@@ -34,9 +34,9 @@ class InterventionAdmin(admin.ModelAdmin):
 
 @admin.register(InterventionAssignment)
 class InterventionAssignmentAdmin(admin.ModelAdmin):
+    raw_id_fields = ("org_unit",)
     list_display = (
         "scenario",
-        "org_unit",
         "intervention",
         "created_by",
         "created_at",
