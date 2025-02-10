@@ -19,7 +19,17 @@ jobs:
     test_js:
         runs-on: ubuntu-20.04
         steps:
-            - uses: actions/checkout@v2
+            - name: Checkout Iaso repo
+              uses: actions/checkout@v4
+              with:
+                  repository: 'BLSQ/iaso'
+                  # TODO: change to main
+                  ref: snt-malaria
+            - name: Checkout SNT Malaria repo nested in the Iaso plugin folder
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.event.inputs.branch }}
+                  path: plugins/snt_malaria
             - name: Use node.js 20
               uses: actions/setup-node@v2
               with:
