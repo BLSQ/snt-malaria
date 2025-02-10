@@ -33,9 +33,7 @@ class Intervention(SoftDeletableModel):
         ordering = ["name"]
         unique_together = [["intervention_family", "name"]]
 
-    intervention_family = models.ForeignKey(
-        InterventionFamily, on_delete=models.PROTECT
-    )
+    intervention_family = models.ForeignKey(InterventionFamily, on_delete=models.PROTECT)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)

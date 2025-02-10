@@ -12,8 +12,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="intervention",
             name="cost_per_unit",
-            field=models.DecimalField(
-                blank=True, decimal_places=2, max_digits=10, null=True
-            ),
+            field=models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True),
         ),
     ]
