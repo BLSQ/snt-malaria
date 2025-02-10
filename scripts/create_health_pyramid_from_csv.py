@@ -108,7 +108,7 @@ for out in response:
 ou_types = {k: ou_types[k] for k in sorted(ou_types)}
 print("OU types:")
 for level, ou_type in ou_types.items():
-    print(f"Level {level}: {ou_type["name"]}")
+    print(f"Level {level}: {ou_type['name']}")
 
 
 # PARENT_LEVEL_3_ID,PARENT_LEVEL_3_NAME
