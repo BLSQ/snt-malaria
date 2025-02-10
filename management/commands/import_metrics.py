@@ -7,28 +7,57 @@ from django.core.management.base import BaseCommand
 from iaso.models import MetricType, MetricValue, OrgUnit
 
 ACCOUNT_ID = 1
-CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "BFA_epi_indicators_pop.csv")
+DATA_CSV_FILE_PATH = os.path.join(
+    os.path.dirname(__file__), "BFA_epi_indicators_pop.csv"
+)
+METADATA_CSV_FILE_PATH = os.path.join(
+    os.path.dirname(__file__), "epi_indicators_explained.csv"
+)
 
 
 class Command(BaseCommand):
     help = "Script to import metrics (covariates) from OpenHEXA into SNT Malaria"
 
     def handle(self, *args, **options):
-        # Open the CSV file
-        with open(CSV_FILE_PATH, newline="", encoding="utf-8") as csvfile:
+        print("Reading metadata file")
+        metadata = {}
+        with open(METADATA_CSV_FILE_PATH, newline="", encoding="utf-8") as metafile:
+            metareader = csv.DictReader(metafile)
+            for row in metareader:
+                metric_name = row["epi_indicator"]
+                print(f"\tMetric: {metric_name}")
+                metadata[metric_name] = {
+                    "description": row["description"],
+                    "source": row["source"],
+                    "units": row["units"],
+                    "comments": row["comments"],
+                }
+
+        print("Reading data file")
+        with open(DATA_CSV_FILE_PATH, newline="", encoding="utf-8") as csvfile:
             csvreader = csv.DictReader(csvfile)
             # Get column names from the CSV file
             columns = csvreader.fieldnames
 
             # Start a database transaction
             with transaction.atomic():
-                # Create MetricType instances for each column (except ADM1, ADM2, ADM1_ID, and ADM2_ID)
+                # Create or update MetricType instances for each column
+                # (except ADM1, ADM2, ADM1_ID, and ADM2_ID)
                 metric_types = {}
                 for column in columns:
                     if column not in ["ADM1", "ADM2", "ADM1_ID", "ADM2_ID"]:
-                        # Create or get the MetricType
+                        # Get metadata for this metric type if available
+                        meta = metadata.get(column, {})
+
                         metric_type, created = MetricType.objects.get_or_create(
-                            account_id=ACCOUNT_ID, name=column
+                            account_id=ACCOUNT_ID,
+                            name=column,
+                            defaults={
+                                "description": meta.get("description", ""),
+                                "source": meta.get("source", ""),
+                                "units": meta.get("units", ""),
+                                "comments": meta.get("comments", ""),
+                            },
                         )
                         metric_types[column] = metric_type
 
