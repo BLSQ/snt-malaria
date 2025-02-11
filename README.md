@@ -40,3 +40,10 @@ docker-compose up
 ```
 
 6. Set up your IASO account with e.g. name `Burkina Faso` and import the geopackage you can retrieve from https://iaso-snt-malaria.bluesquare.org/.
+
+7. With the org unit pyramid set up correctly, you can now import the covariate data sets (metrics) and generate a set of interventions:
+
+```bash
+docker compose run --rm iaso manage import_metrics
+docker compose run --rm iaso manage seed_interventions
+```

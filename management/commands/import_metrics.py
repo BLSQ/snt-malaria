@@ -15,6 +15,10 @@ class Command(BaseCommand):
     help = "Script to import metrics (covariates) from OpenHEXA into SNT Malaria"
 
     def handle(self, *args, **options):
+        print("Clearing existing metrics")
+        MetricValue.objects.all().delete()
+        MetricType.objects.all().delete()
+
         print("Reading metadata file")
         metadata = {}
         with open(METADATA_CSV_FILE_PATH, newline="", encoding="utf-8") as metafile:
