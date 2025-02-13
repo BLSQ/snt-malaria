@@ -26,12 +26,27 @@ export const theme = createTheme({
             light: '#FFB74D',
             dark: '#F57C00',
         },
+        background: {
+            default: '#ECEFF1', // Set the page background color
+        },
     },
     typography: {
         ...defaultTheme.typography,
         button: {
             ...defaultTheme.typography.button,
             fontFamily: '"Roboto", "Arial", sans-serif',
+        },
+    },
+    components: {
+        MuiPaper: {
+            defaultProps: {
+                elevation: 2, // Set default paper elevation to 2
+            },
+            styleOverrides: {
+                root: {
+                    padding: defaultTheme.spacing(2),
+                },
+            },
         },
     },
 });
