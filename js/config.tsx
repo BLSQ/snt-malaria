@@ -1,5 +1,6 @@
 import { Plugin } from '../../../hat/assets/js/apps/Iaso/domains/app/types';
 import { routes } from './src/constants/routes';
+import { theme } from './src/constants/theme';
 import en from './src/constants/translations/en.json';
 import fr from './src/constants/translations/fr.json';
 import { baseUrls, paramsConfig } from './src/constants/urls';
@@ -17,6 +18,7 @@ const config: Plugin = {
     menu: [],
     translations,
     homeUrl: '/snt_malaria/planning',
+    theme,
 };
 
 export default config;
