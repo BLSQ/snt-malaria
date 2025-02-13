@@ -1,71 +1,63 @@
-import React, { FC } from 'react';
-import { Box, Toolbar, Typography, Paper, Grid } from '@mui/material';
+import React, { FC, useState } from 'react';
+import { Toolbar, Typography, Grid } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import {
     PaperContainer,
     PaperFullHeight,
     AppBar,
     PageContainer,
 } from '../../components/styledComponents';
+import { Budgets } from './components/Budgets';
+import { Interventions } from './components/Interventions';
+import { InterventionsPlans } from './components/InterventionsPlans';
+import { LayersDrawer } from './components/LayersDrawer';
 import { Map } from './components/map';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
+import { MESSAGES } from './messages';
 
 export const Planning: FC = () => {
     const { data: orgUnits } = useGetOrgUnits();
+    const { formatMessage } = useSafeIntl();
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const toggleDrawer = () => {
+        setIsDrawerOpen(!isDrawerOpen);
+    };
     return (
         <>
             <AppBar elevation={0} position="static">
                 <Toolbar>
-                    <Typography variant="h6">Planning</Typography>
+                    <Typography variant="h6">
+                        {formatMessage(MESSAGES.title)}
+                    </Typography>
                 </Toolbar>
             </AppBar>
+            <LayersDrawer
+                toggleDrawer={toggleDrawer}
+                isDrawerOpen={isDrawerOpen}
+            />
             <PageContainer>
                 <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
                         <PaperContainer>
                             <PaperFullHeight>
-                                <Map orgUnits={orgUnits} />
+                                <Map
+                                    orgUnits={orgUnits}
+                                    toggleDrawer={toggleDrawer}
+                                />
                             </PaperFullHeight>
                         </PaperContainer>
                     </Grid>
                     <Grid item xs={12} md={3.5}>
                         <PaperContainer>
                             <PaperFullHeight>
-                                <Box p={2}>
-                                    <Typography
-                                        variant="h6"
-                                        gutterBottom
-                                        color="secondary"
-                                    >
-                                        INTERVENTIONS
-                                    </Typography>
-                                </Box>
+                                <Interventions />
                             </PaperFullHeight>
                         </PaperContainer>
                     </Grid>
                     <Grid item xs={12} md={2.5}>
                         <PaperContainer>
-                            <Paper>
-                                <Box p={2}>
-                                    <Typography
-                                        variant="h6"
-                                        gutterBottom
-                                        color="secondary"
-                                    >
-                                        INTERVENTIONS PLANS
-                                    </Typography>
-                                </Box>
-                            </Paper>
-                            <Paper sx={{ mt: 2 }}>
-                                <Box p={2}>
-                                    <Typography
-                                        variant="h6"
-                                        gutterBottom
-                                        color="secondary"
-                                    >
-                                        BUDGETS
-                                    </Typography>
-                                </Box>
-                            </Paper>
+                            <InterventionsPlans />
+                            <Budgets />
                         </PaperContainer>
                     </Grid>
                 </Grid>
