@@ -1,7 +1,11 @@
 import { createTheme } from '@mui/material/styles';
 
+import { theme as defaultTheme } from 'bluesquare-components';
+
 export const theme = createTheme({
+    ...defaultTheme,
     palette: {
+        ...defaultTheme.palette,
         primary: {
             main: '#7B1FA2', // Purple from the UI
             light: '#9C27B0',
@@ -24,15 +28,11 @@ export const theme = createTheme({
         },
     },
     typography: {
-        fontFamily: [
-            '-apple-system',
-            'BlinkMacSystemFont',
-            '"Segoe UI"',
-            'Roboto',
-            '"Helvetica Neue"',
-            'Arial',
-            'sans-serif',
-        ].join(','),
+        ...defaultTheme.typography,
+        button: {
+            ...defaultTheme.typography.button,
+            fontFamily: '"Roboto", "Arial", sans-serif',
+        },
     },
 });
 
