@@ -42,11 +42,6 @@ export const theme = createTheme({
             defaultProps: {
                 elevation: 0,
             },
-            styleOverrides: {
-                root: {
-                    borderRadius: defaultTheme.spacing(2),
-                },
-            },
         },
     },
 });
