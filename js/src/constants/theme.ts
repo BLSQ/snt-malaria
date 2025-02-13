@@ -40,11 +40,11 @@ export const theme = createTheme({
     components: {
         MuiPaper: {
             defaultProps: {
-                elevation: 2, // Set default paper elevation to 2
+                elevation: 0,
             },
             styleOverrides: {
                 root: {
-                    padding: defaultTheme.spacing(2),
+                    borderRadius: defaultTheme.spacing(2),
                 },
             },
         },
