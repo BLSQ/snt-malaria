@@ -3,7 +3,6 @@ from plugins.snt_malaria.models import Intervention
 
 
 class InterventionSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Intervention
         fields = [
