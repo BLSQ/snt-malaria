@@ -1,22 +1,6 @@
 from rest_framework import serializers
-from plugins.snt_malaria.models import InterventionFamily, Intervention
-
-
-class InterventionSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Intervention
-        fields = [
-            "name",
-            "description",
-            "cost_per_unit",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = [
-            "created_at",
-            "updated_at",
-        ]
+from plugins.snt_malaria.models import InterventionFamily
+from plugins.snt_malaria.api.intervention.serializers import InterventionSerializer
 
 
 class InterventionFamilySerializer(serializers.ModelSerializer):
