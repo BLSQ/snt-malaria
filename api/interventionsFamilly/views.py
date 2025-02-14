@@ -1,11 +1,11 @@
-from plugins.snt_malaria.api.interventions.serializers import (
+from rest_framework import viewsets
+from plugins.snt_malaria.api.interventionsFamilly.serializers import (
     InterventionFamilySerializer,
 )
 from plugins.snt_malaria.models import InterventionFamily
-from rest_framework import viewsets
 
 
-class InterventionViewSet(viewsets.ModelViewSet):
+class InterventionsFamillyViewSet(viewsets.ModelViewSet):
     serializer_class = InterventionFamilySerializer
     ordering_fields = ["id", "name"]
     http_method_names = ["get", "options"]
