@@ -30,7 +30,7 @@ export const Planning: FC = () => {
     const [displayedMetric, setDisplayedMetric] = useState<MetricType | null>(
         null,
     );
-    const toggleMetricSelection = (metric: MetricType) => {
+    const displayMetricOnMap = (metric: MetricType) => {
         setDisplayedMetric(prevSelected =>
             prevSelected?.name === metric.name ? null : metric,
         );
@@ -53,7 +53,7 @@ export const Planning: FC = () => {
                 isDrawerOpen={isDrawerOpen}
                 metricTypes={metricTypes}
                 displayedMetric={displayedMetric}
-                toggleMetricSelection={toggleMetricSelection}
+                displayMetricOnMap={displayMetricOnMap}
             />
             <PageContainer>
                 <Grid container spacing={2}>

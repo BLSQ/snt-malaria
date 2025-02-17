@@ -1,9 +1,8 @@
 import React, { FC } from 'react';
 import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined';
 import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
-import { Box, Drawer, IconButton, Typography } from '@mui/material';
-import { LayerConfig } from './layers/LayerConfig';
-import { LayerHeader } from './layers/LayerHeader';
+import { Box, Divider, Drawer, IconButton, Typography } from '@mui/material';
+import { LayerConfigBlock } from './layers/LayerConfigBlock';
 import { MetricType } from '../types/metrics';
 
 type Props = {
@@ -11,7 +10,7 @@ type Props = {
     isDrawerOpen: boolean;
     metricTypes?: MetricType[];
     displayedMetric: MetricType | null;
-    toggleMetricSelection: (metric: MetricType) => void;
+    displayMetricOnMap: (metric: MetricType) => void;
 };
 
 export const LayersDrawer: FC<Props> = ({
@@ -19,15 +18,17 @@ export const LayersDrawer: FC<Props> = ({
     isDrawerOpen,
     metricTypes,
     displayedMetric,
-    toggleMetricSelection,
+    displayMetricOnMap,
 }) => {
     return (
-        <Drawer anchor="left" open={isDrawerOpen} onClose={toggleDrawer}>
+        <Drawer
+            anchor="left"
+            open={isDrawerOpen}
+            // onClose={toggleDrawer} // Close by clicking outside, not sure if we want this
+        >
             <Box
                 sx={{ width: 350, p: 2, position: 'relative' }}
                 role="presentation"
-                onClick={toggleDrawer}
-                onKeyDown={toggleDrawer}
             >
                 <Box
                     sx={{
@@ -50,16 +51,20 @@ export const LayersDrawer: FC<Props> = ({
                     </IconButton>
                 </Box>
                 <Box sx={{ mt: 3 }}>
-                    {metricTypes?.length &&
-                        metricTypes.map(metric => (
-                            <LayerConfig
-                                key={metric.id}
-                                metric={metric}
-                                isSelected={displayedMetric?.id === metric.id}
-                                toggleMapDisplay={() =>
-                                    toggleMetricSelection(metric)
-                                }
-                            />
+                    {metricTypes &&
+                        Object.keys(metricTypes).map(metricCategory => (
+                            <Box key={metricCategory}>
+                                <LayerConfigBlock
+                                    metricCategory={metricCategory}
+                                    metrics={metricTypes[metricCategory]}
+                                    isDisplayedOnMap={
+                                        displayedMetric?.category ===
+                                        metricCategory
+                                    }
+                                    toggleMapDisplay={displayMetricOnMap}
+                                />
+                                <Divider />
+                            </Box>
                         ))}
                 </Box>
             </Box>
