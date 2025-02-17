@@ -10,14 +10,21 @@ import {
 
 export const InterventionsPlans: FC = () => {
     return (
-        <Accordion>
+        <Accordion
+            sx={{
+                mt: 2,
+                '&:before': {
+                    display: 'none',
+                },
+            }}
+        >
             <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 aria-controls="interventions-plans-content"
                 id="interventions-plans-header"
             >
                 <Typography variant="h6" gutterBottom color="secondary">
-                    INTERVENTIONS PLANS
+                    Interventions plan
                 </Typography>
             </AccordionSummary>
             <AccordionDetails>

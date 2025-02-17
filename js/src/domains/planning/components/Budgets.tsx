@@ -24,7 +24,7 @@ export const Budgets: FC = () => {
                 id="budgets-header"
             >
                 <Typography variant="h6" gutterBottom color="secondary">
-                    BUDGETS
+                    Budget & Impact
                 </Typography>
             </AccordionSummary>
             <AccordionDetails>
