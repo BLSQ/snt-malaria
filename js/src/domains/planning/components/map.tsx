@@ -2,7 +2,7 @@ import React, { FC, useMemo, useState } from 'react';
 import { Box, useTheme, Button, styled } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import L from 'leaflet';
-import { MapContainer, GeoJSON, ZoomControl } from 'react-leaflet';
+import { GeoJSON, MapContainer, ZoomControl } from 'react-leaflet';
 import { CustomTileLayer } from 'Iaso/components/maps/tools/CustomTileLayer';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
@@ -47,6 +47,16 @@ export const Map: FC<Props> = ({ orgUnits, toggleDrawer }) => {
         const shape = L.geoJSON(geoJsonFeatures);
         return shape.getBounds();
     }, [orgUnits]);
+
+    // Selecting an org unit on the map
+    const [selectedOrgUnit, setSelectedOrgUnit] = useState<OrgUnit | null>(
+        null,
+    );
+    const onOrgUnitClick = (orgUnitId: number) => {
+        const orgUnit = orgUnits?.find(ou => ou.id === orgUnitId);
+        setSelectedOrgUnit(orgUnit || null);
+    };
+
     return (
         <Box
             height="100%"
@@ -64,32 +74,54 @@ export const Map: FC<Props> = ({ orgUnits, toggleDrawer }) => {
                 {formatMessage(MESSAGES.layers)}
             </StyledButton>
             {orgUnits && (
-                <MapContainer
-                    doubleClickZoom
-                    scrollWheelZoom={false}
-                    maxZoom={currentTile.maxZoom}
-                    style={{ height: '100%' }}
-                    center={[0, 0]}
-                    keyboard={false}
-                    bounds={bounds}
-                    boundsOptions={boundsOptions}
-                    zoomControl={false}
-                >
-                    <ZoomControl position="bottomleft" />
-                    <CustomTileLayer
-                        currentTile={currentTile}
-                        setCurrentTile={setCurrentTile}
-                    />
-                    {orgUnits.map(orgUnit => (
-                        <GeoJSON
-                            key={orgUnit.id}
-                            style={{
-                                color: theme.palette.primary.main,
-                            }}
-                            data={orgUnit.geo_json as unknown as GeoJson}
+                <>
+                    <MapContainer
+                        doubleClickZoom
+                        scrollWheelZoom={false}
+                        maxZoom={currentTile.maxZoom}
+                        style={{ height: '100%' }}
+                        center={[0, 0]}
+                        keyboard={false}
+                        bounds={bounds}
+                        boundsOptions={boundsOptions}
+                        zoomControl={false}
+                    >
+                        <ZoomControl position="bottomleft" />
+                        <CustomTileLayer
+                            currentTile={currentTile}
+                            setCurrentTile={setCurrentTile}
                         />
-                    ))}
-                </MapContainer>
+                        {orgUnits.map(orgUnit => (
+                            <GeoJSON
+                                key={orgUnit.id}
+                                style={{
+                                    color: theme.palette.primary.main,
+                                }}
+                                data={orgUnit.geo_json as unknown as GeoJson}
+                                eventHandlers={{
+                                    click: () => onOrgUnitClick(orgUnit.id),
+                                }}
+                            />
+                        ))}
+                    </MapContainer>
+                    {selectedOrgUnit && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 10,
+                                right: 10,
+                                backgroundColor: '#333D43',
+                                color: 'white',
+                                padding: '10px',
+                                borderRadius: '16px',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                                zIndex: 1000,
+                            }}
+                        >
+                            <h3>{selectedOrgUnit.name}</h3>
+                        </Box>
+                    )}
+                </>
             )}
         </Box>
     );
