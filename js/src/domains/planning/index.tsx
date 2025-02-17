@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { Toolbar, Typography, Grid } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import {
@@ -19,7 +19,6 @@ import { MetricType } from './types/metrics';
 
 export const Planning: FC = () => {
     const { data: orgUnits } = useGetOrgUnits();
-    const { data: metricTypes } = useGetMetricTypes();
     const { formatMessage } = useSafeIntl();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const toggleDrawer = () => {
@@ -27,9 +26,17 @@ export const Planning: FC = () => {
     };
 
     // Metric selection
+    // v1: display Incidence by default
+    const { data: metricTypes } = useGetMetricTypes();
     const [displayedMetric, setDisplayedMetric] = useState<MetricType | null>(
         null,
     );
+    useEffect(() => {
+        if (metricTypes && !displayedMetric) {
+            console.log(metricTypes);
+            setDisplayedMetric(metricTypes['Incidence'][0]);
+        }
+    }, [metricTypes, displayedMetric]);
     const displayMetricOnMap = (metric: MetricType) => {
         setDisplayedMetric(prevSelected =>
             prevSelected?.name === metric.name ? null : metric,

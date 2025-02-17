@@ -6,6 +6,7 @@ export type MetricType = {
     units: string;
     comments: string;
     category: string;
+    legend_threshold: ScaleThreshold;
 };
 
 export type MetricValue = {
@@ -14,4 +15,9 @@ export type MetricValue = {
     org_unit: number;
     year: number | null;
     value: number;
+};
+
+export type ScaleThreshold = {
+    domain: number[];
+    range: string[];
 };
