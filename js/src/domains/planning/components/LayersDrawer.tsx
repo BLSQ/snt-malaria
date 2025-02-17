@@ -1,7 +1,9 @@
 import React, { FC } from 'react';
-import CloseIcon from '@mui/icons-material/Close';
-import { Box, Drawer, IconButton } from '@mui/material';
-import { MetricConfig } from './MetricConfig';
+import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined';
+import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
+import { Box, Drawer, IconButton, Typography } from '@mui/material';
+import { LayerConfig } from './layers/LayerConfig';
+import { LayerHeader } from './layers/LayerHeader';
 import { MetricType } from '../types/metrics';
 
 type Props = {
@@ -27,17 +29,30 @@ export const LayersDrawer: FC<Props> = ({
                 onClick={toggleDrawer}
                 onKeyDown={toggleDrawer}
             >
-                <IconButton
-                    aria-label="close"
-                    onClick={toggleDrawer}
-                    sx={{ position: 'absolute', top: 8, right: 8 }}
+                <Box
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 1,
+                    }}
                 >
-                    <CloseIcon />
-                </IconButton>
+                    <span>
+                        <LayersOutlinedIcon />
+                        Layers
+                    </span>
+                    <IconButton
+                        aria-label="close"
+                        onClick={toggleDrawer}
+                        sx={{ position: 'absolute', top: 8, right: 8 }}
+                    >
+                        <ChevronLeftOutlinedIcon />
+                    </IconButton>
+                </Box>
                 <Box sx={{ mt: 3 }}>
                     {metricTypes?.length &&
                         metricTypes.map(metric => (
-                            <MetricConfig
+                            <LayerConfig
                                 key={metric.id}
                                 metric={metric}
                                 isSelected={displayedMetric?.id === metric.id}

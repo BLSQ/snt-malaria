@@ -3,7 +3,7 @@ import { Box, IconButton, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
-import { MetricType } from '../types/metrics';
+import { MetricType } from '../../types/metrics';
 
 type Props = {
     metric: MetricType;
@@ -11,7 +11,7 @@ type Props = {
     toggleMapDisplay: () => void;
 };
 
-export const MetricConfig: FC<Props> = ({
+export const LayerConfig: FC<Props> = ({
     metric,
     isSelected,
     toggleMapDisplay,
