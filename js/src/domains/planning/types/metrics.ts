@@ -1,10 +1,11 @@
 export type MetricType = {
+    id: number;
     name: string;
     description: string;
     source: string;
     units: string;
     comments: string;
-    id: number;
+    category: string;
 };
 
 export type MetricValue = {

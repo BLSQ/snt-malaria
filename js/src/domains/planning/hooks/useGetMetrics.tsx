@@ -10,13 +10,16 @@ export type DropdownOptions<T> = {
     original: Form;
 };
 
-export const useGetMetricTypes = (): UseQueryResult<MetricType[], Error> => {
+export const useGetMetricTypes = (): UseQueryResult<[], Error> => {
     return useSnackQuery({
         queryKey: ['metricTypes'],
         queryFn: () => getRequest('/api/metrictypes/'),
         options: {
             staleTime: 1000 * 60 * 15, // in MS
             cacheTime: 1000 * 60 * 5,
+            select: (data: MetricType[]) => {
+                return Object.groupBy(data, ({ category }) => category);
+            },
         },
     });
 };
@@ -33,12 +36,6 @@ export const useGetMetricValues = (
             staleTime: 1000 * 60 * 15, // in MS
             cacheTime: 1000 * 60 * 5,
             enabled: Boolean(metricTypeId),
-            // select: data =>
-            //     data?.forms?.map(t => ({
-            //         label: t.name,
-            //         value: t.id,
-            //         original: t,
-            //     })) || [],
         },
     });
 };

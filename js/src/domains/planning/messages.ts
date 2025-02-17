@@ -9,4 +9,8 @@ export const MESSAGES = defineMessages({
         id: 'snt_malaria.label.layers',
         defaultMessage: 'Layers',
     },
+    moreThan: {
+        id: 'snt_malaria.label.layers.moreThan',
+        defaultMessage: 'More than',
+    },
 });
