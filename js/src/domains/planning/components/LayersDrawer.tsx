@@ -1,12 +1,24 @@
 import React, { FC } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { Box, Drawer, IconButton } from '@mui/material';
+import { MetricConfig } from './MetricConfig';
+import { MetricType } from '../types/metrics';
 
 type Props = {
     toggleDrawer: () => void;
     isDrawerOpen: boolean;
+    metricTypes?: MetricType[];
+    displayedMetric: MetricType | null;
+    toggleMetricSelection: (metric: MetricType) => void;
 };
-export const LayersDrawer: FC<Props> = ({ toggleDrawer, isDrawerOpen }) => {
+
+export const LayersDrawer: FC<Props> = ({
+    toggleDrawer,
+    isDrawerOpen,
+    metricTypes,
+    displayedMetric,
+    toggleMetricSelection,
+}) => {
     return (
         <Drawer anchor="left" open={isDrawerOpen} onClose={toggleDrawer}>
             <Box
@@ -22,6 +34,19 @@ export const LayersDrawer: FC<Props> = ({ toggleDrawer, isDrawerOpen }) => {
                 >
                     <CloseIcon />
                 </IconButton>
+                <Box sx={{ mt: 3 }}>
+                    {metricTypes?.length &&
+                        metricTypes.map(metric => (
+                            <MetricConfig
+                                key={metric.id}
+                                metric={metric}
+                                isSelected={displayedMetric?.id === metric.id}
+                                toggleMapDisplay={() =>
+                                    toggleMetricSelection(metric)
+                                }
+                            />
+                        ))}
+                </Box>
             </Box>
         </Drawer>
     );

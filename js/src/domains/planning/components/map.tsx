@@ -10,6 +10,7 @@ import tiles from 'Iaso/constants/mapTiles';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { MESSAGES } from '../messages';
+import { MetricType, MetricValue } from '../types/metrics';
 
 const StyledButton = styled(Button)`
     background-color: white;
@@ -28,9 +29,16 @@ const StyledButton = styled(Button)`
 type Props = {
     orgUnits?: OrgUnit[];
     toggleDrawer: () => void;
+    displayedMetric: MetricType | null;
+    displayedMetricValues?: MetricValue[];
 };
 
-export const Map: FC<Props> = ({ orgUnits, toggleDrawer }) => {
+export const Map: FC<Props> = ({
+    orgUnits,
+    toggleDrawer,
+    displayedMetric,
+    displayedMetricValues,
+}) => {
     const [currentTile, setCurrentTile] = useState<Tile>(tiles.osm);
     const theme = useTheme();
     const { formatMessage } = useSafeIntl();
