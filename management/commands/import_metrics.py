@@ -31,6 +31,7 @@ class Command(BaseCommand):
                     "source": row["source"],
                     "units": row["units"],
                     "comments": row["comments"],
+                    "category": row["category"],
                 }
 
         print("Reading data file")
@@ -57,6 +58,7 @@ class Command(BaseCommand):
                                 "source": meta.get("source", ""),
                                 "units": meta.get("units", ""),
                                 "comments": meta.get("comments", ""),
+                                "category": meta.get("category", ""),
                             },
                         )
                         metric_types[column] = metric_type
