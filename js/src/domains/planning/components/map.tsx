@@ -1,16 +1,24 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, useTheme, Button, styled } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import L from 'leaflet';
-import { GeoJSON, MapContainer, ZoomControl } from 'react-leaflet';
-import { CustomTileLayer } from 'Iaso/components/maps/tools/CustomTileLayer';
+import {
+    GeoJSON,
+    MapContainer,
+    Popup,
+    TileLayer,
+    ZoomControl,
+} from 'react-leaflet';
+
+import { useGetLegend } from 'Iaso/components/LegendBuilder/Legend';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { MESSAGES } from '../messages';
-import { MetricType, MetricValue } from '../types/metrics';
+import { MetricType, MetricValue, ScaleThreshold } from '../types/metrics';
+import { MapLegend } from './MapLegend';
 
 const StyledButton = styled(Button)`
     background-color: white;
@@ -29,7 +37,7 @@ const StyledButton = styled(Button)`
 type Props = {
     orgUnits?: OrgUnit[];
     toggleDrawer: () => void;
-    displayedMetric: MetricType | null;
+    displayedMetric: MetricType;
     displayedMetricValues?: MetricValue[];
 };
 
@@ -55,6 +63,21 @@ export const Map: FC<Props> = ({
         const shape = L.geoJSON(geoJsonFeatures);
         return shape.getBounds();
     }, [orgUnits]);
+
+    // Displaying metrics on the map
+    const getLegend = useGetLegend(displayedMetric?.legend_threshold);
+    const getLegendColor = useCallback(
+        (value, _orgUnitId) => {
+            return getLegend(value);
+        },
+        [displayedMetric, displayedMetricValues, getLegend],
+    );
+    const getSelectedMetricValue = (orgUnitId: number) => {
+        const metricValue = displayedMetricValues?.find(
+            m => m.org_unit === orgUnitId,
+        );
+        return metricValue?.value;
+    };
 
     // Selecting an org unit on the map
     const [selectedOrgUnit, setSelectedOrgUnit] = useState<OrgUnit | null>(
@@ -87,30 +110,60 @@ export const Map: FC<Props> = ({
                         doubleClickZoom
                         scrollWheelZoom={false}
                         maxZoom={currentTile.maxZoom}
-                        style={{ height: '100%' }}
+                        style={{ height: '100%', backgroundColor: '#546E7A' }}
                         center={[0, 0]}
                         keyboard={false}
                         bounds={bounds}
                         boundsOptions={boundsOptions}
                         zoomControl={false}
                     >
-                        <ZoomControl position="bottomleft" />
-                        <CustomTileLayer
+                        <ZoomControl position="bottomright" />
+                        {/* <CustomTileLayer
                             currentTile={currentTile}
                             setCurrentTile={setCurrentTile}
-                        />
+                        /> */}
+                        <TileLayer url="" attribution="" />
                         {orgUnits.map(orgUnit => (
                             <GeoJSON
                                 key={orgUnit.id}
                                 style={{
-                                    color: theme.palette.primary.main,
+                                    color:
+                                        orgUnit.id === selectedOrgUnit?.id
+                                            ? theme.palette.primary.main
+                                            : '#546E7A',
+                                    fillColor: getLegendColor(
+                                        getSelectedMetricValue(orgUnit.id),
+                                        orgUnit.id,
+                                    ),
+                                    fillOpacity: 1,
+                                    weight:
+                                        orgUnit.id === selectedOrgUnit?.id
+                                            ? 3
+                                            : 1,
                                 }}
                                 data={orgUnit.geo_json as unknown as GeoJson}
                                 eventHandlers={{
                                     click: () => onOrgUnitClick(orgUnit.id),
                                 }}
-                            />
+                            >
+                                {/* Temporary Popup, helpful during development */}
+                                <Popup>
+                                    <div>
+                                        <h3>
+                                            Org Unit: {orgUnit.name}{' '}
+                                            {orgUnit.id}
+                                        </h3>
+                                        <p>
+                                            {getSelectedMetricValue(orgUnit.id)}
+                                        </p>
+                                    </div>
+                                </Popup>
+                            </GeoJSON>
                         ))}
+                        <MapLegend
+                            title={displayedMetric.name}
+                            threshold={displayedMetric.legend_threshold}
+                        />
                     </MapContainer>
                     {selectedOrgUnit && (
                         <Box
