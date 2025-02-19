@@ -49,6 +49,7 @@ type Props = {
     toggleDrawer: () => void;
     displayedMetric: MetricType;
     displayedMetricValues?: MetricValue[];
+    onAddOrgUnitToMix: () => void;
 };
 
 export const Map: FC<Props> = ({
@@ -56,6 +57,7 @@ export const Map: FC<Props> = ({
     toggleDrawer,
     displayedMetric,
     displayedMetricValues,
+    onAddOrgUnitToMix,
 }) => {
     const [currentTile, setCurrentTile] = useState<Tile>(tiles.osm);
     const theme = useTheme();
@@ -99,6 +101,9 @@ export const Map: FC<Props> = ({
     const onOrgUnitClick = (orgUnitId: number) => {
         const orgUnit = orgUnits?.find(ou => ou.id === orgUnitId);
         setSelectedOrgUnit(orgUnit || null);
+    };
+    const onClearOrgUnitSelection = () => {
+        setSelectedOrgUnit(null);
     };
 
     return (
@@ -174,7 +179,11 @@ export const Map: FC<Props> = ({
                         )}
                     </MapContainer>
                     {selectedOrgUnit && (
-                        <MapOrgUnitDetails selectedOrgUnit={selectedOrgUnit} />
+                        <MapOrgUnitDetails
+                            selectedOrgUnit={selectedOrgUnit}
+                            onAddToMix={onAddOrgUnitToMix}
+                            onClear={onClearOrgUnitSelection}
+                        />
                     )}
                 </>
             )}

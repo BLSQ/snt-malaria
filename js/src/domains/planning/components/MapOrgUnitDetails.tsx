@@ -1,6 +1,14 @@
 import React, { FC, useMemo } from 'react';
-import { Box, List, ListItem, Tooltip, Typography } from '@mui/material';
-import CircularProgress from '@mui/material/CircularProgress';
+import {
+    Box,
+    Button,
+    CircularProgress,
+    List,
+    ListItem,
+    Tooltip,
+    Typography,
+} from '@mui/material';
+import ArrowForward from '@mui/icons-material/ArrowForward';
 
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
@@ -10,6 +18,8 @@ import { MetricType } from '../types/metrics';
 
 type Props = {
     selectedOrgUnit: OrgUnit;
+    onClear: () => void;
+    onAddToMix: () => void;
 };
 
 const styles: SxStyles = {
@@ -24,6 +34,12 @@ const styles: SxStyles = {
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
         zIndex: 1000,
     },
+    buttonsBox: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%',
+    },
     metricValueBox: {
         display: 'flex',
         justifyContent: 'space-between',
@@ -34,7 +50,11 @@ const styles: SxStyles = {
     },
 };
 
-export const MapOrgUnitDetails: FC<Props> = ({ selectedOrgUnit }) => {
+export const MapOrgUnitDetails: FC<Props> = ({
+    selectedOrgUnit,
+    onClear,
+    onAddToMix,
+}) => {
     const { data: metricTypes } = useGetMetricTypes();
     const flatMetricTypes = useMemo(() => {
         const flatMap = {};
@@ -52,7 +72,23 @@ export const MapOrgUnitDetails: FC<Props> = ({ selectedOrgUnit }) => {
 
     return (
         <Box sx={styles.mainBox}>
+            <Box sx={styles.buttonsBox}>
+                <Button variant="text" size="small" onClick={onClear}>
+                    Clear
+                </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    endIcon={<ArrowForward />}
+                    onClick={onAddToMix}
+                >
+                    Add to mix
+                </Button>
+            </Box>
+
             <h3>{selectedOrgUnit.name}</h3>
+
             {isLoading && <CircularProgress size={24} />}
             <List>
                 {!isLoading &&
