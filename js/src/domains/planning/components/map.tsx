@@ -19,6 +19,7 @@ import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { MESSAGES } from '../messages';
 import { MetricType, MetricValue, ScaleThreshold } from '../types/metrics';
 import { MapLegend } from './MapLegend';
+import { MapOrgUnitDetails } from './MapOrgUnitDetails';
 
 const StyledButton = styled(Button)`
     background-color: white;
@@ -160,27 +161,15 @@ export const Map: FC<Props> = ({
                                 </Popup>
                             </GeoJSON>
                         ))}
-                        <MapLegend
-                            title={displayedMetric.name}
-                            threshold={displayedMetric.legend_threshold}
-                        />
+                        {displayedMetric && (
+                            <MapLegend
+                                title={displayedMetric.name}
+                                threshold={displayedMetric.legend_threshold}
+                            />
+                        )}
                     </MapContainer>
                     {selectedOrgUnit && (
-                        <Box
-                            sx={{
-                                position: 'absolute',
-                                top: 10,
-                                right: 10,
-                                backgroundColor: '#333D43',
-                                color: 'white',
-                                padding: '10px',
-                                borderRadius: '16px',
-                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-                                zIndex: 1000,
-                            }}
-                        >
-                            <h3>{selectedOrgUnit.name}</h3>
-                        </Box>
+                        <MapOrgUnitDetails selectedOrgUnit={selectedOrgUnit} />
                     )}
                 </>
             )}

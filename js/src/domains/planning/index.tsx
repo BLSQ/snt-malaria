@@ -33,7 +33,6 @@ export const Planning: FC = () => {
     );
     useEffect(() => {
         if (metricTypes && !displayedMetric) {
-            console.log(metricTypes);
             setDisplayedMetric(metricTypes['Incidence'][0]);
         }
     }, [metricTypes, displayedMetric]);
@@ -42,9 +41,9 @@ export const Planning: FC = () => {
             prevSelected?.name === metric.name ? null : metric,
         );
     };
-    const { data: displayedMetricValues, isLoading } = useGetMetricValues(
-        displayedMetric?.id || null,
-    );
+    const { data: displayedMetricValues, isLoading } = useGetMetricValues({
+        metricTypeId: displayedMetric?.id || null,
+    });
 
     return (
         <>
