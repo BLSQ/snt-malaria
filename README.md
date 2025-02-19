@@ -25,7 +25,13 @@ cd plugins
 git clone git@github.com:BLSQ/snt-malaria.git
 ```
 
-4. Make following changes to your `.env` in the main IASO repo:
+4. Rename the SNT repo to `snt_malaria`:
+
+```bash
+mv snt-malaria snt_malaria
+```
+
+5. Make following changes to your `.env` in the main IASO repo:
 
 ```.env
 APP_TITLE="SNT Malaria"
@@ -33,15 +39,15 @@ RDS_DB_NAME=snt_malaria  # Your choice of DB
 PLUGINS=snt_malaria
 ```
 
-5. Start IASO as you would normally:
+6. Start IASO as you would normally:
 
 ```bash
 docker-compose up
 ```
 
-6. Set up your IASO account with e.g. name `Burkina Faso` and import the geopackage you can retrieve from https://iaso-snt-malaria.bluesquare.org/.
+7. Set up your IASO account with e.g. name `Burkina Faso` and import the geopackage you can retrieve from https://iaso-snt-malaria.bluesquare.org/.
 
-7. With the org unit pyramid set up correctly, you can now import the covariate data sets (metrics) and generate a set of interventions:
+8. With the org unit pyramid set up correctly, you can now import the covariate data sets (metrics) and generate a set of interventions:
 
 ```bash
 docker compose run --rm iaso manage import_metrics
