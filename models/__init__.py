@@ -1,2 +1,2 @@
-from .intervention import InterventionFamily, Intervention, InterventionAssignment
+from .intervention import InterventionCategory, Intervention, InterventionAssignment
 from .scenario import Scenario

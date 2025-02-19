@@ -10,5 +10,5 @@ class InterventionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Intervention.objects.filter(
-            intervention_family__account=self.request.user.iaso_profile.account
+            intervention_category__account=self.request.user.iaso_profile.account
         )

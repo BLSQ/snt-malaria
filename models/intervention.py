@@ -9,7 +9,7 @@ from iaso.utils.models.soft_deletable import (
 from plugins.snt_malaria.models.scenario import Scenario
 
 
-class InterventionFamily(SoftDeletableModel):
+class InterventionCategory(SoftDeletableModel):
     class Meta:
         app_label = "snt_malaria"
         verbose_name_plural = "Intervention families"
@@ -31,9 +31,11 @@ class Intervention(SoftDeletableModel):
     class Meta:
         app_label = "snt_malaria"
         ordering = ["name"]
-        unique_together = [["intervention_family", "name"]]
+        unique_together = [["intervention_category", "name"]]
 
-    intervention_family = models.ForeignKey(InterventionFamily, on_delete=models.PROTECT)
+    intervention_category = models.ForeignKey(
+        InterventionCategory, on_delete=models.PROTECT
+    )
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
