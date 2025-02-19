@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from iaso.models import Account, User
-from plugins.snt_malaria.models.intervention import InterventionFamily, Intervention
+from plugins.snt_malaria.models.intervention import InterventionCategory, Intervention
 
 
 class Command(BaseCommand):
@@ -142,7 +142,7 @@ class Command(BaseCommand):
         created_by = User.objects.first()
 
         for category_name, data in categories_and_interventions.items():
-            category, created = InterventionFamily.objects.get_or_create(
+            category, created = InterventionCategory.objects.get_or_create(
                 name=category_name,
                 defaults={
                     "description": data["description"],
