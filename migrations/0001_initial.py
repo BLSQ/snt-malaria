@@ -36,7 +36,9 @@ class Migration(migrations.Migration):
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 (
                     "account",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="iaso.account"),
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="iaso.account"
+                    ),
                 ),
                 (
                     "created_by",
@@ -73,7 +75,9 @@ class Migration(migrations.Migration):
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 (
                     "account",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="iaso.account"),
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="iaso.account"
+                    ),
                 ),
                 (
                     "created_by",
@@ -163,7 +167,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "org_unit",
-                    models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to="iaso.orgunit"),
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT, to="iaso.orgunit"
+                    ),
                 ),
                 (
                     "scenario",
