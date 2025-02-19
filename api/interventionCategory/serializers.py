@@ -1,13 +1,13 @@
 from rest_framework import serializers
-from plugins.snt_malaria.models import InterventionFamily
+from plugins.snt_malaria.models import InterventionCategory
 from plugins.snt_malaria.api.intervention.serializers import InterventionSerializer
 
 
-class InterventionFamilySerializer(serializers.ModelSerializer):
+class InterventionCategorySerializer(serializers.ModelSerializer):
     interventions = InterventionSerializer(many=True, source="intervention_set")
 
     class Meta:
-        model = InterventionFamily
+        model = InterventionCategory
         fields = [
             "id",
             "account",
