@@ -40,7 +40,9 @@ def get_group_id_by_name(groups, name):
     return None
 
 
-def find_or_create_org_unit(name, org_unit_type_id, parent_id, source_ref=None, group_id=None):
+def find_or_create_org_unit(
+    name, org_unit_type_id, parent_id, source_ref=None, group_id=None
+):
     # search_url = (
     #     orgunits_url
     #     + f'?limit=20&order=id&page=1&searches=[{{"validation_status":"VALID","search":"{name}","source":{SOURCE_ID},"orgUnitTypeId":"{org_unit_type_id}","orgUnitParentId":"{parent_id}"}}]'
@@ -148,7 +150,9 @@ with open(CSV_NAME, newline="") as csvfile:
         level_7 = (row["PARENT_LEVEL_7_ID"], row["PARENT_LEVEL_7_NAME"])  # Unknown
 
         # Insert into hierarchy
-        current_level = hierarchy[level_1][level_2][level_3][level_4][level_5][level_6][level_7]
+        current_level = hierarchy[level_1][level_2][level_3][level_4][level_5][level_6][
+            level_7
+        ]
 
 # Convert to regular dictionary
 nested_hierarchy = dictify(hierarchy)
