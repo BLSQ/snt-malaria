@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import { Intervention } from '../types/interventions';
 import {
     Typography,
@@ -9,6 +9,11 @@ type Props = {
     interventions: Intervention[]
 }
 export const Interventions: FC<Props> = ({ interventions }) => {
+    const [selectedId, setSelectedId] = useState(null);
+
+    const handleSelect = (id) => {
+        setSelectedId(id);
+    };
     return (<Grid
         container
         direction="row"
@@ -24,12 +29,15 @@ export const Interventions: FC<Props> = ({ interventions }) => {
                 item
                 key={intervention.id}
                 padding={1}
+                onClick={() => handleSelect(intervention.id)}
                 mr={1}
                 sx={{
-                    backgroundColor: "#FFFFFF",
+                    backgroundColor: selectedId === intervention.id ? "primary.main" : "#FFFFFF",
                     borderRadius: "4px",
                     border: "1px solid",
-                    borderColor: "primary.main",
+                    borderColor:  "primary.main",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
                 }}
             >
                 <Typography
@@ -37,7 +45,7 @@ export const Interventions: FC<Props> = ({ interventions }) => {
                     sx={{
                         fontSize: "0.8125rem",
                     }}
-                    color="primary"
+                    color={selectedId === intervention.id ? "#FFFFFF" : "primary" }
                 >
                     {intervention.name}
                 </Typography>
