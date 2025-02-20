@@ -1,28 +1,47 @@
 import React, { FC } from 'react';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Intervention } from '../types/interventions';
 import {
-    Box,
     Typography,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
+    Grid
 } from '@mui/material';
 
-export const Interventions: FC = () => {
-    return (
-        <Accordion>
-            <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
-                aria-controls="interventions-content"
-                id="interventions-header"
+type Props = {
+    interventions: Intervention[]
+}
+export const Interventions: FC<Props> = ({ interventions }) => {
+    return (<Grid
+        container
+        direction="row"
+        padding={1}
+        sx={{
+            display: "inline-flex",
+            backgroundColor: "#EDE7F6",
+            borderRadius: "8px",
+        }}
+    >
+        {interventions.map((intervention) => (
+            <Grid
+                item
+                key={intervention.id}
+                padding={1}
+                mr={1}
+                sx={{
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: "4px",
+                    border: "1px solid",
+                    borderColor: "primary.main",
+                }}
             >
-                <Typography variant="h6" gutterBottom color="secondary">
-                    Intervention mix
+                <Typography
+                    variant="h6"
+                    sx={{
+                        fontSize: "0.8125rem",
+                    }}
+                    color="primary"
+                >
+                    {intervention.name}
                 </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-                <Box p={2}>{/* Add content for intervention mix here */}</Box>
-            </AccordionDetails>
-        </Accordion>
-    );
-};
+            </Grid>
+        ))}
+    </Grid>)
+}

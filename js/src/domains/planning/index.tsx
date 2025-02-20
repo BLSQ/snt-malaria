@@ -8,7 +8,7 @@ import {
     PageContainer,
 } from '../../components/styledComponents';
 import { Budgets } from './components/Budgets';
-import { Interventions } from './components/Interventions';
+import { InterventionsCategories } from './components/InterventionsCategories';
 import { InterventionsPlans } from './components/InterventionsPlans';
 import { LayersDrawer } from './components/LayersDrawer';
 import { Map } from './components/map';
@@ -81,7 +81,7 @@ export const Planning: FC = () => {
                     </Grid>
                     <Grid item xs={12} md={5}>
                         <PaperContainer>
-                            <Interventions />
+                            <InterventionsCategories />
                             <InterventionsPlans />
                             <Budgets />
                         </PaperContainer>
