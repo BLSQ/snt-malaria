@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import { Box, useTheme, Button, styled } from '@mui/material';
+import { Box, useTheme, Button, styled, Theme } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import L from 'leaflet';
 import {
@@ -15,6 +15,7 @@ import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { MESSAGES } from '../messages';
 import { MetricType, MetricValue, ScaleThreshold } from '../types/metrics';
@@ -33,6 +34,14 @@ const StyledButton = styled(Button)`
         border: 2px solid rgba(0, 0, 0, 0.3);
     }
 `;
+
+const styles: SxStyles = {
+    mainBox: (theme: Theme) => ({
+        borderRadius: theme.spacing(2),
+        overflow: 'hidden',
+        position: 'relative',
+    }),
+};
 
 type Props = {
     orgUnits?: OrgUnit[];
@@ -72,12 +81,15 @@ export const Map: FC<Props> = ({
         },
         [displayedMetric, displayedMetricValues, getLegend],
     );
-    const getSelectedMetricValue = (orgUnitId: number) => {
-        const metricValue = displayedMetricValues?.find(
-            m => m.org_unit === orgUnitId,
-        );
-        return metricValue?.value;
-    };
+    const getSelectedMetricValue = useCallback(
+        (orgUnitId: number) => {
+            const metricValue = displayedMetricValues?.find(
+                m => m.org_unit === orgUnitId,
+            );
+            return metricValue?.value;
+        },
+        [displayedMetricValues],
+    );
 
     // Selecting an org unit on the map
     const [selectedOrgUnit, setSelectedOrgUnit] = useState<OrgUnit | null>(
@@ -89,14 +101,7 @@ export const Map: FC<Props> = ({
     };
 
     return (
-        <Box
-            height="100%"
-            sx={{
-                borderRadius: theme.spacing(2),
-                overflow: 'hidden',
-                position: 'relative',
-            }}
-        >
+        <Box height="100%" sx={styles.mainBox}>
             <StyledButton
                 variant="outlined"
                 size="small"

@@ -100,7 +100,6 @@ export const LayerConfigBlock: FC<Props> = ({
                     {selectedMetric.units}
                 </Typography>
             </Box>
-            <Box></Box>
         </Box>
     );
 };
