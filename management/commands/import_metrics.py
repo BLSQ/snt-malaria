@@ -31,6 +31,7 @@ class Command(BaseCommand):
                     "source": row["source"],
                     "units": row["units"],
                     "comments": row["comments"],
+                    "category": row["category"],
                 }
 
         print("Reading data file")
@@ -57,6 +58,10 @@ class Command(BaseCommand):
                                 "source": meta.get("source", ""),
                                 "units": meta.get("units", ""),
                                 "comments": meta.get("comments", ""),
+                                "category": meta.get("category", ""),
+                                "legend_threshold": self.get_legend_thresholds_for_metric_category(
+                                    meta.get("category")
+                                ),
                             },
                         )
                         metric_types[column] = metric_type
@@ -83,3 +88,35 @@ class Command(BaseCommand):
                         MetricValue.objects.create(metric_type=metric_type, org_unit=org_unit, value=value)
 
         print("Data import complete.")
+
+    def get_legend_thresholds_for_metric_category(self, category):
+        if category == "Incidence":
+            return {
+                "domain": [5, 50, 100, 200, 300, 500],
+                "range": [
+                    "#FFCCBC",
+                    "#FFAB91",
+                    "#FF8A65",
+                    "#FF5722",
+                    "#DB3C0B",
+                    "#8B2B0E",
+                    "#601B06",
+                ],
+            }
+        elif category == "Prevalence":
+            return {
+                "domain": [10, 20, 30, 40, 50, 60, 70, 80],
+                "range": [
+                    "#FFCCBC",
+                    "#FFAB91",
+                    "#FF8A65",
+                    "#FF7043",
+                    "#FF5722",
+                    "#DB3C0B",
+                    "#B83B14",
+                    "#8B2B0E",
+                    "#601B06",
+                ],
+            }
+        else:
+            return {}
