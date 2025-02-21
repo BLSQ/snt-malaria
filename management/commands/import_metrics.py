@@ -7,12 +7,8 @@ from django.core.management.base import BaseCommand
 from iaso.models import MetricType, MetricValue, OrgUnit
 
 ACCOUNT_ID = 1
-DATA_CSV_FILE_PATH = os.path.join(
-    os.path.dirname(__file__), "BFA_epi_indicators_pop.csv"
-)
-METADATA_CSV_FILE_PATH = os.path.join(
-    os.path.dirname(__file__), "epi_indicators_explained.csv"
-)
+DATA_CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "BFA_epi_indicators_pop.csv")
+METADATA_CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "epi_indicators_explained.csv")
 
 
 class Command(BaseCommand):
@@ -84,8 +80,6 @@ class Command(BaseCommand):
                             continue
 
                         # Create the MetricValue
-                        MetricValue.objects.create(
-                            metric_type=metric_type, org_unit=org_unit, value=value
-                        )
+                        MetricValue.objects.create(metric_type=metric_type, org_unit=org_unit, value=value)
 
         print("Data import complete.")

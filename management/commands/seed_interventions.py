@@ -151,9 +151,7 @@ class Command(BaseCommand):
                 },
             )
             if created:
-                self.stdout.write(
-                    self.style.SUCCESS(f"Created category: {category_name}")
-                )
+                self.stdout.write(self.style.SUCCESS(f"Created category: {category_name}"))
 
             for intervention_data in data["interventions"]:
                 intervention, created = Intervention.objects.get_or_create(
@@ -165,8 +163,4 @@ class Command(BaseCommand):
                     },
                 )
                 if created:
-                    self.stdout.write(
-                        self.style.SUCCESS(
-                            f"\tCreated intervention: {intervention_data['name']}"
-                        )
-                    )
+                    self.stdout.write(self.style.SUCCESS(f"\tCreated intervention: {intervention_data['name']}"))
