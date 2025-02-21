@@ -7,6 +7,7 @@ import {
     AppBar,
     PageContainer,
 } from '../../components/styledComponents';
+import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { Budgets } from './components/Budgets';
 import { Interventions } from './components/Interventions';
 import { InterventionsPlans } from './components/InterventionsPlans';
@@ -49,6 +50,7 @@ export const Planning: FC = () => {
 
     return (
         <>
+            <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
             <AppBar elevation={0} position="static">
                 <Toolbar>
                     <Typography variant="h6">

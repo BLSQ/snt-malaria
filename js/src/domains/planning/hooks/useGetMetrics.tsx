@@ -10,7 +10,7 @@ export type DropdownOptions<T> = {
     original: Form;
 };
 
-export const useGetMetricTypes = (): UseQueryResult<[], Error> => {
+export const useGetMetricTypes = (): UseQueryResult<MetricType[], Error> => {
     return useSnackQuery({
         queryKey: ['metricTypes'],
         queryFn: () => getRequest('/api/metrictypes/'),

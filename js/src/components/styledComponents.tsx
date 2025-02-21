@@ -22,3 +22,11 @@ export const AppBar = styled(MuiAppBar)(({ theme }) => ({
     color: theme.palette.primary.main,
     borderRadius: theme.spacing(2),
 }));
+
+export const ContentsContainer = styled(Box)(({ theme }) => ({
+    maxWidth: '50%',
+    margin: 'auto',
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    gap: theme.spacing(2),
+}));
