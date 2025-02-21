@@ -3,7 +3,7 @@ from rest_framework import status
 from iaso.test import APITestCase
 
 from iaso.models import Account, OrgUnit, OrgUnitType
-from plugins.snt_malaria.models import Intervention, InterventionFamily, InterventionAssignment, Scenario
+from plugins.snt_malaria.models import Intervention, InterventionCategory, InterventionAssignment, Scenario
 
 
 class ScenarioAPITestCase(APITestCase):
@@ -21,13 +21,13 @@ class ScenarioAPITestCase(APITestCase):
         )
 
         # Create intervention families
-        cls.intervention_family_vaccination = InterventionFamily.objects.create(
+        cls.int_category_vaccination = InterventionCategory.objects.create(
             name="Vaccination",
             account=cls.account,
             created_by=cls.user,
         )
 
-        cls.intervention_family_chemoprevention = InterventionFamily.objects.create(
+        cls.int_category_chemoprevention = InterventionCategory.objects.create(
             name="Preventive Chemotherapy",
             account=cls.account,
             created_by=cls.user,
@@ -37,17 +37,17 @@ class ScenarioAPITestCase(APITestCase):
         cls.intervention_vaccination_rts = Intervention.objects.create(
             name="RTS,S",
             created_by=cls.user,
-            intervention_family=cls.intervention_family_vaccination,
+            intervention_category=cls.int_category_vaccination,
         )
         cls.intervention_chemo_smc = Intervention.objects.create(
             name="SMC",
             created_by=cls.user,
-            intervention_family=cls.intervention_family_chemoprevention,
+            intervention_category=cls.int_category_chemoprevention,
         )
         cls.intervention_chemo_iptp = Intervention.objects.create(
             name="IPTp",
             created_by=cls.user,
-            intervention_family=cls.intervention_family_chemoprevention,
+            intervention_category=cls.int_category_chemoprevention,
         )
 
         # Create Org Units
