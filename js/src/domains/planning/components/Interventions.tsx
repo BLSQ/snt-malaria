@@ -19,25 +19,25 @@ export const Interventions: FC<Props> = ({ interventions }) => {
         direction="row"
         padding={1}
         sx={{
-            display: "inline-flex",
             backgroundColor: "#EDE7F6",
             borderRadius: "8px",
+            width: 'auto',
+            display: 'inline-flex',
+            gap: 1,
         }}
     >
         {interventions.map((intervention) => (
             <Grid
-                item
                 key={intervention.id}
                 padding={1}
                 onClick={() => handleSelect(intervention.id)}
-                mr={1}
                 sx={{
                     backgroundColor: selectedId === intervention.id ? "primary.main" : "#FFFFFF",
                     borderRadius: "4px",
                     border: "1px solid",
                     borderColor:  "primary.main",
                     cursor: "pointer",
-                    transition: "all 0.3s ease",
+                    width: 'auto',
                 }}
             >
                 <Typography
