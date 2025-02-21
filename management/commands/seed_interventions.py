@@ -48,7 +48,10 @@ class Command(BaseCommand):
             "Indoor Residual Spraying (IRS)": {
                 "description": "Spraying the inside walls of homes with insecticides to kill mosquitoes and reduce malaria transmission.",
                 "interventions": [
-                    {"name": "IRS with DDT", "description": "Indoor spraying using DDT to eliminate adult mosquitoes."},
+                    {
+                        "name": "IRS with DDT",
+                        "description": "Indoor spraying using DDT to eliminate adult mosquitoes.",
+                    },
                     {
                         "name": "IRS with pyrethroids",
                         "description": "Using pyrethroid insecticides for effective mosquito control indoors.",
@@ -153,7 +156,7 @@ class Command(BaseCommand):
             for intervention_data in data["interventions"]:
                 intervention, created = Intervention.objects.get_or_create(
                     name=intervention_data["name"],
-                    intervention_family=category,
+                    intervention_category=category,
                     defaults={
                         "description": intervention_data["description"],
                         "created_by": created_by,

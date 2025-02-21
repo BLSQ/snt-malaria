@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import InterventionFamily, Intervention, InterventionAssignment, Scenario
+from .models import Intervention, InterventionAssignment, Scenario, InterventionCategory
 
 
-@admin.register(InterventionFamily)
+@admin.register(InterventionCategory)
 class InterventionFamilyAdmin(admin.ModelAdmin):
     list_display = (
         "name",
@@ -21,14 +21,14 @@ class InterventionFamilyAdmin(admin.ModelAdmin):
 class InterventionAdmin(admin.ModelAdmin):
     list_display = (
         "name",
-        "intervention_family",
+        "intervention_category",
         "created_by",
         "created_at",
         "updated_at",
         "deleted_at",
     )
     search_fields = ("name", "description")
-    list_filter = ("intervention_family", "created_by")
+    list_filter = ("intervention_category", "created_by")
     ordering = ("name",)
 
 
