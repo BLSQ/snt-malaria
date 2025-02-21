@@ -6,14 +6,17 @@ import {
 } from '@mui/material';
 
 type Props = {
-    interventions: Intervention[]
+    interventions: Intervention[];
+    allSelectedIds: number[];
+    handleSelectId: (id: number) => void;
 }
-export const Interventions: FC<Props> = ({ interventions }) => {
-    const [selectedId, setSelectedId] = useState(null);
-
+export const Interventions: FC<Props> = ({ interventions, allSelectedIds, handleSelectId }) => {
+    const [selectedId, setSelectedId] = useState<number | null>(null);
     const handleSelect = (id) => {
-        setSelectedId(id);
+        setSelectedId((prevId) => (prevId === id ? null : id));
+        handleSelectId(id);
     };
+
     return (<Grid
         container
         direction="row"
@@ -38,6 +41,7 @@ export const Interventions: FC<Props> = ({ interventions }) => {
                     borderColor:  "primary.main",
                     cursor: "pointer",
                     width: 'auto',
+                    boxShadow: selectedId === intervention.id ? '0px 4px 4px rgba(0, 0, 0, 0.2)' : 'none'
                 }}
             >
                 <Typography

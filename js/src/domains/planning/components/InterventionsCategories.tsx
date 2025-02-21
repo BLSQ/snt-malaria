@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TuneIcon from '@mui/icons-material/Tune';
 import {
@@ -16,7 +16,18 @@ import { useGetInterventionCategories } from '../hooks/useGetInterventions';
 import { Interventions } from './Interventions';
 
 export const InterventionsCategories: FC = () => {
+    const [allSelectedIds, setAllSelectedIds] = useState<number[]>([]);
     const { data: interventionCategories, isLoading: isLoadingInterventionCategories } = useGetInterventionCategories();
+
+    const handleSelectId = (id: number) => {
+        setAllSelectedIds((prevIds) => {
+            if (prevIds.includes(id)) {
+                return prevIds.filter((item) => item !== id);
+            }
+            return [...prevIds, id];
+        });
+    };
+
     return (
         <Accordion>
             <AccordionSummary
@@ -71,7 +82,8 @@ export const InterventionsCategories: FC = () => {
                                 <Typography sx={{ fontSize: '0.75rem' }}>{interventionCategory.name}</Typography>
                             </Grid>
 
-                            <Interventions interventions={interventionCategory.interventions} />
+                            <Interventions interventionCategoryId={interventionCategory.id} interventions={interventionCategory.interventions} allSelectedIds={allSelectedIds}  // pass the state to the child
+                                handleSelectId={handleSelectId} />
                         </Grid>
                     })}
                 </Grid>
