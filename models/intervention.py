@@ -12,7 +12,7 @@ from plugins.snt_malaria.models.scenario import Scenario
 class InterventionCategory(SoftDeletableModel):
     class Meta:
         app_label = "snt_malaria"
-        verbose_name_plural = "Intervention families"
+        verbose_name_plural = "Intervention categories"
         ordering = ["name"]
         unique_together = [["account", "name"]]
 
