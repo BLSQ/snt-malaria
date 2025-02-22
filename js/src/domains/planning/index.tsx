@@ -1,13 +1,14 @@
 import React, { FC, useEffect, useState } from 'react';
-import { Toolbar, Typography, Grid } from '@mui/material';
+import { Grid } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import {
     PaperContainer,
     PaperFullHeight,
-    AppBar,
     PageContainer,
 } from '../../components/styledComponents';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
+import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
+
 import { Budgets } from './components/Budgets';
 import { Interventions } from './components/Interventions';
 import { InterventionsPlans } from './components/InterventionsPlans';
@@ -17,8 +18,20 @@ import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { useGetMetricTypes, useGetMetricValues } from './hooks/useGetMetrics';
 import { MESSAGES } from './messages';
 import { MetricType } from './types/metrics';
+import { baseUrls } from '../../constants/urls';
+import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
+import { ScenarioTopBar } from './components/ScenarioTopBar';
+
+type PlanningParams = {
+    scenarioId: number;
+};
 
 export const Planning: FC = () => {
+    const params = useParamsObject(
+        baseUrls.planning,
+    ) as unknown as PlanningParams;
+
+    const { data: scenario } = useGetScenario(params.scenarioId);
     const { data: orgUnits } = useGetOrgUnits();
     const { formatMessage } = useSafeIntl();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -51,13 +64,6 @@ export const Planning: FC = () => {
     return (
         <>
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
-            <AppBar elevation={0} position="static">
-                <Toolbar>
-                    <Typography variant="h6">
-                        {formatMessage(MESSAGES.title)}
-                    </Typography>
-                </Toolbar>
-            </AppBar>
             <LayersDrawer
                 toggleDrawer={toggleDrawer}
                 isDrawerOpen={isDrawerOpen}
@@ -66,6 +72,7 @@ export const Planning: FC = () => {
                 displayMetricOnMap={displayMetricOnMap}
             />
             <PageContainer>
+                <ScenarioTopBar scenario={scenario} />
                 <Grid container spacing={2}>
                     <Grid item xs={12} md={7}>
                         <PaperContainer>

@@ -49,11 +49,9 @@ type Props = {
 };
 
 export const ScenarioComponent: FC<Props> = ({ scenario }) => {
-    console.log('scenario', scenario);
     const navigate = useNavigate();
-
     const handleScenarioClick = () => {
-        navigate(`/${baseUrls.planning}/${scenario.id}`);
+        navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
     };
 
     return (
