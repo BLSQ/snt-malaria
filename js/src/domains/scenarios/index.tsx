@@ -18,7 +18,7 @@ const styles: SxStyles = {
         justifyContent: 'space-between',
         alignItems: 'right',
         width: '100%',
-        marginBottom: theme.spacing(2),
+        marginBottom: theme.spacing(4),
     }),
 };
 

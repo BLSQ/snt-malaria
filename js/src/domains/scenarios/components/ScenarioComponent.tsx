@@ -17,6 +17,7 @@ import { baseUrls } from '../../../constants/urls';
 const styles: SxStyles = {
     card: (theme: Theme) => ({
         borderRadius: theme.spacing(2),
+        marginBottom: theme.spacing(2),
     }),
     content: {
         display: 'flex',

@@ -11,10 +11,13 @@ export const PaperContainer = styled(Box)(({ theme }) => ({
 }));
 
 export const PageContainer = styled(Box)(({ theme }) => ({
-    height: `calc(100vh - ${theme.spacing(8)})`,
-    overflow: 'hidden',
-    padding: theme.spacing(2),
     backgroundColor: theme.palette.background.default,
+    borderRadius: theme.spacing(2),
+    height: `calc(100vh - ${theme.spacing(10)})`,
+    marginLeft: theme.spacing(2),
+    marginRight: theme.spacing(2),
+    // overflow: 'hidden',
+    padding: theme.spacing(2),
 }));
 
 export const AppBar = styled(MuiAppBar)(({ theme }) => ({
