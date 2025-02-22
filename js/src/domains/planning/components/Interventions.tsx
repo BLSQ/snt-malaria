@@ -1,20 +1,18 @@
-import React, { FC, useState } from 'react';
-import { Intervention } from '../types/interventions';
+import React, { FC } from 'react';
 import {
     Typography,
     Grid
 } from '@mui/material';
 
 type Props = {
-    interventions: Intervention[];
-    allSelectedIds: number[];
-    handleSelectId: (id: number) => void;
+    interventionCategoryId: number;
+    interventions: { id: number; name: string }[];
+    selectedId: number | null;
+    handleSelectId: (categoryId: number, interventionId: number) => void;
 }
-export const Interventions: FC<Props> = ({ interventions, allSelectedIds, handleSelectId }) => {
-    const [selectedId, setSelectedId] = useState<number | null>(null);
-    const handleSelect = (id) => {
-        setSelectedId((prevId) => (prevId === id ? null : id));
-        handleSelectId(id);
+export const Interventions: FC<Props> = ({ interventionCategoryId, interventions, selectedId, handleSelectId }) => {
+    const handleSelect = (id: number) => {
+        handleSelectId(interventionCategoryId, id);
     };
 
     return (<Grid

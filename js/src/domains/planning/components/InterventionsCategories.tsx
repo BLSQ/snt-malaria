@@ -1,6 +1,7 @@
 import React, { FC, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TuneIcon from '@mui/icons-material/Tune';
+import { useSafeIntl } from 'bluesquare-components';
 import {
     Typography,
     Accordion,
@@ -14,18 +15,18 @@ import {
 } from '@mui/material';
 import { useGetInterventionCategories } from '../hooks/useGetInterventions';
 import { Interventions } from './Interventions';
+import { MESSAGES } from '../messages';
 
 export const InterventionsCategories: FC = () => {
-    const [allSelectedIds, setAllSelectedIds] = useState<number[]>([]);
+    const { formatMessage } = useSafeIntl();
+    const [selectedInterventions, setSelectedInterventions] = useState<{ [categoryId: number]: number | null }>({});
     const { data: interventionCategories, isLoading: isLoadingInterventionCategories } = useGetInterventionCategories();
 
-    const handleSelectId = (id: number) => {
-        setAllSelectedIds((prevIds) => {
-            if (prevIds.includes(id)) {
-                return prevIds.filter((item) => item !== id);
-            }
-            return [...prevIds, id];
-        });
+    const handleSelectId = (categoryId: number, interventionId: number) => {
+        setSelectedInterventions((prev) => ({
+            ...prev,
+            [categoryId]: prev[categoryId] === interventionId ? null : interventionId,
+        }));
     };
 
     return (
@@ -41,7 +42,7 @@ export const InterventionsCategories: FC = () => {
                         <Stack direction="row" spacing={1} alignItems="center">
                             <TuneIcon color="primary" />
                             <Typography variant="h6" gutterBottom color="#1F2B3D">
-                                Intervention mix
+                                {formatMessage(MESSAGES.interventionMixTitle)}
                             </Typography>
                         </Stack>
 
@@ -49,7 +50,7 @@ export const InterventionsCategories: FC = () => {
                     <Grid item sx={{ mr: 5 }}>
                         <Stack direction="row" spacing={3} alignItems="center">
                             <Typography variant="h6" gutterBottom color="primary">
-                                Districts
+                                {formatMessage(MESSAGES.orgUnitDistrict)}
                             </Typography>
                             <Badge
                                 badgeContent={5}
@@ -77,12 +78,14 @@ export const InterventionsCategories: FC = () => {
                 <Divider sx={{ width: '100%' }} />
                 <Grid container direction="row" spacing={2} padding={2}>
                     {!isLoadingInterventionCategories && interventionCategories.map((interventionCategory) => {
-                        return <Grid item direction="column" spacing={2} >
+                        return <Grid item key={interventionCategory.id}>
                             <Grid item>
                                 <Typography sx={{ fontSize: '0.75rem' }}>{interventionCategory.name}</Typography>
                             </Grid>
 
-                            <Interventions interventionCategoryId={interventionCategory.id} interventions={interventionCategory.interventions} allSelectedIds={allSelectedIds}  // pass the state to the child
+                            <Interventions interventionCategoryId={interventionCategory.id}
+                                interventions={interventionCategory.interventions}
+                                selectedId={selectedInterventions[interventionCategory.id] ?? null}
                                 handleSelectId={handleSelectId} />
                         </Grid>
                     })}
@@ -97,7 +100,7 @@ export const InterventionsCategories: FC = () => {
                         color="primary"
                         sx={{ fontSize: '0.875rem', textTransform: 'none' }}
                     >
-                        Apply mix and add to plan
+                        {formatMessage(MESSAGES.applyMixAndAddPlan)}
                     </Button>
                 </Grid>
             </AccordionDetails>

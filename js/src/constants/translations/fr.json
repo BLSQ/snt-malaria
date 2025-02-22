@@ -1,4 +1,7 @@
 {
-    "snt_malaria.home.title": "SNT Malaria",
-    "snt_malaria.label.layers": "Couches"
+    "iaso.snt_malaria.home.title": "SNT Malaria",
+    "iaso.snt_malaria.label.interventionMix.interventionMixTitle": "Mélange d'interventions",
+    "iaso.snt_malaria.label.layers": "Couches",
+    "iaso.snt_malaria.label.orgUnitDistricts": "Districts",
+    "iaso.snt_malaria.label.interventionMix.applyMixAndAddPlan": "Appliquez le mélange et ajoutez-le au plan"
 }
