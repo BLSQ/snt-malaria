@@ -14,15 +14,15 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'More than',
     },
     interventionMixTitle: {
-        id:'iaso.snt_malaria.label.interventionMix.interventionMixTitle',
+        id: 'iaso.snt_malaria.label.interventionMix.interventionMixTitle',
         defaultMessage: 'Intervention mix',
     },
     orgUnitDistrict: {
         id: 'iaso.snt_malaria.label.orgUnitDistricts',
-        defaultMessage: 'Districts'
+        defaultMessage: 'Districts',
     },
     applyMixAndAddPlan: {
         id: 'iaso.snt_malaria.label.interventionMix.applyMixAndAddPlan',
-        defaultMessage: 'Apply mix and add to plan'
-    }
+        defaultMessage: 'Apply mix and add to plan',
+    },
 });
