@@ -8,12 +8,12 @@ import {
     PageContainer,
 } from '../../components/styledComponents';
 import { Budgets } from './components/Budgets';
-import { InterventionsCategories } from './components/InterventionsCategories';
+import { InterventionsMix } from './components/interventionMix/InterventionsMix';
 import { InterventionsPlans } from './components/InterventionsPlans';
 import { LayersDrawer } from './components/LayersDrawer';
 import { Map } from './components/map';
-import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { useGetMetricTypes, useGetMetricValues } from './hooks/useGetMetrics';
+import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { MESSAGES } from './messages';
 import { MetricType } from './types/metrics';
 
@@ -33,7 +33,7 @@ export const Planning: FC = () => {
     );
     useEffect(() => {
         if (metricTypes && !displayedMetric) {
-            setDisplayedMetric(metricTypes['Incidence'][0]);
+            setDisplayedMetric(metricTypes.Incidence[0]);
         }
     }, [metricTypes, displayedMetric]);
     const displayMetricOnMap = (metric: MetricType) => {
@@ -80,7 +80,7 @@ export const Planning: FC = () => {
                     </Grid>
                     <Grid item xs={12} md={5}>
                         <PaperContainer>
-                            <InterventionsCategories />
+                            <InterventionsMix />
                             <InterventionsPlans />
                             <Budgets />
                         </PaperContainer>

@@ -1,4 +1,4 @@
-import { Interventions } from "../components/InterventionsCategories";
+import { Interventions } from "../components/interventionMix/InterventionsMix";
 
 export type InterventionCategory={
     id: number;
