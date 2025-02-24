@@ -33,7 +33,9 @@ export const Planning: FC = () => {
     );
     useEffect(() => {
         if (metricTypes && !displayedMetric) {
-            setDisplayedMetric(metricTypes.Incidence[0]);
+            if (metricTypes.Incidence?.length > 0) {
+                setDisplayedMetric(metricTypes.Incidence[0]);
+            }
         }
     }, [metricTypes, displayedMetric]);
     const displayMetricOnMap = (metric: MetricType) => {

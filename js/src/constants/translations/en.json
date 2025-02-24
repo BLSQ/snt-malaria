@@ -1,7 +1,7 @@
 {
     "iaso.snt_malaria.home.title": "SNT Malaria",
+    "iaso.snt_malaria.label.interventionMix.applyMixAndAddPlan": "Apply mix and add to plan",
     "iaso.snt_malaria.label.interventionMix.interventionMixTitle": "Intervention mix",
     "iaso.snt_malaria.label.layers": "Layers",
-    "iaso.snt_malaria.label.orgUnitDistricts": "Districts",
-    "iaso.snt_malaria.label.interventionMix.applyMixAndAddPlan": "Apply mix and add to plan"
+    "iaso.snt_malaria.label.orgUnitDistricts": "Districts"
 }
