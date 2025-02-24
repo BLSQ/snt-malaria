@@ -43,9 +43,9 @@ export const Planning: FC = () => {
             prevSelected?.name === metric.name ? null : metric,
         );
     };
-    const { data: displayedMetricValues, isLoading } = useGetMetricValues(
-        displayedMetric?.id || null,
-    );
+    const { data: displayedMetricValues, isLoading } = useGetMetricValues({
+        metricTypeId: displayedMetric?.id || null,
+    });
 
     return (
         <>

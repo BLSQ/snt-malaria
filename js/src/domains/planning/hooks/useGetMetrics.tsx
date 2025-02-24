@@ -24,18 +24,30 @@ export const useGetMetricTypes = (): UseQueryResult<[], Error> => {
     });
 };
 
-export const useGetMetricValues = (
-    metricTypeId: number | null,
-): UseQueryResult<MetricValue[], Error> => {
-    const url = `/api/metricvalues/?metric_type_id=${metricTypeId}`;
+interface MetricValuesParams {
+    metricTypeId?: number | null;
+    orgUnitId?: number | null;
+}
+
+export const useGetMetricValues = ({
+    metricTypeId,
+    orgUnitId,
+}: MetricValuesParams): UseQueryResult<MetricValue[], Error> => {
+    let url = '/api/metricvalues/?';
+    if (metricTypeId) {
+        url += `metric_type_id=${metricTypeId}`;
+    }
+    if (orgUnitId) {
+        url += `org_unit_id=${orgUnitId}`;
+    }
 
     return useSnackQuery({
-        queryKey: ['metricValues', metricTypeId],
+        queryKey: ['metricValues', metricTypeId, orgUnitId],
         queryFn: () => getRequest(url),
         options: {
             staleTime: 1000 * 60 * 15, // in MS
             cacheTime: 1000 * 60 * 5,
-            enabled: Boolean(metricTypeId),
+            enabled: Boolean(metricTypeId) || Boolean(orgUnitId),
         },
     });
 };
