@@ -1,4 +1,5 @@
 import React, { FC, useMemo } from 'react';
+import ArrowForward from '@mui/icons-material/ArrowForward';
 import {
     Box,
     Button,
@@ -8,7 +9,6 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import ArrowForward from '@mui/icons-material/ArrowForward';
 
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';

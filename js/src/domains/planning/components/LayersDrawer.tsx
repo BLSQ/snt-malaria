@@ -1,9 +1,9 @@
 import React, { FC } from 'react';
 import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined';
 import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
-import { Box, Divider, Drawer, IconButton, Typography } from '@mui/material';
-import { LayerConfigBlock } from './layers/LayerConfigBlock';
+import { Box, Divider, Drawer, IconButton } from '@mui/material';
 import { MetricType } from '../types/metrics';
+import { LayerConfigBlock } from './layers/LayerConfigBlock';
 
 type Props = {
     toggleDrawer: () => void;
@@ -24,14 +24,13 @@ export const LayersDrawer: FC<Props> = ({
         <Drawer
             anchor="left"
             open={isDrawerOpen}
-
             PaperProps={{
                 sx: {
                     borderRadius: theme => theme.spacing(2),
                     height: '75vh',
                     top: '10vh',
                     marginLeft: '25px',
-                }
+                },
             }}
             // onClose={toggleDrawer} // Close by clicking outside, not sure if we want this
         >
