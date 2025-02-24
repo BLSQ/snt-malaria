@@ -72,7 +72,7 @@ export const Planning: FC = () => {
                 displayMetricOnMap={displayMetricOnMap}
             />
             <PageContainer>
-                <ScenarioTopBar scenario={scenario} />
+                {scenario && <ScenarioTopBar scenario={scenario} />}
                 <Grid container spacing={2}>
                     <Grid item xs={12} md={7}>
                         <PaperContainer>

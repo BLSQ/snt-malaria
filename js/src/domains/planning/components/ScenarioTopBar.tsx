@@ -1,11 +1,13 @@
-import React, { FC } from 'react';
-import { Box, Typography, IconButton, Theme } from '@mui/material';
+import React, { FC, useState } from 'react';
+import { Box, Typography, IconButton, Theme, TextField } from '@mui/material';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import ContentPasteGoOutlinedIcon from '@mui/icons-material/ContentPasteGoOutlined';
 import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 
 import { SxStyles } from 'Iaso/types/general';
+import { useUpdateScenario } from '../../scenarios/hooks/useGetScenarios';
+import { useQueryClient } from 'react-query';
 
 const styles: SxStyles = {
     content: (theme: Theme) => ({
@@ -28,7 +30,6 @@ const styles: SxStyles = {
         transition: 'opacity 0.3s',
     },
     actionBtns: {
-        alignSelf: 'flex-end',
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
@@ -41,27 +42,86 @@ const styles: SxStyles = {
         alignItems: 'center',
         marginLeft: theme.spacing(2),
     }),
+    savingStatus: (theme: Theme) => ({
+        color: theme.palette.text.secondary,
+    }),
     icon: {
         marginRight: '0.5rem',
     },
 };
 
 type Props = {
-    scenario?: Scenario;
+    scenario: Scenario;
 };
 
 export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [tempName, setTempName] = useState(scenario.name);
+
+    const { mutateAsync: updateScenario, isLoading } = useUpdateScenario();
+
+    const handleEditClick = () => {
+        setTempName(scenario.name);
+        setIsEditing(true);
+    };
+
+    const handleInputChange = event => {
+        setTempName(event.target.value);
+    };
+
+    const handleInputBlur = () => {
+        handleSubmit();
+    };
+
+    const handleInputKeyPress = event => {
+        if (event.key === 'Enter') {
+            handleSubmit();
+        }
+    };
+
+    const handleSubmit = () => {
+        if (tempName.trim() !== '') {
+            updateScenario({ ...scenario, name: tempName });
+            setIsEditing(false);
+        } else {
+            setIsEditing(false);
+        }
+    };
+
     if (scenario) {
         return (
             <Box sx={styles.content}>
                 <Box sx={styles.nameContainer}>
-                    <Typography variant="h6">{scenario.name}</Typography>
-                    <IconButton className="editButton" sx={styles.editNameBtn}>
-                        <EditOutlinedIcon />
-                    </IconButton>
+                    {isEditing ? (
+                        <TextField
+                            value={tempName}
+                            onChange={handleInputChange}
+                            onBlur={handleInputBlur}
+                            onKeyPress={handleInputKeyPress}
+                            autoFocus
+                            size="small"
+                            variant="outlined"
+                        />
+                    ) : (
+                        <>
+                            <Typography variant="h6">
+                                {scenario.name}
+                            </Typography>
+                            <IconButton
+                                className="editButton"
+                                sx={styles.editNameBtn}
+                                onClick={handleEditClick}
+                            >
+                                <EditOutlinedIcon />
+                            </IconButton>
+                        </>
+                    )}
                 </Box>
                 <Box sx={styles.actionBtns}>
-                    <Typography variant="body2" sx={styles.actionBtn}>
+                    <Typography
+                        variant="body2"
+                        sx={[styles.actionBtn, styles.savingStatus]}
+                    >
                         <CheckCircleOutlinedIcon sx={styles.icon} />
                         Saved
                     </Typography>
