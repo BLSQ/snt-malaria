@@ -3,7 +3,7 @@ from .models import Intervention, InterventionAssignment, Scenario, Intervention
 
 
 @admin.register(InterventionCategory)
-class InterventionFamilyAdmin(admin.ModelAdmin):
+class InterventionCategoryAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "account",

@@ -1,8 +1,8 @@
 from rest_framework import routers
-from plugins.snt_malaria.api.intervention.views import InterventionViewSet
-from plugins.snt_malaria.api.interventionCategory.views import (
-    InterventionCategoryViewSet,
-)
+
+from .intervention.views import InterventionViewSet
+from .interventionCategory.views import InterventionCategoryViewSet
+from .scenarios.views import ScenarioViewSet
 
 router = routers.SimpleRouter()
 router.register(
@@ -15,3 +15,4 @@ router.register(
     InterventionViewSet,
     basename="intervention",
 )
+router.register(r"snt_malaria/scenarios", ScenarioViewSet, basename="scenario")
