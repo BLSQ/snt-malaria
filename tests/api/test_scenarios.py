@@ -20,7 +20,7 @@ class ScenarioAPITestCase(APITestCase):
             description="A test scenario description.",
         )
 
-        # Create intervention families
+        # Create intervention categories
         cls.int_category_vaccination = InterventionCategory.objects.create(
             name="Vaccination",
             account=cls.account,
