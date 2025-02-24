@@ -24,6 +24,15 @@ export const LayersDrawer: FC<Props> = ({
         <Drawer
             anchor="left"
             open={isDrawerOpen}
+
+            PaperProps={{
+                sx: {
+                    borderRadius: theme => theme.spacing(2),
+                    height: '75vh',
+                    top: '10vh',
+                    marginLeft: '25px',
+                }
+            }}
             // onClose={toggleDrawer} // Close by clicking outside, not sure if we want this
         >
             <Box

@@ -166,8 +166,8 @@ export const Map: FC<Props> = ({
                             </GeoJSON>
                         ))}
                         <MapLegend
-                            title={displayedMetric.name}
-                            threshold={displayedMetric.legend_threshold}
+                            title={displayedMetric?.name}
+                            threshold={displayedMetric?.legend_threshold}
                         />
                     </MapContainer>
                     {selectedOrgUnit && (
