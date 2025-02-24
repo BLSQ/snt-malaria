@@ -44,6 +44,7 @@ const styles: SxStyles = {
         display: 'flex',
         justifyContent: 'space-between',
         width: '100%',
+        gap: '2rem',
     },
     metricValue: {
         color: 'white',
@@ -116,7 +117,9 @@ export const MapOrgUnitDetails: FC<Props> = ({
                                             variant="caption"
                                             sx={styles.metricValue}
                                         >
-                                            {metricValue.value}
+                                            {Intl.NumberFormat().format(
+                                                metricValue.value,
+                                            )}
                                         </Typography>
                                     </Box>
                                 </ListItem>
