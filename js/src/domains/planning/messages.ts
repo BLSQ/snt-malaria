@@ -37,4 +37,9 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.interventionMix.mixConflicts',
         defaultMessage: 'Mix conflicts',
     },
+    applyMixMessage: {
+        id: 'iaso.snt_malaria.label.interventionMix.applyMixMessage',
+        defaultMessage:
+            'You’re about to apply intervention mix to districts that already have been applied a mix. Please review the ones to override.',
+    },
 });
