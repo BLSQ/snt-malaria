@@ -17,6 +17,7 @@ export const InterventionCategories: FC = () => {
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: number | null;
     }>({});
+    const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(false);
 
     const {
         data: interventionCategories,
@@ -25,6 +26,7 @@ export const InterventionCategories: FC = () => {
 
     const handleSelectIntervention = useCallback(
         (categoryId: number, interventionId: number) => {
+            setIsButtonDisabled(false);
             setSelectedInterventions(prev => ({
                 ...prev,
                 [categoryId]:
@@ -51,9 +53,10 @@ export const InterventionCategories: FC = () => {
 
     const handleAssignmentCreation = () => {
         if (selectedInterventionValues.length > 0) {
+            setIsButtonDisabled(true);
             createInterventionAssignment({
                 intervention_ids: selectedInterventionValues,
-                org_unit_ids: [118, 124],
+                org_unit_ids: [119, 128],
                 scenario_id: params.scenarioId,
             });
         }
@@ -114,7 +117,10 @@ export const InterventionCategories: FC = () => {
                         fontSize: '0.875rem',
                         textTransform: 'none',
                     }}
-                    disabled={selectedInterventionValues.length === 0}
+                    disabled={
+                        selectedInterventionValues.length === 0 ||
+                        isButtonDisabled
+                    }
                 >
                     {formatMessage(MESSAGES.applyMixAndAddPlan)}
                 </Button>
