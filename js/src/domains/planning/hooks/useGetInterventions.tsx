@@ -3,11 +3,6 @@ import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
 import { InterventionCategory } from '../types/interventions';
 
-export type DropdownOptions<T> = {
-    label: string;
-    value: T;
-};
-
 export const useGetInterventionCategories = (): UseQueryResult<
     InterventionCategory[],
     Error

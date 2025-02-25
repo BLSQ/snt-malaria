@@ -1,3 +1,4 @@
+from .interventionAssignement.views import InterventionAssignmentViewSet
 from rest_framework import routers
 
 from .intervention.views import InterventionViewSet
@@ -16,3 +17,9 @@ router.register(
     basename="intervention",
 )
 router.register(r"snt_malaria/scenarios", ScenarioViewSet, basename="scenario")
+
+router.register(
+    r"snt_malaria/interventionAssignment",
+    InterventionAssignmentViewSet,
+    basename="interventionAssignment",
+)

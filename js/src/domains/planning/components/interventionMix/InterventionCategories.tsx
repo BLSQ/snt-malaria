@@ -1,9 +1,16 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Button, Divider, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
+import { baseUrls } from '../../../../constants/urls';
+import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
 import { useGetInterventionCategories } from '../../hooks/useGetInterventions';
 import { MESSAGES } from '../../messages';
 import { Interventions } from './Interventions';
+
+type PlanningParams = {
+    scenarioId: number;
+};
 
 export const InterventionCategories: FC = () => {
     const { formatMessage } = useSafeIntl();
@@ -35,6 +42,22 @@ export const InterventionCategories: FC = () => {
         [selectedInterventions],
     );
 
+    const { mutateAsync: createInterventionAssignment } =
+        UseCreateInterventionAssignment();
+
+    const params = useParamsObject(
+        baseUrls.planning,
+    ) as unknown as PlanningParams;
+
+    const handleAssignmentCreation = () => {
+        if (selectedInterventionValues.length > 0) {
+            createInterventionAssignment({
+                intervention_ids: selectedInterventionValues,
+                org_unit_ids: [118, 124],
+                scenario_id: params.scenarioId,
+            });
+        }
+    };
     return (
         <>
             <Grid container direction="row" spacing={2} padding={2}>
@@ -84,9 +107,7 @@ export const InterventionCategories: FC = () => {
                 }}
             >
                 <Button
-                    onClick={() => {
-                        console.log('hello');
-                    }}
+                    onClick={() => handleAssignmentCreation()}
                     variant="contained"
                     color="primary"
                     sx={{
