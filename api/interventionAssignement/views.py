@@ -7,15 +7,16 @@ from rest_framework import viewsets, status
 class InterventionAssignmentViewSet(viewsets.ModelViewSet):
     queryset = InterventionAssignment.objects.all()
     serializer_class = InterventionAssignmentSerializer
+    http_method_names = ["get", "post"]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         # Get validated objects
-        scenario = serializer.validated_data['scenario']
-        org_units = serializer.validated_data['valid_org_units']
-        interventions = serializer.validated_data['valid_interventions']
+        scenario = serializer.validated_data["scenario"]
+        org_units = serializer.validated_data["valid_org_units"]
+        interventions = serializer.validated_data["valid_interventions"]
         created_by = request.user
 
         # Create InterventionAssignment objects
@@ -25,9 +26,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             for intervention in interventions:
                 # Check if the InterventionAssignment already exists
                 existing_assignment = InterventionAssignment.objects.filter(
-                    scenario=scenario,
-                    org_unit=org_unit,
-                    intervention=intervention
+                    scenario=scenario, org_unit=org_unit, intervention=intervention
                 ).exists()
 
                 # Only create and add to the list if it does not exist
@@ -36,7 +35,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
                         scenario=scenario,
                         org_unit=org_unit,
                         intervention=intervention,
-                        created_by=created_by
+                        created_by=created_by,
                     )
                     assignments.append(assignment)
 
@@ -45,5 +44,5 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
 
             return Response(
                 {"message": "intervention assignments created successfully."},
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_201_CREATED,
             )
