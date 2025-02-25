@@ -99,9 +99,10 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(new_scenario.account, self.account)
         self.assertEqual(new_scenario.created_by, self.user)
 
-    def test_scenario_update_name(self):
+    def test_scenario_updat(self):
         url = reverse("scenario-detail", args=[self.scenario.id])
-        response = self.client.patch(url, {"name": "Updated Scenario Name"}, format="json")
+        payload = {"id": self.scenario.id, "name": "Updated Scenario Name"}
+        response = self.client.put(url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.scenario.refresh_from_db()
         self.assertEqual(self.scenario.name, "Updated Scenario Name")
