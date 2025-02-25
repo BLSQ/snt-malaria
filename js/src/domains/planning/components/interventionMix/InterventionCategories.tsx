@@ -16,6 +16,9 @@ type Props = {
 };
 
 export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
+    const params = useParamsObject(
+        baseUrls.planning,
+    ) as unknown as PlanningParams;
     const { formatMessage } = useSafeIntl();
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: number | null;
@@ -27,9 +30,27 @@ export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
         isLoading: isLoadingInterventionCategories,
     } = useGetInterventionCategories();
 
+    const selectedInterventionValues = useMemo(
+        () =>
+            Object.values(selectedInterventions).filter(
+                value => value !== null,
+            ),
+        [selectedInterventions],
+    );
+    const assignIntervention = useMemo(() => {
+        return (
+            selectedInterventionValues.length > 0 &&
+            selectedOrgUnits.length > 0 &&
+            params.scenarioId
+        );
+    }, [
+        params.scenarioId,
+        selectedInterventionValues.length,
+        selectedOrgUnits.length,
+    ]);
+
     const handleSelectIntervention = useCallback(
         (categoryId: number, interventionId: number) => {
-            setIsButtonDisabled(false);
             setSelectedInterventions(prev => ({
                 ...prev,
                 [categoryId]:
@@ -39,23 +60,11 @@ export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
         [],
     );
 
-    const selectedInterventionValues = useMemo(
-        () =>
-            Object.values(selectedInterventions).filter(
-                value => value !== null,
-            ),
-        [selectedInterventions],
-    );
-
     const { mutateAsync: createInterventionAssignment } =
         UseCreateInterventionAssignment();
 
-    const params = useParamsObject(
-        baseUrls.planning,
-    ) as unknown as PlanningParams;
-
     const handleAssignmentCreation = () => {
-        if (selectedInterventionValues.length > 0) {
+        if (assignIntervention) {
             setIsButtonDisabled(true);
             createInterventionAssignment({
                 intervention_ids: selectedInterventionValues,
@@ -120,10 +129,7 @@ export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
                         fontSize: '0.875rem',
                         textTransform: 'none',
                     }}
-                    disabled={
-                        selectedInterventionValues.length === 0 ||
-                        isButtonDisabled
-                    }
+                    disabled={!assignIntervention || isButtonDisabled}
                 >
                     {formatMessage(MESSAGES.applyMixAndAddPlan)}
                 </Button>
