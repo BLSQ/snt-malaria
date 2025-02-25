@@ -1,4 +1,5 @@
 import React, { FC, useMemo } from 'react';
+import ArrowForward from '@mui/icons-material/ArrowForward';
 import {
     Box,
     Button,
@@ -8,7 +9,6 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import ArrowForward from '@mui/icons-material/ArrowForward';
 
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
@@ -44,6 +44,7 @@ const styles: SxStyles = {
         display: 'flex',
         justifyContent: 'space-between',
         width: '100%',
+        gap: '2rem',
     },
     metricValue: {
         color: 'white',
@@ -116,7 +117,9 @@ export const MapOrgUnitDetails: FC<Props> = ({
                                             variant="caption"
                                             sx={styles.metricValue}
                                         >
-                                            {metricValue.value}
+                                            {Intl.NumberFormat().format(
+                                                metricValue.value,
+                                            )}
                                         </Typography>
                                     </Box>
                                 </ListItem>

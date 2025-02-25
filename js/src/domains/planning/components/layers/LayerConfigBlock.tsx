@@ -1,4 +1,6 @@
 import React, { FC, useState } from 'react';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/VisibilityOutlined';
 import {
     Box,
     MenuItem,
@@ -7,13 +9,11 @@ import {
     Typography,
     Theme,
 } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/VisibilityOutlined';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
-import { MetricType } from '../../types/metrics';
 import { MESSAGES } from '../../messages';
+import { MetricType } from '../../types/metrics';
 
 type Props = {
     metricCategory: string;
@@ -100,7 +100,6 @@ export const LayerConfigBlock: FC<Props> = ({
                     {selectedMetric.units}
                 </Typography>
             </Box>
-            <Box></Box>
         </Box>
     );
 };
