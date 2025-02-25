@@ -11,10 +11,12 @@ import {
     Typography,
 } from '@mui/material';
 
+import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 
 import { useGetMetricTypes, useGetMetricValues } from '../hooks/useGetMetrics';
+import { MESSAGES } from '../messages';
 import { MetricType } from '../types/metrics';
 
 type Props = {
@@ -79,6 +81,8 @@ export const MapOrgUnitDetails: FC<Props> = ({
         [selectedOrgUnit.id, selectedOrgUnits],
     );
 
+    const { formatMessage } = useSafeIntl();
+
     return (
         <Box sx={styles.mainBox}>
             <Box sx={styles.buttonsBox}>
@@ -94,7 +98,9 @@ export const MapOrgUnitDetails: FC<Props> = ({
                     }
                     onClick={() => onAddToMix(selectedOrgUnit)}
                 >
-                    {isOrgUnitSelected ? 'Remove from mix' : 'Add to mix'}
+                    {isOrgUnitSelected
+                        ? formatMessage(MESSAGES.removeOrgUnitFromMix)
+                        : formatMessage(MESSAGES.addOrgUnitFromMix)}
                 </Button>
             </Box>
 
