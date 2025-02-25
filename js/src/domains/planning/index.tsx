@@ -40,6 +40,10 @@ export const Planning: FC = () => {
         setIsDrawerOpen(!isDrawerOpen);
     };
 
+    const onSelectOrgUnits = () => {
+        console.log('click!');
+    };
+
     // Metric selection
     // v1: display Incidence by default
     const { data: metricTypes } = useGetMetricTypes();
@@ -82,6 +86,7 @@ export const Planning: FC = () => {
                 metricTypes={metricTypes}
                 displayedMetric={displayedMetric}
                 displayMetricOnMap={displayMetricOnMap}
+                onSelectOrgUnits={onSelectOrgUnits}
             />
             <PageContainer>
                 {scenario && <ScenarioTopBar scenario={scenario} />}
