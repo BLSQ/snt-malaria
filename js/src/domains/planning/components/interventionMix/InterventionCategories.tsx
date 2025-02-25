@@ -11,8 +11,11 @@ import { Interventions } from './Interventions';
 type PlanningParams = {
     scenarioId: number;
 };
+type Props = {
+    selectedOrgUnits: any;
+};
 
-export const InterventionCategories: FC = () => {
+export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
     const { formatMessage } = useSafeIntl();
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: number | null;
@@ -56,7 +59,7 @@ export const InterventionCategories: FC = () => {
             setIsButtonDisabled(true);
             createInterventionAssignment({
                 intervention_ids: selectedInterventionValues,
-                org_unit_ids: [119, 128],
+                org_unit_ids: selectedOrgUnits.map(orgUnit => orgUnit.id),
                 scenario_id: params.scenarioId,
             });
         }

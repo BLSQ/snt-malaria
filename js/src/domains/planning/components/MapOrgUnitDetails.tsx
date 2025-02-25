@@ -1,4 +1,5 @@
 import React, { FC, useMemo } from 'react';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForward from '@mui/icons-material/ArrowForward';
 import {
     Box,
@@ -19,7 +20,8 @@ import { MetricType } from '../types/metrics';
 type Props = {
     selectedOrgUnit: OrgUnit;
     onClear: () => void;
-    onAddToMix: () => void;
+    onAddToMix: (selectedOrgUnit: any) => void;
+    selectedOrgUnits: any[];
 };
 
 const styles: SxStyles = {
@@ -55,6 +57,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
     selectedOrgUnit,
     onClear,
     onAddToMix,
+    selectedOrgUnits,
 }) => {
     const { data: metricTypes } = useGetMetricTypes();
     const flatMetricTypes = useMemo(() => {
@@ -71,6 +74,11 @@ export const MapOrgUnitDetails: FC<Props> = ({
         orgUnitId: selectedOrgUnit.id,
     });
 
+    const isOrgUnitSelected = useMemo(
+        () => selectedOrgUnits.some(unit => unit.id === selectedOrgUnit.id),
+        [selectedOrgUnit.id, selectedOrgUnits],
+    );
+
     return (
         <Box sx={styles.mainBox}>
             <Box sx={styles.buttonsBox}>
@@ -81,10 +89,12 @@ export const MapOrgUnitDetails: FC<Props> = ({
                     variant="contained"
                     color="primary"
                     size="small"
-                    endIcon={<ArrowForward />}
-                    onClick={onAddToMix}
+                    endIcon={
+                        isOrgUnitSelected ? <ArrowBackIcon /> : <ArrowForward />
+                    }
+                    onClick={() => onAddToMix(selectedOrgUnit)}
                 >
-                    Add to mix
+                    {isOrgUnitSelected ? 'Remove from mix' : 'Add to mix'}
                 </Button>
             </Box>
 

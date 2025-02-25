@@ -1,40 +1,43 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import { Grid } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import TopBar from 'Iaso/components/nav/TopBarComponent';
+import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import {
     PaperContainer,
     PaperFullHeight,
     PageContainer,
 } from '../../components/styledComponents';
-import TopBar from 'Iaso/components/nav/TopBarComponent';
-import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 
+import { baseUrls } from '../../constants/urls';
+import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { Budgets } from './components/Budgets';
 import { InterventionsMix } from './components/interventionMix/InterventionsMix';
 import { InterventionsPlans } from './components/InterventionsPlans';
 import { LayersDrawer } from './components/LayersDrawer';
 import { Map } from './components/map';
+import { ScenarioTopBar } from './components/ScenarioTopBar';
 import { useGetMetricTypes, useGetMetricValues } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { MESSAGES } from './messages';
 import { MetricType } from './types/metrics';
-import { baseUrls } from '../../constants/urls';
-import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
-import { ScenarioTopBar } from './components/ScenarioTopBar';
 
 type PlanningParams = {
     scenarioId: number;
 };
-
+type OrgUnit = {
+    id: number;
+    name: string;
+};
 export const Planning: FC = () => {
     const params = useParamsObject(
         baseUrls.planning,
     ) as unknown as PlanningParams;
-
     const { data: scenario } = useGetScenario(params.scenarioId);
     const { data: orgUnits } = useGetOrgUnits();
     const { formatMessage } = useSafeIntl();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [selectedOrgUnits, setSelectedOrgUnits] = useState<OrgUnit[]>([]);
     const toggleDrawer = () => {
         setIsDrawerOpen(!isDrawerOpen);
     };
@@ -61,6 +64,17 @@ export const Planning: FC = () => {
         metricTypeId: displayedMetric?.id || null,
     });
 
+    const onAddOrgUnitToMix = useCallback((orgUnit: OrgUnit | null) => {
+        if (orgUnit) {
+            setSelectedOrgUnits(prev => {
+                if (prev.some(unit => unit.id === orgUnit.id)) {
+                    return prev.filter(unit => unit.id !== orgUnit.id);
+                }
+                return [...prev, orgUnit];
+            });
+        }
+    }, []);
+
     return (
         <>
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
@@ -85,13 +99,17 @@ export const Planning: FC = () => {
                                     displayedMetricValues={
                                         displayedMetricValues
                                     }
+                                    onAddOrgUnitToMix={onAddOrgUnitToMix}
+                                    selectedOrgUnits={selectedOrgUnits}
                                 />
                             </PaperFullHeight>
                         </PaperContainer>
                     </Grid>
                     <Grid item xs={12} md={5}>
                         <PaperContainer>
-                            <InterventionsMix />
+                            <InterventionsMix
+                                selectedOrgUnits={selectedOrgUnits}
+                            />
                             <InterventionsPlans />
                             <Budgets />
                         </PaperContainer>

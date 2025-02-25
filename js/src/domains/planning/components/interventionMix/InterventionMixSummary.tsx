@@ -23,8 +23,10 @@ const badgeStyles = {
         justifyContent: 'center',
     },
 };
-
-export const InterventionMixSummary: FC = () => {
+type Props = {
+    orgUnitCount: number;
+}
+export const InterventionMixSummary: FC<Props> = ({orgUnitCount}) => {
     const { formatMessage } = useSafeIntl();
     return (
         <AccordionSummary
@@ -53,9 +55,10 @@ export const InterventionMixSummary: FC = () => {
                             {formatMessage(MESSAGES.orgUnitDistrict)}
                         </Typography>
                         <Badge
-                            badgeContent={5}
+                            badgeContent={orgUnitCount}
                             sx={badgeStyles}
                             color="primary"
+                            showZero
                         />
                     </Stack>
                 </Grid>
