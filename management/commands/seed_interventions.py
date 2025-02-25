@@ -47,35 +47,31 @@ class Command(BaseCommand):
             },
         }
 
-        account = Account.objects.first()
-        created_by = User.objects.first()
+        for account in Account.objects.all():
+            print(f"Account: {account.name}")
+            print("---------------------------------------------------------")
+            created_by = User.objects.filter(iaso_profile__account=account).first()
 
-        for category_name, data in categories_and_interventions.items():
-            category, created = InterventionCategory.objects.get_or_create(
-                name=category_name,
-                defaults={
-                    # "description": data["description"],
-                    "account": account,
-                    "created_by": created_by,
-                },
-            )
-            if created:
-                self.stdout.write(
-                    self.style.SUCCESS(f"Created category: {category_name}")
-                )
-
-            for intervention_data in data["interventions"]:
-                intervention, created = Intervention.objects.get_or_create(
-                    name=intervention_data["name"],
-                    intervention_category=category,
+            for category_name, data in categories_and_interventions.items():
+                category, created = InterventionCategory.objects.get_or_create(
+                    name=category_name,
+                    account=account,
                     defaults={
-                        "description": intervention_data["description"],
+                        # "description": data["description"],
                         "created_by": created_by,
                     },
                 )
                 if created:
-                    self.stdout.write(
-                        self.style.SUCCESS(
-                            f"\tCreated intervention: {intervention_data['name']}"
-                        )
+                    self.stdout.write(self.style.SUCCESS(f"Created category: {category_name}"))
+
+                for intervention_data in data["interventions"]:
+                    intervention, created = Intervention.objects.get_or_create(
+                        name=intervention_data["name"],
+                        intervention_category=category,
+                        defaults={
+                            "description": intervention_data["description"],
+                            "created_by": created_by,
+                        },
                     )
+                    if created:
+                        self.stdout.write(self.style.SUCCESS(f"\tCreated intervention: {intervention_data['name']}"))

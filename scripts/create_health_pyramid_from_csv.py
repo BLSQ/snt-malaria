@@ -1,4 +1,5 @@
 import csv
+import os
 import requests
 from pprint import pprint
 
@@ -20,11 +21,13 @@ groups_url = SERVER_BASE_URL + "/api/groups/"
 create_org_unit_url = SERVER_BASE_URL + "/api/orgunits/create_org_unit/"
 org_unit_types_url = SERVER_BASE_URL + "/api/v2/orgunittypes/"
 
-AUTH_TOKEN = "XXXXXX"
+AUTH_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoyMDU1ODM4MzY0LCJpYXQiOjE3NDA0NzgzNjQsImp0aSI6ImMwOWJiZTc5ZWQ5MDRhYjY4ZjQ3ZjRhMTA5NTFmZGVjIiwidXNlcl9pZCI6Nn0.P-aKK_mG2gFokohgcF3oXNe-zEp60Fnf7PMlnJQWQVU"
 headers = {"Authorization": "Bearer %s" % AUTH_TOKEN}
 
-SOURCE_ID = 1  # ID of the default source
-CSV_NAME = "BFA_pyramid.csv"
+SOURCE_ID = 2  # ID of the default source
+CSV_NAME = "COD_pyramid.csv"
+current_dir = os.path.dirname(os.path.abspath(__file__))
+CSV_PATH = os.path.join(current_dir, CSV_NAME)
 
 
 def csv_to_dict(filename):
@@ -40,9 +43,7 @@ def get_group_id_by_name(groups, name):
     return None
 
 
-def find_or_create_org_unit(
-    name, org_unit_type_id, parent_id, source_ref=None, group_id=None
-):
+def find_or_create_org_unit(name, org_unit_type_id, parent_id, source_ref=None, group_id=None):
     # search_url = (
     #     orgunits_url
     #     + f'?limit=20&order=id&page=1&searches=[{{"validation_status":"VALID","search":"{name}","source":{SOURCE_ID},"orgUnitTypeId":"{org_unit_type_id}","orgUnitParentId":"{parent_id}"}}]'
@@ -65,8 +66,9 @@ def find_or_create_org_unit(
             "parent_id": parent_id,
             "source_ref": source_ref,
         }
+        print(payload)
         resp = requests.post(create_org_unit_url, headers=headers, json=payload)
-        print(resp)
+        print(resp.json())
         return resp.json()["id"]
     else:
         if result_count > 1:
@@ -76,7 +78,7 @@ def find_or_create_org_unit(
 
 
 # Call the function with your csv file path
-rows = csv_to_dict(CSV_NAME)
+rows = csv_to_dict(CSV_PATH)
 
 
 # Groups
@@ -134,25 +136,24 @@ def dictify(d):
 hierarchy = nested_dict()
 
 # Read CSV and build the hierarchy
-with open(CSV_NAME, newline="") as csvfile:
+with open(CSV_PATH, newline="") as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         # Access each level by its name and ID
         level_1 = (row["PARENT_LEVEL_1_ID"], row["PARENT_LEVEL_1_NAME"])  # Country
-        level_2 = (row["PARENT_LEVEL_2_ID"], row["PARENT_LEVEL_2_NAME"])  # Region
-        level_3 = (row["PARENT_LEVEL_3_ID"], row["PARENT_LEVEL_3_NAME"])  # Province
-        level_4 = (row["PARENT_LEVEL_4_ID"], row["PARENT_LEVEL_4_NAME"])  # District
-        level_5 = (row["PARENT_LEVEL_5_ID"], row["PARENT_LEVEL_5_NAME"])  # Commune
-        level_6 = (
-            row["PARENT_LEVEL_6_ID"],
-            row["PARENT_LEVEL_6_NAME"],
-        )  # Formation sanitaire
-        level_7 = (row["PARENT_LEVEL_7_ID"], row["PARENT_LEVEL_7_NAME"])  # Unknown
+        level_2 = (row["PARENT_LEVEL_2_ID"], row["PARENT_LEVEL_2_NAME"])  # Region / Province
+        level_3 = (row["PARENT_LEVEL_3_ID"], row["PARENT_LEVEL_3_NAME"])  # Province / Zone de santé
+        # level_4 = (row["PARENT_LEVEL_4_ID"], row["PARENT_LEVEL_4_NAME"])  # District
+        # level_5 = (row["PARENT_LEVEL_5_ID"], row["PARENT_LEVEL_5_NAME"])  # Commune
+        # level_6 = (
+        #     row["PARENT_LEVEL_6_ID"],
+        #     row["PARENT_LEVEL_6_NAME"],
+        # )  # Formation sanitaire
+        # level_7 = (row["PARENT_LEVEL_7_ID"], row["PARENT_LEVEL_7_NAME"])  # Unknown
 
         # Insert into hierarchy
-        current_level = hierarchy[level_1][level_2][level_3][level_4][level_5][level_6][
-            level_7
-        ]
+        # current_level = hierarchy[level_1][level_2][level_3][level_4][level_5][level_6][level_7]
+        current_level = hierarchy[level_1][level_2][level_3]
 
 # Convert to regular dictionary
 nested_hierarchy = dictify(hierarchy)
@@ -165,7 +166,7 @@ def process_hierarchy(d, level=1, parent_id=None):
         if not ou_name:
             continue
 
-        print("  " * (level - 1) + f"{ou_name} (ID: {id})")
+        print("  " * (level - 1) + f"{ou_name} (REF: {ou_source_ref})")
         org_unit_id = find_or_create_org_unit(
             name=ou_name,
             org_unit_type_id=ou_types[level]["id"],
@@ -177,60 +178,3 @@ def process_hierarchy(d, level=1, parent_id=None):
 
 
 process_hierarchy(nested_hierarchy)
-
-# pyramid_dict = {}
-# # Turn the file into a pyramid. E.g. for South Sudan:
-# # state
-# #   |- county
-# #       |- payam
-# #           |- CHC-CHP
-# for row in rows:
-#     state = row["State"]
-#     lga = row["LGA"]
-#     ward = row["Ward"]
-#     phc_site = row["PHC/Site"]
-#     group_name = row["partner"]
-
-#     if state in pyramid_dict:
-#         if lga in pyramid_dict[state]:
-#             if ward in pyramid_dict[state][lga]:
-#                 pyramid_dict[state][lga][ward][phc_site] = group_name
-#             else:
-#                 pyramid_dict[state][lga][ward] = {phc_site: group_name}
-#         else:
-#             pyramid_dict[state][lga] = {ward: {phc_site: group_name}}
-#     else:
-#         pyramid_dict[state] = {lga: {ward: {phc_site: group_name}}}
-
-
-# # TODO: Generalize this based on the retrieved OU types
-# for state in pyramid_dict.keys():
-#     print(state, end=" ")
-#     state_id = find_or_create_org_unit(name=state, org_unit_type_id=ou_types["State"], parent_id=COUNTRY_ID)
-
-#     for lga in pyramid_dict[state].keys():
-#         print("\t" + lga, end=" ")
-#         county_id = find_or_create_org_unit(
-#             name=lga,
-#             org_unit_type_id=ou_types["LGA"],
-#             parent_id=state_id,
-#         )
-
-#         for ward in pyramid_dict[state][lga].keys():
-#             print("\t\t" + ward, end=" ")
-#             payam_id = find_or_create_org_unit(
-#                 name=ward,
-#                 org_unit_type_id=ou_types["Ward"],
-#                 parent_id=county_id,
-#             )
-
-#             for phc_site in pyramid_dict[state][lga][ward].keys():
-#                 print("\t\t\t" + phc_site, end=": ")
-#                 group_name = pyramid_dict[state][lga][ward][phc_site]
-#                 print(group_name)
-#                 find_or_create_org_unit(
-#                     name=phc_site,
-#                     org_unit_type_id=ou_types["PHC/Site"],
-#                     parent_id=payam_id,
-#                     group_id=groups[group_name],
-#                 )
