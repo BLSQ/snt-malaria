@@ -2,7 +2,8 @@ import { Paper, Box, AppBar as MuiAppBar } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 export const PaperFullHeight = styled(Paper)(({ theme }) => ({
-    height: `calc(100vh - ${theme.spacing(12)})`,
+    height: `calc(100vh - ${theme.spacing(20)})`,
+    backgroundColor: theme.palette.background.default,
 }));
 
 export const PaperContainer = styled(Box)(({ theme }) => ({

@@ -9,9 +9,9 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.layers',
         defaultMessage: 'Layers',
     },
-    moreThan: {
-        id: 'iaso.snt_malaria.label.layers.moreThan',
-        defaultMessage: 'More than',
+    above: {
+        id: 'iaso.snt_malaria.label.layers.above',
+        defaultMessage: 'Above',
     },
     interventionMixTitle: {
         id: 'iaso.snt_malaria.label.interventionMix',
