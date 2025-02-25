@@ -12,7 +12,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     queryset = Scenario.objects.all()
     serializer_class = ScenarioSerializer
     ordering_fields = ["id", "name"]
-    http_method_names = ["get", "post", "patch"]
+    http_method_names = ["get", "post", "put"]
 
     def get_queryset(self):
         return Scenario.objects.filter(account=self.request.user.iaso_profile.account)
@@ -23,10 +23,10 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     # Override the update method to handle name update via PATCH
-    def partial_update(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         scenario = self.get_object()
 
-        serializer = self.get_serializer(scenario, data=request.data, partial=True)
+        serializer = self.get_serializer(scenario, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
