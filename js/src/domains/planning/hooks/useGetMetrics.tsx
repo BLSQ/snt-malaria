@@ -22,7 +22,6 @@ export const useGetMetricTypes = (): UseQueryResult<MetricType[], Error> => {
                     data,
                     ({ category }) => category,
                 );
-                delete groupedPerCategory['Population'];
                 return groupedPerCategory;
             },
         },

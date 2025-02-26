@@ -83,7 +83,6 @@ export const Planning: FC = () => {
             <LayersDrawer
                 toggleDrawer={toggleDrawer}
                 isDrawerOpen={isDrawerOpen}
-                metricTypes={metricTypes}
                 displayedMetric={displayedMetric}
                 displayMetricOnMap={displayMetricOnMap}
                 onSelectOrgUnits={onSelectOrgUnits}
