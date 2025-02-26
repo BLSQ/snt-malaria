@@ -11,6 +11,4 @@ class InterventionCategoryViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "options"]
 
     def get_queryset(self):
-        return InterventionCategory.objects.filter(
-            account=self.request.user.iaso_profile.account
-        )
+        return InterventionCategory.objects.filter(account=self.request.user.iaso_profile.account)
