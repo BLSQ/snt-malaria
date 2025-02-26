@@ -51,13 +51,16 @@ export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
 
     const handleSelectIntervention = useCallback(
         (categoryId: number, interventionId: number) => {
+            if (assignIntervention) {
+                setIsButtonDisabled(false);
+            }
             setSelectedInterventions(prev => ({
                 ...prev,
                 [categoryId]:
                     prev[categoryId] === interventionId ? null : interventionId,
             }));
         },
-        [],
+        [assignIntervention],
     );
 
     const { mutateAsync: createInterventionAssignment } =
