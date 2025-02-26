@@ -43,19 +43,18 @@ type Props = {
     toggleDrawer: () => void;
     displayedMetric: MetricType | null;
     displayMetricOnMap: (metric: MetricType) => void;
-    onSelectOrgUnits: () => void;
+    onSelectOrgUnits: (metricId: number, filterValue: number) => void;
 };
 
 export const LayersDrawerContents: FC<Props> = ({
     toggleDrawer,
-    // metricTypes,
     displayedMetric,
     displayMetricOnMap,
     onSelectOrgUnits,
 }) => {
     const { data: metricTypes, isLoading } = useGetMetricTypes();
 
-    if (isLoading) {
+    if (isLoading || !metricTypes) {
         return (
             <Box sx={styles.mainBox} role="presentation">
                 <LoadingSpinner fixed={false} padding={40} size={25} />
