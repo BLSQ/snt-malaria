@@ -1,16 +1,16 @@
 import React, { FC } from 'react';
 import { Box, Button, Theme } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import TopBar from 'Iaso/components/nav/TopBarComponent';
+import { SxStyles } from 'Iaso/types/general';
 import {
     ContentsContainer,
     PageContainer,
 } from '../../components/styledComponents';
-import TopBar from 'Iaso/components/nav/TopBarComponent';
 
 import { ScenarioComponent } from './components/ScenarioComponent';
 import { useGetScenarios } from './hooks/useGetScenarios';
 import { MESSAGES } from './messages';
-import { SxStyles } from 'Iaso/types/general';
 
 const styles: SxStyles = {
     buttonsBox: (theme: Theme) => ({

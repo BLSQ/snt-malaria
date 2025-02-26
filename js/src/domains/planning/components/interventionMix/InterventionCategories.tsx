@@ -11,8 +11,14 @@ import { Interventions } from './Interventions';
 type PlanningParams = {
     scenarioId: number;
 };
+type Props = {
+    selectedOrgUnits: any;
+};
 
-export const InterventionCategories: FC = () => {
+export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
+    const params = useParamsObject(
+        baseUrls.planning,
+    ) as unknown as PlanningParams;
     const { formatMessage } = useSafeIntl();
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: number | null;
@@ -24,18 +30,6 @@ export const InterventionCategories: FC = () => {
         isLoading: isLoadingInterventionCategories,
     } = useGetInterventionCategories();
 
-    const handleSelectIntervention = useCallback(
-        (categoryId: number, interventionId: number) => {
-            setIsButtonDisabled(false);
-            setSelectedInterventions(prev => ({
-                ...prev,
-                [categoryId]:
-                    prev[categoryId] === interventionId ? null : interventionId,
-            }));
-        },
-        [],
-    );
-
     const selectedInterventionValues = useMemo(
         () =>
             Object.values(selectedInterventions).filter(
@@ -43,20 +37,41 @@ export const InterventionCategories: FC = () => {
             ),
         [selectedInterventions],
     );
+    const assignIntervention = useMemo(() => {
+        return (
+            selectedInterventionValues.length > 0 &&
+            selectedOrgUnits.length > 0 &&
+            params.scenarioId
+        );
+    }, [
+        params.scenarioId,
+        selectedInterventionValues.length,
+        selectedOrgUnits.length,
+    ]);
+
+    const handleSelectIntervention = useCallback(
+        (categoryId: number, interventionId: number) => {
+            if (assignIntervention) {
+                setIsButtonDisabled(false);
+            }
+            setSelectedInterventions(prev => ({
+                ...prev,
+                [categoryId]:
+                    prev[categoryId] === interventionId ? null : interventionId,
+            }));
+        },
+        [assignIntervention],
+    );
 
     const { mutateAsync: createInterventionAssignment } =
         UseCreateInterventionAssignment();
 
-    const params = useParamsObject(
-        baseUrls.planning,
-    ) as unknown as PlanningParams;
-
     const handleAssignmentCreation = () => {
-        if (selectedInterventionValues.length > 0) {
+        if (assignIntervention) {
             setIsButtonDisabled(true);
             createInterventionAssignment({
                 intervention_ids: selectedInterventionValues,
-                org_unit_ids: [119, 128],
+                org_unit_ids: selectedOrgUnits.map(orgUnit => orgUnit.id),
                 scenario_id: params.scenarioId,
             });
         }
@@ -117,10 +132,7 @@ export const InterventionCategories: FC = () => {
                         fontSize: '0.875rem',
                         textTransform: 'none',
                     }}
-                    disabled={
-                        selectedInterventionValues.length === 0 ||
-                        isButtonDisabled
-                    }
+                    disabled={!assignIntervention || isButtonDisabled}
                 >
                     {formatMessage(MESSAGES.applyMixAndAddPlan)}
                 </Button>

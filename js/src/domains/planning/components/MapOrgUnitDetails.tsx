@@ -1,4 +1,5 @@
 import React, { FC, useMemo } from 'react';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForward from '@mui/icons-material/ArrowForward';
 import {
     Box,
@@ -10,16 +11,19 @@ import {
     Typography,
 } from '@mui/material';
 
+import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 
 import { useGetMetricTypes, useGetMetricValues } from '../hooks/useGetMetrics';
+import { MESSAGES } from '../messages';
 import { MetricType } from '../types/metrics';
 
 type Props = {
     selectedOrgUnit: OrgUnit;
     onClear: () => void;
-    onAddToMix: () => void;
+    onAddToMix: (selectedOrgUnit: any) => void;
+    selectedOrgUnits: any[];
 };
 
 const styles: SxStyles = {
@@ -55,6 +59,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
     selectedOrgUnit,
     onClear,
     onAddToMix,
+    selectedOrgUnits,
 }) => {
     const { data: metricTypes } = useGetMetricTypes();
     const flatMetricTypes = useMemo(() => {
@@ -71,6 +76,13 @@ export const MapOrgUnitDetails: FC<Props> = ({
         orgUnitId: selectedOrgUnit.id,
     });
 
+    const isOrgUnitSelected = useMemo(
+        () => selectedOrgUnits.some(unit => unit.id === selectedOrgUnit.id),
+        [selectedOrgUnit.id, selectedOrgUnits],
+    );
+
+    const { formatMessage } = useSafeIntl();
+
     return (
         <Box sx={styles.mainBox}>
             <Box sx={styles.buttonsBox}>
@@ -81,10 +93,14 @@ export const MapOrgUnitDetails: FC<Props> = ({
                     variant="contained"
                     color="primary"
                     size="small"
-                    endIcon={<ArrowForward />}
-                    onClick={onAddToMix}
+                    endIcon={
+                        isOrgUnitSelected ? <ArrowBackIcon /> : <ArrowForward />
+                    }
+                    onClick={() => onAddToMix(selectedOrgUnit)}
                 >
-                    Add to mix
+                    {isOrgUnitSelected
+                        ? formatMessage(MESSAGES.removeOrgUnitFromMix)
+                        : formatMessage(MESSAGES.addOrgUnitFromMix)}
                 </Button>
             </Box>
 
