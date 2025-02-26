@@ -1,20 +1,18 @@
 import React, { FC, useState } from 'react';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/VisibilityOutlined';
 import {
     Box,
+    Button,
     MenuItem,
     Select,
-    IconButton,
-    Typography,
+    TextField,
     Theme,
-    Button,
+    Typography,
 } from '@mui/material';
 
-import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
-import { MESSAGES } from '../../messages';
 import { MetricType } from '../../types/metrics';
+import { MoreActionsMenu } from './MoreActionsMenu';
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
@@ -39,6 +37,10 @@ const styles: SxStyles = {
     showOnMapIconBtn: (theme: Theme) => ({
         color: theme.palette.primary.main,
     }),
+    filterField: (theme: Theme) => ({
+        marginY: theme.spacing(1),
+        marginRight: theme.spacing(2),
+    }),
     unitText: (theme: Theme) => ({
         color: theme.palette.text.secondary,
         marginTop: theme.spacing(1),
@@ -47,7 +49,6 @@ const styles: SxStyles = {
 };
 
 type Props = {
-    metricCategory: string;
     metrics: MetricType[];
     isDisplayedOnMap: boolean;
     toggleMapDisplay: (metric: MetricType) => void;
@@ -55,18 +56,23 @@ type Props = {
 };
 
 export const LayerConfigBlock: FC<Props> = ({
-    metricCategory,
     metrics,
     isDisplayedOnMap,
     toggleMapDisplay,
     onSelectOrgUnits,
 }) => {
     const [selectedMetric, setSelectedMetric] = useState(metrics[0]);
+
     const handleSelectChange = event => {
         const newMetricType: MetricType = event.target.value;
         setSelectedMetric(newMetricType);
         if (isDisplayedOnMap) {
             toggleMapDisplay(newMetricType);
+        }
+    };
+    const handleDisplayOnMap = () => {
+        if (!isDisplayedOnMap) {
+            toggleMapDisplay(selectedMetric);
         }
     };
 
@@ -84,25 +90,20 @@ export const LayerConfigBlock: FC<Props> = ({
                         </MenuItem>
                     ))}
                 </Select>
-                <IconButton
-                    sx={styles.showOnMapIconBtn}
-                    onClick={() => toggleMapDisplay(selectedMetric)}
-                    aria-label="toggle selection"
-                >
-                    {isDisplayedOnMap ? (
-                        <VisibilityOffIcon />
-                    ) : (
-                        <VisibilityIcon />
+                <Box sx={styles.flex}>
+                    {isDisplayedOnMap && (
+                        <VisibilityIcon sx={styles.showOnMapIconBtn} />
                     )}
-                </IconButton>
+                    <MoreActionsMenu handleDisplayOnMap={handleDisplayOnMap} />
+                </Box>
             </Box>
             <Box sx={styles.flex}>
-                <InputComponent // TODO
-                    keyValue="selectionRule"
-                    type="number"
-                    label={MESSAGES.above}
-                    placeholder="1000"
-                    withMarginTop={false}
+                <TextField
+                    variant="outlined"
+                    label="Above"
+                    placeholder="0-1000"
+                    size="small"
+                    sx={styles.filterField}
                 />
                 <Button variant="text" size="small" onClick={onSelectOrgUnits}>
                     Select
