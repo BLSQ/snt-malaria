@@ -1,7 +1,12 @@
 {
     "iaso.snt_malaria.home.title": "SNT Malaria",
-    "iaso.snt_malaria.label.interventionMix.applyMixAndAddPlan": "Appliquez le mélange et ajoutez-le au plan",
-    "iaso.snt_malaria.label.interventionMix.interventionMixTitle": "Mélange d'interventions",
+    "iaso.snt_malaria.label.interventionMix": "Combinaison d'interventions",
+    "iaso.snt_malaria.label.interventionMix.addOrgUnitFromMix": "Ajouter au mix",
+    "iaso.snt_malaria.label.interventionMix.applyMixAndAddPlan": "Appliquez la combinaison et ajoutez-le au plan",
+    "iaso.snt_malaria.label.interventionMix.applyMixMessage": "Vous êtes sur le point d'appliquer une combinaison d'interventions à des districts où une combinaison a déjà été appliqué. Veuillez vérifier ceux à remplacer.",
+    "iaso.snt_malaria.label.interventionMix.mixConflicts": "Conflits de combinaison",
+    "iaso.snt_malaria.label.interventionMix.overrideMix": "Redéfinir la combinaison",
+    "iaso.snt_malaria.label.interventionMix.removeOrgUnitFromMix": "Retirer du mix ",
     "iaso.snt_malaria.label.layers": "Couches",
     "iaso.snt_malaria.label.orgUnitDistricts": "Districts"
 }

@@ -49,7 +49,8 @@ type Props = {
     toggleDrawer: () => void;
     displayedMetric: MetricType;
     displayedMetricValues?: MetricValue[];
-    onAddOrgUnitToMix: () => void;
+    onAddOrgUnitToMix: (orgUnit: any) => void;
+    selectedOrgUnits: OrgUnit[];
 };
 
 export const Map: FC<Props> = ({
@@ -58,6 +59,7 @@ export const Map: FC<Props> = ({
     displayedMetric,
     displayedMetricValues,
     onAddOrgUnitToMix,
+    selectedOrgUnits,
 }) => {
     const [currentTile, setCurrentTile] = useState<Tile>(tiles.osm);
     const theme = useTheme();
@@ -183,6 +185,7 @@ export const Map: FC<Props> = ({
                             selectedOrgUnit={selectedOrgUnit}
                             onAddToMix={onAddOrgUnitToMix}
                             onClear={onClearOrgUnitSelection}
+                            selectedOrgUnits={selectedOrgUnits}
                         />
                     )}
                 </>

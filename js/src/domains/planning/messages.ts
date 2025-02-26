@@ -14,7 +14,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'More than',
     },
     interventionMixTitle: {
-        id: 'iaso.snt_malaria.label.interventionMix.interventionMixTitle',
+        id: 'iaso.snt_malaria.label.interventionMix',
         defaultMessage: 'Intervention mix',
     },
     orgUnitDistrict: {
@@ -24,5 +24,30 @@ export const MESSAGES = defineMessages({
     applyMixAndAddPlan: {
         id: 'iaso.snt_malaria.label.interventionMix.applyMixAndAddPlan',
         defaultMessage: 'Apply mix and add to plan',
+    },
+    overrideMix: {
+        id: 'iaso.snt_malaria.label.interventionMix.overrideMix',
+        defaultMessage: 'Override mix',
+    },
+    cancel: {
+        defaultMessage: 'Cancel',
+        id: 'iaso.label.cancel',
+    },
+    mixConflicts: {
+        id: 'iaso.snt_malaria.label.interventionMix.mixConflicts',
+        defaultMessage: 'Mix conflicts',
+    },
+    applyMixMessage: {
+        id: 'iaso.snt_malaria.label.interventionMix.applyMixMessage',
+        defaultMessage:
+            'You’re about to apply intervention mix to districts that already have been applied a mix. Please review the ones to override.',
+    },
+    removeOrgUnitFromMix: {
+        id: 'iaso.snt_malaria.label.interventionMix.removeOrgUnitFromMix',
+        defaultMessage: 'Remove from mix',
+    },
+    addOrgUnitFromMix: {
+        id: 'iaso.snt_malaria.label.interventionMix.addOrgUnitFromMix',
+        defaultMessage: 'Add to mix',
     },
 });
