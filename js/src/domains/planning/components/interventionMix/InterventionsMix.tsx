@@ -13,15 +13,17 @@ import {
 // import { ApplyInterventionsMix } from './ApplyInterventionMixModal';
 import { InterventionCategories } from './InterventionCategories';
 import { InterventionMixSummary } from './InterventionMixSummary';
-
-export const InterventionsMix: FC = () => {
+type Props = {
+    selectedOrgUnits: any;
+}
+export const InterventionsMix: FC<Props> = ({selectedOrgUnits}) => {
     // const { formatMessage } = useSafeIntl();
     return (
         <Accordion>
-            <InterventionMixSummary />
+            <InterventionMixSummary orgUnitCount={selectedOrgUnits.length}/>
             <AccordionDetails sx={{ padding: 0 }}>
                 <Divider sx={{ width: '100%' }} />
-                <InterventionCategories />
+                <InterventionCategories selectedOrgUnits={selectedOrgUnits}/>
 
                 {/* <ApplyInterventionsMix iconProps={{}} /> */}
             </AccordionDetails>
