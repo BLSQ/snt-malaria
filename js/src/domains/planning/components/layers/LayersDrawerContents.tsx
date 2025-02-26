@@ -7,6 +7,7 @@ import { LayerConfigBlock } from './LayerConfigBlock';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetMetricTypes } from '../../hooks/useGetMetrics';
 import { LoadingSpinner } from 'bluesquare-components';
+import { LayersTitleWithIcon } from './LayersTitleWithIcon';
 
 const styles: SxStyles = {
     mainBox: { minHeight: 100, width: 350, position: 'relative' },
@@ -65,12 +66,7 @@ export const LayersDrawerContents: FC<Props> = ({
     return (
         <Box sx={styles.mainBox} role="presentation">
             <Box sx={styles.headerBox}>
-                <Box sx={styles.layersIconBox}>
-                    <LayersOutlinedIcon sx={styles.layersIcon} />
-                </Box>
-                <Typography variant="h6" sx={styles.title}>
-                    Layers
-                </Typography>
+                <LayersTitleWithIcon />
                 <IconButton
                     aria-label="close"
                     onClick={toggleDrawer}
