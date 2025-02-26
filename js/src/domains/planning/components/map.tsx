@@ -50,7 +50,7 @@ type Props = {
     displayedMetric: MetricType;
     displayedMetricValues?: MetricValue[];
     onAddOrgUnitToMix: (orgUnit: any) => void;
-    selectedOrgUnits: any[];
+    selectedOrgUnits: OrgUnit[];
 };
 
 export const Map: FC<Props> = ({

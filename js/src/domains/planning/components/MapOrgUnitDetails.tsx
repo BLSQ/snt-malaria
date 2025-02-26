@@ -23,7 +23,7 @@ type Props = {
     selectedOrgUnit: OrgUnit;
     onClear: () => void;
     onAddToMix: (selectedOrgUnit: any) => void;
-    selectedOrgUnits: any[];
+    selectedOrgUnits: OrgUnit[];
 };
 
 const styles: SxStyles = {

@@ -37,7 +37,7 @@ export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
             ),
         [selectedInterventions],
     );
-    const assignIntervention = useMemo(() => {
+    const canApplyInterventions = useMemo(() => {
         return (
             selectedInterventionValues.length > 0 &&
             selectedOrgUnits.length > 0 &&
@@ -51,7 +51,7 @@ export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
 
     const handleSelectIntervention = useCallback(
         (categoryId: number, interventionId: number) => {
-            if (assignIntervention) {
+            if (canApplyInterventions) {
                 setIsButtonDisabled(false);
             }
             setSelectedInterventions(prev => ({
@@ -60,14 +60,14 @@ export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
                     prev[categoryId] === interventionId ? null : interventionId,
             }));
         },
-        [assignIntervention],
+        [canApplyInterventions],
     );
 
     const { mutateAsync: createInterventionAssignment } =
         UseCreateInterventionAssignment();
 
     const handleAssignmentCreation = () => {
-        if (assignIntervention) {
+        if (canApplyInterventions) {
             setIsButtonDisabled(true);
             createInterventionAssignment({
                 intervention_ids: selectedInterventionValues,
@@ -132,7 +132,7 @@ export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
                         fontSize: '0.875rem',
                         textTransform: 'none',
                     }}
-                    disabled={!assignIntervention || isButtonDisabled}
+                    disabled={!canApplyInterventions || isButtonDisabled}
                 >
                     {formatMessage(MESSAGES.applyMixAndAddPlan)}
                 </Button>
