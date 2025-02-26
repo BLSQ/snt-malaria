@@ -37,6 +37,7 @@ const styles: SxStyles = {
         borderRadius: '16px',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
         zIndex: 1000,
+        minWidth: '280px',
     },
     buttonsBox: {
         display: 'flex',
@@ -44,14 +45,26 @@ const styles: SxStyles = {
         alignItems: 'center',
         width: '100%',
     },
-    metricValueBox: {
+    title: {
+        marginTop: '8px',
+        fontSize: '1rem',
+        textTransform: 'none',
+    },
+    listItem: {
         display: 'flex',
         justifyContent: 'space-between',
         width: '100%',
         gap: '2rem',
+        padding: 0,
     },
     metricValue: {
         color: 'white',
+    },
+    button: {
+        color: 'white',
+        fontSize: '0.875rem',
+        fontWeight: 'bold',
+        textTransform: 'none',
     },
 };
 
@@ -86,7 +99,12 @@ export const MapOrgUnitDetails: FC<Props> = ({
     return (
         <Box sx={styles.mainBox}>
             <Box sx={styles.buttonsBox}>
-                <Button variant="text" size="small" onClick={onClear}>
+                <Button
+                    variant="text"
+                    size="small"
+                    sx={styles.button}
+                    onClick={onClear}
+                >
                     Clear
                 </Button>
                 <Button
@@ -97,6 +115,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
                         isOrgUnitSelected ? <ArrowBackIcon /> : <ArrowForward />
                     }
                     onClick={() => onAddToMix(selectedOrgUnit)}
+                    sx={styles.button}
                 >
                     {isOrgUnitSelected
                         ? formatMessage(MESSAGES.removeOrgUnitFromMix)
@@ -104,7 +123,9 @@ export const MapOrgUnitDetails: FC<Props> = ({
                 </Button>
             </Box>
 
-            <h3>{selectedOrgUnit.name}</h3>
+            <Typography variant="h6" sx={styles.title}>
+                {selectedOrgUnit.name}
+            </Typography>
 
             {isLoading && <CircularProgress size={24} />}
             <List>
@@ -123,21 +144,21 @@ export const MapOrgUnitDetails: FC<Props> = ({
                                 }
                                 arrow
                             >
-                                <ListItem key={metricValue.id}>
-                                    <Box sx={styles.metricValueBox}>
-                                        <Typography variant="caption">
-                                            {metricDetails.name ||
-                                                'Unknown Metric'}
-                                        </Typography>
-                                        <Typography
-                                            variant="caption"
-                                            sx={styles.metricValue}
-                                        >
-                                            {Intl.NumberFormat().format(
-                                                metricValue.value,
-                                            )}
-                                        </Typography>
-                                    </Box>
+                                <ListItem
+                                    key={metricValue.id}
+                                    sx={styles.listItem}
+                                >
+                                    <Typography variant="caption">
+                                        {metricDetails.name || 'Unknown Metric'}
+                                    </Typography>
+                                    <Typography
+                                        variant="caption"
+                                        sx={styles.metricValue}
+                                    >
+                                        {Intl.NumberFormat().format(
+                                            metricValue.value,
+                                        )}
+                                    </Typography>
                                 </ListItem>
                             </Tooltip>
                         );
