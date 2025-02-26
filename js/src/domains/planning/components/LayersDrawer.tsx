@@ -22,12 +22,12 @@ export const LayersDrawer: FC<Props> = ({
         <Drawer
             anchor="left"
             open={isDrawerOpen}
-            hideBackdrop={true}
+            variant="persistent"
             PaperProps={{
                 sx: {
                     borderRadius: theme => theme.spacing(2),
                     height: 'auto',
-                    top: '15vh',
+                    top: '144px', // 64 + 16 + 40 + 16
                     marginLeft: '40px', // 16 + 16 + 8
                 },
             }}
