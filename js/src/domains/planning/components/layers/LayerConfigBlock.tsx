@@ -52,7 +52,7 @@ type Props = {
     metrics: MetricType[];
     isDisplayedOnMap: boolean;
     toggleMapDisplay: (metric: MetricType) => void;
-    onSelectOrgUnits: () => void;
+    onSelectOrgUnits: (metricId: number, filterValue: number) => void;
 };
 
 export const LayerConfigBlock: FC<Props> = ({
@@ -63,7 +63,7 @@ export const LayerConfigBlock: FC<Props> = ({
 }) => {
     const [selectedMetric, setSelectedMetric] = useState(metrics[0]);
 
-    const handleSelectChange = event => {
+    const handleSelectMetricChange = event => {
         const newMetricType: MetricType = event.target.value;
         setSelectedMetric(newMetricType);
         if (isDisplayedOnMap) {
@@ -76,12 +76,17 @@ export const LayerConfigBlock: FC<Props> = ({
         }
     };
 
+    const [filterValue, setFilterValue] = useState('');
+    const handleFilterValueChange = event => {
+        setFilterValue(event.target.value);
+    };
+
     return (
         <Box sx={styles.mainBox}>
             <Box sx={styles.flex}>
                 <Select
                     value={selectedMetric}
-                    onChange={handleSelectChange}
+                    onChange={handleSelectMetricChange}
                     sx={styles.metricSelect}
                 >
                     {metrics.map(metric => (
@@ -104,8 +109,22 @@ export const LayerConfigBlock: FC<Props> = ({
                     placeholder="0-1000"
                     size="small"
                     sx={styles.filterField}
+                    value={filterValue}
+                    onChange={handleFilterValueChange}
                 />
-                <Button variant="text" size="small" onClick={onSelectOrgUnits}>
+                <Button
+                    variant="text"
+                    sx={{
+                        fontSize: '0.875rem',
+                        fontWeight: 'bold',
+                        textTransform: 'none',
+                    }}
+                    size="small"
+                    onClick={() =>
+                        onSelectOrgUnits(selectedMetric.id, Number(filterValue))
+                    }
+                    disabled={!filterValue}
+                >
                     Select
                 </Button>
             </Box>

@@ -21,7 +21,8 @@ import { ScenarioTopBar } from './components/ScenarioTopBar';
 import { useGetMetricTypes, useGetMetricValues } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { MESSAGES } from './messages';
-import { MetricType } from './types/metrics';
+import { MetricType, MetricValue } from './types/metrics';
+import { getRequest } from 'Iaso/libs/Api';
 
 type PlanningParams = {
     scenarioId: number;
@@ -38,10 +39,6 @@ export const Planning: FC = () => {
     const [selectedOrgUnits, setSelectedOrgUnits] = useState<OrgUnit[]>([]);
     const toggleDrawer = () => {
         setIsDrawerOpen(!isDrawerOpen);
-    };
-
-    const onSelectOrgUnits = () => {
-        console.log('click!');
     };
 
     // Metric selection
@@ -66,6 +63,8 @@ export const Planning: FC = () => {
         metricTypeId: displayedMetric?.id || null,
     });
 
+    // Adding OUs to the "Intervention mix" section
+    // Manually
     const onAddOrgUnitToMix = useCallback((orgUnit: OrgUnit | null) => {
         if (orgUnit) {
             setSelectedOrgUnits(prev => {
@@ -77,6 +76,44 @@ export const Planning: FC = () => {
         }
     }, []);
 
+    // Automatically based on filter
+    const handleSelectOrgUnits = useCallback(
+        async (metricId: number, filterValue: number) => {
+            // Hardcoded on greater than for v1
+            const jsonFilter = { '>': [{ var: 'value' }, filterValue] };
+            const encodedJsonFilter = encodeURIComponent(
+                JSON.stringify(jsonFilter),
+            );
+            let url = `/api/metricvalues/?metric_type_id=${metricId}&json_filter=${encodedJsonFilter}`;
+            const resp = await getRequest(url);
+            const orgUnitIdsToAdd = resp.map((e: MetricValue) => e.org_unit);
+
+            // Find the org units that have IDs in orgUnitIdsToAdd
+            const orgUnitsToAdd = orgUnits.filter(orgUnit =>
+                orgUnitIdsToAdd.includes(orgUnit.id),
+            );
+
+            // Combine with existing selectedOrgUnits, avoiding duplicates
+            setSelectedOrgUnits(prevSelectedOrgUnits => {
+                // Create a map of existing selected org unit IDs for quick lookup
+                const existingIds = new Set(
+                    prevSelectedOrgUnits.map(orgUnit => orgUnit.id),
+                );
+
+                // Combine the lists, avoiding duplicates
+                const combinedOrgUnits = [
+                    ...prevSelectedOrgUnits,
+                    ...orgUnitsToAdd.filter(
+                        orgUnit => !existingIds.has(orgUnit.id),
+                    ),
+                ];
+
+                return combinedOrgUnits;
+            });
+        },
+        [orgUnits],
+    );
+
     return (
         <>
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
@@ -85,7 +122,7 @@ export const Planning: FC = () => {
                 isDrawerOpen={isDrawerOpen}
                 displayedMetric={displayedMetric}
                 displayMetricOnMap={displayMetricOnMap}
-                onSelectOrgUnits={onSelectOrgUnits}
+                onSelectOrgUnits={handleSelectOrgUnits}
             />
             <PageContainer>
                 {scenario && <ScenarioTopBar scenario={scenario} />}

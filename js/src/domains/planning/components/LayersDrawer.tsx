@@ -8,7 +8,7 @@ type Props = {
     isDrawerOpen: boolean;
     displayedMetric: MetricType | null;
     displayMetricOnMap: (metric: MetricType) => void;
-    onSelectOrgUnits: () => void;
+    onSelectOrgUnits: (metricId: number, filterValue: number) => void;
 };
 
 export const LayersDrawer: FC<Props> = ({
