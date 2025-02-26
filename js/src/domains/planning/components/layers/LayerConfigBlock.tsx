@@ -43,7 +43,6 @@ const styles: SxStyles = {
     }),
     unitText: (theme: Theme) => ({
         color: theme.palette.text.secondary,
-        marginTop: theme.spacing(1),
         marginBottom: theme.spacing(2),
     }),
 };
