@@ -7,6 +7,7 @@ import {
     MapContainer,
     Popup,
     TileLayer,
+    Tooltip,
     ZoomControl,
 } from 'react-leaflet';
 
@@ -159,18 +160,9 @@ export const Map: FC<Props> = ({
                                     click: () => onOrgUnitClick(orgUnit.id),
                                 }}
                             >
-                                {/* Temporary Popup, helpful during development */}
-                                <Popup>
-                                    <div>
-                                        <h3>
-                                            Org Unit: {orgUnit.name}{' '}
-                                            {orgUnit.id}
-                                        </h3>
-                                        <p>
-                                            {getSelectedMetricValue(orgUnit.id)}
-                                        </p>
-                                    </div>
-                                </Popup>
+                                <Tooltip>
+                                    {getSelectedMetricValue(orgUnit.id)}
+                                </Tooltip>
                             </GeoJSON>
                         ))}
                         {displayedMetric && (
