@@ -19,7 +19,7 @@ router.register(
 router.register(r"snt_malaria/scenarios", ScenarioViewSet, basename="scenario")
 
 router.register(
-    r"snt_malaria/interventionAssignment",
+    r"snt_malaria/interventionassignment",
     InterventionAssignmentViewSet,
-    basename="interventionAssignment",
+    basename="interventionassignment",
 )

@@ -1,13 +1,21 @@
 from plugins.snt_malaria.models import InterventionAssignment
-from .serializers import InterventionAssignmentSerializer
+from .serializers import (
+    InterventionAssignmentWriteSerializer,
+    InterventionAssignmentListSerializer,
+)
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 
 
 class InterventionAssignmentViewSet(viewsets.ModelViewSet):
     queryset = InterventionAssignment.objects.all()
-    serializer_class = InterventionAssignmentSerializer
+    serializer_class = InterventionAssignmentWriteSerializer
     http_method_names = ["get", "post"]
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return InterventionAssignmentListSerializer
+        return InterventionAssignmentWriteSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

@@ -6,6 +6,6 @@ import { InterventionAssignment } from '../types/interventions';
 export const UseCreateInterventionAssignment = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: InterventionAssignment) =>
-            postRequest(`/api/snt_malaria/interventionAssignment/`, body),
-        invalidateQueryKey: ['interventionAssignments'],
+            postRequest(`/api/snt_malaria/interventionassignment/`, body),
+        invalidateQueryKey: ['interventionassignments'],
     });

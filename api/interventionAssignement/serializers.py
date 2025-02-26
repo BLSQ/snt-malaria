@@ -7,7 +7,27 @@ from rest_framework import serializers
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 
 
-class InterventionAssignmentSerializer(serializers.ModelSerializer):
+class InterventionAssignmentListSerializer(serializers.ModelSerializer):
+    """For reading InterventionAssignment"""
+
+    intervention = InterventionSerializer(read_only=True)
+
+    class Meta:
+        model = InterventionAssignment
+        fields = [
+            "id",
+            "intervention",
+            "org_unit_id",
+            "created_at",
+            "updated_at",
+            "scenario_id",
+        ]
+        read_only_fields = fields
+
+
+class InterventionAssignmentWriteSerializer(serializers.ModelSerializer):
+    """For creating InterventionAssignment"""
+
     org_unit_ids = serializers.ListField(
         child=serializers.IntegerField(), write_only=True
     )
@@ -15,8 +35,6 @@ class InterventionAssignmentSerializer(serializers.ModelSerializer):
         child=serializers.IntegerField(), write_only=True
     )
     scenario_id = serializers.IntegerField(write_only=True)
-    scenario = ScenarioSerializer(read_only=True)
-    intervention = InterventionSerializer(read_only=True)
 
     class Meta:
         model = InterventionAssignment
@@ -24,15 +42,6 @@ class InterventionAssignmentSerializer(serializers.ModelSerializer):
             "org_unit_ids",
             "intervention_ids",
             "scenario_id",
-            "scenario",
-            "intervention",
-            "org_unit_id",
-        ]
-        read_only_fields = [
-            "id",
-            "org_unit_id",
-            "created_at",
-            "updated_at",
         ]
 
     def validate(self, attrs):
@@ -53,7 +62,7 @@ class InterventionAssignmentSerializer(serializers.ModelSerializer):
         )
         if missing_org_units:
             raise serializers.ValidationError(
-                {"orgunit_ids": f"Invalid org_unit IDs: {missing_org_units}"}
+                {"org_unit_ids": f"Invalid org_unit IDs: {missing_org_units}"}
             )
 
         # Check the existance of selected interventions
