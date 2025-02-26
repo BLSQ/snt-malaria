@@ -98,7 +98,6 @@ export const LayersDrawer: FC<Props> = ({
                         <Box key={metricCategory}>
                             <Box>
                                 <LayerConfigBlock
-                                    metricCategory={metricCategory}
                                     metrics={metricTypes[metricCategory]}
                                     isDisplayedOnMap={
                                         displayedMetric?.category ===
