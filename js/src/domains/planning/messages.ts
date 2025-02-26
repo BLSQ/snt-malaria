@@ -50,4 +50,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.interventionMix.addOrgUnitFromMix',
         defaultMessage: 'Add to mix',
     },
+    interventionPlanTitle: {
+        id: 'iaso.snt_malaria.label.interventionPlanTitle',
+        defaultMessage: 'Intervention plan',
+    },
 });

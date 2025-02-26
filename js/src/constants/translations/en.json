@@ -7,6 +7,7 @@
     "iaso.snt_malaria.label.interventionMix.mixConflicts": "Mix conflicts",
     "iaso.snt_malaria.label.interventionMix.overrideMix": "Override mix",
     "iaso.snt_malaria.label.interventionMix.removeOrgUnitFromMix": "Remove from mix",
+    "iaso.snt_malaria.label.interventionPlanTitle": "Intervention plan",
     "iaso.snt_malaria.label.layers": "Layers",
     "iaso.snt_malaria.label.orgUnitDistricts": "Districts"
 }

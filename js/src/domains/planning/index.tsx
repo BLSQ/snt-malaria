@@ -2,6 +2,7 @@ import React, { FC, useCallback, useEffect, useState } from 'react';
 import { Grid } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import {
     PaperContainer,
@@ -13,7 +14,7 @@ import { baseUrls } from '../../constants/urls';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { Budgets } from './components/Budgets';
 import { InterventionsMix } from './components/interventionMix/InterventionsMix';
-import { InterventionsPlans } from './components/InterventionsPlans';
+import { InterventionsPlans } from './components/interventionPlan/InterventionsPlans';
 import { LayersDrawer } from './components/LayersDrawer';
 import { Map } from './components/map';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
@@ -25,10 +26,7 @@ import { MetricType } from './types/metrics';
 type PlanningParams = {
     scenarioId: number;
 };
-type OrgUnit = {
-    id: number;
-    name: string;
-};
+
 export const Planning: FC = () => {
     const params = useParamsObject(
         baseUrls.planning,
@@ -110,7 +108,9 @@ export const Planning: FC = () => {
                             <InterventionsMix
                                 selectedOrgUnits={selectedOrgUnits}
                             />
-                            <InterventionsPlans />
+                            <InterventionsPlans
+                                selectedOrgUnits={selectedOrgUnits}
+                            />
                             <Budgets />
                         </PaperContainer>
                     </Grid>
