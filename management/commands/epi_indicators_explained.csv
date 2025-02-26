@@ -1,10 +1,10 @@
-epi_indicator,description,source,units,comments,category
+epi_indicator,description,source,units,comments,category,unit_symbol
 "Crude incidence","Incidence (not adjusted) - Crude incidence rate per 1,000 population based on the total cases reported in the public sector. ”Crude”, as no adjustments applied.",Routine DHIS2,Number of cases per 1000 people,,Incidence
 "Adjusted incidence 1","Incidence (adjusted 1st level) - crude incidence, adjusted by accounting for presumed cases (includes both confirmed and presumed cases)",Routine DHIS2,Number of cases per 1000 people,,Incidence
 "Adjusted incidence 2",Incidence (adjusted 2nd level) - Incidence adjusted for presumed cases and reporting rate (RR),Routine DHIS2,Number of cases per 1000 people,,Incidence
 "Adjusted incidence 3","Incidence (adjusted 3rd level) - Incidence adjusted for presumed cases, reporting rate (RR), and TSR (care-seeking behaviour) ","Routine DHIS2, DHS",Number of cases per 1000 people,,Incidence
-PFPR_U5_MAP,Prevalence - Plasmodium falciparum parasite rate (PfPR) on under 5 years old (u5). ,MAP,Percentage (0 - 100),,Prevalence
-PFPR_U5_MIS,Prevalence - Plasmodium falciparum parasite rate (PfPR) on under 5 years old (u5). ,MIS,Percentage (0 - 100),,Prevalence
+PFPR_U5_MAP,Prevalence - Plasmodium falciparum parasite rate (PfPR) on under 5 years old (u5). ,MAP,Percentage (0 - 100),,Prevalence,%
+PFPR_U5_MIS,Prevalence - Plasmodium falciparum parasite rate (PfPR) on under 5 years old (u5). ,MIS,Percentage (0 - 100),,Prevalence,%
 U5_MORTALITY,Mortality all causes among under 5 years old.,Not clear from code ... -.-,Mean rate over 1000 live births ??? ,"No info about this, but data range is 6.5 - 16.09",Mortality
 U5_DEATHS_MEAN,Mortality all causes among under 5 years old.,Not clear from code ... -.-,Mean count,Not sure mean over which period (mean of monthly or yearly values?),Mortality
 U5_MORTALITY_MIS,Mortality all causes among under 5 years old.,MIS,Mean rate over 1000 live births ??? ,"Again, not sure as no info about this, but data range is 39 -- 112",Mortality

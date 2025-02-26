@@ -4,6 +4,7 @@ export type MetricType = {
     description: string;
     source: string;
     units: string;
+    unit_symbol: string;
     comments: string;
     category: string;
     legend_threshold: ScaleThreshold;
