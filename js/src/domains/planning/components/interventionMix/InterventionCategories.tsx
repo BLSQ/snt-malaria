@@ -1,24 +1,21 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Button, Divider, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
-import { baseUrls } from '../../../../constants/urls';
+import { useQueryClient } from 'react-query';
 import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
 import { useGetInterventionCategories } from '../../hooks/useGetInterventions';
 import { MESSAGES } from '../../messages';
 import { Interventions } from './Interventions';
 
-type PlanningParams = {
-    scenarioId: number;
-};
 type Props = {
+    scenarioId: number | undefined;
     selectedOrgUnits: any;
 };
 
-export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
-    const params = useParamsObject(
-        baseUrls.planning,
-    ) as unknown as PlanningParams;
+export const InterventionCategories: FC<Props> = ({
+    scenarioId,
+    selectedOrgUnits,
+}) => {
     const { formatMessage } = useSafeIntl();
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: number | null;
@@ -41,10 +38,10 @@ export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
         return (
             selectedInterventionValues.length > 0 &&
             selectedOrgUnits.length > 0 &&
-            params.scenarioId
+            scenarioId
         );
     }, [
-        params.scenarioId,
+        scenarioId,
         selectedInterventionValues.length,
         selectedOrgUnits.length,
     ]);
@@ -66,14 +63,18 @@ export const InterventionCategories: FC<Props> = ({ selectedOrgUnits }) => {
     const { mutateAsync: createInterventionAssignment } =
         UseCreateInterventionAssignment();
 
-    const handleAssignmentCreation = () => {
+    const queryClient = useQueryClient();
+    const handleAssignmentCreation = async () => {
         if (canApplyInterventions) {
             setIsButtonDisabled(true);
-            createInterventionAssignment({
+
+            await createInterventionAssignment({
                 intervention_ids: selectedInterventionValues,
                 org_unit_ids: selectedOrgUnits.map(orgUnit => orgUnit.id),
-                scenario_id: params.scenarioId,
+                scenario_id: scenarioId,
             });
+
+            queryClient.invalidateQueries(['interventionPlans']);
         }
     };
     return (

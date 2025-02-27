@@ -16,3 +16,9 @@ export type InterventionAssignment = {
     intervention_ids: number[];
     scenario_id: number;
 };
+
+export type InterventionPlan = {
+    id: number;
+    name: string;
+    interventions: Intervention[];
+};

@@ -57,13 +57,14 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
                     )
                     assignments.append(assignment)
 
-            # Bulk create
+        # Bulk create
+        if assignments:
             InterventionAssignment.objects.bulk_create(assignments)
 
-            return Response(
-                {"message": "intervention assignments created successfully."},
-                status=status.HTTP_201_CREATED,
-            )
+        return Response(
+            {"message": "intervention assignments created successfully."},
+            status=status.HTTP_201_CREATED,
+        )
 
     @action(detail=False, methods=["get"])
     def grouped_by_org_unit(self, request):

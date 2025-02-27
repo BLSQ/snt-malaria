@@ -5,9 +5,9 @@ import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../messages';
 
 type Props = {
-    orgUnitCount: number;
+    orgUnitCount: number | undefined;
 };
-export const InterventionPlanSummary: FC<Props> = ({ orgUnitCount }) => {
+export const InterventionPlanSummary: FC<Props> = ({ orgUnitCount = 0 }) => {
     const { formatMessage } = useSafeIntl();
     return (
         <AccordionSummary
@@ -33,7 +33,7 @@ export const InterventionPlanSummary: FC<Props> = ({ orgUnitCount }) => {
                 <Grid item sx={{ mr: 5 }}>
                     <Stack
                         direction="row"
-                        spacing={2}
+                        spacing={1}
                         alignItems="center"
                         sx={{ color: '#1F2B3D99' }}
                     >

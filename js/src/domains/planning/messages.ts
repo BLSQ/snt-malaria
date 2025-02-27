@@ -54,4 +54,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.interventionPlanTitle',
         defaultMessage: 'Intervention plan',
     },
+    noPlanAvailable: {
+        id: 'iaso.snt_malaria.label.noInterventionPlanAvailable',
+        defaultMessage: 'No intervention plan available',
+    },
 });

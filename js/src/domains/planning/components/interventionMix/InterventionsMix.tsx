@@ -16,16 +16,23 @@ import { InterventionCategories } from './InterventionCategories';
 import { InterventionMixSummary } from './InterventionMixSummary';
 
 type Props = {
+    scenarioId: number | undefined;
     selectedOrgUnits: OrgUnit[];
 };
-export const InterventionsMix: FC<Props> = ({ selectedOrgUnits }) => {
+export const InterventionsMix: FC<Props> = ({
+    scenarioId,
+    selectedOrgUnits,
+}) => {
     // const { formatMessage } = useSafeIntl();
     return (
         <Accordion>
             <InterventionMixSummary orgUnitCount={selectedOrgUnits.length} />
             <AccordionDetails sx={{ padding: 0 }}>
                 <Divider sx={{ width: '100%' }} />
-                <InterventionCategories selectedOrgUnits={selectedOrgUnits} />
+                <InterventionCategories
+                    scenarioId={scenarioId}
+                    selectedOrgUnits={selectedOrgUnits}
+                />
 
                 {/* <ApplyInterventionsMix iconProps={{}} /> */}
             </AccordionDetails>
