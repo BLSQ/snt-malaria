@@ -6,9 +6,9 @@ from django.core.management.base import BaseCommand
 
 from iaso.models import MetricType, MetricValue, OrgUnit
 
-ACCOUNT_ID = 1
-DATA_CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "BFA_epi_indicators_pop.csv")
-METADATA_CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "epi_indicators_explained.csv")
+BURKINA_ACCOUNT_ID = 1
+METADATA_CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "burkina_faso/metric_types.csv")
+DATA_CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "burkina_faso/metric_values.csv")
 
 
 class Command(BaseCommand):
@@ -19,57 +19,36 @@ class Command(BaseCommand):
         MetricValue.objects.all().delete()
         MetricType.objects.all().delete()
 
-        print("Reading metadata file")
-        metadata = {}
+        print("Creating MetricTypes from metric_types.csv file...")
+        metric_types = {}
         with open(METADATA_CSV_FILE_PATH, newline="", encoding="utf-8") as metafile:
             metareader = csv.DictReader(metafile)
             for row in metareader:
-                metric_name = row["epi_indicator"]
-                print(f"\tMetric: {metric_name}")
-                metadata[metric_name] = {
-                    "description": row["description"],
-                    "source": row["source"],
-                    "units": row["units"],
-                    "comments": row["comments"],
-                    "category": row["category"],
-                }
+                metric_type = MetricType.objects.create(
+                    account_id=BURKINA_ACCOUNT_ID,
+                    name=row["label"],
+                    code=row["column_name"],
+                    description=row["description"],
+                    source=row["source"],
+                    units=row["units"],
+                    comments=row["comments"],
+                    category=row["category"],
+                    unit_symbol=row["unit_symbol"],
+                    legend_threshold=self.get_legend_thresholds_for_metric_category(row["category"]),
+                )
+                self.stdout.write(self.style.SUCCESS(f"Created metric: {metric_type.name}"))
+                metric_types[metric_type.code] = metric_type
 
-        print("Reading data file")
+        print("Done.")
+
+        print("Reading values from metric_values.csv file...")
         with open(DATA_CSV_FILE_PATH, newline="", encoding="utf-8") as csvfile:
             csvreader = csv.DictReader(csvfile)
-            # Get column names from the CSV file
-            columns = csvreader.fieldnames
 
-            # Start a database transaction
             with transaction.atomic():
-                # Create or update MetricType instances for each column
-                # (except ADM1, ADM2, ADM1_ID, and ADM2_ID)
-                metric_types = {}
-                for column in columns:
-                    if column not in ["ADM1", "ADM2", "ADM1_ID", "ADM2_ID"]:
-                        # Get metadata for this metric type if available
-                        meta = metadata.get(column, {})
-
-                        metric_type, created = MetricType.objects.get_or_create(
-                            account_id=ACCOUNT_ID,
-                            name=column,
-                            defaults={
-                                "description": meta.get("description", ""),
-                                "source": meta.get("source", ""),
-                                "units": meta.get("units", ""),
-                                "comments": meta.get("comments", ""),
-                                "category": meta.get("category", ""),
-                                "legend_threshold": self.get_legend_thresholds_for_metric_category(
-                                    meta.get("category")
-                                ),
-                            },
-                        )
-                        metric_types[column] = metric_type
-
-                # Loop through each row in the CSV file
                 for row in csvreader:
-                    # Get the OrgUnit by source_ref using ADM2_ID
                     try:
+                        # Get the OrgUnit by source_ref using ADM2_ID
                         org_unit = OrgUnit.objects.get(source_ref=row["ADM2_ID"])
                     except OrgUnit.DoesNotExist:
                         print(f"OrgUnit not found for source_ref: {row['ADM2_ID']}")
@@ -85,9 +64,12 @@ class Command(BaseCommand):
                             continue
 
                         # Create the MetricValue
-                        MetricValue.objects.create(metric_type=metric_type, org_unit=org_unit, value=value)
-
-        print("Data import complete.")
+                        MetricValue.objects.create(
+                            metric_type=metric_type,
+                            org_unit=org_unit,
+                            value=value,
+                        )
+        print("Done.")
 
     def get_legend_thresholds_for_metric_category(self, category):
         if category == "Incidence":
