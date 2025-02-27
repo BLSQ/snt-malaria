@@ -10,13 +10,23 @@ import { LoadingSpinner } from 'bluesquare-components';
 import { LayersTitleWithIcon } from './LayersTitleWithIcon';
 
 const styles: SxStyles = {
-    mainBox: { minHeight: 100, width: 350, position: 'relative' },
+    mainBox: {
+        minHeight: 100,
+        minWidth: 350,
+        position: 'relative',
+    },
     headerBox: (theme: Theme) => ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         margin: theme.spacing(1),
     }),
+    metricsBox: {
+        maxHeight: '600px',
+        overflowY: 'scroll',
+        scrollbarWidth: 'thin',
+        width: 'fit-content',
+    },
     layersIconBox: (theme: Theme) => ({
         marginRight: theme.spacing(1),
         backgroundColor: '#EDE7F6',
@@ -76,23 +86,26 @@ export const LayersDrawerContents: FC<Props> = ({
                 </IconButton>
             </Box>
             <Divider />
-            {Object.keys(metricTypes).map(metricCategory => {
-                if (metricCategory !== 'Population') {
-                    return (
-                        <Box key={metricCategory}>
-                            <LayerConfigBlock
-                                metrics={metricTypes[metricCategory]}
-                                isDisplayedOnMap={
-                                    displayedMetric?.category === metricCategory
-                                }
-                                toggleMapDisplay={displayMetricOnMap}
-                                onSelectOrgUnits={onSelectOrgUnits}
-                            />
-                            <Divider />
-                        </Box>
-                    );
-                }
-            })}
+            <Box sx={styles.metricsBox}>
+                {Object.keys(metricTypes).map(metricCategory => {
+                    if (metricCategory !== 'Population') {
+                        return (
+                            <Box key={metricCategory}>
+                                <LayerConfigBlock
+                                    metrics={metricTypes[metricCategory]}
+                                    isDisplayedOnMap={
+                                        displayedMetric?.category ===
+                                        metricCategory
+                                    }
+                                    toggleMapDisplay={displayMetricOnMap}
+                                    onSelectOrgUnits={onSelectOrgUnits}
+                                />
+                                <Divider />
+                            </Box>
+                        );
+                    }
+                })}
+            </Box>
         </Box>
     );
 };
