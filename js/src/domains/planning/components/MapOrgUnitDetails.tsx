@@ -20,9 +20,9 @@ import { MESSAGES } from '../messages';
 import { MetricType } from '../types/metrics';
 
 type Props = {
-    selectedOrgUnit: OrgUnit;
+    clickedOrgUnit: OrgUnit;
     onClear: () => void;
-    onAddToMix: (selectedOrgUnit: any) => void;
+    onAddRemoveOrgUnitToMix: (selectedOrgUnit: any) => void;
     selectedOrgUnits: OrgUnit[];
 };
 
@@ -69,9 +69,9 @@ const styles: SxStyles = {
 };
 
 export const MapOrgUnitDetails: FC<Props> = ({
-    selectedOrgUnit,
+    clickedOrgUnit,
     onClear,
-    onAddToMix,
+    onAddRemoveOrgUnitToMix,
     selectedOrgUnits,
 }) => {
     const { data: metricTypes } = useGetMetricTypes();
@@ -86,12 +86,12 @@ export const MapOrgUnitDetails: FC<Props> = ({
     }, [metricTypes]);
 
     const { data: metricValues, isLoading } = useGetMetricValues({
-        orgUnitId: selectedOrgUnit.id,
+        orgUnitId: clickedOrgUnit.id,
     });
 
     const isOrgUnitSelected = useMemo(
-        () => selectedOrgUnits.some(unit => unit.id === selectedOrgUnit.id),
-        [selectedOrgUnit.id, selectedOrgUnits],
+        () => selectedOrgUnits.some(unit => unit.id === clickedOrgUnit.id),
+        [clickedOrgUnit.id, selectedOrgUnits],
     );
 
     const { formatMessage } = useSafeIntl();
@@ -114,7 +114,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
                     endIcon={
                         isOrgUnitSelected ? <ArrowBackIcon /> : <ArrowForward />
                     }
-                    onClick={() => onAddToMix(selectedOrgUnit)}
+                    onClick={() => onAddRemoveOrgUnitToMix(clickedOrgUnit)}
                     sx={styles.button}
                 >
                     {isOrgUnitSelected
@@ -124,7 +124,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
             </Box>
 
             <Typography variant="h6" sx={styles.title}>
-                {selectedOrgUnit.name}
+                {clickedOrgUnit.name}
             </Typography>
 
             {isLoading && <CircularProgress size={24} />}

@@ -63,20 +63,24 @@ export const Planning: FC = () => {
         metricTypeId: displayedMetric?.id || null,
     });
 
-    // Adding OUs to the "Intervention mix" section
-    // Manually
-    const onAddOrgUnitToMix = useCallback((orgUnit: OrgUnit | null) => {
-        if (orgUnit) {
-            setSelectedOrgUnits(prev => {
-                if (prev.some(unit => unit.id === orgUnit.id)) {
-                    return prev.filter(unit => unit.id !== orgUnit.id);
-                }
-                return [...prev, orgUnit];
-            });
-        }
-    }, []);
+    // Manage OU selection from the "Intervention mix" section
+    // Manual add/remove
+    const handleAddRemoveOrgUnitToMix = useCallback(
+        (orgUnit: OrgUnit | null) => {
+            console.log('handleAddRemoveOrgUnitToMix  ');
+            if (orgUnit) {
+                setSelectedOrgUnits(prev => {
+                    if (prev.some(unit => unit.id === orgUnit.id)) {
+                        return prev.filter(unit => unit.id !== orgUnit.id);
+                    }
+                    return [...prev, orgUnit];
+                });
+            }
+        },
+        [],
+    );
 
-    // Automatically based on filter
+    // Automatic add based on filter
     const handleSelectOrgUnits = useCallback(
         async (metricId: number, filterValue: number) => {
             // Hardcoded on greater than for v1
@@ -138,7 +142,9 @@ export const Planning: FC = () => {
                                     displayedMetricValues={
                                         displayedMetricValues
                                     }
-                                    onAddOrgUnitToMix={onAddOrgUnitToMix}
+                                    onAddRemoveOrgUnitToMix={
+                                        handleAddRemoveOrgUnitToMix
+                                    }
                                     selectedOrgUnits={selectedOrgUnits}
                                 />
                             </PaperFullHeight>

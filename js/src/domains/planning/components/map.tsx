@@ -51,7 +51,7 @@ type Props = {
     toggleDrawer: () => void;
     displayedMetric: MetricType;
     displayedMetricValues?: MetricValue[];
-    onAddOrgUnitToMix: (orgUnit: any) => void;
+    onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
     selectedOrgUnits: OrgUnit[];
 };
 
@@ -60,7 +60,7 @@ export const Map: FC<Props> = ({
     toggleDrawer,
     displayedMetric,
     displayedMetricValues,
-    onAddOrgUnitToMix,
+    onAddRemoveOrgUnitToMix,
     selectedOrgUnits,
 }) => {
     const [currentTile, setCurrentTile] = useState<Tile>(tiles.osm);
@@ -98,15 +98,17 @@ export const Map: FC<Props> = ({
     );
 
     // Selecting an org unit on the map
-    const [selectedOrgUnit, setSelectedOrgUnit] = useState<OrgUnit | null>(
-        null,
-    );
+    const [clickedOrgUnit, setClickedOrgUnit] = useState<OrgUnit | null>(null);
     const onOrgUnitClick = (orgUnitId: number) => {
         const orgUnit = orgUnits?.find(ou => ou.id === orgUnitId);
-        setSelectedOrgUnit(orgUnit || null);
+        setClickedOrgUnit(orgUnit || null);
     };
     const onClearOrgUnitSelection = () => {
-        setSelectedOrgUnit(null);
+        setClickedOrgUnit(null);
+    };
+    const onUnclickAndAddRemoveOrgUnitToMix = orgUnit => {
+        onClearOrgUnitSelection();
+        onAddRemoveOrgUnitToMix(orgUnit);
     };
 
     const selectedOrgUnitIds = useMemo(
@@ -117,7 +119,7 @@ export const Map: FC<Props> = ({
         let color: string;
         let weight: number;
 
-        if (orgUnitId === selectedOrgUnit?.id) {
+        if (orgUnitId === clickedOrgUnit?.id) {
             color = theme.palette.secondary.main;
             weight = 4;
         } else if (selectedOrgUnitIds.includes(orgUnitId)) {
@@ -185,10 +187,12 @@ export const Map: FC<Props> = ({
                             <MapLegend metric={displayedMetric} />
                         )}
                     </MapContainer>
-                    {selectedOrgUnit && (
+                    {clickedOrgUnit && (
                         <MapOrgUnitDetails
-                            selectedOrgUnit={selectedOrgUnit}
-                            onAddToMix={onAddOrgUnitToMix}
+                            clickedOrgUnit={clickedOrgUnit}
+                            onAddRemoveOrgUnitToMix={
+                                onUnclickAndAddRemoveOrgUnitToMix
+                            }
                             onClear={onClearOrgUnitSelection}
                             selectedOrgUnits={selectedOrgUnits}
                         />
