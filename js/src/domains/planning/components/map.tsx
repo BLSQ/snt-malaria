@@ -109,6 +109,36 @@ export const Map: FC<Props> = ({
         setSelectedOrgUnit(null);
     };
 
+    const selectedOrgUnitIds = useMemo(
+        () => selectedOrgUnits.map(ou => ou.id),
+        [selectedOrgUnits],
+    );
+    const getStyleForShape = (orgUnitId: number) => {
+        let color: string;
+        let weight: number;
+
+        if (orgUnitId === selectedOrgUnit?.id) {
+            color = theme.palette.secondary.main;
+            weight = 4;
+        } else if (selectedOrgUnitIds.includes(orgUnitId)) {
+            color = theme.palette.primary.main;
+            weight = 3;
+        } else {
+            color = '#546E7A';
+            weight = 1;
+        }
+
+        return {
+            color,
+            weight,
+            fillColor: getLegendColor(
+                getSelectedMetricValue(orgUnitId),
+                orgUnitId,
+            ),
+            fillOpacity: 1,
+        };
+    };
+
     return (
         <Box height="100%" sx={styles.mainBox}>
             <StyledButton
@@ -140,21 +170,7 @@ export const Map: FC<Props> = ({
                         {orgUnits.map(orgUnit => (
                             <GeoJSON
                                 key={orgUnit.id}
-                                style={{
-                                    color:
-                                        orgUnit.id === selectedOrgUnit?.id
-                                            ? theme.palette.primary.main
-                                            : '#546E7A',
-                                    fillColor: getLegendColor(
-                                        getSelectedMetricValue(orgUnit.id),
-                                        orgUnit.id,
-                                    ),
-                                    fillOpacity: 1,
-                                    weight:
-                                        orgUnit.id === selectedOrgUnit?.id
-                                            ? 3
-                                            : 1,
-                                }}
+                                style={getStyleForShape(orgUnit.id)}
                                 data={orgUnit.geo_json as unknown as GeoJson}
                                 eventHandlers={{
                                     click: () => onOrgUnitClick(orgUnit.id),
