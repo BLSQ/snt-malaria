@@ -18,7 +18,11 @@ export const useGetMetricTypes = (): UseQueryResult<MetricType[], Error> => {
             staleTime: 1000 * 60 * 15, // in MS
             cacheTime: 1000 * 60 * 5,
             select: (data: MetricType[]) => {
-                return Object.groupBy(data, ({ category }) => category);
+                const groupedPerCategory = Object.groupBy(
+                    data,
+                    ({ category }) => category,
+                );
+                return groupedPerCategory;
             },
         },
     });

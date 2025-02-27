@@ -21,7 +21,8 @@ import { ScenarioTopBar } from './components/ScenarioTopBar';
 import { useGetMetricTypes, useGetMetricValues } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { MESSAGES } from './messages';
-import { MetricType } from './types/metrics';
+import { MetricType, MetricValue } from './types/metrics';
+import { getRequest } from 'Iaso/libs/Api';
 
 type PlanningParams = {
     scenarioId: number;
@@ -62,16 +63,60 @@ export const Planning: FC = () => {
         metricTypeId: displayedMetric?.id || null,
     });
 
-    const onAddOrgUnitToMix = useCallback((orgUnit: OrgUnit | null) => {
-        if (orgUnit) {
-            setSelectedOrgUnits(prev => {
-                if (prev.some(unit => unit.id === orgUnit.id)) {
-                    return prev.filter(unit => unit.id !== orgUnit.id);
-                }
-                return [...prev, orgUnit];
+    // Manage OU selection from the "Intervention mix" section
+    // Manual add/remove
+    const handleAddRemoveOrgUnitToMix = useCallback(
+        (orgUnit: OrgUnit | null) => {
+            console.log('handleAddRemoveOrgUnitToMix  ');
+            if (orgUnit) {
+                setSelectedOrgUnits(prev => {
+                    if (prev.some(unit => unit.id === orgUnit.id)) {
+                        return prev.filter(unit => unit.id !== orgUnit.id);
+                    }
+                    return [...prev, orgUnit];
+                });
+            }
+        },
+        [],
+    );
+
+    // Automatic add based on filter
+    const handleSelectOrgUnits = useCallback(
+        async (metricId: number, filterValue: number) => {
+            // Hardcoded on greater than for v1
+            const jsonFilter = { '>': [{ var: 'value' }, filterValue] };
+            const encodedJsonFilter = encodeURIComponent(
+                JSON.stringify(jsonFilter),
+            );
+            let url = `/api/metricvalues/?metric_type_id=${metricId}&json_filter=${encodedJsonFilter}`;
+            const resp = await getRequest(url);
+            const orgUnitIdsToAdd = resp.map((e: MetricValue) => e.org_unit);
+
+            // Find the org units that have IDs in orgUnitIdsToAdd
+            const orgUnitsToAdd = orgUnits.filter(orgUnit =>
+                orgUnitIdsToAdd.includes(orgUnit.id),
+            );
+
+            // Combine with existing selectedOrgUnits, avoiding duplicates
+            setSelectedOrgUnits(prevSelectedOrgUnits => {
+                // Create a map of existing selected org unit IDs for quick lookup
+                const existingIds = new Set(
+                    prevSelectedOrgUnits.map(orgUnit => orgUnit.id),
+                );
+
+                // Combine the lists, avoiding duplicates
+                const combinedOrgUnits = [
+                    ...prevSelectedOrgUnits,
+                    ...orgUnitsToAdd.filter(
+                        orgUnit => !existingIds.has(orgUnit.id),
+                    ),
+                ];
+
+                return combinedOrgUnits;
             });
-        }
-    }, []);
+        },
+        [orgUnits],
+    );
 
     return (
         <>
@@ -79,9 +124,9 @@ export const Planning: FC = () => {
             <LayersDrawer
                 toggleDrawer={toggleDrawer}
                 isDrawerOpen={isDrawerOpen}
-                metricTypes={metricTypes}
                 displayedMetric={displayedMetric}
                 displayMetricOnMap={displayMetricOnMap}
+                onSelectOrgUnits={handleSelectOrgUnits}
             />
             <PageContainer>
                 {scenario && <ScenarioTopBar scenario={scenario} />}
@@ -97,7 +142,9 @@ export const Planning: FC = () => {
                                     displayedMetricValues={
                                         displayedMetricValues
                                     }
-                                    onAddOrgUnitToMix={onAddOrgUnitToMix}
+                                    onAddRemoveOrgUnitToMix={
+                                        handleAddRemoveOrgUnitToMix
+                                    }
                                     selectedOrgUnits={selectedOrgUnits}
                                 />
                             </PaperFullHeight>

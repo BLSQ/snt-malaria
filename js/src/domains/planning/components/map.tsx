@@ -1,12 +1,11 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, useTheme, Button, styled, Theme } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
 import L from 'leaflet';
 import {
     GeoJSON,
     MapContainer,
-    Popup,
     TileLayer,
+    Tooltip,
     ZoomControl,
 } from 'react-leaflet';
 
@@ -17,22 +16,25 @@ import tiles from 'Iaso/constants/mapTiles';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
-import { MESSAGES } from '../messages';
-import { MetricType, MetricValue, ScaleThreshold } from '../types/metrics';
+import { MetricType, MetricValue } from '../types/metrics';
 import { MapLegend } from './MapLegend';
 import { MapOrgUnitDetails } from './MapOrgUnitDetails';
+import { LayersTitleWithIcon } from './layers/LayersTitleWithIcon';
 
 const StyledButton = styled(Button)`
     background-color: white;
     color: ${({ theme }) => theme.palette.text.primary};
+    padding: ${({ theme }) => theme.spacing(1)};
+    border-radius: 12px;
+    line-height: 0;
     position: absolute;
-    top: 16px;
-    left: 16px;
+    top: 8px;
+    left: 8px;
     z-index: 1000;
-    border: 2px solid rgba(0, 0, 0, 0.2);
+    border: 0;
     &:hover {
         background-color: #f5f5f5;
-        border: 2px solid rgba(0, 0, 0, 0.3);
+        border: 0;
     }
 `;
 
@@ -49,7 +51,7 @@ type Props = {
     toggleDrawer: () => void;
     displayedMetric: MetricType;
     displayedMetricValues?: MetricValue[];
-    onAddOrgUnitToMix: (orgUnit: any) => void;
+    onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
     selectedOrgUnits: OrgUnit[];
 };
 
@@ -58,12 +60,11 @@ export const Map: FC<Props> = ({
     toggleDrawer,
     displayedMetric,
     displayedMetricValues,
-    onAddOrgUnitToMix,
+    onAddRemoveOrgUnitToMix,
     selectedOrgUnits,
 }) => {
     const [currentTile, setCurrentTile] = useState<Tile>(tiles.osm);
     const theme = useTheme();
-    const { formatMessage } = useSafeIntl();
     const boundsOptions: Record<string, any> = {
         padding: [10, 10],
         maxZoom: currentTile.maxZoom,
@@ -97,15 +98,47 @@ export const Map: FC<Props> = ({
     );
 
     // Selecting an org unit on the map
-    const [selectedOrgUnit, setSelectedOrgUnit] = useState<OrgUnit | null>(
-        null,
-    );
+    const [clickedOrgUnit, setClickedOrgUnit] = useState<OrgUnit | null>(null);
     const onOrgUnitClick = (orgUnitId: number) => {
         const orgUnit = orgUnits?.find(ou => ou.id === orgUnitId);
-        setSelectedOrgUnit(orgUnit || null);
+        setClickedOrgUnit(orgUnit || null);
     };
     const onClearOrgUnitSelection = () => {
-        setSelectedOrgUnit(null);
+        setClickedOrgUnit(null);
+    };
+    const onUnclickAndAddRemoveOrgUnitToMix = orgUnit => {
+        onClearOrgUnitSelection();
+        onAddRemoveOrgUnitToMix(orgUnit);
+    };
+
+    const selectedOrgUnitIds = useMemo(
+        () => selectedOrgUnits.map(ou => ou.id),
+        [selectedOrgUnits],
+    );
+    const getStyleForShape = (orgUnitId: number) => {
+        let color: string;
+        let weight: number;
+
+        if (orgUnitId === clickedOrgUnit?.id) {
+            color = theme.palette.secondary.main;
+            weight = 4;
+        } else if (selectedOrgUnitIds.includes(orgUnitId)) {
+            color = theme.palette.primary.main;
+            weight = 3;
+        } else {
+            color = '#546E7A';
+            weight = 1;
+        }
+
+        return {
+            color,
+            weight,
+            fillColor: getLegendColor(
+                getSelectedMetricValue(orgUnitId),
+                orgUnitId,
+            ),
+            fillOpacity: 1,
+        };
     };
 
     return (
@@ -115,7 +148,7 @@ export const Map: FC<Props> = ({
                 size="small"
                 onClick={toggleDrawer}
             >
-                {formatMessage(MESSAGES.layers)}
+                <LayersTitleWithIcon />
             </StyledButton>
             {orgUnits && (
                 <>
@@ -139,51 +172,27 @@ export const Map: FC<Props> = ({
                         {orgUnits.map(orgUnit => (
                             <GeoJSON
                                 key={orgUnit.id}
-                                style={{
-                                    color:
-                                        orgUnit.id === selectedOrgUnit?.id
-                                            ? theme.palette.primary.main
-                                            : '#546E7A',
-                                    fillColor: getLegendColor(
-                                        getSelectedMetricValue(orgUnit.id),
-                                        orgUnit.id,
-                                    ),
-                                    fillOpacity: 1,
-                                    weight:
-                                        orgUnit.id === selectedOrgUnit?.id
-                                            ? 3
-                                            : 1,
-                                }}
+                                style={getStyleForShape(orgUnit.id)}
                                 data={orgUnit.geo_json as unknown as GeoJson}
                                 eventHandlers={{
                                     click: () => onOrgUnitClick(orgUnit.id),
                                 }}
                             >
-                                {/* Temporary Popup, helpful during development */}
-                                <Popup>
-                                    <div>
-                                        <h3>
-                                            Org Unit: {orgUnit.name}{' '}
-                                            {orgUnit.id}
-                                        </h3>
-                                        <p>
-                                            {getSelectedMetricValue(orgUnit.id)}
-                                        </p>
-                                    </div>
-                                </Popup>
+                                <Tooltip>
+                                    {getSelectedMetricValue(orgUnit.id)}
+                                </Tooltip>
                             </GeoJSON>
                         ))}
                         {displayedMetric && (
-                            <MapLegend
-                                title={displayedMetric.name}
-                                threshold={displayedMetric.legend_threshold}
-                            />
+                            <MapLegend metric={displayedMetric} />
                         )}
                     </MapContainer>
-                    {selectedOrgUnit && (
+                    {clickedOrgUnit && (
                         <MapOrgUnitDetails
-                            selectedOrgUnit={selectedOrgUnit}
-                            onAddToMix={onAddOrgUnitToMix}
+                            clickedOrgUnit={clickedOrgUnit}
+                            onAddRemoveOrgUnitToMix={
+                                onUnclickAndAddRemoveOrgUnitToMix
+                            }
                             onClear={onClearOrgUnitSelection}
                             selectedOrgUnits={selectedOrgUnits}
                         />
