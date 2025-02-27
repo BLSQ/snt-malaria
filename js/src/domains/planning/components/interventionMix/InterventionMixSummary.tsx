@@ -9,20 +9,24 @@ import {
     Typography,
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
 
-const badgeStyles = {
-    '& .MuiBadge-badge': {
-        fontSize: '1.20rem',
-        minWidth: '28px',
-        height: '28px',
-        padding: '4px',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+const styles: SxStyles = {
+    badgeStyle: {
+        '& .MuiBadge-badge': {
+            fontSize: '1.20rem',
+            minWidth: '28px',
+            height: '28px',
+            padding: '4px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
     },
 };
+
 type Props = {
     orgUnitCount: number;
 };
@@ -56,7 +60,7 @@ export const InterventionMixSummary: FC<Props> = ({ orgUnitCount }) => {
                         </Typography>
                         <Badge
                             badgeContent={orgUnitCount}
-                            sx={badgeStyles}
+                            sx={styles.badgeStyle}
                             color="primary"
                             showZero
                         />

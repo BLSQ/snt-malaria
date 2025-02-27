@@ -109,10 +109,7 @@ export const Planning: FC = () => {
                                 scenarioId={scenario?.id}
                                 selectedOrgUnits={selectedOrgUnits}
                             />
-                            <InterventionsPlans
-                                scenarioId={scenario?.id}
-                                selectedOrgUnits={selectedOrgUnits}
-                            />
+                            <InterventionsPlans scenarioId={scenario?.id} />
                             <Budgets />
                         </PaperContainer>
                     </Grid>

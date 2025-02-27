@@ -13,14 +13,23 @@ import {
     Typography,
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
 import { MESSAGES } from '../../messages';
 import { InterventionPlanSummary } from './InterventionplanSummary';
 
+const styles: SxStyles = {
+    accordion: {
+        mt: 2,
+        '&:before': {
+            display: 'none',
+        },
+    },
+    tableContainer: { maxHeight: 370, overflowY: 'auto', padding: '10px' },
+};
+
 type Props = {
     scenarioId: number | undefined;
-    selectedOrgUnits: OrgUnit[];
 };
 
 const TableRowWithPlans = ({ row, index }) => {
@@ -61,37 +70,23 @@ const TableRowWithoutPlans = () => {
         </TableRow>
     );
 };
-export const InterventionsPlans: FC<Props> = ({
-    scenarioId,
-    selectedOrgUnits,
-}) => {
-    const enabledPlanFetch = Boolean(scenarioId) && selectedOrgUnits.length > 0;
+export const InterventionsPlans: FC<Props> = ({ scenarioId }) => {
     const { data: interventionPlans, isLoading: isLoadingPlans } =
-        useGetInterventionsPlan(
-            scenarioId,
-            selectedOrgUnits.map(orgUnit => orgUnit.id),
-            enabledPlanFetch,
-        );
+        useGetInterventionsPlan(scenarioId);
 
     return (
-        <Accordion
-            sx={{
-                mt: 2,
-                '&:before': {
-                    display: 'none',
-                },
-            }}
-        >
+        <Accordion sx={styles.accordion}>
             <InterventionPlanSummary orgUnitCount={interventionPlans?.length} />
             <Divider sx={{ width: '100%' }} />
             <AccordionDetails sx={{ padding: 2 }}>
-                <TableContainer component={Paper}>
+                <TableContainer component={Paper} sx={styles.tableContainer}>
                     <Table size="small" aria-label="a dense table">
                         <TableBody>
                             {!isLoadingPlans &&
                             (interventionPlans?.length ?? 0) > 0
                                 ? interventionPlans?.map((row, index) => (
                                     <TableRowWithPlans
+                                          key={row.id}
                                           row={row}
                                           index={index}
                                       />
