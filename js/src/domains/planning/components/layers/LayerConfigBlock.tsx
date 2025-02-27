@@ -18,11 +18,11 @@ const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
         margin: theme.spacing(2),
     }),
-    flex: (theme: Theme) => ({
+    flex: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-    }),
+    },
     metricSelect: {
         typography: 'subtitle2',
         '& .MuiSelect-select': {

@@ -1,7 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import { Paper, Box, Theme, Typography } from '@mui/material';
 
-import { ScaleThreshold } from 'Iaso/components/LegendBuilder/types';
 import { Legend } from 'Iaso/components/LegendBuilder/Legend';
 import { SxStyles } from 'Iaso/types/general';
 import { MetricType } from '../types/metrics';
