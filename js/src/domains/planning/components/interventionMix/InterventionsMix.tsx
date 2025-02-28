@@ -3,6 +3,7 @@ import React, { FC } from 'react';
 import {
     Accordion,
     AccordionDetails,
+    Box,
     // Button,
     Divider,
     // Grid,
@@ -25,17 +26,26 @@ export const InterventionsMix: FC<Props> = ({
 }) => {
     // const { formatMessage } = useSafeIntl();
     return (
-        <Accordion>
-            <InterventionMixSummary orgUnitCount={selectedOrgUnits.length} />
-            <AccordionDetails sx={{ padding: 0 }}>
-                <Divider sx={{ width: '100%' }} />
-                <InterventionCategories
-                    scenarioId={scenarioId}
-                    selectedOrgUnits={selectedOrgUnits}
+        <Box
+            sx={{
+                borderRadius: theme => theme.spacing(2),
+                overflow: 'hidden',
+            }}
+        >
+            <Accordion>
+                <InterventionMixSummary
+                    orgUnitCount={selectedOrgUnits.length}
                 />
+                <AccordionDetails sx={{ padding: 0 }}>
+                    <Divider sx={{ width: '100%' }} />
+                    <InterventionCategories
+                        scenarioId={scenarioId}
+                        selectedOrgUnits={selectedOrgUnits}
+                    />
 
-                {/* <ApplyInterventionsMix iconProps={{}} /> */}
-            </AccordionDetails>
-        </Accordion>
+                    {/* <ApplyInterventionsMix iconProps={{}} /> */}
+                </AccordionDetails>
+            </Accordion>
+        </Box>
     );
 };

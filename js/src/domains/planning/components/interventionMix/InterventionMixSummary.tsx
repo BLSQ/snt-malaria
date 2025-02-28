@@ -4,6 +4,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 import {
     AccordionSummary,
     Badge,
+    Box,
     Grid,
     Stack,
     Typography,
@@ -11,18 +12,20 @@ import {
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
+import { containerBoxStyles } from '../styles';
 
 const styles: SxStyles = {
     badgeStyle: {
         '& .MuiBadge-badge': {
             fontSize: '1.20rem',
-            minWidth: '28px',
-            height: '28px',
+            width: '24px',
+            height: '24px',
             padding: '4px',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            aspectRatio: '1',
         },
     },
 };
@@ -47,13 +50,15 @@ export const InterventionMixSummary: FC<Props> = ({ orgUnitCount }) => {
             >
                 <Grid item sx={{ flexGrow: 1 }}>
                     <Stack direction="row" spacing={1} alignItems="center">
-                        <TuneIcon color="primary" />
+                        <Box sx={containerBoxStyles}>
+                            <TuneIcon height="auto" color="primary" />
+                        </Box>
                         <Typography variant="h6" gutterBottom color="#1F2B3D">
                             {formatMessage(MESSAGES.interventionMixTitle)}
                         </Typography>
                     </Stack>
                 </Grid>
-                <Grid item sx={{ mr: 5 }}>
+                <Grid item sx={{ mr: 4 }}>
                     <Stack direction="row" spacing={2} alignItems="center">
                         <Typography variant="h6" gutterBottom color="primary">
                             {formatMessage(MESSAGES.orgUnitDistrict)}

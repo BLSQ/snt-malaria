@@ -1,12 +1,15 @@
 import React, { FC } from 'react';
-import { AccountTree as PlanIcon, ExpandMore } from '@mui/icons-material';
-import { AccordionSummary, Grid, Stack, Typography } from '@mui/material';
+import { ExpandMore } from '@mui/icons-material';
+import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
+import { AccordionSummary, Box, Grid, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../messages';
+import { containerBoxStyles } from '../styles';
 
 type Props = {
     orgUnitCount: number | undefined;
 };
+
 export const InterventionPlanSummary: FC<Props> = ({ orgUnitCount = 0 }) => {
     const { formatMessage } = useSafeIntl();
     return (
@@ -24,13 +27,19 @@ export const InterventionPlanSummary: FC<Props> = ({ orgUnitCount = 0 }) => {
             >
                 <Grid item sx={{ flexGrow: 1 }}>
                     <Stack direction="row" spacing={1} alignItems="center">
-                        <PlanIcon color="primary" />
+                        <Box sx={containerBoxStyles}>
+                            <AccountTreeOutlinedIcon
+                                height="auto"
+                                color="primary"
+                            />
+                        </Box>
+
                         <Typography variant="h6" gutterBottom color="#1F2B3D">
                             {formatMessage(MESSAGES.interventionPlanTitle)}
                         </Typography>
                     </Stack>
                 </Grid>
-                <Grid item sx={{ mr: 5 }}>
+                <Grid item sx={{ mr: 4 }}>
                     <Stack
                         direction="row"
                         spacing={1}

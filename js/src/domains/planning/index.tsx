@@ -3,6 +3,7 @@ import { Grid } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { getRequest } from 'Iaso/libs/Api';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import {
     PaperContainer,
@@ -14,7 +15,7 @@ import { baseUrls } from '../../constants/urls';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { Budgets } from './components/Budgets';
 import { InterventionsMix } from './components/interventionMix/InterventionsMix';
-import { InterventionsPlans } from './components/interventionPlan/InterventionsPlans';
+import { InterventionsPlan } from './components/interventionPlan/InterventionsPlan';
 import { LayersDrawer } from './components/LayersDrawer';
 import { Map } from './components/map';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
@@ -22,7 +23,6 @@ import { useGetMetricTypes, useGetMetricValues } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { MESSAGES } from './messages';
 import { MetricType, MetricValue } from './types/metrics';
-import { getRequest } from 'Iaso/libs/Api';
 
 type PlanningParams = {
     scenarioId: number;
@@ -67,7 +67,6 @@ export const Planning: FC = () => {
     // Manual add/remove
     const handleAddRemoveOrgUnitToMix = useCallback(
         (orgUnit: OrgUnit | null) => {
-            console.log('handleAddRemoveOrgUnitToMix  ');
             if (orgUnit) {
                 setSelectedOrgUnits(prev => {
                     if (prev.some(unit => unit.id === orgUnit.id)) {
@@ -88,12 +87,12 @@ export const Planning: FC = () => {
             const encodedJsonFilter = encodeURIComponent(
                 JSON.stringify(jsonFilter),
             );
-            let url = `/api/metricvalues/?metric_type_id=${metricId}&json_filter=${encodedJsonFilter}`;
+            const url = `/api/metricvalues/?metric_type_id=${metricId}&json_filter=${encodedJsonFilter}`;
             const resp = await getRequest(url);
             const orgUnitIdsToAdd = resp.map((e: MetricValue) => e.org_unit);
 
             // Find the org units that have IDs in orgUnitIdsToAdd
-            const orgUnitsToAdd = orgUnits.filter(orgUnit =>
+            const orgUnitsToAdd = orgUnits?.filter(orgUnit =>
                 orgUnitIdsToAdd.includes(orgUnit.id),
             );
 
@@ -107,9 +106,9 @@ export const Planning: FC = () => {
                 // Combine the lists, avoiding duplicates
                 const combinedOrgUnits = [
                     ...prevSelectedOrgUnits,
-                    ...orgUnitsToAdd.filter(
+                    ...(orgUnitsToAdd?.filter(
                         orgUnit => !existingIds.has(orgUnit.id),
-                    ),
+                    ) || []),
                 ];
 
                 return combinedOrgUnits;
@@ -156,7 +155,7 @@ export const Planning: FC = () => {
                                 scenarioId={scenario?.id}
                                 selectedOrgUnits={selectedOrgUnits}
                             />
-                            <InterventionsPlans scenarioId={scenario?.id} />
+                            <InterventionsPlan scenarioId={scenario?.id} />
                             <Budgets />
                         </PaperContainer>
                     </Grid>
