@@ -27,7 +27,7 @@ const TableRowWithPlans = ({ row, index }) => {
         <TableRow
             key={row.name}
             sx={{
-                backgroundColor: index % 2 === 0 ? 'white' : '#f5f5f5',
+                backgroundColor: index % 2 === 0 ? 'white' : '#ECEFF1',
             }}
         >
             <TableCell sx={styles.tableCellStyle}>{row.name}</TableCell>
@@ -38,6 +38,7 @@ const TableRowWithPlans = ({ row, index }) => {
                         label={intervention.name}
                         sx={{
                             marginLeft: 0.5,
+                            backgroundColor: '#CFD8DC',
                         }}
                     />
                 ))}
