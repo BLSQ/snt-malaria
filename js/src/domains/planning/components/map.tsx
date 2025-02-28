@@ -17,9 +17,9 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { MetricType, MetricValue } from '../types/metrics';
+import { LayersTitleWithIcon } from './layers/LayersTitleWithIcon';
 import { MapLegend } from './MapLegend';
 import { MapOrgUnitDetails } from './MapOrgUnitDetails';
-import { LayersTitleWithIcon } from './layers/LayersTitleWithIcon';
 
 const StyledButton = styled(Button)`
     background-color: white;
@@ -49,7 +49,7 @@ const styles: SxStyles = {
 type Props = {
     orgUnits?: OrgUnit[];
     toggleDrawer: () => void;
-    displayedMetric: MetricType;
+    displayedMetric: MetricType | null;
     displayedMetricValues?: MetricValue[];
     onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
     selectedOrgUnits: OrgUnit[];

@@ -5,7 +5,6 @@ import {
     makeFullModal,
     useSafeIntl,
 } from 'bluesquare-components';
-import { TableWithDeepLink } from '../../../../../../../../hat/assets/js/apps/Iaso/components/tables/TableWithDeepLink';
 import { MESSAGES } from '../../messages';
 import { ApplyInterventionsMixButton } from './ApplyInterventionsMixButton';
 
@@ -19,6 +18,7 @@ export const ApplyInterventionsMixModal: FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
     return (
+        // @ts-ignore
         <ConfirmCancelModal
             open={isOpen}
             closeDialog={closeDialog}

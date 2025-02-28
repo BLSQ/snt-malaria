@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
-import { Box, Theme, Typography } from '@mui/material';
 import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
+import { Box, Theme, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 
 import { SxStyles } from 'Iaso/types/general';

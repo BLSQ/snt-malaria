@@ -1,13 +1,16 @@
 import React, { FC } from 'react';
 import { Typography, Grid } from '@mui/material';
+import { containerBoxStyles } from '../styles';
 
 const styles = {
-    gridContainerStyle: {
-        backgroundColor: '#EDE7F6',
-        borderRadius: '8px',
-        width: 'auto',
-        display: 'inline-flex',
-        gap: 1,
+    gridContainerStyle: containerBox => {
+        return {
+            backgroundColor: containerBox.backgroundColor,
+            borderRadius: '8px',
+            width: 'auto',
+            display: 'inline-flex',
+            gap: 1,
+        };
     },
     interventionGridStyle: isSelectedIntervention => {
         return {
@@ -50,7 +53,7 @@ export const Interventions: FC<Props> = ({
             container
             direction="row"
             padding={1}
-            sx={styles.gridContainerStyle}
+            sx={styles.gridContainerStyle(containerBoxStyles)}
         >
             {interventions.map(intervention => {
                 const isSelectedIntervention = selectedId === intervention.id;
