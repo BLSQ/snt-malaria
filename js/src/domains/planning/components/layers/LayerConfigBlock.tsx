@@ -86,6 +86,9 @@ export const LayerConfigBlock: FC<Props> = ({
 
     const handleFilterValueChange = event => {
         const newFilter = event.target.value;
+        if (newFilter === '') {
+            setCurrentFilter(null);
+        }
         setCurrentFilter(newFilter);
         onFilterChange(metricCategory, selectedMetric.id, newFilter);
     };

@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined';
 import { Box, Button, Divider, IconButton, Theme } from '@mui/material';
 import { MetricsFilters, MetricType } from '../../types/metrics';
@@ -83,15 +83,25 @@ export const LayersDrawerContents: FC<Props> = ({
         metricId: number,
         filterValue: number | null,
     ) => {
-        setFiltersState(prevState => ({
-            ...prevState,
-            [metricCategory]: {
-                [metricId]: filterValue,
-            },
-        }));
+        setFiltersState(prevState => {
+            if (filterValue) {
+                return {
+                    ...prevState,
+                    [metricCategory]: {
+                        [metricId]: filterValue,
+                    },
+                };
+            } else {
+                delete prevState[metricCategory];
+                return { ...prevState };
+            }
+        });
     };
 
-    const activeFilterCount = Object.keys(filtersState).length;
+    const activeFilterCount = useMemo(
+        () => Object.keys(filtersState).length,
+        [filtersState],
+    );
 
     if (isLoading || !metricTypes) {
         return (
@@ -146,7 +156,8 @@ export const LayersDrawerContents: FC<Props> = ({
                         onClick={() => onSelectOrgUnits(filtersState)}
                         sx={styles.button}
                     >
-                        Select districts ({activeFilterCount} filters)
+                        Select districts ({activeFilterCount}{' '}
+                        {activeFilterCount > 1 ? 'filters' : 'filter'})
                     </Button>
                 </Box>
             )}

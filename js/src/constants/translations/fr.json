@@ -11,5 +11,7 @@
     "iaso.snt_malaria.label.interventionPlanTitle": "Plan d'intervention",
     "iaso.snt_malaria.label.layers": "Couches",
     "iaso.snt_malaria.label.noInterventionPlanAvailable": "Aucun plan d'intervention disponible",
+    "iaso.snt_malaria.label.noOrgUnitsSelected": "Aucun district n'adhère aux règles de filtrage, aucun district n'a été sélectionné",
+    "iaso.snt_malaria.label.selectOrgUnitsSuccess": "{amount} districts sélectionnés",
     "iaso.snt_malaria.label.orgUnitDistricts": "Districts"
 }
