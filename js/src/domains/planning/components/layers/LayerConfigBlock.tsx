@@ -2,7 +2,6 @@ import React, { FC, useState } from 'react';
 import VisibilityIcon from '@mui/icons-material/VisibilityOutlined';
 import {
     Box,
-    Button,
     MenuItem,
     Select,
     TextField,
@@ -48,19 +47,28 @@ const styles: SxStyles = {
 };
 
 type Props = {
+    metricCategory: string;
     metrics: MetricType[];
     isDisplayedOnMap: boolean;
+    filtersState: any;
     toggleMapDisplay: (metric: MetricType) => void;
-    onSelectOrgUnits: (metricId: number, filterValue: number) => void;
+    onFilterChange: (
+        metricCategory: string,
+        metricId: number,
+        filterValue: number | null,
+    ) => void;
 };
 
 export const LayerConfigBlock: FC<Props> = ({
+    metricCategory,
     metrics,
     isDisplayedOnMap,
+    filtersState,
     toggleMapDisplay,
-    onSelectOrgUnits,
+    onFilterChange,
 }) => {
     const [selectedMetric, setSelectedMetric] = useState(metrics[0]);
+    const [currentFilter, setCurrentFilter] = useState<number | null>(null);
 
     const handleSelectMetricChange = event => {
         const newMetricType: MetricType = event.target.value;
@@ -68,6 +76,7 @@ export const LayerConfigBlock: FC<Props> = ({
         if (isDisplayedOnMap) {
             toggleMapDisplay(newMetricType);
         }
+        onFilterChange(metricCategory, newMetricType.id, currentFilter);
     };
     const handleDisplayOnMap = () => {
         if (!isDisplayedOnMap) {
@@ -75,9 +84,10 @@ export const LayerConfigBlock: FC<Props> = ({
         }
     };
 
-    const [filterValue, setFilterValue] = useState('');
     const handleFilterValueChange = event => {
-        setFilterValue(event.target.value);
+        const newFilter = event.target.value;
+        setCurrentFilter(newFilter);
+        onFilterChange(metricCategory, selectedMetric.id, newFilter);
     };
 
     return (
@@ -108,10 +118,10 @@ export const LayerConfigBlock: FC<Props> = ({
                     placeholder="0-1000"
                     size="small"
                     sx={styles.filterField}
-                    value={filterValue}
+                    value={filtersState[selectedMetric.id]}
                     onChange={handleFilterValueChange}
                 />
-                <Button
+                {/* <Button
                     variant="text"
                     sx={{
                         fontSize: '0.875rem',
@@ -125,7 +135,7 @@ export const LayerConfigBlock: FC<Props> = ({
                     disabled={!filterValue}
                 >
                     Select
-                </Button>
+                </Button> */}
             </Box>
             <Box sx={styles.unitText}>
                 <Typography variant="caption">
