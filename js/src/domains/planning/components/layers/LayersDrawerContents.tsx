@@ -1,8 +1,7 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined';
-import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
-import { Box, Divider, IconButton, Theme, Typography } from '@mui/material';
-import { MetricType } from '../../types/metrics';
+import { Box, Button, Divider, IconButton, Theme } from '@mui/material';
+import { MetricsFilters, MetricType } from '../../types/metrics';
 import { LayerConfigBlock } from './LayerConfigBlock';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetMetricTypes } from '../../hooks/useGetMetrics';
@@ -48,22 +47,51 @@ const styles: SxStyles = {
         top: 8,
         right: 8,
     },
+    footerBox: (theme: Theme) => ({
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        margin: theme.spacing(1),
+    }),
+    button: {
+        color: 'white',
+        fontSize: '0.875rem',
+        fontWeight: 'bold',
+        textTransform: 'none',
+        marginLeft: '8px',
+    },
 };
 
 type Props = {
     toggleDrawer: () => void;
     displayedMetric: MetricType | null;
-    displayMetricOnMap: (metric: MetricType) => void;
-    onSelectOrgUnits: (metricId: number, filterValue: number) => void;
+    onDisplayMetricOnMap: (metric: MetricType) => void;
+    onSelectOrgUnits: (filters: MetricsFilters) => void;
 };
 
 export const LayersDrawerContents: FC<Props> = ({
     toggleDrawer,
     displayedMetric,
-    displayMetricOnMap,
+    onDisplayMetricOnMap,
     onSelectOrgUnits,
 }) => {
     const { data: metricTypes, isLoading } = useGetMetricTypes();
+
+    const [filtersState, setFiltersState] = useState({});
+    const handleFilterChange = (
+        metricCategory: string,
+        metricId: number,
+        filterValue: number | null,
+    ) => {
+        setFiltersState(prevState => ({
+            ...prevState,
+            [metricCategory]: {
+                [metricId]: filterValue,
+            },
+        }));
+    };
+
+    const activeFilterCount = Object.keys(filtersState).length;
 
     if (isLoading || !metricTypes) {
         return (
@@ -92,13 +120,15 @@ export const LayersDrawerContents: FC<Props> = ({
                         return (
                             <Box key={metricCategory}>
                                 <LayerConfigBlock
+                                    metricCategory={metricCategory}
                                     metrics={metricTypes[metricCategory]}
                                     isDisplayedOnMap={
                                         displayedMetric?.category ===
                                         metricCategory
                                     }
-                                    toggleMapDisplay={displayMetricOnMap}
-                                    onSelectOrgUnits={onSelectOrgUnits}
+                                    toggleMapDisplay={onDisplayMetricOnMap}
+                                    filtersState={filtersState}
+                                    onFilterChange={handleFilterChange}
                                 />
                                 <Divider />
                             </Box>
@@ -106,6 +136,20 @@ export const LayersDrawerContents: FC<Props> = ({
                     }
                 })}
             </Box>
+            <Divider />
+            {activeFilterCount > 0 && (
+                <Box sx={styles.footerBox}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={() => onSelectOrgUnits(filtersState)}
+                        sx={styles.button}
+                    >
+                        Select districts ({activeFilterCount} filters)
+                    </Button>
+                </Box>
+            )}
         </Box>
     );
 };

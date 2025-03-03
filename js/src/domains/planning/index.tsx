@@ -22,7 +22,8 @@ import { ScenarioTopBar } from './components/ScenarioTopBar';
 import { useGetMetricTypes, useGetMetricValues } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { MESSAGES } from './messages';
-import { MetricType, MetricValue } from './types/metrics';
+import { MetricsFilters, MetricType, MetricValue } from './types/metrics';
+import { values } from 'lodash';
 
 type PlanningParams = {
     scenarioId: number;
@@ -54,7 +55,7 @@ export const Planning: FC = () => {
             }
         }
     }, [metricTypes, displayedMetric]);
-    const displayMetricOnMap = (metric: MetricType) => {
+    const handleDisplayMetricOnMap = (metric: MetricType) => {
         setDisplayedMetric(prevSelected =>
             prevSelected?.name === metric.name ? null : metric,
         );
@@ -79,17 +80,40 @@ export const Planning: FC = () => {
         [],
     );
 
-    // Automatic add based on filter
+    // Automatic OU add based on filters.
+    // To move fast for the demo, what this actually does is filter on each filter
+    // individually (parallelized in a `Promise.all`) and then takes the intersection
+    // of all these filters to get the final result.
     const handleSelectOrgUnits = useCallback(
-        async (metricId: number, filterValue: number) => {
-            // Hardcoded on greater than for v1
-            const jsonFilter = { '>': [{ var: 'value' }, filterValue] };
-            const encodedJsonFilter = encodeURIComponent(
-                JSON.stringify(jsonFilter),
+        async (filters: MetricsFilters) => {
+            let urls: string[] = [];
+            for (const category in filters) {
+                const filter = filters[category];
+                const [[metricId, filterValue]] = Object.entries(filter);
+
+                // Hardcoded on greater than for v1
+                const jsonFilter = { '>': [{ var: 'value' }, filterValue] };
+                const encodedJsonFilter = encodeURIComponent(
+                    JSON.stringify(jsonFilter),
+                );
+                urls.push(
+                    `/api/metricvalues/?metric_type_id=${metricId}&json_filter=${encodedJsonFilter}`,
+                );
+            }
+            const responses = await Promise.all(
+                urls.map(url => getRequest(url)),
             );
-            const url = `/api/metricvalues/?metric_type_id=${metricId}&json_filter=${encodedJsonFilter}`;
-            const resp = await getRequest(url);
-            const orgUnitIdsToAdd = resp.map((e: MetricValue) => e.org_unit);
+            const ouArrs = responses.map(values =>
+                values.map((v: MetricValue) => v.org_unit),
+            );
+
+            const orgUnitIdsToAdd = ouArrs.reduce(
+                (intersection, currentArray) => {
+                    return intersection.filter(element =>
+                        currentArray.includes(element),
+                    );
+                },
+            );
 
             // Find the org units that have IDs in orgUnitIdsToAdd
             const orgUnitsToAdd = orgUnits?.filter(orgUnit =>
@@ -124,7 +148,7 @@ export const Planning: FC = () => {
                 toggleDrawer={toggleDrawer}
                 isDrawerOpen={isDrawerOpen}
                 displayedMetric={displayedMetric}
-                displayMetricOnMap={displayMetricOnMap}
+                onDisplayMetricOnMap={handleDisplayMetricOnMap}
                 onSelectOrgUnits={handleSelectOrgUnits}
             />
             <PageContainer>

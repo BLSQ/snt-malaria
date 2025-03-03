@@ -22,3 +22,14 @@ export type ScaleThreshold = {
     domain: number[];
     range: string[];
 };
+
+// Example MetricsFilter:
+// {
+//   Incidence: { "171": "400" },
+//   Prevalence: { "175": "35" }
+// }
+export type MetricsFilters = {
+    [category: string]: {
+        [metricId: string]: string;
+    };
+};
