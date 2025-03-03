@@ -25,16 +25,16 @@ const styles: SxStyles = {
 const TableRowWithPlans = ({ row, index }) => {
     return (
         <TableRow
-            key={row.name}
+            key={index}
             sx={{
                 backgroundColor: index % 2 === 0 ? 'white' : '#ECEFF1',
             }}
         >
             <TableCell sx={styles.tableCellStyle}>{row.name}</TableCell>
             <TableCell sx={styles.tableCellStyle}>
-                {row.interventions.map(intervention => (
+                {row.interventions.map((intervention, idx) => (
                     <Chip
-                        key={intervention.id}
+                        key={idx}
                         label={intervention.name}
                         sx={{
                             marginLeft: 0.5,
