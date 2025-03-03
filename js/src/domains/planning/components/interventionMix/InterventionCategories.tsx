@@ -53,18 +53,18 @@ export const InterventionCategories: FC<Props> = ({
             }
 
             setSelectedInterventions(prev => {
-                const updatedCategory = prev[categoryId]
+                const prevInterventions = prev[categoryId]
                     ? [...prev[categoryId]]
                     : [];
-                if (updatedCategory.includes(interventionId)) {
-                    const filteredCategory = updatedCategory.filter(
+                if (prevInterventions.includes(interventionId)) {
+                    const filteredInterventions = prevInterventions.filter(
                         id => id !== interventionId,
                     );
-                    return { ...prev, [categoryId]: filteredCategory };
+                    return { ...prev, [categoryId]: filteredInterventions };
                 }
                 return {
                     ...prev,
-                    [categoryId]: [...updatedCategory, interventionId],
+                    [categoryId]: [...prevInterventions, interventionId],
                 };
             });
         },
