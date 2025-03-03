@@ -24,6 +24,8 @@ import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { MESSAGES } from './messages';
 import { MetricsFilters, MetricType, MetricValue } from './types/metrics';
 import { values } from 'lodash';
+import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
+import { succesfullSnackBar, warningSnackBar } from 'Iaso/constants/snackBars';
 
 type PlanningParams = {
     scenarioId: number;
@@ -107,7 +109,7 @@ export const Planning: FC = () => {
                 values.map((v: MetricValue) => v.org_unit),
             );
 
-            const orgUnitIdsToAdd = ouArrs.reduce(
+            const orgUnitIdsToSelect = ouArrs.reduce(
                 (intersection, currentArray) => {
                     return intersection.filter(element =>
                         currentArray.includes(element),
@@ -115,28 +117,32 @@ export const Planning: FC = () => {
                 },
             );
 
-            // Find the org units that have IDs in orgUnitIdsToAdd
-            const orgUnitsToAdd = orgUnits?.filter(orgUnit =>
-                orgUnitIdsToAdd.includes(orgUnit.id),
+            // Find the org units that have IDs in orgUnitIdsToSelect
+            const newOrgUnitSelection = orgUnits?.filter(orgUnit =>
+                orgUnitIdsToSelect.includes(orgUnit.id),
             );
 
-            // Combine with existing selectedOrgUnits, avoiding duplicates
-            setSelectedOrgUnits(prevSelectedOrgUnits => {
-                // Create a map of existing selected org unit IDs for quick lookup
-                const existingIds = new Set(
-                    prevSelectedOrgUnits.map(orgUnit => orgUnit.id),
+            if (newOrgUnitSelection && newOrgUnitSelection.length > 0) {
+                setSelectedOrgUnits(newOrgUnitSelection);
+                openSnackBar(
+                    succesfullSnackBar(
+                        'selectOrgUnitsSuccess',
+                        formatMessage(MESSAGES.selectOrgUnitsSuccess, {
+                            amount: newOrgUnitSelection.length,
+                        }),
+                    ),
                 );
-
-                // Combine the lists, avoiding duplicates
-                const combinedOrgUnits = [
-                    ...prevSelectedOrgUnits,
-                    ...(orgUnitsToAdd?.filter(
-                        orgUnit => !existingIds.has(orgUnit.id),
-                    ) || []),
-                ];
-
-                return combinedOrgUnits;
-            });
+            } else {
+                openSnackBar({
+                    messageKey: 'warning',
+                    id: 'noOrgUnitsSelected',
+                    messageObject: MESSAGES.noOrgUnitsSelected,
+                    options: {
+                        variant: 'warning',
+                        persist: false,
+                    },
+                });
+            }
         },
         [orgUnits],
     );
