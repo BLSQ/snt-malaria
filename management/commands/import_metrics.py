@@ -5,6 +5,7 @@ from django.db import transaction
 from django.core.management.base import BaseCommand
 
 from iaso.models import MetricType, MetricValue, OrgUnit
+from .support.legend import get_legend_thresholds_for_metric_category
 
 BURKINA_ACCOUNT_ID = 1
 METADATA_CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "burkina_faso/metric_types.csv")
@@ -34,7 +35,6 @@ class Command(BaseCommand):
                     comments=row["comments"],
                     category=row["category"],
                     unit_symbol=row["unit_symbol"],
-                    legend_threshold=self.get_legend_thresholds_for_metric_category(row["category"]),
                 )
                 self.stdout.write(self.style.SUCCESS(f"Created metric: {metric_type.name}"))
                 metric_types[metric_type.code] = metric_type
@@ -71,34 +71,8 @@ class Command(BaseCommand):
                         )
         print("Done.")
 
-    def get_legend_thresholds_for_metric_category(self, category):
-        if category == "Incidence":
-            return {
-                "domain": [5, 50, 100, 200, 300, 500],
-                "range": [
-                    "#FFCCBC",
-                    "#FFAB91",
-                    "#FF8A65",
-                    "#FF5722",
-                    "#DB3C0B",
-                    "#8B2B0E",
-                    "#601B06",
-                ],
-            }
-        elif category == "Prevalence":
-            return {
-                "domain": [10, 20, 30, 40, 50, 60, 70, 80],
-                "range": [
-                    "#FFCCBC",
-                    "#FFAB91",
-                    "#FF8A65",
-                    "#FF7043",
-                    "#FF5722",
-                    "#DB3C0B",
-                    "#B83B14",
-                    "#8B2B0E",
-                    "#601B06",
-                ],
-            }
-        else:
-            return {}
+        print("Adding threshold scales...")
+        for metric_type in MetricType.objects.all():
+            metric_type.legend_threshold = get_legend_thresholds_for_metric_category(metric_type)
+            metric_type.save()
+        print("Done.")
