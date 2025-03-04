@@ -5,7 +5,7 @@ from django.db import transaction
 from django.core.management.base import BaseCommand
 
 from iaso.models import MetricType, MetricValue, OrgUnit
-from .support.legend import get_legend_thresholds_for_metric_category
+from .support.legend import get_legend_config, get_legend_type
 
 BURKINA_ACCOUNT_ID = 1
 METADATA_CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "burkina_faso/metric_types.csv")
@@ -73,6 +73,7 @@ class Command(BaseCommand):
 
         print("Adding threshold scales...")
         for metric_type in MetricType.objects.all():
-            metric_type.legend_threshold = get_legend_thresholds_for_metric_category(metric_type)
+            metric_type.legend_config = get_legend_config(metric_type)
+            metric_type.legend_type = get_legend_type(metric_type)
             metric_type.save()
         print("Done.")

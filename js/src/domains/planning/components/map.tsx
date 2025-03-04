@@ -81,11 +81,11 @@ export const Map: FC<Props> = ({
     }, [orgUnits]);
 
     // Displaying metrics on the map
-    const getLegend = useGetLegend(displayedMetric?.legend_threshold);
+    const getLegend = useGetLegend(displayedMetric?.legend_config);
     const getColorForShape = useCallback(
         (value, _orgUnitId) => {
-            if (displayedMetric?.category === 'Mortality') {
-                const legend = displayedMetric.legend_threshold;
+            if (displayedMetric?.legend_type === 'linear') {
+                const legend = displayedMetric.legend_config;
                 const colorScale = d3
                     .scaleLinear()
                     .domain(legend.domain)
