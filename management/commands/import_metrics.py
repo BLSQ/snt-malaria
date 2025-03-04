@@ -56,9 +56,9 @@ class Command(BaseCommand):
 
                     # Create MetricValue for each metric type
                     for column, metric_type in metric_types.items():
-                        # Parse the value from the CSV
+                        # Parse the value as a float, rounded to 3 behind the comma
                         try:
-                            value = float(row[column])
+                            value = round(float(row[column]), 3)
                         except ValueError:
                             print(f"Invalid value for {column}: {row[column]}")
                             continue

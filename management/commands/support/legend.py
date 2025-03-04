@@ -54,6 +54,12 @@ def get_legend_config(metric_type):
                 "domain": list(range(int(min_value), int(max_value))),
                 "range": [RISK_LOW, RISK_MEDIUM, RISK_HIGH, RISK_VERY_HIGH],
             }
+        elif metric_type.category == "Seasonality":
+            choices = values_qs.values_list("value", flat=True).distinct().order_by("value")
+            return {
+                "domain": list(choices),
+                "range": [RISK_LOW, RISK_MEDIUM, RISK_HIGH, RISK_VERY_HIGH],
+            }
         else:
             return {"domain": [min_value, max_value], "range": ["#FFCCBC", "#601B06"]}
 
@@ -61,7 +67,7 @@ def get_legend_config(metric_type):
 def get_legend_type(metric_type):
     if metric_type.category == "Mortality":
         return "linear"
-    elif metric_type.category == "Composite risk":
+    elif metric_type.category in ["Composite risk", "Seasonality"]:
         return "ordinal"
     else:
         return "threshold"
