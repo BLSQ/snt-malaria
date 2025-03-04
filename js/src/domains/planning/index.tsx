@@ -1,7 +1,10 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
 import { Grid } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { values } from 'lodash';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
+import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
+import { succesfullSnackBar, warningSnackBar } from 'Iaso/constants/snackBars';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { getRequest } from 'Iaso/libs/Api';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
@@ -23,9 +26,6 @@ import { useGetMetricTypes, useGetMetricValues } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { MESSAGES } from './messages';
 import { MetricsFilters, MetricType, MetricValue } from './types/metrics';
-import { values } from 'lodash';
-import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
-import { succesfullSnackBar, warningSnackBar } from 'Iaso/constants/snackBars';
 
 type PlanningParams = {
     scenarioId: number;
@@ -88,7 +88,7 @@ export const Planning: FC = () => {
     // of all these filters to get the final result.
     const handleSelectOrgUnits = useCallback(
         async (filters: MetricsFilters) => {
-            let urls: string[] = [];
+            const urls: string[] = [];
             for (const category in filters) {
                 const filter = filters[category];
                 const [[metricId, filterValue]] = Object.entries(filter);

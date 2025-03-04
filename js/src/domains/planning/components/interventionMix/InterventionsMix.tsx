@@ -32,7 +32,7 @@ export const InterventionsMix: FC<Props> = ({
                 overflow: 'hidden',
             }}
         >
-            <Accordion>
+            <Accordion defaultExpanded>
                 <InterventionMixSummary
                     orgUnitCount={selectedOrgUnits.length}
                 />

@@ -17,7 +17,9 @@ import { containerBoxStyles } from '../styles';
 const styles: SxStyles = {
     badgeStyle: {
         '& .MuiBadge-badge': {
-            fontSize: '1.20rem',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            lineHeight: 0,
             width: '24px',
             height: '24px',
             padding: '4px',

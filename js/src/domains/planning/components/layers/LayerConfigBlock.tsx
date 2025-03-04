@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import VisibilityIcon from '@mui/icons-material/VisibilityOutlined';
 import {
     Box,
@@ -50,7 +50,7 @@ type Props = {
     metricCategory: string;
     metrics: MetricType[];
     isDisplayedOnMap: boolean;
-    filtersState: any;
+    filtersState: Record<string, Record<number, number>>;
     toggleMapDisplay: (metric: MetricType) => void;
     onFilterChange: (
         metricCategory: string,
@@ -69,29 +69,41 @@ export const LayerConfigBlock: FC<Props> = ({
 }) => {
     const [selectedMetric, setSelectedMetric] = useState(metrics[0]);
     const [currentFilter, setCurrentFilter] = useState<number | null>(null);
-
-    const handleSelectMetricChange = event => {
-        const newMetricType: MetricType = event.target.value;
-        setSelectedMetric(newMetricType);
-        if (isDisplayedOnMap) {
-            toggleMapDisplay(newMetricType);
-        }
-        onFilterChange(metricCategory, newMetricType.id, currentFilter);
-    };
-    const handleDisplayOnMap = () => {
+    console.log(filtersState);
+    const handleSelectMetricChange = useCallback(
+        event => {
+            const newMetricType: MetricType = event.target.value;
+            setSelectedMetric(newMetricType);
+            if (isDisplayedOnMap) {
+                toggleMapDisplay(newMetricType);
+            }
+            onFilterChange(metricCategory, newMetricType.id, currentFilter);
+        },
+        [
+            currentFilter,
+            isDisplayedOnMap,
+            metricCategory,
+            onFilterChange,
+            toggleMapDisplay,
+        ],
+    );
+    const handleDisplayOnMap = useCallback(() => {
         if (!isDisplayedOnMap) {
             toggleMapDisplay(selectedMetric);
         }
-    };
+    }, [isDisplayedOnMap, selectedMetric, toggleMapDisplay]);
 
-    const handleFilterValueChange = event => {
-        const newFilter = event.target.value;
-        if (newFilter === '') {
-            setCurrentFilter(null);
-        }
-        setCurrentFilter(newFilter);
-        onFilterChange(metricCategory, selectedMetric.id, newFilter);
-    };
+    const handleFilterValueChange = useCallback(
+        event => {
+            const newFilter = event.target.value;
+            if (newFilter === '') {
+                setCurrentFilter(null);
+            }
+            setCurrentFilter(newFilter);
+            onFilterChange(metricCategory, selectedMetric.id, newFilter);
+        },
+        [metricCategory, onFilterChange, selectedMetric.id],
+    );
 
     return (
         <Box sx={styles.mainBox}>

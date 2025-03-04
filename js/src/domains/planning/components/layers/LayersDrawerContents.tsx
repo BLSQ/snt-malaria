@@ -1,11 +1,11 @@
 import React, { FC, useMemo, useState } from 'react';
 import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined';
 import { Box, Button, Divider, IconButton, Theme } from '@mui/material';
-import { MetricsFilters, MetricType } from '../../types/metrics';
-import { LayerConfigBlock } from './LayerConfigBlock';
+import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetMetricTypes } from '../../hooks/useGetMetrics';
-import { LoadingSpinner } from 'bluesquare-components';
+import { MetricsFilters, MetricType } from '../../types/metrics';
+import { LayerConfigBlock } from './LayerConfigBlock';
 import { LayersTitleWithIcon } from './LayersTitleWithIcon';
 
 const styles: SxStyles = {
@@ -91,10 +91,9 @@ export const LayersDrawerContents: FC<Props> = ({
                         [metricId]: filterValue,
                     },
                 };
-            } else {
-                delete prevState[metricCategory];
-                return { ...prevState };
             }
+            delete prevState[metricCategory];
+            return { ...prevState };
         });
     };
 

@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, useTheme, Button, styled, Theme } from '@mui/material';
+import * as d3 from 'd3-scale';
 import L from 'leaflet';
 import {
     GeoJSON,
@@ -81,8 +82,16 @@ export const Map: FC<Props> = ({
 
     // Displaying metrics on the map
     const getLegend = useGetLegend(displayedMetric?.legend_threshold);
-    const getLegendColor = useCallback(
+    const getColorForShape = useCallback(
         (value, _orgUnitId) => {
+            if (displayedMetric?.category === 'Mortality') {
+                const legend = displayedMetric.legend_threshold;
+                const colorScale = d3
+                    .scaleLinear()
+                    .domain(legend.domain)
+                    .range(legend.range);
+                return colorScale(value);
+            }
             return getLegend(value);
         },
         [displayedMetric, displayedMetricValues, getLegend],
@@ -115,6 +124,7 @@ export const Map: FC<Props> = ({
         () => selectedOrgUnits.map(ou => ou.id),
         [selectedOrgUnits],
     );
+
     const getStyleForShape = (orgUnitId: number) => {
         let color: string;
         let weight: number;
@@ -133,7 +143,7 @@ export const Map: FC<Props> = ({
         return {
             color,
             weight,
-            fillColor: getLegendColor(
+            fillColor: getColorForShape(
                 getSelectedMetricValue(orgUnitId),
                 orgUnitId,
             ),

@@ -18,7 +18,7 @@ export const InterventionCategories: FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
     const [selectedInterventions, setSelectedInterventions] = useState<{
-        [categoryId: number]: number | null;
+        [categoryId: number]: number[] | [];
     }>({});
     const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(false);
 
@@ -29,9 +29,9 @@ export const InterventionCategories: FC<Props> = ({
 
     const selectedInterventionValues = useMemo(
         () =>
-            Object.values(selectedInterventions).filter(
-                value => value !== null,
-            ),
+            Object.values(selectedInterventions)
+                .flat()
+                .filter(value => value !== null),
         [selectedInterventions],
     );
     const canApplyInterventions = useMemo(() => {
@@ -51,11 +51,22 @@ export const InterventionCategories: FC<Props> = ({
             if (canApplyInterventions) {
                 setIsButtonDisabled(false);
             }
-            setSelectedInterventions(prev => ({
-                ...prev,
-                [categoryId]:
-                    prev[categoryId] === interventionId ? null : interventionId,
-            }));
+
+            setSelectedInterventions(prev => {
+                const prevInterventions = prev[categoryId]
+                    ? [...prev[categoryId]]
+                    : [];
+                if (prevInterventions.includes(interventionId)) {
+                    const filteredInterventions = prevInterventions.filter(
+                        id => id !== interventionId,
+                    );
+                    return { ...prev, [categoryId]: filteredInterventions };
+                }
+                return {
+                    ...prev,
+                    [categoryId]: [...prevInterventions, interventionId],
+                };
+            });
         },
         [canApplyInterventions],
     );
@@ -101,10 +112,10 @@ export const InterventionCategories: FC<Props> = ({
                                     interventions={
                                         interventionCategory.interventions
                                     }
-                                    selectedId={
+                                    selectedIds={
                                         selectedInterventions[
                                             interventionCategory.id
-                                        ] ?? null
+                                        ] ?? []
                                     }
                                     handleSelectIntervention={
                                         handleSelectIntervention
