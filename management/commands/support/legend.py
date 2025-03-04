@@ -37,6 +37,11 @@ def get_legend_config(metric_type):
             "domain": [10, 20, 30, 40, 50, 60, 70, 80],
             "range": NINE_SHADES_OF_RED,
         }
+    elif metric_type.category in ["Bednet coverage", "DHS DTP3 Vaccine"]:
+        return {
+            "domain": [40, 50, 60, 70, 80, 90],
+            "range": list(reversed(SEVEN_SHADES_OF_RED)),
+        }
     else:
         values_qs = metric_type.metricvalue_set.all()
 

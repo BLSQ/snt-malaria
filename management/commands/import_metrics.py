@@ -56,9 +56,21 @@ class Command(BaseCommand):
 
                     # Create MetricValue for each metric type
                     for column, metric_type in metric_types.items():
-                        # Parse the value as a float, rounded to 3 behind the comma
                         try:
-                            value = round(float(row[column]), 3)
+                            # Parse the value as a float
+                            value = float(row[column])
+
+                            # Some percentages are expressed as between 0 and 1,
+                            # adapt them to be also between 0 and 100.
+                            if metric_type.code in ["PFPR_2TO10_MAP"] or metric_type.category in [
+                                "Bednet coverage",
+                                "DHS DTP3 Vaccine",
+                            ]:
+                                value = int(value * 100)
+                            else:
+                                # Round the value to max 3 behind the comma
+                                value = round(value, 3)
+
                         except ValueError:
                             print(f"Invalid value for {column}: {row[column]}")
                             continue
