@@ -1,6 +1,7 @@
 import { UseMutationResult, UseQueryResult } from 'react-query';
 import { getRequest, postRequest, putRequest } from 'Iaso/libs/Api';
 import { useSnackMutation, useSnackQuery } from 'Iaso/libs/apiHooks';
+import { Scenario } from './../types';
 
 export const useGetScenarios = (): UseQueryResult<Scenario[], Error> => {
     return useSnackQuery({

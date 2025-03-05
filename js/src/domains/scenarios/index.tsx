@@ -13,6 +13,7 @@ import { baseUrls } from '../../constants/urls';
 import { ScenarioComponent } from './components/ScenarioComponent';
 import { useCreateScenario, useGetScenarios } from './hooks/useGetScenarios';
 import { MESSAGES } from './messages';
+import { Scenario } from './types';
 
 const styles: SxStyles = {
     buttonsBox: (theme: Theme) => ({
@@ -35,13 +36,12 @@ export const Scenarios: FC = () => {
     const navigate = useNavigate();
     const { data: scenarios, isLoading } = useGetScenarios();
 
-    const { mutateAsync: createScenario, isLoading: loadingCreateScenario } =
+    const { mutateAsync: createScenario, isLoading: isLoadingCreateScenario } =
         useCreateScenario();
 
     const handleCreateScenario = async () => {
-        const resp = await createScenario();
-        console.log(resp);
-        navigate(`/${baseUrls.planning}/scenarioId/${resp.id}`);
+        const scenario = await createScenario();
+        navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
     };
 
     return (
@@ -57,6 +57,7 @@ export const Scenarios: FC = () => {
                             color="primary"
                             size="small"
                             onClick={handleCreateScenario}
+                            disabled={isLoadingCreateScenario}
                         >
                             Create scenario
                         </Button>
