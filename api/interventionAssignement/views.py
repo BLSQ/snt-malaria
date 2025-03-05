@@ -36,26 +36,22 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         org_units = serializer.validated_data["valid_org_units"]
         interventions = serializer.validated_data["valid_interventions"]
         created_by = request.user
-
+        # Delete all assignments linked to orgUnits and to the scenario
+        InterventionAssignment.objects.filter(
+            scenario=scenario, org_unit__in=org_units
+        ).delete()
         # Create InterventionAssignment objects
         assignments = []
 
         for org_unit in org_units:
             for intervention in interventions:
-                # Check if the InterventionAssignment already exists
-                existing_assignment = InterventionAssignment.objects.filter(
-                    scenario=scenario, org_unit=org_unit, intervention=intervention
-                ).exists()
-
-                # Only create and add to the list if it does not exist
-                if not existing_assignment:
-                    assignment = InterventionAssignment(
-                        scenario=scenario,
-                        org_unit=org_unit,
-                        intervention=intervention,
-                        created_by=created_by,
-                    )
-                    assignments.append(assignment)
+                assignment = InterventionAssignment(
+                    scenario=scenario,
+                    org_unit=org_unit,
+                    intervention=intervention,
+                    created_by=created_by,
+                )
+                assignments.append(assignment)
 
         # Bulk create
         if assignments:
