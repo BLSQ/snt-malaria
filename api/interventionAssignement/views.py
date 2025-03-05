@@ -1,4 +1,6 @@
+from decimal import Decimal
 from collections import defaultdict
+from iaso.models.metric import MetricType, MetricValue
 from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.api.intervention.serializers import InterventionSerializer
 from plugins.snt_malaria.api.interventionAssignement.filters import (
@@ -87,6 +89,55 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
                 org_unit["interventions"] = InterventionSerializer(
                     interventions, many=True
                 ).data
+            formatted_response.append(org_unit)
+
+        return Response(formatted_response)
+
+    @action(detail=False, methods=["get"])
+    def budget_per_org_unit(self, request):
+        """
+        Get total budget per org unit (optimized)
+        """
+        queryset = self.filter_queryset(self.get_queryset()).select_related(
+            "intervention", "org_unit"
+        )
+
+        try:
+            population_metric = MetricType.objects.get(name__iexact="Population")
+        except MetricType.DoesNotExist:
+            return Response({"error": "Population MetricType not found"}, status=400)
+
+        org_units = queryset.values_list("org_unit_id", flat=True).distinct()
+        population_values = {
+            mv.org_unit_id: Decimal(mv.value)
+            for mv in MetricValue.objects.filter(
+                metric_type=population_metric, org_unit__in=org_units
+            )
+        }
+
+        budget_per_org_unit = defaultdict(Decimal)
+
+        for instance in queryset:
+            org_unit_id = instance.org_unit_id
+            cost_per_unit = instance.intervention.cost_per_unit
+
+            if cost_per_unit is not None and population_values[org_unit_id]:
+                budget_per_org_unit[org_unit_id] += (
+                    cost_per_unit * population_values[org_unit_id]
+                )
+
+        org_units = (
+            OrgUnit.objects.filter(id__in=budget_per_org_unit.keys())
+            .values("id", "name")
+            .order_by("name")
+        )
+
+        formatted_response = []
+        for org_unit in org_units:
+            org_unit_id = org_unit["id"]
+            budget = budget_per_org_unit[org_unit_id]
+            if budget:
+                org_unit["budget"] = budget_per_org_unit[org_unit_id]
             formatted_response.append(org_unit)
 
         return Response(formatted_response)

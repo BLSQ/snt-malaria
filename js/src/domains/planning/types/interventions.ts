@@ -22,3 +22,9 @@ export type InterventionPlan = {
     name: string;
     interventions: Intervention[];
 };
+
+export type Budget = {
+    id: number;
+    name: string;
+    budget: number;
+};
