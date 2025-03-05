@@ -1,12 +1,15 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined';
 import { Box, Button, Divider, IconButton, Theme } from '@mui/material';
-import { MetricsFilters, MetricType } from '../../types/metrics';
+import { useSafeIntl } from 'bluesquare-components';
+
 import { LayerConfigBlock } from './LayerConfigBlock';
+import { LayersTitleWithIcon } from './LayersTitleWithIcon';
+import { LoadingSpinner } from 'bluesquare-components';
+import { MESSAGES } from '../../messages';
+import { MetricsFilters, MetricType } from '../../types/metrics';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetMetricTypes } from '../../hooks/useGetMetrics';
-import { LoadingSpinner } from 'bluesquare-components';
-import { LayersTitleWithIcon } from './LayersTitleWithIcon';
 
 const styles: SxStyles = {
     mainBox: {
@@ -76,27 +79,31 @@ export const LayersDrawerContents: FC<Props> = ({
     onSelectOrgUnits,
 }) => {
     const { data: metricTypes, isLoading } = useGetMetricTypes();
+    const { formatMessage } = useSafeIntl();
 
     const [filtersState, setFiltersState] = useState({});
-    const handleFilterChange = (
-        metricCategory: string,
-        metricId: number,
-        filterValue: number | null,
-    ) => {
-        setFiltersState(prevState => {
-            if (filterValue) {
-                return {
-                    ...prevState,
-                    [metricCategory]: {
-                        [metricId]: filterValue,
-                    },
-                };
-            } else {
+    const handleFilterChange = useCallback(
+        (
+            metricCategory: string,
+            metricId: number,
+            filterValue: number | null,
+        ) => {
+            setFiltersState(prevState => {
+                if (filterValue) {
+                    return {
+                        ...prevState,
+                        [metricCategory]: {
+                            [metricId]: filterValue,
+                        },
+                    };
+                }
+
                 delete prevState[metricCategory];
                 return { ...prevState };
-            }
-        });
-    };
+            });
+        },
+        [],
+    );
 
     const activeFilterCount = useMemo(
         () => Object.keys(filtersState).length,
@@ -156,8 +163,11 @@ export const LayersDrawerContents: FC<Props> = ({
                         onClick={() => onSelectOrgUnits(filtersState)}
                         sx={styles.button}
                     >
-                        Select districts ({activeFilterCount}{' '}
-                        {activeFilterCount > 1 ? 'filters' : 'filter'})
+                        {activeFilterCount === 1
+                            ? formatMessage(MESSAGES.selectOrgUnitsBtnOneFilter)
+                            : formatMessage(MESSAGES.selectOrgUnitsBtn, {
+                                  amount: activeFilterCount,
+                              })}
                     </Button>
                 </Box>
             )}

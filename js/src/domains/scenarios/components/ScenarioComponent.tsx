@@ -84,9 +84,7 @@ export const ScenarioComponent: FC<Props> = ({ scenario }) => {
                         </Typography>
                         <Typography variant="h6">USD 32,000</Typography>
                     </Box>
-                    <IconButton>
-                        <ChevronRightOutlinedIcon />
-                    </IconButton>
+                    <ChevronRightOutlinedIcon />
                 </CardContent>
             </CardActionArea>
         </Card>

@@ -23,7 +23,6 @@ import { useGetMetricTypes, useGetMetricValues } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { MESSAGES } from './messages';
 import { MetricsFilters, MetricType, MetricValue } from './types/metrics';
-import { values } from 'lodash';
 import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
 import { succesfullSnackBar, warningSnackBar } from 'Iaso/constants/snackBars';
 
