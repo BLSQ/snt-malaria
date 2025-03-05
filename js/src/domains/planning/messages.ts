@@ -62,4 +62,21 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.budgetImpactTitle',
         defaultMessage: 'Budget & Impact',
     },
+    selectOrgUnitsBtn: {
+        id: 'iaso.snt_malaria.label.selectOrgUnitsBtn',
+        defaultMessage: 'Select districts ({amount} filters)',
+    },
+    selectOrgUnitsBtnOneFilter: {
+        id: 'iaso.snt_malaria.label.selectOrgUnitsBtnOneFilter',
+        defaultMessage: 'Select districts (1 filter)',
+    },
+    selectOrgUnitsSuccess: {
+        id: 'iaso.snt_malaria.label.selectOrgUnitsSuccess',
+        defaultMessage: 'Selected {amount} districts',
+    },
+    noOrgUnitsSelected: {
+        id: 'iaso.snt_malaria.label.noOrgUnitsSelected',
+        defaultMessage:
+            'No districts adhere to filter rules, no districts were selected',
+    },
 });

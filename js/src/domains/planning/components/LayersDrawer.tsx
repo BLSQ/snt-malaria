@@ -1,21 +1,21 @@
 import React, { FC } from 'react';
 import { Drawer } from '@mui/material';
-import { MetricType } from '../types/metrics';
+import { MetricsFilters, MetricType } from '../types/metrics';
 import { LayersDrawerContents } from './layers/LayersDrawerContents';
 
 type Props = {
     toggleDrawer: () => void;
     isDrawerOpen: boolean;
     displayedMetric: MetricType | null;
-    displayMetricOnMap: (metric: MetricType) => void;
-    onSelectOrgUnits: (metricId: number, filterValue: number) => void;
+    onDisplayMetricOnMap: (metric: MetricType) => void;
+    onSelectOrgUnits: (filters: MetricsFilters) => void;
 };
 
 export const LayersDrawer: FC<Props> = ({
     toggleDrawer,
     isDrawerOpen,
     displayedMetric,
-    displayMetricOnMap,
+    onDisplayMetricOnMap,
     onSelectOrgUnits,
 }) => {
     return (
@@ -36,7 +36,7 @@ export const LayersDrawer: FC<Props> = ({
             <LayersDrawerContents
                 toggleDrawer={toggleDrawer}
                 displayedMetric={displayedMetric}
-                displayMetricOnMap={displayMetricOnMap}
+                onDisplayMetricOnMap={onDisplayMetricOnMap}
                 onSelectOrgUnits={onSelectOrgUnits}
             />
         </Drawer>

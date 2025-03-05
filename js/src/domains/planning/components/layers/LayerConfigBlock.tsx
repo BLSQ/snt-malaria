@@ -1,8 +1,7 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import VisibilityIcon from '@mui/icons-material/VisibilityOutlined';
 import {
     Box,
-    Button,
     MenuItem,
     Select,
     TextField,
@@ -48,37 +47,58 @@ const styles: SxStyles = {
 };
 
 type Props = {
+    metricCategory: string;
     metrics: MetricType[];
     isDisplayedOnMap: boolean;
+    filtersState: Record<string, Record<string, string>>;
     toggleMapDisplay: (metric: MetricType) => void;
-    onSelectOrgUnits: (metricId: number, filterValue: number) => void;
+    onFilterChange: (
+        metricCategory: string,
+        metricId: number,
+        filterValue: number | null,
+    ) => void;
 };
 
 export const LayerConfigBlock: FC<Props> = ({
+    metricCategory,
     metrics,
     isDisplayedOnMap,
+    filtersState,
     toggleMapDisplay,
-    onSelectOrgUnits,
+    onFilterChange,
 }) => {
     const [selectedMetric, setSelectedMetric] = useState(metrics[0]);
+    const [currentFilter, setCurrentFilter] = useState<number | null>(null);
 
-    const handleSelectMetricChange = event => {
-        const newMetricType: MetricType = event.target.value;
-        setSelectedMetric(newMetricType);
-        if (isDisplayedOnMap) {
-            toggleMapDisplay(newMetricType);
-        }
-    };
-    const handleDisplayOnMap = () => {
+    const handleSelectMetricChange = useCallback(
+        event => {
+            const newMetricType: MetricType = event.target.value;
+            setSelectedMetric(newMetricType);
+            if (isDisplayedOnMap) {
+                toggleMapDisplay(newMetricType);
+            }
+            onFilterChange(metricCategory, newMetricType.id, currentFilter);
+        },
+        [metricCategory, currentFilter],
+    );
+
+    const handleDisplayOnMap = useCallback(() => {
         if (!isDisplayedOnMap) {
             toggleMapDisplay(selectedMetric);
         }
-    };
+    }, []);
 
-    const [filterValue, setFilterValue] = useState('');
-    const handleFilterValueChange = event => {
-        setFilterValue(event.target.value);
-    };
+    const handleFilterValueChange = useCallback(
+        event => {
+            const newFilter = event.target.value;
+            if (newFilter === '') {
+                setCurrentFilter(null);
+            }
+            setCurrentFilter(newFilter);
+            onFilterChange(metricCategory, selectedMetric.id, newFilter);
+        },
+        [metricCategory],
+    );
 
     return (
         <Box sx={styles.mainBox}>
@@ -107,11 +127,12 @@ export const LayerConfigBlock: FC<Props> = ({
                     label="Above"
                     placeholder="0-1000"
                     size="small"
+                    type="number"
                     sx={styles.filterField}
-                    value={filterValue}
+                    value={filtersState[selectedMetric.id]}
                     onChange={handleFilterValueChange}
                 />
-                <Button
+                {/* <Button
                     variant="text"
                     sx={{
                         fontSize: '0.875rem',
@@ -125,7 +146,7 @@ export const LayerConfigBlock: FC<Props> = ({
                     disabled={!filterValue}
                 >
                     Select
-                </Button>
+                </Button> */}
             </Box>
             <Box sx={styles.unitText}>
                 <Typography variant="caption">

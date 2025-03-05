@@ -74,11 +74,7 @@ export const InterventionsPlanTable: FC<Props> = ({
 }) => {
     return (
         <TableContainer component={Paper} sx={styles.tableContainer}>
-            <Table
-                sx={{ minWidth: 650 }}
-                size="small"
-                aria-label="a dense table"
-            >
+            <Table size="small" aria-label="a dense table">
                 <TableBody>
                     {isLoadingPlans ||
                     (interventionPlans?.length ?? 0) === 0 ? (

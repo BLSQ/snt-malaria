@@ -11,5 +11,9 @@
     "iaso.snt_malaria.label.interventionPlanTitle": "Intervention plan",
     "iaso.snt_malaria.label.layers": "Layers",
     "iaso.snt_malaria.label.noInterventionPlanAvailable": "No intervention plan available",
+    "iaso.snt_malaria.label.noOrgUnitsSelected": "No districts adhere to filter rules, no districts were selected",
+    "iaso.snt_malaria.label.selectOrgUnitsBtn": "Select districts ({amount} filters)",
+    "iaso.snt_malaria.label.selectOrgUnitsBtnOneFilter": "Select districts (1 filter)",
+    "iaso.snt_malaria.label.selectOrgUnitsSuccess": "Selected {amount} districts",
     "iaso.snt_malaria.label.orgUnitDistricts": "Districts"
 }

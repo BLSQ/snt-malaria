@@ -7,7 +7,7 @@ export type MetricType = {
     unit_symbol: string;
     comments: string;
     category: string;
-    legend_threshold: ScaleThreshold;
+    legend_threshold: ScaleDomainRange;
 };
 
 export type MetricValue = {
@@ -18,7 +18,18 @@ export type MetricValue = {
     value: number;
 };
 
-export type ScaleThreshold = {
+export type ScaleDomainRange = {
     domain: number[];
     range: string[];
+};
+
+// Example MetricsFilter:
+// {
+//   Incidence: { "171": "400" },
+//   Prevalence: { "175": "35" }
+// }
+export type MetricsFilters = {
+    [category: string]: {
+        [metricId: string]: string;
+    };
 };

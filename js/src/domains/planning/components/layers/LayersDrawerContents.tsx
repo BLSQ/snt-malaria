@@ -1,22 +1,34 @@
-import React, { FC } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined';
-import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
-import { Box, Divider, IconButton, Theme, Typography } from '@mui/material';
-import { MetricType } from '../../types/metrics';
+import { Box, Button, Divider, IconButton, Theme } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
+
 import { LayerConfigBlock } from './LayerConfigBlock';
+import { LayersTitleWithIcon } from './LayersTitleWithIcon';
+import { LoadingSpinner } from 'bluesquare-components';
+import { MESSAGES } from '../../messages';
+import { MetricsFilters, MetricType } from '../../types/metrics';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetMetricTypes } from '../../hooks/useGetMetrics';
-import { LoadingSpinner } from 'bluesquare-components';
-import { LayersTitleWithIcon } from './LayersTitleWithIcon';
 
 const styles: SxStyles = {
-    mainBox: { minHeight: 100, width: 350, position: 'relative' },
+    mainBox: {
+        minHeight: 100,
+        minWidth: 350,
+        position: 'relative',
+    },
     headerBox: (theme: Theme) => ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         margin: theme.spacing(1),
     }),
+    metricsBox: {
+        maxHeight: '600px',
+        overflowY: 'scroll',
+        scrollbarWidth: 'thin',
+        width: 'fit-content',
+    },
     layersIconBox: (theme: Theme) => ({
         marginRight: theme.spacing(1),
         backgroundColor: '#EDE7F6',
@@ -38,22 +50,65 @@ const styles: SxStyles = {
         top: 8,
         right: 8,
     },
+    footerBox: (theme: Theme) => ({
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        margin: theme.spacing(1),
+    }),
+    button: {
+        color: 'white',
+        fontSize: '0.875rem',
+        fontWeight: 'bold',
+        textTransform: 'none',
+        marginLeft: '8px',
+    },
 };
 
 type Props = {
     toggleDrawer: () => void;
     displayedMetric: MetricType | null;
-    displayMetricOnMap: (metric: MetricType) => void;
-    onSelectOrgUnits: (metricId: number, filterValue: number) => void;
+    onDisplayMetricOnMap: (metric: MetricType) => void;
+    onSelectOrgUnits: (filters: MetricsFilters) => void;
 };
 
 export const LayersDrawerContents: FC<Props> = ({
     toggleDrawer,
     displayedMetric,
-    displayMetricOnMap,
+    onDisplayMetricOnMap,
     onSelectOrgUnits,
 }) => {
     const { data: metricTypes, isLoading } = useGetMetricTypes();
+    const { formatMessage } = useSafeIntl();
+
+    const [filtersState, setFiltersState] = useState({});
+    const handleFilterChange = useCallback(
+        (
+            metricCategory: string,
+            metricId: number,
+            filterValue: number | null,
+        ) => {
+            setFiltersState(prevState => {
+                if (filterValue) {
+                    return {
+                        ...prevState,
+                        [metricCategory]: {
+                            [metricId]: filterValue,
+                        },
+                    };
+                }
+
+                delete prevState[metricCategory];
+                return { ...prevState };
+            });
+        },
+        [],
+    );
+
+    const activeFilterCount = useMemo(
+        () => Object.keys(filtersState).length,
+        [filtersState],
+    );
 
     if (isLoading || !metricTypes) {
         return (
@@ -76,23 +131,46 @@ export const LayersDrawerContents: FC<Props> = ({
                 </IconButton>
             </Box>
             <Divider />
-            {Object.keys(metricTypes).map(metricCategory => {
-                if (metricCategory !== 'Population') {
-                    return (
-                        <Box key={metricCategory}>
-                            <LayerConfigBlock
-                                metrics={metricTypes[metricCategory]}
-                                isDisplayedOnMap={
-                                    displayedMetric?.category === metricCategory
-                                }
-                                toggleMapDisplay={displayMetricOnMap}
-                                onSelectOrgUnits={onSelectOrgUnits}
-                            />
-                            <Divider />
-                        </Box>
-                    );
-                }
-            })}
+            <Box sx={styles.metricsBox}>
+                {Object.keys(metricTypes).map(metricCategory => {
+                    if (metricCategory !== 'Population') {
+                        return (
+                            <Box key={metricCategory}>
+                                <LayerConfigBlock
+                                    metricCategory={metricCategory}
+                                    metrics={metricTypes[metricCategory]}
+                                    isDisplayedOnMap={
+                                        displayedMetric?.category ===
+                                        metricCategory
+                                    }
+                                    toggleMapDisplay={onDisplayMetricOnMap}
+                                    filtersState={filtersState}
+                                    onFilterChange={handleFilterChange}
+                                />
+                                <Divider />
+                            </Box>
+                        );
+                    }
+                })}
+            </Box>
+            <Divider />
+            {activeFilterCount > 0 && (
+                <Box sx={styles.footerBox}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={() => onSelectOrgUnits(filtersState)}
+                        sx={styles.button}
+                    >
+                        {activeFilterCount === 1
+                            ? formatMessage(MESSAGES.selectOrgUnitsBtnOneFilter)
+                            : formatMessage(MESSAGES.selectOrgUnitsBtn, {
+                                  amount: activeFilterCount,
+                              })}
+                    </Button>
+                </Box>
+            )}
         </Box>
     );
 };
