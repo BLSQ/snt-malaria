@@ -82,9 +82,7 @@ export const Budgets: FC<Props> = ({ scenarioId }) => {
                                     gutterBottom
                                     color="#1F2B3D"
                                 >
-                                    {formatMessage(
-                                        MESSAGES.interventionPlanTitle,
-                                    )}
+                                    {formatMessage(MESSAGES.budgetImpactTitle)}
                                 </Typography>
                             </Stack>
                         </Grid>

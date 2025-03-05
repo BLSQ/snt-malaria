@@ -32,8 +32,8 @@ const TableRowWithBudgets = ({ row, index }) => {
             <TableCell
                 sx={{
                     ...styles.tableCellStyle,
-                    textAlign: 'left',
-                    paddingLeft: '260px',
+                    textAlign: 'right',
+                    paddingRight: '50px',
                 }}
             >
                 <Typography variant="h6">
