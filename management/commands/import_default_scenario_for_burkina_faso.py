@@ -23,23 +23,21 @@ class Command(BaseCommand):
         account = Account.objects.get(pk=BURKINA_ACCOUNT_ID)
         print(f"Account: {account.name}")
         print("---------------------------------------------------------")
-        print("1. Get the default scenario")
-        default_scenario = Scenario.objects.get(
-            name__iexact=DEFAULT_SCENARIO_NAME, account=account
-        )
+        print("1. Get or create the default scenario")
         created_by = User.objects.filter(iaso_profile__account=account).first()
-        if default_scenario:
+        default_scenario, created = Scenario.objects.get_or_create(
+            name__iexact=DEFAULT_SCENARIO_NAME,  # This should be adjusted (see below)
+            account=account,
+            defaults={
+                "name": DEFAULT_SCENARIO_NAME,
+                "created_by": created_by,
+            },
+        )
+        if not created:
             print(
                 "2. Remove interventions mix related to default scenario if it exists"
             )
             InterventionAssignment.objects.filter(scenario=default_scenario).delete()
-        else:
-            print(
-                "2. Create the new default scenario for Burkina faso if it doesn't exist"
-            )
-            default_scenario = Scenario.objects.create(
-                name=DEFAULT_SCENARIO_NAME, account=account, created_by=created_by
-            )
 
         print("3. Creating default scenario's interventions mix")
         print("---------------------------------------------------------")
@@ -52,8 +50,14 @@ class Command(BaseCommand):
                 if org_unit:
                     csv_intervention_mix = row["INTERVENTION_MIX"].split(", ")
                     db_interventions_mixs = Intervention.objects.filter(
-                        name__in=csv_intervention_mix
+                        name__iregex=r"(" + "|".join(csv_intervention_mix) + ")"
                     )
+
+                    if len(csv_intervention_mix) != len(db_interventions_mixs):
+                        raise ValueError(
+                            "ERROR: Unknown intervention type", csv_intervention_mix
+                        )
+
                     for intervention in db_interventions_mixs:
                         assignments.append(
                             InterventionAssignment(

@@ -17,8 +17,8 @@ export const PageContainer = styled(Box)(({ theme }) => ({
     height: `calc(100vh - ${theme.spacing(10)})`,
     marginLeft: theme.spacing(2),
     marginRight: theme.spacing(2),
-    // overflow: 'hidden',
     padding: theme.spacing(2),
+    overflow: 'auto',
 }));
 
 export const AppBar = styled(MuiAppBar)(({ theme }) => ({
