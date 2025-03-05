@@ -50,7 +50,7 @@ type Props = {
     metricCategory: string;
     metrics: MetricType[];
     isDisplayedOnMap: boolean;
-    filtersState: Record<string, Record<number, number>>;
+    filtersState: Record<string, Record<string, string>>;
     toggleMapDisplay: (metric: MetricType) => void;
     onFilterChange: (
         metricCategory: string,
@@ -69,7 +69,6 @@ export const LayerConfigBlock: FC<Props> = ({
 }) => {
     const [selectedMetric, setSelectedMetric] = useState(metrics[0]);
     const [currentFilter, setCurrentFilter] = useState<number | null>(null);
-    console.log(filtersState);
     const handleSelectMetricChange = useCallback(
         event => {
             const newMetricType: MetricType = event.target.value;
@@ -80,13 +79,14 @@ export const LayerConfigBlock: FC<Props> = ({
             onFilterChange(metricCategory, newMetricType.id, currentFilter);
         },
         [
-            currentFilter,
             isDisplayedOnMap,
-            metricCategory,
             onFilterChange,
+            metricCategory,
+            currentFilter,
             toggleMapDisplay,
         ],
     );
+
     const handleDisplayOnMap = useCallback(() => {
         if (!isDisplayedOnMap) {
             toggleMapDisplay(selectedMetric);
@@ -132,6 +132,7 @@ export const LayerConfigBlock: FC<Props> = ({
                     label="Above"
                     placeholder="0-1000"
                     size="small"
+                    type="number"
                     sx={styles.filterField}
                     value={filtersState[selectedMetric.id]}
                     onChange={handleFilterValueChange}

@@ -20,9 +20,13 @@ SEVEN_SHADES_OF_RED = [
     "#8B2B0E",
     "#601B06",
 ]
+RISK_LOW = "#A5D6A7"
+RISK_MEDIUM = "#FFECB3"
+RISK_HIGH = "#FECDD2"
+RISK_VERY_HIGH = "#FFAB91"
 
 
-def get_legend_thresholds_for_metric_category(metric_type):
+def get_legend_config(metric_type):
     if metric_type.category == "Incidence":
         return {
             "domain": [5, 50, 100, 200, 300, 500],
@@ -33,7 +37,12 @@ def get_legend_thresholds_for_metric_category(metric_type):
             "domain": [10, 20, 30, 40, 50, 60, 70, 80],
             "range": NINE_SHADES_OF_RED,
         }
-    if metric_type.category == "Mortality":
+    elif metric_type.category in ["Bednet coverage", "DHS DTP3 Vaccine"]:
+        return {
+            "domain": [40, 50, 60, 70, 80, 90],
+            "range": list(reversed(SEVEN_SHADES_OF_RED)),
+        }
+    else:
         values_qs = metric_type.metricvalue_set.all()
 
         result = values_qs.aggregate(
@@ -43,6 +52,27 @@ def get_legend_thresholds_for_metric_category(metric_type):
         min_value = result["min_value"]
         max_value = result["max_value"]
 
-        return {"domain": [0, max_value], "range": ["#FFCCBC", "#601B06"]}
+        if metric_type.category == "Mortality":
+            return {"domain": [0, max_value], "range": ["#FFCCBC", "#601B06"]}
+        elif metric_type.category == "Composite risk":
+            return {
+                "domain": list(range(int(min_value), int(max_value))),
+                "range": [RISK_LOW, RISK_MEDIUM, RISK_HIGH, RISK_VERY_HIGH],
+            }
+        elif metric_type.category == "Seasonality":
+            choices = values_qs.values_list("value", flat=True).distinct().order_by("value")
+            return {
+                "domain": list(choices),
+                "range": [RISK_LOW, RISK_MEDIUM, RISK_HIGH, RISK_VERY_HIGH],
+            }
+        else:
+            return {"domain": [min_value, max_value], "range": ["#FFCCBC", "#601B06"]}
+
+
+def get_legend_type(metric_type):
+    if metric_type.category == "Mortality":
+        return "linear"
+    elif metric_type.category in ["Composite risk", "Seasonality"]:
+        return "ordinal"
     else:
-        return {}
+        return "threshold"

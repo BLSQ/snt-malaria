@@ -1,10 +1,9 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
 import { Grid } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { values } from 'lodash';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
-import { succesfullSnackBar, warningSnackBar } from 'Iaso/constants/snackBars';
+import { succesfullSnackBar } from 'Iaso/constants/snackBars';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { getRequest } from 'Iaso/libs/Api';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
@@ -144,7 +143,7 @@ export const Planning: FC = () => {
                 });
             }
         },
-        [orgUnits],
+        [formatMessage, orgUnits],
     );
 
     return (

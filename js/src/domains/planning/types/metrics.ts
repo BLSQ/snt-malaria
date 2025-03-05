@@ -7,7 +7,8 @@ export type MetricType = {
     unit_symbol: string;
     comments: string;
     category: string;
-    legend_threshold: ScaleDomainRange;
+    legend_config: ScaleDomainRange;
+    legend_type: string;
 };
 
 export type MetricValue = {
