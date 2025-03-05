@@ -130,7 +130,6 @@ export const LayerConfigBlock: FC<Props> = ({
                 <TextField
                     variant="outlined"
                     label="Above"
-                    placeholder="0-1000"
                     size="small"
                     type="number"
                     sx={styles.filterField}
