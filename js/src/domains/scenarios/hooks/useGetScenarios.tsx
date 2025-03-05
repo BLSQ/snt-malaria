@@ -1,5 +1,5 @@
 import { UseMutationResult, UseQueryResult } from 'react-query';
-import { getRequest, putRequest } from 'Iaso/libs/Api';
+import { getRequest, postRequest, putRequest } from 'Iaso/libs/Api';
 import { useSnackMutation, useSnackQuery } from 'Iaso/libs/apiHooks';
 
 export const useGetScenarios = (): UseQueryResult<Scenario[], Error> => {
@@ -23,6 +23,15 @@ export const useGetScenario = (
             staleTime: 1000 * 60 * 15, // in MS
             cacheTime: 1000 * 60 * 5,
         },
+    });
+};
+
+export const useCreateScenario = (): UseMutationResult => {
+    const name = `New scenario - ${new Date().toLocaleString()}`;
+
+    return useSnackMutation({
+        mutationFn: () => postRequest('/api/snt_malaria/scenarios/', { name }),
+        invalidateQueryKey: ['scenarios'],
     });
 };
 
