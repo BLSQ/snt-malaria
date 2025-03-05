@@ -1,12 +1,14 @@
 import React, { FC, useMemo } from 'react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForward from '@mui/icons-material/ArrowForward';
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import {
     Box,
     Button,
     CircularProgress,
     List,
     ListItem,
+    IconButton,
     Tooltip,
     Typography,
 } from '@mui/material';
@@ -66,6 +68,10 @@ const styles: SxStyles = {
         fontWeight: 'bold',
         textTransform: 'none',
     },
+    closeIcon: {
+        color: 'white',
+        paddingLeft: 0,
+    },
 };
 
 export const MapOrgUnitDetails: FC<Props> = ({
@@ -99,14 +105,13 @@ export const MapOrgUnitDetails: FC<Props> = ({
     return (
         <Box sx={styles.mainBox}>
             <Box sx={styles.buttonsBox}>
-                <Button
-                    variant="text"
-                    size="small"
-                    sx={styles.button}
+                <IconButton
+                    aria-label="close"
                     onClick={onClear}
+                    sx={styles.closeIcon}
                 >
-                    Clear
-                </Button>
+                    <CloseOutlinedIcon />
+                </IconButton>
                 <Button
                     variant="contained"
                     color="primary"

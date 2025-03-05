@@ -50,7 +50,8 @@ class Command(BaseCommand):
                 if org_unit:
                     csv_intervention_mix = row["INTERVENTION_MIX"].split(", ")
                     db_interventions_mixs = Intervention.objects.filter(
-                        name__iregex=r"(" + "|".join(csv_intervention_mix) + ")"
+                        name__iregex=r"(" + "|".join(csv_intervention_mix) + ")",
+                        intervention_category__account=account,
                     )
 
                     if len(csv_intervention_mix) != len(db_interventions_mixs):

@@ -146,6 +146,10 @@ export const Planning: FC = () => {
         [formatMessage, orgUnits],
     );
 
+    const handleClearOrgUnitSelection = useCallback(() => {
+        setSelectedOrgUnits([]);
+    }, []);
+
     return (
         <>
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
@@ -153,8 +157,10 @@ export const Planning: FC = () => {
                 toggleDrawer={toggleDrawer}
                 isDrawerOpen={isDrawerOpen}
                 displayedMetric={displayedMetric}
+                selectedOrgUnits={selectedOrgUnits}
                 onDisplayMetricOnMap={handleDisplayMetricOnMap}
                 onSelectOrgUnits={handleSelectOrgUnits}
+                onClearOrgUnitSelection={handleClearOrgUnitSelection}
             />
             <PageContainer>
                 {scenario && <ScenarioTopBar scenario={scenario} />}

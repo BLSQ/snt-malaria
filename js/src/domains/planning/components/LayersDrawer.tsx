@@ -1,5 +1,7 @@
 import React, { FC } from 'react';
 import { Drawer } from '@mui/material';
+
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { MetricsFilters, MetricType } from '../types/metrics';
 import { LayersDrawerContents } from './layers/LayersDrawerContents';
 
@@ -7,16 +9,20 @@ type Props = {
     toggleDrawer: () => void;
     isDrawerOpen: boolean;
     displayedMetric: MetricType | null;
+    selectedOrgUnits: OrgUnit[];
     onDisplayMetricOnMap: (metric: MetricType) => void;
     onSelectOrgUnits: (filters: MetricsFilters) => void;
+    onClearOrgUnitSelection: () => void;
 };
 
 export const LayersDrawer: FC<Props> = ({
     toggleDrawer,
     isDrawerOpen,
     displayedMetric,
+    selectedOrgUnits,
     onDisplayMetricOnMap,
     onSelectOrgUnits,
+    onClearOrgUnitSelection,
 }) => {
     return (
         <Drawer
@@ -36,8 +42,10 @@ export const LayersDrawer: FC<Props> = ({
             <LayersDrawerContents
                 toggleDrawer={toggleDrawer}
                 displayedMetric={displayedMetric}
+                selectedOrgUnits={selectedOrgUnits}
                 onDisplayMetricOnMap={onDisplayMetricOnMap}
                 onSelectOrgUnits={onSelectOrgUnits}
+                onClearOrgUnitSelection={onClearOrgUnitSelection}
             />
         </Drawer>
     );

@@ -1,4 +1,4 @@
-type User = {
+export type User = {
     id: number;
     first_name: string;
     last_name: string;
@@ -6,7 +6,7 @@ type User = {
     full_name: string;
 };
 
-type Scenario = {
+export type Scenario = {
     id: number;
     created_by: User;
     name: string;

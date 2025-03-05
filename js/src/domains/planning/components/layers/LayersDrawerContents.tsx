@@ -3,6 +3,7 @@ import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined';
 import { Box, Button, Divider, IconButton, Theme } from '@mui/material';
 import { useSafeIntl, LoadingSpinner } from 'bluesquare-components';
 
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetMetricTypes } from '../../hooks/useGetMetrics';
 import { MESSAGES } from '../../messages';
@@ -55,27 +56,37 @@ const styles: SxStyles = {
         alignItems: 'center',
         margin: theme.spacing(1),
     }),
-    button: {
+    selectBtn: {
         color: 'white',
         fontSize: '0.875rem',
         fontWeight: 'bold',
         textTransform: 'none',
         marginLeft: '8px',
     },
+    clearBtn: {
+        fontSize: '0.875rem',
+        fontWeight: 'bold',
+        textTransform: 'none',
+        marginRight: '8px',
+    },
 };
 
 type Props = {
     toggleDrawer: () => void;
     displayedMetric: MetricType | null;
+    selectedOrgUnits: OrgUnit[];
     onDisplayMetricOnMap: (metric: MetricType) => void;
     onSelectOrgUnits: (filters: MetricsFilters) => void;
+    onClearOrgUnitSelection: () => void;
 };
 
 export const LayersDrawerContents: FC<Props> = ({
     toggleDrawer,
     displayedMetric,
+    selectedOrgUnits,
     onDisplayMetricOnMap,
     onSelectOrgUnits,
+    onClearOrgUnitSelection,
 }) => {
     const { data: metricTypes, isLoading } = useGetMetricTypes();
     const { formatMessage } = useSafeIntl();
@@ -153,23 +164,33 @@ export const LayersDrawerContents: FC<Props> = ({
                 })}
             </Box>
             <Divider />
-            {activeFilterCount > 0 && (
-                <Box sx={styles.footerBox}>
+            <Box sx={styles.footerBox}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    onClick={() => onSelectOrgUnits(filtersState)}
+                    sx={styles.selectBtn}
+                    disabled={activeFilterCount === 0}
+                >
+                    {activeFilterCount === 1
+                        ? formatMessage(MESSAGES.selectOrgUnitsBtnOneFilter)
+                        : formatMessage(MESSAGES.selectOrgUnitsBtn, {
+                              amount: activeFilterCount,
+                          })}
+                </Button>
+                {selectedOrgUnits.length > 0 && (
                     <Button
-                        variant="contained"
+                        variant="text"
                         color="primary"
                         size="small"
-                        onClick={() => onSelectOrgUnits(filtersState)}
-                        sx={styles.button}
+                        onClick={() => onClearOrgUnitSelection()}
+                        sx={styles.clearBtn}
                     >
-                        {activeFilterCount === 1
-                            ? formatMessage(MESSAGES.selectOrgUnitsBtnOneFilter)
-                            : formatMessage(MESSAGES.selectOrgUnitsBtn, {
-                                  amount: activeFilterCount,
-                              })}
+                        {formatMessage(MESSAGES.clearOrgUnitSelection)}
                     </Button>
-                </Box>
-            )}
+                )}
+            </Box>
         </Box>
     );
 };

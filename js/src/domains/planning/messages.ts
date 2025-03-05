@@ -79,4 +79,8 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'No districts adhere to filter rules, no districts were selected',
     },
+    clearOrgUnitSelection: {
+        id: 'iaso.snt_malaria.label.clearOrgUnitSelection',
+        defaultMessage: 'Clear selection',
+    },
 });

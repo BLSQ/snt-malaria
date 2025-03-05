@@ -9,7 +9,7 @@ from iaso.utils.models.soft_deletable import (
 class Scenario(SoftDeletableModel):
     class Meta:
         app_label = "snt_malaria"
-        ordering = ["name"]
+        ordering = ["-updated_at"]
         unique_together = [["account", "name"]]
 
     account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE)

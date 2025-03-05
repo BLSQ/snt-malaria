@@ -63,10 +63,11 @@ export const ScenarioComponent: FC<Props> = ({ scenario }) => {
                             {scenario.name}
                         </Typography>
                         <Typography variant="body2" sx={styles.timestamp}>
-                            Edited on {scenario.updated_at}
+                            Edited on{' '}
+                            {new Date(scenario.updated_at).toLocaleString()}
                         </Typography>
                     </Box>
-                    <Box sx={styles.columnEnd}>
+                    {/* <Box sx={styles.columnEnd}>
                         <Typography variant="overline" color="textSecondary">
                             Districts
                         </Typography>
@@ -83,7 +84,7 @@ export const ScenarioComponent: FC<Props> = ({ scenario }) => {
                             Budget
                         </Typography>
                         <Typography variant="h6">USD 32,000</Typography>
-                    </Box>
+                    </Box> */}
                     <ChevronRightOutlinedIcon />
                 </CardContent>
             </CardActionArea>
