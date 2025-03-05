@@ -5,9 +5,9 @@ on:
         inputs:
             # Branch is chosen by default in github manual actions
             environment:
-                description: Env (staging/prod) or exact env name (e.g. iaso-snt-malaria)
+                description: Env (staging/prod) or exact env name (e.g. snt-malaria)
                 required: true
-                default: staging
+                default: snt-malaria
             iaso_ref:
                 description: The branch, tag or SHA from Iaso to use (main by default)
                 required: false
@@ -66,9 +66,9 @@ jobs:
                   export IASO_VERSION=$(git describe --tags --match "v[[:digit:]]*")
                   echo $IASO_VERSION
                   cd plugins/snt_malaria
-                  export TRYPELIM_VERSION=$(git describe --tags)
-                  echo $TRYPELIM_VERSION
-                  echo "::set-output name=VERSION_NAME::$IASO_VERSION-$TRYPELIM_VERSION"
+                  export SNT_VERSION=$(git rev-parse HEAD)
+                  echo $SNT_VERSION
+                  echo "::set-output name=VERSION_NAME::$IASO_VERSION-$SNT_VERSION"
             - name: Slack deployment start
               uses: rtCamp/action-slack-notify@v2.1.3
               env:
