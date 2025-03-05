@@ -1,15 +1,14 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import ChevronLeftOutlinedIcon from '@mui/icons-material/ChevronLeftOutlined';
 import { Box, Button, Divider, IconButton, Theme } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl, LoadingSpinner } from 'bluesquare-components';
 
-import { LayerConfigBlock } from './LayerConfigBlock';
-import { LayersTitleWithIcon } from './LayersTitleWithIcon';
-import { LoadingSpinner } from 'bluesquare-components';
-import { MESSAGES } from '../../messages';
-import { MetricsFilters, MetricType } from '../../types/metrics';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetMetricTypes } from '../../hooks/useGetMetrics';
+import { MESSAGES } from '../../messages';
+import { MetricsFilters, MetricType } from '../../types/metrics';
+import { LayerConfigBlock } from './LayerConfigBlock';
+import { LayersTitleWithIcon } from './LayersTitleWithIcon';
 
 const styles: SxStyles = {
     mainBox: {

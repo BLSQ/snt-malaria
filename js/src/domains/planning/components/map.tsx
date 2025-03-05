@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import * as d3 from 'd3-scale';
 import { Box, useTheme, Button, styled, Theme } from '@mui/material';
+import * as d3 from 'd3-scale';
 import L from 'leaflet';
 import {
     GeoJSON,
@@ -91,9 +91,8 @@ export const Map: FC<Props> = ({
                     .domain(legend.domain)
                     .range(legend.range);
                 return colorScale(value);
-            } else {
-                return getLegend(value);
             }
+            return getLegend(value);
         },
         [displayedMetric, displayedMetricValues, getLegend],
     );

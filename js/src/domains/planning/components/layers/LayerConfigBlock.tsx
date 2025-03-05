@@ -69,7 +69,6 @@ export const LayerConfigBlock: FC<Props> = ({
 }) => {
     const [selectedMetric, setSelectedMetric] = useState(metrics[0]);
     const [currentFilter, setCurrentFilter] = useState<number | null>(null);
-
     const handleSelectMetricChange = useCallback(
         event => {
             const newMetricType: MetricType = event.target.value;
@@ -79,14 +78,20 @@ export const LayerConfigBlock: FC<Props> = ({
             }
             onFilterChange(metricCategory, newMetricType.id, currentFilter);
         },
-        [metricCategory, currentFilter],
+        [
+            isDisplayedOnMap,
+            onFilterChange,
+            metricCategory,
+            currentFilter,
+            toggleMapDisplay,
+        ],
     );
 
     const handleDisplayOnMap = useCallback(() => {
         if (!isDisplayedOnMap) {
             toggleMapDisplay(selectedMetric);
         }
-    }, []);
+    }, [isDisplayedOnMap, selectedMetric, toggleMapDisplay]);
 
     const handleFilterValueChange = useCallback(
         event => {
@@ -97,7 +102,7 @@ export const LayerConfigBlock: FC<Props> = ({
             setCurrentFilter(newFilter);
             onFilterChange(metricCategory, selectedMetric.id, newFilter);
         },
-        [metricCategory],
+        [metricCategory, onFilterChange, selectedMetric.id],
     );
 
     return (

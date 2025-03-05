@@ -24,6 +24,7 @@ export const useGetInterventionsPlan = (
             select: (data: InterventionPlan[]) => {
                 return data;
             },
+            enabled: Boolean(scenarioId),
         },
     });
 };

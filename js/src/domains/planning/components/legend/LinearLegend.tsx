@@ -29,7 +29,7 @@ export const LinearLegend: FunctionComponent<Props> = ({ domainAndRange }) => {
 
     return (
         <Box>
-            <div style={gradientStyle}></div>
+            <div style={gradientStyle} />
             <Box sx={styles.gradientLabels}>
                 <span>{startValue}</span>
                 <span>{endValue}</span>

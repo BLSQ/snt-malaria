@@ -73,8 +73,10 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         for instance in queryset:
             grouped_data[instance.org_unit_id].append(instance.intervention)
 
-        org_units = OrgUnit.objects.filter(id__in=grouped_data.keys()).values(
-            "id", "name"
+        org_units = (
+            OrgUnit.objects.filter(id__in=grouped_data.keys())
+            .values("id", "name")
+            .order_by("name")
         )
 
         formatted_response = []
