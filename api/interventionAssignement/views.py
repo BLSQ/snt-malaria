@@ -64,22 +64,30 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
+    def get_filtered_queryset(self):
+        return self.filter_queryset(self.get_queryset()).select_related(
+            "intervention", "org_unit"
+        )
+
+    def get_org_units(self, org_unit_ids):
+        return (
+            OrgUnit.objects.filter(id__in=org_unit_ids)
+            .values("id", "name")
+            .order_by("name")
+        )
+
     @action(detail=False, methods=["get"])
     def grouped_by_org_unit(self, request):
         """
         Group interventions by org_unit
         """
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_filtered_queryset()
 
         grouped_data = defaultdict(list)
         for instance in queryset:
             grouped_data[instance.org_unit_id].append(instance.intervention)
 
-        org_units = (
-            OrgUnit.objects.filter(id__in=grouped_data.keys())
-            .values("id", "name")
-            .order_by("name")
-        )
+        org_units = self.get_org_units(grouped_data.keys())
 
         formatted_response = []
         for org_unit in org_units:
@@ -98,10 +106,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         """
         Get total budget per org unit (optimized)
         """
-        queryset = self.filter_queryset(self.get_queryset()).select_related(
-            "intervention", "org_unit"
-        )
-
+        queryset = self.get_filtered_queryset()
         try:
             population_metric = MetricType.objects.get(name__iexact="Population")
         except MetricType.DoesNotExist:
@@ -126,11 +131,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
                     cost_per_unit * population_values[org_unit_id]
                 )
 
-        org_units = (
-            OrgUnit.objects.filter(id__in=budget_per_org_unit.keys())
-            .values("id", "name")
-            .order_by("name")
-        )
+        org_units = self.get_org_units(budget_per_org_unit.keys())
 
         formatted_response = []
         for org_unit in org_units:
