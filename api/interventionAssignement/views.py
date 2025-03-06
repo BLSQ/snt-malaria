@@ -1,4 +1,6 @@
+from decimal import Decimal
 from collections import defaultdict
+from iaso.models.metric import MetricType, MetricValue
 from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.api.intervention.serializers import InterventionSerializer
 from plugins.snt_malaria.api.interventionAssignement.filters import (
@@ -37,9 +39,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         interventions = serializer.validated_data["valid_interventions"]
         created_by = request.user
         # Delete all assignments linked to orgUnits and to the scenario
-        InterventionAssignment.objects.filter(
-            scenario=scenario, org_unit__in=org_units
-        ).delete()
+        InterventionAssignment.objects.filter(scenario=scenario, org_unit__in=org_units).delete()
         # Create InterventionAssignment objects
         assignments = []
 
@@ -62,31 +62,70 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
+    def get_filtered_queryset(self):
+        return self.filter_queryset(self.get_queryset()).select_related("intervention", "org_unit")
+
+    def get_org_units(self, org_unit_ids):
+        return OrgUnit.objects.filter(id__in=org_unit_ids).values("id", "name").order_by("name")
+
     @action(detail=False, methods=["get"])
     def grouped_by_org_unit(self, request):
         """
         Group interventions by org_unit
         """
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_filtered_queryset()
 
         grouped_data = defaultdict(list)
         for instance in queryset:
             grouped_data[instance.org_unit_id].append(instance.intervention)
 
-        org_units = (
-            OrgUnit.objects.filter(id__in=grouped_data.keys())
-            .values("id", "name")
-            .order_by("name")
-        )
+        org_units = self.get_org_units(grouped_data.keys())
 
         formatted_response = []
         for org_unit in org_units:
             org_unit_id = org_unit["id"]
             interventions = grouped_data.get(org_unit_id, [])
             if interventions:
-                org_unit["interventions"] = InterventionSerializer(
-                    interventions, many=True
-                ).data
+                org_unit["interventions"] = InterventionSerializer(interventions, many=True).data
+            formatted_response.append(org_unit)
+
+        return Response(formatted_response)
+
+    @action(detail=False, methods=["get"])
+    def budget_per_org_unit(self, request):
+        """
+        Get total budget per org unit (optimized)
+        """
+        queryset = self.get_filtered_queryset()
+        try:
+            # TODO: filter on account
+            population_metric = MetricType.objects.get(name__iexact="Population")
+        except MetricType.DoesNotExist:
+            return Response({"error": "Population MetricType not found"}, status=400)
+
+        org_units = queryset.values_list("org_unit_id", flat=True).distinct()
+        population_values = {
+            mv.org_unit_id: Decimal(mv.value)
+            for mv in MetricValue.objects.filter(metric_type=population_metric, org_unit__in=org_units)
+        }
+
+        budget_per_org_unit = defaultdict(Decimal)
+
+        for assignment in queryset:
+            org_unit_id = assignment.org_unit_id
+            cost_per_unit = assignment.intervention.cost_per_unit
+
+            if cost_per_unit is not None and population_values[org_unit_id]:
+                budget_per_org_unit[org_unit_id] += cost_per_unit * population_values[org_unit_id]
+
+        org_units = self.get_org_units(budget_per_org_unit.keys())
+
+        formatted_response = []
+        for org_unit in org_units:
+            org_unit_id = org_unit["id"]
+            budget = budget_per_org_unit[org_unit_id]
+            if budget:
+                org_unit["budget"] = budget_per_org_unit[org_unit_id]
             formatted_response.append(org_unit)
 
         return Response(formatted_response)
