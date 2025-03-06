@@ -36,7 +36,7 @@ const TableRowWithBudgets = ({ row, index }) => {
                     paddingRight: '50px',
                 }}
             >
-                <Typography variant="h6">
+                <Typography variant="h6" sx={{ fontSize: '1rem' }}>
                     {new Intl.NumberFormat('en-US', {
                         style: 'currency',
                         currency: 'USD',

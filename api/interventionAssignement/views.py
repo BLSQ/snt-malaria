@@ -39,9 +39,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         interventions = serializer.validated_data["valid_interventions"]
         created_by = request.user
         # Delete all assignments linked to orgUnits and to the scenario
-        InterventionAssignment.objects.filter(
-            scenario=scenario, org_unit__in=org_units
-        ).delete()
+        InterventionAssignment.objects.filter(scenario=scenario, org_unit__in=org_units).delete()
         # Create InterventionAssignment objects
         assignments = []
 
@@ -65,16 +63,10 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         )
 
     def get_filtered_queryset(self):
-        return self.filter_queryset(self.get_queryset()).select_related(
-            "intervention", "org_unit"
-        )
+        return self.filter_queryset(self.get_queryset()).select_related("intervention", "org_unit")
 
     def get_org_units(self, org_unit_ids):
-        return (
-            OrgUnit.objects.filter(id__in=org_unit_ids)
-            .values("id", "name")
-            .order_by("name")
-        )
+        return OrgUnit.objects.filter(id__in=org_unit_ids).values("id", "name").order_by("name")
 
     @action(detail=False, methods=["get"])
     def grouped_by_org_unit(self, request):
@@ -94,9 +86,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             org_unit_id = org_unit["id"]
             interventions = grouped_data.get(org_unit_id, [])
             if interventions:
-                org_unit["interventions"] = InterventionSerializer(
-                    interventions, many=True
-                ).data
+                org_unit["interventions"] = InterventionSerializer(interventions, many=True).data
             formatted_response.append(org_unit)
 
         return Response(formatted_response)
@@ -108,6 +98,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         """
         queryset = self.get_filtered_queryset()
         try:
+            # TODO: filter on account
             population_metric = MetricType.objects.get(name__iexact="Population")
         except MetricType.DoesNotExist:
             return Response({"error": "Population MetricType not found"}, status=400)
@@ -115,21 +106,17 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         org_units = queryset.values_list("org_unit_id", flat=True).distinct()
         population_values = {
             mv.org_unit_id: Decimal(mv.value)
-            for mv in MetricValue.objects.filter(
-                metric_type=population_metric, org_unit__in=org_units
-            )
+            for mv in MetricValue.objects.filter(metric_type=population_metric, org_unit__in=org_units)
         }
 
         budget_per_org_unit = defaultdict(Decimal)
 
-        for instance in queryset:
-            org_unit_id = instance.org_unit_id
-            cost_per_unit = instance.intervention.cost_per_unit
+        for assignment in queryset:
+            org_unit_id = assignment.org_unit_id
+            cost_per_unit = assignment.intervention.cost_per_unit
 
             if cost_per_unit is not None and population_values[org_unit_id]:
-                budget_per_org_unit[org_unit_id] += (
-                    cost_per_unit * population_values[org_unit_id]
-                )
+                budget_per_org_unit[org_unit_id] += cost_per_unit * population_values[org_unit_id]
 
         org_units = self.get_org_units(budget_per_org_unit.keys())
 

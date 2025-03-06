@@ -22,6 +22,7 @@ class InterventionAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "intervention_category",
+        "cost_per_unit",
         "created_by",
         "created_at",
         "updated_at",
