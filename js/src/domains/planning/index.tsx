@@ -38,6 +38,7 @@ export const Planning: FC = () => {
     const { data: orgUnits } = useGetOrgUnits();
     const { formatMessage } = useSafeIntl();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [expanded, setExpanded] = useState('interventionsMix');
     const [selectedOrgUnits, setSelectedOrgUnits] = useState<OrgUnit[]>([]);
     const toggleDrawer = () => {
         setIsDrawerOpen(!isDrawerOpen);
@@ -150,6 +151,9 @@ export const Planning: FC = () => {
         setSelectedOrgUnits([]);
     }, []);
 
+    const handleExpandAccordion = panel => (event, isExpanded) => {
+        setExpanded(isExpanded ? panel : null);
+    };
     return (
         <>
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
@@ -189,9 +193,19 @@ export const Planning: FC = () => {
                             <InterventionsMix
                                 scenarioId={scenario?.id}
                                 selectedOrgUnits={selectedOrgUnits}
+                                handleExpandAccordion={handleExpandAccordion}
+                                expanded={expanded}
                             />
-                            <InterventionsPlan scenarioId={scenario?.id} />
-                            <Budgets scenarioId={scenario?.id} />
+                            <InterventionsPlan
+                                scenarioId={scenario?.id}
+                                handleExpandAccordion={handleExpandAccordion}
+                                expanded={expanded}
+                            />
+                            <Budgets
+                                scenarioId={scenario?.id}
+                                handleExpandAccordion={handleExpandAccordion}
+                                expanded={expanded}
+                            />
                         </PaperContainer>
                     </Grid>
                 </Grid>

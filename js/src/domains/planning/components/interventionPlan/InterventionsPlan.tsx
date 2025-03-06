@@ -24,13 +24,25 @@ const styles: SxStyles = {
 
 type Props = {
     scenarioId: number | undefined;
+    handleExpandAccordion: (panel: string) => void;
+    expanded: string;
 };
 
-export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
+export const InterventionsPlan: FC<Props> = ({
+    scenarioId,
+    handleExpandAccordion,
+    expanded,
+}) => {
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionsPlan(scenarioId);
+
     return (
-        <Accordion sx={styles.accordion}>
+        <Accordion
+            sx={styles.accordion}
+            defaultExpanded
+            expanded={Boolean(expanded === 'interventionsPlan')}
+            onChange={handleExpandAccordion('interventionsPlan')}
+        >
             <InterventionPlanSummary orgUnitCount={interventionPlans?.length} />
             <Divider sx={{ width: '100%' }} />
             <AccordionDetails sx={{ padding: 2 }}>

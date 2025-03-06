@@ -27,8 +27,14 @@ const styles: SxStyles = {
 };
 type Props = {
     scenarioId: number | undefined;
+    handleExpandAccordion: (panel: string) => void;
+    expanded: string;
 };
-export const Budgets: FC<Props> = ({ scenarioId }) => {
+export const Budgets: FC<Props> = ({
+    scenarioId,
+    handleExpandAccordion,
+    expanded,
+}) => {
     const { formatMessage } = useSafeIntl();
     const { data: budgets, isLoading: isLoadingBudgets } =
         UseGetBudgets(scenarioId);
@@ -54,11 +60,13 @@ export const Budgets: FC<Props> = ({ scenarioId }) => {
                         display: 'none',
                     },
                 }}
+                expanded={Boolean(expanded === 'budgets')}
+                onChange={handleExpandAccordion('budgets')}
             >
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
-                    aria-controls="interventions-content"
-                    id="interventions-header"
+                    aria-controls="budgets-content"
+                    id="budgets-header"
                 >
                     <Grid
                         container
@@ -111,9 +119,6 @@ export const Budgets: FC<Props> = ({ scenarioId }) => {
                         budgets={budgets}
                     />
                 </AccordionDetails>
-                {/* <AccordionDetails> */}
-                {/* <Box p={2}>Add content for BUDGETS here</Box> */}
-                {/* </AccordionDetails> */}
             </Accordion>
         </Box>
     );

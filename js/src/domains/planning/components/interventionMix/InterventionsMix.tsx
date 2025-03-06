@@ -1,17 +1,6 @@
 import React, { FC } from 'react';
 
-import {
-    Accordion,
-    AccordionDetails,
-    Box,
-    // Button,
-    Divider,
-    // Grid,
-} from '@mui/material';
-
-// import { useSafeIntl } from 'bluesquare-components';
-// import { MESSAGES } from '../../messages';
-// import { ApplyInterventionsMix } from './ApplyInterventionMixModal';
+import { Accordion, AccordionDetails, Box, Divider } from '@mui/material';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { InterventionCategories } from './InterventionCategories';
 import { InterventionMixSummary } from './InterventionMixSummary';
@@ -19,12 +8,15 @@ import { InterventionMixSummary } from './InterventionMixSummary';
 type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: OrgUnit[];
+    handleExpandAccordion: (panel: string) => void;
+    expanded: string;
 };
 export const InterventionsMix: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
+    handleExpandAccordion,
+    expanded,
 }) => {
-    // const { formatMessage } = useSafeIntl();
     return (
         <Box
             sx={{
@@ -32,7 +24,10 @@ export const InterventionsMix: FC<Props> = ({
                 overflow: 'hidden',
             }}
         >
-            <Accordion defaultExpanded>
+            <Accordion
+                expanded={Boolean(expanded === 'interventionsMix')}
+                onChange={handleExpandAccordion('interventionsMix')}
+            >
                 <InterventionMixSummary
                     orgUnitCount={selectedOrgUnits.length}
                 />

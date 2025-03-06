@@ -40,8 +40,8 @@ export const InterventionMixSummary: FC<Props> = ({ orgUnitCount }) => {
     return (
         <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
-            aria-controls="interventions-content"
-            id="interventions-header"
+            aria-controls="interventionsMix-content"
+            id="interventionsMix-header"
         >
             <Grid
                 container
