@@ -24,7 +24,7 @@ const styles: SxStyles = {
         margin: theme.spacing(1),
     }),
     metricsBox: {
-        maxHeight: '600px',
+        maxHeight: 'calc(80vh - 144px)', // 144px is the height to the top of the page
         overflowY: 'scroll',
         scrollbarWidth: 'thin',
         width: 'fit-content',
