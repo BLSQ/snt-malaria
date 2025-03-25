@@ -1,8 +1,8 @@
 from rest_framework import routers
 
-from .intervention.views import InterventionViewSet
-from .interventionAssignement.views import InterventionAssignmentViewSet
-from .interventionCategory.views import InterventionCategoryViewSet
+from .interventionassignments.views import InterventionAssignmentViewSet
+from .interventioncategories.views import InterventionCategoryViewSet
+from .interventions.views import InterventionViewSet
 from .scenarios.views import ScenarioViewSet
 
 

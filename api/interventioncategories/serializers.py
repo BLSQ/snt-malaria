@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from plugins.snt_malaria.api.intervention.serializers import InterventionSerializer
+from plugins.snt_malaria.api.interventions.serializers import InterventionSerializer
 from plugins.snt_malaria.models import InterventionCategory
 
 

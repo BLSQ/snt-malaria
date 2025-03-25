@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from iaso.models.org_unit import OrgUnit
-from plugins.snt_malaria.api.intervention.serializers import InterventionSerializer
+from plugins.snt_malaria.api.interventions.serializers import InterventionSerializer
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 from plugins.snt_malaria.models.intervention import Intervention
 
@@ -27,12 +27,8 @@ class InterventionAssignmentListSerializer(serializers.ModelSerializer):
 class InterventionAssignmentWriteSerializer(serializers.ModelSerializer):
     """For creating InterventionAssignment"""
 
-    org_unit_ids = serializers.ListField(
-        child=serializers.IntegerField(), write_only=True
-    )
-    intervention_ids = serializers.ListField(
-        child=serializers.IntegerField(), write_only=True
-    )
+    org_unit_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
+    intervention_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
     scenario_id = serializers.IntegerField(write_only=True)
 
     class Meta:
@@ -56,24 +52,16 @@ class InterventionAssignmentWriteSerializer(serializers.ModelSerializer):
 
         # Check the existance of selected orgUnits
         valid_org_units = OrgUnit.objects.filter(id__in=org_unit_ids)
-        missing_org_units = set(org_unit_ids) - set(
-            valid_org_units.values_list("id", flat=True)
-        )
+        missing_org_units = set(org_unit_ids) - set(valid_org_units.values_list("id", flat=True))
         if missing_org_units:
-            raise serializers.ValidationError(
-                {"org_unit_ids": f"Invalid org_unit IDs: {missing_org_units}"}
-            )
+            raise serializers.ValidationError({"org_unit_ids": f"Invalid org_unit IDs: {missing_org_units}"})
 
         # Check the existance of selected interventions
         valid_interventions = Intervention.objects.filter(id__in=intervention_ids)
-        missing_interventions = set(intervention_ids) - set(
-            valid_interventions.values_list("id", flat=True)
-        )
+        missing_interventions = set(intervention_ids) - set(valid_interventions.values_list("id", flat=True))
         if missing_interventions:
             raise serializers.ValidationError(
-                {
-                    "intervention_ids": f"Invalid intervention IDs: {missing_interventions}"
-                }
+                {"intervention_ids": f"Invalid intervention IDs: {missing_interventions}"}
             )
 
         attrs["scenario"] = scenario

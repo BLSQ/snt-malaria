@@ -8,10 +8,10 @@ from rest_framework.response import Response
 
 from iaso.models.metric import MetricType, MetricValue
 from iaso.models.org_unit import OrgUnit
-from plugins.snt_malaria.api.intervention.serializers import InterventionSerializer
-from plugins.snt_malaria.api.interventionAssignement.filters import (
+from plugins.snt_malaria.api.interventionassignments.filters import (
     InterventionAssignmentListFilter,
 )
+from plugins.snt_malaria.api.interventions.serializers import InterventionSerializer
 from plugins.snt_malaria.models import InterventionAssignment
 
 from .serializers import (
