@@ -97,7 +97,7 @@ jobs:
                   python-version: 3.9
             - name: Install GDAL and gettext
               run: sudo apt-get update && sudo apt install gdal-bin gettext
-            - uses: actions/cache@v2
+            - uses: actions/cache@v4
               id: cache-venv
               with:
                   path: ./venv/
@@ -112,9 +112,10 @@ jobs:
             - name: Environment info
               run: |
                   pip list
-            - name: Check formatting with Black
+            - name: Check formatting with ruff
+              # https://docs.astral.sh/ruff/integrations/#github-actions
               run: |
-                  . ./venv/bin/activate && black --check .
+                  . ./venv/bin/activate && ruff check --output-format=github .
             - name: Django tests
               run: |
                   . ./venv/bin/activate &&  python manage.py compilemessages
