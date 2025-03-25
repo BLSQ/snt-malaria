@@ -9,7 +9,7 @@ export const useGetInterventionCategories = (): UseQueryResult<
 > => {
     return useSnackQuery({
         queryKey: ['interventionCategories'],
-        queryFn: () => getRequest('/api/snt_malaria/interventionCategory'),
+        queryFn: () => getRequest('/api/snt_malaria/interventioncategories'),
         options: {
             staleTime: 1000 * 60 * 15, // in MS
             cacheTime: 1000 * 60 * 5,

@@ -9,7 +9,7 @@ export const UseGetBudgets = (scenarioId): UseQueryResult<Budget[], Error> => {
         scenario_id: scenarioId,
     };
     const url = makeUrlWithParams(
-        '/api/snt_malaria/interventionassignment/budget_per_org_unit/',
+        '/api/snt_malaria/interventionassignments/budget_per_org_unit/',
         params,
     );
 

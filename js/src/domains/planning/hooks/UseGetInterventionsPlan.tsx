@@ -11,7 +11,7 @@ export const useGetInterventionsPlan = (
         scenario_id: scenarioId,
     };
     const url = makeUrlWithParams(
-        '/api/snt_malaria/interventionassignment/grouped_by_org_unit/',
+        '/api/snt_malaria/interventionassignments/grouped_by_org_unit/',
         params,
     );
 
