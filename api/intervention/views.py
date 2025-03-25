@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+
 from plugins.snt_malaria.api.intervention.serializers import InterventionSerializer
 from plugins.snt_malaria.models import Intervention
 

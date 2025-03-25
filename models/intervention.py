@@ -1,11 +1,10 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
 from iaso.models import OrgUnit
 from iaso.utils.models.soft_deletable import (
     SoftDeletableModel,
 )
-
 from plugins.snt_malaria.models.scenario import Scenario
 
 

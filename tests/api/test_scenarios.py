@@ -1,9 +1,9 @@
 from django.urls import reverse
 from rest_framework import status
-from iaso.test import APITestCase
 
 from iaso.models import Account, OrgUnit, OrgUnitType
-from plugins.snt_malaria.models import Intervention, InterventionCategory, InterventionAssignment, Scenario
+from iaso.test import APITestCase
+from plugins.snt_malaria.models import Intervention, InterventionAssignment, InterventionCategory, Scenario
 
 
 class ScenarioAPITestCase(APITestCase):

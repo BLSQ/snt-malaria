@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Intervention, InterventionAssignment, Scenario, InterventionCategory
+
+from .models import Intervention, InterventionAssignment, InterventionCategory, Scenario
 
 
 @admin.register(InterventionCategory)
@@ -63,4 +64,3 @@ class ScenarioAdmin(admin.ModelAdmin):
     ordering = ("name",)
 
 
-...

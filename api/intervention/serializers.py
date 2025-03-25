@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from plugins.snt_malaria.models import Intervention
 
 

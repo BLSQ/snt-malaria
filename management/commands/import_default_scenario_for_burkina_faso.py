@@ -2,12 +2,14 @@ import csv
 import os
 
 from django.core.management.base import BaseCommand
+
+from iaso.models import User
 from iaso.models.base import Account
 from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.models import InterventionAssignment
 from plugins.snt_malaria.models.intervention import Intervention
 from plugins.snt_malaria.models.scenario import Scenario
-from iaso.models import User
+
 
 BURKINA_ACCOUNT_ID = 1
 DEFAULT_SCENARIO_NAME = "WHO scenario"

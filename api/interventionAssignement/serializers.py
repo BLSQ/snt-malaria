@@ -1,8 +1,9 @@
+from rest_framework import serializers
+
 from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.api.intervention.serializers import InterventionSerializer
-from plugins.snt_malaria.models.intervention import Intervention
-from rest_framework import serializers
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
+from plugins.snt_malaria.models.intervention import Intervention
 
 
 class InterventionAssignmentListSerializer(serializers.ModelSerializer):

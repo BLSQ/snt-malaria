@@ -1,5 +1,11 @@
-from decimal import Decimal
 from collections import defaultdict
+from decimal import Decimal
+
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
 from iaso.models.metric import MetricType, MetricValue
 from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.api.intervention.serializers import InterventionSerializer
@@ -7,14 +13,11 @@ from plugins.snt_malaria.api.interventionAssignement.filters import (
     InterventionAssignmentListFilter,
 )
 from plugins.snt_malaria.models import InterventionAssignment
+
 from .serializers import (
-    InterventionAssignmentWriteSerializer,
     InterventionAssignmentListSerializer,
+    InterventionAssignmentWriteSerializer,
 )
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import viewsets, status
-from django_filters.rest_framework import DjangoFilterBackend
 
 
 class InterventionAssignmentViewSet(viewsets.ModelViewSet):

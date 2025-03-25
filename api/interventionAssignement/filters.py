@@ -1,4 +1,5 @@
 import django_filters
+
 from plugins.snt_malaria.models import InterventionAssignment
 
 

@@ -1,11 +1,12 @@
 import json
 import os
 
-from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.management.base import BaseCommand
 
-from iaso.utils.gis import simplify_geom
 from iaso.models import *
+from iaso.utils.gis import simplify_geom
+
 
 # FILENAME = "BFA_districts.geojson"
 FILE_LOCATION = "pyramids/COD_shp.geojson"
@@ -20,7 +21,7 @@ class Command(BaseCommand):
         self.load_json_to_postgis(json_path)
 
     def load_json_to_postgis(self, json_path):
-        with open(json_path, "r") as file:
+        with open(json_path) as file:
             data = json.load(file)
 
         # Add geometries to org units

@@ -1,9 +1,10 @@
-from .interventionAssignement.views import InterventionAssignmentViewSet
 from rest_framework import routers
 
 from .intervention.views import InterventionViewSet
+from .interventionAssignement.views import InterventionAssignmentViewSet
 from .interventionCategory.views import InterventionCategoryViewSet
 from .scenarios.views import ScenarioViewSet
+
 
 router = routers.SimpleRouter()
 router.register(

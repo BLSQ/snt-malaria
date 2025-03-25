@@ -1,11 +1,13 @@
 import csv
 import os
 
-from django.db import transaction
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
 from iaso.models import MetricType, MetricValue, OrgUnit
+
 from .support.legend import get_legend_config, get_legend_type
+
 
 BURKINA_ACCOUNT_ID = 1
 METADATA_CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "burkina_faso/metric_types.csv")
