@@ -21,11 +21,14 @@ from .serializers import (
 
 
 class InterventionAssignmentViewSet(viewsets.ModelViewSet):
-    queryset = InterventionAssignment.objects.all()
-    serializer_class = InterventionAssignmentWriteSerializer
     http_method_names = ["get", "post"]
     filter_backends = [DjangoFilterBackend]
     filterset_class = InterventionAssignmentListFilter
+
+    def get_queryset(self):
+        return InterventionAssignment.objects.prefetch_related("intervention__intervention_category__account").filter(
+            intervention__intervention_category__account=self.request.user.iaso_profile.account
+        )
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -66,7 +69,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         )
 
     def get_filtered_queryset(self):
-        return self.filter_queryset(self.get_queryset()).select_related("intervention", "org_unit")
+        return self.filter_queryset(self.get_queryset()).prefetch_related("org_unit")
 
     def get_org_units(self, org_unit_ids):
         return OrgUnit.objects.filter(id__in=org_unit_ids).values("id", "name").order_by("name")
