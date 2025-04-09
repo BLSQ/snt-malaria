@@ -1,6 +1,7 @@
 from rest_framework import serializers
+
+from plugins.snt_malaria.api.interventions.serializers import InterventionSerializer
 from plugins.snt_malaria.models import InterventionCategory
-from plugins.snt_malaria.api.intervention.serializers import InterventionSerializer
 
 
 class InterventionCategorySerializer(serializers.ModelSerializer):
@@ -18,4 +19,11 @@ class InterventionCategorySerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["interventions", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "account",
+            "interventions",
+            "created_by",
+            "created_at",
+            "updated_at",
+        ]

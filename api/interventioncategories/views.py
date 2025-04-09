@@ -1,5 +1,6 @@
 from rest_framework import viewsets
-from plugins.snt_malaria.api.interventionCategory.serializers import (
+
+from plugins.snt_malaria.api.interventioncategories.serializers import (
     InterventionCategorySerializer,
 )
 from plugins.snt_malaria.models import InterventionCategory
@@ -11,4 +12,6 @@ class InterventionCategoryViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "options"]
 
     def get_queryset(self):
-        return InterventionCategory.objects.filter(account=self.request.user.iaso_profile.account)
+        return InterventionCategory.objects.prefetch_related("intervention_set").filter(
+            account=self.request.user.iaso_profile.account
+        )

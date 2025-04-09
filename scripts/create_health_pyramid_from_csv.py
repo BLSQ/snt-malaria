@@ -1,7 +1,8 @@
 import csv
 import os
+
 import requests
-from pprint import pprint
+
 
 """
 Disclaimer: This script is a work in progress. There are many ways to improve and
@@ -70,11 +71,10 @@ def find_or_create_org_unit(name, org_unit_type_id, parent_id, source_ref=None, 
         resp = requests.post(create_org_unit_url, headers=headers, json=payload)
         print(resp.json())
         return resp.json()["id"]
-    else:
-        if result_count > 1:
-            print(f"WARNING: Found multiple results for {name}")
-        print("FOUND")
-        return response.json()["orgunits"][0]["id"]
+    if result_count > 1:
+        print(f"WARNING: Found multiple results for {name}")
+    print("FOUND")
+    return response.json()["orgunits"][0]["id"]
 
 
 # Call the function with your csv file path
@@ -117,6 +117,7 @@ for level, ou_type in ou_types.items():
 
 
 import csv
+
 from collections import defaultdict
 
 

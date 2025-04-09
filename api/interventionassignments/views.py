@@ -1,28 +1,34 @@
-from decimal import Decimal
 from collections import defaultdict
-from iaso.models.metric import MetricType, MetricValue
-from iaso.models.org_unit import OrgUnit
-from plugins.snt_malaria.api.intervention.serializers import InterventionSerializer
-from plugins.snt_malaria.api.interventionAssignement.filters import (
-    InterventionAssignmentListFilter,
-)
-from plugins.snt_malaria.models import InterventionAssignment
-from .serializers import (
-    InterventionAssignmentWriteSerializer,
-    InterventionAssignmentListSerializer,
-)
+from decimal import Decimal
+
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import viewsets, status
-from django_filters.rest_framework import DjangoFilterBackend
+
+from iaso.models.metric import MetricType, MetricValue
+from iaso.models.org_unit import OrgUnit
+from plugins.snt_malaria.api.interventionassignments.filters import (
+    InterventionAssignmentListFilter,
+)
+from plugins.snt_malaria.api.interventions.serializers import InterventionSerializer
+from plugins.snt_malaria.models import InterventionAssignment
+
+from .serializers import (
+    InterventionAssignmentListSerializer,
+    InterventionAssignmentWriteSerializer,
+)
 
 
 class InterventionAssignmentViewSet(viewsets.ModelViewSet):
-    queryset = InterventionAssignment.objects.all()
-    serializer_class = InterventionAssignmentWriteSerializer
     http_method_names = ["get", "post"]
     filter_backends = [DjangoFilterBackend]
     filterset_class = InterventionAssignmentListFilter
+
+    def get_queryset(self):
+        return InterventionAssignment.objects.prefetch_related("intervention__intervention_category__account").filter(
+            intervention__intervention_category__account=self.request.user.iaso_profile.account
+        )
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -63,7 +69,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         )
 
     def get_filtered_queryset(self):
-        return self.filter_queryset(self.get_queryset()).select_related("intervention", "org_unit")
+        return self.filter_queryset(self.get_queryset()).prefetch_related("org_unit")
 
     def get_org_units(self, org_unit_ids):
         return OrgUnit.objects.filter(id__in=org_unit_ids).values("id", "name").order_by("name")

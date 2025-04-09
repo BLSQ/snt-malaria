@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from iaso.models import Account, User
-from plugins.snt_malaria.models.intervention import InterventionCategory, Intervention
+from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
 
 
 class Command(BaseCommand):
