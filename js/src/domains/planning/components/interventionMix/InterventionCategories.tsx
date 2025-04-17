@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Grid, Typography } from '@mui/material';
+import { Grid, MenuItem, Select, Typography } from '@mui/material';
 import { useGetInterventionCategories } from '../../hooks/useGetInterventions';
 import { Interventions } from './Interventions';
 
@@ -70,38 +70,63 @@ export const InterventionCategories: FC<Props> = ({
     );
 
     return (
-        <Grid container direction="row" spacing={2} padding={2}>
-            {!isLoadingInterventionCategories &&
-                interventionCategories?.map(interventionCategory => {
-                    return (
-                        <Grid item key={interventionCategory.id}>
-                            <Grid item>
-                                <Typography
-                                    sx={{
-                                        fontSize: '0.75rem',
-                                    }}
-                                >
-                                    {interventionCategory.name}
-                                </Typography>
-                            </Grid>
+        <Grid container spacing={2} padding={1}>
+            <Grid item container>
+                {/* To do: use inputComponent with type select */}
+                <Select
+                    value=""
+                    onChange={() => console.log('select')}
+                    displayEmpty
+                    sx={{
+                        width: '104px',
+                        height: '32px',
+                        borderRadius: '4px',
+                        '& .MuiSelect-select': {
+                            display: 'flex',
+                            alignItems: 'center',
+                        },
+                    }}
+                >
+                    <MenuItem value="">
+                        <Typography variant="body2">New mix</Typography>
+                    </MenuItem>
+                </Select>
+            </Grid>
+            <Grid item container direction="row" spacing={2} padding={2}>
+                {!isLoadingInterventionCategories &&
+                    interventionCategories?.map(interventionCategory => {
+                        return (
+                            <Grid item key={interventionCategory.id}>
+                                <Grid item>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '0.75rem',
+                                        }}
+                                    >
+                                        {interventionCategory.name}
+                                    </Typography>
+                                </Grid>
 
-                            <Interventions
-                                interventionCategoryId={interventionCategory.id}
-                                interventions={
-                                    interventionCategory.interventions
-                                }
-                                selectedIds={
-                                    selectedInterventions[
+                                <Interventions
+                                    interventionCategoryId={
                                         interventionCategory.id
-                                    ] ?? []
-                                }
-                                handleSelectIntervention={
-                                    handleSelectIntervention
-                                }
-                            />
-                        </Grid>
-                    );
-                })}
+                                    }
+                                    interventions={
+                                        interventionCategory.interventions
+                                    }
+                                    selectedIds={
+                                        selectedInterventions[
+                                            interventionCategory.id
+                                        ] ?? []
+                                    }
+                                    handleSelectIntervention={
+                                        handleSelectIntervention
+                                    }
+                                />
+                            </Grid>
+                        );
+                    })}
+            </Grid>
         </Grid>
     );
 };
