@@ -83,4 +83,9 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.clearOrgUnitSelection',
         defaultMessage: 'Clear selection',
     },
+    selectDistrictsMessage: {
+        id: 'iaso.snt_malaria.label.interventionMix.selectDistrictsMessage',
+        defaultMessage:
+            'Select districts in the map above and add them to the mix',
+    },
 });

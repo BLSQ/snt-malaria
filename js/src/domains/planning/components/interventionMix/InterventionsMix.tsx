@@ -10,6 +10,7 @@ import {
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { InterventionCategories } from './InterventionCategories';
 import { InterventionMixSummary } from './InterventionMixSummary';
+import { SelectedDistricts } from './SelectedDistricts';
 
 type Props = {
     scenarioId: number | undefined;
@@ -53,7 +54,9 @@ export const InterventionsMix: FC<Props> = ({
                     <Divider sx={{ width: '100%', mb: 0 }} />
                     <Grid container sx={{ padding: 0 }}>
                         <Grid item xs={5.5}>
-                            <Box sx={{ padding: 2 }}>Left Side</Box>
+                            <SelectedDistricts
+                                selectedOrgUnits={selectedOrgUnits}
+                            />
                         </Grid>
                         <Grid item>
                             <Divider
