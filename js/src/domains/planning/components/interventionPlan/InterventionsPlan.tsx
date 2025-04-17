@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Accordion, AccordionDetails, Divider } from '@mui/material';
+import { Accordion, AccordionDetails, Divider, Box } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
 import { InterventionPlanSummary } from './InterventionplanSummary';
@@ -7,10 +7,6 @@ import { InterventionsPlanTable } from './InterventionsPlanTable';
 
 const styles: SxStyles = {
     accordion: {
-        mt: 2,
-        '&:before': {
-            display: 'none',
-        },
         borderRadius: theme => theme.spacing(2),
         overflow: 'hidden',
     },
@@ -37,20 +33,28 @@ export const InterventionsPlan: FC<Props> = ({
         useGetInterventionsPlan(scenarioId);
 
     return (
-        <Accordion
-            sx={styles.accordion}
-            defaultExpanded
-            expanded={Boolean(expanded === 'interventionsPlan')}
-            onChange={handleExpandAccordion('interventionsPlan')}
+        <Box
+            sx={{
+                borderRadius: theme => theme.spacing(2),
+                overflow: 'hidden',
+            }}
         >
-            <InterventionPlanSummary orgUnitCount={interventionPlans?.length} />
-            <Divider sx={{ width: '100%' }} />
-            <AccordionDetails sx={{ padding: 2 }}>
-                <InterventionsPlanTable
-                    isLoadingPlans={isLoadingPlans}
-                    interventionPlans={interventionPlans}
+            <Accordion
+                sx={styles.accordion}
+                expanded={Boolean(expanded === 'interventionsPlan')}
+                onChange={handleExpandAccordion('interventionsPlan')}
+            >
+                <InterventionPlanSummary
+                    orgUnitCount={interventionPlans?.length}
                 />
-            </AccordionDetails>
-        </Accordion>
+                <Divider sx={{ width: '100%' }} />
+                <AccordionDetails sx={{ padding: 2 }}>
+                    <InterventionsPlanTable
+                        isLoadingPlans={isLoadingPlans}
+                        interventionPlans={interventionPlans}
+                    />
+                </AccordionDetails>
+            </Accordion>
+        </Box>
     );
 };

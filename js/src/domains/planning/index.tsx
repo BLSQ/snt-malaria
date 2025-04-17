@@ -169,7 +169,7 @@ export const Planning: FC = () => {
             <PageContainer>
                 {scenario && <ScenarioTopBar scenario={scenario} />}
                 <Grid container spacing={2}>
-                    <Grid item xs={12} md={7}>
+                    <Grid item xs={12} md={8}>
                         <PaperContainer>
                             <PaperFullHeight>
                                 {isLoading && <p>Loading data...</p>}
@@ -188,7 +188,12 @@ export const Planning: FC = () => {
                             </PaperFullHeight>
                         </PaperContainer>
                     </Grid>
-                    <Grid item xs={12} md={5}>
+                    <Grid item xs={12} md={4}>
+                        <PaperContainer />
+                    </Grid>
+                </Grid>
+                <Grid container spacing={2} sx={{ mt: 0 }}>
+                    <Grid item xs={12} md={6}>
                         <PaperContainer>
                             <InterventionsMix
                                 scenarioId={scenario?.id}
@@ -196,6 +201,10 @@ export const Planning: FC = () => {
                                 handleExpandAccordion={handleExpandAccordion}
                                 expanded={expanded}
                             />
+                        </PaperContainer>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <PaperContainer>
                             <InterventionsPlan
                                 scenarioId={scenario?.id}
                                 handleExpandAccordion={handleExpandAccordion}

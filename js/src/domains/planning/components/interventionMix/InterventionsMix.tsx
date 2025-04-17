@@ -1,6 +1,12 @@
-import React, { FC } from 'react';
-
-import { Accordion, AccordionDetails, Box, Divider } from '@mui/material';
+import React, { FC, useState } from 'react';
+import {
+    Box,
+    Card,
+    CardContent,
+    CardHeader,
+    Divider,
+    Grid,
+} from '@mui/material';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { InterventionCategories } from './InterventionCategories';
 import { InterventionMixSummary } from './InterventionMixSummary';
@@ -8,15 +14,15 @@ import { InterventionMixSummary } from './InterventionMixSummary';
 type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: OrgUnit[];
-    handleExpandAccordion: (panel: string) => void;
-    expanded: string;
 };
 export const InterventionsMix: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
-    handleExpandAccordion,
-    expanded,
 }) => {
+    const [selectedInterventions, setSelectedInterventions] = useState<{
+        [categoryId: number]: number[] | [];
+    }>({});
+    const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(false);
     return (
         <Box
             sx={{
@@ -24,23 +30,53 @@ export const InterventionsMix: FC<Props> = ({
                 overflow: 'hidden',
             }}
         >
-            <Accordion
-                expanded={Boolean(expanded === 'interventionsMix')}
-                onChange={handleExpandAccordion('interventionsMix')}
-            >
-                <InterventionMixSummary
-                    orgUnitCount={selectedOrgUnits.length}
+            <Card elevation={2}>
+                <CardHeader
+                    title={
+                        <InterventionMixSummary
+                            scenarioId={scenarioId}
+                            selectedOrgUnits={selectedOrgUnits}
+                            selectedInterventions={selectedInterventions}
+                            isButtonDisabled={isButtonDisabled}
+                            setIsButtonDisabled={setIsButtonDisabled}
+                        />
+                    }
                 />
-                <AccordionDetails sx={{ padding: 0 }}>
-                    <Divider sx={{ width: '100%' }} />
-                    <InterventionCategories
-                        scenarioId={scenarioId}
-                        selectedOrgUnits={selectedOrgUnits}
-                    />
+                <CardContent
+                    sx={{
+                        padding: 0,
+                        '&:last-child': {
+                            paddingBottom: 0,
+                        },
+                    }}
+                >
+                    <Divider sx={{ width: '100%', mb: 0 }} />
+                    <Grid container sx={{ padding: 0 }}>
+                        <Grid item xs={5.5}>
+                            <Box sx={{ padding: 2 }}>Left Side</Box>
+                        </Grid>
+                        <Grid item>
+                            <Divider
+                                orientation="vertical"
+                                flexItem
+                                sx={{ height: '100%' }}
+                            />
+                        </Grid>
 
-                    {/* <ApplyInterventionsMix iconProps={{}} /> */}
-                </AccordionDetails>
-            </Accordion>
+                        <Grid item xs={5.5}>
+                            <InterventionCategories
+                                scenarioId={scenarioId}
+                                selectedOrgUnits={selectedOrgUnits}
+                                selectedInterventions={selectedInterventions}
+                                setIsButtonDisabled={setIsButtonDisabled}
+                                setSelectedInterventions={
+                                    setSelectedInterventions
+                                }
+                            />
+                        </Grid>
+                    </Grid>
+                </CardContent>
+            </Card>
         </Box>
     );
 };
