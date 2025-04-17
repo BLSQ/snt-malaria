@@ -25,7 +25,7 @@ export const SelectedDistricts: FC<Props> = ({ selectedOrgUnits }) => {
                             color="#1F2B3D"
                             fontWeight="bold"
                         >
-                            0
+                            {selectedOrgUnits.length}
                         </Typography>
                         <Typography
                             variant="subtitle2"
@@ -72,10 +72,7 @@ export const SelectedDistricts: FC<Props> = ({ selectedOrgUnits }) => {
                         <Typography
                             variant="body2"
                             gutterBottom
-                            sx={{
-                                color: alpha('#1F2B3D', 0.6),
-                                fontWeight: 500,
-                            }}
+                            color={alpha('#1F2B3D', 0.6)}
                             align="center"
                         >
                             {formatMessage(MESSAGES.selectDistrictsMessage)}
