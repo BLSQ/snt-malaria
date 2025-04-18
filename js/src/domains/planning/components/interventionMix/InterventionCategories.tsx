@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import { Grid, MenuItem, Select, Typography } from '@mui/material';
+import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionCategories } from '../../hooks/useGetInterventions';
 import { Interventions } from './Interventions';
 
@@ -11,6 +12,18 @@ type Props = {
     setSelectedInterventions: React.Dispatch<
         React.SetStateAction<{ [categoryId: number]: number[] | [] }>
     >;
+};
+
+const styles: SxStyles = {
+    selectStyle: {
+        width: '104px',
+        height: '32px',
+        borderRadius: '4px',
+        '& .MuiSelect-select': {
+            display: 'flex',
+            alignItems: 'center',
+        },
+    },
 };
 
 export const InterventionCategories: FC<Props> = ({
@@ -77,15 +90,7 @@ export const InterventionCategories: FC<Props> = ({
                     value=""
                     onChange={() => console.log('select')}
                     displayEmpty
-                    sx={{
-                        width: '104px',
-                        height: '32px',
-                        borderRadius: '4px',
-                        '& .MuiSelect-select': {
-                            display: 'flex',
-                            alignItems: 'center',
-                        },
-                    }}
+                    sx={styles.selectStyle}
                 >
                     <MenuItem value="">
                         <Typography variant="body2">New mix</Typography>
