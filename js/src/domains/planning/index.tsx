@@ -198,8 +198,6 @@ export const Planning: FC = () => {
                             <InterventionsMix
                                 scenarioId={scenario?.id}
                                 selectedOrgUnits={selectedOrgUnits}
-                                handleExpandAccordion={handleExpandAccordion}
-                                expanded={expanded}
                             />
                         </PaperContainer>
                     </Grid>
