@@ -39,7 +39,7 @@ export const SelectedDistrictsTable: FC<Props> = ({ selectedOrgUnits }) => {
                             </TableCell>
                             <TableCell
                                 align="right"
-                                sx={{ border: 'none', pr: 2 }}
+                                sx={{ border: 'none', pr: 1.5 }}
                             >
                                 <DeleteOutlineIcon
                                     className="delete-icon"
