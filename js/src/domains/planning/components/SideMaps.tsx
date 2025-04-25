@@ -1,0 +1,67 @@
+import React, { FC, useCallback, useState } from 'react';
+import { Box, Theme } from '@mui/material';
+
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
+
+import { MetricType, MetricTypeCategory, MetricValue } from '../types/metrics';
+import { SideMap } from './SideMap';
+import { LayerSelect } from './LayerSelect';
+
+const styles: SxStyles = {
+    mainBox: (theme: Theme) => ({
+        borderRadius: theme.spacing(2),
+        overflowY: 'scroll',
+        position: 'relative',
+        height: '100%',
+    }),
+    newMapBox: {
+        height: 108,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '1px dashed #b0bec5',
+        borderRadius: 2,
+        p: 2,
+    },
+};
+
+type Props = {
+    orgUnits: OrgUnit[];
+    metricCategories: MetricTypeCategory[];
+};
+export const SideMaps: FC<Props> = ({ orgUnits, metricCategories }) => {
+    const [sideMaps, setSideMaps] = useState([
+        // TODO: temporary for development purposes
+        metricCategories[1].items[0],
+        metricCategories[2].items[0],
+    ]);
+
+    console.log('sideMaps', sideMaps);
+
+    const handleAddSideMap = useCallback(
+        (metric: MetricType) => {
+            console.log('handleAddSideMap ', metric);
+            setSideMaps([...sideMaps, metric]);
+        },
+        [sideMaps],
+    );
+
+    return (
+        <Box sx={styles.mainBox}>
+            {sideMaps.map((metric, index) => (
+                <SideMap
+                    key={index}
+                    orgUnits={orgUnits}
+                    displayedMetric={metric}
+                />
+            ))}
+            <Box sx={styles.newMapBox}>
+                <LayerSelect
+                    metricCategories={metricCategories}
+                    onLayerChange={handleAddSideMap}
+                />
+            </Box>
+        </Box>
+    );
+};
