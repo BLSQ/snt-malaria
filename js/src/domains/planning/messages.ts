@@ -21,8 +21,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.orgUnitDistricts',
         defaultMessage: 'Districts',
     },
-    applyMixAndAddPlan: {
-        id: 'iaso.snt_malaria.label.interventionMix.applyMixAndAddPlan',
+    applyInterventionMix: {
+        id: 'iaso.snt_malaria.label.interventionMix.applyInterventionMix',
         defaultMessage: 'Apply mix and add to plan',
     },
     overrideMix: {

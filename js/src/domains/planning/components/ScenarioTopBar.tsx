@@ -7,7 +7,6 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 
 import { SxStyles } from 'Iaso/types/general';
 import { useUpdateScenario } from '../../scenarios/hooks/useGetScenarios';
-import { useQueryClient } from 'react-query';
 
 const styles: SxStyles = {
     content: (theme: Theme) => ({
@@ -15,7 +14,7 @@ const styles: SxStyles = {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: theme.spacing(2),
+        marginBottom: theme.spacing(1),
     }),
     nameContainer: {
         position: 'relative',

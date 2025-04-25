@@ -93,7 +93,7 @@ export const InterventionMixSummary: FC<Props> = ({
                     }}
                     disabled={!canApplyInterventions || isButtonDisabled}
                 >
-                    {formatMessage(MESSAGES.applyMixAndAddPlan)}
+                    {formatMessage(MESSAGES.applyInterventionMix)}
                 </Button>
             </Grid>
         </Grid>

@@ -168,7 +168,7 @@ export const Planning: FC = () => {
             />
             <PageContainer>
                 {scenario && <ScenarioTopBar scenario={scenario} />}
-                <Grid container spacing={2}>
+                <Grid container spacing={1}>
                     <Grid item xs={12} md={8}>
                         <PaperContainer>
                             <PaperFullHeight>
@@ -192,7 +192,7 @@ export const Planning: FC = () => {
                         <PaperContainer />
                     </Grid>
                 </Grid>
-                <Grid container spacing={2} sx={{ mt: 0 }}>
+                <Grid container spacing={1} sx={{ mt: 0 }}>
                     <Grid item xs={12} md={6}>
                         <PaperContainer>
                             <InterventionsMix
