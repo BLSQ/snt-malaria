@@ -1,3 +1,8 @@
+export type MetricTypeCategory = {
+    name: string;
+    items: MetricType[];
+};
+
 export type MetricType = {
     id: number;
     name: string;

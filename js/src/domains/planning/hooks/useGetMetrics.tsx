@@ -2,7 +2,7 @@ import { UseQueryResult } from 'react-query';
 import { Form } from 'Iaso/domains/forms/types/forms';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
-import { MetricType, MetricValue } from '../types/metrics';
+import { MetricType, MetricTypeCategory, MetricValue } from '../types/metrics';
 
 export type DropdownOptions<T> = {
     label: string;
@@ -10,7 +10,10 @@ export type DropdownOptions<T> = {
     original: Form;
 };
 
-export const useGetMetricTypes = (): UseQueryResult<MetricType[], Error> => {
+export const useGetMetricCategories = (): UseQueryResult<
+    MetricTypeCategory[],
+    Error
+> => {
     return useSnackQuery({
         queryKey: ['metricTypes'],
         queryFn: () => getRequest('/api/metrictypes/'),
@@ -22,7 +25,12 @@ export const useGetMetricTypes = (): UseQueryResult<MetricType[], Error> => {
                     data,
                     ({ category }) => category,
                 );
-                return groupedPerCategory;
+                return Object.keys(groupedPerCategory).map(category => {
+                    return {
+                        name: category,
+                        items: groupedPerCategory[category],
+                    };
+                });
             },
         },
     });

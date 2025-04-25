@@ -21,7 +21,10 @@ import { InterventionsPlan } from './components/interventionPlan/InterventionsPl
 import { LayersDrawer } from './components/LayersDrawer';
 import { Map } from './components/map';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
-import { useGetMetricTypes, useGetMetricValues } from './hooks/useGetMetrics';
+import {
+    useGetMetricCategories,
+    useGetMetricValues,
+} from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { MESSAGES } from './messages';
 import { MetricsFilters, MetricType, MetricValue } from './types/metrics';
@@ -46,17 +49,16 @@ export const Planning: FC = () => {
 
     // Metric selection
     // v1: display Incidence by default
-    const { data: metricTypes } = useGetMetricTypes();
+    const { data: metricCategories } = useGetMetricCategories();
     const [displayedMetric, setDisplayedMetric] = useState<MetricType | null>(
         null,
     );
     useEffect(() => {
-        if (metricTypes && !displayedMetric) {
-            if (metricTypes.Incidence?.length > 0) {
-                setDisplayedMetric(metricTypes.Incidence[0]);
-            }
+        if (metricCategories && !displayedMetric) {
+            setDisplayedMetric(metricCategories[1].items[0]);
         }
-    }, [metricTypes, displayedMetric]);
+    }, [metricCategories, displayedMetric]);
+
     const handleDisplayMetricOnMap = (metric: MetricType) => {
         setDisplayedMetric(prevSelected =>
             prevSelected?.name === metric.name ? null : metric,
