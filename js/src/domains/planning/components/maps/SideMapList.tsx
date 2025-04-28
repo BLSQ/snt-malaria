@@ -31,7 +31,7 @@ type Props = {
     metricCategories: MetricTypeCategory[];
 };
 export const SideMapList: FC<Props> = ({ orgUnits, metricCategories }) => {
-    const [sideMaps, setSideMaps] = useState([
+    const [sideMaps, setSideMaps] = useState<MetricType[]>([
         // TODO: temporary for development purposes
         metricCategories[1].items[0],
         metricCategories[2].items[0],
@@ -53,13 +53,15 @@ export const SideMapList: FC<Props> = ({ orgUnits, metricCategories }) => {
                     initialDisplayedMetric={metric}
                 />
             ))}
-            <Box sx={styles.addNewSideMapBox}>
-                <LayerSelect
-                    createsNewMap={true}
-                    metricCategories={metricCategories}
-                    onLayerChange={handleAddSideMap}
-                />
-            </Box>
+            {sideMaps.length < 5 && ( // we allow max 5 maps to be displayed
+                <Box sx={styles.addNewSideMapBox}>
+                    <LayerSelect
+                        createsNewMap={true}
+                        metricCategories={metricCategories}
+                        onLayerChange={handleAddSideMap}
+                    />
+                </Box>
+            )}
         </Box>
     );
 };
