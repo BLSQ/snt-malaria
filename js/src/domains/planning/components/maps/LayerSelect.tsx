@@ -38,16 +38,19 @@ const styles: SxStyles = {
 
 type Props = {
     createsNewMap?: Boolean;
+    initialSelection?: MetricType | '';
     metricCategories: MetricTypeCategory[];
     onLayerChange: (metric: MetricType) => void;
 };
 
 export const LayerSelect: FC<Props> = ({
     createsNewMap = false,
+    initialSelection = '',
     metricCategories,
     onLayerChange,
 }) => {
-    const [selectedMetricType, setSelectedMetricType] = useState('');
+    const [selectedMetricType, setSelectedMetricType] =
+        useState(initialSelection);
 
     const handleChange = event => {
         const newMetric = event.target.value;

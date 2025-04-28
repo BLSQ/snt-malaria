@@ -37,11 +37,8 @@ export const SideMapList: FC<Props> = ({ orgUnits, metricCategories }) => {
         metricCategories[2].items[0],
     ]);
 
-    console.log('sideMaps', sideMaps);
-
     const handleAddSideMap = useCallback(
         (metric: MetricType) => {
-            console.log('handleAddSideMap ', metric);
             setSideMaps([...sideMaps, metric]);
         },
         [sideMaps],
@@ -53,7 +50,7 @@ export const SideMapList: FC<Props> = ({ orgUnits, metricCategories }) => {
                 <SideMap
                     key={index}
                     orgUnits={orgUnits}
-                    displayedMetric={metric}
+                    initialDisplayedMetric={metric}
                 />
             ))}
             <Box sx={styles.addNewSideMapBox}>

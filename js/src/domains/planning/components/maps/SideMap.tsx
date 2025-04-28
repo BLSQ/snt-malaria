@@ -1,14 +1,6 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, Theme, useTheme } from '@mui/material';
 import * as d3 from 'd3-scale';
-
-import { useGetLegend } from 'Iaso/components/LegendBuilder/Legend';
-import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
-import { GeoJson } from 'Iaso/components/maps/types';
-import tiles from 'Iaso/constants/mapTiles';
-import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { SxStyles } from 'Iaso/types/general';
-import { Bounds } from 'Iaso/utils/map/mapUtils';
 import L from 'leaflet';
 import {
     GeoJSON,
@@ -17,8 +9,21 @@ import {
     Tooltip,
     ZoomControl,
 } from 'react-leaflet';
+
+import { useGetLegend } from 'Iaso/components/LegendBuilder/Legend';
+import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
+import { GeoJson } from 'Iaso/components/maps/types';
+import tiles from 'Iaso/constants/mapTiles';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
+import { Bounds } from 'Iaso/utils/map/mapUtils';
+
+import { LayerSelect } from './LayerSelect';
 import { MetricType } from '../../types/metrics';
-import { useGetMetricValues } from '../../hooks/useGetMetrics';
+import {
+    useGetMetricCategories,
+    useGetMetricValues,
+} from '../../hooks/useGetMetrics';
 import { MapLegend } from '../MapLegend';
 
 const styles: SxStyles = {
@@ -28,13 +33,20 @@ const styles: SxStyles = {
         overflow: 'hidden',
         position: 'relative',
     }),
+    layerSelectBox: (theme: Theme) => ({
+        position: 'absolute',
+        right: theme.spacing(1),
+        top: theme.spacing(1),
+        zIndex: 500,
+    }),
 };
 
 type Props = {
     orgUnits: OrgUnit[];
-    displayedMetric: MetricType | null;
+    initialDisplayedMetric: MetricType;
 };
-export const SideMap: FC<Props> = ({ orgUnits, displayedMetric }) => {
+export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
+    // Map config
     const [currentTile, setCurrentTile] = useState<Tile>(tiles.osm);
     const boundsOptions: Record<string, any> = {
         padding: [-10, -10],
@@ -49,12 +61,19 @@ export const SideMap: FC<Props> = ({ orgUnits, displayedMetric }) => {
         return shape.getBounds();
     }, [orgUnits]);
 
-    // Fetch metric values
+    // LayerSelect
+    const [displayedMetric, setDisplayedMetric] = useState<MetricType>(
+        initialDisplayedMetric,
+    );
+    const { data: metricCategories } = useGetMetricCategories();
+    const handleLayerChange = useCallback((metric: MetricType) => {
+        setDisplayedMetric(metric);
+    }, []);
+
+    // Displaying selected metric on the map along with its legend
     const { data: displayedMetricValues, isLoading } = useGetMetricValues({
         metricTypeId: displayedMetric?.id || null,
     });
-
-    // Displaying metrics on the map
     const getLegend = useGetLegend(displayedMetric?.legend_config);
     const getColorForShape = useCallback(
         (value, _orgUnitId) => {
@@ -126,6 +145,14 @@ export const SideMap: FC<Props> = ({ orgUnits, displayedMetric }) => {
                     </GeoJSON>
                 ))}
                 {displayedMetric && <MapLegend metric={displayedMetric} />}
+
+                <Box sx={styles.layerSelectBox}>
+                    <LayerSelect
+                        initialSelection={initialDisplayedMetric}
+                        metricCategories={metricCategories}
+                        onLayerChange={handleLayerChange}
+                    />
+                </Box>
             </MapContainer>
         </Box>
     );
