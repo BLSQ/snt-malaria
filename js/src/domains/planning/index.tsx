@@ -21,7 +21,7 @@ import { InterventionsPlan } from './components/interventionPlan/InterventionsPl
 import { LayersDrawer } from './components/LayersDrawer';
 import { Map } from './components/map';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
-import { SideMapList } from './components/SideMapList';
+import { SideMapList } from './components/maps/SideMapList';
 import {
     useGetMetricCategories,
     useGetMetricValues,

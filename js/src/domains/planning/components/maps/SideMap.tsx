@@ -17,9 +17,9 @@ import {
     Tooltip,
     ZoomControl,
 } from 'react-leaflet';
-import { MetricType } from '../types/metrics';
-import { useGetMetricValues } from '../hooks/useGetMetrics';
-import { MapLegend } from './MapLegend';
+import { MetricType } from '../../types/metrics';
+import { useGetMetricValues } from '../../hooks/useGetMetrics';
+import { MapLegend } from '../MapLegend';
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({

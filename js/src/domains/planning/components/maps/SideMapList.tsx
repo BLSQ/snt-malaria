@@ -4,7 +4,7 @@ import { Box, Theme } from '@mui/material';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 
-import { MetricType, MetricTypeCategory, MetricValue } from '../types/metrics';
+import { MetricType, MetricTypeCategory } from '../../types/metrics';
 import { SideMap } from './SideMap';
 import { LayerSelect } from './LayerSelect';
 
@@ -15,12 +15,12 @@ const styles: SxStyles = {
         position: 'relative',
         height: '100%',
     }),
-    newMapBox: {
+    addNewSideMapBox: {
         height: 108,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        border: '1px dashed #b0bec5',
+        border: '1px dashed #B0BEC5',
         borderRadius: 2,
         p: 2,
     },
@@ -56,8 +56,9 @@ export const SideMapList: FC<Props> = ({ orgUnits, metricCategories }) => {
                     displayedMetric={metric}
                 />
             ))}
-            <Box sx={styles.newMapBox}>
+            <Box sx={styles.addNewSideMapBox}>
                 <LayerSelect
+                    createsNewMap={true}
                     metricCategories={metricCategories}
                     onLayerChange={handleAddSideMap}
                 />
