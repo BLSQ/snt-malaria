@@ -21,7 +21,7 @@ import { InterventionsPlan } from './components/interventionPlan/InterventionsPl
 import { LayersDrawer } from './components/LayersDrawer';
 import { Map } from './components/map';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
-import { SideMaps } from './components/SideMaps';
+import { SideMapList } from './components/SideMapList';
 import {
     useGetMetricCategories,
     useGetMetricValues,
@@ -195,7 +195,7 @@ export const Planning: FC = () => {
                         <PaperFullHeight>
                             {isLoading && <p>Loading data...</p>}
                             {metricCategories && orgUnits && (
-                                <SideMaps
+                                <SideMapList
                                     orgUnits={orgUnits}
                                     metricCategories={metricCategories}
                                 />

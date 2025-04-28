@@ -30,7 +30,7 @@ type Props = {
     orgUnits: OrgUnit[];
     metricCategories: MetricTypeCategory[];
 };
-export const SideMaps: FC<Props> = ({ orgUnits, metricCategories }) => {
+export const SideMapList: FC<Props> = ({ orgUnits, metricCategories }) => {
     const [sideMaps, setSideMaps] = useState([
         // TODO: temporary for development purposes
         metricCategories[1].items[0],
