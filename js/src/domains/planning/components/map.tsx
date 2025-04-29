@@ -1,14 +1,6 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, useTheme, Button, styled, Theme } from '@mui/material';
 import * as d3 from 'd3-scale';
-import L from 'leaflet';
-import {
-    GeoJSON,
-    MapContainer,
-    TileLayer,
-    Tooltip,
-    ZoomControl,
-} from 'react-leaflet';
 
 import { useGetLegend } from 'Iaso/components/LegendBuilder/Legend';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
@@ -17,6 +9,14 @@ import tiles from 'Iaso/constants/mapTiles';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
+import L from 'leaflet';
+import {
+    GeoJSON,
+    MapContainer,
+    TileLayer,
+    Tooltip,
+    ZoomControl,
+} from 'react-leaflet';
 import { MetricType, MetricValue } from '../types/metrics';
 import { LayersTitleWithIcon } from './layers/LayersTitleWithIcon';
 import { MapLegend } from './MapLegend';
@@ -166,7 +166,7 @@ export const Map: FC<Props> = ({
                         doubleClickZoom
                         scrollWheelZoom={false}
                         maxZoom={currentTile.maxZoom}
-                        style={{ height: '100%', backgroundColor: '#546E7A' }}
+                        style={{ height: '100%', backgroundColor: '#B0BEC5' }}
                         center={[0, 0]}
                         keyboard={false}
                         bounds={bounds}

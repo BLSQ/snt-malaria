@@ -12,12 +12,11 @@ export const PaperContainer = styled(Box)(() => ({
 
 export const PageContainer = styled(Box)(({ theme }) => ({
     backgroundColor: theme.palette.background.default,
-    borderRadius: theme.spacing(2),
-    minHeight: `calc(100vh - ${theme.spacing(10)})`,
     marginLeft: theme.spacing(2),
     marginRight: theme.spacing(2),
     padding: theme.spacing(2),
-    overflow: 'auto',
+    height: `calc(100vh - ${theme.spacing(8)})`,
+    overflowY: 'auto',
 }));
 
 export const AppBar = styled(MuiAppBar)(({ theme }) => ({

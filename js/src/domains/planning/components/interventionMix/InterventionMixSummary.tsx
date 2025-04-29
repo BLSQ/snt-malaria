@@ -1,79 +1,101 @@
-import React, { FC } from 'react';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import React, { FC, useMemo } from 'react';
 import TuneIcon from '@mui/icons-material/Tune';
-import {
-    AccordionSummary,
-    Badge,
-    Box,
-    Grid,
-    Stack,
-    Typography,
-} from '@mui/material';
+import { Box, Button, Grid, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { SxStyles } from 'Iaso/types/general';
+import { useQueryClient } from 'react-query';
+import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
 import { MESSAGES } from '../../messages';
 import { containerBoxStyles } from '../styles';
 
-const styles: SxStyles = {
-    badgeStyle: {
-        '& .MuiBadge-badge': {
-            fontSize: '0.8rem',
-            fontWeight: 600,
-            lineHeight: 0,
-            width: '24px',
-            height: '24px',
-            padding: '4px',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            aspectRatio: '1',
-        },
-    },
-};
-
 type Props = {
-    orgUnitCount: number;
+    scenarioId: number | undefined;
+    selectedOrgUnits: any;
+    isButtonDisabled: boolean;
+    selectedInterventions: { [categoryId: number]: number[] | [] };
+    setIsButtonDisabled: (bool: boolean) => void;
 };
-export const InterventionMixSummary: FC<Props> = ({ orgUnitCount }) => {
+export const InterventionMixSummary: FC<Props> = ({
+    scenarioId,
+    selectedOrgUnits,
+    isButtonDisabled,
+    selectedInterventions,
+    setIsButtonDisabled,
+}) => {
     const { formatMessage } = useSafeIntl();
+    const { mutateAsync: createInterventionAssignment } =
+        UseCreateInterventionAssignment();
+
+    const queryClient = useQueryClient();
+
+    const selectedInterventionValues = useMemo(
+        () =>
+            Object.values(selectedInterventions)
+                .flat()
+                .filter(value => value !== null),
+        [selectedInterventions],
+    );
+
+    const canApplyInterventions = useMemo(() => {
+        return (
+            selectedInterventionValues.length > 0 &&
+            selectedOrgUnits.length > 0 &&
+            scenarioId
+        );
+    }, [
+        scenarioId,
+        selectedInterventionValues.length,
+        selectedOrgUnits.length,
+    ]);
+    const handleAssignmentCreation = async () => {
+        if (canApplyInterventions) {
+            setIsButtonDisabled(true);
+
+            await createInterventionAssignment({
+                intervention_ids: selectedInterventionValues,
+                org_unit_ids: selectedOrgUnits.map(orgUnit => orgUnit.id),
+                scenario_id: scenarioId,
+            });
+
+            queryClient.invalidateQueries(['interventionPlans']);
+        }
+    };
     return (
-        <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="interventionsMix-content"
-            id="interventionsMix-header"
+        <Grid
+            container
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
         >
-            <Grid
-                container
-                direction="row"
-                spacing={2}
-                alignItems="center"
-                justifyContent="space-between"
-            >
-                <Grid item sx={{ flexGrow: 1 }}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                        <Box sx={containerBoxStyles}>
-                            <TuneIcon height="auto" color="primary" />
-                        </Box>
-                        <Typography variant="h6" gutterBottom color="#1F2B3D">
-                            {formatMessage(MESSAGES.interventionMixTitle)}
-                        </Typography>
-                    </Stack>
-                </Grid>
-                <Grid item sx={{ mr: 4 }}>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                        <Typography variant="h6" gutterBottom color="primary">
-                            {formatMessage(MESSAGES.orgUnitDistrict)}
-                        </Typography>
-                        <Badge
-                            badgeContent={orgUnitCount}
-                            sx={styles.badgeStyle}
-                            color="primary"
-                            showZero
-                        />
-                    </Stack>
-                </Grid>
+            <Grid item sx={{ flexGrow: 1 }}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                    <Box sx={containerBoxStyles}>
+                        <TuneIcon height="auto" color="primary" />
+                    </Box>
+                    <Typography variant="h6" gutterBottom color="#1F2B3D">
+                        {formatMessage(MESSAGES.interventionMixTitle)}
+                    </Typography>
+                </Stack>
             </Grid>
-        </AccordionSummary>
+            <Grid
+                item
+                display="flex"
+                justifyContent="flex-end"
+                alignItems="flex-end"
+                sx={{ flexGrow: 1 }}
+            >
+                <Button
+                    onClick={() => handleAssignmentCreation()}
+                    variant="contained"
+                    color="primary"
+                    sx={{
+                        fontSize: '0.875rem',
+                        textTransform: 'none',
+                    }}
+                    disabled={!canApplyInterventions || isButtonDisabled}
+                >
+                    {formatMessage(MESSAGES.applyMixAndAddPlan)}
+                </Button>
+            </Grid>
+        </Grid>
     );
 };
