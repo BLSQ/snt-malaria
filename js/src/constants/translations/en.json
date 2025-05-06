@@ -1,5 +1,6 @@
 {
     "iaso.snt_malaria.home.title": "SNT Malaria",
+    "iaso.snt_malaria.label.addMap": "Add a covariant map",
     "iaso.snt_malaria.label.budgetImpactTitle": "Budget & Impact",
     "iaso.snt_malaria.label.interventionMix": "Intervention mix",
     "iaso.snt_malaria.label.interventionMix.addOrgUnitFromMix": "Add to mix",

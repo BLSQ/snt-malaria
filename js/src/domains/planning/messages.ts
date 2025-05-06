@@ -88,4 +88,8 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Select districts in the map above and add them to the mix',
     },
+    addMap: {
+        id: 'iaso.snt_malaria.label.addMap',
+        defaultMessage: 'Add a coviarant map',
+    },
 });

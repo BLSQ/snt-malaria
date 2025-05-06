@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import { Box, Theme, useTheme } from '@mui/material';
+import { Box, Theme } from '@mui/material';
 import * as d3 from 'd3-scale';
 import L from 'leaflet';
 import {
@@ -47,7 +47,7 @@ type Props = {
 };
 export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
     // Map config
-    const [currentTile, setCurrentTile] = useState<Tile>(tiles.osm);
+    const [currentTile] = useState<Tile>(tiles.osm);
     const boundsOptions: Record<string, any> = {
         padding: [-10, -10],
         maxZoom: currentTile.maxZoom,
@@ -71,7 +71,7 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
     }, []);
 
     // Displaying selected metric on the map along with its legend
-    const { data: displayedMetricValues, isLoading } = useGetMetricValues({
+    const { data: displayedMetricValues } = useGetMetricValues({
         metricTypeId: displayedMetric?.id || null,
     });
     const getLegend = useGetLegend(displayedMetric?.legend_config);
@@ -101,23 +101,20 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
 
     // Selecting an org unit on the map
 
-    const getStyleForShape = (orgUnitId: number) => {
-        let color: string;
-        let weight: number;
-
-        color = '#546E7A';
-        weight = 1;
-
-        return {
-            color,
-            weight,
-            fillColor: getColorForShape(
-                getSelectedMetricValue(orgUnitId),
-                orgUnitId,
-            ),
-            fillOpacity: 1,
-        };
-    };
+    const getStyleForShape = useCallback(
+        (orgUnitId: number) => {
+            return {
+                color: '#546E7A',
+                weight: 1,
+                fillColor: getColorForShape(
+                    getSelectedMetricValue(orgUnitId),
+                    orgUnitId,
+                ),
+                fillOpacity: 1,
+            };
+        },
+        [getColorForShape, getSelectedMetricValue],
+    );
 
     return (
         <Box height="250px" sx={styles.mainBox}>

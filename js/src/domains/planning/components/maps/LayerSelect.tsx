@@ -9,8 +9,11 @@ import {
     Typography,
 } from '@mui/material';
 
+import { useSafeIntl } from 'bluesquare-components';
+
 import { SxStyles } from 'Iaso/types/general';
 import { MetricType, MetricTypeCategory } from '../../types/metrics';
+import { MESSAGES } from '../../messages';
 
 const styles: SxStyles = {
     formControl: {
@@ -49,8 +52,11 @@ export const LayerSelect: FC<Props> = ({
     metricCategories,
     onLayerChange,
 }) => {
-    const [selectedMetricType, setSelectedMetricType] =
-        useState(initialSelection);
+    const { formatMessage } = useSafeIntl();
+
+    const [selectedMetricType, setSelectedMetricType] = useState<
+        MetricType | ''
+    >(initialSelection);
 
     const handleChange = event => {
         const newMetric = event.target.value;
@@ -71,7 +77,7 @@ export const LayerSelect: FC<Props> = ({
                 displayEmpty
             >
                 <MenuItem value="" disabled>
-                    Add a covariant map
+                    {formatMessage(MESSAGES.addMap)}
                 </MenuItem>
                 {metricCategories.map(category => [
                     <ListSubheader>
