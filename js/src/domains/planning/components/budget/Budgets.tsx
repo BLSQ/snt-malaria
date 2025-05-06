@@ -49,7 +49,7 @@ export const Budgets: FC<Props> = ({
     return (
         <Box
             sx={{
-                mt: 2,
+                mt: 1,
                 borderRadius: theme => theme.spacing(2),
                 overflow: 'hidden',
             }}

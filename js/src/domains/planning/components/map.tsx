@@ -163,6 +163,7 @@ export const Map: FC<Props> = ({
             {orgUnits && (
                 <>
                     <MapContainer
+                        id="main_map"
                         doubleClickZoom
                         scrollWheelZoom={false}
                         maxZoom={currentTile.maxZoom}

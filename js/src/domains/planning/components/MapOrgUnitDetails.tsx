@@ -17,9 +17,12 @@ import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 
-import { useGetMetricTypes, useGetMetricValues } from '../hooks/useGetMetrics';
+import {
+    useGetMetricCategories,
+    useGetMetricValues,
+} from '../hooks/useGetMetrics';
 import { MESSAGES } from '../messages';
-import { MetricType } from '../types/metrics';
+import { MetricType, MetricTypeCategory } from '../types/metrics';
 
 type Props = {
     clickedOrgUnit: OrgUnit;
@@ -80,16 +83,18 @@ export const MapOrgUnitDetails: FC<Props> = ({
     onAddRemoveOrgUnitToMix,
     selectedOrgUnits,
 }) => {
-    const { data: metricTypes } = useGetMetricTypes();
+    const { data: metricCategories } = useGetMetricCategories();
     const flatMetricTypes = useMemo(() => {
-        const flatMap = {};
-        for (const category in metricTypes) {
-            metricTypes[category].forEach((metric: MetricType) => {
-                flatMap[metric.id] = metric;
-            });
-        }
-        return flatMap;
-    }, [metricTypes]);
+        return (metricCategories || []).reduce(
+            (acc, category: MetricTypeCategory) => {
+                category.items.forEach((metric: MetricType) => {
+                    acc[metric.id] = metric;
+                });
+                return acc;
+            },
+            {},
+        );
+    }, [metricCategories]);
 
     const { data: metricValues, isLoading } = useGetMetricValues({
         orgUnitId: clickedOrgUnit.id,

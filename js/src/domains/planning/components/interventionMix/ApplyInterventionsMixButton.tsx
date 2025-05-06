@@ -30,7 +30,7 @@ export const ApplyInterventionsMixButton: FC<ApplyButtonProps> = ({
                     textTransform: 'none',
                 }}
             >
-                {formatMessage(MESSAGES.applyMixAndAddPlan)}
+                {formatMessage(MESSAGES.applyInterventionMix)}
             </Button>
         </Grid>
     );

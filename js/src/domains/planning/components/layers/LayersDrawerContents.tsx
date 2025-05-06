@@ -5,7 +5,7 @@ import { useSafeIntl, LoadingSpinner } from 'bluesquare-components';
 
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
-import { useGetMetricTypes } from '../../hooks/useGetMetrics';
+import { useGetMetricCategories } from '../../hooks/useGetMetrics';
 import { MESSAGES } from '../../messages';
 import { MetricsFilters, MetricType } from '../../types/metrics';
 import { LayerConfigBlock } from './LayerConfigBlock';
@@ -88,7 +88,7 @@ export const LayersDrawerContents: FC<Props> = ({
     onSelectOrgUnits,
     onClearOrgUnitSelection,
 }) => {
-    const { data: metricTypes, isLoading } = useGetMetricTypes();
+    const { data: metricCategories, isLoading } = useGetMetricCategories();
     const { formatMessage } = useSafeIntl();
 
     const [filtersState, setFiltersState] = useState({});
@@ -120,7 +120,7 @@ export const LayersDrawerContents: FC<Props> = ({
         [filtersState],
     );
 
-    if (isLoading || !metricTypes) {
+    if (isLoading || !metricCategories) {
         return (
             <Box sx={styles.mainBox} role="presentation">
                 <LoadingSpinner fixed={false} padding={40} size={25} />
@@ -142,16 +142,16 @@ export const LayersDrawerContents: FC<Props> = ({
             </Box>
             <Divider />
             <Box sx={styles.metricsBox}>
-                {Object.keys(metricTypes).map(metricCategory => {
-                    if (metricCategory !== 'Population') {
+                {metricCategories.map(category => {
+                    if (category.name !== 'Population') {
                         return (
-                            <Box key={metricCategory}>
+                            <Box key={category.name}>
                                 <LayerConfigBlock
-                                    metricCategory={metricCategory}
-                                    metrics={metricTypes[metricCategory]}
+                                    metricCategory={category.name}
+                                    metrics={category.items}
                                     isDisplayedOnMap={
                                         displayedMetric?.category ===
-                                        metricCategory
+                                        category.name
                                     }
                                     toggleMapDisplay={onDisplayMetricOnMap}
                                     filtersState={filtersState}

@@ -21,8 +21,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.orgUnitDistricts',
         defaultMessage: 'Districts',
     },
-    applyMixAndAddPlan: {
-        id: 'iaso.snt_malaria.label.interventionMix.applyMixAndAddPlan',
+    applyInterventionMix: {
+        id: 'iaso.snt_malaria.label.interventionMix.applyInterventionMix',
         defaultMessage: 'Apply mix and add to plan',
     },
     overrideMix: {
@@ -87,5 +87,9 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.interventionMix.selectDistrictsMessage',
         defaultMessage:
             'Select districts in the map above and add them to the mix',
+    },
+    addMap: {
+        id: 'iaso.snt_malaria.label.addMap',
+        defaultMessage: 'Add a coviarant map',
     },
 });
