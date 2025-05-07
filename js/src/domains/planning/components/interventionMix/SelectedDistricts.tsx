@@ -7,7 +7,9 @@ import { MESSAGES } from '../../messages';
 import { SelectedDistrictsTable } from './SelectedDistrictsTable';
 
 type Props = {
-    selectedOrgUnits: OrgUnit[];
+    selectedDistricts: OrgUnit[];
+    deleteDistrict: (id: number) => void;
+    clearAllSelectedDistricts: () => void;
 };
 
 const BoldSubtitle = ({ children }) => (
@@ -21,7 +23,11 @@ const BoldSubtitle = ({ children }) => (
     </Typography>
 );
 
-export const SelectedDistricts: FC<Props> = ({ selectedOrgUnits }) => {
+export const SelectedDistricts: FC<Props> = ({
+    selectedDistricts,
+    deleteDistrict,
+    clearAllSelectedDistricts,
+}) => {
     const { formatMessage } = useSafeIntl();
 
     return (
@@ -34,7 +40,7 @@ export const SelectedDistricts: FC<Props> = ({ selectedOrgUnits }) => {
                         marginTop={1}
                         alignItems="center"
                     >
-                        <BoldSubtitle>{selectedOrgUnits.length}</BoldSubtitle>
+                        <BoldSubtitle>{selectedDistricts.length}</BoldSubtitle>
                         <BoldSubtitle>
                             {formatMessage(
                                 MESSAGES.orgUnitDistrict,
@@ -49,7 +55,7 @@ export const SelectedDistricts: FC<Props> = ({ selectedOrgUnits }) => {
                         justifyContent="flex-end"
                     >
                         <Button
-                            onClick={() => console.log('Clear selection')}
+                            onClick={() => clearAllSelectedDistricts()}
                             color="primary"
                             sx={{
                                 textTransform: 'none',
@@ -61,10 +67,17 @@ export const SelectedDistricts: FC<Props> = ({ selectedOrgUnits }) => {
                 </Grid>
             </Grid>
             <Grid container spacing={2}>
-                <Grid item xs={12} display="flex" justifyContent="center">
-                    {selectedOrgUnits.length > 0 ? (
+                <Grid
+                    item
+                    xs={12}
+                    display="flex"
+                    justifyContent="center"
+                    sx={{ maxHeight: '300px', overflowY: 'auto' }}
+                >
+                    {selectedDistricts.length > 0 ? (
                         <SelectedDistrictsTable
-                            selectedOrgUnits={selectedOrgUnits}
+                            selectedDistricts={selectedDistricts}
+                            deleteDistrict={deleteDistrict}
                         />
                     ) : (
                         <Box padding={4}>

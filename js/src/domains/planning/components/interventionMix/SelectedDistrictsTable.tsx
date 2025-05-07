@@ -21,15 +21,20 @@ const styles: SxStyles = {
 };
 
 type Props = {
-    selectedOrgUnits: OrgUnit[];
+    selectedDistricts: OrgUnit[];
+    deleteDistrict: (id: number) => void;
 };
-export const SelectedDistrictsTable: FC<Props> = ({ selectedOrgUnits }) => {
+export const SelectedDistrictsTable: FC<Props> = ({
+    selectedDistricts,
+    deleteDistrict,
+}) => {
+    console.log(selectedDistricts);
     return (
         <Table size="small" aria-label="a dense table">
             <TableBody>
-                {selectedOrgUnits.map(org => {
+                {selectedDistricts.map(org => {
                     return (
-                        <TableRow sx={styles.tableRowStyle}>
+                        <TableRow key={org.id} sx={styles.tableRowStyle}>
                             <TableCell
                                 align="left"
                                 color="#1F2B3D99"
@@ -44,6 +49,7 @@ export const SelectedDistrictsTable: FC<Props> = ({ selectedOrgUnits }) => {
                                 <DeleteOutlineIcon
                                     className="delete-icon"
                                     sx={styles.deleteIconStyle}
+                                    onClick={() => deleteDistrict(org.id)}
                                 />
                             </TableCell>
                         </TableRow>
