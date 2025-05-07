@@ -48,7 +48,7 @@ export const InterventionsMix: FC<Props> = ({
                 overflow: 'hidden',
             }}
         >
-            <Card elevation={2} sx={{ maxHeight: '420px' }}>
+            <Card elevation={2} sx={{ maxHeight: '400px' }}>
                 <CardHeader
                     title={
                         <InterventionMixSummary
