@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import {
     Box,
     Card,
@@ -24,6 +24,23 @@ export const InterventionsMix: FC<Props> = ({
         [categoryId: number]: number[] | [];
     }>({});
     const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(false);
+
+    const [selectedDistricts, setSelectedDistricts] = useState<OrgUnit[]>([]);
+
+    useEffect(() => {
+        setSelectedDistricts(selectedOrgUnits);
+    }, [selectedOrgUnits]);
+
+    const removeDistrict = useCallback(id => {
+        setSelectedDistricts(prev =>
+            prev.filter(district => district.id !== id),
+        );
+    }, []);
+
+    const clearAllSelectedDistricts = useCallback(
+        () => setSelectedDistricts([]),
+        [],
+    );
     return (
         <Box
             sx={{
@@ -31,12 +48,12 @@ export const InterventionsMix: FC<Props> = ({
                 overflow: 'hidden',
             }}
         >
-            <Card elevation={2}>
+            <Card elevation={2} sx={{ maxHeight: '420px' }}>
                 <CardHeader
                     title={
                         <InterventionMixSummary
                             scenarioId={scenarioId}
-                            selectedOrgUnits={selectedOrgUnits}
+                            selectedOrgUnits={selectedDistricts}
                             selectedInterventions={selectedInterventions}
                             isButtonDisabled={isButtonDisabled}
                             setIsButtonDisabled={setIsButtonDisabled}
@@ -55,7 +72,11 @@ export const InterventionsMix: FC<Props> = ({
                     <Grid container sx={{ padding: 0 }}>
                         <Grid item xs={5.5}>
                             <SelectedDistricts
-                                selectedOrgUnits={selectedOrgUnits}
+                                selectedDistricts={selectedDistricts}
+                                removeDistrict={removeDistrict}
+                                clearAllSelectedDistricts={
+                                    clearAllSelectedDistricts
+                                }
                             />
                         </Grid>
                         <Grid item>
