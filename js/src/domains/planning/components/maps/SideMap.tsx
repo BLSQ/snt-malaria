@@ -20,10 +20,7 @@ import { Bounds } from 'Iaso/utils/map/mapUtils';
 
 import { LayerSelect } from './LayerSelect';
 import { MetricType } from '../../types/metrics';
-import {
-    useGetMetricCategories,
-    useGetMetricValues,
-} from '../../hooks/useGetMetrics';
+import { useGetMetricValues } from '../../hooks/useGetMetrics';
 import { MapLegend } from '../MapLegend';
 
 const styles: SxStyles = {
@@ -65,7 +62,6 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
     const [displayedMetric, setDisplayedMetric] = useState<MetricType>(
         initialDisplayedMetric,
     );
-    const { data: metricCategories } = useGetMetricCategories();
     const handleLayerChange = useCallback((metric: MetricType) => {
         setDisplayedMetric(metric);
     }, []);
@@ -146,7 +142,6 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
                 <Box sx={styles.layerSelectBox}>
                     <LayerSelect
                         initialSelection={initialDisplayedMetric}
-                        metricCategories={metricCategories}
                         onLayerChange={handleLayerChange}
                     />
                 </Box>

@@ -21,6 +21,7 @@ import { MetricType, MetricValue } from '../types/metrics';
 import { LayersTitleWithIcon } from './layers/LayersTitleWithIcon';
 import { MapLegend } from './MapLegend';
 import { MapOrgUnitDetails } from './MapOrgUnitDetails';
+import { LayerSelect } from './maps/LayerSelect';
 
 const StyledButton = styled(Button)`
     background-color: white;
@@ -45,6 +46,12 @@ const styles: SxStyles = {
         overflow: 'hidden',
         position: 'relative',
     }),
+    layerSelectBox: (theme: Theme) => ({
+        position: 'absolute',
+        right: theme.spacing(1),
+        top: theme.spacing(1),
+        zIndex: 500,
+    }),
 };
 
 type Props = {
@@ -52,8 +59,9 @@ type Props = {
     toggleDrawer: () => void;
     displayedMetric: MetricType | null;
     displayedMetricValues?: MetricValue[];
-    onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
     selectedOrgUnits: OrgUnit[];
+    onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
+    onChangeMetricLayer: (MetricType) => void;
 };
 
 export const Map: FC<Props> = ({
@@ -61,10 +69,11 @@ export const Map: FC<Props> = ({
     toggleDrawer,
     displayedMetric,
     displayedMetricValues,
-    onAddRemoveOrgUnitToMix,
     selectedOrgUnits,
+    onAddRemoveOrgUnitToMix,
+    onChangeMetricLayer,
 }) => {
-    const [currentTile, setCurrentTile] = useState<Tile>(tiles.osm);
+    const [currentTile] = useState<Tile>(tiles.osm);
     const theme = useTheme();
     const boundsOptions: Record<string, any> = {
         padding: [10, 10],
@@ -175,10 +184,6 @@ export const Map: FC<Props> = ({
                         zoomControl={false}
                     >
                         <ZoomControl position="bottomright" />
-                        {/* <CustomTileLayer
-                            currentTile={currentTile}
-                            setCurrentTile={setCurrentTile}
-                        /> */}
                         <TileLayer url="" attribution="" />
                         {orgUnits.map(orgUnit => (
                             <GeoJSON
@@ -208,6 +213,12 @@ export const Map: FC<Props> = ({
                             selectedOrgUnits={selectedOrgUnits}
                         />
                     )}
+                    <Box sx={styles.layerSelectBox}>
+                        <LayerSelect
+                            initialSelection={displayedMetric || ''}
+                            onLayerChange={onChangeMetricLayer}
+                        />
+                    </Box>
                 </>
             )}
         </Box>

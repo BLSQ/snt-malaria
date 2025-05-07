@@ -14,6 +14,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MetricType, MetricTypeCategory } from '../../types/metrics';
 import { MESSAGES } from '../../messages';
+import { useGetMetricCategories } from '../../hooks/useGetMetrics';
 
 const styles: SxStyles = {
     formControl: {
@@ -42,17 +43,19 @@ const styles: SxStyles = {
 type Props = {
     createsNewMap?: Boolean;
     initialSelection?: MetricType | '';
-    metricCategories: MetricTypeCategory[];
     onLayerChange: (metric: MetricType) => void;
 };
 
 export const LayerSelect: FC<Props> = ({
     createsNewMap = false,
     initialSelection = '',
-    metricCategories,
     onLayerChange,
 }) => {
     const { formatMessage } = useSafeIntl();
+
+    // TODO: Ideally we handle the isLoading here as well (but not urgent, we know the
+    // entire component is not loaded until the categories are loaded.)
+    const { data: metricCategories } = useGetMetricCategories();
 
     const [selectedMetricType, setSelectedMetricType] = useState<
         MetricType | ''
@@ -79,7 +82,7 @@ export const LayerSelect: FC<Props> = ({
                 <MenuItem value="" disabled>
                     {formatMessage(MESSAGES.addMap)}
                 </MenuItem>
-                {metricCategories.map(category => [
+                {metricCategories?.map(category => [
                     <ListSubheader>
                         <Typography variant="overline" sx={styles.category}>
                             {category.name}

@@ -183,10 +183,13 @@ export const Planning: FC = () => {
                                     displayedMetricValues={
                                         displayedMetricValues
                                     }
+                                    selectedOrgUnits={selectedOrgUnits}
+                                    onChangeMetricLayer={
+                                        handleDisplayMetricOnMap
+                                    }
                                     onAddRemoveOrgUnitToMix={
                                         handleAddRemoveOrgUnitToMix
                                     }
-                                    selectedOrgUnits={selectedOrgUnits}
                                 />
                             </PaperFullHeight>
                         </PaperContainer>
