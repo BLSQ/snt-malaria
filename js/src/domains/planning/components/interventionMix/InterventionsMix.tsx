@@ -31,7 +31,7 @@ export const InterventionsMix: FC<Props> = ({
         setSelectedDistricts(selectedOrgUnits);
     }, [selectedOrgUnits]);
 
-    const deleteDistrict = useCallback(id => {
+    const removeDistrict = useCallback(id => {
         setSelectedDistricts(prev =>
             prev.filter(district => district.id !== id),
         );
@@ -73,7 +73,7 @@ export const InterventionsMix: FC<Props> = ({
                         <Grid item xs={5.5}>
                             <SelectedDistricts
                                 selectedDistricts={selectedDistricts}
-                                deleteDistrict={deleteDistrict}
+                                removeDistrict={removeDistrict}
                                 clearAllSelectedDistricts={
                                     clearAllSelectedDistricts
                                 }

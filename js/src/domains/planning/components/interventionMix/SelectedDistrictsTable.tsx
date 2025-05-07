@@ -22,13 +22,12 @@ const styles: SxStyles = {
 
 type Props = {
     selectedDistricts: OrgUnit[];
-    deleteDistrict: (id: number) => void;
+    removeDistrict: (id: number) => void;
 };
 export const SelectedDistrictsTable: FC<Props> = ({
     selectedDistricts,
-    deleteDistrict,
+    removeDistrict,
 }) => {
-    console.log(selectedDistricts);
     return (
         <Table size="small" aria-label="a dense table">
             <TableBody>
@@ -49,7 +48,7 @@ export const SelectedDistrictsTable: FC<Props> = ({
                                 <DeleteOutlineIcon
                                     className="delete-icon"
                                     sx={styles.deleteIconStyle}
-                                    onClick={() => deleteDistrict(org.id)}
+                                    onClick={() => removeDistrict(org.id)}
                                 />
                             </TableCell>
                         </TableRow>

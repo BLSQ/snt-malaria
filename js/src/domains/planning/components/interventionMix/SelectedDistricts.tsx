@@ -8,7 +8,7 @@ import { SelectedDistrictsTable } from './SelectedDistrictsTable';
 
 type Props = {
     selectedDistricts: OrgUnit[];
-    deleteDistrict: (id: number) => void;
+    removeDistrict: (id: number) => void;
     clearAllSelectedDistricts: () => void;
 };
 
@@ -25,7 +25,7 @@ const BoldSubtitle = ({ children }) => (
 
 export const SelectedDistricts: FC<Props> = ({
     selectedDistricts,
-    deleteDistrict,
+    removeDistrict,
     clearAllSelectedDistricts,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -77,7 +77,7 @@ export const SelectedDistricts: FC<Props> = ({
                     {selectedDistricts.length > 0 ? (
                         <SelectedDistrictsTable
                             selectedDistricts={selectedDistricts}
-                            deleteDistrict={deleteDistrict}
+                            removeDistrict={removeDistrict}
                         />
                     ) : (
                         <Box padding={4}>
