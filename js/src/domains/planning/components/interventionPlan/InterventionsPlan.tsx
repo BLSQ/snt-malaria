@@ -1,37 +1,135 @@
 import React, { FC } from 'react';
-import { Accordion, AccordionDetails, Divider, Box } from '@mui/material';
-import { SxStyles } from 'Iaso/types/general';
+import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
 import { InterventionPlanSummary } from './InterventionplanSummary';
 import { InterventionsPlanTable } from './InterventionsPlanTable';
 
-const styles: SxStyles = {
-    accordion: {
-        borderRadius: theme => theme.spacing(2),
-        overflow: 'hidden',
-    },
-    tableContainer: { maxHeight: 320, overflowY: 'auto', padding: '10px' },
-    tableCellStyle: {
-        paddingTop: 0.4,
-        paddingBottom: 0.4,
-        borderBottom: 'none',
-    },
-};
-
 type Props = {
     scenarioId: number | undefined;
-    handleExpandAccordion: (panel: string) => void;
-    expanded: string;
 };
 
-export const InterventionsPlan: FC<Props> = ({
-    scenarioId,
-    handleExpandAccordion,
-    expanded,
-}) => {
+export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionsPlan(scenarioId);
-
+    console.log(interventionPlans);
+    const hardCodedInterventionPlans = [
+        {
+            id: 1,
+            name: 'Mix 1',
+            interventions: [
+                {
+                    id: 41,
+                    name: 'RTS,S',
+                    description: 'RTS,S Tests',
+                    cost_per_unit: null,
+                    created_at: '2025-04-16T15:38:07.347141Z',
+                    updated_at: '2025-04-16T15:38:07.347150Z',
+                },
+                {
+                    id: 42,
+                    name: 'IRS',
+                    description: 'IRS Tests',
+                    cost_per_unit: null,
+                    created_at: '2025-04-16T15:38:07.347141Z',
+                    updated_at: '2025-04-16T15:38:07.347150Z',
+                },
+                {
+                    id: 43,
+                    name: 'SMC',
+                    description: 'SMC Tests',
+                    cost_per_unit: null,
+                    created_at: '2025-04-16T15:38:07.347141Z',
+                    updated_at: '2025-04-16T15:38:07.347150Z',
+                },
+            ],
+            orgUnits: [
+                { id: 1, name: 'Dédougou' },
+                { id: 2, name: 'Nouna' },
+                { id: 3, name: 'Solenzo' },
+                { id: 4, name: 'Toma' },
+                { id: 5, name: 'Mangodora' },
+                { id: 6, name: 'Gourcy' },
+                { id: 7, name: 'Nongr' },
+                { id: 8, name: 'Koupéla' },
+                { id: 9, name: 'Ouargaye' },
+            ],
+        },
+        {
+            id: 2,
+            name: 'Mix 2',
+            interventions: [
+                {
+                    id: 41,
+                    name: 'RTS,S',
+                    description: 'Rapid Diagnostic Tests',
+                    cost_per_unit: null,
+                    created_at: '2025-04-16T15:38:07.347141Z',
+                    updated_at: '2025-04-16T15:38:07.347150Z',
+                },
+                {
+                    id: 44,
+                    name: 'LLIN',
+                    description: 'LLIN Tests',
+                    cost_per_unit: null,
+                    created_at: '2025-04-16T15:38:07.347141Z',
+                    updated_at: '2025-04-16T15:38:07.347150Z',
+                },
+                {
+                    id: 45,
+                    name: 'MDA',
+                    description: 'MDA Tests',
+                    cost_per_unit: null,
+                    created_at: '2025-04-16T15:38:07.347141Z',
+                    updated_at: '2025-04-16T15:38:07.347150Z',
+                },
+            ],
+            orgUnits: [
+                { id: 1, name: 'Dédougou' },
+                { id: 2, name: 'Nouna' },
+                { id: 3, name: 'Solenzo' },
+                { id: 4, name: 'Toma' },
+                { id: 5, name: 'Mangodora' },
+                { id: 6, name: 'Gourcy' },
+                { id: 7, name: 'Nongr' },
+                { id: 8, name: 'Koupéla' },
+                { id: 9, name: 'Ouargaye' },
+            ],
+        },
+        {
+            id: 3,
+            name: 'IPTp',
+            interventions: [],
+            orgUnits: [
+                { id: 1, name: 'Dédougou' },
+                { id: 2, name: 'Nouna' },
+                { id: 3, name: 'Solenzo' },
+            ],
+        },
+        {
+            id: 4,
+            name: 'LLIN',
+            interventions: [],
+            orgUnits: [
+                { id: 1, name: 'Dédougou' },
+                { id: 2, name: 'Nouna' },
+                { id: 3, name: 'Solenzo' },
+                { id: 4, name: 'Toma' },
+                { id: 5, name: 'Mangodora' },
+                { id: 6, name: 'Gourcy' },
+                { id: 7, name: 'Nongr' },
+                { id: 8, name: 'Koupéla' },
+                { id: 9, name: 'Ouargaye' },
+                { id: 10, name: 'Ouargaye' },
+                { id: 11, name: 'Ouargaye' },
+                { id: 12, name: 'Ouargaye' },
+                { id: 13, name: 'Ouargaye' },
+                { id: 14, name: 'Ouargaye' },
+                { id: 15, name: 'Ouargaye' },
+                { id: 16, name: 'Ouargaye' },
+            ],
+        },
+    ];
+    console.log(interventionPlans);
     return (
         <Box
             sx={{
@@ -39,22 +137,23 @@ export const InterventionsPlan: FC<Props> = ({
                 overflow: 'hidden',
             }}
         >
-            <Accordion
-                sx={styles.accordion}
-                expanded={Boolean(expanded === 'interventionsPlan')}
-                onChange={handleExpandAccordion('interventionsPlan')}
-            >
-                <InterventionPlanSummary
-                    orgUnitCount={interventionPlans?.length}
-                />
-                <Divider sx={{ width: '100%' }} />
-                <AccordionDetails sx={{ padding: 2 }}>
+            <Card elevation={2} sx={{ maxHeight: '410px' }}>
+                <CardHeader title={<InterventionPlanSummary />} />
+                <CardContent
+                    sx={{
+                        padding: 0,
+                        '&:last-child': {
+                            paddingBottom: 0,
+                        },
+                    }}
+                >
+                    <Divider sx={{ width: '100%', mb: 0 }} />
                     <InterventionsPlanTable
                         isLoadingPlans={isLoadingPlans}
-                        interventionPlans={interventionPlans}
+                        interventionPlans={hardCodedInterventionPlans}
                     />
-                </AccordionDetails>
-            </Accordion>
+                </CardContent>
+            </Card>
         </Box>
     );
 };

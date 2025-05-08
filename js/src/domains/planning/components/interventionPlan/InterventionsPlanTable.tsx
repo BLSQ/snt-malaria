@@ -1,5 +1,7 @@
 import React, { FC } from 'react';
 import {
+    alpha,
+    Box,
     Chip,
     Paper,
     Table,
@@ -14,32 +16,71 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
 
 const styles: SxStyles = {
-    tableContainer: { maxHeight: 320, overflowY: 'auto', padding: '10px' },
+    tableContainer: {
+        maxHeight: 300,
+        overflowY: 'auto',
+        padding: 0,
+        margin: 0,
+    },
     tableCellStyle: {
-        paddingTop: 0.4,
-        paddingBottom: 0.4,
-        borderBottom: 'none',
+        padding: theme => theme.spacing(1),
+    },
+    orgUnitStyle: {
+        margin: theme => theme.spacing(0.5),
+    },
+    interventionDotStyle: {
+        verticalAlign: 'baseline',
+        paddingLeft: theme => theme.spacing(0.6),
+        paddingRight: theme => theme.spacing(0.6),
     },
 };
 
 const TableRowWithPlans = ({ row, index }) => {
     return (
-        <TableRow
-            key={index}
-            sx={{
-                backgroundColor: index % 2 === 0 ? 'white' : '#ECEFF1',
-            }}
-        >
-            <TableCell sx={styles.tableCellStyle}>{row.name}</TableCell>
-            <TableCell sx={styles.tableCellStyle}>
+        <TableRow key={index}>
+            <TableCell sx={{ ...styles.tableCellStyle, minWidth: '200px' }}>
+                <Typography
+                    variant="subtitle2"
+                    color={alpha('#1F2B3D', 0.87)}
+                    fontWeight="bold"
+                >
+                    {row.name}
+                </Typography>
                 {row.interventions.map((intervention, idx) => (
+                    <Typography
+                        variant="caption"
+                        color={alpha('#1F2B3D', 0.87)}
+                    >
+                        {intervention.name}
+                        {idx < row.interventions.length - 1 && (
+                            <Box
+                                component="span"
+                                sx={styles.interventionDotStyle}
+                            >
+                                ·
+                            </Box>
+                        )}
+                    </Typography>
+                ))}
+            </TableCell>
+            <TableCell sx={styles.tableCellStyle}>
+                {row.orgUnits.map(orgUnit => (
                     <Chip
-                        key={idx}
-                        label={intervention.name}
-                        sx={{
-                            marginLeft: 0.5,
-                            backgroundColor: '#CFD8DC',
-                        }}
+                        key={orgUnit.id}
+                        label={
+                            <Typography
+                                key={orgUnit.id}
+                                variant="body2"
+                                display="inline-block"
+                                color="#1F2B3DDE"
+                            >
+                                {orgUnit.name}
+                            </Typography>
+                        }
+                        sx={styles.orgUnitStyle}
+                        color="default"
+                        size="small"
+                        variant="outlined"
                     />
                 ))}
             </TableCell>
@@ -74,7 +115,7 @@ export const InterventionsPlanTable: FC<Props> = ({
 }) => {
     return (
         <TableContainer component={Paper} sx={styles.tableContainer}>
-            <Table size="small" aria-label="a dense table">
+            <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableBody>
                     {isLoadingPlans ||
                     (interventionPlans?.length ?? 0) === 0 ? (

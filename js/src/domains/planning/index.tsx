@@ -20,8 +20,8 @@ import { InterventionsMix } from './components/interventionMix/InterventionsMix'
 import { InterventionsPlan } from './components/interventionPlan/InterventionsPlan';
 import { LayersDrawer } from './components/LayersDrawer';
 import { Map } from './components/map';
-import { ScenarioTopBar } from './components/ScenarioTopBar';
 import { SideMapList } from './components/maps/SideMapList';
+import { ScenarioTopBar } from './components/ScenarioTopBar';
 import {
     useGetMetricCategories,
     useGetMetricValues,
@@ -219,11 +219,11 @@ export const Planning: FC = () => {
                                 handleExpandAccordion={handleExpandAccordion}
                                 expanded={expanded}
                             />
-                            <Budgets
+                            {/* <Budgets
                                 scenarioId={scenario?.id}
                                 handleExpandAccordion={handleExpandAccordion}
                                 expanded={expanded}
-                            />
+                            /> */}
                         </PaperContainer>
                     </Grid>
                 </Grid>
