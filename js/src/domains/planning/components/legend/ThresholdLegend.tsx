@@ -3,7 +3,6 @@ import { useTheme } from '@mui/material';
 import { scaleThreshold } from '@visx/scale';
 import { LegendThreshold, LegendItem, LegendLabel } from '@visx/legend';
 
-import { SxStyles } from 'Iaso/types/general';
 import { ScaleThreshold } from 'Iaso/components/LegendBuilder/types';
 import { getThresHoldLabels } from 'Iaso/components/LegendBuilder/utils';
 
