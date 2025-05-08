@@ -117,7 +117,7 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
     );
 
     return (
-        <Box height="250px" sx={styles.mainBox}>
+        <Box height="280px" sx={styles.mainBox}>
             <MapContainer
                 id="side_map"
                 doubleClickZoom
