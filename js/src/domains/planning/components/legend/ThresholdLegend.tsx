@@ -1,23 +1,32 @@
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, useMemo } from 'react';
 import { useTheme } from '@mui/material';
-import { scaleOrdinal } from '@visx/scale';
-import { LegendOrdinal, LegendItem, LegendLabel } from '@visx/legend';
-import { ScaleDomainRange } from '../../types/metrics';
+import { scaleThreshold } from '@visx/scale';
+import { LegendThreshold, LegendItem, LegendLabel } from '@visx/legend';
 
-export const useGetLegend = (threshold?: ScaleDomainRange): any => {
-    return scaleOrdinal(threshold);
+import { ScaleThreshold } from 'Iaso/components/LegendBuilder/types';
+import { getThresHoldLabels } from 'Iaso/components/LegendBuilder/utils';
+
+export const useGetLegend = (threshold?: ScaleThreshold): any => {
+    return scaleThreshold(threshold);
 };
 
 type Props = {
-    domainAndRange: ScaleDomainRange;
+    threshold: ScaleThreshold;
+    unit?: string;
 };
 
-export const OrdinalLegend: FunctionComponent<Props> = ({ domainAndRange }) => {
+export const ThresholdLegend: FunctionComponent<Props> = ({
+    threshold,
+    unit,
+}) => {
     const theme = useTheme();
-    const getLegend = useGetLegend(domainAndRange);
-
+    const getLegend = useGetLegend(threshold);
+    const legendLabels = useMemo(
+        () => getThresHoldLabels(threshold, unit),
+        [threshold, unit],
+    );
     return (
-        <LegendOrdinal scale={getLegend}>
+        <LegendThreshold scale={getLegend}>
             {labels =>
                 labels.reverse().map(label => {
                     return (
@@ -36,12 +45,12 @@ export const OrdinalLegend: FunctionComponent<Props> = ({ domainAndRange }) => {
                                 align="left"
                                 margin={theme.spacing(0, 0, 0, 1)}
                             >
-                                {label.text}
+                                {legendLabels[label.index]}
                             </LegendLabel>
                         </LegendItem>
                     );
                 })
             }
-        </LegendOrdinal>
+        </LegendThreshold>
     );
 };
