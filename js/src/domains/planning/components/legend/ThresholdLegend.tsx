@@ -24,7 +24,7 @@ export const ThresholdLegend: FunctionComponent<Props> = ({
     const getLegend = useGetLegend(threshold);
     const legendLabels = useMemo(
         () => getThresHoldLabels(threshold, unit),
-        [threshold],
+        [threshold, unit],
     );
     return (
         <LegendThreshold scale={getLegend}>
