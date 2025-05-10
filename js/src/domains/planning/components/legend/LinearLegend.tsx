@@ -1,10 +1,13 @@
 import React, { FunctionComponent } from 'react';
-import { Box } from '@mui/material';
+import { Box, Theme } from '@mui/material';
 
 import { SxStyles } from 'Iaso/types/general';
 import { ScaleDomainRange } from '../../types/metrics';
 
 const styles: SxStyles = {
+    mainBox: (theme: Theme) => ({
+        marginTop: theme.spacing(1),
+    }),
     gradientLabels: {
         display: 'flex',
         justifyContent: 'space-between',
@@ -28,7 +31,7 @@ export const LinearLegend: FunctionComponent<Props> = ({ domainAndRange }) => {
     };
 
     return (
-        <Box>
+        <Box sx={styles.mainBox}>
             <div style={gradientStyle} />
             <Box sx={styles.gradientLabels}>
                 <span>{startValue}</span>
