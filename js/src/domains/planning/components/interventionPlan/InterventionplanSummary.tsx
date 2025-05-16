@@ -3,11 +3,13 @@ import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import MapIcon from '@mui/icons-material/Map';
 import SearchIcon from '@mui/icons-material/Search';
 import TableRowsIcon from '@mui/icons-material/TableRows';
+import { TabList } from '@mui/lab';
 import {
     Box,
     Grid,
     InputAdornment,
     Stack,
+    Tab,
     TextField,
     Typography,
 } from '@mui/material';
@@ -15,7 +17,10 @@ import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../messages';
 import { containerBoxStyles } from '../styles';
 
-export const InterventionPlanSummary: FC = () => {
+type Props = {
+    setTabValue: (tabValue: string) => void;
+};
+export const InterventionPlanSummary: FC<Props> = ({ setTabValue }) => {
     const { formatMessage } = useSafeIntl();
     return (
         <Grid
@@ -46,8 +51,13 @@ export const InterventionPlanSummary: FC = () => {
                     alignItems="center"
                     sx={{ color: '#1F2B3D99' }}
                 >
-                    <TableRowsIcon />
-                    <MapIcon />
+                    <TabList
+                        onChange={(event, newValue) => setTabValue(newValue)}
+                    >
+                        <Tab value="list" label={<TableRowsIcon />} />
+                        <Tab value="map" label={<MapIcon />} />
+                    </TabList>
+
                     <TextField
                         id="search-field"
                         placeholder="Districts"

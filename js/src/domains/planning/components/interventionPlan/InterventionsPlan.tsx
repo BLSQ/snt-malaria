@@ -1,4 +1,5 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
+import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
 import { InterventionPlanSummary } from './InterventionplanSummary';
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
+    const [tabValue, setTabValue] = useState<string>('list');
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionsPlan(scenarioId);
     console.log(interventionPlans);
@@ -129,7 +131,7 @@ export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
             ],
         },
     ];
-    console.log(interventionPlans);
+
     return (
         <Box
             sx={{
@@ -138,21 +140,32 @@ export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
             }}
         >
             <Card elevation={2} sx={{ maxHeight: '410px' }}>
-                <CardHeader title={<InterventionPlanSummary />} />
-                <CardContent
-                    sx={{
-                        padding: 0,
-                        '&:last-child': {
-                            paddingBottom: 0,
-                        },
-                    }}
-                >
-                    <Divider sx={{ width: '100%', mb: 0 }} />
-                    <InterventionsPlanTable
-                        isLoadingPlans={isLoadingPlans}
-                        interventionPlans={hardCodedInterventionPlans}
+                <TabContext value={tabValue}>
+                    <CardHeader
+                        title={
+                            <InterventionPlanSummary
+                                setTabValue={setTabValue}
+                            />
+                        }
                     />
-                </CardContent>
+                    <CardContent
+                        sx={{
+                            padding: 0,
+                            '&:last-child': {
+                                paddingBottom: 0,
+                            },
+                        }}
+                    >
+                        <Divider sx={{ width: '100%', mb: 0 }} />
+                        <TabPanel value="list">
+                            <InterventionsPlanTable
+                            scenarioId={scenarioId}
+                                isLoadingPlans={isLoadingPlans}
+                                interventionPlans={hardCodedInterventionPlans}
+                            />
+                        </TabPanel>
+                    </CardContent>
+                </TabContext>
             </Card>
         </Box>
     );

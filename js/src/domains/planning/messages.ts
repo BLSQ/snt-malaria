@@ -92,4 +92,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.addMap',
         defaultMessage: 'Add a coviarant map',
     },
+    editMixTitle: {
+        id: 'iaso.snt_malaria.label.interventionMix.editMixTitle',
+        defaultMessage: 'Edit Mix',
+    },
 });

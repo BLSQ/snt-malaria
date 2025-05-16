@@ -6,6 +6,7 @@ import { useQueryClient } from 'react-query';
 import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
 import { MESSAGES } from '../../messages';
 import { containerBoxStyles } from '../styles';
+import { ArrowForward } from '@mui/icons-material';
 
 type Props = {
     scenarioId: number | undefined;
@@ -87,6 +88,7 @@ export const InterventionMixSummary: FC<Props> = ({
                     onClick={() => handleAssignmentCreation()}
                     variant="contained"
                     color="primary"
+                    endIcon={<ArrowForward />}
                     sx={{
                         fontSize: '0.875rem',
                         textTransform: 'none',
