@@ -160,15 +160,6 @@ export const Planning: FC = () => {
     return (
         <>
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
-            <LayersDrawer
-                toggleDrawer={toggleDrawer}
-                isDrawerOpen={isDrawerOpen}
-                displayedMetric={displayedMetric}
-                selectedOrgUnits={selectedOrgUnits}
-                onDisplayMetricOnMap={handleDisplayMetricOnMap}
-                onSelectOrgUnits={handleSelectOrgUnits}
-                onClearOrgUnitSelection={handleClearOrgUnitSelection}
-            />
             <PageContainer>
                 {scenario && <ScenarioTopBar scenario={scenario} />}
                 <Grid container spacing={1}>

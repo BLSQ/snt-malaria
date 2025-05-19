@@ -18,27 +18,10 @@ import {
     ZoomControl,
 } from 'react-leaflet';
 import { MetricType, MetricValue } from '../types/metrics';
-import { LayersTitleWithIcon } from './layers/LayersTitleWithIcon';
 import { MapLegend } from './MapLegend';
 import { MapOrgUnitDetails } from './MapOrgUnitDetails';
 import { LayerSelect } from './maps/LayerSelect';
-
-const StyledButton = styled(Button)`
-    background-color: white;
-    color: ${({ theme }) => theme.palette.text.primary};
-    padding: ${({ theme }) => theme.spacing(1)};
-    border-radius: 12px;
-    line-height: 0;
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 1000;
-    border: 0;
-    &:hover {
-        background-color: #f5f5f5;
-        border: 0;
-    }
-`;
+import { MapSelectionWidget } from './MapSelectionWidget';
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
@@ -142,7 +125,7 @@ export const Map: FC<Props> = ({
             color = theme.palette.secondary.main;
             weight = 4;
         } else if (selectedOrgUnitIds.includes(orgUnitId)) {
-            color = theme.palette.primary.main;
+            color = '#000000';
             weight = 3;
         } else {
             color = '#546E7A';
@@ -162,13 +145,14 @@ export const Map: FC<Props> = ({
 
     return (
         <Box height="100%" sx={styles.mainBox}>
-            <StyledButton
-                variant="outlined"
-                size="small"
-                onClick={toggleDrawer}
-            >
-                <LayersTitleWithIcon />
-            </StyledButton>
+            <MapSelectionWidget
+                selectionCount={8}
+                onAddToMix={() => console.log('onAddToMix')}
+                onClearSelection={() => console.log('onClearSelection')}
+                onOpenQueryBuilderModal={() =>
+                    console.log('onOpenQueryBuilderModal')
+                }
+            />
             {orgUnits && (
                 <>
                     <MapContainer
