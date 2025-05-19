@@ -41,12 +41,11 @@ export const Planning: FC = () => {
     const { data: scenario } = useGetScenario(params.scenarioId);
     const { data: orgUnits } = useGetOrgUnits();
     const { formatMessage } = useSafeIntl();
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+    const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
+    const [selectionOnInterventionMix, setSelectionOnInterventionMix] =
+        useState<OrgUnit[]>([]);
     const [expanded, setExpanded] = useState('interventionsMix');
-    const [selectedOrgUnits, setSelectedOrgUnits] = useState<OrgUnit[]>([]);
-    const toggleDrawer = () => {
-        setIsDrawerOpen(!isDrawerOpen);
-    };
 
     // Metric selection
     // v1: display Incidence by default
@@ -74,7 +73,7 @@ export const Planning: FC = () => {
     const handleAddRemoveOrgUnitToMix = useCallback(
         (orgUnit: OrgUnit | null) => {
             if (orgUnit) {
-                setSelectedOrgUnits(prev => {
+                setSelectionOnInterventionMix(prev => {
                     if (prev.some(unit => unit.id === orgUnit.id)) {
                         return prev.filter(unit => unit.id !== orgUnit.id);
                     }
@@ -126,7 +125,7 @@ export const Planning: FC = () => {
             );
 
             if (newOrgUnitSelection && newOrgUnitSelection.length > 0) {
-                setSelectedOrgUnits(newOrgUnitSelection);
+                setSelectionOnMap(newOrgUnitSelection);
                 openSnackBar(
                     succesfullSnackBar(
                         'selectOrgUnitsSuccess',
@@ -150,8 +149,8 @@ export const Planning: FC = () => {
         [formatMessage, orgUnits],
     );
 
-    const handleClearOrgUnitSelection = useCallback(() => {
-        setSelectedOrgUnits([]);
+    const handleClearSelectionOnMap = useCallback(() => {
+        setSelectionOnMap([]);
     }, []);
 
     const handleExpandAccordion = panel => (event, isExpanded) => {
@@ -169,12 +168,12 @@ export const Planning: FC = () => {
                                 {isLoading && <p>Loading data...</p>}
                                 <Map
                                     orgUnits={orgUnits}
-                                    toggleDrawer={toggleDrawer}
                                     displayedMetric={displayedMetric}
                                     displayedMetricValues={
                                         displayedMetricValues
                                     }
-                                    selectedOrgUnits={selectedOrgUnits}
+                                    selectedOrgUnits={selectionOnMap}
+                                    onClearSelection={handleClearSelectionOnMap}
                                     onChangeMetricLayer={
                                         handleDisplayMetricOnMap
                                     }
@@ -202,7 +201,7 @@ export const Planning: FC = () => {
                         <PaperContainer>
                             <InterventionsMix
                                 scenarioId={scenario?.id}
-                                selectedOrgUnits={selectedOrgUnits}
+                                selectedOrgUnits={selectionOnInterventionMix}
                             />
                         </PaperContainer>
                     </Grid>

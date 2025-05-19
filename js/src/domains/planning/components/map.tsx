@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import { Box, useTheme, Button, styled, Theme } from '@mui/material';
+import { Box, useTheme, Theme } from '@mui/material';
 import * as d3 from 'd3-scale';
 
 import { useGetLegend } from 'Iaso/components/LegendBuilder/Legend';
@@ -39,22 +39,22 @@ const styles: SxStyles = {
 
 type Props = {
     orgUnits?: OrgUnit[];
-    toggleDrawer: () => void;
     displayedMetric: MetricType | null;
     displayedMetricValues?: MetricValue[];
     selectedOrgUnits: OrgUnit[];
     onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
     onChangeMetricLayer: (MetricType) => void;
+    onClearSelection: () => void;
 };
 
 export const Map: FC<Props> = ({
     orgUnits,
-    toggleDrawer,
     displayedMetric,
     displayedMetricValues,
     selectedOrgUnits,
     onAddRemoveOrgUnitToMix,
     onChangeMetricLayer,
+    onClearSelection,
 }) => {
     const [currentTile] = useState<Tile>(tiles.osm);
     const theme = useTheme();
@@ -148,7 +148,7 @@ export const Map: FC<Props> = ({
             <MapSelectionWidget
                 selectionCount={8}
                 onAddToMix={() => console.log('onAddToMix')}
-                onClearSelection={() => console.log('onClearSelection')}
+                onClearSelection={onClearSelection}
                 onOpenQueryBuilderModal={() =>
                     console.log('onOpenQueryBuilderModal')
                 }
