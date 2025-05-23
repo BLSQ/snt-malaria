@@ -13,7 +13,6 @@ export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
     const [tabValue, setTabValue] = useState<string>('list');
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionsPlan(scenarioId);
-    console.log(interventionPlans);
     const hardCodedInterventionPlans = [
         {
             id: 1,
@@ -157,9 +156,9 @@ export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
                         }}
                     >
                         <Divider sx={{ width: '100%', mb: 0 }} />
-                        <TabPanel value="list">
+                        <TabPanel value="list" sx={{ mt: '-20px' }}>
                             <InterventionsPlanTable
-                            scenarioId={scenarioId}
+                                scenarioId={scenarioId}
                                 isLoadingPlans={isLoadingPlans}
                                 interventionPlans={hardCodedInterventionPlans}
                             />

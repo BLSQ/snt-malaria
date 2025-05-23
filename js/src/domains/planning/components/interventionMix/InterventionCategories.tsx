@@ -1,10 +1,11 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Grid, MenuItem, Select, Typography } from '@mui/material';
+import { Grid, MenuItem, Select, TextField, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionCategories } from '../../hooks/useGetInterventions';
 import { Interventions } from './Interventions';
 
 type Props = {
+    mix?: any;
     scenarioId: number | undefined;
     selectedOrgUnits: any;
     selectedInterventions: { [categoryId: number]: number[] | [] };
@@ -27,6 +28,7 @@ const styles: SxStyles = {
 };
 
 export const InterventionCategories: FC<Props> = ({
+    mix,
     scenarioId,
     selectedOrgUnits,
     selectedInterventions,
@@ -86,16 +88,26 @@ export const InterventionCategories: FC<Props> = ({
         <Grid container spacing={2} padding={1}>
             <Grid item container>
                 {/* To do: use inputComponent with type select */}
-                <Select
-                    value=""
-                    onChange={() => console.log('select')}
-                    displayEmpty
-                    sx={styles.selectStyle}
-                >
-                    <MenuItem value="">
-                        <Typography variant="body2">New mix</Typography>
-                    </MenuItem>
-                </Select>
+                {mix ? (
+                    <TextField
+                        label="Name"
+                        id="outlined-size-small"
+                        value={mix.name}
+                        size="small"
+                        sx={{ width: '100%' }}
+                    />
+                ) : (
+                    <Select
+                        value=""
+                        onChange={() => console.log('select')}
+                        displayEmpty
+                        sx={styles.selectStyle}
+                    >
+                        <MenuItem value="">
+                            <Typography variant="body2">New mix</Typography>
+                        </MenuItem>
+                    </Select>
+                )}
             </Grid>
             <Grid item container direction="row" spacing={2} padding={2}>
                 {!isLoadingInterventionCategories &&

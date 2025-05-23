@@ -7,7 +7,9 @@ import {
     TableContainer,
     Typography,
 } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { MESSAGES } from '../../messages';
 import { InterventionsPlanRowTable } from './InterventionsPlanRowTable';
 
 const styles: SxStyles = {
@@ -17,21 +19,17 @@ const styles: SxStyles = {
         padding: 0,
         margin: 0,
     },
-    tableCellStyle: {
-        padding: theme => theme.spacing(0),
-    },
-    orgUnitStyle: {
-        margin: theme => theme.spacing(0.5),
-    },
-    interventionDotStyle: {
-        verticalAlign: 'baseline',
-        paddingLeft: theme => theme.spacing(0.6),
-        paddingRight: theme => theme.spacing(0.6),
+    tableNoContent: {
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 200,
     },
 };
 
 type Props = {
-    scenarioId: number;
+    scenarioId: number | undefined;
     isLoadingPlans: boolean;
     interventionPlans: any;
 };
@@ -40,32 +38,31 @@ export const InterventionsPlanTable: FC<Props> = ({
     isLoadingPlans,
     interventionPlans,
 }) => {
+    const { formatMessage } = useSafeIntl();
     return (
         <TableContainer component={Paper} sx={styles.tableContainer}>
             {isLoadingPlans || (interventionPlans?.length ?? 0) === 0 ? (
-                <Box
-                    sx={{
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        minHeight: 200, // ensure there's enough vertical space
-                    }}
-                >
+                <Box sx={styles.tableNoContent}>
                     <Typography variant="body2" sx={{ color: '#1F2B3D99' }}>
-                        Intervention mixes and their districts will appear here.
+                        {formatMessage(MESSAGES.tableNoContent)}
                     </Typography>
                 </Box>
             ) : (
-                <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                <Table
+                    sx={{
+                        minWidth: 650,
+                    }}
+                    aria-label="simple table"
+                >
                     <TableBody>
                         {interventionPlans?.map((row, index) => (
                             <InterventionsPlanRowTable
                                 scenarioId={scenarioId}
                                 key={row.id}
                                 row={row}
-                                index={index} 
-                                iconProps={undefined}                            />
+                                index={index}
+                                iconProps={undefined}
+                            />
                         ))}
                     </TableBody>
                 </Table>
