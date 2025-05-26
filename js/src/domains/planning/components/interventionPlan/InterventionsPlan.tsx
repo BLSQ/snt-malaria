@@ -168,7 +168,13 @@ export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
                         </TabPanel>
                         <TabPanel
                             value="map"
-                            sx={{ mt: '-20px', width: '100%' }}
+                            sx={{
+                                pt: '4px',
+                                px: '4px',
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'center',
+                            }}
                         >
                             <InterventionsPlanMap />
                         </TabPanel>

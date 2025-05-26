@@ -16,15 +16,44 @@ const styles: SxStyles = {
         overflow: 'hidden',
         position: 'relative',
     }),
-    selectStyle: {
-        width: '104px',
+    select: (theme: Theme) => ({
+        minWidth: 120,
+        '& .MuiSelect-select': { padding: '8px 12px' },
+        backgroundColor: 'white',
+        borderRadius: theme.spacing(1),
         height: '32px',
-        borderRadius: '4px',
-        '& .MuiSelect-select': {
-            display: 'flex',
-            alignItems: 'center',
+        '& .MuiOutlinedInput-notchedOutline': {
+            border: 0,
         },
-        marginRight: 0,
+    }),
+    legendBox: {
+        position: 'absolute',
+        bottom: 8,
+        left: 8,
+        zIndex: 1000,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        height: '25px',
+        width: '100px',
+        borderRadius: 2,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 8px',
+    },
+    legendShape: {
+        backgroundColor: '#9575CD',
+        height: '12px',
+        width: '12px',
+        marginRight: '8px',
+        borderRadius: '2px',
+    },
+    selectBox: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        zIndex: 1000,
+        backgroundColor: 'white',
+        borderRadius: 2,
+        border: 'none',
     },
 };
 export const InterventionsPlanMap: FunctionComponent = () => {
@@ -44,7 +73,7 @@ export const InterventionsPlanMap: FunctionComponent = () => {
     }, [orgUnits]);
 
     return (
-        <Box height="400px" width="100%" sx={styles.mainBox}>
+        <Box height="390px" width="100%" sx={styles.mainBox}>
             <MapContainer
                 id="side_map"
                 doubleClickZoom
@@ -81,57 +110,22 @@ export const InterventionsPlanMap: FunctionComponent = () => {
                     />
                 ))}
             </MapContainer>
-            <Box
-                sx={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    zIndex: 1000,
-                    backgroundColor: 'white',
-                    borderRadius: 2,
-                    border: 'none',
-                }}
-            >
+            <Box sx={styles.selectBox}>
                 <Select
                     value=""
-                    onChange={() => console.log('select')}
+                    onChange={() => null}
                     displayEmpty
-                    sx={{
-                        minWidth: 120,
-                        '& .MuiSelect-select': { padding: '8px 12px' },
-                    }}
+                    sx={styles.select}
                 >
                     <MenuItem value="">
                         <Typography variant="body2">Base Pack</Typography>
                     </MenuItem>
                 </Select>
             </Box>
-            <Box
-                sx={{
-                    position: 'absolute',
-                    bottom: 8,
-                    left: 8,
-                    zIndex: 1000,
-                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                    height: '25px',
-                    width: '100px',
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '0 8px',
-                }}
-            >
-                <Box
-                    sx={{
-                        backgroundColor: '#9575CD',
-                        height: '12px',
-                        width: '12px',
-                        marginRight: '8px',
-                        borderRadius: '2px',
-                    }}
-                />
+            <Box sx={styles.legendBox}>
+                <Box sx={styles.legendShape} />
                 <Typography variant="caption" sx={{ color: 'white' }}>
-                    5 districts
+                    4 districts
                 </Typography>
             </Box>
         </Box>
