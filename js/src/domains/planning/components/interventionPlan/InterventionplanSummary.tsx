@@ -26,7 +26,6 @@ export const InterventionPlanSummary: FC<Props> = ({ setTabValue }) => {
         <Grid
             container
             direction="row"
-            spacing={2}
             alignItems="center"
             justifyContent="space-between"
         >
@@ -53,6 +52,11 @@ export const InterventionPlanSummary: FC<Props> = ({ setTabValue }) => {
                 >
                     <TabList
                         onChange={(event, newValue) => setTabValue(newValue)}
+                        sx={{
+                            '& .MuiTabs-indicator': {
+                                display: 'none',
+                            },
+                        }}
                     >
                         <Tab value="list" label={<TableRowsIcon />} />
                         <Tab value="map" label={<MapIcon />} />

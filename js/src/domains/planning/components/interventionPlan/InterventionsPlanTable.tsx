@@ -14,7 +14,7 @@ import { InterventionsPlanRowTable } from './InterventionsPlanRowTable';
 
 const styles: SxStyles = {
     tableContainer: {
-        minHeight: 275,
+        minHeight: 424,
         overflowY: 'auto',
         padding: 0,
         margin: 0,

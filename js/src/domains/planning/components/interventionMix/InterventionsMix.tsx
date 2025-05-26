@@ -46,9 +46,10 @@ export const InterventionsMix: FC<Props> = ({
             sx={{
                 borderRadius: theme => theme.spacing(2),
                 overflow: 'hidden',
+                height: '493px',
             }}
         >
-            <Card elevation={2} sx={{ maxHeight: '420px' }}>
+            <Card elevation={2} sx={{ minHeight: '424px' }}>
                 <CardHeader
                     title={
                         <InterventionMixSummary
@@ -69,7 +70,7 @@ export const InterventionsMix: FC<Props> = ({
                     }}
                 >
                     <Divider sx={{ width: '100%', mb: 0 }} />
-                    <Grid container sx={{ padding: 0 }}>
+                    <Grid container sx={{ padding: 0, height: '424px' }}>
                         <Grid item xs={5.5}>
                             <SelectedDistricts
                                 selectedDistricts={selectedDistricts}

@@ -3,6 +3,7 @@ import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
 import { InterventionPlanSummary } from './InterventionplanSummary';
+import { InterventionsPlanMap } from './InterventionsPlanMap';
 import { InterventionsPlanTable } from './InterventionsPlanTable';
 
 type Props = {
@@ -136,9 +137,10 @@ export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
             sx={{
                 borderRadius: theme => theme.spacing(2),
                 overflow: 'hidden',
+                height: '493px',
             }}
         >
-            <Card elevation={2} sx={{ maxHeight: '410px' }}>
+            <Card elevation={2}>
                 <TabContext value={tabValue}>
                     <CardHeader
                         title={
@@ -152,16 +154,23 @@ export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
                             padding: 0,
                             '&:last-child': {
                                 paddingBottom: 0,
+                                height: '424px',
                             },
                         }}
                     >
-                        <Divider sx={{ width: '100%', mb: 0 }} />
+                        <Divider sx={{ width: '100%', mt: -1 }} />
                         <TabPanel value="list" sx={{ mt: '-20px' }}>
                             <InterventionsPlanTable
                                 scenarioId={scenarioId}
                                 isLoadingPlans={isLoadingPlans}
                                 interventionPlans={hardCodedInterventionPlans}
                             />
+                        </TabPanel>
+                        <TabPanel
+                            value="map"
+                            sx={{ mt: '-20px', width: '100%' }}
+                        >
+                            <InterventionsPlanMap />
                         </TabPanel>
                     </CardContent>
                 </TabContext>
