@@ -1,26 +1,39 @@
 import React, { FC, useMemo } from 'react';
+import { ArrowForward } from '@mui/icons-material';
 import TuneIcon from '@mui/icons-material/Tune';
 import { Box, Button, Grid, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
 import { useQueryClient } from 'react-query';
 import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
 import { MESSAGES } from '../../messages';
 import { containerBoxStyles } from '../styles';
-import { ArrowForward } from '@mui/icons-material';
 
 type Props = {
     scenarioId: number | undefined;
-    selectedOrgUnits: any;
+    selectedOrgUnits: OrgUnit[];
     isButtonDisabled: boolean;
     selectedInterventions: { [categoryId: number]: number[] | [] };
     setIsButtonDisabled: (bool: boolean) => void;
+    mixName: string;
 };
+
+const styles: SxStyles = {
+    itemGrid: { flexGrow: 1 },
+    applyButton: {
+        fontSize: '0.875rem',
+        textTransform: 'none',
+    },
+};
+
 export const InterventionMixSummary: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
     isButtonDisabled,
     selectedInterventions,
     setIsButtonDisabled,
+    mixName,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { mutateAsync: createInterventionAssignment } =
@@ -40,18 +53,22 @@ export const InterventionMixSummary: FC<Props> = ({
         return (
             selectedInterventionValues.length > 0 &&
             selectedOrgUnits.length > 0 &&
-            scenarioId
+            scenarioId &&
+            mixName
         );
     }, [
         scenarioId,
         selectedInterventionValues.length,
         selectedOrgUnits.length,
+        mixName,
     ]);
+
     const handleAssignmentCreation = async () => {
         if (canApplyInterventions) {
             setIsButtonDisabled(true);
 
             await createInterventionAssignment({
+                name: mixName,
                 intervention_ids: selectedInterventionValues,
                 org_unit_ids: selectedOrgUnits.map(orgUnit => orgUnit.id),
                 scenario_id: scenarioId,
@@ -67,7 +84,7 @@ export const InterventionMixSummary: FC<Props> = ({
             alignItems="center"
             justifyContent="space-between"
         >
-            <Grid item sx={{ flexGrow: 1 }}>
+            <Grid item sx={styles.itemGrid}>
                 <Stack direction="row" spacing={1} alignItems="center">
                     <Box sx={containerBoxStyles}>
                         <TuneIcon height="auto" color="primary" />
@@ -82,17 +99,14 @@ export const InterventionMixSummary: FC<Props> = ({
                 display="flex"
                 justifyContent="flex-end"
                 alignItems="flex-end"
-                sx={{ flexGrow: 1 }}
+                sx={styles.itemGrid}
             >
                 <Button
                     onClick={() => handleAssignmentCreation()}
                     variant="contained"
                     color="primary"
                     endIcon={<ArrowForward />}
-                    sx={{
-                        fontSize: '0.875rem',
-                        textTransform: 'none',
-                    }}
+                    sx={styles.applyButton}
                     disabled={!canApplyInterventions || isButtonDisabled}
                 >
                     {formatMessage(MESSAGES.applyInterventionMix)}

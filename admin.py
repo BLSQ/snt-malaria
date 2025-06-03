@@ -39,14 +39,14 @@ class InterventionAssignmentAdmin(admin.ModelAdmin):
     raw_id_fields = ("org_unit",)
     list_display = (
         "scenario",
-        "intervention",
+        "intervention_mix",
         "created_by",
         "created_at",
         "updated_at",
         "deleted_at",
     )
-    list_filter = ("scenario", "intervention", "created_by")
-    search_fields = ("scenario__name", "org_unit__name", "intervention__name")
+    list_filter = ("scenario", "intervention_mix", "created_by")
+    search_fields = ("scenario__name", "org_unit__name", "intervention_mix__name")
 
 
 @admin.register(Scenario)
