@@ -12,6 +12,7 @@ export type Intervention = {
 };
 
 export type InterventionAssignment = {
+    mix_name: string;
     orgunit_ids: number[];
     intervention_ids: number[];
     scenario_id: number;

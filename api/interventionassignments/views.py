@@ -13,6 +13,7 @@ from plugins.snt_malaria.api.interventionassignments.filters import (
 )
 from plugins.snt_malaria.api.interventions.serializers import InterventionSerializer
 from plugins.snt_malaria.models import InterventionAssignment
+from plugins.snt_malaria.models.intervention import InterventionMix
 
 from .serializers import (
     InterventionAssignmentListSerializer,
@@ -26,9 +27,9 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
     filterset_class = InterventionAssignmentListFilter
 
     def get_queryset(self):
-        return InterventionAssignment.objects.prefetch_related("intervention__intervention_category__account").filter(
-            intervention__intervention_category__account=self.request.user.iaso_profile.account
-        )
+        return InterventionAssignment.objects.prefetch_related(
+            "intervention_mix__interventions__intervention_category__account"
+        ).filter(intervention__intervention_category__account=self.request.user.iaso_profile.account)
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -36,28 +37,31 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         return InterventionAssignmentWriteSerializer
 
     def create(self, request, *args, **kwargs):
+        print("create assignment")
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         # Get validated objects
+        mix_name = serializer.validated_data["mix_name"]
         scenario = serializer.validated_data["scenario"]
         org_units = serializer.validated_data["valid_org_units"]
         interventions = serializer.validated_data["valid_interventions"]
         created_by = request.user
         # Delete all assignments linked to orgUnits and to the scenario
         InterventionAssignment.objects.filter(scenario=scenario, org_unit__in=org_units).delete()
+        # create the intervention mix and link it the interventions
+        intervention_mix, created = InterventionMix.objects.get_or_create(name=mix_name, scenario=scenario)
+        intervention_mix.interventions.add(*interventions)
         # Create InterventionAssignment objects
         assignments = []
-
         for org_unit in org_units:
-            for intervention in interventions:
-                assignment = InterventionAssignment(
-                    scenario=scenario,
-                    org_unit=org_unit,
-                    intervention=intervention,
-                    created_by=created_by,
-                )
-                assignments.append(assignment)
+            assignment = InterventionAssignment(
+                scenario=scenario,
+                org_unit=org_unit,
+                intervention_mix=intervention_mix,
+                created_by=created_by,
+            )
+            assignments.append(assignment)
 
         # Bulk create
         if assignments:

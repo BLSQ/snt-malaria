@@ -66,9 +66,8 @@ export const InterventionMixSummary: FC<Props> = ({
     const handleAssignmentCreation = async () => {
         if (canApplyInterventions) {
             setIsButtonDisabled(true);
-
             await createInterventionAssignment({
-                name: mixName,
+                mix_name: mixName,
                 intervention_ids: selectedInterventionValues,
                 org_unit_ids: selectedOrgUnits.map(orgUnit => orgUnit.id),
                 scenario_id: scenarioId,

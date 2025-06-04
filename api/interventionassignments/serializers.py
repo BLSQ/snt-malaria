@@ -27,6 +27,7 @@ class InterventionAssignmentListSerializer(serializers.ModelSerializer):
 class InterventionAssignmentWriteSerializer(serializers.ModelSerializer):
     """For creating InterventionAssignment"""
 
+    mix_name = serializers.CharField(write_only=True)
     org_unit_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
     intervention_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
     scenario_id = serializers.IntegerField(write_only=True)
@@ -34,6 +35,7 @@ class InterventionAssignmentWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionAssignment
         fields = [
+            "mix_name",
             "org_unit_ids",
             "intervention_ids",
             "scenario_id",
@@ -42,7 +44,7 @@ class InterventionAssignmentWriteSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         request = self.context.get("request")
         account = request.user.iaso_profile.account
-
+        mix_name = attrs.get("mix_name")
         scenario_id = attrs.get("scenario_id")
         org_unit_ids = attrs.get("org_unit_ids", [])
         intervention_ids = attrs.get("intervention_ids", [])
@@ -72,7 +74,7 @@ class InterventionAssignmentWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"intervention_ids": f"Invalid intervention IDs: {missing_interventions}"}
             )
-
+        attrs["mix_name"] = mix_name
         attrs["scenario"] = scenario
         attrs["valid_org_units"] = valid_org_units
         attrs["valid_interventions"] = valid_interventions
