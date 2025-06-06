@@ -17,6 +17,8 @@ type Props = {
     selectedInterventions: { [categoryId: number]: number[] | [] };
     setIsButtonDisabled: (bool: boolean) => void;
     mixName: string;
+    setCreateMix: (createMix: boolean) => void;
+    selectedMix: number | null;
 };
 
 const styles: SxStyles = {
@@ -34,6 +36,8 @@ export const InterventionMixSummary: FC<Props> = ({
     selectedInterventions,
     setIsButtonDisabled,
     mixName,
+    setCreateMix,
+    selectedMix,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { mutateAsync: createInterventionAssignment } =
@@ -51,16 +55,17 @@ export const InterventionMixSummary: FC<Props> = ({
 
     const canApplyInterventions = useMemo(() => {
         return (
-            selectedInterventionValues.length > 0 &&
+            ((selectedInterventionValues.length > 0 && mixName) ||
+                selectedMix) &&
             selectedOrgUnits.length > 0 &&
-            scenarioId &&
-            mixName
+            scenarioId
         );
     }, [
-        scenarioId,
         selectedInterventionValues.length,
-        selectedOrgUnits.length,
         mixName,
+        selectedMix,
+        selectedOrgUnits.length,
+        scenarioId,
     ]);
 
     const handleAssignmentCreation = async () => {
@@ -71,10 +76,12 @@ export const InterventionMixSummary: FC<Props> = ({
                 intervention_ids: selectedInterventionValues,
                 org_unit_ids: selectedOrgUnits.map(orgUnit => orgUnit.id),
                 scenario_id: scenarioId,
+                selectedMix,
             });
 
             queryClient.invalidateQueries(['interventionPlans']);
         }
+        setCreateMix(false);
     };
     return (
         <Grid

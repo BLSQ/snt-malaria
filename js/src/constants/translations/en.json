@@ -6,6 +6,7 @@
     "iaso.snt_malaria.label.interventionMix.addOrgUnitFromMix": "Add to mix",
     "iaso.snt_malaria.label.interventionMix.applyInterventionMix": "Apply Mix",
     "iaso.snt_malaria.label.interventionMix.applyMixMessage": "You’re about to apply intervention mix to districts that already have been applied a mix. Please review the ones to override.",
+    "iaso.snt_malaria.label.interventionMix.chooseMixToApply": "Choose mix to apply",
     "iaso.snt_malaria.label.interventionMix.createNewMix": "Create new mix",
     "iaso.snt_malaria.label.interventionMix.deleteMix": "Delete Mix",
     "iaso.snt_malaria.label.interventionMix.editMixTitle": "Edit Mix",

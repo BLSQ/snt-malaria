@@ -37,7 +37,6 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         return InterventionAssignmentWriteSerializer
 
     def create(self, request, *args, **kwargs):
-        print("create assignment")
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -46,12 +45,20 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         scenario = serializer.validated_data["scenario"]
         org_units = serializer.validated_data["valid_org_units"]
         interventions = serializer.validated_data["valid_interventions"]
+        selected_mix = serializer.validated_data["selected_mix"]
+
         created_by = request.user
         # Delete all assignments linked to orgUnits and to the scenario
         InterventionAssignment.objects.filter(scenario=scenario, org_unit__in=org_units).delete()
-        # create the intervention mix and link it the interventions
-        intervention_mix, created = InterventionMix.objects.get_or_create(name=mix_name, scenario=scenario)
-        intervention_mix.interventions.add(*interventions)
+        # create the created or selected intervention mix and link it the interventions
+        if selected_mix:
+            intervention_mix = selected_mix
+        else:
+            intervention_mix, created = InterventionMix.objects.get_or_create(
+                name=mix_name, account=self.request.user.iaso_profile.account, scenario=scenario
+            )
+            intervention_mix.interventions.add(*interventions)
+
         # Create InterventionAssignment objects
         assignments = []
         for org_unit in org_units:

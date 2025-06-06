@@ -6,6 +6,7 @@
     "iaso.snt_malaria.label.interventionMix.addOrgUnitFromMix": "Ajouter au mix",
     "iaso.snt_malaria.label.interventionMix.applyInterventionMix": "Appliquez le Mix",
     "iaso.snt_malaria.label.interventionMix.applyMixMessage": "Vous êtes sur le point d'appliquer une combinaison d'interventions à des districts où une combinaison a déjà été appliqué. Veuillez vérifier ceux à remplacer.",
+    "iaso.snt_malaria.label.interventionMix.chooseMixToApply": "Choisissez le mix à appliquer",
     "iaso.snt_malaria.label.interventionMix.createNewMix": "Créer un nouveau mix",
     "iaso.snt_malaria.label.interventionMix.deleteMix": "Supprimer le Mix",
     "iaso.snt_malaria.label.interventionMix.editMixTitle": "Modifier le Mix",

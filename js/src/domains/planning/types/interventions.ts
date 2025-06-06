@@ -5,6 +5,12 @@ export type InterventionCategory = {
     interventions: Intervention[];
 };
 
+export type InterventionMix = {
+    id: number;
+    name: string;
+    interventions: Intervention[];
+};
+
 export type Intervention = {
     id: number;
     name: string;

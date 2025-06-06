@@ -111,10 +111,14 @@ export const MESSAGES = defineMessages({
     },
     noMixCreated: {
         id: 'iaso.snt_malaria.label.interventionMix.noMixCreated',
-        defaultMessage: "No mix created",
+        defaultMessage: 'No mix created',
     },
     createNewMix: {
         id: 'iaso.snt_malaria.label.interventionMix.createNewMix',
-        defaultMessage: "Create new mix",
-    }
+        defaultMessage: 'Create new mix',
+    },
+    chooseMixToApply: {
+        id: 'iaso.snt_malaria.label.interventionMix.chooseMixToApply',
+        defaultMessage: 'Choose mix to apply',
+    },
 });

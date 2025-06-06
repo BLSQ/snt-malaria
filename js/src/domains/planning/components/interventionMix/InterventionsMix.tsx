@@ -1,5 +1,7 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
+import { BorderColor } from '@mui/icons-material';
 import {
+    alpha,
     Box,
     Button,
     Card,
@@ -12,6 +14,7 @@ import {
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
+import { useGetInterventionMixes } from '../../hooks/useGetInterventionMixes';
 import { MESSAGES } from '../../messages';
 import { InterventionCategories } from './InterventionCategories';
 import { InterventionMixSummary } from './InterventionMixSummary';
@@ -56,7 +59,70 @@ const styles: SxStyles = {
     },
     noMixMessage: { color: '#1F2B3D99' },
     createMixButton: { textTransform: 'none' },
+    mixStyle: (mixId: number, selectedMix: number) => {
+        return {
+            height: 'auto',
+            display: 'flex',
+            flexDirection: {
+                xs: 'column',
+                sm: 'row',
+            },
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            borderRadius: '4px',
+            border: theme =>
+                `1px solid ${mixId === selectedMix ? theme.palette.primary.main : '#E1E1E1'}`,
+            p: 2,
+            mt: 2,
+            width: '100%',
+            boxSizing: 'border-box',
+            cursor: 'pointer',
+            '&:hover': {
+                borderColor: '#000000',
+            },
+        };
+    },
+    mixName: {
+        fontFamily: 'fontFamily',
+        fontWeight: 'bold',
+        fontSize: '0.875rem',
+        lineHeight: '157%',
+        letterSpacing: '0.1px',
+        color: '#1F2B3DDE',
+    },
+    interventionsWrapper: {
+        fontFamily: 'fontFamily',
+        fontWeight: 'fontWeightRegular',
+        fontSize: '0.75rem',
+        lineHeight: '166%',
+        letterSpacing: '0.4px',
+        textAlign: 'right',
+        color: '#1F2B3D99',
+    },
+    dot: {
+        display: 'inline-block',
+        mx: 0.5,
+    },
 };
+const InterventionList = ({ interventions }) => (
+    <>
+        {interventions.map((intervention, idx) => (
+            <Typography
+                key={intervention.name}
+                variant="caption"
+                color={alpha('#1F2B3D', 0.87)}
+                component="span"
+            >
+                {intervention.name}
+                {idx < interventions.length - 1 && (
+                    <Box component="span" sx={styles.dot}>
+                        ·
+                    </Box>
+                )}
+            </Typography>
+        ))}
+    </>
+);
 
 export const InterventionsMix: FC<Props> = ({
     scenarioId,
@@ -71,6 +137,7 @@ export const InterventionsMix: FC<Props> = ({
 
     const [selectedDistricts, setSelectedDistricts] = useState<OrgUnit[]>([]);
     const [createMix, setCreateMix] = useState<boolean>(false);
+    const [selectedMix, setSelectedMix] = useState<number | null>(null);
 
     useEffect(() => {
         setSelectedDistricts(selectedOrgUnits);
@@ -87,6 +154,8 @@ export const InterventionsMix: FC<Props> = ({
         [],
     );
 
+    const { data: interventionMixes, isLoading: isLoadingMixes } =
+        useGetInterventionMixes(scenarioId);
     return (
         <Box sx={styles.mainMixBox}>
             <Card elevation={2} sx={styles.card}>
@@ -99,6 +168,8 @@ export const InterventionsMix: FC<Props> = ({
                             isButtonDisabled={isButtonDisabled}
                             setIsButtonDisabled={setIsButtonDisabled}
                             mixName={mixName}
+                            setCreateMix={setCreateMix}
+                            selectedMix={selectedMix}
                         />
                     }
                 />
@@ -138,41 +209,73 @@ export const InterventionsMix: FC<Props> = ({
                                     setMixName={setMixName}
                                 />
                             ) : (
-                                <Grid container spacing={2}>
-                                    <Grid
-                                        item
-                                        xs={6}
-                                        display="flex"
-                                        alignItems="center"
-                                    >
-                                        <Typography
-                                            variant="body2"
-                                            sx={styles.noMixMessage}
-                                        >
-                                            {formatMessage(
-                                                MESSAGES.noMixCreated,
-                                            )}
-                                        </Typography>
-                                    </Grid>
-                                    <Grid item xs={6}>
-                                        <Box
+                                <Box>
+                                    <Grid container spacing={2}>
+                                        <Grid
+                                            item
+                                            xs={6}
                                             display="flex"
                                             alignItems="center"
-                                            justifyContent="flex-end"
                                         >
-                                            <Button
-                                                sx={styles.createMixButton}
-                                                onClick={() =>
-                                                    setCreateMix(true)
-                                                }
+                                            <Typography
+                                                variant="body2"
+                                                sx={styles.noMixMessage}
                                             >
                                                 {formatMessage(
-                                                    MESSAGES.createNewMix,
+                                                    (interventionMixes?.length ??
+                                                        0) > 0
+                                                        ? MESSAGES.chooseMixToApply
+                                                        : MESSAGES.noMixCreated,
                                                 )}
-                                            </Button>
-                                        </Box>
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={6}>
+                                            <Box
+                                                display="flex"
+                                                alignItems="center"
+                                                justifyContent="flex-end"
+                                            >
+                                                <Button
+                                                    sx={styles.createMixButton}
+                                                    onClick={() =>
+                                                        setCreateMix(true)
+                                                    }
+                                                >
+                                                    {formatMessage(
+                                                        MESSAGES.createNewMix,
+                                                    )}
+                                                </Button>
+                                            </Box>
+                                        </Grid>
                                     </Grid>
-                                </Grid>
+                                    {interventionMixes?.map(mix => (
+                                        <Box
+                                            onClick={() =>
+                                                setSelectedMix(mix.id)
+                                            }
+                                            sx={styles.mixStyle(
+                                                mix.id,
+                                                selectedMix,
+                                            )}
+                                        >
+                                            <Typography
+                                                variant="subtitle2"
+                                                sx={styles.mixName}
+                                            >
+                                                {mix.name}
+                                            </Typography>
+                                            <Typography
+                                                sx={styles.interventionsWrapper}
+                                            >
+                                                <InterventionList
+                                                    interventions={
+                                                        mix.interventions
+                                                    }
+                                                />
+                                            </Typography>
+                                        </Box>
+                                    ))}
+                                </Box>
                             )}
                         </Grid>
                     </Grid>
