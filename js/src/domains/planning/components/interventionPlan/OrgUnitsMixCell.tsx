@@ -12,7 +12,7 @@ export const OrgUnitsMixCell: FunctionComponent<Props> = ({ row }) => {
     const [clickedOrgUnitId, setClickedOrgUnitId] = useState<number | null>(
         null,
     );
-    return row.orgUnits.map(orgUnit => {
+    return row.org_units.map(orgUnit => {
         const isHovered = hoveredOrgUnitId === orgUnit.id;
         const isClicked = clickedOrgUnitId === orgUnit.id;
         return (

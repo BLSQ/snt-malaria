@@ -42,6 +42,7 @@ export const Planning: FC = () => {
     const { data: orgUnits } = useGetOrgUnits();
     const { formatMessage } = useSafeIntl();
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [mixApplied, setMixApplied] = useState<boolean>(false);
     const [expanded, setExpanded] = useState('interventionsMix');
     const [selectedOrgUnits, setSelectedOrgUnits] = useState<OrgUnit[]>([]);
     const toggleDrawer = () => {
@@ -209,15 +210,20 @@ export const Planning: FC = () => {
                             <InterventionsMix
                                 scenarioId={scenario?.id}
                                 selectedOrgUnits={selectedOrgUnits}
+                                setMixApplied={setMixApplied}
                             />
                         </PaperContainer>
                     </Grid>
                     <Grid item xs={12} md={6}>
                         <PaperContainer>
                             <InterventionsPlan
+                                selectedOrgUnits={selectedOrgUnits
+                                    .map(orgUnit => orgUnit.id)
+                                    .join(',')}
                                 scenarioId={scenario?.id}
                                 handleExpandAccordion={handleExpandAccordion}
                                 expanded={expanded}
+                                mixApplied={mixApplied}
                             />
                             {/* <Budgets
                                 scenarioId={scenario?.id}

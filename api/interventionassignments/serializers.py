@@ -88,3 +88,9 @@ class InterventionAssignmentWriteSerializer(serializers.ModelSerializer):
         attrs["valid_interventions"] = valid_interventions
         attrs["selected_mix"] = selected_mix
         return attrs
+
+
+class OrgUnitSmallSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrgUnit
+        fields = ["id", "name"]

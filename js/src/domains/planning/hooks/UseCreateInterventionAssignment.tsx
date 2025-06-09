@@ -11,5 +11,6 @@ export const UseCreateInterventionAssignment = (): UseMutationResult =>
             'interventionassignments',
             'budgets',
             'interventionMixes',
+            'interventionPlans',
         ],
     });

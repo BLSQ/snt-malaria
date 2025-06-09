@@ -20,6 +20,7 @@ type Props = {
     setSelectedMix: (mix: number | null) => void;
     setMixName: (mixName: string) => void;
     setSelectedInterventions: (interventions: []) => void;
+    setMixApplied: (applied: boolean) => void;
 };
 
 const styles: SxStyles = {
@@ -40,6 +41,7 @@ export const InterventionMixSummary: FC<Props> = ({
     setSelectedMix,
     setMixName,
     setSelectedInterventions,
+    setMixApplied,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { mutateAsync: createInterventionAssignment } =
@@ -74,6 +76,7 @@ export const InterventionMixSummary: FC<Props> = ({
         setMixName('');
         setSelectedInterventions([]);
         setSelectedMix(null);
+        setMixApplied(true);
     };
 
     const handleAssignmentCreation = async () => {
