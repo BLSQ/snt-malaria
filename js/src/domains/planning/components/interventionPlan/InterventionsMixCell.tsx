@@ -40,7 +40,6 @@ export const InterventionsMixCell: FunctionComponent<Props> = ({
                 <Box visibility={hoveredMixName ? 'visible' : 'hidden'}>
                     <EditInterventionMix
                         setHoveredMixName={setHoveredMixName}
-                        scenarioId={scenarioId}
                         iconProps={iconProps}
                         mix={row}
                     />
@@ -49,6 +48,7 @@ export const InterventionsMixCell: FunctionComponent<Props> = ({
             <Box>
                 {row.interventions.map((intervention, idx) => (
                     <Typography
+                        key={intervention.name}
                         variant="caption"
                         color={alpha('#1F2B3D', 0.87)}
                     >

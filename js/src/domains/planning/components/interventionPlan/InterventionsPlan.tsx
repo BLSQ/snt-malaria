@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
-import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
+// import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
 import { InterventionPlanSummary } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
 import { InterventionsPlanTable } from './InterventionsPlanTable';
@@ -12,8 +12,8 @@ type Props = {
 
 export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
     const [tabValue, setTabValue] = useState<string>('list');
-    const { data: interventionPlans, isLoading: isLoadingPlans } =
-        useGetInterventionsPlan(scenarioId);
+    // const { data: interventionPlans, isLoading: isLoadingPlans } =
+    //     useGetInterventionsPlan(scenarioId);
     const hardCodedInterventionPlans = [
         {
             id: 1,
@@ -162,7 +162,7 @@ export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
                         <TabPanel value="list" sx={{ mt: '-20px' }}>
                             <InterventionsPlanTable
                                 scenarioId={scenarioId}
-                                isLoadingPlans={isLoadingPlans}
+                                isLoadingPlans={false}
                                 interventionPlans={hardCodedInterventionPlans}
                             />
                         </TabPanel>

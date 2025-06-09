@@ -18,7 +18,7 @@ export const useGetInterventionMixes = (
         queryKey: ['interventionMixes', scenarioId],
         queryFn: () => getRequest(url),
         options: {
-            staleTime: 1000 * 60 * 15, // in MS
+            staleTime: 1000 * 60 * 15,
             cacheTime: 1000 * 60 * 5,
             select: (data: InterventionMix[]) => {
                 return data;

@@ -1,23 +1,19 @@
-import React, { FC, useCallback, useMemo } from 'react';
+import React, { FC, useCallback } from 'react';
 import { Box, Button, Grid, TextField, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionCategories } from '../../hooks/useGetInterventions';
 import { MESSAGES } from '../../messages';
 import { Interventions } from './Interventions';
 
 type Props = {
-    scenarioId?: number;
-    selectedOrgUnits: OrgUnit[];
     selectedInterventions: Record<number, number[]>;
-    setIsButtonDisabled: (bool: boolean) => void;
     setSelectedInterventions: React.Dispatch<
         React.SetStateAction<Record<number, number[]>>
     >;
-    setCreateMix: (bool: boolean) => void;
-    mixName: string;
-    setMixName: (name: string) => void;
+    setCreateMix?: (bool: boolean) => void;
+    mixName?: string;
+    setMixName?: (name: string) => void;
 };
 
 const styles: SxStyles = {
@@ -30,10 +26,7 @@ const styles: SxStyles = {
 };
 
 export const InterventionCategories: FC<Props> = ({
-    scenarioId,
-    selectedOrgUnits,
     selectedInterventions,
-    setIsButtonDisabled,
     setSelectedInterventions,
     setCreateMix,
     mixName,
@@ -43,31 +36,8 @@ export const InterventionCategories: FC<Props> = ({
     const { data: interventionCategories = [], isLoading } =
         useGetInterventionCategories();
 
-    const selectedInterventionValues = useMemo(
-        () => Object.values(selectedInterventions).flat().filter(Boolean),
-        [selectedInterventions],
-    );
-
-    const canApplyInterventions = useMemo(
-        () =>
-            !!(
-                scenarioId &&
-                selectedOrgUnits.length &&
-                selectedInterventionValues.length
-            ),
-        [
-            scenarioId,
-            selectedOrgUnits.length,
-            selectedInterventionValues.length,
-        ],
-    );
-
     const toggleIntervention = useCallback(
         (categoryId: number, interventionId: number) => {
-            if (canApplyInterventions) {
-                setIsButtonDisabled(false);
-            }
-
             setSelectedInterventions(prev => {
                 const prevSelected = prev[categoryId] || [];
                 const isSelected = prevSelected.includes(interventionId);
@@ -80,7 +50,7 @@ export const InterventionCategories: FC<Props> = ({
                 };
             });
         },
-        [canApplyInterventions, setIsButtonDisabled, setSelectedInterventions],
+        [setSelectedInterventions],
     );
 
     return (
@@ -93,12 +63,18 @@ export const InterventionCategories: FC<Props> = ({
                         value={mixName}
                         size="small"
                         sx={styles.mixNameField}
-                        onChange={e => setMixName(e.target.value)}
+                        onChange={e => setMixName?.(e.target.value)}
                     />
                 </Grid>
                 <Grid item xs>
                     <Box sx={styles.cancelButtonBox}>
-                        <Button onClick={() => setCreateMix(false)}>
+                        <Button
+                            onClick={() => {
+                                setCreateMix?.(false);
+                                setMixName?.('');
+                                setSelectedInterventions([]);
+                            }}
+                        >
                             {formatMessage(MESSAGES.cancel)}
                         </Button>
                     </Box>

@@ -1,5 +1,4 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { BorderColor } from '@mui/icons-material';
 import {
     alpha,
     Box,
@@ -133,7 +132,6 @@ export const InterventionsMix: FC<Props> = ({
         [categoryId: number]: number[] | [];
     }>({});
     const [mixName, setMixName] = useState<string>('');
-    const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(false);
 
     const [selectedDistricts, setSelectedDistricts] = useState<OrgUnit[]>([]);
     const [createMix, setCreateMix] = useState<boolean>(false);
@@ -165,11 +163,12 @@ export const InterventionsMix: FC<Props> = ({
                             scenarioId={scenarioId}
                             selectedOrgUnits={selectedDistricts}
                             selectedInterventions={selectedInterventions}
-                            isButtonDisabled={isButtonDisabled}
-                            setIsButtonDisabled={setIsButtonDisabled}
                             mixName={mixName}
                             setCreateMix={setCreateMix}
                             selectedMix={selectedMix}
+                            setSelectedMix={setSelectedMix}
+                            setMixName={setMixName}
+                            setSelectedInterventions={setSelectedInterventions}
                         />
                     }
                 />
@@ -195,12 +194,9 @@ export const InterventionsMix: FC<Props> = ({
                         <Grid item sx={styles.interventionsItem}>
                             {createMix ? (
                                 <InterventionCategories
-                                    scenarioId={scenarioId}
-                                    selectedOrgUnits={selectedOrgUnits}
                                     selectedInterventions={
                                         selectedInterventions
                                     }
-                                    setIsButtonDisabled={setIsButtonDisabled}
                                     setSelectedInterventions={
                                         setSelectedInterventions
                                     }
@@ -210,7 +206,7 @@ export const InterventionsMix: FC<Props> = ({
                                 />
                             ) : (
                                 <Box>
-                                    <Grid container spacing={2}>
+                                    <Grid container spacing={2} px={2}>
                                         <Grid
                                             item
                                             xs={6}
@@ -237,9 +233,10 @@ export const InterventionsMix: FC<Props> = ({
                                             >
                                                 <Button
                                                     sx={styles.createMixButton}
-                                                    onClick={() =>
-                                                        setCreateMix(true)
-                                                    }
+                                                    onClick={() => {
+                                                        setCreateMix(true);
+                                                        setSelectedMix(null);
+                                                    }}
                                                 >
                                                     {formatMessage(
                                                         MESSAGES.createNewMix,
@@ -250,6 +247,7 @@ export const InterventionsMix: FC<Props> = ({
                                     </Grid>
                                     {interventionMixes?.map(mix => (
                                         <Box
+                                            key={mix.name}
                                             onClick={() =>
                                                 setSelectedMix(mix.id)
                                             }

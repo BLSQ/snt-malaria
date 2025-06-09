@@ -13,12 +13,13 @@ import { containerBoxStyles } from '../styles';
 type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: OrgUnit[];
-    isButtonDisabled: boolean;
     selectedInterventions: { [categoryId: number]: number[] | [] };
-    setIsButtonDisabled: (bool: boolean) => void;
     mixName: string;
     setCreateMix: (createMix: boolean) => void;
     selectedMix: number | null;
+    setSelectedMix: (mix: number | null) => void;
+    setMixName: (mixName: string) => void;
+    setSelectedInterventions: (interventions: []) => void;
 };
 
 const styles: SxStyles = {
@@ -32,12 +33,13 @@ const styles: SxStyles = {
 export const InterventionMixSummary: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
-    isButtonDisabled,
     selectedInterventions,
-    setIsButtonDisabled,
     mixName,
     setCreateMix,
     selectedMix,
+    setSelectedMix,
+    setMixName,
+    setSelectedInterventions,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { mutateAsync: createInterventionAssignment } =
@@ -55,10 +57,10 @@ export const InterventionMixSummary: FC<Props> = ({
 
     const canApplyInterventions = useMemo(() => {
         return (
-            ((selectedInterventionValues.length > 0 && mixName) ||
-                selectedMix) &&
+            ((selectedInterventionValues.length > 0 && mixName !== '') ||
+                selectedMix !== null) &&
             selectedOrgUnits.length > 0 &&
-            scenarioId
+            scenarioId !== null
         );
     }, [
         selectedInterventionValues.length,
@@ -67,10 +69,15 @@ export const InterventionMixSummary: FC<Props> = ({
         selectedOrgUnits.length,
         scenarioId,
     ]);
+    const formReset = () => {
+        setCreateMix(false);
+        setMixName('');
+        setSelectedInterventions([]);
+        setSelectedMix(null);
+    };
 
     const handleAssignmentCreation = async () => {
         if (canApplyInterventions) {
-            setIsButtonDisabled(true);
             await createInterventionAssignment({
                 mix_name: mixName,
                 intervention_ids: selectedInterventionValues,
@@ -81,8 +88,9 @@ export const InterventionMixSummary: FC<Props> = ({
 
             queryClient.invalidateQueries(['interventionPlans']);
         }
-        setCreateMix(false);
+        formReset();
     };
+
     return (
         <Grid
             container
@@ -113,7 +121,7 @@ export const InterventionMixSummary: FC<Props> = ({
                     color="primary"
                     endIcon={<ArrowForward />}
                     sx={styles.applyButton}
-                    disabled={!canApplyInterventions || isButtonDisabled}
+                    disabled={!canApplyInterventions}
                 >
                     {formatMessage(MESSAGES.applyInterventionMix)}
                 </Button>

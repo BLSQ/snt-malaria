@@ -14,14 +14,12 @@ type Props = {
     isOpen: boolean;
     closeDialog: () => void;
     mix: any;
-    scenarioId: number;
     setHoveredMixName: (status: boolean) => void;
 };
 const EditInterventionMixModal: FunctionComponent<Props> = ({
     isOpen,
     closeDialog,
     mix,
-    scenarioId,
     setHoveredMixName,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -43,13 +41,9 @@ const EditInterventionMixModal: FunctionComponent<Props> = ({
             >
                 <Box sx={{ ml: '-10px' }}>
                     <InterventionCategories
-                        mix={mix}
-                        scenarioId={scenarioId}
-                        selectedOrgUnits={[]}
                         selectedInterventions={mix.interventions.map(
                             intervention => intervention.id,
                         )}
-                        setIsButtonDisabled={() => null}
                         setSelectedInterventions={() => null}
                     />
                     <Box sx={{ position: 'absolute', bottom: 10, left: 20 }}>

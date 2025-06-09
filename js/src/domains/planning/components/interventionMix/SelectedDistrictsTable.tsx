@@ -58,11 +58,11 @@ export const SelectedDistrictsTable: FC<Props> = ({
                                 <IconButton
                                     size="small"
                                     sx={styles.iconButtonStyle}
+                                    onClick={() => removeDistrict(org.id)}
                                 >
                                     <DeleteOutlineIcon
                                         className="delete-icon"
                                         sx={styles.removeIconStyle}
-                                        onClick={() => removeDistrict(org.id)}
                                     />
                                 </IconButton>
                             </TableCell>
