@@ -29,15 +29,9 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
     filterset_class = InterventionAssignmentListFilter
 
     def get_queryset(self):
-        return (
-            InterventionAssignment.objects.prefetch_related(
-                "intervention_mix__interventions__intervention_category__account"
-            )
-            .filter(
-                intervention_mix__interventions__intervention_category__account=self.request.user.iaso_profile.account
-            )
-            .distinct()
-        )
+        return InterventionAssignment.objects.prefetch_related(
+            "intervention_mix__interventions__intervention_category__account"
+        ).filter(intervention_mix__interventions__intervention_category__account=self.request.user.iaso_profile.account)
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -88,11 +82,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         )
 
     def get_filtered_queryset(self):
-        queryset = self.get_queryset().prefetch_related("org_unit")
-        scenario_id = self.request.query_params.get("scenario_id")
-        if scenario_id:
-            queryset = queryset.filter(scenario_id=scenario_id)
-        return queryset
+        return self.filter_queryset(self.get_queryset()).prefetch_related("org_unit")
 
     def get_org_units(self, org_unit_ids):
         return OrgUnit.objects.filter(id__in=org_unit_ids).values("id", "name").order_by("name")
@@ -107,6 +97,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         assignments = queryset.select_related("intervention_mix", "org_unit").prefetch_related(
             Prefetch("intervention_mix__interventions")
         )
+
         mixes = {}
         for assignment in assignments:
             mix = assignment.intervention_mix
