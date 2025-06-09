@@ -153,7 +153,10 @@ export const InterventionsMix: FC<Props> = ({
     );
 
     const { data: interventionMixes, isLoading: isLoadingMixes } =
-        useGetInterventionMixes(scenarioId);
+        useGetInterventionMixes(
+            scenarioId,
+            selectedOrgUnits.map(orgUnit => orgUnit.id).join(','),
+        );
     return (
         <Box sx={styles.mainMixBox}>
             <Card elevation={2} sx={styles.card}>

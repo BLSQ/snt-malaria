@@ -14,6 +14,8 @@ class InterventionMixViewSet(viewsets.ModelViewSet):
     filterset_class = InterventionMixListFilter
 
     def get_queryset(self):
-        return InterventionMix.objects.prefetch_related("interventions").filter(
-            account=self.request.user.iaso_profile.account
+        return (
+            InterventionMix.objects.prefetch_related("interventions")
+            .filter(account=self.request.user.iaso_profile.account)
+            .distinct()
         )

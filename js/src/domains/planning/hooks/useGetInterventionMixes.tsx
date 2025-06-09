@@ -6,18 +6,21 @@ import { InterventionMix } from '../types/interventions';
 
 export const useGetInterventionMixes = (
     scenarioId,
+    selectedOrgUnits,
 ): UseQueryResult<InterventionMix[], Error> => {
     const params: Record<string, any> = {
         scenario_id: scenarioId,
+        org_unit_ids: selectedOrgUnits,
     };
     const url = makeUrlWithParams(
         '/api/snt_malaria/interventionmixes/',
         params,
     );
     return useSnackQuery({
-        queryKey: ['interventionMixes', scenarioId],
+        queryKey: ['interventionMixes', scenarioId, selectedOrgUnits],
         queryFn: () => getRequest(url),
         options: {
+            enabled: selectedOrgUnits.length > 0,
             staleTime: 1000 * 60 * 15,
             cacheTime: 1000 * 60 * 5,
             select: (data: InterventionMix[]) => {
