@@ -22,7 +22,6 @@ import { SelectedDistricts } from './SelectedDistricts';
 type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: OrgUnit[];
-    setMixApplied: (applied: boolean) => void;
 };
 
 const styles: SxStyles = {
@@ -127,7 +126,6 @@ const InterventionList = ({ interventions }) => (
 export const InterventionsMix: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
-    setMixApplied,
 }) => {
     const { formatMessage } = useSafeIntl();
     const [selectedInterventions, setSelectedInterventions] = useState<{
@@ -154,11 +152,10 @@ export const InterventionsMix: FC<Props> = ({
         [],
     );
 
-    const { data: interventionMixes, isLoading: isLoadingMixes } =
-        useGetInterventionMixes(
-            scenarioId,
-            selectedOrgUnits.map(orgUnit => orgUnit.id).join(','),
-        );
+    const { data: interventionMixes } = useGetInterventionMixes(
+        scenarioId,
+        selectedOrgUnits.map(orgUnit => orgUnit.id).join(','),
+    );
     return (
         <Box sx={styles.mainMixBox}>
             <Card elevation={2} sx={styles.card}>
@@ -174,7 +171,6 @@ export const InterventionsMix: FC<Props> = ({
                             setSelectedMix={setSelectedMix}
                             setMixName={setMixName}
                             setSelectedInterventions={setSelectedInterventions}
-                            setMixApplied={setMixApplied}
                         />
                     }
                 />

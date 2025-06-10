@@ -9,17 +9,15 @@ import { InterventionsPlanTable } from './InterventionsPlanTable';
 type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: string;
-    mixApplied: boolean;
 };
 
 export const InterventionsPlan: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
-    mixApplied,
 }) => {
     const [tabValue, setTabValue] = useState<string>('list');
     const { data: interventionPlans, isLoading: isLoadingPlans } =
-        useGetInterventionsPlan(scenarioId, selectedOrgUnits, mixApplied);
+        useGetInterventionsPlan(scenarioId, selectedOrgUnits);
 
     return (
         <Box

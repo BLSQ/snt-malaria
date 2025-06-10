@@ -1,7 +1,6 @@
 from collections import defaultdict
 from decimal import Decimal
 
-from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -12,14 +11,12 @@ from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.api.interventionassignments.filters import (
     InterventionAssignmentListFilter,
 )
-from plugins.snt_malaria.api.interventions.serializers import InterventionSerializer
 from plugins.snt_malaria.models import InterventionAssignment
 from plugins.snt_malaria.models.intervention import InterventionMix
 
 from .serializers import (
     InterventionAssignmentListSerializer,
     InterventionAssignmentWriteSerializer,
-    OrgUnitSmallSerializer,
 )
 
 
@@ -86,45 +83,6 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
 
     def get_org_units(self, org_unit_ids):
         return OrgUnit.objects.filter(id__in=org_unit_ids).values("id", "name").order_by("name")
-
-    @action(detail=False, methods=["get"])
-    def grouped_by_mix(self, request):
-        """
-        Group interventions and org units by intervention mix
-        """
-        queryset = self.get_filtered_queryset()
-
-        assignments = queryset.select_related("intervention_mix", "org_unit").prefetch_related(
-            Prefetch("intervention_mix__interventions")
-        )
-
-        mixes = {}
-        for assignment in assignments:
-            mix = assignment.intervention_mix
-            if mix is None:
-                continue
-
-            if mix.id not in mixes:
-                mixes[mix.id] = {
-                    "id": mix.id,
-                    "name": mix.name,
-                    "interventions": mix.interventions.all(),
-                    "org_units": set(),
-                }
-            mixes[mix.id]["org_units"].add(assignment.org_unit)
-
-        result = []
-        for mix in mixes.values():
-            result.append(
-                {
-                    "id": mix["id"],
-                    "name": mix["name"],
-                    "interventions": InterventionSerializer(mix["interventions"], many=True).data,
-                    "org_units": OrgUnitSmallSerializer(mix["org_units"], many=True).data,
-                }
-            )
-
-        return Response(result)
 
     @action(detail=False, methods=["get"])
     def budget_per_org_unit(self, request):

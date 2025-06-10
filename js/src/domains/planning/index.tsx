@@ -210,7 +210,6 @@ export const Planning: FC = () => {
                             <InterventionsMix
                                 scenarioId={scenario?.id}
                                 selectedOrgUnits={selectedOrgUnits}
-                                setMixApplied={setMixApplied}
                             />
                         </PaperContainer>
                     </Grid>
@@ -223,7 +222,6 @@ export const Planning: FC = () => {
                                 scenarioId={scenario?.id}
                                 handleExpandAccordion={handleExpandAccordion}
                                 expanded={expanded}
-                                mixApplied={mixApplied}
                             />
                             {/* <Budgets
                                 scenarioId={scenario?.id}
