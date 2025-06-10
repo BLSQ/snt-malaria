@@ -88,22 +88,25 @@ export const Planning: FC = () => {
     // To move fast for the demo, what this actually does is filter on each filter
     // individually (parallelized in a `Promise.all`) and then takes the intersection
     // of all these filters to get the final result.
-    const handleSelectOrgUnits = useCallback(
+    const handleApplyFilters = useCallback(
+        // TODO: This is a more or less functional hack to make the modal work with the
+        // `and` rules. This needs to be properly implemented in the backend
+        // to be able to process more complex rules. Ideally, only 1 API call
+        // would be needed instead of this intersection way of doing things.
         async (filters: MetricsFilters) => {
             const urls: string[] = [];
-            for (const category in filters) {
-                const filter = filters[category];
-                const [[metricId, filterValue]] = Object.entries(filter);
-
-                // Hardcoded on greater than for v1
-                const jsonFilter = { '>': [{ var: 'value' }, filterValue] };
-                const encodedJsonFilter = encodeURIComponent(
-                    JSON.stringify(jsonFilter),
+            const andFilters = filters['and'];
+            andFilters.forEach(filter => {
+                // force into old format
+                const metricId = filter['>='][0]['var'];
+                filter['>='][0]['var'] = 'value';
+                const encodedFilter = encodeURIComponent(
+                    JSON.stringify(filter),
                 );
                 urls.push(
-                    `/api/metricvalues/?metric_type_id=${metricId}&json_filter=${encodedJsonFilter}`,
+                    `/api/metricvalues/?metric_type_id=${metricId}&json_filter=${encodedFilter}`,
                 );
-            }
+            });
             const responses = await Promise.all(
                 urls.map(url => getRequest(url)),
             );
@@ -173,6 +176,7 @@ export const Planning: FC = () => {
                                         displayedMetricValues
                                     }
                                     selectedOrgUnits={selectionOnMap}
+                                    onApplyFilters={handleApplyFilters}
                                     onClearSelection={handleClearSelectionOnMap}
                                     onChangeMetricLayer={
                                         handleDisplayMetricOnMap

@@ -43,6 +43,7 @@ type Props = {
     displayedMetricValues?: MetricValue[];
     selectedOrgUnits: OrgUnit[];
     onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
+    onApplyFilters: () => void;
     onChangeMetricLayer: (MetricType) => void;
     onClearSelection: () => void;
 };
@@ -53,6 +54,7 @@ export const Map: FC<Props> = ({
     displayedMetricValues,
     selectedOrgUnits,
     onAddRemoveOrgUnitToMix,
+    onApplyFilters,
     onChangeMetricLayer,
     onClearSelection,
 }) => {
@@ -146,12 +148,10 @@ export const Map: FC<Props> = ({
     return (
         <Box height="100%" sx={styles.mainBox}>
             <MapSelectionWidget
-                selectionCount={8}
+                selectionCount={selectedOrgUnits.length}
                 onAddToMix={() => console.log('onAddToMix')}
+                onApplyFilters={onApplyFilters}
                 onClearSelection={onClearSelection}
-                onOpenQueryBuilderModal={() =>
-                    console.log('onOpenQueryBuilderModal')
-                }
             />
             {orgUnits && (
                 <>

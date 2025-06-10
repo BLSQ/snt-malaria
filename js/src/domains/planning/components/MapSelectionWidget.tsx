@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import { Box, Button, Theme, Typography } from '@mui/material';
 import CancelOutlined from '@mui/icons-material/CancelOutlined';
 import TuneOutlined from '@mui/icons-material/TuneOutlined';
@@ -6,13 +6,7 @@ import { IconButton, useSafeIntl } from 'bluesquare-components';
 
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
-
-type Props = {
-    selectionCount: number;
-    onAddToMix: () => void;
-    onClearSelection: () => void;
-    onOpenQueryBuilderModal: () => void;
-};
+import { FilterQueryBuilder } from './maps/FilterQueryBuilder';
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
@@ -48,19 +42,30 @@ const styles: SxStyles = {
     }),
 };
 
+type Props = {
+    selectionCount: number;
+    onAddToMix: () => void;
+    onApplyFilters: () => void;
+    onClearSelection: () => void;
+};
+
 export const MapSelectionWidget: FC<Props> = ({
     selectionCount,
     onAddToMix,
+    onApplyFilters,
     onClearSelection,
-    onOpenQueryBuilderModal,
 }) => {
     const { formatMessage } = useSafeIntl();
+
+    const [queryBuilderIsOpen, setQueryBuilderIsOpen] =
+        useState<boolean>(false);
+    const handleOpenQueryBuilderModal = () => setQueryBuilderIsOpen(true);
 
     return (
         <Box sx={styles.mainBox}>
             <Button
                 sx={styles.openQueryBuilderModalBtn}
-                onClick={onOpenQueryBuilderModal}
+                onClick={handleOpenQueryBuilderModal}
             >
                 <TuneOutlined sx={styles.tuneOutlinedIcon} />
                 <Typography variant="body1" sx={styles.selectCountText}>
@@ -73,6 +78,7 @@ export const MapSelectionWidget: FC<Props> = ({
                 onClick={onClearSelection}
                 overrideIcon={CancelOutlined}
                 tooltipMessage={MESSAGES.clearSelectionTooltip}
+                disabled={selectionCount === 0}
             />
             <Button
                 onClick={onAddToMix}
@@ -83,6 +89,11 @@ export const MapSelectionWidget: FC<Props> = ({
             >
                 {formatMessage(MESSAGES.addToMix)}
             </Button>
+            <FilterQueryBuilder
+                isOpen={queryBuilderIsOpen}
+                onClose={() => setQueryBuilderIsOpen(false)}
+                onSubmit={onApplyFilters}
+            />
         </Box>
     );
 };
