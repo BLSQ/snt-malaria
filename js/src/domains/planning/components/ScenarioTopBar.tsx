@@ -18,6 +18,7 @@ import { baseUrls } from '../../../constants/urls';
 import {
     useUpdateScenario,
     useDuplicateScenario,
+    useExportScenario,
 } from '../../scenarios/hooks/useGetScenarios';
 import { Scenario } from '../../scenarios/types';
 
@@ -85,6 +86,7 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
             );
         },
     );
+    const { mutateAsync: exportScenario } = useExportScenario();
 
     const handleEditClick = () => {
         setTempName(scenario.name);
@@ -94,6 +96,10 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
     const handleDuplicateClick = () => {
         duplicateScenario(scenario.id);
         navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
+    };
+
+    const handleExportClick = async () => {
+        exportScenario(scenario.id);
     };
 
     const handleInputChange = event => {
@@ -153,10 +159,14 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                         <CheckCircleOutlinedIcon sx={styles.icon} />
                         Saved
                     </Typography>
-                    <Typography variant="body2" sx={styles.actionBtn}>
+                    <Button
+                        variant="text"
+                        sx={styles.actionBtn}
+                        onClick={handleExportClick}
+                    >
                         <ContentPasteGoOutlinedIcon sx={styles.icon} />
                         Export
-                    </Typography>
+                    </Button>
                     <Button
                         variant="text"
                         sx={styles.actionBtn}

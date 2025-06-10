@@ -13,6 +13,14 @@ const MESSAGES = defineMessages({
         id: 'snt_malaria.label.scenario-duplicate-error',
         defaultMessage: 'Error duplicating scenario',
     },
+    exportSuccess: {
+        id: 'snt_malaria.label.scenario-export-success',
+        defaultMessage: 'Scenario exported successfully',
+    },
+    exportError: {
+        id: 'snt_malaria.label.scenario-export-error',
+        defaultMessage: 'Error exporting scenario',
+    },
 });
 
 export const useGetScenarios = (): UseQueryResult<Scenario[], Error> => {
@@ -67,4 +75,13 @@ export const useDuplicateScenario = (
         invalidateQueryKey: ['scenarios'],
         snackSuccessMessage: MESSAGES.duplicateSuccess,
         snackErrorMsg: MESSAGES.duplicateError,
+    });
+
+export const useExportScenario = (): UseMutationResult =>
+    useSnackMutation({
+        mutationFn: (scenarioId: number) =>
+            getRequest(`/api/snt_malaria/scenarios/${scenarioId}/export/`),
+        invalidateQueryKey: ['scenarios'],
+        snackSuccessMessage: MESSAGES.exportSuccess,
+        snackErrorMsg: MESSAGES.exportError,
     });
