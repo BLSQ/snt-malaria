@@ -1,9 +1,13 @@
-from datetime import datetime
 import re
+import csv
+from datetime import datetime
 from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from iaso.api.common import CONTENT_TYPE_CSV
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import ParseError
 from drf_yasg.utils import swagger_auto_schema
 
 
@@ -21,6 +25,11 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         "id_to_duplicate": Int
     }
     """
+
+    CSV_HEADER_COLUMNS = [
+        "id",
+        "name"
+    ]
 
     serializer_class = ScenarioSerializer
     ordering_fields = ["id", "name"]
@@ -68,3 +77,24 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=["get"], url_path=r"(?P<scenario_pk>\d+)/export")
+    def export_to_csv(self, *args, **kwargs):
+        scenario_pk = self.request.parser_context.get("kwargs").get("scenario_pk", None)
+        if not scenario_pk:
+            raise ParseError("scenario_pk is required")
+        
+
+        scenario = get_object_or_404(Scenario, pk=scenario_pk)
+        filename = "scenario--%s--%s" % (scenario.name, datetime.now().strftime("%y-%m-%d"))
+        print(f"Exporting scenario: {scenario.name} to {filename}.csv")
+
+        response = HttpResponse(content_type=CONTENT_TYPE_CSV)
+        writer = csv.writer(response)
+        writer.writerow(self.CSV_HEADER_COLUMNS)
+        row = [scenario.id, scenario.name]
+        writer.writerow(row)
+
+        filename = filename + ".csv"
+        response["Content-Disposition"] = "attachment; filename=" + filename
+        return response
