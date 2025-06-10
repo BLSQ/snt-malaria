@@ -18,7 +18,6 @@ import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { Budgets } from './components/budget/Budgets';
 import { InterventionsMix } from './components/interventionMix/InterventionsMix';
 import { InterventionsPlan } from './components/interventionPlan/InterventionsPlan';
-import { LayersDrawer } from './components/LayersDrawer';
 import { Map } from './components/map';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
 import { SideMapList } from './components/maps/SideMapList';
