@@ -13,13 +13,14 @@ from plugins.snt_malaria.models.intervention import InterventionAssignment, Inte
 class InterventionMixViewSet(viewsets.ModelViewSet):
     serializer_class = InterventionMixSerializer
     ordering_fields = ["id", "name"]
-    http_method_names = ["get", "options"]
+    http_method_names = ["get", "patch", "delete", "options"]
     filter_backends = [DjangoFilterBackend]
     filterset_class = InterventionMixListFilter
 
     def get_queryset(self):
         return (
             InterventionMix.objects.prefetch_related("interventions")
+            .filter(deleted_at__isnull=True)
             .filter(account=self.request.user.iaso_profile.account)
             .distinct()
         )

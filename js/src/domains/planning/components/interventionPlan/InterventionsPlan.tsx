@@ -9,11 +9,19 @@ import { InterventionsPlanTable } from './InterventionsPlanTable';
 type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: string;
+    setSelectedInterventions: any;
+    selectedInterventions: any;
+    setMixName: (name: string) => void;
+    mixName: string;
 };
 
 export const InterventionsPlan: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
+    setSelectedInterventions,
+    selectedInterventions,
+    setMixName,
+    mixName,
 }) => {
     const [tabValue, setTabValue] = useState<string>('list');
     const { data: interventionPlans, isLoading: isLoadingPlans } =
@@ -51,6 +59,12 @@ export const InterventionsPlan: FC<Props> = ({
                                 scenarioId={scenarioId}
                                 isLoadingPlans={isLoadingPlans}
                                 interventionPlans={interventionPlans}
+                                setSelectedInterventions={
+                                    setSelectedInterventions
+                                }
+                                selectedInterventions={selectedInterventions}
+                                setMixName={setMixName}
+                                mixName={mixName}
                             />
                         </TabPanel>
                         <TabPanel

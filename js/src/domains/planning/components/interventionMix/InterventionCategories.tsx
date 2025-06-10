@@ -14,6 +14,8 @@ type Props = {
     setCreateMix?: (bool: boolean) => void;
     mixName?: string;
     setMixName?: (name: string) => void;
+    edit?: boolean;
+    mix?: any;
 };
 
 const styles: SxStyles = {
@@ -31,6 +33,8 @@ export const InterventionCategories: FC<Props> = ({
     setCreateMix,
     mixName,
     setMixName,
+    edit,
+    mix,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { data: interventionCategories = [], isLoading } =
@@ -41,7 +45,6 @@ export const InterventionCategories: FC<Props> = ({
             setSelectedInterventions(prev => {
                 const prevSelected = prev[categoryId] || [];
                 const isSelected = prevSelected.includes(interventionId);
-
                 return {
                     ...prev,
                     [categoryId]: isSelected
@@ -56,7 +59,7 @@ export const InterventionCategories: FC<Props> = ({
     return (
         <Grid container spacing={2} padding={1}>
             <Grid item container spacing={4}>
-                <Grid item xs={6}>
+                <Grid item xs={edit ? 12 : 6}>
                     <TextField
                         label="Mix name"
                         id="outlined-size-small"
@@ -66,41 +69,45 @@ export const InterventionCategories: FC<Props> = ({
                         onChange={e => setMixName?.(e.target.value)}
                     />
                 </Grid>
-                <Grid item xs>
-                    <Box sx={styles.cancelButtonBox}>
-                        <Button
-                            onClick={() => {
-                                setCreateMix?.(false);
-                                setMixName?.('');
-                                setSelectedInterventions([]);
-                            }}
-                        >
-                            {formatMessage(MESSAGES.cancel)}
-                        </Button>
-                    </Box>
-                </Grid>
+                {!edit && (
+                    <Grid item xs>
+                        <Box sx={styles.cancelButtonBox}>
+                            <Button
+                                onClick={() => {
+                                    setCreateMix?.(false);
+                                    setMixName?.('');
+                                    setSelectedInterventions([]);
+                                }}
+                            >
+                                {formatMessage(MESSAGES.cancel)}
+                            </Button>
+                        </Box>
+                    </Grid>
+                )}
             </Grid>
 
             <Grid item container spacing={2} padding={2}>
                 {!isLoading &&
                     interventionCategories.map(
-                        ({ id, name, interventions }) => (
-                            <Grid item key={id}>
-                                <Typography sx={styles.categoryName}>
-                                    {name}
-                                </Typography>
-                                <Interventions
-                                    interventionCategoryId={id}
-                                    interventions={interventions}
-                                    selectedIds={
-                                        selectedInterventions[id] ?? []
-                                    }
-                                    handleSelectIntervention={
-                                        toggleIntervention
-                                    }
-                                />
-                            </Grid>
-                        ),
+                        ({ id, name, interventions }) => {
+                            return (
+                                <Grid item key={id}>
+                                    <Typography sx={styles.categoryName}>
+                                        {name}
+                                    </Typography>
+                                    <Interventions
+                                        interventionCategoryId={id}
+                                        interventions={interventions}
+                                        selectedIds={
+                                            selectedInterventions[id] ?? []
+                                        }
+                                        handleSelectIntervention={
+                                            toggleIntervention
+                                        }
+                                    />
+                                </Grid>
+                            );
+                        },
                     )}
             </Grid>
         </Grid>

@@ -22,6 +22,10 @@ import { SelectedDistricts } from './SelectedDistricts';
 type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: OrgUnit[];
+    setSelectedInterventions: any;
+    selectedInterventions: any;
+    mixName: string;
+    setMixName: (name: string) => void;
 };
 
 const styles: SxStyles = {
@@ -126,12 +130,12 @@ const InterventionList = ({ interventions }) => (
 export const InterventionsMix: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
+    setSelectedInterventions,
+    selectedInterventions,
+    mixName,
+    setMixName,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const [selectedInterventions, setSelectedInterventions] = useState<{
-        [categoryId: number]: number[] | [];
-    }>({});
-    const [mixName, setMixName] = useState<string>('');
 
     const [selectedDistricts, setSelectedDistricts] = useState<OrgUnit[]>([]);
     const [createMix, setCreateMix] = useState<boolean>(false);
@@ -156,6 +160,7 @@ export const InterventionsMix: FC<Props> = ({
         scenarioId,
         selectedOrgUnits.map(orgUnit => orgUnit.id).join(','),
     );
+
     return (
         <Box sx={styles.mainMixBox}>
             <Card elevation={2} sx={styles.card}>

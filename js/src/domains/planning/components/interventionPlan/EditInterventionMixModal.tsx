@@ -1,10 +1,13 @@
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, useEffect, useMemo } from 'react';
 import { Box, Button } from '@mui/material';
 import {
     ConfirmCancelModal,
     makeFullModal,
     useSafeIntl,
 } from 'bluesquare-components';
+import { useQueryClient } from 'react-query';
+import { UseDeleteIntervenetionMix } from '../../hooks/UseDeleteIntervenetionMix';
+import { UseUpdateInterventionMix } from '../../hooks/UseUpdateInterventionMix';
 import { MESSAGES } from '../../messages';
 import { InterventionCategories } from '../interventionMix/InterventionCategories';
 import { ConfirmButtonStyles } from './ConfirmButtonStyles';
@@ -15,14 +18,73 @@ type Props = {
     closeDialog: () => void;
     mix: any;
     setHoveredMixName: (status: boolean) => void;
+    setSelectedInterventions: React.Dispatch<
+        React.SetStateAction<Record<number, number[]>>
+    >;
+    selectedInterventions: any;
+    mixName: string;
+    setMixName: (name: string) => void;
 };
 const EditInterventionMixModal: FunctionComponent<Props> = ({
     isOpen,
     closeDialog,
     mix,
     setHoveredMixName,
+    setSelectedInterventions,
+    selectedInterventions,
+    mixName,
+    setMixName,
 }) => {
     const { formatMessage } = useSafeIntl();
+    useEffect(() => {
+        setMixName(mix.name);
+        const newInterventions: Record<number, number[]> = {};
+        mix.interventions.forEach(({ intervention_category, id }) => {
+            if (!newInterventions[intervention_category]) {
+                newInterventions[intervention_category] = [];
+            }
+            newInterventions[intervention_category].push(id);
+        });
+        setSelectedInterventions(newInterventions);
+    }, [mix.interventions, mix.name, setMixName, setSelectedInterventions]);
+
+    const { mutateAsync: updateInterventionMix } = UseUpdateInterventionMix();
+    const { mutateAsync: deleteInterventionMix } = UseDeleteIntervenetionMix();
+    const selectedInterventionValues = useMemo(
+        () =>
+            Object.values(selectedInterventions)
+                .flat()
+                .filter(value => value !== null),
+        [selectedInterventions],
+    );
+    const queryClient = useQueryClient();
+    const handleInterventionMixUpdate = async () => {
+        await updateInterventionMix({
+            id: mix.id,
+            name: mixName,
+            intervention_ids: selectedInterventionValues,
+        });
+
+        queryClient.invalidateQueries([
+            'interventionPlans',
+            'interventionMixes',
+        ]);
+        formReset();
+    };
+
+    const formReset = () => {
+        setMixName('');
+        setSelectedInterventions([]);
+    };
+
+    const handleInterventionMixDelete = async () => {
+        await deleteInterventionMix(mix.id);
+
+        queryClient.invalidateQueries([
+            'interventionPlans',
+            'interventionMixes',
+        ]);
+    };
     return (
         <>
             <ConfirmCancelModal
@@ -30,9 +92,9 @@ const EditInterventionMixModal: FunctionComponent<Props> = ({
                 id="edit-mix-modal"
                 open={isOpen}
                 closeDialog={closeDialog}
-                onConfirm={() => null}
+                onConfirm={() => handleInterventionMixUpdate()}
                 onClose={() => setHoveredMixName(false)}
-                onCancel={() => null}
+                onCancel={() => formReset()}
                 cancelMessage={MESSAGES.cancel}
                 confirmMessage={MESSAGES.updateMix}
                 titleMessage={formatMessage(MESSAGES.editMixTitle)}
@@ -41,10 +103,12 @@ const EditInterventionMixModal: FunctionComponent<Props> = ({
             >
                 <Box sx={{ ml: '-10px' }}>
                     <InterventionCategories
-                        selectedInterventions={mix.interventions.map(
-                            intervention => intervention.id,
-                        )}
-                        setSelectedInterventions={() => null}
+                        selectedInterventions={selectedInterventions}
+                        setSelectedInterventions={setSelectedInterventions}
+                        edit
+                        mix={mix}
+                        mixName={mixName}
+                        setMixName={setMixName}
                     />
                     <Box sx={{ position: 'absolute', bottom: 10, left: 20 }}>
                         <Button
@@ -53,6 +117,7 @@ const EditInterventionMixModal: FunctionComponent<Props> = ({
                                 textTransform: 'capitalize',
                                 fontWeight: 'bold',
                             }}
+                            onClick={() => handleInterventionMixDelete()}
                         >
                             {formatMessage(MESSAGES.deleteMix)}
                         </Button>
