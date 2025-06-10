@@ -3,7 +3,14 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import ContentPasteGoOutlinedIcon from '@mui/icons-material/ContentPasteGoOutlined';
 import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import { Box, Typography, IconButton, Theme, TextField } from '@mui/material';
+import {
+    Box,
+    Typography,
+    IconButton,
+    Theme,
+    TextField,
+    Button,
+} from '@mui/material';
 
 import { SxStyles } from 'Iaso/types/general';
 import {
@@ -48,7 +55,7 @@ const styles: SxStyles = {
     },
     actionBtn: (theme: Theme) => ({
         ...actionBtnStyles(theme),
-        cursor: 'pointer',
+        textTransform: 'none',
     }),
     actionBtnSaving: (theme: Theme) => ({
         ...actionBtnStyles(theme),
@@ -140,14 +147,14 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                         <ContentPasteGoOutlinedIcon sx={styles.icon} />
                         Export
                     </Typography>
-                    <Typography
-                        variant="body2"
+                    <Button
+                        variant="text"
                         sx={styles.actionBtn}
                         onClick={handleDuplicateClick}
                     >
                         <CopyAllOutlinedIcon sx={styles.icon} />
                         Duplicate
-                    </Typography>
+                    </Button>
                 </Box>
             </Box>
         );
