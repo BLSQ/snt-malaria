@@ -17,7 +17,7 @@ env:
 
 jobs:
     test_js:
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-24.04
         steps:
             - name: Checkout Iaso repo
               uses: actions/checkout@v4
@@ -62,7 +62,7 @@ jobs:
                   MSG_MINIMAL: true
               if: failure()
     test_python:
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-24.04
         services:
             postgres:
                 image: postgis/postgis:12-3.3
@@ -106,7 +106,8 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-venv-
                   # Build a virtualenv, but only if it doesn't already exist
-            - run: python -v && python -m venv ./venv && . ./venv/bin/activate && pip install -U pip &&
+            - run:
+                  python -v && python -m venv ./venv && . ./venv/bin/activate && pip install -U pip &&
                   pip install -r requirements-dev.txt
               if: steps.cache-venv.outputs.cache-hit != 'true'
             - name: Environment info
