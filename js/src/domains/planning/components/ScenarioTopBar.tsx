@@ -18,7 +18,6 @@ import { baseUrls } from '../../../constants/urls';
 import {
     useUpdateScenario,
     useDuplicateScenario,
-    useExportScenario,
 } from '../../scenarios/hooks/useGetScenarios';
 import { Scenario } from '../../scenarios/types';
 
@@ -88,6 +87,8 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
     );
     const { mutateAsync: exportScenario } = useExportScenario();
 
+    const csvUrl = `/api/snt_malaria/scenarios/${scenario.id}/export/`;
+
     const handleEditClick = () => {
         setTempName(scenario.name);
         setIsEditing(true);
@@ -96,10 +97,6 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
     const handleDuplicateClick = () => {
         duplicateScenario(scenario.id);
         navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
-    };
-
-    const handleExportClick = async () => {
-        exportScenario(scenario.id);
     };
 
     const handleInputChange = event => {
@@ -159,11 +156,7 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                         <CheckCircleOutlinedIcon sx={styles.icon} />
                         Saved
                     </Typography>
-                    <Button
-                        variant="text"
-                        sx={styles.actionBtn}
-                        onClick={handleExportClick}
-                    >
+                    <Button variant="text" sx={styles.actionBtn} href={csvUrl}>
                         <ContentPasteGoOutlinedIcon sx={styles.icon} />
                         Export
                     </Button>
