@@ -46,12 +46,18 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         scenario = get_object_or_404(Scenario, pk=id_to_duplicate)
         scenario.pk = None
         
-        # Clean scenario name to keep it clear in case of multiple copies
-        clearedName = scenario.name.replace("Copy of", "").strip()
-        clearedName = re.sub(r"\s- (\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})\.(\d{6})", "", clearedName)
-        # Using datetime to create a unique name for the duplicated scenario
-        scenario.name = f"Copy of {clearedName} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}"
-        scenario.save()
+        scenario.name = f"Copy of {scenario.name}"
+        
+        duplicate = Scenario.objects.filter(name=scenario.name)
+        if duplicate.exists():
+            # If a scenario with the same name already exists, append a timestamp to the name
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+            scenario.name = f"{scenario.name} - {timestamp}"
+
+        try: 
+            scenario.save()
+        except Exception as e:
+            print(f"Error saving scenario: {e}")
 
         # Duplicate related assignments
         assignments = InterventionAssignment.objects.filter(scenario_id=id_to_duplicate)
