@@ -1,5 +1,4 @@
 import React, { FC, useMemo, useState } from 'react';
-import { defineMessages } from 'react-intl';
 import { Box, Button } from '@mui/material';
 import {
     JsonLogicTree,
@@ -7,6 +6,7 @@ import {
 } from '@react-awesome-query-builder/mui';
 
 import { QueryBuilder, SimpleModal, useSafeIntl } from 'bluesquare-components';
+import { defineMessages } from 'react-intl';
 
 import { useGetMetricCategories } from '../../hooks/useGetMetrics';
 

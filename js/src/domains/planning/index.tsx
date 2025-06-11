@@ -19,8 +19,8 @@ import { Budgets } from './components/budget/Budgets';
 import { InterventionsMix } from './components/interventionMix/InterventionsMix';
 import { InterventionsPlan } from './components/interventionPlan/InterventionsPlan';
 import { Map } from './components/map';
-import { ScenarioTopBar } from './components/ScenarioTopBar';
 import { SideMapList } from './components/maps/SideMapList';
+import { ScenarioTopBar } from './components/ScenarioTopBar';
 import {
     useGetMetricCategories,
     useGetMetricValues,
@@ -63,6 +63,18 @@ export const Planning: FC = () => {
             prevSelected?.name === metric.name ? null : metric,
         );
     };
+
+    const handleAddMapOrgUnitsToMix = () => {
+        const newOrgUnits = selectionOnMap.filter(
+            orgUnit =>
+                !selectionOnInterventionMix.some(
+                    unit => unit.id === orgUnit.id,
+                ),
+        );
+
+        setSelectionOnInterventionMix(prev => [...prev, ...newOrgUnits]);
+    };
+
     const { data: displayedMetricValues, isLoading } = useGetMetricValues({
         metricTypeId: displayedMetric?.id || null,
     });
@@ -183,6 +195,7 @@ export const Planning: FC = () => {
                                     onAddRemoveOrgUnitToMix={
                                         handleAddRemoveOrgUnitToMix
                                     }
+                                    onAddToMix={handleAddMapOrgUnitsToMix}
                                 />
                             </PaperFullHeight>
                         </PaperContainer>

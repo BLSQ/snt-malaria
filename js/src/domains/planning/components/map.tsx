@@ -44,6 +44,7 @@ type Props = {
     selectedOrgUnits: OrgUnit[];
     onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
     onApplyFilters: () => void;
+    onAddToMix: () => void;
     onChangeMetricLayer: (MetricType) => void;
     onClearSelection: () => void;
 };
@@ -55,6 +56,7 @@ export const Map: FC<Props> = ({
     selectedOrgUnits,
     onAddRemoveOrgUnitToMix,
     onApplyFilters,
+    onAddToMix,
     onChangeMetricLayer,
     onClearSelection,
 }) => {
@@ -149,8 +151,8 @@ export const Map: FC<Props> = ({
         <Box height="100%" sx={styles.mainBox}>
             <MapSelectionWidget
                 selectionCount={selectedOrgUnits.length}
-                onAddToMix={() => console.log('onAddToMix')}
                 onApplyFilters={onApplyFilters}
+                onAddToMix={onAddToMix}
                 onClearSelection={onClearSelection}
             />
             {orgUnits && (
