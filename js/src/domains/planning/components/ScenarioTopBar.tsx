@@ -11,8 +11,10 @@ import {
     TextField,
     Button,
 } from '@mui/material';
-
+import { useNavigate } from 'react-router-dom';
 import { SxStyles } from 'Iaso/types/general';
+import { baseUrls } from '../../../constants/urls';
+
 import {
     useUpdateScenario,
     useDuplicateScenario,
@@ -71,11 +73,18 @@ type Props = {
 };
 
 export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
+    const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [tempName, setTempName] = useState(scenario.name);
 
     const { mutateAsync: updateScenario } = useUpdateScenario();
-    const { mutateAsync: duplicateScenario } = useDuplicateScenario();
+    const { mutateAsync: duplicateScenario } = useDuplicateScenario(
+        duplicatedScenario => {
+            navigate(
+                `/${baseUrls.planning}/scenarioId/${duplicatedScenario.id}`,
+            );
+        },
+    );
 
     const handleEditClick = () => {
         setTempName(scenario.name);
@@ -84,6 +93,7 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
 
     const handleDuplicateClick = () => {
         duplicateScenario(scenario.id);
+        navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
     };
 
     const handleInputChange = event => {

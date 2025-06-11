@@ -55,12 +55,15 @@ export const useUpdateScenario = (): UseMutationResult =>
         invalidateQueryKey: ['scenarios'],
     });
 
-export const useDuplicateScenario = (): UseMutationResult =>
+export const useDuplicateScenario = (
+    onSuccess: (data: any) => void = _data => null,
+): UseMutationResult =>
     useSnackMutation({
         mutationFn: (idToDuplicate: number) =>
             postRequest(`/api/snt_malaria/scenarios/duplicate/`, {
                 id_to_duplicate: idToDuplicate,
             }),
+        options: { onSuccess },
         invalidateQueryKey: ['scenarios'],
         snackSuccessMessage: MESSAGES.duplicateSuccess,
         snackErrorMsg: MESSAGES.duplicateError,
