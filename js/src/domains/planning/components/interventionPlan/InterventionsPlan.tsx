@@ -77,7 +77,10 @@ export const InterventionsPlan: FC<Props> = ({
                                 justifyContent: 'center',
                             }}
                         >
-                            <InterventionsPlanMap />
+                            <InterventionsPlanMap
+                                scenarioId={scenarioId}
+                                selectedOrgUnits={selectedOrgUnits}
+                            />
                         </TabPanel>
                     </CardContent>
                 </TabContext>
