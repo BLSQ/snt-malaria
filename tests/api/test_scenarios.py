@@ -113,12 +113,36 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Scenario.objects.count(), 2)
         duplicated_scenario = Scenario.objects.latest("id")
-        self.assertEqual(duplicated_scenario.name, f"Copy of {self.scenario.name}")
+        self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
         self.assertEqual(duplicated_scenario.intervention_assignments.count(), 2)
 
-    def test_scenario_duplicate_missing_query_param(self):
+    def test_scenario_duplicate_missing_body(self):
         url = reverse("scenarios-duplicate")
         response = self.client.post(url, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(str(response.data["id_to_duplicate"][0]), "This field is required.")
         self.assertEqual(Scenario.objects.count(), 1)
+
+
+    def test_scenario_duplicate_multiple_times_success(self):
+        url = reverse("scenarios-duplicate")
+
+        # First duplication
+        response = self.client.post(url, {"id_to_duplicate": self.scenario.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Scenario.objects.count(), 2)
+        duplicated_scenario = Scenario.objects.latest("id")
+        
+        self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
+        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 2)
+
+        # Second duplication
+        response = self.client.post(url, {"id_to_duplicate": self.scenario.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Scenario.objects.count(), 3)
+        duplicated_scenario = Scenario.objects.latest("id")
+
+        self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
+        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 2)
+
+

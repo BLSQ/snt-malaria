@@ -1,12 +1,34 @@
 import React, { FC, useState } from 'react';
-import { Box, Typography, IconButton, Theme, TextField } from '@mui/material';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import ContentPasteGoOutlinedIcon from '@mui/icons-material/ContentPasteGoOutlined';
 import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-
+import {
+    Box,
+    Typography,
+    IconButton,
+    Theme,
+    TextField,
+    Button,
+} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { SxStyles } from 'Iaso/types/general';
-import { useUpdateScenario } from '../../scenarios/hooks/useGetScenarios';
+import { baseUrls } from '../../../constants/urls';
+
+import {
+    useUpdateScenario,
+    useDuplicateScenario,
+} from '../../scenarios/hooks/useGetScenarios';
+import { Scenario } from '../../scenarios/types';
+
+const actionBtnStyles = (theme: Theme) => ({
+    color: theme.palette.primary.main,
+    fontWeight: 'bold', // medium not working?
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: theme.spacing(2),
+});
 
 const styles: SxStyles = {
     content: (theme: Theme) => ({
@@ -34,14 +56,11 @@ const styles: SxStyles = {
         alignItems: 'center',
     },
     actionBtn: (theme: Theme) => ({
-        color: theme.palette.primary.main,
-        fontWeight: 'bold', // medium not working?
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginLeft: theme.spacing(2),
+        ...actionBtnStyles(theme),
+        textTransform: 'none',
     }),
-    savingStatus: (theme: Theme) => ({
+    actionBtnSaving: (theme: Theme) => ({
+        ...actionBtnStyles(theme),
         color: theme.palette.text.secondary,
     }),
     icon: {
@@ -54,14 +73,27 @@ type Props = {
 };
 
 export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
+    const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [tempName, setTempName] = useState(scenario.name);
 
-    const { mutateAsync: updateScenario, isLoading } = useUpdateScenario();
+    const { mutateAsync: updateScenario } = useUpdateScenario();
+    const { mutateAsync: duplicateScenario } = useDuplicateScenario(
+        duplicatedScenario => {
+            navigate(
+                `/${baseUrls.planning}/scenarioId/${duplicatedScenario.id}`,
+            );
+        },
+    );
 
     const handleEditClick = () => {
         setTempName(scenario.name);
         setIsEditing(true);
+    };
+
+    const handleDuplicateClick = () => {
+        duplicateScenario(scenario.id);
+        navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
     };
 
     const handleInputChange = event => {
@@ -117,10 +149,7 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                     )}
                 </Box>
                 <Box sx={styles.actionBtns}>
-                    <Typography
-                        variant="body2"
-                        sx={[styles.actionBtn, styles.savingStatus]}
-                    >
+                    <Typography variant="body2" sx={styles.actionBtnSaving}>
                         <CheckCircleOutlinedIcon sx={styles.icon} />
                         Saved
                     </Typography>
@@ -128,14 +157,18 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                         <ContentPasteGoOutlinedIcon sx={styles.icon} />
                         Export
                     </Typography>
-                    <Typography variant="body2" sx={styles.actionBtn}>
+                    <Button
+                        variant="text"
+                        sx={styles.actionBtn}
+                        onClick={handleDuplicateClick}
+                    >
                         <CopyAllOutlinedIcon sx={styles.icon} />
                         Duplicate
-                    </Typography>
+                    </Button>
                 </Box>
             </Box>
         );
-    } else {
-        return <></>;
     }
+
+    return null;
 };
