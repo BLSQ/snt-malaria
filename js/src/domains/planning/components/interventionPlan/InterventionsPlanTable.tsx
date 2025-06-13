@@ -32,11 +32,19 @@ type Props = {
     scenarioId: number | undefined;
     isLoadingPlans: boolean;
     interventionPlans: any;
+    setSelectedInterventions: any;
+    selectedInterventions: any;
+    setMixName: (name: string) => void;
+    mixName: string;
 };
 export const InterventionsPlanTable: FC<Props> = ({
     scenarioId,
     isLoadingPlans,
     interventionPlans,
+    setSelectedInterventions,
+    selectedInterventions,
+    setMixName,
+    mixName,
 }) => {
     const { formatMessage } = useSafeIntl();
     return (
@@ -62,6 +70,12 @@ export const InterventionsPlanTable: FC<Props> = ({
                                 row={row}
                                 index={index}
                                 iconProps={undefined}
+                                setSelectedInterventions={
+                                    setSelectedInterventions
+                                }
+                                selectedInterventions={selectedInterventions}
+                                setMixName={setMixName}
+                                mixName={mixName}
                             />
                         ))}
                     </TableBody>

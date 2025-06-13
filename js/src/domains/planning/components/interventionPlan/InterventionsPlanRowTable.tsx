@@ -14,6 +14,10 @@ export const InterventionsPlanRowTable = ({
     row,
     index,
     iconProps,
+    setSelectedInterventions,
+    selectedInterventions,
+    setMixName,
+    mixName,
 }) => {
     return (
         <TableRow key={index}>
@@ -28,6 +32,10 @@ export const InterventionsPlanRowTable = ({
                     row={row}
                     scenarioId={scenarioId}
                     iconProps={iconProps}
+                    setSelectedInterventions={setSelectedInterventions}
+                    selectedInterventions={selectedInterventions}
+                    setMixName={setMixName}
+                    mixName={mixName}
                 />
             </TableCell>
             <TableCell

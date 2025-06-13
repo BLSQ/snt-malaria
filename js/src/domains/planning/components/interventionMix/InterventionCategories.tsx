@@ -1,148 +1,114 @@
-import React, { FC, useCallback, useMemo } from 'react';
-import { Grid, MenuItem, Select, TextField, Typography } from '@mui/material';
+import React, { FC, useCallback } from 'react';
+import { Box, Button, Grid, TextField, Typography } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionCategories } from '../../hooks/useGetInterventions';
+import { MESSAGES } from '../../messages';
 import { Interventions } from './Interventions';
 
 type Props = {
-    mix?: any;
-    scenarioId: number | undefined;
-    selectedOrgUnits: any;
-    selectedInterventions: { [categoryId: number]: number[] | [] };
-    setIsButtonDisabled: (bool: boolean) => void;
+    selectedInterventions: Record<number, number[]>;
     setSelectedInterventions: React.Dispatch<
-        React.SetStateAction<{ [categoryId: number]: number[] | [] }>
+        React.SetStateAction<Record<number, number[]>>
     >;
+    setCreateMix?: (bool: boolean) => void;
+    mixName?: string;
+    setMixName?: (name: string) => void;
+    edit?: boolean;
+    mix?: any;
 };
 
 const styles: SxStyles = {
-    selectStyle: {
-        width: '104px',
-        height: '32px',
-        borderRadius: '4px',
-        '& .MuiSelect-select': {
-            display: 'flex',
-            alignItems: 'center',
-        },
+    categoryName: { fontSize: '0.75rem' },
+    mixNameField: { width: '100%' },
+    cancelButtonBox: {
+        display: 'flex',
+        justifyContent: 'flex-end',
     },
 };
 
 export const InterventionCategories: FC<Props> = ({
-    mix,
-    scenarioId,
-    selectedOrgUnits,
     selectedInterventions,
-    setIsButtonDisabled,
     setSelectedInterventions,
+    setCreateMix,
+    mixName,
+    setMixName,
+    edit,
+    mix,
 }) => {
-    const {
-        data: interventionCategories,
-        isLoading: isLoadingInterventionCategories,
-    } = useGetInterventionCategories();
+    const { formatMessage } = useSafeIntl();
+    const { data: interventionCategories = [], isLoading } =
+        useGetInterventionCategories();
 
-    const selectedInterventionValues = useMemo(
-        () =>
-            Object.values(selectedInterventions)
-                .flat()
-                .filter(value => value !== null),
-        [selectedInterventions],
-    );
-    const canApplyInterventions = useMemo(() => {
-        return (
-            selectedInterventionValues.length > 0 &&
-            selectedOrgUnits.length > 0 &&
-            scenarioId
-        );
-    }, [
-        scenarioId,
-        selectedInterventionValues.length,
-        selectedOrgUnits.length,
-    ]);
-
-    const handleSelectIntervention = useCallback(
+    const toggleIntervention = useCallback(
         (categoryId: number, interventionId: number) => {
-            if (canApplyInterventions) {
-                setIsButtonDisabled(false);
-            }
-
             setSelectedInterventions(prev => {
-                const prevInterventions = prev[categoryId]
-                    ? [...prev[categoryId]]
-                    : [];
-                if (prevInterventions.includes(interventionId)) {
-                    const filteredInterventions = prevInterventions.filter(
-                        id => id !== interventionId,
-                    );
-                    return { ...prev, [categoryId]: filteredInterventions };
-                }
+                const prevSelected = prev[categoryId] || [];
+                const isSelected = prevSelected.includes(interventionId);
                 return {
                     ...prev,
-                    [categoryId]: [...prevInterventions, interventionId],
+                    [categoryId]: isSelected
+                        ? prevSelected.filter(id => id !== interventionId)
+                        : [...prevSelected, interventionId],
                 };
             });
         },
-        [canApplyInterventions, setIsButtonDisabled, setSelectedInterventions],
+        [setSelectedInterventions],
     );
 
     return (
         <Grid container spacing={2} padding={1}>
-            <Grid item container>
-                {/* To do: use inputComponent with type select */}
-                {mix ? (
+            <Grid item container spacing={4}>
+                <Grid item xs={edit ? 12 : 6}>
                     <TextField
-                        label="Name"
+                        label="Mix name"
                         id="outlined-size-small"
-                        value={mix.name}
+                        value={mixName}
                         size="small"
-                        sx={{ width: '100%' }}
+                        sx={styles.mixNameField}
+                        onChange={e => setMixName?.(e.target.value)}
                     />
-                ) : (
-                    <Select
-                        value=""
-                        onChange={() => console.log('select')}
-                        displayEmpty
-                        sx={styles.selectStyle}
-                    >
-                        <MenuItem value="">
-                            <Typography variant="body2">New mix</Typography>
-                        </MenuItem>
-                    </Select>
+                </Grid>
+                {!edit && (
+                    <Grid item xs>
+                        <Box sx={styles.cancelButtonBox}>
+                            <Button
+                                onClick={() => {
+                                    setCreateMix?.(false);
+                                    setMixName?.('');
+                                    setSelectedInterventions([]);
+                                }}
+                            >
+                                {formatMessage(MESSAGES.cancel)}
+                            </Button>
+                        </Box>
+                    </Grid>
                 )}
             </Grid>
-            <Grid item container direction="row" spacing={2} padding={2}>
-                {!isLoadingInterventionCategories &&
-                    interventionCategories?.map(interventionCategory => {
-                        return (
-                            <Grid item key={interventionCategory.id}>
-                                <Grid item>
-                                    <Typography
-                                        sx={{
-                                            fontSize: '0.75rem',
-                                        }}
-                                    >
-                                        {interventionCategory.name}
-                                    </Typography>
-                                </Grid>
 
-                                <Interventions
-                                    interventionCategoryId={
-                                        interventionCategory.id
-                                    }
-                                    interventions={
-                                        interventionCategory.interventions
-                                    }
-                                    selectedIds={
-                                        selectedInterventions[
-                                            interventionCategory.id
-                                        ] ?? []
-                                    }
-                                    handleSelectIntervention={
-                                        handleSelectIntervention
-                                    }
-                                />
-                            </Grid>
-                        );
-                    })}
+            <Grid item container spacing={2} padding={2}>
+                {!isLoading &&
+                    interventionCategories.map(
+                        ({ id, name, interventions }) => {
+                            return (
+                                <Grid item key={id}>
+                                    <Typography sx={styles.categoryName}>
+                                        {name}
+                                    </Typography>
+                                    <Interventions
+                                        interventionCategoryId={id}
+                                        interventions={interventions}
+                                        selectedIds={
+                                            selectedInterventions[id] ?? []
+                                        }
+                                        handleSelectIntervention={
+                                            toggleIntervention
+                                        }
+                                    />
+                                </Grid>
+                            );
+                        },
+                    )}
             </Grid>
         </Grid>
     );

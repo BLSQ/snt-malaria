@@ -1,5 +1,6 @@
 import React, { FunctionComponent, useMemo, useState } from 'react';
 import { Box, MenuItem, Select, Theme, Typography } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
@@ -7,8 +8,14 @@ import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import L from 'leaflet';
 import { MapContainer, GeoJSON, ZoomControl } from 'react-leaflet';
+import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
+import { MESSAGES } from '../../messages';
 
+type Props = {
+    scenarioId: number | undefined;
+    selectedOrgUnits: string;
+};
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
         borderRadius: theme.spacing(2),
@@ -56,9 +63,14 @@ const styles: SxStyles = {
         border: 'none',
     },
 };
-export const InterventionsPlanMap: FunctionComponent = () => {
+export const InterventionsPlanMap: FunctionComponent<Props> = ({
+    scenarioId,
+    selectedOrgUnits,
+}) => {
+    const { formatMessage } = useSafeIntl();
     const { data: orgUnits } = useGetOrgUnits();
     const [currentTile] = useState<Tile>(tiles.osm);
+
     const boundsOptions: Record<string, any> = {
         padding: [-10, -10],
         maxZoom: currentTile.maxZoom,
@@ -72,6 +84,26 @@ export const InterventionsPlanMap: FunctionComponent = () => {
         return shape.getBounds();
     }, [orgUnits]);
 
+    const { data: interventionPlans, isLoading: isLoadingPlans } =
+        useGetInterventionsPlan(scenarioId, selectedOrgUnits);
+    const [selectedPlanId, setSelectedPlanId] = useState<number | null>(
+        interventionPlans?.[0]?.id ?? null,
+    );
+
+    const [highlightedOrgUnits, setHighlightedOrgUnits] = useState<number[]>(
+        interventionPlans?.[0]?.org_units?.map(org_unit => org_unit.id) ?? [],
+    );
+    const handleChange = event => {
+        const selectedId = event.target.value;
+        setSelectedPlanId(selectedId);
+        const selectedPlan = interventionPlans?.filter(
+            interventionPlan => interventionPlan.id === selectedId,
+        )[0];
+
+        setHighlightedOrgUnits(
+            selectedPlan?.org_units.map(org_unit => org_unit.id) ?? [],
+        );
+    };
     return (
         <Box height="390px" width="100%" sx={styles.mainBox}>
             <MapContainer
@@ -94,17 +126,16 @@ export const InterventionsPlanMap: FunctionComponent = () => {
                     position="bottomright"
                     backgroundColor="#1F2B3DBF"
                 />
-                {orgUnits?.map((orgUnit, index) => (
+                {orgUnits?.map(orgUnit => (
                     <GeoJSON
                         key={orgUnit.id}
                         data={orgUnit.geo_json as unknown as GeoJson}
                         style={{
                             color: 'var(--text-primary,#1F2B3DDE)',
                             weight: 1,
-                            fillColor:
-                                index < 5
-                                    ? 'var(--deepPurple-300, #9575CD)'
-                                    : '#ECEFF1',
+                            fillColor: highlightedOrgUnits.includes(orgUnit.id)
+                                ? 'var(--deepPurple-300, #9575CD)'
+                                : '#ECEFF1',
                             fillOpacity: 2,
                         }}
                     />
@@ -112,20 +143,31 @@ export const InterventionsPlanMap: FunctionComponent = () => {
             </MapContainer>
             <Box sx={styles.selectBox}>
                 <Select
-                    value=""
-                    onChange={() => null}
+                    value={selectedPlanId}
+                    onChange={handleChange}
                     displayEmpty
                     sx={styles.select}
                 >
-                    <MenuItem value="">
-                        <Typography variant="body2">Base Pack</Typography>
-                    </MenuItem>
+                    {!isLoadingPlans &&
+                        interventionPlans &&
+                        interventionPlans.map(intervention => {
+                            return (
+                                <MenuItem
+                                    key={intervention.id}
+                                    value={intervention.id}
+                                >
+                                    <Typography variant="body2">
+                                        {intervention.name}
+                                    </Typography>
+                                </MenuItem>
+                            );
+                        })}
                 </Select>
             </Box>
             <Box sx={styles.legendBox}>
                 <Box sx={styles.legendShape} />
                 <Typography variant="caption" sx={{ color: 'white' }}>
-                    4 districts
+                    {`${highlightedOrgUnits.length} ${formatMessage(MESSAGES.orgUnitDistrict)}`}
                 </Typography>
             </Box>
         </Box>

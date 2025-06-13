@@ -45,7 +45,13 @@ export const Planning: FC = () => {
     const [selectionOnInterventionMix, setSelectionOnInterventionMix] =
         useState<OrgUnit[]>([]);
     const [expanded, setExpanded] = useState('interventionsMix');
-
+    const toggleDrawer = () => {
+        setIsDrawerOpen(!isDrawerOpen);
+    };
+    const [selectedInterventions, setSelectedInterventions] = useState<{
+        [categoryId: number]: number[] | [];
+    }>({});
+    const [mixName, setMixName] = useState<string>('');
     // Metric selection
     // v1: display Incidence by default
     const { data: metricCategories } = useGetMetricCategories();
@@ -170,6 +176,7 @@ export const Planning: FC = () => {
     const handleExpandAccordion = panel => (event, isExpanded) => {
         setExpanded(isExpanded ? panel : null);
     };
+
     return (
         <>
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
@@ -218,15 +225,30 @@ export const Planning: FC = () => {
                             <InterventionsMix
                                 scenarioId={scenario?.id}
                                 selectedOrgUnits={selectionOnInterventionMix}
+                                setSelectedInterventions={
+                                    setSelectedInterventions
+                                }
+                                selectedInterventions={selectedInterventions}
+                                mixName={mixName}
+                                setMixName={setMixName}
                             />
                         </PaperContainer>
                     </Grid>
                     <Grid item xs={12} md={6}>
                         <PaperContainer>
                             <InterventionsPlan
+                                selectedOrgUnits={selectedOrgUnits
+                                    .map(orgUnit => orgUnit.id)
+                                    .join(',')}
                                 scenarioId={scenario?.id}
                                 handleExpandAccordion={handleExpandAccordion}
                                 expanded={expanded}
+                                setSelectedInterventions={
+                                    setSelectedInterventions
+                                }
+                                selectedInterventions={selectedInterventions}
+                                setMixName={setMixName}
+                                mixName={mixName}
                             />
                             {/* <Budgets
                                 scenarioId={scenario?.id}

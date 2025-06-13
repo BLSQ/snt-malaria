@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react';
+import React, { FunctionComponent, useEffect, useState } from 'react';
 import { alpha, Box, Stack, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { EditInterventionMix } from './EditInterventionMixModal';
@@ -7,6 +7,12 @@ type Props = {
     scenarioId: number;
     iconProps: any;
     row: any;
+    setSelectedInterventions: React.Dispatch<
+        React.SetStateAction<Record<number, number[]>>
+    >;
+    selectedInterventions: any;
+    setMixName: (name: string) => void;
+    mixName: string;
 };
 const styles: SxStyles = {
     interventionDotStyle: {
@@ -20,8 +26,13 @@ export const InterventionsMixCell: FunctionComponent<Props> = ({
     scenarioId,
     iconProps,
     row,
+    setSelectedInterventions,
+    selectedInterventions,
+    setMixName,
+    mixName,
 }) => {
     const [hoveredMixName, setHoveredMixName] = useState<boolean>(false);
+
     return (
         <Box display="flex" flexDirection="column">
             <Stack
@@ -40,15 +51,19 @@ export const InterventionsMixCell: FunctionComponent<Props> = ({
                 <Box visibility={hoveredMixName ? 'visible' : 'hidden'}>
                     <EditInterventionMix
                         setHoveredMixName={setHoveredMixName}
-                        scenarioId={scenarioId}
                         iconProps={iconProps}
                         mix={row}
+                        setSelectedInterventions={setSelectedInterventions}
+                        selectedInterventions={selectedInterventions}
+                        mixName={mixName}
+                        setMixName={setMixName}
                     />
                 </Box>
             </Stack>
             <Box>
                 {row.interventions.map((intervention, idx) => (
                     <Typography
+                        key={intervention.name}
                         variant="caption"
                         color={alpha('#1F2B3D', 0.87)}
                     >

@@ -1,5 +1,4 @@
 import React, { FC } from 'react';
-
 import { alpha, Box, Button, Grid, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
@@ -33,13 +32,8 @@ export const SelectedDistricts: FC<Props> = ({
     return (
         <>
             <Grid container padding={1} spacing={2}>
-                <Grid item xs={6}>
-                    <Stack
-                        direction="row"
-                        spacing={0.3}
-                        marginTop={1}
-                        alignItems="center"
-                    >
+                <Grid item xs={6} display="flex" alignItems="center">
+                    <Stack direction="row" spacing={0.3} alignItems="center">
                         <BoldSubtitle>{selectedDistricts.length}</BoldSubtitle>
                         <BoldSubtitle>
                             {formatMessage(
