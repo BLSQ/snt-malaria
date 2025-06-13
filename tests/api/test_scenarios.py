@@ -1,4 +1,5 @@
 from django.urls import reverse
+from plugins.snt_malaria.models.intervention import InterventionMix
 from rest_framework import status
 
 from iaso.models import Account, OrgUnit, OrgUnitType
@@ -50,6 +51,11 @@ class ScenarioAPITestCase(APITestCase):
             intervention_category=cls.int_category_chemoprevention,
         )
 
+        # Create intervention mixs
+        cls.intervention_mix_rts = InterventionMix.objects.create(name="rts_mix", scenario=cls.scenario)
+        cls.intervention_mix_rts.interventions.set([cls.intervention_vaccination_rts])
+        cls.intervention_mix_rts_smc = InterventionMix.objects.create(name="rts_smc_mix", scenario=cls.scenario)
+        cls.intervention_mix_rts_smc.interventions.set([cls.intervention_vaccination_rts, cls.intervention_chemo_smc])
         # Create Org Units
         cls.out_district = OrgUnitType.objects.create(name="DISTRICT")
         cls.district1 = OrgUnit.objects.create(org_unit_type=cls.out_district, name="District 1")
@@ -59,13 +65,13 @@ class ScenarioAPITestCase(APITestCase):
         cls.assignment = InterventionAssignment.objects.create(
             scenario=cls.scenario,
             org_unit=cls.district1,
-            intervention=cls.intervention_vaccination_rts,
+            intervention_mix=cls.intervention_mix_rts,
             created_by=cls.user,
         )
         cls.assignment = InterventionAssignment.objects.create(
             scenario=cls.scenario,
             org_unit=cls.district2,
-            intervention=cls.intervention_chemo_smc,
+            intervention_mix=cls.intervention_mix_rts_smc,
             created_by=cls.user,
         )
 
