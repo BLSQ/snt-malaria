@@ -18,12 +18,7 @@ import {
     ZoomControl,
 } from 'react-leaflet';
 
-import {
-    useGetMetricCategories,
-    useGetMetricValues,
-} from '../../hooks/useGetMetrics';
-import { MetricType } from '../../types/metrics';
-import { LayerSelect } from './LayerSelect';
+import { useGetMetricValues } from '../../hooks/useGetMetrics';
 import { MetricType } from '../../types/metrics';
 import { MapLegend } from '../MapLegend';
 import { LayerSelect } from './LayerSelect';
@@ -88,7 +83,7 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
             }
             return getLegend(value);
         },
-        [displayedMetric, displayedMetricValues, getLegend],
+        [displayedMetric, getLegend],
     );
     const getSelectedMetricValue = useCallback(
         (orgUnitId: number) => {
