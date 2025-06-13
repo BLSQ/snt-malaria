@@ -1,7 +1,9 @@
 {
     "iaso.snt_malaria.home.title": "SNT Malaria",
     "iaso.snt_malaria.label.addMap": "Ajouter une carte",
+    "iaso.snt_malaria.label.addToMix": "Ajouter au mix",
     "iaso.snt_malaria.label.budgetImpactTitle": "Budget et Impact",
+    "iaso.snt_malaria.label.clearSelectionTooltip": "Effacer selection",
     "iaso.snt_malaria.label.interventionMix": "Combinaison d'interventions",
     "iaso.snt_malaria.label.interventionMix.addOrgUnitFromMix": "Ajouter au mix",
     "iaso.snt_malaria.label.interventionMix.applyInterventionMix": "Appliquez le Mix",
@@ -24,5 +26,6 @@
     "iaso.snt_malaria.label.orgUnitDistricts": "Districts",
     "iaso.snt_malaria.label.selectOrgUnitsBtn": "Sélectionner les districts ({amount} filtres)",
     "iaso.snt_malaria.label.selectOrgUnitsBtnOneFilter": "Sélectionner les districts (1 filtre)",
-    "iaso.snt_malaria.label.selectOrgUnitsSuccess": "{amount} districts sélectionnés"
+    "iaso.snt_malaria.label.selectOrgUnitsSuccess": "{amount} districts sélectionnés",
+    "iaso.snt_malaria.label.selectedOrgUnitsCount": "{selectionCount} districts sélectionnés"
 }

@@ -18,10 +18,7 @@ import {
     ZoomControl,
 } from 'react-leaflet';
 
-import {
-    useGetMetricCategories,
-    useGetMetricValues,
-} from '../../hooks/useGetMetrics';
+import { useGetMetricValues } from '../../hooks/useGetMetrics';
 import { MetricType } from '../../types/metrics';
 import { MapLegend } from '../MapLegend';
 import { LayerSelect } from './LayerSelect';
@@ -65,7 +62,6 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
     const [displayedMetric, setDisplayedMetric] = useState<MetricType>(
         initialDisplayedMetric,
     );
-    const { data: metricCategories } = useGetMetricCategories();
     const handleLayerChange = useCallback((metric: MetricType) => {
         setDisplayedMetric(metric);
     }, []);
@@ -87,7 +83,7 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
             }
             return getLegend(value);
         },
-        [displayedMetric, displayedMetricValues, getLegend],
+        [displayedMetric, getLegend],
     );
     const getSelectedMetricValue = useCallback(
         (orgUnitId: number) => {
@@ -146,7 +142,6 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
                 <Box sx={styles.layerSelectBox}>
                     <LayerSelect
                         initialSelection={initialDisplayedMetric}
-                        metricCategories={metricCategories}
                         onLayerChange={handleLayerChange}
                     />
                 </Box>
