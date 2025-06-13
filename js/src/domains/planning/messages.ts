@@ -109,4 +109,16 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Intervention mixes and their districts will appear here.',
     },
+    selectedOrgUnitsCount: {
+        id: 'iaso.snt_malaria.label.selectOrgUnitsCount',
+        defaultMessage: '{selectionCount} districts selected',
+    },
+    clearSelectionTooltip: {
+        id: 'iaso.snt_malaria.label.clearSelectionTooltip',
+        defaultMessage: 'Clear selection',
+    },
+    addToMix: {
+        id: 'iaso.snt_malaria.label.addToMix',
+        defaultMessage: 'Add to mix',
+    },
 });

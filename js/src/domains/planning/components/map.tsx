@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import { Box, useTheme, Button, styled, Theme } from '@mui/material';
+import { Box, useTheme, Theme } from '@mui/material';
 import * as d3 from 'd3-scale';
 
 import { useGetLegend } from 'Iaso/components/LegendBuilder/Legend';
@@ -18,26 +18,10 @@ import {
     ZoomControl,
 } from 'react-leaflet';
 import { MetricType, MetricValue } from '../types/metrics';
-import { LayersTitleWithIcon } from './layers/LayersTitleWithIcon';
 import { MapLegend } from './MapLegend';
 import { MapOrgUnitDetails } from './MapOrgUnitDetails';
-
-const StyledButton = styled(Button)`
-    background-color: white;
-    color: ${({ theme }) => theme.palette.text.primary};
-    padding: ${({ theme }) => theme.spacing(1)};
-    border-radius: 12px;
-    line-height: 0;
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 1000;
-    border: 0;
-    &:hover {
-        background-color: #f5f5f5;
-        border: 0;
-    }
-`;
+import { LayerSelect } from './maps/LayerSelect';
+import { MapSelectionWidget } from './MapSelectionWidget';
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
@@ -45,26 +29,38 @@ const styles: SxStyles = {
         overflow: 'hidden',
         position: 'relative',
     }),
+    layerSelectBox: (theme: Theme) => ({
+        position: 'absolute',
+        right: theme.spacing(1),
+        top: theme.spacing(1),
+        zIndex: 500,
+    }),
 };
 
 type Props = {
     orgUnits?: OrgUnit[];
-    toggleDrawer: () => void;
     displayedMetric: MetricType | null;
     displayedMetricValues?: MetricValue[];
-    onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
     selectedOrgUnits: OrgUnit[];
+    onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
+    onApplyFilters: () => void;
+    onAddToMix: () => void;
+    onChangeMetricLayer: (MetricType) => void;
+    onClearSelection: () => void;
 };
 
 export const Map: FC<Props> = ({
     orgUnits,
-    toggleDrawer,
     displayedMetric,
     displayedMetricValues,
-    onAddRemoveOrgUnitToMix,
     selectedOrgUnits,
+    onAddRemoveOrgUnitToMix,
+    onApplyFilters,
+    onAddToMix,
+    onChangeMetricLayer,
+    onClearSelection,
 }) => {
-    const [currentTile, setCurrentTile] = useState<Tile>(tiles.osm);
+    const [currentTile] = useState<Tile>(tiles.osm);
     const theme = useTheme();
     const boundsOptions: Record<string, any> = {
         padding: [10, 10],
@@ -133,7 +129,7 @@ export const Map: FC<Props> = ({
             color = theme.palette.secondary.main;
             weight = 4;
         } else if (selectedOrgUnitIds.includes(orgUnitId)) {
-            color = theme.palette.primary.main;
+            color = '#000000';
             weight = 3;
         } else {
             color = '#546E7A';
@@ -153,13 +149,12 @@ export const Map: FC<Props> = ({
 
     return (
         <Box height="100%" sx={styles.mainBox}>
-            <StyledButton
-                variant="outlined"
-                size="small"
-                onClick={toggleDrawer}
-            >
-                <LayersTitleWithIcon />
-            </StyledButton>
+            <MapSelectionWidget
+                selectionCount={selectedOrgUnits.length}
+                onApplyFilters={onApplyFilters}
+                onAddToMix={onAddToMix}
+                onClearSelection={onClearSelection}
+            />
             {orgUnits && (
                 <>
                     <MapContainer
@@ -175,10 +170,6 @@ export const Map: FC<Props> = ({
                         zoomControl={false}
                     >
                         <ZoomControl position="bottomright" />
-                        {/* <CustomTileLayer
-                            currentTile={currentTile}
-                            setCurrentTile={setCurrentTile}
-                        /> */}
                         <TileLayer url="" attribution="" />
                         {orgUnits.map(orgUnit => (
                             <GeoJSON
@@ -208,6 +199,12 @@ export const Map: FC<Props> = ({
                             selectedOrgUnits={selectedOrgUnits}
                         />
                     )}
+                    <Box sx={styles.layerSelectBox}>
+                        <LayerSelect
+                            initialSelection={displayedMetric || ''}
+                            onLayerChange={onChangeMetricLayer}
+                        />
+                    </Box>
                 </>
             )}
         </Box>
