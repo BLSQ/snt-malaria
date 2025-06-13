@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from drf_yasg.utils import swagger_auto_schema
 
 
@@ -57,7 +58,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         try: 
             scenario.save()
         except Exception as e:
-            print(f"Error saving scenario: {e}")
+            raise ValidationError(f"Error saving scenario: {e}")
 
         # Duplicate related assignments
         assignments = InterventionAssignment.objects.filter(scenario_id=id_to_duplicate)

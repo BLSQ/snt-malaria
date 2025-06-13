@@ -15,14 +15,14 @@ make this script more generic. For the time being, you can set it up as follows:
    desired server.
 """
 
-SERVER_BASE_URL = "https://iaso-snt-malaria.bluesquare.org"
+SERVER_BASE_URL = "https://server.org"
 
 orgunits_url = SERVER_BASE_URL + "/api/orgunits/"
 groups_url = SERVER_BASE_URL + "/api/groups/"
 create_org_unit_url = SERVER_BASE_URL + "/api/orgunits/create_org_unit/"
 org_unit_types_url = SERVER_BASE_URL + "/api/v2/orgunittypes/"
 
-AUTH_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoyMDU1ODM4MzY0LCJpYXQiOjE3NDA0NzgzNjQsImp0aSI6ImMwOWJiZTc5ZWQ5MDRhYjY4ZjQ3ZjRhMTA5NTFmZGVjIiwidXNlcl9pZCI6Nn0.P-aKK_mG2gFokohgcF3oXNe-zEp60Fnf7PMlnJQWQVU"
+AUTH_TOKEN = "XXX"
 headers = {"Authorization": "Bearer %s" % AUTH_TOKEN}
 
 SOURCE_ID = 2  # ID of the default source
@@ -55,7 +55,7 @@ def find_or_create_org_unit(name, org_unit_type_id, parent_id, source_ref=None, 
     # TEMP: Disable the find, only create
     result_count = 0
     if result_count == 0:
-        print("CREATING")
+        # Creating new org unit
         payload = {
             "id": None,
             "name": name,
@@ -67,13 +67,13 @@ def find_or_create_org_unit(name, org_unit_type_id, parent_id, source_ref=None, 
             "parent_id": parent_id,
             "source_ref": source_ref,
         }
-        print(payload)
         resp = requests.post(create_org_unit_url, headers=headers, json=payload)
-        print(resp.json())
+        if resp.status_code != 200:
+            raise Exception(f"Failed to create org unit: {resp.status_code} - {resp.text}")
         return resp.json()["id"]
     if result_count > 1:
-        print(f"WARNING: Found multiple results for {name}")
-    print("FOUND")
+        raise Exception(f"Found multiple results for {name}")
+    # Return existing org unit
     return response.json()["orgunits"][0]["id"]
 
 

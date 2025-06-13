@@ -91,8 +91,8 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         """
         queryset = self.get_filtered_queryset()
         try:
-            # TODO: filter on account
-            population_metric = MetricType.objects.get(name__iexact="Population")
+            user_account = self.request.user.iaso_profile.account
+            population_metric = MetricType.objects.get(name__iexact="Population", account=user_account)
         except MetricType.DoesNotExist:
             return Response({"error": "Population MetricType not found"}, status=400)
 
