@@ -237,7 +237,7 @@ export const Planning: FC = () => {
                     <Grid item xs={12} md={6}>
                         <PaperContainer>
                             <InterventionsPlan
-                                selectedOrgUnits={selectedOrgUnits
+                                selectedOrgUnits={selectionOnInterventionMix
                                     .map(orgUnit => orgUnit.id)
                                     .join(',')}
                                 scenarioId={scenario?.id}
