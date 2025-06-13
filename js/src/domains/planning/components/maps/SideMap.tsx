@@ -1,6 +1,14 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, Theme } from '@mui/material';
 import * as d3 from 'd3-scale';
+
+import { useGetLegend } from 'Iaso/components/LegendBuilder/Legend';
+import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
+import { GeoJson } from 'Iaso/components/maps/types';
+import tiles from 'Iaso/constants/mapTiles';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
+import { Bounds } from 'Iaso/utils/map/mapUtils';
 import L from 'leaflet';
 import {
     GeoJSON,
@@ -10,18 +18,15 @@ import {
     ZoomControl,
 } from 'react-leaflet';
 
-import { useGetLegend } from 'Iaso/components/LegendBuilder/Legend';
-import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
-import { GeoJson } from 'Iaso/components/maps/types';
-import tiles from 'Iaso/constants/mapTiles';
-import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { SxStyles } from 'Iaso/types/general';
-import { Bounds } from 'Iaso/utils/map/mapUtils';
-
+import {
+    useGetMetricCategories,
+    useGetMetricValues,
+} from '../../hooks/useGetMetrics';
+import { MetricType } from '../../types/metrics';
 import { LayerSelect } from './LayerSelect';
 import { MetricType } from '../../types/metrics';
-import { useGetMetricValues } from '../../hooks/useGetMetrics';
 import { MapLegend } from '../MapLegend';
+import { LayerSelect } from './LayerSelect';
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
