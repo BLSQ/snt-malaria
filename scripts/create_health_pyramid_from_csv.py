@@ -26,6 +26,7 @@ AUTH_TOKEN = "XXX"
 headers = {"Authorization": "Bearer %s" % AUTH_TOKEN}
 
 SOURCE_ID = 2  # ID of the default source
+# To use this script in it's current form, you need to add this file to the current dir
 CSV_NAME = "COD_pyramid.csv"
 current_dir = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(current_dir, CSV_NAME)

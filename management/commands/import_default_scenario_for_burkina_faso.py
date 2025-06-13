@@ -13,9 +13,8 @@ from plugins.snt_malaria.models.scenario import Scenario
 
 BURKINA_ACCOUNT_ID = 1
 DEFAULT_SCENARIO_NAME = "WHO scenario"
-BFA_INTERVENTION_MIX = os.path.join(
-    os.path.dirname(__file__), "burkina_faso/BFA_intervention_mix.csv"
-)
+# To use this script in it's current form, you need to add this file to the correct folder
+BFA_INTERVENTION_MIX = os.path.join(os.path.dirname(__file__), "burkina_faso/BFA_intervention_mix.csv")
 
 
 class Command(BaseCommand):
@@ -36,9 +35,7 @@ class Command(BaseCommand):
             },
         )
         if not created:
-            print(
-                "2. Remove interventions mix related to default scenario if it exists"
-            )
+            print("2. Remove interventions mix related to default scenario if it exists")
             InterventionAssignment.objects.filter(scenario=default_scenario).delete()
 
         print("3. Creating default scenario's interventions mix")
@@ -57,9 +54,7 @@ class Command(BaseCommand):
                     )
 
                     if len(csv_intervention_mix) != len(db_interventions_mixs):
-                        raise ValueError(
-                            "ERROR: Unknown intervention type", csv_intervention_mix
-                        )
+                        raise ValueError("ERROR: Unknown intervention type", csv_intervention_mix)
 
                     for intervention in db_interventions_mixs:
                         assignments.append(

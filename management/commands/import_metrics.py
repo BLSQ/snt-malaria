@@ -10,6 +10,7 @@ from .support.legend import get_legend_config, get_legend_type
 
 
 BURKINA_ACCOUNT_ID = 1
+# To use this script in it's current form, you need to add these files to the correct folder
 METADATA_CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "burkina_faso/metric_types.csv")
 DATA_CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "burkina_faso/metric_values.csv")
 
