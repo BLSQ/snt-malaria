@@ -18,10 +18,9 @@ import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { Budgets } from './components/budget/Budgets';
 import { InterventionsMix } from './components/interventionMix/InterventionsMix';
 import { InterventionsPlan } from './components/interventionPlan/InterventionsPlan';
-import { LayersDrawer } from './components/LayersDrawer';
 import { Map } from './components/map';
-import { ScenarioTopBar } from './components/ScenarioTopBar';
 import { SideMapList } from './components/maps/SideMapList';
+import { ScenarioTopBar } from './components/ScenarioTopBar';
 import {
     useGetMetricCategories,
     useGetMetricValues,
@@ -41,12 +40,11 @@ export const Planning: FC = () => {
     const { data: scenario } = useGetScenario(params.scenarioId);
     const { data: orgUnits } = useGetOrgUnits();
     const { formatMessage } = useSafeIntl();
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+    const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
+    const [selectionOnInterventionMix, setSelectionOnInterventionMix] =
+        useState<OrgUnit[]>([]);
     const [expanded, setExpanded] = useState('interventionsMix');
-    const [selectedOrgUnits, setSelectedOrgUnits] = useState<OrgUnit[]>([]);
-    const toggleDrawer = () => {
-        setIsDrawerOpen(!isDrawerOpen);
-    };
 
     // Metric selection
     // v1: display Incidence by default
@@ -65,6 +63,18 @@ export const Planning: FC = () => {
             prevSelected?.name === metric.name ? null : metric,
         );
     };
+
+    const handleAddMapOrgUnitsToMix = () => {
+        const newOrgUnits = selectionOnMap.filter(
+            orgUnit =>
+                !selectionOnInterventionMix.some(
+                    unit => unit.id === orgUnit.id,
+                ),
+        );
+
+        setSelectionOnInterventionMix(prev => [...prev, ...newOrgUnits]);
+    };
+
     const { data: displayedMetricValues, isLoading } = useGetMetricValues({
         metricTypeId: displayedMetric?.id || null,
     });
@@ -74,7 +84,7 @@ export const Planning: FC = () => {
     const handleAddRemoveOrgUnitToMix = useCallback(
         (orgUnit: OrgUnit | null) => {
             if (orgUnit) {
-                setSelectedOrgUnits(prev => {
+                setSelectionOnInterventionMix(prev => {
                     if (prev.some(unit => unit.id === orgUnit.id)) {
                         return prev.filter(unit => unit.id !== orgUnit.id);
                     }
@@ -89,22 +99,25 @@ export const Planning: FC = () => {
     // To move fast for the demo, what this actually does is filter on each filter
     // individually (parallelized in a `Promise.all`) and then takes the intersection
     // of all these filters to get the final result.
-    const handleSelectOrgUnits = useCallback(
+    const handleApplyFilters = useCallback(
+        // TODO: This is a more or less functional hack to make the modal work with the
+        // `and` rules. This needs to be properly implemented in the backend
+        // to be able to process more complex rules. Ideally, only 1 API call
+        // would be needed instead of this intersection way of doing things.
         async (filters: MetricsFilters) => {
             const urls: string[] = [];
-            for (const category in filters) {
-                const filter = filters[category];
-                const [[metricId, filterValue]] = Object.entries(filter);
-
-                // Hardcoded on greater than for v1
-                const jsonFilter = { '>': [{ var: 'value' }, filterValue] };
-                const encodedJsonFilter = encodeURIComponent(
-                    JSON.stringify(jsonFilter),
+            const andFilters = filters['and'];
+            andFilters.forEach(filter => {
+                // force into old format
+                const metricId = filter['>='][0]['var'];
+                filter['>='][0]['var'] = 'value';
+                const encodedFilter = encodeURIComponent(
+                    JSON.stringify(filter),
                 );
                 urls.push(
-                    `/api/metricvalues/?metric_type_id=${metricId}&json_filter=${encodedJsonFilter}`,
+                    `/api/metricvalues/?metric_type_id=${metricId}&json_filter=${encodedFilter}`,
                 );
-            }
+            });
             const responses = await Promise.all(
                 urls.map(url => getRequest(url)),
             );
@@ -126,7 +139,7 @@ export const Planning: FC = () => {
             );
 
             if (newOrgUnitSelection && newOrgUnitSelection.length > 0) {
-                setSelectedOrgUnits(newOrgUnitSelection);
+                setSelectionOnMap(newOrgUnitSelection);
                 openSnackBar(
                     succesfullSnackBar(
                         'selectOrgUnitsSuccess',
@@ -150,8 +163,8 @@ export const Planning: FC = () => {
         [formatMessage, orgUnits],
     );
 
-    const handleClearOrgUnitSelection = useCallback(() => {
-        setSelectedOrgUnits([]);
+    const handleClearSelectionOnMap = useCallback(() => {
+        setSelectionOnMap([]);
     }, []);
 
     const handleExpandAccordion = panel => (event, isExpanded) => {
@@ -160,15 +173,6 @@ export const Planning: FC = () => {
     return (
         <>
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
-            <LayersDrawer
-                toggleDrawer={toggleDrawer}
-                isDrawerOpen={isDrawerOpen}
-                displayedMetric={displayedMetric}
-                selectedOrgUnits={selectedOrgUnits}
-                onDisplayMetricOnMap={handleDisplayMetricOnMap}
-                onSelectOrgUnits={handleSelectOrgUnits}
-                onClearOrgUnitSelection={handleClearOrgUnitSelection}
-            />
             <PageContainer>
                 {scenario && <ScenarioTopBar scenario={scenario} />}
                 <Grid container spacing={1}>
@@ -178,15 +182,20 @@ export const Planning: FC = () => {
                                 {isLoading && <p>Loading data...</p>}
                                 <Map
                                     orgUnits={orgUnits}
-                                    toggleDrawer={toggleDrawer}
                                     displayedMetric={displayedMetric}
                                     displayedMetricValues={
                                         displayedMetricValues
                                     }
+                                    selectedOrgUnits={selectionOnMap}
+                                    onApplyFilters={handleApplyFilters}
+                                    onClearSelection={handleClearSelectionOnMap}
+                                    onChangeMetricLayer={
+                                        handleDisplayMetricOnMap
+                                    }
                                     onAddRemoveOrgUnitToMix={
                                         handleAddRemoveOrgUnitToMix
                                     }
-                                    selectedOrgUnits={selectedOrgUnits}
+                                    onAddToMix={handleAddMapOrgUnitsToMix}
                                 />
                             </PaperFullHeight>
                         </PaperContainer>
@@ -208,7 +217,7 @@ export const Planning: FC = () => {
                         <PaperContainer>
                             <InterventionsMix
                                 scenarioId={scenario?.id}
-                                selectedOrgUnits={selectedOrgUnits}
+                                selectedOrgUnits={selectionOnInterventionMix}
                             />
                         </PaperContainer>
                     </Grid>

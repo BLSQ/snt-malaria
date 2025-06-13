@@ -30,12 +30,31 @@ export type ScaleDomainRange = {
 };
 
 // Example MetricsFilter:
-// {
-//   Incidence: { "171": "400" },
-//   Prevalence: { "175": "35" }
-// }
-export type MetricsFilters = {
-    [category: string]: {
-        [metricId: string]: string;
-    };
+// [
+//     {
+//         ">=": [
+//             { "var": "2" },
+//             400
+//         ]
+//     },
+//     {
+//         ">=": [
+//             { "var": "6" },
+//             400
+//         ]
+//     }
+// ]
+// TODO: Simplified type, could be more complex I suppose
+export type MetricsFilters = { and: Condition[] } | { or: Condition[] };
+
+type Condition = { '>=': [MetricTypeRef | number, number] };
+// TODO: For now only greater or eq than, but later maybe:
+//   | { "<=": [MetricTypeRef | number, number] }
+//   | { "==": [MetricTypeRef | number, number | string | boolean] }
+//   | { "!=": [MetricTypeRef | number, number | string | boolean] }
+//   | { ">": [MetricTypeRef | number, number] }
+//   | { "<": [MetricTypeRef | number, number] }
+
+type MetricTypeRef = {
+    var: string;
 };
