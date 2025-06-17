@@ -7,6 +7,7 @@ import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
 import { FilterQueryBuilder } from './maps/FilterQueryBuilder';
+import { MetricsFilters } from '../types/metrics';
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
@@ -45,7 +46,7 @@ const styles: SxStyles = {
 type Props = {
     selectionCount: number;
     onAddToMix: () => void;
-    onApplyFilters: () => void;
+    onApplyFilters: (filters: MetricsFilters) => void;
     onClearSelection: () => void;
 };
 
@@ -61,6 +62,13 @@ export const MapSelectionWidget: FC<Props> = ({
         useState<boolean>(false);
     const handleOpenQueryBuilderModal = () => setQueryBuilderIsOpen(true);
 
+    const onSubmitFilters = (value: MetricsFilters) => {
+        if (!value) {
+            return;
+        }
+        onApplyFilters(value);
+        setQueryBuilderIsOpen(false);
+    };
     return (
         <Box sx={styles.mainBox}>
             <Button
@@ -92,7 +100,7 @@ export const MapSelectionWidget: FC<Props> = ({
             <FilterQueryBuilder
                 isOpen={queryBuilderIsOpen}
                 onClose={() => setQueryBuilderIsOpen(false)}
-                onSubmit={onApplyFilters}
+                onSubmit={onSubmitFilters}
             />
         </Box>
     );
