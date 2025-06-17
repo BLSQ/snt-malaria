@@ -23,6 +23,7 @@ import { SideMapList } from './components/maps/SideMapList';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
 import {
     useGetMetricCategories,
+    useGetMetricOrgUnits,
     useGetMetricValues,
 } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
@@ -41,6 +42,7 @@ export const Planning: FC = () => {
     const { data: orgUnits } = useGetOrgUnits();
     const { formatMessage } = useSafeIntl();
 
+    const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
     const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
     const [selectionOnInterventionMix, setSelectionOnInterventionMix] =
         useState<OrgUnit[]>([]);
@@ -101,73 +103,39 @@ export const Planning: FC = () => {
         [],
     );
 
-    // Automatic OU add based on filters.
-    // To move fast for the demo, what this actually does is filter on each filter
-    // individually (parallelized in a `Promise.all`) and then takes the intersection
-    // of all these filters to get the final result.
-    const handleApplyFilters = useCallback(
-        // TODO: This is a more or less functional hack to make the modal work with the
-        // `and` rules. This needs to be properly implemented in the backend
-        // to be able to process more complex rules. Ideally, only 1 API call
-        // would be needed instead of this intersection way of doing things.
-        async (filters: MetricsFilters) => {
-            const urls: string[] = [];
-            const andFilters = filters['and'];
-            andFilters.forEach(filter => {
-                // force into old format
-                const metricId = filter['>='][0]['var'];
-                filter['>='][0]['var'] = 'value';
-                const encodedFilter = encodeURIComponent(
-                    JSON.stringify(filter),
-                );
-                urls.push(
-                    `/api/metricvalues/?metric_type_id=${metricId}&json_filter=${encodedFilter}`,
-                );
-            });
-            const responses = await Promise.all(
-                urls.map(url => getRequest(url)),
-            );
-            const ouArrs = responses.map(values =>
-                values.map((v: MetricValue) => v.org_unit),
-            );
+    const handleApplyFilters = filters => {
+        setMetricFilters(filters);
+    };
 
-            const orgUnitIdsToSelect = ouArrs.reduce(
-                (intersection, currentArray) => {
-                    return intersection.filter(element =>
-                        currentArray.includes(element),
-                    );
+    useGetMetricOrgUnits(metricFilters, metricOrgUnitIds => {
+        const newOrgUnitSelection = orgUnits?.filter(orgUnit =>
+            metricOrgUnitIds.includes(orgUnit.id),
+        );
+
+        console.log('New org unit selection:', newOrgUnitSelection);
+
+        if (newOrgUnitSelection && newOrgUnitSelection.length > 0) {
+            setSelectionOnMap(newOrgUnitSelection);
+            openSnackBar(
+                succesfullSnackBar(
+                    'selectOrgUnitsSuccess',
+                    formatMessage(MESSAGES.selectOrgUnitsSuccess, {
+                        amount: newOrgUnitSelection.length,
+                    }),
+                ),
+            );
+        } else {
+            openSnackBar({
+                messageKey: 'warning',
+                id: 'noOrgUnitsSelected',
+                messageObject: MESSAGES.noOrgUnitsSelected,
+                options: {
+                    variant: 'warning',
+                    persist: false,
                 },
-            );
-
-            // Find the org units that have IDs in orgUnitIdsToSelect
-            const newOrgUnitSelection = orgUnits?.filter(orgUnit =>
-                orgUnitIdsToSelect.includes(orgUnit.id),
-            );
-
-            if (newOrgUnitSelection && newOrgUnitSelection.length > 0) {
-                setSelectionOnMap(newOrgUnitSelection);
-                openSnackBar(
-                    succesfullSnackBar(
-                        'selectOrgUnitsSuccess',
-                        formatMessage(MESSAGES.selectOrgUnitsSuccess, {
-                            amount: newOrgUnitSelection.length,
-                        }),
-                    ),
-                );
-            } else {
-                openSnackBar({
-                    messageKey: 'warning',
-                    id: 'noOrgUnitsSelected',
-                    messageObject: MESSAGES.noOrgUnitsSelected,
-                    options: {
-                        variant: 'warning',
-                        persist: false,
-                    },
-                });
-            }
-        },
-        [formatMessage, orgUnits],
-    );
+            });
+        }
+    });
 
     const handleClearSelectionOnMap = useCallback(() => {
         setSelectionOnMap([]);
