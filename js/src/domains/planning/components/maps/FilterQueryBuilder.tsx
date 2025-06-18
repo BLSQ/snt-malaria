@@ -3,6 +3,7 @@ import { Box, Button } from '@mui/material';
 import {
     JsonLogicTree,
     JsonLogicResult,
+    Settings,
 } from '@react-awesome-query-builder/mui';
 
 import { QueryBuilder, SimpleModal, useSafeIntl } from 'bluesquare-components';
@@ -56,6 +57,11 @@ export const FilterQueryBuilder: FC<Props> = ({
         return result;
     }, [metricCategories]);
 
+    const settings = {
+        maxNesting: 2,
+        showNot: false,
+    } as Settings;
+
     const handleChangeCurrentFilter = (result: JsonLogicResult) => {
         setCurrentFilter(result?.logic);
     };
@@ -88,6 +94,7 @@ export const FilterQueryBuilder: FC<Props> = ({
                 <QueryBuilder
                     logic={currentFilter}
                     fields={fields}
+                    settings={settings}
                     onChange={handleChangeCurrentFilter}
                 />
             </Box>
