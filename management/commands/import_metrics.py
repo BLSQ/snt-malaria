@@ -51,10 +51,16 @@ class Command(BaseCommand):
             with transaction.atomic():
                 for row in csvreader:
                     try:
-                        # Get the OrgUnit by source_ref using ADM2_ID
-                        org_unit = OrgUnit.objects.get(source_ref=row["ADM2_ID"])
-                    except OrgUnit.DoesNotExist:
-                        print(f"OrgUnit not found for source_ref: {row['ADM2_ID']}")
+                        # Get the OrgUnit by source_ref using ADM2_ID, filtering by version and data source
+                        org_unit = OrgUnit.objects.filter(
+                            source_ref=row["ADM2_ID"],
+                            version__data_source__projects__account_id=BURKINA_ACCOUNT_ID
+                        ).first()
+                        if not org_unit:
+                            print(f"OrgUnit not found for source_ref: {row['ADM2_ID']} in account {BURKINA_ACCOUNT_ID}")
+                            continue
+                    except Exception as e:
+                        print(f"Error finding OrgUnit for source_ref {row['ADM2_ID']}: {str(e)}")
                         continue
 
                     # Create MetricValue for each metric type
