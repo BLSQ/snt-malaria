@@ -156,10 +156,7 @@ export const InterventionsMix: FC<Props> = ({
         [],
     );
 
-    const { data: interventionMixes } = useGetInterventionMixes(
-        scenarioId,
-        selectedOrgUnits.map(orgUnit => orgUnit.id).join(','),
-    );
+    const { data: interventionMixes } = useGetInterventionMixes(scenarioId);
 
     return (
         <Box sx={styles.mainMixBox}>
