@@ -52,7 +52,13 @@ export const InterventionsPlan: FC<Props> = ({
                         }}
                     >
                         <Divider sx={{ width: '100%', mt: -1 }} />
-                        <TabPanel value="list" sx={{ mt: '-20px' }}>
+                        <TabPanel
+                            value="list"
+                            sx={{
+                                height: '100%',
+                                padding: 1,
+                            }}
+                        >
                             <InterventionsPlanTable
                                 scenarioId={scenarioId}
                                 isLoadingPlans={isLoadingPlans}
