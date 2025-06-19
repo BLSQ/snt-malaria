@@ -87,6 +87,7 @@ export const InterventionMixSummary: FC<Props> = ({
             });
 
             queryClient.invalidateQueries(['interventionPlans']);
+            queryClient.refetchQueries(['interventionPlans', scenarioId]);
         }
         formReset();
     };
