@@ -212,7 +212,13 @@ export const InterventionsMix: FC<Props> = ({
                                     setMixName={setMixName}
                                 />
                             ) : (
-                                <Box>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        height: '100%',
+                                    }}
+                                >
                                     <Grid container spacing={2} px={2}>
                                         <Grid
                                             item
@@ -252,34 +258,40 @@ export const InterventionsMix: FC<Props> = ({
                                             </Box>
                                         </Grid>
                                     </Grid>
-                                    {interventionMixes?.map(mix => (
-                                        <Box
-                                            key={mix.name}
-                                            onClick={() =>
-                                                setSelectedMix(mix.id)
-                                            }
-                                            sx={styles.mixStyle(
-                                                mix.id,
-                                                selectedMix,
-                                            )}
-                                        >
-                                            <Typography
-                                                variant="subtitle2"
-                                                sx={styles.mixName}
+                                    <Grid
+                                        sx={{ flexGrow: 1, overflow: 'auto' }}
+                                    >
+                                        {interventionMixes?.map(mix => (
+                                            <Box
+                                                key={mix.name}
+                                                onClick={() =>
+                                                    setSelectedMix(mix.id)
+                                                }
+                                                sx={styles.mixStyle(
+                                                    mix.id,
+                                                    selectedMix,
+                                                )}
                                             >
-                                                {mix.name}
-                                            </Typography>
-                                            <Typography
-                                                sx={styles.interventionsWrapper}
-                                            >
-                                                <InterventionList
-                                                    interventions={
-                                                        mix.interventions
+                                                <Typography
+                                                    variant="subtitle2"
+                                                    sx={styles.mixName}
+                                                >
+                                                    {mix.name}
+                                                </Typography>
+                                                <Typography
+                                                    sx={
+                                                        styles.interventionsWrapper
                                                     }
-                                                />
-                                            </Typography>
-                                        </Box>
-                                    ))}
+                                                >
+                                                    <InterventionList
+                                                        interventions={
+                                                            mix.interventions
+                                                        }
+                                                    />
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                    </Grid>
                                 </Box>
                             )}
                         </Grid>
