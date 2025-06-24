@@ -5,8 +5,7 @@ import {
     makeFullModal,
     useSafeIntl,
 } from 'bluesquare-components';
-import { useQueryClient } from 'react-query';
-import { UseDeleteIntervenetionMix } from '../../hooks/UseDeleteIntervenetionMix';
+import { UseDeleteIntervenetionMix } from '../../hooks/UseDeleteInterventionMix';
 import { UseUpdateInterventionMix } from '../../hooks/UseUpdateInterventionMix';
 import { MESSAGES } from '../../messages';
 import { InterventionCategories } from '../interventionMix/InterventionCategories';
@@ -57,18 +56,12 @@ const EditInterventionMixModal: FunctionComponent<Props> = ({
                 .filter(value => value !== null),
         [selectedInterventions],
     );
-    const queryClient = useQueryClient();
     const handleInterventionMixUpdate = async () => {
         await updateInterventionMix({
             id: mix.id,
             name: mixName,
             intervention_ids: selectedInterventionValues,
         });
-
-        queryClient.invalidateQueries([
-            'interventionPlans',
-            'interventionMixes',
-        ]);
         formReset();
     };
 
@@ -79,11 +72,6 @@ const EditInterventionMixModal: FunctionComponent<Props> = ({
 
     const handleInterventionMixDelete = async () => {
         await deleteInterventionMix(mix.id);
-
-        queryClient.invalidateQueries([
-            'interventionPlans',
-            'interventionMixes',
-        ]);
     };
     return (
         <>
