@@ -23,6 +23,7 @@ export const InterventionsPlan: FC<Props> = ({
     mixName,
 }) => {
     const [tabValue, setTabValue] = useState<string>('list');
+
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionsPlan(scenarioId);
 
@@ -31,13 +32,12 @@ export const InterventionsPlan: FC<Props> = ({
     const onDeleteOrgUnitFromPlan = (
         orgUnitId: number,
         interventionMixId: number,
-    ) => {
+    ) =>
         removeOrgUnitFromInterventionPlan({
             scenarioId,
             interventionMixId,
             orgUnitId,
         });
-    };
 
     return (
         <Box

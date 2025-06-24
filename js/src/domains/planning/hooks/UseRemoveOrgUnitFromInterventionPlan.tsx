@@ -8,4 +8,5 @@ export const UseRemoveOrgUnitFromInterventionPlan = (): UseMutationResult =>
             deleteRequest(
                 `/api/snt_malaria/interventionassignments/?scenario_id=${scenarioId}&intervention_mix_id=${interventionMixId}&org_unit_id=${orgUnitId}`,
             ),
+        invalidateQueryKey: ['interventionPlans'],
     });

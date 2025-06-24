@@ -1,6 +1,6 @@
+import { UseMutationResult } from 'react-query';
 import { deleteRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { UseMutationResult } from 'react-query';
 
 const deleteInterventionMix = id =>
     deleteRequest(`/api/snt_malaria/interventionmixes/${id}/`);
