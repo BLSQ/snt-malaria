@@ -2,6 +2,7 @@ import React, { FC, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
+import { UseRemoveOrgUnitFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
 import { InterventionPlanSummary } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
 import { InterventionsPlanTable } from './InterventionsPlanTable';
@@ -24,6 +25,19 @@ export const InterventionsPlan: FC<Props> = ({
     const [tabValue, setTabValue] = useState<string>('list');
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionsPlan(scenarioId);
+
+    const { mutateAsync: removeOrgUnitFromInterventionPlan } =
+        UseRemoveOrgUnitFromInterventionPlan();
+    const onDeleteOrgUnitFromPlan = (
+        orgUnitId: number,
+        interventionMixId: number,
+    ) => {
+        removeOrgUnitFromInterventionPlan({
+            scenarioId,
+            interventionMixId,
+            orgUnitId,
+        });
+    };
 
     return (
         <Box
@@ -69,6 +83,7 @@ export const InterventionsPlan: FC<Props> = ({
                                 selectedInterventions={selectedInterventions}
                                 setMixName={setMixName}
                                 mixName={mixName}
+                                onRemoveOrgUnit={onDeleteOrgUnitFromPlan}
                             />
                         </TabPanel>
                         <TabPanel

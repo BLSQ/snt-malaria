@@ -2,13 +2,6 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, useTheme, Theme } from '@mui/material';
 import * as d3 from 'd3-scale';
 
-import { useGetLegend } from 'Iaso/components/LegendBuilder/Legend';
-import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
-import { GeoJson } from 'Iaso/components/maps/types';
-import tiles from 'Iaso/constants/mapTiles';
-import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { SxStyles } from 'Iaso/types/general';
-import { Bounds } from 'Iaso/utils/map/mapUtils';
 import L from 'leaflet';
 import {
     GeoJSON,
@@ -17,6 +10,13 @@ import {
     Tooltip,
     ZoomControl,
 } from 'react-leaflet';
+import { useGetLegend } from 'Iaso/components/LegendBuilder/Legend';
+import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
+import { GeoJson } from 'Iaso/components/maps/types';
+import tiles from 'Iaso/constants/mapTiles';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
+import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { MetricType, MetricValue } from '../types/metrics';
 import { MapLegend } from './MapLegend';
 import { MapOrgUnitDetails } from './MapOrgUnitDetails';
@@ -45,7 +45,7 @@ type Props = {
     onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
     onApplyFilters: () => void;
     onAddToMix: () => void;
-    onChangeMetricLayer: (MetricType) => void;
+    onChangeMetricLayer: (metricType) => void;
     onClearSelection: () => void;
 };
 
@@ -90,7 +90,7 @@ export const Map: FC<Props> = ({
             }
             return getLegend(value);
         },
-        [displayedMetric, displayedMetricValues, getLegend],
+        [displayedMetric, getLegend],
     );
     const getSelectedMetricValue = useCallback(
         (orgUnitId: number) => {
