@@ -1,11 +1,13 @@
 from collections import defaultdict
 from decimal import Decimal
 
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from iaso.api.common import DeletionFilterBackend
 from iaso.models.metric import MetricType, MetricValue
 from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.api.interventionassignments.filters import (
@@ -21,8 +23,8 @@ from .serializers import (
 
 
 class InterventionAssignmentViewSet(viewsets.ModelViewSet):
-    http_method_names = ["get", "post"]
-    filter_backends = [DjangoFilterBackend]
+    http_method_names = ["get", "post", "delete"]
+    filter_backends = [DjangoFilterBackend, DeletionFilterBackend]
     filterset_class = InterventionAssignmentListFilter
 
     def get_queryset(self):
@@ -77,6 +79,38 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             {"message": "intervention assignments created successfully."},
             status=status.HTTP_201_CREATED,
         )
+
+    def delete(self, request, *args, **kwargs):
+        if (
+            "scenario_id" not in request.query_params
+            and "intervention_mix_id" not in request.query_params
+            and "org_unit_id" not in request.query_params
+        ):
+            return Response(
+                {
+                    "message": "Missing one or many of required query params: scenario_id, intervention_mix_id, org_unit_id"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        scenario_id = request.query_params["scenario_id"]
+        intervention_mix_id = request.query_params["intervention_mix_id"]
+        org_unit_id = request.query_params["org_unit_id"]
+
+        # Trying to find assignment, if none found, a 404 is thrown. If many are found, another exception will be thrown
+        assignment = get_object_or_404(
+            InterventionAssignment,
+            scenario_id=scenario_id,
+            intervention_mix=intervention_mix_id,
+            org_unit_id=org_unit_id,
+        )
+
+        print(assignment.id)
+
+        assignment.delete()
+
+        return Response(status=status.HTTP_200_OK)
+        # log_modification(assignments, original, INSTANCE_API, user=request.user)
 
     def get_filtered_queryset(self):
         return self.filter_queryset(self.get_queryset()).prefetch_related("org_unit")
