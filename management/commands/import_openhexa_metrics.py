@@ -33,17 +33,12 @@ class Command(BaseCommand):
             type=str,
             help="Directory to download files to (required)",
         )
-        parser.add_argument(
-            "--format", choices=["json", "table"], default="json", help="Output format for metadata (default: json)"
-        )
         parser.add_argument("--output", type=str, help="Output file path for metadata (optional)")
 
     def handle(self, *args, **options):
         workspace_slug = options["workspace_slug"]
         dataset_slug = options["dataset_slug"]
         download_dir = options["download_dir"]
-        output_format = options["format"]
-        output_file = options.get("output")
 
         if not workspace_slug:
             raise CommandError("--workspace_slug is required. Specify the workspace slug containing the dataset.")
@@ -63,61 +58,42 @@ class Command(BaseCommand):
         if not token:
             raise CommandError("OPENHEXA_TOKEN environment variable is required")
 
-        try:
-            # Initialize OpenHEXA client
-            hexa = OpenHEXA(server_url, token=token)
-            self.stdout.write(f"Connecting to {server_url} with token authentication...")
+        # Initialize OpenHEXA client
+        hexa = OpenHEXA(server_url, token=token)
+        self.stdout.write(f"Connecting to {server_url} with token authentication...")
 
-            # List available datasets for easy debugging
-            self.stdout.write(f'Checking available datasets in workspace "{workspace_slug}"...')
-            datasets = self._list_workspace_datasets(hexa, workspace_slug)
-            if datasets:
-                self.stdout.write(f"Available datasets ({len(datasets)}):")
-                for dataset in datasets:
-                    self.stdout.write(f"  - {dataset['dataset']['slug']} ({dataset['dataset']['name']})")
-            else:
-                self.stdout.write("No datasets found in this workspace (or insufficient permissions to list).")
+        # List available datasets for easy debugging
+        self.stdout.write(f'Checking available datasets in workspace "{workspace_slug}"...')
+        datasets = self._list_workspace_datasets(hexa, workspace_slug)
+        if datasets:
+            self.stdout.write(f"Available datasets ({len(datasets)}):")
+            for dataset in datasets:
+                self.stdout.write(f"  - {dataset['dataset']['slug']} ({dataset['dataset']['name']})")
+        else:
+            self.stdout.write("No datasets found in this workspace (or insufficient permissions to list).")
 
-            self.stdout.write(f'Fetching dataset "{dataset_slug}" from workspace "{workspace_slug}"...')
-            dataset_link = self._get_dataset_link(hexa, workspace_slug, dataset_slug)
+        self.stdout.write(f'Fetching dataset "{dataset_slug}" from workspace "{workspace_slug}"...')
+        dataset_link = self._get_dataset_link(hexa, workspace_slug, dataset_slug)
 
-            if not dataset_link:
-                raise CommandError(f'Dataset "{dataset_slug}" not found in workspace "{workspace_slug}".')
+        if not dataset_link:
+            raise CommandError(f'Dataset "{dataset_slug}" not found in workspace "{workspace_slug}".')
 
-            dataset = dataset_link["dataset"]
+        dataset = dataset_link["dataset"]
 
-            dataset_version = self._get_latest_version(hexa, dataset["id"])
-            if not dataset_version:
-                raise CommandError(f'No versions found for dataset "{dataset_slug}"')
+        dataset_version = self._get_latest_version(hexa, dataset["id"])
+        if not dataset_version:
+            raise CommandError(f'No versions found for dataset "{dataset_slug}"')
 
-            self.stdout.write(f"Using version: {dataset_version['name']}")
+        self.stdout.write(f"Using version: {dataset_version['name']}")
 
-            # Get files for the version
-            files = self._get_version_files(hexa, dataset_version["id"])
+        # Get files for the version
+        files = self._get_version_files(hexa, dataset_version["id"])
 
-            # Download files
-            self._download_files(hexa, files, download_dir, workspace_slug, dataset_slug, dataset_version["name"])
+        # Download files
+        self._download_files(hexa, files, download_dir)
 
-            # Prepare metadata output
-            metadata = {"dataset": dataset, "version": dataset_version, "files": files}
-
-            # Format and output metadata
-            if output_format == "json":
-                output_data = json.dumps(metadata, indent=2)
-            else:  # table format
-                output_data = self._format_as_table(metadata)
-
-            if output_file:
-                with open(output_file, "w") as f:
-                    f.write(output_data)
-                self.stdout.write(self.style.SUCCESS(f"Dataset metadata saved to {output_file}"))
-            else:
-                self.stdout.write(output_data)
-
-        except NotFound as e:
-            raise CommandError(str(e))
-        except Exception as e:
-            raise CommandError(f"Error fetching dataset: {str(e)}")
+        metadata = {"dataset": dataset, "version": dataset_version, "files": files}
+        self.stdout.write(self._format_as_table(metadata))
 
     def _list_workspace_datasets(self, hexa, workspace_slug):
         """List all datasets in a workspace."""
@@ -234,15 +210,13 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f"Could not fetch files: {str(e)}"))
             return []
 
-    def _download_files(self, hexa, files, download_dir, workspace_slug, dataset_slug, version_name):
+    def _download_files(self, hexa, files, download_dir):
         """Download all files in the dataset version."""
         if not files:
             self.stdout.write(self.style.WARNING("No files to download"))
             return
 
-        # Create download directory structure
-        download_path = Path(download_dir) / workspace_slug / dataset_slug / version_name
-        download_path.mkdir(parents=True, exist_ok=True)
+        download_path = Path(download_dir)
 
         self.stdout.write(f"Downloading {len(files)} files to {download_path}...")
 
@@ -281,9 +255,9 @@ class Command(BaseCommand):
             response = result.get("prepareVersionFileDownload")
             if response and response.get("success"):
                 return response.get("downloadUrl")
-            else:
-                self.stdout.write(self.style.WARNING(f"Download preparation failed: {response.get('errors', [])}"))
-                return None
+
+            self.stdout.write(self.style.WARNING(f"Download preparation failed: {response.get('errors', [])}"))
+            return None
         except Exception as e:
             self.stdout.write(self.style.WARNING(f"Error getting download URL: {str(e)}"))
             return None
@@ -319,7 +293,7 @@ class Command(BaseCommand):
             f"Name:        {version.get('name', 'N/A')}",
             f"Changelog:   {version.get('changelog', 'N/A')}",
             f"Created:     {version.get('createdAt', 'N/A')}",
-            f"Created By:  {version.get('createdBy', {}).get('displayName', 'N/A')}",
+            f"Created By:  {(version.get('createdBy') or {}).get('displayName', 'N/A')}",
             "",
             f"Files ({len(files)})",
             "=" * 50,
