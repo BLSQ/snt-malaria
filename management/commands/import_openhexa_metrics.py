@@ -11,19 +11,22 @@ Environment variables required:
     OPENHEXA_TOKEN - API token (optional if using username/password)
 """
 
+import csv
 import json
 import os
-
 from pathlib import Path
 
 import requests
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 from openhexa.toolbox.hexa import NotFound, OpenHEXA
+
+from iaso.models import MetricType, MetricValue, OrgUnit
 
 
 class Command(BaseCommand):
-    help = "Fetch a specific dataset from an OpenHEXA workspace"
+    help = "Fetch a dataset from OpenHEXA workspace and optionally import metrics data"
 
     def add_arguments(self, parser):
         parser.add_argument("--workspace_slug", type=str, help="The slug of the workspace containing the dataset")
@@ -33,12 +36,18 @@ class Command(BaseCommand):
             type=str,
             help="Directory to download files to (required)",
         )
+        parser.add_argument("--import", action="store_true", help="Import metrics data after downloading files")
+        parser.add_argument(
+            "--account-id", type=int, help="Account ID for importing metrics (required when using --import)"
+        )
         parser.add_argument("--output", type=str, help="Output file path for metadata (optional)")
 
     def handle(self, *args, **options):
         workspace_slug = options["workspace_slug"]
         dataset_slug = options["dataset_slug"]
         download_dir = options["download_dir"]
+        should_import = options["import"]
+        account_id = options["account_id"]
 
         if not workspace_slug:
             raise CommandError("--workspace_slug is required. Specify the workspace slug containing the dataset.")
@@ -48,6 +57,11 @@ class Command(BaseCommand):
 
         if not download_dir:
             raise CommandError("--download-dir is required. Specify the directory to download files to.")
+
+        if should_import and not account_id:
+            raise CommandError(
+                "--account-id is required when using --import. Specify the account ID for importing metrics."
+            )
 
         server_url = os.getenv("OPENHEXA_URL")
         token = os.getenv("OPENHEXA_TOKEN")
@@ -91,6 +105,11 @@ class Command(BaseCommand):
 
         # Download files
         self._download_files(hexa, files, download_dir)
+
+        # Import metrics if requested
+        if should_import:
+            self.stdout.write("Starting metrics import...")
+            self._import_metrics(download_dir, account_id)
 
         metadata = {"dataset": dataset, "version": dataset_version, "files": files}
         self.stdout.write(self._format_as_table(metadata))
@@ -312,3 +331,167 @@ class Command(BaseCommand):
             )
 
         return "\n".join(lines)
+
+    def _find_csv_files(self, download_dir):
+        """Find metadata and dataset CSV files in the download directory."""
+        download_path = Path(download_dir)
+
+        # Find metadata file (*_metadata.csv)
+        metadata_files = list(download_path.glob("*_metadata.csv"))
+        if not metadata_files:
+            raise CommandError("No metadata CSV file (*_metadata.csv) found in download directory")
+        if len(metadata_files) > 1:
+            raise CommandError(f"Multiple metadata CSV files found: {[f.name for f in metadata_files]}")
+
+        # Find dataset file (*_dataset.csv)
+        dataset_files = list(download_path.glob("*_dataset.csv"))
+        if not dataset_files:
+            raise CommandError("No dataset CSV file (*_dataset.csv) found in download directory")
+        if len(dataset_files) > 1:
+            raise CommandError(f"Multiple dataset CSV files found: {[f.name for f in dataset_files]}")
+
+        return metadata_files[0], dataset_files[0]
+
+    def _import_metrics(self, download_dir, account_id):
+        """Import metrics from downloaded CSV files."""
+        try:
+            # Find the CSV files
+            metadata_file, dataset_file = self._find_csv_files(download_dir)
+
+            self.stdout.write(f"Using metadata file: {metadata_file.name}")
+            self.stdout.write(f"Using dataset file: {dataset_file.name}")
+
+            # Import the metrics
+            self._process_metrics_import(metadata_file, dataset_file, account_id)
+
+        except Exception as e:
+            raise CommandError(f"Failed to import metrics: {str(e)}")
+
+    def _process_metrics_import(self, metadata_file, dataset_file, account_id):
+        """Process the actual metrics import."""
+        # Validate CSV files first
+        self._validate_csv_files(metadata_file, dataset_file)
+
+        self.stdout.write("Clearing existing metrics...")
+        MetricValue.objects.filter(metric_type__account_id=account_id).delete()
+        MetricType.objects.filter(account_id=account_id).delete()
+
+        self.stdout.write("Creating MetricTypes from metadata file...")
+        metric_types = {}
+
+        with open(metadata_file, newline="", encoding="utf-8") as metafile:
+            metareader = csv.DictReader(metafile)
+            for row in metareader:
+                metric_type = MetricType.objects.create(
+                    account_id=account_id,
+                    name=row["label"],
+                    code=row["column_name"],
+                    description=row["description"],
+                    source=row["source"],
+                    units=row["units"],
+                    comments=row["comments"],
+                    category=row["category"],
+                    unit_symbol=row["unit_symbol"],
+                )
+                self.stdout.write(self.style.SUCCESS(f"Created metric: {metric_type.name}"))
+                metric_types[metric_type.code] = metric_type
+
+        self.stdout.write("Reading values from dataset file...")
+        with open(dataset_file, newline="", encoding="utf-8") as csvfile:
+            csvreader = csv.DictReader(csvfile)
+
+            try:
+                with transaction.atomic():
+                    row_count = 0
+                    value_count = 0
+                    for row in csvreader:
+                        row_count += 1
+                        try:
+                            # Get the OrgUnit by source_ref using ADM2_ID
+                            org_unit = OrgUnit.objects.get(source_ref=row["ADM2_ID"])
+                        except OrgUnit.DoesNotExist:
+                            self.stdout.write(
+                                self.style.WARNING(
+                                    f"Row {row_count}: OrgUnit not found for source_ref: {row['ADM2_ID']}"
+                                )
+                            )
+                            continue
+
+                        # Create MetricValue for each metric type
+                        for column, metric_type in metric_types.items():
+                            if column not in row:
+                                continue
+
+                            try:
+                                # Parse the value as a float
+                                value = float(row[column])
+
+                                # Some percentages are expressed as between 0 and 1,
+                                # adapt them to be also between 0 and 100.
+                                if metric_type.code in ["PFPR_2TO10_MAP"] or metric_type.category in [
+                                    "Bednet coverage",
+                                    "DHS DTP3 Vaccine",
+                                ]:
+                                    value = int(value * 100)
+                                else:
+                                    # Round the value to max 3 behind the comma
+                                    value = round(value, 3)
+
+                            except ValueError:
+                                self.stdout.write(
+                                    self.style.WARNING(f"Row {row_count}: Invalid value for {column}: {row[column]}")
+                                )
+                                continue
+
+                            # Create the MetricValue
+                            MetricValue.objects.create(
+                                metric_type=metric_type,
+                                org_unit=org_unit,
+                                value=value,
+                            )
+                            value_count += 1
+
+                    self.stdout.write(f"Processed {row_count} rows, created {value_count} metric values")
+
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Error during import, rolling back transaction: {str(e)}"))
+                raise
+
+        self.stdout.write("Adding threshold scales...")
+        # Import legend functionality here
+        from .support.legend import get_legend_config, get_legend_type
+
+        for metric_type in MetricType.objects.all():
+            metric_type.legend_config = get_legend_config(metric_type)
+            metric_type.legend_type = get_legend_type(metric_type)
+            metric_type.save()
+
+        self.stdout.write(self.style.SUCCESS("Metrics import completed successfully!"))
+
+    def _validate_csv_files(self, metadata_file, dataset_file):
+        """Validate that CSV files have the expected structure."""
+        # Validate metadata file
+        required_metadata_columns = [
+            "label",
+            "column_name",
+            "description",
+            "source",
+            "units",
+            "comments",
+            "category",
+            "unit_symbol",
+        ]
+
+        with open(metadata_file, newline="", encoding="utf-8") as metafile:
+            metareader = csv.DictReader(metafile)
+            missing_columns = set(required_metadata_columns) - set(metareader.fieldnames)
+            if missing_columns:
+                raise CommandError(f"Metadata file missing required columns: {', '.join(missing_columns)}")
+
+        # Validate dataset file has ADM2_ID column
+        with open(dataset_file, newline="", encoding="utf-8") as csvfile:
+            csvreader = csv.DictReader(csvfile)
+            if "ADM2_ID" not in csvreader.fieldnames:
+                raise CommandError("Dataset file missing required column: ADM2_ID")
+
+        self.stdout.write("CSV file validation passed")
