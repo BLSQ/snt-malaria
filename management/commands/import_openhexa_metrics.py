@@ -28,12 +28,10 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--workspace_slug", type=str, help="The slug of the workspace containing the dataset")
         parser.add_argument("--dataset_slug", type=str, help="The slug of the dataset to fetch")
-        parser.add_argument("--download", action="store_true", help="Download dataset files to local directory")
         parser.add_argument(
             "--download-dir",
             type=str,
-            default="./datasets",
-            help="Directory to download files to (default: ./datasets)",
+            help="Directory to download files to (required)",
         )
         parser.add_argument(
             "--format", choices=["json", "table"], default="json", help="Output format for metadata (default: json)"
@@ -43,42 +41,48 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         workspace_slug = options["workspace_slug"]
         dataset_slug = options["dataset_slug"]
-        should_download = options["download"]
         download_dir = options["download_dir"]
         output_format = options["format"]
         output_file = options.get("output")
 
-        # Get credentials from environment
+        if not workspace_slug:
+            raise CommandError("--workspace_slug is required. Specify the workspace slug containing the dataset.")
+
+        if not dataset_slug:
+            raise CommandError("--dataset_slug is required. Specify the slug of the dataset to fetch.")
+
+        if not download_dir:
+            raise CommandError("--download-dir is required. Specify the directory to download files to.")
+
         server_url = os.getenv("OPENHEXA_URL")
-        username = os.getenv("OPENHEXA_USERNAME")
-        password = os.getenv("OPENHEXA_PASSWORD")
         token = os.getenv("OPENHEXA_TOKEN")
 
         if not server_url:
             raise CommandError("OPENHEXA_SERVER_URL environment variable is required")
 
-        if not token and not (username and password):
-            raise CommandError(
-                "Either OPENHEXA_TOKEN or both OPENHEXA_USERNAME and OPENHEXA_PASSWORD "
-                "environment variables are required"
-            )
+        if not token:
+            raise CommandError("OPENHEXA_TOKEN environment variable is required")
 
         try:
             # Initialize OpenHEXA client
-            if token:
-                hexa = OpenHEXA(server_url, token=token)
-                self.stdout.write(f"Connecting to {server_url} with token authentication...")
+            hexa = OpenHEXA(server_url, token=token)
+            self.stdout.write(f"Connecting to {server_url} with token authentication...")
+
+            # List available datasets for easy debugging
+            self.stdout.write(f'Checking available datasets in workspace "{workspace_slug}"...')
+            datasets = self._list_workspace_datasets(hexa, workspace_slug)
+            if datasets:
+                self.stdout.write(f"Available datasets ({len(datasets)}):")
+                for dataset in datasets:
+                    self.stdout.write(f"  - {dataset['dataset']['slug']} ({dataset['dataset']['name']})")
             else:
-                hexa = OpenHEXA(server_url, username=username, password=password)
-                self.stdout.write(f"Connecting to {server_url} with credentials...")
+                self.stdout.write("No datasets found in this workspace (or insufficient permissions to list).")
 
-            # Fetch the dataset link
             self.stdout.write(f'Fetching dataset "{dataset_slug}" from workspace "{workspace_slug}"...')
-
             dataset_link = self._get_dataset_link(hexa, workspace_slug, dataset_slug)
 
             if not dataset_link:
-                raise CommandError(f'Dataset "{dataset_slug}" not found in workspace "{workspace_slug}"')
+                raise CommandError(f'Dataset "{dataset_slug}" not found in workspace "{workspace_slug}".')
 
             dataset = dataset_link["dataset"]
 
@@ -91,9 +95,8 @@ class Command(BaseCommand):
             # Get files for the version
             files = self._get_version_files(hexa, dataset_version["id"])
 
-            # Download files if requested
-            if should_download:
-                self._download_files(hexa, files, download_dir, workspace_slug, dataset_slug, dataset_version["name"])
+            # Download files
+            self._download_files(hexa, files, download_dir, workspace_slug, dataset_slug, dataset_version["name"])
 
             # Prepare metadata output
             metadata = {"dataset": dataset, "version": dataset_version, "files": files}
@@ -115,6 +118,36 @@ class Command(BaseCommand):
             raise CommandError(str(e))
         except Exception as e:
             raise CommandError(f"Error fetching dataset: {str(e)}")
+
+    def _list_workspace_datasets(self, hexa, workspace_slug):
+        """List all datasets in a workspace."""
+        try:
+            result = hexa.query(
+                """
+                query getWorkspaceDatasets($slug: String!, $page: Int, $perPage: Int) {
+                    workspace(slug: $slug) {
+                        datasets(page: $page, perPage: $perPage) {
+                            items {
+                                id
+                                dataset {
+                                    id
+                                    slug
+                                    name
+                                }
+                            }
+                        }
+                    }
+                }
+                """,
+                {"slug": workspace_slug, "page": 1, "perPage": 100},
+            )
+            workspace = result.get("workspace")
+            if workspace and workspace.get("datasets"):
+                return workspace["datasets"]["items"]
+            return []
+        except Exception as e:
+            self.stdout.write(self.style.WARNING(f"Could not list datasets: {str(e)}"))
+            return []
 
     def _get_dataset_link(self, hexa, workspace_slug, dataset_slug):
         """Fetch dataset link by slug from the workspace."""
@@ -139,6 +172,7 @@ class Command(BaseCommand):
             )
             return result.get("datasetLinkBySlug")
         except Exception as e:
+            print(e)
             if "not found" in str(e).lower():
                 return None
             raise
