@@ -49,8 +49,6 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         selected_mix = serializer.validated_data["selected_mix"]
 
         created_by = request.user
-        # Delete all assignments linked to orgUnits and to the scenario
-        InterventionAssignment.objects.filter(scenario=scenario, org_unit__in=org_units).delete()
         # create the created or selected intervention mix and link it the interventions
         if selected_mix:
             intervention_mix = selected_mix
@@ -63,6 +61,11 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         # Create InterventionAssignment objects
         assignments = []
         for org_unit in org_units:
+            # filter out existing org units
+            if InterventionAssignment.objects.filter(
+                scenario=scenario, org_unit=org_unit, intervention_mix=intervention_mix
+            ).exists():
+                continue
             assignment = InterventionAssignment(
                 scenario=scenario,
                 org_unit=org_unit,
@@ -104,8 +107,6 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             intervention_mix=intervention_mix_id,
             org_unit_id=org_unit_id,
         )
-
-        print(assignment.id)
 
         assignment.delete()
 
