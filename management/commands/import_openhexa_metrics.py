@@ -22,11 +22,11 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from openhexa.toolbox.hexa import NotFound, OpenHEXA
 
-from iaso.models import MetricType, MetricValue, OrgUnit
+from iaso.models import Account, MetricType, MetricValue, OrgUnit
 
 
 class Command(BaseCommand):
-    help = "Fetch a dataset from OpenHEXA workspace and optionally import metrics data"
+    help = "Fetch a dataset from OpenHEXA workspace and import metrics data"
 
     def add_arguments(self, parser):
         parser.add_argument("--workspace_slug", type=str, help="The slug of the workspace containing the dataset")
@@ -36,17 +36,13 @@ class Command(BaseCommand):
             type=str,
             help="Directory to download files to (required)",
         )
-        parser.add_argument("--import", action="store_true", help="Import metrics data after downloading files")
-        parser.add_argument(
-            "--account-id", type=int, help="Account ID for importing metrics (required when using --import)"
-        )
+        parser.add_argument("--account-id", type=int, help="Account ID for importing metrics (required)")
         parser.add_argument("--output", type=str, help="Output file path for metadata (optional)")
 
     def handle(self, *args, **options):
         workspace_slug = options["workspace_slug"]
         dataset_slug = options["dataset_slug"]
         download_dir = options["download_dir"]
-        should_import = options["import"]
         account_id = options["account_id"]
 
         if not workspace_slug:
@@ -58,10 +54,15 @@ class Command(BaseCommand):
         if not download_dir:
             raise CommandError("--download-dir is required. Specify the directory to download files to.")
 
-        if should_import and not account_id:
-            raise CommandError(
-                "--account-id is required when using --import. Specify the account ID for importing metrics."
-            )
+        if not account_id:
+            raise CommandError("--account-id is required. Specify the account ID for importing metrics.")
+
+        # Fetch Account instance
+        try:
+            account = Account.objects.get(id=account_id)
+            self.stdout.write(f"Using account: {account.name} (ID: {account.id})")
+        except Account.DoesNotExist:
+            raise CommandError(f"Account with ID {account_id} not found.")
 
         server_url = os.getenv("OPENHEXA_URL")
         token = os.getenv("OPENHEXA_TOKEN")
@@ -106,10 +107,9 @@ class Command(BaseCommand):
         # Download files
         self._download_files(hexa, files, download_dir)
 
-        # Import metrics if requested
-        if should_import:
-            self.stdout.write("Starting metrics import...")
-            self._import_metrics(download_dir, account_id)
+        # Import metrics
+        self.stdout.write(f"Starting metrics import for account {account.name} ({account.pk})...")
+        self._import_metrics(download_dir, account)
 
         metadata = {"dataset": dataset, "version": dataset_version, "files": files}
         self.stdout.write(self._format_as_table(metadata))
@@ -352,7 +352,7 @@ class Command(BaseCommand):
 
         return metadata_files[0], dataset_files[0]
 
-    def _import_metrics(self, download_dir, account_id):
+    def _import_metrics(self, download_dir, account):
         """Import metrics from downloaded CSV files."""
         try:
             # Find the CSV files
@@ -362,19 +362,19 @@ class Command(BaseCommand):
             self.stdout.write(f"Using dataset file: {dataset_file.name}")
 
             # Import the metrics
-            self._process_metrics_import(metadata_file, dataset_file, account_id)
+            self._process_metrics_import(metadata_file, dataset_file, account)
 
         except Exception as e:
             raise CommandError(f"Failed to import metrics: {str(e)}")
 
-    def _process_metrics_import(self, metadata_file, dataset_file, account_id):
+    def _process_metrics_import(self, metadata_file, dataset_file, account):
         """Process the actual metrics import."""
         # Validate CSV files first
         self._validate_csv_files(metadata_file, dataset_file)
 
         self.stdout.write("Clearing existing metrics...")
-        MetricValue.objects.filter(metric_type__account_id=account_id).delete()
-        MetricType.objects.filter(account_id=account_id).delete()
+        MetricValue.objects.filter(metric_type__account=account).delete()
+        MetricType.objects.filter(account=account).delete()
 
         self.stdout.write("Creating MetricTypes from metadata file...")
         metric_types = {}
@@ -383,15 +383,15 @@ class Command(BaseCommand):
             metareader = csv.DictReader(metafile)
             for row in metareader:
                 metric_type = MetricType.objects.create(
-                    account_id=account_id,
-                    name=row["label"],
-                    code=row["column_name"],
-                    description=row["description"],
-                    source=row["source"],
-                    units=row["units"],
-                    comments=row["comments"],
-                    category=row["category"],
-                    unit_symbol=row["unit_symbol"],
+                    account=account,
+                    name=row["LABEL"],
+                    code=row["VARIABLE"],
+                    description=row["DESCRIPTION"],
+                    source=row["SOURCE"],
+                    units=row["UNITS"],
+                    comments=row["COMMENTS"],
+                    category=row["CATEGORY"],
+                    unit_symbol=row["UNIT_SYMBOL"],
                 )
                 self.stdout.write(self.style.SUCCESS(f"Created metric: {metric_type.name}"))
                 metric_types[metric_type.code] = metric_type
@@ -461,7 +461,7 @@ class Command(BaseCommand):
         # Import legend functionality here
         from .support.legend import get_legend_config, get_legend_type
 
-        for metric_type in MetricType.objects.all():
+        for metric_type in MetricType.objects.filter(account=account):
             metric_type.legend_config = get_legend_config(metric_type)
             metric_type.legend_type = get_legend_type(metric_type)
             metric_type.save()
@@ -472,14 +472,14 @@ class Command(BaseCommand):
         """Validate that CSV files have the expected structure."""
         # Validate metadata file
         required_metadata_columns = [
-            "label",
-            "column_name",
-            "description",
-            "source",
-            "units",
-            "comments",
-            "category",
-            "unit_symbol",
+            "VARIABLE",
+            "LABEL",
+            "DESCRIPTION",
+            "SOURCE",
+            "UNITS",
+            "COMMENTS",
+            "CATEGORY",
+            "UNIT_SYMBOL",
         ]
 
         with open(metadata_file, newline="", encoding="utf-8") as metafile:
