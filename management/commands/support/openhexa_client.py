@@ -13,7 +13,7 @@ class OpenHEXAClient:
 
     def __init__(self, server_url, token):
         """Initialize the OpenHEXA client.
-        
+
         Args:
             server_url: The OpenHEXA server URL
             token: API authentication token
@@ -23,10 +23,10 @@ class OpenHEXAClient:
 
     def list_workspace_datasets(self, workspace_slug):
         """List all datasets in a workspace.
-        
+
         Args:
             workspace_slug: The slug of the workspace
-            
+
         Returns:
             List of dataset items or empty list if none found/error
         """
@@ -60,11 +60,11 @@ class OpenHEXAClient:
 
     def get_dataset_link(self, workspace_slug, dataset_slug):
         """Fetch dataset link by slug from the workspace.
-        
+
         Args:
             workspace_slug: The workspace slug
             dataset_slug: The dataset slug
-            
+
         Returns:
             Dataset link information or None if not found
         """
@@ -95,10 +95,10 @@ class OpenHEXAClient:
 
     def get_latest_version(self, dataset_id):
         """Get the latest version of a dataset.
-        
+
         Args:
             dataset_id: The dataset ID
-            
+
         Returns:
             Latest version information or None if not found
         """
@@ -130,10 +130,10 @@ class OpenHEXAClient:
 
     def get_version_files(self, version_id):
         """Get all files for a dataset version.
-        
+
         Args:
             version_id: The dataset version ID
-            
+
         Returns:
             List of file information or empty list if error
         """
@@ -165,10 +165,10 @@ class OpenHEXAClient:
 
     def get_file_download_url(self, file_id):
         """Get download URL for a specific file.
-        
+
         Args:
             file_id: The file ID
-            
+
         Returns:
             Download URL string or None if error
         """

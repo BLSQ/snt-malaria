@@ -14,7 +14,7 @@ class FileDownloader:
 
     def __init__(self, openhexa_client, download_path, stdout_writer=None):
         """Initialize the file downloader.
-        
+
         Args:
             openhexa_client: OpenHEXA client instance for API calls
             download_path: Path object for download directory
@@ -23,16 +23,16 @@ class FileDownloader:
         self.openhexa_client = openhexa_client
         self.download_path = Path(download_path)
         self.stdout_write = stdout_writer or print
-        
+
         # Ensure download directory exists
         self.download_path.mkdir(parents=True, exist_ok=True)
 
     def download_dataset_files(self, files):
         """Download all files in the dataset version.
-        
+
         Args:
             files: List of file information dictionaries
-            
+
         Returns:
             Number of successfully downloaded files
         """
@@ -41,7 +41,7 @@ class FileDownloader:
             return 0
 
         self.stdout_write(f"Downloading {len(files)} files to {self.download_path}...")
-        
+
         success_count = 0
         for file_info in files:
             try:
@@ -53,16 +53,16 @@ class FileDownloader:
 
             except Exception as e:
                 self.stdout_write(f"ERROR: Failed to download {file_info['filename']}: {str(e)}")
-        
+
         self.stdout_write(f"Downloaded {success_count}/{len(files)} files successfully")
         return success_count
 
     def _download_single_file(self, file_info):
         """Download a single file.
-        
+
         Args:
             file_info: File information dictionary
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -78,7 +78,7 @@ class FileDownloader:
 
     def _download_file_from_url(self, url, file_path, file_info):
         """Download a file from URL to local path.
-        
+
         Args:
             url: Download URL
             file_path: Local file path
