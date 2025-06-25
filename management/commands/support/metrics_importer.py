@@ -49,11 +49,6 @@ class MetricsImporter:
             raise CommandError(f"Failed to import metrics: {str(e)}")
 
     def _find_csv_files(self):
-        """Find metadata and dataset CSV files in the download directory.
-
-        Returns:
-            Tuple of (metadata_file_path, dataset_file_path)
-        """
         # Find metadata file (*metadata.csv)
         metadata_files = list(self.download_path.glob("*metadata.csv"))
         if not metadata_files:
@@ -71,12 +66,6 @@ class MetricsImporter:
         return metadata_files[0], dataset_files[0]
 
     def _validate_csv_files(self, metadata_file, dataset_file):
-        """Validate that CSV files have the expected structure.
-
-        Args:
-            metadata_file: Path to metadata CSV file
-            dataset_file: Path to dataset CSV file
-        """
         # Validate metadata file
         required_metadata_columns = [
             "VARIABLE",
@@ -104,15 +93,6 @@ class MetricsImporter:
         self.stdout_write("CSV file validation passed")
 
     def _process_metrics_import(self, metadata_file, dataset_file):
-        """Process the actual metrics import.
-
-        Args:
-            metadata_file: Path to metadata CSV file
-            dataset_file: Path to dataset CSV file
-
-        Returns:
-            Number of metric values created
-        """
         # Validate CSV files first
         self._validate_csv_files(metadata_file, dataset_file)
 
@@ -133,14 +113,6 @@ class MetricsImporter:
         return value_count
 
     def _create_metric_types(self, metadata_file):
-        """Create MetricType objects from metadata CSV.
-
-        Args:
-            metadata_file: Path to metadata CSV file
-
-        Returns:
-            Dictionary mapping metric codes to MetricType objects
-        """
         metric_types = {}
 
         with open(metadata_file, newline="", encoding="utf-8") as metafile:
@@ -163,15 +135,6 @@ class MetricsImporter:
         return metric_types
 
     def _create_metric_values(self, dataset_file, metric_types):
-        """Create MetricValue objects from dataset CSV.
-
-        Args:
-            dataset_file: Path to dataset CSV file
-            metric_types: Dictionary of metric type code -> MetricType object
-
-        Returns:
-            Number of metric values created
-        """
         with open(dataset_file, newline="", encoding="utf-8") as csvfile:
             csvreader = csv.DictReader(csvfile)
 
@@ -219,7 +182,6 @@ class MetricsImporter:
                 raise
 
     def _configure_legends(self):
-        """Configure legend settings for all metric types."""
         # Import legend functionality
         from .legend import get_legend_config, get_legend_type
 
@@ -227,9 +189,3 @@ class MetricsImporter:
             metric_type.legend_config = get_legend_config(metric_type)
             metric_type.legend_type = get_legend_type(metric_type)
             metric_type.save()
-
-    def clear_existing_metrics(self):
-        """Clear existing metrics for the account."""
-        self.stdout_write("Clearing existing metrics...")
-        MetricValue.objects.filter(metric_type__account=self.account).delete()
-        MetricType.objects.filter(account=self.account).delete()

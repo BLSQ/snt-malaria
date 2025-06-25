@@ -47,7 +47,6 @@ class Command(BaseCommand):
         self._import_metrics(account, download_path)
 
     def _validate_arguments(self, options):
-        """Validate command arguments and return validated values."""
         workspace_slug = options["workspace_slug"]
         dataset_slug = options["dataset_slug"]
         account_id = options["account_id"]
@@ -68,14 +67,12 @@ class Command(BaseCommand):
             raise CommandError(f"Account with ID {account_id} not found.")
 
     def _setup_download_directory(self, account_id):
-        """Set up and return the download directory path."""
         download_path = Path(f"/tmp/openhexa-metrics/{account_id}")
         download_path.mkdir(parents=True, exist_ok=True)
         self.stdout.write(f"Download directory: {download_path}")
         return download_path
 
     def _setup_openhexa_client(self):
-        """Set up and return the OpenHEXA client."""
         server_url = os.getenv("OPENHEXA_URL")
         token = os.getenv("OPENHEXA_TOKEN")
 
@@ -88,7 +85,6 @@ class Command(BaseCommand):
         return OpenHEXAClient(server_url, token)
 
     def _list_available_datasets(self, openhexa_client, workspace_slug):
-        """List available datasets in the workspace for debugging."""
         self.stdout.write(f'Checking available datasets in workspace "{workspace_slug}"...')
         datasets = openhexa_client.list_workspace_datasets(workspace_slug)
         if datasets:
@@ -99,7 +95,6 @@ class Command(BaseCommand):
             self.stdout.write("No datasets found in this workspace (or insufficient permissions to list).")
 
     def _fetch_dataset_info(self, openhexa_client, workspace_slug, dataset_slug):
-        """Fetch dataset information and return dataset info with version and files."""
         self.stdout.write(f'Fetching dataset "{dataset_slug}" from workspace "{workspace_slug}"...')
         dataset_link = openhexa_client.get_dataset_link(workspace_slug, dataset_slug)
 
@@ -117,24 +112,20 @@ class Command(BaseCommand):
         return {"dataset": dataset, "version": dataset_version, "files": files}
 
     def _download_dataset_files(self, openhexa_client, dataset_info, download_path):
-        """Download dataset files and return file list."""
         file_downloader = FileDownloader(openhexa_client, download_path, self.stdout.write)
         file_downloader.download_dataset_files(dataset_info["files"])
         return dataset_info["files"]
 
     def _display_dataset_summary(self, dataset_info, files):
-        """Display dataset information summary."""
         metadata = {"dataset": dataset_info["dataset"], "version": dataset_info["version"], "files": files}
         self.stdout.write(self._format_as_table(metadata))
 
     def _import_metrics(self, account, download_path):
-        """Import metrics from downloaded files."""
         self.stdout.write(f"Starting metrics import for account {account.name} ({account.pk})...")
         metrics_importer = MetricsImporter(account, download_path, self.stdout.write)
         metrics_importer.import_metrics()
 
     def _format_as_table(self, metadata):
-        """Format dataset information as a readable table."""
         dataset = metadata["dataset"]
         version = metadata["version"]
         files = metadata["files"]

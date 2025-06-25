@@ -58,14 +58,6 @@ class FileDownloader:
         return success_count
 
     def _download_single_file(self, file_info):
-        """Download a single file.
-
-        Args:
-            file_info: File information dictionary
-
-        Returns:
-            True if successful, False otherwise
-        """
         # Get download URL for the file
         download_url = self.openhexa_client.get_file_download_url(file_info["id"])
         if not download_url:
@@ -77,20 +69,9 @@ class FileDownloader:
         return True
 
     def _download_file_from_url(self, url, file_path, file_info):
-        """Download a file from URL to local path.
-
-        Args:
-            url: Download URL
-            file_path: Local file path
-            file_info: File information for error reporting
-        """
         response = requests.get(url, stream=True)
         response.raise_for_status()
 
         with open(file_path, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
-
-    def get_download_path(self):
-        """Get the download directory path."""
-        return self.download_path
