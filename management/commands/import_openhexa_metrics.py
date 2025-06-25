@@ -16,13 +16,12 @@ import json
 import os
 from pathlib import Path
 
-import requests
-
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
-from openhexa.toolbox.hexa import NotFound, OpenHEXA
 
 from iaso.models import Account, MetricType, MetricValue, OrgUnit
+from .support.openhexa_client import OpenHEXAClient
+from .support.file_downloader import FileDownloader
 
 
 class Command(BaseCommand):
@@ -69,12 +68,12 @@ class Command(BaseCommand):
             raise CommandError("OPENHEXA_TOKEN environment variable is required")
 
         # Initialize OpenHEXA client
-        hexa = OpenHEXA(server_url, token=token)
+        openhexa_client = OpenHEXAClient(server_url, token)
         self.stdout.write(f"Connecting to {server_url} with token authentication...")
 
         # List available datasets for easy debugging
         self.stdout.write(f'Checking available datasets in workspace "{workspace_slug}"...')
-        datasets = self._list_workspace_datasets(hexa, workspace_slug)
+        datasets = openhexa_client.list_workspace_datasets(workspace_slug)
         if datasets:
             self.stdout.write(f"Available datasets ({len(datasets)}):")
             for dataset in datasets:
@@ -83,24 +82,25 @@ class Command(BaseCommand):
             self.stdout.write("No datasets found in this workspace (or insufficient permissions to list).")
 
         self.stdout.write(f'Fetching dataset "{dataset_slug}" from workspace "{workspace_slug}"...')
-        dataset_link = self._get_dataset_link(hexa, workspace_slug, dataset_slug)
+        dataset_link = openhexa_client.get_dataset_link(workspace_slug, dataset_slug)
 
         if not dataset_link:
             raise CommandError(f'Dataset "{dataset_slug}" not found in workspace "{workspace_slug}".')
 
         dataset = dataset_link["dataset"]
 
-        dataset_version = self._get_latest_version(hexa, dataset["id"])
+        dataset_version = openhexa_client.get_latest_version(dataset["id"])
         if not dataset_version:
             raise CommandError(f'No versions found for dataset "{dataset_slug}"')
 
         self.stdout.write(f"Using version: {dataset_version['name']}")
 
         # Get files for the version
-        files = self._get_version_files(hexa, dataset_version["id"])
+        files = openhexa_client.get_version_files(dataset_version["id"])
 
         # Download files
-        self._download_files(hexa, files, download_path)
+        file_downloader = FileDownloader(openhexa_client, download_path, self.stdout.write)
+        file_downloader.download_dataset_files(files)
         metadata = {"dataset": dataset, "version": dataset_version, "files": files}
         self.stdout.write(self._format_as_table(metadata))
 
@@ -108,179 +108,10 @@ class Command(BaseCommand):
         self.stdout.write(f"Starting metrics import for account {account.name} ({account.pk})...")
         self._import_metrics(download_path, account)
 
-    def _list_workspace_datasets(self, hexa, workspace_slug):
-        """List all datasets in a workspace."""
-        try:
-            result = hexa.query(
-                """
-                query getWorkspaceDatasets($slug: String!, $page: Int, $perPage: Int) {
-                    workspace(slug: $slug) {
-                        datasets(page: $page, perPage: $perPage) {
-                            items {
-                                id
-                                dataset {
-                                    id
-                                    slug
-                                    name
-                                }
-                            }
-                        }
-                    }
-                }
-                """,
-                {"slug": workspace_slug, "page": 1, "perPage": 100},
-            )
-            workspace = result.get("workspace")
-            if workspace and workspace.get("datasets"):
-                return workspace["datasets"]["items"]
-            return []
-        except Exception as e:
-            self.stdout.write(self.style.WARNING(f"Could not list datasets: {str(e)}"))
-            return []
 
-    def _get_dataset_link(self, hexa, workspace_slug, dataset_slug):
-        """Fetch dataset link by slug from the workspace."""
-        try:
-            result = hexa.query(
-                """
-                query getDatasetLinkBySlug($workspaceSlug: String!, $datasetSlug: String!) {
-                    datasetLinkBySlug(workspaceSlug: $workspaceSlug, datasetSlug: $datasetSlug) {
-                        id
-                        dataset {
-                            id
-                            slug
-                            name
-                            description
-                            createdAt
-                            updatedAt
-                        }
-                    }
-                }
-                """,
-                {"workspaceSlug": workspace_slug, "datasetSlug": dataset_slug},
-            )
-            return result.get("datasetLinkBySlug")
-        except Exception as e:
-            print(e)
-            if "not found" in str(e).lower():
-                return None
-            raise
 
-    def _get_latest_version(self, hexa, dataset_id):
-        """Get the latest version of a dataset."""
-        try:
-            result = hexa.query(
-                """
-                query getDatasetLatestVersion($id: ID!) {
-                    dataset(id: $id) {
-                        latestVersion {
-                            id
-                            name
-                            changelog
-                            createdAt
-                            createdBy {
-                                displayName
-                            }
-                        }
-                    }
-                }
-                """,
-                {"id": dataset_id},
-            )
-            dataset = result.get("dataset")
-            return dataset.get("latestVersion") if dataset else None
-        except Exception as e:
-            if "not found" in str(e).lower():
-                return None
-            raise
 
-    def _get_version_files(self, hexa, version_id):
-        """Get all files for a dataset version."""
-        try:
-            result = hexa.query(
-                """
-                query getDatasetVersionFiles($id: ID!, $page: Int, $perPage: Int) {
-                    datasetVersion(id: $id) {
-                        files(page: $page, perPage: $perPage) {
-                            items {
-                                id
-                                filename
-                                contentType
-                                size
-                                createdAt
-                                downloadUrl
-                            }
-                            totalItems
-                        }
-                    }
-                }
-                """,
-                {"id": version_id, "page": 1, "perPage": 100},
-            )
-            version = result.get("datasetVersion")
-            return version["files"]["items"] if version else []
-        except Exception as e:
-            self.stdout.write(self.style.WARNING(f"Could not fetch files: {str(e)}"))
-            return []
 
-    def _download_files(self, hexa, files, download_path):
-        """Download all files in the dataset version."""
-        if not files:
-            self.stdout.write(self.style.WARNING("No files to download"))
-            return
-
-        self.stdout.write(f"Downloading {len(files)} files to {download_path}...")
-
-        for file_info in files:
-            try:
-                # Get download URL for the file
-                download_url = self._get_file_download_url(hexa, file_info["id"])
-                if not download_url:
-                    self.stdout.write(self.style.WARNING(f"Could not get download URL for {file_info['filename']}"))
-                    continue
-
-                # Download the file
-                file_path = download_path / file_info["filename"]
-                self._download_file(download_url, file_path, file_info)
-                self.stdout.write(self.style.SUCCESS(f"Downloaded: {file_info['filename']}"))
-
-            except Exception as e:
-                self.stdout.write(self.style.ERROR(f"Failed to download {file_info['filename']}: {str(e)}"))
-
-    def _get_file_download_url(self, hexa, file_id):
-        """Get download URL for a specific file."""
-        try:
-            result = hexa.query(
-                """
-                mutation prepareFileDownload($input: PrepareVersionFileDownloadInput!) {
-                    prepareVersionFileDownload(input: $input) {
-                        success
-                        downloadUrl
-                        errors
-                    }
-                }
-                """,
-                {"input": {"fileId": file_id}},
-            )
-
-            response = result.get("prepareVersionFileDownload")
-            if response and response.get("success"):
-                return response.get("downloadUrl")
-
-            self.stdout.write(self.style.WARNING(f"Download preparation failed: {response.get('errors', [])}"))
-            return None
-        except Exception as e:
-            self.stdout.write(self.style.WARNING(f"Error getting download URL: {str(e)}"))
-            return None
-
-    def _download_file(self, url, file_path, file_info):
-        """Download a file from URL to local path."""
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
-
-        with open(file_path, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
 
     def _format_as_table(self, metadata):
         """Format dataset information as a readable table."""
