@@ -31,18 +31,11 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--workspace_slug", type=str, help="The slug of the workspace containing the dataset")
         parser.add_argument("--dataset_slug", type=str, help="The slug of the dataset to fetch")
-        parser.add_argument(
-            "--download-dir",
-            type=str,
-            help="Directory to download files to (required)",
-        )
         parser.add_argument("--account-id", type=int, help="Account ID for importing metrics (required)")
-        parser.add_argument("--output", type=str, help="Output file path for metadata (optional)")
 
     def handle(self, *args, **options):
         workspace_slug = options["workspace_slug"]
         dataset_slug = options["dataset_slug"]
-        download_dir = options["download_dir"]
         account_id = options["account_id"]
 
         if not workspace_slug:
@@ -50,9 +43,6 @@ class Command(BaseCommand):
 
         if not dataset_slug:
             raise CommandError("--dataset_slug is required. Specify the slug of the dataset to fetch.")
-
-        if not download_dir:
-            raise CommandError("--download-dir is required. Specify the directory to download files to.")
 
         if not account_id:
             raise CommandError("--account-id is required. Specify the account ID for importing metrics.")
@@ -63,6 +53,11 @@ class Command(BaseCommand):
             self.stdout.write(f"Using account: {account.name} (ID: {account.id})")
         except Account.DoesNotExist:
             raise CommandError(f"Account with ID {account_id} not found.")
+
+        # Set download directory
+        download_path = Path(f"/tmp/openhexa-metrics/{account_id}")
+        download_path.mkdir(parents=True, exist_ok=True)
+        self.stdout.write(f"Download directory: {download_path}")
 
         server_url = os.getenv("OPENHEXA_URL")
         token = os.getenv("OPENHEXA_TOKEN")
@@ -105,14 +100,13 @@ class Command(BaseCommand):
         files = self._get_version_files(hexa, dataset_version["id"])
 
         # Download files
-        self._download_files(hexa, files, download_dir)
+        self._download_files(hexa, files, download_path)
+        metadata = {"dataset": dataset, "version": dataset_version, "files": files}
+        self.stdout.write(self._format_as_table(metadata))
 
         # Import metrics
         self.stdout.write(f"Starting metrics import for account {account.name} ({account.pk})...")
-        self._import_metrics(download_dir, account)
-
-        metadata = {"dataset": dataset, "version": dataset_version, "files": files}
-        self.stdout.write(self._format_as_table(metadata))
+        self._import_metrics(download_path, account)
 
     def _list_workspace_datasets(self, hexa, workspace_slug):
         """List all datasets in a workspace."""
@@ -229,13 +223,11 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f"Could not fetch files: {str(e)}"))
             return []
 
-    def _download_files(self, hexa, files, download_dir):
+    def _download_files(self, hexa, files, download_path):
         """Download all files in the dataset version."""
         if not files:
             self.stdout.write(self.style.WARNING("No files to download"))
             return
-
-        download_path = Path(download_dir)
 
         self.stdout.write(f"Downloading {len(files)} files to {download_path}...")
 
@@ -332,31 +324,29 @@ class Command(BaseCommand):
 
         return "\n".join(lines)
 
-    def _find_csv_files(self, download_dir):
+    def _find_csv_files(self, download_path):
         """Find metadata and dataset CSV files in the download directory."""
-        download_path = Path(download_dir)
-
-        # Find metadata file (*_metadata.csv)
-        metadata_files = list(download_path.glob("*_metadata.csv"))
+        # Find metadata file (*metadata.csv)
+        metadata_files = list(download_path.glob("*metadata.csv"))
         if not metadata_files:
-            raise CommandError("No metadata CSV file (*_metadata.csv) found in download directory")
+            raise CommandError("No metadata CSV file (*metadata.csv) found in download directory")
         if len(metadata_files) > 1:
             raise CommandError(f"Multiple metadata CSV files found: {[f.name for f in metadata_files]}")
 
-        # Find dataset file (*_dataset.csv)
-        dataset_files = list(download_path.glob("*_dataset.csv"))
+        # Find dataset file (*dataset.csv)
+        dataset_files = list(download_path.glob("*dataset.csv"))
         if not dataset_files:
-            raise CommandError("No dataset CSV file (*_dataset.csv) found in download directory")
+            raise CommandError("No dataset CSV file (*dataset.csv) found in download directory")
         if len(dataset_files) > 1:
             raise CommandError(f"Multiple dataset CSV files found: {[f.name for f in dataset_files]}")
 
         return metadata_files[0], dataset_files[0]
 
-    def _import_metrics(self, download_dir, account):
+    def _import_metrics(self, download_path, account):
         """Import metrics from downloaded CSV files."""
         try:
             # Find the CSV files
-            metadata_file, dataset_file = self._find_csv_files(download_dir)
+            metadata_file, dataset_file = self._find_csv_files(download_path)
 
             self.stdout.write(f"Using metadata file: {metadata_file.name}")
             self.stdout.write(f"Using dataset file: {dataset_file.name}")
@@ -421,21 +411,12 @@ class Command(BaseCommand):
                         for column, metric_type in metric_types.items():
                             if column not in row:
                                 continue
+                            if not row[column]:
+                                continue
 
                             try:
-                                # Parse the value as a float
-                                value = float(row[column])
-
-                                # Some percentages are expressed as between 0 and 1,
-                                # adapt them to be also between 0 and 100.
-                                if metric_type.code in ["PFPR_2TO10_MAP"] or metric_type.category in [
-                                    "Bednet coverage",
-                                    "DHS DTP3 Vaccine",
-                                ]:
-                                    value = int(value * 100)
-                                else:
-                                    # Round the value to max 3 behind the comma
-                                    value = round(value, 3)
+                                # Parse the value as a fload and round to max 3 behind the comma
+                                value = round(float(row[column]), 3)
 
                             except ValueError:
                                 self.stdout.write(
