@@ -34,9 +34,11 @@ const styles: SxStyles = {
         overflow: 'hidden',
         height: '493px',
     },
-    card: { minHeight: '424px' },
+    card: { height: '100%', display: 'flex', flexDirection: 'column' },
     cardContent: {
         padding: 0,
+        height: '100%',
+        overflow: 'hidden',
         '&:last-child': {
             paddingBottom: 0,
         },
@@ -44,21 +46,22 @@ const styles: SxStyles = {
     horizontalDivider: { width: '100%', mb: 0 },
     districtsContainer: {
         padding: 0,
-        height: '424px',
         width: '100%',
-        display: 'flex',
+        height: '100%',
+        overflow: 'hidden',
     },
     districtsItem: {
         width: '50%',
         height: '100%',
-        overflow: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
     },
     verticalDivider: { bgcolor: 'grey.300' },
     interventionsItem: {
-        height: '100%',
         width: '49%',
         overflow: 'auto',
         padding: 1,
+        height: '100%',
     },
     noMixMessage: { color: '#1F2B3D99' },
     createMixButton: { textTransform: 'none' },
@@ -156,10 +159,7 @@ export const InterventionsMix: FC<Props> = ({
         [],
     );
 
-    const { data: interventionMixes } = useGetInterventionMixes(
-        scenarioId,
-        selectedOrgUnits.map(orgUnit => orgUnit.id).join(','),
-    );
+    const { data: interventionMixes } = useGetInterventionMixes(scenarioId);
 
     return (
         <Box sx={styles.mainMixBox}>
@@ -212,7 +212,13 @@ export const InterventionsMix: FC<Props> = ({
                                     setMixName={setMixName}
                                 />
                             ) : (
-                                <Box>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        height: '100%',
+                                    }}
+                                >
                                     <Grid container spacing={2} px={2}>
                                         <Grid
                                             item
@@ -252,34 +258,40 @@ export const InterventionsMix: FC<Props> = ({
                                             </Box>
                                         </Grid>
                                     </Grid>
-                                    {interventionMixes?.map(mix => (
-                                        <Box
-                                            key={mix.name}
-                                            onClick={() =>
-                                                setSelectedMix(mix.id)
-                                            }
-                                            sx={styles.mixStyle(
-                                                mix.id,
-                                                selectedMix,
-                                            )}
-                                        >
-                                            <Typography
-                                                variant="subtitle2"
-                                                sx={styles.mixName}
+                                    <Grid
+                                        sx={{ flexGrow: 1, overflow: 'auto' }}
+                                    >
+                                        {interventionMixes?.map(mix => (
+                                            <Box
+                                                key={mix.name}
+                                                onClick={() =>
+                                                    setSelectedMix(mix.id)
+                                                }
+                                                sx={styles.mixStyle(
+                                                    mix.id,
+                                                    selectedMix,
+                                                )}
                                             >
-                                                {mix.name}
-                                            </Typography>
-                                            <Typography
-                                                sx={styles.interventionsWrapper}
-                                            >
-                                                <InterventionList
-                                                    interventions={
-                                                        mix.interventions
+                                                <Typography
+                                                    variant="subtitle2"
+                                                    sx={styles.mixName}
+                                                >
+                                                    {mix.name}
+                                                </Typography>
+                                                <Typography
+                                                    sx={
+                                                        styles.interventionsWrapper
                                                     }
-                                                />
-                                            </Typography>
-                                        </Box>
-                                    ))}
+                                                >
+                                                    <InterventionList
+                                                        interventions={
+                                                            mix.interventions
+                                                        }
+                                                    />
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                    </Grid>
                                 </Box>
                             )}
                         </Grid>

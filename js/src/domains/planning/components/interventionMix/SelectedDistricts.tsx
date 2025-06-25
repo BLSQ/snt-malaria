@@ -60,33 +60,25 @@ export const SelectedDistricts: FC<Props> = ({
                     </Box>
                 </Grid>
             </Grid>
-            <Grid container spacing={2}>
-                <Grid
-                    item
-                    xs={12}
-                    display="flex"
-                    justifyContent="center"
-                    sx={{ maxHeight: '300px', overflowY: 'auto' }}
-                >
-                    {selectedDistricts.length > 0 ? (
-                        <SelectedDistrictsTable
-                            selectedDistricts={selectedDistricts}
-                            removeDistrict={removeDistrict}
-                        />
-                    ) : (
-                        <Box padding={4}>
-                            <Typography
-                                variant="body2"
-                                gutterBottom
-                                color={alpha('#1F2B3D', 0.6)}
-                                align="center"
-                            >
-                                {formatMessage(MESSAGES.selectDistrictsMessage)}
-                            </Typography>
-                        </Box>
-                    )}
-                </Grid>
-            </Grid>
+            <Box sx={{ height: '100%', overflowY: 'auto', padding: 1 }}>
+                {selectedDistricts.length > 0 ? (
+                    <SelectedDistrictsTable
+                        selectedDistricts={selectedDistricts}
+                        removeDistrict={removeDistrict}
+                    />
+                ) : (
+                    <Box padding={4}>
+                        <Typography
+                            variant="body2"
+                            gutterBottom
+                            color={alpha('#1F2B3D', 0.6)}
+                            align="center"
+                        >
+                            {formatMessage(MESSAGES.selectDistrictsMessage)}
+                        </Typography>
+                    </Box>
+                )}
+            </Box>
         </>
     );
 };

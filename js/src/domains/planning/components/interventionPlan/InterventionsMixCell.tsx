@@ -48,7 +48,10 @@ export const InterventionsMixCell: FunctionComponent<Props> = ({
                 >
                     {row.name}
                 </Typography>
-                <Box visibility={hoveredMixName ? 'visible' : 'hidden'}>
+                <Box
+                    visibility={hoveredMixName ? 'visible' : 'hidden'}
+                    sx={{ cursor: 'pointer' }}
+                >
                     <EditInterventionMix
                         setHoveredMixName={setHoveredMixName}
                         iconProps={iconProps}

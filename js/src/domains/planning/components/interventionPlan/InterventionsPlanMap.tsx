@@ -1,20 +1,19 @@
 import React, { FunctionComponent, useMemo, useState } from 'react';
 import { Box, MenuItem, Select, Theme, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import L from 'leaflet';
+import { MapContainer, GeoJSON, ZoomControl } from 'react-leaflet';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
-import L from 'leaflet';
-import { MapContainer, GeoJSON, ZoomControl } from 'react-leaflet';
 import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
 import { MESSAGES } from '../../messages';
 
 type Props = {
     scenarioId: number | undefined;
-    selectedOrgUnits: string;
 };
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
@@ -65,7 +64,6 @@ const styles: SxStyles = {
 };
 export const InterventionsPlanMap: FunctionComponent<Props> = ({
     scenarioId,
-    selectedOrgUnits,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { data: orgUnits } = useGetOrgUnits();
@@ -85,7 +83,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     }, [orgUnits]);
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
-        useGetInterventionsPlan(scenarioId, selectedOrgUnits);
+        useGetInterventionsPlan(scenarioId);
     const [selectedPlanId, setSelectedPlanId] = useState<number | null>(
         interventionPlans?.[0]?.id ?? null,
     );

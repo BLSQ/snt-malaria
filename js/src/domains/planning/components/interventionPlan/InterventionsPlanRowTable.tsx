@@ -25,7 +25,10 @@ export const InterventionsPlanRowTable = ({
                 sx={{
                     ...styles.tableCellStyle,
                     minWidth: '200px',
-                    paddingTop: '4px',
+                    paddingTop: 1,
+                    paddingBottom: 1,
+                    paddingLeft: 1,
+                    verticalAlign: 'top',
                 }}
             >
                 <InterventionsMixCell
@@ -41,9 +44,11 @@ export const InterventionsPlanRowTable = ({
             <TableCell
                 sx={{
                     ...styles.tableCellStyle,
-                    paddingTop: '4px',
+                    paddingTop: 1,
+                    paddingRight: 1,
                     alignItems: 'center',
                     flexWrap: 'wrap',
+                    verticalAlign: 'top',
                 }}
             >
                 <OrgUnitsMixCell row={row} />
