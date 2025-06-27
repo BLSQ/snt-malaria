@@ -10,6 +10,7 @@ import {
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
+import { InterventionPlan } from '../../types/interventions';
 import { InterventionsPlanRowTable } from './InterventionsPlanRowTable';
 
 const styles: SxStyles = {
@@ -31,11 +32,12 @@ const styles: SxStyles = {
 type Props = {
     scenarioId: number | undefined;
     isLoadingPlans: boolean;
-    interventionPlans: any;
+    interventionPlans: InterventionPlan[] | undefined;
     setSelectedInterventions: any;
     selectedInterventions: any;
     setMixName: (name: string) => void;
     mixName: string;
+    onRemoveOrgUnit: (interventionAssignmentsId: number) => void;
 };
 export const InterventionsPlanTable: FC<Props> = ({
     scenarioId,
@@ -45,6 +47,7 @@ export const InterventionsPlanTable: FC<Props> = ({
     selectedInterventions,
     setMixName,
     mixName,
+    onRemoveOrgUnit,
 }) => {
     const { formatMessage } = useSafeIntl();
     return (
@@ -76,6 +79,7 @@ export const InterventionsPlanTable: FC<Props> = ({
                                 selectedInterventions={selectedInterventions}
                                 setMixName={setMixName}
                                 mixName={mixName}
+                                onRemoveOrgUnit={onRemoveOrgUnit}
                             />
                         ))}
                     </TableBody>

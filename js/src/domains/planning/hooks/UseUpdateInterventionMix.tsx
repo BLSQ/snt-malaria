@@ -1,6 +1,6 @@
+import { UseMutationResult } from 'react-query';
 import { patchRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { UseMutationResult } from 'react-query';
 import { InterventionMix } from '../types/interventions';
 
 export const UseUpdateInterventionMix = (): UseMutationResult =>

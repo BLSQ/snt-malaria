@@ -6,6 +6,16 @@ from plugins.snt_malaria.models import InterventionAssignment, Scenario
 from plugins.snt_malaria.models.intervention import Intervention, InterventionMix
 
 
+class InterventionAssignmentToOrgUnitSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="org_unit.id")
+    name = serializers.CharField(source="org_unit.name")
+    intervention_assignment_id = serializers.IntegerField(source="id")
+
+    class Meta:
+        model = InterventionAssignment
+        fields = ["id", "name", "intervention_assignment_id"]
+
+
 class InterventionAssignmentListSerializer(serializers.ModelSerializer):
     """For reading InterventionAssignment"""
 
