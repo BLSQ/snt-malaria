@@ -83,14 +83,11 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    def delete(self, request, pk=None):
-        # Trying to find assignment, if none found, a 404 is thrown. If many are found, another exception will be thrown
-        print("PKPKPK")
-        print(pk)
-        # assignment = get_object_or_404(InterventionAssignment, id=pk)
-        # assignment.delete()
+    def destroy(self, _request, pk=None):
+        assignment = get_object_or_404(InterventionAssignment, id=pk)
+        assignment.delete()
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_filtered_queryset(self):
         return self.filter_queryset(self.get_queryset()).prefetch_related("org_unit")
