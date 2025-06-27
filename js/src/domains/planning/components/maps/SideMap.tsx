@@ -1,14 +1,6 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, Theme } from '@mui/material';
-import * as d3 from 'd3-scale';
 
-import { useGetLegend } from 'Iaso/components/LegendBuilder/Legend';
-import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
-import { GeoJson } from 'Iaso/components/maps/types';
-import tiles from 'Iaso/constants/mapTiles';
-import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { SxStyles } from 'Iaso/types/general';
-import { Bounds } from 'Iaso/utils/map/mapUtils';
 import L from 'leaflet';
 import {
     GeoJSON,
@@ -17,8 +9,16 @@ import {
     Tooltip,
     ZoomControl,
 } from 'react-leaflet';
+import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
+import { GeoJson } from 'Iaso/components/maps/types';
+import tiles from 'Iaso/constants/mapTiles';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
+import { Bounds } from 'Iaso/utils/map/mapUtils';
 
+import { mapTheme } from '../../../../constants/map-theme';
 import { useGetMetricValues } from '../../hooks/useGetMetrics';
+import { getStyleForShape } from '../../libs/map-utils';
 import { MetricType } from '../../types/metrics';
 import { MapLegend } from '../MapLegend';
 import { LayerSelect } from './LayerSelect';
@@ -70,21 +70,6 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
     const { data: displayedMetricValues } = useGetMetricValues({
         metricTypeId: displayedMetric?.id || null,
     });
-    const getLegend = useGetLegend(displayedMetric?.legend_config);
-    const getColorForShape = useCallback(
-        (value, _orgUnitId) => {
-            if (displayedMetric?.legend_type === 'linear') {
-                const legend = displayedMetric.legend_config;
-                const colorScale = d3
-                    .scaleLinear()
-                    .domain(legend.domain)
-                    .range(legend.range);
-                return colorScale(value);
-            }
-            return getLegend(value);
-        },
-        [displayedMetric, getLegend],
-    );
     const getSelectedMetricValue = useCallback(
         (orgUnitId: number) => {
             const metricValue = displayedMetricValues?.find(
@@ -97,19 +82,16 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
 
     // Selecting an org unit on the map
 
-    const getStyleForShape = useCallback(
+    const getMapStyleForOrgUnit = useCallback(
         (orgUnitId: number) => {
-            return {
-                color: '#546E7A',
-                weight: 1,
-                fillColor: getColorForShape(
-                    getSelectedMetricValue(orgUnitId),
-                    orgUnitId,
-                ),
-                fillOpacity: 1,
-            };
+            const selectedMetricValue = getSelectedMetricValue(orgUnitId);
+            return getStyleForShape(
+                selectedMetricValue,
+                displayedMetric?.legend_type,
+                displayedMetric?.legend_config,
+            );
         },
-        [getColorForShape, getSelectedMetricValue],
+        [getSelectedMetricValue, displayedMetric],
     );
 
     return (
@@ -119,7 +101,10 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
                 doubleClickZoom
                 scrollWheelZoom={false}
                 maxZoom={currentTile.maxZoom}
-                style={{ height: '100%', backgroundColor: '#B0BEC5' }}
+                style={{
+                    height: '100%',
+                    backgroundColor: mapTheme.backgroundColor,
+                }}
                 center={[0, 0]}
                 keyboard={false}
                 bounds={bounds}
@@ -131,7 +116,7 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
                 {orgUnits.map(orgUnit => (
                     <GeoJSON
                         key={orgUnit.id}
-                        style={getStyleForShape(orgUnit.id)}
+                        style={getMapStyleForOrgUnit(orgUnit.id)}
                         data={orgUnit.geo_json as unknown as GeoJson}
                     >
                         <Tooltip>{getSelectedMetricValue(orgUnit.id)}</Tooltip>
