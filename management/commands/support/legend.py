@@ -84,9 +84,6 @@ def get_steps(min, max, count):
     round_digits = 2 if min < 1 else 0
     if count == 1:
         return [round(min, round_digits)]
-    print(f"{min}, {max}, {count}")
     step_size = (max - min) / (count - 1)
-    print(step_size)
     steps = [round(min + i * step_size, round_digits) for i in range(count)]
-    print(len(steps))
     return steps
