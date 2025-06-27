@@ -29,15 +29,8 @@ export const InterventionsPlan: FC<Props> = ({
 
     const { mutateAsync: removeOrgUnitFromInterventionPlan } =
         UseRemoveOrgUnitFromInterventionPlan();
-    const onDeleteOrgUnitFromPlan = (
-        orgUnitId: number,
-        interventionMixId: number,
-    ) =>
-        removeOrgUnitFromInterventionPlan({
-            scenarioId,
-            interventionMixId,
-            orgUnitId,
-        });
+    const onDeleteOrgUnitFromPlan = (interventionAssignmentId: number) =>
+        removeOrgUnitFromInterventionPlan(interventionAssignmentId);
 
     return (
         <Box

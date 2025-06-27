@@ -4,8 +4,9 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from plugins.snt_malaria.api.interventionassignments.serializers import InterventionAssignmentToOrgUnitSerializer
 from plugins.snt_malaria.api.interventionMixes.filters import InterventionMixListFilter
-from plugins.snt_malaria.api.interventionMixes.serializers import InterventionMixSerializer, OrgUnitSmallSerializer
+from plugins.snt_malaria.api.interventionMixes.serializers import InterventionMixSerializer
 from plugins.snt_malaria.api.interventions.serializers import InterventionSerializer
 from plugins.snt_malaria.models.intervention import InterventionAssignment, InterventionMix
 
@@ -31,17 +32,17 @@ class InterventionMixViewSet(viewsets.ModelViewSet):
         queryset = base_queryset.prefetch_related(
             Prefetch("interventionassignment_set", queryset=InterventionAssignment.objects.select_related("org_unit"))
         )
-
         result = []
         for mix in queryset:
-            org_units = [ia.org_unit for ia in mix.interventionassignment_set.filter()]
-            org_units_data = OrgUnitSmallSerializer(org_units, many=True).data
+            assignments = InterventionAssignmentToOrgUnitSerializer(
+                mix.interventionassignment_set.all(), many=True
+            ).data
             interventions_data = InterventionSerializer(mix.interventions.all(), many=True).data
             result.append(
                 {
                     "id": mix.id,
                     "name": mix.name,
-                    "org_units": org_units_data,
+                    "org_units": assignments,
                     "interventions": interventions_data,
                 }
             )

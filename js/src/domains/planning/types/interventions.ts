@@ -1,5 +1,3 @@
-import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-
 export type InterventionCategory = {
     id: number;
     name: string;
@@ -30,7 +28,13 @@ export type InterventionPlan = {
     id: number;
     name: string;
     interventions: Intervention[];
-    org_units: OrgUnit[];
+    org_units: InterventionOrgUnit[];
+};
+
+export type InterventionOrgUnit = {
+    name: string;
+    id: number;
+    intervention_assignment_id: number;
 };
 
 export type Budget = {

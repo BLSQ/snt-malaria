@@ -4,9 +4,9 @@ import { useSnackMutation } from 'Iaso/libs/apiHooks';
 
 export const UseRemoveOrgUnitFromInterventionPlan = (): UseMutationResult =>
     useSnackMutation({
-        mutationFn: ({ scenarioId, interventionMixId, orgUnitId }) =>
+        mutationFn: (interventionAssignmentId: number) =>
             deleteRequest(
-                `/api/snt_malaria/interventionassignments/?scenario_id=${scenarioId}&intervention_mix_id=${interventionMixId}&org_unit_id=${orgUnitId}`,
+                `/api/snt_malaria/interventionassignments/${interventionAssignmentId}/`,
             ),
         invalidateQueryKey: ['interventionPlans'],
     });

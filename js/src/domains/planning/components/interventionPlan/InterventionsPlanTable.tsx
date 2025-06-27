@@ -37,7 +37,7 @@ type Props = {
     selectedInterventions: any;
     setMixName: (name: string) => void;
     mixName: string;
-    onRemoveOrgUnit: (orgUnitId: number, planId: number) => void;
+    onRemoveOrgUnit: (interventionAssignmentsId: number) => void;
 };
 export const InterventionsPlanTable: FC<Props> = ({
     scenarioId,

@@ -16,7 +16,7 @@ type Props = {
     selectedInterventions: () => void;
     setMixName: (name: string) => void;
     mixName: string;
-    onRemoveOrgUnit: (orgUnitId: number, planId: number) => void;
+    onRemoveOrgUnit: (interventionAssignmentsId: number) => void;
 };
 
 const styles: SxStyles = {

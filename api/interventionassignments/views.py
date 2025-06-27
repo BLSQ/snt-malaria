@@ -83,35 +83,14 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    def delete(self, request, *args, **kwargs):
-        if (
-            "scenario_id" not in request.query_params
-            and "intervention_mix_id" not in request.query_params
-            and "org_unit_id" not in request.query_params
-        ):
-            return Response(
-                {
-                    "message": "Missing one or many of required query params: scenario_id, intervention_mix_id, org_unit_id"
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        scenario_id = request.query_params["scenario_id"]
-        intervention_mix_id = request.query_params["intervention_mix_id"]
-        org_unit_id = request.query_params["org_unit_id"]
-
+    def delete(self, request, pk=None):
         # Trying to find assignment, if none found, a 404 is thrown. If many are found, another exception will be thrown
-        assignment = get_object_or_404(
-            InterventionAssignment,
-            scenario_id=scenario_id,
-            intervention_mix=intervention_mix_id,
-            org_unit_id=org_unit_id,
-        )
-
-        assignment.delete()
+        print("PKPKPK")
+        print(pk)
+        # assignment = get_object_or_404(InterventionAssignment, id=pk)
+        # assignment.delete()
 
         return Response(status=status.HTTP_200_OK)
-        # log_modification(assignments, original, INSTANCE_API, user=request.user)
 
     def get_filtered_queryset(self):
         return self.filter_queryset(self.get_queryset()).prefetch_related("org_unit")

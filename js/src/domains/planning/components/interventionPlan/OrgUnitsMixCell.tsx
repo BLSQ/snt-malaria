@@ -5,7 +5,7 @@ import { InterventionPlan } from '../../types/interventions';
 
 type Props = {
     row: InterventionPlan;
-    onRemoveOrgUnit: (orgUnitId: number, planId: number) => void;
+    onRemoveOrgUnit: (interventionAssignmentsId: number) => void;
 };
 export const OrgUnitsMixCell: FunctionComponent<Props> = ({
     row,
@@ -26,12 +26,15 @@ export const OrgUnitsMixCell: FunctionComponent<Props> = ({
         null,
     );
 
-    const removeHoveredOrgUnit = useCallback(() => {
-        if (hoveredOrgUnitId != null) {
-            onRemoveOrgUnit(hoveredOrgUnitId, row.id);
-        }
-        setHoveredOrgUnitId(null);
-    }, [hoveredOrgUnitId, onRemoveOrgUnit, row.id]);
+    const removeOrgUnit = useCallback(
+        orgUnit => {
+            if (orgUnit != null) {
+                onRemoveOrgUnit(orgUnit.intervention_assignment_id);
+            }
+            setHoveredOrgUnitId(null);
+        },
+        [onRemoveOrgUnit, setHoveredOrgUnitId],
+    );
 
     return (
         <>
@@ -60,7 +63,7 @@ export const OrgUnitsMixCell: FunctionComponent<Props> = ({
                             }
                             onDelete={
                                 isHovered
-                                    ? () => removeHoveredOrgUnit()
+                                    ? () => removeOrgUnit(orgUnit)
                                     : undefined
                             }
                             deleteIcon={
