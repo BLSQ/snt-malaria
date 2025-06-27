@@ -24,7 +24,7 @@ from .serializers import (
 
 class InterventionAssignmentViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "delete"]
-    filter_backends = [DjangoFilterBackend, DeletionFilterBackend]
+    filter_backends = [DjangoFilterBackend]
     filterset_class = InterventionAssignmentListFilter
 
     def get_queryset(self):
