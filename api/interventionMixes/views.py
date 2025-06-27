@@ -20,7 +20,6 @@ class InterventionMixViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return (
             InterventionMix.objects.prefetch_related("interventions")
-            .filter(deleted_at__isnull=True)
             .filter(account=self.request.user.iaso_profile.account)
             .distinct()
         )
@@ -35,7 +34,7 @@ class InterventionMixViewSet(viewsets.ModelViewSet):
 
         result = []
         for mix in queryset:
-            org_units = [ia.org_unit for ia in mix.interventionassignment_set.filter(deleted_at__isnull=True)]
+            org_units = [ia.org_unit for ia in mix.interventionassignment_set.filter()]
             org_units_data = OrgUnitSmallSerializer(org_units, many=True).data
             interventions_data = InterventionSerializer(mix.interventions.all(), many=True).data
             result.append(
