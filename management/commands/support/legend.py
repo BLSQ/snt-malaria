@@ -53,8 +53,7 @@ def get_legend_config(metric_type):
     max_value = result["max_value"]
 
     if metric_type.category == "Mortality":
-        steps = get_steps(0, max_value, len(SEVEN_SHADES))
-        return {"domain": steps, "range": SEVEN_SHADES}
+        return {"domain": [0, max_value], "range": [NINE_SHADES[0], NINE_SHADES[-1]]}
     if metric_type.category == "Composite risk":
         return {
             "domain": list(range(int(min_value), int(max_value))),
