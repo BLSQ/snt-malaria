@@ -177,6 +177,7 @@ export const Map: FC<Props> = ({
                             }
                             onClear={onClearOrgUnitSelection}
                             selectedOrgUnits={selectedOrgUnits}
+                            highlightMetricType={displayedMetric}
                         />
                     )}
                     <Box sx={styles.layerSelectBox}>
