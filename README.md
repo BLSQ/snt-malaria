@@ -53,3 +53,19 @@ docker-compose up
 docker compose run --rm iaso manage import_metrics
 docker compose run --rm iaso manage seed_interventions
 ```
+
+# OpenHEXA import
+
+Script to fetch a specific dataset from an OpenHEXA workspace and import it into the MetricType and MetricValue tables:
+
+`./manage.py import_openhexa_metrics --workspace_slug <slug> --dataset_slug <slug> --account-id <id>`
+
+### Example for RDC data:
+
+`./manage.py import_openhexa_metrics --workspace_slug snt-development --dataset_slug snt-results --account-id 2`
+To test make sure you set the env variables:
+
+OPENHEXA_URL="https://api.openhexa.org/graphql/"
+OPENHEXA_TOKEN = "XXX"
+You can get the OpenHEXA token by going to the pipelines page, create a new one and choose "From OpenHEXA CLI" -> "Show" access token
+https://app.openhexa.org/workspaces/snt-development/pipelines/
