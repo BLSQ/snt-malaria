@@ -194,6 +194,9 @@ export const Planning: FC = () => {
                             <InterventionsMix
                                 scenarioId={scenario?.id}
                                 selectedOrgUnits={selectionOnInterventionMix}
+                                setSelectedOrgUnits={
+                                    setSelectionOnInterventionMix
+                                }
                                 setSelectedInterventions={
                                     setSelectedInterventions
                                 }
