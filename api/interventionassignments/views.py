@@ -1,11 +1,13 @@
 from collections import defaultdict
 from decimal import Decimal
 
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from iaso.api.common import DeletionFilterBackend
 from iaso.models.metric import MetricType, MetricValue
 from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.api.interventionassignments.filters import (
@@ -21,7 +23,7 @@ from .serializers import (
 
 
 class InterventionAssignmentViewSet(viewsets.ModelViewSet):
-    http_method_names = ["get", "post"]
+    http_method_names = ["get", "post", "delete"]
     filter_backends = [DjangoFilterBackend]
     filterset_class = InterventionAssignmentListFilter
 
@@ -47,8 +49,6 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         selected_mix = serializer.validated_data["selected_mix"]
 
         created_by = request.user
-        # Delete all assignments linked to orgUnits and to the scenario
-        InterventionAssignment.objects.filter(scenario=scenario, org_unit__in=org_units).delete()
         # create the created or selected intervention mix and link it the interventions
         if selected_mix:
             intervention_mix = selected_mix
@@ -61,6 +61,11 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         # Create InterventionAssignment objects
         assignments = []
         for org_unit in org_units:
+            # filter out existing org units
+            if InterventionAssignment.objects.filter(
+                scenario=scenario, org_unit=org_unit, intervention_mix=intervention_mix
+            ).exists():
+                continue
             assignment = InterventionAssignment(
                 scenario=scenario,
                 org_unit=org_unit,
@@ -77,6 +82,12 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             {"message": "intervention assignments created successfully."},
             status=status.HTTP_201_CREATED,
         )
+
+    def destroy(self, _request, pk=None):
+        assignment = get_object_or_404(InterventionAssignment, id=pk)
+        assignment.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_filtered_queryset(self):
         return self.filter_queryset(self.get_queryset()).prefetch_related("org_unit")

@@ -3,6 +3,7 @@ from django.db import models
 
 from iaso.models import OrgUnit
 from iaso.utils.models.soft_deletable import (
+    DefaultSoftDeletableManager,
     SoftDeletableModel,
 )
 from plugins.snt_malaria.models.scenario import Scenario
@@ -60,6 +61,7 @@ class InterventionAssignment(SoftDeletableModel):
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    objects = DefaultSoftDeletableManager()
 
 
 class InterventionMix(SoftDeletableModel):
@@ -73,3 +75,4 @@ class InterventionMix(SoftDeletableModel):
     name = models.CharField(max_length=255)
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="intervention_mixes")
     interventions = models.ManyToManyField(Intervention)
+    objects = DefaultSoftDeletableManager()

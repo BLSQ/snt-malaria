@@ -1,12 +1,13 @@
-import React, { FunctionComponent, useEffect, useState } from 'react';
+import React, { FunctionComponent, useState } from 'react';
 import { alpha, Box, Stack, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
+import { InterventionPlan } from '../../types/interventions';
 import { EditInterventionMix } from './EditInterventionMixModal';
 
 type Props = {
-    scenarioId: number;
+    scenarioId: number | undefined;
     iconProps: any;
-    row: any;
+    row: InterventionPlan;
     setSelectedInterventions: React.Dispatch<
         React.SetStateAction<Record<number, number[]>>
     >;

@@ -1,14 +1,6 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import { Box, useTheme, Theme } from '@mui/material';
-import * as d3 from 'd3-scale';
+import { Box, Theme } from '@mui/material';
 
-import { useGetLegend } from 'Iaso/components/LegendBuilder/Legend';
-import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
-import { GeoJson } from 'Iaso/components/maps/types';
-import tiles from 'Iaso/constants/mapTiles';
-import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { SxStyles } from 'Iaso/types/general';
-import { Bounds } from 'Iaso/utils/map/mapUtils';
 import L from 'leaflet';
 import {
     GeoJSON,
@@ -17,6 +9,14 @@ import {
     Tooltip,
     ZoomControl,
 } from 'react-leaflet';
+import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
+import { GeoJson } from 'Iaso/components/maps/types';
+import tiles from 'Iaso/constants/mapTiles';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
+import { Bounds } from 'Iaso/utils/map/mapUtils';
+import { mapTheme } from '../../../constants/map-theme';
+import { getStyleForShape } from '../libs/map-utils';
 import { MetricType, MetricValue } from '../types/metrics';
 import { MapLegend } from './MapLegend';
 import { MapOrgUnitDetails } from './MapOrgUnitDetails';
@@ -45,7 +45,7 @@ type Props = {
     onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
     onApplyFilters: () => void;
     onAddToMix: () => void;
-    onChangeMetricLayer: (MetricType) => void;
+    onChangeMetricLayer: (metricType) => void;
     onClearSelection: () => void;
 };
 
@@ -61,7 +61,6 @@ export const Map: FC<Props> = ({
     onClearSelection,
 }) => {
     const [currentTile] = useState<Tile>(tiles.osm);
-    const theme = useTheme();
     const boundsOptions: Record<string, any> = {
         padding: [10, 10],
         maxZoom: currentTile.maxZoom,
@@ -77,21 +76,6 @@ export const Map: FC<Props> = ({
     }, [orgUnits]);
 
     // Displaying metrics on the map
-    const getLegend = useGetLegend(displayedMetric?.legend_config);
-    const getColorForShape = useCallback(
-        (value, _orgUnitId) => {
-            if (displayedMetric?.legend_type === 'linear') {
-                const legend = displayedMetric.legend_config;
-                const colorScale = d3
-                    .scaleLinear()
-                    .domain(legend.domain)
-                    .range(legend.range);
-                return colorScale(value);
-            }
-            return getLegend(value);
-        },
-        [displayedMetric, displayedMetricValues, getLegend],
-    );
     const getSelectedMetricValue = useCallback(
         (orgUnitId: number) => {
             const metricValue = displayedMetricValues?.find(
@@ -121,31 +105,24 @@ export const Map: FC<Props> = ({
         [selectedOrgUnits],
     );
 
-    const getStyleForShape = (orgUnitId: number) => {
-        let color: string;
-        let weight: number;
-
-        if (orgUnitId === clickedOrgUnit?.id) {
-            color = theme.palette.secondary.main;
-            weight = 4;
-        } else if (selectedOrgUnitIds.includes(orgUnitId)) {
-            color = '#000000';
-            weight = 3;
-        } else {
-            color = '#546E7A';
-            weight = 1;
-        }
-
-        return {
-            color,
-            weight,
-            fillColor: getColorForShape(
-                getSelectedMetricValue(orgUnitId),
-                orgUnitId,
-            ),
-            fillOpacity: 1,
-        };
-    };
+    const getMapStyleForOrgUnit = useCallback(
+        (orgUnitId: number) => {
+            const selectedMetricValue = getSelectedMetricValue(orgUnitId);
+            return getStyleForShape(
+                selectedMetricValue,
+                displayedMetric?.legend_type,
+                displayedMetric?.legend_config,
+                orgUnitId === clickedOrgUnit?.id,
+                selectedOrgUnitIds.includes(orgUnitId),
+            );
+        },
+        [
+            getSelectedMetricValue,
+            displayedMetric,
+            clickedOrgUnit,
+            selectedOrgUnitIds,
+        ],
+    );
 
     return (
         <Box height="100%" sx={styles.mainBox}>
@@ -162,7 +139,10 @@ export const Map: FC<Props> = ({
                         doubleClickZoom
                         scrollWheelZoom={false}
                         maxZoom={currentTile.maxZoom}
-                        style={{ height: '100%', backgroundColor: '#B0BEC5' }}
+                        style={{
+                            height: '100%',
+                            backgroundColor: mapTheme.backgroundColor,
+                        }}
                         center={[0, 0]}
                         keyboard={false}
                         bounds={bounds}
@@ -174,7 +154,7 @@ export const Map: FC<Props> = ({
                         {orgUnits.map(orgUnit => (
                             <GeoJSON
                                 key={orgUnit.id}
-                                style={getStyleForShape(orgUnit.id)}
+                                style={getMapStyleForOrgUnit(orgUnit.id)}
                                 data={orgUnit.geo_json as unknown as GeoJson}
                                 eventHandlers={{
                                     click: () => onOrgUnitClick(orgUnit.id),

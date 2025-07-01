@@ -6,6 +6,7 @@ into MetricType and MetricValue models, including legend configuration.
 """
 
 import csv
+
 from pathlib import Path
 
 from django.core.management.base import CommandError
@@ -109,7 +110,7 @@ class MetricsImporter:
         self.stdout_write("Adding threshold scales...")
         self._configure_legends()
 
-        self.stdout_write(f"Metrics import completed successfully!")
+        self.stdout_write("Metrics import completed successfully!")
         return value_count
 
     def _create_metric_types(self, metadata_file):
