@@ -47,25 +47,33 @@ docker-compose up
 
 7. Set up your IASO account with e.g. name `Burkina Faso` and import the geopackage you can retrieve from https://iaso-snt-malaria.bluesquare.org/.
 
-8. With the org unit pyramid set up correctly, you can now import the covariate data sets (metrics) and generate a set of interventions:
+8. With the org unit pyramid set up correctly, you can now generate a set of interventions:
 
 ```bash
-docker compose run --rm iaso manage import_metrics
 docker compose run --rm iaso manage seed_interventions
 ```
+
+9. You can now import the covariate data sets (metrics), see the section below.
 
 # OpenHEXA import
 
 Script to fetch a specific dataset from an OpenHEXA workspace and import it into the MetricType and MetricValue tables:
 
-`./manage.py import_openhexa_metrics --workspace_slug <slug> --dataset_slug <slug> --account-id <id>`
+```bash
+docker compose run --rm iaso manage import_openhexa_metrics --workspace_slug <slug> --dataset_slug <slug> --account-id <id>
+```
 
 ### Example for RDC data:
 
-`./manage.py import_openhexa_metrics --workspace_slug snt-development --dataset_slug snt-results --account-id 2`
+```bash
+docker compose run --rm iaso manage import_openhexa_metrics --workspace_slug snt-development --dataset_slug snt-results --account-id 2
+```
+
 To test make sure you set the env variables:
 
+```.env
 OPENHEXA_URL="https://api.openhexa.org/graphql/"
 OPENHEXA_TOKEN = "XXX"
-You can get the OpenHEXA token by going to the pipelines page, create a new one and choose "From OpenHEXA CLI" -> "Show" access token
-https://app.openhexa.org/workspaces/snt-development/pipelines/
+```
+
+Note: You can get a OpenHEXA token by going to the pipelines page, create a new pipeline and choose "From OpenHEXA CLI" -> "Show" access token.
