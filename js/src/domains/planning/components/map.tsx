@@ -41,7 +41,8 @@ type Props = {
     orgUnits?: OrgUnit[];
     displayedMetric: MetricType | null;
     displayedMetricValues?: MetricValue[];
-    selectedOrgUnits: OrgUnit[];
+    orgUnitsOnMap: OrgUnit[];
+    orgUnitsOnMix: OrgUnit[];
     onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
     onApplyFilters: () => void;
     onAddToMix: () => void;
@@ -53,7 +54,8 @@ export const Map: FC<Props> = ({
     orgUnits,
     displayedMetric,
     displayedMetricValues,
-    selectedOrgUnits,
+    orgUnitsOnMap,
+    orgUnitsOnMix,
     onAddRemoveOrgUnitToMix,
     onApplyFilters,
     onAddToMix,
@@ -100,9 +102,9 @@ export const Map: FC<Props> = ({
         onAddRemoveOrgUnitToMix(orgUnit);
     };
 
-    const selectedOrgUnitIds = useMemo(
-        () => selectedOrgUnits.map(ou => ou.id),
-        [selectedOrgUnits],
+    const orgUnitIdsOnMap = useMemo(
+        () => orgUnitsOnMap.map(ou => ou.id),
+        [orgUnitsOnMap],
     );
 
     const getMapStyleForOrgUnit = useCallback(
@@ -113,21 +115,21 @@ export const Map: FC<Props> = ({
                 displayedMetric?.legend_type,
                 displayedMetric?.legend_config,
                 orgUnitId === clickedOrgUnit?.id,
-                selectedOrgUnitIds.includes(orgUnitId),
+                orgUnitIdsOnMap.includes(orgUnitId),
             );
         },
         [
             getSelectedMetricValue,
             displayedMetric,
             clickedOrgUnit,
-            selectedOrgUnitIds,
+            orgUnitIdsOnMap,
         ],
     );
 
     return (
         <Box height="100%" sx={styles.mainBox}>
             <MapSelectionWidget
-                selectionCount={selectedOrgUnits.length}
+                selectionCount={orgUnitIdsOnMap.length}
                 onApplyFilters={onApplyFilters}
                 onAddToMix={onAddToMix}
                 onClearSelection={onClearSelection}
@@ -176,7 +178,8 @@ export const Map: FC<Props> = ({
                                 onUnclickAndAddRemoveOrgUnitToMix
                             }
                             onClear={onClearOrgUnitSelection}
-                            selectedOrgUnits={selectedOrgUnits}
+                            selectedOrgUnits={orgUnitsOnMix}
+                            highlightMetricType={displayedMetric}
                         />
                     )}
                     <Box sx={styles.layerSelectBox}>

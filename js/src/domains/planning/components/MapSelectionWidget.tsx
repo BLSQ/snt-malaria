@@ -1,13 +1,13 @@
 import React, { FC, useState } from 'react';
-import { Box, Button, Theme, Typography } from '@mui/material';
 import CancelOutlined from '@mui/icons-material/CancelOutlined';
 import TuneOutlined from '@mui/icons-material/TuneOutlined';
+import { Box, Button, Theme, Typography } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
-import { FilterQueryBuilder } from './maps/FilterQueryBuilder';
 import { MetricsFilters } from '../types/metrics';
+import { FilterQueryBuilder } from './maps/FilterQueryBuilder';
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({

@@ -22,6 +22,7 @@ import { SelectedDistricts } from './SelectedDistricts';
 type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: OrgUnit[];
+    setSelectedOrgUnits: any;
     setSelectedInterventions: any;
     selectedInterventions: any;
     mixName: string;
@@ -133,6 +134,7 @@ const InterventionList = ({ interventions }) => (
 export const InterventionsMix: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
+    setSelectedOrgUnits,
     setSelectedInterventions,
     selectedInterventions,
     mixName,
@@ -148,15 +150,18 @@ export const InterventionsMix: FC<Props> = ({
         setSelectedDistricts(selectedOrgUnits);
     }, [selectedOrgUnits]);
 
-    const removeDistrict = useCallback(id => {
-        setSelectedDistricts(prev =>
-            prev.filter(district => district.id !== id),
-        );
-    }, []);
+    const removeDistrict = useCallback(
+        id => {
+            setSelectedOrgUnits(prev =>
+                prev.filter(district => district.id !== id),
+            );
+        },
+        [setSelectedOrgUnits],
+    );
 
     const clearAllSelectedDistricts = useCallback(
-        () => setSelectedDistricts([]),
-        [],
+        () => setSelectedOrgUnits([]),
+        [setSelectedOrgUnits],
     );
 
     const { data: interventionMixes } = useGetInterventionMixes(scenarioId);

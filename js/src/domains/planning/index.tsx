@@ -161,7 +161,8 @@ export const Planning: FC = () => {
                                     displayedMetricValues={
                                         displayedMetricValues
                                     }
-                                    selectedOrgUnits={selectionOnMap}
+                                    orgUnitsOnMap={selectionOnMap}
+                                    orgUnitsOnMix={selectionOnInterventionMix}
                                     onApplyFilters={handleApplyFilters}
                                     onClearSelection={handleClearSelectionOnMap}
                                     onChangeMetricLayer={
@@ -193,6 +194,9 @@ export const Planning: FC = () => {
                             <InterventionsMix
                                 scenarioId={scenario?.id}
                                 selectedOrgUnits={selectionOnInterventionMix}
+                                setSelectedOrgUnits={
+                                    setSelectionOnInterventionMix
+                                }
                                 setSelectedInterventions={
                                     setSelectedInterventions
                                 }

@@ -1,6 +1,4 @@
 import React, { FC, useMemo } from 'react';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ArrowForward from '@mui/icons-material/ArrowForward';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import {
     Box,
@@ -11,6 +9,8 @@ import {
     IconButton,
     Tooltip,
     Typography,
+    Theme,
+    styled,
 } from '@mui/material';
 
 import { useSafeIntl } from 'bluesquare-components';
@@ -22,58 +22,63 @@ import {
     useGetMetricValues,
 } from '../hooks/useGetMetrics';
 import { MESSAGES } from '../messages';
-import { MetricType, MetricTypeCategory } from '../types/metrics';
+import { MetricType, MetricTypeCategory, MetricValue } from '../types/metrics';
 
 type Props = {
     clickedOrgUnit: OrgUnit;
     onClear: () => void;
     onAddRemoveOrgUnitToMix: (selectedOrgUnit: any) => void;
     selectedOrgUnits: OrgUnit[];
+    highlightMetricType: MetricType | null;
 };
 
+const ListItemStyled = styled(ListItem)`
+    &:nth-of-type(odd) {
+        background-color: #eceff1;
+    }
+`;
+
 const styles: SxStyles = {
-    mainBox: {
+    mainBox: (theme: Theme) => ({
         position: 'absolute',
-        top: 10,
-        right: 10,
-        backgroundColor: '#333D43',
-        color: 'white',
+        top: 72,
+        left: 8,
+        backgroundColor: 'white',
+        color: theme.palette.text.primary,
         padding: '10px',
         borderRadius: '16px',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
         zIndex: 1000,
-        minWidth: '280px',
-    },
+        maxWidth: '356px',
+        maxHeight: 'calc(100% - 90px)',
+        overflow: 'auto',
+    }),
     buttonsBox: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         width: '100%',
     },
-    title: {
-        marginTop: '8px',
-        fontSize: '1rem',
-        textTransform: 'none',
-    },
-    listItem: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        width: '100%',
-        gap: '2rem',
-        padding: 0,
-    },
-    metricValue: {
-        color: 'white',
-    },
     button: {
-        color: 'white',
-        fontSize: '0.875rem',
-        fontWeight: 'bold',
+        fontSize: '0.8125rem',
+        fontWeight: 'medium',
         textTransform: 'none',
+        minWidth: 80,
     },
+    title: (theme: Theme) => ({
+        marginRight: theme.spacing(1),
+        flexGrow: 1,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+    }),
+    closeIconButton: (theme: Theme) => ({
+        color: theme.palette.text.primary,
+        paddingRight: 0,
+    }),
     closeIcon: {
-        color: 'white',
-        paddingLeft: 0,
+        height: '.8em',
+        width: '.8em',
     },
 };
 
@@ -82,6 +87,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
     onClear,
     onAddRemoveOrgUnitToMix,
     selectedOrgUnits,
+    highlightMetricType,
 }) => {
     const { data: metricCategories } = useGetMetricCategories();
     const flatMetricTypes = useMemo(() => {
@@ -107,23 +113,22 @@ export const MapOrgUnitDetails: FC<Props> = ({
 
     const { formatMessage } = useSafeIntl();
 
+    const getMetricFontWeight = (orgUnitMetric: MetricValue) =>
+        highlightMetricType &&
+        orgUnitMetric.metric_type === highlightMetricType.id
+            ? 'bold'
+            : 'normal';
+
     return (
         <Box sx={styles.mainBox}>
             <Box sx={styles.buttonsBox}>
-                <IconButton
-                    aria-label="close"
-                    onClick={onClear}
-                    sx={styles.closeIcon}
-                >
-                    <CloseOutlinedIcon />
-                </IconButton>
+                <Typography variant="body1" sx={styles.title}>
+                    {clickedOrgUnit.name}
+                </Typography>
                 <Button
-                    variant="contained"
+                    variant="text"
                     color="primary"
                     size="small"
-                    endIcon={
-                        isOrgUnitSelected ? <ArrowBackIcon /> : <ArrowForward />
-                    }
                     onClick={() => onAddRemoveOrgUnitToMix(clickedOrgUnit)}
                     sx={styles.button}
                 >
@@ -131,12 +136,17 @@ export const MapOrgUnitDetails: FC<Props> = ({
                         ? formatMessage(MESSAGES.removeOrgUnitFromMix)
                         : formatMessage(MESSAGES.addOrgUnitFromMix)}
                 </Button>
+                <IconButton
+                    className="Mui-focusVisible"
+                    size="small"
+                    disableRipple={true}
+                    aria-label="close"
+                    onClick={onClear}
+                    sx={styles.closeIconButton}
+                >
+                    <CloseOutlinedIcon sx={styles.closeIcon} />
+                </IconButton>
             </Box>
-
-            <Typography variant="h6" sx={styles.title}>
-                {clickedOrgUnit.name}
-            </Typography>
-
             {isLoading && <CircularProgress size={24} />}
             <List>
                 {!isLoading &&
@@ -154,22 +164,32 @@ export const MapOrgUnitDetails: FC<Props> = ({
                                 }
                                 arrow
                             >
-                                <ListItem
+                                <ListItemStyled
                                     key={metricValue.id}
-                                    sx={styles.listItem}
+                                    sx={(theme: Theme) => ({
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        width: '100%',
+                                        gap: '2rem',
+                                        padding: theme.spacing(1),
+                                        borderRadius: 1,
+                                        ' > *': {
+                                            fontWeight:
+                                                getMetricFontWeight(
+                                                    metricValue,
+                                                ),
+                                        },
+                                    })}
                                 >
                                     <Typography variant="caption">
                                         {metricDetails.name || 'Unknown Metric'}
                                     </Typography>
-                                    <Typography
-                                        variant="caption"
-                                        sx={styles.metricValue}
-                                    >
+                                    <Typography variant="caption">
                                         {Intl.NumberFormat().format(
                                             metricValue.value,
                                         )}
                                     </Typography>
-                                </ListItem>
+                                </ListItemStyled>
                             </Tooltip>
                         );
                     })}
