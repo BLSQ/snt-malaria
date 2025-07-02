@@ -74,7 +74,6 @@ const styles: SxStyles = {
     }),
     closeIconButton: (theme: Theme) => ({
         color: theme.palette.text.primary,
-        // paddingLeft: 0,
         paddingRight: 0,
     }),
     closeIcon: {
