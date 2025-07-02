@@ -160,8 +160,8 @@ class MetricsImporter:
                                 continue
 
                             try:
-                                # Parse the value as a float and round to max 3 behind the comma
-                                value = round(float(row[column]), 3)
+                                # Parse the value as a float
+                                value = float(row[column])
 
                             except ValueError:
                                 self.stdout_write(f"Row {row_count}: Invalid value for {column}: {row[column]}")
