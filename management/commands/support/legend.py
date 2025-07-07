@@ -27,7 +27,7 @@ SEVEN_SHADES = [
     "#512DA8",
     "#4527A0",
 ]
-HEIGHT_SHADES = [
+EIGHT_SHADES = [
     "#EDE7F6",
     "#B39DDB",
     "#9575CD",
@@ -154,7 +154,7 @@ def get_range_from_count(count):
     if count == 7:
         return list(SEVEN_SHADES)
     if count == 8:
-        return list(HEIGHT_SHADES)
+        return list(EIGHT_SHADES)
     if count == 9:
         return list(NINE_SHADES)
     return list(SEVEN_SHADES)
