@@ -144,62 +144,83 @@ class Command(BaseCommand):
                     'coverage': coverage
                 })
 
-        # Second pass: create intervention mixes and assignments
+        # Second pass: group LGAs by intervention combinations
+        intervention_combinations = {}  # Key: intervention combo, Value: list of LGAs
+        
+        for admin_name, interventions_list in lga_interventions.items():
+            # Create a sorted tuple of intervention names for consistent grouping
+            intervention_names = sorted([i['intervention'].name for i in interventions_list])
+            intervention_key = tuple(intervention_names)
+            
+            if intervention_key not in intervention_combinations:
+                intervention_combinations[intervention_key] = {
+                    'lgas': [],
+                    'interventions': [i['intervention'] for i in interventions_list],
+                    'intervention_packages': [i['intervention_package'] for i in interventions_list]
+                }
+            
+            intervention_combinations[intervention_key]['lgas'].append(admin_name)
+
+        self.stdout.write(f"Found {len(intervention_combinations)} unique intervention combinations:")
+        for combo, data in intervention_combinations.items():
+            self.stdout.write(f"  {', '.join(combo)}: {len(data['lgas'])} LGAs")
+
+        # Third pass: create intervention mixes and assignments
         assignments = []
         intervention_mixes_data = {}
         processed_count = 0
 
-        self.stdout.write(f"Processing {len(lga_interventions)} LGAs with intervention data...")
+        for intervention_combo, combo_data in intervention_combinations.items():
+            # Create intervention mix name from the combination
+            intervention_mix_name = f"mix_{'_'.join([name.replace(' ', '_').replace(',', '').lower() for name in intervention_combo])}"
+            
+            # Create intervention mix for this combination
+            intervention_mixes_data[intervention_mix_name] = {
+                "mix": InterventionMix(
+                    account=account,
+                    name=intervention_mix_name,
+                    scenario=scenario,
+                ),
+                "interventions": combo_data['interventions'],
+                "intervention_combo": intervention_combo,
+                "lga_count": len(combo_data['lgas'])
+            }
 
-        for admin_name, interventions_list in lga_interventions.items():
-            if dry_run:
-                if processed_count < 5:  # Show first 5 examples
-                    intervention_names = [INTERVENTION_NAME_MAPPING.get(i['intervention_package'], i['intervention_package']) for i in interventions_list]
-                    self.stdout.write(
-                        f"Would import: {admin_name} -> {', '.join(intervention_names)}"
-                    )
+            # Create intervention assignments for all LGAs with this combination
+            for admin_name in combo_data['lgas']:
+                if dry_run:
+                    if processed_count < 5:  # Show first 5 examples
+                        self.stdout.write(
+                            f"Would import: {admin_name} -> {intervention_mix_name} ({', '.join(intervention_combo)})"
+                        )
+                    processed_count += 1
+                    continue
+
+                # Find the corresponding org unit
+                org_units = OrgUnit.objects.filter(name__iexact=admin_name, version__account=account)
+                
+                if org_units.count() == 0:
+                    self.stderr.write(f"WARNING: No org unit found for '{admin_name}'")
+                    skipped_count += 1
+                    continue
+                elif org_units.count() > 1:
+                    self.stderr.write(f"WARNING: Multiple org units found for '{admin_name}', using first match")
+                    org_unit = org_units.first()
+                else:
+                    org_unit = org_units.first()
+
+                # Create intervention assignment
+                assignment = InterventionAssignment(
+                    scenario=scenario,
+                    org_unit=org_unit,
+                    intervention_mix=intervention_mixes_data[intervention_mix_name]["mix"],
+                    created_by=created_by,
+                )
+                assignments.append(assignment)
                 processed_count += 1
-                continue
 
-            # Find the corresponding org unit
-            org_units = OrgUnit.objects.filter(name__iexact=admin_name, version__account=account)
-            
-            if org_units.count() == 0:
-                self.stderr.write(f"WARNING: No org unit found for '{admin_name}'")
-                skipped_count += 1
-                continue
-            elif org_units.count() > 1:
-                self.stderr.write(f"WARNING: Multiple org units found for '{admin_name}', using first match")
-                org_unit = org_units.first()
-            else:
-                org_unit = org_units.first()
-
-            # Create intervention mix for this LGA
-            intervention_mix_name = f"{admin_name}_mix"
-            
-            if intervention_mix_name not in intervention_mixes_data:
-                intervention_mixes_data[intervention_mix_name] = {
-                    "mix": InterventionMix(
-                        account=account,
-                        name=intervention_mix_name,
-                        scenario=scenario,
-                    ),
-                    "interventions": [item['intervention'] for item in interventions_list],
-                    "admin_name": admin_name,
-                }
-
-            # Create intervention assignment
-            assignment = InterventionAssignment(
-                scenario=scenario,
-                org_unit=org_unit,
-                intervention_mix=intervention_mixes_data[intervention_mix_name]["mix"],
-                created_by=created_by,
-            )
-            assignments.append(assignment)
-            processed_count += 1
-
-            if processed_count % 100 == 0:
-                self.stdout.write(f"Processed {processed_count} LGAs...")
+                if processed_count % 100 == 0:
+                    self.stdout.write(f"Processed {processed_count} LGAs...")
 
         if dry_run:
             self.stdout.write(f"DRY RUN completed. Would process {processed_count} LGAs for Nigeria")
@@ -239,11 +260,17 @@ class Command(BaseCommand):
             self.stdout.write(f"- InterventionMixes created: {len(intervention_mixes_data)}")
             self.stdout.write(f"- InterventionAssignments created: {len(assignments)}")
             
-            # Show intervention summary
+            # Show intervention mix summary
+            self.stdout.write("\nIntervention mix summary:")
+            for mix_name, mix_data in intervention_mixes_data.items():
+                combo_str = ', '.join(mix_data["intervention_combo"])
+                self.stdout.write(f"  {mix_name}: {combo_str} ({mix_data['lga_count']} LGAs)")
+            
+            # Show intervention usage summary
             intervention_counts = {}
-            for lga_data in intervention_mixes_data.values():
-                for intervention in lga_data["interventions"]:
-                    intervention_counts[intervention.name] = intervention_counts.get(intervention.name, 0) + 1
+            for mix_data in intervention_mixes_data.values():
+                for intervention in mix_data["interventions"]:
+                    intervention_counts[intervention.name] = intervention_counts.get(intervention.name, 0) + mix_data['lga_count']
             
             self.stdout.write("\nIntervention usage summary:")
             for intervention_name, count in sorted(intervention_counts.items()):
