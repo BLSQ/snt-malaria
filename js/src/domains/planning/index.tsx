@@ -62,7 +62,7 @@ export const Planning: FC = () => {
     );
     useEffect(() => {
         if (metricCategories && !displayedMetric) {
-            setDisplayedMetric(metricCategories[1].items[0]);
+            setDisplayedMetric(metricCategories[0].items[0]);
         }
     }, [metricCategories, displayedMetric]);
 

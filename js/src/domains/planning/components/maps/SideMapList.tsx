@@ -33,8 +33,8 @@ type Props = {
 export const SideMapList: FC<Props> = ({ orgUnits, metricCategories }) => {
     const [sideMaps, setSideMaps] = useState<MetricType[]>([
         // TODO: temporary for development purposes
-        metricCategories[1].items[0],
-        metricCategories[2].items[0],
+        metricCategories[0].items[0],
+        metricCategories[0].items[1],
     ]);
 
     const handleAddSideMap = useCallback(
