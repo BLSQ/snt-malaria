@@ -1,14 +1,20 @@
+import json
+
 from django.db.models import Max, Min
 
 
-NINE_SHADES = [
-    "#EDE7F6",
+FIVE_SHADES = {
     "#D1C4E9",
     "#B39DDB",
-    "#9575CD",
     "#7E57C2",
     "#673AB7",
-    "#5E35B1",
+    "#4527A0",
+}
+SIX_SHADES = [
+    "#EDE7F6",
+    "#B39DDB",
+    "#7E57C2",
+    "#673AB7",
     "#512DA8",
     "#4527A0",
 ]
@@ -21,13 +27,52 @@ SEVEN_SHADES = [
     "#512DA8",
     "#4527A0",
 ]
+EIGHT_SHADES = [
+    "#EDE7F6",
+    "#B39DDB",
+    "#9575CD",
+    "#7E57C2",
+    "#673AB7",
+    "#5E35B1",
+    "#512DA8",
+    "#4527A0",
+]
+NINE_SHADES = [
+    "#EDE7F6",
+    "#D1C4E9",
+    "#B39DDB",
+    "#9575CD",
+    "#7E57C2",
+    "#673AB7",
+    "#5E35B1",
+    "#512DA8",
+    "#4527A0",
+]
+
 RISK_LOW = "#A5D6A7"
 RISK_MEDIUM = "#FFECB3"
 RISK_HIGH = "#FECDD2"
 RISK_VERY_HIGH = "#FFAB91"
 
 
-def get_legend_config(metric_type):
+def get_legend_config(metric_type, json_scale):
+    # Temporary: use old way as fallback if legend_type was not defined
+    if metric_type.legend_type is None or metric_type.legend_type == "":
+        return __get_legend_config(metric_type)
+
+    if metric_type.legend_type == "threshold":
+        scales = get_scales_from_json_str(json_scale)
+        return {"domain": scales, "range": get_range_from_count(len(scales))}
+    if metric_type.legend_type == "ordinal":
+        return {"domain": [0, 1], "range": [RISK_LOW, RISK_VERY_HIGH]}
+    if metric_type.legend_type == "linear":
+        max_value = get_max_range_value(metric_type)
+        return {"domain": [0, max_value], "range": [NINE_SHADES[0], NINE_SHADES[-1]]}
+
+    return __get_legend_config(metric_type)
+
+
+def __get_legend_config(metric_type):
     if metric_type.category == "Incidence":
         return {
             "domain": [5, 50, 100, 200, 300, 500],
@@ -69,14 +114,6 @@ def get_legend_config(metric_type):
     return {"domain": get_steps(min_value, max_value, len(SEVEN_SHADES)), "range": SEVEN_SHADES}
 
 
-def get_legend_type(metric_type):
-    if metric_type.category == "Mortality":
-        return "linear"
-    if metric_type.category in ["Composite risk", "Seasonality"]:
-        return "ordinal"
-    return "threshold"
-
-
 def get_steps(min, max, count):
     if not min or not max:
         return []
@@ -86,3 +123,38 @@ def get_steps(min, max, count):
     step_size = (max - min) / (count - 1)
     steps = [round(min + i * step_size, round_digits) for i in range(count)]
     return steps
+
+
+def get_scales_from_json_str(jsonstr):
+    if jsonstr:
+        try:
+            scales = json.loads(jsonstr)
+        except Exception as e:
+            print(f"Exception while parsing json: {e}")
+            scales = []
+    else:
+        scales = []
+    return scales
+
+
+def get_max_range_value(metric_type):
+    values_qs = metric_type.metricvalue_set.all()
+
+    result = values_qs.aggregate(
+        max_value=Max("value"),
+    )
+    return result["max_value"]
+
+
+def get_range_from_count(count):
+    if count == 5:
+        return list(FIVE_SHADES)
+    if count == 6:
+        return list(SIX_SHADES)
+    if count == 7:
+        return list(SEVEN_SHADES)
+    if count == 8:
+        return list(EIGHT_SHADES)
+    if count == 9:
+        return list(NINE_SHADES)
+    return list(SEVEN_SHADES)

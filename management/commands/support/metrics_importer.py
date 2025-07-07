@@ -29,6 +29,7 @@ class MetricsImporter:
         self.account = account
         self.download_path = Path(download_path)
         self.stdout_write = stdout_writer or print
+        self.metric_type_scales = {}
 
     def import_metrics(self):
         """Import metrics from downloaded CSV files.
@@ -69,13 +70,14 @@ class MetricsImporter:
     def _validate_csv_files(self, metadata_file, dataset_file):
         # Validate metadata file
         required_metadata_columns = [
-            "VARIABLE",
+            "TYPE",
             "LABEL",
-            "DESCRIPTION",
-            "SOURCE",
+            "SCALE",
             "UNITS",
-            "COMMENTS",
+            "SOURCE",
             "CATEGORY",
+            "VARIABLE",
+            "DESCRIPTION",
             "UNIT_SYMBOL",
         ]
 
@@ -126,11 +128,13 @@ class MetricsImporter:
                     description=row["DESCRIPTION"],
                     source=row["SOURCE"],
                     units=row["UNITS"],
-                    comments=row["COMMENTS"],
                     category=row["CATEGORY"],
                     unit_symbol=row["UNIT_SYMBOL"],
+                    legend_type=row["TYPE"].lower(),
                 )
-                self.stdout_write(f"Created metric: {metric_type.name}")
+
+                self.metric_type_scales[metric_type.code] = row["SCALE"]
+                self.stdout_write(f"Created metric: {metric_type.name} with legend type: {metric_type.legend_type}")
                 metric_types[metric_type.code] = metric_type
 
         return metric_types
@@ -184,9 +188,8 @@ class MetricsImporter:
 
     def _configure_legends(self):
         # Import legend functionality
-        from .legend import get_legend_config, get_legend_type
+        from .legend import get_legend_config
 
         for metric_type in MetricType.objects.filter(account=self.account):
-            metric_type.legend_config = get_legend_config(metric_type)
-            metric_type.legend_type = get_legend_type(metric_type)
+            metric_type.legend_config = get_legend_config(metric_type, self.metric_type_scales[metric_type.code])
             metric_type.save()
