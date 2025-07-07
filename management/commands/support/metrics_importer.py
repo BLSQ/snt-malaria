@@ -29,6 +29,7 @@ class MetricsImporter:
         self.account = account
         self.download_path = Path(download_path)
         self.stdout_write = stdout_writer or print
+        self.metric_type_scales = {}
 
     def import_metrics(self):
         """Import metrics from downloaded CSV files.
@@ -130,8 +131,9 @@ class MetricsImporter:
                     category=row["CATEGORY"],
                     unit_symbol=row["UNIT_SYMBOL"],
                     legend_type=row["TYPE"].lower(),
-                    scale=row["SCALE"],
                 )
+
+                self.metric_type_scales[metric_type.code] = row["SCALE"]
                 self.stdout_write(f"Created metric: {metric_type.name} with legend type: {metric_type.legend_type}")
                 metric_types[metric_type.code] = metric_type
 
@@ -189,5 +191,5 @@ class MetricsImporter:
         from .legend import get_legend_config
 
         for metric_type in MetricType.objects.filter(account=self.account):
-            metric_type.legend_config = get_legend_config(metric_type)
+            metric_type.legend_config = get_legend_config(metric_type, self.metric_type_scales[metric_type.code])
             metric_type.save()

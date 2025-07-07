@@ -55,13 +55,13 @@ RISK_HIGH = "#FECDD2"
 RISK_VERY_HIGH = "#FFAB91"
 
 
-def get_legend_config(metric_type):
+def get_legend_config(metric_type, json_scale):
     # Temporary: use old way as fallback if legend_type was not defined
     if metric_type.legend_type is None or metric_type.legend_type == "":
         return __get_legend_config(metric_type)
 
     if metric_type.legend_type == "threshold":
-        scales = get_scales_from_json_str(metric_type.scale)
+        scales = get_scales_from_json_str(json_scale)
         return {"domain": scales, "range": get_range_from_count(len(scales))}
     if metric_type.legend_type == "ordinal":
         return {"domain": [0, 1], "range": [RISK_LOW, RISK_VERY_HIGH]}
