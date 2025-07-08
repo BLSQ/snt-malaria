@@ -121,21 +121,24 @@ class MetricsImporter:
         with open(metadata_file, newline="", encoding="utf-8") as metafile:
             metareader = csv.DictReader(metafile)
             for row in metareader:
-                metric_type = MetricType.objects.create(
-                    account=self.account,
-                    name=row["LABEL"],
-                    code=row["VARIABLE"],
-                    description=row["DESCRIPTION"],
-                    source=row["SOURCE"],
-                    units=row["UNITS"],
-                    category=row["CATEGORY"],
-                    unit_symbol=row["UNIT_SYMBOL"],
-                    legend_type=row["TYPE"].lower(),
-                )
+                try:
+                    metric_type = MetricType.objects.create(
+                        account=self.account,
+                        name=row["LABEL"],
+                        code=row["VARIABLE"],
+                        description=row["DESCRIPTION"],
+                        source=row["SOURCE"],
+                        units=row["UNITS"],
+                        category=row["CATEGORY"],
+                        unit_symbol=row["UNIT_SYMBOL"],
+                        legend_type=row["TYPE"].lower(),
+                    )
 
-                self.metric_type_scales[metric_type.code] = row["SCALE"]
-                self.stdout_write(f"Created metric: {metric_type.name} with legend type: {metric_type.legend_type}")
-                metric_types[metric_type.code] = metric_type
+                    self.metric_type_scales[metric_type.code] = row["SCALE"]
+                    self.stdout_write(f"Created metric: {metric_type.name} with legend type: {metric_type.legend_type}")
+                    metric_types[metric_type.code] = metric_type
+                except Exception as e:
+                    self.stdout_write(f"ERROR: Error creating MetricType: {row['LABEL']}")
 
         return metric_types
 
