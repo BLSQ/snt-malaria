@@ -83,7 +83,7 @@ export const Map: FC<Props> = ({
             const metricValue = displayedMetricValues?.find(
                 m => m.org_unit === orgUnitId,
             );
-            return metricValue?.value;
+            return metricValue?.value ?? metricValue?.string_value;
         },
         [displayedMetricValues],
     );

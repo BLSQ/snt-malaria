@@ -1,31 +1,57 @@
-import { scaleThreshold } from '@visx/scale';
+import { scaleThreshold, ThresholdScaleConfig } from '@visx/scale';
 import * as d3 from 'd3-scale';
 import { mapTheme } from '../../../constants/map-theme';
 import { ScaleDomainRange } from '../types/metrics';
 
-const getLegend = (legend_config: ScaleDomainRange, value) => {
+const getLegend = (legend_config: ThresholdScaleConfig, value: number) => {
     return scaleThreshold(legend_config)(value);
 };
 
 const getColorForShape = (
-    value: number,
+    value: number | string,
     legend_type: string,
     legend_config: ScaleDomainRange,
 ) => {
-    if (legend_type === 'linear') {
-        const legend = legend_config;
-        const colorScale = d3
-            .scaleLinear()
-            .domain(legend.domain)
-            .range(legend.range);
-        return colorScale(value);
+    if (legend_type === 'ordinal') {
+        const index = legend_config.domain.indexOf(value as never);
+        return legend_config.range[index];
     }
 
-    return getLegend(legend_config, value);
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) {
+        console.error(
+            `Value for ${legend_type} legend can only be a numeric value`,
+        );
+        return null;
+    }
+
+    // Ensure the domain is a number array for linear scales
+    const numericDomain = legend_config.domain.map(Number) as number[];
+    if (numericDomain.some(d => Number.isNaN(d))) {
+        console.error('Legend of type linear only accept numeric as domain');
+        return null;
+    }
+
+    if (legend_type === 'linear') {
+        const colorScale = d3
+            .scaleLinear()
+            .domain(numericDomain)
+            .range(legend_config.range);
+        return colorScale(numericValue);
+    }
+
+    return getLegend(
+        {
+            domain: numericDomain,
+            range: legend_config.range,
+            type: 'threshold',
+        },
+        numericValue,
+    );
 };
 
 export const getStyleForShape = (
-    value: number | undefined,
+    value: number | string | undefined,
     legend_type: string | undefined,
     legend_config: ScaleDomainRange | undefined,
     isActive = false,
