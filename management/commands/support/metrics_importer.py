@@ -134,8 +134,12 @@ class MetricsImporter:
                         legend_type=row["TYPE"].lower(),
                     )
 
-                    self.metric_type_scales[metric_type.code] = row["SCALE"]
+                    # TODO Temp this should come from row scale.
+                    # Or at least move fixed values to a constant
                     self.stdout_write(f"Created metric: {metric_type.name} with legend type: {metric_type.legend_type}")
+                    scale = ["not-seasonal", "seasonal"] if metric_type.legend_type == "ordinal" else row["SCALE"]
+
+                    self.metric_type_scales[metric_type.code] = scale
                     metric_types[metric_type.code] = metric_type
                 except Exception as e:
                     self.stdout_write(f"ERROR: Error creating MetricType: {row['LABEL']}")
@@ -166,19 +170,19 @@ class MetricsImporter:
                             if not row[column]:
                                 continue
 
+                            string_value = row[column]
                             try:
                                 # Parse the value as a float
-                                value = float(row[column])
-
+                                value = float(string_value)
                             except ValueError:
-                                self.stdout_write(f"Row {row_count}: Invalid value for {column}: {row[column]}")
-                                continue
+                                self.stdout_write(
+                                    f"Row {row_count}: Could not parse value to float {column}: {row[column]}. Creating with string_value."
+                                )
+                                value = None
 
                             # Create the MetricValue
                             MetricValue.objects.create(
-                                metric_type=metric_type,
-                                org_unit=org_unit,
-                                value=value,
+                                metric_type=metric_type, org_unit=org_unit, value=value, string_value=string_value
                             )
                             value_count += 1
 
