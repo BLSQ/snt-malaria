@@ -82,10 +82,13 @@ export const useDuplicateScenario = (
         snackErrorMsg: MESSAGES.duplicateError,
     });
 
-export const useDeleteScenario = () =>
+export const useDeleteScenario = (
+    onSuccess: (data: any) => void = _data => null,
+): UseMutationResult =>
     useSnackMutation({
         mutationFn: (id: number) =>
             deleteRequest(`/api/snt_malaria/scenarios/${id}`),
+        options: { onSuccess },
         invalidateQueryKey: ['scenarios'],
         snackSuccessMessage: MESSAGES.deleteSuccess,
         snackErrorMsg: MESSAGES.deleteError,

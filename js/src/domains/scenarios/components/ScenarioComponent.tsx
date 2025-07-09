@@ -49,7 +49,7 @@ const styles: SxStyles = {
 
 type Props = {
     scenario: Scenario;
-    onDelete: any;
+    onDelete: (id: number) => void;
 };
 
 export const ScenarioComponent: FC<Props> = ({ scenario, onDelete }) => {

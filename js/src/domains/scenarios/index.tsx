@@ -43,8 +43,7 @@ export const Scenarios: FC = () => {
     const { mutateAsync: createScenario, isLoading: isLoadingCreateScenario } =
         useCreateScenario();
 
-    const { mutateAsync: deleteScenario, isLoading: isLoadingDeleteScenario } =
-        useDeleteScenario();
+    const { mutateAsync: deleteScenario } = useDeleteScenario();
 
     const handleCreateScenario = async () => {
         const scenario = await createScenario();

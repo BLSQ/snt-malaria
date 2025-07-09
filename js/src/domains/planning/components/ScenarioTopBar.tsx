@@ -2,6 +2,7 @@ import React, { FC, useState } from 'react';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import ContentPasteGoOutlinedIcon from '@mui/icons-material/ContentPasteGoOutlined';
 import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import {
     Box,
@@ -18,6 +19,7 @@ import { baseUrls } from '../../../constants/urls';
 import {
     useUpdateScenario,
     useDuplicateScenario,
+    useDeleteScenario,
 } from '../../scenarios/hooks/useGetScenarios';
 import { Scenario } from '../../scenarios/types';
 
@@ -78,6 +80,9 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
     const [tempName, setTempName] = useState(scenario.name);
 
     const { mutateAsync: updateScenario } = useUpdateScenario();
+    const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
+        navigate('/');
+    });
     const { mutateAsync: duplicateScenario } = useDuplicateScenario(
         duplicatedScenario => {
             navigate(
@@ -93,7 +98,10 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
 
     const handleDuplicateClick = () => {
         duplicateScenario(scenario.id);
-        navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
+    };
+
+    const handleDeleteClick = () => {
+        deleteScenario(scenario.id);
     };
 
     const handleInputChange = event => {
@@ -164,6 +172,14 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                     >
                         <CopyAllOutlinedIcon sx={styles.icon} />
                         Duplicate
+                    </Button>
+                    <Button
+                        variant="text"
+                        sx={styles.actionBtn}
+                        onClick={handleDeleteClick}
+                    >
+                        <DeleteOutlineIcon sx={styles.icon} />
+                        Delete
                     </Button>
                 </Box>
             </Box>
