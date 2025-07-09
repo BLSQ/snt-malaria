@@ -1,13 +1,13 @@
 import React, { FunctionComponent, useMemo } from 'react';
 import { useTheme } from '@mui/material';
-import { scaleThreshold } from '@visx/scale';
 import { LegendThreshold, LegendItem, LegendLabel } from '@visx/legend';
+import { scaleThreshold } from '@visx/scale';
 
 import { ScaleThreshold } from 'Iaso/components/LegendBuilder/types';
 import { getThresHoldLabels } from 'Iaso/components/LegendBuilder/utils';
 
 export const useGetLegend = (threshold?: ScaleThreshold): any => {
-    return scaleThreshold(threshold);
+    return scaleThreshold({ ...threshold });
 };
 
 type Props = {
@@ -27,15 +27,17 @@ export const ThresholdLegend: FunctionComponent<Props> = ({
     );
     return (
         <LegendThreshold scale={getLegend}>
-            {labels =>
-                labels.reverse().map(label => {
+            {_labels =>
+                threshold.range.map((range, index) => {
+                    const value =
+                        index > threshold.domain.length - 1
+                            ? threshold.domain[index - 1]
+                            : threshold.domain[index];
                     return (
-                        <LegendItem
-                            key={`legend-${label.value}-${label.index}`}
-                        >
+                        <LegendItem key={`legend-${value}-${range}`}>
                             <svg width={16} height={16}>
                                 <rect
-                                    fill={label.value}
+                                    fill={range}
                                     width="16px"
                                     height="16px"
                                     rx="4px"
@@ -45,7 +47,7 @@ export const ThresholdLegend: FunctionComponent<Props> = ({
                                 align="left"
                                 margin={theme.spacing(0, 0, 0, 1)}
                             >
-                                {legendLabels[label.index]}
+                                {legendLabels[index]}
                             </LegendLabel>
                         </LegendItem>
                     );
