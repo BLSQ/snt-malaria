@@ -3,6 +3,12 @@ import json
 from django.db.models import Max, Min
 
 
+FOUR_SHADES = {
+    "#D1C4E9",
+    "#B39DDB",
+    "#7E57C2",
+    "#673AB7",
+}
 FIVE_SHADES = {
     "#D1C4E9",
     "#B39DDB",
@@ -54,8 +60,15 @@ RISK_MEDIUM = "#FFECB3"
 RISK_HIGH = "#FECDD2"
 RISK_VERY_HIGH = "#FFAB91"
 
+ORDINAL = {
+    2: [RISK_LOW, RISK_VERY_HIGH],
+    3: [RISK_LOW, RISK_MEDIUM, RISK_VERY_HIGH],
+    4: [RISK_LOW, RISK_MEDIUM, RISK_HIGH, RISK_VERY_HIGH],
+}
+
 
 def get_legend_config(metric_type, scale):
+    print(f"{metric_type.legend_type} {scale}")
     # Temporary: use old way as fallback if legend_type was not defined
     if metric_type.legend_type is None or metric_type.legend_type == "":
         return __get_legend_config(metric_type)
@@ -64,7 +77,11 @@ def get_legend_config(metric_type, scale):
         scales = get_scales_from_list_or_json_str(scale)
         return {"domain": scales, "range": get_range_from_count(len(scales))}
     if metric_type.legend_type == "ordinal":
-        return {"domain": scale, "range": [RISK_LOW, RISK_VERY_HIGH]}
+        if 4 > len(scale) < 2:
+            print(f"Metric ordinal has to many or to few scales {len(scale)}")
+            return None
+
+        return {"domain": scale, "range": ORDINAL[len(scale)]}
     if metric_type.legend_type == "linear":
         max_value = get_max_range_value(metric_type)
         return {"domain": [0, max_value], "range": [NINE_SHADES[0], NINE_SHADES[-1]]}
@@ -149,6 +166,8 @@ def get_max_range_value(metric_type):
 
 
 def get_range_from_count(count):
+    if count == 4:
+        return list(FOUR_SHADES)
     if count == 5:
         return list(FIVE_SHADES)
     if count == 6:

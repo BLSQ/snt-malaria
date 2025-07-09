@@ -13,6 +13,11 @@ from django.core.management.base import CommandError
 from django.db import transaction
 
 from iaso.models import MetricType, MetricValue, OrgUnit
+from plugins.snt_malaria.management.commands.support.generate_composite_risk_layers import (
+    generate_metric_values,
+    get_metric_type_from_scoring_table,
+    scoring_table,
+)
 
 
 class MetricsImporter:
@@ -102,12 +107,14 @@ class MetricsImporter:
         self.stdout_write("Clearing existing metrics...")
         MetricValue.objects.filter(metric_type__account=self.account).delete()
         MetricType.objects.filter(account=self.account).delete()
-
         self.stdout_write("Creating MetricTypes from metadata file...")
         metric_types = self._create_metric_types(metadata_file)
 
         self.stdout_write("Reading values from dataset file...")
         value_count = self._create_metric_values(dataset_file, metric_types)
+
+        self.stdout_write("Generate composite risks metric types & values")
+        self._generate_composite_risk_metrics()
 
         self.stdout_write("Adding threshold scales...")
         self._configure_legends()
@@ -200,3 +207,36 @@ class MetricsImporter:
         for metric_type in MetricType.objects.filter(account=self.account):
             metric_type.legend_config = get_legend_config(metric_type, self.metric_type_scales[metric_type.code])
             metric_type.save()
+
+    def _generate_composite_risk_metrics(self):
+        metric_type_create_model = get_metric_type_from_scoring_table(scoring_table)
+        metric_type = MetricType.objects.create(
+            account=self.account,
+            name=metric_type_create_model["name"],
+            code=metric_type_create_model["code"],
+            description=metric_type_create_model["description"],
+            source=metric_type_create_model["source"],
+            category=metric_type_create_model["category"],
+            unit_symbol=metric_type_create_model["unit_symbol"],
+            legend_type=metric_type_create_model["legend_type"],
+        )
+
+        # TODO Bullet proof this
+        self.metric_type_scales[metric_type.code] = [c.value.label for c in scoring_table.computations]
+        metric_codes = [m.metric_code for m in scoring_table.source_metrics]
+
+        # Get Metrics used to compute composite risk values.
+        # Note that metric_values should be used per org_unit
+        metric_values = (
+            MetricValue.objects.filter(metric_type__code__in=metric_codes, metric_type__account=self.account)
+            .select_related("org_unit", "metric_type")
+            .order_by("org_unit_id", "metric_type__code")
+        )
+        metric_values = generate_metric_values(metric_values, scoring_table)
+        for mv in metric_values:
+            MetricValue.objects.create(
+                metric_type=metric_type,
+                org_unit_id=mv["org_unit_id"],
+                # value=mv["composite_score"],
+                string_value=mv["composite_score_label"],
+            )
