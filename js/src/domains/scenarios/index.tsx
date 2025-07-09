@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Box, Button, Theme } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { useNavigate } from 'react-router-dom';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { SxStyles } from 'Iaso/types/general';
 import {
@@ -11,7 +11,11 @@ import {
 
 import { baseUrls } from '../../constants/urls';
 import { ScenarioComponent } from './components/ScenarioComponent';
-import { useCreateScenario, useGetScenarios } from './hooks/useGetScenarios';
+import {
+    useCreateScenario,
+    useDeleteScenario,
+    useGetScenarios,
+} from './hooks/useGetScenarios';
 import { MESSAGES } from './messages';
 import { Scenario } from './types';
 
@@ -38,6 +42,9 @@ export const Scenarios: FC = () => {
 
     const { mutateAsync: createScenario, isLoading: isLoadingCreateScenario } =
         useCreateScenario();
+
+    const { mutateAsync: deleteScenario, isLoading: isLoadingDeleteScenario } =
+        useDeleteScenario();
 
     const handleCreateScenario = async () => {
         const scenario = await createScenario();
@@ -70,6 +77,7 @@ export const Scenarios: FC = () => {
                             <ScenarioComponent
                                 key={scenario.id}
                                 scenario={scenario}
+                                onDelete={deleteScenario}
                             />
                         ))}
                 </ContentsContainer>

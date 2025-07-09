@@ -1,18 +1,20 @@
 import React, { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import ChevronRightOutlinedIcon from '@mui/icons-material/ChevronRightOutlined';
+import DeleteIcon from '@mui/icons-material/Delete';
 import {
     Box,
     Card,
     CardContent,
     Typography,
-    IconButton,
     Theme,
     CardActionArea,
+    Button,
 } from '@mui/material';
-import ChevronRightOutlinedIcon from '@mui/icons-material/ChevronRightOutlined';
+import { useNavigate } from 'react-router-dom';
 
 import { SxStyles } from 'Iaso/types/general';
 import { baseUrls } from '../../../constants/urls';
+import { Scenario } from '../types';
 
 const styles: SxStyles = {
     card: (theme: Theme) => ({
@@ -31,6 +33,7 @@ const styles: SxStyles = {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-end',
+        flexGrow: 1,
     },
     title: (theme: Theme) => ({
         fontSize: 20,
@@ -46,12 +49,17 @@ const styles: SxStyles = {
 
 type Props = {
     scenario: Scenario;
+    onDelete: any;
 };
 
-export const ScenarioComponent: FC<Props> = ({ scenario }) => {
+export const ScenarioComponent: FC<Props> = ({ scenario, onDelete }) => {
     const navigate = useNavigate();
     const handleScenarioClick = () => {
         navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
+    };
+    const handleOnDelete = event => {
+        event.stopPropagation();
+        onDelete(scenario.id);
     };
 
     return (
@@ -66,6 +74,16 @@ export const ScenarioComponent: FC<Props> = ({ scenario }) => {
                             Edited on{' '}
                             {new Date(scenario.updated_at).toLocaleString()}
                         </Typography>
+                    </Box>
+                    <Box sx={styles.columnEnd}>
+                        <Button
+                            onMouseDown={event => {
+                                event.stopPropagation();
+                            }}
+                            onClick={handleOnDelete}
+                        >
+                            <DeleteIcon />
+                        </Button>
                     </Box>
                     {/* <Box sx={styles.columnEnd}>
                         <Typography variant="overline" color="textSecondary">

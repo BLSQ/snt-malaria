@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 
 from iaso.utils.models.soft_deletable import (
+    DefaultSoftDeletableManager,
     SoftDeletableModel,
 )
 
@@ -18,6 +19,8 @@ class Scenario(SoftDeletableModel):
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = DefaultSoftDeletableManager()
 
     def __str__(self):
         return "%s %s %s" % (self.name, self.updated_at, self.id)
