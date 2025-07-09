@@ -3,6 +3,12 @@ import json
 from django.db.models import Max, Min
 
 
+FOUR_SHADES = {
+    "#D1C4E9",
+    "#B39DDB",
+    "#7E57C2",
+    "#673AB7",
+}
 FIVE_SHADES = {
     "#D1C4E9",
     "#B39DDB",
@@ -154,14 +160,17 @@ def get_max_range_value(metric_type):
 
 
 def get_range_from_count(count):
-    if count == 5:
+    # Note, we always want one additional color, to cover latest value of the scale (> 500 000)
+    if count == 3:
+        return list(FOUR_SHADES)
+    if count == 4:
         return list(FIVE_SHADES)
-    if count == 6:
+    if count == 5:
         return list(SIX_SHADES)
-    if count == 7:
+    if count == 6:
         return list(SEVEN_SHADES)
-    if count == 8:
+    if count == 7:
         return list(EIGHT_SHADES)
-    if count == 9:
+    if count == 8:
         return list(NINE_SHADES)
     return list(SEVEN_SHADES)
