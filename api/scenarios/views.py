@@ -1,12 +1,11 @@
 from datetime import datetime
-import re
+
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
-from drf_yasg.utils import swagger_auto_schema
-
+from rest_framework.response import Response
 
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 
@@ -25,7 +24,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
     serializer_class = ScenarioSerializer
     ordering_fields = ["id", "name"]
-    http_method_names = ["get", "post", "put"]
+    http_method_names = ["get", "post", "put", "delete"]
 
     def get_queryset(self):
         return Scenario.objects.filter(account=self.request.user.iaso_profile.account)
@@ -46,16 +45,16 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         id_to_duplicate = serializer.validated_data.get("id_to_duplicate")
         scenario = get_object_or_404(Scenario, pk=id_to_duplicate)
         scenario.pk = None
-        
+
         scenario.name = f"Copy of {scenario.name}"
-        
+
         duplicate = Scenario.objects.filter(name=scenario.name)
         if duplicate.exists():
             # If a scenario with the same name already exists, append a timestamp to the name
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
             scenario.name = f"{scenario.name} - {timestamp}"
 
-        try: 
+        try:
             scenario.save()
         except Exception as e:
             raise ValidationError(f"Error saving scenario: {e}")

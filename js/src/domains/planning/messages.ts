@@ -133,4 +133,12 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.addToMix',
         defaultMessage: 'Add to mix',
     },
+    modalDeleteScenarioTitle: {
+        id: 'snt_malaria.scenario.delete.title',
+        defaultMessage: 'Delete Scenario',
+    },
+    modalDeleteScenarioConfirm: {
+        id: 'snt_malaria.scenario.delete.confirm',
+        defaultMessage: 'Do you really want to delete this scenario?',
+    },
 });

@@ -1,18 +1,18 @@
 import React, { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import ChevronRightOutlinedIcon from '@mui/icons-material/ChevronRightOutlined';
 import {
     Box,
     Card,
     CardContent,
     Typography,
-    IconButton,
     Theme,
     CardActionArea,
 } from '@mui/material';
-import ChevronRightOutlinedIcon from '@mui/icons-material/ChevronRightOutlined';
+import { useNavigate } from 'react-router-dom';
 
 import { SxStyles } from 'Iaso/types/general';
 import { baseUrls } from '../../../constants/urls';
+import { Scenario } from '../types';
 
 const styles: SxStyles = {
     card: (theme: Theme) => ({
@@ -31,6 +31,7 @@ const styles: SxStyles = {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-end',
+        flexGrow: 1,
     },
     title: (theme: Theme) => ({
         fontSize: 20,
