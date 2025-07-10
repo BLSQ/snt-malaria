@@ -3,8 +3,28 @@ import * as d3 from 'd3-scale';
 import { mapTheme } from '../../../constants/map-theme';
 import { ScaleDomainRange } from '../types/metrics';
 
-const getLegend = (legend_config: ThresholdScaleConfig, value: number) => {
-    return scaleThreshold(legend_config)(value);
+export const getLegend = (
+    threshold: ScaleDomainRange,
+    shouldReverse = false,
+) => {
+    if (!threshold) {
+        return scaleThreshold();
+    }
+
+    if (shouldReverse) {
+        return scaleThreshold({
+            domain: [...threshold.domain].reverse(),
+            range: [...threshold.range].reverse(),
+        });
+    }
+
+    return scaleThreshold(threshold);
+};
+
+export const shouldReverse = (threshold: ScaleDomainRange) => {
+    if (!threshold || !threshold.domain || threshold.domain.length < 2)
+        return false;
+    return threshold.domain[0] > threshold.domain[threshold.domain.length - 1];
 };
 
 const getColorForShape = (
@@ -40,14 +60,7 @@ const getColorForShape = (
         return colorScale(numericValue);
     }
 
-    return getLegend(
-        {
-            domain: numericDomain,
-            range: legend_config.range,
-            type: 'threshold',
-        },
-        numericValue,
-    );
+    return getLegend(legend_config, shouldReverse(legend_config))(value);
 };
 
 export const getStyleForShape = (

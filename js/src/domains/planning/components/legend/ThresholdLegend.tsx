@@ -1,27 +1,9 @@
 import React, { FunctionComponent, useMemo } from 'react';
 import { useTheme } from '@mui/material';
 import { LegendThreshold, LegendItem, LegendLabel } from '@visx/legend';
-import { scaleThreshold } from '@visx/scale';
 
 import { ScaleThreshold } from 'Iaso/components/LegendBuilder/types';
-
-export const useGetLegend = (
-    threshold?: ScaleThreshold,
-    shouldReverse = false,
-): any => {
-    if (!threshold) {
-        return null;
-    }
-
-    if (shouldReverse) {
-        return scaleThreshold({
-            domain: [...threshold.domain].reverse(),
-            range: [...threshold.range].reverse(),
-        });
-    }
-
-    return scaleThreshold(threshold);
-};
+import { getLegend, shouldReverse } from '../../libs/map-utils';
 
 type Props = {
     threshold: ScaleThreshold;
@@ -34,19 +16,16 @@ export const ThresholdLegend: FunctionComponent<Props> = ({
 }) => {
     const theme = useTheme();
 
-    const shouldReverse = useMemo(() => {
-        if (!threshold || !threshold.domain || threshold.domain.length < 2)
-            return false;
-        return (
-            threshold.domain[0] > threshold.domain[threshold.domain.length - 1]
-        );
-    }, [threshold]);
+    const isReversed = useMemo(() => shouldReverse(threshold), [threshold]);
 
-    const getLegend = useGetLegend(threshold, shouldReverse);
+    const legend = useMemo(
+        () => getLegend(threshold, isReversed),
+        [threshold, isReversed],
+    );
 
     return (
         <LegendThreshold
-            scale={getLegend}
+            scale={legend}
             labelDelimiter="-"
             labelLower="< "
             labelUpper="> "
