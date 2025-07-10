@@ -67,8 +67,13 @@ def get_legend_config(metric_type, json_scale):
         return __get_legend_config(metric_type)
 
     if metric_type.legend_type == "threshold":
-        scales = get_scales_from_json_str(json_scale)
-        return {"domain": scales, "range": get_range_from_count(len(scales))}
+        scales = get_scales_from_list_or_json_str(scale)
+        try:
+            numeric_scales = [float(s) for s in scales]
+        except Exception as e:
+            print(f"Error converting scales to numerics: {e}")
+            numeric_scales = []
+        return {"domain": numeric_scales, "range": get_range_from_count(len(scales))}
     if metric_type.legend_type == "ordinal":
         return {"domain": [0, 1], "range": [RISK_LOW, RISK_VERY_HIGH]}
     if metric_type.legend_type == "linear":
