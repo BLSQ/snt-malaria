@@ -60,6 +60,11 @@ RISK_MEDIUM = "#FFECB3"
 RISK_HIGH = "#FECDD2"
 RISK_VERY_HIGH = "#FFAB91"
 
+ORDINAL = {
+    2: [RISK_LOW, RISK_VERY_HIGH],
+    3: [RISK_LOW, RISK_MEDIUM, RISK_VERY_HIGH],
+    4: [RISK_LOW, RISK_MEDIUM, RISK_HIGH, RISK_VERY_HIGH],
+}
 
 def get_legend_config(metric_type, scale):
     # Temporary: use old way as fallback if legend_type was not defined
@@ -76,7 +81,11 @@ def get_legend_config(metric_type, scale):
         return {"domain": numeric_scales, "range": get_range_from_count(len(scales))}
     if metric_type.legend_type == "ordinal":
         scales = get_scales_from_list_or_json_str(scale)
-        return {"domain": scales, "range": [RISK_LOW, RISK_VERY_HIGH]}
+        if 4 > len(scales) < 2:
+            print(f"Metric ordinal has to many or to few scales {len(scales)}")
+            return None
+
+        return {"domain": scales, "range": ORDINAL[len(scales)]}
     if metric_type.legend_type == "linear":
         max_value = get_max_range_value(metric_type)
         return {"domain": [0, max_value], "range": [NINE_SHADES[0], NINE_SHADES[-1]]}
