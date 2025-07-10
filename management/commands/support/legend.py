@@ -60,8 +60,15 @@ RISK_MEDIUM = "#FFECB3"
 RISK_HIGH = "#FECDD2"
 RISK_VERY_HIGH = "#FFAB91"
 
+ORDINAL = {
+    2: [RISK_LOW, RISK_VERY_HIGH],
+    3: [RISK_LOW, RISK_MEDIUM, RISK_VERY_HIGH],
+    4: [RISK_LOW, RISK_MEDIUM, RISK_HIGH, RISK_VERY_HIGH],
+}
 
-def get_legend_config(metric_type, json_scale):
+
+def get_legend_config(metric_type, scale):
+    print(f"Get legend config for: {metric_type.legend_type} {scale}")
     # Temporary: use old way as fallback if legend_type was not defined
     if metric_type.legend_type is None or metric_type.legend_type == "":
         return __get_legend_config(metric_type)
@@ -75,7 +82,12 @@ def get_legend_config(metric_type, json_scale):
             numeric_scales = []
         return {"domain": numeric_scales, "range": get_range_from_count(len(scales))}
     if metric_type.legend_type == "ordinal":
-        return {"domain": [0, 1], "range": [RISK_LOW, RISK_VERY_HIGH]}
+        scales = get_scales_from_list_or_json_str(scale)
+        if 4 > len(scales) < 2:
+            print(f"Metric ordinal has to many or to few scales {len(scales)}")
+            return None
+
+        return {"domain": scales, "range": ORDINAL[len(scales)]}
     if metric_type.legend_type == "linear":
         max_value = get_max_range_value(metric_type)
         return {"domain": [0, max_value], "range": [NINE_SHADES[0], NINE_SHADES[-1]]}
@@ -136,16 +148,22 @@ def get_steps(min, max, count):
     return steps
 
 
-def get_scales_from_json_str(jsonstr):
-    if jsonstr:
-        try:
-            scales = json.loads(jsonstr)
-        except Exception as e:
-            print(f"Exception while parsing json: {e}")
-            scales = []
-    else:
-        scales = []
-    return scales
+def get_scales_from_list_or_json_str(scale):
+    if not scale or scale == "":
+        return []
+
+    if isinstance(scale, list):
+        return scale
+
+    if str.startswith(scale, "[") and str.endswith(scale, "]"):
+        strScale = scale.replace("[", "").replace("]", "")
+        return str.split(strScale, ",")
+
+    try:
+        return json.loads(scale)
+    except Exception as e:
+        print(f"Exception while parsing json: {e}")
+        return []
 
 
 def get_max_range_value(metric_type):
