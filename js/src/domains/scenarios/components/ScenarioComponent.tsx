@@ -1,6 +1,5 @@
 import React, { FC } from 'react';
 import ChevronRightOutlinedIcon from '@mui/icons-material/ChevronRightOutlined';
-import DeleteIcon from '@mui/icons-material/Delete';
 import {
     Box,
     Card,
@@ -8,7 +7,6 @@ import {
     Typography,
     Theme,
     CardActionArea,
-    Button,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -49,17 +47,12 @@ const styles: SxStyles = {
 
 type Props = {
     scenario: Scenario;
-    onDelete: (id: number) => void;
 };
 
-export const ScenarioComponent: FC<Props> = ({ scenario, onDelete }) => {
+export const ScenarioComponent: FC<Props> = ({ scenario }) => {
     const navigate = useNavigate();
     const handleScenarioClick = () => {
         navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
-    };
-    const handleOnDelete = event => {
-        event.stopPropagation();
-        onDelete(scenario.id);
     };
 
     return (
@@ -74,16 +67,6 @@ export const ScenarioComponent: FC<Props> = ({ scenario, onDelete }) => {
                             Edited on{' '}
                             {new Date(scenario.updated_at).toLocaleString()}
                         </Typography>
-                    </Box>
-                    <Box sx={styles.columnEnd}>
-                        <Button
-                            onMouseDown={event => {
-                                event.stopPropagation();
-                            }}
-                            onClick={handleOnDelete}
-                        >
-                            <DeleteIcon />
-                        </Button>
                     </Box>
                     {/* <Box sx={styles.columnEnd}>
                         <Typography variant="overline" color="textSecondary">
