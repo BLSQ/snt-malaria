@@ -39,7 +39,6 @@ const styles: SxStyles = {
         zIndex: 1000,
         backgroundColor: 'rgba(0, 0, 0, 0.6)',
         height: '25px',
-        width: '100px',
         borderRadius: 2,
         display: 'flex',
         alignItems: 'center',
