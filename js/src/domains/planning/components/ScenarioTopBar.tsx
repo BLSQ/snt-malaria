@@ -2,7 +2,6 @@ import React, { FC, useState } from 'react';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import ContentPasteGoOutlinedIcon from '@mui/icons-material/ContentPasteGoOutlined';
 import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import {
     Box,
@@ -13,6 +12,7 @@ import {
     Button,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';
 import { baseUrls } from '../../../constants/urls';
 
@@ -22,6 +22,8 @@ import {
     useDeleteScenario,
 } from '../../scenarios/hooks/useGetScenarios';
 import { Scenario } from '../../scenarios/types';
+import { MESSAGES } from '../messages';
+import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
 
 const actionBtnStyles = (theme: Theme) => ({
     color: theme.palette.primary.main,
@@ -173,14 +175,16 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                         <CopyAllOutlinedIcon sx={styles.icon} />
                         Duplicate
                     </Button>
-                    <Button
-                        variant="text"
-                        sx={styles.actionBtn}
-                        onClick={handleDeleteClick}
+                    <DeleteModal
+                        type="icon"
+                        onConfirm={() => handleDeleteClick()}
+                        titleMessage={MESSAGES.modalDeleteScenarioTitle}
+                        iconProps={{ color: 'primary' }}
                     >
-                        <DeleteOutlineIcon sx={styles.icon} />
-                        Delete
-                    </Button>
+                        <p>
+                            {MESSAGES.modalDeleteScenarioConfirm.defaultMessage}
+                        </p>
+                    </DeleteModal>
                 </Box>
             </Box>
         );
