@@ -123,7 +123,7 @@ export const MESSAGES = defineMessages({
     },
     selectedOrgUnitsCount: {
         id: 'iaso.snt_malaria.label.selectOrgUnitsCount',
-        defaultMessage: '{selectionCount} districts selected',
+        defaultMessage: '{selectionCount} selected',
     },
     clearSelectionTooltip: {
         id: 'iaso.snt_malaria.label.clearSelectionTooltip',

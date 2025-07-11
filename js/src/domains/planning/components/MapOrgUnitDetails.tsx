@@ -10,9 +10,9 @@ import {
     Tooltip,
     Typography,
     Theme,
-    styled,
 } from '@mui/material';
 
+import { blueGrey } from '@mui/material/colors';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
@@ -32,12 +32,6 @@ type Props = {
     highlightMetricType: MetricType | null;
 };
 
-const ListItemStyled = styled(ListItem)`
-    &:nth-of-type(odd) {
-        background-color: #eceff1;
-    }
-`;
-
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
         position: 'absolute',
@@ -50,6 +44,7 @@ const styles: SxStyles = {
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
         zIndex: 1000,
         maxWidth: '356px',
+        width: '330px',
         maxHeight: 'calc(100% - 90px)',
         overflow: 'auto',
     }),
@@ -191,7 +186,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
                                 {categoryName ? (
                                     <Typography
                                         variant="overline"
-                                        sx={styles.category}
+                                        color="textSecondary"
                                     >
                                         {categoryName}
                                     </Typography>
@@ -206,7 +201,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
                                             }
                                             arrow
                                         >
-                                            <ListItemStyled
+                                            <ListItem
                                                 key={metricValue.id}
                                                 sx={(theme: Theme) => ({
                                                     display: 'flex',
@@ -222,6 +217,10 @@ export const MapOrgUnitDetails: FC<Props> = ({
                                                                 metricValue,
                                                             ),
                                                     },
+                                                    ':hover': {
+                                                        backgroundColor:
+                                                            blueGrey[50],
+                                                    },
                                                 })}
                                             >
                                                 <Typography variant="caption">
@@ -233,7 +232,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
                                                         metricValue.value,
                                                     )}
                                                 </Typography>
-                                            </ListItemStyled>
+                                            </ListItem>
                                         </Tooltip>
                                     ))}
                                 </List>
