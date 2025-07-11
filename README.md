@@ -57,6 +57,15 @@ docker compose run --rm iaso manage seed_interventions
 
 # OpenHEXA import
 
+## UI
+
+This adds a "hidden" page to /snt_malaria/import_openhexa_metrics/ that allows an admin user to manually launch the Django command to import the metrics into a specific account.
+
+Example of workspace slug and dataset slug: snt-development and snt-results.
+
+
+## Script
+
 Script to fetch a specific dataset from an OpenHEXA workspace and import it into the MetricType and MetricValue tables:
 
 ```bash
