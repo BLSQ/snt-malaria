@@ -1,0 +1,169 @@
+<html>
+    <head>
+        <title>Import OpenHEXA Metrics</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 600px;
+                margin: 50px auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }
+            .form-container {
+                background-color: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+            h1 {
+                color: #333;
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            .form-group {
+                margin-bottom: 20px;
+            }
+            label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: bold;
+                color: #555;
+            }
+            input[type='text'],
+            select {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 16px;
+                box-sizing: border-box;
+            }
+            .submit-btn {
+                background-color: #007cba;
+                color: white;
+                padding: 12px 30px;
+                border: none;
+                border-radius: 4px;
+                font-size: 16px;
+                cursor: pointer;
+                width: 100%;
+                margin-top: 20px;
+            }
+            .submit-btn:hover {
+                background-color: #005a87;
+            }
+            .warning {
+                background-color: #fff3cd;
+                color: #856404;
+                padding: 12px;
+                border-radius: 4px;
+                margin-bottom: 20px;
+                border: 1px solid #ffeaa7;
+            }
+            .required {
+                color: #e74c3c;
+            }
+            .submit-btn:disabled {
+                background-color: #95a5a6;
+                cursor: not-allowed;
+            }
+            .spinner {
+                display: inline-block;
+                width: 16px;
+                height: 16px;
+                border: 2px solid #ffffff;
+                border-radius: 50%;
+                border-top-color: transparent;
+                animation: spin 1s ease-in-out infinite;
+                margin-right: 8px;
+            }
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="form-container">
+            <h1>Import OpenHEXA Metrics</h1>
+
+            <div class="warning">
+                <strong>⚠️ Admin Only:</strong> This action will download and
+                import metrics data from OpenHEXA workspace. Ensure you have the
+                correct workspace and dataset slugs before proceeding.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="workspace_slug"
+                        >Workspace Slug <span class="required">*</span></label
+                    >
+                    <input
+                        type="text"
+                        id="workspace_slug"
+                        name="workspace_slug"
+                        required
+                        placeholder="e.g., my-workspace-slug"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="dataset_slug"
+                        >Dataset Slug <span class="required">*</span></label
+                    >
+                    <input
+                        type="text"
+                        id="dataset_slug"
+                        name="dataset_slug"
+                        required
+                        placeholder="e.g., my-dataset-slug"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="account_id"
+                        >Account <span class="required">*</span></label
+                    >
+                    <select id="account_id" name="account_id" required>
+                        <option value="">Select an account</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}">
+                            {{ account.name }} (ID: {{ account.id }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button
+                    type="submit"
+                    class="submit-btn"
+                    id="submit-btn"
+                >
+                    Import OpenHEXA Metrics
+                </button>
+            </form>
+        </div>
+        
+        <script>
+            document.getElementById('submit-btn').addEventListener('click', function(e) {
+                // Validate form before submitting
+                const form = this.closest('form');
+                if (!form.checkValidity()) {
+                    return; // Let browser handle validation
+                }
+                
+                // Show loading state
+                this.disabled = true;
+                this.innerHTML = '<span class="spinner"></span>Importing...';
+                
+                // Submit the form after a brief delay to ensure UI updates
+                setTimeout(() => {
+                    form.submit();
+                }, 50);
+                
+                e.preventDefault();
+            });
+        </script>
+    </body>
+</html>
