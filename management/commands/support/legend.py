@@ -4,55 +4,68 @@ from django.db.models import Max, Min
 
 
 FOUR_SHADES = {
-    "#D1C4E9",
-    "#B39DDB",
-    "#7E57C2",
-    "#673AB7",
+    "#A2CAEA",
+    "#ACDF9B",
+    "#F2B16E",
+    "#A93A42",
 }
 FIVE_SHADES = {
-    "#D1C4E9",
-    "#B39DDB",
-    "#7E57C2",
-    "#673AB7",
-    "#4527A0",
+    "#A2CAEA",
+    "#ACDF9B",
+    "#F5F1A0",
+    "#F2B16E",
+    "#A93A42",
 }
 SIX_SHADES = [
-    "#EDE7F6",
-    "#B39DDB",
-    "#7E57C2",
-    "#673AB7",
-    "#512DA8",
-    "#4527A0",
+    "#A2CAEA",
+    "#ACDF9B",
+    "#F5F1A0",
+    "#F2B16E",
+    "#E4754F",
+    "#A93A42",
 ]
 SEVEN_SHADES = [
-    "#EDE7F6",
-    "#D1C4E9",
-    "#B39DDB",
-    "#7E57C2",
-    "#673AB7",
-    "#512DA8",
-    "#4527A0",
+    "#A2CAEA",
+    "#6BD39D",
+    "#ACDF9B",
+    "#F5F1A0",
+    "#F2B16E",
+    "#E4754F",
+    "#A93A42",
 ]
 EIGHT_SHADES = [
-    "#EDE7F6",
-    "#B39DDB",
-    "#9575CD",
-    "#7E57C2",
-    "#673AB7",
-    "#5E35B1",
-    "#512DA8",
-    "#4527A0",
+    "#A2CAEA",
+    "#6BD39D",
+    "#ACDF9B",
+    "#F5F1A0",
+    "#F2B16E",
+    "#E4754F",
+    "#C54A53",
+    "#A93A42",
 ]
 NINE_SHADES = [
-    "#EDE7F6",
-    "#D1C4E9",
-    "#B39DDB",
-    "#9575CD",
-    "#7E57C2",
-    "#673AB7",
-    "#5E35B1",
-    "#512DA8",
-    "#4527A0",
+    "#A2CAEA",
+    "#80B3DC",
+    "#6BD39D",
+    "#ACDF9B",
+    "#F5F1A0",
+    "#F2B16E",
+    "#E4754F",
+    "#C54A53",
+    "#A93A42",
+]
+
+TEN_SHADES = [
+    "#A2CAEA",
+    "#80B3DC",
+    "#6BD39D",
+    "#ACDF9B",
+    "#F5F1A0",
+    "#F2D683",
+    "#F2B16E",
+    "#E4754F",
+    "#C54A53",
+    "#A93A42",
 ]
 
 RISK_LOW = "#A5D6A7"
@@ -187,4 +200,6 @@ def get_range_from_count(count):
         return list(EIGHT_SHADES)
     if count == 8:
         return list(NINE_SHADES)
+    if count == 9:
+        return list(TEN_SHADES)
     return list(SEVEN_SHADES)
