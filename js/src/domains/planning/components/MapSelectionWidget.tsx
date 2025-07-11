@@ -21,12 +21,15 @@ const styles: SxStyles = {
         top: '8px',
         left: '8px',
         zIndex: 1000,
+        width: '330px',
         ':hover': {
             backgroundColor: 'white',
         },
     }),
     openQueryBuilderModalBtn: {
         textTransform: 'none',
+        flexGrow: 1,
+        justifyContent: 'flex-start',
     },
     tuneOutlinedIcon: (theme: Theme) => ({
         color: theme.palette.primary.main,
