@@ -22,7 +22,7 @@ import {
     useGetMetricValues,
 } from '../hooks/useGetMetrics';
 import { MESSAGES } from '../messages';
-import { MetricType, MetricTypeCategory, MetricValue } from '../types/metrics';
+import { MetricType } from '../types/metrics';
 
 type Props = {
     clickedOrgUnit: OrgUnit;
