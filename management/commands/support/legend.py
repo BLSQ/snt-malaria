@@ -55,16 +55,17 @@ RISK_HIGH = "#FECDD2"
 RISK_VERY_HIGH = "#FFAB91"
 
 
-def get_legend_config(metric_type, json_scale):
+def get_legend_config(metric_type, scale):
     # Temporary: use old way as fallback if legend_type was not defined
     if metric_type.legend_type is None or metric_type.legend_type == "":
         return __get_legend_config(metric_type)
 
     if metric_type.legend_type == "threshold":
-        scales = get_scales_from_json_str(json_scale)
+        scales = get_scales_from_list_or_json_str(scale)
         return {"domain": scales, "range": get_range_from_count(len(scales))}
     if metric_type.legend_type == "ordinal":
-        return {"domain": [0, 1], "range": [RISK_LOW, RISK_VERY_HIGH]}
+        scales = get_scales_from_list_or_json_str(scale)
+        return {"domain": scales, "range": [RISK_LOW, RISK_VERY_HIGH]}
     if metric_type.legend_type == "linear":
         max_value = get_max_range_value(metric_type)
         return {"domain": [0, max_value], "range": [NINE_SHADES[0], NINE_SHADES[-1]]}
@@ -125,16 +126,22 @@ def get_steps(min, max, count):
     return steps
 
 
-def get_scales_from_json_str(jsonstr):
-    if jsonstr:
-        try:
-            scales = json.loads(jsonstr)
-        except Exception as e:
-            print(f"Exception while parsing json: {e}")
-            scales = []
-    else:
-        scales = []
-    return scales
+def get_scales_from_list_or_json_str(scale):
+    if not scale or scale == "":
+        return []
+
+    if isinstance(scale, list):
+        return scale
+
+    if str.startswith(scale, "[") and str.endswith(scale, "]"):
+        strScale = scale.replace("[", "").replace("]", "")
+        return str.split(strScale, ",")
+
+    try:
+        return json.loads(scale)
+    except Exception as e:
+        print(f"Exception while parsing json: {e}")
+        return []
 
 
 def get_max_range_value(metric_type):

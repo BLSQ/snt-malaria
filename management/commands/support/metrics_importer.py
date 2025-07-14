@@ -134,8 +134,10 @@ class MetricsImporter:
                         legend_type=row["TYPE"].lower(),
                     )
 
-                    self.metric_type_scales[metric_type.code] = row["SCALE"]
                     self.stdout_write(f"Created metric: {metric_type.name} with legend type: {metric_type.legend_type}")
+                    scale = row["SCALE"]
+
+                    self.metric_type_scales[metric_type.code] = scale
                     metric_types[metric_type.code] = metric_type
                 except Exception as e:
                     self.stdout_write(f"ERROR: Error creating MetricType: {row['LABEL']}")
@@ -166,19 +168,20 @@ class MetricsImporter:
                             if not row[column]:
                                 continue
 
+                            string_value = None
                             try:
                                 # Parse the value as a float
                                 value = float(row[column])
-
                             except ValueError:
-                                self.stdout_write(f"Row {row_count}: Invalid value for {column}: {row[column]}")
-                                continue
+                                self.stdout_write(
+                                    f"Row {row_count}: Could not parse value to float {column}: {row[column]}. Creating with string_value."
+                                )
+                                value = None
+                                string_value = row[column]
 
                             # Create the MetricValue
                             MetricValue.objects.create(
-                                metric_type=metric_type,
-                                org_unit=org_unit,
-                                value=value,
+                                metric_type=metric_type, org_unit=org_unit, value=value, string_value=string_value
                             )
                             value_count += 1
 

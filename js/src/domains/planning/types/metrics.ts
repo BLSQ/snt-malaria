@@ -22,10 +22,11 @@ export type MetricValue = {
     org_unit: number;
     year: number | null;
     value: number;
+    string_value: string;
 };
 
 export type ScaleDomainRange = {
-    domain: number[];
+    domain: number[] | string[];
     range: string[];
 };
 
