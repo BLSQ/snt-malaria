@@ -43,8 +43,8 @@ export const useGetScenario = (
     scenarioId: number,
 ): UseQueryResult<Scenario, Error> => {
     return useSnackQuery({
-        queryKey: ['scenarios', scenarioId],
-        queryFn: () => getRequest(`/api/snt_malaria/scenarios/${scenarioId}`),
+        queryKey: ['scenario', scenarioId],
+        queryFn: () => getRequest(`/api/snt_malaria/scenarios/${scenarioId}/`),
         options: {
             staleTime: 1000 * 60 * 15, // in MS
             cacheTime: 1000 * 60 * 5,
@@ -87,7 +87,7 @@ export const useDeleteScenario = (
 ): UseMutationResult =>
     useSnackMutation({
         mutationFn: (id: number) =>
-            deleteRequest(`/api/snt_malaria/scenarios/${id}`),
+            deleteRequest(`/api/snt_malaria/scenarios/${id}/`),
         options: { onSuccess },
         invalidateQueryKey: ['scenarios'],
         snackSuccessMessage: MESSAGES.deleteSuccess,
