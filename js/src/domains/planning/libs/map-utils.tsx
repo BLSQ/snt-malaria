@@ -1,4 +1,4 @@
-import { scaleThreshold, ThresholdScaleConfig } from '@visx/scale';
+import { scaleThreshold } from '@visx/scale';
 import * as d3 from 'd3-scale';
 import { mapTheme } from '../../../constants/map-theme';
 import { ScaleDomainRange } from '../types/metrics';
