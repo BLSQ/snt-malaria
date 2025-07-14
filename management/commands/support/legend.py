@@ -64,7 +64,8 @@ def get_legend_config(metric_type, scale):
         scales = get_scales_from_list_or_json_str(scale)
         return {"domain": scales, "range": get_range_from_count(len(scales))}
     if metric_type.legend_type == "ordinal":
-        return {"domain": scale, "range": [RISK_LOW, RISK_VERY_HIGH]}
+        scales = get_scales_from_list_or_json_str(scale)
+        return {"domain": scales, "range": [RISK_LOW, RISK_VERY_HIGH]}
     if metric_type.legend_type == "linear":
         max_value = get_max_range_value(metric_type)
         return {"domain": [0, max_value], "range": [NINE_SHADES[0], NINE_SHADES[-1]]}
@@ -131,6 +132,10 @@ def get_scales_from_list_or_json_str(scale):
 
     if isinstance(scale, list):
         return scale
+
+    if str.startswith(scale, "[") and str.endswith(scale, "]"):
+        strScale = scale.replace("[", "").replace("]", "")
+        return str.split(strScale, ",")
 
     try:
         return json.loads(scale)
