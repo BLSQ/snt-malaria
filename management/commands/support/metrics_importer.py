@@ -134,10 +134,8 @@ class MetricsImporter:
                         legend_type=row["TYPE"].lower(),
                     )
 
-                    # TODO Temp this should come from row scale.
-                    # Or at least move fixed values to a constant
                     self.stdout_write(f"Created metric: {metric_type.name} with legend type: {metric_type.legend_type}")
-                    scale = ["not-seasonal", "seasonal"] if metric_type.legend_type == "ordinal" else row["SCALE"]
+                    scale = row["SCALE"]
 
                     self.metric_type_scales[metric_type.code] = scale
                     metric_types[metric_type.code] = metric_type
@@ -170,15 +168,16 @@ class MetricsImporter:
                             if not row[column]:
                                 continue
 
-                            string_value = row[column]
+                            string_value = None
                             try:
                                 # Parse the value as a float
-                                value = float(string_value)
+                                value = float(row[column])
                             except ValueError:
                                 self.stdout_write(
                                     f"Row {row_count}: Could not parse value to float {column}: {row[column]}. Creating with string_value."
                                 )
                                 value = None
+                                string_value = row[column]
 
                             # Create the MetricValue
                             MetricValue.objects.create(
