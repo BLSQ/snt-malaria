@@ -66,10 +66,9 @@ class InterventionAssignment(SoftDeletableModel):
 
 class InterventionMix(SoftDeletableModel):
     class Meta:
-        app_label = "snt_malaria"
         verbose_name_plural = "Intervention mixes"
         ordering = ["name"]
-        unique_together = [["name"]]
+        unique_together = [["name", "scenario"]]
 
     account = models.ForeignKey("iaso.Account", null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
