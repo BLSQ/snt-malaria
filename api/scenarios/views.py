@@ -25,7 +25,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
     serializer_class = ScenarioSerializer
     ordering_fields = ["id", "name"]
-    http_method_names = ["get", "post", "put"]
+    http_method_names = ["get", "post", "put", "delete"]
 
     def get_queryset(self):
         return Scenario.objects.filter(account=self.request.user.iaso_profile.account)

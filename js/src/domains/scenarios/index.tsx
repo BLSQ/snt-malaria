@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Box, Button, Theme } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { useNavigate } from 'react-router-dom';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { SxStyles } from 'Iaso/types/general';
 import {

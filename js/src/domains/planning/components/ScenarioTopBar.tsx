@@ -12,14 +12,18 @@ import {
     Button,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';
 import { baseUrls } from '../../../constants/urls';
 
 import {
     useUpdateScenario,
     useDuplicateScenario,
+    useDeleteScenario,
 } from '../../scenarios/hooks/useGetScenarios';
 import { Scenario } from '../../scenarios/types';
+import { MESSAGES } from '../messages';
+import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
 
 const actionBtnStyles = (theme: Theme) => ({
     color: theme.palette.primary.main,
@@ -78,6 +82,9 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
     const [tempName, setTempName] = useState(scenario.name);
 
     const { mutateAsync: updateScenario } = useUpdateScenario();
+    const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
+        navigate('/');
+    });
     const { mutateAsync: duplicateScenario } = useDuplicateScenario(
         duplicatedScenario => {
             navigate(
@@ -93,7 +100,10 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
 
     const handleDuplicateClick = () => {
         duplicateScenario(scenario.id);
-        navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
+    };
+
+    const handleDeleteClick = () => {
+        deleteScenario(scenario.id);
     };
 
     const handleInputChange = event => {
@@ -165,6 +175,16 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                         <CopyAllOutlinedIcon sx={styles.icon} />
                         Duplicate
                     </Button>
+                    <DeleteModal
+                        type="icon"
+                        onConfirm={() => handleDeleteClick()}
+                        titleMessage={MESSAGES.modalDeleteScenarioTitle}
+                        iconProps={{ color: 'primary' }}
+                    >
+                        <p>
+                            {MESSAGES.modalDeleteScenarioConfirm.defaultMessage}
+                        </p>
+                    </DeleteModal>
                 </Box>
             </Box>
         );
