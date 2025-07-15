@@ -10,9 +10,9 @@ import {
     Tooltip,
     Typography,
     Theme,
-    styled,
 } from '@mui/material';
 
+import { blueGrey } from '@mui/material/colors';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
@@ -22,7 +22,7 @@ import {
     useGetMetricValues,
 } from '../hooks/useGetMetrics';
 import { MESSAGES } from '../messages';
-import { MetricType, MetricTypeCategory, MetricValue } from '../types/metrics';
+import { MetricType } from '../types/metrics';
 
 type Props = {
     clickedOrgUnit: OrgUnit;
@@ -31,12 +31,6 @@ type Props = {
     selectedOrgUnits: OrgUnit[];
     highlightMetricType: MetricType | null;
 };
-
-const ListItemStyled = styled(ListItem)`
-    &:nth-of-type(odd) {
-        background-color: #eceff1;
-    }
-`;
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
@@ -50,6 +44,7 @@ const styles: SxStyles = {
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
         zIndex: 1000,
         maxWidth: '356px',
+        width: '330px',
         maxHeight: 'calc(100% - 90px)',
         overflow: 'auto',
     }),
@@ -90,21 +85,54 @@ export const MapOrgUnitDetails: FC<Props> = ({
     highlightMetricType,
 }) => {
     const { data: metricCategories } = useGetMetricCategories();
-    const flatMetricTypes = useMemo(() => {
-        return (metricCategories || []).reduce(
-            (acc, category: MetricTypeCategory) => {
-                category.items.forEach((metric: MetricType) => {
-                    acc[metric.id] = metric;
-                });
-                return acc;
-            },
-            {},
-        );
-    }, [metricCategories]);
 
     const { data: metricValues, isLoading } = useGetMetricValues({
         orgUnitId: clickedOrgUnit.id,
     });
+
+    const metricTypes = useMemo(
+        () =>
+            metricCategories?.reduce((acc, curr, index) => {
+                return [
+                    ...acc,
+                    ...curr.items.map(i => ({ ...i, categoryId: index })),
+                ];
+            }, []),
+        [metricCategories],
+    );
+
+    const groupedMetricValues: {
+        [categoryId: string]: {
+            id: number;
+            description: string;
+            name: string;
+            value: number;
+            metric_type: number;
+            category: number;
+        }[];
+    } = useMemo(
+        () =>
+            metricValues?.reduce((groups, curr) => {
+                const metricType = metricTypes?.find(
+                    c => c.id === curr.metric_type,
+                );
+
+                if (!metricType) {
+                    return groups;
+                }
+
+                const categoryId = metricType.categoryId ?? 9999999;
+                const newValue = { ...metricType, value: curr.value };
+
+                const existingValues = groups[categoryId] ?? [];
+
+                return {
+                    ...groups,
+                    [categoryId]: [...existingValues, newValue],
+                };
+            }, {}) ?? {},
+        [metricValues, metricTypes],
+    );
 
     const isOrgUnitSelected = useMemo(
         () => selectedOrgUnits.some(unit => unit.id === clickedOrgUnit.id),
@@ -113,7 +141,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
 
     const { formatMessage } = useSafeIntl();
 
-    const getMetricFontWeight = (orgUnitMetric: MetricValue) =>
+    const getMetricFontWeight = (orgUnitMetric: { metric_type: number }) =>
         highlightMetricType &&
         orgUnitMetric.metric_type === highlightMetricType.id
             ? 'bold'
@@ -148,52 +176,70 @@ export const MapOrgUnitDetails: FC<Props> = ({
                 </IconButton>
             </Box>
             {isLoading && <CircularProgress size={24} />}
-            <List>
+            <Box>
                 {!isLoading &&
                     metricValues &&
-                    metricValues.map(metricValue => {
-                        const metricDetails =
-                            flatMetricTypes[metricValue.metric_type];
+                    Object.entries(groupedMetricValues).map(([_, values]) => {
+                        const categoryName = values[0].category;
                         return (
-                            <Tooltip
-                                key={metricValue.id}
-                                title={
-                                    metricDetails
-                                        ? metricDetails.description
-                                        : 'No description available'
-                                }
-                                arrow
-                            >
-                                <ListItemStyled
-                                    key={metricValue.id}
-                                    sx={(theme: Theme) => ({
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        width: '100%',
-                                        gap: '2rem',
-                                        padding: theme.spacing(1),
-                                        borderRadius: 1,
-                                        ' > *': {
-                                            fontWeight:
-                                                getMetricFontWeight(
-                                                    metricValue,
-                                                ),
-                                        },
-                                    })}
-                                >
-                                    <Typography variant="caption">
-                                        {metricDetails.name || 'Unknown Metric'}
+                            <>
+                                {categoryName ? (
+                                    <Typography
+                                        variant="overline"
+                                        color="textSecondary"
+                                    >
+                                        {categoryName}
                                     </Typography>
-                                    <Typography variant="caption">
-                                        {Intl.NumberFormat().format(
-                                            metricValue.value,
-                                        )}
-                                    </Typography>
-                                </ListItemStyled>
-                            </Tooltip>
+                                ) : null}
+                                <List>
+                                    {values.map(metricValue => (
+                                        <Tooltip
+                                            key={metricValue.id}
+                                            title={
+                                                metricValue?.description ??
+                                                'No description available'
+                                            }
+                                            arrow
+                                        >
+                                            <ListItem
+                                                key={metricValue.id}
+                                                sx={(theme: Theme) => ({
+                                                    display: 'flex',
+                                                    justifyContent:
+                                                        'space-between',
+                                                    width: '100%',
+                                                    gap: '2rem',
+                                                    padding: theme.spacing(1),
+                                                    borderRadius: 1,
+                                                    ' > *': {
+                                                        fontWeight:
+                                                            getMetricFontWeight(
+                                                                metricValue,
+                                                            ),
+                                                    },
+                                                    ':hover': {
+                                                        backgroundColor:
+                                                            blueGrey[50],
+                                                    },
+                                                })}
+                                            >
+                                                <Typography variant="caption">
+                                                    {metricValue?.name ??
+                                                        'Unknown Metric'}
+                                                </Typography>
+                                                <Typography variant="caption">
+                                                    {Intl.NumberFormat().format(
+                                                        metricValue.value,
+                                                    )}
+                                                </Typography>
+                                            </ListItem>
+                                        </Tooltip>
+                                    ))}
+                                </List>
+                            </>
                         );
                     })}
-            </List>
+            </Box>
         </Box>
     );
 };
