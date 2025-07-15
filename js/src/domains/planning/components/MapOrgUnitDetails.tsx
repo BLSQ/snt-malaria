@@ -27,7 +27,7 @@ import { MetricType } from '../types/metrics';
 type Props = {
     clickedOrgUnit: OrgUnit;
     onClear: () => void;
-    onAddRemoveOrgUnitToMix: (selectedOrgUnit: any) => void;
+    onAddRemoveOrgUnit: (selectedOrgUnit: any) => void;
     selectedOrgUnits: OrgUnit[];
     highlightMetricType: MetricType | null;
 };
@@ -58,7 +58,7 @@ const styles: SxStyles = {
         fontSize: '0.8125rem',
         fontWeight: 'medium',
         textTransform: 'none',
-        minWidth: 80,
+        minWidth: 55,
     },
     title: (theme: Theme) => ({
         marginRight: theme.spacing(1),
@@ -80,7 +80,7 @@ const styles: SxStyles = {
 export const MapOrgUnitDetails: FC<Props> = ({
     clickedOrgUnit,
     onClear,
-    onAddRemoveOrgUnitToMix,
+    onAddRemoveOrgUnit,
     selectedOrgUnits,
     highlightMetricType,
 }) => {
@@ -157,12 +157,12 @@ export const MapOrgUnitDetails: FC<Props> = ({
                     variant="text"
                     color="primary"
                     size="small"
-                    onClick={() => onAddRemoveOrgUnitToMix(clickedOrgUnit)}
+                    onClick={() => onAddRemoveOrgUnit(clickedOrgUnit)}
                     sx={styles.button}
                 >
                     {isOrgUnitSelected
-                        ? formatMessage(MESSAGES.removeOrgUnitFromMix)
-                        : formatMessage(MESSAGES.addOrgUnitFromMix)}
+                        ? formatMessage(MESSAGES.remove)
+                        : formatMessage(MESSAGES.add)}
                 </Button>
                 <IconButton
                     className="Mui-focusVisible"

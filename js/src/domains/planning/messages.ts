@@ -42,12 +42,12 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'You’re about to apply intervention mix to districts that already have been applied a mix. Please review the ones to override.',
     },
-    removeOrgUnitFromMix: {
-        id: 'iaso.snt_malaria.label.interventionMix.removeOrgUnitFromMix',
+    remove: {
+        id: 'iaso.snt_malaria.label.interventionMix.remove',
         defaultMessage: 'Remove',
     },
-    addOrgUnitFromMix: {
-        id: 'iaso.snt_malaria.label.interventionMix.addOrgUnitFromMix',
+    add: {
+        id: 'iaso.snt_malaria.label.interventionMix.add',
         defaultMessage: 'Add',
     },
     interventionPlanTitle: {
