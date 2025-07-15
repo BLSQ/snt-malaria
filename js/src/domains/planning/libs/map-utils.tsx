@@ -3,6 +3,7 @@ import * as d3 from 'd3-scale';
 import { mapTheme } from '../../../constants/map-theme';
 import { ScaleDomainRange } from '../types/metrics';
 
+const defaultLegend = '#999999';
 export const getLegend = (
     threshold: ScaleDomainRange,
     shouldReverse = false,
@@ -28,13 +29,17 @@ export const shouldReverse = (threshold: ScaleDomainRange) => {
 };
 
 const getColorForShape = (
-    value: number | string,
-    legend_type: string,
-    legend_config: ScaleDomainRange,
+    value?: string | number,
+    legend_type?: string,
+    legend_config?: ScaleDomainRange,
 ) => {
+    if (!value || !legend_type || !legend_config) {
+        return defaultLegend;
+    }
+
     if (legend_type === 'ordinal') {
         const index = legend_config.domain.indexOf(value as never);
-        return legend_config.range[index];
+        return legend_config.range[index] ?? defaultLegend;
     }
 
     const numericValue = Number(value);
@@ -42,14 +47,14 @@ const getColorForShape = (
         console.error(
             `Value for ${legend_type} legend can only be a numeric value`,
         );
-        return null;
+        return defaultLegend;
     }
 
     // Ensure the domain is a number array for linear scales
     const numericDomain = legend_config.domain.map(Number) as number[];
     if (numericDomain.some(d => Number.isNaN(d))) {
         console.error('Legend of type linear only accept numeric as domain');
-        return null;
+        return defaultLegend;
     }
 
     if (legend_type === 'linear') {
@@ -89,7 +94,7 @@ export const getStyleForShape = (
         weight,
         fillColor:
             legend_config &&
-            getColorForShape(value ?? 0, legend_type ?? '', legend_config),
+            getColorForShape(value, legend_type, legend_config),
         fillOpacity: 1,
     };
 };
