@@ -133,6 +133,14 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.addToMix',
         defaultMessage: 'Add to mix',
     },
+    addedMapSelectionToMix: {
+        id: 'iaso.snt_malaria.label.addedMapSelectionToMix',
+        defaultMessage: 'Added {amount} map selection to mix',
+    },
+    clearedMapSelection: {
+        id: 'iaso.snt_malaria.label.clearedMapSelection',
+        defaultMessage: 'Map selection has been cleared',
+    },
     modalDeleteScenarioTitle: {
         id: 'snt_malaria.scenario.delete.title',
         defaultMessage: 'Delete Scenario',

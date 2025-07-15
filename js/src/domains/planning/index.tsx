@@ -81,6 +81,15 @@ export const Planning: FC = () => {
         );
 
         setSelectionOnInterventionMix(prev => [...prev, ...newOrgUnits]);
+
+        openSnackBar(
+            succesfullSnackBar(
+                'addedMapSelectionToMix',
+                formatMessage(MESSAGES.addedMapSelectionToMix, {
+                    amount: newOrgUnits.length,
+                }),
+            ),
+        );
     };
 
     const { data: displayedMetricValues, isLoading } = useGetMetricValues({
@@ -133,6 +142,12 @@ export const Planning: FC = () => {
 
     const handleClearSelectionOnMap = useCallback(() => {
         setSelectionOnMap([]);
+        openSnackBar(
+            succesfullSnackBar(
+                'clearedMapSelection',
+                formatMessage(MESSAGES.clearedMapSelection),
+            ),
+        );
     }, []);
 
     const handleExpandAccordion = panel => (event, isExpanded) => {
