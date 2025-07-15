@@ -44,11 +44,11 @@ export const MESSAGES = defineMessages({
     },
     removeOrgUnitFromMix: {
         id: 'iaso.snt_malaria.label.interventionMix.removeOrgUnitFromMix',
-        defaultMessage: 'Remove from mix',
+        defaultMessage: 'Remove',
     },
     addOrgUnitFromMix: {
         id: 'iaso.snt_malaria.label.interventionMix.addOrgUnitFromMix',
-        defaultMessage: 'Add to mix',
+        defaultMessage: 'Add',
     },
     interventionPlanTitle: {
         id: 'iaso.snt_malaria.label.interventionPlanTitle',
