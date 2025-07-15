@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import { useTheme } from '@mui/material';
-import { scaleOrdinal } from '@visx/scale';
 import { LegendOrdinal, LegendItem, LegendLabel } from '@visx/legend';
+import { scaleOrdinal } from '@visx/scale';
 import { ScaleDomainRange } from '../../types/metrics';
 
 export const useGetLegend = (threshold?: ScaleDomainRange): any => {
@@ -19,7 +19,7 @@ export const OrdinalLegend: FunctionComponent<Props> = ({ domainAndRange }) => {
     return (
         <LegendOrdinal scale={getLegend}>
             {labels =>
-                labels.reverse().map(label => {
+                labels.map(label => {
                     return (
                         <LegendItem
                             key={`legend-${label.value}-${label.index}`}

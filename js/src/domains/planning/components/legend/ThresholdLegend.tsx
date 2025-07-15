@@ -1,14 +1,9 @@
 import React, { FunctionComponent, useMemo } from 'react';
 import { useTheme } from '@mui/material';
-import { scaleThreshold } from '@visx/scale';
 import { LegendThreshold, LegendItem, LegendLabel } from '@visx/legend';
 
 import { ScaleThreshold } from 'Iaso/components/LegendBuilder/types';
-import { getThresHoldLabels } from 'Iaso/components/LegendBuilder/utils';
-
-export const useGetLegend = (threshold?: ScaleThreshold): any => {
-    return scaleThreshold(threshold);
-};
+import { getLegend, shouldReverse } from '../../libs/map-utils';
 
 type Props = {
     threshold: ScaleThreshold;
@@ -20,36 +15,41 @@ export const ThresholdLegend: FunctionComponent<Props> = ({
     unit,
 }) => {
     const theme = useTheme();
-    const getLegend = useGetLegend(threshold);
-    const legendLabels = useMemo(
-        () => getThresHoldLabels(threshold, unit),
-        [threshold, unit],
+
+    const isReversed = useMemo(() => shouldReverse(threshold), [threshold]);
+
+    const legend = useMemo(
+        () => getLegend(threshold, isReversed),
+        [threshold, isReversed],
     );
+
     return (
-        <LegendThreshold scale={getLegend}>
+        <LegendThreshold
+            scale={legend}
+            labelDelimiter="-"
+            labelLower="< "
+            labelUpper="> "
+        >
             {labels =>
-                labels.reverse().map(label => {
-                    return (
-                        <LegendItem
-                            key={`legend-${label.value}-${label.index}`}
+                labels.map(label => (
+                    <LegendItem key={`legend-${label.value}-${label.index}`}>
+                        <svg width={16} height={16}>
+                            <rect
+                                fill={label.value}
+                                width="16px"
+                                height="16px"
+                                rx="4px"
+                            />
+                        </svg>
+                        <LegendLabel
+                            align="left"
+                            margin={theme.spacing(0, 0, 0, 1)}
                         >
-                            <svg width={16} height={16}>
-                                <rect
-                                    fill={label.value}
-                                    width="16px"
-                                    height="16px"
-                                    rx="4px"
-                                />
-                            </svg>
-                            <LegendLabel
-                                align="left"
-                                margin={theme.spacing(0, 0, 0, 1)}
-                            >
-                                {legendLabels[label.index]}
-                            </LegendLabel>
-                        </LegendItem>
-                    );
-                })
+                            {label.text}
+                            {unit}
+                        </LegendLabel>
+                    </LegendItem>
+                ))
             }
         </LegendThreshold>
     );

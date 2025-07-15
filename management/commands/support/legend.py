@@ -3,50 +3,69 @@ import json
 from django.db.models import Max, Min
 
 
+FOUR_SHADES = {
+    "#A2CAEA",
+    "#ACDF9B",
+    "#F2B16E",
+    "#A93A42",
+}
 FIVE_SHADES = {
-    "#D1C4E9",
-    "#B39DDB",
-    "#7E57C2",
-    "#673AB7",
-    "#4527A0",
+    "#A2CAEA",
+    "#ACDF9B",
+    "#F5F1A0",
+    "#F2B16E",
+    "#A93A42",
 }
 SIX_SHADES = [
-    "#EDE7F6",
-    "#B39DDB",
-    "#7E57C2",
-    "#673AB7",
-    "#512DA8",
-    "#4527A0",
+    "#A2CAEA",
+    "#ACDF9B",
+    "#F5F1A0",
+    "#F2B16E",
+    "#E4754F",
+    "#A93A42",
 ]
 SEVEN_SHADES = [
-    "#EDE7F6",
-    "#D1C4E9",
-    "#B39DDB",
-    "#7E57C2",
-    "#673AB7",
-    "#512DA8",
-    "#4527A0",
+    "#A2CAEA",
+    "#6BD39D",
+    "#ACDF9B",
+    "#F5F1A0",
+    "#F2B16E",
+    "#E4754F",
+    "#A93A42",
 ]
 EIGHT_SHADES = [
-    "#EDE7F6",
-    "#B39DDB",
-    "#9575CD",
-    "#7E57C2",
-    "#673AB7",
-    "#5E35B1",
-    "#512DA8",
-    "#4527A0",
+    "#A2CAEA",
+    "#6BD39D",
+    "#ACDF9B",
+    "#F5F1A0",
+    "#F2B16E",
+    "#E4754F",
+    "#C54A53",
+    "#A93A42",
 ]
 NINE_SHADES = [
-    "#EDE7F6",
-    "#D1C4E9",
-    "#B39DDB",
-    "#9575CD",
-    "#7E57C2",
-    "#673AB7",
-    "#5E35B1",
-    "#512DA8",
-    "#4527A0",
+    "#A2CAEA",
+    "#80B3DC",
+    "#6BD39D",
+    "#ACDF9B",
+    "#F5F1A0",
+    "#F2B16E",
+    "#E4754F",
+    "#C54A53",
+    "#A93A42",
+]
+
+TEN_SHADES = [
+    "#A2CAEA",
+    "#80B3DC",
+    "#6BD39D",
+    "#ACDF9B",
+    "#F5F1A0",
+    "#F2D683",
+    "#F2B16E",
+    "#E4754F",
+    "#C54A53",
+    "#A93A42",
 ]
 
 RISK_LOW = "#A5D6A7"
@@ -54,6 +73,11 @@ RISK_MEDIUM = "#FFECB3"
 RISK_HIGH = "#FECDD2"
 RISK_VERY_HIGH = "#FFAB91"
 
+ORDINAL = {
+    2: [RISK_LOW, RISK_VERY_HIGH],
+    3: [RISK_LOW, RISK_MEDIUM, RISK_VERY_HIGH],
+    4: [RISK_LOW, RISK_MEDIUM, RISK_HIGH, RISK_VERY_HIGH],
+}
 
 def get_legend_config(metric_type, scale):
     # Temporary: use old way as fallback if legend_type was not defined
@@ -62,10 +86,19 @@ def get_legend_config(metric_type, scale):
 
     if metric_type.legend_type == "threshold":
         scales = get_scales_from_list_or_json_str(scale)
-        return {"domain": scales, "range": get_range_from_count(len(scales))}
+        try:
+            numeric_scales = [float(s) for s in scales]
+        except Exception as e:
+            print(f"Error converting scales to numerics: {e}")
+            numeric_scales = []
+        return {"domain": numeric_scales, "range": get_range_from_count(len(scales))}
     if metric_type.legend_type == "ordinal":
         scales = get_scales_from_list_or_json_str(scale)
-        return {"domain": scales, "range": [RISK_LOW, RISK_VERY_HIGH]}
+        if 4 > len(scales) < 2:
+            print(f"Metric ordinal has to many or to few scales {len(scales)}")
+            return None
+
+        return {"domain": scales, "range": ORDINAL[len(scales)]}
     if metric_type.legend_type == "linear":
         max_value = get_max_range_value(metric_type)
         return {"domain": [0, max_value], "range": [NINE_SHADES[0], NINE_SHADES[-1]]}
@@ -154,14 +187,19 @@ def get_max_range_value(metric_type):
 
 
 def get_range_from_count(count):
-    if count == 5:
+    # Note, we always want one additional color, to cover latest value of the scale (> 500 000)
+    if count == 3:
+        return list(FOUR_SHADES)
+    if count == 4:
         return list(FIVE_SHADES)
-    if count == 6:
+    if count == 5:
         return list(SIX_SHADES)
-    if count == 7:
+    if count == 6:
         return list(SEVEN_SHADES)
-    if count == 8:
+    if count == 7:
         return list(EIGHT_SHADES)
-    if count == 9:
+    if count == 8:
         return list(NINE_SHADES)
+    if count == 9:
+        return list(TEN_SHADES)
     return list(SEVEN_SHADES)
