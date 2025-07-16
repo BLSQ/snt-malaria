@@ -27,14 +27,30 @@ export const shouldReverse = (threshold: ScaleDomainRange) => {
     return threshold.domain[0] > threshold.domain[threshold.domain.length - 1];
 };
 
+const getColorForOrdinalScale = (
+    value: string | number,
+    legend_config: ScaleDomainRange,
+) => {
+    const numericValue = Number(value);
+    let index: number;
+    if (Number.isNaN(numericValue)) {
+        index = legend_config.domain.indexOf(value as never);
+    } else {
+        index = legend_config.domain.findIndex(
+            (d: number | string) => Number(d) === numericValue,
+        );
+    }
+
+    return legend_config.range[index];
+};
+
 const getColorForShape = (
     value: number | string,
     legend_type: string,
     legend_config: ScaleDomainRange,
 ) => {
     if (legend_type === 'ordinal') {
-        const index = legend_config.domain.indexOf(value as never);
-        return legend_config.range[index];
+        return getColorForOrdinalScale(value, legend_config);
     }
 
     const numericValue = Number(value);
