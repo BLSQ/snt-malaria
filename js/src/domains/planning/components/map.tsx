@@ -17,7 +17,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../../../constants/map-theme';
 import { getStyleForShape } from '../libs/map-utils';
-import { MetricType, MetricValue } from '../types/metrics';
+import { MetricsFilters, MetricType, MetricValue } from '../types/metrics';
 import { MapLegend } from './MapLegend';
 import { MapOrgUnitDetails } from './MapOrgUnitDetails';
 import { LayerSelect } from './maps/LayerSelect';
@@ -42,9 +42,8 @@ type Props = {
     displayedMetric: MetricType | null;
     displayedMetricValues?: MetricValue[];
     orgUnitsOnMap: OrgUnit[];
-    orgUnitsOnMix: OrgUnit[];
-    onAddRemoveOrgUnitToMix: (orgUnit: any) => void;
-    onApplyFilters: () => void;
+    onAddRemoveOrgUnit: (orgUnit: any) => void;
+    onApplyFilters: (filters: MetricsFilters) => void;
     onAddToMix: () => void;
     onChangeMetricLayer: (metricType) => void;
     onClearSelection: () => void;
@@ -55,8 +54,7 @@ export const Map: FC<Props> = ({
     displayedMetric,
     displayedMetricValues,
     orgUnitsOnMap,
-    orgUnitsOnMix,
-    onAddRemoveOrgUnitToMix,
+    onAddRemoveOrgUnit,
     onApplyFilters,
     onAddToMix,
     onChangeMetricLayer,
@@ -97,9 +95,9 @@ export const Map: FC<Props> = ({
     const onClearOrgUnitSelection = () => {
         setClickedOrgUnit(null);
     };
-    const onUnclickAndAddRemoveOrgUnitToMix = orgUnit => {
+    const onUnclickAndAddRemoveOrgUnit = orgUnit => {
         onClearOrgUnitSelection();
-        onAddRemoveOrgUnitToMix(orgUnit);
+        onAddRemoveOrgUnit(orgUnit);
     };
 
     const orgUnitIdsOnMap = useMemo(
@@ -174,11 +172,9 @@ export const Map: FC<Props> = ({
                     {clickedOrgUnit && (
                         <MapOrgUnitDetails
                             clickedOrgUnit={clickedOrgUnit}
-                            onAddRemoveOrgUnitToMix={
-                                onUnclickAndAddRemoveOrgUnitToMix
-                            }
+                            onAddRemoveOrgUnit={onUnclickAndAddRemoveOrgUnit}
                             onClear={onClearOrgUnitSelection}
-                            selectedOrgUnits={orgUnitsOnMix}
+                            selectedOrgUnits={orgUnitsOnMap}
                             highlightMetricType={displayedMetric}
                         />
                     )}

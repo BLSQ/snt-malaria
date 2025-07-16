@@ -81,6 +81,15 @@ export const Planning: FC = () => {
         );
 
         setSelectionOnInterventionMix(prev => [...prev, ...newOrgUnits]);
+
+        openSnackBar(
+            succesfullSnackBar(
+                'addedMapSelectionToMix',
+                formatMessage(MESSAGES.addedMapSelectionToMix, {
+                    amount: newOrgUnits.length,
+                }),
+            ),
+        );
     };
 
     const { data: displayedMetricValues, isLoading } = useGetMetricValues({
@@ -89,10 +98,10 @@ export const Planning: FC = () => {
 
     // Manage OU selection from the "Intervention mix" section
     // Manual add/remove
-    const handleAddRemoveOrgUnitToMix = useCallback(
+    const handleAddRemoveOrgUnitToMap = useCallback(
         (orgUnit: OrgUnit | null) => {
             if (orgUnit) {
-                setSelectionOnInterventionMix(prev => {
+                setSelectionOnMap(prev => {
                     if (prev.some(unit => unit.id === orgUnit.id)) {
                         return prev.filter(unit => unit.id !== orgUnit.id);
                     }
@@ -103,16 +112,10 @@ export const Planning: FC = () => {
         [],
     );
 
-    const handleApplyFilters = filters => {
-        setMetricFilters(filters);
-    };
-
     useGetMetricOrgUnits(metricFilters, metricOrgUnitIds => {
         const newOrgUnitSelection = orgUnits?.filter(orgUnit =>
             metricOrgUnitIds.includes(orgUnit.id),
         );
-
-        console.log('New org unit selection:', newOrgUnitSelection);
 
         if (newOrgUnitSelection && newOrgUnitSelection.length > 0) {
             setSelectionOnMap(newOrgUnitSelection);
@@ -139,6 +142,12 @@ export const Planning: FC = () => {
 
     const handleClearSelectionOnMap = useCallback(() => {
         setSelectionOnMap([]);
+        openSnackBar(
+            succesfullSnackBar(
+                'clearedMapSelection',
+                formatMessage(MESSAGES.clearedMapSelection),
+            ),
+        );
     }, []);
 
     const handleExpandAccordion = panel => (event, isExpanded) => {
@@ -162,14 +171,13 @@ export const Planning: FC = () => {
                                         displayedMetricValues
                                     }
                                     orgUnitsOnMap={selectionOnMap}
-                                    orgUnitsOnMix={selectionOnInterventionMix}
-                                    onApplyFilters={handleApplyFilters}
+                                    onApplyFilters={setMetricFilters}
                                     onClearSelection={handleClearSelectionOnMap}
                                     onChangeMetricLayer={
                                         handleDisplayMetricOnMap
                                     }
-                                    onAddRemoveOrgUnitToMix={
-                                        handleAddRemoveOrgUnitToMix
+                                    onAddRemoveOrgUnit={
+                                        handleAddRemoveOrgUnitToMap
                                     }
                                     onAddToMix={handleAddMapOrgUnitsToMix}
                                 />
