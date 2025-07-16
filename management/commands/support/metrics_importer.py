@@ -7,8 +7,6 @@ into MetricType and MetricValue models, including legend configuration.
 
 import csv
 
-from pathlib import Path
-
 from django.core.management.base import CommandError
 from django.db import transaction
 

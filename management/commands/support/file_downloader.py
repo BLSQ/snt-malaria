@@ -1,13 +1,7 @@
-"""
-Selective CSV file downloader for OpenHEXA datasets.
-
-This module handles downloading only the required CSV files (metadata and dataset)
-from OpenHEXA datasets to temporary files, eliminating the need for temporary directories.
-"""
-
 import tempfile
-from pathlib import Path
+
 import requests
+
 from django.core.management.base import CommandError
 
 
@@ -15,12 +9,6 @@ class FileDownloader:
     """Handles selective downloading of files from OpenHEXA datasets."""
 
     def __init__(self, openhexa_client, stdout_writer=None):
-        """Initialize the CSV downloader.
-
-        Args:
-            openhexa_client: OpenHEXA client instance for API calls
-            stdout_writer: Optional writer for progress output (e.g., self.stdout.write)
-        """
         self.openhexa_client = openhexa_client
         self.stdout_write = stdout_writer or print
 

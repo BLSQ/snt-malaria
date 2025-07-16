@@ -13,9 +13,6 @@ Environment variables required:
 """
 
 import os
-import tempfile
-
-from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 
