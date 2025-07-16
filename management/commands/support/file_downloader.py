@@ -1,77 +1,90 @@
 """
-File downloader for OpenHEXA datasets.
+Selective CSV file downloader for OpenHEXA datasets.
 
-This module handles downloading files from OpenHEXA datasets to local storage,
-including progress reporting and error handling.
+This module handles downloading only the required CSV files (metadata and dataset)
+from OpenHEXA datasets to temporary files, eliminating the need for temporary directories.
 """
 
+import tempfile
 from pathlib import Path
 import requests
+from django.core.management.base import CommandError
 
 
 class FileDownloader:
-    """Handles downloading files from OpenHEXA datasets."""
+    """Handles selective downloading of files from OpenHEXA datasets."""
 
-    def __init__(self, openhexa_client, download_path, stdout_writer=None):
-        """Initialize the file downloader.
+    def __init__(self, openhexa_client, stdout_writer=None):
+        """Initialize the CSV downloader.
 
         Args:
             openhexa_client: OpenHEXA client instance for API calls
-            download_path: Path object for download directory
             stdout_writer: Optional writer for progress output (e.g., self.stdout.write)
         """
         self.openhexa_client = openhexa_client
-        self.download_path = Path(download_path)
         self.stdout_write = stdout_writer or print
 
-        # Ensure download directory exists
-        self.download_path.mkdir(parents=True, exist_ok=True)
-
-    def download_dataset_files(self, files):
-        """Download all files in the dataset version.
+    def download_csv_files(self, files):
+        """Download metadata and dataset CSV files to temporary files.
 
         Args:
             files: List of file information dictionaries
 
         Returns:
-            Number of successfully downloaded files
+            Tuple of (metadata_file_path, dataset_file_path)
+
+        Raises:
+            CommandError: If required CSV files are not found or cannot be downloaded
         """
         if not files:
-            self.stdout_write("WARNING: No files to download")
-            return 0
+            raise CommandError("No files available for download")
 
-        self.stdout_write(f"Downloading {len(files)} files to {self.download_path}...")
+        # Find the required CSV files
+        metadata_file_info = self._find_csv_file(files, "*metadata.csv")
+        dataset_file_info = self._find_csv_file(files, "*dataset.csv")
 
-        success_count = 0
-        for file_info in files:
-            try:
-                if self._download_single_file(file_info):
-                    success_count += 1
-                    self.stdout_write(f"SUCCESS: Downloaded: {file_info['filename']}")
-                else:
-                    self.stdout_write(f"WARNING: Could not get download URL for {file_info['filename']}")
+        self.stdout_write(f"Found metadata file: {metadata_file_info['filename']}")
+        self.stdout_write(f"Found dataset file: {dataset_file_info['filename']}")
 
-            except Exception as e:
-                self.stdout_write(f"ERROR: Failed to download {file_info['filename']}: {str(e)}")
+        # Download to temporary files
+        metadata_path = self._download_to_temp_file(metadata_file_info, "metadata")
+        dataset_path = self._download_to_temp_file(dataset_file_info, "dataset")
 
-        self.stdout_write(f"Downloaded {success_count}/{len(files)} files successfully")
-        return success_count
+        self.stdout_write(f"Downloaded metadata to: {metadata_path}")
+        self.stdout_write(f"Downloaded dataset to: {dataset_path}")
 
-    def _download_single_file(self, file_info):
-        # Get download URL for the file
-        download_url = self.openhexa_client.get_file_download_url(file_info["id"])
-        if not download_url:
-            return False
+        return metadata_path, dataset_path
 
-        # Download the file
-        file_path = self.download_path / file_info["filename"]
-        self._download_file_from_url(download_url, file_path, file_info)
-        return True
+    def _find_csv_file(self, files, pattern):
+        pattern_suffix = pattern.replace("*", "")
+        matching_files = [f for f in files if f["filename"].endswith(pattern_suffix)]
 
-    def _download_file_from_url(self, url, file_path, file_info):
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
+        if not matching_files:
+            raise CommandError(f"No {pattern} file found in dataset")
+        if len(matching_files) > 1:
+            filenames = [f["filename"] for f in matching_files]
+            raise CommandError(f"Multiple {pattern} files found: {filenames}")
 
-        with open(file_path, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
+        return matching_files[0]
+
+    def _download_to_temp_file(self, file_info, file_type):
+        try:
+            download_url = self.openhexa_client.get_file_download_url(file_info["id"])
+            if not download_url:
+                raise CommandError(f"Could not get download URL for {file_type} file: {file_info['filename']}")
+
+            # Create temporary file
+            temp_file = tempfile.NamedTemporaryFile(suffix=".csv", prefix=f"openhexa_{file_type}_", delete=False)
+
+            # Download file content
+            response = requests.get(download_url, stream=True)
+            response.raise_for_status()
+
+            with temp_file as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+
+            return temp_file.name
+
+        except Exception as e:
+            raise CommandError(f"Failed to download {file_type} file '{file_info['filename']}': {str(e)}")

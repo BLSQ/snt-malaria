@@ -18,54 +18,37 @@ from iaso.models import MetricType, MetricValue, OrgUnit
 class MetricsImporter:
     """Handles importing metrics data from CSV files."""
 
-    def __init__(self, account, download_path, stdout_writer=None):
+    def __init__(self, account, stdout_writer=None):
         """Initialize the metrics importer.
 
         Args:
             account: Account instance for importing metrics
-            download_path: Path object for download directory
             stdout_writer: Optional writer for progress output (e.g., self.stdout.write)
         """
         self.account = account
-        self.download_path = Path(download_path)
         self.stdout_write = stdout_writer or print
         self.metric_type_scales = {}
 
-    def import_metrics(self):
-        """Import metrics from downloaded CSV files.
+    def import_metrics(self, metadata_file_path, dataset_file_path):
+        """Import metrics from CSV files.
+
+        Args:
+            metadata_file_path: Path to the metadata CSV file
+            dataset_file_path: Path to the dataset CSV file
 
         Returns:
             Number of metric values created
         """
         try:
-            # Find the CSV files
-            metadata_file, dataset_file = self._find_csv_files()
-
-            self.stdout_write(f"Using metadata file: {metadata_file.name}")
-            self.stdout_write(f"Using dataset file: {dataset_file.name}")
+            self.stdout_write(f"Using metadata file: {metadata_file_path}")
+            self.stdout_write(f"Using dataset file: {dataset_file_path}")
 
             # Import the metrics
-            return self._process_metrics_import(metadata_file, dataset_file)
+            return self._process_metrics_import(metadata_file_path, dataset_file_path)
 
         except Exception as e:
             raise CommandError(f"Failed to import metrics: {str(e)}")
 
-    def _find_csv_files(self):
-        # Find metadata file (*metadata.csv)
-        metadata_files = list(self.download_path.glob("*metadata.csv"))
-        if not metadata_files:
-            raise CommandError("No metadata CSV file (*metadata.csv) found in download directory")
-        if len(metadata_files) > 1:
-            raise CommandError(f"Multiple metadata CSV files found: {[f.name for f in metadata_files]}")
-
-        # Find dataset file (*dataset.csv)
-        dataset_files = list(self.download_path.glob("*dataset.csv"))
-        if not dataset_files:
-            raise CommandError("No dataset CSV file (*dataset.csv) found in download directory")
-        if len(dataset_files) > 1:
-            raise CommandError(f"Multiple dataset CSV files found: {[f.name for f in dataset_files]}")
-
-        return metadata_files[0], dataset_files[0]
 
     def _validate_csv_files(self, metadata_file, dataset_file):
         # Validate metadata file
@@ -95,19 +78,19 @@ class MetricsImporter:
 
         self.stdout_write("CSV file validation passed")
 
-    def _process_metrics_import(self, metadata_file, dataset_file):
+    def _process_metrics_import(self, metadata_file_path, dataset_file_path):
         # Validate CSV files first
-        self._validate_csv_files(metadata_file, dataset_file)
+        self._validate_csv_files(metadata_file_path, dataset_file_path)
 
         self.stdout_write("Clearing existing metrics...")
         MetricValue.objects.filter(metric_type__account=self.account).delete()
         MetricType.objects.filter(account=self.account).delete()
 
         self.stdout_write("Creating MetricTypes from metadata file...")
-        metric_types = self._create_metric_types(metadata_file)
+        metric_types = self._create_metric_types(metadata_file_path)
 
         self.stdout_write("Reading values from dataset file...")
-        value_count = self._create_metric_values(dataset_file, metric_types)
+        value_count = self._create_metric_values(dataset_file_path, metric_types)
 
         self.stdout_write("Adding threshold scales...")
         self._configure_legends()
@@ -115,10 +98,10 @@ class MetricsImporter:
         self.stdout_write("Metrics import completed successfully!")
         return value_count
 
-    def _create_metric_types(self, metadata_file):
+    def _create_metric_types(self, metadata_file_path):
         metric_types = {}
 
-        with open(metadata_file, newline="", encoding="utf-8") as metafile:
+        with open(metadata_file_path, newline="", encoding="utf-8") as metafile:
             metareader = csv.DictReader(metafile)
             for row in metareader:
                 try:
@@ -144,8 +127,8 @@ class MetricsImporter:
 
         return metric_types
 
-    def _create_metric_values(self, dataset_file, metric_types):
-        with open(dataset_file, newline="", encoding="utf-8") as csvfile:
+    def _create_metric_values(self, dataset_file_path, metric_types):
+        with open(dataset_file_path, newline="", encoding="utf-8") as csvfile:
             csvreader = csv.DictReader(csvfile)
 
             try:
