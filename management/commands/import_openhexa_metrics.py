@@ -14,8 +14,6 @@ Environment variables required:
 
 import os
 
-from pathlib import Path
-
 from django.core.management.base import BaseCommand, CommandError
 
 from iaso.models import Account
@@ -36,15 +34,22 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Validate arguments and environment
         workspace_slug, dataset_slug, account = self._validate_arguments(options)
-        download_path = self._setup_download_directory(account.id)
         openhexa_client = self._setup_openhexa_client()
 
         # Orchestrate the full process
         self._list_available_datasets(openhexa_client, workspace_slug)
         dataset_info = self._fetch_dataset_info(openhexa_client, workspace_slug, dataset_slug)
-        files = self._download_dataset_files(openhexa_client, dataset_info, download_path)
-        self._display_dataset_summary(dataset_info, files)
-        self._import_metrics(account, download_path)
+        self._display_dataset_summary(dataset_info, dataset_info["files"])
+
+        # Download CSV files and ensure cleanup
+        file_downloader = FileDownloader(openhexa_client, self.stdout.write)
+        metadata_path, dataset_path = file_downloader.download_csv_files(dataset_info["files"])
+        try:
+            self._import_metrics(account, metadata_path, dataset_path)
+        finally:
+            # Clean up temporary files
+            self._cleanup_temp_file(metadata_path)
+            self._cleanup_temp_file(dataset_path)
 
     def _validate_arguments(self, options):
         workspace_slug = options["workspace_slug"]
@@ -65,12 +70,6 @@ class Command(BaseCommand):
             return workspace_slug, dataset_slug, account
         except Account.DoesNotExist:
             raise CommandError(f"Account with ID {account_id} not found.")
-
-    def _setup_download_directory(self, account_id):
-        download_path = Path(f"/tmp/openhexa-metrics/{account_id}")
-        download_path.mkdir(parents=True, exist_ok=True)
-        self.stdout.write(f"Download directory: {download_path}")
-        return download_path
 
     def _setup_openhexa_client(self):
         server_url = os.getenv("OPENHEXA_URL")
@@ -111,19 +110,22 @@ class Command(BaseCommand):
 
         return {"dataset": dataset, "version": dataset_version, "files": files}
 
-    def _download_dataset_files(self, openhexa_client, dataset_info, download_path):
-        file_downloader = FileDownloader(openhexa_client, download_path, self.stdout.write)
-        file_downloader.download_dataset_files(dataset_info["files"])
-        return dataset_info["files"]
-
     def _display_dataset_summary(self, dataset_info, files):
         metadata = {"dataset": dataset_info["dataset"], "version": dataset_info["version"], "files": files}
         self.stdout.write(self._format_as_table(metadata))
 
-    def _import_metrics(self, account, download_path):
+    def _import_metrics(self, account, metadata_path, dataset_path):
         self.stdout.write(f"Starting metrics import for account {account.name} ({account.pk})...")
-        metrics_importer = MetricsImporter(account, download_path, self.stdout.write)
-        metrics_importer.import_metrics()
+        metrics_importer = MetricsImporter(account, self.stdout.write)
+        metrics_importer.import_metrics(metadata_path, dataset_path)
+
+    def _cleanup_temp_file(self, file_path):
+        try:
+            if os.path.exists(file_path):
+                os.unlink(file_path)
+                self.stdout.write(f"Cleaned up temporary metadata file: {file_path}")
+        except Exception as e:
+            self.stdout.write(f"Warning: Could not clean up metadata file {file_path}: {e}")
 
     def _format_as_table(self, metadata):
         dataset = metadata["dataset"]
