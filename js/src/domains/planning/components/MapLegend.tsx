@@ -26,6 +26,9 @@ const styles: SxStyles = {
         gap: 2,
         flexFlow: 'wrap',
     }),
+    legendUnit: (theme: Theme) => ({
+        padding: theme.spacing(0.5, 1),
+    }),
 };
 
 type Props = {
@@ -35,6 +38,7 @@ type Props = {
 export const MapLegend: FunctionComponent<Props> = ({ metric }) => {
     return (
         <Paper elevation={1} sx={styles.root}>
+            <Box sx={styles.legendUnit}>{metric.units}</Box>
             <Box sx={styles.legendContainer}>
                 {(() => {
                     if (metric.legend_type === 'linear') {
