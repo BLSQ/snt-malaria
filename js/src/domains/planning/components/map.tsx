@@ -49,10 +49,6 @@ type Props = {
     onClearSelection: () => void;
 };
 
-function MetricTooltip({ metricValue }) {
-    return metricValue ? <Tooltip>{metricValue}</Tooltip> : null;
-}
-
 export const Map: FC<Props> = ({
     orgUnits,
     displayedMetric,
@@ -164,11 +160,10 @@ export const Map: FC<Props> = ({
                                     click: () => onOrgUnitClick(orgUnit.id),
                                 }}
                             >
-                                <MetricTooltip
-                                    metricValue={getSelectedMetricValue(
-                                        orgUnit.id,
-                                    )}
-                                />
+                                <Tooltip>
+                                    {getSelectedMetricValue(orgUnit.id) ??
+                                        'N/A'}
+                                </Tooltip>
                             </GeoJSON>
                         ))}
                         {displayedMetric && (
