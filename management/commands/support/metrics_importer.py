@@ -116,9 +116,8 @@ class MetricsImporter:
                     )
 
                     self.stdout_write(f"Created metric: {metric_type.name} with legend type: {metric_type.legend_type}")
-                    scale = row["SCALE"]
 
-                    self.metric_type_scales[metric_type.code] = scale
+                    self.metric_type_scales[metric_type.code] = row["SCALE"]
                     metric_types[metric_type.code] = metric_type
                 except Exception as e:
                     self.stdout_write(f"ERROR: Error creating MetricType: {row['LABEL']}")
