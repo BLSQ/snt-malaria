@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
-import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
+import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
 import { UseRemoveOrgUnitFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
 import { InterventionPlanSummary } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
@@ -11,21 +11,17 @@ type Props = {
     scenarioId: number | undefined;
     setSelectedInterventions: any;
     selectedInterventions: any;
-    setMixName: (name: string) => void;
-    mixName: string;
 };
 
 export const InterventionsPlan: FC<Props> = ({
     scenarioId,
     setSelectedInterventions,
     selectedInterventions,
-    setMixName,
-    mixName,
 }) => {
     const [tabValue, setTabValue] = useState<string>('list');
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
-        useGetInterventionsPlan(scenarioId);
+        useGetInterventionAssignments(scenarioId);
 
     const { mutateAsync: removeOrgUnitFromInterventionPlan } =
         UseRemoveOrgUnitFromInterventionPlan();
@@ -74,8 +70,6 @@ export const InterventionsPlan: FC<Props> = ({
                                     setSelectedInterventions
                                 }
                                 selectedInterventions={selectedInterventions}
-                                setMixName={setMixName}
-                                mixName={mixName}
                                 onRemoveOrgUnit={onDeleteOrgUnitFromPlan}
                             />
                         </TabPanel>

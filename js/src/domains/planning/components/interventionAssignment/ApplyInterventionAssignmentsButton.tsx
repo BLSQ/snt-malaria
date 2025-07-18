@@ -6,7 +6,7 @@ import { MESSAGES } from '../../messages';
 type ApplyButtonProps = {
     onClick: () => void;
 };
-export const ApplyInterventionsMixButton: FC<ApplyButtonProps> = ({
+export const ApplyInterventionAssignmentsButton: FC<ApplyButtonProps> = ({
     onClick,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -30,7 +30,7 @@ export const ApplyInterventionsMixButton: FC<ApplyButtonProps> = ({
                     textTransform: 'none',
                 }}
             >
-                {formatMessage(MESSAGES.applyInterventionMix)}
+                {formatMessage(MESSAGES.addToPlan)}
             </Button>
         </Grid>
     );

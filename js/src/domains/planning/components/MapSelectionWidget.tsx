@@ -38,7 +38,7 @@ const styles: SxStyles = {
     selectCountText: (theme: Theme) => ({
         color: theme.palette.text.primary,
     }),
-    addToMixBtn: (theme: Theme) => ({
+    addToListBtn: (theme: Theme) => ({
         borderRadius: theme.spacing(1),
         fontSize: '0.875rem',
         lineHeight: 0,
@@ -48,14 +48,14 @@ const styles: SxStyles = {
 
 type Props = {
     selectionCount: number;
-    onAddToMix: () => void;
+    onAddToList: () => void;
     onApplyFilters: (filters: MetricsFilters) => void;
     onClearSelection: () => void;
 };
 
 export const MapSelectionWidget: FC<Props> = ({
     selectionCount,
-    onAddToMix,
+    onAddToList,
     onApplyFilters,
     onClearSelection,
 }) => {
@@ -92,13 +92,13 @@ export const MapSelectionWidget: FC<Props> = ({
                 disabled={selectionCount === 0}
             />
             <Button
-                onClick={onAddToMix}
+                onClick={onAddToList}
                 variant="contained"
                 color="primary"
-                sx={styles.addToMixBtn}
+                sx={styles.addToListBtn}
                 disabled={selectionCount === 0}
             >
-                {formatMessage(MESSAGES.addToMix)}
+                {formatMessage(MESSAGES.addToList)}
             </Button>
             <FilterQueryBuilder
                 isOpen={queryBuilderIsOpen}

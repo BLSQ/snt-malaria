@@ -8,7 +8,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
-from plugins.snt_malaria.models.intervention import InterventionMix
 
 from .serializers import DuplicateScenarioSerializer, ScenarioSerializer
 
@@ -60,22 +59,11 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         except Exception as e:
             raise ValidationError(f"Error saving scenario: {e}")
 
-        # Duplicate related mixes
-        mixes = InterventionMix.objects.filter(scenario_id=id_to_duplicate)
-        for mix in mixes:
-            prevMixPk = mix.pk
-            prevMixInterventions = mix.interventions.all()
-            mix.pk = None
-            mix.scenario = scenario
-            mix.save()
-            mix.interventions.set(prevMixInterventions)
-            mixAssignments = InterventionAssignment.objects.filter(
-                scenario_id=id_to_duplicate, intervention_mix_id=prevMixPk
-            )
-            for assignment in mixAssignments:
-                assignment.pk = None
-                assignment.scenario = scenario
-                assignment.intervention_mix = mix
-                assignment.save()
+        # Duplicate related intevention assignments
+        assignments = InterventionAssignment.objects.filter(scenario_id=id_to_duplicate)
+        for assignment in assignments:
+            assignment.pk = None
+            assignment.scenario = scenario
+            assignment.save()
         serializer = self.get_serializer(scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

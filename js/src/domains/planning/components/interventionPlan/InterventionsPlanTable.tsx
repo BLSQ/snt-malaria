@@ -35,8 +35,6 @@ type Props = {
     interventionPlans: InterventionPlan[] | undefined;
     setSelectedInterventions: any;
     selectedInterventions: any;
-    setMixName: (name: string) => void;
-    mixName: string;
     onRemoveOrgUnit: (interventionAssignmentsId: number) => void;
 };
 export const InterventionsPlanTable: FC<Props> = ({
@@ -45,8 +43,6 @@ export const InterventionsPlanTable: FC<Props> = ({
     interventionPlans,
     setSelectedInterventions,
     selectedInterventions,
-    setMixName,
-    mixName,
     onRemoveOrgUnit,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -69,7 +65,7 @@ export const InterventionsPlanTable: FC<Props> = ({
                         {interventionPlans?.map((row, index) => (
                             <InterventionsPlanRowTable
                                 scenarioId={scenarioId}
-                                key={row.id}
+                                key={row.intervention.id}
                                 row={row}
                                 index={index}
                                 iconProps={undefined}
@@ -77,8 +73,6 @@ export const InterventionsPlanTable: FC<Props> = ({
                                     setSelectedInterventions
                                 }
                                 selectedInterventions={selectedInterventions}
-                                setMixName={setMixName}
-                                mixName={mixName}
                                 onRemoveOrgUnit={onRemoveOrgUnit}
                             />
                         ))}
