@@ -79,6 +79,7 @@ ORDINAL = {
     4: [RISK_LOW, RISK_MEDIUM, RISK_HIGH, RISK_VERY_HIGH],
 }
 
+
 def get_legend_config(metric_type, scale):
     # Temporary: use old way as fallback if legend_type was not defined
     if metric_type.legend_type is None or metric_type.legend_type == "":
@@ -168,7 +169,13 @@ def get_scales_from_list_or_json_str(scale):
 
     if str.startswith(scale, "[") and str.endswith(scale, "]"):
         strScale = scale.replace("[", "").replace("]", "")
-        return str.split(strScale, ",")
+        scales = [s.strip() for s in str.split(strScale, ",")]
+        if isFloat(scales[0]):
+            return [float(s) for s in scales]
+        if isInt(scales[0]):
+            return [int(s) for s in scales]
+
+        return scales
 
     try:
         return json.loads(scale)
@@ -203,3 +210,19 @@ def get_range_from_count(count):
     if count == 9:
         return list(TEN_SHADES)
     return list(SEVEN_SHADES)
+
+
+def isFloat(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+
+def isInt(value):
+    try:
+        int(value)
+        return True
+    except ValueError:
+        return False
