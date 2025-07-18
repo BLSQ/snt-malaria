@@ -15,9 +15,14 @@ export const ThresholdLegend: FunctionComponent<Props> = ({
     unit,
 }) => {
     const theme = useTheme();
+    const transformHighNumbers = (value: string | number) => {
+        if (typeof value === 'number' && value >= 1000) {
+            return `${(value / 1000).toFixed(0)}k`;
+        }
+        return value;
+    };
 
     const isReversed = useMemo(() => shouldReverse(threshold), [threshold]);
-
     const legend = useMemo(
         () => getLegend(threshold, isReversed),
         [threshold, isReversed],
@@ -29,6 +34,7 @@ export const ThresholdLegend: FunctionComponent<Props> = ({
             labelDelimiter="-"
             labelLower="< "
             labelUpper="> "
+            labelFormat={transformHighNumbers}
         >
             {labels =>
                 labels.map(label => (
