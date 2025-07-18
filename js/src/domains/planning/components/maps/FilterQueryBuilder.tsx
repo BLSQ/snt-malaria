@@ -10,6 +10,7 @@ import { QueryBuilder, SimpleModal, useSafeIntl } from 'bluesquare-components';
 import { defineMessages } from 'react-intl';
 
 import { useGetMetricCategories } from '../../hooks/useGetMetrics';
+import { ScaleDomainRange } from '../../types/metrics';
 
 export const MESSAGES = defineMessages({
     applyFilter: {
@@ -39,19 +40,49 @@ export const FilterQueryBuilder: FC<Props> = ({
         JsonLogicTree | undefined
     >();
 
+    const getFieldForMetric = (
+        label,
+        legendType: string,
+        legend_config: ScaleDomainRange,
+    ) => {
+        if (legendType === 'ordinal') {
+            return {
+                label,
+                type: 'select',
+                valueSources: ['value'],
+                operators: ['select_equals', 'select_not_equals'],
+                defaultOperator: 'select_equals',
+                fieldSettings: {
+                    listValues: legend_config.domain.map(
+                        (d: string | number) => ({
+                            value: d,
+                            title: d,
+                        }),
+                    ),
+                },
+            };
+        }
+
+        return {
+            label,
+            type: 'number',
+            operators: ['greater_or_equal'],
+            defaultOperator: 'greater_or_equal',
+            valueSources: ['value'],
+        };
+    };
+
     // NOTE: I attempted to Select with metrics grouped per category (like in
     // the mockups), but I couldn't get it to work.
     const fields = useMemo(() => {
         const result = {};
         metricCategories?.forEach(category => {
             category.items.forEach(metric => {
-                result[metric.id] = {
-                    label: `${category.name} - ${metric.name}`,
-                    type: 'number',
-                    operators: ['greater_or_equal'],
-                    defaultOperator: 'greater_or_equal',
-                    valueSources: ['value'],
-                };
+                result[metric.id] = getFieldForMetric(
+                    `${category.name} - ${metric.name}`,
+                    metric.legend_type,
+                    metric.legend_config,
+                );
             });
         });
         return result;
