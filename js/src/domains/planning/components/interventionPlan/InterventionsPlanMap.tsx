@@ -8,7 +8,7 @@ import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
-import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
+import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
 import { MESSAGES } from '../../messages';
 
@@ -82,7 +82,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     }, [orgUnits]);
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
-        useGetInterventionsPlan(scenarioId);
+        useGetInterventionAssignments(scenarioId);
     const [selectedPlanId, setSelectedPlanId] = useState<number | null>(
         interventionPlans?.[0]?.id ?? null,
     );

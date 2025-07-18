@@ -1,62 +1,26 @@
 import React, { FunctionComponent } from 'react';
-import { TableCell, TableRow } from '@mui/material';
+import { Button, Grid, TableCell, TableRow, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { InterventionPlan } from '../../types/interventions';
-import { InterventionsMixCell } from './InterventionsMixCell';
-import { OrgUnitsMixCell } from './OrgUnitsMixCell';
 
 type Props = {
     scenarioId: number | undefined;
     row: InterventionPlan;
     index: number;
-    iconProps: any;
-    setSelectedInterventions: React.Dispatch<
-        React.SetStateAction<Record<number, number[]>>
-    >;
-    selectedInterventions: () => void;
-    setMixName: (name: string) => void;
-    mixName: string;
-    onRemoveOrgUnit: (interventionAssignmentsId: number) => void;
 };
 
 const styles: SxStyles = {
     tableCellStyle: {
-        padding: theme => theme.spacing(0),
+        padding: theme => theme.spacing(1),
     },
 };
 export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
     scenarioId,
     row,
     index,
-    iconProps,
-    setSelectedInterventions,
-    selectedInterventions,
-    setMixName,
-    mixName,
-    onRemoveOrgUnit,
 }) => {
-    return (
-        <TableRow key={index}>
-            <TableCell
-                sx={{
-                    ...styles.tableCellStyle,
-                    minWidth: '200px',
-                    paddingTop: 1,
-                    paddingBottom: 1,
-                    paddingLeft: 1,
-                    verticalAlign: 'top',
-                }}
-            >
-                <InterventionsMixCell
-                    row={row}
-                    scenarioId={scenarioId}
-                    iconProps={iconProps}
-                    setSelectedInterventions={setSelectedInterventions}
-                    selectedInterventions={selectedInterventions}
-                    setMixName={setMixName}
-                    mixName={mixName}
-                />
-            </TableCell>
+    return row ? (
+        <TableRow key={`${row.intervention.id}-${index}`}>
             <TableCell
                 sx={{
                     ...styles.tableCellStyle,
@@ -67,8 +31,17 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
                     verticalAlign: 'top',
                 }}
             >
-                <OrgUnitsMixCell row={row} onRemoveOrgUnit={onRemoveOrgUnit} />
+                <Grid container sx={styles.tableCellStyle}>
+                    <Grid item xs={3}>
+                        <Typography>{row?.intervention.name}</Typography>
+                    </Grid>
+                    <Grid item xs={3}>
+                        <Button variant="text">
+                            {row?.org_units.length} districts
+                        </Button>
+                    </Grid>
+                </Grid>
             </TableCell>
         </TableRow>
-    );
+    ) : null;
 };

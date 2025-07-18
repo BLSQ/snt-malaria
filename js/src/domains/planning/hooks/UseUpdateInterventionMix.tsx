@@ -10,10 +10,5 @@ export const UseUpdateInterventionMix = (): UseMutationResult =>
                 `/api/snt_malaria/interventionmixes/${body.id}/`,
                 body,
             ),
-        invalidateQueryKey: [
-            'interventionassignments',
-            'budgets',
-            'interventionMixes',
-            'interventionPlans',
-        ],
+        invalidateQueryKey: ['interventionAssignments', 'budgets'],
     });

@@ -50,6 +50,7 @@ export const InterventionsPlanTable: FC<Props> = ({
     onRemoveOrgUnit,
 }) => {
     const { formatMessage } = useSafeIntl();
+    console.log(interventionPlans);
     return (
         <TableContainer component={Paper} sx={styles.tableContainer}>
             {isLoadingPlans || (interventionPlans?.length ?? 0) === 0 ? (
@@ -69,7 +70,7 @@ export const InterventionsPlanTable: FC<Props> = ({
                         {interventionPlans?.map((row, index) => (
                             <InterventionsPlanRowTable
                                 scenarioId={scenarioId}
-                                key={row.id}
+                                key={row.intervention.id}
                                 row={row}
                                 index={index}
                                 iconProps={undefined}

@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
-import { useGetInterventionsPlan } from '../../hooks/UseGetInterventionsPlan';
+import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
 import { UseRemoveOrgUnitFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
 import { InterventionPlanSummary } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
@@ -25,7 +25,7 @@ export const InterventionsPlan: FC<Props> = ({
     const [tabValue, setTabValue] = useState<string>('list');
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
-        useGetInterventionsPlan(scenarioId);
+        useGetInterventionAssignments(scenarioId);
 
     const { mutateAsync: removeOrgUnitFromInterventionPlan } =
         UseRemoveOrgUnitFromInterventionPlan();

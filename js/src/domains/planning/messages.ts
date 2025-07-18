@@ -13,17 +13,17 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.layers.above',
         defaultMessage: 'Above',
     },
-    interventionMixTitle: {
-        id: 'iaso.snt_malaria.label.interventionMix',
-        defaultMessage: 'Intervention mix',
+    interventionTitle: {
+        id: 'iaso.snt_malaria.label.interventionTitle',
+        defaultMessage: 'Interventions',
     },
     orgUnitDistrict: {
         id: 'iaso.snt_malaria.label.orgUnitDistricts',
         defaultMessage: 'Districts',
     },
-    applyInterventionMix: {
-        id: 'iaso.snt_malaria.label.interventionMix.applyInterventionMix',
-        defaultMessage: 'Apply mix and add to plan',
+    addToPlan: {
+        id: 'iaso.snt_malaria.label.interventionMix.addToPlan',
+        defaultMessage: 'Add to plan',
     },
     overrideMix: {
         id: 'iaso.snt_malaria.label.interventionMix.overrideMix',
@@ -108,18 +108,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.interventionMix.tableNoContent',
         defaultMessage:
             'Intervention mixes and their districts will appear here.',
-    },
-    noMixCreated: {
-        id: 'iaso.snt_malaria.label.interventionMix.noMixCreated',
-        defaultMessage: 'No mix created',
-    },
-    createNewMix: {
-        id: 'iaso.snt_malaria.label.interventionMix.createNewMix',
-        defaultMessage: 'Create new mix',
-    },
-    chooseMixToApply: {
-        id: 'iaso.snt_malaria.label.interventionMix.chooseMixToApply',
-        defaultMessage: 'Choose mix to apply',
     },
     selectedOrgUnitsCount: {
         id: 'iaso.snt_malaria.label.selectOrgUnitsCount',
