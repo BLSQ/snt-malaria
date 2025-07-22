@@ -170,9 +170,9 @@ def get_scales_from_list_or_json_str(scale):
     if str.startswith(scale, "[") and str.endswith(scale, "]"):
         strScale = scale.replace("[", "").replace("]", "")
         scales = [s.strip() for s in str.split(strScale, ",")]
-        if isFloat(scales[0]):
+        if isinstance(scales[0], float):
             return [float(s) for s in scales]
-        if isInt(scales[0]):
+        if isinstance(scales[0], int):
             return [int(s) for s in scales]
 
         return scales
@@ -210,19 +210,3 @@ def get_range_from_count(count):
     if count == 9:
         return list(TEN_SHADES)
     return list(SEVEN_SHADES)
-
-
-def isFloat(value):
-    try:
-        float(value)
-        return True
-    except ValueError:
-        return False
-
-
-def isInt(value):
-    try:
-        int(value)
-        return True
-    except ValueError:
-        return False
