@@ -3,7 +3,6 @@ from django.db import models
 
 from iaso.models import OrgUnit
 from iaso.utils.models.soft_deletable import (
-    DefaultSoftDeletableManager,
     SoftDeletableModel,
 )
 from plugins.snt_malaria.models.scenario import Scenario
@@ -50,7 +49,7 @@ class Intervention(SoftDeletableModel):
         return "%s %s" % (self.name, self.id)
 
 
-class InterventionAssignment(SoftDeletableModel):
+class InterventionAssignment(models.Model):
     class Meta:
         app_label = "snt_malaria"
         unique_together = [["scenario", "org_unit", "intervention"]]
@@ -61,4 +60,3 @@ class InterventionAssignment(SoftDeletableModel):
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    objects = DefaultSoftDeletableManager()

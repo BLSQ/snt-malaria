@@ -42,7 +42,6 @@ class InterventionAssignmentAdmin(admin.ModelAdmin):
         "created_by",
         "created_at",
         "updated_at",
-        "deleted_at",
     )
     list_filter = ("scenario", "intervention", "created_by")
     search_fields = ("scenario__name", "org_unit__name")

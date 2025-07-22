@@ -33,17 +33,13 @@ type Props = {
     scenarioId: number | undefined;
     isLoadingPlans: boolean;
     interventionPlans: InterventionPlan[] | undefined;
-    setSelectedInterventions: any;
-    selectedInterventions: any;
-    onRemoveOrgUnit: (interventionAssignmentsId: number) => void;
+    showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
 };
 export const InterventionsPlanTable: FC<Props> = ({
     scenarioId,
     isLoadingPlans,
     interventionPlans,
-    setSelectedInterventions,
-    selectedInterventions,
-    onRemoveOrgUnit,
+    showInterventionPlanDetails,
 }) => {
     const { formatMessage } = useSafeIntl();
     return (
@@ -68,12 +64,9 @@ export const InterventionsPlanTable: FC<Props> = ({
                                 key={row.intervention.id}
                                 row={row}
                                 index={index}
-                                iconProps={undefined}
-                                setSelectedInterventions={
-                                    setSelectedInterventions
+                                showInterventionPlanDetails={
+                                    showInterventionPlanDetails
                                 }
-                                selectedInterventions={selectedInterventions}
-                                onRemoveOrgUnit={onRemoveOrgUnit}
                             />
                         ))}
                     </TableBody>

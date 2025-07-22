@@ -30,11 +30,11 @@ export const MESSAGES = defineMessages({
         id: 'iaso.label.cancel',
     },
     remove: {
-        id: 'iaso.snt_malaria.label.interventionMix.remove',
+        id: 'iaso.snt_malaria.label.interventionList.remove',
         defaultMessage: 'Remove',
     },
     add: {
-        id: 'iaso.snt_malaria.label.interventionMix.add',
+        id: 'iaso.snt_malaria.label.interventionList.add',
         defaultMessage: 'Add',
     },
     interventionPlanTitle: {
@@ -110,5 +110,18 @@ export const MESSAGES = defineMessages({
     modalDeleteScenarioConfirm: {
         id: 'snt_malaria.scenario.delete.confirm',
         defaultMessage: 'Do you really want to delete this scenario?',
+    },
+    interventionAssignmentRemoveAllButton: {
+        id: 'snt_malaria.interventionAssignment.removeAll',
+        defaultMessage: 'Remove all',
+    },
+    interventionAssignmentRemoveAllTitle: {
+        id: 'snt_malaria.interventionAssignment.removeAllTitle',
+        defaultMessage: 'Remove all districts',
+    },
+    interventionAssignmentRemoveAllMessage: {
+        id: 'snt_malaria.interventionAssignment.removeAllMessage',
+        defaultMessage:
+            'Do you really want to remove all districts from this intervention assignment?',
     },
 });

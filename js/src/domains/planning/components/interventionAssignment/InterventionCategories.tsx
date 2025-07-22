@@ -13,7 +13,6 @@ type Props = {
 
 const styles: SxStyles = {
     categoryName: { fontSize: '0.75rem', marginBottom: 1 },
-    mixNameField: { width: '100%' },
     cancelButtonBox: {
         display: 'flex',
         justifyContent: 'flex-end',

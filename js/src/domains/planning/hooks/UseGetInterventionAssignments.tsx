@@ -19,7 +19,7 @@ export const useGetInterventionAssignments = (
     );
 
     return useSnackQuery({
-        queryKey: ['interventionAssigments', scenarioId],
+        queryKey: ['interventionAssignments', scenarioId],
         queryFn: () =>
             getRequest(url).then((data: InterventionAssignmentResponse[]) => {
                 return data.reduce((acc: InterventionPlan[], assignment) => {

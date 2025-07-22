@@ -1,12 +1,16 @@
 import React, { FunctionComponent } from 'react';
 import { Button, Grid, TableCell, TableRow, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
-import { InterventionPlan } from '../../types/interventions';
+import {
+    InterventionOrgUnit,
+    InterventionPlan,
+} from '../../types/interventions';
 
 type Props = {
     scenarioId: number | undefined;
     row: InterventionPlan;
     index: number;
+    showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
 };
 
 const styles: SxStyles = {
@@ -18,6 +22,7 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
     scenarioId,
     row,
     index,
+    showInterventionPlanDetails,
 }) => {
     return row ? (
         <TableRow key={`${row.intervention.id}-${index}`}>
@@ -36,7 +41,10 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
                         <Typography>{row?.intervention.name}</Typography>
                     </Grid>
                     <Grid item xs={3}>
-                        <Button variant="text">
+                        <Button
+                            variant="text"
+                            onClick={() => showInterventionPlanDetails(row)}
+                        >
                             {row?.org_units.length} districts
                         </Button>
                     </Grid>

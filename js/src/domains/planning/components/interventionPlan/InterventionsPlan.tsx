@@ -2,31 +2,47 @@ import React, { FC, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
-import { UseRemoveOrgUnitFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
+import { UseRemoveAllOrgUnitsFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
 import { InterventionPlanSummary } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
 import { InterventionsPlanTable } from './InterventionsPlanTable';
+import { InterventionPlan } from '../../types/interventions';
+import { InterventionPlanDetails } from './InterventionPlanDetails';
 
 type Props = {
     scenarioId: number | undefined;
-    setSelectedInterventions: any;
-    selectedInterventions: any;
 };
 
-export const InterventionsPlan: FC<Props> = ({
-    scenarioId,
-    setSelectedInterventions,
-    selectedInterventions,
-}) => {
+export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
     const [tabValue, setTabValue] = useState<string>('list');
+
+    const [selectedInterventionPlan, setSelectedInterventionPlan] =
+        useState<InterventionPlan | null>(null);
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(scenarioId);
 
-    const { mutateAsync: removeOrgUnitFromInterventionPlan } =
-        UseRemoveOrgUnitFromInterventionPlan();
-    const onDeleteOrgUnitFromPlan = (interventionAssignmentId: number) =>
-        removeOrgUnitFromInterventionPlan(interventionAssignmentId);
+    const { mutateAsync: removeAllOrgUnitsFromPlan } =
+        UseRemoveAllOrgUnitsFromInterventionPlan();
+
+    const onRemoveAllOrgUnitsFromPlan = async () => {
+        const assignmentIds = selectedInterventionPlan?.org_units.map(
+            orgUnit => orgUnit.intervention_assignment_id,
+        );
+
+        await removeAllOrgUnitsFromPlan(assignmentIds);
+        setSelectedInterventionPlan(null);
+    };
+
+    const onShowInterventionPlanDetails = (
+        interventionPlan: InterventionPlan,
+    ) => {
+        setSelectedInterventionPlan(interventionPlan);
+    };
+
+    const onCloseInterventionPlanDetails = () => {
+        setSelectedInterventionPlan(null);
+    };
 
     return (
         <Box
@@ -66,11 +82,9 @@ export const InterventionsPlan: FC<Props> = ({
                                 scenarioId={scenarioId}
                                 isLoadingPlans={isLoadingPlans}
                                 interventionPlans={interventionPlans}
-                                setSelectedInterventions={
-                                    setSelectedInterventions
+                                showInterventionPlanDetails={
+                                    onShowInterventionPlanDetails
                                 }
-                                selectedInterventions={selectedInterventions}
-                                onRemoveOrgUnit={onDeleteOrgUnitFromPlan}
                             />
                         </TabPanel>
                         <TabPanel
@@ -88,6 +102,11 @@ export const InterventionsPlan: FC<Props> = ({
                     </CardContent>
                 </TabContext>
             </Card>
+            <InterventionPlanDetails
+                interventionPlan={selectedInterventionPlan}
+                removeAllOrgUnitsFromPlan={onRemoveAllOrgUnitsFromPlan}
+                closeInterventionPlanDetails={onCloseInterventionPlanDetails}
+            />
         </Box>
     );
 };
