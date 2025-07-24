@@ -71,7 +71,7 @@ export const Planning: FC = () => {
         );
     };
 
-    const handleAddMapOrgUnitsToList = () => {
+    const handleAddMapOrgUnitsToList = useCallback(() => {
         const newOrgUnits = selectionOnMap.filter(
             orgUnit =>
                 !selectionOnInterventionList.some(
@@ -89,7 +89,7 @@ export const Planning: FC = () => {
                 }),
             ),
         );
-    };
+    }, [selectionOnMap, selectionOnInterventionList, formatMessage]);
 
     const { data: displayedMetricValues, isLoading } = useGetMetricValues({
         metricTypeId: displayedMetric?.id || null,
