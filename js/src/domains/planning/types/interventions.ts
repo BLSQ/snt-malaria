@@ -1,13 +1,9 @@
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+
 export type InterventionCategory = {
     id: number;
     name: string;
     description: string;
-    interventions: Intervention[];
-};
-
-export type InterventionMix = {
-    id: number;
-    name: string;
     interventions: Intervention[];
 };
 
@@ -17,17 +13,28 @@ export type Intervention = {
     cost_per_unit: number | null;
 };
 
-export type InterventionAssignment = {
-    mix_name: string;
+export type InterventionAssignmentCreate = {
     orgunit_ids: number[];
     intervention_ids: number[];
     scenario_id: number;
 };
 
-export type InterventionPlan = {
+export type InterventionAssignmentResponse = {
     id: number;
-    name: string;
+    org_unit: OrgUnit;
+    intervention: Intervention;
+    scenario_id: number;
+};
+
+export type InterventionAssignment = {
+    org_units: OrgUnit[];
     interventions: Intervention[];
+    scenario_id: number;
+};
+
+export type InterventionPlan = {
+    name: string;
+    intervention: Intervention;
     org_units: InterventionOrgUnit[];
 };
 

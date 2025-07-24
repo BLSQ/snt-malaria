@@ -13,41 +13,28 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.layers.above',
         defaultMessage: 'Above',
     },
-    interventionMixTitle: {
-        id: 'iaso.snt_malaria.label.interventionMix',
-        defaultMessage: 'Intervention mix',
+    interventionTitle: {
+        id: 'iaso.snt_malaria.label.interventionTitle',
+        defaultMessage: 'Interventions',
     },
     orgUnitDistrict: {
         id: 'iaso.snt_malaria.label.orgUnitDistricts',
         defaultMessage: 'Districts',
     },
-    applyInterventionMix: {
-        id: 'iaso.snt_malaria.label.interventionMix.applyInterventionMix',
-        defaultMessage: 'Apply mix and add to plan',
-    },
-    overrideMix: {
-        id: 'iaso.snt_malaria.label.interventionMix.overrideMix',
-        defaultMessage: 'Override mix',
+    addToPlan: {
+        id: 'iaso.snt_malaria.label.interventionList.addToPlan',
+        defaultMessage: 'Add to plan',
     },
     cancel: {
         defaultMessage: 'Cancel',
         id: 'iaso.label.cancel',
     },
-    mixConflicts: {
-        id: 'iaso.snt_malaria.label.interventionMix.mixConflicts',
-        defaultMessage: 'Mix conflicts',
-    },
-    applyMixMessage: {
-        id: 'iaso.snt_malaria.label.interventionMix.applyMixMessage',
-        defaultMessage:
-            'You’re about to apply intervention mix to districts that already have been applied a mix. Please review the ones to override.',
-    },
     remove: {
-        id: 'iaso.snt_malaria.label.interventionMix.remove',
+        id: 'iaso.snt_malaria.label.interventionList.remove',
         defaultMessage: 'Remove',
     },
     add: {
-        id: 'iaso.snt_malaria.label.interventionMix.add',
+        id: 'iaso.snt_malaria.label.interventionList.add',
         defaultMessage: 'Add',
     },
     interventionPlanTitle: {
@@ -84,42 +71,17 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Clear selection',
     },
     selectDistrictsMessage: {
-        id: 'iaso.snt_malaria.label.interventionMix.selectDistrictsMessage',
+        id: 'iaso.snt_malaria.label.interventionList.selectDistrictsMessage',
         defaultMessage:
-            'Select districts in the map above and add them to the mix',
+            'Select districts in the map above and add them to the list',
     },
     addMap: {
         id: 'iaso.snt_malaria.label.addMap',
-        defaultMessage: 'Add a coviarant map',
-    },
-    editMixTitle: {
-        id: 'iaso.snt_malaria.label.interventionMix.editMixTitle',
-        defaultMessage: 'Edit Mix',
-    },
-    updateMix: {
-        id: 'iaso.snt_malaria.label.interventionMix.updateMix',
-        defaultMessage: 'Update Mix',
-    },
-    deleteMix: {
-        id: 'iaso.snt_malaria.label.interventionMix.deleteMix',
-        defaultMessage: 'Delete Mix',
+        defaultMessage: 'Add a covariant map',
     },
     tableNoContent: {
-        id: 'iaso.snt_malaria.label.interventionMix.tableNoContent',
-        defaultMessage:
-            'Intervention mixes and their districts will appear here.',
-    },
-    noMixCreated: {
-        id: 'iaso.snt_malaria.label.interventionMix.noMixCreated',
-        defaultMessage: 'No mix created',
-    },
-    createNewMix: {
-        id: 'iaso.snt_malaria.label.interventionMix.createNewMix',
-        defaultMessage: 'Create new mix',
-    },
-    chooseMixToApply: {
-        id: 'iaso.snt_malaria.label.interventionMix.chooseMixToApply',
-        defaultMessage: 'Choose mix to apply',
+        id: 'iaso.snt_malaria.label.interventionList.tableNoContent',
+        defaultMessage: 'Intervention and their districts will appear here.',
     },
     selectedOrgUnitsCount: {
         id: 'iaso.snt_malaria.label.selectOrgUnitsCount',
@@ -129,13 +91,13 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.clearSelectionTooltip',
         defaultMessage: 'Clear selection',
     },
-    addToMix: {
-        id: 'iaso.snt_malaria.label.addToMix',
-        defaultMessage: 'Add to mix',
+    addToList: {
+        id: 'iaso.snt_malaria.label.addToList',
+        defaultMessage: 'Add to List',
     },
-    addedMapSelectionToMix: {
-        id: 'iaso.snt_malaria.label.addedMapSelectionToMix',
-        defaultMessage: 'Added {amount} map selection to mix',
+    addedMapSelectionToList: {
+        id: 'iaso.snt_malaria.label.addedMapSelectionToList',
+        defaultMessage: 'Added {amount} map selection to list',
     },
     clearedMapSelection: {
         id: 'iaso.snt_malaria.label.clearedMapSelection',
@@ -148,5 +110,18 @@ export const MESSAGES = defineMessages({
     modalDeleteScenarioConfirm: {
         id: 'snt_malaria.scenario.delete.confirm',
         defaultMessage: 'Do you really want to delete this scenario?',
+    },
+    interventionAssignmentRemoveAllButton: {
+        id: 'snt_malaria.interventionAssignment.removeAll',
+        defaultMessage: 'Remove all',
+    },
+    interventionAssignmentRemoveAllTitle: {
+        id: 'snt_malaria.interventionAssignment.removeAllTitle',
+        defaultMessage: 'Remove all districts',
+    },
+    interventionAssignmentRemoveAllMessage: {
+        id: 'snt_malaria.interventionAssignment.removeAllMessage',
+        defaultMessage:
+            'Do you really want to remove all districts from this intervention assignment?',
     },
 });

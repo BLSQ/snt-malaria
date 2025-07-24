@@ -7,14 +7,12 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from iaso.api.common import DeletionFilterBackend
 from iaso.models.metric import MetricType, MetricValue
 from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.api.interventionassignments.filters import (
     InterventionAssignmentListFilter,
 )
 from plugins.snt_malaria.models import InterventionAssignment
-from plugins.snt_malaria.models.intervention import InterventionMix
 
 from .serializers import (
     InterventionAssignmentListSerializer,
@@ -28,9 +26,9 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
     filterset_class = InterventionAssignmentListFilter
 
     def get_queryset(self):
-        return InterventionAssignment.objects.prefetch_related(
-            "intervention_mix__interventions__intervention_category__account"
-        ).filter(intervention_mix__interventions__intervention_category__account=self.request.user.iaso_profile.account)
+        return InterventionAssignment.objects.prefetch_related("intervention__intervention_category__account").filter(
+            intervention__intervention_category__account=self.request.user.iaso_profile.account
+        )
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -42,37 +40,27 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         # Get validated objects
-        mix_name = serializer.validated_data["mix_name"]
         scenario = serializer.validated_data["scenario"]
         org_units = serializer.validated_data["valid_org_units"]
         interventions = serializer.validated_data["valid_interventions"]
-        selected_mix = serializer.validated_data["selected_mix"]
 
         created_by = request.user
-        # create the created or selected intervention mix and link it the interventions
-        if selected_mix:
-            intervention_mix = selected_mix
-        else:
-            intervention_mix, created = InterventionMix.objects.get_or_create(
-                name=mix_name, account=self.request.user.iaso_profile.account, scenario=scenario
-            )
-            intervention_mix.interventions.add(*interventions)
-
         # Create InterventionAssignment objects
         assignments = []
         for org_unit in org_units:
-            # filter out existing org units
-            if InterventionAssignment.objects.filter(
-                scenario=scenario, org_unit=org_unit, intervention_mix=intervention_mix
-            ).exists():
-                continue
-            assignment = InterventionAssignment(
-                scenario=scenario,
-                org_unit=org_unit,
-                intervention_mix=intervention_mix,
-                created_by=created_by,
-            )
-            assignments.append(assignment)
+            for intervention in interventions:
+                # filter out existing org units
+                if InterventionAssignment.objects.filter(
+                    scenario=scenario, org_unit=org_unit, intervention=intervention
+                ).exists():
+                    continue
+                assignment = InterventionAssignment(
+                    scenario=scenario,
+                    org_unit=org_unit,
+                    intervention=intervention,
+                    created_by=created_by,
+                )
+                assignments.append(assignment)
 
         # Bulk create
         if assignments:

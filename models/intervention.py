@@ -3,7 +3,6 @@ from django.db import models
 
 from iaso.models import OrgUnit
 from iaso.utils.models.soft_deletable import (
-    DefaultSoftDeletableManager,
     SoftDeletableModel,
 )
 from plugins.snt_malaria.models.scenario import Scenario
@@ -50,28 +49,14 @@ class Intervention(SoftDeletableModel):
         return "%s %s" % (self.name, self.id)
 
 
-class InterventionAssignment(SoftDeletableModel):
+class InterventionAssignment(models.Model):
     class Meta:
         app_label = "snt_malaria"
-        unique_together = [["scenario", "org_unit", "intervention_mix"]]
+        unique_together = [["scenario", "org_unit", "intervention"]]
 
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="intervention_assignments")
     org_unit = models.ForeignKey(OrgUnit, on_delete=models.PROTECT)
-    intervention_mix = models.ForeignKey("InterventionMix", null=True, on_delete=models.PROTECT)
+    intervention = models.ForeignKey(Intervention, on_delete=models.PROTECT, blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    objects = DefaultSoftDeletableManager()
-
-
-class InterventionMix(SoftDeletableModel):
-    class Meta:
-        verbose_name_plural = "Intervention mixes"
-        ordering = ["name"]
-        unique_together = [["name", "scenario"]]
-
-    account = models.ForeignKey("iaso.Account", null=True, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
-    scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="intervention_mixes")
-    interventions = models.ManyToManyField(Intervention)
-    objects = DefaultSoftDeletableManager()

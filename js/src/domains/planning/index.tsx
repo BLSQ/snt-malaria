@@ -16,7 +16,7 @@ import {
 import { baseUrls } from '../../constants/urls';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { Budgets } from './components/budget/Budgets';
-import { InterventionsMix } from './components/interventionMix/InterventionsMix';
+import { InterventionAssignments } from './components/interventionAssignment/InterventionAssignments';
 import { InterventionsPlan } from './components/interventionPlan/InterventionsPlan';
 import { Map } from './components/map';
 import { SideMapList } from './components/maps/SideMapList';
@@ -44,16 +44,15 @@ export const Planning: FC = () => {
 
     const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
     const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
-    const [selectionOnInterventionMix, setSelectionOnInterventionMix] =
+    const [selectionOnInterventionList, setSelectionOnInterventionList] =
         useState<OrgUnit[]>([]);
-    const [expanded, setExpanded] = useState('interventionsMix');
+    const [expanded, setExpanded] = useState('interventionsList');
     const toggleDrawer = () => {
         setIsDrawerOpen(!isDrawerOpen);
     };
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: number[] | [];
     }>({});
-    const [mixName, setMixName] = useState<string>('');
     // Metric selection
     // v1: display Incidence by default
     const { data: metricCategories } = useGetMetricCategories();
@@ -72,31 +71,31 @@ export const Planning: FC = () => {
         );
     };
 
-    const handleAddMapOrgUnitsToMix = () => {
+    const handleAddMapOrgUnitsToList = useCallback(() => {
         const newOrgUnits = selectionOnMap.filter(
             orgUnit =>
-                !selectionOnInterventionMix.some(
+                !selectionOnInterventionList.some(
                     unit => unit.id === orgUnit.id,
                 ),
         );
 
-        setSelectionOnInterventionMix(prev => [...prev, ...newOrgUnits]);
+        setSelectionOnInterventionList(prev => [...prev, ...newOrgUnits]);
 
         openSnackBar(
             succesfullSnackBar(
-                'addedMapSelectionToMix',
-                formatMessage(MESSAGES.addedMapSelectionToMix, {
+                'addedMapSelectionToList',
+                formatMessage(MESSAGES.addedMapSelectionToList, {
                     amount: newOrgUnits.length,
                 }),
             ),
         );
-    };
+    }, [selectionOnMap, selectionOnInterventionList, formatMessage]);
 
     const { data: displayedMetricValues, isLoading } = useGetMetricValues({
         metricTypeId: displayedMetric?.id || null,
     });
 
-    // Manage OU selection from the "Intervention mix" section
+    // Manage OU selection from the "Intervention list" section
     // Manual add/remove
     const handleAddRemoveOrgUnitToMap = useCallback(
         (orgUnit: OrgUnit | null) => {
@@ -179,7 +178,7 @@ export const Planning: FC = () => {
                                     onAddRemoveOrgUnit={
                                         handleAddRemoveOrgUnitToMap
                                     }
-                                    onAddToMix={handleAddMapOrgUnitsToMix}
+                                    onAddToList={handleAddMapOrgUnitsToList}
                                 />
                             </PaperFullHeight>
                         </PaperContainer>
@@ -199,18 +198,16 @@ export const Planning: FC = () => {
                 <Grid container spacing={1} sx={{ mt: 0 }}>
                     <Grid item xs={12} md={6}>
                         <PaperContainer>
-                            <InterventionsMix
+                            <InterventionAssignments
                                 scenarioId={scenario?.id}
-                                selectedOrgUnits={selectionOnInterventionMix}
+                                selectedOrgUnits={selectionOnInterventionList}
                                 setSelectedOrgUnits={
-                                    setSelectionOnInterventionMix
+                                    setSelectionOnInterventionList
                                 }
                                 setSelectedInterventions={
                                     setSelectedInterventions
                                 }
                                 selectedInterventions={selectedInterventions}
-                                mixName={mixName}
-                                setMixName={setMixName}
                             />
                         </PaperContainer>
                     </Grid>
@@ -224,8 +221,6 @@ export const Planning: FC = () => {
                                     setSelectedInterventions
                                 }
                                 selectedInterventions={selectedInterventions}
-                                setMixName={setMixName}
-                                mixName={mixName}
                             />
                             {/* <Budgets
                                 scenarioId={scenario?.id}

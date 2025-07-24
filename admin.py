@@ -36,17 +36,15 @@ class InterventionAdmin(admin.ModelAdmin):
 
 @admin.register(InterventionAssignment)
 class InterventionAssignmentAdmin(admin.ModelAdmin):
-    raw_id_fields = ("org_unit",)
+    raw_id_fields = ("org_unit", "intervention")
     list_display = (
         "scenario",
-        "intervention_mix",
         "created_by",
         "created_at",
         "updated_at",
-        "deleted_at",
     )
-    list_filter = ("scenario", "intervention_mix", "created_by")
-    search_fields = ("scenario__name", "org_unit__name", "intervention_mix__name")
+    list_filter = ("scenario", "intervention", "created_by")
+    search_fields = ("scenario__name", "org_unit__name")
 
 
 @admin.register(Scenario)
@@ -62,5 +60,3 @@ class ScenarioAdmin(admin.ModelAdmin):
     search_fields = ("name", "description")
     list_filter = ("account", "created_by")
     ordering = ("name",)
-
-

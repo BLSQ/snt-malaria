@@ -1,9 +1,7 @@
 import React, { FC, useCallback } from 'react';
-import { Box, Button, Grid, TextField, Typography } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { Grid, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
-import { useGetInterventionCategories } from '../../hooks/useGetInterventions';
-import { MESSAGES } from '../../messages';
+import { useGetInterventionCategories } from '../../hooks/useGetInterventionCategories';
 import { Interventions } from './Interventions';
 
 type Props = {
@@ -11,16 +9,10 @@ type Props = {
     setSelectedInterventions: React.Dispatch<
         React.SetStateAction<Record<number, number[]>>
     >;
-    setCreateMix?: (bool: boolean) => void;
-    mixName?: string;
-    setMixName?: (name: string) => void;
-    edit?: boolean;
-    mix?: any;
 };
 
 const styles: SxStyles = {
-    categoryName: { fontSize: '0.75rem' },
-    mixNameField: { width: '100%' },
+    categoryName: { fontSize: '0.75rem', marginBottom: 1 },
     cancelButtonBox: {
         display: 'flex',
         justifyContent: 'flex-end',
@@ -30,13 +22,7 @@ const styles: SxStyles = {
 export const InterventionCategories: FC<Props> = ({
     selectedInterventions,
     setSelectedInterventions,
-    setCreateMix,
-    mixName,
-    setMixName,
-    edit,
-    mix,
 }) => {
-    const { formatMessage } = useSafeIntl();
     const { data: interventionCategories = [], isLoading } =
         useGetInterventionCategories();
 
@@ -58,34 +44,6 @@ export const InterventionCategories: FC<Props> = ({
 
     return (
         <Grid container spacing={2} padding={1}>
-            <Grid item container spacing={4}>
-                <Grid item xs={edit ? 12 : 6}>
-                    <TextField
-                        label="Mix name"
-                        id="outlined-size-small"
-                        value={mixName}
-                        size="small"
-                        sx={styles.mixNameField}
-                        onChange={e => setMixName?.(e.target.value)}
-                    />
-                </Grid>
-                {!edit && (
-                    <Grid item xs>
-                        <Box sx={styles.cancelButtonBox}>
-                            <Button
-                                onClick={() => {
-                                    setCreateMix?.(false);
-                                    setMixName?.('');
-                                    setSelectedInterventions([]);
-                                }}
-                            >
-                                {formatMessage(MESSAGES.cancel)}
-                            </Button>
-                        </Box>
-                    </Grid>
-                )}
-            </Grid>
-
             <Grid item container spacing={2} padding={2}>
                 {!isLoading &&
                     interventionCategories.map(
