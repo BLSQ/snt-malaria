@@ -45,9 +45,6 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         interventions = serializer.validated_data["valid_interventions"]
 
         created_by = request.user
-        print(
-            f"Creating intervention assignments for scenario {scenario.id} with org units {org_units} and interventions {interventions}"
-        )
         # Create InterventionAssignment objects
         assignments = []
         for org_unit in org_units:
