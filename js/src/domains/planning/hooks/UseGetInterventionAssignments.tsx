@@ -20,8 +20,11 @@ export const useGetInterventionAssignments = (
 
     return useSnackQuery({
         queryKey: ['interventionAssignments', scenarioId],
-        queryFn: () =>
-            getRequest(url).then((data: InterventionAssignmentResponse[]) => {
+        queryFn: () => getRequest(url),
+        options: {
+            staleTime: 1000 * 60 * 15,
+            cacheTime: 1000 * 60 * 5,
+            select: (data: InterventionAssignmentResponse[]) => {
                 return data.reduce((acc: InterventionPlan[], assignment) => {
                     const existingPlan = acc.find(
                         plan =>
@@ -46,12 +49,6 @@ export const useGetInterventionAssignments = (
 
                     return acc;
                 }, []);
-            }),
-        options: {
-            staleTime: 1000 * 60 * 15,
-            cacheTime: 1000 * 60 * 5,
-            select: (data: InterventionPlan[]) => {
-                return data;
             },
             enabled: Boolean(scenarioId),
         },
