@@ -1,4 +1,4 @@
-import React, { FC, useMemo } from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SearchIcon from '@mui/icons-material/Search';
 import {
@@ -75,10 +75,18 @@ export const InterventionPlanDetails: FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
     const [search, setSearch] = React.useState('');
-    const onSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-        event.preventDefault();
-        setSearch(event.target.value);
-    };
+    const onSearch = useCallback(
+        (event: React.ChangeEvent<HTMLInputElement>) => {
+            event.preventDefault();
+            setSearch(event.target.value);
+        },
+        [],
+    );
+
+    const onCloseInterventionPlanDetails = useCallback(() => {
+        setSearch('');
+        closeInterventionPlanDetails();
+    }, [closeInterventionPlanDetails]);
 
     const filteredData = useMemo(() => {
         if (!interventionPlan) return [];
@@ -91,12 +99,12 @@ export const InterventionPlanDetails: FC<Props> = ({
         <Drawer
             anchor="right"
             open={interventionPlan !== null}
-            onClose={closeInterventionPlanDetails}
+            onClose={onCloseInterventionPlanDetails}
             sx={styles.drawer}
         >
             <Box sx={styles.header}>
                 <IconButton
-                    onClick={closeInterventionPlanDetails}
+                    onClick={onCloseInterventionPlanDetails}
                     sx={styles.headerIcon}
                 >
                     <ChevronRightIcon color="disabled" />
