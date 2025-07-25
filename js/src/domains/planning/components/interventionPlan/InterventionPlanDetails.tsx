@@ -114,6 +114,7 @@ export const InterventionPlanDetails: FC<Props> = ({
                         variant="outlined"
                         fullWidth
                         size="small"
+                        placeholder={formatMessage(MESSAGES.searchPlaceholder)}
                         value={search}
                         onChange={onSearch}
                         InputProps={{

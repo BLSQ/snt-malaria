@@ -17,5 +17,6 @@
     "iaso.snt_malaria.label.selectOrgUnitsBtn": "Select districts ({amount} filters)",
     "iaso.snt_malaria.label.selectOrgUnitsBtnOneFilter": "Select districts (1 filter)",
     "iaso.snt_malaria.label.selectOrgUnitsSuccess": "Selected {amount} districts",
-    "iaso.snt_malaria.label.selectedOrgUnitsCount": "{selectionCount} districts selected"
+    "iaso.snt_malaria.label.selectedOrgUnitsCount": "{selectionCount} districts selected",
+    "iaso.snt_malaria.label.searchPlaceholder": "Search District"
 }
