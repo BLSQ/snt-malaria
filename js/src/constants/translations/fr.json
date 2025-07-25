@@ -17,5 +17,6 @@
     "iaso.snt_malaria.label.selectOrgUnitsBtn": "Sélectionner les districts ({amount} filtres)",
     "iaso.snt_malaria.label.selectOrgUnitsBtnOneFilter": "Sélectionner les districts (1 filtre)",
     "iaso.snt_malaria.label.selectOrgUnitsSuccess": "{amount} districts sélectionnés",
-    "iaso.snt_malaria.label.selectedOrgUnitsCount": "{selectionCount} districts sélectionnés"
+    "iaso.snt_malaria.label.selectedOrgUnitsCount": "{selectionCount} districts sélectionnés",
+    "iaso.snt_malaria.label.searchPlaceholder": "Rechercher un district"
 }
