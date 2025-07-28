@@ -3,11 +3,11 @@ import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
 import { UseRemoveAllOrgUnitsFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
+import { InterventionPlan } from '../../types/interventions';
+import { InterventionPlanDetails } from './InterventionPlanDetails';
 import { InterventionPlanSummary } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
 import { InterventionsPlanTable } from './InterventionsPlanTable';
-import { InterventionPlan } from '../../types/interventions';
-import { InterventionPlanDetails } from './InterventionPlanDetails';
 
 type Props = {
     scenarioId: number | undefined;
