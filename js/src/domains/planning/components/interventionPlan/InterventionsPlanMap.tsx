@@ -16,19 +16,39 @@ import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../../../../constants/map-theme';
 import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
-import { generateColorRange } from '../../libs/map-utils';
+import { defaultLegend } from '../../libs/map-utils';
 import { MESSAGES } from '../../messages';
 import { Intervention, InterventionPlan } from '../../types/interventions';
 
-const defaultLegend = {
-    units: '',
-    legend_type: 'ordinal', // 'linear' | 'ordinal' | 'threshold';
-    legend_config: {
-        domain: [],
-        range: [],
-    },
-    unit_symbol: '',
-};
+const colors = [
+    '#A2CAEA',
+    '#80B3DC',
+    '#6BD39D',
+    '#ACDF9B',
+    '#F5F1A0',
+    '#F2D683',
+    '#F2B16E',
+    '#E4754F',
+    '#C54A53',
+    '#A93A42',
+];
+
+// const defaultLegend = {
+//     units: '',
+//     legend_type: 'ordinal', // 'linear' | 'ordinal' | 'threshold';
+//     legend_config: {
+//         domain: [],
+//         range: [],
+//     },
+//     unit_symbol: '',
+// };
+
+interface InterventionColorMap {
+    color: string;
+    interventionsKey: string;
+    label: string;
+    orgUnitIds: number[];
+}
 
 type Props = {
     scenarioId: number | undefined;
@@ -124,7 +144,6 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         const orgUnitInterventions = getOrgUnitInterventions(
             interventionPlans ?? [],
         );
-        // TODO Enrich data here, we want the color and maybe a key to the legend too.
         return orgUnitInterventions;
     }, [interventionPlans, isLoadingPlans]);
 
@@ -154,28 +173,55 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         return selectedOrgUnits;
     }, [selectedPlanId, getSelectedOrgUnits]);
 
-    // getLegendForInterventionPlans = generateColorRange => {
-    //     return interventionPlans?.map(plan => ({
-    //         id: plan.intervention.id,
-    //         name: plan.intervention.name,
-    //         color: 'var(--deepPurple-300, #9575CD)', // This should be dynamic based on the intervention.
-    //     }));
-    // };
+    const interventionGroupColors = useMemo(() => {
+        const colorMap: InterventionColorMap[] = [];
 
-    // We should also get org unit color based on the legend.
-    // const getHighlightedOrgUnits = (
-    //     interventionPlans: InterventionPlan[]
-    // ) => {
-    //     return interventionPlans.flatMap(plan =>
-    //         plan.org_units.map(orgUnit => ({
-    //             id: orgUnit.id,
-    //             color: getOrgUnitColor(orgUnit.id),
-    //         })),
-    //     );
-    // };
+        orgUnitInterventionsMap.forEach((interventions, key) => {
+            const interventionGroupKey = interventions
+                .map(i => i.id)
+                .join('--');
 
-    // Need something to get the legend.
-    // Need something to get highlightedOrgUnits.
+            // We don't want to generate new color if one was already assigned for this group.
+            const existingMap = colorMap.find(
+                c => c.interventionsKey === interventionGroupKey,
+            );
+            if (existingMap) {
+                existingMap.orgUnitIds.push(key);
+                return;
+            }
+
+            const interventionGroupLabel = interventions
+                .map(i => i.name)
+                .join(' & ');
+            colorMap.push({
+                interventionsKey: interventionGroupKey,
+                color: colors[colorMap.length],
+                label: interventionGroupLabel,
+                orgUnitIds: [key],
+            });
+        });
+
+        return colorMap;
+    }, [orgUnitInterventionsMap]);
+
+    const getOrgUnitColor = useCallback(
+        orgUnitId => {
+            if (!highlightedOrgUnits.includes(orgUnitId)) {
+                return defaultLegend;
+            }
+
+            if (selectedPlanId) {
+                return colors[0];
+            }
+
+            return (
+                interventionGroupColors.find(x =>
+                    x.orgUnitIds.includes(orgUnitId),
+                )?.color ?? 'var(--deepPurple-300, #9575CD)'
+            );
+        },
+        [interventionGroupColors, highlightedOrgUnits, selectedPlanId],
+    );
 
     return (
         <Box height="390px" width="100%" sx={styles.mainBox}>
@@ -206,9 +252,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                         style={{
                             color: 'var(--text-primary,#1F2B3DDE)',
                             weight: 1,
-                            fillColor: highlightedOrgUnits.includes(orgUnit.id)
-                                ? 'var(--deepPurple-300, #9575CD)'
-                                : '#ECEFF1',
+                            fillColor: getOrgUnitColor(orgUnit.id),
                             fillOpacity: 2,
                         }}
                     />
