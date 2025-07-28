@@ -74,14 +74,11 @@ export const InterventionPlanDetails: FC<Props> = ({
     closeInterventionPlanDetails,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const [search, setSearch] = React.useState('');
-    const onSearch = useCallback(
-        (event: React.ChangeEvent<HTMLInputElement>) => {
-            event.preventDefault();
-            setSearch(event.target.value);
-        },
-        [],
-    );
+    const [search, setSearch] = React.useState<string>('');
+    const onSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+        event.preventDefault();
+        setSearch(event.target.value);
+    };
 
     const onCloseInterventionPlanDetails = useCallback(() => {
         setSearch('');
