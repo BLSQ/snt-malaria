@@ -9,7 +9,7 @@ import {
 
 export const useGetInterventionAssignments = (
     scenarioId,
-): UseQueryResult<any[], Error> => {
+): UseQueryResult<InterventionPlan[], Error> => {
     const params: Record<string, any> = {
         scenario_id: scenarioId,
     };

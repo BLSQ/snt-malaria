@@ -128,4 +128,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.searchPlaceholder',
         defaultMessage: 'Search District',
     },
+    allInterventions: {
+        id: 'iaso.snt_malaria.label.allInterventions',
+        defaultMessage: 'All interventions',
+    },
 });

@@ -1,7 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import { Paper, Box, Theme } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
-import { MetricType } from '../types/metrics';
 import { LinearLegend } from './legend/LinearLegend';
 import { OrdinalLegend } from './legend/OrdinalLegend';
 import { ThresholdLegend } from './legend/ThresholdLegend';
@@ -32,33 +31,38 @@ const styles: SxStyles = {
 };
 
 type Props = {
-    metric: MetricType;
+    legendConfig: {
+        units: string;
+        legend_type: string; // 'linear' | 'ordinal' | 'threshold';
+        legend_config: any;
+        unit_symbol: string;
+    };
 };
 
-export const MapLegend: FunctionComponent<Props> = ({ metric }) => {
+export const MapLegend: FunctionComponent<Props> = ({ legendConfig }) => {
     return (
         <Paper elevation={1} sx={styles.root}>
-            <Box sx={styles.legendUnit}>{metric.units}</Box>
+            <Box sx={styles.legendUnit}>{legendConfig.units}</Box>
             <Box sx={styles.legendContainer}>
                 {(() => {
-                    if (metric.legend_type === 'linear') {
+                    if (legendConfig.legend_type === 'linear') {
                         return (
                             <LinearLegend
-                                domainAndRange={metric.legend_config}
+                                domainAndRange={legendConfig.legend_config}
                             />
                         );
                     }
-                    if (metric.legend_type === 'ordinal') {
+                    if (legendConfig.legend_type === 'ordinal') {
                         return (
                             <OrdinalLegend
-                                domainAndRange={metric.legend_config}
+                                domainAndRange={legendConfig.legend_config}
                             />
                         );
                     }
                     return (
                         <ThresholdLegend
-                            threshold={metric.legend_config}
-                            unit={metric.unit_symbol}
+                            threshold={legendConfig.legend_config}
+                            unit={legendConfig.unit_symbol}
                         />
                     );
                 })()}
