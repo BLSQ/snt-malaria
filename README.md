@@ -2,7 +2,7 @@
 
 This repo contains a IASO plugin for the web app of the Malaria Subnational Tailoring project.
 
-## Local development
+## Getting started
 
 To start development on your local machine, you can perform the following steps:
 
@@ -55,16 +55,15 @@ docker compose run --rm iaso manage seed_interventions
 
 9. You can now import the covariate data sets (metrics), see the section below.
 
-# OpenHEXA import
+## OpenHEXA import
 
-## UI
+### UI
 
 This adds a "hidden" page to /snt_malaria/import_openhexa_metrics/ that allows an admin user to manually launch the Django command to import the metrics into a specific account.
 
 Example of workspace slug and dataset slug: snt-development and snt-results.
 
-
-## Script
+### Script
 
 Script to fetch a specific dataset from an OpenHEXA workspace and import it into the MetricType and MetricValue tables:
 
@@ -72,7 +71,7 @@ Script to fetch a specific dataset from an OpenHEXA workspace and import it into
 docker compose run --rm iaso manage import_openhexa_metrics --workspace_slug <slug> --dataset_slug <slug> --account-id <id>
 ```
 
-### Example for RDC data:
+**Example for RDC data:**
 
 ```bash
 docker compose run --rm iaso manage import_openhexa_metrics --workspace_slug snt-development --dataset_slug snt-results --account-id 2
@@ -86,3 +85,14 @@ OPENHEXA_TOKEN = "XXX"
 ```
 
 Note: You can get a OpenHEXA token by going to the pipelines page, create a new pipeline and choose "From OpenHEXA CLI" -> "Show" access token.
+
+## Release workflow
+
+This project follows [Semantic Versioning](http://semver.org/) and assumes you are using [Conventional Commit messages](https://www.conventionalcommits.org/).
+
+Tagging and releases' creation are managed by [release-please](https://github.com/googleapis/release-please) that will create and maintain a pull request with the next release based on the commit messages of the new commits.
+
+On creation of a new release, the following actions are performed:
+
+- The `CHANGELOG.md` is updated with the new changes.
+- A new release is created in GitHub.
