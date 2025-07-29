@@ -8,10 +8,12 @@ import {
     Theme,
     CardActionArea,
 } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import { useNavigate } from 'react-router-dom';
 
 import { SxStyles } from 'Iaso/types/general';
 import { baseUrls } from '../../../constants/urls';
+import { MESSAGES } from '../../messages';
 import { Scenario } from '../types';
 
 const styles: SxStyles = {
@@ -51,6 +53,7 @@ type Props = {
 
 export const ScenarioComponent: FC<Props> = ({ scenario }) => {
     const navigate = useNavigate();
+    const { formatMessage } = useSafeIntl();
     const handleScenarioClick = () => {
         navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
     };
@@ -64,8 +67,11 @@ export const ScenarioComponent: FC<Props> = ({ scenario }) => {
                             {scenario.name}
                         </Typography>
                         <Typography variant="body2" sx={styles.timestamp}>
-                            Edited on{' '}
-                            {new Date(scenario.updated_at).toLocaleString()}
+                            {formatMessage(MESSAGES.editedOn, {
+                                date: new Date(
+                                    scenario.updated_at,
+                                ).toLocaleString(),
+                            })}
                         </Typography>
                     </Box>
                     {/* <Box sx={styles.columnEnd}>

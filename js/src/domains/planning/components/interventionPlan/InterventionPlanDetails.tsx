@@ -13,7 +13,7 @@ import {
 import { useSafeIntl } from 'bluesquare-components';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';
-import { MESSAGES } from '../../messages';
+import { MESSAGES } from '../../../messages';
 import { InterventionPlan } from '../../types/interventions';
 
 const styles: SxStyles = {

@@ -21,7 +21,7 @@ import {
     useGetMetricCategories,
     useGetMetricValues,
 } from '../hooks/useGetMetrics';
-import { MESSAGES } from '../messages';
+import { MESSAGES } from '../../messages';
 import { MetricType } from '../types/metrics';
 
 type Props = {

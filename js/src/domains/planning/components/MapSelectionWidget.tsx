@@ -5,7 +5,7 @@ import { Box, Button, Theme, Typography } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 
 import { SxStyles } from 'Iaso/types/general';
-import { MESSAGES } from '../messages';
+import { MESSAGES } from '../../messages';
 import { MetricsFilters } from '../types/metrics';
 import { FilterQueryBuilder } from './maps/FilterQueryBuilder';
 

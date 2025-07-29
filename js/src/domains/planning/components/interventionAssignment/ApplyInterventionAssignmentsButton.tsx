@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { Button, Grid } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { MESSAGES } from '../../messages';
+import { MESSAGES } from '../../../messages';
 
 type ApplyButtonProps = {
     onClick: () => void;
