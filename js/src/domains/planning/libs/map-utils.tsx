@@ -1,9 +1,32 @@
+import { hslToRgb } from '@mui/material';
 import { scaleThreshold } from '@visx/scale';
 import * as d3 from 'd3-scale';
 import { mapTheme } from '../../../constants/map-theme';
 import { ScaleDomainRange } from '../types/metrics';
 
-const defaultLegend = '#999999';
+export const defaultLegend = '#999999';
+export const maxHue = 350;
+
+export const getColorRange = (count: number = 1) => {
+    const colorStep = Math.round(maxHue / count);
+    let prevHue = 0;
+
+    return Array.from(Array(count)).map(() => {
+        const [hue, sat, light] = getHslColor(prevHue, colorStep);
+        prevHue = hue;
+        return hslToRgb(`hsl(${hue},${sat * 100}%,${light * 100}%)`);
+    });
+};
+
+export const getHslColor = (prevHue: number = 0, stepSize = 10) => {
+    const [sat, lightness] = [0.69, 0.84];
+    let hue = prevHue + stepSize;
+    if (hue > maxHue) {
+        hue -= maxHue;
+    }
+    return [hue, sat, lightness];
+};
+
 export const getLegend = (
     threshold: ScaleDomainRange,
     shouldReverse = false,

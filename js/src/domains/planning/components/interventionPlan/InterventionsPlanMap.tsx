@@ -7,7 +7,7 @@ import React, {
 import { Box, MenuItem, Select, Theme, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import L from 'leaflet';
-import { MapContainer, GeoJSON, ZoomControl } from 'react-leaflet';
+import { GeoJSON, MapContainer, Tooltip, ZoomControl } from 'react-leaflet';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
@@ -16,32 +16,22 @@ import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../../../../constants/map-theme';
 import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
-import { defaultLegend } from '../../libs/map-utils';
+import { defaultLegend, getColorRange } from '../../libs/map-utils';
 import { MESSAGES } from '../../messages';
 import { Intervention, InterventionPlan } from '../../types/interventions';
+import { MapLegend } from '../MapLegend';
 
-const colors = [
-    '#A2CAEA',
-    '#80B3DC',
-    '#6BD39D',
-    '#ACDF9B',
-    '#F5F1A0',
-    '#F2D683',
-    '#F2B16E',
-    '#E4754F',
-    '#C54A53',
-    '#A93A42',
-];
+const defaultLegendConfig = {
+    units: '',
+    legend_type: 'ordinal', // 'linear' | 'ordinal' | 'threshold';
+    legend_config: {
+        domain: [],
+        range: [],
+    },
+    unit_symbol: '',
+};
 
-// const defaultLegend = {
-//     units: '',
-//     legend_type: 'ordinal', // 'linear' | 'ordinal' | 'threshold';
-//     legend_config: {
-//         domain: [],
-//         range: [],
-//     },
-//     unit_symbol: '',
-// };
+const defaultColor = 'var(--deepPurple-300, #9575CD)';
 
 interface InterventionColorMap {
     color: string;
@@ -53,6 +43,7 @@ interface InterventionColorMap {
 type Props = {
     scenarioId: number | undefined;
 };
+
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
         borderRadius: theme.spacing(2),
@@ -123,8 +114,6 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         useGetInterventionAssignments(scenarioId);
     const [selectedPlanId, setSelectedPlanId] = useState<number | null>(0);
 
-    // const [legend, setLegend] = useState<Record<string, string>>({});
-
     const getOrgUnitInterventions = (plans: InterventionPlan[]) => {
         return plans.reduce((acc, plan) => {
             plan.org_units.forEach(orgUnit => {
@@ -192,36 +181,55 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
             const interventionGroupLabel = interventions
                 .map(i => i.name)
-                .join(' & ');
+                .join(' + ');
             colorMap.push({
                 interventionsKey: interventionGroupKey,
-                color: colors[colorMap.length],
+                color: defaultLegend,
                 label: interventionGroupLabel,
                 orgUnitIds: [key],
             });
         });
 
+        getColorRange(colorMap.length).forEach((c, index) => {
+            colorMap[index].color = c;
+        });
+
         return colorMap;
     }, [orgUnitInterventionsMap]);
 
-    const getOrgUnitColor = useCallback(
+    const getOrgUnitMapMisc = useCallback(
         orgUnitId => {
             if (!highlightedOrgUnits.includes(orgUnitId)) {
-                return defaultLegend;
+                return { color: defaultLegend, label: '' };
             }
 
             if (selectedPlanId) {
-                return colors[0];
+                return { color: defaultColor, label: '' };
             }
 
-            return (
+            const { color, label } =
                 interventionGroupColors.find(x =>
                     x.orgUnitIds.includes(orgUnitId),
-                )?.color ?? 'var(--deepPurple-300, #9575CD)'
-            );
+                ) ?? {};
+            return { color, label };
         },
         [interventionGroupColors, highlightedOrgUnits, selectedPlanId],
     );
+
+    const legendConfig = useMemo(() => {
+        const conf = interventionGroupColors.reduce(
+            (acc, v) => {
+                acc.range.push(v.color);
+                acc.domain.push(v.label);
+                return acc;
+            },
+            {
+                domain: [] as string[],
+                range: [] as string[],
+            },
+        );
+        return { ...defaultLegendConfig, legend_config: conf };
+    }, [interventionGroupColors]);
 
     return (
         <Box height="390px" width="100%" sx={styles.mainBox}>
@@ -245,18 +253,32 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                     position="bottomright"
                     backgroundColor="#1F2B3DBF"
                 />
-                {orgUnits?.map(orgUnit => (
-                    <GeoJSON
-                        key={orgUnit.id}
-                        data={orgUnit.geo_json as unknown as GeoJson}
-                        style={{
-                            color: 'var(--text-primary,#1F2B3DDE)',
-                            weight: 1,
-                            fillColor: getOrgUnitColor(orgUnit.id),
-                            fillOpacity: 2,
-                        }}
-                    />
-                ))}
+                {orgUnits?.map(orgUnit => {
+                    const orgUnitMapMisc = getOrgUnitMapMisc(orgUnit.id);
+                    return (
+                        <GeoJSON
+                            key={orgUnit.id}
+                            data={orgUnit.geo_json as unknown as GeoJson}
+                            style={{
+                                color: 'var(--text-primary,#1F2B3DDE)',
+                                weight: 1,
+                                fillColor:
+                                    orgUnitMapMisc?.color ?? defaultColor,
+                                fillOpacity: 2,
+                            }}
+                        >
+                            <Tooltip>
+                                <b>{orgUnit.short_name}</b>
+                                {orgUnitMapMisc.label && (
+                                    <>
+                                        <br />
+                                        {orgUnitMapMisc.label}
+                                    </>
+                                )}
+                            </Tooltip>
+                        </GeoJSON>
+                    );
+                })}
             </MapContainer>
             <Box sx={styles.selectBox}>
                 <Select
@@ -286,7 +308,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                         })}
                 </Select>
             </Box>
-            {/* <MapLegend legendConfig={legendConfig} /> */}
+            {selectedPlanId ? null : <MapLegend legendConfig={legendConfig} />}
         </Box>
     );
 };
