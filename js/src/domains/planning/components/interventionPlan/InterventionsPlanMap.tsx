@@ -4,8 +4,7 @@ import React, {
     useMemo,
     useState,
 } from 'react';
-import { Box, MenuItem, Select, Theme, Typography } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { Box, Theme } from '@mui/material';
 import L from 'leaflet';
 import { GeoJSON, MapContainer, Tooltip, ZoomControl } from 'react-leaflet';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
@@ -17,9 +16,9 @@ import { mapTheme } from '../../../../constants/map-theme';
 import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
 import { defaultLegend, getColorRange } from '../../libs/map-utils';
-import { MESSAGES } from '../../messages';
 import { Intervention, InterventionPlan } from '../../types/interventions';
 import { MapLegend } from '../MapLegend';
+import { InterventionSelect } from './InterventionSelect';
 
 const defaultLegendConfig = {
     units: '',
@@ -93,7 +92,6 @@ const styles: SxStyles = {
 export const InterventionsPlanMap: FunctionComponent<Props> = ({
     scenarioId,
 }) => {
-    const { formatMessage } = useSafeIntl();
     const { data: orgUnits } = useGetOrgUnits();
     const [currentTile] = useState<Tile>(tiles.osm);
 
@@ -112,7 +110,13 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(scenarioId);
-    const [selectedPlanId, setSelectedPlanId] = useState<number | null>(0);
+    const defaultPlanId =
+        interventionPlans && interventionPlans.length === 1
+            ? interventionPlans[0].intervention?.id
+            : 0;
+    const [selectedPlanId, setSelectedPlanId] = useState<number | null>(
+        defaultPlanId,
+    );
 
     const getOrgUnitInterventions = (plans: InterventionPlan[]) => {
         return plans.reduce((acc, plan) => {
@@ -152,10 +156,6 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         },
         [orgUnitInterventionsMap],
     );
-
-    const handleSelectedPlanChange = event => {
-        setSelectedPlanId(event.target.value ?? 0);
-    };
 
     const highlightedOrgUnits = useMemo(() => {
         const selectedOrgUnits = getSelectedOrgUnits(selectedPlanId ?? 0);
@@ -281,32 +281,12 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 })}
             </MapContainer>
             <Box sx={styles.selectBox}>
-                <Select
-                    value={selectedPlanId}
-                    onChange={handleSelectedPlanChange}
-                    displayEmpty
+                <InterventionSelect
+                    onPlanSelect={setSelectedPlanId}
+                    interventionPlans={interventionPlans}
+                    selectedPlanId={selectedPlanId}
                     sx={styles.select}
-                >
-                    <MenuItem value={0}>
-                        <Typography variant="body2">
-                            {formatMessage(MESSAGES.allInterventions)}
-                        </Typography>
-                    </MenuItem>
-                    {!isLoadingPlans &&
-                        interventionPlans &&
-                        interventionPlans.map(({ intervention }) => {
-                            return (
-                                <MenuItem
-                                    key={intervention.id}
-                                    value={intervention.id}
-                                >
-                                    <Typography variant="body2">
-                                        {intervention.name}
-                                    </Typography>
-                                </MenuItem>
-                            );
-                        })}
-                </Select>
+                />
             </Box>
             {selectedPlanId ? null : <MapLegend legendConfig={legendConfig} />}
         </Box>
