@@ -42,7 +42,9 @@ type Props = {
 export const MapLegend: FunctionComponent<Props> = ({ legendConfig }) => {
     return (
         <Paper elevation={1} sx={styles.root}>
-            <Box sx={styles.legendUnit}>{legendConfig.units}</Box>
+            {legendConfig.units ? (
+                <Box sx={styles.legendUnit}>{legendConfig.units}</Box>
+            ) : null}
             <Box sx={styles.legendContainer}>
                 {(() => {
                     if (legendConfig.legend_type === 'linear') {

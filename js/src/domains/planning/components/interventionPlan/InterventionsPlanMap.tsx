@@ -89,6 +89,28 @@ const styles: SxStyles = {
         border: 'none',
     },
 };
+
+function getSelectedOrgUnitsFromId(
+    selectedId: number,
+    orgUnitInterventions: Map<number, Intervention[]>,
+) {
+    const filteredOrgUnitIds = [...orgUnitInterventions]
+        .filter(([_key, value]) =>
+            value.some((v: { id: number }) => v.id === selectedId),
+        )
+        .map(([key, _value]) => key);
+
+    return filteredOrgUnitIds;
+}
+
+function getInterventionsGroupKey(interventions: Intervention[]) {
+    return interventions.map(i => i.id).join('--');
+}
+
+function getInterventionsGroupLabel(interventions: Intervention[]) {
+    return interventions.map(i => i.name).join(' + ');
+}
+
 export const InterventionsPlanMap: FunctionComponent<Props> = ({
     scenarioId,
 }) => {
@@ -121,10 +143,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     const getOrgUnitInterventions = (plans: InterventionPlan[]) => {
         return plans.reduce((acc, plan) => {
             plan.org_units.forEach(orgUnit => {
-                let mapInterventions = acc.get(orgUnit.id);
-                if (!mapInterventions) {
-                    mapInterventions = [];
-                }
+                const mapInterventions = acc.get(orgUnit.id) ?? [];
                 mapInterventions.push(plan.intervention);
                 acc.set(orgUnit.id, mapInterventions);
             });
@@ -132,70 +151,59 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         }, new Map<number, Intervention[]>());
     };
 
-    const orgUnitInterventionsMap = useMemo(() => {
+    const orgUnitInterventions = useMemo(() => {
         if (isLoadingPlans) return new Map<number, Intervention[]>();
-        const orgUnitInterventions = getOrgUnitInterventions(
+        const ouInterventions = getOrgUnitInterventions(
             interventionPlans ?? [],
         );
-        return orgUnitInterventions;
+        return ouInterventions;
     }, [interventionPlans, isLoadingPlans]);
 
-    const getSelectedOrgUnits = useCallback(
-        (selectedId: number) => {
-            if (!selectedId) {
-                return [...orgUnitInterventionsMap.keys()];
-            }
-
-            const filteredOrgUnitIds = [...orgUnitInterventionsMap]
-                .filter(([_key, value]) =>
-                    value.some((v: { id: number }) => v.id === selectedId),
-                )
-                .map(([key, _value]) => key);
-
-            return filteredOrgUnitIds;
-        },
-        [orgUnitInterventionsMap],
+    const highlightedOrgUnits = useMemo(
+        () =>
+            selectedPlanId
+                ? getSelectedOrgUnitsFromId(
+                      selectedPlanId,
+                      orgUnitInterventions,
+                  )
+                : [...orgUnitInterventions.keys()],
+        [selectedPlanId, orgUnitInterventions],
     );
 
-    const highlightedOrgUnits = useMemo(() => {
-        const selectedOrgUnits = getSelectedOrgUnits(selectedPlanId ?? 0);
-        return selectedOrgUnits;
-    }, [selectedPlanId, getSelectedOrgUnits]);
-
     const interventionGroupColors = useMemo(() => {
-        const colorMap: InterventionColorMap[] = [];
+        const colorMap = [...orgUnitInterventions].reduce(
+            (acc, [key, interventions]) => {
+                const interventionGroupKey =
+                    getInterventionsGroupKey(interventions);
 
-        orgUnitInterventionsMap.forEach((interventions, key) => {
-            const interventionGroupKey = interventions
-                .map(i => i.id)
-                .join('--');
+                // We don't want to generate new color if one was already assigned for this group.
+                const existingMap = acc.find(
+                    c => c.interventionsKey === interventionGroupKey,
+                );
+                if (existingMap) {
+                    existingMap.orgUnitIds.push(key);
+                    return acc;
+                }
 
-            // We don't want to generate new color if one was already assigned for this group.
-            const existingMap = colorMap.find(
-                c => c.interventionsKey === interventionGroupKey,
-            );
-            if (existingMap) {
-                existingMap.orgUnitIds.push(key);
-                return;
-            }
-
-            const interventionGroupLabel = interventions
-                .map(i => i.name)
-                .join(' + ');
-            colorMap.push({
-                interventionsKey: interventionGroupKey,
-                color: defaultLegend,
-                label: interventionGroupLabel,
-                orgUnitIds: [key],
-            });
-        });
+                return [
+                    ...acc,
+                    {
+                        interventionsKey: interventionGroupKey,
+                        color: defaultLegend,
+                        label: getInterventionsGroupLabel(interventions),
+                        orgUnitIds: [key],
+                    },
+                ];
+            },
+            [] as InterventionColorMap[],
+        );
 
         getColorRange(colorMap.length).forEach((c, index) => {
             colorMap[index].color = c;
         });
 
         return colorMap;
-    }, [orgUnitInterventionsMap]);
+    }, [orgUnitInterventions]);
 
     const getOrgUnitMapMisc = useCallback(
         orgUnitId => {
@@ -217,18 +225,13 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     );
 
     const legendConfig = useMemo(() => {
-        const conf = interventionGroupColors.reduce(
-            (acc, v) => {
-                acc.range.push(v.color);
-                acc.domain.push(v.label);
-                return acc;
-            },
-            {
-                domain: [] as string[],
-                range: [] as string[],
-            },
-        );
-        return { ...defaultLegendConfig, legend_config: conf };
+        const domain: string[] = [];
+        const range: string[] = [];
+        interventionGroupColors.forEach(v => {
+            range.push(v.color);
+            domain.push(v.label);
+        });
+        return { ...defaultLegendConfig, legend_config: { domain, range } };
     }, [interventionGroupColors]);
 
     return (
