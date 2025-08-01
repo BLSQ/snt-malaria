@@ -90,10 +90,10 @@ const styles: SxStyles = {
     },
 };
 
-function getSelectedOrgUnitsFromId(
+const getSelectedOrgUnitsFromId = (
     selectedId: number,
     orgUnitInterventions: Map<number, Intervention[]>,
-) {
+) => {
     const filteredOrgUnitIds = [...orgUnitInterventions]
         .filter(([_key, value]) =>
             value.some((v: { id: number }) => v.id === selectedId),
@@ -101,15 +101,15 @@ function getSelectedOrgUnitsFromId(
         .map(([key, _value]) => key);
 
     return filteredOrgUnitIds;
-}
+};
 
-function getInterventionsGroupKey(interventions: Intervention[]) {
+const getInterventionsGroupKey = (interventions: Intervention[]) => {
     return interventions.map(i => i.id).join('--');
-}
+};
 
-function getInterventionsGroupLabel(interventions: Intervention[]) {
+const getInterventionsGroupLabel = (interventions: Intervention[]) => {
     return interventions.map(i => i.name).join(' + ');
-}
+};
 
 export const InterventionsPlanMap: FunctionComponent<Props> = ({
     scenarioId,
