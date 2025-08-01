@@ -10,9 +10,9 @@ import {
 } from '../../components/styledComponents';
 
 import { baseUrls } from '../../constants/urls';
+import { MESSAGES } from '../messages';
 import { ScenarioComponent } from './components/ScenarioComponent';
 import { useCreateScenario, useGetScenarios } from './hooks/useGetScenarios';
-import { MESSAGES } from './messages';
 import { Scenario } from './types';
 
 const styles: SxStyles = {
@@ -40,7 +40,7 @@ export const Scenarios: FC = () => {
         useCreateScenario();
 
     const handleCreateScenario = async () => {
-        const scenario = await createScenario();
+        const scenario = (await createScenario(null)) as Scenario;
         navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
     };
 

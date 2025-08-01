@@ -15,7 +15,7 @@ import {
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { UseGetBudgets } from '../../hooks/UseGetBudgets';
-import { MESSAGES } from '../../messages';
+import { MESSAGES } from '../../../messages';
 import { containerBoxStyles } from '../styles';
 import { BudgetsTable } from './BudgetsTable';
 

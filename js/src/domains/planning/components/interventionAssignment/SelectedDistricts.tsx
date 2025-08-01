@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 import { alpha, Box, Button, Grid, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { MESSAGES } from '../../messages';
+import { MESSAGES } from '../../../messages';
 import { SelectedDistrictsTable } from './SelectedDistrictsTable';
 
 type Props = {

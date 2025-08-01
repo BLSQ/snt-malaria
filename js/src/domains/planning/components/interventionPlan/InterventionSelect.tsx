@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import { MenuItem, Select, SxProps, Theme, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { MESSAGES } from '../../messages';
+import { MESSAGES } from '../../../messages';
 import { InterventionPlan } from '../../types/interventions';
 
 type Props = {

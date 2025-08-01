@@ -13,6 +13,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.layers.above',
         defaultMessage: 'Above',
     },
+    editedOn: {
+        id: 'iaso.snt_malaria.label.editedOn',
+        defaultMessage: 'Edited on {date}',
+    },
     interventionTitle: {
         id: 'iaso.snt_malaria.label.interventionTitle',
         defaultMessage: 'Interventions',
@@ -51,11 +55,7 @@ export const MESSAGES = defineMessages({
     },
     selectOrgUnitsBtn: {
         id: 'iaso.snt_malaria.label.selectOrgUnitsBtn',
-        defaultMessage: 'Select districts ({amount} filters)',
-    },
-    selectOrgUnitsBtnOneFilter: {
-        id: 'iaso.snt_malaria.label.selectOrgUnitsBtnOneFilter',
-        defaultMessage: 'Select districts (1 filter)',
+        defaultMessage: 'Select districts',
     },
     selectOrgUnitsSuccess: {
         id: 'iaso.snt_malaria.label.selectOrgUnitsSuccess',
@@ -104,23 +104,23 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Map selection has been cleared',
     },
     modalDeleteScenarioTitle: {
-        id: 'snt_malaria.scenario.delete.title',
+        id: 'iaso.snt_malaria.label.delete.title',
         defaultMessage: 'Delete Scenario',
     },
     modalDeleteScenarioConfirm: {
-        id: 'snt_malaria.scenario.delete.confirm',
+        id: 'iaso.snt_malaria.label.delete.confirm',
         defaultMessage: 'Do you really want to delete this scenario?',
     },
     interventionAssignmentRemoveAllButton: {
-        id: 'snt_malaria.interventionAssignment.removeAll',
+        id: 'iaso.snt_malaria.interventionAssignment.removeAll',
         defaultMessage: 'Remove all',
     },
     interventionAssignmentRemoveAllTitle: {
-        id: 'snt_malaria.interventionAssignment.removeAllTitle',
+        id: 'iaso.snt_malaria.interventionAssignment.removeAllTitle',
         defaultMessage: 'Remove all districts',
     },
     interventionAssignmentRemoveAllMessage: {
-        id: 'snt_malaria.interventionAssignment.removeAllMessage',
+        id: 'iaso.snt_malaria.interventionAssignment.removeAllMessage',
         defaultMessage:
             'Do you really want to remove all districts from this intervention assignment?',
     },
