@@ -37,12 +37,17 @@ mv snt-malaria snt_malaria
 APP_TITLE="SNT Malaria"
 RDS_DB_NAME=snt_malaria  # Your choice of DB
 PLUGINS=snt_malaria
+
+# For importing data from OpenHEXA
+OPENHEXA_URL="https://api.openhexa.org/graphql/"
+OPENHEXA_TOKEN="XXX"
 ```
 
 6. Start IASO as you would normally:
 
 ```bash
-docker-compose up
+docker compose up
+docker compose run iaso fixtures
 ```
 
 7. Set up your IASO account with e.g. name `Burkina Faso` and import the geopackage you can retrieve from https://iaso-snt-malaria.bluesquare.org/.
