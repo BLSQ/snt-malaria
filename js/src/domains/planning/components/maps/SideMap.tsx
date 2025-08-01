@@ -122,7 +122,9 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
                         <Tooltip>{getSelectedMetricValue(orgUnit.id)}</Tooltip>
                     </GeoJSON>
                 ))}
-                {displayedMetric && <MapLegend metric={displayedMetric} />}
+                {displayedMetric && (
+                    <MapLegend legendConfig={displayedMetric} />
+                )}
 
                 <Box sx={styles.layerSelectBox}>
                     <LayerSelect

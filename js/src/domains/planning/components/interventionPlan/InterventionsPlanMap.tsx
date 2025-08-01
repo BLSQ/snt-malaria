@@ -1,20 +1,48 @@
-import React, { FunctionComponent, useMemo, useState } from 'react';
-import { Box, MenuItem, Select, Theme, Typography } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import React, {
+    FunctionComponent,
+    useCallback,
+    useMemo,
+    useState,
+} from 'react';
+import { Box, Theme } from '@mui/material';
 import L from 'leaflet';
-import { MapContainer, GeoJSON, ZoomControl } from 'react-leaflet';
+import { GeoJSON, MapContainer, Tooltip, ZoomControl } from 'react-leaflet';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
+import { mapTheme } from '../../../../constants/map-theme';
 import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
-import { MESSAGES } from '../../messages';
+import { defaultLegend, getColorRange } from '../../libs/map-utils';
+import { Intervention, InterventionPlan } from '../../types/interventions';
+import { MapLegend } from '../MapLegend';
+import { InterventionSelect } from './InterventionSelect';
+
+const defaultLegendConfig = {
+    units: '',
+    legend_type: 'ordinal', // 'linear' | 'ordinal' | 'threshold';
+    legend_config: {
+        domain: [],
+        range: [],
+    },
+    unit_symbol: '',
+};
+
+const defaultColor = 'var(--deepPurple-300, #9575CD)';
+
+interface InterventionColorMap {
+    color: string;
+    interventionsKey: string;
+    label: string;
+    orgUnitIds: number[];
+}
 
 type Props = {
     scenarioId: number | undefined;
 };
+
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
         borderRadius: theme.spacing(2),
@@ -61,10 +89,31 @@ const styles: SxStyles = {
         border: 'none',
     },
 };
+
+const getSelectedOrgUnitsFromId = (
+    selectedId: number,
+    orgUnitInterventions: Map<number, Intervention[]>,
+) => {
+    const filteredOrgUnitIds = [...orgUnitInterventions]
+        .filter(([_key, value]) =>
+            value.some((v: { id: number }) => v.id === selectedId),
+        )
+        .map(([key, _value]) => key);
+
+    return filteredOrgUnitIds;
+};
+
+const getInterventionsGroupKey = (interventions: Intervention[]) => {
+    return interventions.map(i => i.id).join('--');
+};
+
+const getInterventionsGroupLabel = (interventions: Intervention[]) => {
+    return interventions.map(i => i.name).join(' + ');
+};
+
 export const InterventionsPlanMap: FunctionComponent<Props> = ({
     scenarioId,
 }) => {
-    const { formatMessage } = useSafeIntl();
     const { data: orgUnits } = useGetOrgUnits();
     const [currentTile] = useState<Tile>(tiles.osm);
 
@@ -83,24 +132,108 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(scenarioId);
+    const defaultPlanId =
+        interventionPlans && interventionPlans.length === 1
+            ? interventionPlans[0].intervention?.id
+            : 0;
     const [selectedPlanId, setSelectedPlanId] = useState<number | null>(
-        interventionPlans?.[0]?.id ?? null,
+        defaultPlanId,
     );
 
-    const [highlightedOrgUnits, setHighlightedOrgUnits] = useState<number[]>(
-        interventionPlans?.[0]?.org_units?.map(org_unit => org_unit.id) ?? [],
-    );
-    const handleChange = event => {
-        const selectedId = event.target.value;
-        setSelectedPlanId(selectedId);
-        const selectedPlan = interventionPlans?.filter(
-            interventionPlan => interventionPlan.id === selectedId,
-        )[0];
-
-        setHighlightedOrgUnits(
-            selectedPlan?.org_units.map(org_unit => org_unit.id) ?? [],
-        );
+    const getOrgUnitInterventions = (plans: InterventionPlan[]) => {
+        return plans.reduce((acc, plan) => {
+            plan.org_units.forEach(orgUnit => {
+                const mapInterventions = acc.get(orgUnit.id) ?? [];
+                mapInterventions.push(plan.intervention);
+                acc.set(orgUnit.id, mapInterventions);
+            });
+            return acc;
+        }, new Map<number, Intervention[]>());
     };
+
+    const orgUnitInterventions = useMemo(() => {
+        if (isLoadingPlans) return new Map<number, Intervention[]>();
+        const ouInterventions = getOrgUnitInterventions(
+            interventionPlans ?? [],
+        );
+        return ouInterventions;
+    }, [interventionPlans, isLoadingPlans]);
+
+    const highlightedOrgUnits = useMemo(
+        () =>
+            selectedPlanId
+                ? getSelectedOrgUnitsFromId(
+                      selectedPlanId,
+                      orgUnitInterventions,
+                  )
+                : [...orgUnitInterventions.keys()],
+        [selectedPlanId, orgUnitInterventions],
+    );
+
+    const interventionGroupColors = useMemo(() => {
+        const colorMap = [...orgUnitInterventions].reduce(
+            (acc, [key, interventions]) => {
+                const interventionGroupKey =
+                    getInterventionsGroupKey(interventions);
+
+                // We don't want to generate new color if one was already assigned for this group.
+                const existingMap = acc.find(
+                    c => c.interventionsKey === interventionGroupKey,
+                );
+                if (existingMap) {
+                    existingMap.orgUnitIds.push(key);
+                    return acc;
+                }
+
+                return [
+                    ...acc,
+                    {
+                        interventionsKey: interventionGroupKey,
+                        color: defaultLegend,
+                        label: getInterventionsGroupLabel(interventions),
+                        orgUnitIds: [key],
+                    },
+                ];
+            },
+            [] as InterventionColorMap[],
+        );
+
+        getColorRange(colorMap.length).forEach((c, index) => {
+            colorMap[index].color = c;
+        });
+
+        return colorMap;
+    }, [orgUnitInterventions]);
+
+    const getOrgUnitMapMisc = useCallback(
+        orgUnitId => {
+            if (!highlightedOrgUnits.includes(orgUnitId)) {
+                return { color: defaultLegend, label: '' };
+            }
+
+            if (selectedPlanId) {
+                return { color: defaultColor, label: '' };
+            }
+
+            const { color, label } =
+                interventionGroupColors.find(x =>
+                    x.orgUnitIds.includes(orgUnitId),
+                ) ?? {};
+            return { color, label };
+        },
+        [interventionGroupColors, highlightedOrgUnits, selectedPlanId],
+    );
+
+    const legendConfig = useMemo(() => {
+        const domain: string[] = [];
+        const range: string[] = [];
+        interventionGroupColors.forEach(v => {
+            range.push(v.color);
+            domain.push(v.label);
+        });
+        return { ...defaultLegendConfig, legend_config: { domain, range } };
+    }, [interventionGroupColors]);
+
     return (
         <Box height="390px" width="100%" sx={styles.mainBox}>
             <MapContainer
@@ -111,7 +244,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 style={{
                     height: '100%',
                     width: '100%',
-                    backgroundColor: '#ECEFF1',
+                    backgroundColor: mapTheme.backgroundColor,
                 }}
                 center={[0, 0]}
                 keyboard={false}
@@ -123,50 +256,42 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                     position="bottomright"
                     backgroundColor="#1F2B3DBF"
                 />
-                {orgUnits?.map(orgUnit => (
-                    <GeoJSON
-                        key={orgUnit.id}
-                        data={orgUnit.geo_json as unknown as GeoJson}
-                        style={{
-                            color: 'var(--text-primary,#1F2B3DDE)',
-                            weight: 1,
-                            fillColor: highlightedOrgUnits.includes(orgUnit.id)
-                                ? 'var(--deepPurple-300, #9575CD)'
-                                : '#ECEFF1',
-                            fillOpacity: 2,
-                        }}
-                    />
-                ))}
+                {orgUnits?.map(orgUnit => {
+                    const orgUnitMapMisc = getOrgUnitMapMisc(orgUnit.id);
+                    return (
+                        <GeoJSON
+                            key={orgUnit.id}
+                            data={orgUnit.geo_json as unknown as GeoJson}
+                            style={{
+                                color: 'var(--text-primary,#1F2B3DDE)',
+                                weight: 1,
+                                fillColor:
+                                    orgUnitMapMisc?.color ?? defaultColor,
+                                fillOpacity: 2,
+                            }}
+                        >
+                            <Tooltip>
+                                <b>{orgUnit.short_name}</b>
+                                {orgUnitMapMisc.label && (
+                                    <>
+                                        <br />
+                                        {orgUnitMapMisc.label}
+                                    </>
+                                )}
+                            </Tooltip>
+                        </GeoJSON>
+                    );
+                })}
             </MapContainer>
             <Box sx={styles.selectBox}>
-                <Select
-                    value={selectedPlanId}
-                    onChange={handleChange}
-                    displayEmpty
+                <InterventionSelect
+                    onPlanSelect={setSelectedPlanId}
+                    interventionPlans={interventionPlans}
+                    selectedPlanId={selectedPlanId}
                     sx={styles.select}
-                >
-                    {!isLoadingPlans &&
-                        interventionPlans &&
-                        interventionPlans.map(intervention => {
-                            return (
-                                <MenuItem
-                                    key={intervention.id}
-                                    value={intervention.id}
-                                >
-                                    <Typography variant="body2">
-                                        {intervention.name}
-                                    </Typography>
-                                </MenuItem>
-                            );
-                        })}
-                </Select>
+                />
             </Box>
-            <Box sx={styles.legendBox}>
-                <Box sx={styles.legendShape} />
-                <Typography variant="caption" sx={{ color: 'white' }}>
-                    {`${highlightedOrgUnits.length} ${formatMessage(MESSAGES.orgUnitDistrict)}`}
-                </Typography>
-            </Box>
+            {selectedPlanId ? null : <MapLegend legendConfig={legendConfig} />}
         </Box>
     );
 };

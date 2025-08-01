@@ -167,7 +167,7 @@ export const Map: FC<Props> = ({
                             </GeoJSON>
                         ))}
                         {displayedMetric && (
-                            <MapLegend metric={displayedMetric} />
+                            <MapLegend legendConfig={displayedMetric} />
                         )}
                     </MapContainer>
                     {clickedOrgUnit && (
