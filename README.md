@@ -50,37 +50,34 @@ docker compose up
 docker compose run iaso fixtures
 ```
 
-7. Set up your IASO account with e.g. name `Burkina Faso` and import the geopackage you can retrieve from https://iaso-snt-malaria.bluesquare.org/.
+<!-- 7. Set up your IASO account with e.g. name `Burkina Faso` and import the geopackage you can retrieve from https://iaso-snt-malaria.bluesquare.org/.
 
 8. With the org unit pyramid set up correctly, you can now generate a set of interventions:
 
 ```bash
 docker compose run --rm iaso manage seed_interventions
-```
+``` -->
 
 9. You can now import the covariate data sets (metrics), see the section below.
 
 ## OpenHEXA import
 
-### UI
+The data layers to display on the maps are retrieved by fetching a specific dataset from an OpenHEXA workspace. A script then processes this dataset to insert it into the `MetricType` and `MetricValue` tables.
 
-This adds a "hidden" page to /snt_malaria/import_openhexa_metrics/ that allows an admin user to manually launch the Django command to import the metrics into a specific account.
+As a superuser, there are two ways you can import metrics from an OpenHEXA workspace:
 
-Example of workspace slug and dataset slug: snt-development and snt-results.
-
-### Script
-
-Script to fetch a specific dataset from an OpenHEXA workspace and import it into the MetricType and MetricValue tables:
+1. Using the Django command:
 
 ```bash
 docker compose run --rm iaso manage import_openhexa_metrics --workspace_slug <slug> --dataset_slug <slug> --account-id <id>
-```
 
-**Example for RDC data:**
-
-```bash
+# Example for RDC data:**
 docker compose run --rm iaso manage import_openhexa_metrics --workspace_slug snt-development --dataset_slug snt-results --account-id 2
 ```
+
+2. Via the "hidden" admin page on http://localhost:8081/snt_malaria/import_openhexa_metrics/ that allows an admin user to manually launch the Django command to import the metrics into a specific account. Example of workspace slug and dataset slug: `snt-development` and `snt-results`.
+
+### Script
 
 To test make sure you set the env variables:
 

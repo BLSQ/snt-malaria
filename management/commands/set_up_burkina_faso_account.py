@@ -2,8 +2,7 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from iaso.models import Account, Profile, Project, DataSource, SourceVersion
-
+from iaso.models import Account, DataSource, Profile, Project, SourceVersion
 
 
 class Command(BaseCommand):
@@ -22,7 +21,7 @@ class Command(BaseCommand):
             account, created = Account.objects.get_or_create(name="Burkina Faso")
 
             if created:
-                self.stdout.write(self.style.SUCCESS(f"Successfully created Account: {account.name}"))
+                self.stdout.write(self.style.SUCCESS(f"Created Account: {account.name}"))
             else:
                 self.stdout.write(self.style.WARNING(f"Account '{account.name}' already exists"))
 
@@ -32,7 +31,7 @@ class Command(BaseCommand):
             if profile_created:
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"Successfully created Profile connecting user '{admin_user.username}' to account '{account.name}'"
+                        f"Created Profile connecting user '{admin_user.username}' to account '{account.name}'"
                     )
                 )
             else:
@@ -42,50 +41,33 @@ class Command(BaseCommand):
                     )
                 )
 
-            self.stdout.write(self.style.SUCCESS("Setup completed successfully!"))
+            self.stdout.write(self.style.SUCCESS("Done."))
 
             # Create Project
             project, project_created = Project.objects.get_or_create(
-                name="Burkina Faso Project",
-                account=account,
-                defaults={
-                    'app_id': 'burkina'
-                }
+                name="Burkina Faso Project", account=account, defaults={"app_id": "burkina"}
             )
-            
+
             if project_created:
-                self.stdout.write(
-                    self.style.SUCCESS(f"Successfully created Project: {project.name}")
-                )
+                self.stdout.write(self.style.SUCCESS(f"Created Project: {project.name}"))
             else:
-                self.stdout.write(
-                    self.style.WARNING(f"Project '{project.name}' already exists")
-                )
+                self.stdout.write(self.style.WARNING(f"Project '{project.name}' already exists"))
 
             # Add project to profile
             if not profile.projects.filter(id=project.id).exists():
                 profile.projects.add(project)
-                self.stdout.write(
-                    self.style.SUCCESS(f"Added project '{project.name}' to profile")
-                )
+                self.stdout.write(self.style.SUCCESS(f"Added project '{project.name}' to profile"))
 
             # Create DataSource for Burkina Faso
             data_source, ds_created = DataSource.objects.get_or_create(
                 name="Burkina Faso Data Source",
-                defaults={
-                    'description': 'Main data source for Burkina Faso organizational units and data',
-                    'read_only': False,
-                }
+                defaults={"description": "Dummy data source for BFA org units"},
             )
-            
+
             if ds_created:
-                self.stdout.write(
-                    self.style.SUCCESS(f"Successfully created DataSource: {data_source.name}")
-                )
+                self.stdout.write(self.style.SUCCESS(f"Created DataSource: {data_source.name}"))
             else:
-                self.stdout.write(
-                    self.style.WARNING(f"DataSource '{data_source.name}' already exists")
-                )
+                self.stdout.write(self.style.WARNING(f"DataSource '{data_source.name}' already exists"))
 
             # Link project to data source
             if not data_source.projects.filter(id=project.id).exists():
@@ -96,15 +78,12 @@ class Command(BaseCommand):
 
             # Create initial SourceVersion
             source_version, sv_created = SourceVersion.objects.get_or_create(
-                data_source=data_source,
-                number=1,
-                defaults={'description': 'Initial version for Burkina Faso data'
-                          }
+                data_source=data_source, number=1, defaults={"description": "Initial version for Burkina Faso data"}
             )
-            
+
             if sv_created:
                 self.stdout.write(
-                    self.style.SUCCESS(f"Successfully created SourceVersion: {source_version.number} for {data_source.name}")
+                    self.style.SUCCESS(f"Created SourceVersion: {source_version.number} for {data_source.name}")
                 )
             else:
                 self.stdout.write(
@@ -115,19 +94,15 @@ class Command(BaseCommand):
             if not account.default_version:
                 account.default_version = source_version
                 account.save()
-                self.stdout.write(
-                    self.style.SUCCESS(f"Set default version for account '{account.name}'")
-                )
+                self.stdout.write(self.style.SUCCESS(f"Set default version for account '{account.name}'"))
 
             if not data_source.default_version:
                 data_source.default_version = source_version
                 data_source.save()
-                self.stdout.write(
-                    self.style.SUCCESS(f"Set default version for data source '{data_source.name}'")
-                )
+                self.stdout.write(self.style.SUCCESS(f"Set default version for data source '{data_source.name}'"))
 
+            self.stdout.write(self.style.SUCCESS("Setup completed successfully!"))
             self.stdout.write(
-                self.style.SUCCESS("Setup completed successfully!")
                 f"\n  - Account: {account.name} (ID: {account.id})"
                 f"\n  - Project: {project.name} (ID: {project.id})"
                 f"\n  - DataSource: {data_source.name} (ID: {data_source.id})"
