@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from iaso.models import Account, DataSource, Profile, Project, SourceVersion
+from iaso.models import Account, DataSource, OrgUnit, Profile, Project, SourceVersion
 from iaso.gpkg.import_gpkg import import_gpkg_file2
 from .support.metrics_importer import MetricsImporter
 
@@ -63,7 +63,7 @@ class Command(BaseCommand):
 
             # Create DataSource for Burkina Faso
             data_source, ds_created = DataSource.objects.get_or_create(
-                name="Burkina Faso Data Source",
+                name="Burkina Faso Data Source (dummy)",
                 defaults={"description": "Dummy data source for BFA org units"},
             )
 
@@ -104,10 +104,15 @@ class Command(BaseCommand):
                 data_source.save()
                 self.stdout.write(self.style.SUCCESS(f"Set default version for data source '{data_source.name}'"))
 
-            # Import .gpkg file into the SourceVersion
-            gpkg_file_path = os.path.join(os.path.dirname(__file__), "fixtures", "Burkina-Faso-org-units.gpkg")
+            # Import .gpkg file into the SourceVersion (only if no org units exist for this data source)
+            existing_org_units = source_version.orgunit_set.count()
 
-            if os.path.exists(gpkg_file_path):
+            if existing_org_units > 0:
+                self.stdout.write(
+                    self.style.WARNING(f"Data source already has {existing_org_units} org units, skipping GPKG import")
+                )
+            else:
+                gpkg_file_path = os.path.join(os.path.dirname(__file__), "fixtures", "Burkina-Faso-org-units.gpkg")
                 self.stdout.write(f"Importing GPKG file: {gpkg_file_path}. This can take a minute.")
                 try:
                     total_imported = import_gpkg_file2(
@@ -126,8 +131,6 @@ class Command(BaseCommand):
                 except Exception as e:
                     self.stdout.write(self.style.ERROR(f"Failed to import GPKG file: {e}"))
                     raise
-            else:
-                self.stdout.write(self.style.WARNING(f"GPKG file not found at: {gpkg_file_path}"))
 
             # Import metrics data
             metadata_file_path = os.path.join(os.path.dirname(__file__), "fixtures", "BFA_dummy_metadata.csv")
