@@ -31,40 +31,50 @@ git clone git@github.com:BLSQ/snt-malaria.git
 mv snt-malaria snt_malaria
 ```
 
-5. Make following changes to your `.env` in the main IASO repo:
+5. Prepare your `.env` (in the root of the main IASO repo):
 
 ```.env
-APP_TITLE="SNT Malaria"
-RDS_DB_NAME=snt_malaria  # Your choice of DB
-PLUGINS=snt_malaria
+cp .env.dist .env
+```
 
-# For importing data from OpenHEXA
+6. Start your IASO container:
+
+```bash
+docker compose up
+```
+
+If you get a message saying that the database does not exist, you can connect to your Postgres instance and create the database:
+
+```bash
+psql -h localhost -p 5433 -U postgres # password is postgres
+# And then:
+create database snt_malaria;
+```
+
+7. With your containers running, run the script (in a different tab) to set up an initial example account:
+
+```bash
+docker compose run iaso manage set_up_burkina_faso_account
+```
+
+8. Using the credentials you just received, you should now be able to log in and create a first scenario.
+
+## OpenHEXA import
+
+This section describes how to fetch real data layers from OpenHEXA.
+
+The data layers to display on the maps are retrieved by fetching a specific dataset from an OpenHEXA workspace. A script then processes this dataset to insert it into the `MetricType` and `MetricValue` tables.
+
+First, make sure you add the following variables to your `.env` file:
+
+```.env
 OPENHEXA_URL="https://api.openhexa.org/graphql/"
 OPENHEXA_TOKEN="XXX"
 ```
 
-6. Start IASO as you would normally:
+_Note: You can get a OpenHEXA token by going to the pipelines page, create a new pipeline and choose "From OpenHEXA CLI" -> "Show" access token._
 
-```bash
-docker compose up
-docker compose run iaso fixtures
-```
-
-<!-- 7. Set up your IASO account with e.g. name `Burkina Faso` and import the geopackage you can retrieve from https://iaso-snt-malaria.bluesquare.org/.
-
-8. With the org unit pyramid set up correctly, you can now generate a set of interventions:
-
-```bash
-docker compose run --rm iaso manage seed_interventions
-``` -->
-
-9. You can now import the covariate data sets (metrics), see the section below.
-
-## OpenHEXA import
-
-The data layers to display on the maps are retrieved by fetching a specific dataset from an OpenHEXA workspace. A script then processes this dataset to insert it into the `MetricType` and `MetricValue` tables.
-
-As a superuser, there are two ways you can import metrics from an OpenHEXA workspace:
+Now there are two ways you can import metrics from an OpenHEXA workspace:
 
 1. Using the Django command:
 
@@ -75,18 +85,7 @@ docker compose run --rm iaso manage import_openhexa_metrics --workspace_slug <sl
 docker compose run --rm iaso manage import_openhexa_metrics --workspace_slug snt-development --dataset_slug snt-results --account-id 2
 ```
 
-2. Via the "hidden" admin page on http://localhost:8081/snt_malaria/import_openhexa_metrics/ that allows an admin user to manually launch the Django command to import the metrics into a specific account. Example of workspace slug and dataset slug: `snt-development` and `snt-results`.
-
-### Script
-
-To test make sure you set the env variables:
-
-```.env
-OPENHEXA_URL="https://api.openhexa.org/graphql/"
-OPENHEXA_TOKEN = "XXX"
-```
-
-Note: You can get a OpenHEXA token by going to the pipelines page, create a new pipeline and choose "From OpenHEXA CLI" -> "Show" access token.
+2. Via the "hidden" admin (only accessible to superusers) page on http://localhost:8081/snt_malaria/import_openhexa_metrics/ that allows an admin user to manually launch the Django command to import the metrics into a specific account. Example of workspace slug and dataset slug: `snt-development` and `snt-results`.
 
 ## Release workflow
 
