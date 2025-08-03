@@ -5,6 +5,7 @@ from django.db import transaction
 
 from iaso.models import Account, DataSource, Profile, Project, SourceVersion
 from iaso.gpkg.import_gpkg import import_gpkg_file2
+from .support.metrics_importer import MetricsImporter
 
 
 class Command(BaseCommand):
@@ -127,6 +128,19 @@ class Command(BaseCommand):
                     raise
             else:
                 self.stdout.write(self.style.WARNING(f"GPKG file not found at: {gpkg_file_path}"))
+
+            # Import metrics data
+            metadata_file_path = os.path.join(os.path.dirname(__file__), "fixtures", "BFA_dummy_metadata.csv")
+            dataset_file_path = os.path.join(os.path.dirname(__file__), "fixtures", "BFA_dummy_results_dataset.csv")
+
+            self.stdout.write(f"Importing metrics data from {metadata_file_path} and {dataset_file_path}")
+            try:
+                metrics_importer = MetricsImporter(account, self.stdout.write)
+                total_values = metrics_importer.import_metrics(metadata_file_path, dataset_file_path)
+                self.stdout.write(self.style.SUCCESS(f"Successfully imported {total_values} metric values"))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Failed to import metrics data: {e}"))
+                raise
 
             self.stdout.write(self.style.SUCCESS("Setup completed successfully!"))
             self.stdout.write(
