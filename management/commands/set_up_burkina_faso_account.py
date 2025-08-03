@@ -1,8 +1,10 @@
+import os
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from iaso.models import Account, DataSource, Profile, Project, SourceVersion
+from iaso.gpkg.import_gpkg import import_gpkg_file2
 
 
 class Command(BaseCommand):
@@ -100,6 +102,31 @@ class Command(BaseCommand):
                 data_source.default_version = source_version
                 data_source.save()
                 self.stdout.write(self.style.SUCCESS(f"Set default version for data source '{data_source.name}'"))
+
+            # Import .gpkg file into the SourceVersion
+            gpkg_file_path = os.path.join(os.path.dirname(__file__), "fixtures", "Burkina-Faso-org-units.gpkg")
+
+            if os.path.exists(gpkg_file_path):
+                self.stdout.write(f"Importing GPKG file: {gpkg_file_path}. This can take a minute.")
+                try:
+                    total_imported = import_gpkg_file2(
+                        filename=gpkg_file_path,
+                        project=project,
+                        source=data_source,
+                        version_number=source_version.number,
+                        validation_status="VALID",
+                        user=admin_user,
+                        description="Burkina Faso organizational units imported from GPKG",
+                        task=None,
+                    )
+                    self.stdout.write(
+                        self.style.SUCCESS(f"Successfully imported {total_imported} organizational units from GPKG")
+                    )
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"Failed to import GPKG file: {e}"))
+                    raise
+            else:
+                self.stdout.write(self.style.WARNING(f"GPKG file not found at: {gpkg_file_path}"))
 
             self.stdout.write(self.style.SUCCESS("Setup completed successfully!"))
             self.stdout.write(
