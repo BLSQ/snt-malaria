@@ -13,7 +13,7 @@ import { useSafeIntl } from 'bluesquare-components';
 
 import { SxStyles } from 'Iaso/types/general';
 import { MetricType, MetricTypeCategory } from '../../types/metrics';
-import { MESSAGES } from '../../messages';
+import { MESSAGES } from '../../../messages';
 import { useGetMetricCategories } from '../../hooks/useGetMetrics';
 
 const styles: SxStyles = {

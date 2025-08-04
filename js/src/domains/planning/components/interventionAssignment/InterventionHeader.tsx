@@ -7,7 +7,7 @@ import { useQueryClient } from 'react-query';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
-import { MESSAGES } from '../../messages';
+import { MESSAGES } from '../../../messages';
 import { containerBoxStyles } from '../styles';
 
 type Props = {

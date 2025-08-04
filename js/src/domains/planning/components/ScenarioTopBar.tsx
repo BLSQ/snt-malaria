@@ -11,6 +11,7 @@ import {
     TextField,
     Button,
 } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import { useNavigate } from 'react-router-dom';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';
@@ -22,8 +23,7 @@ import {
     useDeleteScenario,
 } from '../../scenarios/hooks/useGetScenarios';
 import { Scenario } from '../../scenarios/types';
-import { MESSAGES } from '../messages';
-import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
+import { MESSAGES } from '../../messages';
 
 const actionBtnStyles = (theme: Theme) => ({
     color: theme.palette.primary.main,
@@ -78,6 +78,8 @@ type Props = {
 
 export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
     const navigate = useNavigate();
+    const { formatMessage } = useSafeIntl();
+
     const [isEditing, setIsEditing] = useState(false);
     const [tempName, setTempName] = useState(scenario.name);
 
@@ -178,11 +180,13 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                     <DeleteModal
                         type="icon"
                         onConfirm={() => handleDeleteClick()}
-                        titleMessage={MESSAGES.modalDeleteScenarioTitle}
+                        titleMessage={formatMessage(
+                            MESSAGES.modalDeleteScenarioTitle,
+                        )}
                         iconProps={{ color: 'primary' }}
                     >
                         <p>
-                            {MESSAGES.modalDeleteScenarioConfirm.defaultMessage}
+                            {formatMessage(MESSAGES.modalDeleteScenarioConfirm)}
                         </p>
                     </DeleteModal>
                 </Box>

@@ -14,7 +14,7 @@ import {
     Typography,
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { MESSAGES } from '../../messages';
+import { MESSAGES } from '../../../messages';
 import { containerBoxStyles } from '../styles';
 
 type Props = {

@@ -27,7 +27,7 @@ import {
     useGetMetricValues,
 } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
-import { MESSAGES } from './messages';
+import { MESSAGES } from '../messages';
 import { MetricsFilters, MetricType, MetricValue } from './types/metrics';
 
 type PlanningParams = {

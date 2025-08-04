@@ -7,21 +7,10 @@ import {
 } from '@react-awesome-query-builder/mui';
 
 import { QueryBuilder, SimpleModal, useSafeIntl } from 'bluesquare-components';
-import { defineMessages } from 'react-intl';
 
 import { useGetMetricCategories } from '../../hooks/useGetMetrics';
+import { MESSAGES } from '../../../messages';
 import { ScaleDomainRange } from '../../types/metrics';
-
-export const MESSAGES = defineMessages({
-    applyFilter: {
-        id: 'iaso.snt_malaria.label.applyFilter',
-        defaultMessage: 'Select districts',
-    },
-    isAbove: {
-        id: 'iaso.snt_malaria.label.isAbove',
-        defaultMessage: 'is above',
-    },
-});
 
 type Props = {
     isOpen: boolean;
@@ -105,7 +94,7 @@ export const FilterQueryBuilder: FC<Props> = ({
                 color="primary"
                 disabled={isLoading || !currentFilter}
             >
-                {formatMessage(MESSAGES.applyFilter)}
+                {formatMessage(MESSAGES.selectOrgUnitsBtn)}
             </Button>
         );
     };
