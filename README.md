@@ -51,6 +51,10 @@ psql -h localhost -p 5433 -U postgres # password is postgres
 create database snt_malaria;
 ```
 
+Or one-line:
+
+`docker compose exec db psql -U postgres -c "create database snt_malaria"`
+
 7. With your containers running, run the script (in a different tab) to set up an initial example account:
 
 ```bash

@@ -100,7 +100,6 @@ class Command(BaseCommand):
                 try:
                     total_imported = import_gpkg_file2(
                         filename=gpkg_file_path,
-                        project=project,
                         source=data_source,
                         version_number=source_version.number,
                         validation_status="VALID",
