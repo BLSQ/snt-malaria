@@ -20,13 +20,13 @@
     "iaso.snt_malaria.label.interventionList.add": "Ajouter",
     "iaso.snt_malaria.label.interventionList.remove": "Retirer",
     "iaso.snt_malaria.label.selectOrgUnitsCount": "{selectionCount} selectionnés",
-    "iaso.snt_malaria.label.addedMapSelectionToList": "{amount} districts ajoutés à la liste.",
+    "iaso.snt_malaria.label.addedMapSelectionToList": "{amount} district(s) ajouté(s) à la liste.",
     "iaso.snt_malaria.label.clearedMapSelection": "La sélection sur la carte a été réinitialisée",
-    "iaso.snt_malaria.label.delete.confirm": "Voulez vous vraiment supprimer ce scénario ?",
+    "iaso.snt_malaria.label.delete.confirm": "Voulez-vous vraiment supprimer ce scénario ?",
     "iaso.snt_malaria.label.delete.title": "Supprimer le scénario",
     "iaso.snt_malaria.interventionAssignment.removeAll": "Tout supprimer",
     "iaso.snt_malaria.interventionAssignment.removeAllTitle": "Supprimer tous les districts",
-    "iaso.snt_malaria.interventionAssignment.removeAllMessage":"Voulez vous vraiment supprimer tous les districts de cette intervention ?",
+    "iaso.snt_malaria.interventionAssignment.removeAllMessage":"Voulez-vous vraiment supprimer tous les districts de cette intervention ?",
     "iaso.snt_malaria.label.allInterventions": "Toutes interventions",
     "iaso.snt_malaria.label.editedOn": "Modifié le {date}"
 }
