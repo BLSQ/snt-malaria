@@ -1,0 +1,7 @@
+VARIABLE,LABEL,DESCRIPTION,SOURCE,UNITS,TYPE,SCALE,CATEGORY,ORDER,UNIT_SYMBOL,PERIOD
+POPULATION,Total Population (DHIS2),Total number of people living in a specific area.,DHIS2,Number of people,Threshold,"[50000,100000,200000,300000,400000,500000]",Population & Health Indicators,1,,2024
+INCIDENCE_CRUDE,Crude Incidence (DHIS2),Number of new malaria cases.,DHIS2,Cases Per Thousand,Threshold,"[50, 150, 250, 350, 450, 1000]",Epidemiological Indicators,4,,2024
+U5_PREVALENCE,Plasmodium U5 Prevalence (DHS),"Proportion of children under 5, classified as having malaria by a Rapid Diagnostic Test (RDT)",DHS,Per 100 children,Threshold,"[0.5, 0.1, 0.2, 0.3, 0.4, 0.5]",Epidemiological Indicators,4,,
+PF_MORTALITY_RATE,Pf Mortality Rate (MAP),"Number of deaths from Plasmodium falciparum per 100,000 population during a defined year.",MAP,Deaths per 100 Thousand,Threshold,"[5, 50, 100, 200, 300, 500]",Epidemiological Indicators,4,,2024
+SEASONALITY_PRECIPITATION,Seasonal by Rainfall (ERA5),"Classification of seasonal malaria transmission based on rainfall trends, used to identify areas eligible for seasonal interventions such as SMC.",ERA5,"Not Seasonal (0), Seasonal (1)",,"[not-seasonal, seasonal]",Environmental Indicators,5,,
+SEASONAL_BLOCK_DURATION_PRECIPITATION,Length of Tansmission Season by Rainfall (ERA5),Estimated number of consecutive months per year with elevated malaria transmission based on rainfall patterns.,ERA5,Number of months,Ordinal,"[3, 4, 5]",Environmental Indicators,5,,

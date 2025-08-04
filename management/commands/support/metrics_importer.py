@@ -47,7 +47,6 @@ class MetricsImporter:
         except Exception as e:
             raise CommandError(f"Failed to import metrics: {str(e)}")
 
-
     def _validate_csv_files(self, metadata_file, dataset_file):
         # Validate metadata file
         required_metadata_columns = [
@@ -136,7 +135,10 @@ class MetricsImporter:
                         row_count += 1
                         try:
                             # Get the OrgUnit by source_ref using ADM2_ID
-                            org_unit = OrgUnit.objects.get(source_ref=row["ADM2_ID"])
+                            org_unit = OrgUnit.objects.get(
+                                version=self.account.default_version,
+                                source_ref=row["ADM2_ID"],
+                            )
                         except OrgUnit.DoesNotExist:
                             self.stdout_write(f"Row {row_count}: OrgUnit not found for source_ref: {row['ADM2_ID']}")
                             continue
