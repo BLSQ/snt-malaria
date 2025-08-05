@@ -150,7 +150,7 @@ class MetricsImporter:
                             if not row[column]:
                                 continue
 
-                            string_value = None
+                            string_value = ""
                             try:
                                 # Parse the value as a float
                                 value = float(row[column])
