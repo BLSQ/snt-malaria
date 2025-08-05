@@ -43,6 +43,14 @@ export const theme = createTheme({
                 elevation: 0,
             },
         },
+        MuiAppBar: {
+            styleOverrides: {
+                colorPrimary: {
+                    color: defaultTheme.palette.text.primary,
+                    backgroundColor: 'white',
+                },
+            },
+        },
     },
 });
 

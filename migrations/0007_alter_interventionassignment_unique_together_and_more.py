@@ -6,9 +6,8 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ("iaso", "0327_merge_20250424_0829"),
+        ("iaso", "0338_metrictype_metricvalue"),
         ("snt_malaria", "0006_interventionmix"),
     ]
 
@@ -20,7 +19,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="interventionassignment",
             name="intervention_mix",
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, to="snt_malaria.interventionmix"),
+            field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.PROTECT, to="snt_malaria.interventionmix"
+            ),
         ),
         migrations.AlterUniqueTogether(
             name="interventionassignment",
