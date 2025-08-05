@@ -6,7 +6,7 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("iaso", "0332_metricvalue_string_value_alter_metricvalue_value_and_more"),
+        ("iaso", "0338_metrictype_metricvalue"),
         ("snt_malaria", "0010_alter_interventionmix_unique_together"),
     ]
 

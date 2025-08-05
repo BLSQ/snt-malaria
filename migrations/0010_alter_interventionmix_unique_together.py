@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('snt_malaria', '0009_alter_interventionmix_unique_together'),
+        ("snt_malaria", "0009_alter_interventionmix_unique_together"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='interventionmix',
-            unique_together={('name', 'scenario')},
+            name="interventionmix",
+            unique_together={("name", "scenario")},
         ),
     ]

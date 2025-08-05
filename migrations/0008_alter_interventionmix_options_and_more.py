@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("iaso", "0327_merge_20250424_0829"),
+        ("iaso", "0338_metrictype_metricvalue"),
         ("snt_malaria", "0007_alter_interventionassignment_unique_together_and_more"),
     ]
 
