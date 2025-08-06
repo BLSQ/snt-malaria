@@ -6,15 +6,17 @@ import { useSafeIntl } from 'bluesquare-components';
 import { useQueryClient } from 'react-query';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
-import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
 import { MESSAGES } from '../../../messages';
+import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
 import { containerBoxStyles } from '../styles';
 
 type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: OrgUnit[];
-    selectedInterventions: { [categoryId: number]: number[] | [] };
-    setSelectedInterventions: (interventions: []) => void;
+    selectedInterventions: { [categoryId: number]: number };
+    setSelectedInterventions: React.Dispatch<
+        React.SetStateAction<{ [categoryId: number]: number }>
+    >;
 };
 
 const styles: SxStyles = {
@@ -38,9 +40,9 @@ export const InterventionHeader: FC<Props> = ({
 
     const selectedInterventionValues = useMemo(
         () =>
-            Object.values(selectedInterventions)
-                .flat()
-                .filter(value => value !== null),
+            Object.values(selectedInterventions).filter(
+                value => value !== null,
+            ),
         [selectedInterventions],
     );
 
@@ -56,7 +58,7 @@ export const InterventionHeader: FC<Props> = ({
         scenarioId,
     ]);
     const formReset = () => {
-        setSelectedInterventions([]);
+        setSelectedInterventions({});
     };
 
     const handleAssignmentCreation = async () => {

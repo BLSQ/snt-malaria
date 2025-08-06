@@ -17,8 +17,10 @@ type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: OrgUnit[];
     setSelectedOrgUnits: any;
-    setSelectedInterventions: any;
-    selectedInterventions: any;
+    setSelectedInterventions: React.Dispatch<
+        React.SetStateAction<{ [categoryId: number]: number }>
+    >;
+    selectedInterventions: { [categoryId: number]: number };
 };
 
 const styles: SxStyles = {
