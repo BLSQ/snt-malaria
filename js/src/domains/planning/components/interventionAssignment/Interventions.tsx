@@ -32,7 +32,7 @@ const styles = {
 type Props = {
     interventionCategoryId: number;
     interventions: { id: number; name: string }[];
-    selectedIds: number[];
+    selectedId: number | null;
     handleSelectIntervention: (
         categoryId: number,
         interventionId: number,
@@ -41,7 +41,7 @@ type Props = {
 export const Interventions: FC<Props> = ({
     interventionCategoryId,
     interventions,
-    selectedIds,
+    selectedId,
     handleSelectIntervention,
 }) => {
     const selectIntervention = (id: number) => {
@@ -56,9 +56,8 @@ export const Interventions: FC<Props> = ({
             sx={styles.gridContainerStyle(containerBoxStyles)}
         >
             {interventions.map(intervention => {
-                const isSelectedIntervention = selectedIds.includes(
-                    intervention.id,
-                );
+                const isSelectedIntervention =
+                    selectedId && selectedId === intervention.id;
                 return (
                     <Grid
                         key={intervention.id}

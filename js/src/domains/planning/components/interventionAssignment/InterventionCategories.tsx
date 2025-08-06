@@ -5,9 +5,9 @@ import { useGetInterventionCategories } from '../../hooks/useGetInterventionCate
 import { Interventions } from './Interventions';
 
 type Props = {
-    selectedInterventions: Record<number, number[]>;
+    selectedInterventions: { [categoryId: number]: number };
     setSelectedInterventions: React.Dispatch<
-        React.SetStateAction<Record<number, number[]>>
+        React.SetStateAction<{ [categoryId: number]: number }>
     >;
 };
 
@@ -29,14 +29,13 @@ export const InterventionCategories: FC<Props> = ({
     const toggleIntervention = useCallback(
         (categoryId: number, interventionId: number) => {
             setSelectedInterventions(prev => {
-                const prevSelected = prev[categoryId] || [];
-                const isSelected = prevSelected.includes(interventionId);
-                return {
-                    ...prev,
-                    [categoryId]: isSelected
-                        ? prevSelected.filter(id => id !== interventionId)
-                        : [...prevSelected, interventionId],
-                };
+                const result = { ...prev };
+                if (prev[categoryId] && prev[categoryId] === interventionId) {
+                    delete result[categoryId];
+                } else {
+                    result[categoryId] = interventionId;
+                }
+                return result;
             });
         },
         [setSelectedInterventions],
@@ -56,9 +55,7 @@ export const InterventionCategories: FC<Props> = ({
                                     <Interventions
                                         interventionCategoryId={id}
                                         interventions={interventions}
-                                        selectedIds={
-                                            selectedInterventions[id] ?? []
-                                        }
+                                        selectedId={selectedInterventions[id]}
                                         handleSelectIntervention={
                                             toggleIntervention
                                         }
