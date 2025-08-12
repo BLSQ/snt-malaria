@@ -6,7 +6,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("iaso", "0318_alter_metricvalue_year"),
+        ("iaso", "0338_metrictype_metricvalue"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("snt_malaria", "0002_intervention_cost_per_unit"),
     ]

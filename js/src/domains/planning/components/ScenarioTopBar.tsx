@@ -17,13 +17,13 @@ import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';
 import { baseUrls } from '../../../constants/urls';
 
+import { MESSAGES } from '../../messages';
 import {
     useUpdateScenario,
     useDuplicateScenario,
     useDeleteScenario,
 } from '../../scenarios/hooks/useGetScenarios';
 import { Scenario } from '../../scenarios/types';
-import { MESSAGES } from '../../messages';
 
 const actionBtnStyles = (theme: Theme) => ({
     color: theme.palette.primary.main,
