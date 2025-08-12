@@ -26,9 +26,9 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
     filterset_class = InterventionAssignmentListFilter
 
     def get_queryset(self):
-        return InterventionAssignment.objects.prefetch_related("intervention__intervention_category__account").filter(
-            intervention__intervention_category__account=self.request.user.iaso_profile.account
-        )
+        return InterventionAssignment.objects.prefetch_related(
+            "intervention__intervention_category__account", "org_unit"
+        ).filter(intervention__intervention_category__account=self.request.user.iaso_profile.account)
 
     def get_serializer_class(self):
         if self.request.method == "GET":
