@@ -17,11 +17,11 @@ import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 
+import { MESSAGES } from '../../messages';
 import {
     useGetMetricCategories,
     useGetMetricValues,
 } from '../hooks/useGetMetrics';
-import { MESSAGES } from '../../messages';
 import { MetricType } from '../types/metrics';
 
 type Props = {
@@ -167,7 +167,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
                 <IconButton
                     className="Mui-focusVisible"
                     size="small"
-                    disableRipple={true}
+                    disableRipple
                     aria-label="close"
                     onClick={onClear}
                     sx={styles.closeIconButton}

@@ -12,9 +12,9 @@ import {
 import { useSafeIntl } from 'bluesquare-components';
 
 import { SxStyles } from 'Iaso/types/general';
-import { MetricType, MetricTypeCategory } from '../../types/metrics';
 import { MESSAGES } from '../../../messages';
 import { useGetMetricCategories } from '../../hooks/useGetMetrics';
+import { MetricType } from '../../types/metrics';
 
 const styles: SxStyles = {
     formControl: {
@@ -41,7 +41,7 @@ const styles: SxStyles = {
 };
 
 type Props = {
-    createsNewMap?: Boolean;
+    createsNewMap?: boolean;
     initialSelection?: MetricType | '';
     onLayerChange: (metric: MetricType) => void;
 };

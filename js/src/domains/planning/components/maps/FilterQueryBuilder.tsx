@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, Button } from '@mui/material';
 import {
     JsonLogicTree,
@@ -8,8 +8,8 @@ import {
 
 import { QueryBuilder, SimpleModal, useSafeIntl } from 'bluesquare-components';
 
-import { useGetMetricCategories } from '../../hooks/useGetMetrics';
 import { MESSAGES } from '../../../messages';
+import { useGetMetricCategories } from '../../hooks/useGetMetrics';
 import { ScaleDomainRange } from '../../types/metrics';
 
 type Props = {
@@ -86,8 +86,8 @@ export const FilterQueryBuilder: FC<Props> = ({
         setCurrentFilter(result?.logic);
     };
 
-    const SubmitButton = () => {
-        return (
+    const SubmitButton = useCallback(
+        () => (
             <Button
                 onClick={() => onSubmit(currentFilter)}
                 variant="contained"
@@ -96,8 +96,9 @@ export const FilterQueryBuilder: FC<Props> = ({
             >
                 {formatMessage(MESSAGES.selectOrgUnitsBtn)}
             </Button>
-        );
-    };
+        ),
+        [currentFilter, isLoading, onSubmit, formatMessage],
+    );
 
     return (
         <SimpleModal

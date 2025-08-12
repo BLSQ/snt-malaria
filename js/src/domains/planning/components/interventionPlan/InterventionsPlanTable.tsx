@@ -10,9 +10,9 @@ import {
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
+import { sortByStringProp } from '../../libs/list-utils';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionsPlanRowTable } from './InterventionsPlanRowTable';
-import { sortByStringProp } from '../../libs/list-utils';
 
 const styles: SxStyles = {
     tableContainer: {
