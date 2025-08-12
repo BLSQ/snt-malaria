@@ -21,7 +21,7 @@ const styles: SxStyles = {
         top: '8px',
         left: '8px',
         zIndex: 1000,
-        width: '330px',
+        width: '390px',
         ':hover': {
             backgroundColor: 'white',
         },
