@@ -1,13 +1,11 @@
 import React, { FunctionComponent } from 'react';
 import { Button, Grid, TableCell, TableRow, Typography } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import {
-    InterventionOrgUnit,
-    InterventionPlan,
-} from '../../types/interventions';
+import { MESSAGES } from '../../../messages';
+import { InterventionPlan } from '../../types/interventions';
 
 type Props = {
-    scenarioId: number | undefined;
     row: InterventionPlan;
     index: number;
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
@@ -17,13 +15,16 @@ const styles: SxStyles = {
     tableCellStyle: {
         padding: theme => theme.spacing(1),
     },
+    textButton: {
+        textTransform: 'none',
+    },
 };
 export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
-    scenarioId,
     row,
     index,
     showInterventionPlanDetails,
 }) => {
+    const { formatMessage } = useSafeIntl();
     return row ? (
         <TableRow key={`${row.intervention.id}-${index}`}>
             <TableCell
@@ -43,9 +44,11 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
                     <Grid item xs={3}>
                         <Button
                             variant="text"
+                            sx={styles.textButton}
                             onClick={() => showInterventionPlanDetails(row)}
                         >
-                            {row?.org_units.length} districts
+                            {row?.org_units.length}{' '}
+                            {formatMessage(MESSAGES.orgUnitDistrict)}
                         </Button>
                     </Grid>
                 </Grid>

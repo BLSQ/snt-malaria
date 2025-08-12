@@ -77,7 +77,6 @@ export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
                             }}
                         >
                             <InterventionsPlanTable
-                                scenarioId={scenarioId}
                                 isLoadingPlans={isLoadingPlans}
                                 interventionPlans={interventionPlans}
                                 showInterventionPlanDetails={

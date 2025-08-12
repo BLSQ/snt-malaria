@@ -30,13 +30,11 @@ const styles: SxStyles = {
 };
 
 type Props = {
-    scenarioId: number | undefined;
     isLoadingPlans: boolean;
     interventionPlans: InterventionPlan[] | undefined;
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
 };
 export const InterventionsPlanTable: FC<Props> = ({
-    scenarioId,
     isLoadingPlans,
     interventionPlans,
     showInterventionPlanDetails,
@@ -60,7 +58,6 @@ export const InterventionsPlanTable: FC<Props> = ({
                     <TableBody>
                         {interventionPlans?.map((row, index) => (
                             <InterventionsPlanRowTable
-                                scenarioId={scenarioId}
                                 key={row.intervention.id}
                                 row={row}
                                 index={index}
