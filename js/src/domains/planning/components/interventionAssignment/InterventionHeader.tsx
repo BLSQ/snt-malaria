@@ -9,6 +9,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
 import { containerBoxStyles } from '../styles';
+import { ConflictManagementModal } from '../conflictManagement/ConflictManagementModal';
 
 type Props = {
     scenarioId: number | undefined;
@@ -17,13 +18,6 @@ type Props = {
     setSelectedInterventions: React.Dispatch<
         React.SetStateAction<{ [categoryId: number]: number }>
     >;
-};
-
-const styles: SxStyles = {
-    applyButton: {
-        fontSize: '0.875rem',
-        textTransform: 'none',
-    },
 };
 
 export const InterventionHeader: FC<Props> = ({
@@ -90,16 +84,7 @@ export const InterventionHeader: FC<Props> = ({
                     {formatMessage(MESSAGES.interventionTitle)}
                 </Typography>
             </Stack>
-            <Button
-                onClick={() => handleAssignmentCreation()}
-                variant="contained"
-                color="primary"
-                endIcon={<ArrowForward />}
-                sx={styles.applyButton}
-                disabled={!canApplyInterventions}
-            >
-                {formatMessage(MESSAGES.addToPlan)}
-            </Button>
+            <ConflictManagementModal iconProps={{}} />
         </Grid>
     );
 };
