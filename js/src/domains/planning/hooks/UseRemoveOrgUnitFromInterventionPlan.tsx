@@ -11,19 +11,19 @@ export const UseRemoveOrgUnitFromInterventionPlan = (): UseMutationResult =>
         invalidateQueryKey: ['interventionAssignments'],
     });
 
-export const UseRemoveAllOrgUnitsFromInterventionPlan = (): UseMutationResult =>
-    useSnackMutation({
-        mutationFn: (interventionAssignmentIds: number[] | null) => {
-            if (!interventionAssignmentIds) {
-                return Promise.resolve([]);
-            }
+export const UseRemoveManyOrgUnitsFromInterventionPlan =
+    (): UseMutationResult =>
+        useSnackMutation({
+            mutationFn: (interventionAssignmentIds: number[] | null) => {
+                if (
+                    !interventionAssignmentIds ||
+                    interventionAssignmentIds.length === 0
+                ) {
+                    return Promise.resolve(true);
+                }
 
-            const promises = interventionAssignmentIds.map(
-                interventionAssignmentId =>
-                    deleteRequest(`${baseUrl}${interventionAssignmentId}/`),
-            );
-
-            return Promise.all(promises);
-        },
-        invalidateQueryKey: ['interventionAssignments'],
-    });
+                const idsParam = interventionAssignmentIds.join(',');
+                return deleteRequest(`${baseUrl}delete_many/?ids=${idsParam}`);
+            },
+            invalidateQueryKey: ['interventionAssignments'],
+        });

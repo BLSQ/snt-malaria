@@ -52,6 +52,16 @@ const styles: SxStyles = {
     listItem: {
         paddingX: 2,
         paddingY: 1,
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        ' button': {
+            opacity: 0,
+        },
+        ':hover button': {
+            opacity: 1,
+        },
     },
     textEmphasis: {
         fontWeight: 500,
@@ -64,13 +74,13 @@ const styles: SxStyles = {
 
 type Props = {
     interventionPlan: InterventionPlan | null;
-    removeAllOrgUnitsFromPlan: () => void;
+    removeOrgUnitsFromPlan: (ordUnitIds: number[]) => void;
     closeInterventionPlanDetails: () => void;
 };
 
 export const InterventionPlanDetails: FC<Props> = ({
     interventionPlan,
-    removeAllOrgUnitsFromPlan,
+    removeOrgUnitsFromPlan,
     closeInterventionPlanDetails,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -85,11 +95,30 @@ export const InterventionPlanDetails: FC<Props> = ({
         closeInterventionPlanDetails();
     }, [closeInterventionPlanDetails]);
 
+    const onRemoveAllOrgUnitsFromPlan = useCallback(
+        () =>
+            removeOrgUnitsFromPlan(
+                interventionPlan?.org_units.map(
+                    o => o.intervention_assignment_id,
+                ) ?? [],
+            ),
+        [interventionPlan, removeOrgUnitsFromPlan],
+    );
+
+    const onRemoveOrgUnitFromPlan = useCallback(
+        (interventionAssignmentId: number) => {
+            removeOrgUnitsFromPlan([interventionAssignmentId]);
+        },
+        [removeOrgUnitsFromPlan],
+    );
+
     const filteredData = useMemo(() => {
         if (!interventionPlan) return [];
-        return interventionPlan.org_units.filter(orgUnit =>
-            orgUnit.name.toLowerCase().includes(search.toLowerCase()),
-        );
+        return interventionPlan.org_units
+            .filter(orgUnit =>
+                orgUnit.name.toLowerCase().includes(search.toLowerCase()),
+            )
+            .sort((a, b) => (a.name < b.name ? -1 : 1));
     }, [interventionPlan, search]);
 
     return (
@@ -138,7 +167,7 @@ export const InterventionPlanDetails: FC<Props> = ({
                     </Typography>
                     <DeleteModal
                         type="button"
-                        onConfirm={removeAllOrgUnitsFromPlan}
+                        onConfirm={onRemoveAllOrgUnitsFromPlan}
                         titleMessage={
                             MESSAGES.interventionAssignmentRemoveAllTitle
                         }
@@ -164,6 +193,23 @@ export const InterventionPlanDetails: FC<Props> = ({
                             <Typography key={orgUnit.id}>
                                 {orgUnit.name}
                             </Typography>
+                            <DeleteModal
+                                type="icon"
+                                onConfirm={() =>
+                                    onRemoveOrgUnitFromPlan(
+                                        orgUnit.intervention_assignment_id,
+                                    )
+                                }
+                                titleMessage={
+                                    MESSAGES.interventionAssignmentRemoveTitle
+                                }
+                            >
+                                <Typography>
+                                    {formatMessage(
+                                        MESSAGES.interventionAssignmentRemoveMessage,
+                                    )}
+                                </Typography>
+                            </DeleteModal>
                         </Box>
                     ))}
                 </Box>

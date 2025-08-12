@@ -2,7 +2,7 @@ import React, { FC, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
-import { UseRemoveAllOrgUnitsFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
+import { UseRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
 import { InterventionPlanSummary } from './InterventionplanSummary';
@@ -22,15 +22,13 @@ export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(scenarioId);
 
-    const { mutateAsync: removeAllOrgUnitsFromPlan } =
-        UseRemoveAllOrgUnitsFromInterventionPlan();
+    const { mutateAsync: removeManyOrgUnitsFromPlan } =
+        UseRemoveManyOrgUnitsFromInterventionPlan();
 
-    const onRemoveAllOrgUnitsFromPlan = async () => {
-        const assignmentIds = selectedInterventionPlan?.org_units.map(
-            orgUnit => orgUnit.intervention_assignment_id,
-        );
-
-        await removeAllOrgUnitsFromPlan(assignmentIds);
+    const onRemoveOrgUnitsFromPlan = async (
+        interventionAssignmentIds: number[],
+    ) => {
+        await removeManyOrgUnitsFromPlan(interventionAssignmentIds);
         setSelectedInterventionPlan(null);
     };
 
@@ -104,7 +102,7 @@ export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
             </Card>
             <InterventionPlanDetails
                 interventionPlan={selectedInterventionPlan}
-                removeAllOrgUnitsFromPlan={onRemoveAllOrgUnitsFromPlan}
+                removeOrgUnitsFromPlan={onRemoveOrgUnitsFromPlan}
                 closeInterventionPlanDetails={onCloseInterventionPlanDetails}
             />
         </Box>
