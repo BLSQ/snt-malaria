@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import {
     Box,
     Paper,
@@ -12,6 +12,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionsPlanRowTable } from './InterventionsPlanRowTable';
+import { sortByStringProp } from '../../libs/list-utils';
 
 const styles: SxStyles = {
     tableContainer: {
@@ -40,6 +41,13 @@ export const InterventionsPlanTable: FC<Props> = ({
     showInterventionPlanDetails,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const sortedInterventionPlans = useMemo(
+        () =>
+            interventionPlans
+                ? sortByStringProp(interventionPlans, 'intervention.name')
+                : [],
+        [interventionPlans],
+    );
     return (
         <TableContainer component={Paper} sx={styles.tableContainer}>
             {isLoadingPlans || (interventionPlans?.length ?? 0) === 0 ? (
@@ -56,7 +64,7 @@ export const InterventionsPlanTable: FC<Props> = ({
                     aria-label="simple table"
                 >
                     <TableBody>
-                        {interventionPlans?.map((row, index) => (
+                        {sortedInterventionPlans?.map((row, index) => (
                             <InterventionsPlanRowTable
                                 key={row.intervention.id}
                                 row={row}
