@@ -118,7 +118,7 @@ export const InterventionPlanDetails: FC<Props> = ({
             .filter(orgUnit =>
                 orgUnit.name.toLowerCase().includes(search.toLowerCase()),
             )
-            .sort((a, b) => (a.name < b.name ? -1 : 1));
+            .sort((a, b) => a.name.localeCompare(b.name));
     }, [interventionPlan, search]);
 
     return (

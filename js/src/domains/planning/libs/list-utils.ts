@@ -12,9 +12,9 @@ export function sortByStringProp<T>(
     return [...items].sort((a, b) => {
         const aVal = getValue(a, prop).toLowerCase();
         const bVal = getValue(b, prop).toLowerCase();
-        if (aVal < bVal) return order === 'asc' ? -1 : 1;
-        if (aVal > bVal) return order === 'asc' ? 1 : -1;
-        return 0;
+        return order === 'asc'
+            ? aVal.localeCompare(bVal)
+            : bVal.localeCompare(aVal);
     });
 }
 
