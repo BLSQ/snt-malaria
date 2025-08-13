@@ -39,10 +39,7 @@ export const InterventionHeader: FC<Props> = ({
     const queryClient = useQueryClient();
 
     const selectedInterventionValues = useMemo(
-        () =>
-            Object.values(selectedInterventions).filter(
-                value => value !== null,
-            ),
+        () => Object.values(selectedInterventions).filter(Boolean),
         [selectedInterventions],
     );
 

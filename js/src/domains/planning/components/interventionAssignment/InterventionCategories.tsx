@@ -29,13 +29,10 @@ export const InterventionCategories: FC<Props> = ({
     const toggleIntervention = useCallback(
         (categoryId: number, interventionId: number) => {
             setSelectedInterventions(prev => {
-                const result = { ...prev };
-                if (prev[categoryId] && prev[categoryId] === interventionId) {
-                    delete result[categoryId];
-                } else {
-                    result[categoryId] = interventionId;
-                }
-                return result;
+                const { [categoryId]: existingValue, ...rest } = prev;
+                return existingValue === interventionId
+                    ? rest
+                    : { ...rest, [categoryId]: interventionId };
             });
         },
         [setSelectedInterventions],
