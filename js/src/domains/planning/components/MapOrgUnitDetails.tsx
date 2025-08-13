@@ -23,6 +23,7 @@ import {
     useGetMetricValues,
 } from '../hooks/useGetMetrics';
 import { MetricType } from '../types/metrics';
+import { mapWidgetSizes } from './styles';
 
 type Props = {
     clickedOrgUnit: OrgUnit;
@@ -43,10 +44,9 @@ const styles: SxStyles = {
         borderRadius: '16px',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
         zIndex: 1000,
-        maxWidth: '390px',
-        width: '390px',
         maxHeight: 'calc(100% - 90px)',
         overflow: 'auto',
+        ...mapWidgetSizes,
     }),
     buttonsBox: {
         display: 'flex',
