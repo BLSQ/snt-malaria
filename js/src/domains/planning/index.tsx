@@ -14,6 +14,7 @@ import {
 } from '../../components/styledComponents';
 
 import { baseUrls } from '../../constants/urls';
+import { MESSAGES } from '../messages';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { Budgets } from './components/budget/Budgets';
 import { InterventionAssignments } from './components/interventionAssignment/InterventionAssignments';
@@ -27,7 +28,6 @@ import {
     useGetMetricValues,
 } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
-import { MESSAGES } from '../messages';
 import { MetricsFilters, MetricType, MetricValue } from './types/metrics';
 
 type PlanningParams = {
@@ -51,7 +51,7 @@ export const Planning: FC = () => {
         setIsDrawerOpen(!isDrawerOpen);
     };
     const [selectedInterventions, setSelectedInterventions] = useState<{
-        [categoryId: number]: number[] | [];
+        [categoryId: number]: number;
     }>({});
     // Metric selection
     // v1: display Incidence by default
@@ -147,7 +147,7 @@ export const Planning: FC = () => {
                 formatMessage(MESSAGES.clearedMapSelection),
             ),
         );
-    }, []);
+    }, [formatMessage]);
 
     const handleExpandAccordion = panel => (event, isExpanded) => {
         setExpanded(isExpanded ? panel : null);
