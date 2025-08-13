@@ -4,11 +4,11 @@
  * @param prop The property name to sort by.
  * @param order 'asc' for ascending, 'desc' for descending (default: 'asc').
  */
-export function sortByStringProp<T>(
+export const sortByStringProp = <T>(
     items: T[],
     prop: string,
     order: 'asc' | 'desc' = 'asc',
-): T[] {
+): T[] => {
     return [...items].sort((a, b) => {
         const aVal = getValue(a, prop).toLowerCase();
         const bVal = getValue(b, prop).toLowerCase();
@@ -16,7 +16,7 @@ export function sortByStringProp<T>(
             ? aVal.localeCompare(bVal)
             : bVal.localeCompare(aVal);
     });
-}
+};
 
 const getValue = (obj: any, path: string): string =>
     path.split('.').reduce((acc, part) => acc?.[part], obj) ?? '';
