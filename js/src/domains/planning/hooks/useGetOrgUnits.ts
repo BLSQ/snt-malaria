@@ -7,6 +7,7 @@ import { makeUrlWithParams } from 'Iaso/libs/utils';
 export const useGetOrgUnits = (): UseQueryResult<OrgUnit[], Error> => {
     const params: Record<string, any> = {
         validation_status: 'VALID',
+        defaultVersion: true,
         asLocation: true,
         limit: 8000,
     };
