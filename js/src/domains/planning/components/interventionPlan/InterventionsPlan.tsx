@@ -1,7 +1,6 @@
 import React, { FC, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
-import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
 import { UseRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
@@ -11,16 +10,19 @@ import { InterventionsPlanTable } from './InterventionsPlanTable';
 
 type Props = {
     scenarioId: number | undefined;
+    interventionPlans: InterventionPlan[];
+    isLoadingPlans: boolean;
 };
 
-export const InterventionsPlan: FC<Props> = ({ scenarioId }) => {
+export const InterventionsPlan: FC<Props> = ({
+    scenarioId,
+    interventionPlans,
+    isLoadingPlans,
+}) => {
     const [tabValue, setTabValue] = useState<string>('list');
 
     const [selectedInterventionPlan, setSelectedInterventionPlan] =
         useState<InterventionPlan | null>(null);
-
-    const { data: interventionPlans, isLoading: isLoadingPlans } =
-        useGetInterventionAssignments(scenarioId);
 
     const { mutateAsync: removeManyOrgUnitsFromPlan } =
         UseRemoveManyOrgUnitsFromInterventionPlan();

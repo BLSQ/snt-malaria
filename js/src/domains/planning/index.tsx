@@ -27,6 +27,7 @@ import {
 } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { MetricsFilters, MetricType } from './types/metrics';
+import { useGetInterventionAssignments } from './hooks/UseGetInterventionAssignments';
 
 type PlanningParams = {
     scenarioId: number;
@@ -54,6 +55,10 @@ export const Planning: FC = () => {
     const [displayedMetric, setDisplayedMetric] = useState<MetricType | null>(
         null,
     );
+
+    const { data: interventionPlans, isLoading: isLoadingPlans } =
+        useGetInterventionAssignments(scenario?.id);
+
     useEffect(() => {
         if (metricCategories && !displayedMetric) {
             setDisplayedMetric(metricCategories[1].items[0]);
@@ -203,6 +208,7 @@ export const Planning: FC = () => {
                                     setSelectedInterventions
                                 }
                                 selectedInterventions={selectedInterventions}
+                                interventionPlans={interventionPlans ?? []}
                             />
                         </PaperContainer>
                     </Grid>
@@ -216,6 +222,8 @@ export const Planning: FC = () => {
                                     setSelectedInterventions
                                 }
                                 selectedInterventions={selectedInterventions}
+                                interventionPlans={interventionPlans ?? []}
+                                isLoadingPlans={isLoadingPlans}
                             />
                         </PaperContainer>
                     </Grid>

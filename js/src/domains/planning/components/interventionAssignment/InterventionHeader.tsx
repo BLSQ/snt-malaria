@@ -1,15 +1,18 @@
-import React, { FC, useMemo } from 'react';
-import { ArrowForward } from '@mui/icons-material';
+import React, { FC, useMemo, useState } from 'react';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
-import { Box, Button, Grid, Stack, Typography } from '@mui/material';
+import { Box, Grid, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { useQueryClient } from 'react-query';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { SxStyles } from 'Iaso/types/general';
+import { useQueryClient } from 'react-query';
 import { MESSAGES } from '../../../messages';
 import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
-import { containerBoxStyles } from '../styles';
+import {
+    getConflictingAssignments,
+    InterventionAssignmentConflict,
+} from '../../libs/intervention-assignment-utils';
+import { InterventionPlan } from '../../types/interventions';
 import { ConflictManagementModal } from '../conflictManagement/ConflictManagementModal';
+import { containerBoxStyles } from '../styles';
 
 type Props = {
     scenarioId: number | undefined;
@@ -18,14 +21,19 @@ type Props = {
     setSelectedInterventions: React.Dispatch<
         React.SetStateAction<{ [categoryId: number]: number }>
     >;
+    interventionPlans: InterventionPlan[];
 };
 
 export const InterventionHeader: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
     selectedInterventions,
+    interventionPlans,
     setSelectedInterventions,
 }) => {
+    const [conflicts, setConflicts] = useState<
+        InterventionAssignmentConflict[]
+    >([]);
     const { formatMessage } = useSafeIntl();
     const { mutateAsync: createInterventionAssignment } =
         UseCreateInterventionAssignment();
@@ -59,11 +67,29 @@ export const InterventionHeader: FC<Props> = ({
                 org_unit_ids: selectedOrgUnits.map(orgUnit => orgUnit.id),
                 scenario_id: scenarioId,
             });
-
+            // TODO maybe we don't need this anymore
             queryClient.invalidateQueries(['interventionAssigments']);
             queryClient.refetchQueries(['interventionAssignments', scenarioId]);
         }
         formReset();
+    };
+
+    const checkForConflict = () => {
+        const conflictingAssignments = getConflictingAssignments(
+            selectedOrgUnits,
+            selectedInterventions,
+            interventionPlans,
+        );
+
+        setConflicts(conflictingAssignments);
+        console.log('conflicts ', conflictingAssignments);
+
+        if (conflictingAssignments.length <= 0) {
+            handleAssignmentCreation();
+            return false;
+        }
+
+        return true;
     };
 
     return (
@@ -84,7 +110,13 @@ export const InterventionHeader: FC<Props> = ({
                     {formatMessage(MESSAGES.interventionTitle)}
                 </Typography>
             </Stack>
-            <ConflictManagementModal iconProps={{}} />
+            <ConflictManagementModal
+                iconProps={{
+                    disabled: !canApplyInterventions,
+                    beforeOnClick: checkForConflict,
+                }}
+                conflicts={conflicts}
+            />
         </Grid>
     );
 };
