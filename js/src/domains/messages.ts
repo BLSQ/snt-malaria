@@ -124,6 +124,15 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Do you really want to remove all districts from this intervention assignment?',
     },
+    interventionAssignmentRemoveTitle: {
+        id: 'iaso.snt_malaria.interventionAssignment.removeTitle',
+        defaultMessage: 'Remove this district',
+    },
+    interventionAssignmentRemoveMessage: {
+        id: 'iaso.snt_malaria.interventionAssignment.removeMessage',
+        defaultMessage:
+            'Do you really want to remove this district from this intervention assignment?',
+    },
     searchPlaceholder: {
         id: 'iaso.snt_malaria.label.searchPlaceholder',
         defaultMessage: 'Search District',

@@ -56,7 +56,7 @@ class InterventionAssignment(models.Model):
 
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="intervention_assignments")
     org_unit = models.ForeignKey(OrgUnit, on_delete=models.PROTECT)
-    intervention = models.ForeignKey(Intervention, on_delete=models.PROTECT, blank=True, null=True)
+    intervention = models.ForeignKey(Intervention, on_delete=models.PROTECT)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

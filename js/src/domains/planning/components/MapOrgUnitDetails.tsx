@@ -17,12 +17,13 @@ import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 
+import { MESSAGES } from '../../messages';
 import {
     useGetMetricCategories,
     useGetMetricValues,
 } from '../hooks/useGetMetrics';
-import { MESSAGES } from '../../messages';
 import { MetricType } from '../types/metrics';
+import { mapWidgetSizes } from './styles';
 
 type Props = {
     clickedOrgUnit: OrgUnit;
@@ -43,10 +44,9 @@ const styles: SxStyles = {
         borderRadius: '16px',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
         zIndex: 1000,
-        maxWidth: '356px',
-        width: '330px',
         maxHeight: 'calc(100% - 90px)',
         overflow: 'auto',
+        ...mapWidgetSizes,
     }),
     buttonsBox: {
         display: 'flex',
@@ -167,7 +167,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
                 <IconButton
                     className="Mui-focusVisible"
                     size="small"
-                    disableRipple={true}
+                    disableRipple
                     aria-label="close"
                     onClick={onClear}
                     sx={styles.closeIconButton}

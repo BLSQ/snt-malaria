@@ -26,9 +26,9 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
     filterset_class = InterventionAssignmentListFilter
 
     def get_queryset(self):
-        return InterventionAssignment.objects.prefetch_related("intervention__intervention_category__account").filter(
-            intervention__intervention_category__account=self.request.user.iaso_profile.account
-        )
+        return InterventionAssignment.objects.prefetch_related(
+            "intervention__intervention_category__account", "org_unit"
+        ).filter(intervention__intervention_category__account=self.request.user.iaso_profile.account)
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -76,6 +76,21 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         assignment.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=["delete"])
+    def delete_many(self, request):
+        ids_param = request.query_params.get("ids", "")
+        if not ids_param:
+            return Response({"error": "No ids provided."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            ids = [int(i) for i in ids_param.split(",") if i.strip()]
+        except ValueError:
+            return Response({"error": "Invalid ids format."}, status=status.HTTP_400_BAD_REQUEST)
+        deleted_count, _ = InterventionAssignment.objects.filter(id__in=ids).delete()
+        return Response(
+            {"message": f"{deleted_count} intervention assignments deleted."},
+            status=status.HTTP_204_NO_CONTENT,
+        )
 
     def get_filtered_queryset(self):
         return self.filter_queryset(self.get_queryset()).prefetch_related("org_unit")

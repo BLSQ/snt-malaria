@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import {
     Box,
     Paper,
@@ -10,6 +10,7 @@ import {
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
+import { sortByStringProp } from '../../libs/list-utils';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionsPlanRowTable } from './InterventionsPlanRowTable';
 
@@ -30,18 +31,23 @@ const styles: SxStyles = {
 };
 
 type Props = {
-    scenarioId: number | undefined;
     isLoadingPlans: boolean;
     interventionPlans: InterventionPlan[] | undefined;
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
 };
 export const InterventionsPlanTable: FC<Props> = ({
-    scenarioId,
     isLoadingPlans,
     interventionPlans,
     showInterventionPlanDetails,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const sortedInterventionPlans = useMemo(
+        () =>
+            interventionPlans
+                ? sortByStringProp(interventionPlans, 'intervention.name')
+                : [],
+        [interventionPlans],
+    );
     return (
         <TableContainer component={Paper} sx={styles.tableContainer}>
             {isLoadingPlans || (interventionPlans?.length ?? 0) === 0 ? (
@@ -58,9 +64,8 @@ export const InterventionsPlanTable: FC<Props> = ({
                     aria-label="simple table"
                 >
                     <TableBody>
-                        {interventionPlans?.map((row, index) => (
+                        {sortedInterventionPlans?.map((row, index) => (
                             <InterventionsPlanRowTable
-                                scenarioId={scenarioId}
                                 key={row.intervention.id}
                                 row={row}
                                 index={index}

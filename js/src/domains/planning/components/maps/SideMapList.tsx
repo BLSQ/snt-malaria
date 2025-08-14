@@ -5,8 +5,8 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 
 import { MetricType, MetricTypeCategory } from '../../types/metrics';
-import { SideMap } from './SideMap';
 import { LayerSelect } from './LayerSelect';
+import { SideMap } from './SideMap';
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
@@ -46,9 +46,9 @@ export const SideMapList: FC<Props> = ({ orgUnits, metricCategories }) => {
 
     return (
         <Box sx={styles.mainBox}>
-            {sideMaps.map((metric, index) => (
+            {sideMaps.map(metric => (
                 <SideMap
-                    key={index}
+                    key={`${metric.category}-${metric.id}`}
                     orgUnits={orgUnits}
                     initialDisplayedMetric={metric}
                 />
@@ -56,8 +56,7 @@ export const SideMapList: FC<Props> = ({ orgUnits, metricCategories }) => {
             {sideMaps.length < 5 && ( // we allow max 5 maps to be displayed
                 <Box sx={styles.addNewSideMapBox}>
                     <LayerSelect
-                        createsNewMap={true}
-                        metricCategories={metricCategories}
+                        createsNewMap
                         onLayerChange={handleAddSideMap}
                     />
                 </Box>

@@ -14,8 +14,8 @@ import {
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import { UseGetBudgets } from '../../hooks/UseGetBudgets';
 import { MESSAGES } from '../../../messages';
+import { UseGetBudgets } from '../../hooks/UseGetBudgets';
 import { containerBoxStyles } from '../styles';
 import { BudgetsTable } from './BudgetsTable';
 

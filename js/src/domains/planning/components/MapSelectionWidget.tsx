@@ -8,6 +8,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
 import { MetricsFilters } from '../types/metrics';
 import { FilterQueryBuilder } from './maps/FilterQueryBuilder';
+import { mapWidgetSizes } from './styles';
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
@@ -21,7 +22,7 @@ const styles: SxStyles = {
         top: '8px',
         left: '8px',
         zIndex: 1000,
-        width: '330px',
+        width: mapWidgetSizes.width,
         ':hover': {
             backgroundColor: 'white',
         },

@@ -5,7 +5,6 @@ import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
 import { succesfullSnackBar } from 'Iaso/constants/snackBars';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { getRequest } from 'Iaso/libs/Api';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import {
     PaperContainer,
@@ -16,7 +15,6 @@ import {
 import { baseUrls } from '../../constants/urls';
 import { MESSAGES } from '../messages';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
-import { Budgets } from './components/budget/Budgets';
 import { InterventionAssignments } from './components/interventionAssignment/InterventionAssignments';
 import { InterventionsPlan } from './components/interventionPlan/InterventionsPlan';
 import { Map } from './components/map';
@@ -28,7 +26,7 @@ import {
     useGetMetricValues,
 } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
-import { MetricsFilters, MetricType, MetricValue } from './types/metrics';
+import { MetricsFilters, MetricType } from './types/metrics';
 
 type PlanningParams = {
     scenarioId: number;
@@ -47,9 +45,6 @@ export const Planning: FC = () => {
     const [selectionOnInterventionList, setSelectionOnInterventionList] =
         useState<OrgUnit[]>([]);
     const [expanded, setExpanded] = useState('interventionsList');
-    const toggleDrawer = () => {
-        setIsDrawerOpen(!isDrawerOpen);
-    };
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: number;
     }>({});
@@ -222,11 +217,6 @@ export const Planning: FC = () => {
                                 }
                                 selectedInterventions={selectedInterventions}
                             />
-                            {/* <Budgets
-                                scenarioId={scenario?.id}
-                                handleExpandAccordion={handleExpandAccordion}
-                                expanded={expanded}
-                            /> */}
                         </PaperContainer>
                     </Grid>
                 </Grid>
