@@ -3,44 +3,70 @@ import { Intervention, InterventionPlan } from '../types/interventions';
 
 export type InterventionAssignmentConflict = {
     orgUnit: OrgUnit;
-    interventionId: number;
-    assignedInterventions: Intervention[];
+    categoryId: number;
+    interventions: Intervention[];
+    isConflicting: boolean;
 };
 
 export const getConflictingAssignments = (
     orgUnits: OrgUnit[],
-    interventions: { [categoryId: number]: number },
+    interventions: { [categoryId: number]: Intervention },
     interventionPlans: InterventionPlan[],
 ) => {
     const plansWithMatchingIntervention = interventionPlans.filter(
         p => interventions[p.intervention.intervention_category],
     );
 
-    const conflicts: InterventionAssignmentConflict[] = [];
+    const conflicts: InterventionAssignmentConflict[] = orgUnits.flatMap(ou => {
+        return Object.entries(interventions).map(
+            ([categoryId, intervention]) => ({
+                orgUnit: ou,
+                categoryId: Number(categoryId),
+                interventions: [intervention],
+                isConflicting: false,
+            }),
+        );
+    });
 
     for (const orgUnit of orgUnits) {
-        const categoryToPlans: { [categoryId: number]: InterventionPlan[] } =
-            {};
+        const categoryToInterventions: {
+            [categoryId: number]: Intervention[];
+        } = {};
 
         for (const plan of plansWithMatchingIntervention) {
             if (plan.org_units.some(o => o.id === orgUnit.id)) {
                 const categoryId = plan.intervention.intervention_category;
-                if (!categoryToPlans[categoryId]) {
-                    categoryToPlans[categoryId] = [];
+                if (!categoryToInterventions[categoryId]) {
+                    categoryToInterventions[categoryId] = [];
                 }
-                categoryToPlans[categoryId].push(plan);
+                categoryToInterventions[categoryId].push(plan.intervention);
             }
         }
 
-        Object.entries(categoryToPlans).forEach(([categoryId, plans]) => {
-            if (plans.length > 0) {
-                conflicts.push({
-                    orgUnit,
-                    interventionId: Number(categoryId),
-                    assignedInterventions: plans.map(p => p.intervention),
-                });
-            }
-        });
+        Object.entries(categoryToInterventions).forEach(
+            ([categoryId, conflictingInterventions]) => {
+                if (conflictingInterventions.length > 0) {
+                    const conflict =
+                        conflicts.find(
+                            c =>
+                                c.categoryId === Number(categoryId) &&
+                                c.orgUnit.id === orgUnit.id,
+                        ) ??
+                        ({
+                            categoryId: Number(categoryId),
+                            orgUnit,
+                            interventions: [],
+                            isConflicting: true,
+                        } as InterventionAssignmentConflict);
+
+                    conflict.isConflicting = true;
+                    conflict.interventions = [
+                        ...(conflict?.interventions ?? []),
+                        ...conflictingInterventions,
+                    ];
+                }
+            },
+        );
     }
 
     return conflicts;

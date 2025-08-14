@@ -6,9 +6,7 @@ import { InterventionAssignmentConflict } from '../../libs/intervention-assignme
 
 type Props = {
     conflict: InterventionAssignmentConflict;
-    onSelectionChange: (selectedIntervention: {
-        [interventionId: number]: boolean;
-    }) => void;
+    onSelectionChange: (selectedIntervention: number[]) => void;
 };
 
 type ToggleButtonProps = {
@@ -54,29 +52,27 @@ export const ConflictManagementRow: FC<Props> = ({
     conflict,
     onSelectionChange,
 }) => {
-    const [buttonStatus, setButtonStatus] = useState<{
-        [interventionId: number]: boolean;
-    }>({});
+    const [activeInterventionIds, setActiveInterventionIds] = useState<
+        number[]
+    >([]);
     const handleButtonToggle = useCallback(
         interventionId => {
-            const newStatus = {
-                ...buttonStatus,
-                [interventionId]: !buttonStatus[interventionId],
-            };
-
-            setButtonStatus(newStatus);
+            const newStatus = activeInterventionIds.includes(interventionId)
+                ? activeInterventionIds.filter(i => i !== interventionId)
+                : [...activeInterventionIds, interventionId];
+            setActiveInterventionIds(newStatus);
             onSelectionChange(newStatus);
         },
-        [setButtonStatus, buttonStatus, onSelectionChange],
+        [activeInterventionIds, setActiveInterventionIds, onSelectionChange],
     );
 
     return (
         <Box sx={styles.conflictManagementRow}>
             <Typography>{conflict.orgUnit.name}</Typography>
             <Box sx={styles.buttonContainer}>
-                {conflict.assignedInterventions.map(i => (
+                {conflict.interventions.map(i => (
                     <ToggleButton
-                        isActive={buttonStatus[i.id]}
+                        isActive={activeInterventionIds.includes(i.id)}
                         key={`toggle-button-${i.id}`}
                         onClick={() => handleButtonToggle(i.id)}
                     >

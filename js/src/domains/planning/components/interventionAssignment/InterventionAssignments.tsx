@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
-import { InterventionPlan } from '../../types/interventions';
+import { Intervention, InterventionPlan } from '../../types/interventions';
 import { InterventionCategories } from './InterventionCategories';
 import { InterventionHeader } from './InterventionHeader';
 import { SelectedDistricts } from './SelectedDistricts';
@@ -19,9 +19,9 @@ type Props = {
     selectedOrgUnits: OrgUnit[];
     setSelectedOrgUnits: any;
     setSelectedInterventions: React.Dispatch<
-        React.SetStateAction<{ [categoryId: number]: number }>
+        React.SetStateAction<{ [categoryId: number]: Intervention }>
     >;
-    selectedInterventions: { [categoryId: number]: number };
+    selectedInterventions: { [categoryId: number]: Intervention };
     interventionPlans: InterventionPlan[];
 };
 

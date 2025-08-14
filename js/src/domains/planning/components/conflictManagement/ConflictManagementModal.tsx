@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useState } from 'react';
 import { FC } from 'react';
 import { ArrowForward } from '@mui/icons-material';
 import { Box, Button, Divider, Theme, Typography } from '@mui/material';
@@ -12,6 +12,8 @@ type Props = {
     isOpen: boolean;
     closeDialog: () => void;
     conflicts: InterventionAssignmentConflict[];
+    onCancel: () => void;
+    onApply: (conflictResolution: { [orgUnitId: number]: number[] }) => void;
 };
 
 type ApplyButtonProps = {
@@ -79,29 +81,45 @@ const ConflictManagementModal: FC<Props> = ({
     isOpen = false,
     closeDialog,
     conflicts,
+    onApply,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const [conflictResolution, setConflictResolution] = useState<{
+        [orgUnitId: number]: number[];
+    }>({});
     const handleInterventionSelectionChange = useCallback(
-        (conflict, selectedInterventions) => {
-            console.log('conflict', conflict);
+        (orgUnitId, selectedInterventions: number[]) => {
+            setConflictResolution({
+                ...conflictResolution,
+                [orgUnitId]: selectedInterventions,
+            });
+
+            console.log('conflict orgunitId', orgUnitId);
             console.log('conflict selection', selectedInterventions);
+            console.log('conflict resolution', {
+                ...conflictResolution,
+                [orgUnitId]: selectedInterventions,
+            });
         },
         [],
     );
 
-    const Buttons = useCallback(
-        ({ closeDialog: close }) => {
-            return (
-                <Box sx={styles.dialogButtonContainer}>
-                    <Button>{formatMessage(MESSAGES.cancel)}</Button>
-                    <Button color="primary" variant="contained">
-                        {formatMessage(MESSAGES.apply)}
-                    </Button>
-                </Box>
-            );
-        },
-        [formatMessage],
-    );
+    const Buttons = useCallback(() => {
+        return (
+            <Box sx={styles.dialogButtonContainer}>
+                <Button onClick={closeDialog}>
+                    {formatMessage(MESSAGES.cancel)}
+                </Button>
+                <Button
+                    onClick={() => onApply(conflictResolution)}
+                    color="primary"
+                    variant="contained"
+                >
+                    {formatMessage(MESSAGES.apply)}
+                </Button>
+            </Box>
+        );
+    }, [formatMessage]);
 
     return (
         <SimpleModal
@@ -125,20 +143,22 @@ const ConflictManagementModal: FC<Props> = ({
                 <Button variant="text">Select all</Button>
             </Box>
             <Divider />
-            {conflicts.map(c => (
-                <>
-                    <ConflictManagementRow
-                        conflict={c}
-                        onSelectionChange={selectedInterventions =>
-                            handleInterventionSelectionChange(
-                                c,
-                                selectedInterventions,
-                            )
-                        }
-                    />
-                    <Divider />
-                </>
-            ))}
+            {conflicts
+                .filter(c => c.isConflicting)
+                .map(c => (
+                    <>
+                        <ConflictManagementRow
+                            conflict={c}
+                            onSelectionChange={selectedInterventions =>
+                                handleInterventionSelectionChange(
+                                    c.orgUnit.id,
+                                    selectedInterventions,
+                                )
+                            }
+                        />
+                        <Divider />
+                    </>
+                ))}
         </SimpleModal>
     );
 };

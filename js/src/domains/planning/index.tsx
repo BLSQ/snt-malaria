@@ -20,14 +20,15 @@ import { InterventionsPlan } from './components/interventionPlan/InterventionsPl
 import { Map } from './components/map';
 import { SideMapList } from './components/maps/SideMapList';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
+import { useGetInterventionAssignments } from './hooks/UseGetInterventionAssignments';
 import {
     useGetMetricCategories,
     useGetMetricOrgUnits,
     useGetMetricValues,
 } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
+import { Intervention } from './types/interventions';
 import { MetricsFilters, MetricType } from './types/metrics';
-import { useGetInterventionAssignments } from './hooks/UseGetInterventionAssignments';
 
 type PlanningParams = {
     scenarioId: number;
@@ -47,7 +48,7 @@ export const Planning: FC = () => {
         useState<OrgUnit[]>([]);
     const [expanded, setExpanded] = useState('interventionsList');
     const [selectedInterventions, setSelectedInterventions] = useState<{
-        [categoryId: number]: number;
+        [categoryId: number]: Intervention;
     }>({});
     // Metric selection
     // v1: display Incidence by default
