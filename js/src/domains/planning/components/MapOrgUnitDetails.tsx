@@ -182,7 +182,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
                     Object.entries(groupedMetricValues).map(([_, values]) => {
                         const categoryName = values[0].category;
                         return (
-                            <>
+                            <React.Fragment key={categoryName}>
                                 {categoryName ? (
                                     <Typography
                                         variant="overline"
@@ -236,7 +236,7 @@ export const MapOrgUnitDetails: FC<Props> = ({
                                         </Tooltip>
                                     ))}
                                 </List>
-                            </>
+                            </React.Fragment>
                         );
                     })}
             </Box>

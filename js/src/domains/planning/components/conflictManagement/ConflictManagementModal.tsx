@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { FC } from 'react';
 import { ArrowForward } from '@mui/icons-material';
 import { Box, Button, Divider, Theme, Typography } from '@mui/material';
@@ -30,6 +30,8 @@ const styles: SxStyles = {
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'flex-end',
+        gap: 1,
+        paddingBottom: 1,
     },
     dialogButtonContainer: (theme: Theme) => ({
         display: 'flex',
@@ -87,6 +89,7 @@ const ConflictManagementModal: FC<Props> = ({
     const [conflictResolution, setConflictResolution] = useState<{
         [orgUnitId: number]: number[];
     }>({});
+
     const handleInterventionSelectionChange = useCallback(
         (orgUnitId, selectedInterventions: number[]) => {
             setConflictResolution({
@@ -101,7 +104,38 @@ const ConflictManagementModal: FC<Props> = ({
                 [orgUnitId]: selectedInterventions,
             });
         },
-        [],
+        [setConflictResolution, conflictResolution],
+    );
+
+    const allInterventions = useMemo(() => {
+        return conflicts.reduce((acc, conflict) => {
+            conflict.interventions.forEach(intervention => {
+                if (acc.includes(intervention.id)) return;
+                acc.push(intervention.id);
+            });
+
+            return acc;
+        }, [] as number[]);
+    }, [conflicts]);
+
+    const selectAllInterventions = useCallback(
+        interventionId => {
+            const resolution = conflicts.reduce(
+                (acc, conflict) => {
+                    const existingResolutionForOrgUnit =
+                        conflictResolution[conflict.orgUnit.id] ?? [];
+                    acc[conflict.orgUnit.id] = [
+                        ...existingResolutionForOrgUnit,
+                        interventionId,
+                    ];
+                    return acc;
+                },
+                {} as { [orgUnitId: number]: number[] },
+            );
+
+            setConflictResolution(resolution);
+        },
+        [conflicts, conflictResolution, setConflictResolution],
     );
 
     const Buttons = useCallback(() => {
@@ -119,16 +153,16 @@ const ConflictManagementModal: FC<Props> = ({
                 </Button>
             </Box>
         );
-    }, [formatMessage]);
+    }, [formatMessage, closeDialog, onApply, conflictResolution]);
 
     return (
         <SimpleModal
             titleMessage=""
-            id={''}
+            id={'conflict-resolution-modal'}
             open={isOpen}
             maxWidth="sm"
             onClose={() => null}
-            dataTestId={''}
+            dataTestId={'conflict-resolution-modal'}
             closeDialog={closeDialog}
             buttons={Buttons}
         >
@@ -139,16 +173,26 @@ const ConflictManagementModal: FC<Props> = ({
                 {formatMessage(MESSAGES.resolveConflictDesc, { br: <br /> })}
             </Typography>
             <Box sx={styles.actionsContainer}>
-                <Button variant="text">Select all</Button>
-                <Button variant="text">Select all</Button>
+                {allInterventions.map(interventionId => (
+                    <Button
+                        key={interventionId}
+                        variant="text"
+                        onClick={() => selectAllInterventions(interventionId)}
+                    >
+                        {formatMessage(MESSAGES.selectAll)}
+                    </Button>
+                ))}
             </Box>
             <Divider />
             {conflicts
                 .filter(c => c.isConflicting)
                 .map(c => (
-                    <>
+                    <React.Fragment key={c.orgUnit.id}>
                         <ConflictManagementRow
                             conflict={c}
+                            selectedInterventionIds={
+                                conflictResolution[c.orgUnit.id] || []
+                            }
                             onSelectionChange={selectedInterventions =>
                                 handleInterventionSelectionChange(
                                     c.orgUnit.id,
@@ -157,7 +201,7 @@ const ConflictManagementModal: FC<Props> = ({
                             }
                         />
                         <Divider />
-                    </>
+                    </React.Fragment>
                 ))}
         </SimpleModal>
     );

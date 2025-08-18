@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { FC } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
@@ -6,6 +6,7 @@ import { InterventionAssignmentConflict } from '../../libs/intervention-assignme
 
 type Props = {
     conflict: InterventionAssignmentConflict;
+    selectedInterventionIds: number[];
     onSelectionChange: (selectedIntervention: number[]) => void;
 };
 
@@ -40,6 +41,7 @@ const styles: SxStyles = {
     },
     buttonContainer: {
         display: 'grid',
+        minWidth: 206,
         gridTemplateColumns: '1fr 1fr',
         gap: 1,
     },
@@ -50,20 +52,17 @@ const styles: SxStyles = {
 
 export const ConflictManagementRow: FC<Props> = ({
     conflict,
+    selectedInterventionIds,
     onSelectionChange,
 }) => {
-    const [activeInterventionIds, setActiveInterventionIds] = useState<
-        number[]
-    >([]);
     const handleButtonToggle = useCallback(
         interventionId => {
-            const newStatus = activeInterventionIds.includes(interventionId)
-                ? activeInterventionIds.filter(i => i !== interventionId)
-                : [...activeInterventionIds, interventionId];
-            setActiveInterventionIds(newStatus);
+            const newStatus = selectedInterventionIds.includes(interventionId)
+                ? selectedInterventionIds.filter(i => i !== interventionId)
+                : [...selectedInterventionIds, interventionId];
             onSelectionChange(newStatus);
         },
-        [activeInterventionIds, setActiveInterventionIds, onSelectionChange],
+        [onSelectionChange, selectedInterventionIds],
     );
 
     return (
@@ -72,7 +71,7 @@ export const ConflictManagementRow: FC<Props> = ({
             <Box sx={styles.buttonContainer}>
                 {conflict.interventions.map(i => (
                     <ToggleButton
-                        isActive={activeInterventionIds.includes(i.id)}
+                        isActive={selectedInterventionIds.includes(i.id)}
                         key={`toggle-button-${i.id}`}
                         onClick={() => handleButtonToggle(i.id)}
                     >

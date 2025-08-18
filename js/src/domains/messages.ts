@@ -154,4 +154,12 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Some districts already have an intervention from the samegroup.{br} Choose which one to apply, or decide to apply both.',
     },
+    selectAll: {
+        id: 'iaso.snt_malaria.label.selectAll',
+        defaultMessage: 'Select All',
+    },
+    unselectAll: {
+        id: 'iaso.snt_malaria.label.unselectAll',
+        defaultMessage: 'Unselect All',
+    },
 });
