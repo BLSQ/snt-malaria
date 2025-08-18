@@ -60,7 +60,9 @@ export const InterventionHeader: FC<Props> = ({
     const handleAssignmentCreation = async () => {
         if (canApplyInterventions) {
             await createInterventionAssignment({
-                intervention_ids: selectedInterventionValues,
+                intervention_ids: selectedInterventionValues.map(
+                    intervention => intervention.id,
+                ),
                 org_unit_ids: selectedOrgUnits.map(orgUnit => orgUnit.id),
                 scenario_id: scenarioId,
             });
@@ -77,7 +79,10 @@ export const InterventionHeader: FC<Props> = ({
 
         setConflicts(conflictingAssignments);
 
-        if (conflictingAssignments.length <= 0) {
+        if (
+            conflictingAssignments.length <= 0 ||
+            !conflictingAssignments.some(c => c.isConflicting)
+        ) {
             handleAssignmentCreation();
             return false;
         }
