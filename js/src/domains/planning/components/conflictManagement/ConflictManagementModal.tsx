@@ -90,23 +90,6 @@ const ConflictManagementModal: FC<Props> = ({
         [orgUnitId: number]: number[];
     }>({});
 
-    const handleInterventionSelectionChange = useCallback(
-        (orgUnitId, selectedInterventions: number[]) => {
-            setConflictResolution({
-                ...conflictResolution,
-                [orgUnitId]: selectedInterventions,
-            });
-
-            console.log('conflict orgunitId', orgUnitId);
-            console.log('conflict selection', selectedInterventions);
-            console.log('conflict resolution', {
-                ...conflictResolution,
-                [orgUnitId]: selectedInterventions,
-            });
-        },
-        [setConflictResolution, conflictResolution],
-    );
-
     const allInterventions = useMemo(() => {
         return conflicts.reduce((acc, conflict) => {
             conflict.interventions.forEach(intervention => {
@@ -118,16 +101,49 @@ const ConflictManagementModal: FC<Props> = ({
         }, [] as number[]);
     }, [conflicts]);
 
-    const selectAllInterventions = useCallback(
+    const allSelected = useMemo(() => {
+        return allInterventions.reduce(
+            (acc, interventionId) => {
+                acc[interventionId] = !conflicts.some(c => {
+                    const resolution = conflictResolution[c.orgUnit.id];
+                    return !resolution || !resolution.includes(interventionId);
+                });
+                return acc;
+            },
+            {} as { [interventionId: number]: boolean },
+        );
+    }, [allInterventions, conflicts, conflictResolution]);
+
+    const handleInterventionSelectionChange = useCallback(
+        (orgUnitId, selectedInterventions: number[]) => {
+            const newState = {
+                ...conflictResolution,
+                [orgUnitId]: selectedInterventions,
+            };
+
+            setConflictResolution(newState);
+
+            console.log('conflict orgunitId', orgUnitId);
+            console.log('conflict selection', selectedInterventions);
+            console.log('conflict resolution', {
+                ...conflictResolution,
+                [orgUnitId]: selectedInterventions,
+            });
+        },
+        [setConflictResolution, conflictResolution],
+    );
+
+    const toggleAllInterventions = useCallback(
         interventionId => {
             const resolution = conflicts.reduce(
                 (acc, conflict) => {
                     const existingResolutionForOrgUnit =
                         conflictResolution[conflict.orgUnit.id] ?? [];
-                    acc[conflict.orgUnit.id] = [
-                        ...existingResolutionForOrgUnit,
-                        interventionId,
-                    ];
+                    acc[conflict.orgUnit.id] = allSelected[interventionId]
+                        ? existingResolutionForOrgUnit.filter(
+                              id => id !== interventionId,
+                          )
+                        : [...existingResolutionForOrgUnit, interventionId];
                     return acc;
                 },
                 {} as { [orgUnitId: number]: number[] },
@@ -135,7 +151,7 @@ const ConflictManagementModal: FC<Props> = ({
 
             setConflictResolution(resolution);
         },
-        [conflicts, conflictResolution, setConflictResolution],
+        [conflicts, conflictResolution, setConflictResolution, allSelected],
     );
 
     const Buttons = useCallback(() => {
@@ -177,9 +193,11 @@ const ConflictManagementModal: FC<Props> = ({
                     <Button
                         key={interventionId}
                         variant="text"
-                        onClick={() => selectAllInterventions(interventionId)}
+                        onClick={() => toggleAllInterventions(interventionId)}
                     >
-                        {formatMessage(MESSAGES.selectAll)}
+                        {allSelected[interventionId]
+                            ? formatMessage(MESSAGES.unselectAll)
+                            : formatMessage(MESSAGES.selectAll)}
                     </Button>
                 ))}
             </Box>
