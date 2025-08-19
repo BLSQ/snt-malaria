@@ -57,24 +57,81 @@ export const InterventionHeader: FC<Props> = ({
         setSelectedInterventions({});
     };
 
-    const handleAssignmentCreation = async () => {
-        if (canApplyInterventions) {
-            await createInterventionAssignment({
-                intervention_ids: selectedInterventionValues.map(
+    const getOrgUnitAssignments = () => {
+        return selectedOrgUnits.reduce(
+            (acc, orgUnit) => {
+                acc[orgUnit.id] = selectedInterventionValues;
+
+                return acc;
+            },
+            {} as { [orgUnitId: number]: Intervention[] },
+        );
+    };
+
+    const getExistingOrgUnitAssignments = () => {
+        return interventionPlans.reduce(
+            (acc, ip) => {
+                ip.org_units.forEach(ou => {
+                    if (!acc[ou.id]) {
+                        acc[ou.id] = [];
+                    }
+                    acc[ou.id].push(ip.intervention);
+                });
+                return acc;
+            },
+            {} as { [orgUnitId: number]: Intervention[] },
+        );
+    };
+
+    // Returns org unit assignments containing new and existing assignments
+    const getAllOrgUnitAssignments = () => {
+        return selectedOrgUnits.reduce(
+            (acc, orgUnit) => {
+                acc[orgUnit.id] = selectedInterventionValues.map(
                     intervention => intervention.id,
-                ),
-                org_unit_ids: selectedOrgUnits.map(orgUnit => orgUnit.id),
-                scenario_id: scenarioId,
-            });
-        }
+                );
+
+                // We also need existing assignment here, as we do a full replacement
+                const existingAssignmentIds = getExistingAssignments(
+                    orgUnit.id,
+                ).map(intervention => intervention.id);
+
+                acc[orgUnit.id] = [
+                    ...acc[orgUnit.id],
+                    ...existingAssignmentIds,
+                ];
+                return acc;
+            },
+            {} as { [orgUnitId: number]: number[] },
+        );
+    };
+
+    const getExistingAssignments = (orgUnitId: number) => {
+        return interventionPlans
+            .filter(plan => plan.org_units.some(ou => ou.id === orgUnitId))
+            .map(plan => plan.intervention);
+    };
+
+    const createAssignments = async (orgUnitInterventions: {
+        [orgUnitId: number]: number[];
+    }) => {
+        await createInterventionAssignment({
+            orgunit_interventions: orgUnitInterventions,
+            scenario_id: scenarioId,
+        });
+
         formReset();
     };
 
     const checkForConflict = () => {
+        if (!canApplyInterventions) {
+            return false;
+        }
+        const ouAssignments = getOrgUnitAssignments();
+        const ouExistingAssignments = getExistingOrgUnitAssignments();
         const conflictingAssignments = getConflictingAssignments(
-            selectedOrgUnits,
-            selectedInterventions,
-            interventionPlans,
+            ouAssignments,
+            ouExistingAssignments,
         );
 
         setConflicts(conflictingAssignments);
@@ -83,21 +140,20 @@ export const InterventionHeader: FC<Props> = ({
             conflictingAssignments.length <= 0 ||
             !conflictingAssignments.some(c => c.isConflicting)
         ) {
-            handleAssignmentCreation();
+            const ouAssignments = getAllOrgUnitAssignments();
+            createAssignments(ouAssignments);
             return false;
         }
 
         return true;
     };
 
-    const applyConflictResolution = (_conflictResolution: {
+    const applyConflictResolution = async (conflictResolution: {
         [orgUnitId: number]: number[];
     }) => {
-        // TODO Set the request properly.
-        // TODO Need to only apply conflict resolution based on  category
-        // TODO Maybe this needs to change when generating the conflict model.
-
-        handleAssignmentCreation();
+        // TODO Make sure it also contains non conflicting assignments
+        // TODO Should we add all existing assignments to the conflict resolution?
+        await createAssignments(conflictResolution);
     };
 
     return (

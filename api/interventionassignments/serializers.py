@@ -44,20 +44,22 @@ class InterventionAssignmentListSerializer(serializers.ModelSerializer):
 class InterventionAssignmentWriteSerializer(serializers.ModelSerializer):
     """For creating InterventionAssignment"""
 
-    org_unit_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
-    intervention_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
     scenario_id = serializers.IntegerField(write_only=True)
+    orgunit_interventions = serializers.DictField(
+        child=serializers.ListField(child=serializers.IntegerField()), write_only=True
+    )
 
     class Meta:
         model = InterventionAssignment
-        fields = ["org_unit_ids", "intervention_ids", "scenario_id"]
+        fields = ["orgunit_interventions", "scenario_id"]
 
     def validate(self, attrs):
         request = self.context.get("request")
         account = request.user.iaso_profile.account
         scenario_id = attrs.get("scenario_id")
-        org_unit_ids = attrs.get("org_unit_ids", [])
-        intervention_ids = attrs.get("intervention_ids")
+        orgunit_interventions = attrs.get("orgunit_interventions", {})
+        org_unit_ids = [int(k) for k in orgunit_interventions.keys()]
+        intervention_ids = list({intervention_id for ids in orgunit_interventions.values() for intervention_id in ids})
 
         # Check the existence of scenario
         try:
@@ -84,7 +86,24 @@ class InterventionAssignmentWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"intervention_ids": f"Invalid intervention IDs: {missing_interventions}"}
             )
+
+        valid_orgunit_interventions = []
+        org_units_dict = {ou.id: ou for ou in valid_org_units}
+        interventions_dict = {i.id: i for i in valid_interventions}
+
+        for org_unit_id, intervention_ids in orgunit_interventions.items():
+            org_unit = org_units_dict.get(int(org_unit_id))
+            interventions = [interventions_dict[iid] for iid in intervention_ids if iid in interventions_dict]
+            if org_unit and interventions:
+                valid_orgunit_interventions.append(
+                    {
+                        "org_unit": org_unit,
+                        "interventions": interventions,
+                    }
+                )
         attrs["scenario"] = scenario
         attrs["valid_org_units"] = valid_org_units
         attrs["valid_interventions"] = valid_interventions
+        attrs["orgunit_interventions"] = orgunit_interventions
+        attrs["valid_orgunit_interventions"] = valid_orgunit_interventions
         return attrs

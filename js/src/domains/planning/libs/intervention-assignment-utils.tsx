@@ -1,76 +1,5 @@
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { Intervention, InterventionPlan } from '../types/interventions';
-
-const getDefaultConflicts = (
-    orgUnits: OrgUnit[],
-    interventions: { [categoryId: number]: Intervention },
-): InterventionAssignmentConflict[] =>
-    orgUnits.flatMap(ou => {
-        return Object.entries(interventions).map(
-            ([categoryId, intervention]) => ({
-                orgUnit: ou,
-                categoryId: Number(categoryId),
-                interventions: [intervention],
-                isConflicting: false,
-            }),
-        );
-    });
-
-const getConflictOrDefault = (
-    conflicts: InterventionAssignmentConflict[],
-    categoryId: number,
-    orgUnit: OrgUnit,
-) => {
-    return (
-        conflicts.find(
-            c =>
-                c.categoryId === Number(categoryId) &&
-                c.orgUnit.id === orgUnit.id,
-        ) ??
-        ({
-            categoryId: Number(categoryId),
-            orgUnit,
-            interventions: [],
-            isConflicting: false,
-        } as InterventionAssignmentConflict)
-    );
-};
-
-const getUniqueInterventions = (
-    interventionsToAdd: Intervention[],
-    sourceInterventions: Intervention[],
-) =>
-    interventionsToAdd.filter(
-        a => !sourceInterventions.some(b => a.id === b.id),
-    );
-
-const getInterventionsPerCategory = (
-    orgUnitId: number,
-    plans: InterventionPlan[],
-) => {
-    const categoryToInterventions: {
-        [categoryId: number]: Intervention[];
-    } = {};
-
-    for (const plan of plans) {
-        if (plan.org_units.some(o => o.id === orgUnitId)) {
-            const categoryId = plan.intervention.intervention_category;
-            if (!categoryToInterventions[categoryId]) {
-                categoryToInterventions[categoryId] = [];
-            }
-
-            if (
-                !categoryToInterventions[categoryId].some(
-                    i => i.id === plan.intervention.id,
-                )
-            ) {
-                categoryToInterventions[categoryId].push(plan.intervention);
-            }
-        }
-    }
-
-    return categoryToInterventions;
-};
+import { Intervention } from '../types/interventions';
 
 export type InterventionAssignmentConflict = {
     orgUnit: OrgUnit;
@@ -79,58 +8,75 @@ export type InterventionAssignmentConflict = {
     isConflicting: boolean;
 };
 
-export const getConflictingAssignments = (
-    orgUnits: OrgUnit[],
-    interventions: { [categoryId: number]: Intervention },
-    interventionPlans: InterventionPlan[],
-) => {
-    // Interventions which are part of same category than intervention of plans
-    const plansWithMatchingIntervention = interventionPlans.filter(
-        p => interventions[p.intervention.intervention_category],
-    );
+const createConflict = (orgUnitId: string, interventionCategory: number) => ({
+    orgUnit: { id: Number(orgUnitId) } as OrgUnit,
+    categoryId: interventionCategory,
+    interventions: [],
+    isConflicting: false,
+});
 
-    // Create base conflicts with selected intervention.
-    const conflicts: InterventionAssignmentConflict[] = getDefaultConflicts(
-        orgUnits,
-        interventions,
-    );
-
-    // Time to generate conflict per org unit
-    for (const orgUnit of orgUnits) {
-        const categoryToInterventions: {
-            [categoryId: number]: Intervention[];
-        } = getInterventionsPerCategory(
-            orgUnit.id,
-            plansWithMatchingIntervention,
-        );
-
-        Object.entries(categoryToInterventions).forEach(
-            ([categoryId, conflictingInterventions]) => {
-                if (conflictingInterventions.length > 0) {
-                    const conflict = getConflictOrDefault(
-                        conflicts,
-                        Number(categoryId),
-                        orgUnit,
+const getInitialConflictMap = (existingAssignments: {
+    [orgUnitId: number]: Intervention[];
+}) => {
+    const conflictMap: {
+        [key: string]: InterventionAssignmentConflict;
+    } = {};
+    Object.entries(existingAssignments).forEach(
+        ([orgUnitId, interventions]) => {
+            interventions.forEach(intervention => {
+                const key = `${orgUnitId}_${intervention.intervention_category}`;
+                if (!conflictMap[key]) {
+                    conflictMap[key] = createConflict(
+                        orgUnitId,
+                        intervention.intervention_category,
                     );
-
-                    // Filter out interventions already in conflict
-                    const uniqueNewInterventions = getUniqueInterventions(
-                        conflictingInterventions,
-                        conflict.interventions,
-                    );
-
-                    // Only modify conflic if new interventions
-                    if (uniqueNewInterventions.length > 0) {
-                        conflict.isConflicting = true;
-                        conflict.interventions = [
-                            ...(conflict.interventions ?? []),
-                            ...conflictingInterventions,
-                        ];
-                    }
                 }
-            },
-        );
-    }
+                conflictMap[key].interventions.push(intervention);
+            });
+        },
+    );
 
-    return conflicts;
+    return conflictMap;
+};
+
+/***
+ * Checks for conflicting assignments between selected interventions and existing plans.
+ * an array of InterventionAssignmentConflict objects is returned containing all assignments with a isConflicting flag.
+ * It also contains all existing assignments for the org units, which will have the isConflicting flag as false.
+ * Note: interventions parameter should contains all interventions we want to add, conflict detection will be based on that list.
+ */
+export const getConflictingAssignments = (
+    orgUnitAssignments: { [orgUnitId: number]: Intervention[] },
+    existingAssignments: { [orgUnitId: number]: Intervention[] },
+): InterventionAssignmentConflict[] => {
+    const conflictMap: {
+        [key: string]: InterventionAssignmentConflict;
+    } = getInitialConflictMap(existingAssignments);
+
+    // Add new assignments, merge interventions, and set isConflicting if more than one intervention in the same category
+    Object.entries(orgUnitAssignments).forEach(([orgUnitId, interventions]) => {
+        interventions.forEach(intervention => {
+            const key = `${orgUnitId}_${intervention.intervention_category}`;
+            if (!conflictMap[key]) {
+                conflictMap[key] = createConflict(
+                    orgUnitId,
+                    intervention.intervention_category,
+                );
+            }
+            // Only add if not already present
+            if (
+                !conflictMap[key].interventions.some(
+                    i => i.id === intervention.id,
+                )
+            ) {
+                conflictMap[key].interventions.push(intervention);
+            }
+            // Mark as conflicting if more than one intervention in the same category
+            if (conflictMap[key].interventions.length > 1) {
+                conflictMap[key].isConflicting = true;
+            }
+        });
+    });
+
+    return Object.values(conflictMap);
 };

@@ -15,8 +15,7 @@ export type Intervention = {
 };
 
 export type InterventionAssignmentCreate = {
-    orgunit_ids: number[];
-    intervention_ids: number[];
+    orgunit_interventions: { [orgUnitId: number]: number[] };
     scenario_id: number;
 };
 

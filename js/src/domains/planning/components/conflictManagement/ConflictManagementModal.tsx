@@ -6,7 +6,8 @@ import { makeFullModal, SimpleModal, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { InterventionAssignmentConflict } from '../../libs/intervention-assignment-utils';
-import { ConflictManagementRow } from './ConflictManagementRow';
+import { ConflictManagementCategory } from './ConflictManagementCategory';
+import { flatten } from 'lodash';
 
 type Props = {
     isOpen: boolean;
@@ -87,81 +88,72 @@ const ConflictManagementModal: FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
     const [conflictResolution, setConflictResolution] = useState<{
-        [orgUnitId: number]: number[];
+        [categoryId: number]: { [orgUnitId: number]: number[] };
     }>({});
 
-    const allInterventions = useMemo(() => {
-        return conflicts.reduce((acc, conflict) => {
-            conflict.interventions.forEach(intervention => {
-                if (acc.includes(intervention.id)) return;
-                acc.push(intervention.id);
-            });
-
-            return acc;
-        }, [] as number[]);
+    const conflictingConflicts = useMemo(() => {
+        return conflicts.filter(conflict => conflict.isConflicting);
     }, [conflicts]);
 
-    const allSelected = useMemo(() => {
-        return allInterventions.reduce(
-            (acc, interventionId) => {
-                acc[interventionId] = !conflicts.some(c => {
-                    const resolution = conflictResolution[c.orgUnit.id];
-                    return !resolution || !resolution.includes(interventionId);
-                });
+    const categoryConflicts = useMemo(() => {
+        return conflictingConflicts.reduce(
+            (acc, conflict) => {
+                const categoryId = conflict.categoryId;
+                if (!acc[categoryId]) {
+                    acc[categoryId] = [];
+                }
+                acc[categoryId].push(conflict);
                 return acc;
             },
-            {} as { [interventionId: number]: boolean },
+            {} as { [categoryId: number]: InterventionAssignmentConflict[] },
         );
-    }, [allInterventions, conflicts, conflictResolution]);
+    }, [conflictingConflicts]);
 
     const handleInterventionSelectionChange = useCallback(
-        (orgUnitId, selectedInterventions: number[]) => {
+        (categoryId, orgUnitId, selectedInterventions: number[]) => {
             const newState = {
                 ...conflictResolution,
-                [orgUnitId]: selectedInterventions,
+                [categoryId]: {
+                    ...conflictResolution[categoryId],
+                    [orgUnitId]: selectedInterventions,
+                },
             };
 
             setConflictResolution(newState);
-
-            console.log('conflict orgunitId', orgUnitId);
-            console.log('conflict selection', selectedInterventions);
-            console.log('conflict resolution', {
-                ...conflictResolution,
-                [orgUnitId]: selectedInterventions,
-            });
         },
         [setConflictResolution, conflictResolution],
     );
 
-    const toggleAllInterventions = useCallback(
-        interventionId => {
-            const resolution = conflicts.reduce(
-                (acc, conflict) => {
-                    const existingResolutionForOrgUnit =
-                        conflictResolution[conflict.orgUnit.id] ?? [];
-                    acc[conflict.orgUnit.id] = allSelected[interventionId]
-                        ? existingResolutionForOrgUnit.filter(
-                              id => id !== interventionId,
-                          )
-                        : [...existingResolutionForOrgUnit, interventionId];
-                    return acc;
-                },
-                {} as { [orgUnitId: number]: number[] },
-            );
+    const applyChanges = useCallback(() => {
+        const resolution = conflicts.reduce(
+            (acc, conflict) => {
+                const assignmentsToAdd = conflict.isConflicting
+                    ? (conflictResolution[conflict.categoryId]?.[
+                          conflict.orgUnit.id
+                      ] ?? [])
+                    : conflict.interventions.map(i => i.id);
 
-            setConflictResolution(resolution);
-        },
-        [conflicts, conflictResolution, setConflictResolution, allSelected],
-    );
+                acc[conflict.orgUnit.id] = [
+                    ...(acc[conflict.orgUnit.id] ?? []),
+                    ...assignmentsToAdd,
+                ];
+                return acc;
+            },
+            {} as { [orgUnitId: number]: number[] },
+        );
+
+        onApply(resolution);
+    }, [conflicts, conflictResolution, onApply]);
 
     const Buttons = useCallback(() => {
+        // TODO Handle disabled of the button.
         return (
             <Box sx={styles.dialogButtonContainer}>
                 <Button onClick={closeDialog}>
                     {formatMessage(MESSAGES.cancel)}
                 </Button>
                 <Button
-                    onClick={() => onApply(conflictResolution)}
+                    onClick={() => applyChanges()}
                     color="primary"
                     variant="contained"
                 >
@@ -169,7 +161,7 @@ const ConflictManagementModal: FC<Props> = ({
                 </Button>
             </Box>
         );
-    }, [formatMessage, closeDialog, onApply, conflictResolution]);
+    }, [formatMessage, closeDialog, applyChanges]);
 
     return (
         <SimpleModal
@@ -189,7 +181,7 @@ const ConflictManagementModal: FC<Props> = ({
                 {formatMessage(MESSAGES.resolveConflictDesc, { br: <br /> })}
             </Typography>
             <Box sx={styles.actionsContainer}>
-                {allInterventions.map(interventionId => (
+                {/* {conflictingInterventions.map(interventionId => (
                     <Button
                         key={interventionId}
                         variant="text"
@@ -199,28 +191,22 @@ const ConflictManagementModal: FC<Props> = ({
                             ? formatMessage(MESSAGES.unselectAll)
                             : formatMessage(MESSAGES.selectAll)}
                     </Button>
-                ))}
+                ))} */}
             </Box>
             <Divider />
-            {conflicts
-                .filter(c => c.isConflicting)
-                .map(c => (
-                    <React.Fragment key={c.orgUnit.id}>
-                        <ConflictManagementRow
-                            conflict={c}
-                            selectedInterventionIds={
-                                conflictResolution[c.orgUnit.id] || []
-                            }
-                            onSelectionChange={selectedInterventions =>
-                                handleInterventionSelectionChange(
-                                    c.orgUnit.id,
-                                    selectedInterventions,
-                                )
-                            }
-                        />
-                        <Divider />
-                    </React.Fragment>
-                ))}
+            {Object.entries(categoryConflicts).map(([categoryId, conflict]) => (
+                <ConflictManagementCategory
+                    key={categoryId}
+                    categoryId={Number(categoryId)}
+                    conflicts={conflict}
+                    handleInterventionSelectionChange={
+                        handleInterventionSelectionChange
+                    }
+                    selectedInterventionIds={
+                        conflictResolution[Number(categoryId)] || []
+                    }
+                />
+            ))}
         </SimpleModal>
     );
 };
