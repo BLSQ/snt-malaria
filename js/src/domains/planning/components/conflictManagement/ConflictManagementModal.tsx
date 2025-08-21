@@ -98,6 +98,17 @@ const ConflictManagementModal: FC<Props> = ({
         return conflicts.filter(conflict => conflict.isConflicting);
     }, [conflicts]);
 
+    const hasUnresolvedConflicts = useMemo(() => {
+        if (conflictingConflicts.length === 0) return false;
+        if (Object.keys(conflictResolution).length === 0) return true;
+
+        return conflictingConflicts.some(conflict => {
+            const resolution =
+                conflictResolution[conflict.categoryId]?.[conflict.orgUnit.id];
+            return !resolution || resolution.length === 0;
+        });
+    }, [conflictResolution, conflictingConflicts]);
+
     const categoryConflicts = useMemo(() => {
         return conflictingConflicts.reduce(
             (acc, conflict) => {
@@ -146,6 +157,7 @@ const ConflictManagementModal: FC<Props> = ({
         );
 
         onApply(resolution);
+        // Handle error and close on success
     }, [conflicts, conflictResolution, onApply]);
 
     const getInterventionCategoryOrDefault = categoryId => {
@@ -156,7 +168,6 @@ const ConflictManagementModal: FC<Props> = ({
     };
 
     const Buttons = useCallback(() => {
-        // TODO Handle disabled of the button.
         return (
             <Box sx={styles.dialogButtonContainer}>
                 <Button onClick={closeDialog}>
@@ -166,12 +177,13 @@ const ConflictManagementModal: FC<Props> = ({
                     onClick={() => applyChanges()}
                     color="primary"
                     variant="contained"
+                    disabled={hasUnresolvedConflicts}
                 >
                     {formatMessage(MESSAGES.apply)}
                 </Button>
             </Box>
         );
-    }, [formatMessage, closeDialog, applyChanges]);
+    }, [formatMessage, closeDialog, applyChanges, hasUnresolvedConflicts]);
 
     return (
         <SimpleModal
