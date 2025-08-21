@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { FC } from 'react';
 import { ArrowForward } from '@mui/icons-material';
-import { Box, Button, Divider, Theme, Typography } from '@mui/material';
+import { Box, Button, Theme, Typography } from '@mui/material';
 import { makeFullModal, SimpleModal, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
@@ -27,13 +27,6 @@ const styles: SxStyles = {
     applyButton: {
         fontSize: '0.875rem',
         textTransform: 'none',
-    },
-    actionsContainer: {
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        gap: 1,
-        paddingBottom: 1,
     },
     dialogButtonContainer: (theme: Theme) => ({
         display: 'flex',
@@ -120,12 +113,12 @@ const ConflictManagementModal: FC<Props> = ({
     }, [conflictingConflicts]);
 
     const handleInterventionSelectionChange = useCallback(
-        (categoryId, orgUnitId, selectedInterventions: number[]) => {
+        (categoryId, selection: { [orgUnitId: number]: number[] }) => {
             const newState = {
                 ...conflictResolution,
                 [categoryId]: {
                     ...conflictResolution[categoryId],
-                    [orgUnitId]: selectedInterventions,
+                    ...selection,
                 },
             };
 
@@ -197,19 +190,6 @@ const ConflictManagementModal: FC<Props> = ({
             <Typography sx={styles.descriptionText}>
                 {formatMessage(MESSAGES.resolveConflictDesc, { br: <br /> })}
             </Typography>
-            <Box sx={styles.actionsContainer}>
-                {/* {conflictingInterventions.map(interventionId => (
-                    <Button
-                        key={interventionId}
-                        variant="text"
-                        onClick={() => toggleAllInterventions(interventionId)}
-                    >
-                        {allSelected[interventionId]
-                            ? formatMessage(MESSAGES.unselectAll)
-                            : formatMessage(MESSAGES.selectAll)}
-                    </Button>
-                ))} */}
-            </Box>
             {Object.entries(categoryConflicts).map(([categoryId, conflict]) => (
                 <ConflictManagementCategory
                     key={categoryId}

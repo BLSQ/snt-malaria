@@ -1,5 +1,8 @@
-import React, { FC } from 'react';
-import { Box, Divider, Typography } from '@mui/material';
+import React, { FC, useCallback, useMemo } from 'react';
+import { Box, Button, Divider, Typography } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
+import { SxStyles } from 'Iaso/types/general';
+import { MESSAGES } from '../../../messages';
 import { InterventionAssignmentConflict } from '../../libs/intervention-assignment-utils';
 import { InterventionCategory } from '../../types/interventions';
 import { ConflictManagementRow } from './ConflictManagementRow';
@@ -10,9 +13,24 @@ type Props = {
     selectedInterventionIds: { [orgUnitId: number]: number[] };
     handleInterventionSelectionChange: (
         categoryId: number,
-        orgUnitId: number,
-        selectedInterventions: number[],
+        selection: { [orgUnitId: number]: number[] },
     ) => void;
+};
+
+const styles: SxStyles = {
+    actionsContainer: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        gap: 1,
+        paddingBottom: 1,
+    },
+    categoryName: {
+        fontSize: '0.75rem',
+        margin: 1,
+        marginBottom: 0.5,
+        flexGrow: 1,
+    },
 };
 
 export const ConflictManagementCategory: FC<Props> = ({
@@ -21,73 +39,77 @@ export const ConflictManagementCategory: FC<Props> = ({
     selectedInterventionIds,
     handleInterventionSelectionChange,
 }) => {
-    // const conflictingInterventions = useMemo(() => {
-    //     return conflicts.reduce((acc, conflict) => {
-    //         conflict.interventions.forEach(intervention => {
-    //             if (acc.includes(intervention.id)) return;
-    //             if (conflict.isConflicting) {
-    //                 acc.push(intervention.id);
-    //             }
-    //         });
-    //         return acc;
-    //     }, [] as number[]);
-    // }, [conflicts]);
+    const { formatMessage } = useSafeIntl();
 
-    // const allSelectedPerCategory = useMemo(() => {
-    //     return conflictingInterventions.reduce(
-    //         (acc, interventionId) => {
-    //             acc[interventionId] = !conflicts.some(c => {
-    //                 const resolution = conflictResolution[c.orgUnit.id];
-    //                 return !resolution || !resolution.includes(interventionId);
-    //             });
+    const conflictingInterventions = useMemo(() => {
+        return conflicts
+            .flatMap(c => c.interventions.map(i => i.id))
+            .filter((value, index, self) => self.indexOf(value) === index);
+    }, [conflicts]);
 
-    //             return acc;
-    //         },
-    //         {} as { [categoryId: number]: number[] },
-    //     );
-    // }, [conflicts]);
+    const allSelected = useMemo(() => {
+        return conflictingInterventions.reduce(
+            (acc, interventionId) => {
+                acc[interventionId] = !conflicts.some(c => {
+                    const resolution = selectedInterventionIds[c.orgUnit.id];
+                    return !resolution || !resolution.includes(interventionId);
+                });
+                return acc;
+            },
+            {} as { [interventionId: number]: boolean },
+        );
+    }, [conflictingInterventions, conflicts, selectedInterventionIds]);
 
-    // const allSelected = useMemo(() => {
-    //     return allInterventions.reduce(
-    //         (acc, interventionId) => {
-    //             acc[interventionId] = !conflictingConflicts.some(c => {
-    //                 const resolution = conflictResolution[c.orgUnit.id];
-    //                 return !resolution || !resolution.includes(interventionId);
-    //             });
-    //             return acc;
-    //         },
-    //         {} as { [interventionId: number]: boolean },
-    //     );
-    // }, [allInterventions, conflicts, conflictResolution]);
-
-    // const toggleAllInterventions = useCallback(
-    //     interventionId => {
-    //         const resolution = conflicts.reduce(
-    //             (acc, conflict) => {
-    //                 const existingResolutionForOrgUnit =
-    //                     conflictResolution[conflict.orgUnit.id] ?? [];
-    //                 acc[conflict.orgUnit.id] = allSelected[interventionId]
-    //                     ? existingResolutionForOrgUnit.filter(
-    //                           id => id !== interventionId,
-    //                       )
-    //                     : [...existingResolutionForOrgUnit, interventionId];
-    //                 return acc;
-    //             },
-    //             {} as { [orgUnitId: number]: number[] },
-    //         );
-
-    //         setConflictResolution(resolution);
-    //     },
-    //     [conflicts, conflictResolution, setConflictResolution, allSelected],
-    // );
+    const toggleAllInterventions = useCallback(
+        interventionId => {
+            const resolution = conflicts.reduce(
+                (acc, conflict) => {
+                    const existingResolutionForOrgUnit =
+                        selectedInterventionIds[conflict.orgUnit.id] ?? [];
+                    acc[conflict.orgUnit.id] = allSelected[interventionId]
+                        ? existingResolutionForOrgUnit.filter(
+                              id => id !== interventionId,
+                          )
+                        : [...existingResolutionForOrgUnit, interventionId];
+                    return acc;
+                },
+                {} as { [orgUnitId: number]: number[] },
+            );
+            handleInterventionSelectionChange(
+                interventionCategory.id,
+                resolution,
+            );
+        },
+        [
+            allSelected,
+            conflicts,
+            selectedInterventionIds,
+            handleInterventionSelectionChange,
+            interventionCategory,
+        ],
+    );
 
     return (
         <Box sx={{ marginBottom: 2 }}>
-            <Typography
-                sx={{ fontSize: '0.75rem', margin: 1, marginBottom: 0.5 }}
-            >
-                {interventionCategory.name}
-            </Typography>
+            <Box sx={styles.actionsContainer}>
+                <Typography sx={styles.categoryName}>
+                    {interventionCategory.name}
+                </Typography>
+                {conflicts.length > 1 &&
+                    conflictingInterventions.map(interventionId => (
+                        <Button
+                            key={interventionId}
+                            variant="text"
+                            onClick={() =>
+                                toggleAllInterventions(interventionId)
+                            }
+                        >
+                            {allSelected[interventionId]
+                                ? formatMessage(MESSAGES.unselectAll)
+                                : formatMessage(MESSAGES.selectAll)}
+                        </Button>
+                    ))}
+            </Box>
             <Divider />
             {conflicts.map((c, index) => (
                 <React.Fragment key={c.orgUnit.id}>
@@ -96,8 +118,7 @@ export const ConflictManagementCategory: FC<Props> = ({
                         onSelectionChange={selectedInterventions =>
                             handleInterventionSelectionChange(
                                 interventionCategory.id,
-                                c.orgUnit.id,
-                                selectedInterventions,
+                                { [c.orgUnit.id]: selectedInterventions },
                             )
                         }
                         selectedInterventionIds={
