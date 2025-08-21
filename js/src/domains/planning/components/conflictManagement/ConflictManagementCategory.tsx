@@ -1,10 +1,11 @@
 import React, { FC } from 'react';
-import { Divider } from '@mui/material';
+import { Box, Divider, Typography } from '@mui/material';
 import { InterventionAssignmentConflict } from '../../libs/intervention-assignment-utils';
+import { InterventionCategory } from '../../types/interventions';
 import { ConflictManagementRow } from './ConflictManagementRow';
 
 type Props = {
-    categoryId: number;
+    interventionCategory: InterventionCategory;
     conflicts: InterventionAssignmentConflict[];
     selectedInterventionIds: { [orgUnitId: number]: number[] };
     handleInterventionSelectionChange: (
@@ -15,7 +16,7 @@ type Props = {
 };
 
 export const ConflictManagementCategory: FC<Props> = ({
-    categoryId,
+    interventionCategory,
     conflicts,
     selectedInterventionIds,
     handleInterventionSelectionChange,
@@ -81,14 +82,20 @@ export const ConflictManagementCategory: FC<Props> = ({
     // );
 
     return (
-        <>
-            {conflicts.map(c => (
+        <Box sx={{ marginBottom: 2 }}>
+            <Typography
+                sx={{ fontSize: '0.75rem', margin: 1, marginBottom: 0.5 }}
+            >
+                {interventionCategory.name}
+            </Typography>
+            <Divider />
+            {conflicts.map((c, index) => (
                 <React.Fragment key={c.orgUnit.id}>
                     <ConflictManagementRow
                         conflict={c}
                         onSelectionChange={selectedInterventions =>
                             handleInterventionSelectionChange(
-                                categoryId,
+                                interventionCategory.id,
                                 c.orgUnit.id,
                                 selectedInterventions,
                             )
@@ -97,9 +104,9 @@ export const ConflictManagementCategory: FC<Props> = ({
                             selectedInterventionIds[c.orgUnit.id] || []
                         }
                     />
-                    <Divider />
+                    {index < conflicts.length - 1 && <Divider />}
                 </React.Fragment>
             ))}
-        </>
+        </Box>
     );
 };

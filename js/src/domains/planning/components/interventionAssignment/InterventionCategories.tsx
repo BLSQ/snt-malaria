@@ -1,11 +1,12 @@
 import React, { FC, useCallback } from 'react';
 import { Grid, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
-import { useGetInterventionCategories } from '../../hooks/useGetInterventionCategories';
-import { Intervention } from '../../types/interventions';
+import { Intervention, InterventionCategory } from '../../types/interventions';
 import { Interventions } from './Interventions';
 
 type Props = {
+    interventionCategories: InterventionCategory[];
+    isLoading?: boolean;
     selectedInterventions: { [categoryId: number]: Intervention };
     setSelectedInterventions: React.Dispatch<
         React.SetStateAction<{ [categoryId: number]: Intervention }>
@@ -21,12 +22,11 @@ const styles: SxStyles = {
 };
 
 export const InterventionCategories: FC<Props> = ({
+    interventionCategories,
+    isLoading = false,
     selectedInterventions,
     setSelectedInterventions,
 }) => {
-    const { data: interventionCategories = [], isLoading } =
-        useGetInterventionCategories();
-
     const toggleIntervention = useCallback(
         (categoryId: number, intervention: Intervention) => {
             setSelectedInterventions((prev = {}) => {

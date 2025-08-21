@@ -6,13 +6,14 @@ import { makeFullModal, SimpleModal, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { InterventionAssignmentConflict } from '../../libs/intervention-assignment-utils';
+import { InterventionCategory } from '../../types/interventions';
 import { ConflictManagementCategory } from './ConflictManagementCategory';
-import { flatten } from 'lodash';
 
 type Props = {
     isOpen: boolean;
     closeDialog: () => void;
     conflicts: InterventionAssignmentConflict[];
+    interventionCategories: InterventionCategory[];
     onCancel: () => void;
     onApply: (conflictResolution: { [orgUnitId: number]: number[] }) => void;
 };
@@ -84,12 +85,21 @@ const ConflictManagementModal: FC<Props> = ({
     isOpen = false,
     closeDialog,
     conflicts,
+    interventionCategories,
     onApply,
 }) => {
     const { formatMessage } = useSafeIntl();
     const [conflictResolution, setConflictResolution] = useState<{
         [categoryId: number]: { [orgUnitId: number]: number[] };
     }>({});
+
+    const categories = useMemo(() => {
+        const map = new Map<number, InterventionCategory>();
+        interventionCategories.forEach(category => {
+            map.set(category.id, category);
+        });
+        return map;
+    }, [interventionCategories]);
 
     const conflictingConflicts = useMemo(() => {
         return conflicts.filter(conflict => conflict.isConflicting);
@@ -145,6 +155,13 @@ const ConflictManagementModal: FC<Props> = ({
         onApply(resolution);
     }, [conflicts, conflictResolution, onApply]);
 
+    const getInterventionCategoryOrDefault = categoryId => {
+        return (
+            categories.get(categoryId) ??
+            ({ id: categoryId } as InterventionCategory)
+        );
+    };
+
     const Buttons = useCallback(() => {
         // TODO Handle disabled of the button.
         return (
@@ -193,11 +210,12 @@ const ConflictManagementModal: FC<Props> = ({
                     </Button>
                 ))} */}
             </Box>
-            <Divider />
             {Object.entries(categoryConflicts).map(([categoryId, conflict]) => (
                 <ConflictManagementCategory
                     key={categoryId}
-                    categoryId={Number(categoryId)}
+                    interventionCategory={getInterventionCategoryOrDefault(
+                        Number(categoryId),
+                    )}
                     conflicts={conflict}
                     handleInterventionSelectionChange={
                         handleInterventionSelectionChange

@@ -8,16 +8,19 @@ export type InterventionAssignmentConflict = {
     isConflicting: boolean;
 };
 
-const createConflict = (orgUnitId: string, interventionCategory: number) => ({
-    orgUnit: { id: Number(orgUnitId) } as OrgUnit,
+const createConflict = (orgUnit: OrgUnit, interventionCategory: number) => ({
+    orgUnit,
     categoryId: interventionCategory,
     interventions: [],
     isConflicting: false,
 });
 
-const getInitialConflictMap = (existingAssignments: {
-    [orgUnitId: number]: Intervention[];
-}) => {
+const getInitialConflictMap = (
+    orgUnitIdValueMap: Map<number, OrgUnit>,
+    existingAssignments: {
+        [orgUnitId: number]: Intervention[];
+    },
+) => {
     const conflictMap: {
         [key: string]: InterventionAssignmentConflict;
     } = {};
@@ -27,7 +30,8 @@ const getInitialConflictMap = (existingAssignments: {
                 const key = `${orgUnitId}_${intervention.intervention_category}`;
                 if (!conflictMap[key]) {
                     conflictMap[key] = createConflict(
-                        orgUnitId,
+                        orgUnitIdValueMap.get(Number(orgUnitId)) ??
+                            ({ id: Number(orgUnitId) } as OrgUnit),
                         intervention.intervention_category,
                     );
                 }
@@ -46,12 +50,16 @@ const getInitialConflictMap = (existingAssignments: {
  * Note: interventions parameter should contains all interventions we want to add, conflict detection will be based on that list.
  */
 export const getConflictingAssignments = (
+    orgUnits: OrgUnit[],
     orgUnitAssignments: { [orgUnitId: number]: Intervention[] },
     existingAssignments: { [orgUnitId: number]: Intervention[] },
 ): InterventionAssignmentConflict[] => {
+    const orgUnitIdValueMap = new Map<number, OrgUnit>();
+    orgUnits.forEach(ou => orgUnitIdValueMap.set(ou.id, ou));
+
     const conflictMap: {
         [key: string]: InterventionAssignmentConflict;
-    } = getInitialConflictMap(existingAssignments);
+    } = getInitialConflictMap(orgUnitIdValueMap, existingAssignments);
 
     // Add new assignments, merge interventions, and set isConflicting if more than one intervention in the same category
     Object.entries(orgUnitAssignments).forEach(([orgUnitId, interventions]) => {
@@ -59,7 +67,8 @@ export const getConflictingAssignments = (
             const key = `${orgUnitId}_${intervention.intervention_category}`;
             if (!conflictMap[key]) {
                 conflictMap[key] = createConflict(
-                    orgUnitId,
+                    orgUnitIdValueMap.get(Number(orgUnitId)) ??
+                        ({ id: Number(orgUnitId) } as OrgUnit),
                     intervention.intervention_category,
                 );
             }

@@ -9,7 +9,11 @@ import {
     getConflictingAssignments,
     InterventionAssignmentConflict,
 } from '../../libs/intervention-assignment-utils';
-import { Intervention, InterventionPlan } from '../../types/interventions';
+import {
+    Intervention,
+    InterventionCategory,
+    InterventionPlan,
+} from '../../types/interventions';
 import { ConflictManagementModal } from '../conflictManagement/ConflictManagementModal';
 import { containerBoxStyles } from '../styles';
 
@@ -21,6 +25,7 @@ type Props = {
         React.SetStateAction<{ [categoryId: number]: Intervention }>
     >;
     interventionPlans: InterventionPlan[];
+    interventionCategories: InterventionCategory[];
 };
 
 export const InterventionHeader: FC<Props> = ({
@@ -29,6 +34,7 @@ export const InterventionHeader: FC<Props> = ({
     selectedInterventions,
     interventionPlans,
     setSelectedInterventions,
+    interventionCategories,
 }) => {
     const [conflicts, setConflicts] = useState<
         InterventionAssignmentConflict[]
@@ -130,6 +136,7 @@ export const InterventionHeader: FC<Props> = ({
         const ouAssignments = getOrgUnitAssignments();
         const ouExistingAssignments = getExistingOrgUnitAssignments();
         const conflictingAssignments = getConflictingAssignments(
+            selectedOrgUnits,
             ouAssignments,
             ouExistingAssignments,
         );
@@ -151,8 +158,6 @@ export const InterventionHeader: FC<Props> = ({
     const applyConflictResolution = async (conflictResolution: {
         [orgUnitId: number]: number[];
     }) => {
-        // TODO Make sure it also contains non conflicting assignments
-        // TODO Should we add all existing assignments to the conflict resolution?
         await createAssignments(conflictResolution);
     };
 
@@ -175,6 +180,7 @@ export const InterventionHeader: FC<Props> = ({
                 </Typography>
             </Stack>
             <ConflictManagementModal
+                interventionCategories={interventionCategories}
                 iconProps={{
                     disabled: !canApplyInterventions,
                     beforeOnClick: checkForConflict,
