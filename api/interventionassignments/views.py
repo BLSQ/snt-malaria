@@ -1,6 +1,7 @@
 from collections import defaultdict
 from decimal import Decimal
 
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -46,27 +47,28 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         created_by = request.user
         # Create InterventionAssignment objects
         assignments = []
-        for ou_interventions in valid_orgunit_interventions:
-            org_unit, interventions = ou_interventions["org_unit"], ou_interventions["interventions"]
-            # Delete existing assignments
-            InterventionAssignment.objects.filter(scenario=scenario, org_unit=org_unit).delete()
-            for intervention in interventions:
-                assignment = InterventionAssignment(
-                    scenario=scenario,
-                    org_unit=org_unit,
-                    intervention=intervention,
-                    created_by=created_by,
-                )
-                assignments.append(assignment)
+        with transaction.atomic():
+            for ou_interventions in valid_orgunit_interventions:
+                org_unit, interventions = ou_interventions["org_unit"], ou_interventions["interventions"]
+                # Delete existing assignments
+                InterventionAssignment.objects.filter(scenario=scenario, org_unit=org_unit).delete()
+                for intervention in interventions:
+                    assignment = InterventionAssignment(
+                        scenario=scenario,
+                        org_unit=org_unit,
+                        intervention=intervention,
+                        created_by=created_by,
+                    )
+                    assignments.append(assignment)
 
-        # Bulk create
-        if assignments:
-            InterventionAssignment.objects.bulk_create(assignments)
+            # Bulk create
+            if assignments:
+                InterventionAssignment.objects.bulk_create(assignments)
 
-        return Response(
-            {"message": "intervention assignments created successfully."},
-            status=status.HTTP_201_CREATED,
-        )
+            return Response(
+                {"message": "intervention assignments created successfully."},
+                status=status.HTTP_201_CREATED,
+            )
 
     def destroy(self, _request, pk=None):
         assignment = get_object_or_404(InterventionAssignment, id=pk)
