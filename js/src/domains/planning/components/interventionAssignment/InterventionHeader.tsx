@@ -104,9 +104,12 @@ export const InterventionHeader: FC<Props> = ({
                 ).map(intervention => intervention.id);
 
                 acc[orgUnit.id] = [
-                    ...acc[orgUnit.id],
-                    ...existingAssignmentIds,
+                    ...new Set<number>([
+                        ...acc[orgUnit.id],
+                        ...existingAssignmentIds,
+                    ]),
                 ];
+
                 return acc;
             },
             {} as { [orgUnitId: number]: number[] },
