@@ -70,13 +70,13 @@ Multi tenant account and real values
 For BFA:
 
 ```bash
-docker compose run iaso manage set_up_snt_account --account_config_name BFA
+docker compose run iaso manage setuper --account_config_name BFA
 ```
 
 For RDC:
 
 ```bash
-docker compose run iaso manage set_up_snt_account --account_config_name BFA
+docker compose run iaso manage setuper --account_config_name BFA
 ```
 
 8. Using the credentials you just received, you should now be able to log in and create a first scenario.
