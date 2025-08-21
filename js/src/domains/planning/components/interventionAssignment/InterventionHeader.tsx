@@ -3,6 +3,7 @@ import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInpu
 import { Box, Grid, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { noOp } from 'Iaso/utils';
 import { MESSAGES } from '../../../messages';
 import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
 import {
@@ -118,14 +119,18 @@ export const InterventionHeader: FC<Props> = ({
             .map(plan => plan.intervention);
     };
 
-    const createAssignments = async (orgUnitInterventions: {
-        [orgUnitId: number]: number[];
-    }) => {
+    const createAssignments = async (
+        orgUnitInterventions: {
+            [orgUnitId: number]: number[];
+        },
+        closeDialog: () => void,
+    ) => {
         await createInterventionAssignment({
             orgunit_interventions: orgUnitInterventions,
             scenario_id: scenarioId,
         });
 
+        closeDialog();
         formReset();
     };
 
@@ -148,17 +153,11 @@ export const InterventionHeader: FC<Props> = ({
             !conflictingAssignments.some(c => c.isConflicting)
         ) {
             const ouAssignments = getAllOrgUnitAssignments();
-            createAssignments(ouAssignments);
+            createAssignments(ouAssignments, noOp);
             return false;
         }
 
         return true;
-    };
-
-    const applyConflictResolution = async (conflictResolution: {
-        [orgUnitId: number]: number[];
-    }) => {
-        await createAssignments(conflictResolution);
     };
 
     return (
@@ -186,7 +185,7 @@ export const InterventionHeader: FC<Props> = ({
                     beforeOnClick: checkForConflict,
                 }}
                 conflicts={conflicts}
-                onApply={applyConflictResolution}
+                onApply={createAssignments}
             />
         </Grid>
     );

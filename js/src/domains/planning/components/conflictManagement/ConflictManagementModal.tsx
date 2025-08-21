@@ -14,8 +14,10 @@ type Props = {
     closeDialog: () => void;
     conflicts: InterventionAssignmentConflict[];
     interventionCategories: InterventionCategory[];
-    onCancel: () => void;
-    onApply: (conflictResolution: { [orgUnitId: number]: number[] }) => void;
+    onApply: (
+        conflictResolution: { [orgUnitId: number]: number[] },
+        closeDialog: () => void,
+    ) => void;
 };
 
 type ApplyButtonProps = {
@@ -138,7 +140,7 @@ const ConflictManagementModal: FC<Props> = ({
         [setConflictResolution, conflictResolution],
     );
 
-    const applyChanges = useCallback(() => {
+    const applyChanges = useCallback(async () => {
         const resolution = conflicts.reduce(
             (acc, conflict) => {
                 const assignmentsToAdd = conflict.isConflicting
@@ -156,9 +158,8 @@ const ConflictManagementModal: FC<Props> = ({
             {} as { [orgUnitId: number]: number[] },
         );
 
-        onApply(resolution);
-        // Handle error and close on success
-    }, [conflicts, conflictResolution, onApply]);
+        onApply(resolution, closeDialog);
+    }, [conflicts, conflictResolution, onApply, closeDialog]);
 
     const getInterventionCategoryOrDefault = categoryId => {
         return (
