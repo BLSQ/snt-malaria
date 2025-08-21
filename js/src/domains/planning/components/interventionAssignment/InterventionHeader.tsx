@@ -1,42 +1,41 @@
-import React, { FC, useMemo } from 'react';
-import { ArrowForward } from '@mui/icons-material';
+import React, { FC, useMemo, useState } from 'react';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
-import { Box, Button, Grid, Stack, Typography } from '@mui/material';
+import { Box, Grid, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { useQueryClient } from 'react-query';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
+import {
+    getConflictingAssignments,
+    InterventionAssignmentConflict,
+} from '../../libs/intervention-assignment-utils';
+import { Intervention, InterventionPlan } from '../../types/interventions';
+import { ConflictManagementModal } from '../conflictManagement/ConflictManagementModal';
 import { containerBoxStyles } from '../styles';
 
 type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: OrgUnit[];
-    selectedInterventions: { [categoryId: number]: number };
+    selectedInterventions: { [categoryId: number]: Intervention };
     setSelectedInterventions: React.Dispatch<
-        React.SetStateAction<{ [categoryId: number]: number }>
+        React.SetStateAction<{ [categoryId: number]: Intervention }>
     >;
-};
-
-const styles: SxStyles = {
-    applyButton: {
-        fontSize: '0.875rem',
-        textTransform: 'none',
-    },
+    interventionPlans: InterventionPlan[];
 };
 
 export const InterventionHeader: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
     selectedInterventions,
+    interventionPlans,
     setSelectedInterventions,
 }) => {
+    const [conflicts, setConflicts] = useState<
+        InterventionAssignmentConflict[]
+    >([]);
     const { formatMessage } = useSafeIntl();
     const { mutateAsync: createInterventionAssignment } =
         UseCreateInterventionAssignment();
-
-    const queryClient = useQueryClient();
 
     const selectedInterventionValues = useMemo(
         () => Object.values(selectedInterventions).filter(Boolean),
@@ -61,15 +60,44 @@ export const InterventionHeader: FC<Props> = ({
     const handleAssignmentCreation = async () => {
         if (canApplyInterventions) {
             await createInterventionAssignment({
-                intervention_ids: selectedInterventionValues,
+                intervention_ids: selectedInterventionValues.map(
+                    intervention => intervention.id,
+                ),
                 org_unit_ids: selectedOrgUnits.map(orgUnit => orgUnit.id),
                 scenario_id: scenarioId,
             });
-
-            queryClient.invalidateQueries(['interventionAssigments']);
-            queryClient.refetchQueries(['interventionAssignments', scenarioId]);
         }
         formReset();
+    };
+
+    const checkForConflict = () => {
+        const conflictingAssignments = getConflictingAssignments(
+            selectedOrgUnits,
+            selectedInterventions,
+            interventionPlans,
+        );
+
+        setConflicts(conflictingAssignments);
+
+        if (
+            conflictingAssignments.length <= 0 ||
+            !conflictingAssignments.some(c => c.isConflicting)
+        ) {
+            handleAssignmentCreation();
+            return false;
+        }
+
+        return true;
+    };
+
+    const applyConflictResolution = (_conflictResolution: {
+        [orgUnitId: number]: number[];
+    }) => {
+        // TODO Set the request properly.
+        // TODO Need to only apply conflict resolution based on  category
+        // TODO Maybe this needs to change when generating the conflict model.
+
+        handleAssignmentCreation();
     };
 
     return (
@@ -90,16 +118,14 @@ export const InterventionHeader: FC<Props> = ({
                     {formatMessage(MESSAGES.interventionTitle)}
                 </Typography>
             </Stack>
-            <Button
-                onClick={() => handleAssignmentCreation()}
-                variant="contained"
-                color="primary"
-                endIcon={<ArrowForward />}
-                sx={styles.applyButton}
-                disabled={!canApplyInterventions}
-            >
-                {formatMessage(MESSAGES.addToPlan)}
-            </Button>
+            <ConflictManagementModal
+                iconProps={{
+                    disabled: !canApplyInterventions,
+                    beforeOnClick: checkForConflict,
+                }}
+                conflicts={conflicts}
+                onApply={applyConflictResolution}
+            />
         </Grid>
     );
 };

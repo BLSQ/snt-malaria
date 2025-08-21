@@ -30,5 +30,11 @@
     "iaso.snt_malaria.interventionAssignment.removeTitle":"Remove this district",
     "iaso.snt_malaria.interventionAssignment.removeMessage":"Do you really want to remove this district from this intervention assignment?",
     "iaso.snt_malaria.label.allInterventions": "All interventions",
-    "iaso.snt_malaria.label.editedOn": "Edited on {date}"
+    "iaso.snt_malaria.label.editedOn": "Edited on {date}",
+    "iaso.snt_malaria.label.resolveConflictTile": "Resolve Conflicts",
+    "iaso.snt_malaria.label.apply": "Apply",
+    "iaso.snt_malaria.label.resolveConflictDesc": "Some districts already have an intervention from the same group.{br} Choose which one to apply, or decide to apply both.",
+    "iaso.snt_malaria.label.selectAll": "Select All",
+    "iaso.snt_malaria.label.unselectAll": "Unselect All",
+    "iaso.snt_malaria.label.clearOrgUnitSelection": "Clear selection"
 }
