@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
 import { Box, Grid, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -60,11 +60,8 @@ export const InterventionHeader: FC<Props> = ({
         selectedOrgUnits.length,
         scenarioId,
     ]);
-    const formReset = () => {
-        setSelectedInterventions({});
-    };
 
-    const getOrgUnitAssignments = () => {
+    const getOrgUnitAssignments = useCallback(() => {
         return selectedOrgUnits.reduce(
             (acc, orgUnit) => {
                 acc[orgUnit.id] = selectedInterventionValues;
@@ -73,9 +70,9 @@ export const InterventionHeader: FC<Props> = ({
             },
             {} as { [orgUnitId: number]: Intervention[] },
         );
-    };
+    }, [selectedOrgUnits, selectedInterventionValues]);
 
-    const getExistingOrgUnitAssignments = () => {
+    const getExistingOrgUnitAssignments = useCallback(() => {
         return interventionPlans.reduce(
             (acc, ip) => {
                 ip.org_units.forEach(ou => {
@@ -88,10 +85,19 @@ export const InterventionHeader: FC<Props> = ({
             },
             {} as { [orgUnitId: number]: Intervention[] },
         );
-    };
+    }, [interventionPlans]);
+
+    const getExistingAssignments = useCallback(
+        (orgUnitId: number) => {
+            return interventionPlans
+                .filter(plan => plan.org_units.some(ou => ou.id === orgUnitId))
+                .map(plan => plan.intervention);
+        },
+        [interventionPlans],
+    );
 
     // Returns org unit assignments containing new and existing assignments
-    const getAllOrgUnitAssignments = () => {
+    const getAllOrgUnitAssignments = useCallback(() => {
         return selectedOrgUnits.reduce(
             (acc, orgUnit) => {
                 acc[orgUnit.id] = selectedInterventionValues.map(
@@ -114,30 +120,27 @@ export const InterventionHeader: FC<Props> = ({
             },
             {} as { [orgUnitId: number]: number[] },
         );
-    };
+    }, [selectedOrgUnits, selectedInterventionValues, getExistingAssignments]);
 
-    const getExistingAssignments = (orgUnitId: number) => {
-        return interventionPlans
-            .filter(plan => plan.org_units.some(ou => ou.id === orgUnitId))
-            .map(plan => plan.intervention);
-    };
+    const createAssignments = useCallback(
+        async (
+            orgUnitInterventions: {
+                [orgUnitId: number]: number[];
+            },
+            closeDialog: () => void,
+        ) => {
+            await createInterventionAssignment({
+                orgunit_interventions: orgUnitInterventions,
+                scenario_id: scenarioId,
+            });
 
-    const createAssignments = async (
-        orgUnitInterventions: {
-            [orgUnitId: number]: number[];
+            closeDialog();
+            setSelectedInterventions({});
         },
-        closeDialog: () => void,
-    ) => {
-        await createInterventionAssignment({
-            orgunit_interventions: orgUnitInterventions,
-            scenario_id: scenarioId,
-        });
+        [createInterventionAssignment, setSelectedInterventions, scenarioId],
+    );
 
-        closeDialog();
-        formReset();
-    };
-
-    const checkForConflict = () => {
+    const checkForConflict = useCallback(() => {
         if (!canApplyInterventions) {
             return false;
         }
@@ -161,7 +164,14 @@ export const InterventionHeader: FC<Props> = ({
         }
 
         return true;
-    };
+    }, [
+        getAllOrgUnitAssignments,
+        getOrgUnitAssignments,
+        canApplyInterventions,
+        createAssignments,
+        selectedOrgUnits,
+        getExistingOrgUnitAssignments,
+    ]);
 
     return (
         <Grid

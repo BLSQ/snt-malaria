@@ -175,7 +175,7 @@ const ConflictManagementModal: FC<Props> = ({
                     {formatMessage(MESSAGES.cancel)}
                 </Button>
                 <Button
-                    onClick={() => applyChanges()}
+                    onClick={applyChanges}
                     color="primary"
                     variant="contained"
                     disabled={hasUnresolvedConflicts}
