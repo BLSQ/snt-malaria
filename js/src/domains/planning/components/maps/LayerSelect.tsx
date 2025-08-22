@@ -83,7 +83,7 @@ export const LayerSelect: FC<Props> = ({
                     {formatMessage(MESSAGES.addMap)}
                 </MenuItem>
                 {metricCategories?.map(category => [
-                    <ListSubheader>
+                    <ListSubheader key={category.name}>
                         <Typography variant="overline" sx={styles.category}>
                             {category.name}
                         </Typography>
