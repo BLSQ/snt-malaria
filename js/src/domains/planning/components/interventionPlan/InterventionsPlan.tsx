@@ -24,14 +24,22 @@ export const InterventionsPlan: FC<Props> = ({
     const [selectedInterventionPlan, setSelectedInterventionPlan] =
         useState<InterventionPlan | null>(null);
 
+    const [isRemovingOrgUnits, setIsRemovingOrgUnits] =
+        useState<boolean>(false);
+
     const { mutateAsync: removeManyOrgUnitsFromPlan } =
         UseRemoveManyOrgUnitsFromInterventionPlan();
 
     const onRemoveOrgUnitsFromPlan = async (
         interventionAssignmentIds: number[],
+        shouldCloseDrawer: boolean,
     ) => {
+        setIsRemovingOrgUnits(true);
         await removeManyOrgUnitsFromPlan(interventionAssignmentIds);
-        setSelectedInterventionPlan(null);
+        setIsRemovingOrgUnits(false);
+        if (shouldCloseDrawer) {
+            onCloseInterventionPlanDetails();
+        }
     };
 
     const onShowInterventionPlanDetails = (
@@ -105,6 +113,7 @@ export const InterventionsPlan: FC<Props> = ({
                 interventionPlan={selectedInterventionPlan}
                 removeOrgUnitsFromPlan={onRemoveOrgUnitsFromPlan}
                 closeInterventionPlanDetails={onCloseInterventionPlanDetails}
+                isRemovingOrgUnits={isRemovingOrgUnits}
             />
         </Box>
     );

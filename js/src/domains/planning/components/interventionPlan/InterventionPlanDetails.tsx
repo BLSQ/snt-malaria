@@ -1,8 +1,9 @@
-import React, { FC, useCallback, useMemo } from 'react';
+import React, { FC, useCallback, useEffect, useMemo } from 'react';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SearchIcon from '@mui/icons-material/Search';
 import {
     Box,
+    Button,
     Divider,
     Drawer,
     IconButton,
@@ -10,8 +11,8 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
-import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import DeleteDialog from 'Iaso/components/dialogs/DeleteDialogComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { InterventionPlan } from '../../types/interventions';
@@ -74,17 +75,24 @@ const styles: SxStyles = {
 
 type Props = {
     interventionPlan: InterventionPlan | null;
-    removeOrgUnitsFromPlan: (ordUnitIds: number[]) => void;
+    removeOrgUnitsFromPlan: (
+        ordUnitIds: number[],
+        shouldCloseModal: boolean,
+    ) => void;
     closeInterventionPlanDetails: () => void;
+    isRemovingOrgUnits: boolean;
 };
 
 export const InterventionPlanDetails: FC<Props> = ({
     interventionPlan,
     removeOrgUnitsFromPlan,
     closeInterventionPlanDetails,
+    isRemovingOrgUnits = true,
 }) => {
     const { formatMessage } = useSafeIntl();
     const [search, setSearch] = React.useState<string>('');
+    const [isLoading, setIsLoading] = React.useState<boolean>(false);
+    const [isOpen, setIsOpen] = React.useState<boolean>(false);
     const onSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         event.preventDefault();
         setSearch(event.target.value);
@@ -93,23 +101,36 @@ export const InterventionPlanDetails: FC<Props> = ({
     const onCloseInterventionPlanDetails = useCallback(() => {
         setSearch('');
         closeInterventionPlanDetails();
+        setIsLoading(false);
+        setIsOpen(false);
     }, [closeInterventionPlanDetails]);
 
-    const onRemoveAllOrgUnitsFromPlan = useCallback(
-        () =>
-            removeOrgUnitsFromPlan(
-                interventionPlan?.org_units.map(
-                    o => o.intervention_assignment_id,
-                ) ?? [],
-            ),
-        [interventionPlan, removeOrgUnitsFromPlan],
-    );
+    useEffect(() => {
+        if (interventionPlan) setIsOpen(true);
+        else if (!interventionPlan && isOpen) onCloseInterventionPlanDetails();
+    }, [interventionPlan, onCloseInterventionPlanDetails, isOpen]);
+
+    const onRemoveAllOrgUnitsFromPlan = useCallback(() => {
+        if (!interventionPlan || interventionPlan.org_units.length === 0) {
+            return;
+        }
+
+        removeOrgUnitsFromPlan(
+            interventionPlan.org_units.map(o => o.intervention_assignment_id),
+            true,
+        );
+
+        setIsLoading(true);
+    }, [interventionPlan, removeOrgUnitsFromPlan]);
 
     const onRemoveOrgUnitFromPlan = useCallback(
         (interventionAssignmentId: number) => {
-            removeOrgUnitsFromPlan([interventionAssignmentId]);
+            removeOrgUnitsFromPlan(
+                [interventionAssignmentId],
+                interventionPlan?.org_units.length === 1,
+            );
         },
-        [removeOrgUnitsFromPlan],
+        [removeOrgUnitsFromPlan, interventionPlan],
     );
 
     const filteredData = useMemo(() => {
@@ -124,10 +145,11 @@ export const InterventionPlanDetails: FC<Props> = ({
     return (
         <Drawer
             anchor="right"
-            open={interventionPlan !== null}
+            open={isOpen}
             onClose={onCloseInterventionPlanDetails}
             sx={styles.drawer}
         >
+            {isLoading && <LoadingSpinner />}
             <Box sx={styles.header}>
                 <IconButton
                     onClick={onCloseInterventionPlanDetails}
@@ -151,6 +173,7 @@ export const InterventionPlanDetails: FC<Props> = ({
                         placeholder={formatMessage(MESSAGES.searchPlaceholder)}
                         value={search}
                         onChange={onSearch}
+                        disabled={isRemovingOrgUnits}
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
@@ -165,27 +188,25 @@ export const InterventionPlanDetails: FC<Props> = ({
                         {interventionPlan?.org_units.length}{' '}
                         {formatMessage(MESSAGES.orgUnitDistrict)}
                     </Typography>
-                    <DeleteModal
-                        type="button"
+                    <DeleteDialog
                         onConfirm={onRemoveAllOrgUnitsFromPlan}
                         titleMessage={
                             MESSAGES.interventionAssignmentRemoveAllTitle
                         }
-                        iconProps={{
+                        Trigger={Button}
+                        triggerProps={{
                             variant: 'text',
                             size: 'small',
-                            message: formatMessage(
+                            disabled: isRemovingOrgUnits,
+                            children: formatMessage(
                                 MESSAGES.interventionAssignmentRemoveAllButton,
                             ),
                             sx: { textTransform: 'none' },
                         }}
-                    >
-                        <Typography>
-                            {formatMessage(
-                                MESSAGES.interventionAssignmentRemoveAllMessage,
-                            )}
-                        </Typography>
-                    </DeleteModal>
+                        message={
+                            MESSAGES.interventionAssignmentRemoveAllMessage
+                        }
+                    />
                 </Box>
                 <Box sx={styles.list}>
                     {filteredData.map(orgUnit => (
@@ -193,8 +214,8 @@ export const InterventionPlanDetails: FC<Props> = ({
                             <Typography key={orgUnit.id}>
                                 {orgUnit.name}
                             </Typography>
-                            <DeleteModal
-                                type="icon"
+                            <DeleteDialog
+                                disabled={isRemovingOrgUnits}
                                 onConfirm={() =>
                                     onRemoveOrgUnitFromPlan(
                                         orgUnit.intervention_assignment_id,
@@ -203,13 +224,10 @@ export const InterventionPlanDetails: FC<Props> = ({
                                 titleMessage={
                                     MESSAGES.interventionAssignmentRemoveTitle
                                 }
-                            >
-                                <Typography>
-                                    {formatMessage(
-                                        MESSAGES.interventionAssignmentRemoveMessage,
-                                    )}
-                                </Typography>
-                            </DeleteModal>
+                                message={
+                                    MESSAGES.interventionAssignmentRemoveMessage
+                                }
+                            />
                         </Box>
                     ))}
                 </Box>
