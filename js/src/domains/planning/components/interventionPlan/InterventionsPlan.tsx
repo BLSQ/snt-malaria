@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { UseRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
@@ -21,11 +21,19 @@ export const InterventionsPlan: FC<Props> = ({
 }) => {
     const [tabValue, setTabValue] = useState<string>('list');
 
-    const [selectedInterventionPlan, setSelectedInterventionPlan] =
-        useState<InterventionPlan | null>(null);
-
     const [isRemovingOrgUnits, setIsRemovingOrgUnits] =
         useState<boolean>(false);
+    const [selectedInterventionId, setSelectedInterventionId] = useState<
+        number | null
+    >(null);
+
+    const selectedInterventionPlan: InterventionPlan | null = useMemo(() => {
+        return (
+            interventionPlans.find(
+                plan => plan.intervention.id === selectedInterventionId,
+            ) || null
+        );
+    }, [interventionPlans, selectedInterventionId]);
 
     const { mutateAsync: removeManyOrgUnitsFromPlan } =
         UseRemoveManyOrgUnitsFromInterventionPlan();
@@ -45,11 +53,11 @@ export const InterventionsPlan: FC<Props> = ({
     const onShowInterventionPlanDetails = (
         interventionPlan: InterventionPlan,
     ) => {
-        setSelectedInterventionPlan(interventionPlan);
+        setSelectedInterventionId(interventionPlan.intervention.id);
     };
 
     const onCloseInterventionPlanDetails = () => {
-        setSelectedInterventionPlan(null);
+        setSelectedInterventionId(null);
     };
 
     return (
