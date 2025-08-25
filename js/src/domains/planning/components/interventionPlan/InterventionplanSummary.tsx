@@ -11,10 +11,14 @@ export type TabValue = 'map' | 'list';
 type Props = {
     setTabValue: Dispatch<SetStateAction<TabValue>>;
     tabValue: TabValue;
+    assignedOrgUnits: number;
+    totalOrgUnits: number;
 };
 export const InterventionPlanSummary: FC<Props> = ({
     setTabValue,
     tabValue,
+    assignedOrgUnits = 0,
+    totalOrgUnits = 0,
 }) => {
     const { formatMessage } = useSafeIntl();
     return (
@@ -41,10 +45,13 @@ export const InterventionPlanSummary: FC<Props> = ({
             <Grid item>
                 <Stack
                     direction="row"
-                    spacing={4}
+                    spacing={2}
                     alignItems="center"
                     sx={{ color: '#1F2B3D99' }}
                 >
+                    <Typography variant="body2">
+                        {assignedOrgUnits} / {totalOrgUnits}
+                    </Typography>
                     <Tabs
                         onChange={(_event, newValue) => setTabValue(newValue)}
                         value={tabValue}
@@ -57,6 +64,9 @@ export const InterventionPlanSummary: FC<Props> = ({
                         <Tab value="map" label={<MapIcon />} />
                         <Tab value="list" label={<TableRowsIcon />} />
                     </Tabs>
+                    <Button variant="contained" color="primary">
+                        {formatMessage(MESSAGES.runInterventionPlanBudget)}
+                    </Button>
                 </Stack>
             </Grid>
         </Grid>

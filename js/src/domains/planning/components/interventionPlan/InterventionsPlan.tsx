@@ -12,12 +12,14 @@ type Props = {
     scenarioId: number | undefined;
     interventionPlans: InterventionPlan[];
     isLoadingPlans: boolean;
+    totalOrgUnitCount: number;
 };
 
 export const InterventionsPlan: FC<Props> = ({
     scenarioId,
     interventionPlans,
     isLoadingPlans,
+    totalOrgUnitCount = 0,
 }) => {
     const [tabValue, setTabValue] = useState<TabValue>('map');
 
@@ -26,6 +28,17 @@ export const InterventionsPlan: FC<Props> = ({
     const [selectedInterventionId, setSelectedInterventionId] = useState<
         number | null
     >(null);
+
+    const assignedOrgUnitCount = useMemo(() => {
+        return interventionPlans.reduce((acc, plan) => {
+            plan.org_units.forEach(orgUnit => {
+                if (!acc.includes(orgUnit.id)) {
+                    acc.push(orgUnit.id);
+                }
+            });
+            return acc;
+        }, [] as number[]).length;
+    }, [interventionPlans]);
 
     const selectedInterventionPlan: InterventionPlan | null = useMemo(() => {
         return (
@@ -75,6 +88,8 @@ export const InterventionsPlan: FC<Props> = ({
                             <InterventionPlanSummary
                                 setTabValue={setTabValue}
                                 tabValue={tabValue}
+                                assignedOrgUnits={assignedOrgUnitCount}
+                                totalOrgUnits={totalOrgUnitCount}
                             />
                         }
                     />
