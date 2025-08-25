@@ -3,15 +3,21 @@ import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import MapIcon from '@mui/icons-material/Map';
 import TableRowsIcon from '@mui/icons-material/TableRows';
 import { TabList } from '@mui/lab';
-import { Box, Grid, Stack, Tab, Typography } from '@mui/material';
+import { Box, Button, Grid, Stack, Tab, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../messages';
 import { containerBoxStyles } from '../styles';
 
 type Props = {
     setTabValue: (tabValue: string) => void;
+    assignedOrgUnits: number;
+    totalOrgUnits: number;
 };
-export const InterventionPlanSummary: FC<Props> = ({ setTabValue }) => {
+export const InterventionPlanSummary: FC<Props> = ({
+    setTabValue,
+    assignedOrgUnits = 0,
+    totalOrgUnits = 0,
+}) => {
     const { formatMessage } = useSafeIntl();
     return (
         <Grid
@@ -37,10 +43,13 @@ export const InterventionPlanSummary: FC<Props> = ({ setTabValue }) => {
             <Grid item>
                 <Stack
                     direction="row"
-                    spacing={4}
+                    spacing={2}
                     alignItems="center"
                     sx={{ color: '#1F2B3D99' }}
                 >
+                    <Typography variant="body2">
+                        {assignedOrgUnits} / {totalOrgUnits}
+                    </Typography>
                     <TabList
                         onChange={(_event, newValue) => setTabValue(newValue)}
                         sx={{
@@ -49,9 +58,20 @@ export const InterventionPlanSummary: FC<Props> = ({ setTabValue }) => {
                             },
                         }}
                     >
-                        <Tab value="list" label={<TableRowsIcon />} />
-                        <Tab value="map" label={<MapIcon />} />
+                        <Tab
+                            value="list"
+                            sx={{ minWidth: 0 }}
+                            label={<TableRowsIcon />}
+                        />
+                        <Tab
+                            value="map"
+                            sx={{ minWidth: 0 }}
+                            label={<MapIcon />}
+                        />
                     </TabList>
+                    <Button variant="contained" color="primary">
+                        {formatMessage(MESSAGES.runInterventionPlanBudget)}
+                    </Button>
                 </Stack>
             </Grid>
         </Grid>

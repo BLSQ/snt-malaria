@@ -7,12 +7,11 @@ on:
             environment:
                 description: Env (staging/prod) or exact env name (e.g. snt-malaria)
                 required: true
-                default: snt-malaria
+                default: snt-malaria-staging
             iaso_ref:
                 description: The branch, tag or SHA from Iaso to use (main by default)
                 required: false
-                # TODO: change default to `main`
-                default: snt-malaria
+                default: main
             slack_channel:
                 description: Slack Channel for notification (snt-iaso-task-force by default)
                 required: false
@@ -83,14 +82,14 @@ jobs:
             - name: Use node.js 20
               uses: actions/setup-node@v2
               with:
-                node-version: '20.13.1'
+                  node-version: '20.13.1'
             - name: upgrade npm
               run: |
-                npm install --global npm@10.5.2
+                  npm install --global npm@10.5.2
             - name: Set up Python 3.9
               uses: actions/setup-python@v1
               with:
-                python-version: 3.9
+                  python-version: 3.9
 
             - name: Setup beanstalk
               # the specification of botocore is due to a deployment problem with 1.21 to remove later
