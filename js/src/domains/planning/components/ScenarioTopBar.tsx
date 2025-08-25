@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { useNavigate } from 'react-router-dom';
-import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
+import DeleteDialog from 'Iaso/components/dialogs/DeleteDialogComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { baseUrls } from '../../../constants/urls';
 
@@ -177,18 +177,14 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                         <CopyAllOutlinedIcon sx={styles.icon} />
                         Duplicate
                     </Button>
-                    <DeleteModal
-                        type="icon"
-                        onConfirm={() => handleDeleteClick()}
+                    <DeleteDialog
+                        onConfirm={handleDeleteClick}
                         titleMessage={formatMessage(
                             MESSAGES.modalDeleteScenarioTitle,
                         )}
-                        iconProps={{ color: 'primary' }}
-                    >
-                        <p>
-                            {formatMessage(MESSAGES.modalDeleteScenarioConfirm)}
-                        </p>
-                    </DeleteModal>
+                        iconColor={'primary'}
+                        message={MESSAGES.modalDeleteScenarioConfirm}
+                    />
                 </Box>
             </Box>
         );
