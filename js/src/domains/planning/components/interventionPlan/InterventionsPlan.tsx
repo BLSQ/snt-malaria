@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { UseRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
@@ -12,17 +12,30 @@ type Props = {
     scenarioId: number | undefined;
     interventionPlans: InterventionPlan[];
     isLoadingPlans: boolean;
+    totalOrgUnitCount: number;
 };
 
 export const InterventionsPlan: FC<Props> = ({
     scenarioId,
     interventionPlans,
     isLoadingPlans,
+    totalOrgUnitCount = 0,
 }) => {
     const [tabValue, setTabValue] = useState<string>('list');
 
     const [selectedInterventionPlan, setSelectedInterventionPlan] =
         useState<InterventionPlan | null>(null);
+
+    const assignedOrgUnitCount = useMemo(() => {
+        return interventionPlans.reduce((acc, plan) => {
+            plan.org_units.forEach(orgUnit => {
+                if (!acc.includes(orgUnit.id)) {
+                    acc.push(orgUnit.id);
+                }
+            });
+            return acc;
+        }, [] as number[]).length;
+    }, [interventionPlans]);
 
     const { mutateAsync: removeManyOrgUnitsFromPlan } =
         UseRemoveManyOrgUnitsFromInterventionPlan();
@@ -58,6 +71,8 @@ export const InterventionsPlan: FC<Props> = ({
                         title={
                             <InterventionPlanSummary
                                 setTabValue={setTabValue}
+                                assignedOrgUnits={assignedOrgUnitCount}
+                                totalOrgUnits={totalOrgUnitCount}
                             />
                         }
                     />
