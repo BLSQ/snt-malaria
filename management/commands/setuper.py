@@ -32,14 +32,12 @@ class Command(BaseCommand):
     }
 
     def add_arguments(self, parser):
-        parser.add_argument("--account_config_name", type=str, required=True)
+        parser.add_argument("--account_config_name", type=str, required=True, choices=self.accounts_config.keys())
         parser.add_argument("--main_username", type=str, default="admin")
 
     def handle(self, *args, **options):
         account_config_name = options["account_config_name"]
         main_username = options["main_username"]
-
-        hash = uuid.uuid4().hex[:6]
 
         account_config = self.accounts_config.get(account_config_name)
         if not account_config:
@@ -67,10 +65,14 @@ class Command(BaseCommand):
                     "is_superuser": True,
                 },
             )
+
             if created:
-                main_user.set_password("admin")
+                password = uuid.uuid4().hex[:8]
+                main_user.set_password(password)
                 main_user.save()
-                self.stdout.write(self.style.SUCCESS(f"Created new main user: {main_username} with password 'admin'"))
+                self.stdout.write(
+                    self.style.SUCCESS(f"Created new main user: {main_username} with password '{password}'")
+                )
             else:
                 self.stdout.write(self.style.SUCCESS(f"Using existing user: {main_username}"))
 
@@ -92,20 +94,22 @@ class Command(BaseCommand):
             )
 
             # Link main user to account
-            tenant_user = TenantUser.objects.create(main_user=main_user, account_user=account_user)
-            profile, _ = Profile.objects.get_or_create(user=tenant_user.account_user, account=account)
+            TenantUser.objects.create(main_user=main_user, account_user=account_user)
+            profile, _ = Profile.objects.get_or_create(user=account_user, account=account)
             self.stdout.write(
                 self.style.SUCCESS(f"Linked main user '{main_user.username}' to account '{account.name}'")
             )
 
             # Create Project
             project = Project.objects.create(name=project_name, account=account, app_id=uuid.uuid4())
-            profile.projects.add(project)
             self.stdout.write(self.style.SUCCESS(f"Created Project: {project.name}"))
 
             # Create DataSource
+
             if DataSource.objects.filter(name=data_source_name).exists():
+                hash = uuid.uuid4().hex[:6]
                 data_source_name = f"{data_source_name}-{hash}"
+
             data_source = DataSource.objects.create(
                 name=data_source_name, description=f"Data source for {account.name}"
             )
@@ -135,14 +139,14 @@ class Command(BaseCommand):
                     source=data_source,
                     version_number=source_version.number,
                     validation_status="VALID",
-                    user=main_user,
+                    user=account_user,
                     description=f"{account.name} organizational units imported from GPKG",
                     task=None,
                 )
+                source_version.orgunit_set.update(validation_status="VALID")
                 self.stdout.write(
                     self.style.SUCCESS(f"Successfully imported {total_imported} organizational units from GPKG")
                 )
-                source_version.orgunit_set.update(validation_status="VALID")
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"Failed to import GPKG file: {e}"))
                 raise
@@ -157,3 +161,14 @@ class Command(BaseCommand):
                     f"./manage.py import_openhexa_metrics --workspace_slug {account_config['dataset_workspaceslug']} --dataset_slug {account_config['dataset_slug']} --account-id {account.id}"
                 )
             )
+            self.stdout.write(self.style.SUCCESS("OR this one if you run under docker"))
+            self.stdout.write(
+                self.style.NOTICE(
+                    f"docker compose run --rm iaso manage import_openhexa_metrics --workspace_slug {account_config['dataset_workspaceslug']} --dataset_slug {account_config['dataset_slug']} --account-id {account.id}"
+                )
+            )
+
+            self.stdout.write(self.style.NOTICE(f"You can now try to login main user: {main_username}"))
+            if "password" in locals():
+                self.stdout.write(self.style.NOTICE(f"And password: {password}"))
+                self.stdout.write(self.style.WARNING("Please change the password after logging in."))

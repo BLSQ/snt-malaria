@@ -76,7 +76,7 @@ docker compose run iaso manage setuper --account_config_name BFA
 For RDC:
 
 ```bash
-docker compose run iaso manage setuper --account_config_name BFA
+docker compose run iaso manage setuper --account_config_name RDC
 ```
 
 8. Using the credentials you just received, you should now be able to log in and create a first scenario.
