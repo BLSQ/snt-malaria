@@ -55,10 +55,28 @@ Or one-line:
 
 `docker compose exec db psql -U postgres -c "create database snt_malaria"`
 
-7. With your containers running, run the script (in a different tab) to set up an initial example account:
+7. Create account and data:
+
+With your containers running, run the script (in a different tab) to set up an initial account
+
+Dummy account and values:
 
 ```bash
 docker compose run iaso manage set_up_burkina_faso_account
+```
+
+Multi tenant account and real values
+
+For BFA:
+
+```bash
+docker compose run iaso manage setuper --account_config_name BFA
+```
+
+For RDC:
+
+```bash
+docker compose run iaso manage setuper --account_config_name RDC
 ```
 
 8. Using the credentials you just received, you should now be able to log in and create a first scenario.
