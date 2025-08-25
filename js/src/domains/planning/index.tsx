@@ -20,12 +20,14 @@ import { InterventionsPlan } from './components/interventionPlan/InterventionsPl
 import { Map } from './components/map';
 import { SideMapList } from './components/maps/SideMapList';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
+import { useGetInterventionAssignments } from './hooks/UseGetInterventionAssignments';
 import {
     useGetMetricCategories,
     useGetMetricOrgUnits,
     useGetMetricValues,
 } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
+import { Intervention } from './types/interventions';
 import { MetricsFilters, MetricType } from './types/metrics';
 
 type PlanningParams = {
@@ -46,7 +48,7 @@ export const Planning: FC = () => {
         useState<OrgUnit[]>([]);
     const [expanded, setExpanded] = useState('interventionsList');
     const [selectedInterventions, setSelectedInterventions] = useState<{
-        [categoryId: number]: number;
+        [categoryId: number]: Intervention;
     }>({});
     // Metric selection
     // v1: display Incidence by default
@@ -54,6 +56,10 @@ export const Planning: FC = () => {
     const [displayedMetric, setDisplayedMetric] = useState<MetricType | null>(
         null,
     );
+
+    const { data: interventionPlans, isLoading: isLoadingPlans } =
+        useGetInterventionAssignments(scenario?.id);
+
     useEffect(() => {
         if (metricCategories && !displayedMetric) {
             setDisplayedMetric(metricCategories[1].items[0]);
@@ -203,6 +209,7 @@ export const Planning: FC = () => {
                                     setSelectedInterventions
                                 }
                                 selectedInterventions={selectedInterventions}
+                                interventionPlans={interventionPlans ?? []}
                             />
                         </PaperContainer>
                     </Grid>
@@ -216,6 +223,8 @@ export const Planning: FC = () => {
                                     setSelectedInterventions
                                 }
                                 selectedInterventions={selectedInterventions}
+                                interventionPlans={interventionPlans ?? []}
+                                isLoadingPlans={isLoadingPlans}
                             />
                         </PaperContainer>
                     </Grid>

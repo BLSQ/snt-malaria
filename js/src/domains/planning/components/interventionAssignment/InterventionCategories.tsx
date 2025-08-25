@@ -1,13 +1,15 @@
 import React, { FC, useCallback } from 'react';
 import { Grid, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
-import { useGetInterventionCategories } from '../../hooks/useGetInterventionCategories';
+import { Intervention, InterventionCategory } from '../../types/interventions';
 import { Interventions } from './Interventions';
 
 type Props = {
-    selectedInterventions: { [categoryId: number]: number };
+    interventionCategories: InterventionCategory[];
+    isLoading?: boolean;
+    selectedInterventions: { [categoryId: number]: Intervention };
     setSelectedInterventions: React.Dispatch<
-        React.SetStateAction<{ [categoryId: number]: number }>
+        React.SetStateAction<{ [categoryId: number]: Intervention }>
     >;
 };
 
@@ -20,19 +22,18 @@ const styles: SxStyles = {
 };
 
 export const InterventionCategories: FC<Props> = ({
+    interventionCategories,
+    isLoading = false,
     selectedInterventions,
     setSelectedInterventions,
 }) => {
-    const { data: interventionCategories = [], isLoading } =
-        useGetInterventionCategories();
-
     const toggleIntervention = useCallback(
-        (categoryId: number, interventionId: number) => {
+        (categoryId: number, intervention: Intervention) => {
             setSelectedInterventions((prev = {}) => {
                 const { [categoryId]: existingValue, ...rest } = prev;
-                return existingValue === interventionId
+                return existingValue?.id === intervention.id
                     ? rest
-                    : { ...rest, [categoryId]: interventionId };
+                    : { ...rest, [categoryId]: intervention };
             });
         },
         [setSelectedInterventions],
@@ -52,7 +53,9 @@ export const InterventionCategories: FC<Props> = ({
                                     <Interventions
                                         interventionCategoryId={id}
                                         interventions={interventions}
-                                        selectedId={selectedInterventions[id]}
+                                        selectedId={
+                                            selectedInterventions[id]?.id
+                                        }
                                         handleSelectIntervention={
                                             toggleIntervention
                                         }

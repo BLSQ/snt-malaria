@@ -9,6 +9,8 @@ import {
 } from '@mui/material';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
+import { useGetInterventionCategories } from '../../hooks/useGetInterventionCategories';
+import { Intervention, InterventionPlan } from '../../types/interventions';
 import { InterventionCategories } from './InterventionCategories';
 import { InterventionHeader } from './InterventionHeader';
 import { SelectedDistricts } from './SelectedDistricts';
@@ -18,9 +20,10 @@ type Props = {
     selectedOrgUnits: OrgUnit[];
     setSelectedOrgUnits: any;
     setSelectedInterventions: React.Dispatch<
-        React.SetStateAction<{ [categoryId: number]: number }>
+        React.SetStateAction<{ [categoryId: number]: Intervention }>
     >;
-    selectedInterventions: { [categoryId: number]: number };
+    selectedInterventions: { [categoryId: number]: Intervention };
+    interventionPlans: InterventionPlan[];
 };
 
 const styles: SxStyles = {
@@ -66,6 +69,7 @@ export const InterventionAssignments: FC<Props> = ({
     setSelectedOrgUnits,
     setSelectedInterventions,
     selectedInterventions,
+    interventionPlans,
 }) => {
     const [selectedDistricts, setSelectedDistricts] = useState<OrgUnit[]>([]);
 
@@ -87,16 +91,21 @@ export const InterventionAssignments: FC<Props> = ({
         [setSelectedOrgUnits],
     );
 
+    const { data: interventionCategories = [], isLoading } =
+        useGetInterventionCategories();
+
     return (
         <Box sx={styles.mainBox}>
             <Card elevation={2} sx={styles.card}>
                 <CardHeader
                     title={
                         <InterventionHeader
+                            interventionCategories={interventionCategories}
                             scenarioId={scenarioId}
                             selectedOrgUnits={selectedDistricts}
                             selectedInterventions={selectedInterventions}
                             setSelectedInterventions={setSelectedInterventions}
+                            interventionPlans={interventionPlans}
                         />
                     }
                 />
@@ -121,6 +130,8 @@ export const InterventionAssignments: FC<Props> = ({
 
                         <Grid item sx={styles.interventionsItem}>
                             <InterventionCategories
+                                interventionCategories={interventionCategories}
+                                isLoading={isLoading}
                                 selectedInterventions={selectedInterventions}
                                 setSelectedInterventions={
                                     setSelectedInterventions

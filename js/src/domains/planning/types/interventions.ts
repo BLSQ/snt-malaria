@@ -11,11 +11,11 @@ export type Intervention = {
     id: number;
     name: string;
     cost_per_unit: number | null;
+    intervention_category: number;
 };
 
 export type InterventionAssignmentCreate = {
-    orgunit_ids: number[];
-    intervention_ids: number[];
+    orgunit_interventions: { [orgUnitId: number]: number[] };
     scenario_id: number;
 };
 

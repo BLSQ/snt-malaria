@@ -1,42 +1,48 @@
-import React, { FC, useMemo } from 'react';
-import { ArrowForward } from '@mui/icons-material';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
-import { Box, Button, Grid, Stack, Typography } from '@mui/material';
+import { Box, Grid, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { useQueryClient } from 'react-query';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { SxStyles } from 'Iaso/types/general';
+import { noOp } from 'Iaso/utils';
 import { MESSAGES } from '../../../messages';
 import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
+import {
+    getConflictingAssignments,
+    InterventionAssignmentConflict,
+} from '../../libs/intervention-assignment-utils';
+import {
+    Intervention,
+    InterventionCategory,
+    InterventionPlan,
+} from '../../types/interventions';
+import { ConflictManagementModal } from '../conflictManagement/ConflictManagementModal';
 import { containerBoxStyles } from '../styles';
 
 type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: OrgUnit[];
-    selectedInterventions: { [categoryId: number]: number };
+    selectedInterventions: { [categoryId: number]: Intervention };
     setSelectedInterventions: React.Dispatch<
-        React.SetStateAction<{ [categoryId: number]: number }>
+        React.SetStateAction<{ [categoryId: number]: Intervention }>
     >;
-};
-
-const styles: SxStyles = {
-    applyButton: {
-        fontSize: '0.875rem',
-        textTransform: 'none',
-    },
+    interventionPlans: InterventionPlan[];
+    interventionCategories: InterventionCategory[];
 };
 
 export const InterventionHeader: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
     selectedInterventions,
+    interventionPlans,
     setSelectedInterventions,
+    interventionCategories,
 }) => {
+    const [conflicts, setConflicts] = useState<
+        InterventionAssignmentConflict[]
+    >([]);
     const { formatMessage } = useSafeIntl();
     const { mutateAsync: createInterventionAssignment } =
         UseCreateInterventionAssignment();
-
-    const queryClient = useQueryClient();
 
     const selectedInterventionValues = useMemo(
         () => Object.values(selectedInterventions).filter(Boolean),
@@ -54,23 +60,118 @@ export const InterventionHeader: FC<Props> = ({
         selectedOrgUnits.length,
         scenarioId,
     ]);
-    const formReset = () => {
-        setSelectedInterventions({});
-    };
 
-    const handleAssignmentCreation = async () => {
-        if (canApplyInterventions) {
+    const getOrgUnitAssignments = useCallback(() => {
+        return selectedOrgUnits.reduce(
+            (acc, orgUnit) => {
+                acc[orgUnit.id] = selectedInterventionValues;
+
+                return acc;
+            },
+            {} as { [orgUnitId: number]: Intervention[] },
+        );
+    }, [selectedOrgUnits, selectedInterventionValues]);
+
+    const getExistingOrgUnitAssignments = useCallback(() => {
+        return interventionPlans.reduce(
+            (acc, ip) => {
+                ip.org_units.forEach(ou => {
+                    if (!acc[ou.id]) {
+                        acc[ou.id] = [];
+                    }
+                    acc[ou.id].push(ip.intervention);
+                });
+                return acc;
+            },
+            {} as { [orgUnitId: number]: Intervention[] },
+        );
+    }, [interventionPlans]);
+
+    const getExistingAssignments = useCallback(
+        (orgUnitId: number) => {
+            return interventionPlans
+                .filter(plan => plan.org_units.some(ou => ou.id === orgUnitId))
+                .map(plan => plan.intervention);
+        },
+        [interventionPlans],
+    );
+
+    // Returns org unit assignments containing new and existing assignments
+    const getAllOrgUnitAssignments = useCallback(() => {
+        return selectedOrgUnits.reduce(
+            (acc, orgUnit) => {
+                acc[orgUnit.id] = selectedInterventionValues.map(
+                    intervention => intervention.id,
+                );
+
+                // We also need existing assignment here, as we do a full replacement
+                const existingAssignmentIds = getExistingAssignments(
+                    orgUnit.id,
+                ).map(intervention => intervention.id);
+
+                acc[orgUnit.id] = [
+                    ...new Set<number>([
+                        ...acc[orgUnit.id],
+                        ...existingAssignmentIds,
+                    ]),
+                ];
+
+                return acc;
+            },
+            {} as { [orgUnitId: number]: number[] },
+        );
+    }, [selectedOrgUnits, selectedInterventionValues, getExistingAssignments]);
+
+    const createAssignments = useCallback(
+        async (
+            orgUnitInterventions: {
+                [orgUnitId: number]: number[];
+            },
+            closeDialog: () => void,
+        ) => {
             await createInterventionAssignment({
-                intervention_ids: selectedInterventionValues,
-                org_unit_ids: selectedOrgUnits.map(orgUnit => orgUnit.id),
+                orgunit_interventions: orgUnitInterventions,
                 scenario_id: scenarioId,
             });
 
-            queryClient.invalidateQueries(['interventionAssigments']);
-            queryClient.refetchQueries(['interventionAssignments', scenarioId]);
+            closeDialog();
+            setSelectedInterventions({});
+        },
+        [createInterventionAssignment, setSelectedInterventions, scenarioId],
+    );
+
+    const checkForConflict = useCallback(() => {
+        if (!canApplyInterventions) {
+            return false;
         }
-        formReset();
-    };
+        const ouAssignments = getOrgUnitAssignments();
+        const ouExistingAssignments = getExistingOrgUnitAssignments();
+        const conflictingAssignments = getConflictingAssignments(
+            selectedOrgUnits,
+            ouAssignments,
+            ouExistingAssignments,
+        );
+
+        setConflicts(conflictingAssignments);
+
+        if (
+            conflictingAssignments.length <= 0 ||
+            !conflictingAssignments.some(c => c.isConflicting)
+        ) {
+            const ouAssignments = getAllOrgUnitAssignments();
+            createAssignments(ouAssignments, noOp);
+            return false;
+        }
+
+        return true;
+    }, [
+        getAllOrgUnitAssignments,
+        getOrgUnitAssignments,
+        canApplyInterventions,
+        createAssignments,
+        selectedOrgUnits,
+        getExistingOrgUnitAssignments,
+    ]);
 
     return (
         <Grid
@@ -90,16 +191,15 @@ export const InterventionHeader: FC<Props> = ({
                     {formatMessage(MESSAGES.interventionTitle)}
                 </Typography>
             </Stack>
-            <Button
-                onClick={() => handleAssignmentCreation()}
-                variant="contained"
-                color="primary"
-                endIcon={<ArrowForward />}
-                sx={styles.applyButton}
-                disabled={!canApplyInterventions}
-            >
-                {formatMessage(MESSAGES.addToPlan)}
-            </Button>
+            <ConflictManagementModal
+                interventionCategories={interventionCategories}
+                iconProps={{
+                    disabled: !canApplyInterventions,
+                    beforeOnClick: checkForConflict,
+                }}
+                conflicts={conflicts}
+                onApply={createAssignments}
+            />
         </Grid>
     );
 };

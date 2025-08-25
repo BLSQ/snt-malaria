@@ -1,5 +1,6 @@
 import React, { FC } from 'react';
 import { Typography, Grid } from '@mui/material';
+import { Intervention } from '../../types/interventions';
 import { containerBoxStyles } from '../styles';
 
 const styles = {
@@ -31,11 +32,11 @@ const styles = {
 
 type Props = {
     interventionCategoryId: number;
-    interventions: { id: number; name: string }[];
+    interventions: Intervention[];
     selectedId: number | null;
     handleSelectIntervention: (
         categoryId: number,
-        interventionId: number,
+        intervention: Intervention,
     ) => void;
 };
 export const Interventions: FC<Props> = ({
@@ -44,8 +45,8 @@ export const Interventions: FC<Props> = ({
     selectedId,
     handleSelectIntervention,
 }) => {
-    const selectIntervention = (id: number) => {
-        handleSelectIntervention(interventionCategoryId, id);
+    const selectIntervention = (intervention: Intervention) => {
+        handleSelectIntervention(interventionCategoryId, intervention);
     };
 
     return (
@@ -62,7 +63,7 @@ export const Interventions: FC<Props> = ({
                     <Grid
                         key={intervention.id}
                         padding={1}
-                        onClick={() => selectIntervention(intervention.id)}
+                        onClick={() => selectIntervention(intervention)}
                         sx={styles?.interventionGridStyle?.(
                             isSelectedIntervention,
                         )}
