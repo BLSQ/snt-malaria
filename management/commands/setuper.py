@@ -1,3 +1,4 @@
+import os
 import uuid
 
 from django.contrib.auth.models import User
@@ -17,7 +18,7 @@ class Command(BaseCommand):
             "account_name": "Democratic Republic Of The Congo",
             "project_name": "DRC",
             "data_source_name": "RDC",
-            "gpkg_path": "plugins/snt_malaria/management/commands/fixtures/RDC-org-units.gpkg",
+            "gpkg_path": os.path.join(os.path.dirname(__file__), "fixtures", "RDC-org-units.gpkg"),
             "dataset_slug": "snt-results",
             "dataset_workspaceslug": "drc-snt-data-pre-processing",
         },
@@ -25,7 +26,7 @@ class Command(BaseCommand):
             "account_name": "Burkina Faso",
             "project_name": "BFA",
             "data_source_name": "BFA",
-            "gpkg_path": "plugins/snt_malaria/management/commands/fixtures/Burkina-Faso-org-units.gpkg",
+            "gpkg_path": os.path.join(os.path.dirname(__file__), "fixtures", "Burkina-Faso-org-units.gpkg"),
             "dataset_slug": "snt-results",
             "dataset_workspaceslug": "bfa-snt-process",
         },
