@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
 import { Grid } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
 import { succesfullSnackBar } from 'Iaso/constants/snackBars';
@@ -39,7 +39,7 @@ export const Planning: FC = () => {
         baseUrls.planning,
     ) as unknown as PlanningParams;
     const { data: scenario } = useGetScenario(params.scenarioId);
-    const { data: orgUnits } = useGetOrgUnits();
+    const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits();
     const { formatMessage } = useSafeIntl();
 
     const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
@@ -156,6 +156,7 @@ export const Planning: FC = () => {
 
     return (
         <>
+            {isLoadingOrgUnits && <LoadingSpinner />}
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
             <PageContainer>
                 {scenario && <ScenarioTopBar scenario={scenario} />}
