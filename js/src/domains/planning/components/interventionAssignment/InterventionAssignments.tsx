@@ -7,8 +7,10 @@ import {
     Divider,
     Grid,
 } from '@mui/material';
+import { LoadingSpinner } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
+import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
 import { useGetInterventionCategories } from '../../hooks/useGetInterventionCategories';
 import { Intervention, InterventionPlan } from '../../types/interventions';
 import { InterventionCategories } from './InterventionCategories';
@@ -31,6 +33,7 @@ const styles: SxStyles = {
         borderRadius: theme => theme.spacing(2),
         overflow: 'hidden',
         height: '493px',
+        position: 'relative',
     },
     card: { height: '100%', display: 'flex', flexDirection: 'column' },
     cardContent: {
@@ -94,9 +97,15 @@ export const InterventionAssignments: FC<Props> = ({
     const { data: interventionCategories = [], isLoading } =
         useGetInterventionCategories();
 
+    const {
+        mutateAsync: createInterventionAssignment,
+        isLoading: isCreatingAssignment,
+    } = UseCreateInterventionAssignment();
+
     return (
         <Box sx={styles.mainBox}>
             <Card elevation={2} sx={styles.card}>
+                {isCreatingAssignment && <LoadingSpinner absolute />}
                 <CardHeader
                     title={
                         <InterventionHeader
@@ -106,6 +115,9 @@ export const InterventionAssignments: FC<Props> = ({
                             selectedInterventions={selectedInterventions}
                             setSelectedInterventions={setSelectedInterventions}
                             interventionPlans={interventionPlans}
+                            onCreateInterventionAssignments={
+                                createInterventionAssignment
+                            }
                         />
                     }
                 />

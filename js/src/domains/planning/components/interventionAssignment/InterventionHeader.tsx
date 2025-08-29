@@ -5,7 +5,6 @@ import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { noOp } from 'Iaso/utils';
 import { MESSAGES } from '../../../messages';
-import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
 import {
     getConflictingAssignments,
     InterventionAssignmentConflict,
@@ -27,6 +26,10 @@ type Props = {
     >;
     interventionPlans: InterventionPlan[];
     interventionCategories: InterventionCategory[];
+    onCreateInterventionAssignments: (args: {
+        orgunit_interventions: { [orgUnitId: number]: number[] };
+        scenario_id: number | undefined;
+    }) => Promise<unknown>;
 };
 
 export const InterventionHeader: FC<Props> = ({
@@ -36,13 +39,12 @@ export const InterventionHeader: FC<Props> = ({
     interventionPlans,
     setSelectedInterventions,
     interventionCategories,
+    onCreateInterventionAssignments,
 }) => {
     const [conflicts, setConflicts] = useState<
         InterventionAssignmentConflict[]
     >([]);
     const { formatMessage } = useSafeIntl();
-    const { mutateAsync: createInterventionAssignment } =
-        UseCreateInterventionAssignment();
 
     const selectedInterventionValues = useMemo(
         () => Object.values(selectedInterventions).filter(Boolean),
@@ -129,7 +131,7 @@ export const InterventionHeader: FC<Props> = ({
             },
             closeDialog: () => void,
         ) => {
-            await createInterventionAssignment({
+            await onCreateInterventionAssignments({
                 orgunit_interventions: orgUnitInterventions,
                 scenario_id: scenarioId,
             });
@@ -137,7 +139,7 @@ export const InterventionHeader: FC<Props> = ({
             closeDialog();
             setSelectedInterventions({});
         },
-        [createInterventionAssignment, setSelectedInterventions, scenarioId],
+        [onCreateInterventionAssignments, setSelectedInterventions, scenarioId],
     );
 
     const checkForConflict = useCallback(() => {
