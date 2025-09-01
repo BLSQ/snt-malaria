@@ -5,6 +5,7 @@ import React, {
     useState,
 } from 'react';
 import { Box, Theme } from '@mui/material';
+import { LoadingSpinner } from 'bluesquare-components';
 import L from 'leaflet';
 import { GeoJSON, MapContainer, Tooltip, ZoomControl } from 'react-leaflet';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
@@ -114,7 +115,7 @@ const getInterventionsGroupLabel = (interventions: Intervention[]) => {
 export const InterventionsPlanMap: FunctionComponent<Props> = ({
     scenarioId,
 }) => {
-    const { data: orgUnits } = useGetOrgUnits();
+    const { data: orgUnits, isLoading: loadingOrgUnits } = useGetOrgUnits();
     const [currentTile] = useState<Tile>(tiles.osm);
 
     const boundsOptions: Record<string, any> = {
@@ -233,6 +234,13 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         });
         return { ...defaultLegendConfig, legend_config: { domain, range } };
     }, [interventionGroupColors]);
+
+    if (loadingOrgUnits)
+        return (
+            <Box height="390px" width="100%" sx={styles.mainBox}>
+                <LoadingSpinner absolute />;
+            </Box>
+        );
 
     return (
         <Box height="390px" width="100%" sx={styles.mainBox}>

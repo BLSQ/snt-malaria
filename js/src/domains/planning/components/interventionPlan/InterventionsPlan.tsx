@@ -19,7 +19,7 @@ export const InterventionsPlan: FC<Props> = ({
     interventionPlans,
     isLoadingPlans,
 }) => {
-    const [tabValue, setTabValue] = useState<string>('list');
+    const [tabValue, setTabValue] = useState<'map' | 'list'>('map');
 
     const [isRemovingOrgUnits, setIsRemovingOrgUnits] =
         useState<boolean>(false);
@@ -74,6 +74,7 @@ export const InterventionsPlan: FC<Props> = ({
                         title={
                             <InterventionPlanSummary
                                 setTabValue={setTabValue}
+                                tabValue={tabValue}
                             />
                         }
                     />
