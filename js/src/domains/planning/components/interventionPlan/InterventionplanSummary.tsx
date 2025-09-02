@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { Dispatch, FC, SetStateAction } from 'react';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import MapIcon from '@mui/icons-material/Map';
 import TableRowsIcon from '@mui/icons-material/TableRows';
@@ -7,9 +7,10 @@ import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../messages';
 import { containerBoxStyles } from '../styles';
 
+export type TabValue = 'map' | 'list';
 type Props = {
-    setTabValue: (tabValue: 'map' | 'list') => void;
-    tabValue: 'map' | 'list';
+    setTabValue: Dispatch<SetStateAction<TabValue>>;
+    tabValue: TabValue;
 };
 export const InterventionPlanSummary: FC<Props> = ({
     setTabValue,
@@ -53,8 +54,8 @@ export const InterventionPlanSummary: FC<Props> = ({
                             },
                         }}
                     >
-                        <Tab value="list" label={<TableRowsIcon />} />
                         <Tab value="map" label={<MapIcon />} />
+                        <Tab value="list" label={<TableRowsIcon />} />
                     </Tabs>
                 </Stack>
             </Grid>

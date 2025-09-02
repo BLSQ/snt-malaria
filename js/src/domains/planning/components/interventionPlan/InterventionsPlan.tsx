@@ -4,7 +4,7 @@ import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { UseRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
-import { InterventionPlanSummary } from './InterventionplanSummary';
+import { InterventionPlanSummary, TabValue } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
 import { InterventionsPlanTable } from './InterventionsPlanTable';
 
@@ -19,7 +19,7 @@ export const InterventionsPlan: FC<Props> = ({
     interventionPlans,
     isLoadingPlans,
 }) => {
-    const [tabValue, setTabValue] = useState<'map' | 'list'>('map');
+    const [tabValue, setTabValue] = useState<TabValue>('map');
 
     const [isRemovingOrgUnits, setIsRemovingOrgUnits] =
         useState<boolean>(false);
