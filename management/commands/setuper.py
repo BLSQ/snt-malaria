@@ -39,7 +39,7 @@ class Command(BaseCommand):
         account_config_name = options["account_config_name"]
         main_username = options["main_username"]
         gpkg_filename = options["gpkg_filename"]
-        gpkg_path = os.path.join(os.path.dirname(__file__), "fixtures", gpkg_filename)
+        gpkg_path = os.path.join(os.path.dirname(__file__), "fixtures/setuper", gpkg_filename)
 
         account_config = self.accounts_config.get(account_config_name)
         if not account_config:
