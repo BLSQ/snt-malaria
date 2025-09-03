@@ -18,7 +18,6 @@ class Command(BaseCommand):
             "account_name": "Democratic Republic Of The Congo",
             "project_name": "DRC",
             "data_source_name": "RDC",
-            "gpkg_path": os.path.join(os.path.dirname(__file__), "fixtures", "RDC-org-units.gpkg"),
             "dataset_slug": "snt-results",
             "dataset_workspaceslug": "drc-snt-data-pre-processing",
         },
@@ -26,7 +25,6 @@ class Command(BaseCommand):
             "account_name": "Burkina Faso",
             "project_name": "BFA",
             "data_source_name": "BFA",
-            "gpkg_path": os.path.join(os.path.dirname(__file__), "fixtures", "Burkina-Faso-org-units.gpkg"),
             "dataset_slug": "snt-results",
             "dataset_workspaceslug": "bfa-snt-process",
         },
@@ -35,10 +33,13 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--account_config_name", type=str, required=True, choices=self.accounts_config.keys())
         parser.add_argument("--main_username", type=str, default="admin")
+        parser.add_argument("--gpkg_filename", type=str, required=True)
 
     def handle(self, *args, **options):
         account_config_name = options["account_config_name"]
         main_username = options["main_username"]
+        gpkg_filename = options["gpkg_filename"]
+        gpkg_path = os.path.join(os.path.dirname(__file__), "fixtures/setuper", gpkg_filename)
 
         account_config = self.accounts_config.get(account_config_name)
         if not account_config:
@@ -52,7 +53,6 @@ class Command(BaseCommand):
         account_name = account_config["account_name"]
         project_name = account_config["project_name"]
         data_source_name = account_config["data_source_name"]
-        gpkg_path = account_config["gpkg_path"]
 
         with transaction.atomic():
             # Get or create main user
@@ -144,7 +144,6 @@ class Command(BaseCommand):
                     description=f"{account.name} organizational units imported from GPKG",
                     task=None,
                 )
-                source_version.orgunit_set.update(validation_status="VALID")
                 self.stdout.write(
                     self.style.SUCCESS(f"Successfully imported {total_imported} organizational units from GPKG")
                 )
