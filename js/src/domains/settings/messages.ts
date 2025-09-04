@@ -6,7 +6,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Settings',
     },
     interventionsTitle: {
-        id: 'iaso.snt_malaria.label.interventionTitle',
+        id: 'iaso.snt_malaria.settings.intervention.title',
         defaultMessage: 'Interventions',
     },
     interventionsSubtitle: {
