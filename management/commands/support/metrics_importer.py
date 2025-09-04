@@ -16,14 +16,16 @@ from iaso.models import MetricType, MetricValue, OrgUnit
 class MetricsImporter:
     """Handles importing metrics data from CSV files."""
 
-    def __init__(self, account, stdout_writer=None):
+    def __init__(self, account, style, stdout_writer=None):
         """Initialize the metrics importer.
 
         Args:
             account: Account instance for importing metrics
+            style: Style instance for formatting output
             stdout_writer: Optional writer for progress output (e.g., self.stdout.write)
         """
         self.account = account
+        self.style = style
         self.stdout_write = stdout_writer or print
         self.metric_type_scales = {}
 
@@ -92,7 +94,7 @@ class MetricsImporter:
         self.stdout_write("Adding threshold scales...")
         self._configure_legends()
 
-        self.stdout_write("Metrics import completed successfully!")
+        self.stdout_write(self.style.SUCCESS("Metrics import completed successfully!"))
         return value_count
 
     def _create_metric_types(self, metadata_file_path):
@@ -114,7 +116,17 @@ class MetricsImporter:
                         legend_type=row["TYPE"].lower(),
                     )
 
-                    self.stdout_write(f"Created metric: {metric_type.name} with legend type: {metric_type.legend_type}")
+                    if metric_type.legend_type not in ["ordinal", "threshold", "linear"]:
+                        self.stdout_write(
+                            self.style.WARNING(
+                                f"WARNING: Metric type for {metric_type.name} is '{metric_type.legend_type}', "
+                                "should be one of 'ordinal', 'threshold', or 'linear'. Defaulting to 'threshold'."
+                            )
+                        )
+                    else:
+                        self.stdout_write(
+                            f"Created metric type: {metric_type.name} with legend type: {metric_type.legend_type}"
+                        )
 
                     self.metric_type_scales[metric_type.code] = row["SCALE"]
                     metric_types[metric_type.code] = metric_type
@@ -156,7 +168,7 @@ class MetricsImporter:
                                 value = float(row[column])
                             except ValueError:
                                 self.stdout_write(
-                                    f"Row {row_count}: Could not parse value to float {column}: {row[column]}. Creating with string_value."
+                                    f"Row {row_count}: Create {column} using string_value: {row[column]}."
                                 )
                                 value = None
                                 string_value = row[column]
