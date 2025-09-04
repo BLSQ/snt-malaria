@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import { Box, Theme } from '@mui/material';
+import { Box, Theme, Typography } from '@mui/material';
 
 import L from 'leaflet';
 import {
@@ -81,7 +81,8 @@ export const Map: FC<Props> = ({
             const metricValue = displayedMetricValues?.find(
                 m => m.org_unit === orgUnitId,
             );
-            return metricValue?.value ?? metricValue?.string_value;
+            const value = metricValue?.value ?? metricValue?.string_value;
+            return value === 0 ? undefined : value;
         },
         [displayedMetricValues],
     );
@@ -161,6 +162,15 @@ export const Map: FC<Props> = ({
                                 }}
                             >
                                 <Tooltip>
+                                    <Typography
+                                        fontSize={12}
+                                        sx={{
+                                            fontWeight: 'bold',
+                                            marginBottom: 0,
+                                        }}
+                                    >
+                                        {orgUnit.name}
+                                    </Typography>
                                     {getSelectedMetricValue(orgUnit.id) ??
                                         'N/A'}
                                 </Tooltip>

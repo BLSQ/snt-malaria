@@ -38,7 +38,11 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
                 }}
             >
                 <Grid container sx={styles.tableCellStyle}>
-                    <Grid item xs={3}>
+                    <Grid
+                        item
+                        xs={3}
+                        sx={{ display: 'flex', alignItems: 'center' }}
+                    >
                         <Typography>{row?.intervention.name}</Typography>
                     </Grid>
                     <Grid item xs={3}>

@@ -1,17 +1,21 @@
-import React, { FC } from 'react';
+import React, { Dispatch, FC, SetStateAction } from 'react';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import MapIcon from '@mui/icons-material/Map';
 import TableRowsIcon from '@mui/icons-material/TableRows';
-import { TabList } from '@mui/lab';
-import { Box, Grid, Stack, Tab, Typography } from '@mui/material';
+import { Box, Grid, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../messages';
 import { containerBoxStyles } from '../styles';
 
+export type TabValue = 'map' | 'list';
 type Props = {
-    setTabValue: (tabValue: string) => void;
+    setTabValue: Dispatch<SetStateAction<TabValue>>;
+    tabValue: TabValue;
 };
-export const InterventionPlanSummary: FC<Props> = ({ setTabValue }) => {
+export const InterventionPlanSummary: FC<Props> = ({
+    setTabValue,
+    tabValue,
+}) => {
     const { formatMessage } = useSafeIntl();
     return (
         <Grid
@@ -41,17 +45,18 @@ export const InterventionPlanSummary: FC<Props> = ({ setTabValue }) => {
                     alignItems="center"
                     sx={{ color: '#1F2B3D99' }}
                 >
-                    <TabList
+                    <Tabs
                         onChange={(_event, newValue) => setTabValue(newValue)}
+                        value={tabValue}
                         sx={{
                             '& .MuiTabs-indicator': {
                                 display: 'none',
                             },
                         }}
                     >
-                        <Tab value="list" label={<TableRowsIcon />} />
                         <Tab value="map" label={<MapIcon />} />
-                    </TabList>
+                        <Tab value="list" label={<TableRowsIcon />} />
+                    </Tabs>
                 </Stack>
             </Grid>
         </Grid>
