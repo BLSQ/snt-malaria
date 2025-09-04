@@ -15,11 +15,16 @@ export const RouteConfigs: Record<string, RouteConfig> = {
         url: 'snt_malaria/scenarios/list',
         params: [...paginationPathParams],
     },
+    settings: {
+        url: 'snt_malaria/settings',
+        params: [],
+    },
 };
 
 export type BaseUrls = {
     planning: string;
     scenarios: string;
+    settings: string;
 };
 export const baseUrls = extractUrls(RouteConfigs) as BaseUrls;
 export const baseParams = extractParams(RouteConfigs);

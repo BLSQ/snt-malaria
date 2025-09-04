@@ -5,6 +5,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.home.title',
         defaultMessage: 'SNT Malaria',
     },
+    settingsTitle: {
+        id: 'iaso.snt_malaria.settings.title',
+        defaultMessage: 'Settings',
+    },
     layers: {
         id: 'iaso.snt_malaria.label.layers',
         defaultMessage: 'Layers',
