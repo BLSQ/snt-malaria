@@ -1,7 +1,9 @@
 import React from 'react';
+import EditIcon from '@mui/icons-material/Edit';
 import { Box, Card, CardContent, CardHeader, Typography } from '@mui/material';
-import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import { IconButton, LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { useGetInterventionCategories } from '../../../planning/hooks/useGetInterventionCategories';
+import { Intervention } from '../../../planning/types/interventions';
 import { MESSAGES } from '../../messages';
 
 export const InterventionSettings: React.FC = () => {
@@ -13,6 +15,11 @@ export const InterventionSettings: React.FC = () => {
     } = useGetInterventionCategories();
 
     if (isLoadingCategories) return <LoadingSpinner />;
+
+    function onEditInterventionCost(intervention: Intervention): void {
+        console.log('To edit intervention:', intervention.id);
+        throw new Error('Function not implemented.');
+    }
 
     return (
         <Card>
@@ -39,6 +46,7 @@ export const InterventionSettings: React.FC = () => {
                                     display: 'flex',
                                     flexDirection: 'row',
                                     justifyContent: 'space-between',
+                                    alignItems: 'center',
                                 }}
                             >
                                 <Typography
@@ -47,13 +55,32 @@ export const InterventionSettings: React.FC = () => {
                                 >
                                     {intervention.name}
                                 </Typography>
-                                <Typography
-                                    variant="subtitle2"
-                                    color="textSecondary"
-                                    sx={{ textAlign: 'right' }}
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                    }}
                                 >
-                                    $00.00
-                                </Typography>
+                                    <Typography
+                                        variant="subtitle2"
+                                        color="textPrimary"
+                                        sx={{
+                                            textAlign: 'right',
+                                            fontWeight: 'bold',
+                                            marginRight: 2,
+                                        }}
+                                    >
+                                        $00.00
+                                    </Typography>
+                                    <IconButton
+                                        onClick={() =>
+                                            onEditInterventionCost(intervention)
+                                        }
+                                        iconSize="small"
+                                        tooltipMessage={MESSAGES.editCost}
+                                        overrideIcon={EditIcon}
+                                    />
+                                </Box>
                             </Box>
                         ))}
                     </Box>
