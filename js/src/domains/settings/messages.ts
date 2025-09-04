@@ -13,4 +13,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.subtitle',
         defaultMessage: 'Customise and group interventions',
     },
+    editCost: {
+        id: 'iaso.snt_malaria.settings.intervention.editCost',
+        defaultMessage: 'Edit cost',
+    },
 });
