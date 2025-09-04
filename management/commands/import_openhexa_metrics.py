@@ -91,7 +91,9 @@ class Command(BaseCommand):
             for dataset in datasets:
                 self.stdout.write(f"  - {dataset['dataset']['slug']} ({dataset['dataset']['name']})")
         else:
-            self.stdout.write("No datasets found in this workspace (or insufficient permissions to list).")
+            self.stdout.write(
+                self.style.WARNING("No datasets found in this workspace (or insufficient permissions to list).")
+            )
 
     def _fetch_dataset_info(self, openhexa_client, workspace_slug, dataset_slug):
         self.stdout.write(f'Fetching dataset "{dataset_slug}" from workspace "{workspace_slug}"...')
@@ -116,7 +118,7 @@ class Command(BaseCommand):
 
     def _import_metrics(self, account, metadata_path, dataset_path):
         self.stdout.write(f"Starting metrics import for account {account.name} ({account.pk})...")
-        metrics_importer = MetricsImporter(account, self.stdout.write)
+        metrics_importer = MetricsImporter(account, self.style, self.stdout.write)
         metrics_importer.import_metrics(metadata_path, dataset_path)
 
     def _cleanup_temp_file(self, file_path):

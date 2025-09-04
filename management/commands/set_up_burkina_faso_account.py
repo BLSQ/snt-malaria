@@ -122,7 +122,7 @@ class Command(BaseCommand):
 
             self.stdout.write(f"Importing metrics data from {metadata_file_path} and {dataset_file_path}")
             try:
-                metrics_importer = MetricsImporter(account, self.stdout.write)
+                metrics_importer = MetricsImporter(account, self.style, self.stdout.write)
                 total_values = metrics_importer.import_metrics(metadata_file_path, dataset_file_path)
                 self.stdout.write(self.style.SUCCESS(f"Successfully imported {total_values} metric values"))
             except Exception as e:
