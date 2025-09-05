@@ -17,4 +17,16 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.editCost',
         defaultMessage: 'Edit cost',
     },
+    unit: {
+        id: 'iaso.snt_malaria.settings.intervention.unit',
+        defaultMessage: 'Unit',
+    },
+    costPerUnit: {
+        id: 'iaso.snt_malaria.settings.intervention.costPerUnit',
+        defaultMessage: 'Cost per unit',
+    },
+    save: {
+        id: 'iaso.snt_malaria.settings.intervention.save',
+        defaultMessage: 'Save intervention',
+    },
 });
