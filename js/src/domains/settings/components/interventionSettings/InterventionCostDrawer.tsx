@@ -9,6 +9,7 @@ type Props = {
     onClose: () => void;
     open: boolean;
     intervention: Intervention | null;
+    onConfirm: (intervention: Intervention) => void;
 };
 
 const styles: SxStyles = {
@@ -26,6 +27,7 @@ export const InterventionCostDrawer: React.FC<Props> = ({
     onClose,
     open,
     intervention,
+    onConfirm,
 }) => {
     return (
         <>
@@ -39,7 +41,18 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                     title={intervention?.name ?? ''}
                     onClose={onClose}
                 />
-                <InterventionCostForm />
+                <InterventionCostForm
+                    defaultValues={{
+                        unit: intervention?.unit,
+                        cost_per_unit: intervention?.cost_per_unit ?? undefined,
+                    }}
+                    onConfirm={costConfig =>
+                        onConfirm({
+                            ...intervention,
+                            ...costConfig,
+                        } as Intervention)
+                    }
+                />
             </Drawer>
         </>
     );

@@ -11,6 +11,7 @@ class InterventionSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "cost_per_unit",
+            "unit",
             "intervention_category",
             "created_at",
             "updated_at",
