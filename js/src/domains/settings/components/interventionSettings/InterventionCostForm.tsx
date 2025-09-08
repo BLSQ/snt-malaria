@@ -8,6 +8,11 @@ import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
 
+type Props = {
+    defaultValues: { unit?: string; cost_per_unit?: number };
+    onConfirm: (data: { unit: string; cost_per_unit: number }) => void;
+};
+
 const styles: SxStyles = {
     formWrapper: {
         flexGrow: 1,
@@ -38,7 +43,10 @@ const validationSchema = Yup.object().shape({
     costPerUnit: Yup.number(),
 });
 
-export const InterventionCostForm: React.FC = () => {
+export const InterventionCostForm: React.FC<Props> = ({
+    defaultValues = { unit: undefined, cost_per_unit: undefined },
+    onConfirm,
+}) => {
     const { formatMessage } = useSafeIntl();
     const {
         values,
@@ -50,17 +58,18 @@ export const InterventionCostForm: React.FC = () => {
         touched,
         setFieldTouched,
     } = useFormik({
-        initialValues: {
-            unit: undefined,
-            costPerUnit: undefined,
-        },
+        initialValues: defaultValues,
         validationSchema,
         onSubmit: () => {
-            console.log('Form submitted with values:', {
-                unit: values.unit,
-                costPerUnit: values.costPerUnit,
-            });
-            // onConfirm({ unit, costPerUnit })
+            if (
+                values.unit !== undefined &&
+                values.cost_per_unit !== undefined
+            ) {
+                onConfirm({
+                    unit: values.unit,
+                    cost_per_unit: values.cost_per_unit,
+                });
+            }
         },
     });
 
@@ -115,10 +124,10 @@ export const InterventionCostForm: React.FC = () => {
                         </Typography>
                         <InputComponent
                             type="number"
-                            keyValue="costPerUnit"
+                            keyValue="cost_per_unit"
                             onChange={setFieldValueAndState}
-                            errors={getErrors('costPerUnit')}
-                            value={values.costPerUnit}
+                            errors={getErrors('cost_per_unit')}
+                            value={values.cost_per_unit}
                             required
                             sx={{ marginTop: 0, maxWidth: '200px' }}
                         />
