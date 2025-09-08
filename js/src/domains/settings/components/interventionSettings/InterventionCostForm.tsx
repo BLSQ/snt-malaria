@@ -28,6 +28,11 @@ const styles: SxStyles = {
         gridTemplateColumns: '1fr 1fr',
         alignItems: 'center',
     },
+    formControlSmall: {
+        '> .MuiBox-root': {
+            maxWidth: '95px',
+        },
+    },
     inputLabel: {
         marginBottom: 1,
     },
@@ -110,8 +115,7 @@ export const InterventionCostForm: React.FC<Props> = ({
                             errors={getErrors('unit')}
                             value={values.unit}
                             required
-                            // @ts-ignore
-                            params={{ sx: { marginTop: 0, maxWidth: '30px' } }}
+                            withMarginTop={false}
                         />
                     </FormControl>
                     <FormControl
@@ -129,7 +133,8 @@ export const InterventionCostForm: React.FC<Props> = ({
                             errors={getErrors('cost_per_unit')}
                             value={values.cost_per_unit}
                             required
-                            sx={{ marginTop: 0, maxWidth: '200px' }}
+                            withMarginTop={false}
+                            wrapperSx={{ maxWidth: '95px', marginLeft: 'auto' }}
                         />
                     </FormControl>
                 </Box>
