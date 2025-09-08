@@ -126,16 +126,31 @@ export const InterventionCostForm: React.FC<Props> = ({
                         <Typography>
                             {formatMessage(MESSAGES.costPerUnit)}
                         </Typography>
-                        <InputComponent
-                            type="number"
-                            keyValue="cost_per_unit"
-                            onChange={setFieldValueAndState}
-                            errors={getErrors('cost_per_unit')}
-                            value={values.cost_per_unit}
-                            required
-                            withMarginTop={false}
-                            wrapperSx={{ maxWidth: '95px', marginLeft: 'auto' }}
-                        />
+                        <Box
+                            sx={{
+                                maxWidth: '95px',
+                                marginLeft: 'auto',
+                                display: 'flex',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Typography
+                                variant="body1"
+                                color="textSecondary"
+                                sx={{ marginRight: 0.5 }}
+                            >
+                                $
+                            </Typography>
+                            <InputComponent
+                                type="number"
+                                keyValue="cost_per_unit"
+                                onChange={setFieldValueAndState}
+                                errors={getErrors('cost_per_unit')}
+                                value={values.cost_per_unit}
+                                required
+                                withMarginTop={false}
+                            />
+                        </Box>
                     </FormControl>
                 </Box>
             </Box>

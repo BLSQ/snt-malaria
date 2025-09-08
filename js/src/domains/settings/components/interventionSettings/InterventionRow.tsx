@@ -17,10 +17,11 @@ export const InterventionRow: React.FC<Props> = ({
     <Box
         key={intervention.id}
         sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
             alignItems: 'center',
+            marginTop: 1,
+            marginBottom: 1,
         }}
     >
         <Typography variant="subtitle2" color="textSecondary">
@@ -30,20 +31,27 @@ export const InterventionRow: React.FC<Props> = ({
             sx={{
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'space-between',
             }}
         >
-            <Typography
-                variant="subtitle2"
-                color="textPrimary"
-                sx={{
-                    textAlign: 'right',
-                    fontWeight: 'bold',
-                    marginRight: 2,
-                }}
-            >
-                {intervention.cost_per_unit ?? 'N/A'}
-                {intervention.unit}
-            </Typography>
+            <Box>
+                <Typography
+                    variant="subtitle2"
+                    color="textPrimary"
+                    sx={{
+                        textAlign: 'right',
+                        fontWeight: 'bold',
+                        marginRight: 2,
+                    }}
+                >
+                    ${intervention.cost_per_unit ?? 'N/A'}
+                </Typography>
+                {intervention.unit && (
+                    <Typography variant="caption" color="textSecondary">
+                        {intervention.unit}
+                    </Typography>
+                )}
+            </Box>
             <IconButton
                 onClick={() => onEditInterventionCost(intervention)}
                 iconSize="small"
