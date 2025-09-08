@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Box, Card, CardContent, CardHeader, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { useGetInterventionCategories } from '../../../planning/hooks/useGetInterventionCategories';
@@ -23,10 +23,23 @@ export const InterventionSettings: React.FC = () => {
 
     const { mutateAsync: updateIntervention } = UseUpdateIntervention();
 
-    const onEditInterventionCost = (intervention: Intervention): void => {
-        setInterventionCostDrawerOpen(true);
-        setSelectedIntervention(intervention);
-    };
+    const onUpdateIntervention = useCallback(
+        (intervention: Intervention) => {
+            updateIntervention(intervention).then(() => {
+                setInterventionCostDrawerOpen(false);
+                setSelectedIntervention(null);
+            });
+        },
+        [updateIntervention, setInterventionCostDrawerOpen],
+    );
+
+    const onEditInterventionCost = useCallback(
+        (intervention: Intervention): void => {
+            setInterventionCostDrawerOpen(true);
+            setSelectedIntervention(intervention);
+        },
+        [setInterventionCostDrawerOpen, setSelectedIntervention],
+    );
 
     return isLoadingCategories ? (
         <LoadingSpinner />
@@ -66,7 +79,7 @@ export const InterventionSettings: React.FC = () => {
                 open={interventionCostDrawerOpen}
                 onClose={() => setInterventionCostDrawerOpen(false)}
                 intervention={selectedIntervention}
-                onConfirm={updateIntervention}
+                onConfirm={onUpdateIntervention}
             />
         </>
     );
