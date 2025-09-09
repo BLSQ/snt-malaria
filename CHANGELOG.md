@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.3.0](https://github.com/BLSQ/snt-malaria/compare/2.2.0...2.3.0) (2025-09-09)
+
+
+### Features
+
+* SNT-125 setting page for costs ([b7a3182](https://github.com/BLSQ/snt-malaria/commit/b7a3182fe3e58eb388a38ff06647b7b3105dd276))
+* SNT-134 Show intervention plan map by default & SNT-136: Improve tooltip on main map when data is missing ([b2a18bc](https://github.com/BLSQ/snt-malaria/commit/b2a18bccdc5c3b89a0653548b786f2199dbd2dcb))
+
+
+### Bug Fixes
+
+* SNT-133 Clean up setuper script ([ea93448](https://github.com/BLSQ/snt-malaria/commit/ea934484fa2f8989e71597875f86ce31d36d66ff))
+* SNT-138: Improve logs when importing metrics ([ed5e776](https://github.com/BLSQ/snt-malaria/commit/ed5e7760f966836e416a4a7ab0aff2d70f59e256))
+
 ## [2.2.0](https://github.com/BLSQ/snt-malaria/compare/2.1.0...2.2.0) (2025-08-29)
 
 
