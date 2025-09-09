@@ -14,6 +14,7 @@ import {
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import DeleteDialog from 'Iaso/components/dialogs/DeleteDialogComponent';
 import { SxStyles } from 'Iaso/types/general';
+import { DrawerHeader } from '../../../../components/DrawerHeader';
 import { MESSAGES } from '../../../messages';
 import { InterventionPlan } from '../../types/interventions';
 
@@ -25,15 +26,6 @@ const styles: SxStyles = {
             boxSizing: 'border-box',
             padding: 0,
         },
-    },
-    header: {
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 2,
-    },
-    headerIcon: {
-        marginRight: 2,
     },
     bodyWrapper: {
         padding: 4,
@@ -150,20 +142,10 @@ export const InterventionPlanDetails: FC<Props> = ({
             sx={styles.drawer}
         >
             {isLoading && <LoadingSpinner />}
-            <Box sx={styles.header}>
-                <IconButton
-                    onClick={onCloseInterventionPlanDetails}
-                    sx={styles.headerIcon}
-                >
-                    <ChevronRightIcon color="disabled" />
-                </IconButton>
-                {interventionPlan && (
-                    <Typography>
-                        {interventionPlan.intervention.name}
-                    </Typography>
-                )}
-            </Box>
-            <Divider />
+            <DrawerHeader
+                title={interventionPlan?.intervention.name}
+                onClose={onCloseInterventionPlanDetails}
+            />
             <Box sx={styles.bodyWrapper}>
                 <Box sx={styles.searchWrapper}>
                     <TextField

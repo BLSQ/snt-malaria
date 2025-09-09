@@ -15,10 +15,10 @@ const styles: SxStyles = {
     },
 };
 
-export const DrawerHeader: React.FC<{ title: string; onClose: () => void }> = ({
-    title,
-    onClose,
-}) => {
+export const DrawerHeader: React.FC<{
+    title?: string;
+    onClose: () => void;
+}> = ({ title, onClose }) => {
     return (
         <>
             <Box sx={styles.header}>
