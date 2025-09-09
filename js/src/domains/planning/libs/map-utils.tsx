@@ -61,7 +61,10 @@ const getColorForShape = (
     }
 
     if (legend_type === 'ordinal') {
-        const index = legend_config.domain.indexOf(value as never);
+        const index = legend_config.domain.findIndex(
+            (d: string | number) => d.toString() === value.toString(),
+        );
+
         return legend_config.range[index] ?? defaultLegend;
     }
 
