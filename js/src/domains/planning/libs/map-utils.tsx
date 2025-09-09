@@ -2,7 +2,10 @@ import { hslToRgb } from '@mui/material';
 import { scaleThreshold } from '@visx/scale';
 import * as d3 from 'd3-scale';
 import { mapTheme } from '../../../constants/map-theme';
-import { ScaleDomainRange } from '../types/metrics';
+import { MESSAGES } from '../../messages';
+import { MetricValue, ScaleDomainRange } from '../types/metrics';
+import { useSafeIntl } from 'bluesquare-components';
+import { useCallback } from 'react';
 
 export const defaultLegend = '#999999';
 export const maxHue = 350;
@@ -61,7 +64,10 @@ const getColorForShape = (
     }
 
     if (legend_type === 'ordinal') {
-        const index = legend_config.domain.indexOf(value as never);
+        const index = legend_config.domain.findIndex(
+            (d: string | number) => d.toString() === value.toString(),
+        );
+
         return legend_config.range[index] ?? defaultLegend;
     }
 
@@ -120,4 +126,41 @@ export const getStyleForShape = (
             getColorForShape(value, legend_type, legend_config),
         fillOpacity: 1,
     };
+};
+
+export const useGetOrgUnitMetric = (
+    displayedMetricValues: MetricValue[] | undefined,
+) => {
+    const { formatMessage } = useSafeIntl();
+
+    return useCallback(
+        (orgUnitId: number) => {
+            if (!displayedMetricValues) {
+                return undefined;
+            }
+
+            const metricValue = displayedMetricValues.find(
+                m => m.org_unit === orgUnitId,
+            );
+
+            if (!metricValue) {
+                return undefined;
+            }
+
+            if (metricValue.value) {
+                return { label: metricValue.value, value: metricValue.value };
+            }
+
+            if (!metricValue.string_value) {
+                return undefined;
+            }
+
+            const metricLabel = MESSAGES[metricValue.string_value]
+                ? formatMessage(MESSAGES[metricValue.string_value])
+                : metricValue.string_value;
+
+            return { value: metricValue.string_value, label: metricLabel };
+        },
+        [formatMessage, displayedMetricValues],
+    );
 };

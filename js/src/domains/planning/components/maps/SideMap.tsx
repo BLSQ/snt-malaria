@@ -18,7 +18,7 @@ import { Bounds } from 'Iaso/utils/map/mapUtils';
 
 import { mapTheme } from '../../../../constants/map-theme';
 import { useGetMetricValues } from '../../hooks/useGetMetrics';
-import { getStyleForShape } from '../../libs/map-utils';
+import { getStyleForShape, useGetOrgUnitMetric } from '../../libs/map-utils';
 import { MetricType } from '../../types/metrics';
 import { MapLegend } from '../MapLegend';
 import { LayerSelect } from './LayerSelect';
@@ -70,28 +70,20 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
     const { data: displayedMetricValues } = useGetMetricValues({
         metricTypeId: displayedMetric?.id || null,
     });
-    const getSelectedMetricValue = useCallback(
-        (orgUnitId: number) => {
-            const metricValue = displayedMetricValues?.find(
-                m => m.org_unit === orgUnitId,
-            );
-            return metricValue?.value;
-        },
-        [displayedMetricValues],
-    );
+    const getSelectedMetric = useGetOrgUnitMetric(displayedMetricValues);
 
     // Selecting an org unit on the map
 
     const getMapStyleForOrgUnit = useCallback(
         (orgUnitId: number) => {
-            const selectedMetricValue = getSelectedMetricValue(orgUnitId);
+            const selectedMetric = getSelectedMetric(orgUnitId);
             return getStyleForShape(
-                selectedMetricValue,
+                selectedMetric?.value,
                 displayedMetric?.legend_type,
                 displayedMetric?.legend_config,
             );
         },
-        [getSelectedMetricValue, displayedMetric],
+        [getSelectedMetric, displayedMetric],
     );
 
     return (
@@ -119,7 +111,9 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
                         style={getMapStyleForOrgUnit(orgUnit.id)}
                         data={orgUnit.geo_json as unknown as GeoJson}
                     >
-                        <Tooltip>{getSelectedMetricValue(orgUnit.id)}</Tooltip>
+                        <Tooltip>
+                            {getSelectedMetric(orgUnit.id)?.label}
+                        </Tooltip>
                     </GeoJSON>
                 ))}
                 {displayedMetric && (

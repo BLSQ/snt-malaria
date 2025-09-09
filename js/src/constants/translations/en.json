@@ -37,9 +37,10 @@
     "iaso.snt_malaria.label.selectAll": "Select All",
     "iaso.snt_malaria.label.unselectAll": "Unselect All",
     "iaso.snt_malaria.label.clearOrgUnitSelection": "Clear selection",
+    "iaso.snt_malaria.metrics.seasonal": "Seasonal",
+    "iaso.snt_malaria.metrics.not-seasonal": "Not seasonal",
     "iaso.snt_malaria.settings.title": "Settings",
     "iaso.snt_malaria.settings.intervention.title": "Intervention Settings",
     "iaso.snt_malaria.settings.intervention.subtitle": "Set the default cost for each intervention. This cost will be used to calculate the total budget of your intervention plans.",
     "iaso.snt_malaria.settings.intervention.editCost": "Edit cost"
-
 }
