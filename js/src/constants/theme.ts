@@ -61,6 +61,36 @@ export const theme = createTheme({
                 },
             },
         },
+        MuiInputLabel: {
+            styleOverrides: {
+                root: {
+                    transform: 'translate(14px, 8px) scale(1)',
+                    color: 'textSecondary',
+                },
+                shrink: {
+                    transform: 'translate(14px, -9px) scale(1)',
+                    fontSize: '0.75rem',
+                },
+                outlined: {
+                    '&.MuiInputLabel-shrink': {
+                        height: '15px',
+                        fontSize: '0.75rem',
+                    },
+                },
+            },
+        },
+        MuiAutocomplete: {
+            styleOverrides: {
+                inputRoot: {
+                    padding: '1px',
+                },
+                root: {
+                    '&.MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
+                        right: '0px',
+                    },
+                },
+            },
+        },
     },
 });
 

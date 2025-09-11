@@ -1,5 +1,12 @@
-import React, { useCallback } from 'react';
-import { FormControl, Box, Typography, Divider, Button } from '@mui/material';
+import React, { useCallback, useState } from 'react';
+import {
+    FormControl,
+    Box,
+    Typography,
+    Divider,
+    Button,
+    Switch,
+} from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -7,9 +14,20 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
+import { InterventionCostDetailsForm } from './InterventionCostDetailsForm';
 
+// TODO Type cost details
 type Props = {
-    defaultValues: { cost_unit?: string; cost_per_unit?: number };
+    defaultValues: {
+        cost_unit?: string;
+        cost_per_unit?: number;
+        costDetails: {
+            name: string;
+            category: number;
+            cost: number;
+            id: number;
+        }[];
+    };
     onConfirm: (data: { cost_unit: string; cost_per_unit: number }) => void;
 };
 
@@ -55,10 +73,15 @@ const validationSchema = Yup.object().shape({
 });
 
 export const InterventionCostForm: React.FC<Props> = ({
-    defaultValues = { cost_unit: undefined, cost_per_unit: undefined },
+    defaultValues = {
+        cost_unit: undefined,
+        cost_per_unit: undefined,
+        costDetails: [{ name: 'test', category: 2, cost: 15.5, id: 1 }],
+    },
     onConfirm,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const [isDetailedMode, setIsDetailedMode] = useState<boolean>(false);
     const {
         values,
         setFieldValue,
@@ -72,6 +95,7 @@ export const InterventionCostForm: React.FC<Props> = ({
         initialValues: defaultValues,
         validationSchema,
         onSubmit: () => {
+            console.log(values.costDetails[0]);
             if (
                 values.cost_unit !== undefined &&
                 values.cost_per_unit !== undefined
@@ -86,6 +110,7 @@ export const InterventionCostForm: React.FC<Props> = ({
 
     const setFieldValueAndState = useCallback(
         (field: string, value: any) => {
+            console.log(field, value);
             setFieldTouched(field, true);
             setFieldValue(field, value);
         },
@@ -148,9 +173,24 @@ export const InterventionCostForm: React.FC<Props> = ({
                                 value={values.cost_per_unit}
                                 required
                                 withMarginTop={false}
+                                disabled={isDetailedMode}
                             />
                         </Box>
                     </FormControl>
+                    <FormControl>
+                        <Switch
+                            size="small"
+                            checked={isDetailedMode}
+                            onChange={() => setIsDetailedMode(!isDetailedMode)}
+                            color="primary"
+                        />
+                    </FormControl>
+                    {isDetailedMode && (
+                        <InterventionCostDetailsForm
+                            costDetails={values.costDetails}
+                            onUpdateField={setFieldValueAndState}
+                        />
+                    )}
                 </Box>
             </Box>
             <Divider />

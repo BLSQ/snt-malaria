@@ -29,4 +29,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.save',
         defaultMessage: 'Save intervention',
     },
+    removeDetailedCost: {
+        id: 'iaso.snt_malaria.settings.intervention.removeDetaildCost',
+        defaultMessage: 'Remove detailed cost',
+    },
 });
