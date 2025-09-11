@@ -6,6 +6,7 @@ import {
     Divider,
     Button,
     Switch,
+    FormControlLabel,
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
@@ -197,11 +198,21 @@ export const InterventionCostForm: React.FC<Props> = ({
                         </Box>
                     </FormControl>
                     <FormControl>
-                        <Switch
-                            size="small"
-                            checked={isDetailedMode}
-                            onChange={() => setIsDetailedMode(!isDetailedMode)}
-                            color="primary"
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    size="small"
+                                    checked={isDetailedMode}
+                                    onChange={() =>
+                                        setIsDetailedMode(!isDetailedMode)
+                                    }
+                                    color="primary"
+                                    sx={{ marginLeft: 1.5 }}
+                                />
+                            }
+                            label={formatMessage(MESSAGES.detailedCosts)}
+                            labelPlacement="start"
+                            sx={{ marginLeft: 0 }}
                         />
                     </FormControl>
                     {isDetailedMode && (
