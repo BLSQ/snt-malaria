@@ -13,22 +13,28 @@ import * as Yup from 'yup';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
+import { InterventionCostLine } from '../../../planning/types/interventions';
 import { MESSAGES } from '../../messages';
-import { InterventionCostDetailsForm } from './InterventionCostDetailsForm';
+import { InterventionCostLinesForm } from './InterventionCostLinesForm';
 
-// TODO Type cost details
 type Props = {
     defaultValues: {
         cost_unit?: string;
         cost_per_unit?: number;
-        costDetails: {
-            name: string;
-            category: number;
-            cost: number;
-            id: number;
-        }[];
+        cost_lines: InterventionCostLine[];
     };
-    onConfirm: (data: { cost_unit: string; cost_per_unit: number }) => void;
+    onConfirm: (data: {
+        cost_unit: string;
+        cost_per_unit: number;
+        cost_lines: any[];
+    }) => void;
+};
+
+const DEFAULT_COST_LINE = {
+    name: '',
+    category: undefined,
+    cost: 0,
+    id: 0,
 };
 
 const styles: SxStyles = {
@@ -76,7 +82,7 @@ export const InterventionCostForm: React.FC<Props> = ({
     defaultValues = {
         cost_unit: undefined,
         cost_per_unit: undefined,
-        costDetails: [{ name: 'test', category: 2, cost: 15.5, id: 1 }],
+        cost_lines: [],
     },
     onConfirm,
 }) => {
@@ -95,7 +101,6 @@ export const InterventionCostForm: React.FC<Props> = ({
         initialValues: defaultValues,
         validationSchema,
         onSubmit: () => {
-            console.log(values.costDetails[0]);
             if (
                 values.cost_unit !== undefined &&
                 values.cost_per_unit !== undefined
@@ -103,6 +108,7 @@ export const InterventionCostForm: React.FC<Props> = ({
                 onConfirm({
                     cost_unit: values.cost_unit,
                     cost_per_unit: values.cost_per_unit,
+                    cost_lines: isDetailedMode ? values.cost_lines : [],
                 });
             }
         },
@@ -110,7 +116,6 @@ export const InterventionCostForm: React.FC<Props> = ({
 
     const setFieldValueAndState = useCallback(
         (field: string, value: any) => {
-            console.log(field, value);
             setFieldTouched(field, true);
             setFieldValue(field, value);
         },
@@ -123,6 +128,20 @@ export const InterventionCostForm: React.FC<Props> = ({
         formatMessage,
         messages: MESSAGES,
     });
+
+    const onAddCostLine = useCallback(() => {
+        const newCostLines = [...values.cost_lines, { ...DEFAULT_COST_LINE }];
+        setFieldValue('cost_lines', newCostLines);
+    }, [values, setFieldValue]);
+
+    const onRemoveCostLine = useCallback(
+        (index: number) => {
+            const newCostLines = [...values.cost_lines];
+            newCostLines.splice(index, 1);
+            setFieldValue('cost_lines', newCostLines);
+        },
+        [values, setFieldValue],
+    );
 
     return (
         <>
@@ -186,9 +205,11 @@ export const InterventionCostForm: React.FC<Props> = ({
                         />
                     </FormControl>
                     {isDetailedMode && (
-                        <InterventionCostDetailsForm
-                            costDetails={values.costDetails}
+                        <InterventionCostLinesForm
+                            costLines={values.cost_lines}
                             onUpdateField={setFieldValueAndState}
+                            onAddCostLine={onAddCostLine}
+                            onRemoveCostLine={onRemoveCostLine}
                         />
                     )}
                 </Box>

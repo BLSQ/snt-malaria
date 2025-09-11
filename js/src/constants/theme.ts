@@ -91,6 +91,13 @@ export const theme = createTheme({
                 },
             },
         },
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    textTransform: 'none',
+                },
+            },
+        },
     },
 });
 
