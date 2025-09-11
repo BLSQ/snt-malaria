@@ -61,3 +61,30 @@ class InterventionAssignment(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class InterventionCostCategory(models.Model):
+    class Meta:
+        app_label = "snt_malaria"
+        unique_together = []
+
+    account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE)
+    name = models.TextField(max_length=255, blank=False)
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class InterventionCostLine(models.Model):
+    class Meta:
+        app_label = "snt_malaria"
+        unique_together = []
+
+    intervention = models.ForeignKey(Intervention, on_delete=models.CASCADE)
+    name = models.TextField(max_length=255, blank=False)
+    category = models.ForeignKey(InterventionCostCategory, on_delete=models.PROTECT)
+    cost = models.FloatField()
+
+    created_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
