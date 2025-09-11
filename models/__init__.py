@@ -1,4 +1,10 @@
-from .intervention import Intervention, InterventionAssignment, InterventionCategory
+from .intervention import (
+    Intervention,
+    InterventionAssignment,
+    InterventionCategory,
+    InterventionCostCategory,
+    InterventionCostLine,
+)
 from .scenario import Scenario
 
 
@@ -7,4 +13,6 @@ __all__ = [
     "InterventionAssignment",
     "InterventionCategory",
     "Scenario",
+    "InterventionCostCategory",
+    "InterventionCostLine",
 ]

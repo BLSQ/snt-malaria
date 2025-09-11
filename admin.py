@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from plugins.snt_malaria.models.intervention import InterventionCostCategory
+
 from .models import Intervention, InterventionAssignment, InterventionCategory, Scenario
 
 
@@ -61,3 +63,11 @@ class ScenarioAdmin(admin.ModelAdmin):
     search_fields = ("name", "description")
     list_filter = ("account", "created_by")
     ordering = ("name",)
+
+
+@admin.register(InterventionCostCategory)
+class InterventionCostCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "id", "created_by", "created_at")
+    search_fields = ("name", "id")
+    list_filter = ("name", "id")
+    ordering = ("id",)

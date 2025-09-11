@@ -16,6 +16,11 @@ export type Intervention = {
     cost_line: InterventionCostLine[];
 };
 
+export type InterventionCostCategory = {
+    name: string;
+    id: string;
+};
+
 export type InterventionCostLine = {
     name: string;
     category: number;

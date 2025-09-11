@@ -4,6 +4,7 @@ import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { Box, Button, Typography } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
+import { DropdownOptions } from 'Iaso/types/utils';
 import { noOp } from 'Iaso/utils';
 import { InterventionCostLine } from '../../../planning/types/interventions';
 import { useGetInterventionCostCategories } from '../../hooks/useGetInterventionCostCategories';
@@ -71,7 +72,13 @@ export const InterventionCostLineForm: FC<RowProps> = ({
     onUpdateField,
     onRemove = noOp,
 }) => {
-    const interventionCostCategories = useGetInterventionCostCategories();
+    const { data: interventionCostCategories = [] } =
+        useGetInterventionCostCategories<DropdownOptions<any>[]>(data =>
+            data.map(d => ({
+                value: d.id,
+                label: d.name,
+            })),
+        );
 
     return (
         <Box
