@@ -55,9 +55,7 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                     defaultValues={{
                         cost_unit: intervention?.cost_unit,
                         cost_per_unit: intervention?.cost_per_unit ?? undefined,
-                        costDetails: [
-                            { name: 'test', category: 2, cost: 15.5, id: 1 },
-                        ],
+                        cost_lines: [],
                     }}
                     onConfirm={handleFormConfirm}
                 />
