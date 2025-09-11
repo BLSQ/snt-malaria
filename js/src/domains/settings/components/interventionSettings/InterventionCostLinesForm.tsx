@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { FC } from 'react';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { Box, Button, Typography } from '@mui/material';
-import { IconButton } from 'bluesquare-components';
+import { IconButton, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { noOp } from 'Iaso/utils';
 import { InterventionCostLine } from '../../../planning/types/interventions';
@@ -22,12 +22,13 @@ export const InterventionCostLinesForm: FC<Props> = ({
     onAddCostLine,
     onRemoveCostLine,
 }) => {
+    const { formatMessage } = useSafeIntl();
     const totalCost = useMemo(
         () => costLines?.reduce((total, costLine) => total + costLine.cost, 0),
         [costLines],
     );
     return costLines ? (
-        <Box>
+        <Box sx={{ marginTop: 1.5 }}>
             {costLines.map((cd, index) => (
                 <InterventionCostLineForm
                     key={`cost-details-row-${cd.id}`}
@@ -46,9 +47,12 @@ export const InterventionCostLinesForm: FC<Props> = ({
                 }}
             >
                 <Button variant="text" onClick={onAddCostLine}>
-                    Add Cost
+                    {formatMessage(MESSAGES.addCostLine)}
                 </Button>
-                <Typography>Total cost ${totalCost}</Typography>
+                <Typography>
+                    {formatMessage(MESSAGES.totalCost)} $
+                    {totalCost.toFixed(2) ?? 0.0}
+                </Typography>
             </Box>
         </Box>
     ) : (
@@ -81,7 +85,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
             <IconButton
                 onClick={() => onRemove()}
                 overrideIcon={RemoveCircleOutlineIcon}
-                tooltipMessage={MESSAGES.removeDetailedCost}
+                tooltipMessage={MESSAGES.removeCostLine}
             ></IconButton>
             <Box
                 sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}
@@ -91,7 +95,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                     onChange={onUpdateField}
                     value={costLines.name}
                     type="text"
-                    labelString="yay"
+                    label={MESSAGES.detailedCostLabel}
                     required
                     withMarginTop={false}
                 />
@@ -105,6 +109,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                     options={interventionCostCategories}
                     value={costLines.category}
                     onChange={onUpdateField}
+                    label={MESSAGES.detailedCostCategoryLabel}
                 />
             </Box>
             <InputComponent
@@ -113,7 +118,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                 onChange={onUpdateField}
                 required
                 withMarginTop={false}
-                labelString="Unit Cost"
+                label={MESSAGES.detailedCostUnitLabel}
                 wrapperSx={{ width: '95px' }}
                 value={costLines.cost}
             />
