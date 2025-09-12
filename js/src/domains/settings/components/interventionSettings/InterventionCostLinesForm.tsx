@@ -108,13 +108,13 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                 />
                 <InputComponent
                     type="select"
-                    keyValue="category"
+                    keyValue="category_id"
                     multi={false}
                     withMarginTop={false}
                     wrapperSx={{ flexGrow: 1 }}
                     clearable={false}
                     options={interventionCostCategories}
-                    value={costLines.category}
+                    value={costLines.category_id}
                     onChange={onUpdateField}
                     label={MESSAGES.detailedCostCategoryLabel}
                 />

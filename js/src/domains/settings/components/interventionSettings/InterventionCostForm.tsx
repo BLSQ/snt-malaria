@@ -33,7 +33,7 @@ type Props = {
 
 const DEFAULT_COST_LINE = {
     name: '',
-    category: undefined,
+    category_id: undefined,
     cost: 0,
     id: 0,
 };
