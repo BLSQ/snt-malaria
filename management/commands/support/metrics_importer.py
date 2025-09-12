@@ -167,9 +167,6 @@ class MetricsImporter:
                                 # Parse the value as a float
                                 value = float(row[column])
                             except ValueError:
-                                self.stdout_write(
-                                    f"Row {row_count}: Create {column} using string_value: {row[column]}."
-                                )
                                 value = None
                                 string_value = row[column]
 
