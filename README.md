@@ -53,7 +53,9 @@ create database snt_malaria;
 
 Or one-line:
 
-`docker compose exec db psql -U postgres -c "create database snt_malaria"`
+```bash
+docker compose exec db psql -U postgres -c "create database snt_malaria"`
+```
 
 7. Create account and data:
 
