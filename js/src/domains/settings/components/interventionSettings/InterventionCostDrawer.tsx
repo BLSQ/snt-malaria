@@ -1,15 +1,23 @@
 import React from 'react';
 import { Drawer } from '@mui/material';
+import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
-import { Intervention } from '../../../planning/types/interventions';
+import {
+    Intervention,
+    InterventionCostLine,
+} from '../../../planning/types/interventions';
+import { useGetInterventionCosts } from '../../hooks/useGetInterventionCosts';
 import { InterventionCostForm } from './InterventionCostForm';
 
 type Props = {
     onClose: () => void;
     open: boolean;
     intervention: Intervention | null;
-    onConfirm: (intervention: Intervention) => void;
+    onConfirm: (
+        intervention: Intervention,
+        costs: InterventionCostLine[],
+    ) => void;
 };
 
 const styles: SxStyles = {
@@ -29,6 +37,9 @@ export const InterventionCostDrawer: React.FC<Props> = ({
     intervention,
     onConfirm,
 }) => {
+    const { data: cost_lines, isFetching: isFetchingCosts } =
+        useGetInterventionCosts(intervention?.id);
+
     return (
         <>
             <Drawer
@@ -41,19 +52,28 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                     title={intervention?.name ?? ''}
                     onClose={onClose}
                 />
-                <InterventionCostForm
-                    defaultValues={{
-                        unit: intervention?.unit,
-                        cost_per_unit: intervention?.cost_per_unit ?? undefined,
-                        cost_lines: [],
-                    }}
-                    onConfirm={costConfig =>
-                        onConfirm({
-                            ...intervention,
-                            ...costConfig,
-                        } as Intervention)
-                    }
-                />
+                {isFetchingCosts ? (
+                    <LoadingSpinner absolute={true} />
+                ) : (
+                    <InterventionCostForm
+                        defaultValues={{
+                            unit: intervention?.unit,
+                            cost_per_unit:
+                                intervention?.cost_per_unit ?? undefined,
+                            cost_lines: cost_lines ?? [],
+                        }}
+                        onConfirm={costConfig =>
+                            onConfirm(
+                                {
+                                    ...intervention,
+                                    cost_per_unit: costConfig.cost_per_unit,
+                                    unit: costConfig.unit,
+                                } as Intervention,
+                                costConfig.cost_lines,
+                            )
+                        }
+                    />
+                )}
             </Drawer>
         </>
     );
