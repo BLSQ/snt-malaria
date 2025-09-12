@@ -75,7 +75,7 @@ class InterventionCostCategory(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
-class InterventionCostLine(models.Model):
+class InterventionCost(models.Model):
     class Meta:
         app_label = "snt_malaria"
         unique_together = []
