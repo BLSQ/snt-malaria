@@ -13,7 +13,6 @@ export type Intervention = {
     cost_per_unit: number | null;
     intervention_category: number;
     cost_unit: string;
-    cost_line: InterventionCostLine[];
 };
 
 export type InterventionCostCategory = {
@@ -23,7 +22,7 @@ export type InterventionCostCategory = {
 
 export type InterventionCostLine = {
     name: string;
-    category: number;
+    category_id: number;
     cost: number;
     id: number;
 };

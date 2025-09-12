@@ -59,6 +59,6 @@ class InterventionCostsViewSet(viewsets.ModelViewSet):
             InterventionCost.objects.bulk_create(newCosts)
 
         return Response(
-            {"message": "intervention assignments created successfully."},
+            {"message": "intervention costs created successfully."},
             status=status.HTTP_201_CREATED,
         )

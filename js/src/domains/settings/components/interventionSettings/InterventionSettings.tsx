@@ -4,7 +4,11 @@ import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionCategories } from '../../../planning/hooks/useGetInterventionCategories';
 import { UseUpdateIntervention } from '../../../planning/hooks/UseUpdateIntervention';
-import { Intervention } from '../../../planning/types/interventions';
+import {
+    Intervention,
+    InterventionCostLine,
+} from '../../../planning/types/interventions';
+import { UseUpdateInterventionCosts } from '../../hooks/useUpdateInterventionCosts';
 import { MESSAGES } from '../../messages';
 import { InterventionCostDrawer } from './InterventionCostDrawer';
 import { InterventionRow } from './InterventionRow';
@@ -28,15 +32,27 @@ export const InterventionSettings: React.FC = () => {
     } = useGetInterventionCategories();
 
     const { mutateAsync: updateIntervention } = UseUpdateIntervention();
+    const { mutateAsync: updateInterventionCosts } =
+        UseUpdateInterventionCosts();
 
     const onUpdateIntervention = useCallback(
-        (intervention: Intervention) => {
-            updateIntervention(intervention).then(() => {
+        (intervention: Intervention, costs: InterventionCostLine[]) => {
+            Promise.all([
+                updateInterventionCosts({
+                    intervention_id: intervention.id,
+                    costs,
+                }),
+                updateIntervention(intervention),
+            ]).then(() => {
                 setInterventionCostDrawerOpen(false);
                 setSelectedIntervention(null);
             });
         },
-        [updateIntervention, setInterventionCostDrawerOpen],
+        [
+            updateIntervention,
+            setInterventionCostDrawerOpen,
+            updateInterventionCosts,
+        ],
     );
 
     const onEditInterventionCost = useCallback(
