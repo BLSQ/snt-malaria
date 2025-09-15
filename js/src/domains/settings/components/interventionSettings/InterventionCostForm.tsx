@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     FormControl,
     Box,
@@ -51,7 +51,10 @@ const styles: SxStyles = {
     formControl: {
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        alignItems: 'center',
+        alignItems: 'start',
+        '> .MuiTypography-root': {
+            paddingTop: 1,
+        },
     },
     formControlSmall: {
         '> .MuiBox-root': {
@@ -94,10 +97,34 @@ export const InterventionCostForm: React.FC<Props> = ({
         [defaultValues],
     );
 
+    const validationSchema = useMemo(
+        () =>
+            Yup.object().shape({
+                unit: Yup.string(),
+                cost_per_unit: Yup.number().required(
+                    formatMessage(MESSAGES.required),
+                ),
+                cost_lines: Yup.array().of(
+                    Yup.object().shape({
+                        name: Yup.string().required(
+                            formatMessage(MESSAGES.required),
+                        ),
+                        cost: Yup.number().required(
+                            formatMessage(MESSAGES.required),
+                        ),
+                        category_id: Yup.number().required(
+                            formatMessage(MESSAGES.required),
+                        ),
+                    }),
+                ),
+            }),
+        [formatMessage],
+    );
+
     const {
         values,
         setFieldValue,
-        setFieldError,
+        // setFieldError,
         isValid,
         handleSubmit,
         errors,
@@ -127,7 +154,6 @@ export const InterventionCostForm: React.FC<Props> = ({
         },
         [setFieldTouched, setFieldValue],
     );
-
     const getErrors = useTranslatedErrors({
         errors,
         touched,
@@ -186,7 +212,7 @@ export const InterventionCostForm: React.FC<Props> = ({
                             <Typography
                                 variant="body1"
                                 color="textSecondary"
-                                sx={{ marginRight: 0.5 }}
+                                sx={{ marginRight: 0.5, paddingTop: 1 }}
                             >
                                 $
                             </Typography>
@@ -226,6 +252,8 @@ export const InterventionCostForm: React.FC<Props> = ({
                             onUpdateField={setFieldValueAndState}
                             onAddCostLine={onAddCostLine}
                             onRemoveCostLine={onRemoveCostLine}
+                            errors={errors.cost_lines}
+                            touched={touched.cost_lines}
                         />
                     )}
                 </Box>

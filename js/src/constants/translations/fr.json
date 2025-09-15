@@ -50,6 +50,6 @@
     "iaso.snt_malaria.settings.intervention.detailedCosts":"Coûts détaillés",
     "iaso.snt_malaria.settings.intervention.detailedCostLabel":"Element",
     "iaso.snt_malaria.settings.intervention.detailedCostUnitLabel":"Unité",
-    "iaso.snt_malaria.settings.intervention.detailedCostCategoryLabel":"Catégorie"
-
+    "iaso.snt_malaria.settings.intervention.detailedCostCategoryLabel":"Catégorie",
+    "iaso.snt_malaria.settings.intervention.errors.required": "Requis"
 }

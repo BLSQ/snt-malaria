@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { FC } from 'react';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { Box, Button, Typography } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
+import { FormikErrors, FormikTouched } from 'formik';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { DropdownOptions } from 'Iaso/types/utils';
 import { noOp } from 'Iaso/utils';
@@ -15,6 +16,12 @@ type Props = {
     costLines: InterventionCostLine[];
     onAddCostLine: () => void;
     onRemoveCostLine: (index: number) => void;
+    touched: FormikTouched<InterventionCostLine>[] | undefined;
+    errors:
+        | string
+        | string[]
+        | FormikErrors<InterventionCostLine>[]
+        | undefined;
 };
 
 export const InterventionCostLinesForm: FC<Props> = ({
@@ -22,12 +29,28 @@ export const InterventionCostLinesForm: FC<Props> = ({
     onUpdateField,
     onAddCostLine,
     onRemoveCostLine,
+    errors,
+    touched,
 }) => {
     const { formatMessage } = useSafeIntl();
     const totalCost = useMemo(
-        () => costLines?.reduce((total, costLine) => total + costLine.cost, 0),
+        () =>
+            costLines?.reduce(
+                (total, costLine) => total + (costLine.cost ?? 0),
+                0,
+            ),
         [costLines],
     );
+    console.log(touched);
+
+    const getChildError = useCallback(
+        (field, index) =>
+            touched?.[index]?.[field] && errors?.[index]?.[field]
+                ? [errors[index][field]]
+                : undefined,
+        [errors, touched],
+    );
+
     return costLines ? (
         <Box sx={{ marginTop: 1.5 }}>
             {costLines.map((cd, index) => (
@@ -38,6 +61,7 @@ export const InterventionCostLinesForm: FC<Props> = ({
                         onUpdateField(`cost_lines[${index}].${field}`, value)
                     }
                     onRemove={() => onRemoveCostLine(index)}
+                    getErrors={field => getChildError(field, index)}
                 />
             ))}
             <Box
@@ -65,12 +89,14 @@ type RowProps = {
     costLine: any;
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
+    getErrors: (keyValue: string) => string[];
 };
 
 export const InterventionCostLineForm: FC<RowProps> = ({
     costLine = {},
     onUpdateField,
     onRemove = noOp,
+    getErrors,
 }) => {
     const { data: interventionCostCategories = [] } =
         useGetInterventionCostCategories<DropdownOptions<any>[]>(data =>
@@ -104,6 +130,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                     type="text"
                     label={MESSAGES.detailedCostLabel}
                     required
+                    errors={getErrors('name')}
                     withMarginTop={false}
                 />
                 <InputComponent
@@ -117,6 +144,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                     value={costLine.category_id}
                     onChange={onUpdateField}
                     label={MESSAGES.detailedCostCategoryLabel}
+                    errors={getErrors('category_id')}
                 />
             </Box>
             <InputComponent
@@ -128,6 +156,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                 label={MESSAGES.detailedCostUnitLabel}
                 wrapperSx={{ width: '95px' }}
                 value={costLine.cost}
+                errors={getErrors('cost')}
             />
         </Box>
     );

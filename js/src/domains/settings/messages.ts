@@ -57,4 +57,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.detailedCostCategoryLabel',
         defaultMessage: 'Category',
     },
+    required: {
+        id: 'iaso.snt_malaria.settings.intervention.errors.required',
+        defaultMessage: 'Required',
+    },
 });
