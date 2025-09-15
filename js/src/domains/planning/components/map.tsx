@@ -16,7 +16,7 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../../../constants/map-theme';
-import { getStyleForShape } from '../libs/map-utils';
+import { getStyleForShape, useGetOrgUnitMetric } from '../libs/map-utils';
 import { MetricsFilters, MetricType, MetricValue } from '../types/metrics';
 import { MapLegend } from './MapLegend';
 import { MapOrgUnitDetails } from './MapOrgUnitDetails';
@@ -76,16 +76,7 @@ export const Map: FC<Props> = ({
     }, [orgUnits]);
 
     // Displaying metrics on the map
-    const getSelectedMetricValue = useCallback(
-        (orgUnitId: number) => {
-            const metricValue = displayedMetricValues?.find(
-                m => m.org_unit === orgUnitId,
-            );
-            const value = metricValue?.value ?? metricValue?.string_value;
-            return value === 0 ? undefined : value;
-        },
-        [displayedMetricValues],
-    );
+    const getSelectedMetric = useGetOrgUnitMetric(displayedMetricValues);
 
     // Selecting an org unit on the map
     const [clickedOrgUnit, setClickedOrgUnit] = useState<OrgUnit | null>(null);
@@ -108,21 +99,16 @@ export const Map: FC<Props> = ({
 
     const getMapStyleForOrgUnit = useCallback(
         (orgUnitId: number) => {
-            const selectedMetricValue = getSelectedMetricValue(orgUnitId);
+            const selectedMetric = getSelectedMetric(orgUnitId);
             return getStyleForShape(
-                selectedMetricValue,
+                selectedMetric?.value,
                 displayedMetric?.legend_type,
                 displayedMetric?.legend_config,
                 orgUnitId === clickedOrgUnit?.id,
                 orgUnitIdsOnMap.includes(orgUnitId),
             );
         },
-        [
-            getSelectedMetricValue,
-            displayedMetric,
-            clickedOrgUnit,
-            orgUnitIdsOnMap,
-        ],
+        [getSelectedMetric, displayedMetric, clickedOrgUnit, orgUnitIdsOnMap],
     );
 
     return (
@@ -171,7 +157,7 @@ export const Map: FC<Props> = ({
                                     >
                                         {orgUnit.name}
                                     </Typography>
-                                    {getSelectedMetricValue(orgUnit.id) ??
+                                    {getSelectedMetric(orgUnit.id)?.label ??
                                         'N/A'}
                                 </Tooltip>
                             </GeoJSON>
