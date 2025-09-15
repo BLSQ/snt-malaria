@@ -1,40 +1,28 @@
 """
 Django management command to transform health pyramid parquet file and GeoJSON to GeoPackage format.
 
-This command transforms the NER_pyramid.parquet file together with NER_shapes.geojson
-to create a GeoPackage (.gpkg) file compatible with IASO.
+The result is a GeoPackage (.gpkg) file compatible with IASO.
 """
 
-import json
 import sqlite3
-import sys
-from pathlib import Path
-from typing import Dict, List, Optional
 
-import pandas as pd
+from pathlib import Path
+from typing import List
+
 import geopandas as gpd
+import pandas as pd
+
 from django.core.management.base import BaseCommand, CommandError
-from shapely.geometry import shape
 
 
 class Command(BaseCommand):
     help = "Transform health pyramid parquet file and GeoJSON to GeoPackage format"
 
     def add_arguments(self, parser):
+        parser.add_argument("--parquet-file", type=str, required=True, help="Path to the parquet file")
+        parser.add_argument("--geojson-file", type=str, required=True, help="Path to the GeoJSON file")
         parser.add_argument(
-            "--parquet-file",
-            type=str,
-            help="Path to the parquet file (default: NER_pyramid.parquet in plugin directory)",
-        )
-        parser.add_argument(
-            "--geojson-file",
-            type=str,
-            help="Path to the GeoJSON file (default: NER_shapes.geojson in plugin directory)",
-        )
-        parser.add_argument(
-            "--output-file",
-            type=str,
-            help="Path for the output GeoPackage file (default: output.gpkg in plugin directory)",
+            "--output-file", type=str, help="Path for the output GeoPackage file (default: output.gpkg)"
         )
         parser.add_argument(
             "--levels",
@@ -50,10 +38,10 @@ class Command(BaseCommand):
             levels = [int(x.strip()) for x in options["levels"].split(",")]
             self.stdout.write(f"Processing levels: {levels}")
 
-            # Set default file paths
+            # Set file paths
             plugin_dir = Path(__file__).parent.parent.parent
-            parquet_path = options["parquet_file"] or str(plugin_dir / "NER_pyramid.parquet")
-            geojson_path = options["geojson_file"] or str(plugin_dir / "NER_shapes.geojson")
+            parquet_path = options["parquet_file"]
+            geojson_path = options["geojson_file"]
             output_path = options["output_file"] or str(plugin_dir / "output.gpkg")
 
             # Check if input files exist
@@ -72,11 +60,13 @@ class Command(BaseCommand):
             # Filter pyramid data to specified levels
             filtered_pyramid = self.filter_pyramid_levels(pyramid_df, levels)
 
-            print("filtered_pyramid count", len(filtered_pyramid))
-            print("filtered_pyramid", filtered_pyramid.head())
-
-            # Merge pyramid data with shapes (if possible)
-            merged_gdf = self.merge_pyramid_with_shapes(filtered_pyramid, shapes_gdf)
+            # Merge pyramid data with shapes
+            merged_gdf = shapes_gdf.merge(
+                filtered_pyramid,
+                left_on="ADM2_ID",
+                right_on="LEVEL_3_ID",
+                how="left",
+            )
 
             # Transform to IASO format and write to GeoPackage
             try:
@@ -86,7 +76,7 @@ class Command(BaseCommand):
                 raise CommandError(f"Error writing GeoPackage: {e}")
 
             # Add empty groups table for IASO compatibility
-            self.create_groups_table(output_path)
+            self.add_empty_groups_table(output_path)
 
             self.stdout.write(self.style.SUCCESS(f"Successfully created GeoPackage: {output_path}"))
 
@@ -98,8 +88,8 @@ class Command(BaseCommand):
         try:
             df = pd.read_parquet(parquet_path)
             self.stdout.write(f"Successfully read parquet file: {parquet_path}")
-            self.stdout.write(f"Shape: {df.shape}")
-            self.stdout.write(f"Columns: {df.columns.tolist()}")
+            self.stdout.write(f"\tShape: {df.shape}")
+            self.stdout.write(f"\tColumns: {df.columns.tolist()}")
             return df
         except ImportError as e:
             raise CommandError(f"Missing dependency for parquet support: {e}")
@@ -111,8 +101,8 @@ class Command(BaseCommand):
         try:
             gdf = gpd.read_file(geojson_path)
             self.stdout.write(f"Successfully read GeoJSON file: {geojson_path}")
-            self.stdout.write(f"Shape: {gdf.shape}")
-            self.stdout.write(f"Columns: {gdf.columns.tolist()}")
+            self.stdout.write(f"\tShape: {gdf.shape}")
+            self.stdout.write(f"\tColumns: {gdf.columns.tolist()}")
             return gdf
         except Exception as e:
             raise CommandError(f"Error reading GeoJSON file: {e}")
@@ -129,8 +119,10 @@ class Command(BaseCommand):
             DataFrame with unique combinations for the specified levels
         """
         # Find level columns using the actual column naming pattern
+        # Always include level 0 (country) if it exists
+        all_levels = [0] + levels if 0 not in levels else levels
         level_columns = []
-        for level in levels:
+        for level in all_levels:
             # Add both ID and NAME columns for each level
             name_col = f"LEVEL_{level}_NAME"
             id_col = f"LEVEL_{level}_ID"
@@ -154,101 +146,6 @@ class Command(BaseCommand):
         self.stdout.write(f"Unique combinations: {len(unique_df)}")
 
         return unique_df
-
-    def create_groups_table(self, gpkg_path: str) -> None:
-        """Create an empty groups table in the GeoPackage for IASO compatibility."""
-        create_groups_table_query = """
-        CREATE TABLE groups (
-            fid  INTEGER NOT NULL
-                CONSTRAINT groups_pk
-                    PRIMARY KEY AUTOINCREMENT,
-            ref  TEXT    NOT NULL,
-            name TEXT    NOT NULL
-        );
-        """
-
-        insert_table_in_gpkg_content = """
-        INSERT INTO gpkg_contents(table_name, data_type, identifier) VALUES (
-            'groups',
-            'attributes',
-            'groups'
-        );
-        """
-
-        try:
-            with sqlite3.connect(gpkg_path) as conn:
-                cur = conn.cursor()
-                # Check if groups table already exists
-                cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='groups';")
-                table_exists = cur.fetchone()
-
-                if not table_exists:
-                    cur.execute(create_groups_table_query)
-                    cur.execute(insert_table_in_gpkg_content)
-                    conn.commit()
-                    self.stdout.write("Successfully created empty groups table")
-                else:
-                    self.stdout.write("Groups table already exists, skipping creation")
-        except Exception as e:
-            raise CommandError(f"Error creating groups table: {e}")
-
-    def merge_pyramid_with_shapes(self, pyramid_df: pd.DataFrame, shapes_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-        """
-        Merge pyramid data with shapes based on common identifiers.
-
-        This function attempts to match the pyramid data with the GeoJSON shapes
-        using available common columns like administrative unit names or IDs.
-        """
-        # Try to identify common columns for merging
-        pyramid_cols = set(pyramid_df.columns)
-        shapes_cols = set(shapes_gdf.columns)
-        common_cols = pyramid_cols & shapes_cols
-
-        self.stdout.write(f"Common columns: {common_cols}")
-
-        if not common_cols:
-            self.stdout.write("No common columns found for merging.")
-            self.stdout.write(f"Pyramid columns: {pyramid_cols}")
-            self.stdout.write(f"Shapes columns: {shapes_cols}")
-
-            # Try to find logical matches between pyramid and shape columns
-            merge_pairs = []
-
-            # Check for ADM1 level matching
-            if "LEVEL_1_NAME" in pyramid_cols and "ADM1_NAME" in shapes_cols:
-                merge_pairs.append(("LEVEL_1_NAME", "ADM1_NAME"))
-            if "LEVEL_1_ID" in pyramid_cols and "ADM1_ID" in shapes_cols:
-                merge_pairs.append(("LEVEL_1_ID", "ADM1_ID"))
-
-            # Check for ADM2 level matching
-            if "LEVEL_2_NAME" in pyramid_cols and "ADM2_NAME" in shapes_cols:
-                merge_pairs.append(("LEVEL_2_NAME", "ADM2_NAME"))
-            if "LEVEL_2_ID" in pyramid_cols and "ADM2_ID" in shapes_cols:
-                merge_pairs.append(("LEVEL_2_ID", "ADM2_ID"))
-
-            if merge_pairs:
-                self.stdout.write(f"Found potential merge pairs: {merge_pairs}")
-                # Use the first available merge pair
-                pyramid_col, shapes_col = merge_pairs[0]
-                self.stdout.write(f"Merging {pyramid_col} with {shapes_col}")
-
-                # Perform the merge using different column names
-                merged_gdf = shapes_gdf.merge(pyramid_df, left_on=shapes_col, right_on=pyramid_col, how="left")
-                self.stdout.write(f"Merged shape: {merged_gdf.shape}")
-                return merged_gdf
-            else:
-                self.stdout.write("No logical merge pairs found. Returning shapes only.")
-                return shapes_gdf
-
-        # Use the first common column for merging
-        merge_col = list(common_cols)[0]
-        self.stdout.write(f"Merging on column: {merge_col}")
-
-        # Perform the merge
-        merged_gdf = shapes_gdf.merge(pyramid_df, on=merge_col, how="left")
-        self.stdout.write(f"Merged shape: {merged_gdf.shape}")
-
-        return merged_gdf
 
     def write_iaso_format_gpkg(self, gdf: gpd.GeoDataFrame, output_path: str) -> None:
         """
@@ -275,26 +172,32 @@ class Command(BaseCommand):
 
         import uuid
 
-        # Create Level 0 (Country) layer
+        # Create Level 0 (Country) layer - extract from parquet data
         self.stdout.write("Creating level 0 (Country) layer...")
+
+        # Get unique country from the merged data
+        countries = gdf[["LEVEL_1_NAME", "LEVEL_1_ID"]].drop_duplicates()
+        country_names = countries["LEVEL_1_NAME"].tolist()
+        country_refs = countries["LEVEL_1_ID"].tolist()
+
         country_df = gpd.GeoDataFrame(
             {
-                "name": ["Niger"],
-                "ref": ["NER"],
-                "code": ["NER"],
-                "geography": [None],  # No geometry for country level
-                "parent": [None],
-                "parent_ref": [None],
-                "group_refs": [None],
-                "group_names": [None],
-                "uuid": [str(uuid.uuid4())],
-                "opening_date": [None],
-                "closed_date": [None],
+                "name": country_names,
+                "ref": country_refs,
+                "code": country_refs,
+                "geography": [None] * len(country_names),  # No geometry for country level
+                "parent": [None] * len(country_names),
+                "parent_ref": [None] * len(country_names),
+                "group_refs": [None] * len(country_names),
+                "group_names": [None] * len(country_names),
+                "uuid": [str(uuid.uuid4()) for _ in range(len(country_names))],
+                "opening_date": [None] * len(country_names),
+                "closed_date": [None] * len(country_names),
             }
         )
         country_gdf = gpd.GeoDataFrame(country_df[iaso_columns], geometry="geography", crs="EPSG:4326")
         country_gdf.to_file(output_path, driver="GPKG", layer="level-0-Country", crs="EPSG:4326")
-        self.stdout.write(f"Written {len(country_gdf)} country feature")
+        self.stdout.write(f"Written {len(country_gdf)} country feature(s)")
 
         # Create Level 1 (Region) layer - extract unique regions from the data
         self.stdout.write("Creating level 1 (Region) layer...")
@@ -319,8 +222,8 @@ class Command(BaseCommand):
                 "ref": region_refs,
                 "code": region_refs,
                 "geography": [None] * len(region_names),  # No geometry for region level
-                "parent": ["Niger"] * len(region_names),  # Parent is the country
-                "parent_ref": ["NER"] * len(region_names),
+                "parent": [country_names[0]] * len(region_names),  # Parent is the country
+                "parent_ref": [country_refs[0]] * len(region_names),
                 "group_refs": [None] * len(region_names),
                 "group_names": [None] * len(region_names),
                 "uuid": [str(uuid.uuid4()) for _ in range(len(region_names))],
@@ -378,23 +281,16 @@ class Command(BaseCommand):
         else:
             iaso_df["parent_ref"] = None
 
-        # Initialize empty group columns (no groups in our data)
+        # Initialize empty group columns
         iaso_df["group_refs"] = None
         iaso_df["group_names"] = None
 
         # Generate UUIDs for each org unit
         iaso_df["uuid"] = [str(uuid.uuid4()) for _ in range(len(gdf))]
 
-        # Set opening/closing dates if available from pyramid data
-        if "OPENING_DATE" in gdf.columns:
-            iaso_df["opening_date"] = gdf["OPENING_DATE"].astype(str).replace("NaT", None)
-        else:
-            iaso_df["opening_date"] = None
-
-        if "CLOSED_DATE" in gdf.columns:
-            iaso_df["closed_date"] = gdf["CLOSED_DATE"].astype(str).replace("NaT", None)
-        else:
-            iaso_df["closed_date"] = None
+        # Initialize empty opening/closing dates
+        iaso_df["opening_date"] = None
+        iaso_df["closed_date"] = None
 
         # Keep only the columns that IASO expects and set geometry
         iaso_gdf = gpd.GeoDataFrame(iaso_df[iaso_columns], geometry="geography", crs="EPSG:4326")
@@ -406,3 +302,40 @@ class Command(BaseCommand):
 
         # Write to GeoPackage following IASO format
         iaso_gdf.to_file(output_path, driver="GPKG", layer="level-2-District", crs="EPSG:4326")
+
+    def add_empty_groups_table(self, gpkg_path: str) -> None:
+        """Create an empty groups table in the GeoPackage for IASO compatibility."""
+        create_groups_table_query = """
+        CREATE TABLE groups (
+            fid  INTEGER NOT NULL
+                CONSTRAINT groups_pk
+                    PRIMARY KEY AUTOINCREMENT,
+            ref  TEXT    NOT NULL,
+            name TEXT    NOT NULL
+        );
+        """
+
+        insert_table_in_gpkg_content = """
+        INSERT INTO gpkg_contents(table_name, data_type, identifier) VALUES (
+            'groups',
+            'attributes',
+            'groups'
+        );
+        """
+
+        try:
+            with sqlite3.connect(gpkg_path) as conn:
+                cur = conn.cursor()
+                # Check if groups table already exists
+                cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='groups';")
+                table_exists = cur.fetchone()
+
+                if not table_exists:
+                    cur.execute(create_groups_table_query)
+                    cur.execute(insert_table_in_gpkg_content)
+                    conn.commit()
+                    self.stdout.write("Successfully created empty groups table")
+                else:
+                    self.stdout.write("Groups table already exists, skipping creation")
+        except Exception as e:
+            raise CommandError(f"Error creating groups table: {e}")
