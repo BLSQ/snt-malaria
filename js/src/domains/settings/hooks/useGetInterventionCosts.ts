@@ -1,14 +1,14 @@
 import { UseQueryResult } from 'react-query';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
-import { InterventionCostLine } from '../../planning/types/interventions';
+import { InterventionCostLine } from '../types/interventionCost';
 
 export const useGetInterventionCosts = <T = InterventionCostLine[]>(
     intervention_id: number | undefined,
     selectFn?: (data: InterventionCostLine[]) => T,
 ): UseQueryResult<T | InterventionCostLine[], Error> => {
     return useSnackQuery({
-        queryKey: ['interventionCosts'],
+        queryKey: ['interventionCosts', intervention_id],
         queryFn: () =>
             intervention_id
                 ? getRequest(

@@ -6,9 +6,9 @@ import { IconButton, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { DropdownOptions } from 'Iaso/types/utils';
 import { noOp } from 'Iaso/utils';
-import { InterventionCostLine } from '../../../planning/types/interventions';
 import { useGetInterventionCostCategories } from '../../hooks/useGetInterventionCostCategories';
 import { MESSAGES } from '../../messages';
+import { InterventionCostLine } from '../../types/interventionCost';
 
 type Props = {
     onUpdateField: (field: string, value: any) => void;
@@ -33,7 +33,7 @@ export const InterventionCostLinesForm: FC<Props> = ({
             {costLines.map((cd, index) => (
                 <InterventionCostLineForm
                     key={`cost-details-row-${cd.id}`}
-                    costLines={cd}
+                    costLine={cd}
                     onUpdateField={(field, value) =>
                         onUpdateField(`cost_lines[${index}].${field}`, value)
                     }
@@ -62,13 +62,13 @@ export const InterventionCostLinesForm: FC<Props> = ({
 };
 
 type RowProps = {
-    costLines: any;
+    costLine: any;
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
 };
 
 export const InterventionCostLineForm: FC<RowProps> = ({
-    costLines = {},
+    costLine = {},
     onUpdateField,
     onRemove = noOp,
 }) => {
@@ -100,7 +100,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                 <InputComponent
                     keyValue="name"
                     onChange={onUpdateField}
-                    value={costLines.name}
+                    value={costLine.name}
                     type="text"
                     label={MESSAGES.detailedCostLabel}
                     required
@@ -114,7 +114,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                     wrapperSx={{ flexGrow: 1 }}
                     clearable={false}
                     options={interventionCostCategories}
-                    value={costLines.category_id}
+                    value={costLine.category_id}
                     onChange={onUpdateField}
                     label={MESSAGES.detailedCostCategoryLabel}
                 />
@@ -127,7 +127,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                 withMarginTop={false}
                 label={MESSAGES.detailedCostUnitLabel}
                 wrapperSx={{ width: '95px' }}
-                value={costLines.cost}
+                value={costLine.cost}
             />
         </Box>
     );

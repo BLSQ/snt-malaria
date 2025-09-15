@@ -6,11 +6,8 @@ from plugins.snt_malaria.models import Intervention, InterventionCost, Intervent
 class InterventionCostSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionCost
-        fields = [
-            "id",
-            "name",
-        ]
-        read_only_fields = ["id", "name"]
+        fields = ["id", "name", "cost", "category_id"]
+        read_only_fields = fields
 
 
 class InterventionCostWriteSerializer(serializers.ModelSerializer):

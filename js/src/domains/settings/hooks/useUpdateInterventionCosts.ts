@@ -1,13 +1,23 @@
 import { UseMutationResult } from 'react-query';
 import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { InterventionCostLine } from '../../planning/types/interventions';
+import { putIntervention } from '../../planning/hooks/UseUpdateIntervention';
+import { Intervention } from '../../planning/types/interventions';
+import { InterventionCostLine } from '../types/interventionCost';
 
 export const UseUpdateInterventionCosts = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: {
-            intervention_id: number;
+            intervention: Intervention;
             costs: InterventionCostLine[];
-        }) => postRequest(`/api/snt_malaria/interventioncosts/`, body),
-        invalidateQueryKey: ['interventionCategories'],
+        }) => {
+            return Promise.all([
+                putIntervention(body.intervention),
+                postRequest(`/api/snt_malaria/interventioncosts/`, {
+                    intervention_id: body.intervention.id,
+                    costs: body.costs,
+                }),
+            ]);
+        },
+        invalidateQueryKey: ['interventionCosts', 'interventionCategories'],
     });

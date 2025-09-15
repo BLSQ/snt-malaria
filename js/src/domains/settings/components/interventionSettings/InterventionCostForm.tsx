@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     FormControl,
     Box,
@@ -14,8 +14,8 @@ import * as Yup from 'yup';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
-import { InterventionCostLine } from '../../../planning/types/interventions';
 import { MESSAGES } from '../../messages';
+import { InterventionCostLine } from '../../types/interventionCost';
 import { InterventionCostLinesForm } from './InterventionCostLinesForm';
 
 type Props = {
@@ -89,6 +89,11 @@ export const InterventionCostForm: React.FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
     const [isDetailedMode, setIsDetailedMode] = useState<boolean>(false);
+    useEffect(
+        () => setIsDetailedMode(defaultValues.cost_lines?.length > 0),
+        [defaultValues],
+    );
+
     const {
         values,
         setFieldValue,
