@@ -42,6 +42,7 @@ class Intervention(SoftDeletableModel):
         decimal_places=2,
         null=True,
         blank=True,
+        default=0
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
