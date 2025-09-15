@@ -3,15 +3,13 @@ import { Box, Card, CardContent, CardHeader, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionCategories } from '../../../planning/hooks/useGetInterventionCategories';
-import { UseUpdateIntervention } from '../../../planning/hooks/UseUpdateIntervention';
-import {
-    Intervention,
-    InterventionCostLine,
-} from '../../../planning/types/interventions';
+import { Intervention } from '../../../planning/types/interventions';
 import { UseUpdateInterventionCosts } from '../../hooks/useUpdateInterventionCosts';
 import { MESSAGES } from '../../messages';
+import { InterventionCostLine } from '../../types/interventionCost';
 import { InterventionCostDrawer } from './InterventionCostDrawer';
 import { InterventionRow } from './InterventionRow';
+import { useGetInterventionCosts } from '../../hooks/useGetInterventionCosts';
 
 const styles: SxStyles = {
     subtitle: { marginBottom: 0.5, fontWeight: 'bold' },
@@ -31,28 +29,20 @@ export const InterventionSettings: React.FC = () => {
         isFetching: isLoadingCategories = true,
     } = useGetInterventionCategories();
 
-    const { mutateAsync: updateIntervention } = UseUpdateIntervention();
     const { mutateAsync: updateInterventionCosts } =
         UseUpdateInterventionCosts();
 
     const onUpdateIntervention = useCallback(
         (intervention: Intervention, costs: InterventionCostLine[]) => {
-            Promise.all([
-                updateInterventionCosts({
-                    intervention_id: intervention.id,
-                    costs,
-                }),
-                updateIntervention(intervention),
-            ]).then(() => {
+            updateInterventionCosts({
+                intervention: intervention,
+                costs,
+            }).then(() => {
                 setInterventionCostDrawerOpen(false);
                 setSelectedIntervention(null);
             });
         },
-        [
-            updateIntervention,
-            setInterventionCostDrawerOpen,
-            updateInterventionCosts,
-        ],
+        [setInterventionCostDrawerOpen, updateInterventionCosts],
     );
 
     const onEditInterventionCost = useCallback(

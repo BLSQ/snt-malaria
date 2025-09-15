@@ -3,11 +3,9 @@ import { Drawer } from '@mui/material';
 import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
-import {
-    Intervention,
-    InterventionCostLine,
-} from '../../../planning/types/interventions';
+import { Intervention } from '../../../planning/types/interventions';
 import { useGetInterventionCosts } from '../../hooks/useGetInterventionCosts';
+import { InterventionCostLine } from '../../types/interventionCost';
 import { InterventionCostForm } from './InterventionCostForm';
 
 type Props = {
@@ -44,8 +42,10 @@ export const InterventionCostDrawer: React.FC<Props> = ({
         costConfig => {
             onConfirm({
                 ...intervention,
-                ...costConfig,
-            } as Intervention);
+                cost_per_unit: costConfig.cost_per_unit,
+                unit_cost: costConfig.unit_cost
+            } as Intervention,
+            costConfig.cost_lines);
         },
         [onConfirm, intervention],
     );
@@ -72,7 +72,7 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                                 intervention?.cost_per_unit ?? undefined,
                             cost_lines: cost_lines ?? [],
                         }}
-                        onConfirm={costConfig => onConfirm(handleFormConfirm)}
+                        onConfirm={handleFormConfirm}
                     />
                 )}
             </Drawer>

@@ -15,18 +15,6 @@ export type Intervention = {
     cost_unit: string;
 };
 
-export type InterventionCostCategory = {
-    name: string;
-    id: string;
-};
-
-export type InterventionCostLine = {
-    name: string;
-    category_id: number;
-    cost: number;
-    id: number;
-};
-
 export type InterventionAssignmentCreate = {
     orgunit_interventions: { [orgUnitId: number]: number[] };
     scenario_id: number;
