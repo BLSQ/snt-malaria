@@ -1,4 +1,5 @@
 name: Deploy SNT Malaria Web App
+run-name: Deploy SNT ${{ inputs.branch }} (IASO ${{ inputs.iaso_ref }}) to ${{ inputs.environment }} by @${{ github.actor }}
 
 on:
     workflow_dispatch:
