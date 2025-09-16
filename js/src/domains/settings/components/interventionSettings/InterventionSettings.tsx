@@ -9,7 +9,6 @@ import { MESSAGES } from '../../messages';
 import { InterventionCostLine } from '../../types/interventionCost';
 import { InterventionCostDrawer } from './InterventionCostDrawer';
 import { InterventionRow } from './InterventionRow';
-import { useGetInterventionCosts } from '../../hooks/useGetInterventionCosts';
 
 const styles: SxStyles = {
     subtitle: { marginBottom: 0.5, fontWeight: 'bold' },
