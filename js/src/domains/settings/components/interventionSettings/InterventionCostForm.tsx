@@ -33,6 +33,12 @@ const styles: SxStyles = {
             maxWidth: '95px',
         },
     },
+    costControlWrapper: {
+        maxWidth: '95px',
+        marginLeft: 'auto',
+        display: 'flex',
+        alignItems: 'center',
+    },
     inputLabel: {
         marginBottom: 1,
     },
@@ -126,14 +132,7 @@ export const InterventionCostForm: React.FC<Props> = ({
                         <Typography>
                             {formatMessage(MESSAGES.costPerUnit)}
                         </Typography>
-                        <Box
-                            sx={{
-                                maxWidth: '95px',
-                                marginLeft: 'auto',
-                                display: 'flex',
-                                alignItems: 'center',
-                            }}
-                        >
+                        <Box sx={styles.costControlWrapper}>
                             <Typography
                                 variant="body1"
                                 color="textSecondary"

@@ -17,7 +17,7 @@ export const InterventionSettings: React.FC = () => {
     const { formatMessage } = useSafeIntl();
 
     const [interventionCostDrawerOpen, setInterventionCostDrawerOpen] =
-        React.useState(false);
+        React.useState<boolean>(false);
     const [selectedIntervention, setSelectedIntervention] =
         React.useState<Intervention | null>(null);
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Drawer } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
@@ -29,6 +29,16 @@ export const InterventionCostDrawer: React.FC<Props> = ({
     intervention,
     onConfirm,
 }) => {
+    const handleFormConfirm = useCallback(
+        costConfig => {
+            onConfirm({
+                ...intervention,
+                ...costConfig,
+            } as Intervention);
+        },
+        [onConfirm, intervention],
+    );
+
     return (
         <>
             <Drawer
@@ -46,12 +56,7 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                         unit: intervention?.unit,
                         cost_per_unit: intervention?.cost_per_unit ?? undefined,
                     }}
-                    onConfirm={costConfig =>
-                        onConfirm({
-                            ...intervention,
-                            ...costConfig,
-                        } as Intervention)
-                    }
+                    onConfirm={handleFormConfirm}
                 />
             </Drawer>
         </>
