@@ -135,6 +135,8 @@ export const Map: FC<Props> = ({
                         bounds={bounds}
                         boundsOptions={boundsOptions}
                         zoomControl={false}
+                        zoomSnap={0.25}
+                        zoomDelta={0.5}
                     >
                         <ZoomControl position="bottomright" />
                         <TileLayer url="" attribution="" />
