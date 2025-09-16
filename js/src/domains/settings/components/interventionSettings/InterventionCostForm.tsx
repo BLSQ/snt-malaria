@@ -9,8 +9,8 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
 
 type Props = {
-    defaultValues: { unit?: string; cost_per_unit?: number };
-    onConfirm: (data: { unit: string; cost_per_unit: number }) => void;
+    defaultValues: { cost_unit?: string; cost_per_unit?: number };
+    onConfirm: (data: { cost_unit: string; cost_per_unit: number }) => void;
 };
 
 const styles: SxStyles = {
@@ -50,12 +50,12 @@ const styles: SxStyles = {
 };
 
 const validationSchema = Yup.object().shape({
-    unit: Yup.string(),
+    cost_unit: Yup.string(),
     costPerUnit: Yup.number(),
 });
 
 export const InterventionCostForm: React.FC<Props> = ({
-    defaultValues = { unit: undefined, cost_per_unit: undefined },
+    defaultValues = { cost_unit: undefined, cost_per_unit: undefined },
     onConfirm,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -73,11 +73,11 @@ export const InterventionCostForm: React.FC<Props> = ({
         validationSchema,
         onSubmit: () => {
             if (
-                values.unit !== undefined &&
+                values.cost_unit !== undefined &&
                 values.cost_per_unit !== undefined
             ) {
                 onConfirm({
-                    unit: values.unit,
+                    cost_unit: values.cost_unit,
                     cost_per_unit: values.cost_per_unit,
                 });
             }
@@ -116,10 +116,10 @@ export const InterventionCostForm: React.FC<Props> = ({
                         <Typography>{formatMessage(MESSAGES.unit)}</Typography>
                         <InputComponent
                             type="text"
-                            keyValue="unit"
+                            keyValue="cost_unit"
                             onChange={setFieldValueAndState}
-                            errors={getErrors('unit')}
-                            value={values.unit}
+                            errors={getErrors('cost_unit')}
+                            value={values.cost_unit}
                             required
                             withMarginTop={false}
                         />

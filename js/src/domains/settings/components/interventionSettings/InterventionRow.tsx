@@ -48,9 +48,9 @@ export const InterventionRow: React.FC<Props> = ({
                 >
                     ${intervention.cost_per_unit ?? 'N/A'}
                 </Typography>
-                {intervention.unit && (
+                {intervention.cost_unit && (
                     <Typography variant="caption" color="textSecondary">
-                        {intervention.unit}
+                        {intervention.cost_unit}
                     </Typography>
                 )}
             </Box>

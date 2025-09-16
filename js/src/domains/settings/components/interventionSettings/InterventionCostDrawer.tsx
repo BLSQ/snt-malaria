@@ -53,7 +53,7 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                 />
                 <InterventionCostForm
                     defaultValues={{
-                        unit: intervention?.unit,
+                        cost_unit: intervention?.cost_unit,
                         cost_per_unit: intervention?.cost_per_unit ?? undefined,
                     }}
                     onConfirm={handleFormConfirm}

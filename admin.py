@@ -24,6 +24,7 @@ class InterventionAdmin(admin.ModelAdmin):
         "name",
         "intervention_category",
         "cost_per_unit",
+        "cost_unit",
         "created_by",
         "created_at",
         "updated_at",
