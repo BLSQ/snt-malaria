@@ -11,6 +11,7 @@ import { InterventionRow } from './InterventionRow';
 
 const styles: SxStyles = {
     subtitle: { marginBottom: 0.5, fontWeight: 'bold' },
+    cardBody: { position: 'relative', minHeight: '150px' },
 };
 
 export const InterventionSettings: React.FC = () => {
@@ -46,9 +47,7 @@ export const InterventionSettings: React.FC = () => {
         [setInterventionCostDrawerOpen, setSelectedIntervention],
     );
 
-    return isLoadingCategories ? (
-        <LoadingSpinner />
-    ) : (
+    return (
         <>
             <Card>
                 <CardHeader
@@ -57,27 +56,31 @@ export const InterventionSettings: React.FC = () => {
                     titleTypographyProps={{ variant: 'h6' }}
                     subheaderTypographyProps={{ variant: 'subtitle1' }}
                 />
-                <CardContent>
-                    {interventionCategories.map(category => (
-                        <Box key={category.id} sx={{ marginBottom: 4 }}>
-                            <Typography
-                                variant="subtitle1"
-                                color="textPrimary"
-                                sx={styles.subtitle}
-                            >
-                                {category.name}
-                            </Typography>
-                            {category.interventions.map(intervention => (
-                                <InterventionRow
-                                    key={intervention.id}
-                                    intervention={intervention}
-                                    onEditInterventionCost={
-                                        onEditInterventionCost
-                                    }
-                                />
-                            ))}
-                        </Box>
-                    ))}
+                <CardContent sx={styles.cardBody}>
+                    {isLoadingCategories ? (
+                        <LoadingSpinner absolute={true} />
+                    ) : (
+                        interventionCategories.map(category => (
+                            <Box key={category.id} sx={{ marginBottom: 4 }}>
+                                <Typography
+                                    variant="subtitle1"
+                                    color="textPrimary"
+                                    sx={styles.subtitle}
+                                >
+                                    {category.name}
+                                </Typography>
+                                {category.interventions.map(intervention => (
+                                    <InterventionRow
+                                        key={intervention.id}
+                                        intervention={intervention}
+                                        onEditInterventionCost={
+                                            onEditInterventionCost
+                                        }
+                                    />
+                                ))}
+                            </Box>
+                        ))
+                    )}
                 </CardContent>
             </Card>
             <InterventionCostDrawer
