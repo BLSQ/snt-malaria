@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { FC } from 'react';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { Box, Button, Typography } from '@mui/material';
@@ -16,6 +16,7 @@ type Props = {
     costLines: InterventionCostLine[];
     onAddCostLine: () => void;
     onRemoveCostLine: (index: number) => void;
+    onTotalCostChanges: (totalCost: number) => void;
     touched: FormikTouched<InterventionCostLine>[] | undefined;
     errors:
         | string
@@ -29,6 +30,7 @@ export const InterventionCostLinesForm: FC<Props> = ({
     onUpdateField,
     onAddCostLine,
     onRemoveCostLine,
+    onTotalCostChanges,
     errors,
     touched,
 }) => {
@@ -41,13 +43,17 @@ export const InterventionCostLinesForm: FC<Props> = ({
             ),
         [costLines],
     );
-    console.log(touched);
+
+    useEffect(
+        () => onTotalCostChanges(totalCost),
+        [totalCost, onTotalCostChanges],
+    );
 
     const getChildError = useCallback(
         (field, index) =>
             touched?.[index]?.[field] && errors?.[index]?.[field]
                 ? [errors[index][field]]
-                : undefined,
+                : [],
         [errors, touched],
     );
 

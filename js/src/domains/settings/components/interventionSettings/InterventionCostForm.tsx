@@ -147,6 +147,13 @@ export const InterventionCostForm: React.FC<Props> = ({
         },
     });
 
+    const onTotalCostChanges = useCallback(
+        (totalCost: number) => {
+            setFieldValue('cost_per_unit', totalCost);
+        },
+        [setFieldValue],
+    );
+
     const setFieldValueAndState = useCallback(
         (field: string, value: any) => {
             setFieldTouched(field, true);
@@ -154,6 +161,7 @@ export const InterventionCostForm: React.FC<Props> = ({
         },
         [setFieldTouched, setFieldValue],
     );
+
     const getErrors = useTranslatedErrors({
         errors,
         touched,
@@ -252,6 +260,7 @@ export const InterventionCostForm: React.FC<Props> = ({
                             onUpdateField={setFieldValueAndState}
                             onAddCostLine={onAddCostLine}
                             onRemoveCostLine={onRemoveCostLine}
+                            onTotalCostChanges={onTotalCostChanges}
                             errors={errors.cost_lines}
                             touched={touched.cost_lines}
                         />
