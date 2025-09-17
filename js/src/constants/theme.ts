@@ -51,6 +51,16 @@ export const theme = createTheme({
                 },
             },
         },
+        MuiInputBase: {
+            styleOverrides: {
+                root: {
+                    minHeight: '0',
+                    input: {
+                        padding: '8.5px 14px',
+                    },
+                },
+            },
+        },
     },
 });
 

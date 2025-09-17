@@ -42,5 +42,8 @@
     "iaso.snt_malaria.settings.title": "Paramètres",
     "iaso.snt_malaria.settings.intervention.title": "Paramètres d'intervention",
     "iaso.snt_malaria.settings.intervention.subtitle": "Définir le coût par défaut pour chaque intervention. Ce coût sera utilisé pour calculer le budget total de vos plans d'intervention.",
-    "iaso.snt_malaria.settings.intervention.editCost": "Modifier le coût"
+    "iaso.snt_malaria.settings.intervention.editCost": "Modifier le coût",
+    "iaso.snt_malaria.settings.intervention.unit": "Unité",
+    "iaso.snt_malaria.settings.intervention.costPerUnit": "Coût par unité",
+    "iaso.snt_malaria.settings.intervention.save": "Sauvegarder l'intervention"
 }

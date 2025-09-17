@@ -12,6 +12,7 @@ export type Intervention = {
     name: string;
     cost_per_unit: number | null;
     intervention_category: number;
+    cost_unit: string;
 };
 
 export type InterventionAssignmentCreate = {
