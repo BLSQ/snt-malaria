@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -48,10 +49,14 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         # Create InterventionAssignment objects
         assignments = []
         with transaction.atomic():
+            delta = 0
             for ou_interventions in valid_orgunit_interventions:
                 org_unit, interventions = ou_interventions["org_unit"], ou_interventions["interventions"]
                 # Delete existing assignments
-                InterventionAssignment.objects.filter(scenario=scenario, org_unit=org_unit).delete()
+                existingInterventions = InterventionAssignment.objects.filter(scenario=scenario, org_unit=org_unit)
+                delta += len(interventions) - existingInterventions.count()
+                existingInterventions.delete()
+
                 for intervention in interventions:
                     assignment = InterventionAssignment(
                         scenario=scenario,
@@ -66,7 +71,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
                 InterventionAssignment.objects.bulk_create(assignments)
 
             return Response(
-                {"message": "intervention assignments created successfully."},
+                {"message": _("{delta} districts added to plan").format(delta=delta)},
                 status=status.HTTP_201_CREATED,
             )
 
