@@ -16,7 +16,12 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../../../constants/map-theme';
-import { getStyleForShape, useGetOrgUnitMetric } from '../libs/map-utils';
+import {
+    defaultZoomDelta,
+    defaultZoomSnap,
+    getStyleForShape,
+    useGetOrgUnitMetric,
+} from '../libs/map-utils';
 import { MetricsFilters, MetricType, MetricValue } from '../types/metrics';
 import { MapLegend } from './MapLegend';
 import { MapOrgUnitDetails } from './MapOrgUnitDetails';
@@ -135,6 +140,8 @@ export const Map: FC<Props> = ({
                         bounds={bounds}
                         boundsOptions={boundsOptions}
                         zoomControl={false}
+                        zoomSnap={defaultZoomSnap}
+                        zoomDelta={defaultZoomDelta}
                     >
                         <ZoomControl position="bottomright" />
                         <TileLayer url="" attribution="" />

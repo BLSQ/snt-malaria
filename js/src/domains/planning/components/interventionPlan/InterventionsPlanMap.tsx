@@ -16,7 +16,12 @@ import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../../../../constants/map-theme';
 import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
-import { defaultLegend, getColorRange } from '../../libs/map-utils';
+import {
+    defaultLegend,
+    defaultZoomDelta,
+    defaultZoomSnap,
+    getColorRange,
+} from '../../libs/map-utils';
 import { Intervention, InterventionPlan } from '../../types/interventions';
 import { MapLegend } from '../MapLegend';
 import { InterventionSelect } from './InterventionSelect';
@@ -259,6 +264,8 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 zoomControl={false}
                 boundsOptions={boundsOptions}
                 bounds={bounds}
+                zoomSnap={defaultZoomSnap}
+                zoomDelta={defaultZoomDelta}
             >
                 <ZoomControl
                     position="bottomright"
