@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ("iaso", "0343_importgpkg_default_valid"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("snt_malaria", "0009_intervention_unit"),
+        ("snt_malaria", "0009_intervention_cost_unit"),
     ]
 
     operations = [
