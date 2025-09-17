@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.3.0](https://github.com/BLSQ/snt-malaria/compare/2.2.0...2.3.0) (2025-09-17)
+
+
+### Features
+
+* SNT-125 setting page for costs ([b7a3182](https://github.com/BLSQ/snt-malaria/commit/b7a3182fe3e58eb388a38ff06647b7b3105dd276))
+* SNT-126 Edit cost per intervention covers only total cost for now ([3a9e657](https://github.com/BLSQ/snt-malaria/commit/3a9e657d2c900bcf32b8784437ed8426e2105f5d))
+* SNT-134 Show intervention plan map by default & SNT-136: Improve tooltip on main map when data is missing ([b2a18bc](https://github.com/BLSQ/snt-malaria/commit/b2a18bccdc5c3b89a0653548b786f2199dbd2dcb))
+
+
+### Bug Fixes
+
+* SNT-133 Clean up setuper script ([ea93448](https://github.com/BLSQ/snt-malaria/commit/ea934484fa2f8989e71597875f86ce31d36d66ff))
+* SNT-138: Improve logs when importing metrics ([ed5e776](https://github.com/BLSQ/snt-malaria/commit/ed5e7760f966836e416a4a7ab0aff2d70f59e256))
+* SNT-141 fix ordinal string legend map color ([5e9d66b](https://github.com/BLSQ/snt-malaria/commit/5e9d66bfc3c4dae8c1c6e187249a0d7b9f6e6fc1))
+* Update dummy datasets to correctly display data ([#88](https://github.com/BLSQ/snt-malaria/issues/88)) ([7c1ddc9](https://github.com/BLSQ/snt-malaria/commit/7c1ddc9217711abc5ffd553e9073e5a33ebedf3e))
+
 ## [2.2.0](https://github.com/BLSQ/snt-malaria/compare/2.1.0...2.2.0) (2025-08-29)
 
 
