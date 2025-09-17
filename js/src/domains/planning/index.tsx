@@ -44,8 +44,6 @@ export const Planning: FC = () => {
 
     const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
     const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
-    const [selectionOnInterventionList, setSelectionOnInterventionList] =
-        useState<OrgUnit[]>([]);
     const [expanded, setExpanded] = useState('interventionsList');
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: Intervention;
@@ -71,26 +69,6 @@ export const Planning: FC = () => {
             prevSelected?.name === metric.name ? null : metric,
         );
     };
-
-    const handleAddMapOrgUnitsToList = useCallback(() => {
-        const newOrgUnits = selectionOnMap.filter(
-            orgUnit =>
-                !selectionOnInterventionList.some(
-                    unit => unit.id === orgUnit.id,
-                ),
-        );
-
-        setSelectionOnInterventionList(prev => [...prev, ...newOrgUnits]);
-
-        openSnackBar(
-            succesfullSnackBar(
-                'addedMapSelectionToList',
-                formatMessage(MESSAGES.addedMapSelectionToList, {
-                    amount: newOrgUnits.length,
-                }),
-            ),
-        );
-    }, [selectionOnMap, selectionOnInterventionList, formatMessage]);
 
     const { data: displayedMetricValues, isLoading } = useGetMetricValues({
         metricTypeId: displayedMetric?.id || null,
@@ -180,7 +158,6 @@ export const Planning: FC = () => {
                                     onAddRemoveOrgUnit={
                                         handleAddRemoveOrgUnitToMap
                                     }
-                                    onAddToList={handleAddMapOrgUnitsToList}
                                 />
                             </PaperFullHeight>
                         </PaperContainer>
@@ -202,10 +179,8 @@ export const Planning: FC = () => {
                         <PaperContainer>
                             <InterventionAssignments
                                 scenarioId={scenario?.id}
-                                selectedOrgUnits={selectionOnInterventionList}
-                                setSelectedOrgUnits={
-                                    setSelectionOnInterventionList
-                                }
+                                selectedOrgUnits={selectionOnMap}
+                                setSelectedOrgUnits={setSelectionOnMap}
                                 setSelectedInterventions={
                                     setSelectedInterventions
                                 }

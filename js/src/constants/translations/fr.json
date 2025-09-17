@@ -1,7 +1,6 @@
 {
     "iaso.snt_malaria.home.title": "SNT Malaria",
     "iaso.snt_malaria.label.addMap": "Ajouter une carte",
-    "iaso.snt_malaria.label.addToList": "Ajouter à la liste",
     "iaso.snt_malaria.label.budgetImpactTitle": "Budget et Impact",
     "iaso.snt_malaria.label.clearSelectionTooltip": "Effacer selection",
     "iaso.snt_malaria.label.interventionTitle": "Interventions",
@@ -20,7 +19,6 @@
     "iaso.snt_malaria.label.interventionList.add": "Ajouter",
     "iaso.snt_malaria.label.interventionList.remove": "Retirer",
     "iaso.snt_malaria.label.selectOrgUnitsCount": "{selectionCount} selectionnés",
-    "iaso.snt_malaria.label.addedMapSelectionToList": "{amount} district(s) ajouté(s) à la liste.",
     "iaso.snt_malaria.label.clearedMapSelection": "La sélection sur la carte a été réinitialisée",
     "iaso.snt_malaria.label.delete.confirm": "Voulez-vous vraiment supprimer ce scénario ?",
     "iaso.snt_malaria.label.delete.title": "Supprimer le scénario",

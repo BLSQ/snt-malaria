@@ -1,7 +1,6 @@
 {
     "iaso.snt_malaria.home.title": "SNT Malaria",
     "iaso.snt_malaria.label.addMap": "Add a covariant map",
-    "iaso.snt_malaria.label.addToList": "Add to list",
     "iaso.snt_malaria.label.budgetImpactTitle": "Budget & Impact",
     "iaso.snt_malaria.label.clearSelectionTooltip": "Clear selection",
     "iaso.snt_malaria.label.interventionList.addOrgUnitFromList": "Add to list",
@@ -20,7 +19,6 @@
     "iaso.snt_malaria.label.interventionList.add": "Add",
     "iaso.snt_malaria.label.interventionList.remove": "Remove",
     "iaso.snt_malaria.label.selectOrgUnitsCount": "{selectionCount} selected",
-    "iaso.snt_malaria.label.addedMapSelectionToList": "Added {amount} map selection(s) to list",
     "iaso.snt_malaria.label.clearedMapSelection": "Map selection has been cleared",
     "iaso.snt_malaria.label.delete.confirm": "Do you really want to delete this scenario?",
     "iaso.snt_malaria.label.delete.title": "Delete scenario",

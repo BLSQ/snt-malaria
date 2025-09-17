@@ -39,24 +39,16 @@ const styles: SxStyles = {
     selectCountText: (theme: Theme) => ({
         color: theme.palette.text.primary,
     }),
-    addToListBtn: (theme: Theme) => ({
-        borderRadius: theme.spacing(1),
-        fontSize: '0.875rem',
-        lineHeight: 0,
-        textTransform: 'none',
-    }),
 };
 
 type Props = {
     selectionCount: number;
-    onAddToList: () => void;
     onApplyFilters: (filters: MetricsFilters) => void;
     onClearSelection: () => void;
 };
 
 export const MapSelectionWidget: FC<Props> = ({
     selectionCount,
-    onAddToList,
     onApplyFilters,
     onClearSelection,
 }) => {
@@ -92,15 +84,6 @@ export const MapSelectionWidget: FC<Props> = ({
                 tooltipMessage={MESSAGES.clearSelectionTooltip}
                 disabled={selectionCount === 0}
             />
-            <Button
-                onClick={onAddToList}
-                variant="contained"
-                color="primary"
-                sx={styles.addToListBtn}
-                disabled={selectionCount === 0}
-            >
-                {formatMessage(MESSAGES.addToList)}
-            </Button>
             <FilterQueryBuilder
                 isOpen={queryBuilderIsOpen}
                 onClose={() => setQueryBuilderIsOpen(false)}
