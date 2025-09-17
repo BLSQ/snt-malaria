@@ -40,12 +40,14 @@ export const InterventionCostDrawer: React.FC<Props> = ({
 
     const handleFormConfirm = useCallback(
         costConfig => {
-            onConfirm({
-                ...intervention,
-                cost_per_unit: costConfig.cost_per_unit,
-                unit_cost: costConfig.unit_cost
-            } as Intervention,
-            costConfig.cost_lines);
+            onConfirm(
+                {
+                    ...intervention,
+                    cost_per_unit: costConfig.cost_per_unit,
+                    cost_unit: costConfig.cost_unit,
+                } as Intervention,
+                costConfig.cost_lines,
+            );
         },
         [onConfirm, intervention],
     );
@@ -67,7 +69,7 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                 ) : (
                     <InterventionCostForm
                         defaultValues={{
-                            unit: intervention?.unit,
+                            cost_unit: intervention?.cost_unit,
                             cost_per_unit:
                                 intervention?.cost_per_unit ?? undefined,
                             cost_lines: cost_lines ?? [],
