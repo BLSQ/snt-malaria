@@ -9,6 +9,8 @@ import { useCallback } from 'react';
 
 export const defaultLegend = '#999999';
 export const maxHue = 350;
+export const defaultZoomSnap = 0.25;
+export const defaultZoomDelta = 0.5;
 
 export const getColorRange = (count: number = 1) => {
     const colorStep = Math.round(maxHue / count);
