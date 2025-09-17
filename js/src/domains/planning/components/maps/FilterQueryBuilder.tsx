@@ -55,7 +55,7 @@ export const FilterQueryBuilder: FC<Props> = ({
         return {
             label,
             type: 'number',
-            operators: ['greater_or_equal'],
+            operators: ['less_or_equal', 'greater_or_equal'],
             defaultOperator: 'greater_or_equal',
             valueSources: ['value'],
         };
