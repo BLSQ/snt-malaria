@@ -9,5 +9,5 @@ export const putIntervention = (body: Intervention) =>
 export const UseUpdateIntervention = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: putIntervention,
-        invalidateQueryKey: ['interventionCategories'],
+        invalidateQueryKey: ['intervention_categories'],
     });

@@ -1,25 +1,27 @@
 from rest_framework import routers
 
-from .interventionassignments.views import InterventionAssignmentViewSet
-from .interventioncategories.views import InterventionCategoryViewSet
-from .interventioncostcategories.views import InterventionCostCategoryViewSet
-from .interventioncosts.views import InterventionCostsViewSet
+from .intervention_assignments.views import InterventionAssignmentViewSet
+from .intervention_categories.views import InterventionCategoryViewSet
+from .cost_breakdown_line.views import CostBreakdownLineViewSet
+from .cost_breakdown_line_categories.views import CostBreakdownLineCategoryViewSet
 from .interventions.views import InterventionViewSet
 from .scenarios.views import ScenarioViewSet
 
 
 router = routers.SimpleRouter()
-router.register(r"snt_malaria/interventioncategories", InterventionCategoryViewSet, basename="interventioncategories")
+router.register(r"snt_malaria/intervention_categories", InterventionCategoryViewSet, basename="intervention_categories")
 router.register(r"snt_malaria/interventions", InterventionViewSet, basename="interventions")
 router.register(
-    r"snt_malaria/interventionassignments",
+    r"snt_malaria/intervention_assignments",
     InterventionAssignmentViewSet,
-    basename="interventionassignments",
+    basename="intervention_assignments",
 )
 router.register(r"snt_malaria/scenarios", ScenarioViewSet, basename="scenarios")
 
 # Cost api
-router.register(r"snt_malaria/interventioncosts", InterventionCostsViewSet, basename="interventioncosts")
+router.register(r"snt_malaria/cost_breakdown_lines", CostBreakdownLineViewSet, basename="intervention_costs")
 router.register(
-    r"snt_malaria/interventioncostcategories", InterventionCostCategoryViewSet, basename="interventioncostcategories"
+    r"snt_malaria/cost_breakdown_line_categories",
+    CostBreakdownLineCategoryViewSet,
+    basename="cost_breakdown_line_categories",
 )

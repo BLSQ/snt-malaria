@@ -14,7 +14,7 @@ export const useGetInterventionAssignments = (
         scenario_id: scenarioId,
     };
     const url = makeUrlWithParams(
-        '/api/snt_malaria/interventionassignments',
+        '/api/snt_malaria/intervention_assignments',
         params,
     );
 

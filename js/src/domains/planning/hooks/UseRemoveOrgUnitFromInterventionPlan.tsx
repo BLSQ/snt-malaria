@@ -2,7 +2,7 @@ import { UseMutationResult } from 'react-query';
 import { deleteRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 
-const baseUrl = '/api/snt_malaria/interventionassignments/';
+const baseUrl = '/api/snt_malaria/intervention_assignments/';
 
 export const UseRemoveOrgUnitFromInterventionPlan = (): UseMutationResult =>
     useSnackMutation({

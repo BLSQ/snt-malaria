@@ -29,12 +29,12 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.save',
         defaultMessage: 'Save intervention',
     },
-    removeCostLine: {
-        id: 'iaso.snt_malaria.settings.intervention.removeCostLine',
+    removeCostBreakdownLine: {
+        id: 'iaso.snt_malaria.settings.intervention.removeCostBreakdownLine',
         defaultMessage: 'Remove cost',
     },
-    addCostLine: {
-        id: 'iaso.snt_malaria.settings.intervention.addCostLine',
+    addCostBreakdownLine: {
+        id: 'iaso.snt_malaria.settings.intervention.addCostBreakdownLine',
         defaultMessage: 'Add cost',
     },
     totalCost: {

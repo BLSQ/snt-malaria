@@ -3,21 +3,21 @@ import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { putIntervention } from '../../planning/hooks/UseUpdateIntervention';
 import { Intervention } from '../../planning/types/interventions';
-import { InterventionCostLine } from '../types/interventionCost';
+import { CostBreakdownLine } from '../types/CostBreakdownLine';
 
-export const UseUpdateInterventionCosts = (): UseMutationResult =>
+export const useUpdateCostBreakdownLines = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: {
             intervention: Intervention;
-            costs: InterventionCostLine[];
+            costs: CostBreakdownLine[];
         }) => {
             return Promise.all([
                 putIntervention(body.intervention),
-                postRequest(`/api/snt_malaria/interventioncosts/`, {
+                postRequest(`/api/snt_malaria/cost_breakdown_lines/`, {
                     intervention_id: body.intervention.id,
                     costs: body.costs,
                 }),
             ]);
         },
-        invalidateQueryKey: ['interventionCosts', 'interventionCategories'],
+        invalidateQueryKey: ['costBreakdownLines', 'interventionCategories'],
     });

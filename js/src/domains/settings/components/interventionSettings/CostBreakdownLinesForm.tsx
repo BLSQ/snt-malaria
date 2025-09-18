@@ -7,29 +7,25 @@ import { FormikErrors, FormikTouched } from 'formik';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { DropdownOptions } from 'Iaso/types/utils';
 import { noOp } from 'Iaso/utils';
-import { useGetInterventionCostCategories } from '../../hooks/useGetInterventionCostCategories';
+import { useGetCostBreakdownLineCategories } from '../../hooks/useGetCostBreakdownLineCategories';
 import { MESSAGES } from '../../messages';
-import { InterventionCostLine } from '../../types/interventionCost';
+import { CostBreakdownLine } from '../../types/CostBreakdownLine';
 
 type Props = {
     onUpdateField: (field: string, value: any) => void;
-    costLines: InterventionCostLine[];
-    onAddCostLine: () => void;
-    onRemoveCostLine: (index: number) => void;
+    costBreakdownLines: CostBreakdownLine[];
+    onAddCostBreakdownLine: () => void;
+    onRemoveCostBreakdownLine: (index: number) => void;
     onTotalCostChanges: (totalCost: number) => void;
-    touched: FormikTouched<InterventionCostLine>[] | undefined;
-    errors:
-        | string
-        | string[]
-        | FormikErrors<InterventionCostLine>[]
-        | undefined;
+    touched: FormikTouched<CostBreakdownLine>[] | undefined;
+    errors: string | string[] | FormikErrors<CostBreakdownLine>[] | undefined;
 };
 
-export const InterventionCostLinesForm: FC<Props> = ({
-    costLines,
+export const CostBreakdownLinesForm: FC<Props> = ({
+    costBreakdownLines,
     onUpdateField,
-    onAddCostLine,
-    onRemoveCostLine,
+    onAddCostBreakdownLine,
+    onRemoveCostBreakdownLine,
     onTotalCostChanges,
     errors,
     touched,
@@ -37,11 +33,12 @@ export const InterventionCostLinesForm: FC<Props> = ({
     const { formatMessage } = useSafeIntl();
     const totalCost = useMemo(
         () =>
-            costLines?.reduce(
-                (total, costLine) => total + (costLine.cost ?? 0),
+            costBreakdownLines?.reduce(
+                (total, costBreakdownLine) =>
+                    total + (costBreakdownLine.cost ?? 0),
                 0,
             ),
-        [costLines],
+        [costBreakdownLines],
     );
 
     useEffect(
@@ -57,16 +54,19 @@ export const InterventionCostLinesForm: FC<Props> = ({
         [errors, touched],
     );
 
-    return costLines ? (
+    return costBreakdownLines ? (
         <Box sx={{ marginTop: 1.5 }}>
-            {costLines.map((cd, index) => (
-                <InterventionCostLineForm
+            {costBreakdownLines.map((cd, index) => (
+                <CostBreakdownLineForm
                     key={`cost-details-row-${cd.id}`}
-                    costLine={cd}
+                    costBreakdownLine={cd}
                     onUpdateField={(field, value) =>
-                        onUpdateField(`cost_lines[${index}].${field}`, value)
+                        onUpdateField(
+                            `cost_breakdown_lines[${index}].${field}`,
+                            value,
+                        )
                     }
-                    onRemove={() => onRemoveCostLine(index)}
+                    onRemove={() => onRemoveCostBreakdownLine(index)}
                     getErrors={field => getChildError(field, index)}
                 />
             ))}
@@ -77,8 +77,8 @@ export const InterventionCostLinesForm: FC<Props> = ({
                     justifyContent: 'space-between',
                 }}
             >
-                <Button variant="text" onClick={onAddCostLine}>
-                    {formatMessage(MESSAGES.addCostLine)}
+                <Button variant="text" onClick={onAddCostBreakdownLine}>
+                    {formatMessage(MESSAGES.addCostBreakdownLine)}
                 </Button>
                 <Typography>
                     {formatMessage(MESSAGES.totalCost)} $
@@ -92,20 +92,20 @@ export const InterventionCostLinesForm: FC<Props> = ({
 };
 
 type RowProps = {
-    costLine: any;
+    costBreakdownLine: any;
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
     getErrors: (keyValue: string) => string[];
 };
 
-export const InterventionCostLineForm: FC<RowProps> = ({
-    costLine = {},
+export const CostBreakdownLineForm: FC<RowProps> = ({
+    costBreakdownLine = {},
     onUpdateField,
     onRemove = noOp,
     getErrors,
 }) => {
     const { data: interventionCostCategories = [] } =
-        useGetInterventionCostCategories<DropdownOptions<any>[]>(data =>
+        useGetCostBreakdownLineCategories<DropdownOptions<any>[]>(data =>
             data.map(d => ({
                 value: d.id,
                 label: d.name,
@@ -124,7 +124,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
             <IconButton
                 onClick={() => onRemove()}
                 overrideIcon={RemoveCircleOutlineIcon}
-                tooltipMessage={MESSAGES.removeCostLine}
+                tooltipMessage={MESSAGES.removeCostBreakdownLine}
             ></IconButton>
             <Box
                 sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}
@@ -132,7 +132,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                 <InputComponent
                     keyValue="name"
                     onChange={onUpdateField}
-                    value={costLine.name}
+                    value={costBreakdownLine.name}
                     type="text"
                     label={MESSAGES.detailedCostLabel}
                     required
@@ -147,7 +147,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                     wrapperSx={{ flexGrow: 1 }}
                     clearable={false}
                     options={interventionCostCategories}
-                    value={costLine.category_id}
+                    value={costBreakdownLine.category_id}
                     onChange={onUpdateField}
                     label={MESSAGES.detailedCostCategoryLabel}
                     errors={getErrors('category_id')}
@@ -161,7 +161,7 @@ export const InterventionCostLineForm: FC<RowProps> = ({
                 withMarginTop={false}
                 label={MESSAGES.detailedCostUnitLabel}
                 wrapperSx={{ width: '95px' }}
-                value={costLine.cost}
+                value={costBreakdownLine.cost}
                 errors={getErrors('cost')}
             />
         </Box>
