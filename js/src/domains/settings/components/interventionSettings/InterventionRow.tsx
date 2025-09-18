@@ -46,11 +46,11 @@ export const InterventionRow: React.FC<Props> = ({
                     color="textPrimary"
                     sx={styles.cost}
                 >
-                    ${intervention.cost_per_unit ?? 'N/A'}
+                    ${intervention.unit_cost ?? 'N/A'}
                 </Typography>
-                {intervention.cost_unit && (
+                {intervention.unit_type && (
                     <Typography variant="caption" color="textSecondary">
-                        {intervention.cost_unit}
+                        {intervention.unit_type}
                     </Typography>
                 )}
             </Box>

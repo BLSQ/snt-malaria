@@ -3,28 +3,28 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
-from plugins.snt_malaria.models import InterventionCost
+from plugins.snt_malaria.models import CostBreakdownLine
 
-from .filters import InterventionCostListFilter
+from .filters import CostBreakdownLineListFilter
 from .serializers import (
-    InterventionCostSerializer,
-    InterventionCostWriteSerializer,
+    CostBreakdownLineSerializer,
+    CostBreakdownLineWriteSerializer,
 )
 
 
-class InterventionCostsViewSet(viewsets.ModelViewSet):
+class CostBreakdownLineViewSet(viewsets.ModelViewSet):
     ordering_fields = ["id"]
     http_method_names = ["get", "options", "post"]
     filter_backends = [DjangoFilterBackend]
-    filterset_class = InterventionCostListFilter
+    filterset_class = CostBreakdownLineListFilter
 
     def get_serializer_class(self):
         if self.request.method == "POST":
-            return InterventionCostWriteSerializer
-        return InterventionCostSerializer
+            return CostBreakdownLineWriteSerializer
+        return CostBreakdownLineSerializer
 
     def get_queryset(self):
-        return InterventionCost.objects.prefetch_related("intervention").filter(
+        return CostBreakdownLine.objects.prefetch_related("intervention").filter(
             intervention__intervention_category__account=self.request.user.iaso_profile.account
         )
 
@@ -44,9 +44,9 @@ class InterventionCostsViewSet(viewsets.ModelViewSet):
 
         # Create InterventionAssignment objects
         with transaction.atomic():
-            InterventionCost.objects.filter(intervention=intervention).delete()
+            CostBreakdownLine.objects.filter(intervention=intervention).delete()
             newCosts = [
-                InterventionCost(
+                CostBreakdownLine(
                     name=item["name"],
                     cost=item["cost"],
                     category=cost_categories_dict[item["category_id"]],
@@ -56,7 +56,7 @@ class InterventionCostsViewSet(viewsets.ModelViewSet):
                 )
                 for item in costs
             ]
-            InterventionCost.objects.bulk_create(newCosts)
+            CostBreakdownLine.objects.bulk_create(newCosts)
 
         return Response(
             {"message": "intervention costs created successfully."},

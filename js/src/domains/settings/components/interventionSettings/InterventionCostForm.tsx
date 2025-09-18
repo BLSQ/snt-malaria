@@ -15,19 +15,19 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
-import { InterventionCostLine } from '../../types/interventionCost';
-import { InterventionCostLinesForm } from './InterventionCostLinesForm';
+import { CostBreakdownLine } from '../../types/CostBreakdownLine';
+import { CostBreakdownLinesForm } from './CostBreakdownLinesForm';
 
 type Props = {
     defaultValues: {
-        cost_unit?: string;
-        cost_per_unit?: number;
-        cost_lines: InterventionCostLine[];
+        unit_type?: string;
+        unit_cost?: number;
+        cost_breakdown_lines: CostBreakdownLine[];
     };
     onConfirm: (data: {
-        cost_unit: string;
-        cost_per_unit: number;
-        cost_lines: any[];
+        unit_type: string;
+        unit_cost: number;
+        cost_breakdown_lines: any[];
     }) => void;
 };
 
@@ -77,23 +77,18 @@ const styles: SxStyles = {
     },
 };
 
-const validationSchema = Yup.object().shape({
-    cost_unit: Yup.string(),
-    costPerUnit: Yup.number(),
-});
-
 export const InterventionCostForm: React.FC<Props> = ({
     defaultValues = {
-        cost_unit: undefined,
-        cost_per_unit: undefined,
-        cost_lines: [],
+        unit_type: undefined,
+        unit_cost: undefined,
+        cost_breakdown_lines: [],
     },
     onConfirm,
 }) => {
     const { formatMessage } = useSafeIntl();
     const [isDetailedMode, setIsDetailedMode] = useState<boolean>(false);
     useEffect(
-        () => setIsDetailedMode(defaultValues.cost_lines?.length > 0),
+        () => setIsDetailedMode(defaultValues.cost_breakdown_lines?.length > 0),
         [defaultValues],
     );
 
@@ -101,10 +96,10 @@ export const InterventionCostForm: React.FC<Props> = ({
         () =>
             Yup.object().shape({
                 unit: Yup.string(),
-                cost_per_unit: Yup.number().required(
+                unit_cost: Yup.number().required(
                     formatMessage(MESSAGES.required),
                 ),
-                cost_lines: Yup.array().of(
+                cost_breakdown_lines: Yup.array().of(
                     Yup.object().shape({
                         name: Yup.string().required(
                             formatMessage(MESSAGES.required),
@@ -135,13 +130,15 @@ export const InterventionCostForm: React.FC<Props> = ({
         validationSchema,
         onSubmit: () => {
             if (
-                values.cost_unit !== undefined &&
-                values.cost_per_unit !== undefined
+                values.unit_type !== undefined &&
+                values.unit_cost !== undefined
             ) {
                 onConfirm({
-                    cost_unit: values.cost_unit,
-                    cost_per_unit: values.cost_per_unit,
-                    cost_lines: isDetailedMode ? values.cost_lines : [],
+                    unit_type: values.unit_type,
+                    unit_cost: values.unit_cost,
+                    cost_breakdown_lines: isDetailedMode
+                        ? values.cost_breakdown_lines
+                        : [],
                 });
             }
         },
@@ -149,7 +146,7 @@ export const InterventionCostForm: React.FC<Props> = ({
 
     const onTotalCostChanges = useCallback(
         (totalCost: number) => {
-            setFieldValue('cost_per_unit', totalCost);
+            setFieldValue('unit_cost', totalCost);
         },
         [setFieldValue],
     );
@@ -169,16 +166,19 @@ export const InterventionCostForm: React.FC<Props> = ({
         messages: MESSAGES,
     });
 
-    const onAddCostLine = useCallback(() => {
-        const newCostLines = [...values.cost_lines, { ...DEFAULT_COST_LINE }];
-        setFieldValue('cost_lines', newCostLines);
+    const onAddCostItem = useCallback(() => {
+        const newCostItems = [
+            ...values.cost_breakdown_lines,
+            { ...DEFAULT_COST_LINE },
+        ];
+        setFieldValue('cost_breakdown_lines', newCostItems);
     }, [values, setFieldValue]);
 
-    const onRemoveCostLine = useCallback(
+    const onRemoveCostItem = useCallback(
         (index: number) => {
-            const newCostLines = [...values.cost_lines];
-            newCostLines.splice(index, 1);
-            setFieldValue('cost_lines', newCostLines);
+            const newCostItems = [...values.cost_breakdown_lines];
+            newCostItems.splice(index, 1);
+            setFieldValue('cost_breakdown_lines', newCostItems);
         },
         [values, setFieldValue],
     );
@@ -200,10 +200,10 @@ export const InterventionCostForm: React.FC<Props> = ({
                         <Typography>{formatMessage(MESSAGES.unit)}</Typography>
                         <InputComponent
                             type="text"
-                            keyValue="cost_unit"
+                            keyValue="unit_type"
                             onChange={setFieldValueAndState}
-                            errors={getErrors('cost_unit')}
-                            value={values.cost_unit}
+                            errors={getErrors('unit_type')}
+                            value={values.unit_type}
                             required
                             withMarginTop={false}
                         />
@@ -226,10 +226,10 @@ export const InterventionCostForm: React.FC<Props> = ({
                             </Typography>
                             <InputComponent
                                 type="number"
-                                keyValue="cost_per_unit"
+                                keyValue="unit_cost"
                                 onChange={setFieldValueAndState}
-                                errors={getErrors('cost_per_unit')}
-                                value={values.cost_per_unit}
+                                errors={getErrors('unit_cost')}
+                                value={values.unit_cost}
                                 required
                                 withMarginTop={false}
                                 disabled={isDetailedMode}
@@ -255,14 +255,14 @@ export const InterventionCostForm: React.FC<Props> = ({
                         />
                     </FormControl>
                     {isDetailedMode && (
-                        <InterventionCostLinesForm
-                            costLines={values.cost_lines}
+                        <CostBreakdownLinesForm
+                            costBreakdownLines={values.cost_breakdown_lines}
                             onUpdateField={setFieldValueAndState}
-                            onAddCostLine={onAddCostLine}
-                            onRemoveCostLine={onRemoveCostLine}
+                            onAddCostBreakdownLine={onAddCostItem}
+                            onRemoveCostBreakdownLine={onRemoveCostItem}
                             onTotalCostChanges={onTotalCostChanges}
-                            errors={errors.cost_lines}
-                            touched={touched.cost_lines}
+                            errors={errors.cost_breakdown_lines}
+                            touched={touched.cost_breakdown_lines}
                         />
                     )}
                 </Box>

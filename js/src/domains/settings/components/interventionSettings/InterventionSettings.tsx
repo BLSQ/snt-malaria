@@ -4,9 +4,9 @@ import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionCategories } from '../../../planning/hooks/useGetInterventionCategories';
 import { Intervention } from '../../../planning/types/interventions';
-import { UseUpdateInterventionCosts } from '../../hooks/useUpdateInterventionCosts';
+import { useUpdateCostBreakdownLines } from '../../hooks/useUpdateCostBreakdownLines';
 import { MESSAGES } from '../../messages';
-import { InterventionCostLine } from '../../types/interventionCost';
+import { CostBreakdownLine } from '../../types/CostBreakdownLine';
 import { InterventionCostDrawer } from './InterventionCostDrawer';
 import { InterventionRow } from './InterventionRow';
 
@@ -29,10 +29,10 @@ export const InterventionSettings: React.FC = () => {
     } = useGetInterventionCategories();
 
     const { mutateAsync: updateInterventionCosts } =
-        UseUpdateInterventionCosts();
+        useUpdateCostBreakdownLines();
 
     const onUpdateIntervention = useCallback(
-        (intervention: Intervention, costs: InterventionCostLine[]) => {
+        (intervention: Intervention, costs: CostBreakdownLine[]) => {
             updateInterventionCosts({
                 intervention: intervention,
                 costs,

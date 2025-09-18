@@ -1,8 +1,13 @@
 from django.contrib import admin
 
-from plugins.snt_malaria.models.intervention import InterventionCost, InterventionCostCategory
-
-from .models import Intervention, InterventionAssignment, InterventionCategory, Scenario
+from .models import (
+    Intervention,
+    InterventionAssignment,
+    InterventionCategory,
+    CostBreakdownLine,
+    CostBreakdownLineCategory,
+    Scenario,
+)
 
 
 @admin.register(InterventionCategory)
@@ -25,11 +30,10 @@ class InterventionAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "intervention_category",
-        "cost_per_unit",
-        "cost_unit",
+        "unit_cost",
+        "unit_type",
         "created_by",
         "created_at",
-        "updated_at",
         "deleted_at",
     )
     search_fields = ("name", "description")
@@ -44,7 +48,6 @@ class InterventionAssignmentAdmin(admin.ModelAdmin):
         "scenario",
         "created_by",
         "created_at",
-        "updated_at",
     )
     list_filter = ("scenario", "intervention", "created_by")
     search_fields = ("scenario__name", "org_unit__name")
@@ -65,16 +68,16 @@ class ScenarioAdmin(admin.ModelAdmin):
     ordering = ("name",)
 
 
-@admin.register(InterventionCostCategory)
-class InterventionCostCategoryAdmin(admin.ModelAdmin):
+@admin.register(CostBreakdownLineCategory)
+class CostBreakdownLineCategoryAdmin(admin.ModelAdmin):
     list_display = ("name", "id", "created_by", "created_at")
     search_fields = ("name", "id")
     list_filter = ("name", "id")
     ordering = ("id",)
 
 
-@admin.register(InterventionCost)
-class InterventionCostCategoryAdmin(admin.ModelAdmin):
+@admin.register(CostBreakdownLine)
+class CostBreakdownLineAdmin(admin.ModelAdmin):
     list_display = ("name", "id", "cost", "intervention", "created_by", "created_at")
     search_fields = ("name", "id")
     list_filter = ("name", "id")

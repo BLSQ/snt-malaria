@@ -1,24 +1,24 @@
 import { UseQueryResult } from 'react-query';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
-import { InterventionCostLine } from '../types/interventionCost';
+import { CostBreakdownLine } from '../types/CostBreakdownLine';
 
-export const useGetInterventionCosts = <T = InterventionCostLine[]>(
+export const useGetCostBreakdownLines = <T = CostBreakdownLine[]>(
     intervention_id: number | undefined,
-    selectFn?: (data: InterventionCostLine[]) => T,
-): UseQueryResult<T | InterventionCostLine[], Error> => {
+    selectFn?: (data: CostBreakdownLine[]) => T,
+): UseQueryResult<T | CostBreakdownLine[], Error> => {
     return useSnackQuery({
-        queryKey: ['interventionCosts', intervention_id],
+        queryKey: ['costBreakdownLines', intervention_id],
         queryFn: () =>
             intervention_id
                 ? getRequest(
-                      `/api/snt_malaria/interventioncosts?intervention_id=${intervention_id}`,
+                      `/api/snt_malaria/cost_breakdown_lines?intervention_id=${intervention_id}`,
                   )
                 : [],
         options: {
             staleTime: 1000 * 60 * 15, // in MS
             cacheTime: 1000 * 60 * 5,
-            select: (data: InterventionCostLine[]) => {
+            select: (data: CostBreakdownLine[]) => {
                 return selectFn ? selectFn(data) : data;
             },
         },

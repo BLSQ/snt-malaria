@@ -1,9 +1,9 @@
 from .intervention import (
+    CostBreakdownLine,
+    CostBreakdownLineCategory,
     Intervention,
     InterventionAssignment,
     InterventionCategory,
-    InterventionCost,
-    InterventionCostCategory,
 )
 from .scenario import Scenario
 
@@ -13,6 +13,6 @@ __all__ = [
     "InterventionAssignment",
     "InterventionCategory",
     "Scenario",
-    "InterventionCost",
-    "InterventionCostCategory",
+    "CostBreakdownLine",
+    "CostBreakdownLineCategory",
 ]
