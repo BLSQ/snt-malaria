@@ -1,6 +1,5 @@
+from .cost_breakdown import CostBreakdownLine, CostBreakdownLineCategory
 from .intervention import (
-    CostBreakdownLine,
-    CostBreakdownLineCategory,
     Intervention,
     InterventionAssignment,
     InterventionCategory,

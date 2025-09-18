@@ -1,11 +1,11 @@
 from django.contrib import admin
 
 from .models import (
+    CostBreakdownLine,
+    CostBreakdownLineCategory,
     Intervention,
     InterventionAssignment,
     InterventionCategory,
-    CostBreakdownLine,
-    CostBreakdownLineCategory,
     Scenario,
 )
 
