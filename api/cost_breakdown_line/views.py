@@ -8,7 +8,7 @@ from plugins.snt_malaria.models import CostBreakdownLine
 from .filters import CostBreakdownLineListFilter
 from .serializers import (
     CostBreakdownLineSerializer,
-    CostBreakdownLineWriteSerializer,
+    CostBreakdownLinesWriteSerializer,
 )
 
 
@@ -20,7 +20,7 @@ class CostBreakdownLineViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.request.method == "POST":
-            return CostBreakdownLineWriteSerializer
+            return CostBreakdownLinesWriteSerializer
         return CostBreakdownLineSerializer
 
     def get_queryset(self):
@@ -32,16 +32,9 @@ class CostBreakdownLineViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        print(f"{serializer.validated_data}")
-
         # Get validated objects
         intervention = serializer.validated_data["intervention"]
         costs = serializer.validated_data["costs"]
-        cost_categories = serializer.validated_data["cost_categories"]
-        print(cost_categories)
-        cost_categories_dict = {value.id: value for _, value in enumerate(cost_categories)}
-        print(f"{costs}")
-
         # Create InterventionAssignment objects
         with transaction.atomic():
             CostBreakdownLine.objects.filter(intervention=intervention).delete()
@@ -49,9 +42,8 @@ class CostBreakdownLineViewSet(viewsets.ModelViewSet):
                 CostBreakdownLine(
                     name=item["name"],
                     cost=item["cost"],
-                    category=cost_categories_dict[item["category_id"]],
+                    category=item["category"],
                     intervention=intervention,
-                    id=item["id"] if item["id"] > 0 else None,
                     created_by=request.user,
                 )
                 for item in costs
