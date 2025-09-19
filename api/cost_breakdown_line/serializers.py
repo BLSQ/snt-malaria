@@ -12,13 +12,9 @@ class CostBreakdownLineSerializer(serializers.ModelSerializer):
 
     def validate_category(self, category):
         if not category:
-            raise serializers.ValidationError(
-                f"Invalid category {category.id} for cost {self.initial_data.get('name')}"
-            )
+            raise serializers.ValidationError(f"Invalid category {category.id}")
         if category.account != self.context["request"].user.iaso_profile.account:
-            raise serializers.ValidationError(
-                f"Category {category.id} does not belong to your account for cost {self.initial_data.get('name')}"
-            )
+            raise serializers.ValidationError(f"Category {category.id} does not belong to your account.")
         return category
 
 
@@ -34,7 +30,3 @@ class CostBreakdownLinesWriteSerializer(serializers.ModelSerializer):
         if not intervention:
             raise serializers.ValidationError("Invalid intervention ID.")
         return intervention
-
-    def validate(self, attrs):
-        super().validate(attrs)
-        return attrs
