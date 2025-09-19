@@ -29,4 +29,36 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.save',
         defaultMessage: 'Save intervention',
     },
+    removeCostBreakdownLine: {
+        id: 'iaso.snt_malaria.settings.intervention.removeCostBreakdownLine',
+        defaultMessage: 'Remove cost',
+    },
+    addCostBreakdownLine: {
+        id: 'iaso.snt_malaria.settings.intervention.addCostBreakdownLine',
+        defaultMessage: 'Add cost',
+    },
+    totalCost: {
+        id: 'iaso.snt_malaria.settings.intervention.totalCost',
+        defaultMessage: 'Total cost',
+    },
+    detailedCosts: {
+        id: 'iaso.snt_malaria.settings.intervention.detailedCosts',
+        defaultMessage: 'Detailed costs',
+    },
+    detailedCostLabel: {
+        id: 'iaso.snt_malaria.settings.intervention.detailedCostLabel',
+        defaultMessage: 'Item',
+    },
+    detailedCostUnitLabel: {
+        id: 'iaso.snt_malaria.settings.intervention.detailedCostUnitLabel',
+        defaultMessage: 'Cost Unit',
+    },
+    detailedCostCategoryLabel: {
+        id: 'iaso.snt_malaria.settings.intervention.detailedCostCategoryLabel',
+        defaultMessage: 'Category',
+    },
+    required: {
+        id: 'iaso.snt_malaria.settings.intervention.errors.required',
+        defaultMessage: 'Required',
+    },
 });

@@ -10,14 +10,12 @@ class InterventionSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
-            "cost_per_unit",
-            "cost_unit",
+            "unit_cost",
+            "unit_type",
             "intervention_category",
             "created_at",
-            "updated_at",
         ]
         read_only_fields = [
             "id",
             "created_at",
-            "updated_at",
         ]

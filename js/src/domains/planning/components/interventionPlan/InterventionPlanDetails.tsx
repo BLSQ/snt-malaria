@@ -1,12 +1,10 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SearchIcon from '@mui/icons-material/Search';
 import {
     Box,
     Button,
     Divider,
     Drawer,
-    IconButton,
     InputAdornment,
     TextField,
     Typography,

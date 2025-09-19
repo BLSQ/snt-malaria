@@ -3,9 +3,10 @@ import { Box, Card, CardContent, CardHeader, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionCategories } from '../../../planning/hooks/useGetInterventionCategories';
-import { UseUpdateIntervention } from '../../../planning/hooks/UseUpdateIntervention';
 import { Intervention } from '../../../planning/types/interventions';
+import { useUpdateCostBreakdownLines } from '../../hooks/useUpdateCostBreakdownLines';
 import { MESSAGES } from '../../messages';
+import { CostBreakdownLine } from '../../types/CostBreakdownLine';
 import { InterventionCostDrawer } from './InterventionCostDrawer';
 import { InterventionRow } from './InterventionRow';
 
@@ -27,16 +28,20 @@ export const InterventionSettings: React.FC = () => {
         isFetching: isLoadingCategories = true,
     } = useGetInterventionCategories();
 
-    const { mutateAsync: updateIntervention } = UseUpdateIntervention();
+    const { mutateAsync: updateInterventionCosts } =
+        useUpdateCostBreakdownLines();
 
     const onUpdateIntervention = useCallback(
-        (intervention: Intervention) => {
-            updateIntervention(intervention).then(() => {
+        (intervention: Intervention, costs: CostBreakdownLine[]) => {
+            updateInterventionCosts({
+                intervention: intervention,
+                costs,
+            }).then(() => {
                 setInterventionCostDrawerOpen(false);
                 setSelectedIntervention(null);
             });
         },
-        [updateIntervention, setInterventionCostDrawerOpen],
+        [setInterventionCostDrawerOpen, updateInterventionCosts],
     );
 
     const onEditInterventionCost = useCallback(

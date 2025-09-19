@@ -6,6 +6,7 @@ from django.urls import path
 
 from .views import import_openhexa_metrics
 
+
 urlpatterns = [
     # Admin tools
     path(
