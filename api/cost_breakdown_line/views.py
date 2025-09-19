@@ -37,18 +37,31 @@ class CostBreakdownLineViewSet(viewsets.ModelViewSet):
         costs = serializer.validated_data["costs"]
         # Create InterventionAssignment objects
         with transaction.atomic():
-            CostBreakdownLine.objects.filter(intervention=intervention).delete()
-            newCosts = [
+            existingCosts = CostBreakdownLine.objects.filter(intervention=intervention)
+            for item in existingCosts:
+                cost = next((c for c in costs if c.get("id", -1) == item.id), None)
+                if cost:
+                    CostBreakdownLine.objects.update(
+                        name=cost["name"],
+                        cost=cost["cost"],
+                        category=cost["category"],
+                        intervention=intervention,
+                        id=cost["id"],
+                    )
+                    costs = costs.exclude(id=cost["id"])
+                else:
+                    item.delete()
+
+            bulk_create_objs = [
                 CostBreakdownLine(
-                    name=item["name"],
-                    cost=item["cost"],
-                    category=item["category"],
+                    name=cost["name"],
+                    cost=cost["cost"],
+                    category=cost["category"],
                     intervention=intervention,
-                    created_by=request.user,
                 )
-                for item in costs
+                for cost in costs
             ]
-            CostBreakdownLine.objects.bulk_create(newCosts)
+            CostBreakdownLine.objects.bulk_create(bulk_create_objs)
 
         return Response(
             {"message": "intervention costs created successfully."},

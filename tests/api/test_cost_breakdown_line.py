@@ -89,7 +89,7 @@ class CostBreakdownLineTests(APITestCase):
         self.client.force_authenticate(user=self.user)
         url = reverse("cost_breakdown_lines-list")
         data = {
-            "costs": {"unit_cost": 15, "unit_type": "doses", "category": self.cost_category_vaccine.id},
+            "costs": [{"unit_cost": 15, "unit_type": "doses", "category": self.cost_category_vaccine.id}],
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
