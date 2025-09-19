@@ -19,12 +19,12 @@ class CostBreakdownLineViewSet(viewsets.ModelViewSet):
     filterset_class = CostBreakdownLineListFilter
 
     def get_serializer_class(self):
-        if self.request.method == "POST":
+        if self.action == "create":
             return CostBreakdownLinesWriteSerializer
         return CostBreakdownLineSerializer
 
     def get_queryset(self):
-        return CostBreakdownLine.objects.prefetch_related("intervention").filter(
+        return CostBreakdownLine.objects.select_related("intervention").filter(
             intervention__intervention_category__account=self.request.user.iaso_profile.account
         )
 
