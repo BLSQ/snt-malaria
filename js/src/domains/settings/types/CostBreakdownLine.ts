@@ -1,6 +1,6 @@
 export type CostBreakdownLine = {
     name: string;
-    category_id: number;
+    category: number;
     cost: number;
     id: number;
 };

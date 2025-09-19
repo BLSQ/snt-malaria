@@ -4,44 +4,37 @@ from plugins.snt_malaria.models import CostBreakdownLine, CostBreakdownLineCateg
 
 
 class CostBreakdownLineSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CostBreakdownLine
-        fields = ["id", "name", "cost", "category_id"]
-        read_only_fields = fields
-
-
-class CostBreakdownLineWriteSerializer(serializers.ModelSerializer):
-    intervention_id = serializers.IntegerField(write_only=True)
-    costs = serializers.ListField(child=serializers.DictField())
+    category = serializers.PrimaryKeyRelatedField(queryset=CostBreakdownLineCategory.objects.all(), required=True)
 
     class Meta:
         model = CostBreakdownLine
-        fields = ["intervention_id", "costs"]
+        fields = ["id", "name", "cost", "category"]
+
+    def validate_category(self, category):
+        if not category:
+            raise serializers.ValidationError(
+                f"Invalid category {category.id} for cost {self.initial_data.get('name')}"
+            )
+        if category.account != self.context["request"].user.iaso_profile.account:
+            raise serializers.ValidationError(
+                f"Category {category.id} does not belong to your account for cost {self.initial_data.get('name')}"
+            )
+        return category
+
+
+class CostBreakdownLinesWriteSerializer(serializers.ModelSerializer):
+    intervention = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all(), required=True)
+    costs = CostBreakdownLineSerializer(many=True)
+
+    class Meta:
+        model = CostBreakdownLine
+        fields = ["intervention", "costs"]
+
+    def validate_intervention(self, intervention):
+        if not intervention:
+            raise serializers.ValidationError("Invalid intervention ID.")
+        return intervention
 
     def validate(self, attrs):
         super().validate(attrs)
-        request = self.context.get("request")
-        account = request.user.iaso_profile.account
-        intervention_id = attrs.get("intervention_id")
-        costs = attrs.get("costs", [])
-        # Check the existence of intervention
-        try:
-            intervention = Intervention.objects.get(
-                id=intervention_id,
-            )
-        except Intervention.DoesNotExist:
-            raise serializers.ValidationError({"intervention_id": "Invalid intervention ID."})
-
-        cost_categories = CostBreakdownLineCategory.objects.filter(account=account)
-        cost_category_ids = set(cost_categories.values_list("id", flat=True))
-        for cost in costs:
-            if cost["category_id"] not in cost_category_ids:
-                raise serializers.ValidationError(
-                    {"category_id": f"Invalid category_id {cost['category_id']} for cost {cost['name']}"}
-                )
-
-        # Validate costs
-
-        attrs["intervention"] = intervention
-        attrs["cost_categories"] = cost_categories
         return attrs

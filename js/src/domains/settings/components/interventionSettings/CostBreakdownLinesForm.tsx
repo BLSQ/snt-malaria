@@ -141,16 +141,16 @@ export const CostBreakdownLineForm: FC<RowProps> = ({
                 />
                 <InputComponent
                     type="select"
-                    keyValue="category_id"
+                    keyValue="category"
                     multi={false}
                     withMarginTop={false}
                     wrapperSx={{ flexGrow: 1 }}
                     clearable={false}
                     options={interventionCostCategories}
-                    value={costBreakdownLine.category_id}
+                    value={costBreakdownLine.category}
                     onChange={onUpdateField}
                     label={MESSAGES.detailedCostCategoryLabel}
-                    errors={getErrors('category_id')}
+                    errors={getErrors('category')}
                 />
             </Box>
             <InputComponent

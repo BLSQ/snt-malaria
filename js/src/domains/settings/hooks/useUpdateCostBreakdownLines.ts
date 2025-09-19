@@ -14,7 +14,7 @@ export const useUpdateCostBreakdownLines = (): UseMutationResult =>
             return Promise.all([
                 putIntervention(body.intervention),
                 postRequest(`/api/snt_malaria/cost_breakdown_lines/`, {
-                    intervention_id: body.intervention.id,
+                    intervention: body.intervention.id,
                     costs: body.costs,
                 }),
             ]);
