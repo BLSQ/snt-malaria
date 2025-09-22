@@ -95,8 +95,9 @@ export const Planning: FC = () => {
             metricOrgUnitIds.includes(orgUnit.id),
         );
 
+        setSelectionOnMap(newOrgUnitSelection || []);
+
         if (newOrgUnitSelection && newOrgUnitSelection.length > 0) {
-            setSelectionOnMap(newOrgUnitSelection);
             openSnackBar(
                 succesfullSnackBar(
                     'selectOrgUnitsSuccess',
@@ -106,6 +107,7 @@ export const Planning: FC = () => {
                 ),
             );
         } else {
+            setSelectionOnMap([]);
             openSnackBar({
                 messageKey: 'warning',
                 id: 'noOrgUnitsSelected',
