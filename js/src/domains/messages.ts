@@ -95,14 +95,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.clearSelectionTooltip',
         defaultMessage: 'Clear selection',
     },
-    addToList: {
-        id: 'iaso.snt_malaria.label.addToList',
-        defaultMessage: 'Add to List',
-    },
-    addedMapSelectionToList: {
-        id: 'iaso.snt_malaria.label.addedMapSelectionToList',
-        defaultMessage: 'Added {amount} map selection to list',
-    },
     clearedMapSelection: {
         id: 'iaso.snt_malaria.label.clearedMapSelection',
         defaultMessage: 'Map selection has been cleared',
