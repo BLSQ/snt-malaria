@@ -18,7 +18,12 @@ import { Bounds } from 'Iaso/utils/map/mapUtils';
 
 import { mapTheme } from '../../../../constants/map-theme';
 import { useGetMetricValues } from '../../hooks/useGetMetrics';
-import { getStyleForShape, useGetOrgUnitMetric } from '../../libs/map-utils';
+import {
+    defaultZoomDelta,
+    defaultZoomSnap,
+    getStyleForShape,
+    useGetOrgUnitMetric,
+} from '../../libs/map-utils';
 import { MetricType } from '../../types/metrics';
 import { MapLegend } from '../MapLegend';
 import { LayerSelect } from './LayerSelect';
@@ -102,6 +107,8 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
                 bounds={bounds}
                 boundsOptions={boundsOptions}
                 zoomControl={false}
+                zoomSnap={defaultZoomSnap}
+                zoomDelta={defaultZoomDelta}
             >
                 <ZoomControl position="bottomright" />
                 <TileLayer url="" attribution="" />
