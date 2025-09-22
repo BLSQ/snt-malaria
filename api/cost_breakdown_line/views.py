@@ -1,6 +1,7 @@
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from plugins.snt_malaria.models import CostBreakdownLine
@@ -43,7 +44,7 @@ class CostBreakdownLineViewSet(viewsets.ModelViewSet):
                 if cost:
                     CostBreakdownLine.objects.update(
                         name=cost["name"],
-                        cost=cost["cost"],
+                        unit_cost=cost["unit_cost"],
                         category=cost["category"],
                         intervention=intervention,
                         id=cost["id"],
@@ -55,7 +56,7 @@ class CostBreakdownLineViewSet(viewsets.ModelViewSet):
             bulk_create_objs = [
                 CostBreakdownLine(
                     name=cost["name"],
-                    cost=cost["cost"],
+                    unit_cost=cost["unit_cost"],
                     category=cost["category"],
                     intervention=intervention,
                 )
@@ -66,4 +67,16 @@ class CostBreakdownLineViewSet(viewsets.ModelViewSet):
         return Response(
             {"message": "intervention costs created successfully."},
             status=status.HTTP_201_CREATED,
+        )
+
+    @action(
+        detail=False,
+        methods=["get"],
+    )
+    def categories(self, _):
+        return Response(
+            [
+                {"value": choice.value, "label": str(choice.label)}
+                for choice in CostBreakdownLine.CostBreakdownLineCategory
+            ]
         )

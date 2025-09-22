@@ -3,7 +3,7 @@ from rest_framework import status
 
 from iaso.models.base import Account
 from iaso.test import APITestCase
-from plugins.snt_malaria.models.cost_breakdown import CostBreakdownLine, CostBreakdownLineCategory
+from plugins.snt_malaria.models.cost_breakdown import CostBreakdownLine
 from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
 
 
@@ -43,26 +43,19 @@ class CostBreakdownLineTests(APITestCase):
             intervention_category=cls.int_category_chemoprevention,
         )
 
-        # Create Cost Breakdown Line Categories
-        cls.cost_category_vaccine = CostBreakdownLineCategory.objects.create(
-            name="Vaccine",
-            account=cls.account,
-            created_by=cls.user,
-        )
-
         # Create cost breakdown lines
         cls.cost_line1 = CostBreakdownLine.objects.create(
             name="Cost Line 1",
             intervention=cls.intervention_vaccination_rts,
-            cost=10,
-            category=cls.cost_category_vaccine,
+            unit_cost=10,
+            category="Procurement",
             created_by=cls.user,
         )
         cls.cost_line2 = CostBreakdownLine.objects.create(
             name="Cost Line 2",
             intervention=cls.intervention_chemo_smc,
-            cost=5,
-            category=cls.cost_category_vaccine,
+            unit_cost=5,
+            category="Procurement",
             created_by=cls.user,
         )
 
@@ -78,18 +71,18 @@ class CostBreakdownLineTests(APITestCase):
         url = reverse("cost_breakdown_lines-list")
         data = {
             "intervention": self.intervention_chemo_iptp.id,
-            "costs": [{"cost": 15, "name": "Cost Line X", "category": self.cost_category_vaccine.id}],
+            "costs": [{"unit_cost": 15, "name": "Cost Line X", "category": "Procurement"}],
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(CostBreakdownLine.objects.count(), 3)
-        self.assertEqual(CostBreakdownLine.objects.get(name="Cost Line X").cost, 15)
+        self.assertEqual(CostBreakdownLine.objects.get(name="Cost Line X").unit_cost, 15)
 
     def test_create_cost_breakdown_line_missing_intervention(self):
         self.client.force_authenticate(user=self.user)
         url = reverse("cost_breakdown_lines-list")
         data = {
-            "costs": [{"unit_cost": 15, "unit_type": "doses", "category": self.cost_category_vaccine.id}],
+            "costs": [{"unit_cost": 15, "unit_type": "doses", "category": "Procurement"}],
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -110,7 +103,7 @@ class CostBreakdownLineTests(APITestCase):
         url = reverse("cost_breakdown_lines-list")
         data = {
             "intervention": self.intervention_chemo_iptp.id,
-            "costs": [{"cost": 15, "category": self.cost_category_vaccine.id}],
+            "costs": [{"unit_cost": 15, "category": "Procurement"}],
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -121,18 +114,18 @@ class CostBreakdownLineTests(APITestCase):
         url = reverse("cost_breakdown_lines-list")
         data = {
             "intervention": self.intervention_chemo_iptp.id,
-            "costs": [{"name": "test", "category": self.cost_category_vaccine.id}],
+            "costs": [{"name": "test", "category": "Procurement"}],
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("'cost': [ErrorDetail(string='This field is required.'", str(response.data))
+        self.assertIn("'unit_cost': [ErrorDetail(string='This field is required.'", str(response.data))
 
     def test_create_cost_breakdown_line_missing_costs_category(self):
         self.client.force_authenticate(user=self.user)
         url = reverse("cost_breakdown_lines-list")
         data = {
             "intervention": self.intervention_chemo_iptp.id,
-            "costs": [{"name": "test", "cost": 15}],
+            "costs": [{"name": "test", "unit_cost": 15}],
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -144,29 +137,8 @@ class CostBreakdownLineTests(APITestCase):
         invalid_category_id = 9999  # Assuming this ID does not exist
         data = {
             "intervention": self.intervention_chemo_iptp.id,
-            "costs": [{"name": "test", "cost": 15, "category": invalid_category_id}],
+            "costs": [{"name": "test", "unit_cost": 15, "category": invalid_category_id}],
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(
-            "'category': [ErrorDetail(string='Invalid pk \"9999\" - object does not exist.'", str(response.data)
-        )
-
-    def test_create_cost_breakdown_line_category_not_in_account(self):
-        self.client.force_authenticate(user=self.user)
-        url = reverse("cost_breakdown_lines-list")
-        # Create a category in a different account
-        other_account = Account.objects.create(name="Other Account")
-        other_user = self.create_user_with_profile(username="otheruser", account=other_account)
-        other_category = CostBreakdownLineCategory.objects.create(
-            name="Other Category",
-            account=other_account,
-            created_by=other_user,
-        )
-        data = {
-            "intervention": self.intervention_chemo_iptp.id,
-            "costs": [{"name": "test", "cost": 20, "category": other_category.id}],
-        }
-        response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("does not belong to your account", str(response.data))
+        self.assertIn("[{'category': [ErrorDetail(string='\"9999\" is not a valid choice.'", str(response.data))

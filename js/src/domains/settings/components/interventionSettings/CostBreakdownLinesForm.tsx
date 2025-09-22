@@ -5,7 +5,6 @@ import { Box, Button, Typography } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { FormikErrors, FormikTouched } from 'formik';
 import InputComponent from 'Iaso/components/forms/InputComponent';
-import { DropdownOptions } from 'Iaso/types/utils';
 import { noOp } from 'Iaso/utils';
 import { useGetCostBreakdownLineCategories } from '../../hooks/useGetCostBreakdownLineCategories';
 import { MESSAGES } from '../../messages';
@@ -33,11 +32,10 @@ export const CostBreakdownLinesForm: FC<Props> = ({
     const { formatMessage } = useSafeIntl();
     const totalCost = useMemo(
         () =>
-            costBreakdownLines?.reduce(
-                (total, costBreakdownLine) =>
-                    total + (costBreakdownLine.cost ?? 0),
-                0,
-            ),
+            costBreakdownLines?.reduce((total, costBreakdownLine) => {
+                const unitCost = parseFloat(costBreakdownLine.unit_cost);
+                return total + (isNaN(unitCost) ? 0 : unitCost);
+            }, 0),
         [costBreakdownLines],
     );
 
@@ -105,12 +103,7 @@ export const CostBreakdownLineForm: FC<RowProps> = ({
     getErrors,
 }) => {
     const { data: interventionCostCategories = [] } =
-        useGetCostBreakdownLineCategories<DropdownOptions<any>[]>(data =>
-            data.map(d => ({
-                value: d.id,
-                label: d.name,
-            })),
-        );
+        useGetCostBreakdownLineCategories();
 
     return (
         <Box
@@ -155,14 +148,14 @@ export const CostBreakdownLineForm: FC<RowProps> = ({
             </Box>
             <InputComponent
                 type="number"
-                keyValue="cost"
+                keyValue="unit_cost"
                 onChange={onUpdateField}
                 required
                 withMarginTop={false}
                 label={MESSAGES.detailedCostUnitLabel}
                 wrapperSx={{ width: '95px' }}
-                value={costBreakdownLine.cost}
-                errors={getErrors('cost')}
+                value={costBreakdownLine.unit_cost}
+                errors={getErrors('unit_cost')}
             />
         </Box>
     );

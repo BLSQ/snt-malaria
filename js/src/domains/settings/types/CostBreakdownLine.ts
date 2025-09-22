@@ -1,11 +1,6 @@
 export type CostBreakdownLine = {
     name: string;
-    category: number;
-    cost: number;
+    category: string;
+    unit_cost: string; // using string to avoid float precision issues
     id: number;
-};
-
-export type CostBreakdownLineCategory = {
-    name: string;
-    id: string;
 };

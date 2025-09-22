@@ -34,7 +34,7 @@ type Props = {
 const DEFAULT_COST_LINE = {
     name: '',
     category: undefined,
-    cost: 0,
+    unit_cost: 0,
     id: 0,
 };
 
@@ -104,10 +104,10 @@ export const InterventionCostForm: React.FC<Props> = ({
                         name: Yup.string().required(
                             formatMessage(MESSAGES.required),
                         ),
-                        cost: Yup.number().required(
+                        unit_cost: Yup.number().required(
                             formatMessage(MESSAGES.required),
                         ),
-                        category: Yup.number().required(
+                        category: Yup.string().required(
                             formatMessage(MESSAGES.required),
                         ),
                     }),
