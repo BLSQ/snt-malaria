@@ -107,7 +107,6 @@ export const Planning: FC = () => {
                 ),
             );
         } else {
-            setSelectionOnMap([]);
             openSnackBar({
                 messageKey: 'warning',
                 id: 'noOrgUnitsSelected',
