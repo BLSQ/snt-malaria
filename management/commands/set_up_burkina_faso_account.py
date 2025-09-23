@@ -7,7 +7,6 @@ from django.db import transaction
 
 from iaso.gpkg.import_gpkg import import_gpkg_file2
 from iaso.models import Account, DataSource, Profile, Project, SourceVersion
-from plugins.snt_malaria.management.commands.support.cost_categories_seeder import CostCategoriesSeeder
 
 from .support.intervention_seeder import InterventionSeeder
 from .support.metrics_importer import MetricsImporter
@@ -132,9 +131,6 @@ class Command(BaseCommand):
 
             # Seed interventions
             InterventionSeeder(account, self.stdout.write).create_interventions()
-
-            # Seed cost categories
-            CostCategoriesSeeder(account, self.stdout.write).create_cost_categories()
 
             self.stdout.write(self.style.SUCCESS("Setup completed successfully!"))
             self.stdout.write(
