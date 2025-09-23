@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from iaso.api.common import UserSerializer
@@ -23,6 +24,19 @@ class ScenarioSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def validate_name(self, value):
+        if not value:
+            raise serializers.ValidationError(_("Name cannot be empty."))
+
+        existingScenarios = Scenario.objects.filter(
+            name=value, account=self.context["request"].user.iaso_profile.account
+        )
+
+        if existingScenarios.exists():
+            raise serializers.ValidationError(_("Scenario with this name already exists."))
+
+        return value
+
 
 class DuplicateScenarioSerializer(serializers.Serializer):
     id_to_duplicate = serializers.IntegerField()
@@ -32,6 +46,6 @@ class DuplicateScenarioSerializer(serializers.Serializer):
         account = request.user.iaso_profile.account
 
         if not Scenario.objects.filter(id=value, account=account).exists():
-            raise serializers.ValidationError("Scenario with this ID does not exist.")
+            raise serializers.ValidationError(_("Scenario with this ID does not exist."))
 
         return value

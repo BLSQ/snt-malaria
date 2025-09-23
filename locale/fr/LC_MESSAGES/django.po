@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-22 13:02+0000\n"
+"POT-Creation-Date: 2025-09-23 12:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -42,3 +42,16 @@ msgstr "Support"
 #: plugins/snt_malaria/models/cost_breakdown.py
 msgid "Other"
 msgstr "Autre"
+
+#: plugins/snt_malaria/api/scenarios/serializers.py
+msgid "Name cannot be empty."
+msgstr "Le nom doit être défini"
+
+#: plugins/snt_malaria/api/scenarios/serializers.py
+msgid "Scenario with this name already exists."
+msgstr "Un scénario avec ce nom existe déjà"
+
+#: plugins/snt_malaria/api/scenarios/serializers.py
+msgid "Scenario with this ID does not exist."
+msgstr "Aucun scénario pour cet ID"
+
