@@ -83,7 +83,7 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [tempName, setTempName] = useState(scenario.name);
 
-    const { mutateAsync: updateScenario } = useUpdateScenario();
+    const { mutateAsync: updateScenario } = useUpdateScenario(scenario.id);
     const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
         navigate('/');
     });
@@ -125,10 +125,9 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
     const handleSubmit = () => {
         if (tempName.trim() !== '') {
             updateScenario({ ...scenario, name: tempName });
-            setIsEditing(false);
-        } else {
-            setIsEditing(false);
         }
+
+        setIsEditing(false);
     };
 
     if (scenario) {
