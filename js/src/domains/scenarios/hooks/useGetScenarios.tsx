@@ -61,11 +61,11 @@ export const useCreateScenario = (): UseMutationResult => {
     });
 };
 
-export const useUpdateScenario = (): UseMutationResult =>
+export const useUpdateScenario = (scenarioId): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: Scenario) =>
-            putRequest(`/api/snt_malaria/scenarios/${body.id}/`, body),
-        invalidateQueryKey: ['scenarios'],
+            putRequest(`/api/snt_malaria/scenarios/${scenarioId}/`, body),
+        invalidateQueryKey: ['scenarios', 'scenario', scenarioId],
     });
 
 export const useDuplicateScenario = (
