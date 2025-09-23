@@ -85,8 +85,8 @@ class InterventionCostBreakdownLineTests(APITestCase):
             "costs": [{"unit_cost": 15, "unit_type": "doses", "category": "Procurement"}],
         }
         response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("This field is required", str(response.data))
+        json_response = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("This field is required.", json_response["intervention"])
 
     def test_create_cost_breakdown_line_missing_costs(self):
         self.client.force_authenticate(user=self.user)
@@ -106,8 +106,8 @@ class InterventionCostBreakdownLineTests(APITestCase):
             "costs": [{"unit_cost": 15, "category": "Procurement"}],
         }
         response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("'name': [ErrorDetail(string='This field is required.'", str(response.data))
+        json_response = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("This field is required.", json_response["costs"][0]["name"])
 
     def test_create_cost_breakdown_line_missing_costs_cost(self):
         self.client.force_authenticate(user=self.user)
@@ -117,8 +117,8 @@ class InterventionCostBreakdownLineTests(APITestCase):
             "costs": [{"name": "test", "category": "Procurement"}],
         }
         response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("'unit_cost': [ErrorDetail(string='This field is required.'", str(response.data))
+        json_response = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("This field is required.", json_response["costs"][0]["unit_cost"])
 
     def test_create_cost_breakdown_line_missing_costs_category(self):
         self.client.force_authenticate(user=self.user)
@@ -128,10 +128,8 @@ class InterventionCostBreakdownLineTests(APITestCase):
             "costs": [{"name": "test", "unit_cost": 15}],
         }
         response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(
-            "{'costs': [ErrorDetail(string=\"Each cost object must have a 'category' field.\"", str(response.data)
-        )
+        json_response = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("This field is required.", json_response["costs"][0]["category"])
 
     def test_create_cost_breakdown_line_invalid_category(self):
         self.client.force_authenticate(user=self.user)
@@ -142,5 +140,5 @@ class InterventionCostBreakdownLineTests(APITestCase):
             "costs": [{"name": "test", "unit_cost": 15, "category": invalid_category_id}],
         }
         response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("[{'category': [ErrorDetail(string='\"9999\" is not a valid choice.'", str(response.data))
+        json_response = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('"9999" is not a valid choice.', json_response["costs"][0]["category"])
