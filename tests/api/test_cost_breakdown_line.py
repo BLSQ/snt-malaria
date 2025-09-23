@@ -61,14 +61,14 @@ class InterventionCostBreakdownLineTests(APITestCase):
 
     def test_list_cost_breakdown_lines(self):
         self.client.force_authenticate(user=self.user)
-        url = reverse("cost_breakdown_lines-list")
+        url = reverse("intervention_cost_breakdown_lines-list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
     def test_create_cost_breakdown_line(self):
         self.client.force_authenticate(user=self.user)
-        url = reverse("cost_breakdown_lines-list")
+        url = reverse("intervention_cost_breakdown_lines-list")
         data = {
             "intervention": self.intervention_chemo_iptp.id,
             "costs": [{"unit_cost": 15, "name": "Cost Line X", "category": "Procurement"}],
@@ -80,7 +80,7 @@ class InterventionCostBreakdownLineTests(APITestCase):
 
     def test_create_cost_breakdown_line_missing_intervention(self):
         self.client.force_authenticate(user=self.user)
-        url = reverse("cost_breakdown_lines-list")
+        url = reverse("intervention_cost_breakdown_lines-list")
         data = {
             "costs": [{"unit_cost": 15, "unit_type": "doses", "category": "Procurement"}],
         }
@@ -90,7 +90,7 @@ class InterventionCostBreakdownLineTests(APITestCase):
 
     def test_create_cost_breakdown_line_missing_costs(self):
         self.client.force_authenticate(user=self.user)
-        url = reverse("cost_breakdown_lines-list")
+        url = reverse("intervention_cost_breakdown_lines-list")
         data = {
             "intervention": self.intervention_chemo_iptp.id,
         }
@@ -100,7 +100,7 @@ class InterventionCostBreakdownLineTests(APITestCase):
 
     def test_create_cost_breakdown_line_missing_costs_name(self):
         self.client.force_authenticate(user=self.user)
-        url = reverse("cost_breakdown_lines-list")
+        url = reverse("intervention_cost_breakdown_lines-list")
         data = {
             "intervention": self.intervention_chemo_iptp.id,
             "costs": [{"unit_cost": 15, "category": "Procurement"}],
@@ -111,7 +111,7 @@ class InterventionCostBreakdownLineTests(APITestCase):
 
     def test_create_cost_breakdown_line_missing_costs_cost(self):
         self.client.force_authenticate(user=self.user)
-        url = reverse("cost_breakdown_lines-list")
+        url = reverse("intervention_cost_breakdown_lines-list")
         data = {
             "intervention": self.intervention_chemo_iptp.id,
             "costs": [{"name": "test", "category": "Procurement"}],
@@ -122,18 +122,20 @@ class InterventionCostBreakdownLineTests(APITestCase):
 
     def test_create_cost_breakdown_line_missing_costs_category(self):
         self.client.force_authenticate(user=self.user)
-        url = reverse("cost_breakdown_lines-list")
+        url = reverse("intervention_cost_breakdown_lines-list")
         data = {
             "intervention": self.intervention_chemo_iptp.id,
             "costs": [{"name": "test", "unit_cost": 15}],
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("'category': [ErrorDetail(string='This field is required.'", str(response.data))
+        self.assertIn(
+            "{'costs': [ErrorDetail(string=\"Each cost object must have a 'category' field.\"", str(response.data)
+        )
 
     def test_create_cost_breakdown_line_invalid_category(self):
         self.client.force_authenticate(user=self.user)
-        url = reverse("cost_breakdown_lines-list")
+        url = reverse("intervention_cost_breakdown_lines-list")
         invalid_category_id = 9999  # Assuming this ID does not exist
         data = {
             "intervention": self.intervention_chemo_iptp.id,
