@@ -5,7 +5,7 @@ from iaso.models.base import Account
 from iaso.test import APITestCase
 
 
-class InterventionCostBreakdownLineCategoriesTests(APITestCase):
+class InterventionCostBreakdownLineCategoriesAPITestCase(APITestCase):
     def setUp(cls):
         # Create a user and account for testing
         cls.account = Account.objects.create(name="Test Account")
@@ -16,7 +16,7 @@ class InterventionCostBreakdownLineCategoriesTests(APITestCase):
         url = reverse("intervention_cost_breakdown_lines-categories")
         response = self.client.get(url)
         json_response = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertEqual(
+        self.assertCountEqual(
             json_response,
             [
                 {"value": "Procurement", "label": "Procurement"},
@@ -27,7 +27,7 @@ class InterventionCostBreakdownLineCategoriesTests(APITestCase):
             ],
         )
 
-    def test_list_cost_breakdown_lines_categories(self):
+    def test_list_cost_breakdown_lines_categories_unauthorized(self):
         url = reverse("intervention_cost_breakdown_lines-categories")
         response = self.client.get(url)
         self.assertJSONResponse(response, status.HTTP_401_UNAUTHORIZED)

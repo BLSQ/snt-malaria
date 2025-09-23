@@ -8,6 +8,7 @@ from plugins.snt_malaria.models import InterventionCostBreakdownLine
 
 from .filters import InterventionCostBreakdownLineListFilter
 from .serializers import (
+    InterventionCostBreakdownLineCategoriesSerializer,
     InterventionCostBreakdownLineSerializer,
     InterventionCostBreakdownLinesWriteSerializer,
 )
@@ -80,9 +81,8 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
         methods=["get"],
     )
     def categories(self, _):
-        return Response(
-            [
-                {"value": choice.value, "label": str(choice.label)}
-                for choice in InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory
-            ]
+        serializer = InterventionCostBreakdownLineCategoriesSerializer(
+            InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.choices,
+            many=True,
         )
+        return Response(serializer.data, status=status.HTTP_200_OK)

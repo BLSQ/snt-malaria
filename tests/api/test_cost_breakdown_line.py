@@ -96,7 +96,6 @@ class InterventionCostBreakdownLineTests(APITestCase):
         }
         response = self.client.post(url, data, format="json")
         json_response = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
-        print(json_response)
         self.assertIn("This field is required.", json_response["costs"])
 
     def test_create_cost_breakdown_line_cost_below_zero(self):
