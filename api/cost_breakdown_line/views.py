@@ -38,18 +38,23 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
         costs = serializer.validated_data["costs"]
         # Create InterventionAssignment objects
         with transaction.atomic():
-            existingCosts = InterventionCostBreakdownLine.objects.filter(intervention=intervention)
-            for item in existingCosts:
-                cost = next((c for c in costs if c.get("id", -1) == item.id), None)
+            existing_costs = InterventionCostBreakdownLine.objects.filter(intervention=intervention)
+            costs_with_id = {}
+            costs_without_id = []
+            for cost in costs:
+                if "id" in cost and cost["id"] is not None:
+                    costs_with_id[cost["id"]] = cost
+                else:
+                    costs_without_id.append(cost)
+            for item in existing_costs:
+                cost = costs_with_id.get(item.id, None)
                 if cost:
-                    InterventionCostBreakdownLine.objects.update(
-                        name=cost["name"],
-                        unit_cost=cost["unit_cost"],
-                        category=cost["category"],
-                        intervention=intervention,
-                        id=cost["id"],
-                    )
-                    costs = costs.exclude(id=cost["id"])
+                    item.name = cost["name"]
+                    item.unit_cost = cost["unit_cost"]
+                    item.category = cost["category"]
+                    item.intervention = intervention
+                    item.updated_by = request.user
+                    item.save()
                 else:
                     item.delete()
 
@@ -59,8 +64,9 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
                     unit_cost=cost["unit_cost"],
                     category=cost["category"],
                     intervention=intervention,
+                    created_by=request.user,
                 )
-                for cost in costs
+                for cost in costs_without_id
             ]
             InterventionCostBreakdownLine.objects.bulk_create(bulk_create_objs)
 
