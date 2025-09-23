@@ -142,3 +142,19 @@ class InterventionCostBreakdownLineTests(APITestCase):
         response = self.client.post(url, data, format="json")
         json_response = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertIn('"9999" is not a valid choice.', json_response["costs"][0]["category"])
+
+    # Not Logged in
+    def test_list_cost_breakdown_lines(self):
+        url = reverse("intervention_cost_breakdown_lines-list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_cost_breakdown_line(self):
+        url = reverse("intervention_cost_breakdown_lines-list")
+        data = {
+            "intervention": self.intervention_chemo_iptp.id,
+            "costs": [{"unit_cost": 15, "name": "Cost Line X", "category": "Procurement"}],
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 2)
