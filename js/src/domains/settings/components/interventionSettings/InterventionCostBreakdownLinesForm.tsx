@@ -6,25 +6,29 @@ import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { FormikErrors, FormikTouched } from 'formik';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { noOp } from 'Iaso/utils';
-import { useGetCostBreakdownLineCategories } from '../../hooks/useGetCostBreakdownLineCategories';
+import { useGetInterventionCostBreakdownLineCategories } from '../../hooks/useGetInterventionCostBreakdownLineCategories';
 import { MESSAGES } from '../../messages';
-import { CostBreakdownLine } from '../../types/CostBreakdownLine';
+import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreakdownLine';
 
 type Props = {
     onUpdateField: (field: string, value: any) => void;
-    costBreakdownLines: CostBreakdownLine[];
-    onAddCostBreakdownLine: () => void;
-    onRemoveCostBreakdownLine: (index: number) => void;
+    costBreakdownLines: InterventionCostBreakdownLine[];
+    onAddInterventionCostBreakdownLine: () => void;
+    onRemoveInterventionCostBreakdownLine: (index: number) => void;
     onTotalCostChanges: (totalCost: number) => void;
-    touched: FormikTouched<CostBreakdownLine>[] | undefined;
-    errors: string | string[] | FormikErrors<CostBreakdownLine>[] | undefined;
+    touched: FormikTouched<InterventionCostBreakdownLine>[] | undefined;
+    errors:
+        | string
+        | string[]
+        | FormikErrors<InterventionCostBreakdownLine>[]
+        | undefined;
 };
 
-export const CostBreakdownLinesForm: FC<Props> = ({
+export const InterventionCostBreakdownLinesForm: FC<Props> = ({
     costBreakdownLines,
     onUpdateField,
-    onAddCostBreakdownLine,
-    onRemoveCostBreakdownLine,
+    onAddInterventionCostBreakdownLine,
+    onRemoveInterventionCostBreakdownLine,
     onTotalCostChanges,
     errors,
     touched,
@@ -55,7 +59,7 @@ export const CostBreakdownLinesForm: FC<Props> = ({
     return costBreakdownLines ? (
         <Box sx={{ marginTop: 1.5 }}>
             {costBreakdownLines.map((cd, index) => (
-                <CostBreakdownLineForm
+                <InterventionCostBreakdownLineForm
                     key={`cost-details-row-${cd.id}`}
                     costBreakdownLine={cd}
                     onUpdateField={(field, value) =>
@@ -64,7 +68,9 @@ export const CostBreakdownLinesForm: FC<Props> = ({
                             value,
                         )
                     }
-                    onRemove={() => onRemoveCostBreakdownLine(index)}
+                    onRemove={() =>
+                        onRemoveInterventionCostBreakdownLine(index)
+                    }
                     getErrors={field => getChildError(field, index)}
                 />
             ))}
@@ -75,8 +81,11 @@ export const CostBreakdownLinesForm: FC<Props> = ({
                     justifyContent: 'space-between',
                 }}
             >
-                <Button variant="text" onClick={onAddCostBreakdownLine}>
-                    {formatMessage(MESSAGES.addCostBreakdownLine)}
+                <Button
+                    variant="text"
+                    onClick={onAddInterventionCostBreakdownLine}
+                >
+                    {formatMessage(MESSAGES.addInterventionCostBreakdownLine)}
                 </Button>
                 <Typography>
                     {formatMessage(MESSAGES.totalCost)} $
@@ -96,14 +105,14 @@ type RowProps = {
     getErrors: (keyValue: string) => string[];
 };
 
-export const CostBreakdownLineForm: FC<RowProps> = ({
+export const InterventionCostBreakdownLineForm: FC<RowProps> = ({
     costBreakdownLine = {},
     onUpdateField,
     onRemove = noOp,
     getErrors,
 }) => {
     const { data: interventionCostCategories = [] } =
-        useGetCostBreakdownLineCategories();
+        useGetInterventionCostBreakdownLineCategories();
 
     return (
         <Box
@@ -117,7 +126,7 @@ export const CostBreakdownLineForm: FC<RowProps> = ({
             <IconButton
                 onClick={() => onRemove()}
                 overrideIcon={RemoveCircleOutlineIcon}
-                tooltipMessage={MESSAGES.removeCostBreakdownLine}
+                tooltipMessage={MESSAGES.removeInterventionCostBreakdownLine}
             ></IconButton>
             <Box
                 sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}

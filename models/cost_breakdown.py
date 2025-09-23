@@ -5,8 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from plugins.snt_malaria.models.intervention import Intervention
 
 
-class CostBreakdownLine(models.Model):
-    class CostBreakdownLineCategory(models.TextChoices):
+class InterventionCostBreakdownLine(models.Model):
+    class InterventionCostBreakdownLineCategory(models.TextChoices):
         PROCUREMENT = "Procurement", _("Procurement")
         DELIVERY = "Distribution", _("Distribution")
         OPERATIONAL = "Operational", _("Operational")
@@ -20,8 +20,8 @@ class CostBreakdownLine(models.Model):
     name = models.TextField(max_length=255, blank=False)
     category = models.CharField(
         max_length=40,
-        choices=CostBreakdownLineCategory.choices,
-        default=CostBreakdownLineCategory.OTHER,
+        choices=InterventionCostBreakdownLineCategory.choices,
+        default=InterventionCostBreakdownLineCategory.OTHER,
     )
     unit_cost = models.FloatField()
 

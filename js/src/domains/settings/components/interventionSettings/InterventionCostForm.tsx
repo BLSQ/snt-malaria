@@ -15,14 +15,14 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
-import { CostBreakdownLine } from '../../types/CostBreakdownLine';
-import { CostBreakdownLinesForm } from './CostBreakdownLinesForm';
+import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreakdownLine';
+import { InterventionCostBreakdownLinesForm } from './InterventionCostBreakdownLinesForm';
 
 type Props = {
     defaultValues: {
         unit_type?: string;
         unit_cost?: number;
-        cost_breakdown_lines: CostBreakdownLine[];
+        cost_breakdown_lines: InterventionCostBreakdownLine[];
     };
     onConfirm: (data: {
         unit_type: string;
@@ -255,11 +255,13 @@ export const InterventionCostForm: React.FC<Props> = ({
                         />
                     </FormControl>
                     {isDetailedMode && (
-                        <CostBreakdownLinesForm
+                        <InterventionCostBreakdownLinesForm
                             costBreakdownLines={values.cost_breakdown_lines}
                             onUpdateField={setFieldValueAndState}
-                            onAddCostBreakdownLine={onAddCostItem}
-                            onRemoveCostBreakdownLine={onRemoveCostItem}
+                            onAddInterventionCostBreakdownLine={onAddCostItem}
+                            onRemoveInterventionCostBreakdownLine={
+                                onRemoveCostItem
+                            }
                             onTotalCostChanges={onTotalCostChanges}
                             errors={errors.cost_breakdown_lines}
                             touched={touched.cost_breakdown_lines}

@@ -1,20 +1,20 @@
 from rest_framework import serializers
 
-from plugins.snt_malaria.models import CostBreakdownLine, Intervention
+from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
 
 
-class CostBreakdownLineSerializer(serializers.ModelSerializer):
+class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CostBreakdownLine
+        model = InterventionCostBreakdownLine
         fields = ["id", "name", "unit_cost", "category"]
 
 
-class CostBreakdownLinesWriteSerializer(serializers.ModelSerializer):
+class InterventionCostBreakdownLinesWriteSerializer(serializers.ModelSerializer):
     intervention = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all(), required=True)
-    costs = CostBreakdownLineSerializer(many=True)
+    costs = InterventionCostBreakdownLineSerializer(many=True)
 
     class Meta:
-        model = CostBreakdownLine
+        model = InterventionCostBreakdownLine
         fields = ["intervention", "costs"]
 
     def validate_intervention(self, intervention):

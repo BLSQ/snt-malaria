@@ -3,11 +3,11 @@ from rest_framework import status
 
 from iaso.models.base import Account
 from iaso.test import APITestCase
-from plugins.snt_malaria.models.cost_breakdown import CostBreakdownLine
+from plugins.snt_malaria.models.cost_breakdown import InterventionCostBreakdownLine
 from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
 
 
-class CostBreakdownLineTests(APITestCase):
+class InterventionCostBreakdownLineTests(APITestCase):
     def setUp(cls):
         # Create a user and account for testing
         cls.account = Account.objects.create(name="Test Account")
@@ -44,14 +44,14 @@ class CostBreakdownLineTests(APITestCase):
         )
 
         # Create cost breakdown lines
-        cls.cost_line1 = CostBreakdownLine.objects.create(
+        cls.cost_line1 = InterventionCostBreakdownLine.objects.create(
             name="Cost Line 1",
             intervention=cls.intervention_vaccination_rts,
             unit_cost=10,
             category="Procurement",
             created_by=cls.user,
         )
-        cls.cost_line2 = CostBreakdownLine.objects.create(
+        cls.cost_line2 = InterventionCostBreakdownLine.objects.create(
             name="Cost Line 2",
             intervention=cls.intervention_chemo_smc,
             unit_cost=5,
@@ -75,8 +75,8 @@ class CostBreakdownLineTests(APITestCase):
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(CostBreakdownLine.objects.count(), 3)
-        self.assertEqual(CostBreakdownLine.objects.get(name="Cost Line X").unit_cost, 15)
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)
+        self.assertEqual(InterventionCostBreakdownLine.objects.get(name="Cost Line X").unit_cost, 15)
 
     def test_create_cost_breakdown_line_missing_intervention(self):
         self.client.force_authenticate(user=self.user)

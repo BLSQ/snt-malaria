@@ -1,10 +1,10 @@
 from django.contrib import admin
 
 from .models import (
-    CostBreakdownLine,
     Intervention,
     InterventionAssignment,
     InterventionCategory,
+    InterventionCostBreakdownLine,
     Scenario,
 )
 
@@ -67,8 +67,8 @@ class ScenarioAdmin(admin.ModelAdmin):
     ordering = ("name",)
 
 
-@admin.register(CostBreakdownLine)
-class CostBreakdownLineAdmin(admin.ModelAdmin):
+@admin.register(InterventionCostBreakdownLine)
+class InterventionCostBreakdownLineAdmin(admin.ModelAdmin):
     list_display = ("name", "id", "unit_cost", "intervention", "created_by", "created_at")
     search_fields = ("name", "id")
     list_filter = ("name", "id")

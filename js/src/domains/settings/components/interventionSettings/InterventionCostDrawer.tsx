@@ -4,15 +4,18 @@ import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
 import { Intervention } from '../../../planning/types/interventions';
-import { useGetCostBreakdownLines } from '../../hooks/useGetCostBreakdownLines';
-import { CostBreakdownLine } from '../../types/CostBreakdownLine';
+import { useGetInterventionCostBreakdownLines } from '../../hooks/useGetInterventionCostBreakdownLines';
+import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreakdownLine';
 import { InterventionCostForm } from './InterventionCostForm';
 
 type Props = {
     onClose: () => void;
     open: boolean;
     intervention: Intervention | null;
-    onConfirm: (intervention: Intervention, costs: CostBreakdownLine[]) => void;
+    onConfirm: (
+        intervention: Intervention,
+        costs: InterventionCostBreakdownLine[],
+    ) => void;
 };
 
 const styles: SxStyles = {
@@ -33,7 +36,7 @@ export const InterventionCostDrawer: React.FC<Props> = ({
     onConfirm,
 }) => {
     const { data: cost_breakdown_lines, isFetching: isFetchingCosts } =
-        useGetCostBreakdownLines(intervention?.id);
+        useGetInterventionCostBreakdownLines(intervention?.id);
 
     const handleFormConfirm = useCallback(
         costConfig => {

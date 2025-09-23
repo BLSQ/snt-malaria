@@ -4,28 +4,28 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from plugins.snt_malaria.models import CostBreakdownLine
+from plugins.snt_malaria.models import InterventionCostBreakdownLine
 
-from .filters import CostBreakdownLineListFilter
+from .filters import InterventionCostBreakdownLineListFilter
 from .serializers import (
-    CostBreakdownLineSerializer,
-    CostBreakdownLinesWriteSerializer,
+    InterventionCostBreakdownLineSerializer,
+    InterventionCostBreakdownLinesWriteSerializer,
 )
 
 
-class CostBreakdownLineViewSet(viewsets.ModelViewSet):
+class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
     ordering_fields = ["id"]
     http_method_names = ["get", "options", "post"]
     filter_backends = [DjangoFilterBackend]
-    filterset_class = CostBreakdownLineListFilter
+    filterset_class = InterventionCostBreakdownLineListFilter
 
     def get_serializer_class(self):
         if self.action == "create":
-            return CostBreakdownLinesWriteSerializer
-        return CostBreakdownLineSerializer
+            return InterventionCostBreakdownLinesWriteSerializer
+        return InterventionCostBreakdownLineSerializer
 
     def get_queryset(self):
-        return CostBreakdownLine.objects.select_related("intervention").filter(
+        return InterventionCostBreakdownLine.objects.select_related("intervention").filter(
             intervention__intervention_category__account=self.request.user.iaso_profile.account
         )
 
@@ -38,11 +38,11 @@ class CostBreakdownLineViewSet(viewsets.ModelViewSet):
         costs = serializer.validated_data["costs"]
         # Create InterventionAssignment objects
         with transaction.atomic():
-            existingCosts = CostBreakdownLine.objects.filter(intervention=intervention)
+            existingCosts = InterventionCostBreakdownLine.objects.filter(intervention=intervention)
             for item in existingCosts:
                 cost = next((c for c in costs if c.get("id", -1) == item.id), None)
                 if cost:
-                    CostBreakdownLine.objects.update(
+                    InterventionCostBreakdownLine.objects.update(
                         name=cost["name"],
                         unit_cost=cost["unit_cost"],
                         category=cost["category"],
@@ -54,7 +54,7 @@ class CostBreakdownLineViewSet(viewsets.ModelViewSet):
                     item.delete()
 
             bulk_create_objs = [
-                CostBreakdownLine(
+                InterventionCostBreakdownLine(
                     name=cost["name"],
                     unit_cost=cost["unit_cost"],
                     category=cost["category"],
@@ -62,7 +62,7 @@ class CostBreakdownLineViewSet(viewsets.ModelViewSet):
                 )
                 for cost in costs
             ]
-            CostBreakdownLine.objects.bulk_create(bulk_create_objs)
+            InterventionCostBreakdownLine.objects.bulk_create(bulk_create_objs)
 
         return Response(
             {"message": "intervention costs created successfully."},
@@ -77,6 +77,6 @@ class CostBreakdownLineViewSet(viewsets.ModelViewSet):
         return Response(
             [
                 {"value": choice.value, "label": str(choice.label)}
-                for choice in CostBreakdownLine.CostBreakdownLineCategory
+                for choice in InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory
             ]
         )
