@@ -9,6 +9,8 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
         required=True,
     )
 
+    unit_cost = serializers.DecimalField(max_digits=19, decimal_places=2, required=True, min_value=0)
+
     class Meta:
         model = InterventionCostBreakdownLine
         fields = ["id", "name", "unit_cost", "category"]

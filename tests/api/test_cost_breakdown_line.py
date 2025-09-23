@@ -95,8 +95,21 @@ class InterventionCostBreakdownLineTests(APITestCase):
             "intervention": self.intervention_chemo_iptp.id,
         }
         response = self.client.post(url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("This field is required", str(response.data))
+        json_response = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        print(json_response)
+        self.assertIn("This field is required.", json_response["costs"])
+
+    def test_create_cost_breakdown_line_cost_below_zero(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse("intervention_cost_breakdown_lines-list")
+        data = {
+            "intervention": self.intervention_chemo_iptp.id,
+            "costs": [{"unit_cost": -5, "name": "test", "category": "Procurement"}],
+        }
+
+        response = self.client.post(url, data, format="json")
+        json_response = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Ensure this value is greater than or equal to 0.", json_response["costs"][0]["unit_cost"])
 
     def test_create_cost_breakdown_line_missing_costs_name(self):
         self.client.force_authenticate(user=self.user)

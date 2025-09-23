@@ -96,17 +96,20 @@ export const InterventionCostForm: React.FC<Props> = ({
         () =>
             Yup.object().shape({
                 unit: Yup.string(),
-                unit_cost: Yup.number().required(
-                    formatMessage(MESSAGES.required),
-                ),
+                unit_cost: Yup.number()
+                    .required(formatMessage(MESSAGES.required))
+                    .min(0, formatMessage(MESSAGES.negativeValueNotAllowed)),
                 cost_breakdown_lines: Yup.array().of(
                     Yup.object().shape({
                         name: Yup.string().required(
                             formatMessage(MESSAGES.required),
                         ),
-                        unit_cost: Yup.number().required(
-                            formatMessage(MESSAGES.required),
-                        ),
+                        unit_cost: Yup.number()
+                            .required(formatMessage(MESSAGES.required))
+                            .min(
+                                0,
+                                formatMessage(MESSAGES.negativeValueNotAllowed),
+                            ),
                         category: Yup.string().required(
                             formatMessage(MESSAGES.required),
                         ),

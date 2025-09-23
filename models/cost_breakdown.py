@@ -23,7 +23,7 @@ class InterventionCostBreakdownLine(models.Model):
         choices=InterventionCostBreakdownLineCategory.choices,
         default=InterventionCostBreakdownLineCategory.OTHER,
     )
-    unit_cost = models.FloatField()
+    unit_cost = models.DecimalField(max_digits=19, decimal_places=2, null=False, blank=False, default=0)
 
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="cost_breakdown_line_created_set"
