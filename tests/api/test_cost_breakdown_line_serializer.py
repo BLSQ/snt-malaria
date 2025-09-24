@@ -75,7 +75,6 @@ class InterventionCostBreakdownLineSerializerTests(APITestCase):
         }
         serializer = InterventionCostBreakdownLineSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        print(serializer.errors)
         self.assertIn("unit_cost", serializer.errors)
 
     def test_create_cost_breakdown_line_missing_costs_name(self):
