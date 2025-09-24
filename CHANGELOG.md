@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.3.0](https://github.com/BLSQ/snt-malaria/compare/2.2.0...2.3.0) (2025-09-23)
+
+
+### Features
+
+* SNT-125 setting page for costs ([b7a3182](https://github.com/BLSQ/snt-malaria/commit/b7a3182fe3e58eb388a38ff06647b7b3105dd276))
+* SNT-126 Edit cost per intervention covers only total cost for now ([3a9e657](https://github.com/BLSQ/snt-malaria/commit/3a9e657d2c900bcf32b8784437ed8426e2105f5d))
+* SNT-134 Show intervention plan map by default & SNT-136: Improve tooltip on main map when data is missing ([b2a18bc](https://github.com/BLSQ/snt-malaria/commit/b2a18bccdc5c3b89a0653548b786f2199dbd2dcb))
+* SNT-145: Share state between map and list ([#91](https://github.com/BLSQ/snt-malaria/issues/91)) ([9aafe16](https://github.com/BLSQ/snt-malaria/commit/9aafe161402213c3b10bc47109709540e1aea720))
+* SNT-146: Display amount of districts added to plan ([#93](https://github.com/BLSQ/snt-malaria/issues/93)) ([529cd37](https://github.com/BLSQ/snt-malaria/commit/529cd378e3158f8862b14c3573059e06d37933f3))
+* SNT-149 refine map zoom step size ([#94](https://github.com/BLSQ/snt-malaria/issues/94)) ([c16f49a](https://github.com/BLSQ/snt-malaria/commit/c16f49aeb00332d1c4626aecfd73fee8fda9588e))
+* SNT-150: Allow query less or equal ([#95](https://github.com/BLSQ/snt-malaria/issues/95)) ([3ecfd35](https://github.com/BLSQ/snt-malaria/commit/3ecfd35d81959e1c37b149046081d17011d11871))
+* SNT-151 Empty selection when filter doesn't return anything ([#96](https://github.com/BLSQ/snt-malaria/issues/96)) ([b621fd2](https://github.com/BLSQ/snt-malaria/commit/b621fd24461a9cbde6bfa6643154d8e987f1355d))
+
+
+### Bug Fixes
+
+* SNT-133 Clean up setuper script ([ea93448](https://github.com/BLSQ/snt-malaria/commit/ea934484fa2f8989e71597875f86ce31d36d66ff))
+* SNT-138: Improve logs when importing metrics ([ed5e776](https://github.com/BLSQ/snt-malaria/commit/ed5e7760f966836e416a4a7ab0aff2d70f59e256))
+* SNT-141 fix ordinal string legend map color ([5e9d66b](https://github.com/BLSQ/snt-malaria/commit/5e9d66bfc3c4dae8c1c6e187249a0d7b9f6e6fc1))
+* SNT-142: re-fetch scenario on title change ([#97](https://github.com/BLSQ/snt-malaria/issues/97)) ([c6e5f3c](https://github.com/BLSQ/snt-malaria/commit/c6e5f3ca19544eea4350c3475b8f664f8bc3498b))
+* Update dummy datasets to correctly display data ([#88](https://github.com/BLSQ/snt-malaria/issues/88)) ([7c1ddc9](https://github.com/BLSQ/snt-malaria/commit/7c1ddc9217711abc5ffd553e9073e5a33ebedf3e))
+
 ## [2.2.0](https://github.com/BLSQ/snt-malaria/compare/2.1.0...2.2.0) (2025-08-29)
 
 
