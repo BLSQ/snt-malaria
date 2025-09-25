@@ -2,7 +2,7 @@ import React, { Dispatch, FC, SetStateAction } from 'react';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import MapIcon from '@mui/icons-material/Map';
 import TableRowsIcon from '@mui/icons-material/TableRows';
-import { Box, Grid, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Button, Grid, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../messages';
 import { containerBoxStyles } from '../styles';
