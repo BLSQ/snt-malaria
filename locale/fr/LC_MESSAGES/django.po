@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-17 11:39+0000\n"
+"POT-Creation-Date: 2025-09-22 13:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,28 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-#: plugins/snt_malaria/api/interventionassignments/views.py
+
+#: plugins/snt_malaria/api/intervention_assignments/views.py
 #, python-brace-format
 msgid "{delta} districts added to plan"
 msgstr "{delta} district(s) ajouté(s) au plan"
+
+#: plugins/snt_malaria/models/cost_breakdown.py
+msgid "Procurement"
+msgstr "Approvisionnement"
+
+#: plugins/snt_malaria/models/cost_breakdown.py
+msgid "Distribution"
+msgstr "Distribution"
+
+#: plugins/snt_malaria/models/cost_breakdown.py
+msgid "Operational"
+msgstr "Opérationnel"
+
+#: plugins/snt_malaria/models/cost_breakdown.py
+msgid "Supportive"
+msgstr "Support"
+
+#: plugins/snt_malaria/models/cost_breakdown.py
+msgid "Other"
+msgstr "Autre"

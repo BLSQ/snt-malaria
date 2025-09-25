@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 from iaso.models.metric import MetricType, MetricValue
 from iaso.models.org_unit import OrgUnit
-from plugins.snt_malaria.api.interventionassignments.filters import (
+from plugins.snt_malaria.api.intervention_assignments.filters import (
     InterventionAssignmentListFilter,
 )
 from plugins.snt_malaria.models import InterventionAssignment
@@ -124,10 +124,10 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
 
         for assignment in queryset:
             org_unit_id = assignment.org_unit_id
-            cost_per_unit = assignment.intervention.cost_per_unit
+            unit_cost = assignment.intervention.unit_cost
 
-            if cost_per_unit is not None and population_values[org_unit_id]:
-                budget_per_org_unit[org_unit_id] += cost_per_unit * population_values[org_unit_id]
+            if unit_cost is not None and population_values[org_unit_id]:
+                budget_per_org_unit[org_unit_id] += unit_cost * population_values[org_unit_id]
 
         org_units = self.get_org_units(budget_per_org_unit.keys())
 

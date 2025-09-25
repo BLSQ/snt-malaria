@@ -1,11 +1,11 @@
+import { useCallback } from 'react';
 import { hslToRgb } from '@mui/material';
 import { scaleThreshold } from '@visx/scale';
+import { useSafeIntl } from 'bluesquare-components';
 import * as d3 from 'd3-scale';
 import { mapTheme } from '../../../constants/map-theme';
 import { MESSAGES } from '../../messages';
 import { MetricValue, ScaleDomainRange } from '../types/metrics';
-import { useSafeIntl } from 'bluesquare-components';
-import { useCallback } from 'react';
 
 export const defaultLegend = '#999999';
 export const maxHue = 350;

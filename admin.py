@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import Intervention, InterventionAssignment, InterventionCategory, Scenario
+from .models import (
+    Intervention,
+    InterventionAssignment,
+    InterventionCategory,
+    InterventionCostBreakdownLine,
+    Scenario,
+)
 
 
 @admin.register(InterventionCategory)
@@ -23,11 +29,12 @@ class InterventionAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "intervention_category",
-        "cost_per_unit",
-        "cost_unit",
+        "unit_cost",
+        "unit_type",
         "created_by",
         "created_at",
         "updated_at",
+        "updated_by",
         "deleted_at",
     )
     search_fields = ("name", "description")
@@ -42,7 +49,6 @@ class InterventionAssignmentAdmin(admin.ModelAdmin):
         "scenario",
         "created_by",
         "created_at",
-        "updated_at",
     )
     list_filter = ("scenario", "intervention", "created_by")
     search_fields = ("scenario__name", "org_unit__name")
@@ -61,3 +67,11 @@ class ScenarioAdmin(admin.ModelAdmin):
     search_fields = ("name", "description")
     list_filter = ("account", "created_by")
     ordering = ("name",)
+
+
+@admin.register(InterventionCostBreakdownLine)
+class InterventionCostBreakdownLineAdmin(admin.ModelAdmin):
+    list_display = ("name", "id", "unit_cost", "intervention", "created_by", "created_at")
+    search_fields = ("name", "id")
+    list_filter = ("name", "id")
+    ordering = ("id", "name")

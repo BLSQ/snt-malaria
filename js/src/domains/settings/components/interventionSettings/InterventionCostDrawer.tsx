@@ -1,15 +1,21 @@
 import React, { useCallback } from 'react';
 import { Drawer } from '@mui/material';
+import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
 import { Intervention } from '../../../planning/types/interventions';
+import { useGetInterventionCostBreakdownLines } from '../../hooks/useGetInterventionCostBreakdownLines';
+import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreakdownLine';
 import { InterventionCostForm } from './InterventionCostForm';
 
 type Props = {
     onClose: () => void;
     open: boolean;
     intervention: Intervention | null;
-    onConfirm: (intervention: Intervention) => void;
+    onConfirm: (
+        intervention: Intervention,
+        costs: InterventionCostBreakdownLine[],
+    ) => void;
 };
 
 const styles: SxStyles = {
@@ -29,12 +35,19 @@ export const InterventionCostDrawer: React.FC<Props> = ({
     intervention,
     onConfirm,
 }) => {
+    const { data: cost_breakdown_lines, isFetching: isFetchingCosts } =
+        useGetInterventionCostBreakdownLines(intervention?.id);
+
     const handleFormConfirm = useCallback(
         costConfig => {
-            onConfirm({
-                ...intervention,
-                ...costConfig,
-            } as Intervention);
+            onConfirm(
+                {
+                    ...intervention,
+                    unit_cost: costConfig.unit_cost,
+                    unit_type: costConfig.unit_type,
+                } as Intervention,
+                costConfig.cost_breakdown_lines,
+            );
         },
         [onConfirm, intervention],
     );
@@ -51,13 +64,18 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                     title={intervention?.name ?? ''}
                     onClose={onClose}
                 />
-                <InterventionCostForm
-                    defaultValues={{
-                        cost_unit: intervention?.cost_unit,
-                        cost_per_unit: intervention?.cost_per_unit ?? undefined,
-                    }}
-                    onConfirm={handleFormConfirm}
-                />
+                {isFetchingCosts ? (
+                    <LoadingSpinner absolute={true} />
+                ) : (
+                    <InterventionCostForm
+                        defaultValues={{
+                            unit_type: intervention?.unit_type,
+                            unit_cost: intervention?.unit_cost ?? undefined,
+                            cost_breakdown_lines: cost_breakdown_lines ?? [],
+                        }}
+                        onConfirm={handleFormConfirm}
+                    />
+                )}
             </Drawer>
         </>
     );

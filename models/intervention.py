@@ -36,15 +36,13 @@ class Intervention(SoftDeletableModel):
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    cost_unit = models.TextField(max_length=255, blank=True)
-    cost_per_unit = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        null=True,
-        blank=True,
-    )
+    unit_type = models.TextField(max_length=255, blank=True)
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="intervention_updated_set"
+    )
 
     def __str__(self):
         return "%s %s" % (self.name, self.id)
@@ -60,4 +58,3 @@ class InterventionAssignment(models.Model):
     intervention = models.ForeignKey(Intervention, on_delete=models.PROTECT)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
