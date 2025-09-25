@@ -19,12 +19,6 @@ class ScenarioAPITestCase(APITestCase):
             name="Test Scenario",
             description="A test scenario description.",
         )
-        cls.scenario2 = Scenario.objects.create(
-            account=cls.account,
-            created_by=cls.user,
-            name="Test Scenario 2",
-            description="A test scenario 2 description.",
-        )
 
         # Create intervention categories
         cls.int_category_vaccination = InterventionCategory.objects.create(
@@ -87,15 +81,11 @@ class ScenarioAPITestCase(APITestCase):
         url = reverse("scenarios-list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-        scenario = next(item for item in response.data if item["id"] == self.scenario.id)
+        self.assertEqual(len(response.data), 1)
+        scenario = response.data[0]
         self.assertEqual(scenario["name"], "Test Scenario")
         self.assertEqual(scenario["description"], "A test scenario description.")
         self.assertEqual(scenario["created_by"]["id"], self.user.id)
-        scenario2 = next(item for item in response.data if item["id"] == self.scenario2.id)
-        self.assertEqual(scenario2["name"], "Test Scenario 2")
-        self.assertEqual(scenario2["description"], "A test scenario 2 description.")
-        self.assertEqual(scenario2["created_by"]["id"], self.user.id)
 
     def test_scenario_retrieve(self):
         url = reverse("scenarios-detail", args=[self.scenario.id])
@@ -109,7 +99,7 @@ class ScenarioAPITestCase(APITestCase):
         url = reverse("scenarios-list")
         response = self.client.post(url, {"name": "New Scenario"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Scenario.objects.count(), 3)
+        self.assertEqual(Scenario.objects.count(), 2)
         new_scenario = Scenario.objects.latest("id")
         self.assertEqual(new_scenario.name, "New Scenario")
         self.assertEqual(new_scenario.account, self.account)
@@ -124,18 +114,23 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(self.scenario.name, "Updated Scenario Name")
 
     def test_scenario_update_name_already_taken(self):
+        self.scenario2 = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user,
+            name="Test Scenario 2",
+            description="A test scenario 2 description.",
+        )
         url = reverse("scenarios-detail", args=[self.scenario.id])
         payload = {"id": self.scenario.id, "name": "Test Scenario 2"}
         response = self.client.put(url, payload, format="json")
         jsonResponse = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
-        print(jsonResponse)
         self.assertEqual(jsonResponse, {"name": ["Scenario with this name already exists."]})
 
     def test_scenario_duplicate_success(self):
         url = reverse("scenarios-duplicate")
         response = self.client.post(url, {"id_to_duplicate": self.scenario.id}, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Scenario.objects.count(), 3)
+        self.assertEqual(Scenario.objects.count(), 2)
         duplicated_scenario = Scenario.objects.latest("id")
         self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
         self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
@@ -145,7 +140,7 @@ class ScenarioAPITestCase(APITestCase):
         response = self.client.post(url, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(str(response.data["id_to_duplicate"][0]), "This field is required.")
-        self.assertEqual(Scenario.objects.count(), 2)
+        self.assertEqual(Scenario.objects.count(), 1)
 
     def test_scenario_duplicate_multiple_times_success(self):
         url = reverse("scenarios-duplicate")
@@ -153,7 +148,7 @@ class ScenarioAPITestCase(APITestCase):
         # First duplication
         response = self.client.post(url, {"id_to_duplicate": self.scenario.id}, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Scenario.objects.count(), 3)
+        self.assertEqual(Scenario.objects.count(), 2)
         duplicated_scenario = Scenario.objects.latest("id")
 
         self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
@@ -162,7 +157,7 @@ class ScenarioAPITestCase(APITestCase):
         # Second duplication
         response = self.client.post(url, {"id_to_duplicate": self.scenario.id}, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Scenario.objects.count(), 4)
+        self.assertEqual(Scenario.objects.count(), 3)
         duplicated_scenario = Scenario.objects.latest("id")
 
         self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
