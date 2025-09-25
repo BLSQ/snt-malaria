@@ -105,13 +105,26 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(new_scenario.account, self.account)
         self.assertEqual(new_scenario.created_by, self.user)
 
-    def test_scenario_updat(self):
+    def test_scenario_update(self):
         url = reverse("scenarios-detail", args=[self.scenario.id])
         payload = {"id": self.scenario.id, "name": "Updated Scenario Name"}
         response = self.client.put(url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.scenario.refresh_from_db()
         self.assertEqual(self.scenario.name, "Updated Scenario Name")
+
+    def test_scenario_update_name_already_taken(self):
+        self.scenario2 = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user,
+            name="Test Scenario 2",
+            description="A test scenario 2 description.",
+        )
+        url = reverse("scenarios-detail", args=[self.scenario.id])
+        payload = {"id": self.scenario.id, "name": "Test Scenario 2"}
+        response = self.client.put(url, payload, format="json")
+        jsonResponse = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(jsonResponse, {"name": ["Scenario with this name already exists."]})
 
     def test_scenario_duplicate_success(self):
         url = reverse("scenarios-duplicate")
