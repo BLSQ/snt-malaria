@@ -11,7 +11,6 @@ import {
     TextField,
     Button,
 } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
 import { useNavigate } from 'react-router-dom';
 import DeleteDialog from 'Iaso/components/dialogs/DeleteDialogComponent';
 import { SxStyles } from 'Iaso/types/general';
@@ -78,7 +77,6 @@ type Props = {
 
 export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
     const navigate = useNavigate();
-    const { formatMessage } = useSafeIntl();
 
     const [isEditing, setIsEditing] = useState(false);
     const [tempName, setTempName] = useState(scenario.name);
@@ -178,9 +176,7 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                     </Button>
                     <DeleteDialog
                         onConfirm={handleDeleteClick}
-                        titleMessage={formatMessage(
-                            MESSAGES.modalDeleteScenarioTitle,
-                        )}
+                        titleMessage={MESSAGES.modalDeleteScenarioTitle}
                         iconColor={'primary'}
                         message={MESSAGES.modalDeleteScenarioConfirm}
                     />
