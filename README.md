@@ -16,16 +16,10 @@ git clone git@github.com:BLSQ/iaso.git
 
 ```bash
 cd plugins
-git clone git@github.com:BLSQ/snt-malaria.git
+git clone git@github.com:BLSQ/snt-malaria.git snt_malaria
 ```
 
-3. Rename the SNT repo to `snt_malaria`:
-
-```bash
-mv snt-malaria snt_malaria
-```
-
-4. Prepare your `.env` (in the root of the main IASO repo):
+3. Prepare your `.env` (in the root of the main IASO repo):
 
 ```.env
 cp .env.dist .env
@@ -39,7 +33,7 @@ RDS_DB_NAME=snt_malaria
 PLUGINS=snt_malaria
 ```
 
-5. Start your IASO container:
+4. Start your IASO container:
 
 ```bash
 docker compose up
@@ -59,7 +53,7 @@ Or one-line:
 docker compose exec db psql -U postgres -c "create database snt_malaria"`
 ```
 
-6. Create account and data:
+5. Create account and data:
 
 With your containers running, run the script (in a different tab) to set up an initial account
 
@@ -69,7 +63,7 @@ Dummy account and values:
 docker compose run iaso manage set_up_burkina_faso_account
 ```
 
-7. Using the credentials you just received, you should now be able to log in and create a first scenario.
+6. Using the credentials you just received, you should now be able to log in and create a first scenario.
 
 ## OpenHEXA import
 
