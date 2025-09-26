@@ -44,8 +44,6 @@ export const Planning: FC = () => {
 
     const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
     const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
-    const [selectionOnInterventionList, setSelectionOnInterventionList] =
-        useState<OrgUnit[]>([]);
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: Intervention;
     }>({});
