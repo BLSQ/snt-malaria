@@ -15,6 +15,7 @@ import {
 import { baseUrls } from '../../constants/urls';
 import { MESSAGES } from '../messages';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
+import { Budgeting } from './components/budgeting/budgeting';
 import { InterventionAssignments } from './components/interventionAssignment/InterventionAssignments';
 import { InterventionsPlan } from './components/interventionPlan/InterventionsPlan';
 import { Map } from './components/map';
@@ -27,6 +28,7 @@ import {
     useGetMetricValues,
 } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
+import { InterventionPlanMetrics } from './types/budget';
 import { Intervention } from './types/interventions';
 import { MetricsFilters, MetricType } from './types/metrics';
 
@@ -53,6 +55,9 @@ export const Planning: FC = () => {
     const [displayedMetric, setDisplayedMetric] = useState<MetricType | null>(
         null,
     );
+    const [interventionPlanMetrics, setInterventionPlanMetrics] = useState<
+        InterventionPlanMetrics[] | null
+    >(null);
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(scenario?.id);
@@ -88,6 +93,10 @@ export const Planning: FC = () => {
         },
         [],
     );
+
+    const runBudget = useCallback(interventionPlanMetrics => {
+        setInterventionPlanMetrics(interventionPlanMetrics);
+    }, []);
 
     useGetMetricOrgUnits(metricFilters, metricOrgUnitIds => {
         const newOrgUnitSelection = orgUnits?.filter(orgUnit =>
@@ -192,9 +201,15 @@ export const Planning: FC = () => {
                                 totalOrgUnitCount={orgUnits?.length ?? 0}
                                 interventionPlans={interventionPlans ?? []}
                                 isLoadingPlans={isLoadingPlans}
+                                onRunBudget={runBudget}
                             />
                         </PaperContainer>
                     </Grid>
+                    {interventionPlanMetrics ? (
+                        <Budgeting
+                            interventionPlanMetrics={interventionPlanMetrics}
+                        />
+                    ) : null}
                 </Grid>
             </PageContainer>
         </>

@@ -2,6 +2,7 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
+import { InterventionPlanMetrics } from '../../types/budget';
 import { InterventionPlan } from '../../types/interventions';
 import { MetricType } from '../../types/metrics';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
@@ -14,6 +15,7 @@ type Props = {
     interventionPlans: InterventionPlan[];
     isLoadingPlans: boolean;
     totalOrgUnitCount: number;
+    onRunBudget: (interventionPlanMetrics: InterventionPlanMetrics[]) => void;
 };
 
 export const InterventionsPlan: FC<Props> = ({
@@ -21,6 +23,7 @@ export const InterventionsPlan: FC<Props> = ({
     interventionPlans,
     isLoadingPlans,
     totalOrgUnitCount = 0,
+    onRunBudget,
 }) => {
     const [tabValue, setTabValue] = useState<TabValue>('map');
 
@@ -98,8 +101,8 @@ export const InterventionsPlan: FC<Props> = ({
 
         // TODO: Should we send the request with all intervention even if no metricType is selected ?
         // TODO: Next part should be handled in a higher level.
-        console.log(budgetRequest);
-    }, [interventionMetricTypes, interventionPlans]);
+        onRunBudget(budgetRequest);
+    }, [interventionMetricTypes, interventionPlans, onRunBudget]);
 
     return (
         <Box
