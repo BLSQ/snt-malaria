@@ -1,7 +1,10 @@
 import React, { FC } from 'react';
-import { Typography } from '@mui/material';
+import { Grid } from '@mui/material';
+import { PaperContainer } from '../../../../components/styledComponents';
 import { useGetBudget } from '../../hooks/useGetBudget';
 import { InterventionPlanMetrics } from '../../types/budget';
+import { CostBreakdownChart } from './CostBreakdownChart';
+import { ProportionChart } from './ProportionChart';
 
 type Props = {
     interventionPlanMetrics?: InterventionPlanMetrics[];
@@ -14,11 +17,16 @@ export const Budgeting: FC<Props> = ({ interventionPlanMetrics }) => {
     console.log(budget);
     return (
         <>
-            {budget?.budgets.interventions.map(i => (
-                <Typography key={i.name}>
-                    {i.name} {i.cost}
-                </Typography>
-            ))}
+            <Grid item xs={12} md={6}>
+                <PaperContainer>
+                    <CostBreakdownChart />
+                </PaperContainer>
+            </Grid>
+            <Grid item xs={12} md={6}>
+                <PaperContainer>
+                    <ProportionChart />
+                </PaperContainer>
+            </Grid>
         </>
     );
 };
