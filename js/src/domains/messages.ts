@@ -166,4 +166,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.metrics.not-seasonal',
         defaultMessage: 'Not Seasonal',
     },
+    selectMetric: {
+        id: 'iaso.snt_malaria.metrics.select-metric',
+        defaultMessage: 'Select metric',
+    },
 });
