@@ -14,7 +14,7 @@ import tiles from 'Iaso/constants/mapTiles';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../../../../constants/map-theme';
-import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
+import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
 import {
     defaultLegend,
