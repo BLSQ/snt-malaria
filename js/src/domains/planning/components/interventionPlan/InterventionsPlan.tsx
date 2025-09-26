@@ -1,8 +1,9 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { UseRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
 import { InterventionPlan } from '../../types/interventions';
+import { MetricType } from '../../types/metrics';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
 import { InterventionPlanSummary, TabValue } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
@@ -28,6 +29,10 @@ export const InterventionsPlan: FC<Props> = ({
     const [selectedInterventionId, setSelectedInterventionId] = useState<
         number | null
     >(null);
+
+    const [interventionMetricTypes, setInterventionMetricTypes] = useState<{
+        [interventionId: number]: MetricType;
+    }>({});
 
     const assignedOrgUnitCount = useMemo(() => {
         return interventionPlans.reduce((acc, plan) => {
@@ -73,6 +78,29 @@ export const InterventionsPlan: FC<Props> = ({
         setSelectedInterventionId(null);
     };
 
+    const setSelectedMetricForIntervention = useCallback(
+        (interventionId: number, metric: MetricType) => {
+            setInterventionMetricTypes({
+                ...interventionMetricTypes,
+                [interventionId]: metric,
+            });
+        },
+        [setInterventionMetricTypes, interventionMetricTypes],
+    );
+
+    const runBudget = useCallback(() => {
+        const budgetRequest = interventionPlans.map(ip => ({
+            interventionId: ip.intervention.id,
+            orgUnits: ip.org_units,
+            metricType:
+                interventionMetricTypes[ip.intervention.id] ?? undefined,
+        }));
+
+        // TODO: Should we send the request with all intervention even if no metricType is selected ?
+        // TODO: Next part should be handled in a higher level.
+        console.log(budgetRequest);
+    }, [interventionMetricTypes, interventionPlans]);
+
     return (
         <Box
             sx={{
@@ -90,6 +118,7 @@ export const InterventionsPlan: FC<Props> = ({
                                 tabValue={tabValue}
                                 assignedOrgUnits={assignedOrgUnitCount}
                                 totalOrgUnits={totalOrgUnitCount}
+                                onRunBudget={runBudget}
                             />
                         }
                     />
@@ -115,6 +144,9 @@ export const InterventionsPlan: FC<Props> = ({
                                 interventionPlans={interventionPlans}
                                 showInterventionPlanDetails={
                                     onShowInterventionPlanDetails
+                                }
+                                onMetricSelected={
+                                    setSelectedMetricForIntervention
                                 }
                             />
                         </TabPanel>

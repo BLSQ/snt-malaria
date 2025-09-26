@@ -12,6 +12,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { sortByStringProp } from '../../libs/list-utils';
 import { InterventionPlan } from '../../types/interventions';
+import { MetricType } from '../../types/metrics';
 import { InterventionsPlanRowTable } from './InterventionsPlanRowTable';
 
 const styles: SxStyles = {
@@ -34,11 +35,13 @@ type Props = {
     isLoadingPlans: boolean;
     interventionPlans: InterventionPlan[] | undefined;
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
+    onMetricSelected: (interventionId: number, metric: MetricType) => void;
 };
 export const InterventionsPlanTable: FC<Props> = ({
     isLoadingPlans,
     interventionPlans,
     showInterventionPlanDetails,
+    onMetricSelected,
 }) => {
     const { formatMessage } = useSafeIntl();
     const sortedInterventionPlans = useMemo(
@@ -71,6 +74,12 @@ export const InterventionsPlanTable: FC<Props> = ({
                                 index={index}
                                 showInterventionPlanDetails={
                                     showInterventionPlanDetails
+                                }
+                                onMetricSelected={metric =>
+                                    onMetricSelected(
+                                        row.intervention.id,
+                                        metric,
+                                    )
                                 }
                             />
                         ))}

@@ -11,12 +11,14 @@ export type TabValue = 'map' | 'list';
 type Props = {
     setTabValue: Dispatch<SetStateAction<TabValue>>;
     tabValue: TabValue;
+    onRunBudget: () => void;
     assignedOrgUnits: number;
     totalOrgUnits: number;
 };
 export const InterventionPlanSummary: FC<Props> = ({
     setTabValue,
     tabValue,
+    onRunBudget,
     assignedOrgUnits = 0,
     totalOrgUnits = 0,
 }) => {
@@ -64,7 +66,11 @@ export const InterventionPlanSummary: FC<Props> = ({
                         <Tab value="map" label={<MapIcon />} />
                         <Tab value="list" label={<TableRowsIcon />} />
                     </Tabs>
-                    <Button variant="contained" color="primary">
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={onRunBudget}
+                    >
                         {formatMessage(MESSAGES.runInterventionPlanBudget)}
                     </Button>
                 </Stack>
