@@ -6,7 +6,7 @@ import { Intervention } from '../types/interventions';
 export const putIntervention = (body: Intervention) =>
     putRequest(`/api/snt_malaria/interventions/${body.id}/`, body);
 
-export const UseUpdateIntervention = (): UseMutationResult =>
+export const useUpdateIntervention = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: putIntervention,
         invalidateQueryKey: ['intervention_categories'],

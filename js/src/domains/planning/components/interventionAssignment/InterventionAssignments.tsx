@@ -10,7 +10,7 @@ import {
 import { LoadingSpinner } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
-import { UseCreateInterventionAssignment } from '../../hooks/UseCreateInterventionAssignment';
+import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionCategories } from '../../hooks/useGetInterventionCategories';
 import { Intervention, InterventionPlan } from '../../types/interventions';
 import { InterventionCategories } from './InterventionCategories';
@@ -101,7 +101,7 @@ export const InterventionAssignments: FC<Props> = ({
     const {
         mutateAsync: createInterventionAssignment,
         isLoading: isCreatingAssignment,
-    } = UseCreateInterventionAssignment();
+    } = useCreateInterventionAssignment();
 
     return (
         <Box sx={styles.mainBox}>

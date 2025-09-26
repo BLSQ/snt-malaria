@@ -5,7 +5,7 @@ import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { InterventionAssignmentCreate } from '../types/interventions';
 
-export const UseCreateInterventionAssignment = (): UseMutationResult =>
+export const useCreateInterventionAssignment = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: InterventionAssignmentCreate) =>
             postRequest(`/api/snt_malaria/intervention_assignments/`, body),

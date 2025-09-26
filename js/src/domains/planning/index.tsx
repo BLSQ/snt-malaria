@@ -20,7 +20,7 @@ import { InterventionsPlan } from './components/interventionPlan/InterventionsPl
 import { Map } from './components/map';
 import { SideMapList } from './components/maps/SideMapList';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
-import { useGetInterventionAssignments } from './hooks/UseGetInterventionAssignments';
+import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import {
     useGetMetricCategories,
     useGetMetricOrgUnits,

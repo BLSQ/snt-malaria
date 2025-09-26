@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
-import { UseRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
+import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
 import { InterventionPlan } from '../../types/interventions';
 import { MetricType } from '../../types/metrics';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
@@ -54,7 +54,7 @@ export const InterventionsPlan: FC<Props> = ({
     }, [interventionPlans, selectedInterventionId]);
 
     const { mutateAsync: removeManyOrgUnitsFromPlan } =
-        UseRemoveManyOrgUnitsFromInterventionPlan();
+        useRemoveManyOrgUnitsFromInterventionPlan();
 
     const onRemoveOrgUnitsFromPlan = async (
         interventionAssignmentIds: number[],
