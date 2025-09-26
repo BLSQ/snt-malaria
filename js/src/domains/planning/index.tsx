@@ -44,7 +44,8 @@ export const Planning: FC = () => {
 
     const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
     const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
-    const [expanded, setExpanded] = useState('interventionsList');
+    const [selectionOnInterventionList, setSelectionOnInterventionList] =
+        useState<OrgUnit[]>([]);
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: Intervention;
     }>({});
@@ -129,10 +130,6 @@ export const Planning: FC = () => {
         );
     }, [formatMessage]);
 
-    const handleExpandAccordion = panel => (event, isExpanded) => {
-        setExpanded(isExpanded ? panel : null);
-    };
-
     return (
         <>
             {isLoadingOrgUnits && <LoadingSpinner />}
@@ -194,12 +191,7 @@ export const Planning: FC = () => {
                         <PaperContainer>
                             <InterventionsPlan
                                 scenarioId={scenario?.id}
-                                handleExpandAccordion={handleExpandAccordion}
-                                expanded={expanded}
-                                setSelectedInterventions={
-                                    setSelectedInterventions
-                                }
-                                selectedInterventions={selectedInterventions}
+                                totalOrgUnitCount={orgUnits?.length ?? 0}
                                 interventionPlans={interventionPlans ?? []}
                                 isLoadingPlans={isLoadingPlans}
                             />

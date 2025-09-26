@@ -150,6 +150,10 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Some districts already have an intervention from the samegroup.{br} Choose which one to apply, or decide to apply both.',
     },
+    runInterventionPlanBudget: {
+        id: 'iaso.snt_malaria.label.runInterventionPlanBudget',
+        defaultMessage: 'Run Budget',
+    },
     selectAll: {
         id: 'iaso.snt_malaria.label.selectAll',
         defaultMessage: 'Select All',

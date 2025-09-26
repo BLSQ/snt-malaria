@@ -52,5 +52,6 @@
     "iaso.snt_malaria.settings.intervention.detailedCostUnitLabel":"Unité",
     "iaso.snt_malaria.settings.intervention.detailedCostCategoryLabel":"Catégorie",
     "iaso.snt_malaria.settings.intervention.errors.required": "Requis",
-    "iaso.snt_malaria.settings.intervention.errors.negativeValueNotAllowed": "La valeur négative n'est pas autorisée"
+    "iaso.snt_malaria.settings.intervention.errors.negativeValueNotAllowed": "La valeur négative n'est pas autorisée",
+    "iaso.snt_malaria.label.runInterventionPlanBudget": "Exécuter Budget"
 }
