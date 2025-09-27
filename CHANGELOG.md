@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.4.0](https://github.com/BLSQ/snt-malaria/compare/2.3.0...2.4.0) (2025-09-26)
+
+
+### Features
+
+* SNT-121 Add run budget button no action yet ([#75](https://github.com/BLSQ/snt-malaria/issues/75)) ([98323f3](https://github.com/BLSQ/snt-malaria/commit/98323f3ef5be9eba585ac29354f05ee388b68292))
+* SNT-127 Edit detailed cost per intervention ([#92](https://github.com/BLSQ/snt-malaria/issues/92)) ([26ce277](https://github.com/BLSQ/snt-malaria/commit/26ce2778f9a58f35de012d47e19a62a9f7faab36))
+* SNT-147 Validate name and show error ([#98](https://github.com/BLSQ/snt-malaria/issues/98)) ([5cc1654](https://github.com/BLSQ/snt-malaria/commit/5cc1654d0d1122e7677509bed3935257e040792a))
+
 ## [2.3.0](https://github.com/BLSQ/snt-malaria/compare/2.2.0...2.3.0) (2025-09-23)
 
 
