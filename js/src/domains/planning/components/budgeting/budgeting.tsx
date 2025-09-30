@@ -19,12 +19,22 @@ export const Budgeting: FC<Props> = ({ interventionPlanMetrics }) => {
         <>
             <Grid item xs={12} md={7}>
                 <PaperContainer>
-                    <CostBreakdownChart />
+                    <CostBreakdownChart
+                        isLoading={isFetchingBudget}
+                        interventionBudgets={
+                            budget?.budgets?.interventions ?? []
+                        }
+                    />
                 </PaperContainer>
             </Grid>
             <Grid item xs={12} md={5}>
                 <PaperContainer>
-                    <ProportionChart />
+                    <ProportionChart
+                        isLoading={isFetchingBudget}
+                        interventionBudgets={
+                            budget?.budgets?.interventions ?? []
+                        }
+                    />
                 </PaperContainer>
             </Grid>
         </>

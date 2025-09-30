@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import {
     Box,
     Card,
@@ -9,72 +9,25 @@ import {
     ListItem,
     Typography,
 } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import {
     Bar,
     BarChart,
     CartesianGrid,
     Legend,
     ResponsiveContainer,
+    Tooltip,
     XAxis,
     YAxis,
 } from 'recharts';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
+import { getCostBreakdownChartData } from '../../libs/cost-utils';
 
-type Props = {};
-
-const data = [
-    {
-        interventionName: 'Routine LLIN',
-        Procurement: 4000,
-        Distribution: 2400,
-        Operational: 2400,
-        Supportive: 0,
-        Other: 0,
-    },
-    {
-        interventionName: 'IPTp',
-        Procurement: 4000,
-        Distribution: 2400,
-        Operational: 2400,
-        Supportive: 0,
-        Other: 0,
-    },
-    {
-        interventionName: 'MDA',
-        Procurement: 4000,
-        Distribution: 2400,
-        Operational: 2400,
-        Supportive: 0,
-        Other: 0,
-    },
-    {
-        interventionName: 'RTS,S',
-        Procurement: 4000,
-        Distribution: 2400,
-        Operational: 2400,
-        Supportive: 0,
-        Implementation: 0,
-        Other: 0,
-    },
-    {
-        interventionName: 'Campaign LLIN',
-        Procurement: 4000,
-        Distribution: 2400,
-        Operational: 2400,
-        Supportive: 0,
-        Other: 0,
-    },
-    {
-        interventionName: 'SMC',
-        Procurement: 4000,
-        Distribution: 2400,
-        Operational: 2400,
-        Supportive: 0,
-        Other: 0,
-    },
-];
+type Props = {
+    interventionBudgets: any[];
+    isLoading: boolean;
+};
 
 const styles: SxStyles = {
     mainBox: {
@@ -89,6 +42,7 @@ const styles: SxStyles = {
         padding: 1,
         height: '100%',
         overflow: 'hidden',
+        position: 'relative',
         '&:last-child': {
             paddingBottom: 0,
         },
@@ -105,8 +59,24 @@ const styles: SxStyles = {
     },
 };
 
-export const CostBreakdownChart: FC<Props> = ({}) => {
+const LEGEND_COLORS = ['#522da9', '#7452ba', '#9477ca', '#b29cda', '#d1c3e9'];
+const BARS = [
+    { color: LEGEND_COLORS[0], label: 'Procurement', key: 'Procurement' },
+    { color: LEGEND_COLORS[1], label: 'Distribution', key: 'Distribution' },
+    { color: LEGEND_COLORS[2], label: 'Operational', key: 'Operational' },
+    { color: LEGEND_COLORS[3], label: 'Supportive', key: 'Supportive' },
+    { color: LEGEND_COLORS[4], label: 'Other', key: 'Other' },
+];
+
+export const CostBreakdownChart: FC<Props> = ({
+    interventionBudgets,
+    isLoading = false,
+}) => {
     const { formatMessage } = useSafeIntl();
+    const data = useMemo(() => {
+        return getCostBreakdownChartData(interventionBudgets);
+    }, [interventionBudgets]);
+
     const renderLegend = props => {
         const { payload } = props;
 
@@ -138,41 +108,40 @@ export const CostBreakdownChart: FC<Props> = ({}) => {
                 ></CardHeader>
                 <Divider />
                 <CardContent sx={styles.cardContent}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={data}>
-                            <XAxis
-                                dataKey="interventionName"
-                                axisLine={false}
-                                tickLine={false}
-                            />
-                            <YAxis axisLine={false} tickLine={false} />
-                            <CartesianGrid
-                                vertical={false}
-                                strokeDasharray="1"
-                            />
-                            <Bar
-                                dataKey="Procurement"
-                                stackId="a"
-                                fill="#512DA8"
-                                barSize={18}
-                            />
-                            <Bar
-                                dataKey="Distribution"
-                                stackId="a"
-                                fill="#9575CD"
-                            />
-                            <Bar
-                                dataKey="Operational"
-                                stackId="a"
-                                fill="#D1C4E9"
-                            />
-                            <Legend
-                                verticalAlign="bottom"
-                                align="center"
-                                content={renderLegend}
-                            />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    {isLoading ? (
+                        <LoadingSpinner absolute={true} />
+                    ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={data}>
+                                <XAxis
+                                    dataKey="interventionName"
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <YAxis axisLine={false} tickLine={false} />
+                                <CartesianGrid
+                                    vertical={false}
+                                    strokeDasharray="1"
+                                />
+                                <Tooltip cursor={false} />
+
+                                {BARS.map(bar => (
+                                    <Bar
+                                        dataKey={bar.key}
+                                        fill={bar.color}
+                                        key={bar.key}
+                                        barSize={18}
+                                        stackId="a"
+                                    />
+                                ))}
+                                <Legend
+                                    verticalAlign="bottom"
+                                    align="center"
+                                    content={renderLegend}
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    )}
                 </CardContent>
             </Card>
         </Box>

@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import {
     Box,
     Card,
@@ -9,31 +9,22 @@ import {
     ListItem,
     Typography,
 } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from 'recharts';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import {
+    Cell,
+    Legend,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+} from 'recharts';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
+import { INTERVENTION_COLORS } from '../../libs/cost-utils';
 
-const data = [
-    { name: 'Routine LLIN', value: 400 },
-    { name: 'IPTp', value: 300 },
-    { name: 'MDA', value: 300 },
-    { name: 'RTS,S', value: 200 },
-    { name: 'Campaign LLIN', value: 175 },
-    { name: 'SMC', value: 25 },
-];
+type Props = { interventionBudgets: any[]; isLoading: boolean };
 
-// In the same order: Routine LLIN, IPTp, MDA, RTS,S, Campaign LLIN, SMC
-const COLORS = [
-    '#80B3DC',
-    '#F2B16E',
-    '#D1C4E9',
-    '#F2D683',
-    '#6BD39D',
-    '#C54A53',
-];
-
-type Props = {};
+const DEFAULT_COLOR = '#512DA8';
 
 const styles: SxStyles = {
     mainBox: {
@@ -59,8 +50,21 @@ const styles: SxStyles = {
     },
 };
 
-export const ProportionChart: FC<Props> = ({}) => {
+export const ProportionChart: FC<Props> = ({
+    interventionBudgets,
+    isLoading,
+}) => {
     const { formatMessage } = useSafeIntl();
+
+    const data = useMemo(
+        () =>
+            interventionBudgets?.map(b => ({
+                name: b.name,
+                value: b.cost,
+            })),
+        [interventionBudgets],
+    );
+
     const renderLegend = props => {
         const { payload } = props;
 
@@ -92,30 +96,39 @@ export const ProportionChart: FC<Props> = ({}) => {
                 ></CardHeader>
                 <Divider />
                 <CardContent sx={styles.cardContent}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie
-                                data={data}
-                                dataKey={'value'}
-                                innerRadius={80}
-                                outerRadius={120}
-                            >
-                                {data.map((entry, index) => (
-                                    <Cell
-                                        key={`cell-${entry.name}`}
-                                        fill={COLORS[index % COLORS.length]}
-                                    />
-                                ))}
-                            </Pie>
-                            <Legend
-                                layout="vertical"
-                                align="right"
-                                verticalAlign="middle"
-                                content={renderLegend}
-                                wrapperStyle={{ left: 'calc(50% + 3rem)' }}
-                            ></Legend>
-                        </PieChart>
-                    </ResponsiveContainer>
+                    {isLoading ? (
+                        <LoadingSpinner absolute={true} />
+                    ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Tooltip />
+                                <Pie
+                                    data={data}
+                                    dataKey={'value'}
+                                    innerRadius={80}
+                                    outerRadius={120}
+                                >
+                                    {data.map(entry => (
+                                        <Cell
+                                            key={`cell-${entry.name}`}
+                                            fill={
+                                                INTERVENTION_COLORS[
+                                                    entry.name
+                                                ] ?? DEFAULT_COLOR
+                                            }
+                                        />
+                                    ))}
+                                </Pie>
+                                <Legend
+                                    layout="vertical"
+                                    align="right"
+                                    verticalAlign="middle"
+                                    content={renderLegend}
+                                    wrapperStyle={{ left: 'calc(50% + 3rem)' }}
+                                ></Legend>
+                            </PieChart>
+                        </ResponsiveContainer>
+                    )}
                 </CardContent>
             </Card>
         </Box>
