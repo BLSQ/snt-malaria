@@ -17,12 +17,12 @@ export const Budgeting: FC<Props> = ({ interventionPlanMetrics }) => {
     console.log(budget);
     return (
         <>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={7}>
                 <PaperContainer>
                     <CostBreakdownChart />
                 </PaperContainer>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={5}>
                 <PaperContainer>
                     <ProportionChart />
                 </PaperContainer>

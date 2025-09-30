@@ -7,7 +7,6 @@ import {
     Divider,
     List,
     ListItem,
-    Stack,
     Typography,
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -23,9 +22,7 @@ import {
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 
-type Props = {
-    d: any;
-};
+type Props = {};
 
 const data = [
     {
@@ -89,7 +86,7 @@ const styles: SxStyles = {
     card: { height: '100%', display: 'flex', flexDirection: 'column' },
     cardContent: {
         marginTop: 4,
-        padding: 0,
+        padding: 1,
         height: '100%',
         overflow: 'hidden',
         '&:last-child': {
@@ -108,7 +105,7 @@ const styles: SxStyles = {
     },
 };
 
-export const CostBreakdownChart: FC<Props> = ({ d }) => {
+export const CostBreakdownChart: FC<Props> = ({}) => {
     const { formatMessage } = useSafeIntl();
     const renderLegend = props => {
         const { payload } = props;
@@ -141,13 +138,14 @@ export const CostBreakdownChart: FC<Props> = ({ d }) => {
                 ></CardHeader>
                 <Divider />
                 <CardContent sx={styles.cardContent}>
-                    <ResponsiveContainer width="100%" height="90%">
+                    <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={data}>
                             <XAxis
                                 dataKey="interventionName"
+                                axisLine={false}
                                 tickLine={false}
                             />
-                            <YAxis />
+                            <YAxis axisLine={false} tickLine={false} />
                             <CartesianGrid
                                 vertical={false}
                                 strokeDasharray="1"
