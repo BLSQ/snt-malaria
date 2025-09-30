@@ -14,7 +14,6 @@ export const Budgeting: FC<Props> = ({ interventionPlanMetrics }) => {
     const { data: budget, isFetching: isFetchingBudget } = useGetBudget(
         interventionPlanMetrics,
     );
-    console.log(budget);
     return (
         <>
             <Grid item xs={12} md={7}>

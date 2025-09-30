@@ -177,6 +177,7 @@ export const useGetBudget = (
     return useSnackQuery({
         queryKey: ['budget'],
         queryFn: () => {
+            // TODO Type budget object.
             return new Promise((resolve, reject) => {
                 setTimeout(() => resolve(dummy), 1000);
             });
