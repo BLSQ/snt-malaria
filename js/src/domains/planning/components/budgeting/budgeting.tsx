@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import { Grid } from '@mui/material';
 import { PaperContainer } from '../../../../components/styledComponents';
 import { useGetBudget } from '../../hooks/useGetBudget';
@@ -14,15 +14,22 @@ export const Budgeting: FC<Props> = ({ interventionPlanMetrics }) => {
     const { data: budget, isFetching: isFetchingBudget } = useGetBudget(
         interventionPlanMetrics,
     );
+
+    const budgetInterventions = useMemo(
+        () =>
+            budget?.budgets?.length && budget.budgets.length > 0
+                ? budget.budgets[0].interventions
+                : [],
+        [budget],
+    );
+
     return (
         <>
             <Grid item xs={12} md={7}>
                 <PaperContainer>
                     <CostBreakdownChart
                         isLoading={isFetchingBudget}
-                        interventionBudgets={
-                            budget?.budgets?.interventions ?? []
-                        }
+                        interventionBudgets={budgetInterventions}
                     />
                 </PaperContainer>
             </Grid>
@@ -30,9 +37,7 @@ export const Budgeting: FC<Props> = ({ interventionPlanMetrics }) => {
                 <PaperContainer>
                     <ProportionChart
                         isLoading={isFetchingBudget}
-                        interventionBudgets={
-                            budget?.budgets?.interventions ?? []
-                        }
+                        interventionBudgets={budgetInterventions}
                     />
                 </PaperContainer>
             </Grid>

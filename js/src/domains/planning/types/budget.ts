@@ -2,9 +2,20 @@ import { InterventionOrgUnit } from './interventions';
 import { MetricType } from './metrics';
 
 export type Budget = {
-    id: number;
+    year: number;
+    interventions: BudgetIntervention[];
+};
+
+export type BudgetIntervention = {
     name: string;
-    budget: number;
+    cost: number;
+    costBreakdown: BudgetInterventionCostLine[];
+};
+
+export type BudgetInterventionCostLine = {
+    cost: number;
+    category: string;
+    name: string;
 };
 
 export type InterventionPlanMetrics = {
