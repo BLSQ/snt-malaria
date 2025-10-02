@@ -9,7 +9,7 @@ export const UseCreateInterventionAssignment = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: InterventionAssignmentCreate) =>
             postRequest(`/api/snt_malaria/intervention_assignments/`, body),
-        invalidateQueryKey: ['interventionAssignments', 'budgets'],
+        invalidateQueryKey: ['interventionAssignments'],
         showSucessSnackBar: false,
         options: {
             onSuccess: (data, variables, context) => {
