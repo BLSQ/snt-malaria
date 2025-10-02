@@ -25,7 +25,6 @@ const styles: SxStyles = {
         justifyContent: 'space-between',
     },
     cost: {
-        textAlign: 'right',
         fontWeight: 'bold',
         marginRight: 2,
     },
@@ -46,7 +45,9 @@ export const InterventionRow: React.FC<Props> = ({
                     color="textPrimary"
                     sx={styles.cost}
                 >
-                    ${intervention.unit_cost ?? 'N/A'}
+                    {intervention.unit_cost
+                        ? `$${intervention.unit_cost}`
+                        : 'N/A'}
                 </Typography>
                 {intervention.unit_type && (
                     <Typography variant="caption" color="textSecondary">
