@@ -118,6 +118,7 @@ export const InterventionsPlan: FC<Props> = ({
             <Card elevation={2}>
                 <TabContext value={tabValue}>
                     <CardHeader
+                        sx={{ paddingTop: 1.5 }}
                         title={
                             <InterventionPlanSummary
                                 setTabValue={setTabValue}

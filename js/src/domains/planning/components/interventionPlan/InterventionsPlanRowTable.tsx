@@ -16,9 +16,8 @@ type Props = {
     coverage: string;
 };
 
-// TODO: I don't like this, I think I'd better have an enum
 const coverageOptions: Array<DropdownOptions<string>> = [
-    { value: InterventionCostCoverage.HEIGHTY_PERCENT, label: '80%' },
+    { value: InterventionCostCoverage.EIGHTY_PERCENT, label: '80%' },
     { value: InterventionCostCoverage.HUNDRED_PERCENT, label: '100%' },
 ];
 

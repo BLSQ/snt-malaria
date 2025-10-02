@@ -1,5 +1,4 @@
 import { InterventionOrgUnit } from './interventions';
-import { MetricType } from './metrics';
 
 export type Budget = {
     year: number;
@@ -20,7 +19,7 @@ export type BudgetInterventionCostLine = {
 
 export enum InterventionCostCoverage {
     HUNDRED_PERCENT = 'hundred_percent',
-    HEIGHTY_PERCENT = 'heighty_percent',
+    EIGHTY_PERCENT = 'eighty_percent',
 }
 
 export type InterventionPlanBudgetRequest = {
