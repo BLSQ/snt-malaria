@@ -6,6 +6,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from snt_malaria_budgeting import get_budget
 
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 
@@ -72,10 +73,46 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     def calculate_budget(self, request, pk=None):
         scenario = get_object_or_404(Scenario, pk=pk)
 
+        # TODO: Extract actual values from scenario and related models
+        country = "DRC"  # Placeholder
+        start_year = 2025  # Placeholder
+        end_year = 2027  # Placeholder
+
+        # TODO: Build interventions from InterventionAssignment queryset
+        interventions = [
+            {"name": "smc", "type": "SP+AQ", "places": ["Tshopo:Opala"]},
+            {"name": "vacc", "type": "R21", "places": ["Tshopo:Opala"]},
+            {"name": "iptp", "type": "SP", "places": ["Tshopo:Opala"]},
+        ]
+
+        settings = {
+            "smc_buffer": 1.5,
+            "vacc_doses_per_child": 4,
+            "currency": "NGN",
+        }
+
+        # TODO: Load actual cost_df and population_df from data sources
+        cost_df = None  # Placeholder
+        population_df = None  # Placeholder
+
+        budgets = []
+        for year in range(start_year, end_year + 1):
+            budgets.append(
+                get_budget(
+                    country=country,
+                    year=year,
+                    interventions_input=interventions,
+                    settings=settings,
+                    cost_df=cost_df,
+                    population_df=population_df,
+                    cost_overrides=[],  # optional
+                )
+            )
+
         budget_data = {
             "scenario_id": scenario.id,
             "scenario_name": scenario.name,
-            "total_budget": 0,
+            "budgets": budgets,
             "status": "calculated",
         }
 
