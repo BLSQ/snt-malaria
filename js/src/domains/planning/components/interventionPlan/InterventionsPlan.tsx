@@ -90,6 +90,7 @@ export const InterventionsPlan: FC<Props> = ({
                                 tabValue={tabValue}
                                 assignedOrgUnits={assignedOrgUnitCount}
                                 totalOrgUnits={totalOrgUnitCount}
+                                scenarioId={scenarioId}
                             />
                         }
                     />

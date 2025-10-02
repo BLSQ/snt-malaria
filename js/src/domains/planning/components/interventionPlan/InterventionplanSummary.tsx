@@ -6,6 +6,7 @@ import { Box, Button, Grid, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../messages';
 import { containerBoxStyles } from '../styles';
+import { useCalculateBudget } from '../../hooks/useCalculateBudget';
 
 export type TabValue = 'map' | 'list';
 type Props = {
@@ -13,14 +14,24 @@ type Props = {
     tabValue: TabValue;
     assignedOrgUnits: number;
     totalOrgUnits: number;
+    scenarioId?: number;
 };
 export const InterventionPlanSummary: FC<Props> = ({
     setTabValue,
     tabValue,
     assignedOrgUnits = 0,
     totalOrgUnits = 0,
+    scenarioId,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const { mutate: calculateBudget, isLoading: isCalculatingBudget } =
+        useCalculateBudget();
+
+    const handleRunBudget = () => {
+        if (scenarioId) {
+            calculateBudget(scenarioId);
+        }
+    };
     return (
         <Grid
             container
@@ -64,7 +75,12 @@ export const InterventionPlanSummary: FC<Props> = ({
                         <Tab value="map" label={<MapIcon />} />
                         <Tab value="list" label={<TableRowsIcon />} />
                     </Tabs>
-                    <Button variant="contained" color="primary">
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleRunBudget}
+                        disabled={!scenarioId || isCalculatingBudget}
+                    >
                         {formatMessage(MESSAGES.runInterventionPlanBudget)}
                     </Button>
                 </Stack>
