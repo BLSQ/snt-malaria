@@ -12,7 +12,6 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { sortByStringProp } from '../../libs/list-utils';
 import { InterventionPlan } from '../../types/interventions';
-import { MetricType } from '../../types/metrics';
 import { InterventionsPlanRowTable } from './InterventionsPlanRowTable';
 
 const styles: SxStyles = {
@@ -35,13 +34,15 @@ type Props = {
     isLoadingPlans: boolean;
     interventionPlans: InterventionPlan[] | undefined;
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
-    onMetricSelected: (interventionId: number, metric: MetricType) => void;
+    onCoverageSelected: (interventionId: number, coverage: string) => void;
+    interventionsCoverage: { [interventionId: number]: string };
 };
 export const InterventionsPlanTable: FC<Props> = ({
     isLoadingPlans,
     interventionPlans,
     showInterventionPlanDetails,
-    onMetricSelected,
+    onCoverageSelected,
+    interventionsCoverage,
 }) => {
     const { formatMessage } = useSafeIntl();
     const sortedInterventionPlans = useMemo(
@@ -75,11 +76,14 @@ export const InterventionsPlanTable: FC<Props> = ({
                                 showInterventionPlanDetails={
                                     showInterventionPlanDetails
                                 }
-                                onMetricSelected={metric =>
-                                    onMetricSelected(
+                                onCoverageSelected={coverage =>
+                                    onCoverageSelected(
                                         row.intervention.id,
-                                        metric,
+                                        coverage,
                                     )
+                                }
+                                coverage={
+                                    interventionsCoverage?.[row.intervention.id]
                                 }
                             />
                         ))}

@@ -1,18 +1,25 @@
 import React, { FunctionComponent } from 'react';
 import { Button, Grid, TableCell, TableRow, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
+import { DropdownOptions } from 'Iaso/types/utils';
 import { MESSAGES } from '../../../messages';
 import { InterventionPlan } from '../../types/interventions';
-import { MetricType } from '../../types/metrics';
-import { LayerSelect } from '../maps/LayerSelect';
 
 type Props = {
     row: InterventionPlan;
     index: number;
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
-    onMetricSelected: (metric: MetricType) => void;
+    onCoverageSelected: (coverage: string) => void;
+    coverage: string;
 };
+
+// TODO: I don't like this, I think I'd better have an enum
+const coverageOptions: Array<DropdownOptions<string>> = [
+    { value: 'heighty', label: '80%' },
+    { value: 'hundred', label: '100%' },
+];
 
 const styles: SxStyles = {
     tableCellStyle: {
@@ -21,16 +28,13 @@ const styles: SxStyles = {
     textButton: {
         textTransform: 'none',
     },
-    metricSelectWrapper: {
-        display: 'flex',
-        justifyContent: 'end',
-    },
 };
 export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
     row,
     index,
     showInterventionPlanDetails,
-    onMetricSelected,
+    onCoverageSelected,
+    coverage,
 }) => {
     const { formatMessage } = useSafeIntl();
     return row ? (
@@ -53,7 +57,7 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
                     >
                         <Typography>{row?.intervention.name}</Typography>
                     </Grid>
-                    <Grid item xs={3}>
+                    <Grid item xs={7}>
                         <Button
                             variant="text"
                             sx={styles.textButton}
@@ -63,11 +67,16 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
                             {formatMessage(MESSAGES.orgUnitDistrict)}
                         </Button>
                     </Grid>
-                    <Grid item xs={6} sx={styles.metricSelectWrapper}>
-                        <LayerSelect
-                            initialSelection={''}
-                            onLayerChange={onMetricSelected}
-                            placeholder={MESSAGES.selectMetric}
+                    <Grid item xs={2}>
+                        <InputComponent
+                            keyValue="key"
+                            type="select"
+                            value={coverage}
+                            onChange={(_key, value) =>
+                                onCoverageSelected(value)
+                            }
+                            options={coverageOptions}
+                            clearable={false}
                         />
                     </Grid>
                 </Grid>

@@ -4,9 +4,8 @@ import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
 import { InterventionPlanMetrics } from '../../types/budget';
 import { InterventionPlan } from '../../types/interventions';
-import { MetricType } from '../../types/metrics';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
-import { InterventionPlanSummary, TabValue } from './InterventionplanSummary';
+import { InterventionPlanSummary, TabValue } from './InterventionPlanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
 import { InterventionsPlanTable } from './InterventionsPlanTable';
 
@@ -33,8 +32,8 @@ export const InterventionsPlan: FC<Props> = ({
         number | null
     >(null);
 
-    const [interventionMetricTypes, setInterventionMetricTypes] = useState<{
-        [interventionId: number]: MetricType;
+    const [interventionCoverage, setInterventionCoverage] = useState<{
+        [interventionId: number]: string;
     }>({});
 
     const assignedOrgUnitCount = useMemo(() => {
@@ -81,28 +80,27 @@ export const InterventionsPlan: FC<Props> = ({
         setSelectedInterventionId(null);
     };
 
-    const setSelectedMetricForIntervention = useCallback(
-        (interventionId: number, metric: MetricType) => {
-            setInterventionMetricTypes({
-                ...interventionMetricTypes,
-                [interventionId]: metric,
+    const setSelectedCoverageForIntervention = useCallback(
+        (interventionId: number, coverage: string) => {
+            setInterventionCoverage({
+                ...interventionCoverage,
+                [interventionId]: coverage,
             });
         },
-        [setInterventionMetricTypes, interventionMetricTypes],
+        [setInterventionCoverage, interventionCoverage],
     );
 
     const runBudget = useCallback(() => {
         const budgetRequest = interventionPlans.map(ip => ({
             interventionId: ip.intervention.id,
             orgUnits: ip.org_units,
-            metricType:
-                interventionMetricTypes[ip.intervention.id] ?? undefined,
+            coverage: interventionCoverage[ip.intervention.id] ?? undefined,
         }));
 
         // TODO: Should we send the request with all intervention even if no metricType is selected ?
         // TODO: Next part should be handled in a higher level.
         onRunBudget(budgetRequest);
-    }, [interventionMetricTypes, interventionPlans, onRunBudget]);
+    }, [interventionCoverage, interventionPlans, onRunBudget]);
 
     return (
         <Box
@@ -148,9 +146,10 @@ export const InterventionsPlan: FC<Props> = ({
                                 showInterventionPlanDetails={
                                     onShowInterventionPlanDetails
                                 }
-                                onMetricSelected={
-                                    setSelectedMetricForIntervention
+                                onCoverageSelected={
+                                    setSelectedCoverageForIntervention
                                 }
+                                interventionsCoverage={interventionCoverage}
                             />
                         </TabPanel>
                         <TabPanel
