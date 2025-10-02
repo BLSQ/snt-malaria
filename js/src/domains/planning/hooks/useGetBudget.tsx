@@ -93,11 +93,13 @@
  * This is a mock implementation and should be replaced with a real API call.
  */
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
-import { Budget, InterventionPlanMetrics } from '../types/budget';
+import { Budget, InterventionPlanBudgetRequest } from '../types/budget';
 import { dummyBudget } from '../libs/cost-utils';
 import { UseQueryResult } from 'react-query';
 
-const mapToRequest = (interventionPlanMetrics: InterventionPlanMetrics[]) => {
+const mapToRequest = (
+    interventionPlanMetrics: InterventionPlanBudgetRequest[],
+) => {
     return {
         startYear: 2025,
         endYear: 2027,
@@ -111,7 +113,7 @@ const mapToRequest = (interventionPlanMetrics: InterventionPlanMetrics[]) => {
 };
 
 export const useGetBudget = (
-    interventionPlanMetrics?: InterventionPlanMetrics[],
+    interventionPlanMetrics?: InterventionPlanBudgetRequest[],
 ): UseQueryResult<{ budgets: Budget[] }, Error> => {
     return useSnackQuery({
         queryKey: ['budget'],

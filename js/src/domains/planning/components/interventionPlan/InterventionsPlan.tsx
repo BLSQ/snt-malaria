@@ -2,7 +2,10 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import { InterventionPlanMetrics } from '../../types/budget';
+import {
+    InterventionCostCoverage,
+    InterventionPlanBudgetRequest,
+} from '../../types/budget';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
 import { InterventionPlanSummary, TabValue } from './InterventionPlanSummary';
@@ -14,7 +17,9 @@ type Props = {
     interventionPlans: InterventionPlan[];
     isLoadingPlans: boolean;
     totalOrgUnitCount: number;
-    onRunBudget: (interventionPlanMetrics: InterventionPlanMetrics[]) => void;
+    onRunBudget: (
+        interventionPlanMetrics: InterventionPlanBudgetRequest[],
+    ) => void;
 };
 
 export const InterventionsPlan: FC<Props> = ({
@@ -33,7 +38,7 @@ export const InterventionsPlan: FC<Props> = ({
     >(null);
 
     const [interventionCoverage, setInterventionCoverage] = useState<{
-        [interventionId: number]: string;
+        [interventionId: number]: InterventionCostCoverage;
     }>({});
 
     const assignedOrgUnitCount = useMemo(() => {
@@ -81,7 +86,7 @@ export const InterventionsPlan: FC<Props> = ({
     };
 
     const setSelectedCoverageForIntervention = useCallback(
-        (interventionId: number, coverage: string) => {
+        (interventionId: number, coverage: InterventionCostCoverage) => {
             setInterventionCoverage({
                 ...interventionCoverage,
                 [interventionId]: coverage,

@@ -18,8 +18,13 @@ export type BudgetInterventionCostLine = {
     name: string;
 };
 
-export type InterventionPlanMetrics = {
+export enum InterventionCostCoverage {
+    HUNDRED_PERCENT = 'hundred_percent',
+    HEIGHTY_PERCENT = 'heighty_percent',
+}
+
+export type InterventionPlanBudgetRequest = {
     interventionId: number;
     orgUnits: InterventionOrgUnit[];
-    metricType?: MetricType;
+    coverage?: InterventionCostCoverage;
 };

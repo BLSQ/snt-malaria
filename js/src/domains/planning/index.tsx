@@ -28,7 +28,7 @@ import {
     useGetMetricValues,
 } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
-import { InterventionPlanMetrics } from './types/budget';
+import { InterventionPlanBudgetRequest } from './types/budget';
 import { Intervention } from './types/interventions';
 import { MetricsFilters, MetricType } from './types/metrics';
 
@@ -56,7 +56,7 @@ export const Planning: FC = () => {
         null,
     );
     const [interventionPlanMetrics, setInterventionPlanMetrics] = useState<
-        InterventionPlanMetrics[] | null
+        InterventionPlanBudgetRequest[] | null
     >(null);
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =

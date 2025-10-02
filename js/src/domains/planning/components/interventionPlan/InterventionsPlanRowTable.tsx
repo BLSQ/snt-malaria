@@ -5,20 +5,21 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { DropdownOptions } from 'Iaso/types/utils';
 import { MESSAGES } from '../../../messages';
+import { InterventionCostCoverage } from '../../types/budget';
 import { InterventionPlan } from '../../types/interventions';
 
 type Props = {
     row: InterventionPlan;
     index: number;
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
-    onCoverageSelected: (coverage: string) => void;
+    onCoverageSelected: (coverage: InterventionCostCoverage) => void;
     coverage: string;
 };
 
 // TODO: I don't like this, I think I'd better have an enum
 const coverageOptions: Array<DropdownOptions<string>> = [
-    { value: 'heighty', label: '80%' },
-    { value: 'hundred', label: '100%' },
+    { value: InterventionCostCoverage.HEIGHTY_PERCENT, label: '80%' },
+    { value: InterventionCostCoverage.HUNDRED_PERCENT, label: '100%' },
 ];
 
 const styles: SxStyles = {

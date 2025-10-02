@@ -2,12 +2,12 @@ import React, { FC, useMemo } from 'react';
 import { Grid } from '@mui/material';
 import { PaperContainer } from '../../../../components/styledComponents';
 import { useGetBudget } from '../../hooks/useGetBudget';
-import { InterventionPlanMetrics } from '../../types/budget';
+import { InterventionPlanBudgetRequest } from '../../types/budget';
 import { CostBreakdownChart } from './CostBreakdownChart';
 import { ProportionChart } from './ProportionChart';
 
 type Props = {
-    interventionPlanMetrics?: InterventionPlanMetrics[];
+    interventionPlanMetrics?: InterventionPlanBudgetRequest[];
 };
 
 export const Budgeting: FC<Props> = ({ interventionPlanMetrics }) => {

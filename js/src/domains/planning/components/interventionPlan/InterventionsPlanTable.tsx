@@ -11,6 +11,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { sortByStringProp } from '../../libs/list-utils';
+import { InterventionCostCoverage } from '../../types/budget';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionsPlanRowTable } from './InterventionsPlanRowTable';
 
@@ -34,7 +35,10 @@ type Props = {
     isLoadingPlans: boolean;
     interventionPlans: InterventionPlan[] | undefined;
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
-    onCoverageSelected: (interventionId: number, coverage: string) => void;
+    onCoverageSelected: (
+        interventionId: number,
+        coverage: InterventionCostCoverage,
+    ) => void;
     interventionsCoverage: { [interventionId: number]: string };
 };
 export const InterventionsPlanTable: FC<Props> = ({
