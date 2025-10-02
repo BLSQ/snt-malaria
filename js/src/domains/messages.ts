@@ -53,10 +53,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.noInterventionPlanAvailable',
         defaultMessage: 'No intervention plan available',
     },
-    budgetImpactTitle: {
-        id: 'iaso.snt_malaria.label.budgetImpactTitle',
-        defaultMessage: 'Budget & Impact',
-    },
     selectOrgUnitsBtn: {
         id: 'iaso.snt_malaria.label.selectOrgUnitsBtn',
         defaultMessage: 'Select districts',

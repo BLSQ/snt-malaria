@@ -1,6 +1,3 @@
-from collections import defaultdict
-from decimal import Decimal
-
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
@@ -9,8 +6,6 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from iaso.models.metric import MetricType, MetricValue
-from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.api.intervention_assignments.filters import (
     InterventionAssignmentListFilter,
 )
@@ -95,48 +90,3 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             {"message": f"{deleted_count} intervention assignments deleted."},
             status=status.HTTP_204_NO_CONTENT,
         )
-
-    def get_filtered_queryset(self):
-        return self.filter_queryset(self.get_queryset()).prefetch_related("org_unit")
-
-    def get_org_units(self, org_unit_ids):
-        return OrgUnit.objects.filter(id__in=org_unit_ids).values("id", "name").order_by("name")
-
-    @action(detail=False, methods=["get"])
-    def budget_per_org_unit(self, request):
-        """
-        Get total budget per org unit (optimized)
-        """
-        queryset = self.get_filtered_queryset()
-        try:
-            user_account = self.request.user.iaso_profile.account
-            population_metric = MetricType.objects.get(name__iexact="Population", account=user_account)
-        except MetricType.DoesNotExist:
-            return Response({"error": "Population MetricType not found"}, status=400)
-
-        org_units = queryset.values_list("org_unit_id", flat=True).distinct()
-        population_values = {
-            mv.org_unit_id: Decimal(mv.value)
-            for mv in MetricValue.objects.filter(metric_type=population_metric, org_unit__in=org_units)
-        }
-
-        budget_per_org_unit = defaultdict(Decimal)
-
-        for assignment in queryset:
-            org_unit_id = assignment.org_unit_id
-            unit_cost = assignment.intervention.unit_cost
-
-            if unit_cost is not None and population_values[org_unit_id]:
-                budget_per_org_unit[org_unit_id] += unit_cost * population_values[org_unit_id]
-
-        org_units = self.get_org_units(budget_per_org_unit.keys())
-
-        formatted_response = []
-        for org_unit in org_units:
-            org_unit_id = org_unit["id"]
-            budget = budget_per_org_unit[org_unit_id]
-            if budget:
-                org_unit["budget"] = budget_per_org_unit[org_unit_id]
-            formatted_response.append(org_unit)
-
-        return Response(formatted_response)

@@ -44,9 +44,3 @@ export type InterventionOrgUnit = {
     id: number;
     intervention_assignment_id: number;
 };
-
-export type Budget = {
-    id: number;
-    name: string;
-    budget: number;
-};
