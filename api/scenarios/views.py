@@ -67,3 +67,16 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             assignment.save()
         serializer = self.get_serializer(scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"], url_path="calculate_budget")
+    def calculate_budget(self, request, pk=None):
+        scenario = get_object_or_404(Scenario, pk=pk)
+
+        budget_data = {
+            "scenario_id": scenario.id,
+            "scenario_name": scenario.name,
+            "total_budget": 0,
+            "status": "calculated",
+        }
+
+        return Response(budget_data, status=status.HTTP_200_OK)
