@@ -35,6 +35,7 @@ class Intervention(SoftDeletableModel):
     intervention_category = models.ForeignKey(InterventionCategory, on_delete=models.PROTECT)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
+    code = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     unit_type = models.TextField(max_length=255, blank=True)
     unit_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=0)

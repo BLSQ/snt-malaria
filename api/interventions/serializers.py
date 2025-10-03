@@ -11,6 +11,7 @@ class InterventionSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
+            "code",
             "description",
             "unit_cost",
             "unit_type",
@@ -20,6 +21,7 @@ class InterventionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "code",
             "created_at",
             "updated_at",
         ]
