@@ -56,6 +56,7 @@ const styles: SxStyles = {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        borderRight: '1px solid rgba(0, 0, 0, 0.12)',
     },
     verticalDivider: { bgcolor: 'grey.300' },
     interventionsItem: {
@@ -124,7 +125,7 @@ export const InterventionAssignments: FC<Props> = ({
                 <CardContent sx={styles.cardContent}>
                     <Divider sx={styles.horizontalDivider} />
                     <Grid container sx={styles.districtsContainer}>
-                        <Grid item sx={styles.districtsItem}>
+                        <Grid item md={7} xs={12} sx={styles.districtsItem}>
                             <SelectedDistricts
                                 selectedDistricts={selectedDistricts}
                                 removeDistrict={removeDistrict}
@@ -133,14 +134,7 @@ export const InterventionAssignments: FC<Props> = ({
                                 }
                             />
                         </Grid>
-
-                        <Divider
-                            orientation="vertical"
-                            flexItem
-                            sx={styles.verticalDivider}
-                        />
-
-                        <Grid item sx={styles.interventionsItem}>
+                        <Grid item md={5} xs={12} sx={styles.interventionsItem}>
                             <InterventionCategories
                                 interventionCategories={interventionCategories}
                                 isLoading={isLoading}

@@ -41,7 +41,7 @@ export const InterventionCategories: FC<Props> = ({
 
     return (
         <Grid container spacing={2} padding={1}>
-            <Grid item container spacing={2} padding={2}>
+            <Grid item container spacing={2} padding={2} direction="column">
                 {!isLoading &&
                     interventionCategories.map(
                         ({ id, name, interventions }) => {
