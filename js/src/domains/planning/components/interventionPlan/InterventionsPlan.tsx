@@ -1,14 +1,16 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
+import { useCalculateBudget } from '../../hooks/useCalculateBudget';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
 import {
+    Budget,
+    BudgetCalculationResponse,
     InterventionCostCoverage,
-    InterventionPlanBudgetRequest,
 } from '../../types/budget';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
-import { InterventionPlanSummary, TabValue } from './InterventionPlanSummary';
+import { InterventionPlanSummary, TabValue } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
 import { InterventionsPlanTable } from './InterventionsPlanTable';
 
@@ -17,9 +19,7 @@ type Props = {
     interventionPlans: InterventionPlan[];
     isLoadingPlans: boolean;
     totalOrgUnitCount: number;
-    onRunBudget: (
-        interventionPlanMetrics: InterventionPlanBudgetRequest[],
-    ) => void;
+    onBudgetRan: (budgets: Budget[]) => void;
 };
 
 export const InterventionsPlan: FC<Props> = ({
@@ -27,7 +27,7 @@ export const InterventionsPlan: FC<Props> = ({
     interventionPlans,
     isLoadingPlans,
     totalOrgUnitCount = 0,
-    onRunBudget,
+    onBudgetRan,
 }) => {
     const [tabValue, setTabValue] = useState<TabValue>('map');
 
@@ -62,6 +62,9 @@ export const InterventionsPlan: FC<Props> = ({
 
     const { mutateAsync: removeManyOrgUnitsFromPlan } =
         useRemoveManyOrgUnitsFromInterventionPlan();
+
+    const { mutate: calculateBudget, isLoading: isCalculatingBudget } =
+        useCalculateBudget();
 
     const onRemoveOrgUnitsFromPlan = async (
         interventionAssignmentIds: number[],
@@ -103,9 +106,20 @@ export const InterventionsPlan: FC<Props> = ({
         }));
 
         // TODO: Should we send the request with all intervention even if no metricType is selected ?
-        // TODO: Next part should be handled in a higher level.
-        onRunBudget(budgetRequest);
-    }, [interventionCoverage, interventionPlans, onRunBudget]);
+        calculateBudget(
+            { scenarioId, requestBody: budgetRequest },
+            {
+                onSuccess: (data: BudgetCalculationResponse) =>
+                    onBudgetRan(data.intervention_budget),
+            },
+        );
+    }, [
+        scenarioId,
+        calculateBudget,
+        interventionPlans,
+        interventionCoverage,
+        onBudgetRan,
+    ]);
 
     return (
         <Box
@@ -126,6 +140,7 @@ export const InterventionsPlan: FC<Props> = ({
                                 assignedOrgUnits={assignedOrgUnitCount}
                                 totalOrgUnits={totalOrgUnitCount}
                                 onRunBudget={runBudget}
+                                isCalculatingBudget={isCalculatingBudget}
                             />
                         }
                     />

@@ -28,9 +28,9 @@ import {
     useGetMetricValues,
 } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
-import { InterventionPlanBudgetRequest } from './types/budget';
 import { Intervention } from './types/interventions';
 import { MetricsFilters, MetricType } from './types/metrics';
+import { Budget } from './types/budget';
 
 type PlanningParams = {
     scenarioId: number;
@@ -55,9 +55,8 @@ export const Planning: FC = () => {
     const [displayedMetric, setDisplayedMetric] = useState<MetricType | null>(
         null,
     );
-    const [interventionPlanMetrics, setInterventionPlanMetrics] = useState<
-        InterventionPlanBudgetRequest[] | null
-    >(null);
+
+    const [budgets, setBudgets] = useState<Budget[] | null>(null);
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(scenario?.id);
@@ -93,10 +92,6 @@ export const Planning: FC = () => {
         },
         [],
     );
-
-    const runBudget = useCallback(interventionPlanMetrics => {
-        setInterventionPlanMetrics(interventionPlanMetrics);
-    }, []);
 
     useGetMetricOrgUnits(metricFilters, metricOrgUnitIds => {
         const newOrgUnitSelection = orgUnits?.filter(orgUnit =>
@@ -201,15 +196,11 @@ export const Planning: FC = () => {
                                 totalOrgUnitCount={orgUnits?.length ?? 0}
                                 interventionPlans={interventionPlans ?? []}
                                 isLoadingPlans={isLoadingPlans}
-                                onRunBudget={runBudget}
+                                onBudgetRan={setBudgets}
                             />
                         </PaperContainer>
                     </Grid>
-                    {interventionPlanMetrics ? (
-                        <Budgeting
-                            interventionPlanMetrics={interventionPlanMetrics}
-                        />
-                    ) : null}
+                    {budgets ? <Budgeting budgets={budgets} /> : null}
                 </Grid>
             </PageContainer>
         </>

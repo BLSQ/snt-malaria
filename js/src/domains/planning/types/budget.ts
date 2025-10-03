@@ -22,8 +22,16 @@ export enum InterventionCostCoverage {
     EIGHTY_PERCENT = 'eighty_percent',
 }
 
-export type InterventionPlanBudgetRequest = {
+export type BudgetCalculationRequest = {
     interventionId: number;
     orgUnits: InterventionOrgUnit[];
     coverage?: InterventionCostCoverage;
+};
+
+export type BudgetCalculationResponse = {
+    scenarioId: number;
+    scenarioName: string;
+    status: string;
+    total_budget: number;
+    intervention_budget: Budget[];
 };

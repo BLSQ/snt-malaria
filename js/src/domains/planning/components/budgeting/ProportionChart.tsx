@@ -9,7 +9,7 @@ import {
     ListItem,
     Typography,
 } from '@mui/material';
-import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import {
     Cell,
     Legend,
@@ -22,7 +22,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { INTERVENTION_COLORS } from '../../libs/cost-utils';
 
-type Props = { interventionBudgets: any[]; isLoading: boolean };
+type Props = { interventionBudgets: any[] };
 
 const DEFAULT_COLOR = '#512DA8';
 
@@ -50,10 +50,7 @@ const styles: SxStyles = {
     },
 };
 
-export const ProportionChart: FC<Props> = ({
-    interventionBudgets,
-    isLoading,
-}) => {
+export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
     const { formatMessage } = useSafeIntl();
 
     const data = useMemo(
@@ -96,39 +93,34 @@ export const ProportionChart: FC<Props> = ({
                 ></CardHeader>
                 <Divider />
                 <CardContent sx={styles.cardContent}>
-                    {isLoading ? (
-                        <LoadingSpinner absolute={true} />
-                    ) : (
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Tooltip />
-                                <Pie
-                                    data={data}
-                                    dataKey={'value'}
-                                    innerRadius={80}
-                                    outerRadius={120}
-                                >
-                                    {data.map(entry => (
-                                        <Cell
-                                            key={`cell-${entry.name}`}
-                                            fill={
-                                                INTERVENTION_COLORS[
-                                                    entry.name
-                                                ] ?? DEFAULT_COLOR
-                                            }
-                                        />
-                                    ))}
-                                </Pie>
-                                <Legend
-                                    layout="vertical"
-                                    align="right"
-                                    verticalAlign="middle"
-                                    content={renderLegend}
-                                    wrapperStyle={{ left: 'calc(50% + 3rem)' }}
-                                ></Legend>
-                            </PieChart>
-                        </ResponsiveContainer>
-                    )}
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Tooltip />
+                            <Pie
+                                data={data}
+                                dataKey={'value'}
+                                innerRadius={80}
+                                outerRadius={120}
+                            >
+                                {data.map(entry => (
+                                    <Cell
+                                        key={`cell-${entry.name}`}
+                                        fill={
+                                            INTERVENTION_COLORS[entry.name] ??
+                                            DEFAULT_COLOR
+                                        }
+                                    />
+                                ))}
+                            </Pie>
+                            <Legend
+                                layout="vertical"
+                                align="right"
+                                verticalAlign="middle"
+                                content={renderLegend}
+                                wrapperStyle={{ left: 'calc(50% + 3rem)' }}
+                            ></Legend>
+                        </PieChart>
+                    </ResponsiveContainer>
                 </CardContent>
             </Card>
         </Box>

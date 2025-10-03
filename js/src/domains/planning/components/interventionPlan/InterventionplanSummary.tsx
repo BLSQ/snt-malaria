@@ -3,7 +3,7 @@ import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import MapIcon from '@mui/icons-material/Map';
 import TableRowsIcon from '@mui/icons-material/TableRows';
 import { Box, Button, Grid, Stack, Tab, Tabs, Typography } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../messages';
 import { containerBoxStyles } from '../styles';
 
@@ -12,6 +12,7 @@ type Props = {
     setTabValue: Dispatch<SetStateAction<TabValue>>;
     tabValue: TabValue;
     onRunBudget: () => void;
+    isCalculatingBudget: boolean;
     assignedOrgUnits: number;
     totalOrgUnits: number;
 };
@@ -19,6 +20,7 @@ export const InterventionPlanSummary: FC<Props> = ({
     setTabValue,
     tabValue,
     onRunBudget,
+    isCalculatingBudget,
     assignedOrgUnits = 0,
     totalOrgUnits = 0,
 }) => {
@@ -70,8 +72,17 @@ export const InterventionPlanSummary: FC<Props> = ({
                         variant="contained"
                         color="primary"
                         onClick={onRunBudget}
+                        disabled={isCalculatingBudget}
                     >
                         {formatMessage(MESSAGES.runInterventionPlanBudget)}
+                        {isCalculatingBudget && (
+                            <LoadingSpinner
+                                size={16}
+                                absolute
+                                fixed={false}
+                                transparent
+                            />
+                        )}
                     </Button>
                 </Stack>
             </Grid>

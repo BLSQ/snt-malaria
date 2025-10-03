@@ -9,7 +9,7 @@ import {
     ListItem,
     Typography,
 } from '@mui/material';
-import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import {
     Bar,
     BarChart,
@@ -26,7 +26,6 @@ import { getCostBreakdownChartData } from '../../libs/cost-utils';
 
 type Props = {
     interventionBudgets: any[];
-    isLoading: boolean;
 };
 
 const styles: SxStyles = {
@@ -68,10 +67,7 @@ const BARS = [
     { color: LEGEND_COLORS[4], label: 'Other', key: 'Other' },
 ];
 
-export const CostBreakdownChart: FC<Props> = ({
-    interventionBudgets,
-    isLoading = false,
-}) => {
+export const CostBreakdownChart: FC<Props> = ({ interventionBudgets }) => {
     const { formatMessage } = useSafeIntl();
     const data = useMemo(() => {
         return getCostBreakdownChartData(interventionBudgets);
@@ -108,40 +104,36 @@ export const CostBreakdownChart: FC<Props> = ({
                 ></CardHeader>
                 <Divider />
                 <CardContent sx={styles.cardContent}>
-                    {isLoading ? (
-                        <LoadingSpinner absolute={true} />
-                    ) : (
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={data}>
-                                <XAxis
-                                    dataKey="interventionName"
-                                    axisLine={false}
-                                    tickLine={false}
-                                />
-                                <YAxis axisLine={false} tickLine={false} />
-                                <CartesianGrid
-                                    vertical={false}
-                                    strokeDasharray="1"
-                                />
-                                <Tooltip cursor={false} />
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={data}>
+                            <XAxis
+                                dataKey="interventionName"
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <YAxis axisLine={false} tickLine={false} />
+                            <CartesianGrid
+                                vertical={false}
+                                strokeDasharray="1"
+                            />
+                            <Tooltip cursor={false} />
 
-                                {BARS.map(bar => (
-                                    <Bar
-                                        dataKey={bar.key}
-                                        fill={bar.color}
-                                        key={bar.key}
-                                        barSize={18}
-                                        stackId="a"
-                                    />
-                                ))}
-                                <Legend
-                                    verticalAlign="bottom"
-                                    align="center"
-                                    content={renderLegend}
+                            {BARS.map(bar => (
+                                <Bar
+                                    dataKey={bar.key}
+                                    fill={bar.color}
+                                    key={bar.key}
+                                    barSize={18}
+                                    stackId="a"
                                 />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    )}
+                            ))}
+                            <Legend
+                                verticalAlign="bottom"
+                                align="center"
+                                content={renderLegend}
+                            />
+                        </BarChart>
+                    </ResponsiveContainer>
                 </CardContent>
             </Card>
         </Box>
