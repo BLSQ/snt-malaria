@@ -14,11 +14,13 @@ import * as Yup from 'yup';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
+import { DropdownOptions } from 'Iaso/types/utils';
 import { MESSAGES } from '../../messages';
 import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreakdownLine';
 import { InterventionCostBreakdownLinesForm } from './InterventionCostBreakdownLinesForm';
 
 type Props = {
+    interventionUnitTypes?: DropdownOptions<string>[];
     defaultValues: {
         unit_type?: string;
         unit_cost?: number;
@@ -78,6 +80,7 @@ const styles: SxStyles = {
 };
 
 export const InterventionCostForm: React.FC<Props> = ({
+    interventionUnitTypes = [],
     defaultValues = {
         unit_type: undefined,
         unit_cost: undefined,
@@ -87,6 +90,7 @@ export const InterventionCostForm: React.FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
     const [isDetailedMode, setIsDetailedMode] = useState<boolean>(false);
+
     useEffect(
         () => setIsDetailedMode(defaultValues.cost_breakdown_lines?.length > 0),
         [defaultValues],
@@ -202,13 +206,17 @@ export const InterventionCostForm: React.FC<Props> = ({
                     >
                         <Typography>{formatMessage(MESSAGES.unit)}</Typography>
                         <InputComponent
-                            type="text"
+                            type="select"
                             keyValue="unit_type"
-                            onChange={setFieldValueAndState}
-                            errors={getErrors('unit_type')}
-                            value={values.unit_type}
-                            required
+                            multi={false}
                             withMarginTop={false}
+                            clearable={false}
+                            options={interventionUnitTypes}
+                            value={values.unit_type}
+                            onChange={setFieldValueAndState}
+                            label={MESSAGES.detailedCostCategoryLabel}
+                            errors={getErrors('unit_type')}
+                            required
                         />
                     </FormControl>
                     <FormControl
