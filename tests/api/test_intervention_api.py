@@ -41,7 +41,6 @@ class InterventionAPITests(APITestCase):
         response = self.client.get(BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
-        print(response.data)
         # Verify that the intervention with id intervention_vaccination_rts has a unit_type_label
         rts_intervention = next(
             (item for item in response.data if item["id"] == self.intervention_vaccination_rts.id), None

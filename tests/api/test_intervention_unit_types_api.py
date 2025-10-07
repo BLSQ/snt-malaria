@@ -15,7 +15,7 @@ class InterventionCostBreakdownLineCategoriesAPITestCase(APITestCase):
 
     def test_list_cintervention_unit_types(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(f"{BASE_URL}")
+        response = self.client.get(BASE_URL)
         json_response = self.assertJSONResponse(response, status.HTTP_200_OK)
         self.assertCountEqual(
             json_response,
@@ -37,5 +37,5 @@ class InterventionCostBreakdownLineCategoriesAPITestCase(APITestCase):
         )
 
     def test_list_unit_types_unauthorized(self):
-        response = self.client.get(f"{BASE_URL}")
+        response = self.client.get(BASE_URL)
         self.assertJSONResponse(response, status.HTTP_401_UNAUTHORIZED)
