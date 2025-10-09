@@ -12,7 +12,8 @@ import {
 import { baseUrls } from '../../constants/urls';
 import { MESSAGES } from '../messages';
 import { ScenarioComponent } from './components/ScenarioComponent';
-import { useCreateScenario, useGetScenarios } from './hooks/useGetScenarios';
+import { useCreateScenario } from './hooks/useCreateScenario';
+import { useGetScenarios } from './hooks/useGetScenarios';
 import { Scenario } from './types';
 
 const styles: SxStyles = {

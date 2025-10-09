@@ -1,29 +1,25 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import CloseIcon from '@mui/icons-material/Close';
 import ContentPasteGoOutlinedIcon from '@mui/icons-material/ContentPasteGoOutlined';
 import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import {
-    Box,
-    Typography,
-    IconButton,
-    Theme,
-    TextField,
-    Button,
-} from '@mui/material';
+import { Box, Typography, IconButton, Theme, Button } from '@mui/material';
+import { blueGrey } from '@mui/material/colors';
+import { useSafeIntl } from 'bluesquare-components';
+import { useFormik } from 'formik';
 import { useNavigate } from 'react-router-dom';
+import * as Yup from 'yup';
 import DeleteDialog from 'Iaso/components/dialogs/DeleteDialogComponent';
+import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { baseUrls } from '../../../constants/urls';
 
 import { MESSAGES } from '../../messages';
-import {
-    useUpdateScenario,
-    useDuplicateScenario,
-    useDeleteScenario,
-} from '../../scenarios/hooks/useGetScenarios';
+import { useDeleteScenario } from '../../scenarios/hooks/useDeleteScenario';
+import { useDuplicateScenario } from '../../scenarios/hooks/useDuplicateScenario';
+import { useUpdateScenario } from '../../scenarios/hooks/useUpdateScenario';
 import { Scenario } from '../../scenarios/types';
-
 const actionBtnStyles = (theme: Theme) => ({
     color: theme.palette.primary.main,
     fontWeight: 'bold', // medium not working?
@@ -41,12 +37,15 @@ const styles: SxStyles = {
         alignItems: 'center',
         marginBottom: theme.spacing(1),
     }),
-    nameContainer: {
+    formContainer: {
         position: 'relative',
         display: 'inline-flex',
         alignItems: 'center',
         '&:hover .editButton': {
             opacity: 1,
+        },
+        '& .MuiFormLabel-root': {
+            backgroundColor: blueGrey[50],
         },
     },
     editNameBtn: {
@@ -69,6 +68,13 @@ const styles: SxStyles = {
     icon: {
         marginRight: '0.5rem',
     },
+    yearInputWrapper: {
+        maxWidth: '75px',
+        marginLeft: 1,
+    },
+    submitButton: {
+        marginLeft: 1,
+    },
 };
 
 type Props = {
@@ -77,9 +83,9 @@ type Props = {
 
 export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
     const navigate = useNavigate();
-
+    const { formatMessage } = useSafeIntl();
     const [isEditing, setIsEditing] = useState(false);
-    const [tempName, setTempName] = useState(scenario.name);
+    const currentYear = new Date().getFullYear();
 
     const { mutate: updateScenario } = useUpdateScenario(scenario.id);
     const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
@@ -93,10 +99,37 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
         },
     );
 
-    const handleEditClick = () => {
-        setTempName(scenario.name);
-        setIsEditing(true);
-    };
+    const validationSchema = useMemo(
+        () =>
+            Yup.object().shape({
+                name: Yup.string().required(),
+                start_year: Yup.number().required().min(2025).max(2035),
+                end_year: Yup.number().required().min(2025).max(2035),
+            }),
+        [formatMessage],
+    );
+
+    const {
+        values,
+        setFieldValue,
+        // setFieldError,
+        isValid,
+        handleSubmit,
+        // errors,
+        // touched,
+        setFieldTouched,
+    } = useFormik({
+        initialValues: {
+            name: scenario.name,
+            start_year: scenario.start_year ?? currentYear,
+            end_year: scenario.end_year ?? currentYear,
+        },
+        validationSchema,
+        onSubmit: () => {
+            updateScenario({ ...scenario, ...values });
+            setIsEditing(false);
+        },
+    });
 
     const handleDuplicateClick = () => {
         duplicateScenario(scenario.id);
@@ -106,51 +139,73 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
         deleteScenario(scenario.id);
     };
 
-    const handleInputChange = event => {
-        setTempName(event.target.value);
-    };
-
-    const handleInputBlur = () => {
-        handleSubmit();
-    };
-
-    const handleInputKeyPress = event => {
-        if (event.key === 'Enter') {
-            handleSubmit();
-        }
-    };
-
-    const handleSubmit = () => {
-        if (tempName.trim() !== '') {
-            updateScenario({ ...scenario, name: tempName });
-        }
-
-        setIsEditing(false);
-    };
+    const setFieldValueAndState = useCallback(
+        (field: string, value: any) => {
+            setFieldTouched(field, true);
+            setFieldValue(field, value);
+        },
+        [setFieldTouched, setFieldValue],
+    );
 
     if (scenario) {
         return (
             <Box sx={styles.content}>
-                <Box sx={styles.nameContainer}>
+                <Box sx={styles.formContainer}>
                     {isEditing ? (
-                        <TextField
-                            value={tempName}
-                            onChange={handleInputChange}
-                            onBlur={handleInputBlur}
-                            onKeyPress={handleInputKeyPress}
-                            autoFocus
-                            size="small"
-                            variant="outlined"
-                        />
+                        <>
+                            <InputComponent
+                                type="text"
+                                keyValue="name"
+                                value={values.name}
+                                onChange={setFieldValueAndState}
+                                withMarginTop={false}
+                                label={MESSAGES.name}
+                            />
+                            <Box sx={styles.yearInputWrapper}>
+                                <InputComponent
+                                    type="number"
+                                    keyValue="start_year"
+                                    value={values.start_year}
+                                    onChange={setFieldValueAndState}
+                                    withMarginTop={false}
+                                    label={MESSAGES.startYear}
+                                />
+                            </Box>
+                            <Box sx={styles.yearInputWrapper}>
+                                <InputComponent
+                                    type="number"
+                                    keyValue="end_year"
+                                    value={values.end_year}
+                                    onChange={setFieldValueAndState}
+                                    withMarginTop={false}
+                                    label={MESSAGES.endYear}
+                                />
+                            </Box>
+                            <Button
+                                onClick={() => handleSubmit()}
+                                sx={styles.submitButton}
+                                disabled={!isValid}
+                            >
+                                {formatMessage(MESSAGES.apply)}
+                            </Button>
+                            <IconButton
+                                className="editButton"
+                                sx={styles.editNameBtn}
+                                onClick={() => setIsEditing(false)}
+                            >
+                                <CloseIcon />
+                            </IconButton>
+                        </>
                     ) : (
                         <>
                             <Typography variant="h6">
-                                {scenario.name}
+                                {scenario.name} {scenario.start_year} -{' '}
+                                {scenario.end_year}
                             </Typography>
                             <IconButton
                                 className="editButton"
                                 sx={styles.editNameBtn}
-                                onClick={handleEditClick}
+                                onClick={() => setIsEditing(true)}
                             >
                                 <EditOutlinedIcon />
                             </IconButton>
