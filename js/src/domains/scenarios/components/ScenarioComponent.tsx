@@ -58,7 +58,10 @@ export const ScenarioComponent: FC<Props> = ({ scenario }) => {
                 <CardContent sx={styles.content}>
                     <Box sx={styles.column}>
                         <Typography variant="h6" sx={styles.title}>
-                            {scenario.name}
+                            {scenario.name}{' '}
+                            <span>
+                                {scenario.start_year} - {scenario.end_year}
+                            </span>
                         </Typography>
                         <Typography variant="body2" sx={styles.timestamp}>
                             {formatMessage(MESSAGES.editedOn, {

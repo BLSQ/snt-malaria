@@ -1,8 +1,10 @@
 from datetime import datetime
 
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status, viewsets
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -33,6 +35,15 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         serializer.validated_data["created_by"] = self.request.user
         serializer.validated_data["account"] = self.request.user.iaso_profile.account
         serializer.save()
+
+    def perform_update(self, serializer):
+        serializer.validated_data["updated_by"] = self.request.user
+        try:
+            serializer.save()
+        except IntegrityError as e:
+            if "duplicate" in str(e).lower() and "(account_id, name)" in str(e).lower():
+                raise serializers.ValidationError(_("Scenario with this name already exists."))
+            raise serializers.ValidationError(str(e))
 
     # Custom action to duplicate a scenario
     @swagger_auto_schema(request_body=DuplicateScenarioSerializer(many=False))
