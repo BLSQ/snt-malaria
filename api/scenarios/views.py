@@ -14,6 +14,9 @@ from plugins.snt_malaria.models import InterventionAssignment, Scenario
 from .serializers import CalculateBudgetSerializer, DuplicateScenarioSerializer, ScenarioSerializer
 
 
+from snt_malaria_budgeting import get_budget
+
+
 class ScenarioViewSet(viewsets.ModelViewSet):
     """Scenario API
 
@@ -93,5 +96,39 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             "status": "calculated",
             "intervention_budget": serializer.get_dummy_budget(),
         }
+
+        country = "DRC"
+        start_year = 2025
+        end_year = 2027
+        interventions = [
+            {"name": "smc", "type": "SP+AQ", "places": ["Tshopo:Opala"]},
+            {"name": "vacc", "type": "R21", "places": ["Tshopo:Opala"]},
+            {"name": "iptp", "type": "SP", "places": ["Tshopo:Opala"]},
+        ]
+        settings = {
+            "smc_buffer": 1.5,
+            "vacc_doses_per_child": 4,
+            "currency": "NGN",
+        }
+
+        budgets = []
+        cost_df = None
+        population_df = None
+
+        for year in range(start_year, end_year + 1):
+            print(f"Fetching budget for year: {year}")
+            budgets.append(
+                get_budget(
+                    country=country,
+                    year=year,
+                    interventions_input=interventions,
+                    settings=settings,
+                    cost_df=cost_df,
+                    population_df=population_df,
+                    cost_overrides=[],  # optional
+                )
+            )
+
+        print(budgets)
 
         return Response(budget_data, status=status.HTTP_200_OK)
