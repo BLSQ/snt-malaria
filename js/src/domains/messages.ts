@@ -186,4 +186,12 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.proportion-chart.title',
         defaultMessage: 'Proportion ot Total Budget by Intervention',
     },
+    selectYear: {
+        id: 'iaso.snt_malaria.budgeting.selectYear',
+        defaultMessage: 'Select a year',
+    },
+    entirePeriod: {
+        id: 'iaso.snt_malaria.budgeting.entirePeriod',
+        defaultMessage: 'Entire period',
+    },
 });
