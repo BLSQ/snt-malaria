@@ -1,14 +1,5 @@
 import React, { FC, useMemo } from 'react';
-import {
-    Box,
-    Card,
-    CardContent,
-    CardHeader,
-    Divider,
-    List,
-    ListItem,
-    Typography,
-} from '@mui/material';
+import { Box, Card, CardContent, CardHeader, Divider } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import {
     Bar,
@@ -22,7 +13,9 @@ import {
 } from 'recharts';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
+import { useGetInterventionCostBreakdownLineCategories } from '../../../settings/hooks/useGetInterventionCostBreakdownLineCategories';
 import { getCostBreakdownChartData } from '../../libs/cost-utils';
+import { ChartLegend } from './ChartLegend';
 
 type Props = {
     interventionBudgets: any[];
@@ -46,55 +39,33 @@ const styles: SxStyles = {
             paddingBottom: 0,
         },
     },
-    legendColorBox: {
-        width: '1rem',
-        height: '1rem',
-        marginRight: 1,
-        borderRadius: 0.5,
-    },
-    legendItem: {
-        width: 'auto',
-        paddingRight: 0,
+    legendWrapper: {
+        display: 'flex',
+        flexDirection: 'row',
     },
 };
-
 const LEGEND_COLORS = ['#522da9', '#7452ba', '#9477ca', '#b29cda', '#d1c3e9'];
-const BARS = [
-    { color: LEGEND_COLORS[0], label: 'Procurement', key: 'Procurement' },
-    { color: LEGEND_COLORS[1], label: 'Distribution', key: 'Distribution' },
-    { color: LEGEND_COLORS[2], label: 'Operational', key: 'Operational' },
-    { color: LEGEND_COLORS[3], label: 'Supportive', key: 'Supportive' },
-    { color: LEGEND_COLORS[4], label: 'Other', key: 'Other' },
-];
 
 export const CostBreakdownChart: FC<Props> = ({ interventionBudgets }) => {
     const { formatMessage } = useSafeIntl();
+    const { data: interventionCostCategories = [] } =
+        useGetInterventionCostBreakdownLineCategories();
     const data = useMemo(() => {
         return getCostBreakdownChartData(interventionBudgets);
     }, [interventionBudgets]);
 
-    const renderLegend = props => {
-        const { payload } = props;
+    const barsConfig = useMemo(() => {
+        if (!interventionCostCategories) {
+            return;
+        }
 
-        return (
-            <List sx={{ display: 'flex', flexDirection: 'row' }}>
-                {payload.map(entry => (
-                    <ListItem
-                        key={`item-${entry.value}`}
-                        sx={styles.legendItem}
-                    >
-                        <Box
-                            sx={{
-                                ...styles.legendColorBox,
-                                backgroundColor: entry.color,
-                            }}
-                        ></Box>
-                        <Typography variant="body2">{entry.value}</Typography>
-                    </ListItem>
-                ))}
-            </List>
-        );
-    };
+        return interventionCostCategories.map((c, index) => ({
+            color: LEGEND_COLORS[index],
+            label: c.label,
+            key: c.value,
+        }));
+    }, [interventionCostCategories]);
+
     return (
         <Box sx={styles.mainBox}>
             <Card sx={styles.card}>
@@ -118,19 +89,25 @@ export const CostBreakdownChart: FC<Props> = ({ interventionBudgets }) => {
                             />
                             <Tooltip cursor={false} />
 
-                            {BARS.map(bar => (
+                            {barsConfig?.map(bar => (
                                 <Bar
                                     dataKey={bar.key}
                                     fill={bar.color}
                                     key={bar.key}
                                     barSize={18}
                                     stackId="a"
+                                    name={bar.label}
                                 />
                             ))}
                             <Legend
                                 verticalAlign="bottom"
                                 align="center"
-                                content={renderLegend}
+                                content={({ payload }) => (
+                                    <ChartLegend
+                                        wrapperSx={styles.legendWrapper}
+                                        payload={payload}
+                                    />
+                                )}
                             />
                         </BarChart>
                     </ResponsiveContainer>

@@ -12,8 +12,7 @@ export const useCreateInterventionAssignment = (): UseMutationResult =>
         invalidateQueryKey: ['interventionAssignments'],
         showSucessSnackBar: false,
         options: {
-            onSuccess: (data, _variables, _context) => {
-                openSnackBar(succesfullSnackBar(data.message, data.message));
-            },
+            onSuccess: data =>
+                openSnackBar(succesfullSnackBar(data.message, data.message)),
         },
     });

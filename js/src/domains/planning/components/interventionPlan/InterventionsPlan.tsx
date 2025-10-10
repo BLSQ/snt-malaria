@@ -1,6 +1,7 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
+import { SxStyles } from 'Iaso/types/general';
 import { useCalculateBudget } from '../../hooks/useCalculateBudget';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
 import {
@@ -20,6 +21,35 @@ type Props = {
     isLoadingPlans: boolean;
     totalOrgUnitCount: number;
     onBudgetRan: (budgets: Budget[]) => void;
+};
+
+const styles: SxStyles = {
+    mainContent: {
+        borderRadius: theme => theme.spacing(2),
+        overflow: 'hidden',
+        height: '493px',
+    },
+    cardHeader: { paddingTop: 1.5 },
+    cardContent: {
+        padding: 0,
+        '&:last-child': {
+            paddingBottom: 0,
+            height: '424px',
+        },
+    },
+    divider: { width: '100%', mt: -1 },
+    listTab: {
+        height: '100%',
+        padding: 1,
+    },
+    mapTab: {
+        p: 1,
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 };
 
 export const InterventionsPlan: FC<Props> = ({
@@ -122,17 +152,11 @@ export const InterventionsPlan: FC<Props> = ({
     ]);
 
     return (
-        <Box
-            sx={{
-                borderRadius: theme => theme.spacing(2),
-                overflow: 'hidden',
-                height: '493px',
-            }}
-        >
+        <Box sx={styles.mainContent}>
             <Card elevation={2}>
                 <TabContext value={tabValue}>
                     <CardHeader
-                        sx={{ paddingTop: 1.5 }}
+                        sx={styles.cardHeader}
                         title={
                             <InterventionPlanSummary
                                 setTabValue={setTabValue}
@@ -144,23 +168,9 @@ export const InterventionsPlan: FC<Props> = ({
                             />
                         }
                     />
-                    <CardContent
-                        sx={{
-                            padding: 0,
-                            '&:last-child': {
-                                paddingBottom: 0,
-                                height: '424px',
-                            },
-                        }}
-                    >
-                        <Divider sx={{ width: '100%', mt: -1 }} />
-                        <TabPanel
-                            value="list"
-                            sx={{
-                                height: '100%',
-                                padding: 1,
-                            }}
-                        >
+                    <CardContent sx={styles.cardContent}>
+                        <Divider sx={styles.divider} />
+                        <TabPanel value="list" sx={styles.listTab}>
                             <InterventionsPlanTable
                                 isLoadingPlans={isLoadingPlans}
                                 interventionPlans={interventionPlans}
@@ -173,16 +183,7 @@ export const InterventionsPlan: FC<Props> = ({
                                 interventionsCoverage={interventionCoverage}
                             />
                         </TabPanel>
-                        <TabPanel
-                            value="map"
-                            sx={{
-                                pt: '4px',
-                                px: '4px',
-                                width: '100%',
-                                display: 'flex',
-                                justifyContent: 'center',
-                            }}
-                        >
+                        <TabPanel value="map" sx={styles.mapTab}>
                             <InterventionsPlanMap scenarioId={scenarioId} />
                         </TabPanel>
                     </CardContent>

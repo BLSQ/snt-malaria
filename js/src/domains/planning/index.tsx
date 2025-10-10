@@ -200,7 +200,7 @@ export const Planning: FC = () => {
                             />
                         </PaperContainer>
                     </Grid>
-                    {budgets ? <Budgeting budgets={budgets} /> : null}
+                    {budgets && <Budgeting budgets={budgets} />}
                 </Grid>
             </PageContainer>
         </>

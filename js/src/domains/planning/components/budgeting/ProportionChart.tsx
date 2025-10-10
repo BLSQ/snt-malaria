@@ -1,14 +1,5 @@
 import React, { FC, useMemo } from 'react';
-import {
-    Box,
-    Card,
-    CardContent,
-    CardHeader,
-    Divider,
-    List,
-    ListItem,
-    Typography,
-} from '@mui/material';
+import { Box, Card, CardContent, CardHeader, Divider } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import {
     Cell,
@@ -21,6 +12,7 @@ import {
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { INTERVENTION_COLORS } from '../../libs/cost-utils';
+import { ChartLegend } from './ChartLegend';
 
 type Props = { interventionBudgets: any[] };
 
@@ -62,28 +54,18 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
         [interventionBudgets],
     );
 
-    const renderLegend = props => {
-        const { payload } = props;
+    const renderLegend = ({ payload }) => (
+        <ChartLegend
+            payload={payload}
+            renderValue={entry => (
+                <>
+                    {entry.value}{' '}
+                    <b> {Math.round(entry.payload.percent * 100)}%</b>
+                </>
+            )}
+        />
+    );
 
-        return (
-            <List>
-                {payload.map(entry => (
-                    <ListItem key={`item-${entry.value}`}>
-                        <Box
-                            sx={{
-                                ...styles.legendColorBox,
-                                backgroundColor: entry.color,
-                            }}
-                        ></Box>
-                        <Typography variant="body2">
-                            {entry.value}{' '}
-                            <b> {Math.round(entry.payload.percent * 100)}%</b>
-                        </Typography>
-                    </ListItem>
-                ))}
-            </List>
-        );
-    };
     return (
         <Box sx={styles.mainBox}>
             <Card sx={styles.card}>
