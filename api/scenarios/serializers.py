@@ -133,5 +133,16 @@ class CalculateBudgetSerializer(serializers.Serializer):
                     }
                     for item in self.interventions_data
                 ],
-            }
+            },
+            {
+                "year": 2026,
+                "interventions": [
+                    {
+                        "name": item["name"],
+                        "cost": item["cost"],
+                        "costBreakdown": self.generate_cost_breakdown(item["cost"]) if item["cost"] > 0 else [],
+                    }
+                    for item in self.interventions_data
+                ],
+            },
         ]
