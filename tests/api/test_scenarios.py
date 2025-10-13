@@ -5,7 +5,7 @@ import pandas as pd
 from django.urls import reverse
 from rest_framework import status
 
-from iaso.models import Account, OrgUnit, OrgUnitType
+from iaso.models import Account, MetricType, MetricValue, OrgUnit, OrgUnitType
 from iaso.test import APITestCase
 from plugins.snt_malaria.models import Intervention, InterventionAssignment, InterventionCategory, Scenario
 
@@ -174,60 +174,57 @@ class ScenarioAPITestCase(APITestCase):
         self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
         self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
 
-    @patch("plugins.snt_malaria.api.scenarios.views.get_budget")
-    @patch("pandas.read_csv")
-    def test_calculate_budget_success(self, mock_read_csv, mock_get_budget):
+    def test_calculate_budget_success(self):
         """Test calculate_budget endpoint with mocked CSV data and budget calculation"""
-        # Mock the CSV data
-        cost_df = pd.DataFrame(
-            {
-                "code_intervention": ["vacc", "cps", "cpp"],
-                "type_intervention": ["R21", "SP+AQ", "SP"],
-                "cout_classe": ["Approvisionnement", "Approvisionnement", "Approvisionnement"],
-                "cout_usd": [3.98, 2.5, 0.2],
-            }
+        # Create MetricType for population
+        metric_type_population = MetricType.objects.create(
+            account=self.account,
+            name="Total Population",
+            code="POPULATION",
+            description="Total population data",
+            units="people",
         )
-        population_df = pd.DataFrame(
-            {
-                "adm0": ["DRC", "DRC"],
-                "adm1": ["Tshopo", "Tshopo"],
-                "adm2": ["Opala", "Opala"],
-                "annee": [2025, 2026],
-                "pop_total": [100000, 102000],
-                "pop_0_5": [20000, 20400],
-            }
-        )
-        mock_read_csv.side_effect = [cost_df, population_df]
 
-        # Mock the get_budget function
-        mock_budget_result = {
-            "year": 2025,
-            "total": 50000,
-            "interventions": [
-                {"name": "vacc", "type": "R21", "cost": 20000},
-                {"name": "cps", "type": "SP+AQ", "cost": 15000},
-                {"name": "cpp", "type": "SP", "cost": 15000},
-            ],
-        }
-        mock_get_budget.return_value = mock_budget_result
+        # Create MetricValues for the org units (district1 and district2)
+        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district1, value=100000)
+        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district2, value=150000)
+
+        # Create SMC intervention assignment for district1
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_chemo_smc,
+            created_by=self.user,
+        )
 
         url = reverse("scenarios-calculate-budget", args=[self.scenario.id])
         response = self.client.post(url, {"scenario": self.scenario.id}, format="json")
 
-        breakpoint()
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["scenario_id"], self.scenario.id)
-        self.assertEqual(response.data["scenario_name"], self.scenario.name)
-        self.assertEqual(response.data["status"], "calculated")
-        self.assertIn("intervention_budget", response.data)
-        self.assertIn("total_budget", response.data)
 
-        # Verify get_budget was called 3 times (for years 2025-2027)
-        self.assertEqual(mock_get_budget.call_count, 3)
+        # Response should be a list of budgets by year (2025, 2026, 2027)
+        self.assertEqual(len(response.data), 3)
 
-        # Verify read_csv was called twice (for cost and population data)
-        self.assertEqual(mock_read_csv.call_count, 2)
+        # Check first year (2025)
+        budget_2025 = response.data[0]
+        self.assertEqual(budget_2025["year"], 2025)
+        self.assertEqual(budget_2025["scenario_name"], "Test Scenario")
+        self.assertIn("interventions", budget_2025)
+
+        # Find SMC intervention in the budget
+        smc_intervention = None
+        for intervention in budget_2025["interventions"]:
+            if intervention["name"] == "smc":
+                smc_intervention = intervention
+                break
+
+        self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
+        self.assertEqual(smc_intervention["total_cost"], 2299000.0)
+        self.assertEqual(smc_intervention["total_pop"], 950000.0)
+        self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
+        self.assertEqual(smc_intervention["cost_breakdown"][0]["name"], "smc")
+        self.assertEqual(smc_intervention["cost_breakdown"][0]["cost_class"], "Procurement")
+        self.assertEqual(smc_intervention["cost_breakdown"][0]["cost"], 2299000.0)
 
     def test_calculate_budget_missing_scenario(self):
         """Test calculate_budget endpoint without scenario parameter"""

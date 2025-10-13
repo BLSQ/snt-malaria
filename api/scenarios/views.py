@@ -95,17 +95,41 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         # TODO: Years should come from the frontend
         start_year = 2025
         end_year = 2027
-        interventions = [
-            {"name": "smc", "type": "SP+AQ", "places": [116, 102, 83]},
-            {"name": "vacc", "type": "R21", "places": [116, 102, 83]},
-            {"name": "iptp", "type": "SP", "places": [116, 102, 83]},
-        ]
-        # settings = {
-        #     "smc_buffer": 1.5,
-        #     "vacc_doses_per_child": 4,
-        #     "currency": "NGN",
-        # }
-        # settings = InterventionCostModel().assumptions
+
+        pd.set_option("display.max_columns", None)
+        # Load cost data from CSV
+        cost_csv_path = Path(__file__).parent.parent.parent / "cost.csv"
+        cost_df = pd.read_csv(cost_csv_path)
+        # print(cost_df.head())
+
+        # Build population data from MetricType
+        population_df = build_population_dataframe(self.request.user.iaso_profile.account)
+        # print(population_df.head())
+
+        # Format the interventions to fit the requirement of the budgeting library.
+        # e.g.
+        # interventions = [
+        #     {"name": "smc", "type": "SP+AQ", "places": [1, 2, 3]}, # list of org_unit_id
+        #     {"name": "vacc", "type": "R21", "places": [1, 2, 3, 4, 5]},
+        #     {"name": "iptp", "type": "SP", "places": [3, 4, 5]},
+        # ]
+        interventions_dict = {}
+        assignments = scenario.intervention_assignments.select_related("intervention", "org_unit").all()
+
+        for assignment in assignments:
+            intervention_code = assignment.intervention.name.lower()
+            org_unit_id = assignment.org_unit.id
+
+            # Group by intervention name and type
+            if intervention_code not in interventions_dict:
+                interventions_dict[intervention_code] = {"name": intervention_code, "type": "SP+AQ", "places": []}
+            interventions_dict[intervention_code]["places"].append(org_unit_id)
+
+        interventions = list(interventions_dict.values())
+        print("interventions", interventions)
+        interventions_input = [InterventionDetailModel(**i) for i in interventions]
+
+        # For now: just take everything from InterventionCostModel().assumptions
         settings = {
             "itn_campaign_divisor": 1.8,
             "itn_campaign_bale_size": 50,
@@ -138,19 +162,6 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         }
 
         budgets = []
-
-        pd.set_option("display.max_columns", None)
-
-        # Load cost data from CSV
-        cost_csv_path = Path(__file__).parent.parent.parent / "cost.csv"
-        cost_df = pd.read_csv(cost_csv_path)
-        # print(cost_df.head())
-
-        # Build population data from MetricType
-        population_df = build_population_dataframe(self.request.user.iaso_profile.account)
-        print(population_df.head())
-
-        interventions_input = [InterventionDetailModel(**i) for i in interventions]
 
         for year in range(start_year, end_year + 1):
             print(f"Fetching budget for year: {year}")
