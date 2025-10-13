@@ -1,3 +1,7 @@
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pandas as pd
 from django.urls import reverse
 from rest_framework import status
 
@@ -169,3 +173,74 @@ class ScenarioAPITestCase(APITestCase):
 
         self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
         self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
+
+    @patch("plugins.snt_malaria.api.scenarios.views.get_budget")
+    @patch("pandas.read_csv")
+    def test_calculate_budget_success(self, mock_read_csv, mock_get_budget):
+        """Test calculate_budget endpoint with mocked CSV data and budget calculation"""
+        # Mock the CSV data
+        cost_df = pd.DataFrame(
+            {
+                "code_intervention": ["vacc", "cps", "cpp"],
+                "type_intervention": ["R21", "SP+AQ", "SP"],
+                "cout_classe": ["Approvisionnement", "Approvisionnement", "Approvisionnement"],
+                "cout_usd": [3.98, 2.5, 0.2],
+            }
+        )
+        population_df = pd.DataFrame(
+            {
+                "adm0": ["DRC", "DRC"],
+                "adm1": ["Tshopo", "Tshopo"],
+                "adm2": ["Opala", "Opala"],
+                "annee": [2025, 2026],
+                "pop_total": [100000, 102000],
+                "pop_0_5": [20000, 20400],
+            }
+        )
+        mock_read_csv.side_effect = [cost_df, population_df]
+
+        # Mock the get_budget function
+        mock_budget_result = {
+            "year": 2025,
+            "total": 50000,
+            "interventions": [
+                {"name": "vacc", "type": "R21", "cost": 20000},
+                {"name": "cps", "type": "SP+AQ", "cost": 15000},
+                {"name": "cpp", "type": "SP", "cost": 15000},
+            ],
+        }
+        mock_get_budget.return_value = mock_budget_result
+
+        url = reverse("scenarios-calculate-budget", args=[self.scenario.id])
+        response = self.client.post(url, {"scenario": self.scenario.id}, format="json")
+
+        breakpoint()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["scenario_id"], self.scenario.id)
+        self.assertEqual(response.data["scenario_name"], self.scenario.name)
+        self.assertEqual(response.data["status"], "calculated")
+        self.assertIn("intervention_budget", response.data)
+        self.assertIn("total_budget", response.data)
+
+        # Verify get_budget was called 3 times (for years 2025-2027)
+        self.assertEqual(mock_get_budget.call_count, 3)
+
+        # Verify read_csv was called twice (for cost and population data)
+        self.assertEqual(mock_read_csv.call_count, 2)
+
+    def test_calculate_budget_missing_scenario(self):
+        """Test calculate_budget endpoint without scenario parameter"""
+        url = reverse("scenarios-calculate-budget", args=[self.scenario.id])
+        response = self.client.post(url, {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("scenario", response.data)
+
+    def test_calculate_budget_invalid_scenario(self):
+        """Test calculate_budget endpoint with non-existent scenario"""
+        url = reverse("scenarios-calculate-budget", args=[self.scenario.id])
+        response = self.client.post(url, {"scenario": 99999}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("scenario", response.data)

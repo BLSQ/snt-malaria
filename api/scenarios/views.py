@@ -1,4 +1,7 @@
 from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
 
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
@@ -8,13 +11,12 @@ from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from snt_malaria_budgeting import InterventionCostModel, InterventionDetailModel, get_budget
 
+from plugins.snt_malaria.api.budgeting.utils import build_population_dataframe
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 
 from .serializers import CalculateBudgetSerializer, DuplicateScenarioSerializer, ScenarioSerializer
-
-
-from snt_malaria_budgeting import get_budget
 
 
 class ScenarioViewSet(viewsets.ModelViewSet):
@@ -89,39 +91,74 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         serializer = CalculateBudgetSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         scenario = serializer.validated_data["scenario"]
-        budget_data = {
-            "scenario_id": scenario.id,
-            "scenario_name": scenario.name,
-            "total_budget": 0,
-            "status": "calculated",
-            "intervention_budget": serializer.get_dummy_budget(),
-        }
 
-        country = "DRC"
+        # TODO: Years should come from the frontend
         start_year = 2025
         end_year = 2027
         interventions = [
-            {"name": "smc", "type": "SP+AQ", "places": ["Tshopo:Opala"]},
-            {"name": "vacc", "type": "R21", "places": ["Tshopo:Opala"]},
-            {"name": "iptp", "type": "SP", "places": ["Tshopo:Opala"]},
+            {"name": "smc", "type": "SP+AQ", "places": [116, 102, 83]},
+            {"name": "vacc", "type": "R21", "places": [116, 102, 83]},
+            {"name": "iptp", "type": "SP", "places": [116, 102, 83]},
         ]
+        # settings = {
+        #     "smc_buffer": 1.5,
+        #     "vacc_doses_per_child": 4,
+        #     "currency": "NGN",
+        # }
+        # settings = InterventionCostModel().assumptions
         settings = {
-            "smc_buffer": 1.5,
+            "itn_campaign_divisor": 1.8,
+            "itn_campaign_bale_size": 50,
+            "itn_campaign_buffer_mult": 1.1,
+            "itn_campaign_coverage": 1.0,
+            "itn_routine_coverage": 0.3,
+            "itn_routine_buffer_mult": 1.1,
+            "iptp_anc_coverage": 0.8,
+            "iptp_doses_per_pw": 3,
+            "iptp_buffer_mult": 1.1,
+            "smc_age_string": "0.18,0.77",  # proportion of population 3-11 months, 12-59 months
+            "smc_pop_prop_3_11": 0.18,
+            "smc_pop_prop_12_59": 0.77,
+            "smc_coverage": 1.0,
+            "smc_monthly_rounds": 4,
+            "smc_buffer_mult": 1.1,
+            "pmc_coverage": 0.85,
+            "pmc_touchpoints": 4,
+            "pmc_tablet_factor": 0.75,
+            "pmc_buffer_mult": 1.1,
+            "vacc_coverage": 0.84,
             "vacc_doses_per_child": 4,
-            "currency": "NGN",
+            "vacc_buffer_mult": 1.1,
+            "iptp_type": "SP",
+            "smc_type": "SP+AQ",
+            "pmc_type": "SP",
+            "irs_type": "Sumishield",
+            "lsm_type": "Bti",
+            "vacc_type": "R21",
         }
 
         budgets = []
-        cost_df = None
-        population_df = None
+
+        pd.set_option("display.max_columns", None)
+
+        # Load cost data from CSV
+        cost_csv_path = Path(__file__).parent.parent.parent / "cost.csv"
+        cost_df = pd.read_csv(cost_csv_path)
+        # print(cost_df.head())
+
+        # Build population data from MetricType
+        population_df = build_population_dataframe(self.request.user.iaso_profile.account)
+        print(population_df.head())
+
+        interventions_input = [InterventionDetailModel(**i) for i in interventions]
 
         for year in range(start_year, end_year + 1):
             print(f"Fetching budget for year: {year}")
             budgets.append(
                 get_budget(
-                    country=country,
                     year=year,
-                    interventions_input=interventions,
+                    spatial_planning_unit="org_unit_id",
+                    interventions_input=interventions_input,
                     settings=settings,
                     cost_df=cost_df,
                     population_df=population_df,
@@ -131,4 +168,4 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
         print(budgets)
 
-        return Response(budget_data, status=status.HTTP_200_OK)
+        return Response(budgets, status=status.HTTP_200_OK)
