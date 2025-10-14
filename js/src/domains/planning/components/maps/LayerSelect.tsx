@@ -11,6 +11,7 @@ import {
 
 import { useSafeIntl } from 'bluesquare-components';
 
+import { MessageDescriptor } from 'react-intl';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { useGetMetricCategories } from '../../hooks/useGetMetrics';
@@ -19,6 +20,7 @@ import { MetricType } from '../../types/metrics';
 const styles: SxStyles = {
     formControl: {
         minWidth: '200px',
+        maxWidth: '100%',
     },
     select: (theme: Theme) => ({
         backgroundColor: 'white',
@@ -26,6 +28,10 @@ const styles: SxStyles = {
         height: '32px',
         '& .MuiOutlinedInput-notchedOutline': {
             border: 0,
+        },
+        '& .MuiSelect-select .MuiTypography-root': {
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
         },
     }),
     category: {
@@ -44,12 +50,14 @@ type Props = {
     createsNewMap?: boolean;
     initialSelection?: MetricType | '';
     onLayerChange: (metric: MetricType) => void;
+    placeholder?: MessageDescriptor;
 };
 
 export const LayerSelect: FC<Props> = ({
     createsNewMap = false,
     initialSelection = '',
     onLayerChange,
+    placeholder = MESSAGES.addMap,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -80,7 +88,7 @@ export const LayerSelect: FC<Props> = ({
                 displayEmpty
             >
                 <MenuItem value="" disabled>
-                    {formatMessage(MESSAGES.addMap)}
+                    {formatMessage(placeholder)}
                 </MenuItem>
                 {metricCategories?.map(category => [
                     <ListSubheader key={category.name}>

@@ -1,15 +1,25 @@
 import React, { FunctionComponent } from 'react';
 import { Button, Grid, TableCell, TableRow, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
+import { DropdownOptions } from 'Iaso/types/utils';
 import { MESSAGES } from '../../../messages';
+import { InterventionCostCoverage } from '../../types/budget';
 import { InterventionPlan } from '../../types/interventions';
 
 type Props = {
     row: InterventionPlan;
     index: number;
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
+    onCoverageSelected: (coverage: InterventionCostCoverage) => void;
+    coverage: string;
 };
+
+const coverageOptions: Array<DropdownOptions<string>> = [
+    { value: InterventionCostCoverage.EIGHTY_PERCENT, label: '80%' },
+    { value: InterventionCostCoverage.HUNDRED_PERCENT, label: '100%' },
+];
 
 const styles: SxStyles = {
     tableCellStyle: {
@@ -23,6 +33,8 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
     row,
     index,
     showInterventionPlanDetails,
+    onCoverageSelected,
+    coverage,
 }) => {
     const { formatMessage } = useSafeIntl();
     return row ? (
@@ -45,7 +57,7 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
                     >
                         <Typography>{row?.intervention.name}</Typography>
                     </Grid>
-                    <Grid item xs={3}>
+                    <Grid item xs={7}>
                         <Button
                             variant="text"
                             sx={styles.textButton}
@@ -54,6 +66,18 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
                             {row?.org_units.length}{' '}
                             {formatMessage(MESSAGES.orgUnitDistrict)}
                         </Button>
+                    </Grid>
+                    <Grid item xs={2}>
+                        <InputComponent
+                            keyValue="key"
+                            type="select"
+                            value={coverage}
+                            onChange={(_key, value) =>
+                                onCoverageSelected(value)
+                            }
+                            options={coverageOptions}
+                            clearable={false}
+                        />
                     </Grid>
                 </Grid>
             </TableCell>

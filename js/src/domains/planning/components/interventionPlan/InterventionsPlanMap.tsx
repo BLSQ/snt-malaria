@@ -14,7 +14,7 @@ import tiles from 'Iaso/constants/mapTiles';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../../../../constants/map-theme';
-import { useGetInterventionAssignments } from '../../hooks/UseGetInterventionAssignments';
+import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
 import {
     defaultLegend,
@@ -52,7 +52,6 @@ type Props = {
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
         borderRadius: theme.spacing(2),
-        marginBottom: theme.spacing(1),
         overflow: 'hidden',
         position: 'relative',
     }),
@@ -250,7 +249,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     return (
         <Box height="390px" width="100%" sx={styles.mainBox}>
             <MapContainer
-                id="side_map"
+                id="intervention_plan_map"
                 doubleClickZoom
                 scrollWheelZoom={false}
                 maxZoom={currentTile.maxZoom}

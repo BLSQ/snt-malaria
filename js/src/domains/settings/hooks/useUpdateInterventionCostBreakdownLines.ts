@@ -1,7 +1,7 @@
 import { UseMutationResult } from 'react-query';
 import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { putIntervention } from '../../planning/hooks/UseUpdateIntervention';
+import { putIntervention } from '../../planning/hooks/useUpdateIntervention';
 import { Intervention } from '../../planning/types/interventions';
 import { InterventionCostBreakdownLine } from '../types/InterventionCostBreakdownLine';
 

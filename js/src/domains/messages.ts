@@ -166,4 +166,12 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.metrics.not-seasonal',
         defaultMessage: 'Not Seasonal',
     },
+    costBreakdownChartTitle: {
+        id: 'iaso.snt_malaria.cost-breakdown-chart.title',
+        defaultMessage: 'Cost Breakdown by Category per Intervention',
+    },
+    proportionChart: {
+        id: 'iaso.snt_malaria.proportion-chart.title',
+        defaultMessage: 'Proportion ot Total Budget by Intervention',
+    },
 });

@@ -15,12 +15,13 @@ import {
 import { baseUrls } from '../../constants/urls';
 import { MESSAGES } from '../messages';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
+import { Budgeting } from './components/budgeting/Budgeting';
 import { InterventionAssignments } from './components/interventionAssignment/InterventionAssignments';
 import { InterventionsPlan } from './components/interventionPlan/InterventionsPlan';
 import { Map } from './components/map';
 import { SideMapList } from './components/maps/SideMapList';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
-import { useGetInterventionAssignments } from './hooks/UseGetInterventionAssignments';
+import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import {
     useGetMetricCategories,
     useGetMetricOrgUnits,
@@ -29,6 +30,7 @@ import {
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { Intervention } from './types/interventions';
 import { MetricsFilters, MetricType } from './types/metrics';
+import { Budget } from './types/budget';
 
 type PlanningParams = {
     scenarioId: number;
@@ -44,8 +46,6 @@ export const Planning: FC = () => {
 
     const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
     const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
-    const [selectionOnInterventionList, setSelectionOnInterventionList] =
-        useState<OrgUnit[]>([]);
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: Intervention;
     }>({});
@@ -55,6 +55,8 @@ export const Planning: FC = () => {
     const [displayedMetric, setDisplayedMetric] = useState<MetricType | null>(
         null,
     );
+
+    const [budgets, setBudgets] = useState<Budget[] | null>(null);
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(scenario?.id);
@@ -194,9 +196,11 @@ export const Planning: FC = () => {
                                 totalOrgUnitCount={orgUnits?.length ?? 0}
                                 interventionPlans={interventionPlans ?? []}
                                 isLoadingPlans={isLoadingPlans}
+                                onBudgetRan={setBudgets}
                             />
                         </PaperContainer>
                     </Grid>
+                    {budgets && <Budgeting budgets={budgets} />}
                 </Grid>
             </PageContainer>
         </>

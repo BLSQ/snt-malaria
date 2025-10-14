@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 
-from .serializers import DuplicateScenarioSerializer, ScenarioSerializer
+from .serializers import CalculateBudgetSerializer, DuplicateScenarioSerializer, ScenarioSerializer
 
 
 class ScenarioViewSet(viewsets.ModelViewSet):
@@ -70,13 +70,15 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="calculate_budget")
     def calculate_budget(self, request, pk=None):
-        scenario = get_object_or_404(Scenario, pk=pk)
-
+        serializer = CalculateBudgetSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        scenario = serializer.validated_data["scenario"]
         budget_data = {
             "scenario_id": scenario.id,
             "scenario_name": scenario.name,
             "total_budget": 0,
             "status": "calculated",
+            "intervention_budget": serializer.get_dummy_budget(),
         }
 
         return Response(budget_data, status=status.HTTP_200_OK)

@@ -1,7 +1,14 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
-import { UseRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/UseRemoveOrgUnitFromInterventionPlan';
+import { SxStyles } from 'Iaso/types/general';
+import { useCalculateBudget } from '../../hooks/useCalculateBudget';
+import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
+import {
+    Budget,
+    BudgetCalculationResponse,
+    InterventionCostCoverage,
+} from '../../types/budget';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
 import { InterventionPlanSummary, TabValue } from './InterventionplanSummary';
@@ -13,6 +20,36 @@ type Props = {
     interventionPlans: InterventionPlan[];
     isLoadingPlans: boolean;
     totalOrgUnitCount: number;
+    onBudgetRan: (budgets: Budget[]) => void;
+};
+
+const styles: SxStyles = {
+    mainContent: {
+        borderRadius: theme => theme.spacing(2),
+        overflow: 'hidden',
+        height: '493px',
+    },
+    cardHeader: { paddingTop: 1.5 },
+    cardContent: {
+        padding: 0,
+        '&:last-child': {
+            paddingBottom: 0,
+            height: '424px',
+        },
+    },
+    divider: { width: '100%', mt: -1 },
+    listTab: {
+        height: '100%',
+        padding: 1,
+    },
+    mapTab: {
+        p: 1,
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 };
 
 export const InterventionsPlan: FC<Props> = ({
@@ -20,6 +57,7 @@ export const InterventionsPlan: FC<Props> = ({
     interventionPlans,
     isLoadingPlans,
     totalOrgUnitCount = 0,
+    onBudgetRan,
 }) => {
     const [tabValue, setTabValue] = useState<TabValue>('map');
 
@@ -28,6 +66,10 @@ export const InterventionsPlan: FC<Props> = ({
     const [selectedInterventionId, setSelectedInterventionId] = useState<
         number | null
     >(null);
+
+    const [interventionCoverage, setInterventionCoverage] = useState<{
+        [interventionId: number]: InterventionCostCoverage;
+    }>({});
 
     const assignedOrgUnitCount = useMemo(() => {
         return interventionPlans.reduce((acc, plan) => {
@@ -49,7 +91,10 @@ export const InterventionsPlan: FC<Props> = ({
     }, [interventionPlans, selectedInterventionId]);
 
     const { mutateAsync: removeManyOrgUnitsFromPlan } =
-        UseRemoveManyOrgUnitsFromInterventionPlan();
+        useRemoveManyOrgUnitsFromInterventionPlan();
+
+    const { mutate: calculateBudget, isLoading: isCalculatingBudget } =
+        useCalculateBudget();
 
     const onRemoveOrgUnitsFromPlan = async (
         interventionAssignmentIds: number[],
@@ -73,61 +118,72 @@ export const InterventionsPlan: FC<Props> = ({
         setSelectedInterventionId(null);
     };
 
+    const setSelectedCoverageForIntervention = useCallback(
+        (interventionId: number, coverage: InterventionCostCoverage) => {
+            setInterventionCoverage({
+                ...interventionCoverage,
+                [interventionId]: coverage,
+            });
+        },
+        [setInterventionCoverage, interventionCoverage],
+    );
+
+    const runBudget = useCallback(() => {
+        const budgetRequest = interventionPlans.map(ip => ({
+            interventionId: ip.intervention.id,
+            orgUnits: ip.org_units,
+            coverage: interventionCoverage[ip.intervention.id] ?? undefined,
+        }));
+
+        // TODO: Should we send the request with all intervention even if no metricType is selected ?
+        calculateBudget(
+            { scenarioId, requestBody: budgetRequest },
+            {
+                onSuccess: (data: BudgetCalculationResponse) =>
+                    onBudgetRan(data.intervention_budget),
+            },
+        );
+    }, [
+        scenarioId,
+        calculateBudget,
+        interventionPlans,
+        interventionCoverage,
+        onBudgetRan,
+    ]);
+
     return (
-        <Box
-            sx={{
-                borderRadius: theme => theme.spacing(2),
-                overflow: 'hidden',
-                height: '493px',
-            }}
-        >
+        <Box sx={styles.mainContent}>
             <Card elevation={2}>
                 <TabContext value={tabValue}>
                     <CardHeader
+                        sx={styles.cardHeader}
                         title={
                             <InterventionPlanSummary
                                 setTabValue={setTabValue}
                                 tabValue={tabValue}
                                 assignedOrgUnits={assignedOrgUnitCount}
                                 totalOrgUnits={totalOrgUnitCount}
+                                onRunBudget={runBudget}
+                                isCalculatingBudget={isCalculatingBudget}
                             />
                         }
                     />
-                    <CardContent
-                        sx={{
-                            padding: 0,
-                            '&:last-child': {
-                                paddingBottom: 0,
-                                height: '424px',
-                            },
-                        }}
-                    >
-                        <Divider sx={{ width: '100%', mt: -1 }} />
-                        <TabPanel
-                            value="list"
-                            sx={{
-                                height: '100%',
-                                padding: 1,
-                            }}
-                        >
+                    <CardContent sx={styles.cardContent}>
+                        <Divider sx={styles.divider} />
+                        <TabPanel value="list" sx={styles.listTab}>
                             <InterventionsPlanTable
                                 isLoadingPlans={isLoadingPlans}
                                 interventionPlans={interventionPlans}
                                 showInterventionPlanDetails={
                                     onShowInterventionPlanDetails
                                 }
+                                onCoverageSelected={
+                                    setSelectedCoverageForIntervention
+                                }
+                                interventionsCoverage={interventionCoverage}
                             />
                         </TabPanel>
-                        <TabPanel
-                            value="map"
-                            sx={{
-                                pt: '4px',
-                                px: '4px',
-                                width: '100%',
-                                display: 'flex',
-                                justifyContent: 'center',
-                            }}
-                        >
+                        <TabPanel value="map" sx={styles.mapTab}>
                             <InterventionsPlanMap scenarioId={scenarioId} />
                         </TabPanel>
                     </CardContent>
