@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Typography, Grid } from '@mui/material';
+import { Typography, Grid, Tooltip } from '@mui/material';
 import { Intervention } from '../../types/interventions';
 import { containerBoxStyles } from '../styles';
 
@@ -60,26 +60,32 @@ export const Interventions: FC<Props> = ({
                 const isSelectedIntervention =
                     selectedId && selectedId === intervention.id;
                 return (
-                    <Grid
+                    <Tooltip
                         key={intervention.id}
-                        padding={1}
-                        onClick={() => selectIntervention(intervention)}
-                        sx={styles?.interventionGridStyle?.(
-                            isSelectedIntervention,
-                        )}
+                        title={intervention.description}
                     >
-                        <Typography
-                            variant="h6"
-                            sx={{
-                                fontSize: '0.8125rem',
-                            }}
-                            color={
-                                isSelectedIntervention ? '#FFFFFF' : 'primary'
-                            }
+                        <Grid
+                            padding={1}
+                            onClick={() => selectIntervention(intervention)}
+                            sx={styles?.interventionGridStyle?.(
+                                isSelectedIntervention,
+                            )}
                         >
-                            {intervention.name}
-                        </Typography>
-                    </Grid>
+                            <Typography
+                                variant="h6"
+                                sx={{
+                                    fontSize: '0.8125rem',
+                                }}
+                                color={
+                                    isSelectedIntervention
+                                        ? '#FFFFFF'
+                                        : 'primary'
+                                }
+                            >
+                                {intervention.name}
+                            </Typography>
+                        </Grid>
+                    </Tooltip>
                 );
             })}
         </Grid>
