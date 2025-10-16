@@ -1,6 +1,8 @@
 from django.contrib import admin
 
 from .models import (
+    Budget,
+    BudgetSettings,
     Intervention,
     InterventionAssignment,
     InterventionCategory,
@@ -75,3 +77,19 @@ class InterventionCostBreakdownLineAdmin(admin.ModelAdmin):
     search_fields = ("name", "id")
     list_filter = ("name", "id")
     ordering = ("id", "name")
+
+
+@admin.register(Budget)
+class BudgetAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "cost_input", "result", "updated_at")
+    search_fields = ("id", "name")
+    list_filter = ("id", "name")
+    ordering = ("id", "name", "updated_at")
+
+
+@admin.register(BudgetSettings)
+class BudgetSettingsAdmin(admin.ModelAdmin):
+    list_display = ("id", "local_currency", "exchange_rate", "inflation_rate")
+    search_fields = ("id", "local_currency")
+    list_filter = ("id", "local_currency")
+    ordering = ("id", "local_currency")
