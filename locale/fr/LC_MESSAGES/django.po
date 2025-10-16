@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-23 12:12+0000\n"
+"POT-Creation-Date: 2025-10-06 14:33+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,6 +22,18 @@ msgstr ""
 #, python-brace-format
 msgid "{delta} districts added to plan"
 msgstr "{delta} district(s) ajouté(s) au plan"
+
+#: plugins/snt_malaria/api/scenarios/serializers.py
+msgid "Name cannot be empty."
+msgstr "Le nom doit être défini"
+
+#: plugins/snt_malaria/api/scenarios/serializers.py
+msgid "Scenario with this name already exists."
+msgstr "Un scénario avec ce nom existe déjà"
+
+#: plugins/snt_malaria/api/scenarios/serializers.py
+msgid "Scenario with this ID does not exist."
+msgstr "Aucun scénario pour cet ID"
 
 #: plugins/snt_malaria/models/cost_breakdown.py
 msgid "Procurement"
@@ -40,18 +52,54 @@ msgid "Supportive"
 msgstr "Support"
 
 #: plugins/snt_malaria/models/cost_breakdown.py
+#: plugins/snt_malaria/models/intervention.py
 msgid "Other"
 msgstr "Autre"
 
-#: plugins/snt_malaria/api/scenarios/serializers.py
-msgid "Name cannot be empty."
-msgstr "Le nom doit être défini"
+#: plugins/snt_malaria/models/intervention.py
+msgid "per ITN"
+msgstr "par ITN"
 
-#: plugins/snt_malaria/api/scenarios/serializers.py
-msgid "Scenario with this name already exists."
-msgstr "Un scénario avec ce nom existe déjà"
+#: plugins/snt_malaria/models/intervention.py
+msgid "per SP"
+msgstr "par SP"
 
-#: plugins/snt_malaria/api/scenarios/serializers.py
-msgid "Scenario with this ID does not exist."
-msgstr "Aucun scénario pour cet ID"
+#: plugins/snt_malaria/models/intervention.py
+msgid "per child"
+msgstr "par enfant"
 
+#: plugins/snt_malaria/models/intervention.py
+msgid "per dose"
+msgstr "par dose"
+
+#: plugins/snt_malaria/models/intervention.py
+msgid "per SPAQ pack 3-11 month olds"
+msgstr "par pack SPAQ de 3-11 mois"
+
+#: plugins/snt_malaria/models/intervention.py
+msgid "per SPAQ pack 12-59 month olds"
+msgstr "par pack SPAQ de 12-59 mois"
+
+#: plugins/snt_malaria/models/intervention.py
+msgid "per SPAQ pack 5-10 years olds"
+msgstr "pas pack SPAQ de 5-10 mois"
+
+#: plugins/snt_malaria/models/intervention.py
+msgid "per RDT kit"
+msgstr "par kit RDT"
+
+#: plugins/snt_malaria/models/intervention.py
+msgid "per AL"
+msgstr "par AL"
+
+#: plugins/snt_malaria/models/intervention.py
+msgid "per 60mg powder"
+msgstr "par 60mg de poudre"
+
+#: plugins/snt_malaria/models/intervention.py
+msgid "per RAS"
+msgstr "par RAS"
+
+#: plugins/snt_malaria/models/intervention.py
+msgid "per bale"
+msgstr "par balle"

@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import { Drawer } from '@mui/material';
 import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { DropdownOptions } from 'Iaso/types/utils';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
 import { Intervention } from '../../../planning/types/interventions';
 import { useGetInterventionCostBreakdownLines } from '../../hooks/useGetInterventionCostBreakdownLines';
@@ -12,6 +13,7 @@ type Props = {
     onClose: () => void;
     open: boolean;
     intervention: Intervention | null;
+    interventionUnitTypes?: DropdownOptions<string>[];
     onConfirm: (
         intervention: Intervention,
         costs: InterventionCostBreakdownLine[],
@@ -33,6 +35,7 @@ export const InterventionCostDrawer: React.FC<Props> = ({
     onClose,
     open,
     intervention,
+    interventionUnitTypes,
     onConfirm,
 }) => {
     const { data: cost_breakdown_lines, isFetching: isFetchingCosts } =
@@ -68,6 +71,7 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                     <LoadingSpinner absolute={true} />
                 ) : (
                     <InterventionCostForm
+                        interventionUnitTypes={interventionUnitTypes}
                         defaultValues={{
                             unit_type: intervention?.unit_type,
                             unit_cost: intervention?.unit_cost ?? undefined,

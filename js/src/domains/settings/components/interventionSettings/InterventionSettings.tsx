@@ -4,6 +4,7 @@ import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionCategories } from '../../../planning/hooks/useGetInterventionCategories';
 import { Intervention } from '../../../planning/types/interventions';
+import { useGetInterventionUnitTypes } from '../../hooks/useGetInterventionUnitType';
 import { useUpdateInterventionCostBreakdownLines } from '../../hooks/useUpdateInterventionCostBreakdownLines';
 import { MESSAGES } from '../../messages';
 import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreakdownLine';
@@ -27,6 +28,8 @@ export const InterventionSettings: React.FC = () => {
         data: interventionCategories = [],
         isFetching: isLoadingCategories = true,
     } = useGetInterventionCategories();
+
+    const { data: interventionUnitTypes } = useGetInterventionUnitTypes();
 
     const { mutateAsync: updateInterventionCosts } =
         useUpdateInterventionCostBreakdownLines();
@@ -95,6 +98,7 @@ export const InterventionSettings: React.FC = () => {
                 open={interventionCostDrawerOpen}
                 onClose={() => setInterventionCostDrawerOpen(false)}
                 intervention={selectedIntervention}
+                interventionUnitTypes={interventionUnitTypes}
                 onConfirm={onUpdateIntervention}
             />
         </>
