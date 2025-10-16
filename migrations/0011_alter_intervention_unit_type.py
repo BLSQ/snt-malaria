@@ -4,15 +4,32 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('snt_malaria', '0010_rename_cost_unit_intervention_unit_type_and_more'),
+        ("snt_malaria", "0010_rename_cost_unit_intervention_unit_type_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='intervention',
-            name='unit_type',
-            field=models.CharField(choices=[('PER_ITN', 'per ITN'), ('PER_SP', 'per SP'), ('PER_CHILD', 'per child'), ('PER_DOSE', 'per dose'), ('PER_SPAQ_3_11_MONTHS', 'per SPAQ pack 3-11 month olds'), ('PER_SPAQ_12_59_MONTHS', 'per SPAQ pack 12-59 month olds'), ('PER_SPAQ_5_10_YEARS', 'per SPAQ pack 5-10 years olds'), ('PER_RDT_KIT', 'per RDT kit'), ('PER_AL', 'per AL'), ('PER_60MG_POWDER', 'per 60mg powder'), ('PER_RAS', 'per RAS'), ('PER_BALE', 'per bale'), ('OTHER', 'Other')], default='OTHER', max_length=50),
+            model_name="intervention",
+            name="unit_type",
+            field=models.CharField(
+                choices=[
+                    ("PER_ITN", "per ITN"),
+                    ("PER_SP", "per SP"),
+                    ("PER_CHILD", "per child"),
+                    ("PER_DOSE", "per dose"),
+                    ("PER_SPAQ_3_11_MONTHS", "per SPAQ pack 3-11 month olds"),
+                    ("PER_SPAQ_12_59_MONTHS", "per SPAQ pack 12-59 month olds"),
+                    ("PER_SPAQ_5_10_YEARS", "per SPAQ pack 5-10 years olds"),
+                    ("PER_RDT_KIT", "per RDT kit"),
+                    ("PER_AL", "per AL"),
+                    ("PER_60MG_POWDER", "per 60mg powder"),
+                    ("PER_RAS", "per RAS"),
+                    ("PER_BALE", "per bale"),
+                    ("OTHER", "Other"),
+                ],
+                default="OTHER",
+                max_length=50,
+            ),
         ),
     ]

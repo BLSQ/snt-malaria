@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("snt_malaria", "0010_rename_cost_unit_intervention_unit_type_and_more"),
+        ("snt_malaria", "0011_alter_intervention_unit_type"),
     ]
 
     operations = [
