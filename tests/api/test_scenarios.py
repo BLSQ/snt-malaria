@@ -18,6 +18,8 @@ class ScenarioAPITestCase(APITestCase):
             created_by=cls.user,
             name="Test Scenario",
             description="A test scenario description.",
+            start_year=2025,
+            end_year=2026,
         )
 
         # Create intervention categories
@@ -97,7 +99,7 @@ class ScenarioAPITestCase(APITestCase):
 
     def test_scenario_create(self):
         url = reverse("scenarios-list")
-        response = self.client.post(url, {"name": "New Scenario"}, format="json")
+        response = self.client.post(url, {"name": "New Scenario", "start_year": 2025, "end_year": 2026}, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Scenario.objects.count(), 2)
         new_scenario = Scenario.objects.latest("id")
@@ -119,9 +121,11 @@ class ScenarioAPITestCase(APITestCase):
             created_by=self.user,
             name="Test Scenario 2",
             description="A test scenario 2 description.",
+            start_year=2025,
+            end_year=2026,
         )
         url = reverse("scenarios-detail", args=[self.scenario.id])
-        payload = {"id": self.scenario.id, "name": "Test Scenario 2"}
+        payload = {"id": self.scenario.id, "name": "Test Scenario 2", "start_year": 2025, "end_year": 2026}
         response = self.client.put(url, payload, format="json")
         jsonResponse = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(jsonResponse, ["Scenario with this name already exists."])
