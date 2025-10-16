@@ -11,6 +11,8 @@ export type Scenario = {
     created_by: User;
     name: string;
     description: string;
+    start_year: number;
+    end_year: number;
     created_at: string; // ISO 8601 formatted date string
     updated_at: string; // ISO 8601 formatted date string
 };

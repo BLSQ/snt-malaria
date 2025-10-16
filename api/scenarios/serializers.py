@@ -1,4 +1,5 @@
 import random
+
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
@@ -11,14 +12,7 @@ class ScenarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Scenario
-        fields = [
-            "id",
-            "created_by",
-            "name",
-            "description",
-            "created_at",
-            "updated_at",
-        ]
+        fields = ["id", "created_by", "name", "description", "created_at", "updated_at", "start_year", "end_year"]
         read_only_fields = [
             "id",
             "created_at",
@@ -28,13 +22,6 @@ class ScenarioSerializer(serializers.ModelSerializer):
     def validate_name(self, value):
         if not value:
             raise serializers.ValidationError(_("Name cannot be empty."))
-
-        existingScenarios = Scenario.objects.filter(
-            name=value, account=self.context["request"].user.iaso_profile.account
-        )
-
-        if existingScenarios.exists():
-            raise serializers.ValidationError(_("Scenario with this name already exists."))
 
         return value
 
@@ -146,5 +133,16 @@ class CalculateBudgetSerializer(serializers.Serializer):
                     }
                     for item in self.interventions_data
                 ],
-            }
+            },
+            {
+                "year": 2026,
+                "interventions": [
+                    {
+                        "name": item["name"],
+                        "cost": item["cost"],
+                        "costBreakdown": self.generate_cost_breakdown(item["cost"]) if item["cost"] > 0 else [],
+                    }
+                    for item in self.interventions_data
+                ],
+            },
         ]

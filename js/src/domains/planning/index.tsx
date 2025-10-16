@@ -28,9 +28,9 @@ import {
     useGetMetricValues,
 } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
+import { Budget } from './types/budget';
 import { Intervention } from './types/interventions';
 import { MetricsFilters, MetricType } from './types/metrics';
-import { Budget } from './types/budget';
 
 type PlanningParams = {
     scenarioId: number;

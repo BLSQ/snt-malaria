@@ -9,6 +9,18 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.title',
         defaultMessage: 'Settings',
     },
+    name: {
+        id: 'iaso.snt_malaria.label.name',
+        defaultMessage: 'Name',
+    },
+    startYear: {
+        id: 'iaso.snt_malaria.label.start_year',
+        defaultMessage: 'Start year',
+    },
+    endYear: {
+        id: 'iaso.snt_malaria.label.end_year',
+        defaultMessage: 'End year',
+    },
     layers: {
         id: 'iaso.snt_malaria.label.layers',
         defaultMessage: 'Layers',
@@ -173,5 +185,13 @@ export const MESSAGES = defineMessages({
     proportionChart: {
         id: 'iaso.snt_malaria.proportion-chart.title',
         defaultMessage: 'Proportion ot Total Budget by Intervention',
+    },
+    selectYear: {
+        id: 'iaso.snt_malaria.budgeting.selectYear',
+        defaultMessage: 'Select a year',
+    },
+    entirePeriod: {
+        id: 'iaso.snt_malaria.budgeting.entirePeriod',
+        defaultMessage: 'Entire period',
     },
 });

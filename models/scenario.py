@@ -12,11 +12,19 @@ class Scenario(SoftDeletableModel):
         app_label = "snt_malaria"
         ordering = ["-updated_at"]
         unique_together = [["account", "name"]]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(start_year__lte=models.F("end_year")),
+                name="%(app_label)s_%(class)s_start_year_lte_end_year",
+            )
+        ]
 
     account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    start_year = models.IntegerField(blank=False, null=False)
+    end_year = models.IntegerField(blank=False, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
