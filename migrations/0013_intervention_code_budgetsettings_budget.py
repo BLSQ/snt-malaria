@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ("iaso", "0348_alter_assignment_unique_together_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("snt_malaria", "0011_scenario_end_year_scenario_start_year"),
+        ("snt_malaria", "0012_scenario_end_year_scenario_start_year_and_more"),
     ]
 
     operations = [
