@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentPasteGoOutlinedIcon from '@mui/icons-material/ContentPasteGoOutlined';
@@ -77,6 +77,12 @@ const styles: SxStyles = {
     },
 };
 
+const validationSchema = Yup.object().shape({
+    name: Yup.string().required(),
+    start_year: Yup.number().required().min(2025).max(2035),
+    end_year: Yup.number().required().min(2025).max(2035),
+});
+
 type Props = {
     scenario: Scenario;
 };
@@ -87,7 +93,9 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
     const [isEditing, setIsEditing] = useState(false);
     const currentYear = new Date().getFullYear();
 
-    const { mutate: updateScenario } = useUpdateScenario(scenario.id);
+    const { mutate: updateScenario } = useUpdateScenario(scenario.id, () =>
+        setIsEditing(false),
+    );
     const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
         navigate('/');
     });
@@ -97,16 +105,6 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                 `/${baseUrls.planning}/scenarioId/${duplicatedScenario.id}`,
             );
         },
-    );
-
-    const validationSchema = useMemo(
-        () =>
-            Yup.object().shape({
-                name: Yup.string().required(),
-                start_year: Yup.number().required().min(2025).max(2035),
-                end_year: Yup.number().required().min(2025).max(2035),
-            }),
-        [formatMessage],
     );
 
     const {
@@ -125,10 +123,7 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
             end_year: scenario.end_year ?? currentYear,
         },
         validationSchema,
-        onSubmit: () => {
-            updateScenario({ ...scenario, ...values });
-            setIsEditing(false);
-        },
+        onSubmit: () => updateScenario({ ...scenario, ...values }),
     });
 
     const handleDuplicateClick = () => {
