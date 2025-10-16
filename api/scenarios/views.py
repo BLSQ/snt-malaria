@@ -43,6 +43,8 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         except IntegrityError as e:
             if "duplicate" in str(e).lower() and "(account_id, name)" in str(e).lower():
                 raise serializers.ValidationError(_("Scenario with this name already exists."))
+            if "snt_malaria_scenario_end_year_gte_start_year" in str(e).lower():
+                raise serializers.ValidationError(_("Start year should be lower or equal end year."))
             raise serializers.ValidationError(str(e))
 
     # Custom action to duplicate a scenario
