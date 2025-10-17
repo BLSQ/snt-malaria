@@ -10,11 +10,9 @@ import {
 export const useGetInterventionAssignments = (
     scenarioId,
 ): UseQueryResult<InterventionPlan[], Error> => {
-    const params: Record<string, any> = {
-        scenario_id: scenarioId,
-    };
+    const params: Record<string, any> = { scenario_id: scenarioId };
     const url = makeUrlWithParams(
-        '/api/snt_malaria/intervention_assignments',
+        '/api/snt_malaria/intervention_assignments/',
         params,
     );
 
