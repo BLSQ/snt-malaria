@@ -11,7 +11,11 @@ from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from snt_malaria_budgeting import InterventionCostModel, InterventionDetailModel, get_budget
+from snt_malaria_budgeting import (
+    DEFAULT_COST_ASSUMPTIONS,
+    InterventionDetailModel,
+    get_budget,
+)
 
 from plugins.snt_malaria.api.budgeting.utils import build_population_dataframe
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
@@ -86,6 +90,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    # TODO: Move to POST /budgets
     @action(detail=True, methods=["post"], url_path="calculate_budget")
     def calculate_budget(self, request, pk=None):
         serializer = CalculateBudgetSerializer(data=request.data, context={"request": request})
@@ -97,7 +102,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         end_year = 2027
 
         pd.set_option("display.max_columns", None)
-        # Load cost data from CSV
+        # TODO: For now load cost data from CSV, replace with CostSettings
         cost_csv_path = Path(__file__).parent.parent.parent / "cost.csv"
         cost_df = pd.read_csv(cost_csv_path)
         # print(cost_df.head())
@@ -129,39 +134,10 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         print("interventions", interventions)
         interventions_input = [InterventionDetailModel(**i) for i in interventions]
 
-        # For now: just take everything from InterventionCostModel().assumptions
-        settings = {
-            "itn_campaign_divisor": 1.8,
-            "itn_campaign_bale_size": 50,
-            "itn_campaign_buffer_mult": 1.1,
-            "itn_campaign_coverage": 1.0,
-            "itn_routine_coverage": 0.3,
-            "itn_routine_buffer_mult": 1.1,
-            "iptp_anc_coverage": 0.8,
-            "iptp_doses_per_pw": 3,
-            "iptp_buffer_mult": 1.1,
-            "smc_age_string": "0.18,0.77",  # proportion of population 3-11 months, 12-59 months
-            "smc_pop_prop_3_11": 0.18,
-            "smc_pop_prop_12_59": 0.77,
-            "smc_coverage": 1.0,
-            "smc_monthly_rounds": 4,
-            "smc_buffer_mult": 1.1,
-            "pmc_coverage": 0.85,
-            "pmc_touchpoints": 4,
-            "pmc_tablet_factor": 0.75,
-            "pmc_buffer_mult": 1.1,
-            "vacc_coverage": 0.84,
-            "vacc_doses_per_child": 4,
-            "vacc_buffer_mult": 1.1,
-            "iptp_type": "SP",
-            "smc_type": "SP+AQ",
-            "pmc_type": "SP",
-            "irs_type": "Sumishield",
-            "lsm_type": "Bti",
-            "vacc_type": "R21",
-        }
-
         budgets = []
+
+        print("cost_df", cost_df)
+        print("population_df", population_df)
 
         for year in range(start_year, end_year + 1):
             print(f"Fetching budget for year: {year}")
@@ -170,13 +146,13 @@ class ScenarioViewSet(viewsets.ModelViewSet):
                     year=year,
                     spatial_planning_unit="org_unit_id",
                     interventions_input=interventions_input,
-                    settings=settings,
+                    settings=DEFAULT_COST_ASSUMPTIONS,
                     cost_df=cost_df,
                     population_df=population_df,
                     cost_overrides=[],  # optional
                 )
             )
 
-        print(budgets)
+        # print(budgets)
 
         return Response(budgets, status=status.HTTP_200_OK)
