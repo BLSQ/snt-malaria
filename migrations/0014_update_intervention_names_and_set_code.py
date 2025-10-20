@@ -40,37 +40,6 @@ class Migration(migrations.Migration):
             )
             llin_routine_intervention.save()
 
-    def merge_cm_interventions(apps, schema_edit):
-        InterventionCategories = apps.get_model("snt_malaria", "InterventionCategory")
-        Intervention = apps.get_model("snt_malaria", "Intervention")
-        InterventionAssignment = apps.get_model("snt_malaria", "InterventionAssignment")
-
-        cm_categories = InterventionCategories.objects.prefetch_related("intervention_set").filter(
-            name="Case Management"
-        )
-
-        with transaction.atomic():
-            for category in cm_categories:
-                interventions = category.intervention_set.all()
-                intervention_names = set(i.name for i in interventions)
-                if not ("RDTs" in intervention_names and "ACTs" in intervention_names):
-                    # Skip this category if it doesn't contain both interventions
-                    pass
-
-                cm_intervention = Intervention.objects.create(
-                    name="CM",
-                    description="Case Management",
-                    code="cm",
-                    intervention_category_id=category.id,
-                    created_by=category.created_by,
-                )
-                cm_intervention.save()
-
-                for intervention in interventions:
-                    assignments = InterventionAssignment.objects.filter(intervention_id=intervention.id)
-                    assignments.delete()
-                    intervention.delete()
-
     def set_intervention_codes(apps, schema_editor):
         intervention_name_to_code = {
             "RTS,S": "vacc",
@@ -81,7 +50,8 @@ class Migration(migrations.Migration):
             "LLIN Routine": "itn_routine",
             "IRS": "irs",
             "MDA": "",
-            "CM": "cm",
+            "RDTs": "cm",
+            "ACTs": "cm",
         }
 
         Intervention = apps.get_model("snt_malaria", "Intervention")
@@ -93,7 +63,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(set_intervention_names),
-        migrations.RunPython(merge_cm_interventions),
         migrations.RunPython(set_intervention_codes),
         migrations.RunPython(add_lsm_intervention),
     ]

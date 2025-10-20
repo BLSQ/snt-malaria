@@ -41,7 +41,8 @@ CATEGORIES_AND_INTERVENTIONS = {
     },
     "Case Management": {
         "interventions": [
-            {"name": "CM", "description": "Case Management", "code": "cm"},
+            {"name": "RDTs", "description": "Rapid Diagnostic Tests", "code": "cm"},
+            {"name": "ACTs", "description": "Artemisin-based Combination Therapy", "code": "cm"},
         ]
     },
 }
