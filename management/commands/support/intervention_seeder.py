@@ -76,6 +76,7 @@ class InterventionSeeder:
                 _intervention, created = Intervention.objects.get_or_create(
                     name=intervention_data["name"],
                     intervention_category=category,
+                    code=intervention_data["code"],
                     defaults={
                         "description": intervention_data["description"],
                         "created_by": created_by,

@@ -31,8 +31,6 @@ class InterventionAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "intervention_category",
-        "unit_cost",
-        "unit_type",
         "created_by",
         "created_at",
         "updated_at",
@@ -81,7 +79,7 @@ class InterventionCostBreakdownLineAdmin(admin.ModelAdmin):
 
 @admin.register(Budget)
 class BudgetAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "cost_input", "result", "updated_at")
+    list_display = ("id", "name", "cost_input", "results", "updated_at")
     search_fields = ("id", "name")
     list_filter = ("id", "name")
     ordering = ("id", "name", "updated_at")

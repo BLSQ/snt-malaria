@@ -40,16 +40,19 @@ class ScenarioAPITestCase(APITestCase):
             name="RTS,S",
             created_by=cls.user,
             intervention_category=cls.int_category_vaccination,
+            code="rts_s",
         )
         cls.intervention_chemo_smc = Intervention.objects.create(
             name="SMC",
             created_by=cls.user,
             intervention_category=cls.int_category_chemoprevention,
+            code="smc",
         )
         cls.intervention_chemo_iptp = Intervention.objects.create(
             name="IPTp",
             created_by=cls.user,
             intervention_category=cls.int_category_chemoprevention,
+            code="iptp",
         )
 
         # Create Org Units

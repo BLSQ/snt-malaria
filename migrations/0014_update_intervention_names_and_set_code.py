@@ -5,7 +5,7 @@ from django.db import migrations, transaction
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("snt_malaria", "0013_intervention_code_budgetsettings_budget"),
+        ("snt_malaria", "0013_alter_intervention_unique_together_intervention_code_and_more"),
     ]
 
     def add_lsm_intervention(apps, schema_editor):

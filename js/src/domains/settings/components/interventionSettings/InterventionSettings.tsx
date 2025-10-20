@@ -4,7 +4,6 @@ import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionCategories } from '../../../planning/hooks/useGetInterventionCategories';
 import { Intervention } from '../../../planning/types/interventions';
-import { useGetInterventionUnitTypes } from '../../hooks/useGetInterventionUnitType';
 import { useUpdateInterventionCostBreakdownLines } from '../../hooks/useUpdateInterventionCostBreakdownLines';
 import { MESSAGES } from '../../messages';
 import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreakdownLine';
@@ -29,25 +28,26 @@ export const InterventionSettings: React.FC = () => {
         isFetching: isLoadingCategories = true,
     } = useGetInterventionCategories();
 
-    const { data: interventionUnitTypes } = useGetInterventionUnitTypes();
-
     const { mutateAsync: updateInterventionCosts } =
         useUpdateInterventionCostBreakdownLines();
 
     const onUpdateIntervention = useCallback(
-        (
-            intervention: Intervention,
-            costs: InterventionCostBreakdownLine[],
-        ) => {
+        (costs: InterventionCostBreakdownLine[]) => {
+            if (!selectedIntervention) return;
+
             updateInterventionCosts({
-                intervention: intervention,
+                interventionId: selectedIntervention.id,
                 costs,
             }).then(() => {
                 setInterventionCostDrawerOpen(false);
                 setSelectedIntervention(null);
             });
         },
-        [setInterventionCostDrawerOpen, updateInterventionCosts],
+        [
+            setInterventionCostDrawerOpen,
+            updateInterventionCosts,
+            selectedIntervention,
+        ],
     );
 
     const onEditInterventionCost = useCallback(
@@ -98,7 +98,6 @@ export const InterventionSettings: React.FC = () => {
                 open={interventionCostDrawerOpen}
                 onClose={() => setInterventionCostDrawerOpen(false)}
                 intervention={selectedIntervention}
-                interventionUnitTypes={interventionUnitTypes}
                 onConfirm={onUpdateIntervention}
             />
         </>

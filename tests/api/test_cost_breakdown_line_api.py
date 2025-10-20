@@ -25,16 +25,19 @@ class InterventionCostBreakdownLineAPITests(APITestCase):
             name="RTS,S",
             created_by=cls.user,
             intervention_category=cls.int_category_vaccination,
+            code="rts_s",
         )
         cls.intervention_chemo_smc = Intervention.objects.create(
             name="SMC",
             created_by=cls.user,
             intervention_category=cls.int_category_chemoprevention,
+            code="smc",
         )
         cls.intervention_chemo_iptp = Intervention.objects.create(
             name="IPTp",
             created_by=cls.user,
             intervention_category=cls.int_category_chemoprevention,
+            code="iptp",
         )
         cls.cost_line1 = InterventionCostBreakdownLine.objects.create(
             name="Cost Line 1",
@@ -42,6 +45,7 @@ class InterventionCostBreakdownLineAPITests(APITestCase):
             unit_cost=10,
             category="Procurement",
             created_by=cls.user,
+            year=2025,
         )
         cls.cost_line2 = InterventionCostBreakdownLine.objects.create(
             name="Cost Line 2",
@@ -49,6 +53,7 @@ class InterventionCostBreakdownLineAPITests(APITestCase):
             unit_cost=5,
             category="Procurement",
             created_by=cls.user,
+            year=2025,
         )
 
     def test_list_cost_breakdown_lines_authenticated(self):
@@ -63,7 +68,9 @@ class InterventionCostBreakdownLineAPITests(APITestCase):
         url = reverse("intervention_cost_breakdown_lines-list")
         data = {
             "intervention": self.intervention_chemo_iptp.id,
-            "costs": [{"unit_cost": 15, "name": "Cost Line X", "category": "Procurement"}],
+            "costs": [
+                {"unit_cost": 15, "unit_type": "OTHER", "name": "Cost Line X", "category": "Procurement", "year": 2025}
+            ],
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -79,7 +86,9 @@ class InterventionCostBreakdownLineAPITests(APITestCase):
         url = reverse("intervention_cost_breakdown_lines-list")
         data = {
             "intervention": self.intervention_chemo_iptp.id,
-            "costs": [{"unit_cost": 15, "name": "Cost Line X", "category": "Procurement"}],
+            "costs": [
+                {"unit_cost": 15, "unit_type": "OTHER", "name": "Cost Line X", "category": "Procurement", "year": 2025}
+            ],
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

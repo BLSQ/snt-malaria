@@ -26,22 +26,26 @@ class InterventionCostBreakdownLineSerializerTests(APITestCase):
             name="RTS,S",
             created_by=cls.user,
             intervention_category=cls.int_category_vaccination,
+            code="rts_s",
         )
         cls.intervention_chemo_smc = Intervention.objects.create(
             name="SMC",
             created_by=cls.user,
             intervention_category=cls.int_category_chemoprevention,
+            code="smc",
         )
         cls.intervention_chemo_iptp = Intervention.objects.create(
             name="IPTp",
             created_by=cls.user,
             intervention_category=cls.int_category_chemoprevention,
+            code="iptp",
         )
         cls.cost_line1 = InterventionCostBreakdownLine.objects.create(
             name="Cost Line 1",
             intervention=cls.intervention_vaccination_rts,
             unit_cost=10,
             category="Procurement",
+            year=2025,
             created_by=cls.user,
         )
         cls.cost_line2 = InterventionCostBreakdownLine.objects.create(
@@ -49,12 +53,13 @@ class InterventionCostBreakdownLineSerializerTests(APITestCase):
             intervention=cls.intervention_chemo_smc,
             unit_cost=5,
             category="Procurement",
+            year=2025,
             created_by=cls.user,
         )
 
     def test_create_cost_breakdown_line_missing_intervention(self):
         data = {
-            "costs": [{"unit_cost": 15, "unit_type": "doses", "category": "Procurement"}],
+            "costs": [{"category": "Procurement"}],
         }
         serializer = InterventionCostBreakdownLinesWriteSerializer(data=data)
         self.assertFalse(serializer.is_valid())
