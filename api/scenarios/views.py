@@ -1,7 +1,4 @@
 from datetime import datetime
-from pathlib import Path
-
-import pandas as pd
 
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
@@ -11,16 +8,10 @@ from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from snt_malaria_budgeting import (
-    DEFAULT_COST_ASSUMPTIONS,
-    InterventionDetailModel,
-    get_budget,
-)
 
-from plugins.snt_malaria.api.budgeting.utils import build_population_dataframe
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 
-from .serializers import CalculateBudgetSerializer, DuplicateScenarioSerializer, ScenarioSerializer
+from .serializers import DuplicateScenarioSerializer, ScenarioSerializer
 
 
 class ScenarioViewSet(viewsets.ModelViewSet):
@@ -89,70 +80,3 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             assignment.save()
         serializer = self.get_serializer(scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    # TODO: Move to POST /budgets
-    @action(detail=True, methods=["post"], url_path="calculate_budget")
-    def calculate_budget(self, request, pk=None):
-        serializer = CalculateBudgetSerializer(data=request.data, context={"request": request})
-        serializer.is_valid(raise_exception=True)
-        scenario = serializer.validated_data["scenario"]
-
-        # TODO: Years should come from the frontend
-        start_year = 2025
-        end_year = 2027
-
-        pd.set_option("display.max_columns", None)
-        # TODO: For now load cost data from CSV, replace with CostSettings
-        cost_csv_path = Path(__file__).parent.parent.parent / "cost.csv"
-        cost_df = pd.read_csv(cost_csv_path)
-        # print(cost_df.head())
-
-        # Build population data from MetricType
-        population_df = build_population_dataframe(self.request.user.iaso_profile.account)
-        # print(population_df.head())
-
-        # Format the interventions to fit the requirement of the budgeting library.
-        # e.g.
-        # interventions = [
-        #     {"name": "smc", "type": "SP+AQ", "places": [1, 2, 3]}, # list of org_unit_id
-        #     {"name": "vacc", "type": "R21", "places": [1, 2, 3, 4, 5]},
-        #     {"name": "iptp", "type": "SP", "places": [3, 4, 5]},
-        # ]
-        interventions_dict = {}
-        assignments = scenario.intervention_assignments.select_related("intervention", "org_unit").all()
-
-        for assignment in assignments:
-            intervention_code = assignment.intervention.name.lower()
-            org_unit_id = assignment.org_unit.id
-
-            # Group by intervention name and type
-            if intervention_code not in interventions_dict:
-                interventions_dict[intervention_code] = {"name": intervention_code, "type": "SP+AQ", "places": []}
-            interventions_dict[intervention_code]["places"].append(org_unit_id)
-
-        interventions = list(interventions_dict.values())
-        print("interventions", interventions)
-        interventions_input = [InterventionDetailModel(**i) for i in interventions]
-
-        budgets = []
-
-        print("cost_df", cost_df)
-        print("population_df", population_df)
-
-        for year in range(start_year, end_year + 1):
-            print(f"Fetching budget for year: {year}")
-            budgets.append(
-                get_budget(
-                    year=year,
-                    spatial_planning_unit="org_unit_id",
-                    interventions_input=interventions_input,
-                    settings=DEFAULT_COST_ASSUMPTIONS,
-                    cost_df=cost_df,
-                    population_df=population_df,
-                    cost_overrides=[],  # optional
-                )
-            )
-
-        # print(budgets)
-
-        return Response(budgets, status=status.HTTP_200_OK)
