@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.urls import reverse
 from rest_framework import status
 
@@ -55,26 +57,50 @@ class InterventionCostBreakdownLineAPITests(APITestCase):
             created_by=cls.user,
             year=2025,
         )
+        cls.cost_line2 = InterventionCostBreakdownLine.objects.create(
+            name="Cost Line 2",
+            intervention=cls.intervention_chemo_smc,
+            unit_cost=5.55,
+            category="Supportive",
+            created_by=cls.user,
+            year=2025,
+        )
+        cls.cost_line2 = InterventionCostBreakdownLine.objects.create(
+            name="Cost Line 2",
+            intervention=cls.intervention_chemo_smc,
+            unit_cost=5.55,
+            category="Supportive",
+            created_by=cls.user,
+            year=2026,
+        )
 
-    def test_list_cost_breakdown_lines_authenticated(self):
+    def test_list_cost_breakdown_lines_authenticated_no_year_filter(self):
         self.client.force_authenticate(user=self.user)
         url = reverse("intervention_cost_breakdown_lines-list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 4)
+
+    def test_list_cost_breakdown_lines_authenticated_with_year_filter(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse("intervention_cost_breakdown_lines-list")
+        response = self.client.get(url, {"year": 2025})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
 
     def test_create_cost_breakdown_line_authenticated(self):
         self.client.force_authenticate(user=self.user)
         url = reverse("intervention_cost_breakdown_lines-list")
         data = {
             "intervention": self.intervention_chemo_iptp.id,
+            "year": 2025,
             "costs": [
                 {"unit_cost": 15, "unit_type": "OTHER", "name": "Cost Line X", "category": "Procurement", "year": 2025}
             ],
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 5)
         self.assertEqual(InterventionCostBreakdownLine.objects.get(name="Cost Line X").unit_cost, 15)
 
     def test_list_cost_breakdown_lines_unauthenticated(self):
@@ -92,4 +118,24 @@ class InterventionCostBreakdownLineAPITests(APITestCase):
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 2)
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 4)
+
+    def test_get_sum_by_intervention(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse("intervention_cost_breakdown_lines-get-sum-by-intervention")
+        response = self.client.get(url, {"year": 2025})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        expected_data = [
+            {
+                "intervention": self.intervention_chemo_smc.id,
+                "intervention__name": self.intervention_chemo_smc.name,
+                "total_cost": Decimal("10.55"),
+            },
+            {
+                "intervention": self.intervention_vaccination_rts.id,
+                "intervention__name": self.intervention_vaccination_rts.name,
+                "total_cost": Decimal("10.00"),
+            },
+        ]
+        self.assertCountEqual(response.data, expected_data)
