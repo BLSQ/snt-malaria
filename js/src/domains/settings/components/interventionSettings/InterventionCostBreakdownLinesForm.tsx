@@ -174,6 +174,7 @@ export const InterventionCostBreakdownLineForm: FC<RowProps> = ({
                     wrapperSx={{ width: '95px' }}
                     value={costBreakdownLine.unit_cost}
                     errors={getErrors('unit_cost')}
+                    numberInputOptions={{ decimalScale: 2 }}
                 />
             </Box>
 
