@@ -3,6 +3,7 @@ Create interventions for a given account
 """
 
 from iaso.models import User
+from plugins.snt_malaria.models.budget_settings import BudgetSettings
 from plugins.snt_malaria.models.cost_breakdown import (
     InterventionCostBreakdownLine,
     InterventionCostUnitType,
@@ -358,6 +359,9 @@ class InterventionSeeder:
         self.stdout_write(f"Creating interventions for account {self.account.name}:")
         created_by = User.objects.filter(iaso_profile__account=self.account).first()
 
+        # Create budget settings if they don't exist
+        self._create_budget_settings()
+
         for category_name, data in CATEGORIES_AND_INTERVENTIONS.items():
             category, created = InterventionCategory.objects.get_or_create(
                 name=category_name,
@@ -388,6 +392,17 @@ class InterventionSeeder:
                         self._create_cost_breakdown_lines(intervention, cost_settings, created_by)
 
         self.stdout_write("Done.")
+
+    def _create_budget_settings(self):
+        """Create budget settings for the account if they don't exist."""
+        if not BudgetSettings.objects.filter(account=self.account).exists():
+            BudgetSettings.objects.create(
+                account=self.account,
+                local_currency="USD",  # Default to USD, can be changed per account
+                exchange_rate=1.0,  # 1:1 exchange rate with USD as default
+                inflation_rate=0.03,  # 3% inflation rate as default
+            )
+            self.stdout_write("Created budget settings")
 
     def _create_cost_breakdown_lines(self, intervention, cost_settings, created_by):
         """Create cost breakdown lines for a given intervention."""
