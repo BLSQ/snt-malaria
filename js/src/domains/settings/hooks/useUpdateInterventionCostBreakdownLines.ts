@@ -32,6 +32,9 @@ export const useUpdateInterventionCostBreakdownLines =
                     queryClient.invalidateQueries(
                         `interventionCostBreakdownLines_${variables.interventionId}_${variables.year}`,
                     );
+                    queryClient.invalidateQueries(
+                        `interventionTotalCosts_${variables.year}`,
+                    );
                     queryClient.invalidateQueries('interventionCategories');
                 },
             },

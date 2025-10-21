@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import models, transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -81,6 +81,30 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
             {"message": "intervention costs created successfully."},
             status=status.HTTP_201_CREATED,
         )
+
+    @action(
+        detail=False,
+        methods=["get"],
+    )
+    def get_sum_by_intervention(self, request):
+        year = request.query_params.get("year")
+        if not year:
+            return Response(
+                {"error": "year query parameter is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        total_cost = list(
+            InterventionCostBreakdownLine.objects.filter(
+                year=year,
+                intervention__intervention_category__account=request.user.iaso_profile.account,
+            )
+            .values("intervention", "intervention__name")
+            .annotate(total_cost=models.Sum("unit_cost"))
+            .order_by("intervention__name")
+        )
+
+        return Response(total_cost, status=status.HTTP_200_OK)
 
     @action(
         detail=False,

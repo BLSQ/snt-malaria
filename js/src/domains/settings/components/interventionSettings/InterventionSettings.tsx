@@ -10,6 +10,7 @@ import { MESSAGES } from '../../messages';
 import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreakdownLine';
 import { InterventionCostDrawer } from './InterventionCostDrawer';
 import { InterventionRow } from './InterventionRow';
+import { useGetInterventionTotalCosts } from '../../hooks/useGetInterventionTotalCosts';
 
 const styles: SxStyles = {
     subtitle: { marginBottom: 0.5, fontWeight: 'bold' },
@@ -42,6 +43,9 @@ export const InterventionSettings: React.FC = () => {
         data: interventionCategories = [],
         isFetching: isLoadingCategories = true,
     } = useGetInterventionCategories();
+
+    const { data: interventionTotalCosts, isFetching: isLoadingTotalCosts } =
+        useGetInterventionTotalCosts(activeYear);
 
     const { mutateAsync: updateInterventionCosts } =
         useUpdateInterventionCostBreakdownLines();
@@ -126,6 +130,11 @@ export const InterventionSettings: React.FC = () => {
                                             <InterventionRow
                                                 key={intervention.id}
                                                 intervention={intervention}
+                                                total_cost={
+                                                    interventionTotalCosts?.[
+                                                        intervention.id
+                                                    ]
+                                                }
                                                 onEditInterventionCost={
                                                     onEditInterventionCost
                                                 }
