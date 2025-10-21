@@ -32,9 +32,9 @@ class BudgetViewSet(viewsets.ModelViewSet):
             return BudgetCreateSerializer
         return BudgetSerializer
 
-    def perform_create(self, serializer):
-        # serializer = CalculateBudgetSerializer(data=request.data, context={"request": request})
-        # serializer.is_valid(raise_exception=True)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         scenario = serializer.validated_data["scenario"]
 
         # TODO: Years should come from the frontend
@@ -45,11 +45,9 @@ class BudgetViewSet(viewsets.ModelViewSet):
         # TODO: For now load cost data from CSV, replace with CostSettings
         cost_csv_path = Path(__file__).parent.parent.parent / "cost.csv"
         cost_df = pd.read_csv(cost_csv_path)
-        # print(cost_df.head())
 
         # Build population data from MetricType
-        population_df = build_population_dataframe(self.request.user.iaso_profile.account)
-        # print(population_df.head())
+        population_df = build_population_dataframe(request.user.iaso_profile.account)
 
         # Format the interventions to fit the requirement of the budgeting library.
         # e.g.
@@ -78,6 +76,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
 
         print("cost_df", cost_df)
         print("population_df", population_df)
+        settings = DEFAULT_COST_ASSUMPTIONS
 
         for year in range(start_year, end_year + 1):
             print(f"Fetching budget for year: {year}")
@@ -86,7 +85,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
                     year=year,
                     spatial_planning_unit="org_unit_id",
                     interventions_input=interventions_input,
-                    settings=DEFAULT_COST_ASSUMPTIONS,
+                    settings=settings,
                     cost_df=cost_df,
                     population_df=population_df,
                     cost_overrides=[],  # optional
@@ -94,6 +93,16 @@ class BudgetViewSet(viewsets.ModelViewSet):
                 )
             )
 
-        # print(budgets)
+        budget = Budget.objects.create(
+            scenario=scenario,
+            name=f"Budget for {scenario.name}",
+            cost_input={},
+            assumptions=settings,
+            results=budgets,
+            created_by=request.user,
+            updated_by=request.user,
+        )
 
-        return Response(budgets, status=status.HTTP_200_OK)
+        # Return the created budget using the display serializer
+        output_serializer = BudgetSerializer(budget)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)

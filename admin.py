@@ -79,15 +79,14 @@ class InterventionCostBreakdownLineAdmin(admin.ModelAdmin):
 
 @admin.register(Budget)
 class BudgetAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "cost_input", "results", "updated_at")
+    list_display = ("id", "scenario", "name", "cost_input", "assumptions", "updated_at")
     search_fields = ("id", "name")
-    list_filter = ("id", "name")
+    list_filter = ("scenario",)
     ordering = ("id", "name", "updated_at")
 
 
 @admin.register(BudgetSettings)
 class BudgetSettingsAdmin(admin.ModelAdmin):
-    list_display = ("id", "local_currency", "exchange_rate", "inflation_rate")
+    list_display = ("id", "account", "local_currency", "exchange_rate", "inflation_rate")
     search_fields = ("id", "local_currency")
-    list_filter = ("id", "local_currency")
     ordering = ("id", "local_currency")
