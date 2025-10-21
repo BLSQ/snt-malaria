@@ -36,7 +36,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
         scenario = serializer.validated_data["scenario"]
 
         # TODO: Years should come from the frontend
-        start_year = 2025
+        start_year = 2024
         end_year = 2027
 
         pd.set_option("display.max_columns", None)
@@ -58,12 +58,17 @@ class BudgetViewSet(viewsets.ModelViewSet):
         assignments = scenario.intervention_assignments.select_related("intervention", "org_unit").all()
 
         for assignment in assignments:
-            intervention_code = assignment.intervention.name.lower()
+            intervention_code = assignment.intervention.code
+            intervention_type = assignment.intervention.name
             org_unit_id = assignment.org_unit.id
 
             # Group by intervention name and type
             if intervention_code not in interventions_dict:
-                interventions_dict[intervention_code] = {"name": intervention_code, "type": "SP+AQ", "places": []}
+                interventions_dict[intervention_code] = {
+                    "name": intervention_code,
+                    "type": intervention_type,
+                    "places": [],
+                }
             interventions_dict[intervention_code]["places"].append(org_unit_id)
 
         interventions = list(interventions_dict.values())
