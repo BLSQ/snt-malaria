@@ -3,13 +3,16 @@ import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
 import { DropdownOptions } from 'Iaso/types/utils';
 
-export const useGetInterventionUnitTypes = (): UseQueryResult<
+export const useGetInterventionCostUnitTypes = (): UseQueryResult<
     DropdownOptions<string>[],
     Error
 > => {
     return useSnackQuery({
-        queryKey: ['interventionUnitType'],
-        queryFn: () => getRequest('/api/snt_malaria/interventions/unit_types/'),
+        queryKey: ['interventionCostUnitType'],
+        queryFn: () =>
+            getRequest(
+                '/api/snt_malaria/intervention_cost_breakdown_lines/unit_types/',
+            ),
         options: {
             staleTime: 1000 * 60 * 15, // in MS
             cacheTime: 1000 * 60 * 5,

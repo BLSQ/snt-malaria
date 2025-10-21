@@ -37,10 +37,11 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
 
         # Get validated objects
         intervention = serializer.validated_data["intervention"]
+        year = serializer.validated_data["year"]
         costs = serializer.validated_data["costs"]
         # Create InterventionAssignment objects
         with transaction.atomic():
-            existing_costs = InterventionCostBreakdownLine.objects.filter(intervention=intervention)
+            existing_costs = InterventionCostBreakdownLine.objects.filter(intervention=intervention, year=year)
             costs_with_id = {}
             costs_without_id = []
             for cost in costs:

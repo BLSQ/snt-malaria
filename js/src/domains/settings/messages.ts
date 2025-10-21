@@ -65,4 +65,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.errors.negativeValueNotAllowed',
         defaultMessage: 'Negative value not allowed',
     },
+    selectYear: {
+        id: 'iaso.snt_malaria.settings.intervention.selectYear',
+        defaultMessage: 'Select Year',
+    },
 });

@@ -7,6 +7,7 @@ export const useUpdateInterventionCostBreakdownLines = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: {
             interventionId: number;
+            year: number;
             costs: InterventionCostBreakdownLine[];
         }) => {
             return Promise.all([
@@ -14,6 +15,7 @@ export const useUpdateInterventionCostBreakdownLines = (): UseMutationResult =>
                     `/api/snt_malaria/intervention_cost_breakdown_lines/`,
                     {
                         intervention: body.interventionId,
+                        year: body.year,
                         costs: body.costs,
                     },
                 ),
