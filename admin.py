@@ -71,9 +71,9 @@ class ScenarioAdmin(admin.ModelAdmin):
 
 @admin.register(InterventionCostBreakdownLine)
 class InterventionCostBreakdownLineAdmin(admin.ModelAdmin):
-    list_display = ("name", "id", "unit_cost", "intervention", "created_by", "created_at")
-    search_fields = ("name", "id")
-    list_filter = ("name", "id")
+    list_display = ("id", "intervention", "name", "unit_cost", "created_at")
+    search_fields = ("intervention",)
+    list_filter = ("intervention",)
     ordering = ("id", "name")
 
 

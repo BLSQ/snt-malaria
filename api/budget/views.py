@@ -38,28 +38,21 @@ class BudgetViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         scenario = serializer.validated_data["scenario"]
 
-        # TODO: Years should come from the frontend
+        # TODO: Years should come from the frontend?
         start_year = 2024
         end_year = 2027
 
         pd.set_option("display.max_columns", None)
 
-        # Build cost data from Intervention, InterventionCostBreakdownLine and
-        # BudgetSettings database models
+        # Build cost and population dataframes and format the intervention plan
         cost_df = build_cost_dataframe(request.user.iaso_profile.account)
-
-        # Build population data from MetricType and MetricValue
         population_df = build_population_dataframe(request.user.iaso_profile.account)
-
-        # Format intervention plan to fit get_budget input format
         interventions_input = build_interventions_input(scenario)
 
-        budgets = []
-
-        print("cost_df", cost_df)
-        print("population_df", population_df)
+        # For now, assume the default coverage etc.
         settings = DEFAULT_COST_ASSUMPTIONS
 
+        budgets = []
         for year in range(start_year, end_year + 1):
             print(f"Fetching budget for year: {year}")
             budgets.append(
