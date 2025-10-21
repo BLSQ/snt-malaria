@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pandas as pd
 
 from rest_framework import status, viewsets
@@ -12,7 +10,7 @@ from snt_malaria_budgeting import (
 
 from plugins.snt_malaria.api.budget.filters import BudgetListFilter
 from plugins.snt_malaria.api.budget.serializers import BudgetCreateSerializer, BudgetSerializer
-from plugins.snt_malaria.api.budgeting.utils import build_population_dataframe
+from plugins.snt_malaria.api.budgeting.utils import build_cost_dataframe, build_population_dataframe
 from plugins.snt_malaria.models.budget import Budget
 
 
@@ -42,9 +40,9 @@ class BudgetViewSet(viewsets.ModelViewSet):
         end_year = 2027
 
         pd.set_option("display.max_columns", None)
-        # TODO: For now load cost data from CSV, replace with CostSettings
-        cost_csv_path = Path(__file__).parent.parent.parent / "cost.csv"
-        cost_df = pd.read_csv(cost_csv_path)
+
+        # Build cost data from database models
+        cost_df = build_cost_dataframe(request.user.iaso_profile.account)
 
         # Build population data from MetricType
         population_df = build_population_dataframe(request.user.iaso_profile.account)

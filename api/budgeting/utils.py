@@ -2,6 +2,7 @@ import pandas as pd
 from rest_framework.exceptions import ValidationError
 
 from iaso.models import MetricType, MetricValue
+from plugins.snt_malaria.models import BudgetSettings, Intervention, InterventionCostBreakdownLine
 
 
 # This is Work in Progress
@@ -71,5 +72,103 @@ def build_population_dataframe(account):
 
     # Drop the original value column
     df = df.drop(columns=["value"])
+
+    return df
+
+
+def build_cost_dataframe(account):
+    """
+    Build a cost dataframe from InterventionCostBreakdownLine, Intervention, and BudgetSettings models.
+
+    Returns a DataFrame with columns matching the cost.csv structure:
+    - code_intervention: Intervention code
+    - type_intervention: Intervention name
+    - cost_class: Cost breakdown line category
+    - cost_class_other: (empty)
+    - description: Intervention description
+    - unit: Unit type
+    - local_currency_cost: (empty)
+    - exchange_rate: From BudgetSettings
+    - usd_cost: Unit cost
+    - cost_year_for_analysis: Year
+    - original_unit_cost: (empty)
+    - original_unit_cost_year: (empty)
+    - inflation_factor: From BudgetSettings
+    - notes: (empty)
+    - source: (empty)
+    """
+    try:
+        budget_settings = BudgetSettings.objects.get(account=account)
+    except BudgetSettings.DoesNotExist:
+        raise ValidationError("BudgetSettings does not exist for this account")
+
+    # Query all cost breakdown lines with related interventions
+    cost_lines = (
+        InterventionCostBreakdownLine.objects.filter(
+            intervention__intervention_category__account=account
+        )
+        .select_related("intervention", "intervention__intervention_category")
+        .values(
+            "intervention__code",
+            "intervention__name",
+            "category",
+            "intervention__description",
+            "unit_type",
+            "unit_cost",
+            "year",
+        )
+    )
+
+    if not cost_lines:
+        raise ValidationError("No cost breakdown lines found for this account")
+
+    # Convert to DataFrame
+    df = pd.DataFrame(list(cost_lines))
+
+    # Rename columns to match CSV structure
+    df = df.rename(
+        columns={
+            "intervention__code": "code_intervention",
+            "intervention__name": "type_intervention",
+            "category": "cost_class",
+            "intervention__description": "description",
+            "unit_type": "unit",
+            "unit_cost": "usd_cost",
+            "year": "cost_year_for_analysis",
+        }
+    )
+
+    # Add BudgetSettings fields
+    df["exchange_rate"] = budget_settings.exchange_rate
+    df["inflation_factor"] = budget_settings.inflation_rate
+
+    # Add empty columns for fields that are not mapped
+    df["cost_class_other"] = ""
+    df["local_currency_cost"] = ""
+    df["original_unit_cost"] = ""
+    df["original_unit_cost_year"] = ""
+    df["notes"] = ""
+    df["source"] = ""
+
+    # Reorder columns to match CSV structure
+    column_order = [
+        "code_intervention",
+        "type_intervention",
+        "cost_class",
+        "cost_class_other",
+        "description",
+        "unit",
+        "local_currency_cost",
+        "exchange_rate",
+        "usd_cost",
+        "cost_year_for_analysis",
+        "original_unit_cost",
+        "original_unit_cost_year",
+        "inflation_factor",
+        "notes",
+        "source",
+    ]
+
+    df = df[column_order]
 
     return df
