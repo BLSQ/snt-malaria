@@ -1,8 +1,10 @@
 import pandas as pd
+
 from rest_framework.exceptions import ValidationError
+from snt_malaria_budgeting import InterventionDetailModel
 
 from iaso.models import MetricType, MetricValue
-from plugins.snt_malaria.models import BudgetSettings, Intervention, InterventionCostBreakdownLine
+from plugins.snt_malaria.models import BudgetSettings, InterventionCostBreakdownLine
 
 
 # This is Work in Progress
@@ -104,9 +106,7 @@ def build_cost_dataframe(account):
 
     # Query all cost breakdown lines with related interventions
     cost_lines = (
-        InterventionCostBreakdownLine.objects.filter(
-            intervention__intervention_category__account=account
-        )
+        InterventionCostBreakdownLine.objects.filter(intervention__intervention_category__account=account)
         .select_related("intervention", "intervention__intervention_category")
         .values(
             "intervention__code",
@@ -172,3 +172,36 @@ def build_cost_dataframe(account):
     df = df[column_order]
 
     return df
+
+
+def build_interventions_input(scenario):
+    """
+    Format the interventions to fit the requirement of the budgeting library.
+    e.g.
+    interventions = [
+        {"name": "smc", "type": "SP+AQ", "places": [1, 2, 3]}, # list of org_unit_id
+        {"name": "vacc", "type": "R21", "places": [1, 2, 3, 4, 5]},
+        {"name": "iptp", "type": "SP", "places": [3, 4, 5]},
+    ]
+    """
+    interventions_dict = {}
+    assignments = scenario.intervention_assignments.select_related("intervention", "org_unit").all()
+
+    for assignment in assignments:
+        intervention_code = assignment.intervention.code
+        intervention_type = assignment.intervention.name
+        org_unit_id = assignment.org_unit.id
+
+        # Group by intervention name and type
+        if intervention_code not in interventions_dict:
+            interventions_dict[intervention_code] = {
+                "name": intervention_code,
+                "type": intervention_type,
+                "places": [],
+            }
+        interventions_dict[intervention_code]["places"].append(org_unit_id)
+
+    interventions = list(interventions_dict.values())
+    print("interventions", interventions)
+
+    return [InterventionDetailModel(**i) for i in interventions]

@@ -4,13 +4,16 @@ from rest_framework import status, viewsets
 from rest_framework.response import Response
 from snt_malaria_budgeting import (
     DEFAULT_COST_ASSUMPTIONS,
-    InterventionDetailModel,
     get_budget,
 )
 
 from plugins.snt_malaria.api.budget.filters import BudgetListFilter
 from plugins.snt_malaria.api.budget.serializers import BudgetCreateSerializer, BudgetSerializer
-from plugins.snt_malaria.api.budget.utils import build_cost_dataframe, build_population_dataframe
+from plugins.snt_malaria.api.budget.utils import (
+    build_cost_dataframe,
+    build_interventions_input,
+    build_population_dataframe,
+)
 from plugins.snt_malaria.models.budget import Budget
 
 
@@ -41,39 +44,15 @@ class BudgetViewSet(viewsets.ModelViewSet):
 
         pd.set_option("display.max_columns", None)
 
-        # Build cost data from database models
+        # Build cost data from Intervention, InterventionCostBreakdownLine and
+        # BudgetSettings database models
         cost_df = build_cost_dataframe(request.user.iaso_profile.account)
 
-        # Build population data from MetricType
+        # Build population data from MetricType and MetricValue
         population_df = build_population_dataframe(request.user.iaso_profile.account)
 
-        # Format the interventions to fit the requirement of the budgeting library.
-        # e.g.
-        # interventions = [
-        #     {"name": "smc", "type": "SP+AQ", "places": [1, 2, 3]}, # list of org_unit_id
-        #     {"name": "vacc", "type": "R21", "places": [1, 2, 3, 4, 5]},
-        #     {"name": "iptp", "type": "SP", "places": [3, 4, 5]},
-        # ]
-        interventions_dict = {}
-        assignments = scenario.intervention_assignments.select_related("intervention", "org_unit").all()
-
-        for assignment in assignments:
-            intervention_code = assignment.intervention.code
-            intervention_type = assignment.intervention.name
-            org_unit_id = assignment.org_unit.id
-
-            # Group by intervention name and type
-            if intervention_code not in interventions_dict:
-                interventions_dict[intervention_code] = {
-                    "name": intervention_code,
-                    "type": intervention_type,
-                    "places": [],
-                }
-            interventions_dict[intervention_code]["places"].append(org_unit_id)
-
-        interventions = list(interventions_dict.values())
-        print("interventions", interventions)
-        interventions_input = [InterventionDetailModel(**i) for i in interventions]
+        # Format intervention plan to fit get_budget input format
+        interventions_input = build_interventions_input(scenario)
 
         budgets = []
 
