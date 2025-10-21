@@ -2,7 +2,6 @@ import React, { useCallback } from 'react';
 import { Drawer } from '@mui/material';
 import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import { DropdownOptions } from 'Iaso/types/utils';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
 import { Intervention } from '../../../planning/types/interventions';
 import { useGetInterventionCostBreakdownLines } from '../../hooks/useGetInterventionCostBreakdownLines';
@@ -13,11 +12,7 @@ type Props = {
     onClose: () => void;
     open: boolean;
     intervention: Intervention | null;
-    interventionUnitTypes?: DropdownOptions<string>[];
-    onConfirm: (
-        intervention: Intervention,
-        costs: InterventionCostBreakdownLine[],
-    ) => void;
+    onConfirm: (costs: InterventionCostBreakdownLine[]) => void;
 };
 
 const styles: SxStyles = {
@@ -35,7 +30,6 @@ export const InterventionCostDrawer: React.FC<Props> = ({
     onClose,
     open,
     intervention,
-    interventionUnitTypes,
     onConfirm,
 }) => {
     const { data: cost_breakdown_lines, isFetching: isFetchingCosts } =
@@ -43,16 +37,9 @@ export const InterventionCostDrawer: React.FC<Props> = ({
 
     const handleFormConfirm = useCallback(
         costConfig => {
-            onConfirm(
-                {
-                    ...intervention,
-                    unit_cost: costConfig.unit_cost,
-                    unit_type: costConfig.unit_type,
-                } as Intervention,
-                costConfig.cost_breakdown_lines,
-            );
+            onConfirm(costConfig.cost_breakdown_lines);
         },
-        [onConfirm, intervention],
+        [onConfirm],
     );
 
     return (
@@ -71,7 +58,6 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                     <LoadingSpinner absolute={true} />
                 ) : (
                     <InterventionCostForm
-                        interventionUnitTypes={interventionUnitTypes}
                         defaultValues={{
                             unit_type: intervention?.unit_type,
                             unit_cost: intervention?.unit_cost ?? undefined,

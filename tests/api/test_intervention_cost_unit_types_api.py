@@ -4,7 +4,7 @@ from iaso.models.base import Account
 from iaso.test import APITestCase
 
 
-BASE_URL = "/api/snt_malaria/interventions/unit_types/"
+BASE_URL = "/api/snt_malaria/intervention_cost_breakdown_lines/unit_types/"
 
 
 class InterventionCostBreakdownLineCategoriesAPITestCase(APITestCase):

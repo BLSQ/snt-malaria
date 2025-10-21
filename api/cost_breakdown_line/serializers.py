@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from iaso.api.common import DropdownOptionsSerializer
-from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
+from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine, InterventionCostUnitType
 
 
 class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
@@ -11,10 +11,15 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
     )
 
     unit_cost = serializers.DecimalField(max_digits=19, decimal_places=2, required=True, min_value=0)
+    unit_type_label = serializers.SerializerMethodField()
 
     class Meta:
         model = InterventionCostBreakdownLine
-        fields = ["id", "name", "unit_cost", "category"]
+        fields = ["id", "name", "unit_cost", "unit_type", "unit_type_label", "category", "year"]
+
+    def get_unit_type_label(self, obj):
+        choices = dict(InterventionCostUnitType.choices)
+        return choices.get(obj.unit_type, obj.unit_type)
 
 
 class InterventionCostBreakdownLinesWriteSerializer(serializers.ModelSerializer):
@@ -26,6 +31,6 @@ class InterventionCostBreakdownLinesWriteSerializer(serializers.ModelSerializer)
         fields = ["intervention", "costs"]
 
 
-class InterventionCostBreakdownLineCategoriesSerializer(DropdownOptionsSerializer):
+class DropdownOptionsWithRepresentationSerializer(DropdownOptionsSerializer):
     def to_representation(self, instance):
         return {"value": instance[0], "label": str(instance[1])}

@@ -4,26 +4,28 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('snt_malaria', '0011_alter_intervention_unit_type'),
+        ("snt_malaria", "0011_alter_intervention_unit_type"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='scenario',
-            name='end_year',
+            model_name="scenario",
+            name="end_year",
             field=models.IntegerField(default=2026),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='scenario',
-            name='start_year',
+            model_name="scenario",
+            name="start_year",
             field=models.IntegerField(default=2025),
             preserve_default=False,
         ),
         migrations.AddConstraint(
-            model_name='scenario',
-            constraint=models.CheckConstraint(check=models.Q(('start_year__lte', models.F('end_year'))), name='snt_malaria_scenario_start_year_lte_end_year'),
+            model_name="scenario",
+            constraint=models.CheckConstraint(
+                check=models.Q(("start_year__lte", models.F("end_year"))),
+                name="snt_malaria_scenario_start_year_lte_end_year",
+            ),
         ),
     ]

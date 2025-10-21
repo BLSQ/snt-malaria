@@ -6,34 +6,43 @@ from iaso.models import User
 from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
 
 
+("itn_campaign",)
+("itn_routine",)
+("lsm",)
 CATEGORIES_AND_INTERVENTIONS = {
     "Vaccination": {
         "interventions": [
-            {"name": "RTS,S", "description": "RTS,S malaria vaccine"},
+            {"name": "RTS,S", "description": "RTS,S malaria vaccine", "code": "vacc"},
         ],
     },
     "Preventive Chemotherapy": {
         "interventions": [
-            {"name": "SMC", "description": "Seasonal Malaria Chemoprevention"},
-            {"name": "PMC", "description": "Perennial Malaria Chemoprevention"},
-            {"name": "IPTp", "description": "Intermittent Preventive Treatment in Pregnancy"},
+            {"name": "SMC", "description": "Seasonal Malaria Chemoprevention", "code": "smc"},
+            {"name": "PMC", "description": "Perennial Malaria Chemoprevention", "code": "pmc"},
+            {"name": "IPTp", "description": "Intermittent Preventive Treatment in Pregnancy", "code": "iptp"},
         ]
     },
     "Vector Control": {
         "interventions": [
-            {"name": "LLIN", "description": "Long-Lasting Insecticidal Nets"},
-            {"name": "IRS", "description": "Indoor Residual Spraying"},
+            {"name": "LLIN Routine", "description": "Long-Lasting Insecticidal Nets - Routine", "code": "itn_routine"},
+            {
+                "name": "LLIN Campaign",
+                "description": "Long-Lasting Insecticidal Nets - Campaign",
+                "code": "itn_campaign",
+            },
+            {"name": "IRS", "description": "Indoor Residual Spraying", "code": "irs"},
+            {"name": "LSM", "description": "Larval Source Management", "code": "lsm"},
         ]
     },
     "Mass Drug Administration": {
         "interventions": [
-            {"name": "MDA", "description": "Mass Drug Administration"},
+            {"name": "MDA", "description": "Mass Drug Administration", "code": ""},
         ],
     },
     "Case Management": {
         "interventions": [
-            {"name": "RDTs", "description": "Rapid Diagnostic Tests"},
-            {"name": "ACTs", "description": "Artemisin-based Combination Therapy"},
+            {"name": "RDTs", "description": "Rapid Diagnostic Tests", "code": "cm"},
+            {"name": "ACTs", "description": "Artemisin-based Combination Therapy", "code": "cm"},
         ]
     },
 }
@@ -68,6 +77,7 @@ class InterventionSeeder:
                 _intervention, created = Intervention.objects.get_or_create(
                     name=intervention_data["name"],
                     intervention_category=category,
+                    code=intervention_data["code"],
                     defaults={
                         "description": intervention_data["description"],
                         "created_by": created_by,

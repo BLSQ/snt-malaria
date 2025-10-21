@@ -5,10 +5,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from plugins.snt_malaria.models import InterventionCostBreakdownLine
+from plugins.snt_malaria.models.cost_breakdown import InterventionCostUnitType
 
 from .filters import InterventionCostBreakdownLineListFilter
 from .serializers import (
-    InterventionCostBreakdownLineCategoriesSerializer,
+    DropdownOptionsWithRepresentationSerializer,
     InterventionCostBreakdownLineSerializer,
     InterventionCostBreakdownLinesWriteSerializer,
 )
@@ -55,6 +56,8 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
                     item.category = cost["category"]
                     item.intervention = intervention
                     item.updated_by = request.user
+                    item.year = cost["year"]
+                    item.unit_type = cost["unit_type"]
                     item.save()
                 else:
                     item.delete()
@@ -63,9 +66,11 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
                 InterventionCostBreakdownLine(
                     name=cost["name"],
                     unit_cost=cost["unit_cost"],
+                    unit_type=cost["unit_type"],
                     category=cost["category"],
                     intervention=intervention,
                     created_by=request.user,
+                    year=cost["year"],
                 )
                 for cost in costs_without_id
             ]
@@ -81,8 +86,19 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
         methods=["get"],
     )
     def categories(self, _):
-        serializer = InterventionCostBreakdownLineCategoriesSerializer(
+        serializer = DropdownOptionsWithRepresentationSerializer(
             InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.choices,
+            many=True,
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=False,
+        methods=["get"],
+    )
+    def unit_types(self, _):
+        serializer = DropdownOptionsWithRepresentationSerializer(
+            InterventionCostUnitType.choices,
             many=True,
         )
         return Response(serializer.data, status=status.HTTP_200_OK)

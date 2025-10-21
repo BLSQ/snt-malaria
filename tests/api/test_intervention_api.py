@@ -10,8 +10,8 @@ BASE_URL = "/api/snt_malaria/interventions/"
 
 class InterventionAPITests(APITestCase):
     def setUp(cls):
-        cls.account = Account.objects.create(name="Test Account")
-        cls.user = cls.create_user_with_profile(username="testuser", account=cls.account)
+        cls.account = Account.objects.create(name="Test Account 3")
+        cls.user = cls.create_user_with_profile(username="testuserintervention", account=cls.account)
         cls.int_category_vaccination = InterventionCategory.objects.create(
             name="Vaccination",
             account=cls.account,
@@ -23,17 +23,22 @@ class InterventionAPITests(APITestCase):
             created_by=cls.user,
         )
         cls.intervention_vaccination_rts = Intervention.objects.create(
-            name="RTS,S", created_by=cls.user, intervention_category=cls.int_category_vaccination, unit_type="PER_AL"
+            name="RTS,S",
+            created_by=cls.user,
+            intervention_category=cls.int_category_vaccination,
+            code="rts_s",
         )
         cls.intervention_chemo_smc = Intervention.objects.create(
             name="SMC",
             created_by=cls.user,
             intervention_category=cls.int_category_chemoprevention,
+            code="smc",
         )
         cls.intervention_chemo_iptp = Intervention.objects.create(
             name="IPTp",
             created_by=cls.user,
             intervention_category=cls.int_category_chemoprevention,
+            code="iptp",
         )
 
     def test_list_interventions_authenticated(self):
@@ -41,13 +46,10 @@ class InterventionAPITests(APITestCase):
         response = self.client.get(BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
-        # Verify that the intervention with id intervention_vaccination_rts has a unit_type_label
         rts_intervention = next(
             (item for item in response.data if item["id"] == self.intervention_vaccination_rts.id), None
         )
         self.assertIsNotNone(rts_intervention)
-        self.assertIn("unit_type_label", rts_intervention)
-        self.assertEqual(rts_intervention["unit_type_label"], "per AL")
 
     def test_list_intervention_unauthenticated(self):
         response = self.client.get(BASE_URL)
