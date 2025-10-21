@@ -10,7 +10,7 @@ from snt_malaria_budgeting import (
 
 from plugins.snt_malaria.api.budget.filters import BudgetListFilter
 from plugins.snt_malaria.api.budget.serializers import BudgetCreateSerializer, BudgetSerializer
-from plugins.snt_malaria.api.budgeting.utils import build_cost_dataframe, build_population_dataframe
+from plugins.snt_malaria.api.budget.utils import build_cost_dataframe, build_population_dataframe
 from plugins.snt_malaria.models.budget import Budget
 
 
