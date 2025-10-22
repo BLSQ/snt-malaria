@@ -15,9 +15,8 @@ from plugins.snt_malaria.models import BudgetSettings, InterventionCostBreakdown
 # TODO:
 # - think about the str() issue for org_unit_id
 # - add correct different pop datas from OH
-# - add correct years, make this a param to this function
 # - think about error handling all the way to the frontend
-def build_population_dataframe(account):
+def build_population_dataframe(account, start_year, end_year):
     """
     Build a population dataframe from
 
@@ -45,8 +44,8 @@ def build_population_dataframe(account):
     # Convert to DataFrame
     df = pd.DataFrame(list(metric_values))
 
-    # Duplicate data across years 2024, 2025, 2026, 2027
-    years = [2024, 2025, 2026, 2027]
+    # Duplicate data across scenario years
+    years = [year for year in range(start_year, end_year + 1)]
     dfs_by_year = []
 
     for year in years:

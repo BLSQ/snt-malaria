@@ -45,7 +45,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
 
         # Build cost and population dataframes and format the intervention plan
         cost_df = build_cost_dataframe(request.user.iaso_profile.account)
-        population_df = build_population_dataframe(request.user.iaso_profile.account)
+        population_df = build_population_dataframe(request.user.iaso_profile.account, start_year, end_year)
         interventions_input = build_interventions_input(scenario)
 
         # For now, assume the default coverage etc.
@@ -53,7 +53,6 @@ class BudgetViewSet(viewsets.ModelViewSet):
 
         budgets = []
         for year in range(start_year, end_year + 1):
-            print(f"Fetching budget for year: {year}")
             budgets.append(
                 get_budget(
                     year=year,
