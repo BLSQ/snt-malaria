@@ -38,9 +38,8 @@ class BudgetViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         scenario = serializer.validated_data["scenario"]
 
-        # TODO: Years should come from the frontend?
-        start_year = 2024
-        end_year = 2027
+        start_year = scenario.start_year
+        end_year = scenario.end_year
 
         pd.set_option("display.max_columns", None)
 
