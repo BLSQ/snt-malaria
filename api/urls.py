@@ -26,5 +26,5 @@ router.register(
     InterventionCostBreakdownLineViewSet,
     basename="intervention_cost_breakdown_lines",
 )
-router.register(r"snt_malaria/budget", BudgetViewSet, basename="budget")
+router.register(r"snt_malaria/budgets", BudgetViewSet, basename="budgets")
 router.register(r"snt_malaria/budget_settings", BudgetSettingsViewSet, basename="budget_settings")

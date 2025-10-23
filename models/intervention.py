@@ -31,7 +31,7 @@ class Intervention(SoftDeletableModel):
     class Meta:
         app_label = "snt_malaria"
         ordering = ["name"]
-        unique_together = [["intervention_category", "name"], ["intervention_category", "code"]]
+        unique_together = [["intervention_category", "name"]]
 
     intervention_category = models.ForeignKey(InterventionCategory, on_delete=models.PROTECT)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)

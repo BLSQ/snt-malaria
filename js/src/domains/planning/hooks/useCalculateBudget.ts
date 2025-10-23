@@ -27,7 +27,7 @@ export const postCalculateBudget = ({
     scenarioId: number;
     requestBody: BudgetCalculationRequest[];
 }): Promise<BudgetCalculationResponse> =>
-    postRequest(`/api/snt_malaria/scenarios/${scenarioId}/calculate_budget/`, {
+    postRequest(`/api/snt_malaria/budgets/`, {
         scenario: scenarioId,
         intervention_plan_budget_requests: requestBody,
     });
