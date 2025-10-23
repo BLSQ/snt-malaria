@@ -179,6 +179,5 @@ def build_interventions_input(scenario):
         interventions_dict[intervention_code]["places"].append(org_unit_id)
 
     interventions = list(interventions_dict.values())
-    print("interventions", interventions)
 
     return [InterventionDetailModel(**i) for i in interventions]
