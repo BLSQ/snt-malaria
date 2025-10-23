@@ -14,17 +14,12 @@ def import_openhexa_metrics(request):
     Admin-only view to import OpenHEXA metrics data via web interface.
 
     Provides a form to execute the import_openhexa_metrics management command
-    with workspace_slug, dataset_slug, and account_id parameters.
+    with account_id parameter. The workspace slug and dataset slug are automatically
+    retrieved from the OpenHEXAWorkspace model associated with the account.
     """
     if request.method == "POST":
-        workspace_slug = request.POST.get("workspace_slug", "").strip()
-        dataset_slug = request.POST.get("dataset_slug", "").strip()
         account_id = request.POST.get("account_id", "")
 
-        if not workspace_slug:
-            return HttpResponse("Error: workspace_slug is required", status=400)
-        if not dataset_slug:
-            return HttpResponse("Error: dataset_slug is required", status=400)
         if not account_id:
             return HttpResponse("Error: account_id is required", status=400)
 
@@ -37,8 +32,6 @@ def import_openhexa_metrics(request):
             out = io.StringIO()
             call_command(
                 "import_openhexa_metrics",
-                workspace_slug=workspace_slug,
-                dataset_slug=dataset_slug,
                 account_id=account_id,
                 stdout=out,
                 stderr=out,
@@ -48,8 +41,6 @@ def import_openhexa_metrics(request):
             # Render success template
             template = loader.get_template("import_openhexa_metrics_success.html")
             context = {
-                "workspace_slug": workspace_slug,
-                "dataset_slug": dataset_slug,
                 "account_id": account_id,
                 "output": output,
             }
@@ -58,8 +49,6 @@ def import_openhexa_metrics(request):
         except Exception as e:
             template = loader.get_template("import_openhexa_metrics_error.html")
             context = {
-                "workspace_slug": workspace_slug,
-                "dataset_slug": dataset_slug,
                 "account_id": account_id,
                 "error_message": str(e),
             }

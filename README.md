@@ -74,24 +74,35 @@ The data layers to display on the maps are retrieved by fetching a specific data
 First, make sure you add the following variables to your `.env` file:
 
 ```.env
-OPENHEXA_URL="https://api.openhexa.org/graphql/"
-OPENHEXA_TOKEN="XXX"
+ENCRYPTED_TEXT_FIELD_KEY="XXX"
 ```
 
 _Note: You can get a OpenHEXA token by going to the pipelines page, create a new pipeline and choose "From OpenHEXA CLI" -> "Show" access token._
+
+Now, you'll need to create an OpenHexa Instance and an OpenHexa Workspace from api interface.
+For OpenHexa Instance:
+
+- name: choose one that fits your case
+- url: https://api.openhexa.org/graphql/
+- token
+
+For OpenHexa Workspace:
+
+- Select the OpenHexa instance you have create just before
+- Select the account you want
+- Enter your slug, you can find it in open hexa url (IE: https://app.openhexa.org/workspaces/bfa-snt-process => bfa-snt-process)
+- Add snt_results_dataset in the config:
+  `{"snt_results_dataset": "snt-results"}`
 
 Now there are two ways you can import metrics from an OpenHEXA workspace:
 
 1. Using the Django command:
 
 ```bash
-docker compose run --rm iaso manage import_openhexa_metrics --workspace_slug <slug> --dataset_slug <slug> --account-id <id>
-
-# Example for RDC data:**
-docker compose run --rm iaso manage import_openhexa_metrics --workspace_slug snt-development --dataset_slug snt-results --account-id 2
+docker compose run --rm iaso manage import_openhexa_metrics --account-id <id>
 ```
 
-2. Via the "hidden" admin (only accessible to superusers) page on http://localhost:8081/snt_malaria/import_openhexa_metrics/ that allows an admin user to manually launch the Django command to import the metrics into a specific account. Example of workspace slug and dataset slug: `snt-development` and `snt-results`.
+2. Via the "hidden" admin (only accessible to superusers) page on http://localhost:8081/snt_malaria/import_openhexa_metrics/ that allows an admin user to manually launch the Django command to import the metrics into a specific account.
 
 ## Release workflow
 
