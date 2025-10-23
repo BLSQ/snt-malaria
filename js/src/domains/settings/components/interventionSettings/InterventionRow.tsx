@@ -8,6 +8,7 @@ import { MESSAGES } from '../../messages';
 
 type Props = {
     intervention: Intervention;
+    total_cost?: string | number;
     onEditInterventionCost: (intervention: Intervention) => void;
 };
 
@@ -32,6 +33,7 @@ const styles: SxStyles = {
 
 export const InterventionRow: React.FC<Props> = ({
     intervention,
+    total_cost,
     onEditInterventionCost,
 }) => (
     <Box key={intervention.id} sx={styles.row}>
@@ -45,15 +47,8 @@ export const InterventionRow: React.FC<Props> = ({
                     color="textPrimary"
                     sx={styles.cost}
                 >
-                    {intervention.unit_cost
-                        ? `$${intervention.unit_cost}`
-                        : 'N/A'}
+                    {total_cost ? `$${total_cost}` : 'N/A'}
                 </Typography>
-                {intervention.unit_type_label && (
-                    <Typography variant="caption" color="textSecondary">
-                        {intervention.unit_type_label}
-                    </Typography>
-                )}
             </Box>
             <IconButton
                 onClick={() => onEditInterventionCost(intervention)}

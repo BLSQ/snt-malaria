@@ -12,6 +12,7 @@ type Props = {
     onClose: () => void;
     open: boolean;
     intervention: Intervention | null;
+    year: number;
     onConfirm: (costs: InterventionCostBreakdownLine[]) => void;
 };
 
@@ -30,15 +31,14 @@ export const InterventionCostDrawer: React.FC<Props> = ({
     onClose,
     open,
     intervention,
+    year,
     onConfirm,
 }) => {
     const { data: cost_breakdown_lines, isFetching: isFetchingCosts } =
-        useGetInterventionCostBreakdownLines(intervention?.id);
+        useGetInterventionCostBreakdownLines(intervention?.id, year);
 
     const handleFormConfirm = useCallback(
-        costConfig => {
-            onConfirm(costConfig.cost_breakdown_lines);
-        },
+        costConfig => onConfirm(costConfig.cost_breakdown_lines),
         [onConfirm],
     );
 
@@ -58,9 +58,8 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                     <LoadingSpinner absolute={true} />
                 ) : (
                     <InterventionCostForm
+                        year={year}
                         defaultValues={{
-                            unit_type: intervention?.unit_type,
-                            unit_cost: intervention?.unit_cost ?? undefined,
                             cost_breakdown_lines: cost_breakdown_lines ?? [],
                         }}
                         onConfirm={handleFormConfirm}

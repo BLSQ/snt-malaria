@@ -8,4 +8,4 @@ class InterventionCostBreakdownLineListFilter(django_filters.rest_framework.Filt
 
     class Meta:
         model = InterventionCostBreakdownLine
-        fields = ["intervention_id"]
+        fields = ["intervention_id", "year"]

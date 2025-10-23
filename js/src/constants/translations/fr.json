@@ -56,5 +56,6 @@
     "iaso.snt_malaria.cost-breakdown-chart.title": "Répartition des coûts par catégorie et par intervention",
     "iaso.snt_malaria.proportion-chart.title": "Proportion du budget total par intervention",
     "iaso.snt_malaria.budgeting.selectYear": "Selection de l'année",
-    "iaso.snt_malaria.budgeting.entirePeriod": "Periode complète"
+    "iaso.snt_malaria.budgeting.entirePeriod": "Periode complète",
+    "iaso.snt_malaria.settings.intervention.selectYear": "Sélectionner l'année"
 }

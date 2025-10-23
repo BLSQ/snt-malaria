@@ -25,10 +25,11 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
 class InterventionCostBreakdownLinesWriteSerializer(serializers.ModelSerializer):
     intervention = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all(), required=True)
     costs = InterventionCostBreakdownLineSerializer(many=True)
+    year = serializers.IntegerField(required=True)
 
     class Meta:
         model = InterventionCostBreakdownLine
-        fields = ["intervention", "costs"]
+        fields = ["intervention", "year", "costs"]
 
 
 class DropdownOptionsWithRepresentationSerializer(DropdownOptionsSerializer):

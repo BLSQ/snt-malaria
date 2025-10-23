@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Box, Divider, Button } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
@@ -9,12 +9,10 @@ import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreak
 import { InterventionCostBreakdownLinesForm } from './InterventionCostBreakdownLinesForm';
 
 type Props = {
-    // interventionUnitTypes?: DropdownOptions<string>[];
     defaultValues: {
-        unit_type?: string;
-        unit_cost?: number;
         cost_breakdown_lines: InterventionCostBreakdownLine[];
     };
+    year: number;
     onConfirm: (data: { cost_breakdown_lines: any[] }) => void;
 };
 
@@ -66,26 +64,17 @@ const styles: SxStyles = {
 };
 
 export const InterventionCostForm: React.FC<Props> = ({
+    year,
     defaultValues = {
         cost_breakdown_lines: [],
     },
     onConfirm,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const [isDetailedMode, setIsDetailedMode] = useState<boolean>(false);
-
-    useEffect(
-        () => setIsDetailedMode(defaultValues.cost_breakdown_lines?.length > 0),
-        [defaultValues],
-    );
 
     const validationSchema = useMemo(
         () =>
             Yup.object().shape({
-                unit: Yup.string(),
-                unit_cost: Yup.number()
-                    .required(formatMessage(MESSAGES.required))
-                    .min(0, formatMessage(MESSAGES.negativeValueNotAllowed)),
                 cost_breakdown_lines: Yup.array().of(
                     Yup.object().shape({
                         name: Yup.string().required(
@@ -98,6 +87,9 @@ export const InterventionCostForm: React.FC<Props> = ({
                                 formatMessage(MESSAGES.negativeValueNotAllowed),
                             ),
                         category: Yup.string().required(
+                            formatMessage(MESSAGES.required),
+                        ),
+                        unit_type: Yup.string().required(
                             formatMessage(MESSAGES.required),
                         ),
                     }),
@@ -120,9 +112,7 @@ export const InterventionCostForm: React.FC<Props> = ({
         validationSchema,
         onSubmit: () =>
             onConfirm({
-                cost_breakdown_lines: isDetailedMode
-                    ? values.cost_breakdown_lines
-                    : [],
+                cost_breakdown_lines: values.cost_breakdown_lines ?? [],
             }),
     });
 
@@ -144,10 +134,10 @@ export const InterventionCostForm: React.FC<Props> = ({
     const onAddCostItem = useCallback(() => {
         const newCostItems = [
             ...values.cost_breakdown_lines,
-            { ...DEFAULT_COST_LINE },
+            { ...DEFAULT_COST_LINE, year },
         ];
         setFieldValue('cost_breakdown_lines', newCostItems);
-    }, [values, setFieldValue]);
+    }, [values, setFieldValue, year]);
 
     const onRemoveCostItem = useCallback(
         (index: number) => {
