@@ -1,3 +1,5 @@
+import { BudgetIntervention } from '../types/budget';
+
 export const INTERVENTION_COLORS = {
     ACTs: '#A2CAEA',
     RDTs: '#ACDF9B',
@@ -11,11 +13,13 @@ export const INTERVENTION_COLORS = {
     IPTp: '#80B3DC',
 };
 
-export const getCostBreakdownChartData = (interventionBudgets: any[]) => {
+export const getCostBreakdownChartData = (
+    interventionBudgets: BudgetIntervention[],
+) => {
     return interventionBudgets
-        ?.map((interventionBudget: any) => {
+        ?.map((interventionBudget: BudgetIntervention) => {
             // TODO Define what to do if not costbreakdown, hide from here, show as Other, ...
-            return interventionBudget.costBreakdown?.reduce(
+            return interventionBudget.cost_breakdown?.reduce(
                 (acc, costLine) => {
                     return {
                         ...acc,
