@@ -53,18 +53,24 @@ class BudgetViewSet(viewsets.ModelViewSet):
 
         budgets = []
         for year in range(start_year, end_year + 1):
-            budgets.append(
-                get_budget(
-                    year=year,
-                    spatial_planning_unit="org_unit_id",
-                    interventions_input=interventions_input,
-                    settings=settings,
-                    cost_df=cost_df,
-                    population_df=population_df,
-                    cost_overrides=[],  # optional
-                    local_currency="EUR",
-                )
+            result = get_budget(
+                year=year,
+                spatial_planning_unit="org_unit_id",
+                interventions_input=interventions_input,
+                settings=settings,
+                cost_df=cost_df,
+                population_df=population_df,
+                cost_overrides=[],  # optional
+                local_currency="EUR",
             )
+
+            for intervention in result["interventions"]:
+                print("intervention before", intervention)
+                for cost_breakdown in intervention["cost_breakdown"]:
+                    cost_breakdown["category"] = cost_breakdown.get("cost_class", "")
+                    cost_breakdown.pop("cost_class", None)
+
+            budgets.append(result)
 
         budget = Budget.objects.create(
             scenario=scenario,

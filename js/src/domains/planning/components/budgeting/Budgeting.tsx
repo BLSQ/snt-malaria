@@ -4,11 +4,16 @@ import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { PaperContainer } from '../../../../components/styledComponents';
 import { MESSAGES } from '../../../messages';
+import {
+    Budget,
+    BudgetIntervention,
+    BudgetInterventionCostLine,
+} from '../../types/budget';
 import { CostBreakdownChart } from './CostBreakdownChart';
 import { ProportionChart } from './ProportionChart';
 
 type Props = {
-    budgets: any[];
+    budgets: Budget[];
 };
 
 export const Budgeting: FC<Props> = ({ budgets }) => {
@@ -21,8 +26,12 @@ export const Budgeting: FC<Props> = ({ budgets }) => {
         }),
         [formatMessage],
     );
+
     const mergeCostBreakdown = useCallback(
-        (sourceCostBreakdown, costBreakdownToAdd) => {
+        (
+            sourceCostBreakdown: BudgetInterventionCostLine[],
+            costBreakdownToAdd: BudgetInterventionCostLine[],
+        ) => {
             const mergedCosts = {};
             sourceCostBreakdown.forEach(
                 c => (mergedCosts[c.category] = c.cost),
@@ -37,29 +46,32 @@ export const Budgeting: FC<Props> = ({ budgets }) => {
             return Object.entries(mergedCosts).map(([category, cost]) => ({
                 category,
                 cost,
-            }));
+            })) as BudgetInterventionCostLine[];
         },
         [],
     );
 
     const mergeInterventionCosts = useCallback(
-        (sourceInterventions, interventionsToAdd) => {
+        (
+            sourceInterventions: BudgetIntervention[],
+            interventionsToAdd: BudgetIntervention[],
+        ) => {
             const mergedCosts = {};
             sourceInterventions?.forEach(i => (mergedCosts[i.name] = i));
             interventionsToAdd.forEach(i => {
                 const existing = mergedCosts[i.name];
                 const newVal = { ...i };
                 if (existing) {
-                    newVal.cost += existing.cost;
-                    newVal.costBreakdown = mergeCostBreakdown(
-                        existing.costBreakdown,
-                        newVal.costBreakdown,
+                    newVal.total_cost += existing.total_cost;
+                    newVal.cost_breakdown = mergeCostBreakdown(
+                        existing.cost_breakdown,
+                        newVal.cost_breakdown,
                     );
                 }
 
                 mergedCosts[i.name] = newVal;
             });
-            return Object.values(mergedCosts);
+            return Object.values(mergedCosts) as BudgetIntervention[];
         },
         [mergeCostBreakdown],
     );
@@ -111,26 +123,33 @@ export const Budgeting: FC<Props> = ({ budgets }) => {
                             multi={false}
                             value={selectedYear}
                             options={yearOptions}
+                            labelString="" // This is required to prevent warning in console..
                             onChange={(_, value) => setSelectedYear(value)}
-                            keyValue={'year_options'}
+                            keyValue="year_options"
                             withMarginTop={false}
                             wrapperSx={{ minWidth: '225px' }}
                         />
                     </Box>
                 </Grid>
             )}
-            <Grid item xs={12} md={7}>
-                <PaperContainer>
-                    <CostBreakdownChart
-                        interventionBudgets={interventionCosts}
-                    />
-                </PaperContainer>
-            </Grid>
-            <Grid item xs={12} md={5}>
-                <PaperContainer>
-                    <ProportionChart interventionBudgets={interventionCosts} />
-                </PaperContainer>
-            </Grid>
+            {interventionCosts && (
+                <>
+                    <Grid item xs={12} md={7}>
+                        <PaperContainer>
+                            <CostBreakdownChart
+                                interventionBudgets={interventionCosts}
+                            />
+                        </PaperContainer>
+                    </Grid>
+                    <Grid item xs={12} md={5}>
+                        <PaperContainer>
+                            <ProportionChart
+                                interventionBudgets={interventionCosts}
+                            />
+                        </PaperContainer>
+                    </Grid>
+                </>
+            )}
         </>
     );
 };

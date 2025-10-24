@@ -129,27 +129,11 @@ export const InterventionsPlan: FC<Props> = ({
     );
 
     const runBudget = useCallback(() => {
-        const budgetRequest = interventionPlans.map(ip => ({
-            interventionId: ip.intervention.id,
-            orgUnits: ip.org_units,
-            coverage: interventionCoverage[ip.intervention.id] ?? undefined,
-        }));
-
-        // TODO: Should we send the request with all intervention even if no metricType is selected ?
-        calculateBudget(
-            { scenarioId, requestBody: budgetRequest },
-            {
-                onSuccess: (data: BudgetCalculationResponse) =>
-                    onBudgetRan(data.intervention_budget),
-            },
-        );
-    }, [
-        scenarioId,
-        calculateBudget,
-        interventionPlans,
-        interventionCoverage,
-        onBudgetRan,
-    ]);
+        calculateBudget(scenarioId, {
+            onSuccess: (data: BudgetCalculationResponse) =>
+                onBudgetRan(data.results),
+        });
+    }, [scenarioId, calculateBudget, onBudgetRan]);
 
     return (
         <Box sx={styles.mainContent}>

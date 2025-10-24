@@ -7,8 +7,8 @@ export type Budget = {
 
 export type BudgetIntervention = {
     name: string;
-    cost: number;
-    costBreakdown: BudgetInterventionCostLine[];
+    total_cost: number;
+    cost_breakdown: BudgetInterventionCostLine[];
 };
 
 export type BudgetInterventionCostLine = {
@@ -29,9 +29,9 @@ export type BudgetCalculationRequest = {
 };
 
 export type BudgetCalculationResponse = {
-    scenarioId: number;
-    scenarioName: string;
-    status: string;
-    total_budget: number;
-    intervention_budget: Budget[];
+    id: number;
+    scenario: number;
+    cost_input: any; // TODO Define this
+    assumptions: { [key: string]: string | number };
+    results: Budget[];
 };

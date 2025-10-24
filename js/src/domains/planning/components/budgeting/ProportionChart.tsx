@@ -12,9 +12,10 @@ import {
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { INTERVENTION_COLORS } from '../../libs/cost-utils';
+import { BudgetIntervention } from '../../types/budget';
 import { ChartLegend } from './ChartLegend';
 
-type Props = { interventionBudgets: any[] };
+type Props = { interventionBudgets: BudgetIntervention[] };
 
 const DEFAULT_COLOR = '#512DA8';
 
@@ -49,7 +50,7 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
         () =>
             interventionBudgets?.map(b => ({
                 name: b.name,
-                value: b.cost,
+                value: b.total_cost,
             })),
         [interventionBudgets],
     );
@@ -60,7 +61,12 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
             renderValue={entry => (
                 <>
                     {entry.value}{' '}
-                    <b> {Math.round(entry.payload.percent * 100)}%</b>
+                    <b>
+                        {entry?.payload?.percent
+                            ? Math.round(entry.payload.percent * 100)
+                            : 0}
+                        %
+                    </b>
                 </>
             )}
         />
@@ -88,8 +94,9 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
                                     <Cell
                                         key={`cell-${entry.name}`}
                                         fill={
-                                            INTERVENTION_COLORS[entry.name] ??
-                                            DEFAULT_COLOR
+                                            INTERVENTION_COLORS[
+                                                entry.name.toLowerCase()
+                                            ] ?? DEFAULT_COLOR
                                         }
                                     />
                                 ))}

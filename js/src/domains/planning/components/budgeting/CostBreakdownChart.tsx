@@ -15,10 +15,11 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { useGetInterventionCostBreakdownLineCategories } from '../../../settings/hooks/useGetInterventionCostBreakdownLineCategories';
 import { getCostBreakdownChartData } from '../../libs/cost-utils';
+import { BudgetIntervention } from '../../types/budget';
 import { ChartLegend } from './ChartLegend';
 
 type Props = {
-    interventionBudgets: any[];
+    interventionBudgets: BudgetIntervention[];
 };
 
 const styles: SxStyles = {
