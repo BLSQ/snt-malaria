@@ -13,4 +13,5 @@ export const postCalculateBudget = (
 export const useCalculateBudget = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: postCalculateBudget,
+        invalidateQueryKey: ['calculated_budget'],
     });

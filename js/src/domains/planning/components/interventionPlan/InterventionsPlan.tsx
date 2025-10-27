@@ -4,11 +4,7 @@ import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { useCalculateBudget } from '../../hooks/useCalculateBudget';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import {
-    Budget,
-    BudgetCalculationResponse,
-    InterventionCostCoverage,
-} from '../../types/budget';
+import { InterventionCostCoverage } from '../../types/budget';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
 import { InterventionPlanSummary, TabValue } from './InterventionplanSummary';
@@ -20,7 +16,6 @@ type Props = {
     interventionPlans: InterventionPlan[];
     isLoadingPlans: boolean;
     totalOrgUnitCount: number;
-    onBudgetRan: (budgets: Budget[]) => void;
 };
 
 const styles: SxStyles = {
@@ -57,7 +52,6 @@ export const InterventionsPlan: FC<Props> = ({
     interventionPlans,
     isLoadingPlans,
     totalOrgUnitCount = 0,
-    onBudgetRan,
 }) => {
     const [tabValue, setTabValue] = useState<TabValue>('map');
 
@@ -129,11 +123,8 @@ export const InterventionsPlan: FC<Props> = ({
     );
 
     const runBudget = useCallback(() => {
-        calculateBudget(scenarioId, {
-            onSuccess: (data: BudgetCalculationResponse) =>
-                onBudgetRan(data.results),
-        });
-    }, [scenarioId, calculateBudget, onBudgetRan]);
+        calculateBudget(scenarioId);
+    }, [scenarioId, calculateBudget]);
 
     return (
         <Box sx={styles.mainContent}>

@@ -1,6 +1,7 @@
 import pandas as pd
 
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from snt_malaria_budgeting import (
     DEFAULT_COST_ASSUMPTIONS,
@@ -27,6 +28,15 @@ class BudgetViewSet(viewsets.ModelViewSet):
         return Budget.objects.select_related("scenario").filter(
             scenario__account=self.request.user.iaso_profile.account
         )
+
+    @action(detail=False, methods=["get"])
+    def get_latest(self, _request):
+        queryset = self.filter_queryset(self.get_queryset())
+        budget = queryset.order_by("-created_at").first()
+        if not budget:
+            return Response({"detail": "No budget found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = BudgetSerializer(budget)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def get_serializer_class(self):
         if self.action == "create":
