@@ -17,6 +17,7 @@ export type Intervention = {
 export type InterventionAssignmentCreate = {
     orgunit_interventions: { [orgUnitId: number]: number[] };
     scenario_id: number;
+    showDiffSnackbar?: boolean;
 };
 
 export type InterventionAssignmentResponse = {

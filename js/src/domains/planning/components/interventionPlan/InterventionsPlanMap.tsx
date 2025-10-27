@@ -14,8 +14,10 @@ import tiles from 'Iaso/constants/mapTiles';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../../../../constants/map-theme';
+import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
+import { useRemoveOrgUnitFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
 import {
     defaultLegend,
     defaultZoomDelta,
@@ -120,6 +122,10 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     scenarioId,
 }) => {
     const { data: orgUnits, isLoading: loadingOrgUnits } = useGetOrgUnits();
+    const { mutate: removeOrgUnitsFromIntervention } =
+        useRemoveOrgUnitFromInterventionPlan(false);
+    const { mutate: createInterventionAssignment } =
+        useCreateInterventionAssignment(false);
     const [currentTile] = useState<Tile>(tiles.osm);
 
     const boundsOptions: Record<string, any> = {
@@ -137,13 +143,13 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(scenarioId);
-    const defaultPlanId =
+    const defaultInterventionId =
         interventionPlans && interventionPlans.length === 1
             ? interventionPlans[0].intervention?.id
             : 0;
-    const [selectedPlanId, setSelectedPlanId] = useState<number | null>(
-        defaultPlanId,
-    );
+    const [selectedInterventionId, setSelectedInterventionId] = useState<
+        number | null
+    >(defaultInterventionId);
 
     const getOrgUnitInterventions = (plans: InterventionPlan[]) => {
         return plans.reduce((acc, plan) => {
@@ -166,13 +172,13 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
     const highlightedOrgUnits = useMemo(
         () =>
-            selectedPlanId
+            selectedInterventionId
                 ? getSelectedOrgUnitsFromId(
-                      selectedPlanId,
+                      selectedInterventionId,
                       orgUnitInterventions,
                   )
                 : [...orgUnitInterventions.keys()],
-        [selectedPlanId, orgUnitInterventions],
+        [selectedInterventionId, orgUnitInterventions],
     );
 
     const interventionGroupColors = useMemo(() => {
@@ -216,7 +222,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 return { color: defaultLegend, label: '' };
             }
 
-            if (selectedPlanId) {
+            if (selectedInterventionId) {
                 return { color: defaultColor, label: '' };
             }
 
@@ -226,7 +232,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 ) ?? {};
             return { color, label };
         },
-        [interventionGroupColors, highlightedOrgUnits, selectedPlanId],
+        [interventionGroupColors, highlightedOrgUnits, selectedInterventionId],
     );
 
     const legendConfig = useMemo(() => {
@@ -238,6 +244,44 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         });
         return { ...defaultLegendConfig, legend_config: { domain, range } };
     }, [interventionGroupColors]);
+
+    const onOrgUnitClick = useCallback(
+        orgUnitId => {
+            if (!selectedInterventionId) {
+                return;
+            }
+
+            const existingAssignment = interventionPlans
+                ?.find(plan => plan.intervention.id === selectedInterventionId)
+                ?.org_units.find(ou => ou.id === orgUnitId);
+            if (existingAssignment) {
+                removeOrgUnitsFromIntervention(
+                    existingAssignment.intervention_assignment_id,
+                );
+            } else {
+                const ouInterventions =
+                    orgUnitInterventions.get(orgUnitId) || [];
+
+                createInterventionAssignment({
+                    scenario_id: scenarioId!,
+                    orgunit_interventions: {
+                        [orgUnitId]: [
+                            ...ouInterventions.map(i => i.id),
+                            selectedInterventionId,
+                        ],
+                    },
+                });
+            }
+        },
+        [
+            selectedInterventionId,
+            interventionPlans,
+            removeOrgUnitsFromIntervention,
+            scenarioId,
+            createInterventionAssignment,
+            orgUnitInterventions,
+        ],
+    );
 
     if (loadingOrgUnits)
         return (
@@ -283,6 +327,9 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                                     orgUnitMapMisc?.color ?? defaultColor,
                                 fillOpacity: 2,
                             }}
+                            eventHandlers={{
+                                click: () => onOrgUnitClick(orgUnit.id),
+                            }}
                         >
                             <Tooltip>
                                 <b>{orgUnit.short_name}</b>
@@ -299,13 +346,17 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
             </MapContainer>
             <Box sx={styles.selectBox}>
                 <InterventionSelect
-                    onPlanSelect={setSelectedPlanId}
-                    interventionPlans={interventionPlans}
-                    selectedPlanId={selectedPlanId}
+                    onInterventionSelect={setSelectedInterventionId}
+                    interventions={interventionPlans?.map(
+                        ({ intervention }) => intervention,
+                    )}
+                    selectedInterventionId={selectedInterventionId}
                     sx={styles.select}
                 />
             </Box>
-            {selectedPlanId ? null : <MapLegend legendConfig={legendConfig} />}
+            {selectedInterventionId ? null : (
+                <MapLegend legendConfig={legendConfig} />
+            )}
         </Box>
     );
 };
