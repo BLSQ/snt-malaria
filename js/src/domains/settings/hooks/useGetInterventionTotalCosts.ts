@@ -8,11 +8,9 @@ export const useGetInterventionTotalCosts = (
     return useSnackQuery({
         queryKey: [`interventionTotalCosts_${year}`],
         queryFn: () =>
-            year
-                ? getRequest(
-                      `/api/snt_malaria/intervention_cost_breakdown_lines/get_sum_by_intervention/?year=${year}`,
-                  )
-                : [],
+            getRequest(
+                `/api/snt_malaria/intervention_cost_breakdown_lines/get_sum_by_intervention/?year=${year}`,
+            ),
         options: {
             staleTime: 1000 * 60 * 15, // in MS
             cacheTime: 1000 * 60 * 5,
@@ -25,6 +23,7 @@ export const useGetInterventionTotalCosts = (
                     {} as Record<number, number>,
                 );
             },
+            enabled: !!year,
         },
     });
 };

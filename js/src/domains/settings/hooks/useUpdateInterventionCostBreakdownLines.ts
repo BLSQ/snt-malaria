@@ -12,18 +12,15 @@ export const useUpdateInterventionCostBreakdownLines =
                 interventionId: number;
                 year: number;
                 costs: InterventionCostBreakdownLine[];
-            }) => {
-                return Promise.all([
-                    postRequest(
-                        `/api/snt_malaria/intervention_cost_breakdown_lines/`,
-                        {
-                            intervention: body.interventionId,
-                            year: body.year,
-                            costs: body.costs,
-                        },
-                    ),
-                ]);
-            },
+            }) =>
+                postRequest(
+                    `/api/snt_malaria/intervention_cost_breakdown_lines/`,
+                    {
+                        intervention: body.interventionId,
+                        year: body.year,
+                        costs: body.costs,
+                    },
+                ),
             options: {
                 onSuccess: (
                     _data,

@@ -57,16 +57,16 @@ class InterventionCostBreakdownLineAPITests(APITestCase):
             created_by=cls.user,
             year=2025,
         )
-        cls.cost_line2 = InterventionCostBreakdownLine.objects.create(
-            name="Cost Line 2",
+        cls.cost_line3 = InterventionCostBreakdownLine.objects.create(
+            name="Cost Line 3",
             intervention=cls.intervention_chemo_smc,
             unit_cost=5.55,
             category="Supportive",
             created_by=cls.user,
             year=2025,
         )
-        cls.cost_line2 = InterventionCostBreakdownLine.objects.create(
-            name="Cost Line 2",
+        cls.cost_line4 = InterventionCostBreakdownLine.objects.create(
+            name="Cost Line 4",
             intervention=cls.intervention_chemo_smc,
             unit_cost=5.55,
             category="Supportive",
@@ -130,7 +130,7 @@ class InterventionCostBreakdownLineAPITests(APITestCase):
             {
                 "intervention": self.intervention_chemo_smc.id,
                 "intervention__name": self.intervention_chemo_smc.name,
-                "total_cost": Decimal("10.55"),
+                "total_cost": Decimal(str(self.cost_line2.unit_cost)) + Decimal(str(self.cost_line3.unit_cost)),
             },
             {
                 "intervention": self.intervention_vaccination_rts.id,
