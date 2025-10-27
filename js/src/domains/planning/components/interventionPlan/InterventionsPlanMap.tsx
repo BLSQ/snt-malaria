@@ -354,7 +354,9 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                     sx={styles.select}
                 />
             </Box>
-            {selectedInterventionId ? null : (
+            {selectedInterventionId ||
+            !interventionPlans ||
+            interventionPlans.length <= 0 ? null : (
                 <MapLegend legendConfig={legendConfig} />
             )}
         </Box>
