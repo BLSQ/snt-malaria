@@ -22,7 +22,7 @@ export const InterventionSelect: FunctionComponent<Props> = ({
         onInterventionSelect(event.target.value ?? 0);
     };
 
-    return interventions ? (
+    return interventions && interventions.length > 0 ? (
         <Select
             value={selectedInterventionId}
             onChange={handleSelectedPlanChange}

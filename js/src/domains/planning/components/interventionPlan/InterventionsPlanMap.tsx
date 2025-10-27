@@ -1,6 +1,7 @@
 import React, {
     FunctionComponent,
     useCallback,
+    useEffect,
     useMemo,
     useState,
 } from 'react';
@@ -143,13 +144,26 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(scenarioId);
-    const defaultInterventionId =
-        interventionPlans && interventionPlans.length === 1
-            ? interventionPlans[0].intervention?.id
-            : 0;
+
     const [selectedInterventionId, setSelectedInterventionId] = useState<
         number | null
-    >(defaultInterventionId);
+    >(null);
+
+    useEffect(() => {
+        if (
+            selectedInterventionId &&
+            interventionPlans?.some(
+                i => i.intervention.id === selectedInterventionId,
+            )
+        )
+            return;
+
+        const defaultId =
+            interventionPlans && interventionPlans.length === 1
+                ? interventionPlans[0].intervention?.id
+                : 0;
+        setSelectedInterventionId(defaultId);
+    }, [interventionPlans, selectedInterventionId, setSelectedInterventionId]);
 
     const getOrgUnitInterventions = (plans: InterventionPlan[]) => {
         return plans.reduce((acc, plan) => {
