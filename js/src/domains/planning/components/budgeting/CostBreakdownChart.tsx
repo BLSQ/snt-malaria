@@ -14,7 +14,10 @@ import {
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { useGetInterventionCostBreakdownLineCategories } from '../../../settings/hooks/useGetInterventionCostBreakdownLineCategories';
-import { getCostBreakdownChartData } from '../../libs/cost-utils';
+import {
+    formatCostValue,
+    getCostBreakdownChartData,
+} from '../../libs/cost-utils';
 import { BudgetIntervention } from '../../types/budget';
 import { ChartLegend } from './ChartLegend';
 
@@ -83,12 +86,21 @@ export const CostBreakdownChart: FC<Props> = ({ interventionBudgets }) => {
                                 axisLine={false}
                                 tickLine={false}
                             />
-                            <YAxis axisLine={false} tickLine={false} />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tickFormatter={formatCostValue}
+                            />
                             <CartesianGrid
                                 vertical={false}
                                 strokeDasharray="1"
                             />
-                            <Tooltip cursor={false} />
+                            <Tooltip
+                                cursor={false}
+                                formatter={(value: number) =>
+                                    formatCostValue(value)
+                                }
+                            />
 
                             {barsConfig?.map(bar => (
                                 <Bar

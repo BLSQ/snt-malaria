@@ -11,7 +11,10 @@ import {
 } from 'recharts';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
-import { INTERVENTION_COLORS } from '../../libs/cost-utils';
+import {
+    formatCostValue,
+    INTERVENTION_CODE_COLORS,
+} from '../../libs/cost-utils';
 import { BudgetIntervention } from '../../types/budget';
 import { ChartLegend } from './ChartLegend';
 
@@ -83,7 +86,11 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
                 <CardContent sx={styles.cardContent}>
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                            <Tooltip />
+                            <Tooltip
+                                formatter={(value: number) =>
+                                    formatCostValue(value)
+                                }
+                            />
                             <Pie
                                 data={data}
                                 dataKey={'value'}
@@ -94,7 +101,7 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
                                     <Cell
                                         key={`cell-${entry.name}`}
                                         fill={
-                                            INTERVENTION_COLORS[
+                                            INTERVENTION_CODE_COLORS[
                                                 entry.name.toLowerCase()
                                             ] ?? DEFAULT_COLOR
                                         }

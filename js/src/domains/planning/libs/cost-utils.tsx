@@ -13,6 +13,16 @@ export const INTERVENTION_COLORS = {
     IPTp: '#80B3DC',
 };
 
+// TODO: this is temporary, until we sort out intervention codes vs names throughout the codebase
+export const INTERVENTION_CODE_COLORS = {
+    iptp: '#A2CAEA',
+    vacc: '#ACDF9B',
+    pmc: '#F2B16E',
+    smc: '#C54A53',
+    itn_campaign: '#F2D683',
+    itn_routine: '#E4754F',
+};
+
 export const getCostBreakdownChartData = (
     interventionBudgets: BudgetIntervention[],
 ) => {
@@ -33,4 +43,17 @@ export const getCostBreakdownChartData = (
             );
         })
         .filter(Boolean);
+};
+
+export const formatCostValue = (value: number) => {
+    if (value >= 1_000_000_000) {
+        return `${(value / 1_000_000_000).toFixed(2)}B`;
+    }
+    if (value >= 1_000_000) {
+        return `${(value / 1_000_000).toFixed(2)}M`;
+    }
+    if (value >= 1_000) {
+        return `${(value / 1_000).toFixed(2)}K`;
+    }
+    return value.toString();
 };
