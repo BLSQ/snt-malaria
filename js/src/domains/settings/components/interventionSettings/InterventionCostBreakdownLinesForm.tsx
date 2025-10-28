@@ -7,6 +7,7 @@ import { FormikErrors, FormikTouched } from 'formik';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { noOp } from 'Iaso/utils';
 import { useGetInterventionCostBreakdownLineCategories } from '../../hooks/useGetInterventionCostBreakdownLineCategories';
+import { useGetInterventionCostUnitTypes } from '../../hooks/useGetInterventionCostUnitType';
 import { MESSAGES } from '../../messages';
 import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreakdownLine';
 
@@ -93,9 +94,7 @@ export const InterventionCostBreakdownLinesForm: FC<Props> = ({
                 </Typography>
             </Box>
         </Box>
-    ) : (
-        <></>
-    );
+    ) : null;
 };
 
 type RowProps = {
@@ -114,57 +113,83 @@ export const InterventionCostBreakdownLineForm: FC<RowProps> = ({
     const { data: interventionCostCategories = [] } =
         useGetInterventionCostBreakdownLineCategories();
 
+    const { data: interventionCostUnitTypes = [] } =
+        useGetInterventionCostUnitTypes();
+
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: 1,
-                marginBottom: 2,
-            }}
-        >
-            <IconButton
-                onClick={() => onRemove()}
-                overrideIcon={RemoveCircleOutlineIcon}
-                tooltipMessage={MESSAGES.removeInterventionCostBreakdownLine}
-            ></IconButton>
+        <Box sx={{ marginBottom: 4 }}>
             <Box
-                sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: 2,
+                    marginBottom: 2,
+                }}
             >
+                <IconButton
+                    onClick={() => onRemove()}
+                    overrideIcon={RemoveCircleOutlineIcon}
+                    tooltipMessage={
+                        MESSAGES.removeInterventionCostBreakdownLine
+                    }
+                ></IconButton>
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: 2,
+                    }}
+                >
+                    <InputComponent
+                        keyValue="name"
+                        onChange={onUpdateField}
+                        value={costBreakdownLine.name}
+                        type="text"
+                        label={MESSAGES.detailedCostLabel}
+                        required
+                        errors={getErrors('name')}
+                        withMarginTop={false}
+                    />
+                    <InputComponent
+                        type="select"
+                        keyValue="category"
+                        multi={false}
+                        withMarginTop={false}
+                        wrapperSx={{ flexGrow: 1 }}
+                        clearable={false}
+                        options={interventionCostCategories}
+                        value={costBreakdownLine.category}
+                        onChange={onUpdateField}
+                        label={MESSAGES.detailedCostCategoryLabel}
+                        errors={getErrors('category')}
+                    />
+                </Box>
                 <InputComponent
-                    keyValue="name"
+                    type="number"
+                    keyValue="unit_cost"
                     onChange={onUpdateField}
-                    value={costBreakdownLine.name}
-                    type="text"
-                    label={MESSAGES.detailedCostLabel}
                     required
-                    errors={getErrors('name')}
                     withMarginTop={false}
-                />
-                <InputComponent
-                    type="select"
-                    keyValue="category"
-                    multi={false}
-                    withMarginTop={false}
-                    wrapperSx={{ flexGrow: 1 }}
-                    clearable={false}
-                    options={interventionCostCategories}
-                    value={costBreakdownLine.category}
-                    onChange={onUpdateField}
-                    label={MESSAGES.detailedCostCategoryLabel}
-                    errors={getErrors('category')}
+                    label={MESSAGES.detailedCostUnitLabel}
+                    wrapperSx={{ width: '95px' }}
+                    value={costBreakdownLine.unit_cost}
+                    errors={getErrors('unit_cost')}
+                    numberInputOptions={{ decimalScale: 2 }}
                 />
             </Box>
+
             <InputComponent
-                type="number"
-                keyValue="unit_cost"
-                onChange={onUpdateField}
-                required
+                type="select"
+                keyValue="unit_type"
+                multi={false}
                 withMarginTop={false}
-                label={MESSAGES.detailedCostUnitLabel}
-                wrapperSx={{ width: '95px' }}
-                value={costBreakdownLine.unit_cost}
-                errors={getErrors('unit_cost')}
+                wrapperSx={{ marginLeft: '56px' }}
+                clearable={false}
+                options={interventionCostUnitTypes}
+                value={costBreakdownLine.unit_type}
+                onChange={onUpdateField}
+                label={MESSAGES.unit}
+                errors={getErrors('unit')}
             />
         </Box>
     );

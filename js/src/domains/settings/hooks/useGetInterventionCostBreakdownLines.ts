@@ -7,17 +7,17 @@ export const useGetInterventionCostBreakdownLines = <
     T = InterventionCostBreakdownLine[],
 >(
     intervention_id: number | undefined,
+    year: number,
     selectFn?: (data: InterventionCostBreakdownLine[]) => T,
 ): UseQueryResult<T | InterventionCostBreakdownLine[], Error> => {
     return useSnackQuery({
-        queryKey: ['interventionCostBreakdownLines', intervention_id],
+        queryKey: [`interventionCostBreakdownLines_${intervention_id}_${year}`],
         queryFn: () =>
-            intervention_id
-                ? getRequest(
-                      `/api/snt_malaria/intervention_cost_breakdown_lines?intervention_id=${intervention_id}`,
-                  )
-                : [],
+            getRequest(
+                `/api/snt_malaria/intervention_cost_breakdown_lines/?intervention_id=${intervention_id}&year=${year}`,
+            ),
         options: {
+            enabled: !!intervention_id,
             staleTime: 1000 * 60 * 15, // in MS
             cacheTime: 1000 * 60 * 5,
             select: (data: InterventionCostBreakdownLine[]) => {
