@@ -142,8 +142,10 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         return shape.getBounds();
     }, [orgUnits]);
 
-    const { data: interventionPlans, isLoading: isLoadingPlans } =
-        useGetInterventionAssignments(scenarioId);
+    const {
+        data: interventionAssignments,
+        isLoading: isLoadinginterventionAssignments,
+    } = useGetInterventionAssignments(scenarioId);
 
     const [selectedInterventionId, setSelectedInterventionId] = useState<
         number | null
@@ -152,18 +154,22 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     useEffect(() => {
         if (
             selectedInterventionId &&
-            interventionPlans?.some(
+            interventionAssignments?.some(
                 i => i.intervention.id === selectedInterventionId,
             )
         )
             return;
 
         const defaultId =
-            interventionPlans && interventionPlans.length === 1
-                ? interventionPlans[0].intervention?.id
+            interventionAssignments && interventionAssignments.length === 1
+                ? interventionAssignments[0].intervention?.id
                 : 0;
         setSelectedInterventionId(defaultId);
-    }, [interventionPlans, selectedInterventionId, setSelectedInterventionId]);
+    }, [
+        interventionAssignments,
+        selectedInterventionId,
+        setSelectedInterventionId,
+    ]);
 
     const getOrgUnitInterventions = (plans: InterventionPlan[]) => {
         return plans.reduce((acc, plan) => {
@@ -177,12 +183,13 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     };
 
     const orgUnitInterventions = useMemo(() => {
-        if (isLoadingPlans) return new Map<number, Intervention[]>();
+        if (isLoadinginterventionAssignments)
+            return new Map<number, Intervention[]>();
         const ouInterventions = getOrgUnitInterventions(
-            interventionPlans ?? [],
+            interventionAssignments ?? [],
         );
         return ouInterventions;
-    }, [interventionPlans, isLoadingPlans]);
+    }, [interventionAssignments, isLoadinginterventionAssignments]);
 
     const highlightedOrgUnits = useMemo(
         () =>
@@ -265,7 +272,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 return;
             }
 
-            const existingAssignment = interventionPlans
+            const existingAssignment = interventionAssignments
                 ?.find(plan => plan.intervention.id === selectedInterventionId)
                 ?.org_units.find(ou => ou.id === orgUnitId);
             if (existingAssignment) {
@@ -289,7 +296,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         },
         [
             selectedInterventionId,
-            interventionPlans,
+            interventionAssignments,
             removeOrgUnitsFromIntervention,
             scenarioId,
             createInterventionAssignment,
@@ -361,7 +368,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
             <Box sx={styles.selectBox}>
                 <InterventionSelect
                     onInterventionSelect={setSelectedInterventionId}
-                    interventions={interventionPlans?.map(
+                    interventions={interventionAssignments?.map(
                         ({ intervention }) => intervention,
                     )}
                     selectedInterventionId={selectedInterventionId}
@@ -369,8 +376,8 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 />
             </Box>
             {selectedInterventionId ||
-            !interventionPlans ||
-            interventionPlans.length <= 0 ? null : (
+            !interventionAssignments ||
+            interventionAssignments.length <= 0 ? null : (
                 <MapLegend legendConfig={legendConfig} />
             )}
         </Box>
