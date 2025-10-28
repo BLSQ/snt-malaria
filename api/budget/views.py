@@ -75,7 +75,6 @@ class BudgetViewSet(viewsets.ModelViewSet):
             )
 
             for intervention in result["interventions"]:
-                print("intervention before", intervention)
                 for cost_breakdown in intervention["cost_breakdown"]:
                     cost_breakdown["category"] = cost_breakdown.get("cost_class", "")
                     cost_breakdown.pop("cost_class", None)
