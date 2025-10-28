@@ -6,7 +6,9 @@ import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { InterventionAssignmentCreate } from '../types/interventions';
 
 export const useCreateInterventionAssignment = (
-    showDiffSnackbar?: boolean,
+    { showDiffSnackbar }: { showDiffSnackbar: boolean } = {
+        showDiffSnackbar: false,
+    },
 ): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: InterventionAssignmentCreate) =>

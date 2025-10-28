@@ -126,7 +126,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     const { mutate: removeOrgUnitsFromIntervention } =
         useRemoveOrgUnitFromInterventionPlan(false);
     const { mutate: createInterventionAssignment } =
-        useCreateInterventionAssignment(false);
+        useCreateInterventionAssignment();
     const [currentTile] = useState<Tile>(tiles.osm);
 
     const boundsOptions: Record<string, any> = {
