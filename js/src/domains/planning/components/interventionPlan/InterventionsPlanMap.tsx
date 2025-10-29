@@ -375,13 +375,13 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
     if (loadingOrgUnits)
         return (
-            <Box height="390px" width="100%" sx={styles.mainBox}>
+            <Box height="100%" width="100%" sx={styles.mainBox}>
                 <LoadingSpinner absolute />;
             </Box>
         );
 
     return (
-        <Box height="390px" width="100%" sx={styles.mainBox}>
+        <Box height="100%" width="100%" sx={styles.mainBox}>
             <MapContainer
                 id="intervention_plan_map"
                 doubleClickZoom

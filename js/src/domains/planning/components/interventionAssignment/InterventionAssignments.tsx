@@ -29,13 +29,15 @@ type Props = {
 };
 
 const styles: SxStyles = {
-    mainBox: {
-        borderRadius: theme => theme.spacing(2),
+    card: {
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         overflow: 'hidden',
-        height: '493px',
         position: 'relative',
+        borderRadius: theme => theme.spacing(2),
+        boxShadow: 'none',
     },
-    card: { height: '100%', display: 'flex', flexDirection: 'column' },
     cardContent: {
         padding: 0,
         height: '100%',
@@ -104,49 +106,45 @@ export const InterventionAssignments: FC<Props> = ({
     } = useCreateInterventionAssignment({ showDiffSnackbar: true });
 
     return (
-        <Box sx={styles.mainBox}>
-            <Card elevation={2} sx={styles.card}>
-                {isCreatingAssignment && <LoadingSpinner absolute />}
-                <CardHeader
-                    title={
-                        <InterventionHeader
-                            interventionCategories={interventionCategories}
-                            scenarioId={scenarioId}
-                            selectedOrgUnits={selectedDistricts}
-                            selectedInterventions={selectedInterventions}
-                            setSelectedInterventions={setSelectedInterventions}
-                            interventionPlans={interventionPlans}
-                            onCreateInterventionAssignments={
-                                createInterventionAssignment
+        <Card elevation={2} sx={styles.card}>
+            {isCreatingAssignment && <LoadingSpinner absolute />}
+            <CardHeader
+                title={
+                    <InterventionHeader
+                        interventionCategories={interventionCategories}
+                        scenarioId={scenarioId}
+                        selectedOrgUnits={selectedDistricts}
+                        selectedInterventions={selectedInterventions}
+                        setSelectedInterventions={setSelectedInterventions}
+                        interventionPlans={interventionPlans}
+                        onCreateInterventionAssignments={
+                            createInterventionAssignment
+                        }
+                    />
+                }
+            />
+            <CardContent sx={styles.cardContent}>
+                <Divider sx={styles.horizontalDivider} />
+                <Grid container sx={styles.districtsContainer}>
+                    <Grid item md={7} xs={12} sx={styles.districtsItem}>
+                        <SelectedDistricts
+                            selectedDistricts={selectedDistricts}
+                            removeDistrict={removeDistrict}
+                            clearAllSelectedDistricts={
+                                clearAllSelectedDistricts
                             }
                         />
-                    }
-                />
-                <CardContent sx={styles.cardContent}>
-                    <Divider sx={styles.horizontalDivider} />
-                    <Grid container sx={styles.districtsContainer}>
-                        <Grid item md={7} xs={12} sx={styles.districtsItem}>
-                            <SelectedDistricts
-                                selectedDistricts={selectedDistricts}
-                                removeDistrict={removeDistrict}
-                                clearAllSelectedDistricts={
-                                    clearAllSelectedDistricts
-                                }
-                            />
-                        </Grid>
-                        <Grid item md={5} xs={12} sx={styles.interventionsItem}>
-                            <InterventionCategories
-                                interventionCategories={interventionCategories}
-                                isLoading={isLoading}
-                                selectedInterventions={selectedInterventions}
-                                setSelectedInterventions={
-                                    setSelectedInterventions
-                                }
-                            />
-                        </Grid>
                     </Grid>
-                </CardContent>
-            </Card>
-        </Box>
+                    <Grid item md={5} xs={12} sx={styles.interventionsItem}>
+                        <InterventionCategories
+                            interventionCategories={interventionCategories}
+                            isLoading={isLoading}
+                            selectedInterventions={selectedInterventions}
+                            setSelectedInterventions={setSelectedInterventions}
+                        />
+                    </Grid>
+                </Grid>
+            </CardContent>
+        </Card>
     );
 };
