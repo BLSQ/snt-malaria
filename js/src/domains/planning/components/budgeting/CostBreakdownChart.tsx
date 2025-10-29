@@ -35,7 +35,7 @@ const styles: SxStyles = {
     card: { height: '100%', display: 'flex', flexDirection: 'column' },
     cardContent: {
         marginTop: 4,
-        padding: 1,
+        padding: 2,
         height: '100%',
         overflow: 'hidden',
         position: 'relative',
@@ -90,6 +90,7 @@ export const CostBreakdownChart: FC<Props> = ({ interventionBudgets }) => {
                                 axisLine={false}
                                 tickLine={false}
                                 tickFormatter={formatCostValue}
+                                width={70}
                             />
                             <CartesianGrid
                                 vertical={false}
