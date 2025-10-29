@@ -53,10 +53,6 @@ class Migration(migrations.Migration):
             field=models.IntegerField(default=2025),
             preserve_default=False,
         ),
-        migrations.AlterUniqueTogether(
-            name="intervention",
-            unique_together={("intervention_category", "name"), ("intervention_category", "code")},
-        ),
         migrations.CreateModel(
             name="BudgetSettings",
             fields=[
