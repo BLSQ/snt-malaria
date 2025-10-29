@@ -119,23 +119,3 @@ class InterventionCostBreakdownLineAPITests(APITestCase):
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(InterventionCostBreakdownLine.objects.count(), 4)
-
-    def test_get_sum_by_intervention(self):
-        self.client.force_authenticate(user=self.user)
-        url = reverse("intervention_cost_breakdown_lines-get-sum-by-intervention")
-        response = self.client.get(url, {"year": 2025})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-        expected_data = [
-            {
-                "intervention": self.intervention_chemo_smc.id,
-                "intervention__name": self.intervention_chemo_smc.name,
-                "total_cost": Decimal(str(self.cost_line2.unit_cost)) + Decimal(str(self.cost_line3.unit_cost)),
-            },
-            {
-                "intervention": self.intervention_vaccination_rts.id,
-                "intervention__name": self.intervention_vaccination_rts.name,
-                "total_cost": Decimal("10.00"),
-            },
-        ]
-        self.assertCountEqual(response.data, expected_data)

@@ -37,10 +37,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.addInterventionCostBreakdownLine',
         defaultMessage: 'Add cost',
     },
-    totalCost: {
-        id: 'iaso.snt_malaria.settings.intervention.totalCost',
-        defaultMessage: 'Total cost',
-    },
     detailedCosts: {
         id: 'iaso.snt_malaria.settings.intervention.detailedCosts',
         defaultMessage: 'Detailed costs',
