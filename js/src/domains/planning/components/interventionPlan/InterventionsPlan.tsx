@@ -4,7 +4,6 @@ import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { useCalculateBudget } from '../../hooks/useCalculateBudget';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import { InterventionCostCoverage } from '../../types/budget';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
 import { InterventionPlanSummary, TabValue } from './InterventionplanSummary';
@@ -61,10 +60,6 @@ export const InterventionsPlan: FC<Props> = ({
         number | null
     >(null);
 
-    const [interventionCoverage, setInterventionCoverage] = useState<{
-        [interventionId: number]: InterventionCostCoverage;
-    }>({});
-
     const assignedOrgUnitCount = useMemo(() => {
         return interventionPlans.reduce((acc, plan) => {
             plan.org_units.forEach(orgUnit => {
@@ -112,16 +107,6 @@ export const InterventionsPlan: FC<Props> = ({
         setSelectedInterventionId(null);
     };
 
-    const setSelectedCoverageForIntervention = useCallback(
-        (interventionId: number, coverage: InterventionCostCoverage) => {
-            setInterventionCoverage({
-                ...interventionCoverage,
-                [interventionId]: coverage,
-            });
-        },
-        [setInterventionCoverage, interventionCoverage],
-    );
-
     const runBudget = useCallback(() => {
         calculateBudget(scenarioId);
     }, [scenarioId, calculateBudget]);
@@ -152,10 +137,6 @@ export const InterventionsPlan: FC<Props> = ({
                                 showInterventionPlanDetails={
                                     onShowInterventionPlanDetails
                                 }
-                                onCoverageSelected={
-                                    setSelectedCoverageForIntervention
-                                }
-                                interventionsCoverage={interventionCoverage}
                             />
                         </TabPanel>
                         <TabPanel value="map" sx={styles.mapTab}>

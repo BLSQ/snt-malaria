@@ -1,25 +1,15 @@
 import React, { FunctionComponent } from 'react';
 import { Button, Grid, TableCell, TableRow, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
-import { DropdownOptions } from 'Iaso/types/utils';
 import { MESSAGES } from '../../../messages';
-import { InterventionCostCoverage } from '../../types/budget';
 import { InterventionPlan } from '../../types/interventions';
 
 type Props = {
     row: InterventionPlan;
     index: number;
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
-    onCoverageSelected: (coverage: InterventionCostCoverage) => void;
-    coverage: string;
 };
-
-const coverageOptions: Array<DropdownOptions<string>> = [
-    { value: InterventionCostCoverage.EIGHTY_PERCENT, label: '80%' },
-    { value: InterventionCostCoverage.HUNDRED_PERCENT, label: '100%' },
-];
 
 const styles: SxStyles = {
     tableCellStyle: {
@@ -33,8 +23,6 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
     row,
     index,
     showInterventionPlanDetails,
-    onCoverageSelected,
-    coverage,
 }) => {
     const { formatMessage } = useSafeIntl();
     return row ? (
@@ -66,20 +54,6 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
                             {row?.org_units.length}{' '}
                             {formatMessage(MESSAGES.orgUnitDistrict)}
                         </Button>
-                    </Grid>
-                    <Grid item xs={2}>
-                        <InputComponent
-                            keyValue="key"
-                            type="select"
-                            labelString=""
-                            value={coverage}
-                            onChange={(_key, value) =>
-                                onCoverageSelected(value)
-                            }
-                            options={coverageOptions}
-                            clearable={false}
-                            withMarginTop={false}
-                        />
                     </Grid>
                 </Grid>
             </TableCell>
