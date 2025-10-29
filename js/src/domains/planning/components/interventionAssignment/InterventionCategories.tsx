@@ -40,31 +40,23 @@ export const InterventionCategories: FC<Props> = ({
     );
 
     return (
-        <Grid container spacing={2} padding={1}>
-            <Grid item container spacing={2} padding={2} direction="column">
-                {!isLoading &&
-                    interventionCategories.map(
-                        ({ id, name, interventions }) => {
-                            return (
-                                <Grid item key={id}>
-                                    <Typography sx={styles.categoryName}>
-                                        {name}
-                                    </Typography>
-                                    <Interventions
-                                        interventionCategoryId={id}
-                                        interventions={interventions}
-                                        selectedId={
-                                            selectedInterventions[id]?.id
-                                        }
-                                        handleSelectIntervention={
-                                            toggleIntervention
-                                        }
-                                    />
-                                </Grid>
-                            );
-                        },
-                    )}
-            </Grid>
+        <Grid container spacing={2} padding={2} direction="column">
+            {!isLoading &&
+                interventionCategories.map(({ id, name, interventions }) => {
+                    return (
+                        <Grid item key={id}>
+                            <Typography sx={styles.categoryName}>
+                                {name}
+                            </Typography>
+                            <Interventions
+                                interventionCategoryId={id}
+                                interventions={interventions}
+                                selectedId={selectedInterventions[id]?.id}
+                                handleSelectIntervention={toggleIntervention}
+                            />
+                        </Grid>
+                    );
+                })}
         </Grid>
     );
 };

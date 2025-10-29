@@ -1,12 +1,5 @@
-import React, { FC, useCallback, useEffect, useState } from 'react';
-import {
-    Box,
-    Card,
-    CardContent,
-    CardHeader,
-    Divider,
-    Grid,
-} from '@mui/material';
+import React, { FC } from 'react';
+import { Card, CardContent, CardHeader, Divider } from '@mui/material';
 import { LoadingSpinner } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
@@ -15,12 +8,10 @@ import { useGetInterventionCategories } from '../../hooks/useGetInterventionCate
 import { Intervention, InterventionPlan } from '../../types/interventions';
 import { InterventionCategories } from './InterventionCategories';
 import { InterventionHeader } from './InterventionHeader';
-import { SelectedDistricts } from './SelectedDistricts';
 
 type Props = {
     scenarioId: number | undefined;
     selectedOrgUnits: OrgUnit[];
-    setSelectedOrgUnits: any;
     setSelectedInterventions: React.Dispatch<
         React.SetStateAction<{ [categoryId: number]: Intervention }>
     >;
@@ -72,31 +63,10 @@ const styles: SxStyles = {
 export const InterventionAssignments: FC<Props> = ({
     scenarioId,
     selectedOrgUnits,
-    setSelectedOrgUnits,
     setSelectedInterventions,
     selectedInterventions,
     interventionPlans,
 }) => {
-    const [selectedDistricts, setSelectedDistricts] = useState<OrgUnit[]>([]);
-
-    useEffect(() => {
-        setSelectedDistricts(selectedOrgUnits);
-    }, [selectedOrgUnits]);
-
-    const removeDistrict = useCallback(
-        id => {
-            setSelectedOrgUnits(prev =>
-                prev.filter(district => district.id !== id),
-            );
-        },
-        [setSelectedOrgUnits],
-    );
-
-    const clearAllSelectedDistricts = useCallback(
-        () => setSelectedOrgUnits([]),
-        [setSelectedOrgUnits],
-    );
-
     const { data: interventionCategories = [], isLoading } =
         useGetInterventionCategories();
 
@@ -113,7 +83,7 @@ export const InterventionAssignments: FC<Props> = ({
                     <InterventionHeader
                         interventionCategories={interventionCategories}
                         scenarioId={scenarioId}
-                        selectedOrgUnits={selectedDistricts}
+                        selectedOrgUnits={selectedOrgUnits}
                         selectedInterventions={selectedInterventions}
                         setSelectedInterventions={setSelectedInterventions}
                         interventionPlans={interventionPlans}
@@ -125,25 +95,12 @@ export const InterventionAssignments: FC<Props> = ({
             />
             <CardContent sx={styles.cardContent}>
                 <Divider sx={styles.horizontalDivider} />
-                <Grid container sx={styles.districtsContainer}>
-                    <Grid item md={7} xs={12} sx={styles.districtsItem}>
-                        <SelectedDistricts
-                            selectedDistricts={selectedDistricts}
-                            removeDistrict={removeDistrict}
-                            clearAllSelectedDistricts={
-                                clearAllSelectedDistricts
-                            }
-                        />
-                    </Grid>
-                    <Grid item md={5} xs={12} sx={styles.interventionsItem}>
-                        <InterventionCategories
-                            interventionCategories={interventionCategories}
-                            isLoading={isLoading}
-                            selectedInterventions={selectedInterventions}
-                            setSelectedInterventions={setSelectedInterventions}
-                        />
-                    </Grid>
-                </Grid>
+                <InterventionCategories
+                    interventionCategories={interventionCategories}
+                    isLoading={isLoading}
+                    selectedInterventions={selectedInterventions}
+                    setSelectedInterventions={setSelectedInterventions}
+                />
             </CardContent>
         </Card>
     );

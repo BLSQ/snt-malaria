@@ -180,17 +180,16 @@ export const Planning: FC = () => {
                     </Grid>
                 </Grid>
                 <Grid container spacing={1} sx={{ mt: 0 }}>
-                    <Grid item xs={12} md={5} sx={styles.assignmentContainer}>
+                    <Grid item xs={12} md={3} sx={styles.assignmentContainer}>
                         <InterventionAssignments
                             scenarioId={scenario?.id}
                             selectedOrgUnits={selectionOnMap}
-                            setSelectedOrgUnits={setSelectionOnMap}
                             setSelectedInterventions={setSelectedInterventions}
                             selectedInterventions={selectedInterventions}
                             interventionPlans={interventionPlans ?? []}
                         />
                     </Grid>
-                    <Grid item xs={12} md={7} sx={styles.assignmentContainer}>
+                    <Grid item xs={12} md={9} sx={styles.assignmentContainer}>
                         <InterventionsPlan
                             scenarioId={scenario?.id}
                             totalOrgUnitCount={orgUnits?.length ?? 0}
