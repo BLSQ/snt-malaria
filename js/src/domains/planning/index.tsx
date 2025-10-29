@@ -22,6 +22,7 @@ import { Map } from './components/map';
 import { SideMapList } from './components/maps/SideMapList';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
+import { useGetLatestCalculatedBudget } from './hooks/useGetLatestCalculatedBudget';
 import {
     useGetMetricCategories,
     useGetMetricOrgUnits,
@@ -56,7 +57,7 @@ export const Planning: FC = () => {
         null,
     );
 
-    const [budgets, setBudgets] = useState<Budget[] | null>(null);
+    const { data: budget } = useGetLatestCalculatedBudget(scenario?.id);
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(scenario?.id);
@@ -196,11 +197,10 @@ export const Planning: FC = () => {
                                 totalOrgUnitCount={orgUnits?.length ?? 0}
                                 interventionPlans={interventionPlans ?? []}
                                 isLoadingPlans={isLoadingPlans}
-                                onBudgetRan={setBudgets}
                             />
                         </PaperContainer>
                     </Grid>
-                    {budgets && <Budgeting budgets={budgets} />}
+                    {budget && <Budgeting budgets={budget?.results} />}
                 </Grid>
             </PageContainer>
         </>

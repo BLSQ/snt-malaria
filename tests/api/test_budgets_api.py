@@ -163,7 +163,7 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(smc_intervention["total_pop"], 237500.0)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
         self.assertEqual(smc_intervention["cost_breakdown"][0]["name"], "smc")
-        self.assertEqual(smc_intervention["cost_breakdown"][0]["cost_class"], "Procurement")
+        self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
         self.assertEqual(smc_intervention["cost_breakdown"][0]["cost"], 198000.0)
 
     def test_calculate_budget_missing_scenario(self):

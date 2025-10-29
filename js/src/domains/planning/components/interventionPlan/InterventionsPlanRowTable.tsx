@@ -71,12 +71,14 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
                         <InputComponent
                             keyValue="key"
                             type="select"
+                            labelString=""
                             value={coverage}
                             onChange={(_key, value) =>
                                 onCoverageSelected(value)
                             }
                             options={coverageOptions}
                             clearable={false}
+                            withMarginTop={false}
                         />
                     </Grid>
                 </Grid>

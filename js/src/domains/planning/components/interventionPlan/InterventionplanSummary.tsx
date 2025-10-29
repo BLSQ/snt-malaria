@@ -72,7 +72,7 @@ export const InterventionPlanSummary: FC<Props> = ({
                         variant="contained"
                         color="primary"
                         onClick={onRunBudget}
-                        disabled={isCalculatingBudget}
+                        disabled={assignedOrgUnits === 0 || isCalculatingBudget}
                     >
                         {formatMessage(MESSAGES.runInterventionPlanBudget)}
                         {isCalculatingBudget && (

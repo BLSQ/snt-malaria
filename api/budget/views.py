@@ -1,6 +1,7 @@
 import pandas as pd
 
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from snt_malaria_budgeting import (
     DEFAULT_COST_ASSUMPTIONS,
@@ -28,6 +29,15 @@ class BudgetViewSet(viewsets.ModelViewSet):
             scenario__account=self.request.user.iaso_profile.account
         )
 
+    @action(detail=False, methods=["get"])
+    def get_latest(self, _request):
+        queryset = self.filter_queryset(self.get_queryset())
+        budget = queryset.order_by("-created_at").first()
+        if not budget:
+            return Response({"detail": "No budget found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = BudgetSerializer(budget)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def get_serializer_class(self):
         if self.action == "create":
             return BudgetCreateSerializer
@@ -53,18 +63,23 @@ class BudgetViewSet(viewsets.ModelViewSet):
 
         budgets = []
         for year in range(start_year, end_year + 1):
-            budgets.append(
-                get_budget(
-                    year=year,
-                    spatial_planning_unit="org_unit_id",
-                    interventions_input=interventions_input,
-                    settings=settings,
-                    cost_df=cost_df,
-                    population_df=population_df,
-                    cost_overrides=[],  # optional
-                    local_currency="EUR",
-                )
+            result = get_budget(
+                year=year,
+                spatial_planning_unit="org_unit_id",
+                interventions_input=interventions_input,
+                settings=settings,
+                cost_df=cost_df,
+                population_df=population_df,
+                cost_overrides=[],  # optional
+                local_currency="EUR",
             )
+
+            for intervention in result["interventions"]:
+                for cost_breakdown in intervention["cost_breakdown"]:
+                    cost_breakdown["category"] = cost_breakdown.get("cost_class", "")
+                    cost_breakdown.pop("cost_class", None)
+
+            budgets.append(result)
 
         budget = Budget.objects.create(
             scenario=scenario,

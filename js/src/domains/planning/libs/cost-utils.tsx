@@ -1,3 +1,5 @@
+import { BudgetIntervention } from '../types/budget';
+
 export const INTERVENTION_COLORS = {
     ACTs: '#A2CAEA',
     RDTs: '#ACDF9B',
@@ -11,11 +13,23 @@ export const INTERVENTION_COLORS = {
     IPTp: '#80B3DC',
 };
 
-export const getCostBreakdownChartData = (interventionBudgets: any[]) => {
+// TODO: this is temporary, until we sort out intervention codes vs names throughout the codebase
+export const INTERVENTION_CODE_COLORS = {
+    iptp: '#A2CAEA',
+    vacc: '#ACDF9B',
+    pmc: '#F2B16E',
+    smc: '#C54A53',
+    itn_campaign: '#F2D683',
+    itn_routine: '#E4754F',
+};
+
+export const getCostBreakdownChartData = (
+    interventionBudgets: BudgetIntervention[],
+) => {
     return interventionBudgets
-        ?.map((interventionBudget: any) => {
+        ?.map((interventionBudget: BudgetIntervention) => {
             // TODO Define what to do if not costbreakdown, hide from here, show as Other, ...
-            return interventionBudget.costBreakdown?.reduce(
+            return interventionBudget.cost_breakdown?.reduce(
                 (acc, costLine) => {
                     return {
                         ...acc,
@@ -29,4 +43,17 @@ export const getCostBreakdownChartData = (interventionBudgets: any[]) => {
             );
         })
         .filter(Boolean);
+};
+
+export const formatCostValue = (value: number) => {
+    if (value >= 1_000_000_000) {
+        return `${(value / 1_000_000_000).toFixed(2)}B`;
+    }
+    if (value >= 1_000_000) {
+        return `${(value / 1_000_000).toFixed(2)}M`;
+    }
+    if (value >= 1_000) {
+        return `${(value / 1_000).toFixed(2)}K`;
+    }
+    return value.toString();
 };
