@@ -5,14 +5,23 @@ import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { InterventionAssignmentCreate } from '../types/interventions';
 
-export const useCreateInterventionAssignment = (): UseMutationResult =>
+export const useCreateInterventionAssignment = (
+    { showDiffSnackbar }: { showDiffSnackbar: boolean } = {
+        showDiffSnackbar: false,
+    },
+): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: InterventionAssignmentCreate) =>
             postRequest(`/api/snt_malaria/intervention_assignments/`, body),
         invalidateQueryKey: ['interventionAssignments'],
-        showSucessSnackBar: false,
+        showSuccessSnackBar: false,
         options: {
-            onSuccess: data =>
-                openSnackBar(succesfullSnackBar(data.message, data.message)),
+            onSuccess: data => {
+                if (showDiffSnackbar) {
+                    openSnackBar(
+                        succesfullSnackBar(data.message, data.message),
+                    );
+                }
+            },
         },
     });

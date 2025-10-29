@@ -4,11 +4,14 @@ import { useSnackMutation } from 'Iaso/libs/apiHooks';
 
 const baseUrl = '/api/snt_malaria/intervention_assignments/';
 
-export const useRemoveOrgUnitFromInterventionPlan = (): UseMutationResult =>
+export const useRemoveOrgUnitFromInterventionPlan = ({
+    showSuccessSnackBar = true,
+}: { showSuccessSnackBar?: boolean } = {}): UseMutationResult =>
     useSnackMutation({
         mutationFn: (interventionAssignmentId: number) =>
             deleteRequest(`${baseUrl}${interventionAssignmentId}/`),
         invalidateQueryKey: ['interventionAssignments'],
+        showSuccessSnackBar,
     });
 
 export const useRemoveManyOrgUnitsFromInterventionPlan =

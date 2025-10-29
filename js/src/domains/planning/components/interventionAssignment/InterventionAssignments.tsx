@@ -101,7 +101,7 @@ export const InterventionAssignments: FC<Props> = ({
     const {
         mutateAsync: createInterventionAssignment,
         isLoading: isCreatingAssignment,
-    } = useCreateInterventionAssignment();
+    } = useCreateInterventionAssignment({ showDiffSnackbar: true });
 
     return (
         <Box sx={styles.mainBox}>

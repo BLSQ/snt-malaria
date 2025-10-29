@@ -1,6 +1,7 @@
 import React, {
     FunctionComponent,
     useCallback,
+    useEffect,
     useMemo,
     useState,
 } from 'react';
@@ -14,15 +15,21 @@ import tiles from 'Iaso/constants/mapTiles';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../../../../constants/map-theme';
+import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
+import { useRemoveOrgUnitFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
 import {
     defaultLegend,
     defaultZoomDelta,
     defaultZoomSnap,
     getColorRange,
 } from '../../libs/map-utils';
-import { Intervention, InterventionPlan } from '../../types/interventions';
+import {
+    Intervention,
+    InterventionOrgUnit,
+    InterventionPlan,
+} from '../../types/interventions';
 import { MapLegend } from '../MapLegend';
 import { InterventionSelect } from './InterventionSelect';
 
@@ -120,6 +127,10 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     scenarioId,
 }) => {
     const { data: orgUnits, isLoading: loadingOrgUnits } = useGetOrgUnits();
+    const { mutateAsync: removeOrgUnitsFromIntervention } =
+        useRemoveOrgUnitFromInterventionPlan({ showSuccessSnackBar: false });
+    const { mutateAsync: createInterventionAssignment } =
+        useCreateInterventionAssignment();
     const [currentTile] = useState<Tile>(tiles.osm);
 
     const boundsOptions: Record<string, any> = {
@@ -135,15 +146,34 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         return shape.getBounds();
     }, [orgUnits]);
 
-    const { data: interventionPlans, isLoading: isLoadingPlans } =
-        useGetInterventionAssignments(scenarioId);
-    const defaultPlanId =
-        interventionPlans && interventionPlans.length === 1
-            ? interventionPlans[0].intervention?.id
-            : 0;
-    const [selectedPlanId, setSelectedPlanId] = useState<number | null>(
-        defaultPlanId,
-    );
+    const {
+        data: interventionAssignments,
+        isLoading: isLoadinginterventionAssignments,
+    } = useGetInterventionAssignments(scenarioId);
+
+    const [selectedInterventionId, setSelectedInterventionId] = useState<
+        number | null
+    >(null);
+
+    useEffect(() => {
+        if (
+            selectedInterventionId &&
+            interventionAssignments?.some(
+                i => i.intervention.id === selectedInterventionId,
+            )
+        )
+            return;
+
+        const defaultId =
+            interventionAssignments && interventionAssignments.length === 1
+                ? interventionAssignments[0].intervention?.id
+                : 0;
+        setSelectedInterventionId(defaultId);
+    }, [
+        interventionAssignments,
+        selectedInterventionId,
+        setSelectedInterventionId,
+    ]);
 
     const getOrgUnitInterventions = (plans: InterventionPlan[]) => {
         return plans.reduce((acc, plan) => {
@@ -156,23 +186,32 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         }, new Map<number, Intervention[]>());
     };
 
+    const [localInterventionAssignments, setLocalInterventionAssignments] =
+        useState<InterventionPlan[]>(interventionAssignments || []);
+
+    useEffect(
+        () => setLocalInterventionAssignments(interventionAssignments || []),
+        [interventionAssignments],
+    );
+
     const orgUnitInterventions = useMemo(() => {
-        if (isLoadingPlans) return new Map<number, Intervention[]>();
+        if (isLoadinginterventionAssignments)
+            return new Map<number, Intervention[]>();
         const ouInterventions = getOrgUnitInterventions(
-            interventionPlans ?? [],
+            localInterventionAssignments ?? [],
         );
         return ouInterventions;
-    }, [interventionPlans, isLoadingPlans]);
+    }, [localInterventionAssignments, isLoadinginterventionAssignments]);
 
     const highlightedOrgUnits = useMemo(
         () =>
-            selectedPlanId
+            selectedInterventionId
                 ? getSelectedOrgUnitsFromId(
-                      selectedPlanId,
+                      selectedInterventionId,
                       orgUnitInterventions,
                   )
                 : [...orgUnitInterventions.keys()],
-        [selectedPlanId, orgUnitInterventions],
+        [selectedInterventionId, orgUnitInterventions],
     );
 
     const interventionGroupColors = useMemo(() => {
@@ -216,7 +255,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 return { color: defaultLegend, label: '' };
             }
 
-            if (selectedPlanId) {
+            if (selectedInterventionId) {
                 return { color: defaultColor, label: '' };
             }
 
@@ -226,7 +265,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 ) ?? {};
             return { color, label };
         },
-        [interventionGroupColors, highlightedOrgUnits, selectedPlanId],
+        [interventionGroupColors, highlightedOrgUnits, selectedInterventionId],
     );
 
     const legendConfig = useMemo(() => {
@@ -238,6 +277,101 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         });
         return { ...defaultLegendConfig, legend_config: { domain, range } };
     }, [interventionGroupColors]);
+
+    const removeAssignment = useCallback(
+        async (orgUnitId: number, assignmentId: number) => {
+            await removeOrgUnitsFromIntervention(assignmentId);
+            const updatedAssignments = localInterventionAssignments?.map(
+                plan => {
+                    if (plan.intervention.id !== selectedInterventionId) {
+                        return plan;
+                    }
+                    return {
+                        ...plan,
+                        org_units: plan.org_units.filter(
+                            ou => ou.id !== orgUnitId,
+                        ),
+                    };
+                },
+            );
+            setLocalInterventionAssignments(updatedAssignments || []);
+        },
+        [
+            selectedInterventionId,
+            localInterventionAssignments,
+            removeOrgUnitsFromIntervention,
+        ],
+    );
+
+    const addAssigment = useCallback(
+        async (orgUnitId: number, scenarioId?: number) => {
+            const ouInterventions = orgUnitInterventions.get(orgUnitId) || [];
+
+            await createInterventionAssignment({
+                scenario_id: scenarioId!,
+                orgunit_interventions: {
+                    [orgUnitId]: [
+                        ...ouInterventions.map(i => i.id),
+                        selectedInterventionId,
+                    ],
+                },
+            });
+            const updatedAssignments = localInterventionAssignments?.map(
+                plan => {
+                    if (plan.intervention.id !== selectedInterventionId) {
+                        return plan;
+                    }
+                    return {
+                        ...plan,
+                        org_units: [
+                            ...plan.org_units,
+                            {
+                                id: orgUnitId,
+                                name:
+                                    orgUnits?.find(ou => ou.id === orgUnitId)
+                                        ?.name || '',
+                                intervention_assignment_id: 0,
+                            } as InterventionOrgUnit,
+                        ],
+                    };
+                },
+            );
+            setLocalInterventionAssignments(updatedAssignments || []);
+        },
+        [
+            createInterventionAssignment,
+            orgUnitInterventions,
+            selectedInterventionId,
+            localInterventionAssignments,
+            orgUnits,
+        ],
+    );
+    const onOrgUnitClick = useCallback(
+        orgUnitId => {
+            if (!selectedInterventionId) {
+                return;
+            }
+
+            const existingAssignment = localInterventionAssignments
+                ?.find(plan => plan.intervention.id === selectedInterventionId)
+                ?.org_units.find(ou => ou.id === orgUnitId);
+            if (existingAssignment) {
+                removeAssignment(
+                    orgUnitId,
+                    existingAssignment.intervention_assignment_id,
+                );
+            } else {
+                addAssigment(orgUnitId, scenarioId);
+            }
+        },
+        [
+            selectedInterventionId,
+            localInterventionAssignments,
+            removeAssignment,
+            addAssigment,
+            scenarioId,
+        ],
+    );
 
     if (loadingOrgUnits)
         return (
@@ -283,6 +417,9 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                                     orgUnitMapMisc?.color ?? defaultColor,
                                 fillOpacity: 2,
                             }}
+                            eventHandlers={{
+                                click: () => onOrgUnitClick(orgUnit.id),
+                            }}
                         >
                             <Tooltip>
                                 <b>{orgUnit.short_name}</b>
@@ -299,13 +436,19 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
             </MapContainer>
             <Box sx={styles.selectBox}>
                 <InterventionSelect
-                    onPlanSelect={setSelectedPlanId}
-                    interventionPlans={interventionPlans}
-                    selectedPlanId={selectedPlanId}
+                    onInterventionSelect={setSelectedInterventionId}
+                    interventions={localInterventionAssignments?.map(
+                        ({ intervention }) => intervention,
+                    )}
+                    selectedInterventionId={selectedInterventionId}
                     sx={styles.select}
                 />
             </Box>
-            {selectedPlanId ? null : <MapLegend legendConfig={legendConfig} />}
+            {selectedInterventionId ||
+            !localInterventionAssignments ||
+            localInterventionAssignments.length <= 0 ? null : (
+                <MapLegend legendConfig={legendConfig} />
+            )}
         </Box>
     );
 };
