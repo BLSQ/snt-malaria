@@ -34,6 +34,7 @@ const styles: SxStyles = {
         lineHeight: '160%',
         color: theme.palette.text.primary,
     }),
+    period: { marginLeft: 1 },
     timestamp: (theme: Theme) => ({
         fontSize: 14,
         lineHeight: '143%',
@@ -59,7 +60,11 @@ export const ScenarioComponent: FC<Props> = ({ scenario }) => {
                     <Box sx={styles.column}>
                         <Typography variant="h6" sx={styles.title}>
                             {scenario.name}
-                            <Box component="span" display="inline-block" ml="2">
+                            <Box
+                                component="span"
+                                display="inline-block"
+                                sx={styles.period}
+                            >
                                 {scenario.start_year} - {scenario.end_year}
                             </Box>
                         </Typography>
