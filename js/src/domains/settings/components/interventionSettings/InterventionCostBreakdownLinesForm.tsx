@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { FC } from 'react';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { FormikErrors, FormikTouched } from 'formik';
 import InputComponent from 'Iaso/components/forms/InputComponent';
@@ -16,7 +16,6 @@ type Props = {
     costBreakdownLines: InterventionCostBreakdownLine[];
     onAddInterventionCostBreakdownLine: () => void;
     onRemoveInterventionCostBreakdownLine: (index: number) => void;
-    onTotalCostChanges: (totalCost: number) => void;
     touched: FormikTouched<InterventionCostBreakdownLine>[] | undefined;
     errors:
         | string
@@ -30,24 +29,10 @@ export const InterventionCostBreakdownLinesForm: FC<Props> = ({
     onUpdateField,
     onAddInterventionCostBreakdownLine,
     onRemoveInterventionCostBreakdownLine,
-    onTotalCostChanges,
     errors,
     touched,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const totalCost = useMemo(
-        () =>
-            costBreakdownLines?.reduce((total, costBreakdownLine) => {
-                const unitCost = parseFloat(costBreakdownLine.unit_cost);
-                return total + (isNaN(unitCost) ? 0 : unitCost);
-            }, 0),
-        [costBreakdownLines],
-    );
-
-    useEffect(
-        () => onTotalCostChanges(totalCost),
-        [totalCost, onTotalCostChanges],
-    );
 
     const getChildError = useCallback(
         (field, index) =>
@@ -88,10 +73,6 @@ export const InterventionCostBreakdownLinesForm: FC<Props> = ({
                 >
                     {formatMessage(MESSAGES.addInterventionCostBreakdownLine)}
                 </Button>
-                <Typography>
-                    {formatMessage(MESSAGES.totalCost)} $
-                    {totalCost.toFixed(2) ?? 0.0}
-                </Typography>
             </Box>
         </Box>
     ) : null;

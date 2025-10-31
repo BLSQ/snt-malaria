@@ -45,7 +45,6 @@
     "iaso.snt_malaria.settings.intervention.save": "Sauvegarder l'intervention",
     "iaso.snt_malaria.settings.intervention.removeCostBreakdownLine": "Retirer le coût",
     "iaso.snt_malaria.settings.intervention.addCostBreakdownLine": "Ajouter un coût",
-    "iaso.snt_malaria.settings.intervention.totalCost": "Coût total",
     "iaso.snt_malaria.settings.intervention.detailedCosts": "Coûts détaillés",
     "iaso.snt_malaria.settings.intervention.detailedCostLabel": "Element",
     "iaso.snt_malaria.settings.intervention.detailedCostUnitLabel": "Unité",

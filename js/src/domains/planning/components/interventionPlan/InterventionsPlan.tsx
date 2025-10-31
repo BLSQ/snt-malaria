@@ -1,10 +1,9 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { TabContext, TabPanel } from '@mui/lab';
-import { Divider, Box, CardHeader, CardContent, Card } from '@mui/material';
+import { Divider, CardHeader, CardContent, Card } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { useCalculateBudget } from '../../hooks/useCalculateBudget';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import { InterventionCostCoverage } from '../../types/budget';
 import { InterventionPlan } from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
 import { InterventionPlanSummary, TabValue } from './InterventionplanSummary';
@@ -22,25 +21,26 @@ const styles: SxStyles = {
     mainContent: {
         borderRadius: theme => theme.spacing(2),
         overflow: 'hidden',
-        height: '493px',
+        height: '100%',
+        boxShadow: 'none',
     },
     cardHeader: { paddingTop: 1.5 },
     cardContent: {
         padding: 0,
         '&:last-child': {
             paddingBottom: 0,
-            height: '424px',
+            height: '100%',
         },
     },
     divider: { width: '100%', mt: -1 },
     listTab: {
-        height: '100%',
+        height: 'calc(100% - 76px)',
         padding: 1,
     },
     mapTab: {
         p: 1,
         width: '100%',
-        height: '100%',
+        height: 'calc(100% - 76px)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -60,10 +60,6 @@ export const InterventionsPlan: FC<Props> = ({
     const [selectedInterventionId, setSelectedInterventionId] = useState<
         number | null
     >(null);
-
-    const [interventionCoverage, setInterventionCoverage] = useState<{
-        [interventionId: number]: InterventionCostCoverage;
-    }>({});
 
     const assignedOrgUnitCount = useMemo(() => {
         return interventionPlans.reduce((acc, plan) => {
@@ -112,23 +108,13 @@ export const InterventionsPlan: FC<Props> = ({
         setSelectedInterventionId(null);
     };
 
-    const setSelectedCoverageForIntervention = useCallback(
-        (interventionId: number, coverage: InterventionCostCoverage) => {
-            setInterventionCoverage({
-                ...interventionCoverage,
-                [interventionId]: coverage,
-            });
-        },
-        [setInterventionCoverage, interventionCoverage],
-    );
-
     const runBudget = useCallback(() => {
         calculateBudget(scenarioId);
     }, [scenarioId, calculateBudget]);
 
     return (
-        <Box sx={styles.mainContent}>
-            <Card elevation={2}>
+        <>
+            <Card elevation={2} sx={styles.mainContent}>
                 <TabContext value={tabValue}>
                     <CardHeader
                         sx={styles.cardHeader}
@@ -152,10 +138,6 @@ export const InterventionsPlan: FC<Props> = ({
                                 showInterventionPlanDetails={
                                     onShowInterventionPlanDetails
                                 }
-                                onCoverageSelected={
-                                    setSelectedCoverageForIntervention
-                                }
-                                interventionsCoverage={interventionCoverage}
                             />
                         </TabPanel>
                         <TabPanel value="map" sx={styles.mapTab}>
@@ -170,6 +152,6 @@ export const InterventionsPlan: FC<Props> = ({
                 closeInterventionPlanDetails={onCloseInterventionPlanDetails}
                 isRemovingOrgUnits={isRemovingOrgUnits}
             />
-        </Box>
+        </>
     );
 };

@@ -20,7 +20,7 @@ const styles: SxStyles = {
     drawer: {
         '& .MuiDrawer-paper': {
             height: '100vh',
-            width: '509px',
+            width: '650px',
             boxSizing: 'border-box',
             padding: 0,
         },

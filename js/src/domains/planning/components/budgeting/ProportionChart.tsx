@@ -13,6 +13,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import {
     formatCostValue,
+    formatPercentValue,
     INTERVENTION_CODE_COLORS,
 } from '../../libs/cost-utils';
 import { BudgetIntervention } from '../../types/budget';
@@ -65,10 +66,8 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
                 <>
                     {entry.value}{' '}
                     <b>
-                        {entry?.payload?.percent
-                            ? Math.round(entry.payload.percent * 100)
-                            : 0}
-                        %
+                        {formatCostValue(entry?.payload?.value ?? 0)} (
+                        {formatPercentValue(entry?.payload?.percent ?? 0)})
                     </b>
                 </>
             )}

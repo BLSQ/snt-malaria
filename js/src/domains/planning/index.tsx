@@ -6,6 +6,7 @@ import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
 import { succesfullSnackBar } from 'Iaso/constants/snackBars';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
+import { SxStyles } from 'Iaso/types/general';
 import {
     PaperContainer,
     PaperFullHeight,
@@ -29,12 +30,15 @@ import {
     useGetMetricValues,
 } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
-import { Budget } from './types/budget';
 import { Intervention } from './types/interventions';
 import { MetricsFilters, MetricType } from './types/metrics';
 
 type PlanningParams = {
     scenarioId: number;
+};
+
+const styles: SxStyles = {
+    assignmentContainer: { height: '630px' },
 };
 
 export const Planning: FC = () => {
@@ -176,29 +180,22 @@ export const Planning: FC = () => {
                     </Grid>
                 </Grid>
                 <Grid container spacing={1} sx={{ mt: 0 }}>
-                    <Grid item xs={12} md={5}>
-                        <PaperContainer>
-                            <InterventionAssignments
-                                scenarioId={scenario?.id}
-                                selectedOrgUnits={selectionOnMap}
-                                setSelectedOrgUnits={setSelectionOnMap}
-                                setSelectedInterventions={
-                                    setSelectedInterventions
-                                }
-                                selectedInterventions={selectedInterventions}
-                                interventionPlans={interventionPlans ?? []}
-                            />
-                        </PaperContainer>
+                    <Grid item xs={12} md={3} sx={styles.assignmentContainer}>
+                        <InterventionAssignments
+                            scenarioId={scenario?.id}
+                            selectedOrgUnits={selectionOnMap}
+                            setSelectedInterventions={setSelectedInterventions}
+                            selectedInterventions={selectedInterventions}
+                            interventionPlans={interventionPlans ?? []}
+                        />
                     </Grid>
-                    <Grid item xs={12} md={7}>
-                        <PaperContainer>
-                            <InterventionsPlan
-                                scenarioId={scenario?.id}
-                                totalOrgUnitCount={orgUnits?.length ?? 0}
-                                interventionPlans={interventionPlans ?? []}
-                                isLoadingPlans={isLoadingPlans}
-                            />
-                        </PaperContainer>
+                    <Grid item xs={12} md={9} sx={styles.assignmentContainer}>
+                        <InterventionsPlan
+                            scenarioId={scenario?.id}
+                            totalOrgUnitCount={orgUnits?.length ?? 0}
+                            interventionPlans={interventionPlans ?? []}
+                            isLoadingPlans={isLoadingPlans}
+                        />
                     </Grid>
                     {budget && <Budgeting budgets={budget?.results} />}
                 </Grid>
