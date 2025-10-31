@@ -9,6 +9,8 @@
     "iaso.snt_malaria.label.interventionPlanTitle": "Plan d'intervention",
     "iaso.snt_malaria.label.layers": "Couches",
     "iaso.snt_malaria.label.noInterventionPlanAvailable": "Aucun plan d'intervention disponible",
+    "iaso.snt_malaria.label.customize": "Personnaliser",
+    "iaso.snt_malaria.label.customizeTooltip": "Activer / Desactiver la modification du plan en cliquant sur des zones de la carte.",
     "iaso.snt_malaria.label.noOrgUnitsSelected": "Aucun district n'adhère aux règles de filtrage, aucun district n'a été sélectionné",
     "iaso.snt_malaria.label.orgUnitDistricts": "Districts",
     "iaso.snt_malaria.label.selectOrgUnitsBtn": "Sélectionner les districts",

@@ -5,16 +5,23 @@ import React, {
     useMemo,
     useState,
 } from 'react';
-import { Box, Theme } from '@mui/material';
-import { LoadingSpinner } from 'bluesquare-components';
+import InfoOutlineIcon from '@mui/icons-material/InfoOutlined';
+import { Box, Button, Theme, Tooltip } from '@mui/material';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import L from 'leaflet';
-import { GeoJSON, MapContainer, Tooltip, ZoomControl } from 'react-leaflet';
+import {
+    GeoJSON,
+    MapContainer,
+    Tooltip as LeafletTooltip,
+    ZoomControl,
+} from 'react-leaflet';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../../../../constants/map-theme';
+import { MESSAGES } from '../../../messages';
 import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
@@ -66,8 +73,9 @@ const styles: SxStyles = {
         minWidth: 120,
         '& .MuiSelect-select': { padding: '8px 12px' },
         backgroundColor: 'white',
-        borderRadius: theme.spacing(1),
-        height: '32px',
+        marginRight: 1,
+        borderRadius: theme.spacing(0.5),
+        height: '36px',
         '& .MuiOutlinedInput-notchedOutline': {
             border: 0,
         },
@@ -91,14 +99,22 @@ const styles: SxStyles = {
         marginRight: '8px',
         borderRadius: '2px',
     },
-    selectBox: {
+    actionBox: {
         position: 'absolute',
         top: 8,
         right: 8,
         zIndex: 1000,
-        backgroundColor: 'white',
         borderRadius: 2,
         border: 'none',
+        display: 'flex',
+        alignItems: 'center',
+    },
+    customizeButton: {
+        marginRight: 1,
+        '&.MuiButton-outlined': {
+            borderColor: 'white',
+            backgroundColor: 'white',
+        },
     },
 };
 
@@ -126,7 +142,9 @@ const getInterventionsGroupLabel = (interventions: Intervention[]) => {
 export const InterventionsPlanMap: FunctionComponent<Props> = ({
     scenarioId,
 }) => {
+    const { formatMessage } = useSafeIntl();
     const { data: orgUnits, isLoading: loadingOrgUnits } = useGetOrgUnits();
+    const [editMode, setEditMode] = useState<boolean>(false);
     const { mutateAsync: removeOrgUnitsFromIntervention } =
         useRemoveOrgUnitFromInterventionPlan({ showSuccessSnackBar: false });
     const { mutateAsync: createInterventionAssignment } =
@@ -348,7 +366,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     );
     const onOrgUnitClick = useCallback(
         orgUnitId => {
-            if (!selectedInterventionId) {
+            if (!editMode || !selectedInterventionId) {
                 return;
             }
 
@@ -365,6 +383,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
             }
         },
         [
+            editMode,
             selectedInterventionId,
             localInterventionAssignments,
             removeAssignment,
@@ -421,7 +440,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                                 click: () => onOrgUnitClick(orgUnit.id),
                             }}
                         >
-                            <Tooltip>
+                            <LeafletTooltip>
                                 <b>{orgUnit.short_name}</b>
                                 {orgUnitMapMisc.label && (
                                     <>
@@ -429,12 +448,12 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                                         {orgUnitMapMisc.label}
                                     </>
                                 )}
-                            </Tooltip>
+                            </LeafletTooltip>
                         </GeoJSON>
                     );
                 })}
             </MapContainer>
-            <Box sx={styles.selectBox}>
+            <Box sx={styles.actionBox}>
                 <InterventionSelect
                     onInterventionSelect={setSelectedInterventionId}
                     interventions={localInterventionAssignments?.map(
@@ -443,6 +462,15 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                     selectedInterventionId={selectedInterventionId}
                     sx={styles.select}
                 />
+                <Tooltip title={formatMessage(MESSAGES.customizeTooltip)}>
+                    <Button
+                        variant={editMode ? 'contained' : 'outlined'}
+                        onClick={() => setEditMode(!editMode)}
+                        sx={styles.customizeButton}
+                    >
+                        {formatMessage(MESSAGES.customize)}
+                    </Button>
+                </Tooltip>
             </Box>
             {selectedInterventionId ||
             !localInterventionAssignments ||
