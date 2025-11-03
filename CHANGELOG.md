@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.4.0](https://github.com/BLSQ/snt-malaria/compare/2.3.0...2.4.0) (2025-11-03)
+
+
+### Features
+
+* Add API endpoint to calculate budget ([#103](https://github.com/BLSQ/snt-malaria/issues/103)) ([69607f3](https://github.com/BLSQ/snt-malaria/commit/69607f39a1a0111e91ff9a3a7eed993e5abd3e57))
+* create budgeting models ([#107](https://github.com/BLSQ/snt-malaria/issues/107)) (SNT-160) ([65a3b4f](https://github.com/BLSQ/snt-malaria/commit/65a3b4f2e8cd3abf24fe0edafe2f68fe870a64ca))
+* SNT-121 Add run budget button no action yet ([#75](https://github.com/BLSQ/snt-malaria/issues/75)) ([98323f3](https://github.com/BLSQ/snt-malaria/commit/98323f3ef5be9eba585ac29354f05ee388b68292))
+* SNT-122, SNT-123, SNT-124 metric selection per intervention ([#104](https://github.com/BLSQ/snt-malaria/issues/104)) ([82f4828](https://github.com/BLSQ/snt-malaria/commit/82f4828e48714677aa238c8b999a45136913ac73))
+* SNT-127 Edit detailed cost per intervention ([#92](https://github.com/BLSQ/snt-malaria/issues/92)) ([26ce277](https://github.com/BLSQ/snt-malaria/commit/26ce2778f9a58f35de012d47e19a62a9f7faab36))
+* SNT-147 Validate name and show error ([#98](https://github.com/BLSQ/snt-malaria/issues/98)) ([5cc1654](https://github.com/BLSQ/snt-malaria/commit/5cc1654d0d1122e7677509bed3935257e040792a))
+* SNT-152 manage year for costing ([#110](https://github.com/BLSQ/snt-malaria/issues/110)) ([6661f8e](https://github.com/BLSQ/snt-malaria/commit/6661f8ea17a625f9c1e2b5f3bd2814c55f809250))
+* SNT-154 increase map sizes ([#101](https://github.com/BLSQ/snt-malaria/issues/101)) ([9b9c3b9](https://github.com/BLSQ/snt-malaria/commit/9b9c3b94b39fc214a944b50c1d569350519761ac))
+* SNT-156 Use the budget function package in the backend ([#108](https://github.com/BLSQ/snt-malaria/issues/108)) ([7ece984](https://github.com/BLSQ/snt-malaria/commit/7ece984ad76bed8d112d743ad7b6effa12626b34))
+* SNT-157 define a period for a scenario ([#106](https://github.com/BLSQ/snt-malaria/issues/106)) ([6bc3140](https://github.com/BLSQ/snt-malaria/commit/6bc3140b9c348fac3d8b6c67f427de577061ce69))
+* SNT-159 Replace open field for unit by a select ([#105](https://github.com/BLSQ/snt-malaria/issues/105)) ([77969f3](https://github.com/BLSQ/snt-malaria/commit/77969f35636e122187e8092ebe262f00497ad1a6))
+* SNT-171 update fe response and request for budgeting ([#112](https://github.com/BLSQ/snt-malaria/issues/112)) ([51a03ce](https://github.com/BLSQ/snt-malaria/commit/51a03ce6d5b7ea5b86fb95d84f3f3b5e26daaa36))
+* SNT-172 select unselect org units from intervention plan map ([#113](https://github.com/BLSQ/snt-malaria/issues/113)) ([892c8c1](https://github.com/BLSQ/snt-malaria/commit/892c8c1b50891e20c2250b3eb6c50ed7ebb8fdbb))
+* SNT-173 refinements on budgets ([#115](https://github.com/BLSQ/snt-malaria/issues/115)) ([3317105](https://github.com/BLSQ/snt-malaria/commit/3317105a830e4fba1ff994f8fe7e06d355731b93))
+
+
+### Bug Fixes
+
+* Fix migration ([#114](https://github.com/BLSQ/snt-malaria/issues/114)) ([9e055fa](https://github.com/BLSQ/snt-malaria/commit/9e055fad076fc4bf2e24a841d1776fb479ba2233))
+
 ## [2.3.0](https://github.com/BLSQ/snt-malaria/compare/2.2.0...2.3.0) (2025-09-23)
 
 
