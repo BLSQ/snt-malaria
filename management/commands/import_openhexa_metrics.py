@@ -66,17 +66,9 @@ class Command(BaseCommand):
         except Account.DoesNotExist:
             raise CommandError(f"Account with ID {account_id} not found.")
 
-        # Get user from account for config validation (using first user with account access)
-        user = account.iaso_profile_set.first().user if account.iaso_profile_set.exists() else None
-        if not user:
-            raise CommandError(
-                f"No users found for account '{account.name}' (ID: {account_id}). "
-                f"Cannot validate OpenHEXA configuration."
-            )
-
         # Use centralized config validation
         try:
-            openhexa_url, openhexa_token, workspace_slug, workspace = get_openhexa_config(user)
+            openhexa_url, openhexa_token, workspace_slug, workspace = get_openhexa_config(account)
             self.stdout.write(
                 f"Found OpenHEXA workspace: {workspace_slug} (Instance: {workspace.openhexa_instance.name})"
             )
