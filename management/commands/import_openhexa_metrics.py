@@ -14,10 +14,11 @@ with the account.
 
 import os
 
+from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 
 from iaso.models import Account
-from iaso.models.openhexa import OpenHEXAWorkspace
+from iaso.utils.openhexa import get_openhexa_config
 
 from .support.file_downloader import FileDownloader
 from .support.metrics_importer import MetricsImporter
@@ -32,8 +33,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Validate arguments and get OpenHEXA configuration
-        account, workspace, workspace_slug, dataset_slug = self._validate_arguments(options)
-        openhexa_client = self._setup_openhexa_client(workspace.openhexa_instance)
+        account, openhexa_url, openhexa_token, workspace_slug, workspace, dataset_slug = self._validate_arguments(
+            options
+        )
+        openhexa_client = self._setup_openhexa_client(openhexa_url, openhexa_token)
 
         # Orchestrate the full process
         self._list_available_datasets(openhexa_client, workspace_slug)
@@ -63,32 +66,27 @@ class Command(BaseCommand):
         except Account.DoesNotExist:
             raise CommandError(f"Account with ID {account_id} not found.")
 
-        # Fetch OpenHEXAWorkspace for this account
+        # Get user from account for config validation (using first user with account access)
+        user = account.iaso_profile_set.first().user if account.iaso_profile_set.exists() else None
+        if not user:
+            raise CommandError(
+                f"No users found for account '{account.name}' (ID: {account_id}). "
+                f"Cannot validate OpenHEXA configuration."
+            )
+
+        # Use centralized config validation
         try:
-            workspace = OpenHEXAWorkspace.objects.select_related("openhexa_instance").get(account=account)
+            openhexa_url, openhexa_token, workspace_slug, workspace = get_openhexa_config(user)
             self.stdout.write(
-                f"Found OpenHEXA workspace: {workspace.slug} (Instance: {workspace.openhexa_instance.name})"
+                f"Found OpenHEXA workspace: {workspace_slug} (Instance: {workspace.openhexa_instance.name})"
             )
-        except OpenHEXAWorkspace.DoesNotExist:
+        except ValidationError as e:
             raise CommandError(
-                f"No OpenHEXA workspace configured for account '{account.name}' (ID: {account_id}). "
-                f"Please configure an OpenHEXA workspace for this account in the admin interface."
-            )
-        except OpenHEXAWorkspace.MultipleObjectsReturned:
-            raise CommandError(
-                f"Multiple OpenHEXA workspaces found for account '{account.name}' (ID: {account_id}). "
-                f"Please ensure only one workspace is configured per account."
+                f"OpenHEXA configuration error for account '{account.name}': {e}. "
+                f"Please configure the workspace in the admin interface."
             )
 
-        # Get workspace slug
-        workspace_slug = workspace.slug
-        if not workspace_slug:
-            raise CommandError(
-                f"OpenHEXA workspace for account '{account.name}' has no slug configured. "
-                f"Please update the workspace configuration in the admin interface."
-            )
-
-        # Get dataset slug from workspace config
+        # Get dataset slug from workspace config (specific to this command)
         if not workspace.config:
             raise CommandError(
                 f"OpenHEXA workspace '{workspace_slug}' has no configuration. "
@@ -99,31 +97,18 @@ class Command(BaseCommand):
         if not dataset_slug:
             raise CommandError(
                 f"OpenHEXA workspace '{workspace_slug}' configuration is missing 'snt_results_dataset' key. "
-                f"Expected format: {{\"snt_results_dataset\": \"dataset-slug\"}}"
+                f'Expected format: {{"snt_results_dataset": "dataset-slug"}}'
             )
 
         self.stdout.write(f"Using workspace slug: {workspace_slug}")
         self.stdout.write(f"Using dataset slug: {dataset_slug}")
 
-        return account, workspace, workspace_slug, dataset_slug
+        return account, openhexa_url, openhexa_token, workspace_slug, workspace, dataset_slug
 
-    def _setup_openhexa_client(self, openhexa_instance):
-        server_url = openhexa_instance.url
-        token = openhexa_instance.token
-
-        if not server_url:
-            raise CommandError(
-                f"OpenHEXA instance '{openhexa_instance.name}' has no URL configured. "
-                f"Please update the instance configuration in the admin interface."
-            )
-        if not token:
-            raise CommandError(
-                f"OpenHEXA instance '{openhexa_instance.name}' has no token configured. "
-                f"Please update the instance configuration in the admin interface."
-            )
-
-        self.stdout.write(f"Connecting to {server_url} with token authentication...")
-        return OpenHEXAClient(server_url, token)
+    def _setup_openhexa_client(self, openhexa_url, openhexa_token):
+        """Initialize OpenHEXA client with validated URL and token."""
+        self.stdout.write(f"Connecting to {openhexa_url} with token authentication...")
+        return OpenHEXAClient(openhexa_url, openhexa_token)
 
     def _list_available_datasets(self, openhexa_client, workspace_slug):
         self.stdout.write(f'Checking available datasets in workspace "{workspace_slug}"...')
