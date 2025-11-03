@@ -11,7 +11,7 @@ export const useUpdateScenario = (
     useSnackMutation({
         mutationFn: (body: Scenario) =>
             putRequest(`/api/snt_malaria/scenarios/${scenarioId}/`, body),
-        invalidateQueryKey: ['scenarios', 'scenario', scenarioId],
+        invalidateQueryKey: ['scenarios', `scenario_${scenarioId}`],
         options: {
             onSuccess,
             onError,

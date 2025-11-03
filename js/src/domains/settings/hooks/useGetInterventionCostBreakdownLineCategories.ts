@@ -13,9 +13,5 @@ export const useGetInterventionCostBreakdownLineCategories = (): UseQueryResult<
             getRequest(
                 '/api/snt_malaria/intervention_cost_breakdown_lines/categories/',
             ),
-        options: {
-            staleTime: 1000 * 60 * 15, // in MS
-            cacheTime: 1000 * 60 * 5,
-        },
     });
 };

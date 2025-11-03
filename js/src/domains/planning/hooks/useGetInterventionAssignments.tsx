@@ -17,11 +17,10 @@ export const useGetInterventionAssignments = (
     );
 
     return useSnackQuery({
-        queryKey: ['interventionAssignments', scenarioId],
+        queryKey: ['interventionAssignments'],
         queryFn: () => getRequest(url),
         options: {
-            staleTime: 1000 * 60 * 15,
-            cacheTime: 1000 * 60 * 5,
+            staleTime: 1000 * 60 * 15, // in MS
             select: (data: InterventionAssignmentResponse[]) => {
                 return data.reduce((acc: InterventionPlan[], assignment) => {
                     const existingPlan = acc.find(

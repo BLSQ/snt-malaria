@@ -23,8 +23,6 @@ export const useGetMetricCategories = (): UseQueryResult<
         queryKey: ['metricTypes'],
         queryFn: () => getRequest('/api/metrictypes/'),
         options: {
-            staleTime: 1000 * 60 * 15, // in MS
-            cacheTime: 1000 * 60 * 5,
             select: (data: MetricType[]) => {
                 const groupedPerCategory = Object.groupBy(
                     data,
@@ -81,7 +79,6 @@ export const useGetMetricValues = ({
         queryFn: () => getRequest(url),
         options: {
             staleTime: 1000 * 60 * 15, // in MS
-            cacheTime: 1000 * 60 * 5,
             enabled: Boolean(metricTypeId) || Boolean(orgUnitId),
         },
     });

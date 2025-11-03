@@ -15,9 +15,5 @@ export const useGetOrgUnits = (): UseQueryResult<OrgUnit[], Error> => {
     return useSnackQuery({
         queryKey: ['orgUnits', params],
         queryFn: () => getRequest(url),
-        options: {
-            staleTime: 1000 * 60 * 15, // in MS
-            cacheTime: 1000 * 60 * 5,
-        },
     });
 };
