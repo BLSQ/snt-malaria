@@ -5,18 +5,20 @@ Downloads dataset files from OpenHEXA workspace and imports metrics data
 into Django models for the specified account.
 
 Usage:
-    python manage.py import_openhexa_metrics --workspace_slug <slug> --dataset_slug <slug> --account-id <id>
+    python manage.py import_openhexa_metrics --account-id <id>
 
-Environment variables required:
-    OPENHEXA_URL - OpenHEXA server URL
-    OPENHEXA_TOKEN - API authentication token
+The workspace slug, dataset slug, server URL, and token are automatically
+retrieved from the OpenHEXAWorkspace and OpenHEXAInstance models associated
+with the account.
 """
 
 import os
 
+from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 
 from iaso.models import Account
+from iaso.utils.openhexa import get_openhexa_config
 
 from .support.file_downloader import FileDownloader
 from .support.metrics_importer import MetricsImporter
@@ -27,14 +29,14 @@ class Command(BaseCommand):
     help = "Fetch a dataset from OpenHEXA workspace and import metrics data"
 
     def add_arguments(self, parser):
-        parser.add_argument("--workspace_slug", type=str, help="The slug of the workspace containing the dataset")
-        parser.add_argument("--dataset_slug", type=str, help="The slug of the dataset to fetch")
         parser.add_argument("--account-id", type=int, help="Account ID for importing metrics (required)")
 
     def handle(self, *args, **options):
-        # Validate arguments and environment
-        workspace_slug, dataset_slug, account = self._validate_arguments(options)
-        openhexa_client = self._setup_openhexa_client()
+        # Validate arguments and get OpenHEXA configuration
+        account, openhexa_url, openhexa_token, workspace_slug, workspace, dataset_slug = self._validate_arguments(
+            options
+        )
+        openhexa_client = self._setup_openhexa_client(openhexa_url, openhexa_token)
 
         # Orchestrate the full process
         self._list_available_datasets(openhexa_client, workspace_slug)
@@ -52,14 +54,8 @@ class Command(BaseCommand):
             self._cleanup_temp_file(dataset_path)
 
     def _validate_arguments(self, options):
-        workspace_slug = options["workspace_slug"]
-        dataset_slug = options["dataset_slug"]
         account_id = options["account_id"]
 
-        if not workspace_slug:
-            raise CommandError("--workspace_slug is required. Specify the workspace slug containing the dataset.")
-        if not dataset_slug:
-            raise CommandError("--dataset_slug is required. Specify the slug of the dataset to fetch.")
         if not account_id:
             raise CommandError("--account-id is required. Specify the account ID for importing metrics.")
 
@@ -67,21 +63,44 @@ class Command(BaseCommand):
         try:
             account = Account.objects.get(id=account_id)
             self.stdout.write(f"Using account: {account.name} (ID: {account.id})")
-            return workspace_slug, dataset_slug, account
         except Account.DoesNotExist:
             raise CommandError(f"Account with ID {account_id} not found.")
 
-    def _setup_openhexa_client(self):
-        server_url = os.getenv("OPENHEXA_URL")
-        token = os.getenv("OPENHEXA_TOKEN")
+        # Use centralized config validation
+        try:
+            openhexa_url, openhexa_token, workspace_slug, workspace = get_openhexa_config(account)
+            self.stdout.write(
+                f"Found OpenHEXA workspace: {workspace_slug} (Instance: {workspace.openhexa_instance.name})"
+            )
+        except ValidationError as e:
+            raise CommandError(
+                f"OpenHEXA configuration error for account '{account.name}': {e}. "
+                f"Please configure the workspace in the admin interface."
+            )
 
-        if not server_url:
-            raise CommandError("OPENHEXA_URL environment variable is required")
-        if not token:
-            raise CommandError("OPENHEXA_TOKEN environment variable is required")
+        # Get dataset slug from workspace config (specific to this command)
+        if not workspace.config:
+            raise CommandError(
+                f"OpenHEXA workspace '{workspace_slug}' has no configuration. "
+                f"Please add configuration with 'snt_results_dataset' key in the admin interface."
+            )
 
-        self.stdout.write(f"Connecting to {server_url} with token authentication...")
-        return OpenHEXAClient(server_url, token)
+        dataset_slug = workspace.config.get("snt_results_dataset")
+        if not dataset_slug:
+            raise CommandError(
+                f"OpenHEXA workspace '{workspace_slug}' configuration is missing 'snt_results_dataset' key. "
+                f'Expected format: {{"snt_results_dataset": "dataset-slug"}}'
+            )
+
+        self.stdout.write(f"Using workspace slug: {workspace_slug}")
+        self.stdout.write(f"Using dataset slug: {dataset_slug}")
+
+        return account, openhexa_url, openhexa_token, workspace_slug, workspace, dataset_slug
+
+    def _setup_openhexa_client(self, openhexa_url, openhexa_token):
+        """Initialize OpenHEXA client with validated URL and token."""
+        self.stdout.write(f"Connecting to {openhexa_url} with token authentication...")
+        return OpenHEXAClient(openhexa_url, openhexa_token)
 
     def _list_available_datasets(self, openhexa_client, workspace_slug):
         self.stdout.write(f'Checking available datasets in workspace "{workspace_slug}"...')
