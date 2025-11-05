@@ -17,7 +17,10 @@ export const useGetInterventionAssignments = (
     );
 
     return useSnackQuery({
-        queryKey: ['interventionAssignments'],
+        queryKey: [
+            'interventionAssignments',
+            `interventionAssignments_${scenarioId}`,
+        ],
         queryFn: () => getRequest(url),
         options: {
             staleTime: 1000 * 60 * 15, // in MS

@@ -4,10 +4,10 @@ import { useSnackQuery } from 'Iaso/libs/apiHooks';
 import { BudgetCalculationResponse } from '../types/budget';
 
 export const useGetLatestCalculatedBudget = (
-    scenarioId,
+    scenarioId: number,
 ): UseQueryResult<BudgetCalculationResponse, Error> => {
     return useSnackQuery({
-        queryKey: ['calculated_budget'],
+        queryKey: ['calculated_budget', `calculated_budget_${scenarioId}`],
         queryFn: () =>
             getRequest(
                 `/api/snt_malaria/budgets/get_latest/?scenario_id=${scenarioId}`,
