@@ -21,6 +21,8 @@ export const useGetInterventionAssignments = (
         queryFn: () => getRequest(url),
         options: {
             staleTime: 1000 * 60 * 15, // in MS
+            refetchOnWindowFocus: false, // This is only needed with staleTime set
+            cacheTime: Infinity, // disable auto fetch on cache expiration
             select: (data: InterventionAssignmentResponse[]) => {
                 return data.reduce((acc: InterventionPlan[], assignment) => {
                     const existingPlan = acc.find(

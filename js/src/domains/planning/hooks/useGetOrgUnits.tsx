@@ -15,5 +15,8 @@ export const useGetOrgUnits = (): UseQueryResult<OrgUnit[], Error> => {
     return useSnackQuery({
         queryKey: ['orgUnits', params],
         queryFn: () => getRequest(url),
+        options: {
+            cacheTime: Infinity, // disable auto fetch on cache expiration
+        },
     });
 };

@@ -17,7 +17,9 @@ export const useGetScenario = (
         queryKey: [`scenario_${scenarioId}`],
         queryFn: () => getRequest(`/api/snt_malaria/scenarios/${scenarioId}/`),
         options: {
+            cacheTime: Infinity, // disable auto fetch on cache expiration
             staleTime: 1000 * 60 * 15, // in MS
+            refetchOnWindowFocus: false, // This is only needed with staleTime set
         },
     });
 };

@@ -13,5 +13,8 @@ export const useGetInterventionCostUnitTypes = (): UseQueryResult<
             getRequest(
                 '/api/snt_malaria/intervention_cost_breakdown_lines/unit_types/',
             ),
+        options: {
+            cacheTime: Infinity, // disable auto fetch on cache expiration
+        },
     });
 };

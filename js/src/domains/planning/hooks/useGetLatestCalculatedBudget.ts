@@ -13,6 +13,7 @@ export const useGetLatestCalculatedBudget = (
                 `/api/snt_malaria/budgets/get_latest/?scenario_id=${scenarioId}`,
             ),
         options: {
+            cacheTime: Infinity, // disable auto fetch on cache expiration
             enabled: Boolean(scenarioId),
         },
         ignoreErrorCodes: [404],

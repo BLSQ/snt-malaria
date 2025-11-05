@@ -10,5 +10,8 @@ export const useGetInterventionCategories = (): UseQueryResult<
     return useSnackQuery({
         queryKey: ['interventionCategories'],
         queryFn: () => getRequest('/api/snt_malaria/intervention_categories/'),
+        options: {
+            cacheTime: Infinity, // disable auto fetch on cache expiration
+        },
     });
 };

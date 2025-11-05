@@ -23,6 +23,7 @@ export const useGetMetricCategories = (): UseQueryResult<
         queryKey: ['metricTypes'],
         queryFn: () => getRequest('/api/metrictypes/'),
         options: {
+            cacheTime: Infinity, // disable auto fetch on cache expiration
             select: (data: MetricType[]) => {
                 const groupedPerCategory = Object.groupBy(
                     data,
@@ -78,7 +79,9 @@ export const useGetMetricValues = ({
         queryKey: ['metricValues', metricTypeId, orgUnitId],
         queryFn: () => getRequest(url),
         options: {
+            cacheTime: Infinity, // disable auto fetch on cache expiration
             staleTime: 1000 * 60 * 15, // in MS
+            refetchOnWindowFocus: false, // This is only needed with staleTime set
             enabled: Boolean(metricTypeId) || Boolean(orgUnitId),
         },
     });
