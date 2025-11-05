@@ -11,7 +11,7 @@ export const MESSAGES = defineMessages({
     },
     interventionsSubtitle: {
         id: 'iaso.snt_malaria.settings.intervention.subtitle',
-        defaultMessage: 'Customise and group interventions',
+        defaultMessage: 'Customize and group interventions',
     },
     editCost: {
         id: 'iaso.snt_malaria.settings.intervention.editCost',

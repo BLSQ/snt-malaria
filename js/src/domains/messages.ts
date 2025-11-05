@@ -65,6 +65,15 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.noInterventionPlanAvailable',
         defaultMessage: 'No intervention plan available',
     },
+    customize: {
+        id: 'iaso.snt_malaria.label.customize',
+        defaultMessage: 'Customize',
+    },
+    customizeTooltip: {
+        id: 'iaso.snt_malaria.label.customizeTooltip',
+        defaultMessage:
+            'Enable / Disable modification of plan from the map by clicking on a district',
+    },
     selectOrgUnitsBtn: {
         id: 'iaso.snt_malaria.label.selectOrgUnitsBtn',
         defaultMessage: 'Select districts',
