@@ -67,8 +67,12 @@ export const Planning: FC = () => {
         useGetInterventionAssignments(scenario?.id);
 
     useEffect(() => {
-        if (metricCategories && !displayedMetric) {
-            setDisplayedMetric(metricCategories[1].items[0]);
+        if (
+            metricCategories &&
+            metricCategories.length > 0 &&
+            !displayedMetric
+        ) {
+            setDisplayedMetric(metricCategories[0].items[0]);
         }
     }, [metricCategories, displayedMetric]);
 
