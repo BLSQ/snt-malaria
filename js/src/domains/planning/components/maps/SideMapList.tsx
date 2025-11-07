@@ -31,11 +31,16 @@ type Props = {
     metricCategories: MetricTypeCategory[];
 };
 export const SideMapList: FC<Props> = ({ orgUnits, metricCategories }) => {
-    const [sideMaps, setSideMaps] = useState<MetricType[]>([
-        // TODO: temporary for development purposes
-        metricCategories[1].items[0],
-        metricCategories[2].items[0],
-    ]);
+    const [sideMaps, setSideMaps] = useState<MetricType[]>([]);
+
+    if (metricCategories.length > 2) {
+        setSideMaps([
+            metricCategories[1].items[0],
+            metricCategories[2].items[0],
+        ]);
+    } else if (metricCategories.length > 1) {
+        setSideMaps([metricCategories[1].items[0]]);
+    }
 
     const handleAddSideMap = useCallback(
         (metric: MetricType) => {
