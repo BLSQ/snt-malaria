@@ -57,9 +57,9 @@ export const Budgeting: FC<Props> = ({ budgets }) => {
             interventionsToAdd: BudgetIntervention[],
         ) => {
             const mergedCosts = {};
-            sourceInterventions?.forEach(i => (mergedCosts[i.name] = i));
+            sourceInterventions?.forEach(i => (mergedCosts[i.type] = i));
             interventionsToAdd.forEach(i => {
-                const existing = mergedCosts[i.name];
+                const existing = mergedCosts[i.type];
                 const newVal = { ...i };
                 if (existing) {
                     newVal.total_cost += existing.total_cost;
@@ -69,7 +69,7 @@ export const Budgeting: FC<Props> = ({ budgets }) => {
                     );
                 }
 
-                mergedCosts[i.name] = newVal;
+                mergedCosts[i.type] = newVal;
             });
             return Object.values(mergedCosts) as BudgetIntervention[];
         },

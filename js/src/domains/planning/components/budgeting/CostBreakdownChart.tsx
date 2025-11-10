@@ -82,7 +82,7 @@ export const CostBreakdownChart: FC<Props> = ({ interventionBudgets }) => {
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={data}>
                             <XAxis
-                                dataKey="interventionName"
+                                dataKey="interventionType"
                                 axisLine={false}
                                 tickLine={false}
                             />

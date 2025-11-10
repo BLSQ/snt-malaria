@@ -8,19 +8,9 @@ export const INTERVENTION_COLORS = {
     SMC: '#C54A53',
     'RTS,S': '#F2D683',
     IRS: '#E4754F',
-    'Routine LLIN': '#80B3DC',
-    'Campaign LLIN': '#6BD39D',
+    'LLIN Routine': '#80B3DC',
+    'LLIN Campaign': '#6BD39D',
     IPTp: '#80B3DC',
-};
-
-// TODO: this is temporary, until we sort out intervention codes vs names throughout the codebase
-export const INTERVENTION_CODE_COLORS = {
-    iptp: '#A2CAEA',
-    vacc: '#ACDF9B',
-    pmc: '#F2B16E',
-    smc: '#C54A53',
-    itn_campaign: '#F2D683',
-    itn_routine: '#E4754F',
 };
 
 export const getCostBreakdownChartData = (
@@ -38,7 +28,7 @@ export const getCostBreakdownChartData = (
                     };
                 },
                 {
-                    interventionName: interventionBudget.name,
+                    interventionType: interventionBudget.type,
                 },
             );
         })

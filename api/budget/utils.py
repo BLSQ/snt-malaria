@@ -156,9 +156,9 @@ def build_interventions_input(scenario):
     Format the interventions to fit the requirement of the budgeting library.
     e.g.
     interventions = [
-        {"name": "smc", "type": "SP+AQ", "places": [1, 2, 3]}, # list of org_unit_id
-        {"name": "vacc", "type": "R21", "places": [1, 2, 3, 4, 5]},
-        {"name": "iptp", "type": "SP", "places": [3, 4, 5]},
+        {"code": "smc", "type": "SP+AQ", "places": [1, 2, 3]}, # list of org_unit_id
+        {"code": "vacc", "type": "R21", "places": [1, 2, 3, 4, 5]},
+        {"code": "iptp", "type": "SP", "places": [3, 4, 5]},
     ]
     """
     interventions_dict = {}
@@ -172,7 +172,7 @@ def build_interventions_input(scenario):
         # Group by intervention name and type
         if intervention_code not in interventions_dict:
             interventions_dict[intervention_code] = {
-                "name": intervention_code,
+                "code": intervention_code,
                 "type": intervention_type,
                 "places": [],
             }
