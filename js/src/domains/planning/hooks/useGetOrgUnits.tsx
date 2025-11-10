@@ -16,8 +16,7 @@ export const useGetOrgUnits = (): UseQueryResult<OrgUnit[], Error> => {
         queryKey: ['orgUnits', params],
         queryFn: () => getRequest(url),
         options: {
-            staleTime: 1000 * 60 * 15, // in MS
-            cacheTime: 1000 * 60 * 5,
+            cacheTime: Infinity, // disable auto fetch on cache expiration
         },
     });
 };

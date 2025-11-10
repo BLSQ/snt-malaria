@@ -11,11 +11,7 @@ export const useGetInterventionCategories = (): UseQueryResult<
         queryKey: ['interventionCategories'],
         queryFn: () => getRequest('/api/snt_malaria/intervention_categories/'),
         options: {
-            staleTime: 1000 * 60 * 15, // in MS
-            cacheTime: 1000 * 60 * 5,
-            select: (data: InterventionCategory[]) => {
-                return data;
-            },
+            cacheTime: Infinity, // disable auto fetch on cache expiration
         },
     });
 };

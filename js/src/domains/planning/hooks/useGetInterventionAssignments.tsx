@@ -17,11 +17,15 @@ export const useGetInterventionAssignments = (
     );
 
     return useSnackQuery({
-        queryKey: ['interventionAssignments', scenarioId],
+        queryKey: [
+            'interventionAssignments',
+            `interventionAssignments_${scenarioId}`,
+        ],
         queryFn: () => getRequest(url),
         options: {
-            staleTime: 1000 * 60 * 15,
-            cacheTime: 1000 * 60 * 5,
+            staleTime: 1000 * 60 * 15, // in MS
+            refetchOnWindowFocus: false, // This is only needed with staleTime set
+            cacheTime: Infinity, // disable auto fetch on cache expiration
             select: (data: InterventionAssignmentResponse[]) => {
                 return data.reduce((acc: InterventionPlan[], assignment) => {
                     const existingPlan = acc.find(

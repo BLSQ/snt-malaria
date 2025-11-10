@@ -4,20 +4,16 @@ import { useSnackQuery } from 'Iaso/libs/apiHooks';
 import { BudgetCalculationResponse } from '../types/budget';
 
 export const useGetLatestCalculatedBudget = (
-    scenarioId,
+    scenarioId: number,
 ): UseQueryResult<BudgetCalculationResponse, Error> => {
     return useSnackQuery({
-        queryKey: ['calculated_budget', scenarioId],
+        queryKey: ['calculated_budget', `calculated_budget_${scenarioId}`],
         queryFn: () =>
             getRequest(
                 `/api/snt_malaria/budgets/get_latest/?scenario_id=${scenarioId}`,
             ),
         options: {
-            staleTime: 1000 * 60 * 15, // in MS
-            cacheTime: 1000 * 60 * 5,
-            select: (data: BudgetCalculationResponse) => {
-                return data;
-            },
+            cacheTime: Infinity, // disable auto fetch on cache expiration
             enabled: Boolean(scenarioId),
         },
         ignoreErrorCodes: [404],

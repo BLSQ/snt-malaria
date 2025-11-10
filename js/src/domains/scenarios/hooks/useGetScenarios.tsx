@@ -7,10 +7,6 @@ export const useGetScenarios = (): UseQueryResult<Scenario[], Error> => {
     return useSnackQuery({
         queryKey: ['scenarios'],
         queryFn: () => getRequest('/api/snt_malaria/scenarios/'),
-        options: {
-            staleTime: 1000 * 60 * 15, // in MS
-            cacheTime: 1000 * 60 * 5,
-        },
     });
 };
 
@@ -18,11 +14,12 @@ export const useGetScenario = (
     scenarioId: number,
 ): UseQueryResult<Scenario, Error> => {
     return useSnackQuery({
-        queryKey: ['scenario', scenarioId],
+        queryKey: [`scenario_${scenarioId}`],
         queryFn: () => getRequest(`/api/snt_malaria/scenarios/${scenarioId}/`),
         options: {
+            cacheTime: Infinity, // disable auto fetch on cache expiration
             staleTime: 1000 * 60 * 15, // in MS
-            cacheTime: 1000 * 60 * 5,
+            refetchOnWindowFocus: false, // This is only needed with staleTime set
         },
     });
 };
