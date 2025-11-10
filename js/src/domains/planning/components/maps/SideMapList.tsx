@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import { Box, Theme } from '@mui/material';
 
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
@@ -32,15 +32,16 @@ type Props = {
 };
 export const SideMapList: FC<Props> = ({ orgUnits, metricCategories }) => {
     const [sideMaps, setSideMaps] = useState<MetricType[]>([]);
-
-    if (metricCategories.length > 2) {
-        setSideMaps([
-            metricCategories[1].items[0],
-            metricCategories[2].items[0],
-        ]);
-    } else if (metricCategories.length > 1) {
-        setSideMaps([metricCategories[1].items[0]]);
-    }
+    useEffect(() => {
+        if (metricCategories.length > 2) {
+            setSideMaps([
+                metricCategories[1].items[0],
+                metricCategories[2].items[0],
+            ]);
+        } else if (metricCategories.length > 1) {
+            setSideMaps([metricCategories[1].items[0]]);
+        }
+    }, [metricCategories, setSideMaps]);
 
     const handleAddSideMap = useCallback(
         (metric: MetricType) => {
