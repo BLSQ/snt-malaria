@@ -15,6 +15,7 @@ import {
     formatCostValue,
     formatPercentValue,
     INTERVENTION_CODE_COLORS,
+    INTERVENTION_COLORS,
 } from '../../libs/cost-utils';
 import { BudgetIntervention } from '../../types/budget';
 import { ChartLegend } from './ChartLegend';
@@ -49,11 +50,10 @@ const styles: SxStyles = {
 
 export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
     const { formatMessage } = useSafeIntl();
-
     const data = useMemo(
         () =>
             interventionBudgets?.map(b => ({
-                name: b.name,
+                name: b.type,
                 value: b.total_cost,
             })),
         [interventionBudgets],
@@ -100,9 +100,8 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
                                     <Cell
                                         key={`cell-${entry.name}`}
                                         fill={
-                                            INTERVENTION_CODE_COLORS[
-                                                entry.name.toLowerCase()
-                                            ] ?? DEFAULT_COLOR
+                                            INTERVENTION_COLORS[entry.name] ??
+                                            DEFAULT_COLOR
                                         }
                                     />
                                 ))}

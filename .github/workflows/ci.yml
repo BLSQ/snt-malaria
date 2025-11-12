@@ -74,11 +74,37 @@ jobs:
                 # needed because the postgres container does not provide a health check
                 options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         steps:
+            # Determine which branch of the Iaso repo to use.
+            - name: Determine Iaso Branch
+              id: get_iaso_branch
+              run: |
+                  # Use the same branch name on the IASO repo
+                  # only for branches names starting with SNT
+
+                  PLUGIN_BRANCH="${{ github.head_ref || github.ref_name }}"
+                  DEFAULT_IASO_BRANCH="develop"
+                  BRANCH="${PLUGIN_BRANCH,,}" # lowercase to be case-insensitive
+
+                  echo "Plugin (SaaS) branch is '${PLUGIN_BRANCH}'"
+
+                  if [[ "$BRANCH" == snt* ]]; then
+                    echo "Checking for corresponding branch in Iaso..."
+                    if git ls-remote --exit-code --heads https://github.com/BLSQ/iaso.git "$PLUGIN_BRANCH"; then
+                      echo "Using matching branch '${PLUGIN_BRANCH}' found in Iaso."
+                      echo "branch_name=${PLUGIN_BRANCH}" >> $GITHUB_OUTPUT
+                    else
+                      echo "No matching branch found in Iaso. Using default Iaso branch '${DEFAULT_IASO_BRANCH}'."
+                      echo "branch_name=${DEFAULT_IASO_BRANCH}" >> $GITHUB_OUTPUT
+                    fi
+                  else
+                    echo "Branch name does not match prefix criteria. Using default Iaso branch '${DEFAULT_IASO_BRANCH}'."
+                    echo "branch_name=${DEFAULT_IASO_BRANCH}" >> $GITHUB_OUTPUT
+                  fi
             - name: Checkout Iaso repo
               uses: actions/checkout@v4
               with:
                   repository: 'BLSQ/iaso'
-                  ref: develop
+                  ref: ${{ steps.get_iaso_branch.outputs.branch_name }}
             - name: Checkout SNT Malaria repo nested in the Iaso plugin folder
               uses: actions/checkout@v4
               with:

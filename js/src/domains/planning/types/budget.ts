@@ -6,7 +6,8 @@ export type Budget = {
 };
 
 export type BudgetIntervention = {
-    name: string;
+    type: string;
+    code: string;
     total_cost: number;
     cost_breakdown: BudgetInterventionCostLine[];
 };
