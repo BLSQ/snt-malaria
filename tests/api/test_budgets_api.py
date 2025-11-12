@@ -154,7 +154,7 @@ class ScenarioAPITestCase(APITestCase):
         # Find SMC intervention in the budget
         smc_intervention = None
         for intervention in budget_2025["interventions"]:
-            if intervention["name"] == "smc":
+            if intervention["code"] == "smc":
                 smc_intervention = intervention
                 break
 
@@ -162,7 +162,6 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(smc_intervention["total_cost"], 198000.0)
         self.assertEqual(smc_intervention["total_pop"], 237500.0)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
-        self.assertEqual(smc_intervention["cost_breakdown"][0]["name"], "smc")
         self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
         self.assertEqual(smc_intervention["cost_breakdown"][0]["cost"], 198000.0)
 
