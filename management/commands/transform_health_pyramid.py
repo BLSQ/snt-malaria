@@ -1,7 +1,19 @@
 """
-Django management command to transform health pyramid parquet file and GeoJSON to GeoPackage format.
+Django management command to transform health pyramid data file and GeoJSON to GeoPackage format.
 
+The pyramid file can be in .parquet or .csv format.
 The result is a GeoPackage (.gpkg) file compatible with IASO.
+
+Before usage:
+
+    pip install pyarrow fastparquet
+    pip install --upgrade geopandas
+
+Example usage:
+    ./manage.py transform_health_pyramid \
+        --pyramid-file plugins/snt_malaria/NER_pyramid.parquet \
+        --geojson-file plugins/snt_malaria/NER_shapes.geojson \
+        --output-file plugins/snt_malaria/NER_health_pyramid.gpkg
 """
 
 import sqlite3
@@ -16,10 +28,12 @@ from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
-    help = "Transform health pyramid parquet file and GeoJSON to GeoPackage format"
+    help = "Transform health pyramid data file and GeoJSON to GeoPackage format"
 
     def add_arguments(self, parser):
-        parser.add_argument("--parquet-file", type=str, required=True, help="Path to the parquet file")
+        parser.add_argument(
+            "--pyramid-file", type=str, required=True, help="Path to the pyramid file (.parquet or .csv)"
+        )
         parser.add_argument("--geojson-file", type=str, required=True, help="Path to the GeoJSON file")
         parser.add_argument(
             "--output-file", type=str, help="Path for the output GeoPackage file (default: output.gpkg)"
@@ -40,13 +54,13 @@ class Command(BaseCommand):
 
             # Set file paths
             plugin_dir = Path(__file__).parent.parent.parent
-            parquet_path = options["parquet_file"]
+            pyramid_path = options["pyramid_file"]
             geojson_path = options["geojson_file"]
             output_path = options["output_file"] or str(plugin_dir / "output.gpkg")
 
             # Check if input files exist
-            if not Path(parquet_path).exists():
-                raise CommandError(f"Parquet file not found: {parquet_path}")
+            if not Path(pyramid_path).exists():
+                raise CommandError(f"Pyramid file not found: {pyramid_path}")
 
             if not Path(geojson_path).exists():
                 raise CommandError(f"GeoJSON file not found: {geojson_path}")
@@ -54,7 +68,7 @@ class Command(BaseCommand):
             self.stdout.write("Starting transformation to GeoPackage...")
 
             # Read input files
-            pyramid_df = self.read_parquet_file(parquet_path)
+            pyramid_df = self.read_pyramid_file(pyramid_path)
             shapes_gdf = self.read_geojson_file(geojson_path)
 
             # Filter pyramid data to specified levels
@@ -83,18 +97,30 @@ class Command(BaseCommand):
         except Exception as e:
             raise CommandError(f"Transformation failed: {e}")
 
-    def read_parquet_file(self, parquet_path: str) -> pd.DataFrame:
-        """Read parquet file and return DataFrame."""
+    def read_pyramid_file(self, pyramid_path: str) -> pd.DataFrame:
+        """Read pyramid file (parquet or CSV) and return DataFrame."""
+        file_path = Path(pyramid_path)
+        file_extension = file_path.suffix.lower()
+
         try:
-            df = pd.read_parquet(parquet_path)
-            self.stdout.write(f"Successfully read parquet file: {parquet_path}")
+            if file_extension == ".parquet":
+                df = pd.read_parquet(pyramid_path)
+                self.stdout.write(f"Successfully read parquet file: {pyramid_path}")
+            elif file_extension == ".csv":
+                df = pd.read_csv(pyramid_path)
+                self.stdout.write(f"Successfully read CSV file: {pyramid_path}")
+            else:
+                raise CommandError(
+                    f"Unsupported file format: {file_extension}. Please provide a .parquet or .csv file."
+                )
+
             self.stdout.write(f"\tShape: {df.shape}")
             self.stdout.write(f"\tColumns: {df.columns.tolist()}")
             return df
         except ImportError as e:
-            raise CommandError(f"Missing dependency for parquet support: {e}")
+            raise CommandError(f"Missing dependency: {e}")
         except Exception as e:
-            raise CommandError(f"Error reading parquet file: {e}")
+            raise CommandError(f"Error reading pyramid file: {e}")
 
     def read_geojson_file(self, geojson_path: str) -> gpd.GeoDataFrame:
         """Read GeoJSON file and return GeoDataFrame."""
