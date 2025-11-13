@@ -1,5 +1,6 @@
 import csv
 
+from collections import defaultdict
 from datetime import datetime
 from itertools import groupby
 
@@ -14,6 +15,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from iaso.api.common import CONTENT_TYPE_CSV
+from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 from plugins.snt_malaria.models.intervention import Intervention
 
@@ -94,13 +96,13 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         if not scenario_id:
             raise ValidationError({"id": _("This query parameter is required.")})
         scenario = get_object_or_404(self.get_queryset(), pk=scenario_id)
-
-        assignments = InterventionAssignment.objects.select_related("org_unit", "intervention").filter(
-            scenario__id=scenario_id
-        )
-
         interventions = Intervention.objects.filter(
             intervention_category__account=self.request.user.iaso_profile.account
+        )
+
+        org_units = OrgUnit.objects.filter_for_user(self.request.user).filter(validation_status="VALID")
+        assignments = InterventionAssignment.objects.select_related("org_unit", "intervention").filter(
+            scenario__id=scenario_id
         )
 
         csv_header_columns = self.get_csv_headers(interventions)
@@ -109,13 +111,13 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         writer = csv.writer(response)
         writer.writerow(csv_header_columns)
 
-        sortedAssignments = sorted(assignments, key=lambda a: a.org_unit.name)
-        orgUnitInterventions = groupby(sortedAssignments, key=lambda a: a.org_unit.id)
+        sorted_org_units = sorted(org_units, key=lambda a: a.name)
+        org_unit_interventions = {ou.id: {"name": ou.name, "assignments": []} for ou in sorted_org_units}
+        for assignment in assignments:
+            org_unit_interventions[assignment.org_unit.id]["assignments"].append(assignment)
 
-        for org_unit_id, group in orgUnitInterventions:
-            group_list = list(group)
-            print(group)
-            row = self.get_csv_row(org_unit_id, group_list, interventions)
+        for org_unit_id, oui in org_unit_interventions.items():
+            row = self.get_csv_row(org_unit_id, oui["name"], oui["assignments"], interventions)
             if row:
                 writer.writerow(row)
 
@@ -129,11 +131,8 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         csv_header_columns.extend(intervention_names)
         return csv_header_columns
 
-    def get_csv_row(self, org_unit_id, org_unit_interventions, interventions):
-        if not org_unit_interventions or len(org_unit_interventions) <= 0:
-            return None
-
-        row = [org_unit_id, org_unit_interventions[0].org_unit.name]
+    def get_csv_row(self, org_unit_id, org_unit_name, org_unit_interventions, interventions):
+        row = [org_unit_id, org_unit_name]
         for intervention in interventions:
             if any(assignment.intervention.id == intervention.id for assignment in org_unit_interventions):
                 row.append(1)
