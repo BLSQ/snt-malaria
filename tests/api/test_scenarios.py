@@ -2,6 +2,8 @@ from django.urls import reverse
 from rest_framework import status
 
 from iaso.models import Account, OrgUnit, OrgUnitType
+from iaso.models.data_source import DataSource, SourceVersion
+from iaso.models.project import Project
 from iaso.test import APITestCase
 from plugins.snt_malaria.models import Intervention, InterventionAssignment, InterventionCategory, Scenario
 
@@ -56,9 +58,30 @@ class ScenarioAPITestCase(APITestCase):
         )
 
         # Create Org Units
+        cls.project = project = Project.objects.create(
+            name="Hydroponic gardens",
+            app_id="stars.empire.agriculture.hydroponics",
+            account=cls.account,
+        )
+        sw_source = DataSource.objects.create(name="Evil Empire")
+        sw_source.projects.add(project)
+        cls.sw_source = sw_source
+        cls.sw_version_1 = sw_version_1 = SourceVersion.objects.create(data_source=sw_source, number=1)
+        cls.user.default_version = sw_version_1
+        cls.user.save()
         cls.out_district = OrgUnitType.objects.create(name="DISTRICT")
-        cls.district1 = OrgUnit.objects.create(org_unit_type=cls.out_district, name="District 1")
-        cls.district2 = OrgUnit.objects.create(org_unit_type=cls.out_district, name="District 2")
+        cls.district1 = OrgUnit.objects.create(
+            org_unit_type=cls.out_district,
+            name="District 1",
+            validation_status=OrgUnit.VALIDATION_VALID,
+            version=sw_version_1,
+        )
+        cls.district2 = OrgUnit.objects.create(
+            org_unit_type=cls.out_district,
+            name="District 2",
+            validation_status=OrgUnit.VALIDATION_VALID,
+            version=sw_version_1,
+        )
 
         # Create assignments related to the scenario
         cls.assignment = InterventionAssignment.objects.create(
@@ -169,3 +192,17 @@ class ScenarioAPITestCase(APITestCase):
 
         self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
         self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
+
+    def test_scenario_export_to_csv(self):
+        url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id}"
+        response = self.client.get(url)
+
+        csvList = self.assertCsvFileResponse(response, return_as_lists=True)
+        self.assertEqual(len(csvList), 3)  # Headers + 2 org units
+        csvHeaders = csvList[0]
+        csvDistrict1 = csvList[1]
+        csvDistrict2 = csvList[2]
+
+        self.assertSequenceEqual(csvHeaders, ["org_unit_id", "org_unit_name", "IPTp", "RTS,S", "SMC"])
+        self.assertSequenceEqual(csvDistrict1, [str(self.district1.id), self.district1.name, "1", "0", "0"])
+        self.assertSequenceEqual(csvDistrict2, [str(self.district2.id), self.district2.name, "0", "1", "1"])

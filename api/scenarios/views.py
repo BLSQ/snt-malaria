@@ -100,7 +100,9 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             intervention_category__account=self.request.user.iaso_profile.account
         )
 
-        org_units = OrgUnit.objects.filter_for_user(self.request.user).filter(validation_status="VALID")
+        org_units = OrgUnit.objects.filter_for_user(self.request.user).filter(
+            validation_status=OrgUnit.VALIDATION_VALID
+        )
         assignments = InterventionAssignment.objects.select_related("org_unit", "intervention").filter(
             scenario__id=scenario_id
         )

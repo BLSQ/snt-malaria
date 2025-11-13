@@ -1,7 +1,6 @@
 import React, { FC, useCallback, useState } from 'react';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import CloseIcon from '@mui/icons-material/Close';
-import ContentPasteGoOutlinedIcon from '@mui/icons-material/ContentPasteGoOutlined';
 import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { Box, Typography, IconButton, Theme, Button } from '@mui/material';
@@ -11,6 +10,7 @@ import { useFormik } from 'formik';
 import { useNavigate } from 'react-router-dom';
 import * as Yup from 'yup';
 import DeleteDialog from 'Iaso/components/dialogs/DeleteDialogComponent';
+import DownloadButtonsComponent from 'Iaso/components/DownloadButtonsComponent';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { baseUrls } from '../../../constants/urls';
@@ -20,7 +20,7 @@ import { useDeleteScenario } from '../../scenarios/hooks/useDeleteScenario';
 import { useDuplicateScenario } from '../../scenarios/hooks/useDuplicateScenario';
 import { useUpdateScenario } from '../../scenarios/hooks/useUpdateScenario';
 import { Scenario } from '../../scenarios/types';
-import DownloadButtonsComponent from 'Iaso/components/DownloadButtonsComponent';
+
 const actionBtnStyles = (theme: Theme) => ({
     color: theme.palette.primary.main,
     fontWeight: 'bold', // medium not working?
