@@ -196,7 +196,7 @@ class Command(BaseCommand):
             }
         )
         country_gdf = gpd.GeoDataFrame(country_df[iaso_columns], geometry="geography", crs="EPSG:4326")
-        country_gdf.to_file(output_path, driver="GPKG", layer="level-0-Country", crs="EPSG:4326")
+        country_gdf.to_file(output_path, driver="GPKG", layer="level-0-Country")
         self.stdout.write(f"Written {len(country_gdf)} country feature(s)")
 
         # Create Level 1 (Region) layer - extract unique regions from the data
@@ -232,7 +232,7 @@ class Command(BaseCommand):
             }
         )
         region_gdf = gpd.GeoDataFrame(region_df[iaso_columns], geometry="geography", crs="EPSG:4326")
-        region_gdf.to_file(output_path, driver="GPKG", layer="level-1-Region", crs="EPSG:4326")
+        region_gdf.to_file(output_path, driver="GPKG", layer="level-1-Region")
         self.stdout.write(f"Written {len(region_gdf)} region features")
 
         # Create Level 2 (District) layer - the main data with geometry
@@ -301,7 +301,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Writing {len(iaso_gdf)} district features")
 
         # Write to GeoPackage following IASO format
-        iaso_gdf.to_file(output_path, driver="GPKG", layer="level-2-District", crs="EPSG:4326")
+        iaso_gdf.to_file(output_path, driver="GPKG", layer="level-2-District")
 
     def add_empty_groups_table(self, gpkg_path: str) -> None:
         """Create an empty groups table in the GeoPackage for IASO compatibility."""
