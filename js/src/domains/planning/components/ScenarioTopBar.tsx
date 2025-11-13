@@ -20,6 +20,7 @@ import { useDeleteScenario } from '../../scenarios/hooks/useDeleteScenario';
 import { useDuplicateScenario } from '../../scenarios/hooks/useDuplicateScenario';
 import { useUpdateScenario } from '../../scenarios/hooks/useUpdateScenario';
 import { Scenario } from '../../scenarios/types';
+import DownloadButtonsComponent from 'Iaso/components/DownloadButtonsComponent';
 const actionBtnStyles = (theme: Theme) => ({
     color: theme.palette.primary.main,
     fontWeight: 'bold', // medium not working?
@@ -88,6 +89,8 @@ type Props = {
 };
 
 export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
+    const csvUrl = `/api/snt_malaria/scenarios/export_to_csv/?id=${scenario.id}`;
+
     const navigate = useNavigate();
     const { formatMessage } = useSafeIntl();
     const [isEditing, setIsEditing] = useState(false);
@@ -212,10 +215,7 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                         <CheckCircleOutlinedIcon sx={styles.icon} />
                         Saved
                     </Typography>
-                    <Typography variant="body2" sx={styles.actionBtn}>
-                        <ContentPasteGoOutlinedIcon sx={styles.icon} />
-                        Export
-                    </Typography>
+                    <DownloadButtonsComponent variant="text" csvUrl={csvUrl} />
                     <Button
                         variant="text"
                         sx={styles.actionBtn}
