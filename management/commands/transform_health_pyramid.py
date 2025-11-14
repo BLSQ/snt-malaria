@@ -71,6 +71,16 @@ class Command(BaseCommand):
             pyramid_df = self.read_pyramid_file(pyramid_path)
             shapes_gdf = self.read_geojson_file(geojson_path)
 
+            # # Changes for Nigeria from IDM data:
+            # # Add LEVEL_1_ID and LEVEL_2_ID
+            # pyramid_df["LEVEL_1_ID"] = pyramid_df["LEVEL_1_NAME"]
+            # pyramid_df["LEVEL_2_ID"] = pyramid_df["LEVEL_2_NAME"]
+            # # Construct the ADM1_ID and ADM2_ID keys
+            # shapes_gdf["ADM1_ID"] = shapes_gdf["State"]
+            # shapes_gdf["ADM1_NAME"] = shapes_gdf["State"]
+            # shapes_gdf["ADM2_ID"] = shapes_gdf["State"] + ":" + shapes_gdf["LGA"]
+            # shapes_gdf["ADM2_NAME"] = shapes_gdf["LGA"]
+
             # Filter pyramid data to specified levels
             filtered_pyramid = self.filter_pyramid_levels(pyramid_df, levels)
 
@@ -259,6 +269,8 @@ class Command(BaseCommand):
         )
         region_gdf = gpd.GeoDataFrame(region_df[iaso_columns], geometry="geography", crs="EPSG:4326")
         region_gdf.to_file(output_path, driver="GPKG", layer="level-1-Region")
+        # Nigeria
+        # region_gdf.to_file(output_path, driver="GPKG", layer="level-1-State")
         self.stdout.write(f"Written {len(region_gdf)} region features")
 
         # Create Level 2 (District) layer - the main data with geometry
@@ -328,6 +340,8 @@ class Command(BaseCommand):
 
         # Write to GeoPackage following IASO format
         iaso_gdf.to_file(output_path, driver="GPKG", layer="level-2-District")
+        # Nigeria
+        # iaso_gdf.to_file(output_path, driver="GPKG", layer="level-2-LGA")
 
     def add_empty_groups_table(self, gpkg_path: str) -> None:
         """Create an empty groups table in the GeoPackage for IASO compatibility."""
