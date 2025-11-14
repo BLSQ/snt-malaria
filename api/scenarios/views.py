@@ -1,6 +1,11 @@
+import csv
+
+from collections import defaultdict
 from datetime import datetime
+from itertools import groupby
 
 from django.db import IntegrityError
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
@@ -9,7 +14,10 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
+from iaso.api.common import CONTENT_TYPE_CSV
+from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
+from plugins.snt_malaria.models.intervention import Intervention
 
 from .serializers import DuplicateScenarioSerializer, ScenarioSerializer
 
@@ -80,3 +88,57 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             assignment.save()
         serializer = self.get_serializer(scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # Custom action to download scenario as CSV
+    @action(detail=False, methods=["get"])
+    def export_to_csv(self, request):
+        scenario_id = request.query_params.get("id")
+        if not scenario_id:
+            raise ValidationError({"id": _("This query parameter is required.")})
+        scenario = get_object_or_404(self.get_queryset(), pk=scenario_id)
+        interventions = Intervention.objects.filter(
+            intervention_category__account=self.request.user.iaso_profile.account
+        )
+
+        org_units = OrgUnit.objects.filter_for_user(self.request.user).filter(
+            validation_status=OrgUnit.VALIDATION_VALID
+        )
+        assignments = InterventionAssignment.objects.select_related("org_unit", "intervention").filter(
+            scenario__id=scenario_id
+        )
+
+        csv_header_columns = self.get_csv_headers(interventions)
+
+        response = HttpResponse(content_type=CONTENT_TYPE_CSV)
+        writer = csv.writer(response)
+        writer.writerow(csv_header_columns)
+
+        sorted_org_units = sorted(org_units, key=lambda a: a.name)
+        org_unit_interventions = {ou.id: {"name": ou.name, "assignments": []} for ou in sorted_org_units}
+        for assignment in assignments:
+            org_unit_interventions[assignment.org_unit.id]["assignments"].append(assignment)
+
+        for org_unit_id, oui in org_unit_interventions.items():
+            row = self.get_csv_row(org_unit_id, oui["name"], oui["assignments"], interventions)
+            if row:
+                writer.writerow(row)
+
+        filename = "%s--%s.csv" % (scenario.name, datetime.now().strftime("%Y-%m-%d"))
+        response["Content-Disposition"] = "attachment; filename=" + filename
+        return response
+
+    def get_csv_headers(self, interventions):
+        csv_header_columns = ["org_unit_id", "org_unit_name"]
+        intervention_names = interventions.values_list("name", flat=True)
+        csv_header_columns.extend(intervention_names)
+        return csv_header_columns
+
+    def get_csv_row(self, org_unit_id, org_unit_name, org_unit_interventions, interventions):
+        row = [org_unit_id, org_unit_name]
+        for intervention in interventions:
+            if any(assignment.intervention.id == intervention.id for assignment in org_unit_interventions):
+                row.append(1)
+            else:
+                row.append(0)
+
+        return row
