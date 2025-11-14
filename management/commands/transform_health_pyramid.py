@@ -203,8 +203,8 @@ class Command(BaseCommand):
 
         # Get unique country from the merged data
         countries = gdf[["LEVEL_1_NAME", "LEVEL_1_ID"]].drop_duplicates()
-        country_names = countries["LEVEL_1_NAME"].tolist()
-        country_refs = countries["LEVEL_1_ID"].tolist()
+        country_names = countries["LEVEL_1_NAME"].dropna().tolist()
+        country_refs = countries["LEVEL_1_ID"].dropna().tolist()
 
         country_df = gpd.GeoDataFrame(
             {
