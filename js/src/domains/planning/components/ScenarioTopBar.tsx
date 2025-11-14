@@ -13,6 +13,7 @@ import DeleteDialog from 'Iaso/components/dialogs/DeleteDialogComponent';
 import DownloadButtonsComponent from 'Iaso/components/DownloadButtonsComponent';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
+import { exportScenarioAPIPath } from '../../../constants/api-urls';
 import { baseUrls } from '../../../constants/urls';
 
 import { MESSAGES } from '../../messages';
@@ -89,7 +90,7 @@ type Props = {
 };
 
 export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
-    const csvUrl = `/api/snt_malaria/scenarios/export_to_csv/?id=${scenario.id}`;
+    const csvUrl = `${exportScenarioAPIPath}?id=${scenario.id}`;
 
     const navigate = useNavigate();
     const { formatMessage } = useSafeIntl();

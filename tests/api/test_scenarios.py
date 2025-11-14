@@ -197,12 +197,18 @@ class ScenarioAPITestCase(APITestCase):
         url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id}"
         response = self.client.get(url)
 
-        csvList = self.assertCsvFileResponse(response, return_as_lists=True)
-        self.assertEqual(len(csvList), 3)  # Headers + 2 org units
-        csvHeaders = csvList[0]
-        csvDistrict1 = csvList[1]
-        csvDistrict2 = csvList[2]
+        csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
+        self.assertEqual(len(csv_list), 3)  # Headers + 2 org units
+        csv_headers = csv_list[0]
+        csv_district_1 = csv_list[1]
+        csv_district_2 = csv_list[2]
 
-        self.assertSequenceEqual(csvHeaders, ["org_unit_id", "org_unit_name", "IPTp", "RTS,S", "SMC"])
-        self.assertSequenceEqual(csvDistrict1, [str(self.district1.id), self.district1.name, "1", "0", "0"])
-        self.assertSequenceEqual(csvDistrict2, [str(self.district2.id), self.district2.name, "0", "1", "1"])
+        self.assertSequenceEqual(csv_headers, ["org_unit_id", "org_unit_name", "IPTp", "RTS,S", "SMC"])
+        self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "1", "0", "0"])
+        self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "1", "1"])
+
+    def test_scenario_export_to_csv_unauthicated(self):
+        self.client.force_authenticate(user=None)
+        url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

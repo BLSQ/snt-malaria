@@ -58,5 +58,10 @@
     "iaso.snt_malaria.proportion-chart.title": "Proportion du budget total par intervention",
     "iaso.snt_malaria.budgeting.selectYear": "Selection de l'année",
     "iaso.snt_malaria.budgeting.entirePeriod": "Periode complète",
-    "iaso.snt_malaria.settings.intervention.selectYear": "Sélectionner l'année"
+    "iaso.snt_malaria.settings.intervention.selectYear": "Sélectionner l'année",
+    "iaso.snt_malaria.more": "Plus",
+    "iaso.snt_malaria.loading": "Chargement du contenu...",
+    "iaso.snt_malaria.scenario.downloadCSVTemplate": "Télécharger le Template CSV",
+    "iaso.snt_malaria.scenario.importCSV": "Importer CSV",
+    "iaso.snt_malaria.scenario.createScenario": "Créer un scenario"
 }
