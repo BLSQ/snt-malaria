@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.5.0](https://github.com/BLSQ/snt-malaria/compare/2.4.0...2.5.0) (2025-11-14)
+
+
+### Features
+
+* Remove cache duration and only keep staleTime when it makes sense ([#117](https://github.com/BLSQ/snt-malaria/issues/117)) ([549f373](https://github.com/BLSQ/snt-malaria/commit/549f373b178fd7f13b94ff3c346a1ef093419c86))
+* SNT-178: Add customize button on intervention plan map ([#116](https://github.com/BLSQ/snt-malaria/issues/116)) ([3c14d38](https://github.com/BLSQ/snt-malaria/commit/3c14d381f31fbf69adb820b7833a87520af14b28))
+* SNT-185 Update snt_malaria_budgeting package version ([#121](https://github.com/BLSQ/snt-malaria/issues/121)) ([9b06945](https://github.com/BLSQ/snt-malaria/commit/9b0694543faea4b3c79f0fe89b4e5f32d54f9d30))
+* SNT-186 endpoint for nsp csv intervention assignments ([#122](https://github.com/BLSQ/snt-malaria/issues/122)) ([25b04b4](https://github.com/BLSQ/snt-malaria/commit/25b04b41615af585d6cd1e41801ecc4dc79e41e9))
+
+
+### Bug Fixes
+
+* Don´t break the scenario page if there are no metrics ([#119](https://github.com/BLSQ/snt-malaria/issues/119)) ([c7b80c7](https://github.com/BLSQ/snt-malaria/commit/c7b80c7f779f7587638ae049ac5bf2c68f06ab85))
+* Prevent infinite loop in scenario side map ([#120](https://github.com/BLSQ/snt-malaria/issues/120)) ([fee336c](https://github.com/BLSQ/snt-malaria/commit/fee336c3e432e71e075dc272307fcb596aeb01dc))
+
 ## [2.4.0](https://github.com/BLSQ/snt-malaria/compare/2.3.0...2.4.0) (2025-11-03)
 
 
