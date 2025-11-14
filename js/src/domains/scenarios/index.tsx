@@ -1,6 +1,16 @@
-import React, { FC } from 'react';
-import { Box, Button, Theme } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import React, { FC, useState } from 'react';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import {
+    Box,
+    Button,
+    ClickAwayListener,
+    Link,
+    MenuItem,
+    MenuList,
+    Popover,
+    Theme,
+} from '@mui/material';
+import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { useNavigate } from 'react-router-dom';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { SxStyles } from 'Iaso/types/general';
@@ -9,6 +19,7 @@ import {
     PageContainer,
 } from '../../components/styledComponents';
 
+import { exportScenarioAPIPath } from '../../constants/api-urls';
 import { baseUrls } from '../../constants/urls';
 import { MESSAGES } from '../messages';
 import { ScenarioComponent } from './components/ScenarioComponent';
@@ -19,10 +30,11 @@ import { Scenario } from './types';
 const styles: SxStyles = {
     buttonsBox: (theme: Theme) => ({
         display: 'flex',
-        justifyContent: 'space-between',
+        justifyContent: 'end',
         alignItems: 'right',
         width: '100%',
         marginBottom: theme.spacing(4),
+        gap: 2,
     }),
     button: {
         color: 'white',
@@ -30,12 +42,18 @@ const styles: SxStyles = {
         fontWeight: 'bold',
         textTransform: 'none',
     },
+    moreButton: {
+        paddingLeft: 1,
+        paddingRight: 1,
+    },
 };
 
 export const Scenarios: FC = () => {
     const { formatMessage } = useSafeIntl();
     const navigate = useNavigate();
     const { data: scenarios, isLoading } = useGetScenarios();
+    const [isOpen, setIsOpen] = useState<boolean>(false);
+    const anchorRef = React.useRef<HTMLDivElement>(null);
 
     const { mutateAsync: createScenario, isLoading: isLoadingCreateScenario } =
         useCreateScenario();
@@ -45,13 +63,27 @@ export const Scenarios: FC = () => {
         navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
     };
 
+    const togglePopover = () => {
+        setIsOpen(!isOpen);
+    };
+
+    const handleClose = (event: Event) => {
+        if (
+            anchorRef.current &&
+            anchorRef.current.contains(event.target as HTMLElement)
+        ) {
+            return;
+        }
+
+        setIsOpen(false);
+    };
+
     return (
         <>
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
             <PageContainer>
                 <ContentsContainer>
                     <Box sx={styles.buttonsBox}>
-                        <div>{/* empty div for styling purposes */}</div>
                         <Button
                             sx={styles.button}
                             variant="contained"
@@ -60,11 +92,47 @@ export const Scenarios: FC = () => {
                             onClick={handleCreateScenario}
                             disabled={isLoadingCreateScenario}
                         >
-                            Create scenario
+                            {formatMessage(MESSAGES.createScenario)}
                         </Button>
+                        <Box ref={anchorRef}>
+                            <IconButton
+                                overrideIcon={MoreHorizIcon}
+                                onClick={togglePopover}
+                                tooltipMessage={MESSAGES.more}
+                            ></IconButton>
+                        </Box>
+                        <Popover
+                            id="import_scenario"
+                            open={isOpen}
+                            anchorEl={anchorRef.current}
+                            anchorOrigin={{
+                                vertical: 'bottom',
+                                horizontal: 'right',
+                            }}
+                            transformOrigin={{
+                                vertical: 'top',
+                                horizontal: 'right',
+                            }}
+                        >
+                            <ClickAwayListener onClickAway={handleClose}>
+                                <MenuList>
+                                    <MenuItem href="#">
+                                        {formatMessage(MESSAGES.importCSV)}
+                                    </MenuItem>
+                                    <MenuItem
+                                        component={Link}
+                                        href={exportScenarioAPIPath}
+                                    >
+                                        {formatMessage(
+                                            MESSAGES.downloadCSVTemplate,
+                                        )}
+                                    </MenuItem>
+                                </MenuList>
+                            </ClickAwayListener>
+                        </Popover>
                     </Box>
 
-                    {isLoading && <p>Loading data...</p>}
+                    {isLoading && <p>{formatMessage(MESSAGES.loading)}</p>}
                     {!isLoading &&
                         scenarios &&
                         scenarios.map((scenario: Scenario) => (
