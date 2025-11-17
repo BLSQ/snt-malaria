@@ -89,8 +89,35 @@ class Command(BaseCommand):
                 filtered_pyramid,
                 left_on="ADM2_ID",
                 right_on="LEVEL_3_ID",
-                how="left",
+                how="inner",
+                validate="1:1",  # Make sure there are no duplicate matches
             )
+
+            # Check if any records were dropped, this would mean that there are
+            # records in the pyramid without a matching shape.
+            # If so, do a full outer merge to print out the ones that don't match.
+            if len(merged_gdf) != len(filtered_pyramid):
+                outer_merged_gdf = shapes_gdf.merge(
+                    filtered_pyramid,
+                    left_on="ADM2_ID",
+                    right_on="LEVEL_3_ID",
+                    how="outer",  # changed to outer to keep all records
+                    indicator=True,  # adds a _merge column
+                )
+
+                # See the merge results
+                print(outer_merged_gdf["_merge"].value_counts())
+
+                # Records only in filtered_pyramid (right)
+                right_only = outer_merged_gdf[outer_merged_gdf["_merge"] == "right_only"]
+                print(f"\nRecords only in filtered_pyramid: {len(right_only)}")
+                print(right_only[["LEVEL_3_ID"]])
+
+                raise ValueError(
+                    f"Merge dropped records! Expected {len(filtered_pyramid)} rows, "
+                    f"got {len(merged_gdf)} rows. "
+                    f"{len(filtered_pyramid) - len(merged_gdf)} records from filtered_pyramid had no match."
+                )
 
             # Transform to IASO format and write to GeoPackage
             try:
