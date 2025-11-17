@@ -3,6 +3,7 @@ import csv
 from datetime import datetime
 
 from django.db import IntegrityError
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
@@ -104,6 +105,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             OrgUnit.objects.order_by("name")
             .filter_for_user(self.request.user)
             .filter(validation_status=OrgUnit.VALIDATION_VALID)
+            .filter(Q(location__isnull=False) | Q(simplified_geom__isnull=False))
         )
 
         assignments = (
