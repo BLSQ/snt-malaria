@@ -126,7 +126,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             if ou_id in org_unit_interventions:
                 org_unit_interventions[ou_id]["assignments"].append(assignment)
             else:
-                print(f"User doesn't have access to org unit {ou_id} of an assignment, skipping in export")
+                raise PermissionError(f"User doesn't have access to org unit {ou_id} of an assignment")
 
         for org_unit_id, oui in org_unit_interventions.items():
             row = self.get_csv_row(org_unit_id, oui["name"], oui["assignments"], interventions)
