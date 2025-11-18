@@ -56,7 +56,7 @@ def get_assignments_from_row(user, scenario, row, interventions):
         if assigned_value == 1:
             assignment = InterventionAssignment(
                 scenario=scenario,
-                org_unit=row["org_unit_id"],
+                org_unit_id=row["org_unit_id"],
                 intervention_id=intervention["id"],
                 created_by=user,
             )
