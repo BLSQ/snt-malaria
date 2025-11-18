@@ -203,4 +203,24 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.budgeting.entirePeriod',
         defaultMessage: 'Entire period',
     },
+    more: {
+        id: 'iaso.snt_malaria.more',
+        defaultMessage: 'More',
+    },
+    loading: {
+        id: 'iaso.snt_malaria.loading',
+        defaultMessage: 'Loading content...',
+    },
+    downloadCSVTemplate: {
+        id: 'iaso.snt_malaria.scenario.downloadCSVTemplate',
+        defaultMessage: 'Download CSV Template',
+    },
+    importCSV: {
+        id: 'iaso.snt_malaria.scenario.importCSV',
+        defaultMessage: 'Import CSV',
+    },
+    createScenario: {
+        id: 'iaso.snt_malaria.scenario.createScenario',
+        defaultMessage: 'Create Scenario',
+    },
 });

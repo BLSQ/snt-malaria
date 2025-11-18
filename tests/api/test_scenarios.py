@@ -1,3 +1,4 @@
+from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 from django.urls import reverse
 from rest_framework import status
 
@@ -59,28 +60,33 @@ class ScenarioAPITestCase(APITestCase):
 
         # Create Org Units
         cls.project = project = Project.objects.create(
-            name="Hydroponic gardens",
-            app_id="stars.empire.agriculture.hydroponics",
+            name="Project",
+            app_id="APP_ID",
             account=cls.account,
         )
-        sw_source = DataSource.objects.create(name="Evil Empire")
+        sw_source = DataSource.objects.create(name="data_source")
         sw_source.projects.add(project)
         cls.sw_source = sw_source
         cls.sw_version_1 = sw_version_1 = SourceVersion.objects.create(data_source=sw_source, number=1)
         cls.user.default_version = sw_version_1
         cls.user.save()
         cls.out_district = OrgUnitType.objects.create(name="DISTRICT")
+        cls.mock_multipolygon = MultiPolygon(Polygon([[-1.3, 2.5], [-1.7, 2.8], [-1.1, 4.1], [-1.3, 2.5]]))
         cls.district1 = OrgUnit.objects.create(
             org_unit_type=cls.out_district,
             name="District 1",
             validation_status=OrgUnit.VALIDATION_VALID,
             version=sw_version_1,
+            location=Point(x=4, y=50, z=100),
+            geom=cls.mock_multipolygon,
         )
         cls.district2 = OrgUnit.objects.create(
             org_unit_type=cls.out_district,
             name="District 2",
             validation_status=OrgUnit.VALIDATION_VALID,
             version=sw_version_1,
+            location=Point(x=4, y=50, z=100),
+            geom=cls.mock_multipolygon,
         )
 
         # Create assignments related to the scenario
@@ -197,12 +203,46 @@ class ScenarioAPITestCase(APITestCase):
         url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id}"
         response = self.client.get(url)
 
-        csvList = self.assertCsvFileResponse(response, return_as_lists=True)
-        self.assertEqual(len(csvList), 3)  # Headers + 2 org units
-        csvHeaders = csvList[0]
-        csvDistrict1 = csvList[1]
-        csvDistrict2 = csvList[2]
+        csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
+        self.assertEqual(len(csv_list), 3)  # Headers + 2 org units
+        csv_headers = csv_list[0]
+        csv_district_1 = csv_list[1]
+        csv_district_2 = csv_list[2]
 
-        self.assertSequenceEqual(csvHeaders, ["org_unit_id", "org_unit_name", "IPTp", "RTS,S", "SMC"])
-        self.assertSequenceEqual(csvDistrict1, [str(self.district1.id), self.district1.name, "1", "0", "0"])
-        self.assertSequenceEqual(csvDistrict2, [str(self.district2.id), self.district2.name, "0", "1", "1"])
+        self.assertSequenceEqual(csv_headers, ["org_unit_id", "org_unit_name", "IPTp", "RTS,S", "SMC"])
+        self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "1", "0", "0"])
+        self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "1", "1"])
+
+    def test_scenario_export_to_csv_no_scenario_id_returns_template(self):
+        url = "/api/snt_malaria/scenarios/export_to_csv/"
+        response = self.client.get(url)
+
+        csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
+        self.assertEqual(len(csv_list), 3)  # Headers + 2 org units
+        csv_headers = csv_list[0]
+        csv_district_1 = csv_list[1]
+        csv_district_2 = csv_list[2]
+
+        self.assertSequenceEqual(csv_headers, ["org_unit_id", "org_unit_name", "IPTp", "RTS,S", "SMC"])
+        self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "0", "0", "0"])
+        self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "0", "0"])
+
+    def test_scenario_export_to_csv_unauthicated(self):
+        self.client.force_authenticate(user=None)
+        url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_scenario_export_to_csv_non_existing_scenario(self):
+        url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id + 1}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_scenario_export_to_csv_no_acces_to_scenario(self):
+        wrong_account = Account.objects.create(name="Test Account Invalid")
+        wrong_user = self.create_user_with_profile(username="testuserinvalid", account=wrong_account)
+        self.client.force_authenticate(user=wrong_user)
+
+        url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id + 1}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

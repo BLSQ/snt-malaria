@@ -1,10 +1,9 @@
 import csv
 
-from collections import defaultdict
 from datetime import datetime
-from itertools import groupby
 
 from django.db import IntegrityError
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
@@ -93,18 +92,26 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def export_to_csv(self, request):
         scenario_id = request.query_params.get("id")
-        if not scenario_id:
-            raise ValidationError({"id": _("This query parameter is required.")})
-        scenario = get_object_or_404(self.get_queryset(), pk=scenario_id)
+        scenario_name = "template"
+        if scenario_id:
+            scenario = get_object_or_404(self.get_queryset(), pk=scenario_id)
+            scenario_name = scenario.name
+
         interventions = Intervention.objects.filter(
             intervention_category__account=self.request.user.iaso_profile.account
         )
 
-        org_units = OrgUnit.objects.filter_for_user(self.request.user).filter(
-            validation_status=OrgUnit.VALIDATION_VALID
+        org_units = (
+            OrgUnit.objects.order_by("name")
+            .filter_for_user(self.request.user)
+            .filter(validation_status=OrgUnit.VALIDATION_VALID)
+            .filter(Q(location__isnull=False) | Q(simplified_geom__isnull=False))
         )
-        assignments = InterventionAssignment.objects.select_related("org_unit", "intervention").filter(
-            scenario__id=scenario_id
+
+        assignments = (
+            InterventionAssignment.objects.select_related("org_unit", "intervention").filter(scenario__id=scenario_id)
+            if scenario_id
+            else []
         )
 
         csv_header_columns = self.get_csv_headers(interventions)
@@ -113,17 +120,19 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         writer = csv.writer(response)
         writer.writerow(csv_header_columns)
 
-        sorted_org_units = sorted(org_units, key=lambda a: a.name)
-        org_unit_interventions = {ou.id: {"name": ou.name, "assignments": []} for ou in sorted_org_units}
+        org_unit_interventions = {ou.id: {"name": ou.name, "assignments": []} for ou in org_units}
         for assignment in assignments:
-            org_unit_interventions[assignment.org_unit.id]["assignments"].append(assignment)
+            ou_id = assignment.org_unit.id
+            if ou_id in org_unit_interventions:
+                org_unit_interventions[ou_id]["assignments"].append(assignment)
+            else:
+                raise PermissionError(f"User doesn't have access to org unit {ou_id} of an assignment")
 
         for org_unit_id, oui in org_unit_interventions.items():
             row = self.get_csv_row(org_unit_id, oui["name"], oui["assignments"], interventions)
-            if row:
-                writer.writerow(row)
+            writer.writerow(row)
 
-        filename = "%s--%s.csv" % (scenario.name, datetime.now().strftime("%Y-%m-%d"))
+        filename = "%s_%s.csv" % (scenario_name, datetime.now().strftime("%Y-%m-%d"))
         response["Content-Disposition"] = "attachment; filename=" + filename
         return response
 
