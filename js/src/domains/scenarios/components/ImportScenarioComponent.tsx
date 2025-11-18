@@ -29,13 +29,10 @@ type Props = {
 };
 const ImportScenarioDialog: FC<Props> = ({ isOpen, closeDialog }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const { mutateAsync: importScenario } = useImportScenario();
+    const { mutate: importScenario } = useImportScenario(closeDialog);
     const handleSubmit = () => {
-        console.log(selectedFile);
         if (selectedFile) {
-            importScenario(selectedFile).then(() => {
-                closeDialog();
-            });
+            importScenario(selectedFile);
         }
     };
     const handleOnChange = useCallback(
@@ -56,6 +53,7 @@ const ImportScenarioDialog: FC<Props> = ({ isOpen, closeDialog }) => {
             cancelMessage={MESSAGES.cancel}
             confirmMessage={MESSAGES.importCSV}
             titleMessage={MESSAGES.importCSV}
+            closeOnConfirm={false}
         >
             <Box sx={{ mt: 2 }}>
                 <FilesUpload
