@@ -1,4 +1,5 @@
 from django.contrib.gis.geos import MultiPolygon, Point, Polygon
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
 
@@ -246,3 +247,100 @@ class ScenarioAPITestCase(APITestCase):
         url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id + 1}"
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_scenario_import_csv_missing_file(self):
+        url = "/api/snt_malaria/scenarios/import_from_csv/"
+        response = self.client.post(url, {}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("file", response.data)
+        self.assertEqual(str(response.data["file"][0]), "No file was submitted.")
+
+    def test_scenario_import_csv_invalid_file_type(self):
+        url = "/api/snt_malaria/scenarios/import_from_csv/"
+        invalid_file = SimpleUploadedFile("test.txt", b"Invalid content", content_type="text/plain")
+        response = self.client.post(url, {"file": invalid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("file", response.data)
+        self.assertEqual(str(response.data["file"][0]), "The file must be a CSV.")
+
+    def test_scenario_import_csv_missing_org_unit_id_column(self):
+        url = "/api/snt_malaria/scenarios/import_from_csv/"
+        csv_content = b"org_unit_name,IPTp,RTS,S,SMC\nDistrict 1,1,0,0\nDistrict 2,0,1,1\n"
+        invalid_file = SimpleUploadedFile("test.csv", csv_content, content_type="text/csv")
+        response = self.client.post(url, {"file": invalid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("file", response.data)
+        self.assertEqual(str(response.data["file"][0]), "The CSV must contain an 'org_unit_id' column.")
+
+    def test_scenario_import_csv_missing_header(self):
+        url = "/api/snt_malaria/scenarios/import_from_csv/"
+        csv_content = (
+            'org_unit_id,org_unit_name,IPTp,"RTS,S"\n'
+            f"{self.district1.id},District 1,1,0\n"
+            f"{self.district2.id},District 2,0,1\n"
+        )
+
+        valid_file = SimpleUploadedFile("test.csv", csv_content.encode(), content_type="text/csv")
+        response = self.client.post(url, {"file": valid_file}, format="multipart")
+        print(response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("file", response.data)
+        self.assertIn("header_errors", response.data["file"])
+        self.assertIn("SMC", response.data["file"]["header_errors"])
+
+    def test_scenario_import_csv_no_assignments(self):
+        url = "/api/snt_malaria/scenarios/import_from_csv/"
+        csv_content = (
+            'org_unit_id,org_unit_name,IPTp,"RTS,S",SMC\n'
+            f"{self.district1.id},District 1,0,0,0\n"
+            f"{self.district2.id},District 2,0,0,0\n"
+        )
+
+        valid_file = SimpleUploadedFile("test.csv", csv_content.encode(), content_type="text/csv")
+        response = self.client.post(url, {"file": valid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(str(response.data[0]), "No assignments to create from the provided CSV data.")
+
+    def test_scenario_import_csv_org_unit_not_found(self):
+        url = "/api/snt_malaria/scenarios/import_from_csv/"
+        csv_content = 'org_unit_id,org_unit_name,IPTp,"RTS,S",SMC\n9999,District Unknown,1,0,0\n'
+
+        valid_file = SimpleUploadedFile("test.csv", csv_content.encode(), content_type="text/csv")
+        response = self.client.post(url, {"file": valid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("file", response.data)
+        self.assertIn("not_found_org_units", response.data["file"])
+        self.assertIn("9999", response.data["file"]["not_found_org_units"])
+        self.assertIn("missing_org_units_from_file", response.data["file"])
+        self.assertIn(str(self.district1.id), response.data["file"]["missing_org_units_from_file"])
+        self.assertIn(str(self.district2.id), response.data["file"]["missing_org_units_from_file"])
+
+    def test_scenario_import_csv_success(self):
+        url = "/api/snt_malaria/scenarios/import_from_csv/"
+        csv_content = (
+            'org_unit_id,org_unit_name,IPTp,"RTS,S",SMC\n'
+            f"{self.district1.id},District 1,1,0,0\n"
+            f"{self.district2.id},District 2,0,1,1\n"
+        )
+
+        valid_file = SimpleUploadedFile("test.csv", csv_content.encode(), content_type="text/csv")
+        response = self.client.post(url, {"file": valid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("id", response.data)
+
+        # Verify that the scenario and assignments were created
+        new_scenario = Scenario.objects.get(id=response.data["id"])
+        self.assertEqual(new_scenario.intervention_assignments.count(), 3)
+
+        assignments_district_1 = InterventionAssignment.objects.filter(scenario=new_scenario, org_unit=self.district1)
+        assignments_district_2 = InterventionAssignment.objects.filter(scenario=new_scenario, org_unit=self.district2)
+
+        self.assertEqual(assignments_district_1.count(), 1)
+        self.assertEqual(assignments_district_1.first().intervention, self.intervention_chemo_iptp)
+
+        self.assertEqual(assignments_district_2.count(), 2)
+        intervention_ids_district_2 = set(assignments_district_2.values_list("intervention_id", flat=True))
+        self.assertSetEqual(
+            intervention_ids_district_2,
+            {self.intervention_vaccination_rts.id, self.intervention_chemo_smc.id},
+        )

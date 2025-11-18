@@ -160,4 +160,4 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             else:
                 raise ValidationError("No assignments to create from the provided CSV data.")
 
-        return Response({"status": "Import successful"}, status=status.HTTP_200_OK)
+        return Response({"status": "Import successful", "id": scenario.id}, status=status.HTTP_201_CREATED)
