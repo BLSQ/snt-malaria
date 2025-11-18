@@ -1,7 +1,10 @@
+import pandas as pd
+
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from iaso.api.common import UserSerializer
+from plugins.snt_malaria.api.scenarios.utils import get_csv_headers, get_interventions, get_org_units
 from plugins.snt_malaria.models import Scenario
 
 
@@ -35,3 +38,48 @@ class DuplicateScenarioSerializer(serializers.Serializer):
             raise serializers.ValidationError(_("Scenario with this ID does not exist."))
 
         return value
+
+
+class ImportScenarioSerializer(serializers.Serializer):
+    file = serializers.FileField(required=True)
+
+    def validate_file(self, value):
+        if not value.name.endswith(".csv"):
+            raise serializers.ValidationError(_("The file must be a CSV."))
+
+        request = self.context.get("request")
+        interventions = get_interventions(request.user.iaso_profile.account)
+        df = pd.read_csv(value)
+
+        self.context["assignment_df"] = df
+        self.context["interventions"] = interventions
+
+        # Raise this before the rest as this is a blocking issue
+        if "org_unit_id" not in df.columns:
+            raise serializers.ValidationError(_("The CSV must contain an 'org_unit_id' column."))
+
+        # We are more interested in missing headers for intervention names than fixed ones
+        header_errors = self.get_missing_headers(df, interventions)
+
+        csv_org_unit_ids = set(df["org_unit_id"].dropna().astype(int).unique().tolist())
+        org_units = get_org_units(request.user)
+        available_org_unit_ids = set(org_units.values_list("id", flat=True))
+        not_found_org_units = csv_org_unit_ids - available_org_unit_ids
+        missing_org_units_from_file = available_org_unit_ids - csv_org_unit_ids
+
+        self.context["org_units"] = org_units
+
+        if header_errors or not_found_org_units or missing_org_units_from_file:
+            errors = {
+                "header_errors": header_errors,
+                "not_found_org_units": list(not_found_org_units),
+                "missing_org_units_from_file": list(missing_org_units_from_file),
+            }
+            raise serializers.ValidationError(errors)
+
+        return value
+
+    def get_missing_headers(self, df, interventions):
+        file_headers = df.columns.tolist()
+        csv_headers = get_csv_headers(interventions)
+        return [header for header in csv_headers if header not in file_headers]

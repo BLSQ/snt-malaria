@@ -2,8 +2,7 @@ import csv
 
 from datetime import datetime
 
-from django.db import IntegrityError
-from django.db.models import Q
+from django.db import IntegrityError, transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
@@ -14,11 +13,17 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from iaso.api.common import CONTENT_TYPE_CSV
-from iaso.models.org_unit import OrgUnit
+from plugins.snt_malaria.api.scenarios.utils import (
+    get_assignments_from_row,
+    get_csv_headers,
+    get_csv_row,
+    get_org_units,
+    get_scenario,
+)
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 from plugins.snt_malaria.models.intervention import Intervention
 
-from .serializers import DuplicateScenarioSerializer, ScenarioSerializer
+from .serializers import DuplicateScenarioSerializer, ImportScenarioSerializer, ScenarioSerializer
 
 
 class ScenarioViewSet(viewsets.ModelViewSet):
@@ -101,12 +106,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             intervention_category__account=self.request.user.iaso_profile.account
         )
 
-        org_units = (
-            OrgUnit.objects.order_by("name")
-            .filter_for_user(self.request.user)
-            .filter(validation_status=OrgUnit.VALIDATION_VALID)
-            .filter(Q(location__isnull=False) | Q(simplified_geom__isnull=False))
-        )
+        org_units = get_org_units(self.request.user)
 
         assignments = (
             InterventionAssignment.objects.select_related("org_unit", "intervention").filter(scenario__id=scenario_id)
@@ -114,7 +114,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             else []
         )
 
-        csv_header_columns = self.get_csv_headers(interventions)
+        csv_header_columns = get_csv_headers(interventions)
 
         response = HttpResponse(content_type=CONTENT_TYPE_CSV)
         writer = csv.writer(response)
@@ -129,25 +129,35 @@ class ScenarioViewSet(viewsets.ModelViewSet):
                 raise PermissionError(f"User doesn't have access to org unit {ou_id} of an assignment")
 
         for org_unit_id, oui in org_unit_interventions.items():
-            row = self.get_csv_row(org_unit_id, oui["name"], oui["assignments"], interventions)
+            row = get_csv_row(org_unit_id, oui["name"], oui["assignments"], interventions)
             writer.writerow(row)
 
         filename = "%s_%s.csv" % (scenario_name, datetime.now().strftime("%Y-%m-%d"))
         response["Content-Disposition"] = "attachment; filename=" + filename
         return response
 
-    def get_csv_headers(self, interventions):
-        csv_header_columns = ["org_unit_id", "org_unit_name"]
-        intervention_names = interventions.values_list("name", flat=True)
-        csv_header_columns.extend(intervention_names)
-        return csv_header_columns
+    @action(detail=False, methods=["post"])
+    def import_from_csv(self, request):
+        serializer = ImportScenarioSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
 
-    def get_csv_row(self, org_unit_id, org_unit_name, org_unit_interventions, interventions):
-        row = [org_unit_id, org_unit_name]
-        for intervention in interventions:
-            if any(assignment.intervention.id == intervention.id for assignment in org_unit_interventions):
-                row.append(1)
+        assignment_df = serializer.context.get("assignment_df")
+        interventions = serializer.context.get("interventions")
+
+        # Get scenario property from serializer
+        scenario = get_scenario(request.user, baseName="Imported Scenario")
+        with transaction.atomic():
+            scenario.save()
+            intervention_assignments = []
+
+            for index, row in assignment_df.iterrows():
+                assignment = get_assignments_from_row(request.user, scenario, row, interventions)
+                if assignment is not None and len(assignment) > 0:
+                    intervention_assignments.extend(assignment)
+
+            if intervention_assignments and len(intervention_assignments) > 0:
+                InterventionAssignment.objects.bulk_create(intervention_assignments)
             else:
-                row.append(0)
+                raise ValidationError("No assignments to create from the provided CSV data.")
 
-        return row
+        return Response({"status": "Import successful"}, status=status.HTTP_200_OK)
