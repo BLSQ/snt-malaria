@@ -63,5 +63,8 @@
     "iaso.snt_malaria.loading": "Loading Content...",
     "iaso.snt_malaria.scenario.downloadCSVTemplate": "Download CSV Template",
     "iaso.snt_malaria.scenario.importCSV": "Import CSV",
-    "iaso.snt_malaria.scenario.createScenario": "Create Scenario"
+    "iaso.snt_malaria.scenario.createScenario": "Create Scenario",
+    "iaso.snt_malaria.scenario.scenarioCSV": "Scenario CSV",
+    "iaso.snt_malaria.scenario.scenarioImportSuccess": "Scenario imported successfully",
+    "iaso.snt_malaria.scenario.scenarioImportError": "Error importing scenario."
 }

@@ -1,6 +1,7 @@
 import { UseMutationResult } from 'react-query';
 import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
+import { MESSAGES } from '../../messages';
 
 export const useImportScenario = (
     onSuccess?: (data: any, variables: any, context: any) => void,
@@ -16,6 +17,8 @@ export const useImportScenario = (
                 data: {},
             }),
         invalidateQueryKey: ['scenarios'],
+        snackSuccessMessage: MESSAGES.scenarioImportSuccess,
+        snackErrorMsg: MESSAGES.scenarioImportError,
         options: {
             onSuccess,
             onError,

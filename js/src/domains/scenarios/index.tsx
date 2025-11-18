@@ -117,7 +117,10 @@ export const Scenarios: FC = () => {
                         >
                             <ClickAwayListener onClickAway={handleClose}>
                                 <MenuList>
-                                    <ImportScenarioModal iconProps={{}} />
+                                    <ImportScenarioModal
+                                        iconProps={{}}
+                                        onClose={() => setIsOpen(false)}
+                                    />
                                     <MenuItem
                                         component={Link}
                                         href={exportScenarioAPIPath}

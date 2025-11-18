@@ -13,11 +13,21 @@ import { useImportScenario } from '../hooks/useImportScenario';
 
 type PropsImportAction = {
     onClick: () => void;
+    beforeOnClick?: () => void;
 };
-const ImportAction: FunctionComponent<PropsImportAction> = ({ onClick }) => {
+const ImportAction: FunctionComponent<PropsImportAction> = ({
+    onClick,
+    beforeOnClick,
+}) => {
     const { formatMessage } = useSafeIntl();
+    const handleClick = useCallback(() => {
+        if (beforeOnClick) {
+            beforeOnClick();
+        }
+        onClick();
+    }, [beforeOnClick, onClick]);
     return (
-        <MenuItem onClick={onClick}>
+        <MenuItem onClick={handleClick}>
             {formatMessage(MESSAGES.importCSV)}
         </MenuItem>
     );
@@ -26,15 +36,25 @@ const ImportAction: FunctionComponent<PropsImportAction> = ({ onClick }) => {
 type Props = {
     isOpen: boolean;
     closeDialog: () => void;
+    onClose?: () => void;
 };
-const ImportScenarioDialog: FC<Props> = ({ isOpen, closeDialog }) => {
+const ImportScenarioDialog: FC<Props> = ({ isOpen, closeDialog, onClose }) => {
+    const { formatMessage } = useSafeIntl();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const { mutate: importScenario } = useImportScenario(closeDialog);
-    const handleSubmit = () => {
+    const handleSuccessClose = useCallback(() => {
+        closeDialog();
+        if (onClose) {
+            onClose();
+        }
+    }, [closeDialog, onClose]);
+    const { mutate: importScenario } = useImportScenario(handleSuccessClose);
+
+    const handleSubmit = useCallback(() => {
         if (selectedFile) {
             importScenario(selectedFile);
         }
-    };
+    }, [selectedFile, importScenario]);
+
     const handleOnChange = useCallback(
         (file: File[]) => setSelectedFile(file[0]),
         [setSelectedFile],
@@ -47,9 +67,9 @@ const ImportScenarioDialog: FC<Props> = ({ isOpen, closeDialog }) => {
             open={isOpen}
             closeDialog={closeDialog}
             onConfirm={handleSubmit}
-            onClose={() => null}
+            onClose={onClose || noOp}
             allowConfirm={selectedFile !== null}
-            onCancel={noOp}
+            onCancel={onClose || noOp}
             cancelMessage={MESSAGES.cancel}
             confirmMessage={MESSAGES.importCSV}
             titleMessage={MESSAGES.importCSV}
@@ -61,9 +81,7 @@ const ImportScenarioDialog: FC<Props> = ({ isOpen, closeDialog }) => {
                     files={selectedFile ? [selectedFile] : []}
                     onFilesSelect={handleOnChange}
                     multi={false}
-                    // errors={errors}
-                    // disabled={disabled}
-                    // placeholder={formatMessage(MESSAGES.document)}
+                    placeholder={formatMessage(MESSAGES.scenarioCSV)}
                 />
             </Box>
         </ConfirmCancelModal>
