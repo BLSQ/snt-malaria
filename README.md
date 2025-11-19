@@ -114,3 +114,18 @@ On creation of a new release, the following actions are performed:
 
 - The `CHANGELOG.md` is updated with the new changes.
 - A new release is created in GitHub.
+
+## Budgeting package
+
+To debug the budgeting plugin, you can checkout the repo snt-malaria-budgeting in the parent folder of iaso repo.
+(request access if you don't have it).
+
+If you want to check it out somewhere else, you will need to change the docker-compose mount for this package: `../snt-malaria-budgeting:/opt/snt-malaria-budgeting`
+
+Now, you can run your docker. It will still use the package from python for now.
+You can go to your docker container and execute this two commands to make sure it uses your local:
+`pip uninstall snt-malaria-budgeting`
+`pip install -e /opt/snt_malaria_budgeting`
+
+Once done, you can restart iaso container to activate hot reload.
+From there, if you modify the package source, it should trigger a reload and be reflected in snt-malaria.
