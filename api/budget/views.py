@@ -58,6 +58,13 @@ class BudgetViewSet(viewsets.ModelViewSet):
         population_df = build_population_dataframe(request.user.iaso_profile.account, start_year, end_year)
         interventions_input = build_interventions_input(scenario)
 
+        print("COST DATAFRAME")
+        print(cost_df)
+        print("POPULATION DATAFRAME")
+        print(population_df)
+        print("INTERVENTIONS_INPUT")
+        print(interventions_input)
+
         # For now, assume the default coverage etc.
         settings = DEFAULT_COST_ASSUMPTIONS
 
