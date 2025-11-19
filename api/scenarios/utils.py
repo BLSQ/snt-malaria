@@ -21,7 +21,7 @@ def get_interventions(account):
     return Intervention.objects.filter(intervention_category__account=account).values("id", "name")
 
 
-def get_org_units(user):
+def get_valid_org_units_for_user(user):
     return (
         OrgUnit.objects.order_by("name")
         .filter_for_user(user)
@@ -35,6 +35,12 @@ def get_csv_headers(interventions):
     intervention_names = interventions.values_list("name", flat=True).order_by("name")
     csv_header_columns.extend(intervention_names)
     return csv_header_columns
+
+
+def get_missing_headers(df, interventions):
+    file_headers = df.columns.tolist()
+    csv_headers = get_csv_headers(interventions)
+    return [header for header in csv_headers if header not in file_headers]
 
 
 def get_csv_row(org_unit_id, org_unit_name, org_unit_interventions, interventions):

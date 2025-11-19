@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import serializers, status, viewsets
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -17,8 +17,8 @@ from plugins.snt_malaria.api.scenarios.utils import (
     get_assignments_from_row,
     get_csv_headers,
     get_csv_row,
-    get_org_units,
     get_scenario,
+    get_valid_org_units_for_user,
 )
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 from plugins.snt_malaria.models.intervention import Intervention
@@ -106,7 +106,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             intervention_category__account=self.request.user.iaso_profile.account
         )
 
-        org_units = get_org_units(self.request.user)
+        org_units = get_valid_org_units_for_user(self.request.user)
 
         assignments = (
             InterventionAssignment.objects.select_related("org_unit", "intervention").filter(scenario__id=scenario_id)
@@ -150,12 +150,12 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             scenario.save()
             intervention_assignments = []
 
-            for index, row in assignment_df.iterrows():
-                assignment = get_assignments_from_row(request.user, scenario, row, interventions)
-                if assignment is not None and len(assignment) > 0:
-                    intervention_assignments.extend(assignment)
+            for _, row in assignment_df.iterrows():
+                assignments = get_assignments_from_row(request.user, scenario, row, interventions)
+                if len(assignments) > 0:
+                    intervention_assignments.extend(assignments)
 
-            if intervention_assignments and len(intervention_assignments) > 0:
+            if len(intervention_assignments) > 0:
                 InterventionAssignment.objects.bulk_create(intervention_assignments)
             else:
                 raise ValidationError("No assignments to create from the provided CSV data.")

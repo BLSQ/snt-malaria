@@ -248,6 +248,12 @@ class ScenarioAPITestCase(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_scenario_import_csv_unauthicated(self):
+        self.client.force_authenticate(user=None)
+        url = "/api/snt_malaria/scenarios/import_from_csv/"
+        response = self.client.post(url, {}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_scenario_import_csv_missing_file(self):
         url = "/api/snt_malaria/scenarios/import_from_csv/"
         response = self.client.post(url, {}, format="multipart")

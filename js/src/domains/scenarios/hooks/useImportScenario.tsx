@@ -3,10 +3,7 @@ import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { MESSAGES } from '../../messages';
 
-export const useImportScenario = (
-    onSuccess?: (data: any, variables: any, context: any) => void,
-    onError?: (error: any, variables: any, context: any) => void,
-): UseMutationResult =>
+export const useImportScenario = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: (file: File) =>
             postRequest({
@@ -19,8 +16,4 @@ export const useImportScenario = (
         invalidateQueryKey: ['scenarios'],
         snackSuccessMessage: MESSAGES.scenarioImportSuccess,
         snackErrorMsg: MESSAGES.scenarioImportError,
-        options: {
-            onSuccess,
-            onError,
-        },
     });

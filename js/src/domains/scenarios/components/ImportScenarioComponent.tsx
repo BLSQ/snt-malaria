@@ -11,11 +11,11 @@ import { noOp } from 'Iaso/utils';
 import { MESSAGES } from '../../messages';
 import { useImportScenario } from '../hooks/useImportScenario';
 
-type PropsImportAction = {
+type ImportActionProps = {
     onClick: () => void;
     beforeOnClick?: () => void;
 };
-const ImportAction: FunctionComponent<PropsImportAction> = ({
+const ImportAction: FunctionComponent<ImportActionProps> = ({
     onClick,
     beforeOnClick,
 }) => {
@@ -36,24 +36,22 @@ const ImportAction: FunctionComponent<PropsImportAction> = ({
 type Props = {
     isOpen: boolean;
     closeDialog: () => void;
-    onClose?: () => void;
+    onClose: () => void;
 };
 const ImportScenarioDialog: FC<Props> = ({ isOpen, closeDialog, onClose }) => {
     const { formatMessage } = useSafeIntl();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const handleSuccessClose = useCallback(() => {
         closeDialog();
-        if (onClose) {
-            onClose();
-        }
+        onClose();
     }, [closeDialog, onClose]);
-    const { mutate: importScenario } = useImportScenario(handleSuccessClose);
+    const { mutate: importScenario } = useImportScenario();
 
     const handleSubmit = useCallback(() => {
         if (selectedFile) {
-            importScenario(selectedFile);
+            importScenario(selectedFile, { onSuccess: handleSuccessClose });
         }
-    }, [selectedFile, importScenario]);
+    }, [selectedFile, importScenario, handleSuccessClose]);
 
     const handleOnChange = useCallback(
         (file: File[]) => setSelectedFile(file[0]),
