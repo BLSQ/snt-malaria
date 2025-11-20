@@ -22,6 +22,7 @@ import {
 import { exportScenarioAPIPath } from '../../constants/api-urls';
 import { baseUrls } from '../../constants/urls';
 import { MESSAGES } from '../messages';
+import { ImportScenarioModal } from './components/ImportScenarioComponent';
 import { ScenarioComponent } from './components/ScenarioComponent';
 import { useCreateScenario } from './hooks/useCreateScenario';
 import { useGetScenarios } from './hooks/useGetScenarios';
@@ -116,9 +117,10 @@ export const Scenarios: FC = () => {
                         >
                             <ClickAwayListener onClickAway={handleClose}>
                                 <MenuList>
-                                    <MenuItem href="#">
-                                        {formatMessage(MESSAGES.importCSV)}
-                                    </MenuItem>
+                                    <ImportScenarioModal
+                                        iconProps={{}}
+                                        onClose={() => setIsOpen(false)}
+                                    />
                                     <MenuItem
                                         component={Link}
                                         href={exportScenarioAPIPath}

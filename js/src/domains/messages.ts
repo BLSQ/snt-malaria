@@ -223,4 +223,16 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenario.createScenario',
         defaultMessage: 'Create Scenario',
     },
+    scenarioCSV: {
+        id: 'iaso.snt_malaria.scenario.scenarioCSV',
+        defaultMessage: 'Scenario CSV',
+    },
+    scenarioImportSuccess: {
+        id: 'iaso.snt_malaria.scenario.scenarioImportSuccess',
+        defaultMessage: 'Scenario imported successfully',
+    },
+    scenarioImportError: {
+        id: 'iaso.snt_malaria.scenario.scenarioImportError',
+        defaultMessage: 'Error importing scenario',
+    },
 });
