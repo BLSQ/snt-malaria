@@ -145,17 +145,17 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         interventions = serializer.context.get("interventions")
 
         # Get scenario property from serializer
-        scenario = get_scenario(request.user, baseName="Imported Scenario")
+        scenario = get_scenario(request.user, base_name="Imported Scenario")
         with transaction.atomic():
             scenario.save()
             intervention_assignments = []
 
             for _, row in assignment_df.iterrows():
                 assignments = get_assignments_from_row(request.user, scenario, row, interventions)
-                if len(assignments) > 0:
+                if assignments:
                     intervention_assignments.extend(assignments)
 
-            if len(intervention_assignments) > 0:
+            if intervention_assignments:
                 InterventionAssignment.objects.bulk_create(intervention_assignments)
             else:
                 raise ValidationError("No assignments to create from the provided CSV data.")

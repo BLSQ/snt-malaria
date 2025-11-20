@@ -228,7 +228,7 @@ class ScenarioAPITestCase(APITestCase):
         self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "0", "0", "0"])
         self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "0", "0"])
 
-    def test_scenario_export_to_csv_unauthicated(self):
+    def test_scenario_export_to_csv_unauthenticated(self):
         self.client.force_authenticate(user=None)
         url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id}"
         response = self.client.get(url)
@@ -248,7 +248,7 @@ class ScenarioAPITestCase(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_scenario_import_csv_unauthicated(self):
+    def test_scenario_import_csv_unauthenticated(self):
         self.client.force_authenticate(user=None)
         url = "/api/snt_malaria/scenarios/import_from_csv/"
         response = self.client.post(url, {}, format="multipart")
@@ -288,7 +288,7 @@ class ScenarioAPITestCase(APITestCase):
 
         valid_file = SimpleUploadedFile("test.csv", csv_content.encode(), content_type="text/csv")
         response = self.client.post(url, {"file": valid_file}, format="multipart")
-        print(response.data)
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("file", response.data)
         self.assertIn("header_errors", response.data["file"])

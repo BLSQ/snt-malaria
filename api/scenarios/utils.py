@@ -7,9 +7,9 @@ from plugins.snt_malaria.models.intervention import Intervention, InterventionAs
 from plugins.snt_malaria.models.scenario import Scenario
 
 
-def get_scenario(user, baseName="Scenario"):
+def get_scenario(user, base_name="Scenario"):
     return Scenario(
-        name=f"{baseName} {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        name=f"{base_name} {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         created_by=user,
         account=user.iaso_profile.account,
         start_year=datetime.now().year,
