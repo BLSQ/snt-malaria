@@ -3,10 +3,7 @@ import pandas as pd
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from snt_malaria_budgeting import (
-    DEFAULT_COST_ASSUMPTIONS,
-    get_budget,
-)
+from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS, BudgetCalculator
 
 from plugins.snt_malaria.api.budget.filters import BudgetListFilter
 from plugins.snt_malaria.api.budget.serializers import BudgetCreateSerializer, BudgetSerializer
@@ -62,24 +59,25 @@ class BudgetViewSet(viewsets.ModelViewSet):
         settings = DEFAULT_COST_ASSUMPTIONS
 
         budgets = []
-        for year in range(start_year, end_year + 1):
-            result = get_budget(
-                year=year,
-                spatial_planning_unit="org_unit_id",
-                interventions_input=interventions_input,
-                settings=settings,
-                cost_df=cost_df,
-                population_df=population_df,
-                cost_overrides=[],  # optional
-                local_currency="EUR",
-            )
+        budget_calculator = BudgetCalculator(
+            interventions_input=interventions_input,
+            settings=settings,
+            cost_df=cost_df,
+            population_df=population_df,
+            local_currency="EUR",
+            spatial_planning_unit="org_unit_id",
+        )
 
-            for intervention in result["interventions"]:
+        for year in range(start_year, end_year + 1):
+            interventions_costs = budget_calculator.get_intervention_costs(year)
+            places_costs = budget_calculator.get_places_costs(year)
+
+            for intervention in interventions_costs["interventions"]:
                 for cost_breakdown in intervention["cost_breakdown"]:
                     cost_breakdown["category"] = cost_breakdown.get("cost_class", "")
                     cost_breakdown.pop("cost_class", None)
 
-            budgets.append(result)
+            budgets.append(interventions_costs)
 
         budget = Budget.objects.create(
             scenario=scenario,
