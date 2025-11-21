@@ -5,7 +5,6 @@ import React, {
     useMemo,
     useState,
 } from 'react';
-import InfoOutlineIcon from '@mui/icons-material/InfoOutlined';
 import { Box, Button, Theme, Tooltip } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import L from 'leaflet';

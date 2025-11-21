@@ -69,15 +69,19 @@ class BudgetViewSet(viewsets.ModelViewSet):
         )
 
         for year in range(start_year, end_year + 1):
-            interventions_costs = budget_calculator.get_intervention_costs(year)
+            interventions_costs = budget_calculator.get_interventions_costs(year)
             places_costs = budget_calculator.get_places_costs(year)
 
-            for intervention in interventions_costs["interventions"]:
+            for intervention in interventions_costs:
                 for cost_breakdown in intervention["cost_breakdown"]:
                     cost_breakdown["category"] = cost_breakdown.get("cost_class", "")
                     cost_breakdown.pop("cost_class", None)
 
-            budgets.append(interventions_costs)
+            for place_cost in places_costs:
+                place_cost["org_unit_id"] = place_cost.get("place")
+                place_cost.pop("place")
+
+            budgets.append({"year": year, "interventions": interventions_costs, "org_units_costs": places_costs})
 
         budget = Budget.objects.create(
             scenario=scenario,

@@ -2,21 +2,25 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { PaperContainer } from '../../../../components/styledComponents';
 import { MESSAGES } from '../../../messages';
 import {
     Budget,
     BudgetIntervention,
     BudgetInterventionCostLine,
+    BudgetOrgUnit,
 } from '../../types/budget';
 import { CostBreakdownChart } from './CostBreakdownChart';
+import { OrgUnitCostMap } from './OrgUnitCostMap';
 import { ProportionChart } from './ProportionChart';
 
 type Props = {
     budgets: Budget[];
+    orgUnits: OrgUnit[];
 };
 
-export const Budgeting: FC<Props> = ({ budgets }) => {
+export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
     const { formatMessage } = useSafeIntl();
     const [selectedYear, setSelectedYear] = useState<number | null>(0);
     const defaultBudgetOption = useMemo(
@@ -100,6 +104,37 @@ export const Budgeting: FC<Props> = ({ budgets }) => {
         [budgets, yearOptions, selectedYear, mergeInterventionCosts],
     );
 
+    // TODO We will want interventions costs as well in the future, atm it is not grouped
+    const mergeOrgUnitCosts = useCallback(
+        (target: BudgetOrgUnit[], source: BudgetOrgUnit[]) => {
+            const mergedCosts = {};
+            target.forEach(i => (mergedCosts[i.org_unit_id] = i));
+            source.forEach(org_unit_cost => {
+                const org_unit_id = org_unit_cost.org_unit_id;
+                if (mergedCosts[org_unit_id]) {
+                    mergedCosts[org_unit_id].total_cost +=
+                        org_unit_cost.total_cost;
+                } else {
+                    mergedCosts[org_unit_id] = { ...org_unit_cost };
+                }
+            });
+            return Object.values(mergedCosts) as BudgetOrgUnit[];
+        },
+        [],
+    );
+
+    const orgUnitCosts = useMemo(
+        () =>
+            selectedYear || yearOptions.length <= 2
+                ? budgets.find(b => b.year === selectedYear)?.org_units_costs
+                : budgets.reduce(
+                      (org_units_costs, b) =>
+                          mergeOrgUnitCosts(org_units_costs, b.org_units_costs),
+                      [] as BudgetOrgUnit[],
+                  ),
+        [mergeOrgUnitCosts, budgets, selectedYear, yearOptions],
+    );
+
     return (
         <>
             {yearOptions && yearOptions.length > 2 && (
@@ -145,6 +180,14 @@ export const Budgeting: FC<Props> = ({ budgets }) => {
                         <PaperContainer>
                             <ProportionChart
                                 interventionBudgets={interventionCosts}
+                            />
+                        </PaperContainer>
+                    </Grid>
+                    <Grid item xs={12} md={12} sx={{ height: '493px' }}>
+                        <PaperContainer sx={{ height: '100%' }}>
+                            <OrgUnitCostMap
+                                orgUnitCosts={orgUnitCosts}
+                                orgUnits={orgUnits}
                             />
                         </PaperContainer>
                     </Grid>
