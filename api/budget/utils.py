@@ -42,6 +42,8 @@ def build_population_dataframe(account, start_year, end_year):
     if not metric_types.exists():
         raise ValidationError("No population MetricTypes found for this account")
 
+    # TODO: Handle case of only POPULATION
+
     # Check for required POPULATION metric type
     metric_type_codes = set(metric_types.values_list("code", flat=True))
     if "POPULATION" not in metric_type_codes:
@@ -62,7 +64,7 @@ def build_population_dataframe(account, start_year, end_year):
 
     # Pivot the data so each metric type becomes a column
     df_pivoted = df.pivot_table(
-        index=["org_unit_id", "year"],
+        index=["org_unit_id"],
         columns="metric_type__code",
         values="value",
         aggfunc="first",
@@ -71,32 +73,22 @@ def build_population_dataframe(account, start_year, end_year):
     # Rename columns from metric codes to expected column names
     df_pivoted = df_pivoted.rename(columns=metric_code_to_column)
 
-    # Ensure all expected columns exist (fill missing with None)
-    expected_columns = list(metric_code_to_column.values())
-    for col in expected_columns:
-        if col not in df_pivoted.columns:
-            df_pivoted[col] = None
-
     # Duplicate data across scenario years
-    years = [year for year in range(start_year, end_year + 1)]
     dfs_by_year = []
-
-    for year in years:
+    for year in [year for year in range(start_year, end_year + 1)]:
         df_year = df_pivoted.copy()
         df_year["year"] = year
         dfs_by_year.append(df_year)
-
-    # Combine all years into a single dataframe
     df_final = pd.concat(dfs_by_year, ignore_index=True)
 
     # Ensure column order is consistent
-    final_columns = ["org_unit_id", "year"] + expected_columns
+    final_columns = ["org_unit_id", "year"] + list(metric_code_to_column.values())
     df_final = df_final[final_columns]
 
     return df_final
 
 
-def build_cost_dataframe(account):
+def build_cost_dataframe(account, start_year, end_year):
     """
     Build a cost dataframe from InterventionCostBreakdownLine, Intervention, and BudgetSettings models.
     """
@@ -125,12 +117,20 @@ def build_cost_dataframe(account):
                 "unit": line.get_unit_type_display(),
                 # TODO: Change budget package to support decimals
                 "usd_cost": float(line.unit_cost),
-                "cost_year_for_analysis": line.year,
+                # "cost_year_for_analysis": line.year, # TODO
             }
         )
 
     # Convert to DataFrame
     df = pd.DataFrame(cost_lines_data)
+
+    # Duplicate data across scenario years
+    dfs_by_year = []
+    for year in [year for year in range(start_year, end_year + 1)]:
+        df_year = df.copy()
+        df_year["cost_year_for_analysis"] = year
+        dfs_by_year.append(df_year)
+    df = pd.concat(dfs_by_year, ignore_index=True)
 
     # BudgetSettings fields
     # NOTE: not supported yet by budget script
