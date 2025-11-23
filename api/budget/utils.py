@@ -9,72 +9,91 @@ from plugins.snt_malaria.models import BudgetSettings, InterventionCostBreakdown
 
 # This is Work in Progress
 # For now this creates a dataframe for the population as expected by the budget function.
-# It duplicates the total population (MetricType with code="POPULATION") for all columns.
-# As well as duplicates all data to fit years 2025 to 2027.
+# It duplicates all data to fit years in the scenario range.
 #
 # TODO:
 # - think about the str() issue for org_unit_id
-# - add correct different pop datas from OH
 # - think about error handling all the way to the frontend
 def build_population_dataframe(account, start_year, end_year):
     """
-    Build a population dataframe from
+    Build a population dataframe from MetricTypes with population data.
 
     Returns a DataFrame with columns:
     - org_unit_id: OrgUnit ID
     - year: Year of the metric
     - pop_total, pop_0_5, pop_0_1, pop_1_2, pop_vaccine_5_36_months, pop_pw, pop_5_10, pop_urbain:
-      All populated with the same total population value for now
+      Populated from their respective MetricTypes
     """
-    try:
-        metric_type = MetricType.objects.get(account=account, code="POPULATION")
-    except MetricType.DoesNotExist:
+    # Mapping from MetricType codes to DataFrame column names
+    metric_code_to_column = {
+        "POPULATION": "pop_total",
+        "POP_UNDER_5": "pop_0_5",
+        "POP_0_1_Y": "pop_0_1",
+        "POP_1_2_Y": "pop_1_2",
+        "POP_5_36_M": "pop_vaccine_5_36_months",
+        "POP_PREGNANT_WOMAN": "pop_pw",
+        "POP_5_10_Y": "pop_5_10",
+        "POP_URBAN": "pop_urbain",
+    }
+
+    # Fetch all relevant MetricTypes for this account
+    metric_types = MetricType.objects.filter(account=account, code__in=metric_code_to_column.keys())
+
+    if not metric_types.exists():
+        raise ValidationError("No population MetricTypes found for this account")
+
+    # Check for required POPULATION metric type
+    metric_type_codes = set(metric_types.values_list("code", flat=True))
+    if "POPULATION" not in metric_type_codes:
         raise ValidationError("MetricType with code 'POPULATION' does not exist for this account")
 
-    # Query all MetricValues for this MetricType
+    # Fetch all MetricValues for these MetricTypes
     metric_values = (
-        MetricValue.objects.filter(metric_type=metric_type)
-        .select_related("org_unit")
-        .values("org_unit_id", "year", "value")
+        MetricValue.objects.filter(metric_type__in=metric_types)
+        .select_related("metric_type")
+        .values("org_unit_id", "year", "value", "metric_type__code")
     )
 
     if not metric_values:
-        raise ValidationError("No population data found for MetricType 'POPULATION'")
+        raise ValidationError("No population data found")
 
     # Convert to DataFrame
     df = pd.DataFrame(list(metric_values))
+
+    # Pivot the data so each metric type becomes a column
+    df_pivoted = df.pivot_table(
+        index=["org_unit_id", "year"],
+        columns="metric_type__code",
+        values="value",
+        aggfunc="first",
+    ).reset_index()
+
+    # Rename columns from metric codes to expected column names
+    df_pivoted = df_pivoted.rename(columns=metric_code_to_column)
+
+    # Ensure all expected columns exist (fill missing with None)
+    expected_columns = list(metric_code_to_column.values())
+    for col in expected_columns:
+        if col not in df_pivoted.columns:
+            df_pivoted[col] = None
 
     # Duplicate data across scenario years
     years = [year for year in range(start_year, end_year + 1)]
     dfs_by_year = []
 
     for year in years:
-        df_year = df.copy()
+        df_year = df_pivoted.copy()
         df_year["year"] = year
         dfs_by_year.append(df_year)
 
     # Combine all years into a single dataframe
-    df = pd.concat(dfs_by_year, ignore_index=True)
+    df_final = pd.concat(dfs_by_year, ignore_index=True)
 
-    # Duplicate the population value across all population columns
-    pop_columns = [
-        "pop_total",
-        "pop_0_5",
-        "pop_0_1",
-        "pop_1_2",
-        "pop_vaccine_5_36_months",
-        "pop_pw",
-        "pop_5_10",
-        "pop_urbain",
-    ]
+    # Ensure column order is consistent
+    final_columns = ["org_unit_id", "year"] + expected_columns
+    df_final = df_final[final_columns]
 
-    for col in pop_columns:
-        df[col] = df["value"]
-
-    # Drop the original value column
-    df = df.drop(columns=["value"])
-
-    return df
+    return df_final
 
 
 def build_cost_dataframe(account):

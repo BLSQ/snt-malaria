@@ -17,8 +17,8 @@ const styles: SxStyles = {
     yearSelectWrapper: { marginBottom: 4 },
 };
 
-const startYear = 2025;
-const yearRange = 100;
+const startYear = 2024;
+const yearRange = 5;
 const yearOptions = Array.from({ length: yearRange }, (_, i) => {
     const year = startYear + i;
     return {
@@ -35,7 +35,7 @@ export const InterventionSettings: React.FC = () => {
     const [selectedIntervention, setSelectedIntervention] =
         React.useState<Intervention | null>(null);
     const [activeYear, setActiveYear] = React.useState<number>(
-        new Date().getFullYear(),
+        new Date().getFullYear() - 1,
     );
 
     const {
