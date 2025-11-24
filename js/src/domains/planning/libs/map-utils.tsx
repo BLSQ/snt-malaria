@@ -56,7 +56,7 @@ export const shouldReverse = (threshold: ScaleDomainRange) => {
     return threshold.domain[0] > threshold.domain[threshold.domain.length - 1];
 };
 
-const getColorForShape = (
+export const getColorForShape = (
     value?: string | number,
     legend_type?: string,
     legend_config?: ScaleDomainRange,

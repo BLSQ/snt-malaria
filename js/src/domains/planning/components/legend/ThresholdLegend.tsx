@@ -3,6 +3,7 @@ import { useTheme } from '@mui/material';
 import { LegendThreshold, LegendItem, LegendLabel } from '@visx/legend';
 
 import { ScaleThreshold } from 'Iaso/components/LegendBuilder/types';
+import { formatBigNumber } from '../../libs/cost-utils';
 import { getLegend, shouldReverse } from '../../libs/map-utils';
 
 type Props = {
@@ -15,12 +16,6 @@ export const ThresholdLegend: FunctionComponent<Props> = ({
     unit,
 }) => {
     const theme = useTheme();
-    const transformHighNumbers = (value: string | number) => {
-        if (typeof value === 'number' && value >= 1000) {
-            return `${(value / 1000).toFixed(0)}k`;
-        }
-        return value;
-    };
 
     const isReversed = useMemo(() => shouldReverse(threshold), [threshold]);
     const legend = useMemo(
@@ -34,7 +29,7 @@ export const ThresholdLegend: FunctionComponent<Props> = ({
             labelDelimiter="-"
             labelLower="< "
             labelUpper="> "
-            labelFormat={transformHighNumbers}
+            labelFormat={formatBigNumber}
         >
             {labels =>
                 labels.map(label => (

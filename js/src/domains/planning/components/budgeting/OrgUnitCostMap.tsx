@@ -14,12 +14,16 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../../../../constants/map-theme';
+import { formatBigNumber } from '../../libs/cost-utils';
 import {
     defaultZoomSnap,
     defaultZoomDelta,
     defaultLegend,
+    getColorRange,
+    getColorForShape,
 } from '../../libs/map-utils';
 import { BudgetOrgUnit } from '../../types/budget';
+import { MapLegend } from '../MapLegend';
 
 const styles: SxStyles = {
     mainBox: {
@@ -29,8 +33,16 @@ const styles: SxStyles = {
     },
 };
 
-// Move this to utils
+// TODO Move this to utils, along with other fixed colors
 const defaultColor = 'var(--deepPurple-300, #9575CD)';
+const colorRange = [
+    '#ACDF9B',
+    '#6BD39D',
+    '#F5F1A0',
+    '#F2B16E',
+    '#E4754F',
+    '#A93A42',
+];
 
 type Props = {
     orgUnitCosts?: BudgetOrgUnit[];
@@ -54,16 +66,38 @@ export const OrgUnitCostMap: FC<Props> = ({ orgUnitCosts, orgUnits }) => {
         return shape.getBounds();
     }, [orgUnits]);
 
+    const legendConfig = useMemo(() => {
+        const costs = orgUnitCosts?.map(ouc => ouc.total_cost) ?? [];
+        const maxCost = Math.max(...costs);
+        const stepSize = maxCost / 6;
+        const legend = {
+            range: colorRange,
+            domain: Array.from({ length: 5 }, (_, i) => (i + 1) * stepSize),
+        };
+
+        return {
+            units: '',
+            legend_type: 'threshold',
+            legend_config: legend,
+            unit_symbol: '',
+        };
+    }, [orgUnitCosts]);
+
     const getOrgUnitMapMisc = useCallback(
         orgUnitId => {
             const ouc = orgUnitCosts?.find(c => c.org_unit_id === orgUnitId);
             if (!ouc || ouc.total_cost <= 0) {
                 return { color: defaultLegend, label: '0' };
             }
-            // TODO round this.
-            return { color: 'red', label: ouc.total_cost };
+
+            const fillColor = getColorForShape(
+                ouc.total_cost,
+                legendConfig.legend_type,
+                legendConfig.legend_config,
+            );
+            return { color: fillColor, label: formatBigNumber(ouc.total_cost) };
         },
-        [orgUnitCosts],
+        [orgUnitCosts, legendConfig],
     );
 
     return (
@@ -92,7 +126,6 @@ export const OrgUnitCostMap: FC<Props> = ({ orgUnitCosts, orgUnits }) => {
                 />
                 {orgUnits?.map(orgUnit => {
                     const orgUnitMapMisc = getOrgUnitMapMisc(orgUnit.id);
-                    // console.log(orgUnitMapMisc, orgUnit.id, !!orgUnit.geo_json);
                     return (
                         <GeoJSON
                             key={orgUnit.id}
@@ -117,6 +150,7 @@ export const OrgUnitCostMap: FC<Props> = ({ orgUnitCosts, orgUnits }) => {
                         </GeoJSON>
                     );
                 })}
+                <MapLegend legendConfig={legendConfig} />
             </MapContainer>
         </Box>
     );
