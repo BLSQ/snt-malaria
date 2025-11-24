@@ -7,36 +7,19 @@ import React, {
 } from 'react';
 import { Box, Button, Theme, Tooltip } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
-import L from 'leaflet';
-import {
-    GeoJSON,
-    MapContainer,
-    Tooltip as LeafletTooltip,
-    ZoomControl,
-} from 'react-leaflet';
-import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
-import { GeoJson } from 'Iaso/components/maps/types';
-import tiles from 'Iaso/constants/mapTiles';
 import { SxStyles } from 'Iaso/types/general';
-import { Bounds } from 'Iaso/utils/map/mapUtils';
-import { mapTheme } from '../../../../constants/map-theme';
+import { Map as SNTMap } from '../../../../components/Map';
 import { MESSAGES } from '../../../messages';
 import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
 import { useRemoveOrgUnitFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import {
-    defaultLegend,
-    defaultZoomDelta,
-    defaultZoomSnap,
-    getColorRange,
-} from '../../libs/map-utils';
+import { defaultLegend, getColorRange } from '../../libs/map-utils';
 import {
     Intervention,
     InterventionOrgUnit,
     InterventionPlan,
 } from '../../types/interventions';
-import { MapLegend } from '../MapLegend';
 import { InterventionSelect } from './InterventionSelect';
 
 const defaultLegendConfig = {
@@ -148,20 +131,6 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         useRemoveOrgUnitFromInterventionPlan({ showSuccessSnackBar: false });
     const { mutateAsync: createInterventionAssignment } =
         useCreateInterventionAssignment();
-    const [currentTile] = useState<Tile>(tiles.osm);
-
-    const boundsOptions: Record<string, any> = {
-        padding: [-10, -10],
-        maxZoom: currentTile.maxZoom,
-    };
-    const bounds: Bounds | undefined = useMemo(() => {
-        const geoJsonFeatures = orgUnits
-            ?.filter(orgUnit => orgUnit.geo_json)
-            .map(orgUnit => orgUnit.geo_json);
-        if (geoJsonFeatures?.length === 0) return undefined;
-        const shape = L.geoJSON(geoJsonFeatures);
-        return shape.getBounds();
-    }, [orgUnits]);
 
     const {
         data: interventionAssignments,
@@ -400,58 +369,21 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
     return (
         <Box height="100%" width="100%" sx={styles.mainBox}>
-            <MapContainer
-                id="intervention_plan_map"
-                doubleClickZoom
-                scrollWheelZoom={false}
-                maxZoom={currentTile.maxZoom}
-                style={{
-                    height: '100%',
-                    width: '100%',
-                    backgroundColor: mapTheme.backgroundColor,
-                }}
-                center={[0, 0]}
-                keyboard={false}
-                zoomControl={false}
-                boundsOptions={boundsOptions}
-                bounds={bounds}
-                zoomSnap={defaultZoomSnap}
-                zoomDelta={defaultZoomDelta}
-            >
-                <ZoomControl
-                    position="bottomright"
-                    backgroundColor="#1F2B3DBF"
+            {orgUnits && (
+                <SNTMap
+                    id="intervention_plan_map"
+                    orgUnits={orgUnits}
+                    getOrgUnitMapMisc={getOrgUnitMapMisc}
+                    onOrgUnitClick={onOrgUnitClick}
+                    legendConfig={legendConfig}
+                    hideLegend={
+                        !!selectedInterventionId ||
+                        !localInterventionAssignments ||
+                        localInterventionAssignments.length <= 0
+                    }
                 />
-                {orgUnits?.map(orgUnit => {
-                    const orgUnitMapMisc = getOrgUnitMapMisc(orgUnit.id);
-                    return (
-                        <GeoJSON
-                            key={orgUnit.id}
-                            data={orgUnit.geo_json as unknown as GeoJson}
-                            style={{
-                                color: 'var(--text-primary,#1F2B3DDE)',
-                                weight: 1,
-                                fillColor:
-                                    orgUnitMapMisc?.color ?? defaultColor,
-                                fillOpacity: 2,
-                            }}
-                            eventHandlers={{
-                                click: () => onOrgUnitClick(orgUnit.id),
-                            }}
-                        >
-                            <LeafletTooltip>
-                                <b>{orgUnit.short_name}</b>
-                                {orgUnitMapMisc.label && (
-                                    <>
-                                        <br />
-                                        {orgUnitMapMisc.label}
-                                    </>
-                                )}
-                            </LeafletTooltip>
-                        </GeoJSON>
-                    );
-                })}
-            </MapContainer>
+            )}
+
             <Box sx={styles.actionBox}>
                 <InterventionSelect
                     onInterventionSelect={setSelectedInterventionId}
@@ -471,11 +403,6 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                     </Button>
                 </Tooltip>
             </Box>
-            {selectedInterventionId ||
-            !localInterventionAssignments ||
-            localInterventionAssignments.length <= 0 ? null : (
-                <MapLegend legendConfig={legendConfig} />
-            )}
         </Box>
     );
 };
