@@ -13,6 +13,7 @@ from plugins.snt_malaria.api.budget.utils import (
     build_population_dataframe,
 )
 from plugins.snt_malaria.models.budget import Budget
+from plugins.snt_malaria.models.intervention import Intervention
 
 
 class BudgetViewSet(viewsets.ModelViewSet):
@@ -54,6 +55,10 @@ class BudgetViewSet(viewsets.ModelViewSet):
         cost_df = build_cost_dataframe(request.user.iaso_profile.account)
         population_df = build_population_dataframe(request.user.iaso_profile.account, start_year, end_year)
         interventions_input = build_interventions_input(scenario)
+        interventions = Intervention.objects.all()
+        print(interventions)
+        # build a quick lookup map ((code, type) -> id) for fast id retrieval
+        interventions_map = {(iv.code, iv.name): iv.id for iv in interventions}
 
         # For now, assume the default coverage etc.
         settings = DEFAULT_COST_ASSUMPTIONS
@@ -80,6 +85,12 @@ class BudgetViewSet(viewsets.ModelViewSet):
             for place_cost in places_costs:
                 place_cost["org_unit_id"] = place_cost.get("place")
                 place_cost.pop("place")
+                for place_cost_intervention in place_cost.get("interventions", []):
+                    code = place_cost_intervention["code"]
+                    type_ = place_cost_intervention["type"]
+                    intervention_id = interventions_map.get((code, type_))
+                    # attach the found intervention (or None) for downstream use
+                    place_cost_intervention["id"] = intervention_id
 
             budgets.append({"year": year, "interventions": interventions_costs, "org_units_costs": places_costs})
 

@@ -8,7 +8,9 @@ import React, {
 import { Box, Button, Theme, Tooltip } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { InterventionSelect } from '../../../../components/InterventionSelect';
 import { Map as SNTMap } from '../../../../components/Map';
+import { MapActionBox } from '../../../../components/MapActionBox';
 import { MESSAGES } from '../../../messages';
 import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
@@ -20,7 +22,6 @@ import {
     InterventionOrgUnit,
     InterventionPlan,
 } from '../../types/interventions';
-import { InterventionSelect } from './InterventionSelect';
 
 const defaultLegendConfig = {
     units: '',
@@ -51,46 +52,6 @@ const styles: SxStyles = {
         overflow: 'hidden',
         position: 'relative',
     }),
-    select: (theme: Theme) => ({
-        minWidth: 120,
-        '& .MuiSelect-select': { padding: '8px 12px' },
-        backgroundColor: 'white',
-        marginRight: 1,
-        borderRadius: theme.spacing(0.5),
-        height: '36px',
-        '& .MuiOutlinedInput-notchedOutline': {
-            border: 0,
-        },
-    }),
-    legendBox: {
-        position: 'absolute',
-        bottom: 8,
-        left: 8,
-        zIndex: 1000,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        height: '25px',
-        borderRadius: 2,
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 8px',
-    },
-    legendShape: {
-        backgroundColor: '#9575CD',
-        height: '12px',
-        width: '12px',
-        marginRight: '8px',
-        borderRadius: '2px',
-    },
-    actionBox: {
-        position: 'absolute',
-        top: 8,
-        right: 8,
-        zIndex: 1000,
-        borderRadius: 2,
-        border: 'none',
-        display: 'flex',
-        alignItems: 'center',
-    },
     customizeButton: {
         marginRight: 1,
         '&.MuiButton-outlined': {
@@ -384,14 +345,13 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 />
             )}
 
-            <Box sx={styles.actionBox}>
+            <MapActionBox>
                 <InterventionSelect
                     onInterventionSelect={setSelectedInterventionId}
                     interventions={localInterventionAssignments?.map(
                         ({ intervention }) => intervention,
                     )}
                     selectedInterventionId={selectedInterventionId}
-                    sx={styles.select}
                 />
                 <Tooltip title={formatMessage(MESSAGES.customizeTooltip)}>
                     <Button
@@ -402,7 +362,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                         {formatMessage(MESSAGES.customize)}
                     </Button>
                 </Tooltip>
-            </Box>
+            </MapActionBox>
         </Box>
     );
 };

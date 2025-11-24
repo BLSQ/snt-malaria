@@ -13,6 +13,7 @@ export type BudgetOrgUnit = {
 };
 
 export type BudgetIntervention = {
+    id: number;
     type: string;
     code: string;
     total_cost: number;

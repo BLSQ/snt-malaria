@@ -104,23 +104,26 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
         [budgets, yearOptions, selectedYear, mergeInterventionCosts],
     );
 
-    // TODO We will want interventions costs as well in the future, atm it is not grouped
     const mergeOrgUnitCosts = useCallback(
         (target: BudgetOrgUnit[], source: BudgetOrgUnit[]) => {
             const mergedCosts = {};
             target.forEach(i => (mergedCosts[i.org_unit_id] = i));
-            source.forEach(org_unit_cost => {
+            source?.forEach(org_unit_cost => {
                 const org_unit_id = org_unit_cost.org_unit_id;
-                if (mergedCosts[org_unit_id]) {
-                    mergedCosts[org_unit_id].total_cost +=
-                        org_unit_cost.total_cost;
+                const existing = mergedCosts[org_unit_id];
+                if (existing) {
+                    existing.total_cost += org_unit_cost.total_cost;
+                    existing.interventions = mergeInterventionCosts(
+                        existing.interventions ?? [],
+                        org_unit_cost.interventions ?? [],
+                    );
                 } else {
                     mergedCosts[org_unit_id] = { ...org_unit_cost };
                 }
             });
             return Object.values(mergedCosts) as BudgetOrgUnit[];
         },
-        [],
+        [mergeInterventionCosts],
     );
 
     const orgUnitCosts = useMemo(
