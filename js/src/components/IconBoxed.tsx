@@ -8,6 +8,6 @@ type Props = {
 
 export const IconBoxed: FC<Props> = ({ Icon }) => (
     <Box sx={containerBoxStyles}>
-        <Icon height="auto" color="primary" />
+        <Icon color="primary" />
     </Box>
 );
