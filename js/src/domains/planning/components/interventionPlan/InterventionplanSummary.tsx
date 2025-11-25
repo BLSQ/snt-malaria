@@ -2,10 +2,10 @@ import React, { Dispatch, FC, SetStateAction } from 'react';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import MapIcon from '@mui/icons-material/Map';
 import TableRowsIcon from '@mui/icons-material/TableRows';
-import { Box, Button, Grid, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { Button, Grid, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import { IconBoxed } from '../../../../components/IconBoxed';
 import { MESSAGES } from '../../../messages';
-import { containerBoxStyles } from '../styles';
 
 export type TabValue = 'map' | 'list';
 type Props = {
@@ -34,12 +34,7 @@ export const InterventionPlanSummary: FC<Props> = ({
         >
             <Grid item sx={{ flexGrow: 1 }}>
                 <Stack direction="row" spacing={1} alignItems="center">
-                    <Box sx={containerBoxStyles}>
-                        <AccountTreeOutlinedIcon
-                            height="auto"
-                            color="primary"
-                        />
-                    </Box>
+                    <IconBoxed Icon={AccountTreeOutlinedIcon} />
 
                     <Typography variant="h6" gutterBottom color="#1F2B3D">
                         {formatMessage(MESSAGES.interventionPlanTitle)}
