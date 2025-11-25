@@ -6,7 +6,11 @@ import { InterventionSelect } from '../../../../components/InterventionSelect';
 import { Map } from '../../../../components/Map';
 import { MapActionBox } from '../../../../components/MapActionBox';
 import { formatBigNumber } from '../../libs/cost-utils';
-import { defaultLegend, getColorForShape } from '../../libs/map-utils';
+import {
+    defaultLegend,
+    getColorForShape,
+    severityColorRange,
+} from '../../libs/map-utils';
 import { BudgetOrgUnit } from '../../types/budget';
 import { Intervention } from '../../types/interventions';
 
@@ -17,16 +21,6 @@ const styles: SxStyles = {
         position: 'relative',
     },
 };
-
-// TODO Move this to utils, along with other fixed colors
-const colorRange = [
-    '#ACDF9B',
-    '#6BD39D',
-    '#F5F1A0',
-    '#F2B16E',
-    '#E4754F',
-    '#A93A42',
-];
 
 type Props = {
     orgUnitCosts?: BudgetOrgUnit[];
@@ -53,7 +47,7 @@ export const OrgUnitCostMap: FC<Props> = ({ orgUnitCosts, orgUnits }) => {
         const maxCost = Math.max(...costs);
         const stepSize = maxCost / 6;
         const legend = {
-            range: colorRange,
+            range: severityColorRange,
             domain: Array.from({ length: 5 }, (_, i) => (i + 1) * stepSize),
         };
 

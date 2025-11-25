@@ -56,7 +56,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
         population_df = build_population_dataframe(request.user.iaso_profile.account, start_year, end_year)
         interventions_input = build_interventions_input(scenario)
         interventions = Intervention.objects.all()
-        print(interventions)
+
         # build a quick lookup map ((code, type) -> id) for fast id retrieval
         interventions_map = {(iv.code, iv.name): iv.id for iv in interventions}
 
