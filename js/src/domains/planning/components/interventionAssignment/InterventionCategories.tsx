@@ -14,6 +14,13 @@ type Props = {
 };
 
 const styles: SxStyles = {
+    container: {
+        maxHeight: '100%',
+        overflow: 'auto',
+        flexWrap: 'nowrap',
+        padding: 2,
+        gap: 2,
+    },
     categoryName: { fontSize: '0.75rem', marginBottom: 1 },
     cancelButtonBox: {
         display: 'flex',
@@ -40,7 +47,7 @@ export const InterventionCategories: FC<Props> = ({
     );
 
     return (
-        <Grid container spacing={2} padding={2} direction="column">
+        <Grid container direction="column" sx={styles.container}>
             {!isLoading &&
                 interventionCategories.map(({ id, name, interventions }) => {
                     return (
