@@ -79,12 +79,11 @@ class BudgetViewSet(viewsets.ModelViewSet):
 
             for intervention in interventions_costs:
                 for cost_breakdown in intervention["cost_breakdown"]:
-                    cost_breakdown["category"] = cost_breakdown.get("cost_class", "")
-                    cost_breakdown.pop("cost_class", None)
+                    cost_breakdown["category"] = cost_breakdown.pop("cost_class", None)
 
             for place_cost in places_costs:
-                place_cost["org_unit_id"] = place_cost.get("place")
-                place_cost.pop("place")
+                place_cost["org_unit_id"] = place_cost.pop("place")
+
                 for place_cost_intervention in place_cost.get("interventions", []):
                     code = place_cost_intervention["code"]
                     type_ = place_cost_intervention["type"]

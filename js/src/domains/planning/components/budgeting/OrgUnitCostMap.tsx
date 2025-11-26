@@ -88,16 +88,18 @@ export const OrgUnitCostMap: FC<Props> = ({ orgUnitCosts, orgUnits }) => {
         const oucInterventions =
             orgUnitCosts?.flatMap(ouc => ouc.interventions) ?? [];
 
-        const allInterventions = {};
-        oucInterventions?.forEach(oui => {
-            if (!allInterventions[oui.id]) {
-                allInterventions[oui.id] = {
-                    code: oui.code,
-                    name: oui.type,
-                    id: oui.id,
-                };
-            }
-        });
+        const allInterventions = oucInterventions?.reduce((acc, oui) => {
+            return acc[oui.id]
+                ? acc
+                : {
+                      ...acc,
+                      [oui.id]: {
+                          code: oui.code,
+                          name: oui.type,
+                          id: oui.id,
+                      },
+                  };
+        }, {});
         return Object.values<Intervention>(allInterventions);
     }, [orgUnitCosts]);
 

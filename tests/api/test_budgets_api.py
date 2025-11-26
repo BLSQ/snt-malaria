@@ -153,11 +153,9 @@ class ScenarioAPITestCase(APITestCase):
         self.assertIn("org_units_costs", budget_2025)
 
         # Find SMC intervention in the budget
-        smc_intervention = None
-        for intervention in budget_2025["interventions"]:
-            if intervention["code"] == "smc":
-                smc_intervention = intervention
-                break
+        smc_intervention = next(
+            intervention for intervention in budget_2025["interventions"] if intervention["code"] == "smc"
+        )
 
         self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
         self.assertEqual(smc_intervention["total_cost"], 198000.0)
