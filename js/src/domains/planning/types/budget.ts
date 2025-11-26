@@ -3,9 +3,17 @@ import { InterventionOrgUnit } from './interventions';
 export type Budget = {
     year: number;
     interventions: BudgetIntervention[];
+    org_units_costs: BudgetOrgUnit[];
+};
+
+export type BudgetOrgUnit = {
+    org_unit_id: number;
+    total_cost: number;
+    interventions: BudgetIntervention[];
 };
 
 export type BudgetIntervention = {
+    id: number;
     type: string;
     code: string;
     total_cost: number;

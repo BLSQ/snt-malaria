@@ -15,7 +15,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { useGetInterventionCostBreakdownLineCategories } from '../../../settings/hooks/useGetInterventionCostBreakdownLineCategories';
 import {
-    formatCostValue,
+    formatBigNumber,
     getCostBreakdownChartData,
 } from '../../libs/cost-utils';
 import { BudgetIntervention } from '../../types/budget';
@@ -89,7 +89,7 @@ export const CostBreakdownChart: FC<Props> = ({ interventionBudgets }) => {
                             <YAxis
                                 axisLine={false}
                                 tickLine={false}
-                                tickFormatter={formatCostValue}
+                                tickFormatter={formatBigNumber}
                                 width={70}
                             />
                             <CartesianGrid
@@ -99,7 +99,7 @@ export const CostBreakdownChart: FC<Props> = ({ interventionBudgets }) => {
                             <Tooltip
                                 cursor={false}
                                 formatter={(value: number) =>
-                                    formatCostValue(value)
+                                    formatBigNumber(value)
                                 }
                             />
 

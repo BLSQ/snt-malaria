@@ -12,9 +12,8 @@ import {
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import {
-    formatCostValue,
+    formatBigNumber,
     formatPercentValue,
-    INTERVENTION_CODE_COLORS,
     INTERVENTION_COLORS,
 } from '../../libs/cost-utils';
 import { BudgetIntervention } from '../../types/budget';
@@ -66,7 +65,7 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
                 <>
                     {entry.value}{' '}
                     <b>
-                        {formatCostValue(entry?.payload?.value ?? 0)} (
+                        {formatBigNumber(entry?.payload?.value ?? 0)} (
                         {formatPercentValue(entry?.payload?.percent ?? 0)})
                     </b>
                 </>
@@ -87,7 +86,7 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
                         <PieChart>
                             <Tooltip
                                 formatter={(value: number) =>
-                                    formatCostValue(value)
+                                    formatBigNumber(value)
                                 }
                             />
                             <Pie

@@ -1,20 +1,33 @@
 import React, { FunctionComponent } from 'react';
-import { MenuItem, Select, SxProps, Theme, Typography } from '@mui/material';
+import { MenuItem, Select, Theme, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { MESSAGES } from '../../../messages';
-import { Intervention } from '../../types/interventions';
+import { SxStyles } from 'Iaso/types/general';
+import { MESSAGES } from '../domains/messages';
+import { Intervention } from '../domains/planning/types/interventions';
+
+const styles: SxStyles = {
+    select: (theme: Theme) => ({
+        minWidth: 120,
+        '& .MuiSelect-select': { padding: '8px 12px' },
+        backgroundColor: 'white',
+        marginRight: 1,
+        borderRadius: theme.spacing(0.5),
+        height: '36px',
+        '& .MuiOutlinedInput-notchedOutline': {
+            border: 0,
+        },
+    }),
+};
 
 type Props = {
     interventions: Intervention[] | undefined;
     selectedInterventionId: number | null;
     onInterventionSelect: (interventionId: number) => unknown;
-    sx: SxProps<Theme>;
 };
 export const InterventionSelect: FunctionComponent<Props> = ({
     interventions,
     selectedInterventionId,
     onInterventionSelect,
-    sx,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -27,7 +40,7 @@ export const InterventionSelect: FunctionComponent<Props> = ({
             value={selectedInterventionId}
             onChange={handleSelectedPlanChange}
             displayEmpty
-            sx={sx}
+            sx={styles.select}
         >
             {interventions.length > 1 && (
                 <MenuItem value={0}>

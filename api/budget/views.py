@@ -3,10 +3,7 @@ import pandas as pd
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from snt_malaria_budgeting import (
-    DEFAULT_COST_ASSUMPTIONS,
-    get_budget,
-)
+from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS, BudgetCalculator
 
 from plugins.snt_malaria.api.budget.filters import BudgetListFilter
 from plugins.snt_malaria.api.budget.serializers import BudgetCreateSerializer, BudgetSerializer
@@ -16,6 +13,7 @@ from plugins.snt_malaria.api.budget.utils import (
     build_population_dataframe,
 )
 from plugins.snt_malaria.models.budget import Budget
+from plugins.snt_malaria.models.intervention import Intervention
 
 
 class BudgetViewSet(viewsets.ModelViewSet):
@@ -57,29 +55,43 @@ class BudgetViewSet(viewsets.ModelViewSet):
         cost_df = build_cost_dataframe(request.user.iaso_profile.account)
         population_df = build_population_dataframe(request.user.iaso_profile.account, start_year, end_year)
         interventions_input = build_interventions_input(scenario)
+        interventions = Intervention.objects.all()
+
+        # build a quick lookup map ((code, type) -> id) for fast id retrieval
+        interventions_map = {(iv.code, iv.name): iv.id for iv in interventions}
 
         # For now, assume the default coverage etc.
         settings = DEFAULT_COST_ASSUMPTIONS
 
         budgets = []
+        budget_calculator = BudgetCalculator(
+            interventions_input=interventions_input,
+            settings=settings,
+            cost_df=cost_df,
+            population_df=population_df,
+            local_currency="EUR",
+            spatial_planning_unit="org_unit_id",
+        )
+
         for year in range(start_year, end_year + 1):
-            result = get_budget(
-                year=year,
-                spatial_planning_unit="org_unit_id",
-                interventions_input=interventions_input,
-                settings=settings,
-                cost_df=cost_df,
-                population_df=population_df,
-                cost_overrides=[],  # optional
-                local_currency="EUR",
-            )
+            interventions_costs = budget_calculator.get_interventions_costs(year)
+            places_costs = budget_calculator.get_places_costs(year)
 
-            for intervention in result["interventions"]:
+            for intervention in interventions_costs:
                 for cost_breakdown in intervention["cost_breakdown"]:
-                    cost_breakdown["category"] = cost_breakdown.get("cost_class", "")
-                    cost_breakdown.pop("cost_class", None)
+                    cost_breakdown["category"] = cost_breakdown.pop("cost_class", None)
 
-            budgets.append(result)
+            for place_cost in places_costs:
+                place_cost["org_unit_id"] = place_cost.pop("place")
+
+                for place_cost_intervention in place_cost.get("interventions", []):
+                    code = place_cost_intervention["code"]
+                    type_ = place_cost_intervention["type"]
+                    intervention_id = interventions_map.get((code, type_))
+                    # attach the found intervention (or None) for downstream use
+                    place_cost_intervention["id"] = intervention_id
+
+            budgets.append({"year": year, "interventions": interventions_costs, "org_units_costs": places_costs})
 
         budget = Budget.objects.create(
             scenario=scenario,

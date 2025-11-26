@@ -201,7 +201,12 @@ export const Planning: FC = () => {
                             isLoadingPlans={isLoadingPlans}
                         />
                     </Grid>
-                    {budget && <Budgeting budgets={budget?.results} />}
+                    {orgUnits && budget && (
+                        <Budgeting
+                            budgets={budget?.results}
+                            orgUnits={orgUnits}
+                        />
+                    )}
                 </Grid>
             </PageContainer>
         </>

@@ -167,6 +167,7 @@ def build_interventions_input(scenario):
     for assignment in assignments:
         intervention_code = assignment.intervention.code
         intervention_type = assignment.intervention.name
+        intervention_id = assignment.intervention.id
         org_unit_id = assignment.org_unit.id
 
         # Group by intervention name and type
@@ -174,6 +175,7 @@ def build_interventions_input(scenario):
             interventions_dict[intervention_code] = {
                 "code": intervention_code,
                 "type": intervention_type,
+                "id": intervention_id,
                 "places": [],
             }
         interventions_dict[intervention_code]["places"].append(org_unit_id)

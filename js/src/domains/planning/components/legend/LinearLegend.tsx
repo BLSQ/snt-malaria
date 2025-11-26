@@ -22,7 +22,6 @@ type Props = {
 export const LinearLegend: FunctionComponent<Props> = ({ domainAndRange }) => {
     const [startValue, endValue] = domainAndRange.domain;
     const [startColor, endColor] = domainAndRange.range;
-
     const gradientStyle = {
         background: `linear-gradient(to right, ${startColor}, ${endColor})`,
         minWidth: '250px',

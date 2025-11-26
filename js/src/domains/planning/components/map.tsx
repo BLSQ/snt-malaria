@@ -2,13 +2,7 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, Theme, Typography } from '@mui/material';
 
 import L from 'leaflet';
-import {
-    GeoJSON,
-    MapContainer,
-    TileLayer,
-    Tooltip,
-    ZoomControl,
-} from 'react-leaflet';
+import { GeoJSON, MapContainer, Tooltip, ZoomControl } from 'react-leaflet';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
@@ -141,7 +135,6 @@ export const Map: FC<Props> = ({
                         zoomDelta={defaultZoomDelta}
                     >
                         <ZoomControl position="bottomright" />
-                        <TileLayer url="" attribution="" />
                         {orgUnits.map(orgUnit => (
                             <GeoJSON
                                 key={orgUnit.id}

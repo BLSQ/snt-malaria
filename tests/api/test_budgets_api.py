@@ -150,13 +150,12 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(budget_2025["year"], 2025)
         self.assertEqual(response.data["scenario"], self.scenario.id)
         self.assertIn("interventions", budget_2025)
+        self.assertIn("org_units_costs", budget_2025)
 
         # Find SMC intervention in the budget
-        smc_intervention = None
-        for intervention in budget_2025["interventions"]:
-            if intervention["code"] == "smc":
-                smc_intervention = intervention
-                break
+        smc_intervention = next(
+            intervention for intervention in budget_2025["interventions"] if intervention["code"] == "smc"
+        )
 
         self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
         self.assertEqual(smc_intervention["total_cost"], 198000.0)
@@ -164,6 +163,21 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
         self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
         self.assertEqual(smc_intervention["cost_breakdown"][0]["cost"], 198000.0)
+
+        # Find Org unit cost
+        smc_org_unit_costs = None
+        for org_unit_costs in budget_2025["org_units_costs"]:
+            if org_unit_costs["org_unit_id"] == self.district1.id:
+                smc_org_unit_costs = org_unit_costs
+                break
+
+        self.assertIsNotNone(smc_org_unit_costs)
+        self.assertEqual(smc_org_unit_costs["total_cost"], 79200.0)
+        self.assertEqual(len(smc_org_unit_costs["interventions"]), 1)
+        self.assertEqual(smc_org_unit_costs["interventions"][0]["code"], "smc")
+        self.assertEqual(smc_org_unit_costs["interventions"][0]["type"], "SMC")
+        self.assertEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 79200.0)
+        self.assertEqual(smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id)
 
     def test_calculate_budget_missing_scenario(self):
         """Test calculate_budget endpoint without scenario parameter"""

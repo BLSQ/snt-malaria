@@ -12,6 +12,15 @@ export const maxHue = 350;
 export const defaultZoomSnap = 0.25;
 export const defaultZoomDelta = 0.5;
 
+export const severityColorRange = [
+    '#ACDF9B',
+    '#6BD39D',
+    '#F5F1A0',
+    '#F2B16E',
+    '#E4754F',
+    '#A93A42',
+];
+
 export const getColorRange = (count: number = 1) => {
     const colorStep = Math.round(maxHue / count);
     let prevHue = 0;
@@ -56,7 +65,7 @@ export const shouldReverse = (threshold: ScaleDomainRange) => {
     return threshold.domain[0] > threshold.domain[threshold.domain.length - 1];
 };
 
-const getColorForShape = (
+export const getColorForShape = (
     value?: string | number,
     legend_type?: string,
     legend_config?: ScaleDomainRange,
