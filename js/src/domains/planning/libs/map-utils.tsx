@@ -1,45 +1,14 @@
 import { useCallback } from 'react';
-import { hslToRgb } from '@mui/material';
 import { scaleThreshold } from '@visx/scale';
 import { useSafeIntl } from 'bluesquare-components';
 import * as d3 from 'd3-scale';
 import { mapTheme } from '../../../constants/map-theme';
 import { MESSAGES } from '../../messages';
 import { MetricValue, ScaleDomainRange } from '../types/metrics';
+import { defaultLegend } from './color-utils';
 
-export const defaultLegend = '#999999';
-export const maxHue = 350;
 export const defaultZoomSnap = 0.25;
 export const defaultZoomDelta = 0.5;
-
-export const severityColorRange = [
-    '#ACDF9B',
-    '#6BD39D',
-    '#F5F1A0',
-    '#F2B16E',
-    '#E4754F',
-    '#A93A42',
-];
-
-export const getColorRange = (count: number = 1) => {
-    const colorStep = Math.round(maxHue / count);
-    let prevHue = 0;
-
-    return Array.from(Array(count)).map(() => {
-        const [hue, sat, light] = getHslColor(prevHue, colorStep);
-        prevHue = hue;
-        return hslToRgb(`hsl(${hue},${sat * 100}%,${light * 100}%)`);
-    });
-};
-
-export const getHslColor = (prevHue: number = 0, stepSize = 10) => {
-    const [sat, lightness] = [0.69, 0.84];
-    let hue = prevHue + stepSize;
-    if (hue > maxHue) {
-        hue -= maxHue;
-    }
-    return [hue, sat, lightness];
-};
 
 export const getLegend = (
     threshold: ScaleDomainRange,

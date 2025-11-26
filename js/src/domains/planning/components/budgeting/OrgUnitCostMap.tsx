@@ -5,12 +5,9 @@ import { SxStyles } from 'Iaso/types/general';
 import { InterventionSelect } from '../../../../components/InterventionSelect';
 import { Map } from '../../../../components/Map';
 import { MapActionBox } from '../../../../components/MapActionBox';
+import { defaultLegend, severityColorRange } from '../../libs/color-utils';
 import { formatBigNumber } from '../../libs/cost-utils';
-import {
-    defaultLegend,
-    getColorForShape,
-    severityColorRange,
-} from '../../libs/map-utils';
+import { getColorForShape } from '../../libs/map-utils';
 import { BudgetOrgUnit } from '../../types/budget';
 import { Intervention } from '../../types/interventions';
 

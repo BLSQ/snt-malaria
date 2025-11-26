@@ -16,7 +16,7 @@ import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventi
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
 import { useRemoveOrgUnitFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import { defaultLegend, getColorRange } from '../../libs/map-utils';
+import { defaultLegend, getColorRange } from '../../libs/color-utils';
 import {
     Intervention,
     InterventionOrgUnit,
