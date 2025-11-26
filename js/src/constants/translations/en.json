@@ -58,6 +58,8 @@
     "iaso.snt_malaria.proportion-chart.title": "Proportion ot Total Budget by Intervention",
     "iaso.snt_malaria.budgeting.selectYear": "Select year",
     "iaso.snt_malaria.budgeting.entirePeriod": "Entire period",
+    "iaso.snt_malaria.budgeting.total": "Budget",
+    "iaso.snt_malaria.budgeting.budget": "Total",
     "iaso.snt_malaria.settings.intervention.selectYear": "Select year",
     "iaso.snt_malaria.more": "More",
     "iaso.snt_malaria.loading": "Loading Content...",
