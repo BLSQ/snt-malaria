@@ -36,13 +36,13 @@ def build_population_dataframe(account, start_year, end_year):
         "POP_URBAN": "pop_urbain",
     }
 
+    pop_columns = list(metric_code_to_column.values())
+
     # Fetch all relevant MetricTypes for this account
     metric_types = MetricType.objects.filter(account=account, code__in=metric_code_to_column.keys())
 
     if not metric_types.exists():
         raise ValidationError("No population MetricTypes found for this account")
-
-    # TODO: Handle case of only POPULATION
 
     # Check for required POPULATION metric type
     metric_type_codes = set(metric_types.values_list("code", flat=True))
@@ -73,6 +73,17 @@ def build_population_dataframe(account, start_year, end_year):
     # Rename columns from metric codes to expected column names
     df_pivoted = df_pivoted.rename(columns=metric_code_to_column)
 
+    # Add potential missing columns with 0 as value
+    for col in pop_columns:
+        if col not in df_pivoted.columns:
+            df_pivoted[col] = 0
+
+    # Ensure all expected population columns exist and set missing values to 0
+    for col in pop_columns:
+        if col not in df_pivoted.columns:
+            df_pivoted[col] = 0
+    # Fill any remaining NaNs in population columns with 0
+    df_pivoted[pop_columns] = df_pivoted[pop_columns].fillna(0)
     # Duplicate data across scenario years
     dfs_by_year = []
     for year in [year for year in range(start_year, end_year + 1)]:
@@ -82,7 +93,7 @@ def build_population_dataframe(account, start_year, end_year):
     df_final = pd.concat(dfs_by_year, ignore_index=True)
 
     # Ensure column order is consistent
-    final_columns = ["org_unit_id", "year"] + list(metric_code_to_column.values())
+    final_columns = ["org_unit_id", "year"] + pop_columns
     df_final = df_final[final_columns]
 
     return df_final
@@ -117,7 +128,7 @@ def build_cost_dataframe(account, start_year, end_year):
                 "unit": line.get_unit_type_display(),
                 # TODO: Change budget package to support decimals
                 "usd_cost": float(line.unit_cost),
-                # "cost_year_for_analysis": line.year, # TODO
+                # "cost_year_for_analysis": line.year, # This is set later once we copy per year
             }
         )
 

@@ -114,6 +114,68 @@ class ScenarioAPITestCase(APITestCase):
 
         cls.client.force_authenticate(user=cls.user)
 
+    def test_calculate_budget_no_population_metric(self):
+        """Test calculate_budget endpoint with mocked CSV data and budget calculation"""
+        # Create SMC intervention assignment for district1
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_chemo_smc,
+            created_by=self.user,
+        )
+
+        url = f"{BASE_URL}?scenario_id={self.scenario.id}"
+        response = self.client.post(url, {"scenario": self.scenario.id}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data[0], "No population MetricTypes found for this account")
+
+    def test_calculate_budget_no_total_population_metric(self):
+        """Test calculate_budget endpoint with mocked CSV data and budget calculation"""
+        MetricType.objects.create(
+            account=self.account,
+            name="Total Population",
+            code="POP_UNDER_5",
+            description="Total population data",
+            units="people",
+        )
+        # Create SMC intervention assignment for district1
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_chemo_smc,
+            created_by=self.user,
+        )
+
+        url = f"{BASE_URL}?scenario_id={self.scenario.id}"
+        response = self.client.post(url, {"scenario": self.scenario.id}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data[0], "MetricType with code 'POPULATION' does not exist for this account")
+
+    def test_calculate_budget_no_metric_values(self):
+        """Test calculate_budget endpoint with mocked CSV data and budget calculation"""
+        MetricType.objects.create(
+            account=self.account,
+            name="Total Population",
+            code="POPULATION",
+            description="Total population data",
+            units="people",
+        )
+        # Create SMC intervention assignment for district1
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_chemo_smc,
+            created_by=self.user,
+        )
+
+        url = f"{BASE_URL}?scenario_id={self.scenario.id}"
+        response = self.client.post(url, {"scenario": self.scenario.id}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data[0], "No population data found")
+
     def test_calculate_budget_success(self):
         """Test calculate_budget endpoint with mocked CSV data and budget calculation"""
         # Create MetricType for population
@@ -124,10 +186,19 @@ class ScenarioAPITestCase(APITestCase):
             description="Total population data",
             units="people",
         )
+        metric_type_pop_under_5 = MetricType.objects.create(
+            account=self.account,
+            name="Total Population",
+            code="POP_UNDER_5",
+            description="Population under 5 year",
+            units="child",
+        )
 
         # Create MetricValues for the org units (district1 and district2)
-        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district1, value=100000)
-        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district2, value=150000)
+        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district1, value=10000000)
+        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district2, value=15000000)
+        MetricValue.objects.create(metric_type=metric_type_pop_under_5, org_unit=self.district1, value=100000)
+        MetricValue.objects.create(metric_type=metric_type_pop_under_5, org_unit=self.district2, value=150000)
 
         # Create SMC intervention assignment for district1
         InterventionAssignment.objects.create(
@@ -158,11 +229,11 @@ class ScenarioAPITestCase(APITestCase):
         )
 
         self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
-        self.assertEqual(smc_intervention["total_cost"], 198000.0)
-        self.assertEqual(smc_intervention["total_pop"], 237500.0)
+        self.assertEqual(smc_intervention["total_cost"], 1009800.0)
+        self.assertEqual(smc_intervention["total_pop"], 475000.0)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
         self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
-        self.assertEqual(smc_intervention["cost_breakdown"][0]["cost"], 198000.0)
+        self.assertEqual(smc_intervention["cost_breakdown"][0]["cost"], 1009800.0)
 
         # Find Org unit cost
         smc_org_unit_costs = None
@@ -172,11 +243,11 @@ class ScenarioAPITestCase(APITestCase):
                 break
 
         self.assertIsNotNone(smc_org_unit_costs)
-        self.assertEqual(smc_org_unit_costs["total_cost"], 79200.0)
+        self.assertEqual(smc_org_unit_costs["total_cost"], 403920.0)
         self.assertEqual(len(smc_org_unit_costs["interventions"]), 1)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["code"], "smc")
         self.assertEqual(smc_org_unit_costs["interventions"][0]["type"], "SMC")
-        self.assertEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 79200.0)
+        self.assertEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 403920.0)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id)
 
     def test_calculate_budget_missing_scenario(self):
