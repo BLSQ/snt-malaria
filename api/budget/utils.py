@@ -1,5 +1,6 @@
 import pandas as pd
 
+from django.utils import translation
 from rest_framework.exceptions import ValidationError
 from snt_malaria_budgeting import InterventionDetailModel
 
@@ -119,18 +120,20 @@ def build_cost_dataframe(account, start_year, end_year):
     # Convert to list of dicts with display values for choice fields
     cost_lines_data = []
     for line in cost_lines:
-        cost_lines_data.append(
-            {
-                "code_intervention": line.intervention.code,
-                "type_intervention": line.intervention.name,
-                "cost_class": line.get_category_display(),
-                "description": line.intervention.description,
-                "unit": line.get_unit_type_display(),
-                # TODO: Change budget package to support decimals
-                "usd_cost": float(line.unit_cost),
-                # "cost_year_for_analysis": line.year, # This is set later once we copy per year
-            }
-        )
+        # Force english here, so our text choices still match budgeting tool types
+        with translation.override("en"):
+            cost_lines_data.append(
+                {
+                    "code_intervention": line.intervention.code,
+                    "type_intervention": line.intervention.name,
+                    "cost_class": line.get_category_display(),
+                    "description": line.intervention.description,
+                    "unit": line.get_unit_type_display(),
+                    # TODO: Change budget package to support decimals
+                    "usd_cost": float(line.unit_cost),
+                    # "cost_year_for_analysis": line.year, # This is set later once we copy per year
+                }
+            )
 
     # Convert to DataFrame
     df = pd.DataFrame(cost_lines_data)
