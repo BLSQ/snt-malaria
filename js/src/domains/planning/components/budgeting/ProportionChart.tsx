@@ -18,6 +18,7 @@ import {
 } from '../../libs/cost-utils';
 import { BudgetIntervention } from '../../types/budget';
 import { ChartLegend } from './ChartLegend';
+import { getRandomColor } from '../../libs/color-utils';
 
 type Props = { interventionBudgets: BudgetIntervention[] };
 
@@ -100,7 +101,7 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
                                         key={`cell-${entry.name}`}
                                         fill={
                                             INTERVENTION_COLORS[entry.name] ??
-                                            DEFAULT_COLOR
+                                            getRandomColor(entry.name)
                                         }
                                     />
                                 ))}

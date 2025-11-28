@@ -1,9 +1,10 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
-import { Box, Grid, Stack, Typography } from '@mui/material';
+import { Grid, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { noOp } from 'Iaso/utils';
+import { IconBoxed } from '../../../../components/IconBoxed';
 import { MESSAGES } from '../../../messages';
 import {
     getConflictingAssignments,
@@ -15,7 +16,6 @@ import {
     InterventionPlan,
 } from '../../types/interventions';
 import { ConflictManagementModal } from '../conflictManagement/ConflictManagementModal';
-import { containerBoxStyles } from '../styles';
 
 type Props = {
     scenarioId: number | undefined;
@@ -183,12 +183,8 @@ export const InterventionHeader: FC<Props> = ({
             justifyContent="space-between"
         >
             <Stack direction="row" spacing={1} alignItems="center">
-                <Box sx={containerBoxStyles}>
-                    <SettingsInputComponentOutlinedIcon
-                        height="auto"
-                        color="primary"
-                    />
-                </Box>
+                <IconBoxed Icon={SettingsInputComponentOutlinedIcon} />
+
                 <Typography variant="h6" gutterBottom color="#1F2B3D">
                     {formatMessage(MESSAGES.interventionTitle)}
                 </Typography>

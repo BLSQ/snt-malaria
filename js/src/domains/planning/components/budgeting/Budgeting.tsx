@@ -1,10 +1,13 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import { Box, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { IconBoxed } from '../../../../components/IconBoxed';
 import { PaperContainer } from '../../../../components/styledComponents';
 import { MESSAGES } from '../../../messages';
+import { formatBigNumber } from '../../libs/cost-utils';
 import {
     Budget,
     BudgetIntervention,
@@ -138,6 +141,15 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
         [mergeOrgUnitCosts, budgets, selectedYear, yearOptions],
     );
 
+    const totalCost = useMemo(
+        () =>
+            interventionCosts?.reduce(
+                (sum, interventionCost) => sum + interventionCost.total_cost,
+                0,
+            ) ?? 0,
+        [interventionCosts],
+    );
+
     return (
         <>
             {yearOptions && yearOptions.length > 2 && (
@@ -145,28 +157,37 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
                     <Box
                         sx={{
                             py: 1,
-                            px: 4,
+                            px: 2,
                             display: 'flex',
                             alignItems: 'center',
+                            justifyContent: 'space-between',
                             backgroundColor: 'white',
                             borderRadius: 4,
                         }}
                     >
-                        <Typography sx={{ marginRight: 2 }}>
-                            {formatMessage(MESSAGES.selectYear)}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <IconBoxed Icon={AttachMoneyIcon} />
+                            <Typography sx={{ mx: 2 }}>
+                                {formatMessage(MESSAGES.budget)}
+                            </Typography>
 
-                        <InputComponent
-                            type="select"
-                            multi={false}
-                            value={selectedYear}
-                            options={yearOptions}
-                            labelString="" // This is required to prevent warning in console..
-                            onChange={(_, value) => setSelectedYear(value)}
-                            keyValue="year_options"
-                            withMarginTop={false}
-                            wrapperSx={{ minWidth: '225px' }}
-                        />
+                            <InputComponent
+                                type="select"
+                                multi={false}
+                                value={selectedYear}
+                                options={yearOptions}
+                                labelString="" // This is required to prevent warning in console..
+                                onChange={(_, value) => setSelectedYear(value)}
+                                keyValue="year_options"
+                                withMarginTop={false}
+                                wrapperSx={{ minWidth: '150px' }}
+                                clearable={false}
+                            />
+                        </Box>
+                        <Typography>
+                            {formatMessage(MESSAGES.total)} :{' '}
+                            {formatBigNumber(totalCost)}
+                        </Typography>
                     </Box>
                 </Grid>
             )}
