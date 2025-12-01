@@ -43,7 +43,9 @@ export const InterventionsPlanRowTable: FunctionComponent<Props> = ({
                         xs={3}
                         sx={{ display: 'flex', alignItems: 'center' }}
                     >
-                        <Typography>{row?.intervention.name}</Typography>
+                        <Typography>
+                            {row?.intervention.name} - {row?.intervention.code}
+                        </Typography>
                     </Grid>
                     <Grid item xs={7}>
                         <Button

@@ -9,6 +9,7 @@ class InterventionSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
+            "code",
             "description",
             "intervention_category",
             "created_at",

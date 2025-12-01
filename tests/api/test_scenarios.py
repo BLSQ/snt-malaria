@@ -210,7 +210,9 @@ class ScenarioAPITestCase(APITestCase):
         csv_district_1 = csv_list[1]
         csv_district_2 = csv_list[2]
 
-        self.assertSequenceEqual(csv_headers, ["org_unit_id", "org_unit_name", "IPTp", "RTS,S", "SMC"])
+        self.assertSequenceEqual(
+            csv_headers, ["org_unit_id", "org_unit_name", "IPTp - iptp", "RTS,S - rts_s", "SMC - smc"]
+        )
         self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "1", "0", "0"])
         self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "1", "1"])
 
@@ -224,7 +226,9 @@ class ScenarioAPITestCase(APITestCase):
         csv_district_1 = csv_list[1]
         csv_district_2 = csv_list[2]
 
-        self.assertSequenceEqual(csv_headers, ["org_unit_id", "org_unit_name", "IPTp", "RTS,S", "SMC"])
+        self.assertSequenceEqual(
+            csv_headers, ["org_unit_id", "org_unit_name", "IPTp - iptp", "RTS,S - rts_s", "SMC - smc"]
+        )
         self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "0", "0", "0"])
         self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "0", "0"])
 
@@ -271,7 +275,7 @@ class ScenarioAPITestCase(APITestCase):
 
     def test_scenario_import_csv_missing_org_unit_id_column(self):
         url = "/api/snt_malaria/scenarios/import_from_csv/"
-        csv_content = b"org_unit_name,IPTp,RTS,S,SMC\nDistrict 1,1,0,0\nDistrict 2,0,1,1\n"
+        csv_content = b"org_unit_name,IPTp - iptp,RTS,S - rts_s,SMC - smc\nDistrict 1,1,0,0\nDistrict 2,0,1,1\n"
         invalid_file = SimpleUploadedFile("test.csv", csv_content, content_type="text/csv")
         response = self.client.post(url, {"file": invalid_file}, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -281,7 +285,7 @@ class ScenarioAPITestCase(APITestCase):
     def test_scenario_import_csv_missing_header(self):
         url = "/api/snt_malaria/scenarios/import_from_csv/"
         csv_content = (
-            'org_unit_id,org_unit_name,IPTp,"RTS,S"\n'
+            'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s"\n'
             f"{self.district1.id},District 1,1,0\n"
             f"{self.district2.id},District 2,0,1\n"
         )
@@ -292,12 +296,12 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("file", response.data)
         self.assertIn("header_errors", response.data["file"])
-        self.assertIn("SMC", response.data["file"]["header_errors"])
+        self.assertIn("SMC - smc", response.data["file"]["header_errors"])
 
     def test_scenario_import_csv_no_assignments(self):
         url = "/api/snt_malaria/scenarios/import_from_csv/"
         csv_content = (
-            'org_unit_id,org_unit_name,IPTp,"RTS,S",SMC\n'
+            'org_unit_id,org_unit_name,"IPTp - iptp","RTS,S - rts_s","SMC - smc"\n'
             f"{self.district1.id},District 1,0,0,0\n"
             f"{self.district2.id},District 2,0,0,0\n"
         )
@@ -309,7 +313,7 @@ class ScenarioAPITestCase(APITestCase):
 
     def test_scenario_import_csv_org_unit_not_found(self):
         url = "/api/snt_malaria/scenarios/import_from_csv/"
-        csv_content = 'org_unit_id,org_unit_name,IPTp,"RTS,S",SMC\n9999,District Unknown,1,0,0\n'
+        csv_content = 'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n9999,District Unknown,1,0,0\n'
 
         valid_file = SimpleUploadedFile("test.csv", csv_content.encode(), content_type="text/csv")
         response = self.client.post(url, {"file": valid_file}, format="multipart")
@@ -324,7 +328,7 @@ class ScenarioAPITestCase(APITestCase):
     def test_scenario_import_csv_success(self):
         url = "/api/snt_malaria/scenarios/import_from_csv/"
         csv_content = (
-            'org_unit_id,org_unit_name,IPTp,"RTS,S",SMC\n'
+            'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n'
             f"{self.district1.id},District 1,1,0,0\n"
             f"{self.district2.id},District 2,0,1,1\n"
         )
