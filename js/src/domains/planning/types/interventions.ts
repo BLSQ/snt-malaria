@@ -10,6 +10,7 @@ export type InterventionCategory = {
 export type Intervention = {
     id: number;
     name: string;
+    code: string;
     description: string;
     intervention_category: number;
 };

@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
+import { getRandomColor } from '../../libs/color-utils';
 import {
     formatBigNumber,
     formatPercentValue,
@@ -18,11 +19,8 @@ import {
 } from '../../libs/cost-utils';
 import { BudgetIntervention } from '../../types/budget';
 import { ChartLegend } from './ChartLegend';
-import { getRandomColor } from '../../libs/color-utils';
 
 type Props = { interventionBudgets: BudgetIntervention[] };
-
-const DEFAULT_COLOR = '#512DA8';
 
 const styles: SxStyles = {
     mainBox: {
@@ -53,7 +51,7 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
     const data = useMemo(
         () =>
             interventionBudgets?.map(b => ({
-                name: b.type,
+                name: `${b.type} - ${b.code}`,
                 value: b.total_cost,
             })),
         [interventionBudgets],

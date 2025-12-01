@@ -18,7 +18,6 @@ export const getCostBreakdownChartData = (
 ) => {
     return interventionBudgets
         ?.map((interventionBudget: BudgetIntervention) => {
-            // TODO Define what to do if not costbreakdown, hide from here, show as Other, ...
             return interventionBudget.cost_breakdown?.reduce(
                 (acc, costLine) => {
                     return {
@@ -29,6 +28,7 @@ export const getCostBreakdownChartData = (
                 },
                 {
                     interventionType: interventionBudget.type,
+                    interventionCode: interventionBudget.code,
                 },
             );
         })
