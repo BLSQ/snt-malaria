@@ -81,8 +81,8 @@ const styles: SxStyles = {
 
 const validationSchema = Yup.object().shape({
     name: Yup.string().required(),
-    start_year: Yup.number().required().min(2025).max(2035),
-    end_year: Yup.number().required().min(2025).max(2035),
+    start_year: Yup.number().required().min(2024).max(2035),
+    end_year: Yup.number().required().min(2024).max(2035),
 });
 
 type Props = {

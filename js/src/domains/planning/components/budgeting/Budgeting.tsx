@@ -36,8 +36,8 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
 
     const mergeCostBreakdown = useCallback(
         (
-            sourceCostBreakdown: BudgetInterventionCostLine[],
-            costBreakdownToAdd: BudgetInterventionCostLine[],
+            sourceCostBreakdown: BudgetInterventionCostLine[] = [],
+            costBreakdownToAdd: BudgetInterventionCostLine[] = [],
         ) => {
             const mergedCosts = {};
             sourceCostBreakdown.forEach(

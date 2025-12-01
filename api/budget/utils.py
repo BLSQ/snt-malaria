@@ -1,5 +1,6 @@
 import pandas as pd
 
+from django.utils import translation
 from rest_framework.exceptions import ValidationError
 from snt_malaria_budgeting import InterventionDetailModel
 
@@ -9,75 +10,97 @@ from plugins.snt_malaria.models import BudgetSettings, InterventionCostBreakdown
 
 # This is Work in Progress
 # For now this creates a dataframe for the population as expected by the budget function.
-# It duplicates the total population (MetricType with code="POPULATION") for all columns.
-# As well as duplicates all data to fit years 2025 to 2027.
+# It duplicates all data to fit years in the scenario range.
 #
 # TODO:
 # - think about the str() issue for org_unit_id
-# - add correct different pop datas from OH
 # - think about error handling all the way to the frontend
 def build_population_dataframe(account, start_year, end_year):
     """
-    Build a population dataframe from
+    Build a population dataframe from MetricTypes with population data.
 
     Returns a DataFrame with columns:
     - org_unit_id: OrgUnit ID
     - year: Year of the metric
     - pop_total, pop_0_5, pop_0_1, pop_1_2, pop_vaccine_5_36_months, pop_pw, pop_5_10, pop_urbain:
-      All populated with the same total population value for now
+      Populated from their respective MetricTypes
     """
-    try:
-        metric_type = MetricType.objects.get(account=account, code="POPULATION")
-    except MetricType.DoesNotExist:
+    # Mapping from MetricType codes to DataFrame column names
+    metric_code_to_column = {
+        "POPULATION": "pop_total",
+        "POP_UNDER_5": "pop_0_5",
+        "POP_0_1_Y": "pop_0_1",
+        "POP_1_2_Y": "pop_1_2",
+        "POP_5_36_M": "pop_vaccine_5_36_months",
+        "POP_PREGNANT_WOMAN": "pop_pw",
+        "POP_5_10_Y": "pop_5_10",
+        "POP_URBAN": "pop_urbain",
+    }
+
+    pop_columns = list(metric_code_to_column.values())
+
+    # Fetch all relevant MetricTypes for this account
+    metric_types = MetricType.objects.filter(account=account, code__in=metric_code_to_column.keys())
+
+    if not metric_types.exists():
+        raise ValidationError("No population MetricTypes found for this account")
+
+    # Check for required POPULATION metric type
+    metric_type_codes = set(metric_types.values_list("code", flat=True))
+    if "POPULATION" not in metric_type_codes:
         raise ValidationError("MetricType with code 'POPULATION' does not exist for this account")
 
-    # Query all MetricValues for this MetricType
+    # Fetch all MetricValues for these MetricTypes
     metric_values = (
-        MetricValue.objects.filter(metric_type=metric_type)
-        .select_related("org_unit")
-        .values("org_unit_id", "year", "value")
+        MetricValue.objects.filter(metric_type__in=metric_types)
+        .select_related("metric_type")
+        .values("org_unit_id", "year", "value", "metric_type__code")
     )
 
     if not metric_values:
-        raise ValidationError("No population data found for MetricType 'POPULATION'")
+        raise ValidationError("No population data found")
 
     # Convert to DataFrame
     df = pd.DataFrame(list(metric_values))
 
-    # Duplicate data across scenario years
-    years = [year for year in range(start_year, end_year + 1)]
-    dfs_by_year = []
+    # Pivot the data so each metric type becomes a column
+    df_pivoted = df.pivot_table(
+        index=["org_unit_id"],
+        columns="metric_type__code",
+        values="value",
+        aggfunc="first",
+    ).reset_index()
 
-    for year in years:
-        df_year = df.copy()
+    # Rename columns from metric codes to expected column names
+    df_pivoted = df_pivoted.rename(columns=metric_code_to_column)
+
+    # Add potential missing columns with 0 as value
+    for col in pop_columns:
+        if col not in df_pivoted.columns:
+            df_pivoted[col] = 0
+
+    # Ensure all expected population columns exist and set missing values to 0
+    for col in pop_columns:
+        if col not in df_pivoted.columns:
+            df_pivoted[col] = 0
+    # Fill any remaining NaNs in population columns with 0
+    df_pivoted[pop_columns] = df_pivoted[pop_columns].fillna(0)
+    # Duplicate data across scenario years
+    dfs_by_year = []
+    for year in [year for year in range(start_year, end_year + 1)]:
+        df_year = df_pivoted.copy()
         df_year["year"] = year
         dfs_by_year.append(df_year)
+    df_final = pd.concat(dfs_by_year, ignore_index=True)
 
-    # Combine all years into a single dataframe
-    df = pd.concat(dfs_by_year, ignore_index=True)
+    # Ensure column order is consistent
+    final_columns = ["org_unit_id", "year"] + pop_columns
+    df_final = df_final[final_columns]
 
-    # Duplicate the population value across all population columns
-    pop_columns = [
-        "pop_total",
-        "pop_0_5",
-        "pop_0_1",
-        "pop_1_2",
-        "pop_vaccine_5_36_months",
-        "pop_pw",
-        "pop_5_10",
-        "pop_urbain",
-    ]
-
-    for col in pop_columns:
-        df[col] = df["value"]
-
-    # Drop the original value column
-    df = df.drop(columns=["value"])
-
-    return df
+    return df_final
 
 
-def build_cost_dataframe(account):
+def build_cost_dataframe(account, start_year, end_year):
     """
     Build a cost dataframe from InterventionCostBreakdownLine, Intervention, and BudgetSettings models.
     """
@@ -97,21 +120,31 @@ def build_cost_dataframe(account):
     # Convert to list of dicts with display values for choice fields
     cost_lines_data = []
     for line in cost_lines:
-        cost_lines_data.append(
-            {
-                "code_intervention": line.intervention.code,
-                "type_intervention": line.intervention.name,
-                "cost_class": line.get_category_display(),
-                "description": line.intervention.description,
-                "unit": line.get_unit_type_display(),
-                # TODO: Change budget package to support decimals
-                "usd_cost": float(line.unit_cost),
-                "cost_year_for_analysis": line.year,
-            }
-        )
+        # Force english here, so our text choices still match budgeting tool types
+        with translation.override("en"):
+            cost_lines_data.append(
+                {
+                    "code_intervention": line.intervention.code,
+                    "type_intervention": line.intervention.name,
+                    "cost_class": line.get_category_display(),
+                    "description": line.intervention.description,
+                    "unit": line.get_unit_type_display(),
+                    # TODO: Change budget package to support decimals
+                    "usd_cost": float(line.unit_cost),
+                    # "cost_year_for_analysis": line.year, # This is set later once we copy per year
+                }
+            )
 
     # Convert to DataFrame
     df = pd.DataFrame(cost_lines_data)
+
+    # Duplicate data across scenario years
+    dfs_by_year = []
+    for year in [year for year in range(start_year, end_year + 1)]:
+        df_year = df.copy()
+        df_year["cost_year_for_analysis"] = year
+        dfs_by_year.append(df_year)
+    df = pd.concat(dfs_by_year, ignore_index=True)
 
     # BudgetSettings fields
     # NOTE: not supported yet by budget script

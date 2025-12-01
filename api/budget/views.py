@@ -52,8 +52,16 @@ class BudgetViewSet(viewsets.ModelViewSet):
         pd.set_option("display.max_columns", None)
 
         # Build cost and population dataframes and format the intervention plan
-        cost_df = build_cost_dataframe(request.user.iaso_profile.account)
-        population_df = build_population_dataframe(request.user.iaso_profile.account, start_year, end_year)
+        cost_df = build_cost_dataframe(
+            request.user.iaso_profile.account,
+            start_year,
+            end_year,
+        )
+        population_df = build_population_dataframe(
+            request.user.iaso_profile.account,
+            start_year,
+            end_year,
+        )
         interventions_input = build_interventions_input(scenario)
         interventions = Intervention.objects.all()
 
@@ -69,7 +77,8 @@ class BudgetViewSet(viewsets.ModelViewSet):
             settings=settings,
             cost_df=cost_df,
             population_df=population_df,
-            local_currency="EUR",
+            local_currency="NGN",
+            budget_currency="USD",
             spatial_planning_unit="org_unit_id",
         )
 
