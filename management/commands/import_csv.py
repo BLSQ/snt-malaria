@@ -6,6 +6,7 @@ import pandas as pd
 
 from django.core.management.base import BaseCommand
 
+from iaso.models.base import Account
 from iaso.models.org_unit import OrgUnit
 
 
@@ -48,7 +49,7 @@ class Command(BaseCommand):
             default=0.8,
             help="Fuzzy matching cutoff ratio (default 0.8)",
         )
-        parser.add_argument("--project-id", type=int)
+        parser.add_argument("--account-id", type=int)
         parser.add_argument("--lga-org-unit-type", type=int)
 
     def handle(self, *args, **options):
@@ -57,8 +58,10 @@ class Command(BaseCommand):
         encoding = options["encoding"]
         drop_columns = options["drop_columns"]
         cutoff = options["match_cutoff"]
-        project_id = options["project_id"]
+        account_id = options["account_id"]
         lga_org_unit_type = options["lga_org_unit_type"]
+
+        account = Account.objects.filter(id=account_id).first()
 
         try:
             # read CSV into a pandas DataFrame; keep strings for reliable matching
@@ -107,6 +110,7 @@ class Command(BaseCommand):
             exact_qs = OrgUnit.objects.filter(
                 name__iexact=name,
                 org_unit_type=lga_org_unit_type,
+                version=account.default_version,
             )
             if exact_qs.count() == 1:
                 mapping[raw] = exact_qs.first().id
@@ -119,7 +123,11 @@ class Command(BaseCommand):
                 continue
 
             # try icontains (substrings)
-            contains_qs = OrgUnit.objects.filter(name__icontains=name)
+            contains_qs = OrgUnit.objects.filter(
+                org_unit_type=lga_org_unit_type,
+                name__icontains=name,
+                version=account.default_version,
+            )
             if contains_qs.count() == 1:
                 mapping[raw] = contains_qs.first().id
                 continue
@@ -138,11 +146,20 @@ class Command(BaseCommand):
                 continue
 
             # fall back to fuzzy matching across all OrgUnit names
-            all_names = list(OrgUnit.objects.values_list("name", flat=True))
+            all_names = list(
+                OrgUnit.objects.filter(
+                    org_unit_type=lga_org_unit_type,
+                    version=account.default_version,
+                ).values_list("name", flat=True)
+            )
             close = difflib.get_close_matches(name, all_names, n=1, cutoff=cutoff)
             if close:
                 matched_name = close[0]
-                matched_objs = OrgUnit.objects.filter(name=matched_name)
+                matched_objs = OrgUnit.objects.filter(
+                    name=matched_name,
+                    org_unit_type=lga_org_unit_type,
+                    version=account.default_version,
+                )
 
                 mapping[raw] = next(
                     matched_obj.id for matched_obj in matched_objs if matched_obj.id not in mapping.values()
