@@ -107,6 +107,7 @@ class Command(BaseCommand):
             exact_qs = OrgUnit.objects.filter(
                 name__iexact=name,
                 org_unit_type=lga_org_unit_type,
+                version__data_source__projects__in=[project_id],
             )
             if exact_qs.count() == 1:
                 mapping[raw] = exact_qs.first().id
@@ -119,7 +120,11 @@ class Command(BaseCommand):
                 continue
 
             # try icontains (substrings)
-            contains_qs = OrgUnit.objects.filter(name__icontains=name)
+            contains_qs = OrgUnit.objects.filter(
+                org_unit_type=lga_org_unit_type,
+                name__icontains=name,
+                version__data_source__projects__in=[project_id],
+            )
             if contains_qs.count() == 1:
                 mapping[raw] = contains_qs.first().id
                 continue
@@ -138,11 +143,19 @@ class Command(BaseCommand):
                 continue
 
             # fall back to fuzzy matching across all OrgUnit names
-            all_names = list(OrgUnit.objects.values_list("name", flat=True))
+            all_names = list(
+                OrgUnit.objects.filter(
+                    org_unit_type=lga_org_unit_type, version__data_source__projects__in=[project_id]
+                ).values_list("name", flat=True)
+            )
             close = difflib.get_close_matches(name, all_names, n=1, cutoff=cutoff)
             if close:
                 matched_name = close[0]
-                matched_objs = OrgUnit.objects.filter(name=matched_name)
+                matched_objs = OrgUnit.objects.filter(
+                    name=matched_name,
+                    org_unit_type=lga_org_unit_type,
+                    version__data_source__projects__in=[project_id],
+                )
 
                 mapping[raw] = next(
                     matched_obj.id for matched_obj in matched_objs if matched_obj.id not in mapping.values()
