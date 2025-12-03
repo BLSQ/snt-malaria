@@ -14,9 +14,6 @@ from iaso.models import Account, OrgUnit, OrgUnitType
 
 
 def normalize_name(name):
-    """Normalize name by removing spaces, dashes, slashes and converting to lowercase"""
-    if not name:
-        return ""
     return name.replace(" ", "").replace("-", "").replace("/", "").lower()
 
 
@@ -33,19 +30,17 @@ except OrgUnitType.DoesNotExist:
     sys.exit(1)
 
 # Get all valid LGA orgunits in Nigeria with their parent (state) name
-org_units = (
-    OrgUnit.objects.filter(
-        org_unit_type=lga_org_unit_type,
-        version=account.default_version,
-        validation_status="VALID",
-    )
-    .select_related("parent")
-    .values("id", "uuid", "name", "parent__name")
-)
+org_units = OrgUnit.objects.filter(
+    org_unit_type=lga_org_unit_type,
+    version=account.default_version,
+    validation_status="VALID",
+).select_related("parent")
 
 org_units_list = list(org_units)
 print(f"Found {len(org_units_list)} valid LGA OrgUnits")
 print("-" * 80)
+
+uuid_matchings = {}
 
 # Iterate over each LGA and lookup in IDM's admin_info table
 matched_count = 0
@@ -54,10 +49,9 @@ unmatched_lgas = []
 
 with connection.cursor() as cursor:
     for org_unit in org_units_list:
-        lga_name = org_unit["name"]
-        state_name = org_unit["parent__name"] if org_unit["parent__name"] else None
+        lga_name = org_unit.name
+        state_name = org_unit.parent.name
 
-        # Normalize names in Python
         normalized_lga = normalize_name(lga_name)
         normalized_state = normalize_name(state_name)
 
@@ -65,7 +59,7 @@ with connection.cursor() as cursor:
         # Normalize by removing spaces, dashes, and slashes for comparison
         cursor.execute(
             """
-            SELECT admin_2_name, state, population
+            SELECT id
             FROM idm_dashboard.admin_info
             WHERE LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(admin_2_name, '2', ''), '1', ''), ' ', ''), '-', ''), '/', '')) = %s
               AND LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(state, '2', ''), '1', ''), ' ', ''), '-', ''), '/', '')) = %s
@@ -77,7 +71,7 @@ with connection.cursor() as cursor:
 
         if result:
             matched_count += 1
-            # TODO
+            uuid_matchings[result[0]] = org_unit.uuid
         else:
             unmatched_count += 1
             unmatched_lgas.append((lga_name, state_name))
@@ -89,5 +83,11 @@ print(f"  Total LGAs: {len(org_units_list)}")
 print(f"  Matched: {matched_count}")
 print(f"  Unmatched: {unmatched_count}")
 print("-" * 80)
+
+if len(set(uuid_matchings.keys())) == len(org_units_list):
+    # INSERT QUERY
+else:
+    print("Error: Match count not equal to OU count")
+
 
 print("\nDone!")
