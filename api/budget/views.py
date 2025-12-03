@@ -63,7 +63,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
             start_year,
             end_year,
         )
-        cost_df.to_csv("/var/app/population_df.csv")
+        population_df.to_csv("/var/app/population_df.csv")
 
         interventions_input = build_interventions_input(scenario)
         interventions = Intervention.objects.all()
