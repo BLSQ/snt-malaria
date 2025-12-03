@@ -57,13 +57,13 @@ class BudgetViewSet(viewsets.ModelViewSet):
             start_year,
             end_year,
         )
-        cost_df.to_csv("/var/app/cost_df.csv")
+        cost_df.to_csv("./cost_df-2.csv")
         population_df = build_population_dataframe(
             request.user.iaso_profile.account,
             start_year,
             end_year,
         )
-        population_df.to_csv("/var/app/population_df.csv")
+        population_df.to_csv("./population_df-2.csv")
 
         interventions_input = build_interventions_input(scenario)
         interventions = Intervention.objects.all()
