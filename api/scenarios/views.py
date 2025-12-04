@@ -3,6 +3,7 @@ import csv
 from datetime import datetime
 
 from django.db import IntegrityError, transaction
+from django.forms.models import model_to_dict
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
@@ -18,7 +19,7 @@ from plugins.snt_malaria.api.scenarios.utils import (
     get_csv_headers,
     get_csv_row,
     get_scenario,
-    get_valid_org_units_for_user,
+    get_valid_org_units_for_account,
 )
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 from plugins.snt_malaria.models.intervention import Intervention
@@ -106,7 +107,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             intervention_category__account=self.request.user.iaso_profile.account
         )
 
-        org_units = get_valid_org_units_for_user(self.request.user)
+        org_units = get_valid_org_units_for_account(self.request.user.iaso_profile.account)
 
         assignments = (
             InterventionAssignment.objects.select_related("org_unit", "intervention").filter(scenario__id=scenario_id)
@@ -146,17 +147,40 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
         # Get scenario property from serializer
         scenario = get_scenario(request.user, base_name="Imported Scenario")
+        print("SCENARIO")
+        print(scenario)
         with transaction.atomic():
             scenario.save()
+            print("SAVED")
             intervention_assignments = []
 
             for _, row in assignment_df.iterrows():
                 assignments = get_assignments_from_row(request.user, scenario, row, interventions)
+                print("ASSIGNMENT")
+                print(assignments)
                 if assignments:
                     intervention_assignments.extend(assignments)
 
             if intervention_assignments:
-                InterventionAssignment.objects.bulk_create(intervention_assignments)
+                for assignment in intervention_assignments:
+                    print("creating assignments")
+                    if hasattr(assignment, "_meta"):
+                        # Django model instance: print field values
+                        try:
+                            print(model_to_dict(assignment))
+                        except Exception:
+                            print({f.name: getattr(assignment, f.name) for f in assignment._meta.fields})
+                    elif isinstance(assignment, dict):
+                        # dict of values
+                        print(assignment)
+                    else:
+                        # fallback for other objects
+                        try:
+                            print(vars(assignment))
+                        except Exception:
+                            print(repr(assignment))
+                    assignment.save()
+                # InterventionAssignment.objects.bulk_create(intervention_assignments)
             else:
                 raise ValidationError("No assignments to create from the provided CSV data.")
 
