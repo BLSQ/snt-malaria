@@ -17,8 +17,9 @@ const styles: SxStyles = {
 
 export const DrawerHeader: React.FC<{
     title?: string;
+    hideDivider?: boolean;
     onClose: () => void;
-}> = ({ title, onClose }) => {
+}> = ({ title, hideDivider = false, onClose }) => {
     return (
         <>
             <Box sx={styles.header}>
@@ -27,7 +28,7 @@ export const DrawerHeader: React.FC<{
                 </IconButton>
                 <Typography>{title}</Typography>
             </Box>
-            <Divider />
+            {!hideDivider && <Divider />}
         </>
     );
 };
