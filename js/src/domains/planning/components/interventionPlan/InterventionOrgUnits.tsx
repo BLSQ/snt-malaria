@@ -46,7 +46,7 @@ const styles: SxStyles = {
     },
 };
 type Props = {
-    interventionPlan?: InterventionPlan;
+    interventionPlan: InterventionPlan;
     removeOrgUnitsFromPlan: (
         ordUnitIds: number[],
         shouldCloseModal: boolean,
