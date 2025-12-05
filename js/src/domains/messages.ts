@@ -239,4 +239,52 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenario.scenarioImportError',
         defaultMessage: 'Error importing scenario',
     },
+    budgetSettingsSave: {
+        id: 'iaso.snt_malaria.budgetSettings.save',
+        defaultMEssage: 'Save Settings',
+    },
+    budgetSettingsCoverage: {
+        id: 'iaso.snt_malaria.budgetSettings.coverage',
+        defaultMessage: 'Coverage',
+    },
+    budgetSettingsBuffer: {
+        id: 'iaso.snt_malaria.budgetSettings.buffer',
+        defaultMessage: 'Buffer',
+    },
+    budgetSettingsPPN: {
+        id: 'iaso.snt_malaria.budgetSettings.ppn',
+        defaultMessage: 'PPN',
+    },
+    budgetSettingsTouchpoints: {
+        id: 'iaso.snt_malaria.budgetSettings.touchpoints',
+        defaultMessage: 'Tp.',
+    },
+    budgetSettingsPopProp3_11: {
+        id: 'iaso.snt_malaria.budgetSettings.pop_prop_3_11',
+        defaultMessage: '3-11mo',
+    },
+    budgetSettingsPopProp12_59: {
+        id: 'iaso.snt_malaria.budgetSettings.pop_prop_12_59',
+        defaultMessage: '12-59mo',
+    },
+    budgetSettingsMonthlyRound: {
+        id: 'iaso.snt_malaria.budgetSettings.monthly_round',
+        defaultMessage: 'Cycles',
+    },
+    budgetSettingsBaleSize: {
+        id: 'iaso.snt_malaria.budgetSettings.bale_size',
+        defaultMessage: 'Bale Sz.',
+    },
+    budgetSettingsDosesPerPW: {
+        id: 'iaso.snt_malaria.budgetSettings.doses_per_pw',
+        defaultMessage: 'PW Doses',
+    },
+    budgetSettingsDosesPerChild: {
+        id: 'iaso.snt_malaria.budgetSettings.doses_per_child',
+        defaultMessage: 'Child Doses',
+    },
+    budgetSettingsTabletFactor: {
+        id: 'iaso.snt_malaria.budgetSettings.tablet_factor',
+        defaultMessage: 'Tablet Fac.',
+    },
 });

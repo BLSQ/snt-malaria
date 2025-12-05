@@ -3,7 +3,11 @@ import { Box, Drawer, Tab, Tabs } from '@mui/material';
 import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
-import { InterventionPlan } from '../../types/interventions';
+import {
+    InterventionBudgetSettings,
+    InterventionPlan,
+} from '../../types/interventions';
+import { InterventionBudgetSettingsForm } from './InterventionBudgetSettingsForm';
 import { InterventionOrgUnits } from './InterventionOrgUnits';
 
 const styles: SxStyles = {
@@ -25,6 +29,7 @@ const styles: SxStyles = {
 
 type Props = {
     interventionPlan?: InterventionPlan;
+    budgetSettings?: InterventionBudgetSettings;
     closeInterventionPlanDetails: () => void;
     removeOrgUnitsFromPlan: (
         ordUnitIds: number[],
@@ -35,6 +40,7 @@ type Props = {
 
 export const InterventionPlanDetails: FC<Props> = ({
     interventionPlan,
+    budgetSettings,
     closeInterventionPlanDetails,
     removeOrgUnitsFromPlan,
     isRemovingOrgUnits = true,
@@ -47,7 +53,7 @@ export const InterventionPlanDetails: FC<Props> = ({
 
     const onCloseInterventionPlanDetails = useCallback(() => {
         closeInterventionPlanDetails();
-        // setIsOpen(false);
+        setIsOpen(false);
     }, [closeInterventionPlanDetails]);
 
     useEffect(() => {
@@ -77,12 +83,15 @@ export const InterventionPlanDetails: FC<Props> = ({
                 <Tab label="Districts" value="districts"></Tab>
             </Tabs>
             <Box sx={styles.bodyWrapper}>
-                {activeTab === 'budget_settings' && (
-                    <Box>
-                        <h1>Budget settings</h1>
-                    </Box>
-                )}
-                {activeTab === 'districts' && (
+                {activeTab === 'budget_settings' &&
+                    interventionPlan?.intervention &&
+                    budgetSettings && (
+                        <InterventionBudgetSettingsForm
+                            intervention={interventionPlan?.intervention}
+                            budgetSettings={budgetSettings}
+                        />
+                    )}
+                {activeTab === 'districts' && interventionPlan && (
                     <InterventionOrgUnits
                         setIsLoading={setIsLoading}
                         removeOrgUnitsFromPlan={removeOrgUnitsFromPlan}
