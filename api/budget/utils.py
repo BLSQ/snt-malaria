@@ -204,14 +204,16 @@ def build_interventions_input(scenario):
         org_unit_id = assignment.org_unit.id
 
         # Group by intervention name and type
-        if intervention_code not in interventions_dict:
-            interventions_dict[intervention_code] = {
+        intervention_key = f"{intervention_code}_{intervention_type}"
+        if intervention_key not in interventions_dict:
+            interventions_dict[intervention_key] = {
                 "code": intervention_code,
                 "type": intervention_type,
                 "id": intervention_id,
                 "places": [],
             }
-        interventions_dict[intervention_code]["places"].append(org_unit_id)
+
+        interventions_dict[intervention_key]["places"].append(org_unit_id)
 
     interventions = list(interventions_dict.values())
 

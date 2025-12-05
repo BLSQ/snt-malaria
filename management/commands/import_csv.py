@@ -12,8 +12,8 @@ from iaso.models.org_unit import OrgUnit
 
 columns_map = {
     "LGA": "org_unit_name",
-    "CM": "CM - cm_public",
-    "CM_SUBSIDY": "CM - cm_subsidy",
+    "CM": "CM - cm",
+    "CM_SUBSIDY": "CM subsidy - cm",
     "AIX2_R": "Dual AI - itn_routine",
     "PYR_R": "Standard Pyrethroid - itn_routine",
     "PBO_R": "PBO - itn_routine",

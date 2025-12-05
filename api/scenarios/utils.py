@@ -25,10 +25,10 @@ def get_interventions(account):
     return Intervention.objects.filter(intervention_category__account=account).values("id", "name", "code")
 
 
-def get_valid_org_units_for_user(user):
+def get_valid_org_units_for_account(account):
     return (
         OrgUnit.objects.order_by("name")
-        .filter_for_user(user)
+        .filter(version=account.default_version)
         .filter(validation_status=OrgUnit.VALIDATION_VALID)
         .filter(Q(location__isnull=False) | Q(simplified_geom__isnull=False))
     )

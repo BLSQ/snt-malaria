@@ -69,8 +69,8 @@ class ScenarioAPITestCase(APITestCase):
         sw_source.projects.add(project)
         cls.sw_source = sw_source
         cls.sw_version_1 = sw_version_1 = SourceVersion.objects.create(data_source=sw_source, number=1)
-        cls.user.default_version = sw_version_1
-        cls.user.save()
+        cls.account.default_version = sw_version_1
+        cls.account.save()
         cls.out_district = OrgUnitType.objects.create(name="DISTRICT")
         cls.mock_multipolygon = MultiPolygon(Polygon([[-1.3, 2.5], [-1.7, 2.8], [-1.1, 4.1], [-1.3, 2.5]]))
         cls.district1 = OrgUnit.objects.create(
