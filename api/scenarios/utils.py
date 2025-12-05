@@ -28,7 +28,7 @@ def get_interventions(account):
 def get_valid_org_units_for_account(account):
     return (
         OrgUnit.objects.order_by("name")
-        .filter_for_account(account)
+        .filter(version=account.default_version)
         .filter(validation_status=OrgUnit.VALIDATION_VALID)
         .filter(Q(location__isnull=False) | Q(simplified_geom__isnull=False))
     )
