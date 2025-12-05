@@ -213,8 +213,7 @@ def build_interventions_input(scenario):
                 "places": [],
             }
 
-        if org_unit_id not in interventions_dict[intervention_key]["places"]:
-            interventions_dict[intervention_key]["places"].append(org_unit_id)
+        interventions_dict[intervention_key]["places"].append(org_unit_id)
 
     interventions = list(interventions_dict.values())
 
