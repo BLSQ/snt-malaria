@@ -2,6 +2,7 @@ from rest_framework import routers
 
 from plugins.snt_malaria.api.budget.views import BudgetViewSet
 from plugins.snt_malaria.api.budget_settings.views import BudgetSettingsViewSet
+from plugins.snt_malaria.api.budget_settings_overrides.views import BudgetSettingsOverridesViewSet
 
 from .cost_breakdown_line.views import InterventionCostBreakdownLineViewSet
 from .intervention_assignments.views import InterventionAssignmentViewSet
@@ -28,3 +29,6 @@ router.register(
 )
 router.register(r"snt_malaria/budgets", BudgetViewSet, basename="budgets")
 router.register(r"snt_malaria/budget_settings", BudgetSettingsViewSet, basename="budget_settings")
+router.register(
+    r"snt_malaria/budget_settings_overrides", BudgetSettingsOverridesViewSet, basename="budget_settings_overrides"
+)
