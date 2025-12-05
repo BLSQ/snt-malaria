@@ -3,8 +3,12 @@ import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, CardHeader, CardContent, Card } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { useCalculateBudget } from '../../hooks/useCalculateBudget';
+import { useGetBudgetSettingsOverrides } from '../../hooks/useGetBudgetSettingsOverrides';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import { InterventionPlan } from '../../types/interventions';
+import {
+    InterventionBudgetSettings,
+    InterventionPlan,
+} from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
 import { InterventionPlanSummary, TabValue } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
@@ -72,13 +76,23 @@ export const InterventionsPlan: FC<Props> = ({
         }, [] as number[]).length;
     }, [interventionPlans]);
 
-    const selectedInterventionPlan: InterventionPlan | null = useMemo(() => {
-        return (
-            interventionPlans.find(
+    const selectedInterventionPlan: InterventionPlan | undefined =
+        useMemo(() => {
+            return interventionPlans.find(
                 plan => plan.intervention.id === selectedInterventionId,
-            ) || null
-        );
-    }, [interventionPlans, selectedInterventionId]);
+            );
+        }, [interventionPlans, selectedInterventionId]);
+
+    const { data: budgetSettings } = useGetBudgetSettingsOverrides(scenarioId);
+    const selectedBudgetSettingsOverrides:
+        | InterventionBudgetSettings
+        | undefined = useMemo(
+        () =>
+            budgetSettings?.find(
+                bs => bs.intervention_id === selectedInterventionId,
+            ),
+        [selectedInterventionId, budgetSettings],
+    );
 
     const { mutateAsync: removeManyOrgUnitsFromPlan } =
         useRemoveManyOrgUnitsFromInterventionPlan();
@@ -148,6 +162,7 @@ export const InterventionsPlan: FC<Props> = ({
             </Card>
             <InterventionPlanDetails
                 interventionPlan={selectedInterventionPlan}
+                budgetSettings={selectedBudgetSettingsOverrides}
                 removeOrgUnitsFromPlan={onRemoveOrgUnitsFromPlan}
                 closeInterventionPlanDetails={onCloseInterventionPlanDetails}
                 isRemovingOrgUnits={isRemovingOrgUnits}
