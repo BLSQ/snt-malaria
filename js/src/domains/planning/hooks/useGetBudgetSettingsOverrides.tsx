@@ -11,7 +11,7 @@ const percentageFields = [
 ];
 
 export const useGetBudgetSettingsOverrides = (
-    scenarioId,
+    scenarioId: number,
 ): UseQueryResult<InterventionBudgetSettings[], Error> => {
     return useSnackQuery({
         queryKey: [`budget_settings_overrides_${scenarioId}`],

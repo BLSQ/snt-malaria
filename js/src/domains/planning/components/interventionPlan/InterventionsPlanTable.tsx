@@ -1,22 +1,19 @@
 import React, { FC, useMemo } from 'react';
-import {
-    Box,
-    Paper,
-    Table,
-    TableBody,
-    TableContainer,
-    Typography,
-} from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { sortByStringProp } from '../../libs/list-utils';
-import { InterventionPlan } from '../../types/interventions';
-import { InterventionsPlanRowTable } from './InterventionsPlanRowTable';
+import {
+    InterventionBudgetSettings,
+    InterventionPlan,
+} from '../../types/interventions';
+import { InterventionsPlanHeader } from './InterventionsPlanHeader';
+import { InterventionsPlanRow } from './InterventionsPlanRow';
 
 const styles: SxStyles = {
-    tableContainer: {
-        overflowY: 'auto',
+    container: {
+        overflowY: 'none',
         padding: 0,
         margin: 0,
         height: '100%',
@@ -28,16 +25,22 @@ const styles: SxStyles = {
         justifyContent: 'center',
         minHeight: 200,
     },
+    rowContainer: {
+        height: '100%',
+        overflowY: 'auto',
+    },
 };
 
 type Props = {
     isLoadingPlans: boolean;
-    interventionPlans: InterventionPlan[] | undefined;
+    interventionPlans?: InterventionPlan[];
+    interventionBudgetSettings?: InterventionBudgetSettings[];
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
 };
 export const InterventionsPlanTable: FC<Props> = ({
     isLoadingPlans,
     interventionPlans,
+    interventionBudgetSettings,
     showInterventionPlanDetails,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -48,8 +51,18 @@ export const InterventionsPlanTable: FC<Props> = ({
                 : [],
         [interventionPlans],
     );
+
+    const interventionPlanBudgetSettings = useMemo(
+        () =>
+            interventionBudgetSettings?.reduce(
+                (acc, ibs) => ({ ...acc, [ibs.intervention_id]: ibs }),
+                {} as { [interventionId: number]: InterventionBudgetSettings },
+            ),
+        [interventionBudgetSettings],
+    );
+
     return (
-        <TableContainer component={Paper} sx={styles.tableContainer}>
+        <Paper component={Paper} sx={styles.container}>
             {isLoadingPlans || (interventionPlans?.length ?? 0) === 0 ? (
                 <Box sx={styles.tableNoContent}>
                     <Typography variant="body2" sx={{ color: '#1F2B3D99' }}>
@@ -57,26 +70,26 @@ export const InterventionsPlanTable: FC<Props> = ({
                     </Typography>
                 </Box>
             ) : (
-                <Table
-                    sx={{
-                        minWidth: 650,
-                    }}
-                    aria-label="simple table"
-                >
-                    <TableBody>
-                        {sortedInterventionPlans?.map((row, index) => (
-                            <InterventionsPlanRowTable
+                <>
+                    <InterventionsPlanHeader />
+                    <Box sx={styles.rowContainer}>
+                        {sortedInterventionPlans?.map(row => (
+                            <InterventionsPlanRow
                                 key={row.intervention.id}
-                                row={row}
-                                index={index}
+                                interventionPlan={row}
+                                interventionBudgetSettings={
+                                    interventionPlanBudgetSettings?.[
+                                        row.intervention.id
+                                    ] ?? undefined
+                                }
                                 showInterventionPlanDetails={
                                     showInterventionPlanDetails
                                 }
                             />
                         ))}
-                    </TableBody>
-                </Table>
+                    </Box>
+                </>
             )}
-        </TableContainer>
+        </Paper>
     );
 };

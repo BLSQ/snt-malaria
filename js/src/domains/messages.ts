@@ -37,6 +37,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.interventionTitle',
         defaultMessage: 'Interventions',
     },
+    interventionLabel: {
+        id: 'iaso.snt_malaria.label.interventionLabel',
+        defaultMessage: 'Intervention',
+    },
     orgUnitDistrict: {
         id: 'iaso.snt_malaria.label.orgUnitDistricts',
         defaultMessage: 'Districts',
@@ -239,9 +243,13 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenario.scenarioImportError',
         defaultMessage: 'Error importing scenario',
     },
+    budgetSettingsLabel: {
+        id: 'iaso.snt_malaria.budgetSettings.label',
+        defaultMessage: 'Budget settings',
+    },
     budgetSettingsSave: {
         id: 'iaso.snt_malaria.budgetSettings.save',
-        defaultMEssage: 'Save Settings',
+        defaultMessage: 'Save Settings',
     },
     budgetSettingsCoverage: {
         id: 'iaso.snt_malaria.budgetSettings.coverage',
@@ -286,5 +294,13 @@ export const MESSAGES = defineMessages({
     budgetSettingsTabletFactor: {
         id: 'iaso.snt_malaria.budgetSettings.tablet_factor',
         defaultMessage: 'Tablet Fac.',
+    },
+    impactSettingsLabel: {
+        id: 'iaso.snt_malaria.impactSettings.label',
+        defaultMessage: 'Impact settings',
+    },
+    impactSettingsNotIncluded: {
+        id: 'iaso.snt_malaria.impactSettings.notIncluded',
+        defaultMessage: 'Not included',
     },
 });

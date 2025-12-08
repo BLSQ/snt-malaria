@@ -15,7 +15,7 @@ import { InterventionsPlanMap } from './InterventionsPlanMap';
 import { InterventionsPlanTable } from './InterventionsPlanTable';
 
 type Props = {
-    scenarioId: number | undefined;
+    scenarioId: number;
     interventionPlans: InterventionPlan[];
     isLoadingPlans: boolean;
     totalOrgUnitCount: number;
@@ -149,6 +149,7 @@ export const InterventionsPlan: FC<Props> = ({
                             <InterventionsPlanTable
                                 isLoadingPlans={isLoadingPlans}
                                 interventionPlans={interventionPlans}
+                                interventionBudgetSettings={budgetSettings}
                                 showInterventionPlanDetails={
                                     onShowInterventionPlanDetails
                                 }

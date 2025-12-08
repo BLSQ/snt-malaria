@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Box, Button, Divider } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -13,11 +13,6 @@ import {
 } from '../../types/interventions';
 
 const styles: SxStyles = {
-    actions: {
-        display: 'flex',
-        justifyContent: 'flex-end',
-        padding: 4,
-    },
     inputRow: {
         display: 'flex',
         flexDirection: 'row',
@@ -72,13 +67,6 @@ const interventionCodeValidationSchema = {
     }),
 };
 
-const percentageFields = [
-    'coverage',
-    'tablet_factor',
-    'pop_prop_3_11',
-    'pop_prop_12_59',
-];
-
 export const InterventionBudgetSettingsForm: FC<Props> = ({
     intervention,
     budgetSettings,
@@ -107,26 +95,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
             ...budgetSettings,
         },
         validationSchema,
-        onSubmit: () => {
-            const costOverrides = Object.entries(values).reduce(
-                (acc, [key, value]) => {
-                    let newValue = value;
-                    if (percentageFields.includes(key)) {
-                        newValue = value / 100;
-                    }
-
-                    if (key === 'buffer_mult') {
-                        newValue = 1 + value / 100;
-                    }
-
-                    return { ...acc, [key]: newValue };
-                },
-                {} as any,
-            );
-
-            costOverrides.age_string = `${costOverrides.pop_prop_3_11}, ${costOverrides.pop_prop_12_59}`;
-            console.log('on submit', costOverrides);
-        },
+        onSubmit: () => {},
         // TODO Transform :
         // Add anc for iptp_coverage => iptp_anc_coverage
         // age_string:
@@ -295,17 +264,14 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                         wrapperSx={styles.inputWrapper}
                     />
                 </Box>
-                <Divider />
-                <Box sx={styles.actions}>
-                    <Button
-                        onClick={() => handleSubmit()}
-                        disabled={!isValid}
-                        variant="contained"
-                        color="primary"
-                    >
-                        {formatMessage(MESSAGES.budgetSettingsSave)}
-                    </Button>
-                </Box>
+                <Button
+                    onClick={() => handleSubmit()}
+                    disabled={!isValid}
+                    variant="contained"
+                    color="primary"
+                >
+                    {formatMessage(MESSAGES.budgetSettingsSave)}
+                </Button>
             </>
         )
     );
