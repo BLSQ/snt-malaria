@@ -7,7 +7,7 @@ from iaso.api.common import UserSerializer
 from plugins.snt_malaria.api.scenarios.utils import (
     get_interventions,
     get_missing_headers,
-    get_valid_org_units_for_user,
+    get_valid_org_units_for_account,
 )
 from plugins.snt_malaria.models import Scenario
 
@@ -66,7 +66,7 @@ class ImportScenarioSerializer(serializers.Serializer):
         header_errors = get_missing_headers(df, interventions)
 
         csv_org_unit_ids = set(df["org_unit_id"].dropna().astype(int).unique().tolist())
-        org_units = get_valid_org_units_for_user(request.user)
+        org_units = get_valid_org_units_for_account(request.user.iaso_profile.account)
         available_org_unit_ids = set(org_units.values_list("id", flat=True))
         not_found_org_units = csv_org_unit_ids - available_org_unit_ids
         missing_org_units_from_file = available_org_unit_ids - csv_org_unit_ids
