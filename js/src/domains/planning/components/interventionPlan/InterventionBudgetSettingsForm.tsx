@@ -57,7 +57,7 @@ const interventionCodeValidationSchema = {
         buffer_mult: Yup.number(),
         pop_prop_3_11: Yup.number(),
         pop_prop_12_59: Yup.number(),
-        monthly_round: Yup.number(),
+        monthly_rounds: Yup.number(),
     }),
     pmc: Yup.object().shape({
         coverage: Yup.number(),
@@ -211,14 +211,14 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                             wrapperSx={styles.inputWrapper}
                         />
                     )}
-                    {validationSchema.fields.monthly_round && (
+                    {validationSchema.fields.monthly_rounds && (
                         <InputComponent
                             type="number"
-                            keyValue="monthly_round"
+                            keyValue="monthly_rounds"
                             withMarginTop={false}
                             min={0}
                             max={31}
-                            value={values.monthly_round}
+                            value={values.monthly_rounds}
                             onChange={setFieldValueAndState}
                             label={MESSAGES.budgetSettingsMonthlyRound}
                             numberInputOptions={{ decimalScale: 0 }}
@@ -277,7 +277,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                             value={values.tablet_factor}
                             onChange={setFieldValueAndState}
                             label={MESSAGES.budgetSettingsTabletFactor}
-                            numberInputOptions={{ decimalScale: 0 }}
+                            numberInputOptions={percentageNumberOptions}
                             wrapperSx={styles.inputWrapper}
                         />
                     )}

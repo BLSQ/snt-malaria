@@ -8,4 +8,4 @@ class BudgetSettingsOverridesListFilter(django_filters.rest_framework.FilterSet)
 
     class Meta:
         model = BudgetSettingsOverrides
-        fields = "__all__"
+        fields = ["scenario_id"]

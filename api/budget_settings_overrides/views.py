@@ -58,4 +58,5 @@ class BudgetSettingsOverridesViewSet(viewsets.ModelViewSet):
         return Response(all_overrides, status=status.HTTP_200_OK)
 
     def _get_override(self, override: BudgetSettingsOverrides, key, intervention_code):
-        return getattr(override, key) if override else DEFAULT_COST_ASSUMPTIONS.get(f"{intervention_code}_{key}", 0)
+        prefix = f"{intervention_code}_anc" if intervention_code == "iptp" and key == "coverage" else intervention_code
+        return getattr(override, key) if override else DEFAULT_COST_ASSUMPTIONS.get(f"{prefix}_{key}", 0)

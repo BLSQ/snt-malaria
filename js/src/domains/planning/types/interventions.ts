@@ -55,7 +55,7 @@ export type InterventionBudgetSettings = {
     divisor: number;
     doses_pr_pw: number;
     anc_coverage: number;
-    monthly_round: number;
+    monthly_rounds: number;
     // age_string: string;
     pop_prop_3_11: number;
     pop_prop_12_59: number;
