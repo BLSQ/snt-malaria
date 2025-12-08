@@ -1,8 +1,9 @@
 import React, { FC, useCallback, useEffect } from 'react';
 import { Box, Drawer, Tab, Tabs } from '@mui/material';
-import { LoadingSpinner } from 'bluesquare-components';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
+import { MESSAGES } from '../../../messages';
 import {
     InterventionBudgetSettings,
     InterventionPlan,
@@ -24,6 +25,8 @@ const styles: SxStyles = {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
+        height: '100%',
+        justifyContent: 'space-between',
     },
 };
 
@@ -50,6 +53,8 @@ export const InterventionPlanDetails: FC<Props> = ({
     const [activeTab, setActiveTab] = React.useState<
         'budget_settings' | 'districts'
     >('budget_settings');
+
+    const { formatMessage } = useSafeIntl();
 
     const onCloseInterventionPlanDetails = useCallback(() => {
         closeInterventionPlanDetails();
@@ -79,8 +84,14 @@ export const InterventionPlanDetails: FC<Props> = ({
                 value={activeTab}
                 onChange={(event, newTab) => setActiveTab(newTab)}
             >
-                <Tab label="Budget settings" value="budget_settings"></Tab>
-                <Tab label="Districts" value="districts"></Tab>
+                <Tab
+                    label={formatMessage(MESSAGES.budgetSettingsLabel)}
+                    value="budget_settings"
+                ></Tab>
+                <Tab
+                    label={formatMessage(MESSAGES.orgUnitDistrict)}
+                    value="districts"
+                ></Tab>
             </Tabs>
             <Box sx={styles.bodyWrapper}>
                 {activeTab === 'budget_settings' &&
