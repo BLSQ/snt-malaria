@@ -1,12 +1,13 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import { Box, Button } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
+import { useSaveBudgetSettingsOverrides } from '../../hooks/useSaveBudgetSettingsOverrides';
 import {
     Intervention,
     InterventionBudgetSettings,
@@ -27,6 +28,7 @@ const styles: SxStyles = {
 };
 
 type Props = {
+    scenarioId: number;
     intervention: Intervention;
     budgetSettings: InterventionBudgetSettings;
 };
@@ -63,22 +65,25 @@ const interventionCodeValidationSchema = {
     vacc: Yup.object().shape({
         coverage: Yup.number(),
         buffer_mult: Yup.number(),
-        doses_per_child: Yup.number(), // TODO
+        doses_per_child: Yup.number(),
     }),
 };
 
 export const InterventionBudgetSettingsForm: FC<Props> = ({
+    scenarioId,
     intervention,
     budgetSettings,
 }) => {
+    const percentageNumberOptions = { suffix: '%', decimalScale: 0 };
     const { formatMessage } = useSafeIntl();
-
+    const {
+        mutateAsync: saveBudgetSettingsOverrides,
+        isLoading: isSavingBudgetSettingsOverrides,
+    } = useSaveBudgetSettingsOverrides(scenarioId);
     const validationSchema = useMemo(
         () => interventionCodeValidationSchema[intervention.code],
         [intervention],
     );
-
-    const percentageNumberOptions = { suffix: '%', decimalScale: 0 };
 
     const {
         values,
@@ -89,16 +94,15 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
         touched,
         setFieldTouched,
     } = useFormik({
-        // TODO Default coverage depends on intervention type.
-        // TODO Transform percentage * 100 and (buffer_multi - 1) * 100
         initialValues: {
             ...budgetSettings,
         },
         validationSchema,
-        onSubmit: () => {},
-        // TODO Transform :
-        // Add anc for iptp_coverage => iptp_anc_coverage
-        // age_string:
+        onSubmit: () => {
+            saveBudgetSettingsOverrides({
+                budgetSettings: values,
+            }).then(value => (values.id = value.id));
+        },
     });
 
     const setFieldValueAndState = useCallback(
@@ -266,11 +270,19 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                 </Box>
                 <Button
                     onClick={() => handleSubmit()}
-                    disabled={!isValid}
                     variant="contained"
                     color="primary"
+                    disabled={!isValid && isSavingBudgetSettingsOverrides}
                 >
                     {formatMessage(MESSAGES.budgetSettingsSave)}
+                    {isSavingBudgetSettingsOverrides && (
+                        <LoadingSpinner
+                            size={16}
+                            absolute
+                            fixed={false}
+                            transparent
+                        />
+                    )}
                 </Button>
             </>
         )

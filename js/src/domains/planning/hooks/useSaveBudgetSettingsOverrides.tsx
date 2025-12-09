@@ -1,7 +1,8 @@
 import { UseMutationResult } from 'react-query';
-import { postRequest } from 'Iaso/libs/Api';
+import { postRequest, putRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { InterventionBudgetSettings } from '../types/interventions';
+import { InterventionBudgetSettingsForm } from '../components/interventionPlan/InterventionBudgetSettingsForm';
 
 const percentageFields = [
     'coverage',
@@ -10,40 +11,42 @@ const percentageFields = [
     'pop_prop_12_59',
 ];
 
-const transformValues = (budgetSettings: InterventionBudgetSettings[]) =>
-    budgetSettings.map(values => {
-        const costOverrides = Object.entries(values).reduce(
-            (acc, [key, value]) => {
-                let newValue = value;
-                if (percentageFields.includes(key)) {
-                    newValue = value / 100;
-                }
+const transformValues = (budgetSettings: InterventionBudgetSettings) => {
+    const costOverrides = Object.entries(budgetSettings).reduce(
+        (acc, [key, value]) => {
+            let newValue = value;
+            if (percentageFields.includes(key)) {
+                newValue = value / 100;
+            }
 
-                if (key === 'buffer_mult') {
-                    newValue = 1 + value / 100;
-                }
+            if (key === 'buffer_mult') {
+                newValue = 1 + value / 100;
+            }
 
-                return { ...acc, [key]: newValue };
-            },
-            {} as any,
-        );
-        costOverrides.age_string = `${costOverrides.pop_prop_3_11}, ${costOverrides.pop_prop_12_59}`;
-        costOverrides.intervention_id = values.intervention_id;
-        return costOverrides;
-    });
+            return { ...acc, [key]: newValue };
+        },
+        {} as any,
+    );
+    costOverrides.age_string = `${costOverrides.pop_prop_3_11}, ${costOverrides.pop_prop_12_59}`;
+    return { ...budgetSettings, ...costOverrides };
+};
 
-export const useSaveBudgetSettingsOverrides = (): UseMutationResult =>
+const apiUrl = '/api/snt_malaria/budget_settings_overrides/';
+
+export const useSaveBudgetSettingsOverrides = (
+    scenarioId: number,
+): UseMutationResult<InterventionBudgetSettings> =>
     useSnackMutation({
         mutationFn: ({
-            scenarioId,
             budgetSettings,
         }: {
-            scenarioId: number;
-            budgetSettings: InterventionBudgetSettings[];
+            budgetSettings: InterventionBudgetSettings;
         }) =>
-            postRequest(
-                `/api/snt_malaria/budget_settings_overrides/?scenario_id${scenarioId}`,
-                transformValues(budgetSettings),
-            ),
-        invalidateQueryKey: ['intervention_categories'],
+            budgetSettings.id
+                ? putRequest(
+                      `${apiUrl}${budgetSettings.id}/`,
+                      transformValues(budgetSettings),
+                  )
+                : postRequest(apiUrl, transformValues(budgetSettings)),
+        invalidateQueryKey: [`budget_settings_overrides_${scenarioId}`],
     });

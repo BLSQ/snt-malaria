@@ -16,7 +16,7 @@ const styles: SxStyles = {
         overflowY: 'none',
         padding: 0,
         margin: 0,
-        height: '100%',
+        height: 'calc(100% - 37px)',
     },
     tableNoContent: {
         height: '100%',
@@ -55,7 +55,7 @@ export const InterventionsPlanTable: FC<Props> = ({
     const interventionPlanBudgetSettings = useMemo(
         () =>
             interventionBudgetSettings?.reduce(
-                (acc, ibs) => ({ ...acc, [ibs.intervention_id]: ibs }),
+                (acc, ibs) => ({ ...acc, [ibs.intervention]: ibs }),
                 {} as { [interventionId: number]: InterventionBudgetSettings },
             ),
         [interventionBudgetSettings],
@@ -73,7 +73,7 @@ export const InterventionsPlanTable: FC<Props> = ({
                 <>
                     <InterventionsPlanHeader />
                     <Box sx={styles.rowContainer}>
-                        {sortedInterventionPlans?.map(row => (
+                        {sortedInterventionPlans?.map((row, index) => (
                             <InterventionsPlanRow
                                 key={row.intervention.id}
                                 interventionPlan={row}
@@ -84,6 +84,9 @@ export const InterventionsPlanTable: FC<Props> = ({
                                 }
                                 showInterventionPlanDetails={
                                     showInterventionPlanDetails
+                                }
+                                hideDivider={
+                                    index === sortedInterventionPlans.length - 1
                                 }
                             />
                         ))}

@@ -31,6 +31,7 @@ const styles: SxStyles = {
 };
 
 type Props = {
+    scenarioId: number;
     interventionPlan?: InterventionPlan;
     budgetSettings?: InterventionBudgetSettings;
     closeInterventionPlanDetails: () => void;
@@ -42,6 +43,7 @@ type Props = {
 };
 
 export const InterventionPlanDetails: FC<Props> = ({
+    scenarioId,
     interventionPlan,
     budgetSettings,
     closeInterventionPlanDetails,
@@ -75,7 +77,7 @@ export const InterventionPlanDetails: FC<Props> = ({
         >
             {isLoading && <LoadingSpinner />}
             <DrawerHeader
-                title={interventionPlan?.intervention.name}
+                title={`${interventionPlan?.intervention.name} - ${interventionPlan?.intervention.code}`}
                 hideDivider={true}
                 onClose={onCloseInterventionPlanDetails}
             />
@@ -98,6 +100,7 @@ export const InterventionPlanDetails: FC<Props> = ({
                     interventionPlan?.intervention &&
                     budgetSettings && (
                         <InterventionBudgetSettingsForm
+                            scenarioId={scenarioId}
                             intervention={interventionPlan?.intervention}
                             budgetSettings={budgetSettings}
                         />
