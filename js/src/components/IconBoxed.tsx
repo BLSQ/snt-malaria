@@ -4,7 +4,7 @@ import { containerBoxStyles } from '../domains/planning/components/styles';
 
 type Props = {
     Icon: ComponentType<SvgIconProps>;
-    rounded: boolean;
+    rounded?: boolean;
 };
 
 export const IconBoxed: FC<Props> = ({ Icon, rounded = false }) => (

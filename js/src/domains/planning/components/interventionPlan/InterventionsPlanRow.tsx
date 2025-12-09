@@ -14,6 +14,7 @@ type Props = {
     interventionPlan: InterventionPlan;
     interventionBudgetSettings?: InterventionBudgetSettings;
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
+    hideDivider: boolean;
 };
 
 const styles: SxStyles = {
@@ -45,6 +46,7 @@ export const InterventionsPlanRow: FunctionComponent<Props> = ({
     interventionPlan,
     interventionBudgetSettings,
     showInterventionPlanDetails,
+    hideDivider,
 }) => {
     const { formatMessage } = useSafeIntl();
     return interventionPlan ? (
@@ -83,7 +85,7 @@ export const InterventionsPlanRow: FunctionComponent<Props> = ({
                     <IconBoxed Icon={EditIcon} rounded />
                 </Grid>
             </Grid>
-            <Divider />
+            {!hideDivider && <Divider />}
         </>
     ) : null;
 };

@@ -48,7 +48,8 @@ export type InterventionOrgUnit = {
 
 export type InterventionBudgetSettings = {
     id: number;
-    intervention_id: number;
+    intervention: number;
+    scenario: number;
     coverage: number;
     buffer_mult: number;
     bale_size: number;

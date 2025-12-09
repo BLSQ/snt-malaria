@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from plugins.snt_malaria.models.budget_settings_overrides import BudgetSettingsOverrides
+
 from .models import (
     Budget,
     BudgetSettings,
@@ -90,3 +92,10 @@ class BudgetSettingsAdmin(admin.ModelAdmin):
     list_display = ("id", "account", "local_currency", "exchange_rate", "inflation_rate")
     search_fields = ("id", "local_currency")
     ordering = ("id", "local_currency")
+
+
+@admin.register(BudgetSettingsOverrides)
+class BudgetSettingsOverrides(admin.ModelAdmin):
+    list_display = ("id", "scenario", "intervention")
+    search_fields = ("id", "scenario", "intervention")
+    ordering = ("id",)

@@ -89,7 +89,7 @@ export const InterventionsPlan: FC<Props> = ({
         | undefined = useMemo(
         () =>
             budgetSettings?.find(
-                bs => bs.intervention_id === selectedInterventionId,
+                bs => bs.intervention === selectedInterventionId,
             ),
         [selectedInterventionId, budgetSettings],
     );
@@ -162,6 +162,7 @@ export const InterventionsPlan: FC<Props> = ({
                 </TabContext>
             </Card>
             <InterventionPlanDetails
+                scenarioId={scenarioId}
                 interventionPlan={selectedInterventionPlan}
                 budgetSettings={selectedBudgetSettingsOverrides}
                 removeOrgUnitsFromPlan={onRemoveOrgUnitsFromPlan}
