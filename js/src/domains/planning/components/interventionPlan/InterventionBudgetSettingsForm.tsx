@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -84,6 +84,10 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
         () => interventionCodeValidationSchema[intervention.code],
         [intervention],
     );
+    const descriptionMessageKey = useMemo(
+        () => `budgetSettingsDescription_${intervention.code}`,
+        [intervention],
+    );
 
     const {
         values,
@@ -115,158 +119,170 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
     return (
         validationSchema && (
             <>
-                <Box sx={styles.inputRow}>
-                    {validationSchema.fields.pop_prop_3_11 && (
+                <Box>
+                    <Box sx={styles.inputRow}>
+                        {validationSchema.fields.pop_prop_3_11 && (
+                            <InputComponent
+                                type="number"
+                                keyValue="pop_prop_3_11"
+                                withMarginTop={false}
+                                min={0}
+                                max={100}
+                                value={values.pop_prop_3_11}
+                                onChange={setFieldValueAndState}
+                                label={MESSAGES.budgetSettingsPopProp3_11}
+                                numberInputOptions={percentageNumberOptions}
+                                wrapperSx={styles.inputWrapper}
+                            />
+                        )}
+                        {validationSchema.fields.pop_prop_12_59 && (
+                            <InputComponent
+                                type="number"
+                                keyValue="pop_prop_12_59"
+                                withMarginTop={false}
+                                min={0}
+                                max={100}
+                                value={values.pop_prop_12_59}
+                                onChange={setFieldValueAndState}
+                                label={MESSAGES.budgetSettingsPopProp12_59}
+                                numberInputOptions={percentageNumberOptions}
+                                wrapperSx={styles.inputWrapper}
+                            />
+                        )}
                         <InputComponent
                             type="number"
-                            keyValue="pop_prop_3_11"
+                            keyValue="coverage"
                             withMarginTop={false}
                             min={0}
                             max={100}
-                            value={values.pop_prop_3_11}
+                            value={values.coverage}
                             onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetSettingsPopProp3_11}
+                            label={MESSAGES.budgetSettingsCoverage}
                             numberInputOptions={percentageNumberOptions}
                             wrapperSx={styles.inputWrapper}
                         />
-                    )}
-                    {validationSchema.fields.pop_prop_12_59 && (
-                        <InputComponent
-                            type="number"
-                            keyValue="pop_prop_12_59"
-                            withMarginTop={false}
-                            min={0}
-                            max={100}
-                            value={values.pop_prop_12_59}
-                            onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetSettingsPopProp12_59}
-                            numberInputOptions={percentageNumberOptions}
-                            wrapperSx={styles.inputWrapper}
-                        />
-                    )}
-                    <InputComponent
-                        type="number"
-                        keyValue="coverage"
-                        withMarginTop={false}
-                        min={0}
-                        max={100}
-                        value={values.coverage}
-                        onChange={setFieldValueAndState}
-                        label={MESSAGES.budgetSettingsCoverage}
-                        numberInputOptions={percentageNumberOptions}
-                        wrapperSx={styles.inputWrapper}
-                    />
-                    {validationSchema.fields.divisor && (
-                        <InputComponent
-                            type="number"
-                            keyValue="divisor"
-                            withMarginTop={false}
-                            min={0}
-                            max={5}
-                            value={values.divisor}
-                            onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetSettingsPPN}
-                            numberInputOptions={{ decimalScale: 1 }}
-                            wrapperSx={styles.inputWrapper}
-                        />
-                    )}
-                    {validationSchema.fields.touchpoints && (
-                        <InputComponent
-                            type="number"
-                            keyValue="touchpoints"
-                            withMarginTop={false}
-                            min={0}
-                            max={5}
-                            value={values.touchpoints}
-                            onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetSettingsTouchpoints}
-                            numberInputOptions={{ decimalScale: 0 }}
-                            wrapperSx={styles.inputWrapper}
-                        />
-                    )}
-                    {validationSchema.fields.monthly_rounds && (
-                        <InputComponent
-                            type="number"
-                            keyValue="monthly_rounds"
-                            withMarginTop={false}
-                            min={0}
-                            max={31}
-                            value={values.monthly_rounds}
-                            onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetSettingsMonthlyRound}
-                            numberInputOptions={{ decimalScale: 0 }}
-                            wrapperSx={styles.inputWrapper}
-                        />
-                    )}
-                    {validationSchema.fields.bale_size && (
-                        <InputComponent
-                            type="number"
-                            keyValue="bale_size"
-                            withMarginTop={false}
-                            min={0}
-                            max={999}
-                            value={values.bale_size}
-                            onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetSettingsBaleSize}
-                            numberInputOptions={{ decimalScale: 0 }}
-                            wrapperSx={styles.inputWrapper}
-                        />
-                    )}
-                    {validationSchema.fields.doses_per_pw && (
-                        <InputComponent
-                            type="number"
-                            keyValue="doses_per_pw"
-                            withMarginTop={false}
-                            min={0}
-                            max={999}
-                            value={values.doses_per_pw}
-                            onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetSettingsDosesPerPW}
-                            numberInputOptions={{ decimalScale: 0 }}
-                            wrapperSx={styles.inputWrapper}
-                        />
-                    )}
-                    {validationSchema.fields.doses_per_child && (
-                        <InputComponent
-                            type="number"
-                            keyValue="doses_per_child"
-                            withMarginTop={false}
-                            min={0}
-                            max={999}
-                            value={values.doses_per_child}
-                            onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetSettingsDosesPerChild}
-                            numberInputOptions={{ decimalScale: 0 }}
-                            wrapperSx={styles.inputWrapper}
-                        />
-                    )}
-                    {validationSchema.fields.tablet_factor && (
-                        <InputComponent
-                            type="number"
-                            keyValue="tablet_factor"
-                            withMarginTop={false}
-                            min={0}
-                            max={999}
-                            value={values.tablet_factor}
-                            onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetSettingsTabletFactor}
-                            numberInputOptions={percentageNumberOptions}
-                            wrapperSx={styles.inputWrapper}
-                        />
-                    )}
+                        {validationSchema.fields.divisor && (
+                            <InputComponent
+                                type="number"
+                                keyValue="divisor"
+                                withMarginTop={false}
+                                min={0}
+                                max={5}
+                                value={values.divisor}
+                                onChange={setFieldValueAndState}
+                                label={MESSAGES.budgetSettingsPPN}
+                                numberInputOptions={{ decimalScale: 1 }}
+                                wrapperSx={styles.inputWrapper}
+                            />
+                        )}
+                        {validationSchema.fields.touchpoints && (
+                            <InputComponent
+                                type="number"
+                                keyValue="touchpoints"
+                                withMarginTop={false}
+                                min={0}
+                                max={5}
+                                value={values.touchpoints}
+                                onChange={setFieldValueAndState}
+                                label={MESSAGES.budgetSettingsTouchpoints}
+                                numberInputOptions={{ decimalScale: 0 }}
+                                wrapperSx={styles.inputWrapper}
+                            />
+                        )}
+                        {validationSchema.fields.monthly_rounds && (
+                            <InputComponent
+                                type="number"
+                                keyValue="monthly_rounds"
+                                withMarginTop={false}
+                                min={0}
+                                max={31}
+                                value={values.monthly_rounds}
+                                onChange={setFieldValueAndState}
+                                label={MESSAGES.budgetSettingsMonthlyRound}
+                                numberInputOptions={{ decimalScale: 0 }}
+                                wrapperSx={styles.inputWrapper}
+                            />
+                        )}
+                        {validationSchema.fields.bale_size && (
+                            <InputComponent
+                                type="number"
+                                keyValue="bale_size"
+                                withMarginTop={false}
+                                min={0}
+                                max={999}
+                                value={values.bale_size}
+                                onChange={setFieldValueAndState}
+                                label={MESSAGES.budgetSettingsBaleSize}
+                                numberInputOptions={{ decimalScale: 0 }}
+                                wrapperSx={styles.inputWrapper}
+                            />
+                        )}
+                        {validationSchema.fields.doses_per_pw && (
+                            <InputComponent
+                                type="number"
+                                keyValue="doses_per_pw"
+                                withMarginTop={false}
+                                min={0}
+                                max={999}
+                                value={values.doses_per_pw}
+                                onChange={setFieldValueAndState}
+                                label={MESSAGES.budgetSettingsDosesPerPW}
+                                numberInputOptions={{ decimalScale: 0 }}
+                                wrapperSx={styles.inputWrapper}
+                            />
+                        )}
+                        {validationSchema.fields.doses_per_child && (
+                            <InputComponent
+                                type="number"
+                                keyValue="doses_per_child"
+                                withMarginTop={false}
+                                min={0}
+                                max={999}
+                                value={values.doses_per_child}
+                                onChange={setFieldValueAndState}
+                                label={MESSAGES.budgetSettingsDosesPerChild}
+                                numberInputOptions={{ decimalScale: 0 }}
+                                wrapperSx={styles.inputWrapper}
+                            />
+                        )}
+                        {validationSchema.fields.tablet_factor && (
+                            <InputComponent
+                                type="number"
+                                keyValue="tablet_factor"
+                                withMarginTop={false}
+                                min={0}
+                                max={999}
+                                value={values.tablet_factor}
+                                onChange={setFieldValueAndState}
+                                label={MESSAGES.budgetSettingsTabletFactor}
+                                numberInputOptions={percentageNumberOptions}
+                                wrapperSx={styles.inputWrapper}
+                            />
+                        )}
 
-                    <InputComponent
-                        type="number"
-                        keyValue="buffer_mult"
-                        withMarginTop={false}
-                        min={0}
-                        max={100}
-                        value={values.buffer_mult}
-                        onChange={setFieldValueAndState}
-                        label={MESSAGES.budgetSettingsBuffer}
-                        numberInputOptions={percentageNumberOptions}
-                        wrapperSx={styles.inputWrapper}
-                    />
+                        <InputComponent
+                            type="number"
+                            keyValue="buffer_mult"
+                            withMarginTop={false}
+                            min={0}
+                            max={100}
+                            value={values.buffer_mult}
+                            onChange={setFieldValueAndState}
+                            label={MESSAGES.budgetSettingsBuffer}
+                            numberInputOptions={percentageNumberOptions}
+                            wrapperSx={styles.inputWrapper}
+                        />
+                    </Box>
+                    <Box>
+                        <Typography variant="body2" color="text.secondary">
+                            {formatMessage(MESSAGES[descriptionMessageKey], {
+                                b: chunks => <strong>{chunks}</strong>,
+                                li: chunks => <li>{chunks}</li>,
+                                ul: chunks => <ul>{chunks}</ul>,
+                                br: () => <br />,
+                            })}
+                        </Typography>
+                    </Box>
                 </Box>
                 <Button
                     onClick={() => handleSubmit()}
