@@ -1,5 +1,6 @@
 from .budget import Budget
 from .budget_settings import BudgetSettings
+from .budget_settings_overrides import BudgetSettingsOverrides
 from .cost_breakdown import InterventionCostBreakdownLine, InterventionCostUnitType
 from .intervention import (
     Intervention,
@@ -18,4 +19,5 @@ __all__ = [
     "InterventionCostUnitType",
     "Budget",
     "BudgetSettings",
+    "BudgetSettingsOverrides",
 ]
