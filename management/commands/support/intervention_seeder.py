@@ -19,6 +19,270 @@ CostCategory = InterventionCostBreakdownLine.InterventionCostBreakdownLineCatego
 CURRENT_YEAR = date.today().year
 
 CATEGORIES_AND_INTERVENTIONS = {
+    "Case Management": {
+        "interventions": [
+            {
+                "name": "CM",
+                "code": "cm_public",
+                "description": "",
+                "cost_settings": [],
+            },
+            {
+                "name": "CM Subsidy",
+                "code": "cm_subsidy",
+                "description": "",
+                "cost_settings": [],
+            },
+        ],
+    },
+    "IPTp, PMC & SMC": {
+        "interventions": [
+            {
+                "name": "IPTp (SP)",
+                "code": "iptp",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "name": "IPTp (SP) Procurement",
+                        "unit_cost": "0.51",
+                        "unit_type": InterventionCostUnitType.PER_SP,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": CURRENT_YEAR,
+                    },
+                    {
+                        "name": "IPTp (SP) Distribution",
+                        "unit_cost": "0.13",
+                        "unit_type": InterventionCostUnitType.PER_SP,
+                        "category": CostCategory.DELIVERY,
+                        "year": CURRENT_YEAR,
+                    },
+                ],
+            },
+            {
+                "name": "PMC (SP)",
+                "code": "pmc",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "name": "PMC (SP) Procurement",
+                        "unit_cost": "0.20",
+                        "unit_type": InterventionCostUnitType.PER_SP,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": CURRENT_YEAR,
+                    },
+                    {
+                        "name": "PMC (SP) Operational",
+                        "unit_cost": "0.08",
+                        "unit_type": InterventionCostUnitType.PER_CHILD,
+                        "category": CostCategory.OPERATIONAL,
+                        "year": CURRENT_YEAR,
+                    },
+                ],
+            },
+            {
+                "name": "SMC (SP+AQ)",
+                "code": "smc",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "id": 196,
+                        "name": "SMC (SP+AQ) Procurement",
+                        "unit_cost": "0.24",
+                        "unit_type": InterventionCostUnitType.PER_SPAQ_3_11_MONTHS,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": CURRENT_YEAR,
+                    },
+                    {
+                        "name": "SMC (SP+AQ) Procurement",
+                        "unit_cost": "0.27",
+                        "unit_type": InterventionCostUnitType.PER_SPAQ_12_59_MONTHS,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": CURRENT_YEAR,
+                    },
+                    {
+                        "name": "SMC (SP+AQ) Operational",
+                        "unit_cost": "1.33",
+                        "unit_type": InterventionCostUnitType.PER_CHILD,
+                        "category": CostCategory.OPERATIONAL,
+                        "year": CURRENT_YEAR,
+                    },
+                ],
+            },
+        ],
+    },
+    "ITN Campaign": {
+        "interventions": [
+            {
+                "name": "Dual AI",
+                "code": "itn_campaign",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "name": "Dual AI Procurement",
+                        "unit_cost": "3.49",
+                        "unit_type": InterventionCostUnitType.PER_ITN,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": CURRENT_YEAR,
+                    },
+                    {
+                        "name": "Dual AI Distribution",
+                        "unit_cost": "6.25",
+                        "unit_type": InterventionCostUnitType.PER_BALE,
+                        "category": CostCategory.DELIVERY,
+                        "year": CURRENT_YEAR,
+                    },
+                ],
+            },
+            {
+                "name": "PBO",
+                "code": "itn_campaign",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "name": "PBO Procurement",
+                        "unit_cost": "3.49",
+                        "unit_type": InterventionCostUnitType.PER_ITN,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": CURRENT_YEAR,
+                    },
+                    {
+                        "name": "PBO Distribution",
+                        "unit_cost": "6.25",
+                        "unit_type": InterventionCostUnitType.PER_BALE,
+                        "category": CostCategory.DELIVERY,
+                        "year": CURRENT_YEAR,
+                    },
+                ],
+            },
+            {
+                "name": "Standard Pyrethroid",
+                "code": "itn_campaign",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "name": "Standard Pyrethroid Procurement",
+                        "unit_cost": "0.87",
+                        "unit_type": InterventionCostUnitType.PER_ITN,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": CURRENT_YEAR,
+                    },
+                    {
+                        "name": "Standard Pyrethroid Distribution",
+                        "unit_cost": "6.25",
+                        "unit_type": InterventionCostUnitType.PER_BALE,
+                        "category": CostCategory.DELIVERY,
+                        "year": CURRENT_YEAR,
+                    },
+                ],
+            },
+        ],
+    },
+    "ITN Routine": {
+        "interventions": [
+            {
+                "name": "Dual AI",
+                "code": "itn_routine",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "name": "Dual AI Procurement",
+                        "unit_cost": "3.49",
+                        "unit_type": InterventionCostUnitType.PER_ITN,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": CURRENT_YEAR,
+                    },
+                    {
+                        "name": "Dual AI Operational",
+                        "unit_cost": "0.36",
+                        "unit_type": InterventionCostUnitType.PER_ITN,
+                        "category": CostCategory.OPERATIONAL,
+                        "year": CURRENT_YEAR,
+                    },
+                ],
+            },
+            {
+                "name": "PBO",
+                "code": "itn_routine",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "name": "PBO Procurement",
+                        "unit_cost": "0.87",
+                        "unit_type": InterventionCostUnitType.PER_ITN,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": CURRENT_YEAR,
+                    },
+                    {
+                        "name": "PBO Operational",
+                        "unit_cost": "0.36",
+                        "unit_type": InterventionCostUnitType.PER_ITN,
+                        "category": CostCategory.OPERATIONAL,
+                        "year": CURRENT_YEAR,
+                    },
+                ],
+            },
+            {
+                "name": "Standard Pyrethroid",
+                "code": "itn_routine",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "name": "Standard Pyrethroid Procurement",
+                        "unit_cost": "3.49",
+                        "unit_type": InterventionCostUnitType.PER_ITN,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": CURRENT_YEAR,
+                    },
+                    {
+                        "name": "Standard Pyrethroid Operational",
+                        "unit_cost": "0.36",
+                        "unit_type": InterventionCostUnitType.PER_ITN,
+                        "category": CostCategory.OPERATIONAL,
+                        "year": CURRENT_YEAR,
+                    },
+                ],
+            },
+        ],
+    },
+    "Vaccination": {
+        "interventions": [
+            {
+                "name": "R21",
+                "code": "vacc",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "name": "R21 Procurement",
+                        "unit_cost": "4.00",
+                        "unit_type": InterventionCostUnitType.PER_DOSE,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": CURRENT_YEAR,
+                    },
+                    {
+                        "name": "R21 Operational",
+                        "unit_cost": "1.00",
+                        "unit_type": InterventionCostUnitType.PER_CHILD,
+                        "category": CostCategory.OPERATIONAL,
+                        "year": CURRENT_YEAR,
+                    },
+                ],
+            }
+        ],
+    },
+    "Vector Control": {
+        "interventions": [
+            {
+                "name": "LSM",
+                "code": "lsm",
+                "description": "",
+                "cost_settings": [],
+            }
+        ],
+    },
+}
+
+
+CATEGORIES_AND_INTERVENTIONS_OLD = {
     "Vaccination": {
         "interventions": [
             {
