@@ -19,10 +19,19 @@ DEMO_USER_PASSWORD = "demo"
 class Command(BaseCommand):
     help = "Set up the 'Burkina Faso Demo' account. If the account already exists, it will be deleted and re-created."
 
-    def handle(self, *args, **options):
+    def delete_existing_demo_account(self):
+        """Delete the demo account and all associated resources."""
+        if User.objects.filter(username=DEMO_USER_USERNAME).exists():
+            User.objects.get(username=DEMO_USER_USERNAME).delete()
+            self.stdout.write(f"Deleted existing demo user: {DEMO_USER_USERNAME}")
+
+        # CASCADE should handle related objects
         if Account.objects.filter(name=DEMO_ACCOUNT_NAME).exists():
-            # TODO delete account and everything associated
-            pass
+            Account.objects.get(name=DEMO_ACCOUNT_NAME).delete()
+            self.stdout.write(f"Deleted existing demo account: {DEMO_ACCOUNT_NAME}")
+
+    def handle(self, *args, **options):
+        self.delete_existing_demo_account()
 
         with transaction.atomic():
             # Demo user
