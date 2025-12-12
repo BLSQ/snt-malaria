@@ -7,11 +7,8 @@ import * as Yup from 'yup';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
-import { useSaveBudgetSettingsOverrides } from '../../hooks/useSaveBudgetSettingsOverrides';
-import {
-    Intervention,
-    InterventionBudgetSettings,
-} from '../../types/interventions';
+import { useSaveBudgetAssumptions } from '../../hooks/useSaveBudgetAssumptions';
+import { Intervention, BudgetAssumptions } from '../../types/interventions';
 
 const styles: SxStyles = {
     inputRow: {
@@ -30,7 +27,7 @@ const styles: SxStyles = {
 type Props = {
     scenarioId: number;
     intervention: Intervention;
-    budgetSettings: InterventionBudgetSettings;
+    budgetAssumptions: BudgetAssumptions;
 };
 
 const interventionCodeValidationSchema = {
@@ -69,45 +66,38 @@ const interventionCodeValidationSchema = {
     }),
 };
 
-export const InterventionBudgetSettingsForm: FC<Props> = ({
+export const BudgetAssumptionsForm: FC<Props> = ({
     scenarioId,
     intervention,
-    budgetSettings,
+    budgetAssumptions,
 }) => {
     const percentageNumberOptions = { suffix: '%', decimalScale: 0 };
     const { formatMessage } = useSafeIntl();
     const {
-        mutateAsync: saveBudgetSettingsOverrides,
-        isLoading: isSavingBudgetSettingsOverrides,
-    } = useSaveBudgetSettingsOverrides(scenarioId);
+        mutateAsync: saveBudgetAssumptions,
+        isLoading: isSavingBudgetAssumptions,
+    } = useSaveBudgetAssumptions(scenarioId);
     const validationSchema = useMemo(
         () => interventionCodeValidationSchema[intervention.code],
         [intervention],
     );
     const descriptionMessageKey = useMemo(
-        () => `budgetSettingsDescription_${intervention.code}`,
+        () => `budgetAssumptionsDescription_${intervention.code}`,
         [intervention],
     );
 
-    const {
-        values,
-        setFieldValue,
-        isValid,
-        handleSubmit,
-        errors,
-        touched,
-        setFieldTouched,
-    } = useFormik({
-        initialValues: {
-            ...budgetSettings,
-        },
-        validationSchema,
-        onSubmit: () => {
-            saveBudgetSettingsOverrides({
-                budgetSettings: values,
-            }).then(value => (values.id = value.id));
-        },
-    });
+    const { values, setFieldValue, isValid, handleSubmit, setFieldTouched } =
+        useFormik({
+            initialValues: {
+                ...budgetAssumptions,
+            },
+            validationSchema,
+            onSubmit: () => {
+                saveBudgetAssumptions({
+                    budgetAssumptions: values,
+                }).then(value => (values.id = value.id));
+            },
+        });
 
     const setFieldValueAndState = useCallback(
         (field: string, value: any) => {
@@ -130,7 +120,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                                 max={100}
                                 value={values.pop_prop_3_11}
                                 onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetSettingsPopProp3_11}
+                                label={MESSAGES.budgetAssumptionsPopProp3_11}
                                 numberInputOptions={percentageNumberOptions}
                                 wrapperSx={styles.inputWrapper}
                             />
@@ -144,7 +134,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                                 max={100}
                                 value={values.pop_prop_12_59}
                                 onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetSettingsPopProp12_59}
+                                label={MESSAGES.budgetAssumptionsPopProp12_59}
                                 numberInputOptions={percentageNumberOptions}
                                 wrapperSx={styles.inputWrapper}
                             />
@@ -157,7 +147,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                             max={100}
                             value={values.coverage}
                             onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetSettingsCoverage}
+                            label={MESSAGES.budgetAssumptionsCoverage}
                             numberInputOptions={percentageNumberOptions}
                             wrapperSx={styles.inputWrapper}
                         />
@@ -170,7 +160,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                                 max={5}
                                 value={values.divisor}
                                 onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetSettingsPPN}
+                                label={MESSAGES.budgetAssumptionsPPN}
                                 numberInputOptions={{ decimalScale: 1 }}
                                 wrapperSx={styles.inputWrapper}
                             />
@@ -184,7 +174,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                                 max={5}
                                 value={values.touchpoints}
                                 onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetSettingsTouchpoints}
+                                label={MESSAGES.budgetAssumptionsTouchpoints}
                                 numberInputOptions={{ decimalScale: 0 }}
                                 wrapperSx={styles.inputWrapper}
                             />
@@ -198,7 +188,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                                 max={31}
                                 value={values.monthly_rounds}
                                 onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetSettingsMonthlyRound}
+                                label={MESSAGES.budgetAssumptionsMonthlyRound}
                                 numberInputOptions={{ decimalScale: 0 }}
                                 wrapperSx={styles.inputWrapper}
                             />
@@ -212,7 +202,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                                 max={999}
                                 value={values.bale_size}
                                 onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetSettingsBaleSize}
+                                label={MESSAGES.budgetAssumptionsBaleSize}
                                 numberInputOptions={{ decimalScale: 0 }}
                                 wrapperSx={styles.inputWrapper}
                             />
@@ -226,7 +216,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                                 max={999}
                                 value={values.doses_per_pw}
                                 onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetSettingsDosesPerPW}
+                                label={MESSAGES.budgetAssumptionsDosesPerPW}
                                 numberInputOptions={{ decimalScale: 0 }}
                                 wrapperSx={styles.inputWrapper}
                             />
@@ -240,7 +230,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                                 max={999}
                                 value={values.doses_per_child}
                                 onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetSettingsDosesPerChild}
+                                label={MESSAGES.budgetAssumptionsDosesPerChild}
                                 numberInputOptions={{ decimalScale: 0 }}
                                 wrapperSx={styles.inputWrapper}
                             />
@@ -254,7 +244,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                                 max={999}
                                 value={values.tablet_factor}
                                 onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetSettingsTabletFactor}
+                                label={MESSAGES.budgetAssumptionsTabletFactor}
                                 numberInputOptions={percentageNumberOptions}
                                 wrapperSx={styles.inputWrapper}
                             />
@@ -268,7 +258,7 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                             max={100}
                             value={values.buffer_mult}
                             onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetSettingsBuffer}
+                            label={MESSAGES.budgetAssumptionsBuffer}
                             numberInputOptions={percentageNumberOptions}
                             wrapperSx={styles.inputWrapper}
                         />
@@ -288,10 +278,10 @@ export const InterventionBudgetSettingsForm: FC<Props> = ({
                     onClick={() => handleSubmit()}
                     variant="contained"
                     color="primary"
-                    disabled={!isValid && isSavingBudgetSettingsOverrides}
+                    disabled={!isValid && isSavingBudgetAssumptions}
                 >
-                    {formatMessage(MESSAGES.budgetSettingsSave)}
-                    {isSavingBudgetSettingsOverrides && (
+                    {formatMessage(MESSAGES.budgetAssumptionsSave)}
+                    {isSavingBudgetAssumptions && (
                         <LoadingSpinner
                             size={16}
                             absolute

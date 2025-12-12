@@ -4,10 +4,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { sortByStringProp } from '../../libs/list-utils';
-import {
-    InterventionBudgetSettings,
-    InterventionPlan,
-} from '../../types/interventions';
+import { BudgetAssumptions, InterventionPlan } from '../../types/interventions';
 import { InterventionsPlanHeader } from './InterventionsPlanHeader';
 import { InterventionsPlanRow } from './InterventionsPlanRow';
 
@@ -34,13 +31,13 @@ const styles: SxStyles = {
 type Props = {
     isLoadingPlans: boolean;
     interventionPlans?: InterventionPlan[];
-    interventionBudgetSettings?: InterventionBudgetSettings[];
+    budgetAssumptions?: BudgetAssumptions[];
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
 };
 export const InterventionsPlanTable: FC<Props> = ({
     isLoadingPlans,
     interventionPlans,
-    interventionBudgetSettings,
+    budgetAssumptions,
     showInterventionPlanDetails,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -52,13 +49,13 @@ export const InterventionsPlanTable: FC<Props> = ({
         [interventionPlans],
     );
 
-    const interventionPlanBudgetSettings = useMemo(
+    const interventionPlanBudgetAssumptions = useMemo(
         () =>
-            interventionBudgetSettings?.reduce(
+            budgetAssumptions?.reduce(
                 (acc, ibs) => ({ ...acc, [ibs.intervention]: ibs }),
-                {} as { [interventionId: number]: InterventionBudgetSettings },
+                {} as { [interventionId: number]: BudgetAssumptions },
             ),
-        [interventionBudgetSettings],
+        [budgetAssumptions],
     );
 
     return (
@@ -77,8 +74,8 @@ export const InterventionsPlanTable: FC<Props> = ({
                             <InterventionsPlanRow
                                 key={row.intervention.id}
                                 interventionPlan={row}
-                                interventionBudgetSettings={
-                                    interventionPlanBudgetSettings?.[
+                                budgetAssumptions={
+                                    interventionPlanBudgetAssumptions?.[
                                         row.intervention.id
                                     ] ?? undefined
                                 }

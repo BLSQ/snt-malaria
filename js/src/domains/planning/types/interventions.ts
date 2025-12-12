@@ -46,7 +46,7 @@ export type InterventionOrgUnit = {
     intervention_assignment_id: number;
 };
 
-export type InterventionBudgetSettings = {
+export type BudgetAssumptions = {
     id: number;
     intervention: number;
     scenario: number;
