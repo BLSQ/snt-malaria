@@ -621,8 +621,20 @@ class InterventionSeeder:
 
     def create_interventions(self):
         if InterventionCategory.objects.filter(account=self.account).exists():
-            self.stdout_write(f"Skipping account {self.account.name}, already has interventions")
-            return
+            response = (
+                input(
+                    f"Interventions already exist for account {self.account.name}. Do you want to override them? (y/N): "
+                )
+                .strip()
+                .lower()
+            )
+            if response != "y":
+                self.stdout_write(f"Skipping account {self.account.name}, already has interventions")
+                return
+            # Delete existing interventions and categories for this account
+            Intervention.objects.filter(intervention_category__account=self.account).delete()
+            InterventionCategory.objects.filter(account=self.account).delete()
+            self.stdout_write(f"Existing interventions for account {self.account.name} have been deleted.")
 
         self.stdout_write(f"Creating interventions for account {self.account.name}:")
         created_by = User.objects.filter(iaso_profile__account=self.account).first()
