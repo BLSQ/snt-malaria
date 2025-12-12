@@ -10,7 +10,7 @@ from plugins.snt_malaria.models import BudgetAssumptions, Intervention, Interven
 BASE_URL = "/api/snt_malaria/budget_assumptions/"
 
 
-class ScenarioAPITestCase(APITestCase):
+class BudgetAssumptionsAPITestCase(APITestCase):
     def setUp(cls):
         # Create a user and account for testing
         cls.account = Account.objects.create(name="Test Account")
@@ -261,3 +261,99 @@ class ScenarioAPITestCase(APITestCase):
         self.assertIsNotNone(response.data["id"])
         self.assertEqual(response.data["coverage"], "0.90")
         self.assertEqual(response.data["doses_per_child"], 5)
+
+    def test_put_budget_assumptions_unauthenticated(self):
+        # First, create an assumption for one intervention
+        assumption = BudgetAssumptions.objects.create(
+            intervention=self.intervention_vaccination_rts,
+            scenario=self.scenario,
+            coverage=0.9,
+            divisor=0,
+            bale_size=0,
+            buffer_mult=0,
+            doses_per_pw=0,
+            age_string=0,
+            pop_prop_3_11=0,
+            pop_prop_12_59=0,
+            monthly_rounds=0,
+            touchpoints=0,
+            tablet_factor=0,
+            doses_per_child=5,
+        )
+
+        self.client.force_authenticate(user=None)
+        updated_data = {
+            "id": assumption.id,
+            "intervention": self.intervention_vaccination_rts.id,
+            "scenario": self.scenario.id,
+            "coverage": 0.95,
+            "divisor": 1,
+            "bale_size": 10,
+            "buffer_mult": 1.2,
+            "doses_per_pw": 2,
+            "age_string": "1-5",
+            "pop_prop_3_11": 0.1,
+            "pop_prop_12_59": 0.5,
+            "monthly_rounds": 3,
+            "touchpoints": 2.5,
+            "tablet_factor": 1.1,
+            "doses_per_child": 6,
+        }
+        response = self.client.put(f"{BASE_URL}{assumption.id}/", updated_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_put_budget_assumptions(self):
+        # First, create an assumption for one intervention
+        assumption = BudgetAssumptions.objects.create(
+            intervention=self.intervention_vaccination_rts,
+            scenario=self.scenario,
+            coverage=0.9,
+            divisor=0,
+            bale_size=0,
+            buffer_mult=0,
+            doses_per_pw=0,
+            age_string=0,
+            pop_prop_3_11=0,
+            pop_prop_12_59=0,
+            monthly_rounds=0,
+            touchpoints=0,
+            tablet_factor=0,
+            doses_per_child=5,
+        )
+
+        # Now, update the override via PUT
+        updated_data = {
+            "id": assumption.id,
+            "intervention": self.intervention_vaccination_rts.id,
+            "scenario": self.scenario.id,
+            "coverage": 0.95,
+            "divisor": 1,
+            "bale_size": 10,
+            "buffer_mult": 1.2,
+            "doses_per_pw": 2,
+            "age_string": "1-5",
+            "pop_prop_3_11": 0.1,
+            "pop_prop_12_59": 0.5,
+            "monthly_rounds": 3,
+            "touchpoints": 2.5,
+            "tablet_factor": 1.1,
+            "doses_per_child": 6,
+        }
+
+        response = self.client.put(f"{BASE_URL}{assumption.id}/", updated_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data["id"], assumption.id)
+        self.assertEqual(response.data["coverage"], "0.95")
+        self.assertEqual(response.data["divisor"], "1.00")
+        self.assertEqual(response.data["bale_size"], 10)
+        self.assertEqual(response.data["buffer_mult"], "1.20")
+        self.assertEqual(response.data["doses_per_pw"], 2)
+        self.assertEqual(response.data["age_string"], "1-5")
+        self.assertEqual(response.data["pop_prop_3_11"], "0.1000000000")
+        self.assertEqual(response.data["pop_prop_12_59"], "0.5000000000")
+        self.assertEqual(response.data["monthly_rounds"], 3)
+        self.assertEqual(response.data["touchpoints"], "2.5000000000")
+        self.assertEqual(response.data["tablet_factor"], "1.1000000000")
+        self.assertEqual(response.data["doses_per_child"], 6)
