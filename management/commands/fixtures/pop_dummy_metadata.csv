@@ -1,0 +1,8 @@
+VARIABLE,LABEL,DESCRIPTION,SOURCE,UNITS,TYPE,SCALE,CATEGORY,ORDER,UNIT_SYMBOL,PERIOD
+POP_UNDER_5,Population aged 0-5 years,Number of children aged 0 to 5 years.,IDM,Number of people,Threshold,"[10000, 25000, 50000, 75000, 100000, 150000]",Population variables,2,,2024
+POP_0_1_Y,Population aged 0-1 years,Number of children aged 0 to 1 year.,IDM,Number of people,Threshold,"[5000, 10000, 15000, 20000, 25000, 30000]",Population variables,3,,2024
+POP_1_2_Y,Population aged 1-2 years,Number of children aged 1 to 2 years.,IDM,Number of people,Threshold,"[5000, 10000, 15000, 20000, 25000, 30000]",Population variables,4,,2024
+POP_5_36_M,Vaccine-eligible population (5-36 months),Number of children aged 5 to 36 months eligible for vaccination.,IDM,Number of people,Threshold,"[5000, 10000, 15000, 20000, 25000, 30000]",Population variables,5,,2024
+POP_PREGNANT_WOMAN,Pregnant women population,Estimated number of pregnant women.,IDM,Number of people,Threshold,"[2500, 5000, 7500, 10000, 15000, 20000]",Population variables,6,,2024
+POP_5_10_Y,Population aged 5-10 years,Number of children aged 5 to 10 years.,IDM,Number of people,Threshold,"[10000, 25000, 50000, 75000, 100000, 150000]",Population variables,7,,2024
+POP_URBAN,Urban population,Number of people living in urban areas.,IDM,Number of people,Threshold,"[10000, 50000, 100000, 200000, 300000, 500000]",Population variables,8,,2024
