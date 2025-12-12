@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.6.0](https://github.com/BLSQ/snt-malaria/compare/2.5.0...2.6.0) (2025-12-12)
+
+
+### Features
+
+* Add dummy population for DRC ([#138](https://github.com/BLSQ/snt-malaria/issues/138)) ([baf7766](https://github.com/BLSQ/snt-malaria/commit/baf7766195055de732afe9b66acc5cfb15af9018))
+* Allow to override interventions for an account ([#137](https://github.com/BLSQ/snt-malaria/issues/137)) ([dcbec33](https://github.com/BLSQ/snt-malaria/commit/dcbec339f673b87aef8da11f8e2541461d5b6ed9))
+* SNT-198 import nsp fine tunnings ([#132](https://github.com/BLSQ/snt-malaria/issues/132)) ([ec32e18](https://github.com/BLSQ/snt-malaria/commit/ec32e18e36ed4bb89e866fe781d54d5414214d31))
+* SNT-211 improve data for burkina faso demo account ([#135](https://github.com/BLSQ/snt-malaria/issues/135)) ([5fca75a](https://github.com/BLSQ/snt-malaria/commit/5fca75add2bcea23f30d6f32823d461819495897))
+
 ## [2.5.0](https://github.com/BLSQ/snt-malaria/compare/2.4.0...2.5.0) (2025-12-02)
 
 
