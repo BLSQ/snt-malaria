@@ -1,14 +1,16 @@
-import { createTheme } from '@mui/material/styles';
+import { alpha, createTheme } from '@mui/material/styles';
 
 import { theme as defaultTheme } from 'bluesquare-components';
+
+const primaryMain = '#673AB7';
 
 export const theme = createTheme({
     ...defaultTheme,
     palette: {
         ...defaultTheme.palette,
         primary: {
-            main: '#7B1FA2', // Purple from the UI
-            light: '#9C27B0',
+            main: primaryMain, // Purple from the UI
+            light: '#EDE7F6',
             dark: '#6A1B9A',
         },
         secondary: {
@@ -28,6 +30,12 @@ export const theme = createTheme({
         },
         background: {
             default: '#ECEFF1', // Set the page background color
+        },
+        text: {
+            primary: '#1F2B3DDE',
+        },
+        action: {
+            hover: alpha(primaryMain, 0.04),
         },
     },
     typography: {
