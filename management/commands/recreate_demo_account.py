@@ -1,0 +1,110 @@
+import os
+
+from django.contrib.auth.models import User
+from django.core.management.base import BaseCommand
+from django.db import transaction
+
+from iaso.gpkg.import_gpkg import import_gpkg_file2
+from iaso.models import Account, DataSource, Profile, Project, SourceVersion
+
+from .support.intervention_seeder import InterventionSeeder
+from .support.metrics_importer import MetricsImporter
+
+
+DEMO_ACCOUNT_NAME = "Burkina Faso (demo)"
+DEMO_USER_USERNAME = "demo"
+DEMO_USER_PASSWORD = "demo"
+
+
+class Command(BaseCommand):
+    help = "Set up the 'Burkina Faso Demo' account. If the account already exists, it will be deleted and re-created."
+
+    def handle(self, *args, **options):
+        if Account.objects.filter(name=DEMO_ACCOUNT_NAME).exists():
+            # TODO delete account and everything associated
+            pass
+
+        with transaction.atomic():
+            # Demo user
+            admin_user = User(
+                username="demo",
+                email="demo@bluesquarehub.com",
+                first_name="Demo",
+                last_name="User",
+                is_staff=True,
+                is_superuser=True,
+            )
+            admin_user.set_password("demo")
+            admin_user.save()
+            self.stdout.write(f"Created new admin user: {DEMO_USER_USERNAME} / {DEMO_USER_PASSWORD}")
+
+            # Demo account
+            account = Account.objects.create(name=DEMO_ACCOUNT_NAME)
+            self.stdout.write(f"Created Account: {account.name}")
+
+            profile = Profile.objects.create(user=admin_user, account=account)
+            project = Project.objects.create(name="Burkina Faso Project", account=account, app_id="burkina")
+            profile.projects.add(project)
+
+            # Create DataSource for Burkina Faso
+            data_source = DataSource.objects.create(name="Burkina Faso Public Data", description="")
+            data_source.projects.add(project)
+
+            source_version = SourceVersion.objects.create(data_source=data_source, number=1, description="v1")
+            account.default_version = source_version
+            account.save()
+
+            data_source.default_version = source_version
+            data_source.save()
+
+            self.stdout.write("Created Profile, Project, DataSource, SourceVersion.")
+
+            # Import .gpkg file into the SourceVersion
+            gpkg_file_path = os.path.join(os.path.dirname(__file__), "fixtures", "Burkina-Faso-org-units.gpkg")
+            self.stdout.write(f"Importing GPKG file: {gpkg_file_path}.")
+            try:
+                total_imported = import_gpkg_file2(
+                    filename=gpkg_file_path,
+                    source=data_source,
+                    version_number=source_version.number,
+                    validation_status="VALID",
+                    user=admin_user,
+                    description="Burkina Faso OUs imported from GPKG",
+                    task=None,
+                )
+                self.stdout.write(f"Imported {total_imported} org units from GPKG")
+                # Make sure validation_status is set to "VALID"
+                source_version.orgunit_set.update(validation_status="VALID")
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Failed to import GPKG file: {e}"))
+                raise
+
+            # Import data layers (metrics)
+            metadata_file_path = os.path.join(os.path.dirname(__file__), "fixtures", "BFA_dummy_metadata.csv")
+            dataset_file_path = os.path.join(os.path.dirname(__file__), "fixtures", "BFA_dummy_results_dataset.csv")
+
+            self.stdout.write(f"Importing metrics data from {metadata_file_path} and {dataset_file_path}")
+            try:
+                metrics_importer = MetricsImporter(account, self.style, self.stdout.write)
+                total_values = metrics_importer.import_metrics(metadata_file_path, dataset_file_path)
+                self.stdout.write(f"Successfully imported {total_values} metric values")
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Failed to import metrics data: {e}"))
+                raise
+
+            # Seed interventions and intervention costs
+            InterventionSeeder(account, self.stdout.write).create_interventions()
+
+            # Create first default scenario with budget
+
+            self.stdout.write(self.style.SUCCESS("Setup completed successfully:"))
+            self.stdout.write(
+                f"\n  - Account: {account.name} (ID: {account.id})"
+                f"\n  - Project: {project.name} (ID: {project.id})"
+                f"\n  - DataSource: {data_source.name} (ID: {data_source.id})"
+                f"\n  - SourceVersion: {source_version.number} (ID: {source_version.id})"
+                f"\n  - Profile: {admin_user.username} -> {account.name}"
+            )
+            self.stdout.write(self.style.SUCCESS("\nDemo user created with credentials:"))
+            self.stdout.write(self.style.SUCCESS(f"\tUsername: {DEMO_USER_USERNAME}"))
+            self.stdout.write(self.style.SUCCESS(f"\tPassword: {DEMO_USER_PASSWORD}"))
