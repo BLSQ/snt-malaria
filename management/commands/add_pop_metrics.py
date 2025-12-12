@@ -1,5 +1,6 @@
 import csv
 
+import os
 from time import sleep
 
 from django.core.management.base import BaseCommand, CommandError
@@ -35,8 +36,15 @@ class Command(BaseCommand):
         # Load metric types from CSV
         metric_types = {}
 
+        csv_path = os.path.join(
+            os.path.dirname(__file__),
+            "fixtures",
+            "pop_dummy_metadata.csv",
+        )
+        csv_path = os.path.abspath(csv_path)
+
         with open(
-            "/opt/app/plugins/snt_malaria/management/commands/fixtures/pop_dummy_metadata.csv",
+            csv_path,
             newline="",
             encoding="utf-8",
         ) as metafile:
