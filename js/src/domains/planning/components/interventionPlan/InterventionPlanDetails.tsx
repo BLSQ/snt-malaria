@@ -4,11 +4,8 @@ import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
 import { MESSAGES } from '../../../messages';
-import {
-    InterventionBudgetSettings,
-    InterventionPlan,
-} from '../../types/interventions';
-import { InterventionBudgetSettingsForm } from './InterventionBudgetSettingsForm';
+import { BudgetAssumptions, InterventionPlan } from '../../types/interventions';
+import { BudgetAssumptionsForm } from './BudgetAssumptionsForm';
 import { InterventionOrgUnits } from './InterventionOrgUnits';
 
 const styles: SxStyles = {
@@ -33,7 +30,7 @@ const styles: SxStyles = {
 type Props = {
     scenarioId: number;
     interventionPlan?: InterventionPlan;
-    budgetSettings?: InterventionBudgetSettings;
+    budgetAssumptions?: BudgetAssumptions;
     closeInterventionPlanDetails: () => void;
     removeOrgUnitsFromPlan: (
         ordUnitIds: number[],
@@ -45,7 +42,7 @@ type Props = {
 export const InterventionPlanDetails: FC<Props> = ({
     scenarioId,
     interventionPlan,
-    budgetSettings,
+    budgetAssumptions,
     closeInterventionPlanDetails,
     removeOrgUnitsFromPlan,
     isRemovingOrgUnits = true,
@@ -87,7 +84,7 @@ export const InterventionPlanDetails: FC<Props> = ({
                 onChange={(event, newTab) => setActiveTab(newTab)}
             >
                 <Tab
-                    label={formatMessage(MESSAGES.budgetSettingsLabel)}
+                    label={formatMessage(MESSAGES.budgetAssumptionsLabel)}
                     value="budget_settings"
                 ></Tab>
                 <Tab
@@ -98,11 +95,11 @@ export const InterventionPlanDetails: FC<Props> = ({
             <Box sx={styles.bodyWrapper}>
                 {activeTab === 'budget_settings' &&
                     interventionPlan?.intervention &&
-                    budgetSettings && (
-                        <InterventionBudgetSettingsForm
+                    budgetAssumptions && (
+                        <BudgetAssumptionsForm
                             scenarioId={scenarioId}
                             intervention={interventionPlan?.intervention}
-                            budgetSettings={budgetSettings}
+                            budgetAssumptions={budgetAssumptions}
                         />
                     )}
                 {activeTab === 'districts' && interventionPlan && (

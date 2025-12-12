@@ -243,56 +243,56 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenario.scenarioImportError',
         defaultMessage: 'Error importing scenario',
     },
-    budgetSettingsLabel: {
-        id: 'iaso.snt_malaria.budgetSettings.label',
+    budgetAssumptionsLabel: {
+        id: 'iaso.snt_malaria.budgetAssumptions.label',
         defaultMessage: 'Budget settings',
     },
-    budgetSettingsSave: {
-        id: 'iaso.snt_malaria.budgetSettings.save',
+    budgetAssumptionsSave: {
+        id: 'iaso.snt_malaria.budgetAssumptions.save',
         defaultMessage: 'Save Settings',
     },
-    budgetSettingsCoverage: {
-        id: 'iaso.snt_malaria.budgetSettings.coverage',
+    budgetAssumptionsCoverage: {
+        id: 'iaso.snt_malaria.budgetAssumptions.coverage',
         defaultMessage: 'Coverage',
     },
-    budgetSettingsBuffer: {
-        id: 'iaso.snt_malaria.budgetSettings.buffer',
+    budgetAssumptionsBuffer: {
+        id: 'iaso.snt_malaria.budgetAssumptions.buffer',
         defaultMessage: 'Buffer',
     },
-    budgetSettingsPPN: {
-        id: 'iaso.snt_malaria.budgetSettings.ppn',
+    budgetAssumptionsPPN: {
+        id: 'iaso.snt_malaria.budgetAssumptions.ppn',
         defaultMessage: 'PPN',
     },
-    budgetSettingsTouchpoints: {
-        id: 'iaso.snt_malaria.budgetSettings.touchpoints',
+    budgetAssumptionsTouchpoints: {
+        id: 'iaso.snt_malaria.budgetAssumptions.touchpoints',
         defaultMessage: 'Tp.',
     },
-    budgetSettingsPopProp3_11: {
-        id: 'iaso.snt_malaria.budgetSettings.pop_prop_3_11',
+    budgetAssumptionsPopProp3_11: {
+        id: 'iaso.snt_malaria.budgetAssumptions.pop_prop_3_11',
         defaultMessage: '3-11mo',
     },
-    budgetSettingsPopProp12_59: {
-        id: 'iaso.snt_malaria.budgetSettings.pop_prop_12_59',
+    budgetAssumptionsPopProp12_59: {
+        id: 'iaso.snt_malaria.budgetAssumptions.pop_prop_12_59',
         defaultMessage: '12-59mo',
     },
-    budgetSettingsMonthlyRound: {
-        id: 'iaso.snt_malaria.budgetSettings.monthly_round',
+    budgetAssumptionsMonthlyRound: {
+        id: 'iaso.snt_malaria.budgetAssumptions.monthly_round',
         defaultMessage: 'Cycles',
     },
-    budgetSettingsBaleSize: {
-        id: 'iaso.snt_malaria.budgetSettings.bale_size',
+    budgetAssumptionsBaleSize: {
+        id: 'iaso.snt_malaria.budgetAssumptions.bale_size',
         defaultMessage: 'Bale Sz.',
     },
-    budgetSettingsDosesPerPW: {
-        id: 'iaso.snt_malaria.budgetSettings.doses_per_pw',
+    budgetAssumptionsDosesPerPW: {
+        id: 'iaso.snt_malaria.budgetAssumptions.doses_per_pw',
         defaultMessage: 'PW Doses',
     },
-    budgetSettingsDosesPerChild: {
-        id: 'iaso.snt_malaria.budgetSettings.doses_per_child',
+    budgetAssumptionsDosesPerChild: {
+        id: 'iaso.snt_malaria.budgetAssumptions.doses_per_child',
         defaultMessage: 'Child Doses',
     },
-    budgetSettingsTabletFactor: {
-        id: 'iaso.snt_malaria.budgetSettings.tablet_factor',
+    budgetAssumptionsTabletFactor: {
+        id: 'iaso.snt_malaria.budgetAssumptions.tablet_factor',
         defaultMessage: 'Tablet Fac.',
     },
     impactSettingsLabel: {
@@ -303,29 +303,29 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.impactSettings.notIncluded',
         defaultMessage: 'Not included',
     },
-    budgetSettingsDescription_itn_campaign: {
-        id: 'iaso.snt_malaria.budgetSettings.description.itn_campaign',
+    budgetAssumptionsDescription_itn_campaign: {
+        id: 'iaso.snt_malaria.budgetAssumptions.description.itn_campaign',
         defaultMessage: `To estimate the number of insecticide-treated nets (ITNs) needed for campaign delivery in targeted areas:<br></br>
             The <b>target population</b> (default: total pop) of the area is multiplied by the <b>target intervention coverage</b> 
             (default: 100%) to estimate the target population for the campaign and then divided by the <b>number of people 
             assumed to use 1 net</b> (default: 1.8). A <b>buffer</b> (default: 10%) is applied to account for wastage and contingency. 
             The number of <b>bales</b> is calculated by dividing the number of nets by 50 (assuming 50 nets per bale).`,
     },
-    budgetSettingsDescription_itn_routine: {
-        id: 'iaso.snt_malaria.budgetSettings.description.itn_routine',
+    budgetAssumptionsDescription_itn_routine: {
+        id: 'iaso.snt_malaria.budgetAssumptions.description.itn_routine',
         defaultMessage: `To estimate the number of nets needed for routine delivery channels often through ANC and EPI 
         services, the <b>target population</b> (default: total under 5 and pregnant women population) of an area is multiplied 
         by the <b>expected routine distribution coverage</b> (default: 30%) and a <b>procurement buffer</b> (default: 10%).`,
     },
-    budgetSettingsDescription_iptp: {
-        id: 'iaso.snt_malaria.budgetSettings.description.iptp',
+    budgetAssumptionsDescription_iptp: {
+        id: 'iaso.snt_malaria.budgetAssumptions.description.iptp',
         defaultMessage: `To estimate the amount of SP (blister packs of 3 pills) to procure for IPTp 
         we take the <b>target population</b> (default: pregnant women) of an area, 
         multiply by the <b>expected coverage at ANC attendence</b> (default: 80%) for the scheduled number of <b>touchpoints</b> 
         per woman (default: 3) and multiply this by a <b>procurement buffer</b> (default: 10%).`,
     },
-    budgetSettingsDescription_smc: {
-        id: 'iaso.snt_malaria.budgetSettings.description.smc',
+    budgetAssumptionsDescription_smc: {
+        id: 'iaso.snt_malaria.budgetAssumptions.description.smc',
         defaultMessage: `To estimate the number of SP+AQ co-blistered packets required for Seasonal Malaria Chemoprevention (SMC), 
         we use the following methodology with the default assumptions included here for clarity. 
         We first assume each packet contains one full course for a single cycle (1 tablet of SP and 3 tablets of AQ). 
@@ -338,8 +338,8 @@ export const MESSAGES = defineMessages({
         <b>Coverage</b> of the target population is assumed to be 100%, unless otherwise specified, 
         and is applied before the buffer is calculated. A <b>10% buffer</b> is then included to account for re-dosing, wastage, and the treatment of children from outside the catchment area.`,
     },
-    budgetSettingsDescription_pmc: {
-        id: 'iaso.snt_malaria.budgetSettings.description.pmc',
+    budgetAssumptionsDescription_pmc: {
+        id: 'iaso.snt_malaria.budgetAssumptions.description.pmc',
         defaultMessage: `To estimate the quantity of sulfadoxine-pyrimethamine (SP) required for Perennial Malaria Chemoprevention (PMC), 
         we assume delivery is integrated into routine Expanded Programme on Immunization (EPI). 
         Each eligible child receives SP at four routine immunization touchpoints per year, with age-specific dosing:
@@ -354,8 +354,8 @@ export const MESSAGES = defineMessages({
 
         An <b>85% coverage rate</b> is assumed and a <b>10% procurement buffer</b> is then included to cover wastage, re-dosing, and stockouts.`,
     },
-    budgetSettingsDescription_vacc: {
-        id: 'iaso.snt_malaria.budgetSettings.description.vacc',
+    budgetAssumptionsDescription_vacc: {
+        id: 'iaso.snt_malaria.budgetAssumptions.description.vacc',
         defaultMessage: `To estimate the number of malaria vaccine doses required, at default, 
         we assume each eligible child will receive a <b>4-dose schedule</b>. 
         Assuming the first three doses are delivered monthly and start around 5 months of age and the 4th dose is delivered ~12 - 15 months following the 3rd dose. 

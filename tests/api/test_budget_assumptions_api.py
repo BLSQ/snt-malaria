@@ -1,11 +1,13 @@
+from typing import OrderedDict
+
 from rest_framework import status
 
 from iaso.models import Account
 from iaso.test import APITestCase
-from plugins.snt_malaria.models import BudgetSettingsOverrides, Intervention, InterventionCategory, Scenario
+from plugins.snt_malaria.models import BudgetAssumptions, Intervention, InterventionCategory, Scenario
 
 
-BASE_URL = "/api/snt_malaria/budget_settings_overrides/"
+BASE_URL = "/api/snt_malaria/budget_assumptions/"
 
 
 class ScenarioAPITestCase(APITestCase):
@@ -59,73 +61,80 @@ class ScenarioAPITestCase(APITestCase):
 
         cls.client.force_authenticate(user=cls.user)
 
-    def test_get_budget_overrides_unauthenticated(self):
+    def test_get_budget_assumptions_unauthenticated(self):
         self.client.force_authenticate(user=None)
-        response = self.client.get(f"{BASE_URL}?scenario_id={self.scenario.id}")
+        response = self.client.get(f"{BASE_URL}?scenario={self.scenario.id}")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_get_budget_overrides_default_values(self):
-        response = self.client.get(f"{BASE_URL}?scenario_id={self.scenario.id}")
+    def test_get_budget_assumptions_default_values(self):
+        response = self.client.get(f"{BASE_URL}?scenario={self.scenario.id}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
+        print(response.data)
         self.assertEqual(
             response.data,
             [
-                {
-                    "id": None,
-                    "intervention": 3,
-                    "scenario": 1,
-                    "coverage": 0.8,
-                    "divisor": 0,
-                    "bale_size": 0,
-                    "buffer_mult": 1.1,
-                    "doses_per_pw": 3,
-                    "age_string": 0,
-                    "pop_prop_3_11": 0,
-                    "pop_prop_12_59": 0,
-                    "monthly_rounds": 0,
-                    "touchpoints": 0,
-                    "tablet_factor": 0,
-                    "doses_per_child": 0,
-                },
-                {
-                    "id": None,
-                    "intervention": 1,
-                    "scenario": 1,
-                    "coverage": 0,
-                    "divisor": 0,
-                    "bale_size": 0,
-                    "buffer_mult": 0,
-                    "doses_per_pw": 0,
-                    "age_string": 0,
-                    "pop_prop_3_11": 0,
-                    "pop_prop_12_59": 0,
-                    "monthly_rounds": 0,
-                    "touchpoints": 0,
-                    "tablet_factor": 0,
-                    "doses_per_child": 0,
-                },
-                {
-                    "id": None,
-                    "intervention": 2,
-                    "scenario": 1,
-                    "coverage": 1.0,
-                    "divisor": 0,
-                    "bale_size": 0,
-                    "buffer_mult": 1.1,
-                    "doses_per_pw": 0,
-                    "age_string": "0.18,0.77",
-                    "pop_prop_3_11": 0.18,
-                    "pop_prop_12_59": 0.77,
-                    "monthly_rounds": 4,
-                    "touchpoints": 0,
-                    "tablet_factor": 0,
-                    "doses_per_child": 0,
-                },
+                OrderedDict(
+                    [
+                        ("id", None),
+                        ("scenario", 1),
+                        ("intervention", 3),
+                        ("coverage", "0.80"),
+                        ("divisor", "0.00"),
+                        ("bale_size", 0),
+                        ("buffer_mult", "1.10"),
+                        ("doses_per_pw", 3),
+                        ("age_string", "0"),
+                        ("pop_prop_3_11", "0.0000000000"),
+                        ("pop_prop_12_59", "0.0000000000"),
+                        ("monthly_rounds", 0),
+                        ("touchpoints", "0.0000000000"),
+                        ("tablet_factor", "0.0000000000"),
+                        ("doses_per_child", 0),
+                    ]
+                ),
+                OrderedDict(
+                    [
+                        ("id", None),
+                        ("scenario", 1),
+                        ("intervention", 1),
+                        ("coverage", "0.00"),
+                        ("divisor", "0.00"),
+                        ("bale_size", 0),
+                        ("buffer_mult", "0.00"),
+                        ("doses_per_pw", 0),
+                        ("age_string", "0"),
+                        ("pop_prop_3_11", "0.0000000000"),
+                        ("pop_prop_12_59", "0.0000000000"),
+                        ("monthly_rounds", 0),
+                        ("touchpoints", "0.0000000000"),
+                        ("tablet_factor", "0.0000000000"),
+                        ("doses_per_child", 0),
+                    ]
+                ),
+                OrderedDict(
+                    [
+                        ("id", None),
+                        ("scenario", 1),
+                        ("intervention", 2),
+                        ("coverage", "1.00"),
+                        ("divisor", "0.00"),
+                        ("bale_size", 0),
+                        ("buffer_mult", "1.10"),
+                        ("doses_per_pw", 0),
+                        ("age_string", "0.18,0.77"),
+                        ("pop_prop_3_11", "0.1800000000"),
+                        ("pop_prop_12_59", "0.7700000000"),
+                        ("monthly_rounds", 4),
+                        ("touchpoints", "0.0000000000"),
+                        ("tablet_factor", "0.0000000000"),
+                        ("doses_per_child", 0),
+                    ]
+                ),
             ],
         )
 
-    def test_get_budget_overrides_with_existing(self):
+    def test_get_budget_assumptions_with_existing(self):
         # First, create an override for one intervention
         override_data = {
             "intervention": self.intervention_vaccination_rts,
@@ -144,10 +153,10 @@ class ScenarioAPITestCase(APITestCase):
             "doses_per_child": 5,
         }
 
-        BudgetSettingsOverrides.objects.create(**override_data)
+        BudgetAssumptions.objects.create(**override_data)
 
-        # Now, fetch the overrides via the API
-        response = self.client.get(f"{BASE_URL}?scenario_id={self.scenario.id}")
+        # Now, fetch the assumptions via the API
+        response = self.client.get(f"{BASE_URL}?scenario={self.scenario.id}")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
 
@@ -159,11 +168,11 @@ class ScenarioAPITestCase(APITestCase):
             else:
                 # Other interventions should have default values
                 if item["intervention"] == self.intervention_chemo_smc.id:
-                    self.assertEqual(item["coverage"], 1.0)
+                    self.assertEqual(item["coverage"], "1.00")
                 elif item["intervention"] == self.intervention_chemo_iptp.id:
-                    self.assertEqual(item["coverage"], 0.8)
+                    self.assertEqual(item["coverage"], "0.80")
 
-    def test_post_budget_overrides_unauthenticated(self):
+    def test_post_budget_assumptions_unauthenticated(self):
         self.client.force_authenticate(user=None)
         override_data = {
             "intervention": self.intervention_vaccination_rts.id,
@@ -184,7 +193,7 @@ class ScenarioAPITestCase(APITestCase):
         response = self.client.post(BASE_URL, override_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_post_budget_overrides_invalid_scenario(self):
+    def test_post_budget_assumptions_invalid_scenario(self):
         override_data = {
             "intervention": self.intervention_vaccination_rts.id,
             "scenario": 9999,
@@ -205,7 +214,7 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("scenario", response.data)
 
-    def test_post_budget_overrides_invalid_intervention(self):
+    def test_post_budget_assumptions_invalid_intervention(self):
         override_data = {
             "intervention": 9999,
             "scenario": self.scenario.id,
@@ -226,7 +235,7 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("intervention", response.data)
 
-    def test_post_budget_overrides(self):
+    def test_post_budget_assumptions(self):
         # Create an override for one intervention
         override_data = {
             "intervention": self.intervention_vaccination_rts.id,

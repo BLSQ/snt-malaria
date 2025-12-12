@@ -4,7 +4,7 @@ from plugins.snt_malaria.models.intervention import Intervention
 from plugins.snt_malaria.models.scenario import Scenario
 
 
-class BudgetSettingsOverrides(models.Model):
+class BudgetAssumptions(models.Model):
     class Meta:
         app_label = "snt_malaria"
         unique_together = [["scenario", "intervention"]]

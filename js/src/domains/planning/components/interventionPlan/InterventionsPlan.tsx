@@ -3,12 +3,9 @@ import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, CardHeader, CardContent, Card } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { useCalculateBudget } from '../../hooks/useCalculateBudget';
-import { useGetBudgetSettingsOverrides } from '../../hooks/useGetBudgetSettingsOverrides';
+import { useGetBudgetAssumptions } from '../../hooks/useGetBudgetAssumptions';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import {
-    InterventionBudgetSettings,
-    InterventionPlan,
-} from '../../types/interventions';
+import { BudgetAssumptions, InterventionPlan } from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
 import { InterventionPlanSummary, TabValue } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
@@ -83,15 +80,13 @@ export const InterventionsPlan: FC<Props> = ({
             );
         }, [interventionPlans, selectedInterventionId]);
 
-    const { data: budgetSettings } = useGetBudgetSettingsOverrides(scenarioId);
-    const selectedBudgetSettingsOverrides:
-        | InterventionBudgetSettings
-        | undefined = useMemo(
+    const { data: budgetAssumptions } = useGetBudgetAssumptions(scenarioId);
+    const selectedBudgetAssumptions: BudgetAssumptions | undefined = useMemo(
         () =>
-            budgetSettings?.find(
+            budgetAssumptions?.find(
                 bs => bs.intervention === selectedInterventionId,
             ),
-        [selectedInterventionId, budgetSettings],
+        [selectedInterventionId, budgetAssumptions],
     );
 
     const { mutateAsync: removeManyOrgUnitsFromPlan } =
@@ -149,7 +144,7 @@ export const InterventionsPlan: FC<Props> = ({
                             <InterventionsPlanTable
                                 isLoadingPlans={isLoadingPlans}
                                 interventionPlans={interventionPlans}
-                                interventionBudgetSettings={budgetSettings}
+                                budgetAssumptions={budgetAssumptions}
                                 showInterventionPlanDetails={
                                     onShowInterventionPlanDetails
                                 }
@@ -164,7 +159,7 @@ export const InterventionsPlan: FC<Props> = ({
             <InterventionPlanDetails
                 scenarioId={scenarioId}
                 interventionPlan={selectedInterventionPlan}
-                budgetSettings={selectedBudgetSettingsOverrides}
+                budgetAssumptions={selectedBudgetAssumptions}
                 removeOrgUnitsFromPlan={onRemoveOrgUnitsFromPlan}
                 closeInterventionPlanDetails={onCloseInterventionPlanDetails}
                 isRemovingOrgUnits={isRemovingOrgUnits}

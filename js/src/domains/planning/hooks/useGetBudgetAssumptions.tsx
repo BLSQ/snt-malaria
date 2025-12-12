@@ -1,7 +1,7 @@
 import { UseQueryResult } from 'react-query';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
-import { InterventionBudgetSettings } from '../types/interventions';
+import { BudgetAssumptions } from '../types/interventions';
 
 const percentageFields = [
     'coverage',
@@ -10,18 +10,18 @@ const percentageFields = [
     'pop_prop_12_59',
 ];
 
-export const useGetBudgetSettingsOverrides = (
+export const useGetBudgetAssumptions = (
     scenarioId: number,
-): UseQueryResult<InterventionBudgetSettings[], Error> => {
+): UseQueryResult<BudgetAssumptions[], Error> => {
     return useSnackQuery({
-        queryKey: [`budget_settings_overrides_${scenarioId}`],
+        queryKey: [`budget_assumptions_${scenarioId}`],
         queryFn: () =>
             getRequest(
-                `/api/snt_malaria/budget_settings_overrides/?scenario_id=${scenarioId}`,
+                `/api/snt_malaria/budget_assumptions/?scenario=${scenarioId}`,
             ),
         options: {
             cacheTime: Infinity, // disable auto fetch on cache expiration
-            select: (data: InterventionBudgetSettings[]) =>
+            select: (data: BudgetAssumptions[]) =>
                 data.map(d =>
                     Object.entries(d).reduce((acc, [key, value]) => {
                         let newValue = value;

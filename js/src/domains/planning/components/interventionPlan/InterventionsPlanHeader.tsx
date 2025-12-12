@@ -26,7 +26,7 @@ export const InterventionsPlanHeader: FC = () => {
                 </Grid>
                 <Grid item xs={4}>
                     <Typography variant="subtitle2">
-                        {formatMessage(MESSAGES.budgetSettingsLabel)}
+                        {formatMessage(MESSAGES.budgetAssumptionsLabel)}
                     </Typography>
                 </Grid>
                 <Grid item xs={4}>

@@ -5,14 +5,11 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { IconBoxed } from '../../../../components/IconBoxed';
 import { MESSAGES } from '../../../messages';
-import {
-    InterventionBudgetSettings,
-    InterventionPlan,
-} from '../../types/interventions';
+import { BudgetAssumptions, InterventionPlan } from '../../types/interventions';
 
 type Props = {
     interventionPlan: InterventionPlan;
-    interventionBudgetSettings?: InterventionBudgetSettings;
+    budgetAssumptions?: BudgetAssumptions;
     showInterventionPlanDetails: (interventionPlan: InterventionPlan) => void;
     hideDivider: boolean;
 };
@@ -44,7 +41,7 @@ const styles: SxStyles = {
 };
 export const InterventionsPlanRow: FunctionComponent<Props> = ({
     interventionPlan,
-    interventionBudgetSettings,
+    budgetAssumptions,
     showInterventionPlanDetails,
     hideDivider,
 }) => {
@@ -69,9 +66,9 @@ export const InterventionsPlanRow: FunctionComponent<Props> = ({
                     </Typography>
                 </Grid>
                 <Grid item xs={4} sx={styles.cellStyle}>
-                    {interventionBudgetSettings && (
+                    {budgetAssumptions && (
                         <Chip
-                            label={interventionBudgetSettings.coverage + '%'}
+                            label={budgetAssumptions.coverage + '%'}
                             sx={styles.chip}
                         />
                     )}
