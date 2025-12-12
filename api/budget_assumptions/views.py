@@ -14,7 +14,7 @@ from plugins.snt_malaria.models import BudgetAssumptions, Intervention
 
 
 class BudgetAssumptionsViewSet(viewsets.ModelViewSet):
-    http_method_names = ["get", "post", "put", "delete"]
+    http_method_names = ["get", "post", "put"]
     filter_backends = [DjangoFilterBackend]
     filterset_class = BudgetAssumptionsListFilter
 
@@ -42,7 +42,7 @@ class BudgetAssumptionsViewSet(viewsets.ModelViewSet):
         intervention_assumption_map = {a.intervention.id: a for a in assumptions}
         for intervention in interventions:
             assumption = intervention_assumption_map.get(intervention.id)
-            
+
             if assumption:
                 all_assumptions.append(assumption)
                 continue
