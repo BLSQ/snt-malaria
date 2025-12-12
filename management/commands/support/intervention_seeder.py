@@ -10,7 +10,7 @@ from plugins.snt_malaria.models.cost_breakdown import (
     InterventionCostBreakdownLine,
     InterventionCostUnitType,
 )
-from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
+from plugins.snt_malaria.models.intervention import Intervention, InterventionAssignment, InterventionCategory
 
 
 # Alias for brevity
@@ -632,6 +632,10 @@ class InterventionSeeder:
                 self.stdout_write(f"Skipping account {self.account.name}, already has interventions")
                 return
             # Delete existing interventions and categories for this account
+            InterventionCostBreakdownLine.objects.filter(
+                intervention__intervention_category__account=self.account
+            ).delete()
+            InterventionAssignment.objects.filter(intervention__intervention_category__account=self.account).delete()
             Intervention.objects.filter(intervention_category__account=self.account).delete()
             InterventionCategory.objects.filter(account=self.account).delete()
             self.stdout_write(f"Existing interventions for account {self.account.name} have been deleted.")
