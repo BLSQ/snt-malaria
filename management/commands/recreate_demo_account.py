@@ -5,8 +5,17 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from iaso.gpkg.import_gpkg import import_gpkg_file2
-from iaso.models import Account, DataSource, Profile, Project, SourceVersion
+from iaso.models import Account, DataSource, MetricType, MetricValue, Profile, Project, Report, SourceVersion, Team
+from plugins.snt_malaria.models import (
+    Budget,
+    Intervention,
+    InterventionAssignment,
+    InterventionCategory,
+    InterventionCostBreakdownLine,
+    Scenario,
+)
 
+from .support.demo_scenario_seeder import DemoScenarioSeeder
 from .support.intervention_seeder import InterventionSeeder
 from .support.metrics_importer import MetricsImporter
 
@@ -21,14 +30,34 @@ class Command(BaseCommand):
 
     def delete_existing_demo_account(self):
         """Delete the demo account and all associated resources."""
-        if User.objects.filter(username=DEMO_USER_USERNAME).exists():
-            User.objects.get(username=DEMO_USER_USERNAME).delete()
-            self.stdout.write(f"Deleted existing demo user: {DEMO_USER_USERNAME}")
+        if not Account.objects.filter(name=DEMO_ACCOUNT_NAME).exists():
+            return
 
-        # CASCADE should handle related objects
-        if Account.objects.filter(name=DEMO_ACCOUNT_NAME).exists():
-            Account.objects.get(name=DEMO_ACCOUNT_NAME).delete()
-            self.stdout.write(f"Deleted existing demo account: {DEMO_ACCOUNT_NAME}")
+        demo_account = Account.objects.get(name=DEMO_ACCOUNT_NAME)
+        projects = Project.objects.filter(account=demo_account)
+        data_sources = DataSource.objects.filter(projects__in=projects)
+        scenarios = Scenario.objects.filter(account=demo_account)
+        categories = InterventionCategory.objects.filter(account=demo_account)
+        interventions = Intervention.objects.filter(intervention_category__in=categories)
+        metric_types = MetricType.objects.filter(account=demo_account)
+
+        # Delete in order to avoid PROTECT foreign key constraints
+        InterventionAssignment.objects.filter(scenario__in=scenarios).delete()
+        Budget.objects.filter(scenario__in=scenarios).delete()
+        scenarios.delete()
+        InterventionCostBreakdownLine.objects.filter(intervention__in=interventions).delete()
+        interventions.delete()
+        categories.delete()
+        MetricValue.objects.filter(metric_type__in=metric_types).delete()
+        metric_types.delete()
+        Team.objects.filter(project__in=projects).delete()
+        Report.objects.filter(project__in=projects).delete()
+        data_sources.delete()
+        projects.delete()
+        User.objects.filter(username=DEMO_USER_USERNAME).delete()
+        demo_account.delete()
+
+        self.stdout.write(self.style.SUCCESS(f"Deleted existing demo account: {DEMO_ACCOUNT_NAME}"))
 
     def handle(self, *args, **options):
         self.delete_existing_demo_account()
@@ -104,7 +133,8 @@ class Command(BaseCommand):
             # Seed interventions and intervention costs
             InterventionSeeder(account, self.stdout.write).create_interventions()
 
-            # Create first default scenario with budget
+            # Create demo scenario with intervention assignments
+            DemoScenarioSeeder(account, self.stdout.write).create_scenario()
 
             self.stdout.write(self.style.SUCCESS("Setup completed successfully:"))
             self.stdout.write(
