@@ -20,8 +20,8 @@ const styles: SxStyles = {
         marginBottom: 2,
     },
     inputWrapper: {
-        minWidth: '107px',
-        width: '107px',
+        minWidth: '99px',
+        width: '99px',
     },
 };
 
@@ -29,42 +29,6 @@ type Props = {
     scenarioId: number;
     intervention: Intervention;
     budgetAssumptions: BudgetAssumptions;
-};
-
-const interventionCodeValidationSchema = {
-    itn_campaign: Yup.object().shape({
-        coverage: Yup.number().min(0).max(100),
-        buffer_mult: Yup.number().min(0).max(100),
-        divisor: Yup.number().min(0).max(100),
-        bale_size: Yup.number().min(0).max(999),
-    }),
-    itn_routine: Yup.object().shape({
-        coverage: Yup.number().min(0).max(100),
-        buffer_mult: Yup.number().min(0).max(100),
-    }),
-    iptp: Yup.object().shape({
-        coverage: Yup.number().min(0).max(100),
-        buffer_mult: Yup.number().min(0).max(100),
-        doses_per_pw: Yup.number().min(0).max(999),
-    }),
-    smc: Yup.object().shape({
-        coverage: Yup.number().min(0).max(100),
-        buffer_mult: Yup.number().min(0).max(100),
-        pop_prop_3_11: Yup.number().min(0).max(100),
-        pop_prop_12_59: Yup.number().min(0).max(100),
-        monthly_rounds: Yup.number().min(0).max(32),
-    }),
-    pmc: Yup.object().shape({
-        coverage: Yup.number().min(0).max(100),
-        buffer_mult: Yup.number().min(0).max(100),
-        touchpoints: Yup.number().min(0).max(999),
-        tablet_factor: Yup.number().min(0).max(999),
-    }),
-    vacc: Yup.object().shape({
-        coverage: Yup.number().min(0).max(100),
-        buffer_mult: Yup.number().min(0).max(100),
-        doses_per_child: Yup.number().min(0).max(999),
-    }),
 };
 
 export const BudgetAssumptionsForm: FC<Props> = ({
@@ -78,14 +42,108 @@ export const BudgetAssumptionsForm: FC<Props> = ({
         mutateAsync: saveBudgetAssumptions,
         isLoading: isSavingBudgetAssumptions,
     } = useSaveBudgetAssumptions(scenarioId);
-    const validationSchema = useMemo(
-        () => interventionCodeValidationSchema[intervention.code],
-        [intervention],
-    );
+
     const descriptionMessageKey = useMemo(
         () => `budgetAssumptionsDescription_${intervention.code}`,
         [intervention],
     );
+    const getMinMessage = useCallback(
+        (min: number) =>
+            formatMessage(MESSAGES.budgetAssumptionsMinValue, { min }),
+        [formatMessage],
+    );
+    const getMaxMessage = useCallback(
+        (max: number) =>
+            formatMessage(MESSAGES.budgetAssumptionsMaxValue, { max }),
+        [formatMessage],
+    );
+    const validationSchema = useMemo(() => {
+        switch (intervention.code) {
+            case 'itn_campaign':
+                return Yup.object().shape({
+                    coverage: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    buffer_mult: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    divisor: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    bale_size: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(999, getMaxMessage(999)),
+                });
+            case 'itn_routine':
+                return Yup.object().shape({
+                    coverage: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    buffer_mult: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                });
+            case 'iptp':
+                return Yup.object().shape({
+                    coverage: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    buffer_mult: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    doses_per_pw: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(999, getMaxMessage(999)),
+                });
+            case 'smc':
+                return Yup.object().shape({
+                    coverage: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    buffer_mult: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    pop_prop_3_11: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    pop_prop_12_59: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    monthly_rounds: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(32, getMaxMessage(32)),
+                });
+            case 'pmc':
+                return Yup.object().shape({
+                    coverage: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    buffer_mult: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    touchpoints: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(999, getMaxMessage(999)),
+                    tablet_factor: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(999, getMaxMessage(999)),
+                });
+            case 'vacc':
+                return Yup.object().shape({
+                    coverage: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    buffer_mult: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(100, getMaxMessage(100)),
+                    doses_per_child: Yup.number()
+                        .min(0, getMinMessage(0))
+                        .max(999, getMaxMessage(999)),
+                });
+            default:
+                return null;
+        }
+    }, [intervention, getMinMessage, getMaxMessage]);
 
     const {
         values,
@@ -109,7 +167,6 @@ export const BudgetAssumptionsForm: FC<Props> = ({
 
     const setFieldValueAndState = useCallback(
         (field: string, value: any) => {
-            console.log('Setting field', field, 'to value', value);
             setFieldTouched(field, true);
             setFieldValue(field, value);
         },
@@ -283,7 +340,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                     onClick={() => handleSubmit()}
                     variant="contained"
                     color="primary"
-                    disabled={!isValid && isSavingBudgetAssumptions}
+                    disabled={!isValid || isSavingBudgetAssumptions}
                 >
                     {formatMessage(MESSAGES.budgetAssumptionsSave)}
                     {isSavingBudgetAssumptions && (
