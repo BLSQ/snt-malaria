@@ -109,6 +109,18 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
         [budgets, yearOptions, selectedYear, mergeInterventionCosts],
     );
 
+    const sortedInterventionCosts = useMemo(
+        () =>
+            interventionCosts
+                ? [...interventionCosts].sort(
+                      (a, b) =>
+                          a.type.localeCompare(b.type) ||
+                          a.code.localeCompare(b.code),
+                  )
+                : [],
+        [interventionCosts],
+    );
+
     const mergeOrgUnitCosts = useCallback(
         (target: BudgetOrgUnit[], source: BudgetOrgUnit[]) => {
             const mergedCosts = {};
@@ -193,19 +205,19 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
                     </Box>
                 </Grid>
             )}
-            {interventionCosts && (
+            {sortedInterventionCosts && (
                 <>
                     <Grid item xs={12} md={7}>
                         <PaperContainer>
                             <CostBreakdownChart
-                                interventionBudgets={interventionCosts}
+                                interventionBudgets={sortedInterventionCosts}
                             />
                         </PaperContainer>
                     </Grid>
                     <Grid item xs={12} md={5}>
                         <PaperContainer>
                             <ProportionChart
-                                interventionBudgets={interventionCosts}
+                                interventionBudgets={sortedInterventionCosts}
                             />
                         </PaperContainer>
                     </Grid>

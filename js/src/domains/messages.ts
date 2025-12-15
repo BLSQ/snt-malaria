@@ -120,6 +120,14 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.clearedMapSelection',
         defaultMessage: 'Map selection has been cleared',
     },
+    showLegend: {
+        id: 'iaso.snt_malaria.label.showLegend',
+        defaultMessage: 'Show Legend',
+    },
+    hideLegend: {
+        id: 'iaso.snt_malaria.label.hideLegend',
+        defaultMessage: 'Hide Legend',
+    },
     modalDeleteScenarioTitle: {
         id: 'iaso.snt_malaria.label.delete.title',
         defaultMessage: 'Delete Scenario',
