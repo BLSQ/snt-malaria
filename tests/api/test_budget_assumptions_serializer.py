@@ -5,6 +5,7 @@ from plugins.snt_malaria.api.budget_assumptions.serializers import (
     BudgetAssumptionsSerializer,
     BudgetAssumptionsWriteSerializer,
 )
+from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
 from plugins.snt_malaria.models.scenario import Scenario
 
@@ -73,6 +74,13 @@ class BudgetAssumptionsSerializerTests(APITestCase):
             code="rts_s",
         )
 
+        cls.intervention_vaccination_rts2 = Intervention.objects.create(
+            name="RTS,S2",
+            created_by=cls.user,
+            intervention_category=cls.int_category_vaccination,
+            code="rts_s2",
+        )
+
     def test_serializer_fields(self):
         serializer = BudgetAssumptionsSerializer()
         expected_fields = {
@@ -120,6 +128,133 @@ class BudgetAssumptionsSerializerTests(APITestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("intervention", serializer.errors)
         self.assertEqual(serializer.errors["intervention"][0], 'Invalid pk "99" - object does not exist.')
+
+    def test_with_object_instance(self):
+        instance = BudgetAssumptions(
+            id=1,
+            scenario=self.scenario,
+            intervention=self.intervention_vaccination_rts,
+            coverage="0.80",
+            divisor="1.00",
+            bale_size=10,
+            buffer_mult="1.20",
+            doses_per_pw=2,
+            age_string="3-59",
+            pop_prop_3_11="0.10",
+            pop_prop_12_59="0.50",
+            monthly_rounds=3,
+            touchpoints=2,
+            tablet_factor="0.55",
+            doses_per_child=6,
+        )
+        serializer = BudgetAssumptionsSerializer(instance)
+        data = serializer.data
+        self.assertEqual(data["id"], 1)
+        self.assertEqual(data["scenario"], self.scenario.id)
+        self.assertEqual(data["intervention"], self.intervention_vaccination_rts.id)
+        self.assertEqual(data["coverage"], "0.80")
+        self.assertEqual(data["divisor"], "1.00")
+        self.assertEqual(data["bale_size"], 10)
+        self.assertEqual(data["buffer_mult"], "1.20")
+        self.assertEqual(data["doses_per_pw"], 2)
+        self.assertEqual(data["age_string"], "3-59")
+        self.assertEqual(data["pop_prop_3_11"], "0.10")
+        self.assertEqual(data["pop_prop_12_59"], "0.50")
+        self.assertEqual(data["monthly_rounds"], 3)
+        self.assertEqual(data["touchpoints"], 2)
+        self.assertEqual(data["tablet_factor"], "0.55")
+        self.assertEqual(data["doses_per_child"], 6)
+
+    def test_valid_data(self):
+        data = {
+            "scenario": self.scenario.id,
+            "intervention": self.intervention_vaccination_rts.id,
+            "coverage": "0.80",
+            "divisor": "1.00",
+            "bale_size": 10,
+            "buffer_mult": "1.20",
+            "doses_per_pw": 2,
+            "age_string": "3-59",
+            "pop_prop_3_11": "0.10",
+            "pop_prop_12_59": "0.50",
+            "monthly_rounds": 3,
+            "touchpoints": 2,
+            "tablet_factor": "0.55",
+            "doses_per_child": 6,
+        }
+        serializer = BudgetAssumptionsSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        instance = serializer.save()
+        self.assertIsNotNone(instance.id)
+        self.assertEqual(instance.scenario.id, self.scenario.id)
+        self.assertEqual(instance.intervention.id, self.intervention_vaccination_rts.id)
+        self.assertEqual(str(instance.coverage), "0.80")
+        self.assertEqual(str(instance.divisor), "1.00")
+        self.assertEqual(instance.bale_size, 10)
+        self.assertEqual(str(instance.buffer_mult), "1.20")
+        self.assertEqual(instance.doses_per_pw, 2)
+        self.assertEqual(instance.age_string, "3-59")
+        self.assertEqual(str(instance.pop_prop_3_11), "0.10")
+        self.assertEqual(str(instance.pop_prop_12_59), "0.50")
+        self.assertEqual(instance.monthly_rounds, 3)
+        self.assertEqual(instance.touchpoints, 2)
+        self.assertEqual(str(instance.tablet_factor), "0.55")
+        self.assertEqual(instance.doses_per_child, 6)
+
+    def test_valid_data_with_id(self):
+        model = BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention=self.intervention_vaccination_rts2,
+            coverage="0.75",
+            divisor="1.00",
+            bale_size=10,
+            buffer_mult="1.10",
+            doses_per_pw=2,
+            age_string="3-59",
+            pop_prop_3_11="0.10",
+            pop_prop_12_59="0.50",
+            monthly_rounds=3,
+            touchpoints=2,
+            tablet_factor="0.50",
+            doses_per_child=6,
+        )
+
+        data = {
+            "id": model.id,
+            "scenario": self.scenario.id,
+            "intervention": self.intervention_vaccination_rts.id,
+            "coverage": "0.80",
+            "divisor": "1.00",
+            "bale_size": 10,
+            "buffer_mult": "1.20",
+            "doses_per_pw": 2,
+            "age_string": "3-59",
+            "pop_prop_3_11": "0.10",
+            "pop_prop_12_59": "0.50",
+            "monthly_rounds": 3,
+            "touchpoints": 2,
+            "tablet_factor": "0.55",
+            "doses_per_child": 6,
+        }
+        serializer = BudgetAssumptionsSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        instance = serializer.update(model, serializer.validated_data)
+        self.assertIsNotNone(instance.id)
+        self.assertEqual(instance.id, model.id)
+        self.assertEqual(instance.scenario.id, self.scenario.id)
+        self.assertEqual(instance.intervention.id, self.intervention_vaccination_rts.id)
+        self.assertEqual(str(instance.coverage), "0.80")
+        self.assertEqual(str(instance.divisor), "1.00")
+        self.assertEqual(instance.bale_size, 10)
+        self.assertEqual(str(instance.buffer_mult), "1.20")
+        self.assertEqual(instance.doses_per_pw, 2)
+        self.assertEqual(instance.age_string, "3-59")
+        self.assertEqual(str(instance.pop_prop_3_11), "0.10")
+        self.assertEqual(str(instance.pop_prop_12_59), "0.50")
+        self.assertEqual(instance.monthly_rounds, 3)
+        self.assertEqual(instance.touchpoints, 2)
+        self.assertEqual(str(instance.tablet_factor), "0.55")
+        self.assertEqual(instance.doses_per_child, 6)
 
 
 class BudgetAssumptionsWriteSerializerTests(APITestCase):

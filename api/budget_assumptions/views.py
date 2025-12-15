@@ -33,7 +33,7 @@ class BudgetAssumptionsViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         scenario = serializer.validated_data["scenario"]
 
-        assumptions = self.get_queryset().filter(scenario__id=scenario.id)
+        assumptions = self.get_queryset().filter(scenario_id=scenario.id)
         interventions = Intervention.objects.prefetch_related("intervention_category__account").filter(
             intervention_category__account=self.request.user.iaso_profile.account
         )
@@ -47,7 +47,7 @@ class BudgetAssumptionsViewSet(viewsets.ModelViewSet):
                 all_assumptions.append(assumption)
                 continue
 
-            defaultBudget = {
+            default_budget = {
                 "id": None,
                 "intervention": intervention,
                 "scenario": scenario,
@@ -66,11 +66,11 @@ class BudgetAssumptionsViewSet(viewsets.ModelViewSet):
                 "doses_per_child": self._get_default_override("doses_per_child", intervention.code),
             }
 
-            all_assumptions.append(defaultBudget)
+            all_assumptions.append(default_budget)
 
-        assumptionsSerializer = BudgetAssumptionsSerializer(all_assumptions, many=True)
+        assumptions_serializer = BudgetAssumptionsSerializer(all_assumptions, many=True)
 
-        return Response(assumptionsSerializer.data, status=status.HTTP_200_OK)
+        return Response(assumptions_serializer.data, status=status.HTTP_200_OK)
 
     def _get_default_override(self, key, intervention_code):
         prefix = f"{intervention_code}_anc" if intervention_code == "iptp" and key == "coverage" else intervention_code
