@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     Budget,
+    BudgetAssumptions,
     BudgetSettings,
     Intervention,
     InterventionAssignment,
@@ -90,3 +91,10 @@ class BudgetSettingsAdmin(admin.ModelAdmin):
     list_display = ("id", "account", "local_currency", "exchange_rate", "inflation_rate")
     search_fields = ("id", "local_currency")
     ordering = ("id", "local_currency")
+
+
+@admin.register(BudgetAssumptions)
+class BudgetAssumptionsAdmin(admin.ModelAdmin):
+    list_display = ("id", "scenario", "intervention")
+    search_fields = ("id", "scenario", "intervention")
+    ordering = ("id",)

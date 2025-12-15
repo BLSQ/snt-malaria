@@ -195,7 +195,7 @@ export const Planning: FC = () => {
                     </Grid>
                     <Grid item xs={12} md={9} sx={styles.assignmentContainer}>
                         <InterventionsPlan
-                            scenarioId={scenario?.id}
+                            scenarioId={params.scenarioId}
                             totalOrgUnitCount={orgUnits?.length ?? 0}
                             interventionPlans={interventionPlans ?? []}
                             isLoadingPlans={isLoadingPlans}

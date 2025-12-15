@@ -1,20 +1,12 @@
-import React, { FC, useCallback, useEffect, useMemo } from 'react';
-import SearchIcon from '@mui/icons-material/Search';
-import {
-    Box,
-    Button,
-    Divider,
-    Drawer,
-    InputAdornment,
-    TextField,
-    Typography,
-} from '@mui/material';
+import React, { FC, useCallback, useEffect } from 'react';
+import { Box, Drawer, Tab, Tabs } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
-import DeleteDialog from 'Iaso/components/dialogs/DeleteDialogComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
 import { MESSAGES } from '../../../messages';
-import { InterventionPlan } from '../../types/interventions';
+import { BudgetAssumptions, InterventionPlan } from '../../types/interventions';
+import { BudgetAssumptionsForm } from './BudgetAssumptionsForm';
+import { InterventionOrgUnits } from './InterventionOrgUnits';
 
 const styles: SxStyles = {
     drawer: {
@@ -30,68 +22,41 @@ const styles: SxStyles = {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-    },
-    body: {
-        display: 'flex',
-        flexDirection: 'row',
+        height: '100%',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingX: 2,
-        paddingY: 1,
-    },
-    list: { overflowY: 'auto', flexGrow: 1 },
-    listItem: {
-        paddingX: 2,
-        paddingY: 1,
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        ' button': {
-            opacity: 0,
-        },
-        ':hover button': {
-            opacity: 1,
-        },
-    },
-    textEmphasis: {
-        fontWeight: 500,
-        textTransform: 'lowercase',
-    },
-    searchWrapper: {
-        marginBottom: 3,
     },
 };
 
 type Props = {
-    interventionPlan: InterventionPlan | null;
+    scenarioId: number;
+    interventionPlan?: InterventionPlan;
+    budgetAssumptions?: BudgetAssumptions;
+    closeInterventionPlanDetails: () => void;
     removeOrgUnitsFromPlan: (
         ordUnitIds: number[],
         shouldCloseModal: boolean,
     ) => void;
-    closeInterventionPlanDetails: () => void;
     isRemovingOrgUnits: boolean;
 };
 
 export const InterventionPlanDetails: FC<Props> = ({
+    scenarioId,
     interventionPlan,
-    removeOrgUnitsFromPlan,
+    budgetAssumptions,
     closeInterventionPlanDetails,
+    removeOrgUnitsFromPlan,
     isRemovingOrgUnits = true,
 }) => {
-    const { formatMessage } = useSafeIntl();
-    const [search, setSearch] = React.useState<string>('');
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
-    const onSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-        event.preventDefault();
-        setSearch(event.target.value);
-    };
+    const [activeTab, setActiveTab] = React.useState<
+        'budget_settings' | 'districts'
+    >('budget_settings');
+
+    const { formatMessage } = useSafeIntl();
 
     const onCloseInterventionPlanDetails = useCallback(() => {
-        setSearch('');
         closeInterventionPlanDetails();
-        setIsLoading(false);
         setIsOpen(false);
     }, [closeInterventionPlanDetails]);
 
@@ -99,38 +64,6 @@ export const InterventionPlanDetails: FC<Props> = ({
         if (interventionPlan) setIsOpen(true);
         else if (!interventionPlan && isOpen) onCloseInterventionPlanDetails();
     }, [interventionPlan, onCloseInterventionPlanDetails, isOpen]);
-
-    const onRemoveAllOrgUnitsFromPlan = useCallback(() => {
-        if (!interventionPlan || interventionPlan.org_units.length === 0) {
-            return;
-        }
-
-        removeOrgUnitsFromPlan(
-            interventionPlan.org_units.map(o => o.intervention_assignment_id),
-            true,
-        );
-
-        setIsLoading(true);
-    }, [interventionPlan, removeOrgUnitsFromPlan]);
-
-    const onRemoveOrgUnitFromPlan = useCallback(
-        (interventionAssignmentId: number) => {
-            removeOrgUnitsFromPlan(
-                [interventionAssignmentId],
-                interventionPlan?.org_units.length === 1,
-            );
-        },
-        [removeOrgUnitsFromPlan, interventionPlan],
-    );
-
-    const filteredData = useMemo(() => {
-        if (!interventionPlan) return [];
-        return interventionPlan.org_units
-            .filter(orgUnit =>
-                orgUnit.name.toLowerCase().includes(search.toLowerCase()),
-            )
-            .sort((a, b) => a.name.localeCompare(b.name));
-    }, [interventionPlan, search]);
 
     return (
         <Drawer
@@ -141,78 +74,43 @@ export const InterventionPlanDetails: FC<Props> = ({
         >
             {isLoading && <LoadingSpinner />}
             <DrawerHeader
-                title={interventionPlan?.intervention.name}
+                title={`${interventionPlan?.intervention.name} - ${interventionPlan?.intervention.code}`}
+                hideDivider={true}
                 onClose={onCloseInterventionPlanDetails}
             />
+
+            <Tabs
+                value={activeTab}
+                onChange={(event, newTab) => setActiveTab(newTab)}
+            >
+                <Tab
+                    label={formatMessage(MESSAGES.budgetAssumptionsLabel)}
+                    value="budget_settings"
+                ></Tab>
+                <Tab
+                    label={formatMessage(MESSAGES.orgUnitDistrict)}
+                    value="districts"
+                ></Tab>
+            </Tabs>
             <Box sx={styles.bodyWrapper}>
-                <Box sx={styles.searchWrapper}>
-                    <TextField
-                        variant="outlined"
-                        fullWidth
-                        size="small"
-                        placeholder={formatMessage(MESSAGES.searchPlaceholder)}
-                        value={search}
-                        onChange={onSearch}
-                        disabled={isRemovingOrgUnits}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <SearchIcon />
-                                </InputAdornment>
-                            ),
-                        }}
+                {activeTab === 'budget_settings' &&
+                    interventionPlan?.intervention &&
+                    budgetAssumptions && (
+                        <BudgetAssumptionsForm
+                            scenarioId={scenarioId}
+                            intervention={interventionPlan?.intervention}
+                            budgetAssumptions={budgetAssumptions}
+                        />
+                    )}
+                {activeTab === 'districts' && interventionPlan && (
+                    <InterventionOrgUnits
+                        setIsLoading={setIsLoading}
+                        removeOrgUnitsFromPlan={removeOrgUnitsFromPlan}
+                        isRemovingOrgUnits={isRemovingOrgUnits}
+                        interventionPlan={interventionPlan}
                     />
-                </Box>
-                <Box sx={styles.body}>
-                    <Typography variant="body2" sx={styles.textEmphasis}>
-                        {interventionPlan?.org_units.length}{' '}
-                        {formatMessage(MESSAGES.orgUnitDistrict)}
-                    </Typography>
-                    <DeleteDialog
-                        onConfirm={onRemoveAllOrgUnitsFromPlan}
-                        titleMessage={
-                            MESSAGES.interventionAssignmentRemoveAllTitle
-                        }
-                        Trigger={Button}
-                        triggerProps={{
-                            variant: 'text',
-                            size: 'small',
-                            disabled: isRemovingOrgUnits,
-                            children: formatMessage(
-                                MESSAGES.interventionAssignmentRemoveAllButton,
-                            ),
-                            sx: { textTransform: 'none' },
-                        }}
-                        message={
-                            MESSAGES.interventionAssignmentRemoveAllMessage
-                        }
-                    />
-                </Box>
-                <Box sx={styles.list}>
-                    {filteredData.map(orgUnit => (
-                        <Box sx={styles.listItem} key={orgUnit.id}>
-                            <Typography key={orgUnit.id}>
-                                {orgUnit.name}
-                            </Typography>
-                            <DeleteDialog
-                                disabled={isRemovingOrgUnits}
-                                onConfirm={() =>
-                                    onRemoveOrgUnitFromPlan(
-                                        orgUnit.intervention_assignment_id,
-                                    )
-                                }
-                                titleMessage={
-                                    MESSAGES.interventionAssignmentRemoveTitle
-                                }
-                                message={
-                                    MESSAGES.interventionAssignmentRemoveMessage
-                                }
-                            />
-                        </Box>
-                    ))}
-                </Box>
+                )}
             </Box>
-            <Divider />
         </Drawer>
     );
 };

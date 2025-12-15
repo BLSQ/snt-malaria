@@ -45,3 +45,23 @@ export type InterventionOrgUnit = {
     id: number;
     intervention_assignment_id: number;
 };
+
+export type BudgetAssumptions = {
+    id: number;
+    intervention: number;
+    scenario: number;
+    coverage: number;
+    buffer_mult: number;
+    bale_size: number;
+    divisor: number;
+    doses_pr_pw: number;
+    anc_coverage: number;
+    monthly_rounds: number;
+    // age_string: string;
+    pop_prop_3_11: number;
+    pop_prop_12_59: number;
+    touchpoints: number;
+    tablet_factor: number;
+    doses_per_child: number;
+    doses_per_pw: number;
+};

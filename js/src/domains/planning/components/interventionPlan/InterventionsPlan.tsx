@@ -3,15 +3,16 @@ import { TabContext, TabPanel } from '@mui/lab';
 import { Divider, CardHeader, CardContent, Card } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { useCalculateBudget } from '../../hooks/useCalculateBudget';
+import { useGetBudgetAssumptions } from '../../hooks/useGetBudgetAssumptions';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import { InterventionPlan } from '../../types/interventions';
+import { BudgetAssumptions, InterventionPlan } from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
 import { InterventionPlanSummary, TabValue } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
 import { InterventionsPlanTable } from './InterventionsPlanTable';
 
 type Props = {
-    scenarioId: number | undefined;
+    scenarioId: number;
     interventionPlans: InterventionPlan[];
     isLoadingPlans: boolean;
     totalOrgUnitCount: number;
@@ -72,13 +73,21 @@ export const InterventionsPlan: FC<Props> = ({
         }, [] as number[]).length;
     }, [interventionPlans]);
 
-    const selectedInterventionPlan: InterventionPlan | null = useMemo(() => {
-        return (
-            interventionPlans.find(
+    const selectedInterventionPlan: InterventionPlan | undefined =
+        useMemo(() => {
+            return interventionPlans.find(
                 plan => plan.intervention.id === selectedInterventionId,
-            ) || null
-        );
-    }, [interventionPlans, selectedInterventionId]);
+            );
+        }, [interventionPlans, selectedInterventionId]);
+
+    const { data: budgetAssumptions } = useGetBudgetAssumptions(scenarioId);
+    const selectedBudgetAssumptions: BudgetAssumptions | undefined = useMemo(
+        () =>
+            budgetAssumptions?.find(
+                bs => bs.intervention === selectedInterventionId,
+            ),
+        [selectedInterventionId, budgetAssumptions],
+    );
 
     const { mutateAsync: removeManyOrgUnitsFromPlan } =
         useRemoveManyOrgUnitsFromInterventionPlan();
@@ -135,6 +144,7 @@ export const InterventionsPlan: FC<Props> = ({
                             <InterventionsPlanTable
                                 isLoadingPlans={isLoadingPlans}
                                 interventionPlans={interventionPlans}
+                                budgetAssumptions={budgetAssumptions}
                                 showInterventionPlanDetails={
                                     onShowInterventionPlanDetails
                                 }
@@ -147,7 +157,9 @@ export const InterventionsPlan: FC<Props> = ({
                 </TabContext>
             </Card>
             <InterventionPlanDetails
+                scenarioId={scenarioId}
                 interventionPlan={selectedInterventionPlan}
+                budgetAssumptions={selectedBudgetAssumptions}
                 removeOrgUnitsFromPlan={onRemoveOrgUnitsFromPlan}
                 closeInterventionPlanDetails={onCloseInterventionPlanDetails}
                 isRemovingOrgUnits={isRemovingOrgUnits}
