@@ -45,7 +45,7 @@ class BudgetAssumptionsWriteSerializer(serializers.ModelSerializer):
     pop_prop_12_59 = serializers.DecimalField(max_digits=3, decimal_places=2)
     monthly_rounds = serializers.IntegerField(min_value=0, max_value=31)
     touchpoints = serializers.IntegerField(min_value=0, max_value=999)
-    tablet_factor = serializers.IntegerField(min_value=0, max_value=999)
+    tablet_factor = serializers.DecimalField(min_value=0, max_value=1, max_digits=3, decimal_places=2)
     doses_per_child = serializers.IntegerField(min_value=0, max_value=999)
 
     class Meta:

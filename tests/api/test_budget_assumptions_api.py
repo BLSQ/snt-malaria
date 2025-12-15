@@ -89,7 +89,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
                         ("pop_prop_12_59", "0.00"),
                         ("monthly_rounds", 0),
                         ("touchpoints", 0),
-                        ("tablet_factor", 0),
+                        ("tablet_factor", "0.00"),
                         ("doses_per_child", 0),
                     ]
                 ),
@@ -108,7 +108,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
                         ("pop_prop_12_59", "0.00"),
                         ("monthly_rounds", 0),
                         ("touchpoints", 0),
-                        ("tablet_factor", 0),
+                        ("tablet_factor", "0.00"),
                         ("doses_per_child", 0),
                     ]
                 ),
@@ -127,7 +127,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
                         ("pop_prop_12_59", "0.77"),
                         ("monthly_rounds", 4),
                         ("touchpoints", 0),
-                        ("tablet_factor", 0),
+                        ("tablet_factor", "0.00"),
                         ("doses_per_child", 0),
                     ]
                 ),
@@ -356,5 +356,5 @@ class BudgetAssumptionsAPITestCase(APITestCase):
         self.assertEqual(response.data["pop_prop_12_59"], "0.50")
         self.assertEqual(response.data["monthly_rounds"], 3)
         self.assertEqual(response.data["touchpoints"], 2)
-        self.assertEqual(response.data["tablet_factor"], 1)
+        self.assertEqual(response.data["tablet_factor"], "1.00")
         self.assertEqual(response.data["doses_per_child"], 6)
