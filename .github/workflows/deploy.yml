@@ -129,6 +129,18 @@ jobs:
                   rm -rf plugins/snt_malaria/.git
                   git add -f plugins/snt_malaria
 
+            # Copy plugin-specific .ebextensions files to the main .ebextensions directory
+            # so they will be deployed with the application
+            - name: Copy plugin ebextensions
+              run: |
+                  if [ -d "plugins/snt_malaria/.ebextensions" ]; then
+                      cp -v plugins/snt_malaria/.ebextensions/*.config .ebextensions/
+                      git add -f .ebextensions/
+                      echo "Copied SNT Malaria ebextensions files"
+                  else
+                      echo "No ebextensions directory found in SNT Malaria plugin"
+                  fi
+
             - name: Deploy to beanstalk
               run: python scripts/eb_deploy.py ${{ steps.config.outputs.ENVIRONMENT }}
               env:
