@@ -12,22 +12,29 @@ from iaso.models.org_unit import OrgUnit
 
 columns_map = {
     "LGA": "org_unit_name",
-    "CM": "CM - cm",
-    "CM_SUBSIDY": "CM subsidy - cm",
-    "AIX2_R": "Dual AI - itn_routine",
-    "PYR_R": "Standard Pyrethroid - itn_routine",
-    "PBO_R": "PBO - itn_routine",
-    "AIX2_C": "Dual AI - itn_campaign",
-    "PYR_C": "Standard Pyrethroid - itn_campaign",
-    "PBO_C": "PBO - itn_campaign",
-    "SMC": "SMC (SP+AQ) - smc",
-    "PMC": "PMC (SP) - pmc",
-    "LSM": "LSM - lsm",
-    "IPTP": "IPTp (SP) - iptp",
-    "Vaccine": "R21 - vacc",
+    "CM_current": "CM - cm_public",
+    "CM_SUBSIDY_current": "CM subsidy - cm",
+    "AIX2_R_current": "Dual AI - itn_routine",
+    "PYR_R_current": "Standard Pyrethroid - itn_routine",
+    "PBO_R_current": "PBO - itn_routine",
+    "AIX2_C_current": "Dual AI - itn_campaign",
+    "PYR_C_current": "Standard Pyrethroid - itn_campaign",
+    "PBO_C_current": "PBO - itn_campaign",
+    "SMC_current": "SMC (SP+AQ) - smc",
+    "PMC_current": "PMC (SP) - pmc",
+    "LSM_current": "LSM - lsm",
+    "IPTP_current": "IPTp (SP) - iptp",
+    "Vaccine_current": "R21 - vacc",
 }
 
 extra_columns = ["CM Subsidy - cm_subsidy"]
+
+org_unit_hard_map = {
+    "Ola-oluwa": "Ola Oluwa",
+    "Ilemeji": "Ilejemeje",  # example mapping
+    "Egbado North": "Yewa North",  # ambiguous, handled separately
+    "Egbado South": "Yewa South",  # ambiguous, handled separately
+}
 
 
 class Command(BaseCommand):
@@ -66,6 +73,10 @@ class Command(BaseCommand):
         try:
             # read CSV into a pandas DataFrame; keep strings for reliable matching
             df = pd.read_csv(csv_file, sep=sep, encoding=encoding, dtype=str, low_memory=False)
+            # Filter rows where the 'scenario' column (case-insensitive) is 'NSP'
+            scenario_col = next((c for c in df.columns if c.lower() == "scenario"), None)
+            if scenario_col:
+                df = df[df[scenario_col].str.strip().str.upper() == "NSP"]
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"Failed to read CSV '{csv_file}': {e}"))
             return
@@ -105,6 +116,9 @@ class Command(BaseCommand):
             if not name:
                 mapping[raw] = None
                 continue
+            # apply hardcoded mapping first
+            if name in org_unit_hard_map:
+                name = org_unit_hard_map[name]
 
             # try exact case-insensitive match
             exact_qs = OrgUnit.objects.filter(
@@ -183,6 +197,10 @@ class Command(BaseCommand):
         df = df.rename(columns_map, axis="columns")
         for col in extra_columns:
             df[col] = 0
+
+        # Keep only columns in columns_map and extra_columns (plus org_unit_id)
+        keep_cols = ["org_unit_id"] + list(columns_map.values()) + extra_columns
+        df = df[[col for col in keep_cols if col in df.columns]]
 
         df.info(buf=buf)
 
