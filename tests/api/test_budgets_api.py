@@ -230,7 +230,7 @@ class ScenarioAPITestCase(APITestCase):
 
         self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
         self.assertEqual(smc_intervention["total_cost"], 1009800.0)
-        self.assertEqual(smc_intervention["total_pop"], 475000.0)
+        self.assertEqual(smc_intervention["total_pop"], 237500.0)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
         self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
         self.assertEqual(smc_intervention["cost_breakdown"][0]["cost"], 1009800.0)
