@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Only run this script in demo environment
+if [ "$SENTRY_ENVIRONMENT" != "demo" ]; then
+    exit 0
+fi
+
 # Script to recreate the Burkina Faso demo account
 # This script is intended to run as a cron job on AWS Elastic Beanstalk
 
