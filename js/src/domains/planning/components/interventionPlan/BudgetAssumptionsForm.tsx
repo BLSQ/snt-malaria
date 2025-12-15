@@ -5,6 +5,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
 import InputComponent from 'Iaso/components/forms/InputComponent';
+import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { useSaveBudgetAssumptions } from '../../hooks/useSaveBudgetAssumptions';
@@ -32,37 +33,37 @@ type Props = {
 
 const interventionCodeValidationSchema = {
     itn_campaign: Yup.object().shape({
-        coverage: Yup.number(),
-        buffer_mult: Yup.number(),
-        divisor: Yup.number(),
-        bale_size: Yup.number(),
+        coverage: Yup.number().min(0).max(100),
+        buffer_mult: Yup.number().min(0).max(100),
+        divisor: Yup.number().min(0).max(100),
+        bale_size: Yup.number().min(0).max(999),
     }),
     itn_routine: Yup.object().shape({
-        coverage: Yup.number(),
-        buffer_mult: Yup.number(),
+        coverage: Yup.number().min(0).max(100),
+        buffer_mult: Yup.number().min(0).max(100),
     }),
     iptp: Yup.object().shape({
-        coverage: Yup.number(),
-        buffer_mult: Yup.number(),
-        doses_per_pw: Yup.number(),
+        coverage: Yup.number().min(0).max(100),
+        buffer_mult: Yup.number().min(0).max(100),
+        doses_per_pw: Yup.number().min(0).max(999),
     }),
     smc: Yup.object().shape({
-        coverage: Yup.number(),
-        buffer_mult: Yup.number(),
-        pop_prop_3_11: Yup.number(),
-        pop_prop_12_59: Yup.number(),
-        monthly_rounds: Yup.number(),
+        coverage: Yup.number().min(0).max(100),
+        buffer_mult: Yup.number().min(0).max(100),
+        pop_prop_3_11: Yup.number().min(0).max(100),
+        pop_prop_12_59: Yup.number().min(0).max(100),
+        monthly_rounds: Yup.number().min(0).max(32),
     }),
     pmc: Yup.object().shape({
-        coverage: Yup.number(),
-        buffer_mult: Yup.number(),
-        touchpoints: Yup.number(),
-        tablet_factor: Yup.number(),
+        coverage: Yup.number().min(0).max(100),
+        buffer_mult: Yup.number().min(0).max(100),
+        touchpoints: Yup.number().min(0).max(999),
+        tablet_factor: Yup.number().min(0).max(999),
     }),
     vacc: Yup.object().shape({
-        coverage: Yup.number(),
-        buffer_mult: Yup.number(),
-        doses_per_child: Yup.number(),
+        coverage: Yup.number().min(0).max(100),
+        buffer_mult: Yup.number().min(0).max(100),
+        doses_per_child: Yup.number().min(0).max(999),
     }),
 };
 
@@ -86,26 +87,41 @@ export const BudgetAssumptionsForm: FC<Props> = ({
         [intervention],
     );
 
-    const { values, setFieldValue, isValid, handleSubmit, setFieldTouched } =
-        useFormik({
-            initialValues: {
-                ...budgetAssumptions,
-            },
-            validationSchema,
-            onSubmit: () => {
-                saveBudgetAssumptions({
-                    budgetAssumptions: values,
-                }).then(value => (values.id = value.id));
-            },
-        });
+    const {
+        values,
+        setFieldValue,
+        isValid,
+        handleSubmit,
+        setFieldTouched,
+        errors,
+        touched,
+    } = useFormik({
+        initialValues: {
+            ...budgetAssumptions,
+        },
+        validationSchema,
+        onSubmit: () => {
+            saveBudgetAssumptions({
+                budgetAssumptions: values,
+            }).then(value => (values.id = value.id));
+        },
+    });
 
     const setFieldValueAndState = useCallback(
         (field: string, value: any) => {
+            console.log('Setting field', field, 'to value', value);
             setFieldTouched(field, true);
             setFieldValue(field, value);
         },
         [setFieldTouched, setFieldValue],
     );
+
+    const getErrors = useTranslatedErrors({
+        errors,
+        formatMessage,
+        touched,
+        messages: MESSAGES,
+    });
     return (
         validationSchema && (
             <>
@@ -116,8 +132,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 type="number"
                                 keyValue="pop_prop_3_11"
                                 withMarginTop={false}
-                                min={0}
-                                max={100}
+                                errors={getErrors('pop_prop_3_11')}
                                 value={values.pop_prop_3_11}
                                 onChange={setFieldValueAndState}
                                 label={MESSAGES.budgetAssumptionsPopProp3_11}
@@ -130,8 +145,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 type="number"
                                 keyValue="pop_prop_12_59"
                                 withMarginTop={false}
-                                min={0}
-                                max={100}
+                                errors={getErrors('pop_prop_12_59')}
                                 value={values.pop_prop_12_59}
                                 onChange={setFieldValueAndState}
                                 label={MESSAGES.budgetAssumptionsPopProp12_59}
@@ -143,8 +157,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                             type="number"
                             keyValue="coverage"
                             withMarginTop={false}
-                            min={0}
-                            max={100}
+                            errors={getErrors('coverage')}
                             value={values.coverage}
                             onChange={setFieldValueAndState}
                             label={MESSAGES.budgetAssumptionsCoverage}
@@ -156,8 +169,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 type="number"
                                 keyValue="divisor"
                                 withMarginTop={false}
-                                min={0}
-                                max={5}
+                                errors={getErrors('divisor')}
                                 value={values.divisor}
                                 onChange={setFieldValueAndState}
                                 label={MESSAGES.budgetAssumptionsPPN}
@@ -170,8 +182,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 type="number"
                                 keyValue="touchpoints"
                                 withMarginTop={false}
-                                min={0}
-                                max={5}
+                                errors={getErrors('touchpoints')}
                                 value={values.touchpoints}
                                 onChange={setFieldValueAndState}
                                 label={MESSAGES.budgetAssumptionsTouchpoints}
@@ -184,8 +195,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 type="number"
                                 keyValue="monthly_rounds"
                                 withMarginTop={false}
-                                min={0}
-                                max={31}
+                                errors={getErrors('monthly_rounds')}
                                 value={values.monthly_rounds}
                                 onChange={setFieldValueAndState}
                                 label={MESSAGES.budgetAssumptionsMonthlyRound}
@@ -198,8 +208,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 type="number"
                                 keyValue="bale_size"
                                 withMarginTop={false}
-                                min={0}
-                                max={999}
+                                errors={getErrors('bale_size')}
                                 value={values.bale_size}
                                 onChange={setFieldValueAndState}
                                 label={MESSAGES.budgetAssumptionsBaleSize}
@@ -212,8 +221,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 type="number"
                                 keyValue="doses_per_pw"
                                 withMarginTop={false}
-                                min={0}
-                                max={999}
+                                errors={getErrors('doses_per_pw')}
                                 value={values.doses_per_pw}
                                 onChange={setFieldValueAndState}
                                 label={MESSAGES.budgetAssumptionsDosesPerPW}
@@ -226,8 +234,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 type="number"
                                 keyValue="doses_per_child"
                                 withMarginTop={false}
-                                min={0}
-                                max={999}
+                                errors={getErrors('doses_per_child')}
                                 value={values.doses_per_child}
                                 onChange={setFieldValueAndState}
                                 label={MESSAGES.budgetAssumptionsDosesPerChild}
@@ -240,8 +247,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 type="number"
                                 keyValue="tablet_factor"
                                 withMarginTop={false}
-                                min={0}
-                                max={999}
+                                errors={getErrors('tablet_factor')}
                                 value={values.tablet_factor}
                                 onChange={setFieldValueAndState}
                                 label={MESSAGES.budgetAssumptionsTabletFactor}
@@ -254,8 +260,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                             type="number"
                             keyValue="buffer_mult"
                             withMarginTop={false}
-                            min={0}
-                            max={100}
+                            errors={getErrors('buffer_mult')}
                             value={values.buffer_mult}
                             onChange={setFieldValueAndState}
                             label={MESSAGES.budgetAssumptionsBuffer}
