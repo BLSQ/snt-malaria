@@ -21,5 +21,5 @@ class BudgetAssumptions(models.Model):
     pop_prop_12_59 = models.DecimalField(max_digits=3, decimal_places=2)
     monthly_rounds = models.IntegerField()
     touchpoints = models.IntegerField()
-    tablet_factor = models.IntegerField()
+    tablet_factor = models.DecimalField(max_digits=3, decimal_places=2)
     doses_per_child = models.IntegerField()

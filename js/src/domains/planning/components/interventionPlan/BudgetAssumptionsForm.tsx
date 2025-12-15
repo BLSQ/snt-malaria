@@ -69,7 +69,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                         .max(100, getMaxMessage(100)),
                     divisor: Yup.number()
                         .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
+                        .max(9, getMaxMessage(9)),
                     bale_size: Yup.number()
                         .min(0, getMinMessage(0))
                         .max(999, getMaxMessage(999)),
@@ -126,7 +126,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                         .max(999, getMaxMessage(999)),
                     tablet_factor: Yup.number()
                         .min(0, getMinMessage(0))
-                        .max(999, getMaxMessage(999)),
+                        .max(100, getMaxMessage(100)),
                 });
             case 'vacc':
                 return Yup.object().shape({

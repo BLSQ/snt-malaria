@@ -272,7 +272,7 @@ class BudgetAssumptionsWriteSerializerTests(APITestCase):
             "pop_prop_12_59": "0.50",
             "monthly_rounds": 3,
             "touchpoints": 2,
-            "tablet_factor": 55,
+            "tablet_factor": "0.55",
             "doses_per_child": 6,
         }
         serializer = BudgetAssumptionsWriteSerializer(data=data)
@@ -291,5 +291,5 @@ class BudgetAssumptionsWriteSerializerTests(APITestCase):
         self.assertEqual(str(instance.pop_prop_12_59), "0.50")
         self.assertEqual(instance.monthly_rounds, 3)
         self.assertEqual(instance.touchpoints, 2)
-        self.assertEqual(instance.tablet_factor, 55)
+        self.assertEqual(str(instance.tablet_factor), "0.55")
         self.assertEqual(instance.doses_per_child, 6)
