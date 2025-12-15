@@ -362,4 +362,12 @@ export const MESSAGES = defineMessages({
         The vaccine is delivered through routine immunization contacts with an <b>expected coverage of 84%</b> among the target population. 
         A 10% buffer is included to account for losses during transportation, storage, and administration.`,
     },
+    budgetAssumptionsMinValue: {
+        id: 'iaso.snt_malaria.budgetAssumptions.minValue',
+        defaultMessage: 'Value must be at least {min}',
+    },
+    budgetAssumptionsMaxValue: {
+        id: 'iaso.snt_malaria.budgetAssumptions.maxValue',
+        defaultMessage: 'Value must be at most {max}',
+    },
 });
