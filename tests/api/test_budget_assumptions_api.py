@@ -85,11 +85,11 @@ class BudgetAssumptionsAPITestCase(APITestCase):
                         ("buffer_mult", "1.10"),
                         ("doses_per_pw", 3),
                         ("age_string", "0"),
-                        ("pop_prop_3_11", "0.0000000000"),
-                        ("pop_prop_12_59", "0.0000000000"),
+                        ("pop_prop_3_11", "0.00"),
+                        ("pop_prop_12_59", "0.00"),
                         ("monthly_rounds", 0),
-                        ("touchpoints", "0.0000000000"),
-                        ("tablet_factor", "0.0000000000"),
+                        ("touchpoints", 0),
+                        ("tablet_factor", 0),
                         ("doses_per_child", 0),
                     ]
                 ),
@@ -104,11 +104,11 @@ class BudgetAssumptionsAPITestCase(APITestCase):
                         ("buffer_mult", "0.00"),
                         ("doses_per_pw", 0),
                         ("age_string", "0"),
-                        ("pop_prop_3_11", "0.0000000000"),
-                        ("pop_prop_12_59", "0.0000000000"),
+                        ("pop_prop_3_11", "0.00"),
+                        ("pop_prop_12_59", "0.00"),
                         ("monthly_rounds", 0),
-                        ("touchpoints", "0.0000000000"),
-                        ("tablet_factor", "0.0000000000"),
+                        ("touchpoints", 0),
+                        ("tablet_factor", 0),
                         ("doses_per_child", 0),
                     ]
                 ),
@@ -123,11 +123,11 @@ class BudgetAssumptionsAPITestCase(APITestCase):
                         ("buffer_mult", "1.10"),
                         ("doses_per_pw", 0),
                         ("age_string", "0.18,0.77"),
-                        ("pop_prop_3_11", "0.1800000000"),
-                        ("pop_prop_12_59", "0.7700000000"),
+                        ("pop_prop_3_11", "0.18"),
+                        ("pop_prop_12_59", "0.77"),
                         ("monthly_rounds", 4),
-                        ("touchpoints", "0.0000000000"),
-                        ("tablet_factor", "0.0000000000"),
+                        ("touchpoints", 0),
+                        ("tablet_factor", 0),
                         ("doses_per_child", 0),
                     ]
                 ),
@@ -296,7 +296,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
             "pop_prop_12_59": 0.5,
             "monthly_rounds": 3,
             "touchpoints": 2.5,
-            "tablet_factor": 1.1,
+            "tablet_factor": 1,
             "doses_per_child": 6,
         }
         response = self.client.put(f"{BASE_URL}{assumption.id}/", updated_data, format="json")
@@ -335,12 +335,13 @@ class BudgetAssumptionsAPITestCase(APITestCase):
             "pop_prop_3_11": 0.1,
             "pop_prop_12_59": 0.5,
             "monthly_rounds": 3,
-            "touchpoints": 2.5,
-            "tablet_factor": 1.1,
+            "touchpoints": 2,
+            "tablet_factor": 1,
             "doses_per_child": 6,
         }
 
         response = self.client.put(f"{BASE_URL}{assumption.id}/", updated_data, format="json")
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertIsNotNone(response.data)
@@ -351,9 +352,9 @@ class BudgetAssumptionsAPITestCase(APITestCase):
         self.assertEqual(response.data["buffer_mult"], "1.20")
         self.assertEqual(response.data["doses_per_pw"], 2)
         self.assertEqual(response.data["age_string"], "1-5")
-        self.assertEqual(response.data["pop_prop_3_11"], "0.1000000000")
-        self.assertEqual(response.data["pop_prop_12_59"], "0.5000000000")
+        self.assertEqual(response.data["pop_prop_3_11"], "0.10")
+        self.assertEqual(response.data["pop_prop_12_59"], "0.50")
         self.assertEqual(response.data["monthly_rounds"], 3)
-        self.assertEqual(response.data["touchpoints"], "2.5000000000")
-        self.assertEqual(response.data["tablet_factor"], "1.1000000000")
+        self.assertEqual(response.data["touchpoints"], 2)
+        self.assertEqual(response.data["tablet_factor"], 1)
         self.assertEqual(response.data["doses_per_child"], 6)
