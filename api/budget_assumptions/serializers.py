@@ -6,7 +6,7 @@ from plugins.snt_malaria.models.scenario import Scenario
 
 
 class BudgetAssumptionsQuerySerializer(serializers.Serializer):
-    scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.all(), required=True)
+    scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.all())
 
 
 class BudgetAssumptionsSerializer(serializers.ModelSerializer):
