@@ -77,7 +77,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
                     [
                         ("id", None),
                         ("scenario", 1),
-                        ("intervention", 3),
+                        ("intervention_code", "iptp"),
                         ("coverage", "0.80"),
                         ("divisor", "0.00"),
                         ("bale_size", 0),
@@ -96,7 +96,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
                     [
                         ("id", None),
                         ("scenario", 1),
-                        ("intervention", 1),
+                        ("intervention_code", "rts_s"),
                         ("coverage", "0.00"),
                         ("divisor", "0.00"),
                         ("bale_size", 0),
@@ -115,7 +115,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
                     [
                         ("id", None),
                         ("scenario", 1),
-                        ("intervention", 2),
+                        ("intervention_code", "smc"),
                         ("coverage", "1.00"),
                         ("divisor", "0.00"),
                         ("bale_size", 0),
@@ -136,7 +136,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
     def test_get_budget_assumptions_with_existing(self):
         # First, create an override for one intervention
         override_data = {
-            "intervention": self.intervention_vaccination_rts,
+            "intervention_code": self.intervention_vaccination_rts.code,
             "scenario": self.scenario,
             "coverage": 0.9,
             "divisor": 0,
@@ -161,20 +161,20 @@ class BudgetAssumptionsAPITestCase(APITestCase):
 
         # Check that the override is reflected in the response
         for item in response.data:
-            if item["intervention"] == self.intervention_vaccination_rts.id:
+            if item["intervention_code"] == self.intervention_vaccination_rts.code:
                 self.assertEqual(item["coverage"], "0.90")
                 self.assertEqual(item["doses_per_child"], 5)
             else:
                 # Other interventions should have default values
-                if item["intervention"] == self.intervention_chemo_smc.id:
+                if item["intervention_code"] == self.intervention_chemo_smc.code:
                     self.assertEqual(item["coverage"], "1.00")
-                elif item["intervention"] == self.intervention_chemo_iptp.id:
+                elif item["intervention_code"] == self.intervention_chemo_iptp.code:
                     self.assertEqual(item["coverage"], "0.80")
 
     def test_post_budget_assumptions_unauthenticated(self):
         self.client.force_authenticate(user=None)
         override_data = {
-            "intervention": self.intervention_vaccination_rts.id,
+            "intervention_code": self.intervention_vaccination_rts.code,
             "scenario": self.scenario.id,
             "coverage": 0.9,
             "divisor": 0,
@@ -194,7 +194,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
 
     def test_post_budget_assumptions_invalid_scenario(self):
         override_data = {
-            "intervention": self.intervention_vaccination_rts.id,
+            "intervention_code": self.intervention_vaccination_rts.code,
             "scenario": 9999,
             "coverage": 0.9,
             "divisor": 0,
@@ -213,31 +213,10 @@ class BudgetAssumptionsAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("scenario", response.data)
 
-    def test_post_budget_assumptions_invalid_intervention(self):
-        override_data = {
-            "intervention": 9999,
-            "scenario": self.scenario.id,
-            "coverage": 0.9,
-            "divisor": 0,
-            "bale_size": 0,
-            "buffer_mult": 0,
-            "doses_per_pw": 0,
-            "age_string": 0,
-            "pop_prop_3_11": 0,
-            "pop_prop_12_59": 0,
-            "monthly_rounds": 0,
-            "touchpoints": 0,
-            "tablet_factor": 0,
-            "doses_per_child": 5,
-        }
-        response = self.client.post(BASE_URL, override_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("intervention", response.data)
-
     def test_post_budget_assumptions(self):
         # Create an override for one intervention
         override_data = {
-            "intervention": self.intervention_vaccination_rts.id,
+            "intervention_code": self.intervention_vaccination_rts.code,
             "scenario": self.scenario.id,
             "coverage": 0.9,
             "divisor": 0,
@@ -264,7 +243,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
     def test_put_budget_assumptions_unauthenticated(self):
         # First, create an assumption for one intervention
         assumption = BudgetAssumptions.objects.create(
-            intervention=self.intervention_vaccination_rts,
+            intervention_code=self.intervention_vaccination_rts.code,
             scenario=self.scenario,
             coverage=0.9,
             divisor=0,
@@ -283,7 +262,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
         self.client.force_authenticate(user=None)
         updated_data = {
             "id": assumption.id,
-            "intervention": self.intervention_vaccination_rts.id,
+            "intervention_code": self.intervention_vaccination_rts.code,
             "scenario": self.scenario.id,
             "coverage": 0.95,
             "divisor": 1,
@@ -304,7 +283,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
     def test_put_budget_assumptions(self):
         # First, create an assumption for one intervention
         assumption = BudgetAssumptions.objects.create(
-            intervention=self.intervention_vaccination_rts,
+            intervention_code=self.intervention_vaccination_rts.code,
             scenario=self.scenario,
             coverage=0.9,
             divisor=0,
@@ -323,7 +302,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
         # Now, update the override via PUT
         updated_data = {
             "id": assumption.id,
-            "intervention": self.intervention_vaccination_rts.id,
+            "intervention_code": self.intervention_vaccination_rts.code,
             "scenario": self.scenario.id,
             "coverage": 0.95,
             "divisor": 1,

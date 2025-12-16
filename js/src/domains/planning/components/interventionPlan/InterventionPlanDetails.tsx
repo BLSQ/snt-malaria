@@ -98,7 +98,6 @@ export const InterventionPlanDetails: FC<Props> = ({
                     budgetAssumptions && (
                         <BudgetAssumptionsForm
                             scenarioId={scenarioId}
-                            intervention={interventionPlan?.intervention}
                             budgetAssumptions={budgetAssumptions}
                         />
                     )}

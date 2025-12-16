@@ -52,8 +52,8 @@ export const InterventionsPlanTable: FC<Props> = ({
     const interventionPlanBudgetAssumptions = useMemo(
         () =>
             budgetAssumptions?.reduce(
-                (acc, ibs) => ({ ...acc, [ibs.intervention]: ibs }),
-                {} as { [interventionId: number]: BudgetAssumptions },
+                (acc, ia) => ({ ...acc, [ia.intervention_code]: ia }),
+                {} as { [interventionCode: string]: BudgetAssumptions },
             ),
         [budgetAssumptions],
     );
@@ -76,7 +76,7 @@ export const InterventionsPlanTable: FC<Props> = ({
                                 interventionPlan={row}
                                 budgetAssumptions={
                                     interventionPlanBudgetAssumptions?.[
-                                        row.intervention.id
+                                        row.intervention.code
                                     ] ?? undefined
                                 }
                                 showInterventionPlanDetails={

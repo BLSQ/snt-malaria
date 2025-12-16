@@ -84,9 +84,11 @@ export const InterventionsPlan: FC<Props> = ({
     const selectedBudgetAssumptions: BudgetAssumptions | undefined = useMemo(
         () =>
             budgetAssumptions?.find(
-                bs => bs.intervention === selectedInterventionId,
+                bs =>
+                    bs.intervention_code ===
+                    selectedInterventionPlan?.intervention.code,
             ),
-        [selectedInterventionId, budgetAssumptions],
+        [selectedInterventionPlan, budgetAssumptions],
     );
 
     const { mutateAsync: removeManyOrgUnitsFromPlan } =
