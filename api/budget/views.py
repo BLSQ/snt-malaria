@@ -3,7 +3,7 @@ import pandas as pd
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS, BudgetCalculator
+from snt_malaria_budgeting import BudgetCalculator
 
 from plugins.snt_malaria.api.budget.filters import BudgetListFilter
 from plugins.snt_malaria.api.budget.serializers import BudgetCreateSerializer, BudgetSerializer
