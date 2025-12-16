@@ -2,10 +2,11 @@ import pandas as pd
 
 from django.utils import translation
 from rest_framework.exceptions import ValidationError
-from snt_malaria_budgeting import InterventionDetailModel
+from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS, InterventionDetailModel
 
 from iaso.models import MetricType, MetricValue
 from plugins.snt_malaria.models import BudgetSettings, InterventionCostBreakdownLine
+from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 
 
 # This is Work in Progress
@@ -218,3 +219,36 @@ def build_interventions_input(scenario):
     interventions = list(interventions_dict.values())
 
     return [InterventionDetailModel(**i) for i in interventions]
+
+
+def build_budget_assumptions(scenario):
+    """
+    Build a map of budget assumptions for quick lookup by intervention code.
+    """
+    assumptions = BudgetAssumptions.objects.filter(scenario=scenario)
+    cost_assumptions = DEFAULT_COST_ASSUMPTIONS.copy()
+    for assumption in assumptions:
+        # Handle iptp_anc special case
+        for key, value in (
+            (get_assumption_key(assumption.intervention_code, key), value)
+            for key, value in assumption.__dict__.items()
+            if key != "id" and key != "scenario" and key != "intervention_code"
+        ):
+            if key in cost_assumptions:
+                # Convert Decimal to float if necessary
+                if hasattr(value, "is_finite"):
+                    cost_assumptions[key] = float(value)
+                else:
+                    cost_assumptions[key] = value
+
+    return cost_assumptions
+
+
+def get_assumption_key(intervention_code, field):
+    """
+    Get the assumption key for a given intervention code and field.
+    Handles special cases like iptp_anc.
+    """
+    if intervention_code == "iptp" and field == "coverage":
+        return f"{intervention_code}_anc_{field}"
+    return f"{intervention_code}_{field}"

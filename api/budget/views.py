@@ -8,6 +8,7 @@ from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS, BudgetCalculator
 from plugins.snt_malaria.api.budget.filters import BudgetListFilter
 from plugins.snt_malaria.api.budget.serializers import BudgetCreateSerializer, BudgetSerializer
 from plugins.snt_malaria.api.budget.utils import (
+    build_budget_assumptions,
     build_cost_dataframe,
     build_interventions_input,
     build_population_dataframe,
@@ -68,8 +69,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
         # build a quick lookup map ((code, type) -> id) for fast id retrieval
         interventions_map = {(iv.code, iv.name): iv.id for iv in interventions}
 
-        # For now, assume the default coverage etc.
-        settings = DEFAULT_COST_ASSUMPTIONS
+        settings = build_budget_assumptions(scenario)
 
         budgets = []
         budget_calculator = BudgetCalculator(
