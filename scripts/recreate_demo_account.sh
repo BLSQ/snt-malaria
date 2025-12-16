@@ -1,8 +1,14 @@
 #!/bin/bash
 set -e
+export $(cat /opt/elasticbeanstalk/deployment/env | xargs)
 
-# Only run this script in demo environment
+# Only run this script in demo environment on the main web server
 if [ "$SENTRY_ENVIRONMENT" != "demo" ]; then
+    echo "Environment is not 'demo', don't execute sync script, exiting"
+    exit 0
+fi
+if [ "$WORKER" = "true" ]; then
+    echo "WORKER is set to true, don't execute sync script, exiting"
     exit 0
 fi
 
