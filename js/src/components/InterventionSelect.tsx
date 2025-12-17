@@ -60,7 +60,7 @@ export const InterventionSelect: FunctionComponent<Props> = ({
                     return (
                         <MenuItem key={intervention.id} value={intervention.id}>
                             <Typography variant="body2">
-                                {intervention.name} - {intervention.code}
+                                {intervention.short_name}
                             </Typography>
                         </MenuItem>
                     );

@@ -20,6 +20,7 @@ CURRENT_YEAR = date.today().year
 
 CATEGORIES_AND_INTERVENTIONS = {
     "Case Management": {
+        "short_name": "CM",
         "interventions": [
             {
                 "name": "CM",
@@ -35,10 +36,11 @@ CATEGORIES_AND_INTERVENTIONS = {
             },
         ],
     },
-    "IPTp, PMC & SMC": {
+    "IPTp": {
         "interventions": [
             {
                 "name": "IPTp (SP)",
+                "short_name": "IPTp",
                 "code": "iptp",
                 "description": "",
                 "cost_settings": [
@@ -58,8 +60,13 @@ CATEGORIES_AND_INTERVENTIONS = {
                     },
                 ],
             },
+        ],
+    },
+    "PMC & SMC": {
+        "interventions": [
             {
                 "name": "PMC (SP)",
+                "short_name": "PMC",
                 "code": "pmc",
                 "description": "",
                 "cost_settings": [
@@ -81,6 +88,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             },
             {
                 "name": "SMC (SP+AQ)",
+                "short_name": "SMC",
                 "code": "smc",
                 "description": "",
                 "cost_settings": [
@@ -114,6 +122,7 @@ CATEGORIES_AND_INTERVENTIONS = {
         "interventions": [
             {
                 "name": "Dual AI",
+                "short_name": "Dual AI (Campaign)",
                 "code": "itn_campaign",
                 "description": "",
                 "cost_settings": [
@@ -135,6 +144,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             },
             {
                 "name": "PBO",
+                "short_name": "PBO (Campaign)",
                 "code": "itn_campaign",
                 "description": "",
                 "cost_settings": [
@@ -156,6 +166,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             },
             {
                 "name": "Standard Pyrethroid",
+                "short_name": "PYR (Campaign)",
                 "code": "itn_campaign",
                 "description": "",
                 "cost_settings": [
@@ -181,6 +192,7 @@ CATEGORIES_AND_INTERVENTIONS = {
         "interventions": [
             {
                 "name": "Dual AI",
+                "short_name": "Dual AI (Routine)",
                 "code": "itn_routine",
                 "description": "",
                 "cost_settings": [
@@ -202,6 +214,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             },
             {
                 "name": "PBO",
+                "short_name": "PBO (Routine)",
                 "code": "itn_routine",
                 "description": "",
                 "cost_settings": [
@@ -223,6 +236,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             },
             {
                 "name": "Standard Pyrethroid",
+                "short_name": "PYR (Routine)",
                 "code": "itn_routine",
                 "description": "",
                 "cost_settings": [
@@ -245,6 +259,7 @@ CATEGORIES_AND_INTERVENTIONS = {
         ],
     },
     "Vaccination": {
+        "short_name": "Vacc",
         "interventions": [
             {
                 "name": "R21",
@@ -649,6 +664,7 @@ class InterventionSeeder:
         for category_name, data in CATEGORIES_AND_INTERVENTIONS.items():
             category, created = InterventionCategory.objects.get_or_create(
                 name=category_name,
+                short_name=data.get("short_name", category_name),
                 account=self.account,
                 defaults={
                     # "description": data["description"],
@@ -661,6 +677,7 @@ class InterventionSeeder:
             for intervention_data in data["interventions"]:
                 intervention, created = Intervention.objects.get_or_create(
                     name=intervention_data["name"],
+                    short_name=intervention_data.get("short_name", intervention_data["name"]),
                     intervention_category=category,
                     code=intervention_data["code"],
                     defaults={

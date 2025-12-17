@@ -74,7 +74,7 @@ export const InterventionPlanDetails: FC<Props> = ({
         >
             {isLoading && <LoadingSpinner />}
             <DrawerHeader
-                title={`${interventionPlan?.intervention.name} - ${interventionPlan?.intervention.code}`}
+                title={interventionPlan?.intervention.short_name}
                 hideDivider={true}
                 onClose={onCloseInterventionPlanDetails}
             />

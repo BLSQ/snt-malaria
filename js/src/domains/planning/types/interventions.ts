@@ -3,6 +3,7 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 export type InterventionCategory = {
     id: number;
     name: string;
+    short_name: string;
     description: string;
     interventions: Intervention[];
 };
@@ -10,6 +11,7 @@ export type InterventionCategory = {
 export type Intervention = {
     id: number;
     name: string;
+    short_name: string;
     code: string;
     description: string;
     intervention_category: number;
