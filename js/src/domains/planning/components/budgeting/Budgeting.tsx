@@ -113,9 +113,7 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
         () =>
             interventionCosts
                 ? [...interventionCosts].sort(
-                      (a, b) =>
-                          a.type.localeCompare(b.type) ||
-                          a.code.localeCompare(b.code),
+                      (a, b) => b.total_cost - a.total_cost,
                   )
                 : [],
         [interventionCosts],

@@ -14,11 +14,13 @@ const styles: SxStyles = {
         width: '1rem',
         height: '1rem',
         marginRight: 1,
+        marginTop: '2px',
         borderRadius: 0.5,
     },
     legendItem: {
         width: 'auto',
         paddingRight: 0,
+        alignItems: 'start',
     },
 };
 
@@ -33,9 +35,11 @@ export const ChartLegend: FC<Props> = ({ payload, wrapperSx, renderValue }) => {
                             backgroundColor: entry.color,
                         }}
                     ></Box>
-                    <Typography variant="body2">
-                        {renderValue ? renderValue(entry) : entry.dataKey}
-                    </Typography>
+                    {renderValue ? (
+                        renderValue(entry)
+                    ) : (
+                        <Typography variant="body2">{entry.dataKey}</Typography>
+                    )}
                 </ListItem>
             ))}
         </List>

@@ -1,5 +1,12 @@
 import React, { FC, useMemo } from 'react';
-import { Box, Card, CardContent, CardHeader, Divider } from '@mui/material';
+import {
+    Box,
+    Card,
+    CardContent,
+    CardHeader,
+    Divider,
+    Typography,
+} from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import {
     Cell,
@@ -26,7 +33,7 @@ const styles: SxStyles = {
     mainBox: {
         borderRadius: theme => theme.spacing(2),
         overflow: 'hidden',
-        height: '493px',
+        height: '600px',
         position: 'relative',
     },
     card: { height: '100%', display: 'flex', flexDirection: 'column' },
@@ -44,6 +51,9 @@ const styles: SxStyles = {
         marginRight: 1,
         borderRadius: 0.5,
     },
+    legendItem: {
+        minWidth: '120px',
+    },
 };
 
 export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
@@ -51,7 +61,7 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
     const data = useMemo(
         () =>
             interventionBudgets?.map(b => ({
-                name: `${b.type} - ${b.code}`,
+                name: b.type,
                 value: b.total_cost,
             })),
         [interventionBudgets],
@@ -59,15 +69,20 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
 
     const renderLegend = ({ payload }) => (
         <ChartLegend
+            wrapperSx={{
+                display: 'flex',
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+            }}
             payload={payload}
             renderValue={entry => (
-                <>
-                    {entry.value}{' '}
-                    <b>
+                <Box sx={styles.legendItem}>
+                    <Typography variant="body2">{entry.value}</Typography>
+                    <Typography variant="body2" fontWeight={'bold'}>
                         {formatBigNumber(entry?.payload?.value ?? 0)} (
                         {formatPercentValue(entry?.payload?.percent ?? 0)})
-                    </b>
-                </>
+                    </Typography>
+                </Box>
             )}
         />
     );
@@ -105,11 +120,10 @@ export const ProportionChart: FC<Props> = ({ interventionBudgets }) => {
                                 ))}
                             </Pie>
                             <Legend
-                                layout="vertical"
-                                align="right"
-                                verticalAlign="middle"
+                                layout="horizontal"
+                                align="left"
+                                verticalAlign="bottom"
                                 content={renderLegend}
-                                wrapperStyle={{ left: 'calc(50% + 3rem)' }}
                             ></Legend>
                         </PieChart>
                     </ResponsiveContainer>
