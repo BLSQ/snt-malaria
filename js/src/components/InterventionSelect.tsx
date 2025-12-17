@@ -1,8 +1,9 @@
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, useMemo } from 'react';
 import { MenuItem, Select, Theme, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../domains/messages';
+import { sortByStringProp } from '../domains/planning/libs/list-utils';
 import { Intervention } from '../domains/planning/types/interventions';
 
 const styles: SxStyles = {
@@ -35,26 +36,31 @@ export const InterventionSelect: FunctionComponent<Props> = ({
         onInterventionSelect(event.target.value ?? 0);
     };
 
-    return interventions && interventions.length > 0 ? (
+    const sortedInterventions = useMemo(
+        () => (interventions ? sortByStringProp(interventions, 'name') : []),
+        [interventions],
+    );
+
+    return sortedInterventions && sortedInterventions.length > 0 ? (
         <Select
             value={selectedInterventionId}
             onChange={handleSelectedPlanChange}
             displayEmpty
             sx={styles.select}
         >
-            {interventions.length > 1 && (
+            {sortedInterventions.length > 1 && (
                 <MenuItem value={0}>
                     <Typography variant="body2">
                         {formatMessage(MESSAGES.allInterventions)}
                     </Typography>
                 </MenuItem>
             )}
-            {interventions &&
-                interventions.map(intervention => {
+            {sortedInterventions &&
+                sortedInterventions.map(intervention => {
                     return (
                         <MenuItem key={intervention.id} value={intervention.id}>
                             <Typography variant="body2">
-                                {intervention.name}
+                                {intervention.name} - {intervention.code}
                             </Typography>
                         </MenuItem>
                     );

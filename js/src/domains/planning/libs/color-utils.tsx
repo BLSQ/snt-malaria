@@ -18,8 +18,8 @@ export const INTERVENTION_COLORS = {
 };
 
 export const severityColorRange = [
-    '#ACDF9B',
     '#6BD39D',
+    '#ACDF9B',
     '#F5F1A0',
     '#F2B16E',
     '#E4754F',

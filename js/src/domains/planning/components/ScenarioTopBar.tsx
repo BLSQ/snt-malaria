@@ -168,6 +168,10 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                                     onChange={setFieldValueAndState}
                                     withMarginTop={false}
                                     label={MESSAGES.startYear}
+                                    numberInputOptions={{
+                                        thousandSeparator: '.',
+                                        decimalSeparator: ',',
+                                    }}
                                 />
                             </Box>
                             <Box sx={styles.yearInputWrapper}>
@@ -178,6 +182,10 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                                     onChange={setFieldValueAndState}
                                     withMarginTop={false}
                                     label={MESSAGES.endYear}
+                                    numberInputOptions={{
+                                        thousandSeparator: '.',
+                                        decimalSeparator: ',',
+                                    }}
                                 />
                             </Box>
                             <Button
