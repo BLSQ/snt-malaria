@@ -86,7 +86,7 @@ class BudgetAssumptionsSerializerTests(APITestCase):
         expected_fields = {
             "id",
             "scenario",
-            "intervention",
+            "intervention_code",
             "coverage",
             "divisor",
             "bale_size",
@@ -104,7 +104,7 @@ class BudgetAssumptionsSerializerTests(APITestCase):
 
     def test_missing_fields(self):
         data = {
-            "intervention": 99,
+            "intervention_code": "smth",
             "coverage": "0.80",
             "divisor": "1.00",
             "bale_size": 10,
@@ -121,19 +121,16 @@ class BudgetAssumptionsSerializerTests(APITestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("scenario", serializer.errors)
         self.assertEqual(serializer.errors["scenario"][0], "This field is required.")
-        self.assertEqual(serializer.errors["intervention"][0], 'Invalid pk "99" - object does not exist.')
         # Now provide scenario and test again
         data["scenario"] = self.scenario.id
         serializer = BudgetAssumptionsSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn("intervention", serializer.errors)
-        self.assertEqual(serializer.errors["intervention"][0], 'Invalid pk "99" - object does not exist.')
 
     def test_with_object_instance(self):
         instance = BudgetAssumptions(
             id=1,
             scenario=self.scenario,
-            intervention=self.intervention_vaccination_rts,
+            intervention_code=self.intervention_vaccination_rts.code,
             coverage="0.80",
             divisor="1.00",
             bale_size=10,
@@ -151,7 +148,7 @@ class BudgetAssumptionsSerializerTests(APITestCase):
         data = serializer.data
         self.assertEqual(data["id"], 1)
         self.assertEqual(data["scenario"], self.scenario.id)
-        self.assertEqual(data["intervention"], self.intervention_vaccination_rts.id)
+        self.assertEqual(data["intervention_code"], self.intervention_vaccination_rts.code)
         self.assertEqual(data["coverage"], "0.80")
         self.assertEqual(data["divisor"], "1.00")
         self.assertEqual(data["bale_size"], 10)
@@ -168,7 +165,7 @@ class BudgetAssumptionsSerializerTests(APITestCase):
     def test_valid_data(self):
         data = {
             "scenario": self.scenario.id,
-            "intervention": self.intervention_vaccination_rts.id,
+            "intervention_code": self.intervention_vaccination_rts.code,
             "coverage": "0.80",
             "divisor": "1.00",
             "bale_size": 10,
@@ -187,7 +184,7 @@ class BudgetAssumptionsSerializerTests(APITestCase):
         instance = serializer.save()
         self.assertIsNotNone(instance.id)
         self.assertEqual(instance.scenario.id, self.scenario.id)
-        self.assertEqual(instance.intervention.id, self.intervention_vaccination_rts.id)
+        self.assertEqual(instance.intervention_code, self.intervention_vaccination_rts.code)
         self.assertEqual(str(instance.coverage), "0.80")
         self.assertEqual(str(instance.divisor), "1.00")
         self.assertEqual(instance.bale_size, 10)
@@ -204,7 +201,7 @@ class BudgetAssumptionsSerializerTests(APITestCase):
     def test_valid_data_with_id(self):
         model = BudgetAssumptions.objects.create(
             scenario=self.scenario,
-            intervention=self.intervention_vaccination_rts2,
+            intervention_code=self.intervention_vaccination_rts2.code,
             coverage="0.75",
             divisor="1.00",
             bale_size=10,
@@ -222,7 +219,7 @@ class BudgetAssumptionsSerializerTests(APITestCase):
         data = {
             "id": model.id,
             "scenario": self.scenario.id,
-            "intervention": self.intervention_vaccination_rts.id,
+            "intervention_code": self.intervention_vaccination_rts.code,
             "coverage": "0.80",
             "divisor": "1.00",
             "bale_size": 10,
@@ -242,7 +239,7 @@ class BudgetAssumptionsSerializerTests(APITestCase):
         self.assertIsNotNone(instance.id)
         self.assertEqual(instance.id, model.id)
         self.assertEqual(instance.scenario.id, self.scenario.id)
-        self.assertEqual(instance.intervention.id, self.intervention_vaccination_rts.id)
+        self.assertEqual(instance.intervention_code, self.intervention_vaccination_rts.code)
         self.assertEqual(str(instance.coverage), "0.80")
         self.assertEqual(str(instance.divisor), "1.00")
         self.assertEqual(instance.bale_size, 10)
@@ -287,7 +284,7 @@ class BudgetAssumptionsWriteSerializerTests(APITestCase):
 
     def test_missing_scenario(self):
         data = {
-            "intervention": self.intervention_vaccination_rts.id,
+            "intervention_code": self.intervention_vaccination_rts.code,
             "coverage": "0.80",
             "divisor": "1.00",
             "bale_size": 10,
@@ -322,34 +319,13 @@ class BudgetAssumptionsWriteSerializerTests(APITestCase):
         }
         serializer = BudgetAssumptionsWriteSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn("intervention", serializer.errors)
-        self.assertEqual(serializer.errors["intervention"][0], "This field is required.")
-
-    def test_invalid_intervention(self):
-        data = {
-            "scenario": self.scenario.id,
-            "intervention": 9999,
-            "coverage": "0.80",
-            "divisor": "1.00",
-            "bale_size": 10,
-            "buffer_mult": "1.20",
-            "doses_per_pw": 2,
-            "age_string": "3-59",
-            "pop_prop_3_11": "0.10",
-            "pop_prop_12_59": "0.50",
-            "monthly_rounds": 3,
-            "touchpoints": 2,
-            "doses_per_child": 6,
-        }
-        serializer = BudgetAssumptionsWriteSerializer(data=data)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("intervention", serializer.errors)
-        self.assertEqual(serializer.errors["intervention"][0], 'Invalid pk "9999" - object does not exist.')
+        self.assertIn("intervention_code", serializer.errors)
+        self.assertEqual(serializer.errors["intervention_code"][0], "This field is required.")
 
     def test_invalid_scenario(self):
         data = {
             "scenario": 9999,
-            "intervention": self.intervention_vaccination_rts.id,
+            "intervention_code": self.intervention_vaccination_rts.code,
             "coverage": "0.80",
             "divisor": "1.00",
             "bale_size": 10,
@@ -370,7 +346,7 @@ class BudgetAssumptionsWriteSerializerTests(APITestCase):
     def test_invalid_fields(self):
         data = {
             "scenario": self.scenario.id,
-            "intervention": self.intervention_vaccination_rts.id,
+            "intervention_code": self.intervention_vaccination_rts.code,
             "coverage": "1.50",  # Invalid: greater than 1
             "divisor": "-0.10",  # Invalid: less than 0
             "bale_size": 1000,  # Invalid: greater than max_value
@@ -396,7 +372,7 @@ class BudgetAssumptionsWriteSerializerTests(APITestCase):
     def test_valid_data(self):
         data = {
             "scenario": self.scenario.id,
-            "intervention": self.intervention_vaccination_rts.id,
+            "intervention_code": self.intervention_vaccination_rts.code,
             "coverage": "0.80",
             "divisor": "1.00",
             "bale_size": 10,
@@ -415,7 +391,7 @@ class BudgetAssumptionsWriteSerializerTests(APITestCase):
         instance = serializer.save()
         self.assertIsNotNone(instance.id)
         self.assertEqual(instance.scenario.id, self.scenario.id)
-        self.assertEqual(instance.intervention.id, self.intervention_vaccination_rts.id)
+        self.assertEqual(instance.intervention_code, self.intervention_vaccination_rts.code)
         self.assertEqual(str(instance.coverage), "0.80")
         self.assertEqual(str(instance.divisor), "1.00")
         self.assertEqual(instance.bale_size, 10)

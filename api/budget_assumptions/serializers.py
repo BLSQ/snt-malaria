@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
 from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
-from plugins.snt_malaria.models.intervention import Intervention
 from plugins.snt_malaria.models.scenario import Scenario
 
 
@@ -15,7 +14,7 @@ class BudgetAssumptionsSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "scenario",
-            "intervention",
+            "intervention_code",
             "coverage",
             "divisor",
             "bale_size",
@@ -33,7 +32,7 @@ class BudgetAssumptionsSerializer(serializers.ModelSerializer):
 
 class BudgetAssumptionsWriteSerializer(serializers.ModelSerializer):
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.all())
-    intervention = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all())
+    intervention_code = serializers.CharField(max_length=100)
 
     divisor = serializers.DecimalField(min_value=0, max_value=9, max_digits=3, decimal_places=2)
     bale_size = serializers.IntegerField(min_value=0, max_value=999)
@@ -53,7 +52,7 @@ class BudgetAssumptionsWriteSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "scenario",
-            "intervention",
+            "intervention_code",
             "coverage",
             "divisor",
             "bale_size",

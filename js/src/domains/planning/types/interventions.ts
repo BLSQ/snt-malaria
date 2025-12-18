@@ -48,7 +48,7 @@ export type InterventionOrgUnit = {
 
 export type BudgetAssumptions = {
     id: number;
-    intervention: number;
+    intervention_code: string;
     scenario: number;
     coverage: number;
     buffer_mult: number;

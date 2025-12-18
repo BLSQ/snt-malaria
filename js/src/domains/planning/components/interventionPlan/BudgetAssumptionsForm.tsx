@@ -9,7 +9,7 @@ import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { useSaveBudgetAssumptions } from '../../hooks/useSaveBudgetAssumptions';
-import { Intervention, BudgetAssumptions } from '../../types/interventions';
+import { BudgetAssumptions } from '../../types/interventions';
 
 const styles: SxStyles = {
     inputRow: {
@@ -27,13 +27,11 @@ const styles: SxStyles = {
 
 type Props = {
     scenarioId: number;
-    intervention: Intervention;
     budgetAssumptions: BudgetAssumptions;
 };
 
 export const BudgetAssumptionsForm: FC<Props> = ({
     scenarioId,
-    intervention,
     budgetAssumptions,
 }) => {
     const percentageNumberOptions = { suffix: '%', decimalScale: 0 };
@@ -43,10 +41,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
         isLoading: isSavingBudgetAssumptions,
     } = useSaveBudgetAssumptions(scenarioId);
 
-    const descriptionMessageKey = useMemo(
-        () => `budgetAssumptionsDescription_${intervention.code}`,
-        [intervention],
-    );
+    const descriptionMessageKey = `budgetAssumptionsDescription_${budgetAssumptions.intervention_code}`;
     const getMinMessage = useCallback(
         (min: number) =>
             formatMessage(MESSAGES.budgetAssumptionsMinValue, { min }),
@@ -58,7 +53,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
         [formatMessage],
     );
     const validationSchema = useMemo(() => {
-        switch (intervention.code) {
+        switch (budgetAssumptions.intervention_code) {
             case 'itn_campaign':
                 return Yup.object().shape({
                     coverage: Yup.number()
@@ -143,7 +138,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
             default:
                 return null;
         }
-    }, [intervention, getMinMessage, getMaxMessage]);
+    }, [budgetAssumptions, getMinMessage, getMaxMessage]);
 
     const {
         values,

@@ -3,6 +3,7 @@ from rest_framework import status
 from iaso.models import Account, MetricType, MetricValue, OrgUnit, OrgUnitType
 from iaso.test import APITestCase
 from plugins.snt_malaria.models import Intervention, InterventionAssignment, InterventionCategory, Scenario
+from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 from plugins.snt_malaria.models.budget_settings import BudgetSettings
 from plugins.snt_malaria.models.cost_breakdown import InterventionCostBreakdownLine
 
@@ -265,3 +266,95 @@ class ScenarioAPITestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("scenario", response.data)
+
+    # Not goind to far into detailed testing of the budget calculator here,
+    # just a basic test to ensure assumptions are applied correctly
+    def test_calculate_budget_with_assumptions(self):
+        """Test calculate_budget endpoint with mocked CSV data and budget calculation"""
+        # Create MetricType for population
+        metric_type_population = MetricType.objects.create(
+            account=self.account,
+            name="Total Population",
+            code="POPULATION",
+            description="Total population data",
+            units="people",
+        )
+        metric_type_pop_under_5 = MetricType.objects.create(
+            account=self.account,
+            name="Total Population",
+            code="POP_UNDER_5",
+            description="Population under 5 year",
+            units="child",
+        )
+
+        # Create MetricValues for the org units (district1 and district2)
+        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district1, value=10000000)
+        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district2, value=15000000)
+        MetricValue.objects.create(metric_type=metric_type_pop_under_5, org_unit=self.district1, value=100000)
+        MetricValue.objects.create(metric_type=metric_type_pop_under_5, org_unit=self.district2, value=150000)
+
+        # Create SMC intervention assignment for district1
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_chemo_smc,
+            created_by=self.user,
+        )
+
+        BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_code="smc",
+            coverage=0.8,
+            divisor=0,
+            bale_size=0,
+            buffer_mult=1.1,
+            doses_per_pw=0,
+            age_string="",
+            pop_prop_3_11=0.18,
+            pop_prop_12_59=0.77,
+            monthly_rounds=4,
+            touchpoints=0,
+            tablet_factor=0.0,
+            doses_per_child=0,
+        )
+
+        url = f"{BASE_URL}?scenario_id={self.scenario.id}"
+        response = self.client.post(url, {"scenario": self.scenario.id}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Response should be a list of budgets by year (2025, 2026, 2027)
+        self.assertEqual(len(response.data), 7)
+
+        # Check first year (2025)
+        budget_2025 = response.data["results"][0]
+        self.assertEqual(budget_2025["year"], 2025)
+        self.assertEqual(response.data["scenario"], self.scenario.id)
+        self.assertIn("interventions", budget_2025)
+        self.assertIn("org_units_costs", budget_2025)
+
+        # Find SMC intervention in the budget
+        smc_intervention = next(
+            intervention for intervention in budget_2025["interventions"] if intervention["code"] == "smc"
+        )
+
+        self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
+        self.assertAlmostEqual(smc_intervention["total_cost"], 1009800.0 * 0.8)
+        self.assertAlmostEqual(smc_intervention["total_pop"], 237500.0 * 0.8)
+        self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
+        self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
+        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["cost"], 1009800.0 * 0.8)
+        # Find Org unit cost
+        smc_org_unit_costs = None
+        for org_unit_costs in budget_2025["org_units_costs"]:
+            if org_unit_costs["org_unit_id"] == self.district1.id:
+                smc_org_unit_costs = org_unit_costs
+                break
+
+        self.assertIsNotNone(smc_org_unit_costs)
+        self.assertAlmostEqual(smc_org_unit_costs["total_cost"], 403920.0 * 0.8)
+        self.assertEqual(len(smc_org_unit_costs["interventions"]), 1)
+        self.assertEqual(smc_org_unit_costs["interventions"][0]["code"], "smc")
+        self.assertEqual(smc_org_unit_costs["interventions"][0]["type"], "SMC")
+        self.assertAlmostEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 403920.0 * 0.8)
+        self.assertEqual(smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id)
