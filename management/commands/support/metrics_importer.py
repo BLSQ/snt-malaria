@@ -84,7 +84,6 @@ class MetricsImporter:
 
     def _process_population_metrics_import(self, pop_dataset_file_path):
         self._validate_csv_files(None, pop_dataset_file_path)
-        self.stdout_write("Creating MetricTypes from population dataset file...")
         with open(pop_dataset_file_path, newline="", encoding="utf-8") as pop_dataset_file:
             self.stdout_write("Creating MetricTypes from population dataset file...")
             pop_metric_types = self._create_pop_metric_types(pop_dataset_file)
