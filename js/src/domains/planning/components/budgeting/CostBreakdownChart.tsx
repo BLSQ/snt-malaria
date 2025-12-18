@@ -29,7 +29,7 @@ const styles: SxStyles = {
     mainBox: {
         borderRadius: theme => theme.spacing(2),
         overflow: 'hidden',
-        height: '493px',
+        height: '600px',
         position: 'relative',
     },
     card: { height: '100%', display: 'flex', flexDirection: 'column' },
@@ -54,9 +54,10 @@ export const CostBreakdownChart: FC<Props> = ({ interventionBudgets }) => {
     const { formatMessage } = useSafeIntl();
     const { data: interventionCostCategories = [] } =
         useGetInterventionCostBreakdownLineCategories();
-    const data = useMemo(() => {
-        return getCostBreakdownChartData(interventionBudgets);
-    }, [interventionBudgets]);
+    const data = useMemo(
+        () => getCostBreakdownChartData(interventionBudgets),
+        [interventionBudgets],
+    );
 
     const barsConfig = useMemo(() => {
         if (!interventionCostCategories) {
@@ -67,6 +68,7 @@ export const CostBreakdownChart: FC<Props> = ({ interventionBudgets }) => {
             color: LEGEND_COLORS[index],
             label: c.label,
             key: c.value,
+            stackId: 'cost_categories',
         }));
     }, [interventionCostCategories]);
 
@@ -80,20 +82,22 @@ export const CostBreakdownChart: FC<Props> = ({ interventionBudgets }) => {
                 <Divider />
                 <CardContent sx={styles.cardContent}>
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={data}>
+                        <BarChart data={data} layout="vertical" barSize={15}>
                             <XAxis
-                                dataKey="interventionType"
-                                axisLine={false}
-                                tickLine={false}
-                            />
-                            <YAxis
                                 axisLine={false}
                                 tickLine={false}
                                 tickFormatter={formatBigNumber}
-                                width={70}
+                                type="number"
+                            />
+                            <YAxis
+                                dataKey={'interventionType'}
+                                axisLine={false}
+                                tickLine={false}
+                                width={150}
+                                type="category"
                             />
                             <CartesianGrid
-                                vertical={false}
+                                vertical={true}
                                 strokeDasharray="1"
                             />
                             <Tooltip
@@ -108,8 +112,7 @@ export const CostBreakdownChart: FC<Props> = ({ interventionBudgets }) => {
                                     dataKey={bar.key}
                                     fill={bar.color}
                                     key={bar.key}
-                                    barSize={18}
-                                    stackId="a"
+                                    stackId={bar.stackId}
                                     name={bar.label}
                                 />
                             ))}

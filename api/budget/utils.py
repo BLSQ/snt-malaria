@@ -126,7 +126,7 @@ def build_cost_dataframe(account, start_year, end_year):
             cost_lines_data.append(
                 {
                     "code_intervention": line.intervention.code,
-                    "type_intervention": line.intervention.name,
+                    "type_intervention": line.intervention.short_name,
                     "cost_class": line.get_category_display(),
                     "description": line.intervention.description,
                     "unit": line.get_unit_type_display(),
@@ -200,7 +200,7 @@ def build_interventions_input(scenario):
 
     for assignment in assignments:
         intervention_code = assignment.intervention.code
-        intervention_type = assignment.intervention.name
+        intervention_type = assignment.intervention.short_name
         intervention_id = assignment.intervention.id
         org_unit_id = assignment.org_unit.id
 

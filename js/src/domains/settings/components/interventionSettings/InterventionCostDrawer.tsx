@@ -51,11 +51,7 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                 sx={styles.drawer}
             >
                 <DrawerHeader
-                    title={
-                        intervention
-                            ? `${intervention.name} - ${intervention.code}`
-                            : ''
-                    }
+                    title={intervention ? `${intervention.short_name}` : ''}
                     onClose={onClose}
                 />
                 {isFetchingCosts ? (

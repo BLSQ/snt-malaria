@@ -1,6 +1,5 @@
 from django.contrib.auth.models import User
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 from iaso.models import OrgUnit
 from iaso.utils.models.soft_deletable import (
@@ -19,6 +18,7 @@ class InterventionCategory(SoftDeletableModel):
     account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
+    short_name = models.CharField(max_length=100, null=True, blank=True)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -36,6 +36,7 @@ class Intervention(SoftDeletableModel):
     intervention_category = models.ForeignKey(InterventionCategory, on_delete=models.PROTECT)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
+    short_name = models.CharField(max_length=100, null=True, blank=True)
     code = models.CharField(max_length=50)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
