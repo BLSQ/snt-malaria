@@ -33,8 +33,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Validate arguments and get OpenHEXA configuration
-        account, openhexa_url, openhexa_token, workspace_slug, workspace, dataset_slug = self._validate_arguments(
-            options
+        account, openhexa_url, openhexa_token, workspace_slug, workspace, dataset_slug, pop_dataset_slug = (
+            self._validate_arguments(options)
         )
         openhexa_client = self._setup_openhexa_client(openhexa_url, openhexa_token)
 
@@ -45,9 +45,18 @@ class Command(BaseCommand):
 
         # Download CSV files and ensure cleanup
         file_downloader = FileDownloader(openhexa_client, self.stdout.write)
-        metadata_path, dataset_path = file_downloader.download_csv_files(dataset_info["files"])
+        dataset_path = file_downloader.download_csv_files(dataset_info["files"], "dataset")
+        metadata_path = file_downloader.download_csv_files(dataset_info["files"], "metadata")
+
+        # Same for population dataset
+        pop_dataset_path = None
+        if pop_dataset_slug:
+            pop_dataset_info = self._fetch_dataset_info(openhexa_client, workspace_slug, pop_dataset_slug)
+            self._display_dataset_summary(pop_dataset_info, pop_dataset_info["files"])
+            pop_dataset_path = file_downloader.download_csv_files(pop_dataset_info["files"], "population")
+
         try:
-            self._import_metrics(account, metadata_path, dataset_path)
+            self._import_metrics(account, metadata_path, dataset_path, pop_dataset_path)
         finally:
             # Clean up temporary files
             self._cleanup_temp_file(metadata_path)
@@ -92,10 +101,19 @@ class Command(BaseCommand):
                 f'Expected format: {{"snt_results_dataset": "dataset-slug"}}'
             )
 
+        pop_dataset_slug = workspace.config.get("snt_population_dataset")
+        if not pop_dataset_slug:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"OpenHEXA workspace '{workspace_slug}' configuration is missing 'snt_population_dataset' key. "
+                    f'Expected format: {{"snt_population_dataset": "dataset-slug"}}'
+                )
+            )
+
         self.stdout.write(f"Using workspace slug: {workspace_slug}")
         self.stdout.write(f"Using dataset slug: {dataset_slug}")
 
-        return account, openhexa_url, openhexa_token, workspace_slug, workspace, dataset_slug
+        return account, openhexa_url, openhexa_token, workspace_slug, workspace, dataset_slug, pop_dataset_slug
 
     def _setup_openhexa_client(self, openhexa_url, openhexa_token):
         """Initialize OpenHEXA client with validated URL and token."""
@@ -135,10 +153,10 @@ class Command(BaseCommand):
         metadata = {"dataset": dataset_info["dataset"], "version": dataset_info["version"], "files": files}
         self.stdout.write(self._format_as_table(metadata))
 
-    def _import_metrics(self, account, metadata_path, dataset_path):
+    def _import_metrics(self, account, metadata_path, dataset_path, pop_dataset_path=None):
         self.stdout.write(f"Starting metrics import for account {account.name} ({account.pk})...")
         metrics_importer = MetricsImporter(account, self.style, self.stdout.write)
-        metrics_importer.import_metrics(metadata_path, dataset_path)
+        metrics_importer.import_metrics(metadata_path, dataset_path, pop_dataset_path)
 
     def _cleanup_temp_file(self, file_path):
         try:

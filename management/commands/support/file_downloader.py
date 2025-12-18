@@ -12,7 +12,7 @@ class FileDownloader:
         self.openhexa_client = openhexa_client
         self.stdout_write = stdout_writer or print
 
-    def download_csv_files(self, files):
+    def download_csv_files(self, files, filename_suffix):
         """Download metadata and dataset CSV files to temporary files.
 
         Args:
@@ -28,20 +28,12 @@ class FileDownloader:
             raise CommandError("No files available for download")
 
         # Find the required CSV files
-        metadata_file_info = self._find_csv_file(files, "*metadata.csv")
-        dataset_file_info = self._find_csv_file(files, "*dataset.csv")
-
-        self.stdout_write(f"Found metadata file: {metadata_file_info['filename']}")
-        self.stdout_write(f"Found dataset file: {dataset_file_info['filename']}")
-
+        file_info = self._find_csv_file(files, f"*{filename_suffix}.csv")
+        self.stdout_write(f"Found dataset file: {file_info['filename']}")
         # Download to temporary files
-        metadata_path = self._download_to_temp_file(metadata_file_info, "metadata")
-        dataset_path = self._download_to_temp_file(dataset_file_info, "dataset")
-
-        self.stdout_write(f"Downloaded metadata to: {metadata_path}")
-        self.stdout_write(f"Downloaded dataset to: {dataset_path}")
-
-        return metadata_path, dataset_path
+        file_path = self._download_to_temp_file(file_info, "dataset")
+        self.stdout_write(f"Downloaded dataset to: {file_path}")
+        return file_path
 
     def _find_csv_file(self, files, pattern):
         pattern_suffix = pattern.replace("*", "")
