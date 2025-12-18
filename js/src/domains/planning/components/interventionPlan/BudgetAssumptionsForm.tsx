@@ -41,11 +41,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
         isLoading: isSavingBudgetAssumptions,
     } = useSaveBudgetAssumptions(scenarioId);
 
-    const descriptionMessageKey = useMemo(
-        () =>
-            `budgetAssumptionsDescription_${budgetAssumptions.intervention_code}`,
-        [budgetAssumptions.intervention_code],
-    );
+    const descriptionMessageKey = `budgetAssumptionsDescription_${budgetAssumptions.intervention_code}`;
     const getMinMessage = useCallback(
         (min: number) =>
             formatMessage(MESSAGES.budgetAssumptionsMinValue, { min }),
