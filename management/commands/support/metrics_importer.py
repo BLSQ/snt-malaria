@@ -158,7 +158,6 @@ class MetricsImporter:
         csvreader = csv.DictReader(pop_dataset_file)
         pop_metric_types = {}
 
-        csvreader.fieldnames
         columns = (
             col
             for col in csvreader.fieldnames
