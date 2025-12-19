@@ -93,6 +93,7 @@ export const OrgUnitCostMap: FC<Props> = ({ orgUnitCosts, orgUnits }) => {
                       [oui.id]: {
                           code: oui.code,
                           name: oui.type,
+                          short_name: oui.type,
                           id: oui.id,
                       },
                   };
