@@ -19,6 +19,12 @@ const styles: SxStyles = {
         gap: 2,
         marginBottom: 2,
     },
+    formWrapper: {
+        maxHeight: '100%',
+        overflowY: 'auto',
+        mb: 2,
+        pt: 1,
+    },
     inputWrapper: {
         minWidth: '99px',
         width: '99px',
@@ -177,7 +183,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
     return (
         validationSchema && (
             <>
-                <Box>
+                <Box sx={styles.formWrapper}>
                     <Box sx={styles.inputRow}>
                         {validationSchema.fields.pop_prop_3_11 && (
                             <InputComponent
@@ -321,13 +327,20 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                         />
                     </Box>
                     <Box>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ mb: 1 }}
+                        >
                             {formatMessage(MESSAGES[descriptionMessageKey], {
                                 b: chunks => <strong>{chunks}</strong>,
                                 li: chunks => <li>{chunks}</li>,
                                 ul: chunks => <ul>{chunks}</ul>,
                                 br: () => <br />,
                             })}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {formatMessage(MESSAGES.budgetAssumptionsPath)}
                         </Typography>
                     </Box>
                 </Box>
