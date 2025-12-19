@@ -43,10 +43,16 @@ class MetricsImporter:
             self.stdout_write(f"Using metadata file: {metadata_file_path}")
             self.stdout_write(f"Using dataset file: {dataset_file_path}")
 
+            account_org_units = OrgUnit.objects.filter(
+                version__account=self.account, version=self.account.default_version
+            )
+
             # Import the metrics
-            metrics_count = self._process_metrics_import(metadata_file_path, dataset_file_path)
+            metrics_count = self._process_metrics_import(metadata_file_path, dataset_file_path, account_org_units)
             popmetrics_count = (
-                self._process_population_metrics_import(pop_dataset_file_path) if pop_dataset_file_path else 0
+                self._process_population_metrics_import(pop_dataset_file_path, account_org_units)
+                if pop_dataset_file_path
+                else 0
             )
             return metrics_count + popmetrics_count
 
@@ -82,19 +88,19 @@ class MetricsImporter:
 
         self.stdout_write("CSV file validation passed")
 
-    def _process_population_metrics_import(self, pop_dataset_file_path):
+    def _process_population_metrics_import(self, pop_dataset_file_path, account_org_units):
         self._validate_csv_files(None, pop_dataset_file_path)
         with open(pop_dataset_file_path, newline="", encoding="utf-8") as pop_dataset_file:
             self.stdout_write("Creating MetricTypes from population dataset file...")
             pop_metric_types = self._create_pop_metric_types(pop_dataset_file)
             self.stdout_write("Reading values from population dataset file...")
-            pop_value_count = self._create_metric_values(pop_dataset_file, pop_metric_types)
+            pop_value_count = self._create_metric_values(pop_dataset_file, pop_metric_types, account_org_units)
 
         self.stdout_write(self.style.SUCCESS("Metrics population import completed successfully!"))
 
         return pop_value_count
 
-    def _process_metrics_import(self, metadata_file_path, dataset_file_path):
+    def _process_metrics_import(self, metadata_file_path, dataset_file_path, account_org_units):
         # Validate CSV files first
         self._validate_csv_files(metadata_file_path, dataset_file_path)
 
@@ -109,8 +115,7 @@ class MetricsImporter:
 
         self.stdout_write("Reading values from dataset file...")
         with open(dataset_file_path, newline="", encoding="utf-8") as csvfile:
-            value_count = self._create_metric_values(csvfile, metric_types)
-
+            value_count = self._create_metric_values(csvfile, metric_types, account_org_units)
         self.stdout_write("Adding threshold scales...")
         self._configure_legends()
 
@@ -181,7 +186,7 @@ class MetricsImporter:
         pop_dataset_file.seek(0)
         return pop_metric_types
 
-    def _create_metric_values(self, csvfile, metric_types):
+    def _create_metric_values(self, csvfile, metric_types, account_org_units):
         csvreader = csv.DictReader(csvfile)
 
         try:
@@ -192,10 +197,7 @@ class MetricsImporter:
                     row_count += 1
                     try:
                         # Get the OrgUnit by source_ref using ADM2_ID
-                        org_unit = OrgUnit.objects.get(
-                            version=self.account.default_version,
-                            source_ref=row["ADM2_ID"],
-                        )
+                        org_unit = next(ou for ou in account_org_units if ou.source_ref == row["ADM2_ID"])
                     except OrgUnit.DoesNotExist:
                         self.stdout_write(f"Row {row_count}: OrgUnit not found for source_ref: {row['ADM2_ID']}")
                         continue
