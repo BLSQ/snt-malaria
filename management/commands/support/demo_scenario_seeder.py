@@ -3,6 +3,7 @@ Create a demo scenario with intervention assignments for Burkina Faso
 """
 
 import random
+
 from datetime import date
 
 from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS, BudgetCalculator
@@ -30,7 +31,7 @@ class DemoScenarioSeeder:
         # Check if a demo scenario already exists
         if Scenario.objects.filter(account=self.account, name__icontains="Demo").exists():
             self.stdout_write(f"Skipping scenario creation for {self.account.name}, demo scenario already exists")
-            return
+            return None
 
         self.stdout_write(f"Creating demo scenario for account {self.account.name}:")
 
@@ -38,7 +39,7 @@ class DemoScenarioSeeder:
         created_by = User.objects.filter(iaso_profile__account=self.account).first()
         if not created_by:
             self.stdout_write("ERROR: No user found for this account")
-            return
+            return None
 
         # Create the demo scenario
         current_year = date.today().year
@@ -63,7 +64,7 @@ class DemoScenarioSeeder:
 
         if not interventions.exists():
             self.stdout_write("WARNING: No interventions found for this account. Run intervention_seeder first.")
-            return
+            return None
 
         # Get all org units with geometry from the account's default version
         # We only want org units that have a geometry (can be displayed on a map)
@@ -75,7 +76,7 @@ class DemoScenarioSeeder:
 
         if not org_units.exists():
             self.stdout_write("WARNING: No valid org units with geometry found for this account")
-            return
+            return None
 
         self.stdout_write(
             f"Found {interventions.count()} interventions and {org_units.count()} org units with geometry"
@@ -84,7 +85,8 @@ class DemoScenarioSeeder:
         # Categories to assign across the whole country
         categories_to_assign = [
             "Case Management",
-            "IPTp, PMC & SMC",
+            "IPTp",
+            "PMC & SMC",
             "ITN Campaign",
             "Vaccination",
         ]
