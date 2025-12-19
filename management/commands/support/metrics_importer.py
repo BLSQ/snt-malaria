@@ -47,10 +47,12 @@ class MetricsImporter:
                 version__account=self.account, version=self.account.default_version
             )
 
+            org_units_mapping = {ou.source_ref: ou for ou in account_org_units}
+
             # Import the metrics
-            metrics_count = self._process_metrics_import(metadata_file_path, dataset_file_path, account_org_units)
+            metrics_count = self._process_metrics_import(metadata_file_path, dataset_file_path, org_units_mapping)
             popmetrics_count = (
-                self._process_population_metrics_import(pop_dataset_file_path, account_org_units)
+                self._process_population_metrics_import(pop_dataset_file_path, org_units_mapping)
                 if pop_dataset_file_path
                 else 0
             )
@@ -88,19 +90,19 @@ class MetricsImporter:
 
         self.stdout_write("CSV file validation passed")
 
-    def _process_population_metrics_import(self, pop_dataset_file_path, account_org_units):
+    def _process_population_metrics_import(self, pop_dataset_file_path, org_units_mapping):
         self._validate_csv_files(None, pop_dataset_file_path)
         with open(pop_dataset_file_path, newline="", encoding="utf-8") as pop_dataset_file:
             self.stdout_write("Creating MetricTypes from population dataset file...")
             pop_metric_types = self._create_pop_metric_types(pop_dataset_file)
             self.stdout_write("Reading values from population dataset file...")
-            pop_value_count = self._create_metric_values(pop_dataset_file, pop_metric_types, account_org_units)
+            pop_value_count = self._create_metric_values(pop_dataset_file, pop_metric_types, org_units_mapping)
 
         self.stdout_write(self.style.SUCCESS("Metrics population import completed successfully!"))
 
         return pop_value_count
 
-    def _process_metrics_import(self, metadata_file_path, dataset_file_path, account_org_units):
+    def _process_metrics_import(self, metadata_file_path, dataset_file_path, org_units_mapping):
         # Validate CSV files first
         self._validate_csv_files(metadata_file_path, dataset_file_path)
 
@@ -115,7 +117,7 @@ class MetricsImporter:
 
         self.stdout_write("Reading values from dataset file...")
         with open(dataset_file_path, newline="", encoding="utf-8") as csvfile:
-            value_count = self._create_metric_values(csvfile, metric_types, account_org_units)
+            value_count = self._create_metric_values(csvfile, metric_types, org_units_mapping)
         self.stdout_write("Adding threshold scales...")
         self._configure_legends()
 
@@ -186,7 +188,7 @@ class MetricsImporter:
         pop_dataset_file.seek(0)
         return pop_metric_types
 
-    def _create_metric_values(self, csvfile, metric_types, account_org_units):
+    def _create_metric_values(self, csvfile, metric_types, org_units_mapping):
         csvreader = csv.DictReader(csvfile)
 
         try:
@@ -197,7 +199,7 @@ class MetricsImporter:
                     row_count += 1
                     try:
                         # Get the OrgUnit by source_ref using ADM2_ID
-                        org_unit = next(ou for ou in account_org_units if ou.source_ref == row["ADM2_ID"])
+                        org_unit = org_units_mapping.get(row["ADM2_ID"])
                     except OrgUnit.DoesNotExist:
                         self.stdout_write(f"Row {row_count}: OrgUnit not found for source_ref: {row['ADM2_ID']}")
                         continue
