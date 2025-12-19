@@ -52,7 +52,7 @@ const styles: SxStyles = {
         borderRadius: 0.5,
     },
     legendItem: {
-        minWidth: '120px',
+        minWidth: '130px',
     },
 };
 
