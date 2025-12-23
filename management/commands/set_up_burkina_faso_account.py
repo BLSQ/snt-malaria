@@ -129,7 +129,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f"Failed to import metrics data: {e}"))
                 raise
 
-            # Seed interventions
+            # Seed interventions and intervention costs
             InterventionSeeder(account, self.stdout.write).create_interventions()
 
             self.stdout.write(self.style.SUCCESS("Setup completed successfully!"))

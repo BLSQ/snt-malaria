@@ -16,7 +16,8 @@ from plugins.snt_malaria.models.intervention import Intervention, InterventionAs
 # Alias for brevity
 CostCategory = InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory
 
-CURRENT_YEAR = date.today().year
+# Hard code for now to match InterventionSettings.tsx startYear
+COST_YEAR = 2024
 
 CATEGORIES_AND_INTERVENTIONS = {
     "Case Management": {
@@ -49,14 +50,14 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_cost": "0.51",
                         "unit_type": InterventionCostUnitType.PER_SP,
                         "category": CostCategory.PROCUREMENT,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                     {
                         "name": "IPTp (SP) Distribution",
                         "unit_cost": "0.13",
                         "unit_type": InterventionCostUnitType.PER_SP,
                         "category": CostCategory.DELIVERY,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                 ],
             },
@@ -75,14 +76,14 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_cost": "0.20",
                         "unit_type": InterventionCostUnitType.PER_SP,
                         "category": CostCategory.PROCUREMENT,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                     {
                         "name": "PMC (SP) Operational",
                         "unit_cost": "0.08",
                         "unit_type": InterventionCostUnitType.PER_CHILD,
                         "category": CostCategory.OPERATIONAL,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                 ],
             },
@@ -98,21 +99,21 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_cost": "0.24",
                         "unit_type": InterventionCostUnitType.PER_SPAQ_3_11_MONTHS,
                         "category": CostCategory.PROCUREMENT,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                     {
                         "name": "SMC (SP+AQ) Procurement",
                         "unit_cost": "0.27",
                         "unit_type": InterventionCostUnitType.PER_SPAQ_12_59_MONTHS,
                         "category": CostCategory.PROCUREMENT,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                     {
                         "name": "SMC (SP+AQ) Operational",
                         "unit_cost": "1.33",
                         "unit_type": InterventionCostUnitType.PER_CHILD,
                         "category": CostCategory.OPERATIONAL,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                 ],
             },
@@ -131,14 +132,14 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_cost": "3.49",
                         "unit_type": InterventionCostUnitType.PER_ITN,
                         "category": CostCategory.PROCUREMENT,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                     {
                         "name": "Dual AI Distribution",
                         "unit_cost": "6.25",
                         "unit_type": InterventionCostUnitType.PER_BALE,
                         "category": CostCategory.DELIVERY,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                 ],
             },
@@ -153,14 +154,14 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_cost": "3.49",
                         "unit_type": InterventionCostUnitType.PER_ITN,
                         "category": CostCategory.PROCUREMENT,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                     {
                         "name": "PBO Distribution",
                         "unit_cost": "6.25",
                         "unit_type": InterventionCostUnitType.PER_BALE,
                         "category": CostCategory.DELIVERY,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                 ],
             },
@@ -175,14 +176,14 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_cost": "0.87",
                         "unit_type": InterventionCostUnitType.PER_ITN,
                         "category": CostCategory.PROCUREMENT,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                     {
                         "name": "Standard Pyrethroid Distribution",
                         "unit_cost": "6.25",
                         "unit_type": InterventionCostUnitType.PER_BALE,
                         "category": CostCategory.DELIVERY,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                 ],
             },
@@ -201,14 +202,14 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_cost": "3.49",
                         "unit_type": InterventionCostUnitType.PER_ITN,
                         "category": CostCategory.PROCUREMENT,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                     {
                         "name": "Dual AI Operational",
                         "unit_cost": "0.36",
                         "unit_type": InterventionCostUnitType.PER_ITN,
                         "category": CostCategory.OPERATIONAL,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                 ],
             },
@@ -223,14 +224,14 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_cost": "0.87",
                         "unit_type": InterventionCostUnitType.PER_ITN,
                         "category": CostCategory.PROCUREMENT,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                     {
                         "name": "PBO Operational",
                         "unit_cost": "0.36",
                         "unit_type": InterventionCostUnitType.PER_ITN,
                         "category": CostCategory.OPERATIONAL,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                 ],
             },
@@ -245,14 +246,14 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_cost": "3.49",
                         "unit_type": InterventionCostUnitType.PER_ITN,
                         "category": CostCategory.PROCUREMENT,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                     {
                         "name": "Standard Pyrethroid Operational",
                         "unit_cost": "0.36",
                         "unit_type": InterventionCostUnitType.PER_ITN,
                         "category": CostCategory.OPERATIONAL,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                 ],
             },
@@ -271,14 +272,14 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_cost": "4.00",
                         "unit_type": InterventionCostUnitType.PER_DOSE,
                         "category": CostCategory.PROCUREMENT,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                     {
                         "name": "R21 Operational",
                         "unit_cost": "1.00",
                         "unit_type": InterventionCostUnitType.PER_CHILD,
                         "category": CostCategory.OPERATIONAL,
-                        "year": CURRENT_YEAR,
+                        "year": COST_YEAR,
                     },
                 ],
             }
@@ -293,338 +294,6 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "cost_settings": [],
             }
         ],
-    },
-}
-
-
-CATEGORIES_AND_INTERVENTIONS_OLD = {
-    "Vaccination": {
-        "interventions": [
-            {
-                "name": "RTS,S",
-                "description": "RTS,S malaria vaccine",
-                "code": "vacc",
-                "cost_settings": [
-                    {
-                        "name": "R21 vaccine procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_DOSE,
-                        "unit_cost": 9.3,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "R21 operational costs",
-                        "category": CostCategory.OPERATIONAL,
-                        "unit_type": InterventionCostUnitType.PER_CHILD,
-                        "unit_cost": 8.5,
-                        "year": CURRENT_YEAR,
-                    },
-                ],
-            },
-        ],
-    },
-    "Preventive Chemotherapy": {
-        "interventions": [
-            {
-                "name": "SMC",
-                "description": "Seasonal Malaria Chemoprevention",
-                "code": "smc",
-                "cost_settings": [
-                    {
-                        "name": "SP+AQ procurement (3-11 month olds)",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_SPAQ_3_11_MONTHS,
-                        "unit_cost": 0.2,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "SP+AQ procurement (12-59 month olds)",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_SPAQ_12_59_MONTHS,
-                        "unit_cost": 0.2,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "Campaign operational costs",
-                        "category": CostCategory.OPERATIONAL,
-                        "unit_type": InterventionCostUnitType.PER_CHILD,
-                        "unit_cost": 5,
-                        "year": CURRENT_YEAR,
-                    },
-                ],
-            },
-            {
-                "name": "PMC",
-                "description": "Perennial Malaria Chemoprevention",
-                "code": "pmc",
-                "cost_settings": [
-                    {
-                        "name": "SP procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_SP,
-                        "unit_cost": 0.3,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "PMC operational costs",
-                        "category": CostCategory.OPERATIONAL,
-                        "unit_type": InterventionCostUnitType.PER_CHILD,
-                        "unit_cost": 3,
-                        "year": CURRENT_YEAR,
-                    },
-                ],
-            },
-            {
-                "name": "IPTp",
-                "description": "Intermittent Preventive Treatment in Pregnancy",
-                "code": "iptp",
-                "cost_settings": [
-                    {
-                        "name": "SP procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_SP,
-                        "unit_cost": 0.4,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "SP distribution",
-                        "category": CostCategory.DELIVERY,
-                        "unit_type": InterventionCostUnitType.PER_SP,
-                        "unit_cost": 0.3,
-                        "year": CURRENT_YEAR,
-                    },
-                ],
-            },
-        ]
-    },
-    "Vector Control": {
-        "interventions": [
-            {
-                "name": "LLIN Routine",
-                "description": "Long-Lasting Insecticidal Nets - Routine",
-                "code": "itn_routine",
-                "cost_settings": [
-                    {
-                        "name": "Dual AI nets procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_ITN,
-                        "unit_cost": 3.5,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "PBO nets procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_ITN,
-                        "unit_cost": 2.8,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "Standard Pyrethroid procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_ITN,
-                        "unit_cost": 2.2,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "Routine distribution operational costs",
-                        "category": CostCategory.OPERATIONAL,
-                        "unit_type": InterventionCostUnitType.PER_ITN,
-                        "unit_cost": 0.8,
-                        "year": CURRENT_YEAR,
-                    },
-                ],
-            },
-            {
-                "name": "LLIN Campaign",
-                "description": "Long-Lasting Insecticidal Nets - Campaign",
-                "code": "itn_campaign",
-                "cost_settings": [
-                    {
-                        "name": "GF procurement cost",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_ITN,
-                        "unit_cost": 2.5,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "PBO nets procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_ITN,
-                        "unit_cost": 2.0,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "Standard Pyrethroid procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_ITN,
-                        "unit_cost": 2.2,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "Moving net from central to regional hubs",
-                        "category": CostCategory.DELIVERY,
-                        "unit_type": InterventionCostUnitType.PER_BALE,
-                        "unit_cost": 1.5,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "Campaign costs",
-                        "category": CostCategory.OPERATIONAL,
-                        "unit_type": InterventionCostUnitType.PER_ITN,
-                        "unit_cost": 0.6,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "Net Storage at GF warehouse per year",
-                        "category": CostCategory.SUPPORTIVE,
-                        "unit_type": InterventionCostUnitType.OTHER,
-                        "unit_cost": 5000,
-                        "year": CURRENT_YEAR,
-                    },
-                ],
-            },
-            {
-                "name": "IRS",
-                "description": "Indoor Residual Spraying",
-                "code": "irs",
-                "cost_settings": [
-                    {
-                        "name": "Actellic 300CS operational costs",
-                        "category": CostCategory.OPERATIONAL,
-                        "unit_type": InterventionCostUnitType.OTHER,
-                        "unit_cost": 8.5,
-                        "year": CURRENT_YEAR,
-                    },
-                ],
-            },
-            {
-                "name": "LSM",
-                "description": "Larval Source Management",
-                "code": "lsm",
-                "cost_settings": [
-                    {
-                        "name": "LSM procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.OTHER,
-                        "unit_cost": 2.5,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "LSM operational costs",
-                        "category": CostCategory.OPERATIONAL,
-                        "unit_type": InterventionCostUnitType.OTHER,
-                        "unit_cost": 3.2,
-                        "year": CURRENT_YEAR,
-                    },
-                ],
-            },
-        ]
-    },
-    "Mass Drug Administration": {
-        "interventions": [
-            {
-                "name": "MDA",
-                "description": "Mass Drug Administration",
-                "code": "mda",
-                "cost_settings": [
-                    {
-                        "name": "MDA drug procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.OTHER,
-                        "unit_cost": 0.75,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "MDA campaign costs",
-                        "category": CostCategory.OPERATIONAL,
-                        "unit_type": InterventionCostUnitType.OTHER,
-                        "unit_cost": 2.5,
-                        "year": CURRENT_YEAR,
-                    },
-                ],
-            },
-        ],
-    },
-    "Case Management": {
-        "interventions": [
-            {
-                "name": "RDTs",
-                "description": "Rapid Diagnostic Tests",
-                "code": "cm",
-                "cost_settings": [
-                    {
-                        "name": "RDT kits procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_RDT_KIT,
-                        "unit_cost": 0.75,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "RDT kits distribution",
-                        "category": CostCategory.DELIVERY,
-                        "unit_type": InterventionCostUnitType.PER_RDT_KIT,
-                        "unit_cost": 0.2,
-                        "year": CURRENT_YEAR,
-                    },
-                ],
-            },
-            {
-                "name": "ACTs",
-                "description": "Artemisin-based Combination Therapy",
-                "code": "cm",
-                "cost_settings": [
-                    {
-                        "name": "AL procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_AL,
-                        "unit_cost": 1.2,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "AL distribution",
-                        "category": CostCategory.DELIVERY,
-                        "unit_type": InterventionCostUnitType.PER_AL,
-                        "unit_cost": 0.3,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "Artesunate injections procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_60MG_POWDER,
-                        "unit_cost": 4.5,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "Artesunate injections distribution",
-                        "category": CostCategory.DELIVERY,
-                        "unit_type": InterventionCostUnitType.PER_60MG_POWDER,
-                        "unit_cost": 1.0,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "RAS procurement",
-                        "category": CostCategory.PROCUREMENT,
-                        "unit_type": InterventionCostUnitType.PER_RAS,
-                        "unit_cost": 2.8,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "RAS distribution",
-                        "category": CostCategory.DELIVERY,
-                        "unit_type": InterventionCostUnitType.PER_RAS,
-                        "unit_cost": 0.6,
-                        "year": CURRENT_YEAR,
-                    },
-                    {
-                        "name": "Fixed operational costs",
-                        "category": CostCategory.OPERATIONAL,
-                        "unit_type": InterventionCostUnitType.OTHER,
-                        "unit_cost": 10000,
-                        "year": CURRENT_YEAR,
-                    },
-                ],
-            },
-        ]
     },
 }
 
