@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.6.0](https://github.com/BLSQ/snt-malaria/compare/2.5.0...2.6.0) (2025-12-23)
+
+
+### Features
+
+* Add dummy population for DRC ([#138](https://github.com/BLSQ/snt-malaria/issues/138)) ([baf7766](https://github.com/BLSQ/snt-malaria/commit/baf7766195055de732afe9b66acc5cfb15af9018))
+* Allow to override interventions for an account ([#137](https://github.com/BLSQ/snt-malaria/issues/137)) ([dcbec33](https://github.com/BLSQ/snt-malaria/commit/dcbec339f673b87aef8da11f8e2541461d5b6ed9))
+* Snt 203 apply cost overrides ([#142](https://github.com/BLSQ/snt-malaria/issues/142)) ([1f0f04d](https://github.com/BLSQ/snt-malaria/commit/1f0f04d4cd504d151e6e55f8d18d12c1510ff4b5))
+* SNT-170: Import population metadata ([#144](https://github.com/BLSQ/snt-malaria/issues/144)) ([c5c6aca](https://github.com/BLSQ/snt-malaria/commit/c5c6acaeb8d9a4a839c985db22b64363425b805a))
+* SNT-198 import nsp fine tunnings ([#132](https://github.com/BLSQ/snt-malaria/issues/132)) ([ec32e18](https://github.com/BLSQ/snt-malaria/commit/ec32e18e36ed4bb89e866fe781d54d5414214d31))
+* SNT-201 show cost override settings panel ([#134](https://github.com/BLSQ/snt-malaria/issues/134)) ([a596fe7](https://github.com/BLSQ/snt-malaria/commit/a596fe7112a38b24565d2a6f52bd9da78a3a30c2))
+* SNT-211 improve data for burkina faso demo account ([#135](https://github.com/BLSQ/snt-malaria/issues/135)) ([5fca75a](https://github.com/BLSQ/snt-malaria/commit/5fca75add2bcea23f30d6f32823d461819495897))
+* SNT-218: UI overflow improvement ([#141](https://github.com/BLSQ/snt-malaria/issues/141)) ([0d78ac3](https://github.com/BLSQ/snt-malaria/commit/0d78ac3106873d83d13bb23a21fa4fdfa696ff7f))
+* SNT-220 improve charts legend display ([#143](https://github.com/BLSQ/snt-malaria/issues/143)) ([5a5ffb5](https://github.com/BLSQ/snt-malaria/commit/5a5ffb534fa306c174b50e9c77ba1d3bb6989d64))
+
+
+### Bug Fixes
+
+* SNT-121 Improve NSP Import ([#136](https://github.com/BLSQ/snt-malaria/issues/136)) ([f3b7473](https://github.com/BLSQ/snt-malaria/commit/f3b7473183c7ce21be0510319604a443fc65adf9))
+* SNT-217 Setup scripts fine tuning ([#139](https://github.com/BLSQ/snt-malaria/issues/139)) ([cf87b1c](https://github.com/BLSQ/snt-malaria/commit/cf87b1cd3b323643a36ba750d55f5e036ec52aa9))
+
 ## [2.5.0](https://github.com/BLSQ/snt-malaria/compare/2.4.0...2.5.0) (2025-12-02)
 
 
