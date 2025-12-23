@@ -32,7 +32,7 @@ jobs:
             - name: Use node.js 22
               uses: actions/setup-node@v4
               with:
-                  node-version: '22.18.0'
+                  node-version: '22.21.1'
                   cache: npm
             - name: upgrade npm
               run: |
