@@ -16,6 +16,7 @@ from .models import (
 class InterventionCategoryAdmin(admin.ModelAdmin):
     list_display = (
         "name",
+        "short_name",
         "account",
         "created_by",
         "created_at",
@@ -31,6 +32,7 @@ class InterventionCategoryAdmin(admin.ModelAdmin):
 class InterventionAdmin(admin.ModelAdmin):
     list_display = (
         "name",
+        "short_name",
         "intervention_category",
         "created_by",
         "created_at",
@@ -39,7 +41,10 @@ class InterventionAdmin(admin.ModelAdmin):
         "deleted_at",
     )
     search_fields = ("name", "description")
-    list_filter = ("intervention_category", "created_by")
+    list_filter = (
+        "intervention_category__account",
+        "created_by",
+    )
     ordering = ("name",)
 
 
@@ -88,7 +93,13 @@ class BudgetAdmin(admin.ModelAdmin):
 
 @admin.register(BudgetSettings)
 class BudgetSettingsAdmin(admin.ModelAdmin):
-    list_display = ("id", "account", "local_currency", "exchange_rate", "inflation_rate")
+    list_display = (
+        "id",
+        "account",
+        "local_currency",
+        "exchange_rate",
+        "inflation_rate",
+    )
     search_fields = ("id", "local_currency")
     ordering = ("id", "local_currency")
 
