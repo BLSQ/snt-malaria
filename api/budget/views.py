@@ -72,7 +72,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
         interventions = Intervention.objects.all()
 
         # build a quick lookup map ((code, type) -> id) for fast id retrieval
-        interventions_map = {(iv.code, iv.name): iv.id for iv in interventions}
+        interventions_map = {(iv.code, iv.short_name): iv.id for iv in interventions}
 
         settings = build_budget_assumptions(scenario)
 
