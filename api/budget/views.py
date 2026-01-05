@@ -6,7 +6,10 @@ from rest_framework.response import Response
 from snt_malaria_budgeting import BudgetCalculator
 
 from plugins.snt_malaria.api.budget.filters import BudgetListFilter
-from plugins.snt_malaria.api.budget.serializers import BudgetCreateSerializer, BudgetSerializer
+from plugins.snt_malaria.api.budget.serializers import (
+    BudgetCreateSerializer,
+    BudgetSerializer,
+)
 from plugins.snt_malaria.api.budget.utils import (
     build_budget_assumptions,
     build_cost_dataframe,
@@ -33,7 +36,9 @@ class BudgetViewSet(viewsets.ModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
         budget = queryset.order_by("-created_at").first()
         if not budget:
-            return Response({"detail": "No budget found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "No budget found"}, status=status.HTTP_404_NOT_FOUND
+            )
         serializer = BudgetSerializer(budget)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -100,12 +105,18 @@ class BudgetViewSet(viewsets.ModelViewSet):
                     # attach the found intervention (or None) for downstream use
                     place_cost_intervention["id"] = intervention_id
 
-            budgets.append({"year": year, "interventions": interventions_costs, "org_units_costs": places_costs})
+            budgets.append(
+                {
+                    "year": year,
+                    "interventions": interventions_costs,
+                    "org_units_costs": places_costs,
+                }
+            )
 
         budget = Budget.objects.create(
             scenario=scenario,
             name=f"Budget for {scenario.name}",
-            cost_input={},
+            cost_input=cost_df.astype(str).to_dict(orient="records"),
             assumptions=settings,
             results=budgets,
             created_by=request.user,

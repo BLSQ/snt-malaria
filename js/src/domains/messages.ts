@@ -201,11 +201,11 @@ export const MESSAGES = defineMessages({
     },
     costBreakdownChartTitle: {
         id: 'iaso.snt_malaria.cost-breakdown-chart.title',
-        defaultMessage: 'Cost Breakdown by Category per Intervention',
+        defaultMessage: 'Cost per intervention category',
     },
     proportionChart: {
         id: 'iaso.snt_malaria.proportion-chart.title',
-        defaultMessage: 'Proportion ot Total Budget by Intervention',
+        defaultMessage: 'Cost per intervention',
     },
     budget: {
         id: 'iaso.snt_malaria.budgeting.budget',
