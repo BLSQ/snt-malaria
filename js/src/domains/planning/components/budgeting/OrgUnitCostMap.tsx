@@ -85,19 +85,23 @@ export const OrgUnitCostMap: FC<Props> = ({ orgUnitCosts, orgUnits }) => {
         const oucInterventions =
             orgUnitCosts?.flatMap(ouc => ouc.interventions) ?? [];
 
-        const allInterventions = oucInterventions?.reduce((acc, oui) => {
-            return acc[oui.id]
-                ? acc
-                : {
-                      ...acc,
-                      [oui.id]: {
-                          code: oui.code,
-                          name: oui.type,
-                          short_name: oui.type,
-                          id: oui.id,
-                      },
-                  };
-        }, {});
+        // Map to unique interventions by id
+        const allInterventions = oucInterventions?.reduce(
+            (acc, intervention) => {
+                return acc[intervention.id]
+                    ? acc
+                    : {
+                          ...acc,
+                          [intervention.id]: {
+                              code: intervention.code,
+                              name: intervention.type,
+                              short_name: intervention.type,
+                              id: intervention.id,
+                          },
+                      };
+            },
+            {},
+        );
         return Object.values<Intervention>(allInterventions);
     }, [orgUnitCosts]);
 
