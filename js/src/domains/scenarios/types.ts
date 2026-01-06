@@ -15,4 +15,5 @@ export type Scenario = {
     end_year: number;
     created_at: string; // ISO 8601 formatted date string
     updated_at: string; // ISO 8601 formatted date string
+    is_locked: boolean;
 };

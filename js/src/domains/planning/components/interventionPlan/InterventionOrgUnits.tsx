@@ -46,6 +46,7 @@ const styles: SxStyles = {
     },
 };
 type Props = {
+    disabled?: boolean;
     interventionPlan: InterventionPlan;
     removeOrgUnitsFromPlan: (
         ordUnitIds: number[],
@@ -56,6 +57,7 @@ type Props = {
 };
 
 export const InterventionOrgUnits: FC<Props> = ({
+    disabled = false,
     interventionPlan,
     removeOrgUnitsFromPlan,
     setIsLoading,
@@ -126,40 +128,48 @@ export const InterventionOrgUnits: FC<Props> = ({
                     {interventionPlan?.org_units.length}{' '}
                     {formatMessage(MESSAGES.orgUnitDistrict)}
                 </Typography>
-                <DeleteDialog
-                    onConfirm={onRemoveAllOrgUnitsFromPlan}
-                    titleMessage={MESSAGES.interventionAssignmentRemoveAllTitle}
-                    Trigger={Button}
-                    triggerProps={{
-                        variant: 'text',
-                        size: 'small',
-                        disabled: isRemovingOrgUnits,
-                        children: formatMessage(
-                            MESSAGES.interventionAssignmentRemoveAllButton,
-                        ),
-                        sx: { textTransform: 'none' },
-                    }}
-                    message={MESSAGES.interventionAssignmentRemoveAllMessage}
-                />
+                {!disabled && (
+                    <DeleteDialog
+                        onConfirm={onRemoveAllOrgUnitsFromPlan}
+                        titleMessage={
+                            MESSAGES.interventionAssignmentRemoveAllTitle
+                        }
+                        Trigger={Button}
+                        triggerProps={{
+                            variant: 'text',
+                            size: 'small',
+                            disabled: isRemovingOrgUnits,
+                            children: formatMessage(
+                                MESSAGES.interventionAssignmentRemoveAllButton,
+                            ),
+                            sx: { textTransform: 'none' },
+                        }}
+                        message={
+                            MESSAGES.interventionAssignmentRemoveAllMessage
+                        }
+                    />
+                )}
             </Box>
             <Box sx={styles.list}>
                 {filteredData.map(orgUnit => (
                     <Box sx={styles.listItem} key={orgUnit.id}>
                         <Typography key={orgUnit.id}>{orgUnit.name}</Typography>
-                        <DeleteDialog
-                            disabled={isRemovingOrgUnits}
-                            onConfirm={() =>
-                                onRemoveOrgUnitFromPlan(
-                                    orgUnit.intervention_assignment_id,
-                                )
-                            }
-                            titleMessage={
-                                MESSAGES.interventionAssignmentRemoveTitle
-                            }
-                            message={
-                                MESSAGES.interventionAssignmentRemoveMessage
-                            }
-                        />
+                        {!disabled && (
+                            <DeleteDialog
+                                disabled={isRemovingOrgUnits}
+                                onConfirm={() =>
+                                    onRemoveOrgUnitFromPlan(
+                                        orgUnit.intervention_assignment_id,
+                                    )
+                                }
+                                titleMessage={
+                                    MESSAGES.interventionAssignmentRemoveTitle
+                                }
+                                message={
+                                    MESSAGES.interventionAssignmentRemoveMessage
+                                }
+                            />
+                        )}
                     </Box>
                 ))}
             </Box>

@@ -251,6 +251,24 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenario.scenarioImportError',
         defaultMessage: 'Error importing scenario',
     },
+    lockScenario: {
+        id: 'iaso.snt_malaria.scenario.lockScenario',
+        defaultMessage: 'Lock Scenario',
+    },
+    unlockScenario: {
+        id: 'iaso.snt_malaria.scenario.unlockScenario',
+        defaultMessage: 'Unlock Scenario',
+    },
+    modalLockScenarioConfirm: {
+        id: 'iaso.snt_malaria.scenario.modalLockScenarioConfirm',
+        defaultMessage:
+            'Do you really want to lock this scenario? Locking a scenario will prevent any further edits to be made.',
+    },
+    modalUnlockScenarioConfirm: {
+        id: 'iaso.snt_malaria.scenario.modalUnlockScenarioConfirm',
+        defaultMessage:
+            'Do you really want to unlock this scenario? Unlocking a scenario allows further edits to be made.',
+    },
     budgetAssumptionsLabel: {
         id: 'iaso.snt_malaria.budgetAssumptions.label',
         defaultMessage: 'Budget settings',

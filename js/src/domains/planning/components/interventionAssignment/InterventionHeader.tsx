@@ -30,6 +30,7 @@ type Props = {
         orgunit_interventions: { [orgUnitId: number]: number[] };
         scenario_id: number | undefined;
     }) => Promise<unknown>;
+    disabled?: boolean;
 };
 
 export const InterventionHeader: FC<Props> = ({
@@ -40,6 +41,7 @@ export const InterventionHeader: FC<Props> = ({
     setSelectedInterventions,
     interventionCategories,
     onCreateInterventionAssignments,
+    disabled = false,
 }) => {
     const [conflicts, setConflicts] = useState<
         InterventionAssignmentConflict[]
@@ -55,12 +57,14 @@ export const InterventionHeader: FC<Props> = ({
         return (
             selectedInterventionValues.length > 0 &&
             selectedOrgUnits.length > 0 &&
-            scenarioId !== null
+            scenarioId !== null &&
+            !disabled
         );
     }, [
         selectedInterventionValues.length,
         selectedOrgUnits.length,
         scenarioId,
+        disabled,
     ]);
 
     const getOrgUnitAssignments = useCallback(() => {

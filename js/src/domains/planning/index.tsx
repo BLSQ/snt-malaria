@@ -167,6 +167,7 @@ export const Planning: FC = () => {
                                     onAddRemoveOrgUnit={
                                         handleAddRemoveOrgUnitToMap
                                     }
+                                    disabled={scenario?.is_locked}
                                 />
                             </PaperFullHeight>
                         </PaperContainer>
@@ -191,6 +192,7 @@ export const Planning: FC = () => {
                             setSelectedInterventions={setSelectedInterventions}
                             selectedInterventions={selectedInterventions}
                             interventionPlans={interventionPlans ?? []}
+                            disabled={scenario?.is_locked}
                         />
                     </Grid>
                     <Grid item xs={12} md={9} sx={styles.assignmentContainer}>
@@ -199,6 +201,7 @@ export const Planning: FC = () => {
                             totalOrgUnitCount={orgUnits?.length ?? 0}
                             interventionPlans={interventionPlans ?? []}
                             isLoadingPlans={isLoadingPlans}
+                            disabled={scenario?.is_locked}
                         />
                     </Grid>
                     {orgUnits && budget && (

@@ -38,6 +38,7 @@ const styles: SxStyles = {
 
 type Props = {
     orgUnits?: OrgUnit[];
+    disabled?: boolean;
     displayedMetric: MetricType | null;
     displayedMetricValues?: MetricValue[];
     orgUnitsOnMap: OrgUnit[];
@@ -49,6 +50,7 @@ type Props = {
 
 export const Map: FC<Props> = ({
     orgUnits,
+    disabled = false,
     displayedMetric,
     displayedMetricValues,
     orgUnitsOnMap,
@@ -110,11 +112,13 @@ export const Map: FC<Props> = ({
 
     return (
         <Box height="100%" sx={styles.mainBox}>
-            <MapSelectionWidget
-                selectionCount={orgUnitIdsOnMap.length}
-                onApplyFilters={onApplyFilters}
-                onClearSelection={onClearSelection}
-            />
+            {!disabled && (
+                <MapSelectionWidget
+                    selectionCount={orgUnitIdsOnMap.length}
+                    onApplyFilters={onApplyFilters}
+                    onClearSelection={onClearSelection}
+                />
+            )}
             {orgUnits && (
                 <>
                     <MapContainer
@@ -166,6 +170,7 @@ export const Map: FC<Props> = ({
                     {clickedOrgUnit && (
                         <MapOrgUnitDetails
                             clickedOrgUnit={clickedOrgUnit}
+                            disabled={disabled}
                             onAddRemoveOrgUnit={onUnclickAndAddRemoveOrgUnit}
                             onClear={onClearOrgUnitSelection}
                             selectedOrgUnits={orgUnitsOnMap}

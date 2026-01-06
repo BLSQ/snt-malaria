@@ -1,14 +1,16 @@
 import React, { FC, useCallback, useState } from 'react';
-import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import LockIcon from '@mui/icons-material/Lock';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 import { Box, Typography, IconButton, Theme, Button } from '@mui/material';
 import { blueGrey } from '@mui/material/colors';
 import { useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
 import { useNavigate } from 'react-router-dom';
 import * as Yup from 'yup';
+import ConfirmDialog from 'Iaso/components/dialogs/ConfirmDialogComponent';
 import DeleteDialog from 'Iaso/components/dialogs/DeleteDialogComponent';
 import DownloadButtonsComponent from 'Iaso/components/DownloadButtonsComponent';
 import InputComponent from 'Iaso/components/forms/InputComponent';
@@ -138,6 +140,10 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
         deleteScenario(scenario.id);
     };
 
+    const handleToggleLockClick = () => {
+        updateScenario({ ...scenario, is_locked: !scenario.is_locked });
+    };
+
     const setFieldValueAndState = useCallback(
         (field: string, value: any) => {
             setFieldTouched(field, true);
@@ -146,69 +152,73 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
         [setFieldTouched, setFieldValue],
     );
 
-    if (scenario) {
-        return (
-            <Box sx={styles.content}>
-                <Box sx={styles.formContainer}>
-                    {isEditing ? (
-                        <>
+    if (!scenario) {
+        return null;
+    }
+
+    return (
+        <Box sx={styles.content}>
+            <Box sx={styles.formContainer}>
+                {isEditing ? (
+                    <>
+                        <InputComponent
+                            type="text"
+                            keyValue="name"
+                            value={values.name}
+                            onChange={setFieldValueAndState}
+                            withMarginTop={false}
+                            label={MESSAGES.name}
+                        />
+                        <Box sx={styles.yearInputWrapper}>
                             <InputComponent
-                                type="text"
-                                keyValue="name"
-                                value={values.name}
+                                type="number"
+                                keyValue="start_year"
+                                value={values.start_year}
                                 onChange={setFieldValueAndState}
                                 withMarginTop={false}
-                                label={MESSAGES.name}
+                                label={MESSAGES.startYear}
+                                numberInputOptions={{
+                                    thousandSeparator: '.',
+                                    decimalSeparator: ',',
+                                }}
                             />
-                            <Box sx={styles.yearInputWrapper}>
-                                <InputComponent
-                                    type="number"
-                                    keyValue="start_year"
-                                    value={values.start_year}
-                                    onChange={setFieldValueAndState}
-                                    withMarginTop={false}
-                                    label={MESSAGES.startYear}
-                                    numberInputOptions={{
-                                        thousandSeparator: '.',
-                                        decimalSeparator: ',',
-                                    }}
-                                />
-                            </Box>
-                            <Box sx={styles.yearInputWrapper}>
-                                <InputComponent
-                                    type="number"
-                                    keyValue="end_year"
-                                    value={values.end_year}
-                                    onChange={setFieldValueAndState}
-                                    withMarginTop={false}
-                                    label={MESSAGES.endYear}
-                                    numberInputOptions={{
-                                        thousandSeparator: '.',
-                                        decimalSeparator: ',',
-                                    }}
-                                />
-                            </Box>
-                            <Button
-                                onClick={() => handleSubmit()}
-                                sx={styles.submitButton}
-                                disabled={!isValid}
-                            >
-                                {formatMessage(MESSAGES.apply)}
-                            </Button>
-                            <IconButton
-                                className="editButton"
-                                sx={styles.editNameBtn}
-                                onClick={() => setIsEditing(false)}
-                            >
-                                <CloseIcon />
-                            </IconButton>
-                        </>
-                    ) : (
-                        <>
-                            <Typography variant="h6">
-                                {scenario.name} {scenario.start_year} -{' '}
-                                {scenario.end_year}
-                            </Typography>
+                        </Box>
+                        <Box sx={styles.yearInputWrapper}>
+                            <InputComponent
+                                type="number"
+                                keyValue="end_year"
+                                value={values.end_year}
+                                onChange={setFieldValueAndState}
+                                withMarginTop={false}
+                                label={MESSAGES.endYear}
+                                numberInputOptions={{
+                                    thousandSeparator: '.',
+                                    decimalSeparator: ',',
+                                }}
+                            />
+                        </Box>
+                        <Button
+                            onClick={() => handleSubmit()}
+                            sx={styles.submitButton}
+                            disabled={!isValid}
+                        >
+                            {formatMessage(MESSAGES.apply)}
+                        </Button>
+                        <IconButton
+                            className="editButton"
+                            sx={styles.editNameBtn}
+                            onClick={() => setIsEditing(false)}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    </>
+                ) : (
+                    <>
+                        <Typography variant="h6">
+                            {scenario.name} {scenario.start_year} -{' '}
+                            {scenario.end_year}
+                        </Typography>
+                        {!scenario.is_locked && (
                             <IconButton
                                 className="editButton"
                                 sx={styles.editNameBtn}
@@ -216,33 +226,47 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                             >
                                 <EditOutlinedIcon />
                             </IconButton>
-                        </>
-                    )}
-                </Box>
-                <Box sx={styles.actionBtns}>
-                    <Typography variant="body2" sx={styles.actionBtnSaving}>
-                        <CheckCircleOutlinedIcon sx={styles.icon} />
-                        Saved
-                    </Typography>
-                    <DownloadButtonsComponent variant="text" csvUrl={csvUrl} />
-                    <Button
-                        variant="text"
-                        sx={styles.actionBtn}
-                        onClick={handleDuplicateClick}
-                    >
-                        <CopyAllOutlinedIcon sx={styles.icon} />
-                        Duplicate
-                    </Button>
-                    <DeleteDialog
-                        onConfirm={handleDeleteClick}
-                        titleMessage={MESSAGES.modalDeleteScenarioTitle}
-                        iconColor={'primary'}
-                        message={MESSAGES.modalDeleteScenarioConfirm}
-                    />
-                </Box>
+                        )}
+                    </>
+                )}
             </Box>
-        );
-    }
-
-    return null;
+            <Box sx={styles.actionBtns}>
+                <DownloadButtonsComponent variant="text" csvUrl={csvUrl} />
+                <Button
+                    variant="text"
+                    sx={styles.actionBtn}
+                    onClick={handleDuplicateClick}
+                >
+                    <CopyAllOutlinedIcon sx={styles.icon} />
+                    Duplicate
+                </Button>
+                <ConfirmDialog
+                    BtnIcon={scenario.is_locked ? LockIcon : LockOpenIcon}
+                    message={formatMessage(
+                        scenario.is_locked
+                            ? MESSAGES.modalUnlockScenarioConfirm
+                            : MESSAGES.modalLockScenarioConfirm,
+                    )}
+                    question={formatMessage(
+                        scenario.is_locked
+                            ? MESSAGES.unlockScenario
+                            : MESSAGES.lockScenario,
+                    )}
+                    confirm={handleToggleLockClick}
+                    btnMessage={''}
+                    tooltipMessage={
+                        scenario.is_locked
+                            ? formatMessage(MESSAGES.unlockScenario)
+                            : formatMessage(MESSAGES.lockScenario)
+                    }
+                />
+                <DeleteDialog
+                    onConfirm={handleDeleteClick}
+                    titleMessage={MESSAGES.modalDeleteScenarioTitle}
+                    iconColor={'primary'}
+                    message={MESSAGES.modalDeleteScenarioConfirm}
+                />
+            </Box>
+        </Box>
+    );
 };

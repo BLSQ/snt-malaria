@@ -11,6 +11,7 @@ import { InterventionHeader } from './InterventionHeader';
 
 type Props = {
     scenarioId: number | undefined;
+    disabled?: boolean;
     selectedOrgUnits: OrgUnit[];
     setSelectedInterventions: React.Dispatch<
         React.SetStateAction<{ [categoryId: number]: Intervention }>
@@ -62,6 +63,7 @@ const styles: SxStyles = {
 
 export const InterventionAssignments: FC<Props> = ({
     scenarioId,
+    disabled = false,
     selectedOrgUnits,
     setSelectedInterventions,
     selectedInterventions,
@@ -90,6 +92,7 @@ export const InterventionAssignments: FC<Props> = ({
                         onCreateInterventionAssignments={
                             createInterventionAssignment
                         }
+                        disabled={disabled}
                     />
                 }
             />

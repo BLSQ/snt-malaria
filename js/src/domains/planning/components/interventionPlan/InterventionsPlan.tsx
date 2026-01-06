@@ -13,6 +13,7 @@ import { InterventionsPlanTable } from './InterventionsPlanTable';
 
 type Props = {
     scenarioId: number;
+    disabled?: boolean;
     interventionPlans: InterventionPlan[];
     isLoadingPlans: boolean;
     totalOrgUnitCount: number;
@@ -50,6 +51,7 @@ const styles: SxStyles = {
 
 export const InterventionsPlan: FC<Props> = ({
     scenarioId,
+    disabled = false,
     interventionPlans,
     isLoadingPlans,
     totalOrgUnitCount = 0,
@@ -160,6 +162,7 @@ export const InterventionsPlan: FC<Props> = ({
             </Card>
             <InterventionPlanDetails
                 scenarioId={scenarioId}
+                disabled={disabled}
                 interventionPlan={selectedInterventionPlan}
                 budgetAssumptions={selectedBudgetAssumptions}
                 removeOrgUnitsFromPlan={onRemoveOrgUnitsFromPlan}
