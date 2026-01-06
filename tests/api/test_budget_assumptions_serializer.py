@@ -302,6 +302,33 @@ class BudgetAssumptionsWriteSerializerTests(APITestCase):
         self.assertIn("scenario", serializer.errors)
         self.assertEqual(serializer.errors["scenario"][0], "This field is required.")
 
+    def test_scenario_locked(self):
+        self.scenario.is_locked = True
+        self.scenario.save()
+        data = {
+            "scenario": self.scenario.id,
+            "intervention_code": self.intervention_vaccination_rts.code,
+            "coverage": "0.80",
+            "divisor": "1.00",
+            "bale_size": 10,
+            "buffer_mult": "1.20",
+            "doses_per_pw": 2,
+            "age_string": "3-59",
+            "pop_prop_3_11": "0.10",
+            "pop_prop_12_59": "0.50",
+            "monthly_rounds": 3,
+            "touchpoints": 2,
+            "doses_per_child": 6,
+            "tablet_factor": "0.55",
+        }
+        serializer = BudgetAssumptionsWriteSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("scenario_id", serializer.errors)
+        self.assertEqual(
+            serializer.errors["scenario_id"][0],
+            "Cannot modify budget assumptions for a locked scenario.",
+        )
+
     def test_missing_intervention(self):
         data = {
             "scenario": self.scenario.id,

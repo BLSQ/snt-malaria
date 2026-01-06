@@ -213,6 +213,31 @@ class BudgetAssumptionsAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("scenario", response.data)
 
+    def test_post_budget_assumptions_locked_scenario(self):
+        # Lock the scenario
+        self.scenario.is_locked = True
+        self.scenario.save()
+
+        override_data = {
+            "intervention_code": self.intervention_vaccination_rts.code,
+            "scenario": self.scenario.id,
+            "coverage": 0.9,
+            "divisor": 0,
+            "bale_size": 0,
+            "buffer_mult": 0,
+            "doses_per_pw": 0,
+            "age_string": 0,
+            "pop_prop_3_11": 0,
+            "pop_prop_12_59": 0,
+            "monthly_rounds": 0,
+            "touchpoints": 0,
+            "tablet_factor": 0,
+            "doses_per_child": 5,
+        }
+        response = self.client.post(BASE_URL, override_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("scenario_id", response.data)
+
     def test_post_budget_assumptions(self):
         # Create an override for one intervention
         override_data = {

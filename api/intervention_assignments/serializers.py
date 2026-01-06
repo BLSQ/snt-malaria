@@ -69,6 +69,10 @@ class InterventionAssignmentWriteSerializer(serializers.ModelSerializer):
         except Scenario.DoesNotExist:
             raise serializers.ValidationError({"scenario_id": "Invalid scenario ID."})
 
+        # Check that scenario is not locked
+        if scenario.is_locked:
+            raise serializers.ValidationError({"scenario_id": "The scenario is locked and cannot be modified."})
+
         # Check the existence of selected orgUnits
         valid_org_units = OrgUnit.objects.filter(id__in=org_unit_ids)
         missing_org_units = set(org_unit_ids) - set(valid_org_units.values_list("id", flat=True))
