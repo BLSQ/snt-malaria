@@ -72,6 +72,12 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
 
     def destroy(self, _request, pk=None):
         assignment = get_object_or_404(InterventionAssignment, id=pk)
+        scenario = assignment.scenario
+        if scenario.is_locked:
+            return Response(
+                {"scenario_id": _("The scenario is locked and cannot be modified.")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         assignment.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -85,7 +91,15 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             ids = [int(i) for i in ids_param.split(",") if i.strip()]
         except ValueError:
             return Response({"error": "Invalid ids format."}, status=status.HTTP_400_BAD_REQUEST)
-        deleted_count, _ = InterventionAssignment.objects.filter(id__in=ids).delete()
+        assignments = InterventionAssignment.objects.filter(id__in=ids)
+        for assignment in assignments:
+            scenario = assignment.scenario
+            if scenario.is_locked:
+                return Response(
+                    {"scenario_id": "The scenario is locked and cannot be modified."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        deleted_count, _ = assignments.delete()
         return Response(
             {"message": f"{deleted_count} intervention assignments deleted."},
             status=status.HTTP_204_NO_CONTENT,
