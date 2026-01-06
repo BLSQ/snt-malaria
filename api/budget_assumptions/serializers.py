@@ -66,11 +66,3 @@ class BudgetAssumptionsWriteSerializer(serializers.ModelSerializer):
             "tablet_factor",
             "doses_per_child",
         )
-
-    def validate(self, attrs):
-        scenario = attrs.get("scenario")
-        if scenario.is_locked:
-            raise serializers.ValidationError(
-                {"scenario_id": "Cannot modify budget assumptions for a locked scenario."}
-            )
-        return attrs
