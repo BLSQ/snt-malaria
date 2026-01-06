@@ -30,7 +30,7 @@ jobs:
                   ref: ${{ github.event.inputs.branch }}
                   path: plugins/snt_malaria
             - name: Use node.js 22
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: '22.21.1'
                   cache: npm
