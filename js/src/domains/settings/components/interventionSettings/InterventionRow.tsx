@@ -29,7 +29,7 @@ const styles: SxStyles = {
     },
     costList: {
         display: 'grid',
-        gridTemplateColumns: '200px 50px 200px',
+        gridTemplateColumns: '200px 50px 250px',
         gap: 1,
         marginTop: 1,
     },
