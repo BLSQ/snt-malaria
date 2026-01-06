@@ -118,7 +118,7 @@ export const InterventionSettings: React.FC = () => {
                                 <InputComponent
                                     type="select"
                                     keyValue="year"
-                                    label={formatMessage(MESSAGES.selectYear)}
+                                    label={MESSAGES.selectYear}
                                     value={activeYear}
                                     withMarginTop={false}
                                     onChange={(_, value) =>

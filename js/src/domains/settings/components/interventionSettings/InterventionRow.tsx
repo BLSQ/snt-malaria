@@ -61,16 +61,11 @@ export const InterventionRow: React.FC<Props> = ({
             <Box sx={styles.costList}>
                 {(costBreakdownLines.length > 0 &&
                     costBreakdownLines.map(line => (
-                        <>
-                            <Typography
-                                key={line.id}
-                                variant="body2"
-                                color="textPrimary"
-                            >
+                        <React.Fragment key={line.id}>
+                            <Typography variant="body2" color="textPrimary">
                                 {line.category_label}
                             </Typography>
                             <Typography
-                                key={line.id}
                                 variant="body2"
                                 color="textPrimary"
                                 fontWeight={700}
@@ -78,14 +73,10 @@ export const InterventionRow: React.FC<Props> = ({
                             >
                                 {line.unit_cost}
                             </Typography>
-                            <Typography
-                                key={line.id}
-                                variant="body2"
-                                color="textSecondary"
-                            >
+                            <Typography variant="body2" color="textSecondary">
                                 {line.unit_type_label}
                             </Typography>
-                        </>
+                        </React.Fragment>
                     ))) || (
                     <Typography variant="body2" color="textSecondary">
                         {formatMessage(MESSAGES.noCostBreakdownLines)}

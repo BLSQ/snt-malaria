@@ -95,7 +95,14 @@ class InterventionCostBreakdownLineAPITests(APITestCase):
             "intervention": self.intervention_chemo_iptp.id,
             "year": 2025,
             "costs": [
-                {"unit_cost": 15, "unit_type": "OTHER", "name": "Cost Line X", "category": "Procurement", "year": 2025}
+                {
+                    "unit_cost": 15,
+                    "unit_type": "OTHER",
+                    "name": "Cost Line X",
+                    "category": "Procurement",
+                    "year": 2025,
+                    "intervention": self.intervention_chemo_iptp.id,
+                }
             ],
         }
         response = self.client.post(url, data, format="json")
