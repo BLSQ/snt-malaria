@@ -29,13 +29,13 @@ jobs:
 
         steps:
             - name: Checkout Iaso repo
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
               with:
                   repository: 'BLSQ/iaso'
                   ref: ${{ github.event.inputs.iaso_ref }}
                   fetch-depth: 0
             - name: Checkout SNT Malaria repo nested in the Iaso plugin folder
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
               with:
                   ref: ${{ github.event.inputs.branch }}
                   path: plugins/snt_malaria
