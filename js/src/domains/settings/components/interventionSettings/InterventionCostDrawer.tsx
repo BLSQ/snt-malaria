@@ -52,6 +52,7 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                     onClose={onClose}
                 />
                 <InterventionCostForm
+                    interventionId={intervention ? intervention.id : null}
                     year={year}
                     defaultValues={{
                         cost_breakdown_lines: costBreakdownLines ?? [],
