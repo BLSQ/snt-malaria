@@ -155,7 +155,10 @@ export const InterventionsPlan: FC<Props> = ({
                             />
                         </TabPanel>
                         <TabPanel value="map" sx={styles.mapTab}>
-                            <InterventionsPlanMap scenarioId={scenarioId} />
+                            <InterventionsPlanMap
+                                scenarioId={scenarioId}
+                                disabled={disabled}
+                            />
                         </TabPanel>
                     </CardContent>
                 </TabContext>

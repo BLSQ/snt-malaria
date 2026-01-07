@@ -44,6 +44,7 @@ interface InterventionColorMap {
 
 type Props = {
     scenarioId: number | undefined;
+    disabled?: boolean;
 };
 
 const styles: SxStyles = {
@@ -84,6 +85,7 @@ const getInterventionsGroupLabel = (interventions: Intervention[]) => {
 
 export const InterventionsPlanMap: FunctionComponent<Props> = ({
     scenarioId,
+    disabled = false,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { data: orgUnits, isLoading: loadingOrgUnits } = useGetOrgUnits();
@@ -353,15 +355,17 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                     )}
                     selectedInterventionId={selectedInterventionId}
                 />
-                <Tooltip title={formatMessage(MESSAGES.customizeTooltip)}>
-                    <Button
-                        variant={editMode ? 'contained' : 'outlined'}
-                        onClick={() => setEditMode(!editMode)}
-                        sx={styles.customizeButton}
-                    >
-                        {formatMessage(MESSAGES.customize)}
-                    </Button>
-                </Tooltip>
+                {disabled ? null : (
+                    <Tooltip title={formatMessage(MESSAGES.customizeTooltip)}>
+                        <Button
+                            variant={editMode ? 'contained' : 'outlined'}
+                            onClick={() => setEditMode(!editMode)}
+                            sx={styles.customizeButton}
+                        >
+                            {formatMessage(MESSAGES.customize)}
+                        </Button>
+                    </Tooltip>
+                )}
             </MapActionBox>
         </Box>
     );
