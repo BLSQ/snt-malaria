@@ -5,6 +5,7 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetInterventionCategories } from '../../../planning/hooks/useGetInterventionCategories';
 import { Intervention } from '../../../planning/types/interventions';
+import { useGetAllInterventionCostBreakdownLines } from '../../hooks/useGetInterventionCostBreakdownLines';
 import { useUpdateInterventionCostBreakdownLines } from '../../hooks/useUpdateInterventionCostBreakdownLines';
 import { MESSAGES } from '../../messages';
 import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreakdownLine';
@@ -37,6 +38,23 @@ export const InterventionSettings: React.FC = () => {
     const [activeYear, setActiveYear] = React.useState<number>(
         new Date().getFullYear() - 1,
     );
+    const {
+        data: costBreakdownLines,
+        isFetching: isLoadingCostBreakdownLines = true,
+    } = useGetAllInterventionCostBreakdownLines({
+        selectFn: data =>
+            data.reduce(
+                (acc, line) => {
+                    if (!acc[line.intervention]) {
+                        acc[line.intervention] = [];
+                    }
+                    acc[line.intervention].push(line);
+                    return acc;
+                },
+                {} as Record<number, InterventionCostBreakdownLine[]>,
+            ),
+        year: activeYear,
+    });
 
     const {
         data: interventionCategories = [],
@@ -85,7 +103,7 @@ export const InterventionSettings: React.FC = () => {
                     subheaderTypographyProps={{ variant: 'subtitle1' }}
                 />
                 <CardContent sx={styles.cardBody}>
-                    {isLoadingCategories ? (
+                    {isLoadingCategories || isLoadingCostBreakdownLines ? (
                         <LoadingSpinner absolute={true} />
                     ) : (
                         <>
@@ -100,7 +118,7 @@ export const InterventionSettings: React.FC = () => {
                                 <InputComponent
                                     type="select"
                                     keyValue="year"
-                                    label={formatMessage(MESSAGES.selectYear)}
+                                    label={MESSAGES.selectYear}
                                     value={activeYear}
                                     withMarginTop={false}
                                     onChange={(_, value) =>
@@ -126,6 +144,11 @@ export const InterventionSettings: React.FC = () => {
                                             <InterventionRow
                                                 key={intervention.id}
                                                 intervention={intervention}
+                                                costBreakdownLines={
+                                                    costBreakdownLines?.[
+                                                        intervention.id
+                                                    ] || []
+                                                }
                                                 onEditInterventionCost={
                                                     onEditInterventionCost
                                                 }
@@ -142,6 +165,11 @@ export const InterventionSettings: React.FC = () => {
                 open={interventionCostDrawerOpen}
                 onClose={() => setInterventionCostDrawerOpen(false)}
                 intervention={selectedIntervention}
+                costBreakdownLines={
+                    selectedIntervention
+                        ? costBreakdownLines?.[selectedIntervention.id] || []
+                        : []
+                }
                 year={activeYear}
                 onConfirm={onUpdateIntervention}
             />

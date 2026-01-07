@@ -65,4 +65,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.selectYear',
         defaultMessage: 'Select Year',
     },
+    noCostBreakdownLines: {
+        id: 'iaso.snt_malaria.settings.intervention.noCostBreakdownLines',
+        defaultMessage: 'No cost configured.',
+    },
 });

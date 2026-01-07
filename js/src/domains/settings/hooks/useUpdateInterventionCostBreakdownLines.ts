@@ -27,6 +27,9 @@ export const useUpdateInterventionCostBreakdownLines =
                     variables: { interventionId: number; year: number },
                 ) => {
                     queryClient.invalidateQueries(
+                        `allInterventionCostBreakdownLines_${variables.year}`,
+                    );
+                    queryClient.invalidateQueries(
                         `interventionCostBreakdownLines_${variables.interventionId}_${variables.year}`,
                     );
                     queryClient.invalidateQueries(

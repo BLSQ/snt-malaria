@@ -3,6 +3,32 @@ import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
 import { InterventionCostBreakdownLine } from '../types/InterventionCostBreakdownLine';
 
+export const useGetAllInterventionCostBreakdownLines = <
+    T = InterventionCostBreakdownLine[],
+>(
+    props:
+        | {
+              selectFn: (data: InterventionCostBreakdownLine[]) => T;
+              year: number;
+          }
+        | undefined,
+): UseQueryResult<T, Error> => {
+    return useSnackQuery({
+        queryKey: [`allInterventionCostBreakdownLines_${props?.year}`],
+        queryFn: () =>
+            getRequest(
+                `/api/snt_malaria/intervention_cost_breakdown_lines/?year=${props?.year}`,
+            ),
+        options: {
+            cacheTime: Infinity, // disable auto fetch on cache expiration
+            staleTime: 1000 * 60 * 15, // in MS
+            select: (data: InterventionCostBreakdownLine[]) => {
+                return props?.selectFn ? props.selectFn(data) : (data as T);
+            },
+        },
+    });
+};
+
 export const useGetInterventionCostBreakdownLines = <
     T = InterventionCostBreakdownLine[],
 >(

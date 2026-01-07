@@ -1,10 +1,8 @@
 import React, { useCallback } from 'react';
 import { Drawer } from '@mui/material';
-import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
 import { Intervention } from '../../../planning/types/interventions';
-import { useGetInterventionCostBreakdownLines } from '../../hooks/useGetInterventionCostBreakdownLines';
 import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreakdownLine';
 import { InterventionCostForm } from './InterventionCostForm';
 
@@ -12,6 +10,7 @@ type Props = {
     onClose: () => void;
     open: boolean;
     intervention: Intervention | null;
+    costBreakdownLines: InterventionCostBreakdownLine[] | undefined;
     year: number;
     onConfirm: (costs: InterventionCostBreakdownLine[]) => void;
 };
@@ -31,12 +30,10 @@ export const InterventionCostDrawer: React.FC<Props> = ({
     onClose,
     open,
     intervention,
+    costBreakdownLines,
     year,
     onConfirm,
 }) => {
-    const { data: cost_breakdown_lines, isFetching: isFetchingCosts } =
-        useGetInterventionCostBreakdownLines(intervention?.id, year);
-
     const handleFormConfirm = useCallback(
         costConfig => onConfirm(costConfig.cost_breakdown_lines),
         [onConfirm],
@@ -54,17 +51,13 @@ export const InterventionCostDrawer: React.FC<Props> = ({
                     title={intervention ? `${intervention.short_name}` : ''}
                     onClose={onClose}
                 />
-                {isFetchingCosts ? (
-                    <LoadingSpinner absolute={true} />
-                ) : (
-                    <InterventionCostForm
-                        year={year}
-                        defaultValues={{
-                            cost_breakdown_lines: cost_breakdown_lines ?? [],
-                        }}
-                        onConfirm={handleFormConfirm}
-                    />
-                )}
+                <InterventionCostForm
+                    year={year}
+                    defaultValues={{
+                        cost_breakdown_lines: costBreakdownLines ?? [],
+                    }}
+                    onConfirm={handleFormConfirm}
+                />
             </Drawer>
         </>
     );

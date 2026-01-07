@@ -12,14 +12,29 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
 
     unit_cost = serializers.DecimalField(max_digits=19, decimal_places=2, required=True, min_value=0)
     unit_type_label = serializers.SerializerMethodField()
+    category_label = serializers.SerializerMethodField()
 
     class Meta:
         model = InterventionCostBreakdownLine
-        fields = ["id", "name", "unit_cost", "unit_type", "unit_type_label", "category", "year"]
+        fields = [
+            "id",
+            "name",
+            "unit_cost",
+            "unit_type",
+            "unit_type_label",
+            "category",
+            "category_label",
+            "year",
+            "intervention",
+        ]
 
     def get_unit_type_label(self, obj):
         choices = dict(InterventionCostUnitType.choices)
         return choices.get(obj.unit_type, obj.unit_type)
+
+    def get_category_label(self, obj):
+        choices = dict(InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.choices)
+        return choices.get(obj.category, obj.category)
 
 
 class InterventionCostBreakdownLinesWriteSerializer(serializers.ModelSerializer):

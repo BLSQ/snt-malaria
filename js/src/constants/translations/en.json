@@ -55,6 +55,7 @@
     "iaso.snt_malaria.settings.intervention.detailedCostCategoryLabel": "Category",
     "iaso.snt_malaria.settings.intervention.errors.required": "Required",
     "iaso.snt_malaria.settings.intervention.errors.negativeValueNotAllowed": "Negative value not allowed",
+    "iaso.snt_malaria.settings.intervention.noCostBreakdownLines": "No cost configured.",
     "iaso.snt_malaria.label.runInterventionPlanBudget": "Run Budget",
     "iaso.snt_malaria.cost-breakdown-chart.title": "Cost per intervention category",
     "iaso.snt_malaria.proportion-chart.title": "Cost per intervention",
