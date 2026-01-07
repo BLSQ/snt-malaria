@@ -53,6 +53,10 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Cancel',
         id: 'iaso.label.cancel',
     },
+    duplicate: {
+        id: 'iaso.snt_malaria.label.duplicate',
+        defaultMessage: 'Duplicate',
+    },
     remove: {
         id: 'iaso.snt_malaria.label.interventionList.remove',
         defaultMessage: 'Remove',

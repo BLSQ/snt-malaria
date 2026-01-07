@@ -101,5 +101,6 @@
     "iaso.snt_malaria.budgetAssumptions.minValue": "Value must be at least {min}",
     "iaso.snt_malaria.budgetAssumptions.maxValue": "Value must be at most {max}",
     "iaso.snt_malaria.label.showLegend": "Show Legend",
-    "iaso.snt_malaria.label.hideLegend": "Hide Legend"
+    "iaso.snt_malaria.label.hideLegend": "Hide Legend",
+    "iaso.snt_malaria.label.duplicate": "Duplicate"
 }

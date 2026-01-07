@@ -238,7 +238,7 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                     onClick={handleDuplicateClick}
                 >
                     <CopyAllOutlinedIcon sx={styles.icon} />
-                    Duplicate
+                    {formatMessage(MESSAGES.duplicate)}
                 </Button>
                 <ConfirmDialog
                     BtnIcon={scenario.is_locked ? LockIcon : LockOpenIcon}
