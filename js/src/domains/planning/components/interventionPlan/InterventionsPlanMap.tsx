@@ -297,7 +297,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     );
     const onOrgUnitClick = useCallback(
         orgUnitId => {
-            if (!editMode || !selectedInterventionId) {
+            if (disabled || !editMode || !selectedInterventionId) {
                 return;
             }
 
@@ -320,6 +320,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
             removeAssignment,
             addAssigment,
             scenarioId,
+            disabled,
         ],
     );
 
