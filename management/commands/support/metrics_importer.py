@@ -140,6 +140,7 @@ class MetricsImporter:
                     category=row["CATEGORY"],
                     unit_symbol=row["UNIT_SYMBOL"],
                     legend_type=row["TYPE"].lower(),
+                    is_utility=row.get("IS_UTILITY", "False").lower() == "true",
                 )
 
                 if metric_type.legend_type not in ["ordinal", "threshold", "linear"]:
