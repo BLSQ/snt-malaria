@@ -79,7 +79,7 @@ const getInterventionsGroupKey = (interventions: Intervention[]) => {
 };
 
 const getInterventionsGroupLabel = (interventions: Intervention[]) => {
-    return interventions.map(i => i.name).join(' + ');
+    return interventions.map(i => i.short_name).join(' + ');
 };
 
 export const InterventionsPlanMap: FunctionComponent<Props> = ({
