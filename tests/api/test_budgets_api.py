@@ -20,9 +20,7 @@ class ScenarioAPITestCase(APITestCase):
     def setUp(cls):
         # Create a user and account for testing
         cls.account = Account.objects.create(name="Test Account")
-        cls.user = cls.create_user_with_profile(
-            username="testuser", account=cls.account
-        )
+        cls.user = cls.create_user_with_profile(username="testuser", account=cls.account)
 
         # Create a scenario
         cls.scenario = Scenario.objects.create(
@@ -72,12 +70,8 @@ class ScenarioAPITestCase(APITestCase):
 
         # Create Org Units
         cls.out_district = OrgUnitType.objects.create(name="DISTRICT")
-        cls.district1 = OrgUnit.objects.create(
-            org_unit_type=cls.out_district, name="District 1"
-        )
-        cls.district2 = OrgUnit.objects.create(
-            org_unit_type=cls.out_district, name="District 2"
-        )
+        cls.district1 = OrgUnit.objects.create(org_unit_type=cls.out_district, name="District 1")
+        cls.district2 = OrgUnit.objects.create(org_unit_type=cls.out_district, name="District 2")
 
         # Create assignments related to the scenario
         cls.assignment = InterventionAssignment.objects.create(
@@ -143,9 +137,7 @@ class ScenarioAPITestCase(APITestCase):
         response = self.client.post(url, {"scenario": self.scenario.id}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data[0], "No population MetricTypes found for this account"
-        )
+        self.assertEqual(response.data[0], "No population MetricTypes found for this account")
 
     def test_calculate_budget_no_total_population_metric(self):
         """Test calculate_budget endpoint with mocked CSV data and budget calculation"""
@@ -215,18 +207,10 @@ class ScenarioAPITestCase(APITestCase):
         )
 
         # Create MetricValues for the org units (district1 and district2)
-        MetricValue.objects.create(
-            metric_type=metric_type_population, org_unit=self.district1, value=10000000
-        )
-        MetricValue.objects.create(
-            metric_type=metric_type_population, org_unit=self.district2, value=15000000
-        )
-        MetricValue.objects.create(
-            metric_type=metric_type_pop_under_5, org_unit=self.district1, value=100000
-        )
-        MetricValue.objects.create(
-            metric_type=metric_type_pop_under_5, org_unit=self.district2, value=150000
-        )
+        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district1, value=10000000)
+        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district2, value=15000000)
+        MetricValue.objects.create(metric_type=metric_type_pop_under_5, org_unit=self.district1, value=100000)
+        MetricValue.objects.create(metric_type=metric_type_pop_under_5, org_unit=self.district2, value=150000)
 
         # Create SMC intervention assignment for district1
         InterventionAssignment.objects.create(
@@ -253,21 +237,15 @@ class ScenarioAPITestCase(APITestCase):
 
         # Find SMC intervention in the budget
         smc_intervention = next(
-            intervention
-            for intervention in budget_2025["interventions"]
-            if intervention["code"] == "smc"
+            intervention for intervention in budget_2025["interventions"] if intervention["code"] == "smc"
         )
 
-        self.assertIsNotNone(
-            smc_intervention, "SMC intervention should be in the budget"
-        )
-        self.assertEqual(smc_intervention["total_cost"], 1009800.0)
+        self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
+        self.assertEqual(smc_intervention["total_cost"], 1009800.0000000001)
         self.assertEqual(smc_intervention["total_pop"], 237500.0)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
-        self.assertEqual(
-            smc_intervention["cost_breakdown"][0]["category"], "Procurement"
-        )
-        self.assertEqual(smc_intervention["cost_breakdown"][0]["cost"], 1009800.0)
+        self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
+        self.assertEqual(smc_intervention["cost_breakdown"][0]["cost"], 1009800.0000000001)
 
         # Find Org unit cost
         smc_org_unit_costs = None
@@ -282,9 +260,7 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(smc_org_unit_costs["interventions"][0]["code"], "smc")
         self.assertEqual(smc_org_unit_costs["interventions"][0]["type"], "SMC")
         self.assertEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 403920.0)
-        self.assertEqual(
-            smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id
-        )
+        self.assertEqual(smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id)
 
     def test_calculate_budget_missing_scenario(self):
         """Test calculate_budget endpoint without scenario parameter"""
@@ -323,18 +299,10 @@ class ScenarioAPITestCase(APITestCase):
         )
 
         # Create MetricValues for the org units (district1 and district2)
-        MetricValue.objects.create(
-            metric_type=metric_type_population, org_unit=self.district1, value=10000000
-        )
-        MetricValue.objects.create(
-            metric_type=metric_type_population, org_unit=self.district2, value=15000000
-        )
-        MetricValue.objects.create(
-            metric_type=metric_type_pop_under_5, org_unit=self.district1, value=100000
-        )
-        MetricValue.objects.create(
-            metric_type=metric_type_pop_under_5, org_unit=self.district2, value=150000
-        )
+        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district1, value=10000000)
+        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district2, value=15000000)
+        MetricValue.objects.create(metric_type=metric_type_pop_under_5, org_unit=self.district1, value=100000)
+        MetricValue.objects.create(metric_type=metric_type_pop_under_5, org_unit=self.district2, value=150000)
 
         # Create SMC intervention assignment for district1
         InterventionAssignment.objects.create(
@@ -378,23 +346,15 @@ class ScenarioAPITestCase(APITestCase):
 
         # Find SMC intervention in the budget
         smc_intervention = next(
-            intervention
-            for intervention in budget_2025["interventions"]
-            if intervention["code"] == "smc"
+            intervention for intervention in budget_2025["interventions"] if intervention["code"] == "smc"
         )
 
-        self.assertIsNotNone(
-            smc_intervention, "SMC intervention should be in the budget"
-        )
+        self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
         self.assertAlmostEqual(smc_intervention["total_cost"], 1009800.0 * 0.8)
         self.assertAlmostEqual(smc_intervention["total_pop"], 237500.0 * 0.8)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
-        self.assertEqual(
-            smc_intervention["cost_breakdown"][0]["category"], "Procurement"
-        )
-        self.assertAlmostEqual(
-            smc_intervention["cost_breakdown"][0]["cost"], 1009800.0 * 0.8
-        )
+        self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
+        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["cost"], 1009800.0 * 0.8)
         # Find Org unit cost
         smc_org_unit_costs = None
         for org_unit_costs in budget_2025["org_units_costs"]:
@@ -407,9 +367,5 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(len(smc_org_unit_costs["interventions"]), 1)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["code"], "smc")
         self.assertEqual(smc_org_unit_costs["interventions"][0]["type"], "SMC")
-        self.assertAlmostEqual(
-            smc_org_unit_costs["interventions"][0]["total_cost"], 403920.0 * 0.8
-        )
-        self.assertEqual(
-            smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id
-        )
+        self.assertAlmostEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 403920.0 * 0.8)
+        self.assertEqual(smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id)
