@@ -91,7 +91,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             ids = [int(i) for i in ids_param.split(",") if i.strip()]
         except ValueError:
             return Response({"error": "Invalid ids format."}, status=status.HTTP_400_BAD_REQUEST)
-        assignments = InterventionAssignment.objects.filter(id__in=ids)
+        assignments = InterventionAssignment.objects.select_related("scenario").filter(id__in=ids)
         for assignment in assignments:
             scenario = assignment.scenario
             if scenario.is_locked:
