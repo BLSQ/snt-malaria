@@ -7,16 +7,16 @@ import React, {
 } from 'react';
 import { Box, Button, Theme, Tooltip } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import { set } from 'lodash';
 import { SxStyles } from 'Iaso/types/general';
 import { InterventionSelect } from '../../../../components/InterventionSelect';
 import { Map as SNTMap } from '../../../../components/Map';
 import { MapActionBox } from '../../../../components/MapActionBox';
 import { MESSAGES } from '../../../messages';
-import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
-import { useRemoveOrgUnitFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import { defaultLegend, getColorRange, getRandomColor, purples } from '../../libs/color-utils';
+import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
+import { defaultLegend, getRandomColor, purples } from '../../libs/color-utils';
 import {
     Intervention,
     InterventionOrgUnit,
@@ -28,6 +28,7 @@ import {
 // TODO: Add selected org units and a clear all
 // TODO: Add a cancel button ?
 // TODO: Save batch
+// TODO: Delete assignments
 
 const defaultLegendConfig = {
     units: '',
@@ -91,41 +92,13 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         data: interventionAssignments,
         isLoading: isLoadinginterventionAssignments,
     } = useGetInterventionAssignments(scenarioId);
+    const { mutateAsync: removeManyOrgUnitsFromPlan } =
+        useRemoveManyOrgUnitsFromInterventionPlan();
 
-    const [localInterventionAssignments, setLocalInterventionAssignments] =
-        useState<InterventionPlan[]>(interventionAssignments || []);
     const interventionIds = useMemo(
         () => interventions.map(i => i.id),
         [interventions],
     );
-
-
-    // const { mutateAsync: removeOrgUnitsFromIntervention } =
-    //     useRemoveOrgUnitFromInterventionPlan({ showSuccessSnackBar: false });
-    // const { mutateAsync: createInterventionAssignment } =
-    //     useCreateInterventionAssignment();
-
-
-
-    // useEffect(() => {
-    //     if (
-    //         interventions && interventions.length > 0 &&
-    //         interventionAssignments?.some(
-    //             i => i.intervention.id === selectedInterventionId,
-    //         )
-    //     )
-    //         return;
-
-    //     const defaultId =
-    //         interventionAssignments && interventionAssignments.length === 1
-    //             ? interventionAssignments[0].intervention?.id
-    //             : 0;
-    //     setSelectedInterventionId(defaultId);
-    // }, [
-    //     interventionAssignments,
-    //     selectedInterventionId,
-    //     setSelectedInterventionId,
-    // ]);
 
     // Helper to map org unit IDs to their interventions
     const getOrgUnitInterventions = (plans: InterventionPlan[]) => {
@@ -143,15 +116,10 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         if (isLoadinginterventionAssignments)
             return new Map<number, Intervention[]>();
         const ouInterventions = getOrgUnitInterventions(
-            localInterventionAssignments ?? [],
+            interventionAssignments ?? [],
         );
         return ouInterventions;
-    }, [localInterventionAssignments, isLoadinginterventionAssignments]);
-
-    useEffect(
-        () => setLocalInterventionAssignments(interventionAssignments || []),
-        [interventionAssignments],
-    );
+    }, [interventionAssignments, isLoadinginterventionAssignments]);
 
     useEffect(() => {
         if (editMode === false) {
@@ -247,6 +215,54 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         }
         return { ...defaultLegendConfig, legend_config: { domain, range } };
     }, [interventionGroupColors, interventions]);
+
+    const removeSelectedOrgUnitsFromPlan = useCallback(
+        (orgUnitIds: number[]) => {
+            const assignmentIds = orgUnitIds
+                .map(ouId =>
+                    interventionAssignments
+                        ?.filter(
+                            plan =>
+                                interventionIds.includes(
+                                    plan.intervention.id,
+                                ) && plan.org_units.some(ou => ou.id === ouId),
+                        )
+                        .map(
+                            plan =>
+                                plan.org_units.find(ou => ou.id === ouId)
+                                    ?.intervention_assignment_id,
+                        ),
+                )
+                .flat();
+
+            removeManyOrgUnitsFromPlan(assignmentIds);
+        },
+        [removeManyOrgUnitsFromPlan, interventionAssignments, interventionIds],
+    );
+
+    const assignOrgUnitsToIntervention = useCallback(
+        async (orgUnitIds: number[], targetInterventionId: number | null) => {
+            // Implementation for assigning org units to an intervention
+            if (orgUnitIds.length === 0) return;
+            if (targetInterventionId === null) return;
+            // TODO: move to a dedicated hook
+            if (targetInterventionId <= 0) {
+                removeSelectedOrgUnitsFromPlan(orgUnitIds);
+            }
+
+            setSelectedOrgUnits([]);
+            setEditMode(false);
+
+            return;
+        },
+        [
+            interventionAssignments,
+            interventionIds,
+            removeManyOrgUnitsFromPlan,
+            setSelectedOrgUnits,
+            setEditMode,
+        ],
+    );
 
     // const removeAssignment = useCallback(
     //     async (orgUnitId: number, assignmentId: number) => {
@@ -362,8 +378,8 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                     onOrgUnitClick={onOrgUnitClick}
                     legendConfig={legendConfig}
                     hideLegend={
-                        !localInterventionAssignments ||
-                        localInterventionAssignments.length <= 0
+                        !interventionAssignments ||
+                        interventionAssignments.length <= 0
                     }
                 />
             )}
@@ -380,15 +396,28 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 )}
                 {disabled || interventions.length === 0 ? null : (
                     <Tooltip title={formatMessage(MESSAGES.customizeTooltip)}>
-                        <Button
-                            variant={editMode ? 'contained' : 'outlined'}
-                            onClick={() => setEditMode(!editMode)}
-                            sx={styles.customizeButton}
-                        >
-                            {formatMessage(
-                                editMode ? MESSAGES.ok : MESSAGES.customize,
-                            )}
-                        </Button>
+                        {editMode ? (
+                            <Button
+                                variant="contained"
+                                onClick={() =>
+                                    assignOrgUnitsToIntervention(
+                                        selectedOrgUnits,
+                                        selectedInterventionId,
+                                    )
+                                }
+                                sx={styles.customizeButton}
+                            >
+                                {formatMessage(MESSAGES.ok)}
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="outlined"
+                                onClick={() => setEditMode(!editMode)}
+                                sx={styles.customizeButton}
+                            >
+                                {formatMessage(MESSAGES.customize)}
+                            </Button>
+                        )}
                     </Tooltip>
                 )}
             </MapActionBox>
