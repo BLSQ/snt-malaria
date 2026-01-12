@@ -362,14 +362,16 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                     )}
                     selectedInterventionId={selectedInterventionId}
                 /> */}
-                {disabled ? null : (
+                {disabled || interventions.length === 0 ? null : (
                     <Tooltip title={formatMessage(MESSAGES.customizeTooltip)}>
                         <Button
                             variant={editMode ? 'contained' : 'outlined'}
                             onClick={() => setEditMode(!editMode)}
                             sx={styles.customizeButton}
                         >
-                            {formatMessage(MESSAGES.customize)}
+                            {formatMessage(
+                                editMode ? MESSAGES.ok : MESSAGES.customize,
+                            )}
                         </Button>
                     </Tooltip>
                 )}
