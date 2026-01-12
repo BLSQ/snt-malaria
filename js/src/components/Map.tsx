@@ -37,6 +37,7 @@ type Props = {
     };
     hideLegend?: boolean;
     defaultColor?: string;
+    selectedOrgUnits?: number[];
     onOrgUnitClick?: (orgUnitId: number) => void;
 };
 export const Map: FC<Props> = ({
@@ -46,6 +47,7 @@ export const Map: FC<Props> = ({
     legendConfig,
     hideLegend = false,
     defaultColor = 'var(--deepPurple-300, #9575CD)',
+    selectedOrgUnits = [],
     onOrgUnitClick = noOp,
 }) => {
     const [currentTile] = useState<Tile>(tiles.osm);
@@ -86,13 +88,16 @@ export const Map: FC<Props> = ({
             <ZoomControl position="bottomright" />
             {orgUnits?.map(orgUnit => {
                 const orgUnitMapMisc = getOrgUnitMapMisc(orgUnit.id);
+                const weight = selectedOrgUnits.includes(orgUnit.id)
+                    ? mapTheme.selectedShapeWeight
+                    : mapTheme.shapeWeight;
                 return (
                     <GeoJSON
                         key={orgUnit.id}
                         data={orgUnit.geo_json as unknown as GeoJson}
                         style={{
                             color: 'var(--text-primary,#1F2B3DDE)',
-                            weight: 1,
+                            weight: weight,
                             fillColor: orgUnitMapMisc?.color ?? defaultColor,
                             fillOpacity: 2,
                         }}

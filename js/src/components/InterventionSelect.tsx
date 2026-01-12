@@ -23,11 +23,15 @@ const styles: SxStyles = {
 type Props = {
     interventions: Intervention[] | undefined;
     selectedInterventionId: number | null;
+    showAllOption?: boolean;
+    showNoneOption?: boolean;
     onInterventionSelect: (interventionId: number) => unknown;
 };
 export const InterventionSelect: FunctionComponent<Props> = ({
     interventions,
     selectedInterventionId,
+    showAllOption = true,
+    showNoneOption = false,
     onInterventionSelect,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -48,7 +52,7 @@ export const InterventionSelect: FunctionComponent<Props> = ({
             displayEmpty
             sx={styles.select}
         >
-            {sortedInterventions.length > 1 && (
+            {showAllOption && sortedInterventions.length > 1 && (
                 <MenuItem value={0}>
                     <Typography variant="body2">
                         {formatMessage(MESSAGES.allInterventions)}
@@ -65,6 +69,13 @@ export const InterventionSelect: FunctionComponent<Props> = ({
                         </MenuItem>
                     );
                 })}
+            {showNoneOption && (
+                <MenuItem value={-1}>
+                    <Typography variant="body2">
+                        {formatMessage(MESSAGES.none)}
+                    </Typography>
+                </MenuItem>
+            )}
         </Select>
     ) : null;
 };

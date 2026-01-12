@@ -23,6 +23,12 @@ import {
     InterventionPlan,
 } from '../../types/interventions';
 
+// TODO: Update button placeholder when design is ready
+// TODO: Select place holder
+// TODO: Add selected org units and a clear all
+// TODO: Add a cancel button ?
+// TODO: Save batch
+
 const defaultLegendConfig = {
     units: '',
     legend_type: 'ordinal', // 'linear' | 'ordinal' | 'threshold';
@@ -77,7 +83,10 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     const { formatMessage } = useSafeIntl();
     const { data: orgUnits, isLoading: loadingOrgUnits } = useGetOrgUnits();
     const [editMode, setEditMode] = useState<boolean>(false);
-
+    const [selectedOrgUnits, setSelectedOrgUnits] = useState<number[]>([]);
+    const [selectedInterventionId, setSelectedInterventionId] = useState<
+        number | null
+    >(null);
     const {
         data: interventionAssignments,
         isLoading: isLoadinginterventionAssignments,
@@ -90,14 +99,13 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         [interventions],
     );
 
+
     // const { mutateAsync: removeOrgUnitsFromIntervention } =
     //     useRemoveOrgUnitFromInterventionPlan({ showSuccessSnackBar: false });
     // const { mutateAsync: createInterventionAssignment } =
     //     useCreateInterventionAssignment();
 
-    // const [selectedInterventionId, setSelectedInterventionId] = useState<
-    //     number | null
-    // >(null);
+
 
     // useEffect(() => {
     //     if (
@@ -144,6 +152,12 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         () => setLocalInterventionAssignments(interventionAssignments || []),
         [interventionAssignments],
     );
+
+    useEffect(() => {
+        if (editMode === false) {
+            setSelectedOrgUnits([]);
+        }
+    }, [editMode]);
 
     // Get OrgUnits relevant to the selected interventions
     const highlightedOrgUnits = useMemo(
@@ -302,34 +316,33 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     //         orgUnits,
     //     ],
     // );
-    // const onOrgUnitClick = useCallback(
-    //     orgUnitId => {
-    //         if (disabled || !editMode || !selectedInterventionId) {
-    //             return;
-    //         }
+    const onOrgUnitClick = useCallback(
+        (orgUnitId: number) => {
+            if (
+                disabled ||
+                !editMode ||
+                !interventions ||
+                interventions.length === 0
+            ) {
+                return;
+            }
 
-    //         const existingAssignment = localInterventionAssignments
-    //             ?.find(plan => plan.intervention.id === selectedInterventionId)
-    //             ?.org_units.find(ou => ou.id === orgUnitId);
-    //         if (existingAssignment) {
-    //             removeAssignment(
-    //                 orgUnitId,
-    //                 existingAssignment.intervention_assignment_id,
-    //             );
-    //         } else {
-    //             addAssigment(orgUnitId, scenarioId);
-    //         }
-    //     },
-    //     [
-    //         editMode,
-    //         selectedInterventionId,
-    //         localInterventionAssignments,
-    //         removeAssignment,
-    //         addAssigment,
-    //         scenarioId,
-    //         disabled,
-    //     ],
-    // );
+            if (selectedOrgUnits.includes(orgUnitId)) {
+                setSelectedOrgUnits(
+                    selectedOrgUnits.filter(id => id !== orgUnitId),
+                );
+            } else {
+                setSelectedOrgUnits([...selectedOrgUnits, orgUnitId]);
+            }
+        },
+        [
+            editMode,
+            disabled,
+            interventions,
+            setSelectedOrgUnits,
+            selectedOrgUnits,
+        ],
+    );
 
     if (loadingOrgUnits)
         return (
@@ -344,8 +357,9 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 <SNTMap
                     id="intervention_plan_map"
                     orgUnits={orgUnits}
+                    selectedOrgUnits={selectedOrgUnits}
                     getOrgUnitMapMisc={getOrgUnitMapMisc}
-                    // onOrgUnitClick={onOrgUnitClick}
+                    onOrgUnitClick={onOrgUnitClick}
                     legendConfig={legendConfig}
                     hideLegend={
                         !localInterventionAssignments ||
@@ -355,13 +369,15 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
             )}
 
             <MapActionBox>
-                {/* <InterventionSelect
-                    onInterventionSelect={setSelectedInterventionId}
-                    interventions={localInterventionAssignments?.map(
-                        ({ intervention }) => intervention,
-                    )}
-                    selectedInterventionId={selectedInterventionId}
-                /> */}
+                {editMode && (
+                    <InterventionSelect
+                        onInterventionSelect={setSelectedInterventionId}
+                        interventions={interventions}
+                        showNoneOption={true}
+                        showAllOption={false}
+                        selectedInterventionId={selectedInterventionId}
+                    />
+                )}
                 {disabled || interventions.length === 0 ? null : (
                     <Tooltip title={formatMessage(MESSAGES.customizeTooltip)}>
                         <Button
