@@ -8,7 +8,8 @@ from datetime import date
 
 from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS, BudgetCalculator
 
-from iaso.models import OrgUnit, User
+from iaso.models import User
+from iaso.models.metric import MetricValue
 from plugins.snt_malaria.api.budget.utils import (
     build_cost_dataframe,
     build_interventions_input,
@@ -66,61 +67,80 @@ class DemoScenarioSeeder:
             self.stdout_write("WARNING: No interventions found for this account. Run intervention_seeder first.")
             return None
 
-        # Get all org units with geometry from the account's default version
-        # We only want org units that have a geometry (can be displayed on a map)
-        org_units = OrgUnit.objects.filter(
-            version=self.account.default_version,
-            validation_status=OrgUnit.VALIDATION_VALID,
-            geom__isnull=False,
+        metrics = MetricValue.objects.filter(
+            metric_type__code__in=["PF_PR_RATE", "PF_INCIDENCE_RATE"],
+            metric_type__account=self.account,
+        ).select_related("org_unit")
+
+        all_org_units = metrics.values_list("org_unit", flat=True).distinct()
+        incidence_250_ou = (
+            metrics.filter(value__gte=250, metric_type__code="PF_INCIDENCE_RATE")
+            .values_list("org_unit", flat=True)
+            .distinct()
+        )
+        prevalence_55_ou = (
+            metrics.filter(value__gte=55, metric_type__code="PF_PR_RATE").values_list("org_unit", flat=True).distinct()
+        )
+        prevalence_75_ou = (
+            metrics.filter(value__gte=75, metric_type__code="PF_PR_RATE").values_list("org_unit", flat=True).distinct()
         )
 
-        if not org_units.exists():
-            self.stdout_write("WARNING: No valid org units with geometry found for this account")
-            return None
-
-        self.stdout_write(
-            f"Found {interventions.count()} interventions and {org_units.count()} org units with geometry"
-        )
-
-        # Categories to assign across the whole country
-        categories_to_assign = [
-            "Case Management",
-            "IPTp",
-            "PMC & SMC",
-            "ITN Campaign",
-            "Vaccination",
-        ]
-
+        incidence_250_prevalence_55_ou = [ou for ou in prevalence_55_ou if ou in incidence_250_ou]
+        incidence_250_prevalence_75_ou = [ou for ou in incidence_250_ou if ou in prevalence_75_ou]
+        intervention_to_assign = {
+            "cm_public": "all",
+            "itn_routine": "all",
+            "itn_campaign": "all",
+            "iptp": "prevalence_55",
+            "vacc": "prevalence_75",
+        }
         all_assignments = []
 
-        for category_name in categories_to_assign:
-            # Get interventions for this category
-            category_interventions = interventions.filter(intervention_category__name=category_name)
+        for intervention_code, prevalence_group in intervention_to_assign.items():
+            # Get interventions for this code
+            if intervention_code in ["itn_routine", "itn_campaign"]:
+                code_interventions = interventions.filter(code=intervention_code, name="Dual AI")
+            else:
+                code_interventions = interventions.filter(code=intervention_code)
 
-            if not category_interventions.exists():
-                self.stdout_write(f"WARNING: No '{category_name}' interventions found, skipping...")
+            if not code_interventions.exists():
+                self.stdout_write(f"WARNING: No interventions found for code '{intervention_code}', skipping...")
                 continue
 
             # Convert to list for random selection
-            category_interventions_list = list(category_interventions)
+            code_interventions_list = list(code_interventions)
             self.stdout_write(
-                f"Found {len(category_interventions_list)} '{category_name}' interventions: "
-                f"{[i.name for i in category_interventions_list]}"
+                f"Found {len(code_interventions_list)} '{intervention_code}' interventions: "
+                f"{[i.name for i in code_interventions_list]}"
             )
 
-            # Assign one random intervention from this category to each org unit
-            for org_unit in org_units:
-                intervention = random.choice(category_interventions_list)
+            # Filter org units by prevalence group if needed
+            filtered_org_units = []
+            if prevalence_group != "all":
+                if prevalence_group == "prevalence_55":
+                    filtered_org_units = incidence_250_prevalence_55_ou
+                elif prevalence_group == "prevalence_75":
+                    filtered_org_units = incidence_250_prevalence_75_ou
+                self.stdout_write(
+                    f"Assigning '{intervention_code}' to {len(filtered_org_units)} org units in prevalence group '{prevalence_group}'"
+                )
+            else:
+                filtered_org_units = all_org_units
+                self.stdout_write(f"Assigning '{intervention_code}' to all {len(filtered_org_units)} org units")
+
+            # Assign one random intervention from this code to each filtered org unit
+            for org_unit in filtered_org_units:
+                intervention = random.choice(code_interventions_list)
                 all_assignments.append(
                     InterventionAssignment(
                         scenario=scenario,
-                        org_unit=org_unit,
+                        org_unit_id=org_unit,
                         intervention=intervention,
                         created_by=created_by,
                     )
                 )
 
-            self.stdout_write(f"Created {len(org_units)} '{category_name}' assignments (one per org unit)")
+            self.stdout_write(f"Created {len(filtered_org_units)} '{intervention_code}' assignments")
 
         # Bulk create all assignments
         total_assignments = len(all_assignments)
