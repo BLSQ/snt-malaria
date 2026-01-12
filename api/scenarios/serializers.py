@@ -17,7 +17,17 @@ class ScenarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Scenario
-        fields = ["id", "created_by", "name", "description", "created_at", "updated_at", "start_year", "end_year"]
+        fields = [
+            "id",
+            "created_by",
+            "name",
+            "description",
+            "created_at",
+            "updated_at",
+            "start_year",
+            "end_year",
+            "is_locked",
+        ]
         read_only_fields = [
             "id",
             "created_at",

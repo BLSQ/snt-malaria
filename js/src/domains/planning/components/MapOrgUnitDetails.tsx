@@ -27,6 +27,7 @@ import { mapWidgetSizes } from './styles';
 
 type Props = {
     clickedOrgUnit: OrgUnit;
+    disabled?: boolean;
     onClear: () => void;
     onAddRemoveOrgUnit: (selectedOrgUnit: any) => void;
     selectedOrgUnits: OrgUnit[];
@@ -79,6 +80,7 @@ const styles: SxStyles = {
 
 export const MapOrgUnitDetails: FC<Props> = ({
     clickedOrgUnit,
+    disabled = false,
     onClear,
     onAddRemoveOrgUnit,
     selectedOrgUnits,
@@ -153,17 +155,19 @@ export const MapOrgUnitDetails: FC<Props> = ({
                 <Typography variant="body1" sx={styles.title}>
                     {clickedOrgUnit.name}
                 </Typography>
-                <Button
-                    variant="text"
-                    color="primary"
-                    size="small"
-                    onClick={() => onAddRemoveOrgUnit(clickedOrgUnit)}
-                    sx={styles.button}
-                >
-                    {isOrgUnitSelected
-                        ? formatMessage(MESSAGES.remove)
-                        : formatMessage(MESSAGES.add)}
-                </Button>
+                {!disabled && (
+                    <Button
+                        variant="text"
+                        color="primary"
+                        size="small"
+                        onClick={() => onAddRemoveOrgUnit(clickedOrgUnit)}
+                        sx={styles.button}
+                    >
+                        {isOrgUnitSelected
+                            ? formatMessage(MESSAGES.remove)
+                            : formatMessage(MESSAGES.add)}
+                    </Button>
+                )}
                 <IconButton
                     className="Mui-focusVisible"
                     size="small"

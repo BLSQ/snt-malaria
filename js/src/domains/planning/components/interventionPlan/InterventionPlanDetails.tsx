@@ -29,6 +29,7 @@ const styles: SxStyles = {
 
 type Props = {
     scenarioId: number;
+    disabled?: boolean;
     interventionPlan?: InterventionPlan;
     budgetAssumptions?: BudgetAssumptions;
     closeInterventionPlanDetails: () => void;
@@ -41,6 +42,7 @@ type Props = {
 
 export const InterventionPlanDetails: FC<Props> = ({
     scenarioId,
+    disabled = false,
     interventionPlan,
     budgetAssumptions,
     closeInterventionPlanDetails,
@@ -103,6 +105,7 @@ export const InterventionPlanDetails: FC<Props> = ({
                     )}
                 {activeTab === 'districts' && interventionPlan && (
                     <InterventionOrgUnits
+                        disabled={disabled}
                         setIsLoading={setIsLoading}
                         removeOrgUnitsFromPlan={removeOrgUnitsFromPlan}
                         isRemovingOrgUnits={isRemovingOrgUnits}

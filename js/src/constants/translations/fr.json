@@ -72,6 +72,10 @@
     "iaso.snt_malaria.scenario.scenarioCSV": "Scenario CSV",
     "iaso.snt_malaria.scenario.scenarioImportSuccess": "Scénario importé avec succès",
     "iaso.snt_malaria.scenario.scenarioImportError": "Erreur lors de l'import du scénario.",
+    "iaso.snt_malaria.scenario.unlockScenario": "Déverrouiller le scénario",
+    "iaso.snt_malaria.scenario.lockScenario": "Verrouiller le scénario",
+    "iaso.snt_malaria.scenario.modalUnlockScenarioConfirm": "Voulez-vous vraiment déverrouiller ce scénario ? Le déverrouillage d'un scénario permet de le modifier à nouveau.",
+    "iaso.snt_malaria.scenario.modalLockScenarioConfirm": "Voulez-vous vraiment verrouiller ce scénario ? Le verrouillage d'un scénario empêchera toute modification ultérieure.",
     "iaso.snt_malaria.budgetAssumptions.label": "Paramètres du budget",
     "iaso.snt_malaria.budgetAssumptions.save": "Enregistrer les paramètres",
     "iaso.snt_malaria.budgetAssumptions.coverage": "Couverture",
@@ -97,5 +101,6 @@
     "iaso.snt_malaria.budgetAssumptions.minValue": "La valeur doit être au minimum {min}",
     "iaso.snt_malaria.budgetAssumptions.maxValue": "La valeur doit être au maximum {max}",
     "iaso.snt_malaria.label.showLegend": "Afficher la légende",
-    "iaso.snt_malaria.label.hideLegend": "Masquer la légende"
+    "iaso.snt_malaria.label.hideLegend": "Masquer la légende",
+    "iaso.snt_malaria.label.duplicate": "Dupliquer"
 }

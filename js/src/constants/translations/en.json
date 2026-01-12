@@ -72,6 +72,10 @@
     "iaso.snt_malaria.scenario.scenarioCSV": "Scenario CSV",
     "iaso.snt_malaria.scenario.scenarioImportSuccess": "Scenario imported successfully",
     "iaso.snt_malaria.scenario.scenarioImportError": "Error importing scenario.",
+    "iaso.snt_malaria.scenario.unlockScenario": "Unlock Scenario",
+    "iaso.snt_malaria.scenario.lockScenario": "Lock Scenario",
+    "iaso.snt_malaria.scenario.modalUnlockScenarioConfirm": "Do you really want to unlock this scenario? Unlocking a scenario allows further edits to be made.",
+    "iaso.snt_malaria.scenario.modalLockScenarioConfirm": "Do you really want to lock this scenario? Locking a scenario will prevent any further edits to be made.",
     "iaso.snt_malaria.budgetAssumptions.label": "Budget settings",
     "iaso.snt_malaria.budgetAssumptions.save": "Save Settings",
     "iaso.snt_malaria.budgetAssumptions.coverage": "Coverage",
@@ -97,5 +101,6 @@
     "iaso.snt_malaria.budgetAssumptions.minValue": "Value must be at least {min}",
     "iaso.snt_malaria.budgetAssumptions.maxValue": "Value must be at most {max}",
     "iaso.snt_malaria.label.showLegend": "Show Legend",
-    "iaso.snt_malaria.label.hideLegend": "Hide Legend"
+    "iaso.snt_malaria.label.hideLegend": "Hide Legend",
+    "iaso.snt_malaria.label.duplicate": "Duplicate"
 }
