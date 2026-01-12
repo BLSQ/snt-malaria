@@ -5,7 +5,11 @@ import { SxStyles } from 'Iaso/types/general';
 import { useCalculateBudget } from '../../hooks/useCalculateBudget';
 import { useGetBudgetAssumptions } from '../../hooks/useGetBudgetAssumptions';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import { BudgetAssumptions, InterventionPlan } from '../../types/interventions';
+import {
+    BudgetAssumptions,
+    InterventionCategory,
+    InterventionPlan,
+} from '../../types/interventions';
 import { InterventionPlanDetails } from './InterventionPlanDetails';
 import { InterventionPlanSummary, TabValue } from './InterventionplanSummary';
 import { InterventionsPlanMap } from './InterventionsPlanMap';
@@ -57,6 +61,8 @@ export const InterventionsPlan: FC<Props> = ({
     totalOrgUnitCount = 0,
 }) => {
     const [tabValue, setTabValue] = useState<TabValue>('map');
+    const [interventionCategory, setInterventionCategory] =
+        useState<InterventionCategory | null>(null);
 
     const [isRemovingOrgUnits, setIsRemovingOrgUnits] =
         useState<boolean>(false);
@@ -135,6 +141,9 @@ export const InterventionsPlan: FC<Props> = ({
                             <InterventionPlanSummary
                                 setTabValue={setTabValue}
                                 tabValue={tabValue}
+                                setInterventionCategory={
+                                    setInterventionCategory
+                                }
                                 assignedOrgUnits={assignedOrgUnitCount}
                                 totalOrgUnits={totalOrgUnitCount}
                                 onRunBudget={runBudget}
@@ -158,6 +167,9 @@ export const InterventionsPlan: FC<Props> = ({
                             <InterventionsPlanMap
                                 scenarioId={scenarioId}
                                 disabled={disabled}
+                                interventions={
+                                    interventionCategory?.interventions || []
+                                }
                             />
                         </TabPanel>
                     </CardContent>

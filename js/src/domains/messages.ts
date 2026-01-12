@@ -166,6 +166,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.searchPlaceholder',
         defaultMessage: 'Search District',
     },
+    allInterventionCategories: {
+        id: 'iaso.snt_malaria.label.allInterventionCategories',
+        defaultMessage: 'All intervention categories',
+    },
     allInterventions: {
         id: 'iaso.snt_malaria.label.allInterventions',
         defaultMessage: 'All interventions',

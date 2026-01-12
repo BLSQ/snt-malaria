@@ -31,6 +31,7 @@
     "iaso.snt_malaria.interventionAssignment.removeTitle": "Remove this district",
     "iaso.snt_malaria.interventionAssignment.removeMessage": "Do you really want to remove this district from this intervention assignment?",
     "iaso.snt_malaria.label.allInterventions": "All interventions",
+    "iaso.snt_malaria.label.allInterventionCategories": "All intervention categories",
     "iaso.snt_malaria.label.editedOn": "Edited on {date}",
     "iaso.snt_malaria.label.resolveConflictTile": "Resolve Conflicts",
     "iaso.snt_malaria.label.apply": "Apply",
