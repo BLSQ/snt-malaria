@@ -7,28 +7,22 @@ import React, {
 } from 'react';
 import { Box, Button, Theme, Tooltip } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
-import { set } from 'lodash';
 import { SxStyles } from 'Iaso/types/general';
 import { InterventionSelect } from '../../../../components/InterventionSelect';
 import { Map as SNTMap } from '../../../../components/Map';
 import { MapActionBox } from '../../../../components/MapActionBox';
 import { MESSAGES } from '../../../messages';
+import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
 import { defaultLegend, getRandomColor, purples } from '../../libs/color-utils';
-import {
-    Intervention,
-    InterventionOrgUnit,
-    InterventionPlan,
-} from '../../types/interventions';
+import { Intervention, InterventionPlan } from '../../types/interventions';
 
 // TODO: Update button placeholder when design is ready
 // TODO: Select place holder
 // TODO: Add selected org units and a clear all
 // TODO: Add a cancel button ?
-// TODO: Save batch
-// TODO: Delete assignments
 
 const defaultLegendConfig = {
     units: '',
@@ -94,6 +88,8 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     } = useGetInterventionAssignments(scenarioId);
     const { mutateAsync: removeManyOrgUnitsFromPlan } =
         useRemoveManyOrgUnitsFromInterventionPlan();
+    const { mutateAsync: createInterventionAssignment } =
+        useCreateInterventionAssignment();
 
     const interventionIds = useMemo(
         () => interventions.map(i => i.id),
@@ -240,98 +236,39 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         [removeManyOrgUnitsFromPlan, interventionAssignments, interventionIds],
     );
 
-    const assignOrgUnitsToIntervention = useCallback(
+    const applyInterventionToOrgUnits = useCallback(
         async (orgUnitIds: number[], targetInterventionId: number | null) => {
-            // Implementation for assigning org units to an intervention
             if (orgUnitIds.length === 0) return;
             if (targetInterventionId === null) return;
-            // TODO: move to a dedicated hook
             if (targetInterventionId <= 0) {
                 removeSelectedOrgUnitsFromPlan(orgUnitIds);
+            } else {
+                const orgunitsInterventions = orgUnitIds.reduce(
+                    (acc, orgUnitId) => {
+                        acc[orgUnitId] = [targetInterventionId];
+                        return acc;
+                    },
+                    {} as { [orgUnitId: number]: number[] },
+                );
+                createInterventionAssignment({
+                    scenario_id: scenarioId!,
+                    orgunit_interventions: orgunitsInterventions,
+                });
             }
 
             setSelectedOrgUnits([]);
             setEditMode(false);
-
             return;
         },
         [
-            interventionAssignments,
-            interventionIds,
-            removeManyOrgUnitsFromPlan,
             setSelectedOrgUnits,
             setEditMode,
+            removeSelectedOrgUnitsFromPlan,
+            createInterventionAssignment,
+            scenarioId,
         ],
     );
 
-    // const removeAssignment = useCallback(
-    //     async (orgUnitId: number, assignmentId: number) => {
-    //         await removeOrgUnitsFromIntervention(assignmentId);
-    //         const updatedAssignments = localInterventionAssignments?.map(
-    //             plan => {
-    //                 if (plan.intervention.id !== selectedInterventionId) {
-    //                     return plan;
-    //                 }
-    //                 return {
-    //                     ...plan,
-    //                     org_units: plan.org_units.filter(
-    //                         ou => ou.id !== orgUnitId,
-    //                     ),
-    //                 };
-    //             },
-    //         );
-    //         setLocalInterventionAssignments(updatedAssignments || []);
-    //     },
-    //     [
-    //         selectedInterventionId,
-    //         localInterventionAssignments,
-    //         removeOrgUnitsFromIntervention,
-    //     ],
-    // );
-
-    // const addAssigment = useCallback(
-    //     async (orgUnitId: number, scenarioId?: number) => {
-    //         const ouInterventions = orgUnitInterventions.get(orgUnitId) || [];
-
-    //         await createInterventionAssignment({
-    //             scenario_id: scenarioId!,
-    //             orgunit_interventions: {
-    //                 [orgUnitId]: [
-    //                     ...ouInterventions.map(i => i.id),
-    //                     selectedInterventionId,
-    //                 ],
-    //             },
-    //         });
-    //         const updatedAssignments = localInterventionAssignments?.map(
-    //             plan => {
-    //                 if (plan.intervention.id !== selectedInterventionId) {
-    //                     return plan;
-    //                 }
-    //                 return {
-    //                     ...plan,
-    //                     org_units: [
-    //                         ...plan.org_units,
-    //                         {
-    //                             id: orgUnitId,
-    //                             name:
-    //                                 orgUnits?.find(ou => ou.id === orgUnitId)
-    //                                     ?.name || '',
-    //                             intervention_assignment_id: 0,
-    //                         } as InterventionOrgUnit,
-    //                     ],
-    //                 };
-    //             },
-    //         );
-    //         setLocalInterventionAssignments(updatedAssignments || []);
-    //     },
-    //     [
-    //         createInterventionAssignment,
-    //         orgUnitInterventions,
-    //         selectedInterventionId,
-    //         localInterventionAssignments,
-    //         orgUnits,
-    //     ],
-    // );
     const onOrgUnitClick = useCallback(
         (orgUnitId: number) => {
             if (
@@ -400,7 +337,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                             <Button
                                 variant="contained"
                                 onClick={() =>
-                                    assignOrgUnitsToIntervention(
+                                    applyInterventionToOrgUnits(
                                         selectedOrgUnits,
                                         selectedInterventionId,
                                     )

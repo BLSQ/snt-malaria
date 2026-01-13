@@ -47,8 +47,14 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
             delta = 0
             for ou_interventions in valid_orgunit_interventions:
                 org_unit, interventions = ou_interventions["org_unit"], ou_interventions["interventions"]
-                # Delete existing assignments
-                existingInterventions = InterventionAssignment.objects.filter(scenario=scenario, org_unit=org_unit)
+                # Delete existing assignments of same category for this org unit and scenario
+                existingInterventions = InterventionAssignment.objects.prefetch_related(
+                    "intervention__intervention_category"
+                ).filter(
+                    scenario=scenario,
+                    org_unit=org_unit,
+                    intervention__intervention_category__in=[i.intervention_category for i in interventions],
+                )
                 delta += len(interventions) - existingInterventions.count()
                 existingInterventions.delete()
 

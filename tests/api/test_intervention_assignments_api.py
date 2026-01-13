@@ -46,6 +46,12 @@ class InterventionAssignmentsAPITests(APITestCase):
             intervention_category=cls.int_category_chemoprevention,
             code="iptp",
         )
+        cls.intervention_chemo_iptp2 = Intervention.objects.create(
+            name="IPTp Variant",
+            created_by=cls.user,
+            intervention_category=cls.int_category_chemoprevention,
+            code="iptp2",
+        )
 
         # Create Org Units
         cls.out_district = OrgUnitType.objects.create(name="DISTRICT")
@@ -124,6 +130,101 @@ class InterventionAssignmentsAPITests(APITestCase):
         self.assertSetEqual(
             assigned_interventions_district2,
             {self.intervention_chemo_smc.id, self.intervention_chemo_iptp.id},
+        )
+
+    def test_intervention_assignments_create_many_existing_same_category(self):
+        self.client.force_authenticate(user=self.user)
+        # Pre-create an assignment that will be replaced
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_vaccination_rts,
+            created_by=self.user,
+        )
+
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_chemo_iptp,
+            created_by=self.user,
+        )
+
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district2,
+            intervention=self.intervention_chemo_iptp,
+            created_by=self.user,
+        )
+
+        payload = {
+            "scenario_id": self.scenario.id,
+            "orgunit_interventions": {
+                self.district1.id: [self.intervention_chemo_smc.id],  # Different intervention
+            },
+        }
+        response = self.client.post("/api/snt_malaria/intervention_assignments/", data=payload, format="json")
+        self.assertEqual(response.status_code, 201)
+
+        untouched_assignments = InterventionAssignment.objects.filter(scenario=self.scenario, org_unit=self.district2)
+        self.assertEqual(untouched_assignments.count(), 1)
+        self.assertEqual(untouched_assignments[0].intervention_id, self.intervention_chemo_iptp.id)
+
+        assignments = InterventionAssignment.objects.filter(scenario=self.scenario, org_unit=self.district1)
+        # It should have removed interventions of the same categories and added the new one
+        self.assertEqual(assignments.count(), 2)
+        assigned_interventions = set(assignments.values_list("intervention_id", flat=True))
+        self.assertSetEqual(
+            assigned_interventions,
+            {self.intervention_chemo_smc.id, self.intervention_vaccination_rts.id},
+        )
+
+    def test_intervention_assignments_create_many_with_same_category(self):
+        self.client.force_authenticate(user=self.user)
+        # Pre-create an assignment that will be replaced
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_vaccination_rts,
+            created_by=self.user,
+        )
+
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_chemo_iptp,
+            created_by=self.user,
+        )
+
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district2,
+            intervention=self.intervention_chemo_iptp,
+            created_by=self.user,
+        )
+
+        payload = {
+            "scenario_id": self.scenario.id,
+            "orgunit_interventions": {
+                self.district1.id: [
+                    self.intervention_chemo_smc.id,
+                    self.intervention_chemo_iptp2.id,
+                ],
+            },
+        }
+        response = self.client.post("/api/snt_malaria/intervention_assignments/", data=payload, format="json")
+        self.assertEqual(response.status_code, 201)
+
+        untouched_assignments = InterventionAssignment.objects.filter(scenario=self.scenario, org_unit=self.district2)
+        self.assertEqual(untouched_assignments.count(), 1)
+        self.assertEqual(untouched_assignments[0].intervention_id, self.intervention_chemo_iptp.id)
+
+        assignments = InterventionAssignment.objects.filter(scenario=self.scenario, org_unit=self.district1)
+        # It should have removed interventions of the same categories and added the new one
+        self.assertEqual(assignments.count(), 3)
+        assigned_interventions = set(assignments.values_list("intervention_id", flat=True))
+        self.assertSetEqual(
+            assigned_interventions,
+            {self.intervention_chemo_smc.id, self.intervention_chemo_iptp2.id, self.intervention_vaccination_rts.id},
         )
 
     def test_intervention_assignments_create_with_invalid_org_unit(self):
