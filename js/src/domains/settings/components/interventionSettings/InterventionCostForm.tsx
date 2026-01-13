@@ -9,6 +9,7 @@ import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreak
 import { InterventionCostBreakdownLinesForm } from './InterventionCostBreakdownLinesForm';
 
 type Props = {
+    interventionId: number | null;
     defaultValues: {
         cost_breakdown_lines: InterventionCostBreakdownLine[];
     };
@@ -64,6 +65,7 @@ const styles: SxStyles = {
 };
 
 export const InterventionCostForm: React.FC<Props> = ({
+    interventionId,
     year,
     defaultValues = {
         cost_breakdown_lines: [],
@@ -127,10 +129,10 @@ export const InterventionCostForm: React.FC<Props> = ({
     const onAddCostItem = useCallback(() => {
         const newCostItems = [
             ...values.cost_breakdown_lines,
-            { ...DEFAULT_COST_LINE, year },
+            { ...DEFAULT_COST_LINE, year, intervention: interventionId },
         ];
         setFieldValue('cost_breakdown_lines', newCostItems);
-    }, [values, setFieldValue, year]);
+    }, [values, setFieldValue, year, interventionId]);
 
     const onRemoveCostItem = useCallback(
         (index: number) => {
