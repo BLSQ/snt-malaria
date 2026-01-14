@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useMemo } from 'react';
 import { MenuItem, Select, Theme, Typography } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../domains/messages';
 import { sortByStringProp } from '../domains/planning/libs/list-utils';
@@ -26,6 +26,7 @@ type Props = {
     showAllOption?: boolean;
     showNoneOption?: boolean;
     onInterventionSelect: (interventionId: number) => unknown;
+    placeholder?: IntlMessage;
 };
 export const InterventionSelect: FunctionComponent<Props> = ({
     interventions,
@@ -33,6 +34,7 @@ export const InterventionSelect: FunctionComponent<Props> = ({
     showAllOption = true,
     showNoneOption = false,
     onInterventionSelect,
+    placeholder,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -47,11 +49,14 @@ export const InterventionSelect: FunctionComponent<Props> = ({
 
     return sortedInterventions && sortedInterventions.length > 0 ? (
         <Select
-            value={selectedInterventionId}
+            value={selectedInterventionId ?? ''}
             onChange={handleSelectedPlanChange}
             displayEmpty
             sx={styles.select}
         >
+            {placeholder && (
+                <MenuItem value="">{formatMessage(placeholder)}</MenuItem>
+            )}
             {showAllOption && sortedInterventions.length > 1 && (
                 <MenuItem value={0}>
                     <Typography variant="body2">

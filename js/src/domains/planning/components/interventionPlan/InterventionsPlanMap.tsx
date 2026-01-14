@@ -19,8 +19,7 @@ import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemove
 import { defaultLegend, getRandomColor, purples } from '../../libs/color-utils';
 import { Intervention, InterventionPlan } from '../../types/interventions';
 
-// TODO: Update button placeholder when design is ready
-// TODO: Select place holder
+// TODO: Display selected org unit count
 // TODO: Add selected org units and a clear all
 // TODO: Add a cancel button ?
 
@@ -119,9 +118,12 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
     useEffect(() => {
         if (editMode === false) {
+            setSelectedInterventionId(null);
             setSelectedOrgUnits([]);
         }
     }, [editMode]);
+
+    useEffect(() => setSelectedInterventionId(null), [interventions]);
 
     // Get OrgUnits relevant to the selected interventions
     const highlightedOrgUnits = useMemo(
@@ -329,6 +331,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                         showNoneOption={true}
                         showAllOption={false}
                         selectedInterventionId={selectedInterventionId}
+                        placeholder={MESSAGES.changeTo}
                     />
                 )}
                 {disabled || interventions.length === 0 ? null : (
