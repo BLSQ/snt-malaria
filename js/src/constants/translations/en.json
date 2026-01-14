@@ -42,6 +42,7 @@
     "iaso.snt_malaria.label.selectAll": "Select All",
     "iaso.snt_malaria.label.unselectAll": "Unselect All",
     "iaso.snt_malaria.label.invertSelection": "Invert Selection",
+    "iaso.snt_malaria.label.filter": "Filter",
     "iaso.snt_malaria.label.clearOrgUnitSelection": "Clear selection",
     "iaso.snt_malaria.metrics.seasonal": "Seasonal",
     "iaso.snt_malaria.metrics.not-seasonal": "Not seasonal",
