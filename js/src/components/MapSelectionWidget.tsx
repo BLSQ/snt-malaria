@@ -22,6 +22,7 @@ const styles = {
         paddingX: 1,
         borderRadius: 1,
     },
+    countText: { mr: 1, minWidth: 120 },
 };
 
 type Props = {
@@ -72,7 +73,7 @@ export const MapSelectionWidget: FC<Props> = ({
                     />
                 </>
             )}
-            <Typography variant="body2" sx={{ mr: 1 }}>
+            <Typography variant="body2" sx={styles.countText}>
                 {formatMessage(MESSAGES.selectedOrgUnitsCount, {
                     selectionCount: selectedOrgUnits.length,
                 })}
