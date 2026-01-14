@@ -11,7 +11,6 @@ const styles: SxStyles = {
         minWidth: 120,
         '& .MuiSelect-select': { padding: '8px 12px' },
         backgroundColor: 'white',
-        marginRight: 1,
         borderRadius: theme.spacing(0.5),
         height: '36px',
         '& .MuiOutlinedInput-notchedOutline': {

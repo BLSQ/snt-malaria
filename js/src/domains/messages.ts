@@ -211,6 +211,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.unselectAll',
         defaultMessage: 'Unselect All',
     },
+    invertSelection: {
+        id: 'iaso.snt_malaria.label.invertSelection',
+        defaultMessage: 'Invert Selection',
+    },
     seasonal: {
         id: 'iaso.snt_malaria.metrics.seasonal',
         defaultMessage: 'Seasonal',

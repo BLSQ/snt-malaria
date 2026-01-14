@@ -11,6 +11,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { InterventionSelect } from '../../../../components/InterventionSelect';
 import { Map as SNTMap } from '../../../../components/Map';
 import { MapActionBox } from '../../../../components/MapActionBox';
+import { OrgUnitActions } from '../../../../components/OrgUnitActions';
 import { MESSAGES } from '../../../messages';
 import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
@@ -19,8 +20,6 @@ import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemove
 import { defaultLegend, getRandomColor, purples } from '../../libs/color-utils';
 import { Intervention, InterventionPlan } from '../../types/interventions';
 
-// TODO: Display selected org unit count
-// TODO: Add selected org units and a clear all
 // TODO: Add a cancel button ?
 
 const defaultLegendConfig = {
@@ -214,6 +213,14 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         return { ...defaultLegendConfig, legend_config: { domain, range } };
     }, [interventionGroupColors, interventions]);
 
+    const invertSelectedOrgUnits = useCallback(() => {
+        if (!orgUnits) return;
+        const newSelectedOrgUnits = orgUnits
+            .map(ou => ou.id)
+            .filter(ouId => !selectedOrgUnits.includes(ouId));
+        setSelectedOrgUnits(newSelectedOrgUnits);
+    }, [orgUnits, selectedOrgUnits]);
+
     const removeSelectedOrgUnitsFromPlan = useCallback(
         (orgUnitIds: number[]) => {
             const assignmentIds = orgUnitIds
@@ -325,14 +332,27 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
             <MapActionBox>
                 {editMode && (
-                    <InterventionSelect
-                        onInterventionSelect={setSelectedInterventionId}
-                        interventions={interventions}
-                        showNoneOption={true}
-                        showAllOption={false}
-                        selectedInterventionId={selectedInterventionId}
-                        placeholder={MESSAGES.changeTo}
-                    />
+                    <>
+                        <OrgUnitActions
+                            selectedOrgUnits={selectedOrgUnits}
+                            onClearAll={() => setSelectedOrgUnits([])}
+                            onSelectAll={() =>
+                                setSelectedOrgUnits(
+                                    orgUnits?.map(orgUnit => orgUnit.id) || [],
+                                )
+                            }
+                            onInvertSelection={invertSelectedOrgUnits}
+                            disabled={disabled}
+                        />
+                        <InterventionSelect
+                            onInterventionSelect={setSelectedInterventionId}
+                            interventions={interventions}
+                            showNoneOption={true}
+                            showAllOption={false}
+                            selectedInterventionId={selectedInterventionId}
+                            placeholder={MESSAGES.changeTo}
+                        />
+                    </>
                 )}
                 {disabled || interventions.length === 0 ? null : (
                     <Tooltip title={formatMessage(MESSAGES.customizeTooltip)}>

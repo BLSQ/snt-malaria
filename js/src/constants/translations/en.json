@@ -41,6 +41,7 @@
     "iaso.snt_malaria.label.resolveConflictDesc": "Some districts already have an intervention from the same group.{br} Choose which one to apply, or decide to apply both.",
     "iaso.snt_malaria.label.selectAll": "Select All",
     "iaso.snt_malaria.label.unselectAll": "Unselect All",
+    "iaso.snt_malaria.label.invertSelection": "Invert Selection",
     "iaso.snt_malaria.label.clearOrgUnitSelection": "Clear selection",
     "iaso.snt_malaria.metrics.seasonal": "Seasonal",
     "iaso.snt_malaria.metrics.not-seasonal": "Not seasonal",
