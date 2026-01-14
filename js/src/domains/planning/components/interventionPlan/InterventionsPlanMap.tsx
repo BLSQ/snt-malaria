@@ -20,8 +20,6 @@ import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemove
 import { defaultLegend, getRandomColor, purples } from '../../libs/color-utils';
 import { Intervention, InterventionPlan } from '../../types/interventions';
 
-// TODO: Add a cancel button ?
-
 const defaultLegendConfig = {
     units: '',
     legend_type: 'ordinal', // 'linear' | 'ordinal' | 'threshold';
@@ -247,8 +245,12 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
     const applyInterventionToOrgUnits = useCallback(
         async (orgUnitIds: number[], targetInterventionId: number | null) => {
-            if (orgUnitIds.length === 0) return;
-            if (targetInterventionId === null) return;
+            if (orgUnitIds.length === 0 || targetInterventionId === null) {
+                setEditMode(false);
+                setSelectedOrgUnits([]);
+                return;
+            }
+
             if (targetInterventionId <= 0) {
                 removeSelectedOrgUnitsFromPlan(orgUnitIds);
             } else {
