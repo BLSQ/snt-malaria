@@ -9,6 +9,7 @@ import tiles from 'Iaso/constants/mapTiles';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
+import { MapSelectionWidget } from '../../../components/MapSelectionWidget';
 import { mapTheme } from '../../../constants/map-theme';
 import {
     defaultZoomDelta,
@@ -20,7 +21,6 @@ import { MetricsFilters, MetricType, MetricValue } from '../types/metrics';
 import { MapLegend } from './MapLegend';
 import { MapOrgUnitDetails } from './MapOrgUnitDetails';
 import { LayerSelect } from './maps/LayerSelect';
-import { MapSelectionWidget } from './MapSelectionWidget';
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
@@ -34,6 +34,12 @@ const styles: SxStyles = {
         top: theme.spacing(1),
         zIndex: 500,
     }),
+    mapSelectionWidgetBox: {
+        position: 'absolute',
+        top: 1,
+        left: 1,
+        zIndex: 500,
+    },
 };
 
 type Props = {
@@ -46,6 +52,8 @@ type Props = {
     onApplyFilters: (filters: MetricsFilters) => void;
     onChangeMetricLayer: (metricType) => void;
     onClearSelection: () => void;
+    onSelectAll: () => void;
+    onInvertSelected: () => void;
 };
 
 export const Map: FC<Props> = ({
@@ -58,6 +66,8 @@ export const Map: FC<Props> = ({
     onApplyFilters,
     onChangeMetricLayer,
     onClearSelection,
+    onSelectAll,
+    onInvertSelected,
 }) => {
     const [currentTile] = useState<Tile>(tiles.osm);
     const boundsOptions: Record<string, any> = {
@@ -113,11 +123,15 @@ export const Map: FC<Props> = ({
     return (
         <Box height="100%" sx={styles.mainBox}>
             {!disabled && (
-                <MapSelectionWidget
-                    selectionCount={orgUnitIdsOnMap.length}
-                    onApplyFilters={onApplyFilters}
-                    onClearSelection={onClearSelection}
-                />
+                <Box sx={styles.mapSelectionWidgetBox}>
+                    <MapSelectionWidget
+                        selectedOrgUnits={orgUnitIdsOnMap}
+                        onApplyFilters={onApplyFilters}
+                        onClearAll={onClearSelection}
+                        onSelectAll={onSelectAll}
+                        onInvertSelection={onInvertSelected}
+                    />
+                </Box>
             )}
             {orgUnits && (
                 <>

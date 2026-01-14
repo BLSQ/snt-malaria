@@ -11,7 +11,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { InterventionSelect } from '../../../../components/InterventionSelect';
 import { Map as SNTMap } from '../../../../components/Map';
 import { MapActionBox } from '../../../../components/MapActionBox';
-import { OrgUnitActions } from '../../../../components/OrgUnitActions';
+import { MapSelectionWidget } from '../../../../components/MapSelectionWidget';
 import { MESSAGES } from '../../../messages';
 import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
@@ -333,7 +333,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
             <MapActionBox>
                 {editMode && (
                     <>
-                        <OrgUnitActions
+                        <MapSelectionWidget
                             selectedOrgUnits={selectedOrgUnits}
                             onClearAll={() => setSelectedOrgUnits([])}
                             onSelectAll={() =>
@@ -342,6 +342,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                                 )
                             }
                             onInvertSelection={invertSelectedOrgUnits}
+                            showFilterButton={false}
                             disabled={disabled}
                         />
                         <InterventionSelect

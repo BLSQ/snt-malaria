@@ -141,6 +141,21 @@ export const Planning: FC = () => {
         );
     }, [formatMessage]);
 
+    const handleSelectAllOnMap = useCallback(
+        () => setSelectionOnMap(orgUnits || []),
+        [orgUnits],
+    );
+
+    const handleInvertSelectionOnMap = useCallback(() => {
+        setSelectionOnMap(prevSelected => {
+            if (!orgUnits) return prevSelected;
+            const newSelection = orgUnits.filter(
+                orgUnit => !prevSelected.some(sel => sel.id === orgUnit.id),
+            );
+            return newSelection;
+        });
+    }, [orgUnits]);
+
     return (
         <>
             {isLoadingOrgUnits && <LoadingSpinner />}
@@ -161,6 +176,10 @@ export const Planning: FC = () => {
                                     orgUnitsOnMap={selectionOnMap}
                                     onApplyFilters={setMetricFilters}
                                     onClearSelection={handleClearSelectionOnMap}
+                                    onInvertSelected={
+                                        handleInvertSelectionOnMap
+                                    }
+                                    onSelectAll={handleSelectAllOnMap}
                                     onChangeMetricLayer={
                                         handleDisplayMetricOnMap
                                     }
