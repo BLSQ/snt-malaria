@@ -99,8 +99,8 @@ export const InterventionSettings: React.FC = () => {
                 <CardHeader
                     title={formatMessage(MESSAGES.interventionsTitle)}
                     subheader={formatMessage(MESSAGES.interventionsSubtitle)}
-                    titleTypographyProps={{ variant: 'h6' }}
-                    subheaderTypographyProps={{ variant: 'subtitle1' }}
+                    titleTypographyProps={{ variant: 'h6', mb: 3 }}
+                    subheaderTypographyProps={{ variant: 'caption' }}
                 />
                 <CardContent sx={styles.cardBody}>
                     {isLoadingCategories || isLoadingCostBreakdownLines ? (
