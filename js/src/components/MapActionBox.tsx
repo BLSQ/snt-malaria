@@ -16,6 +16,7 @@ const styles: SxStyles = {
         border: 'none',
         display: 'flex',
         alignItems: 'center',
+        gap: 1,
     },
 };
 

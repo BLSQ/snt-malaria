@@ -73,6 +73,18 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.noInterventionPlanAvailable',
         defaultMessage: 'No intervention plan available',
     },
+    none: {
+        id: 'iaso.snt_malaria.label.none',
+        defaultMessage: 'None',
+    },
+    ok: {
+        id: 'iaso.snt_malaria.label.ok',
+        defaultMessage: 'OK',
+    },
+    changeTo: {
+        id: 'iaso.snt_malaria.label.changeTo',
+        defaultMessage: 'Change to...',
+    },
     customize: {
         id: 'iaso.snt_malaria.label.customize',
         defaultMessage: 'Customize',
@@ -166,6 +178,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.searchPlaceholder',
         defaultMessage: 'Search District',
     },
+    allInterventionCategories: {
+        id: 'iaso.snt_malaria.label.allInterventionCategories',
+        defaultMessage: 'All intervention categories',
+    },
     allInterventions: {
         id: 'iaso.snt_malaria.label.allInterventions',
         defaultMessage: 'All interventions',
@@ -194,6 +210,14 @@ export const MESSAGES = defineMessages({
     unselectAll: {
         id: 'iaso.snt_malaria.label.unselectAll',
         defaultMessage: 'Unselect All',
+    },
+    invertSelection: {
+        id: 'iaso.snt_malaria.label.invertSelection',
+        defaultMessage: 'Invert Selection',
+    },
+    filter: {
+        id: 'iaso.snt_malaria.label.filter',
+        defaultMessage: 'Filter',
     },
     seasonal: {
         id: 'iaso.snt_malaria.metrics.seasonal',
