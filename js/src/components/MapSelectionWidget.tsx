@@ -109,13 +109,13 @@ export const MapSelectionWidget: FC<Props> = ({
                 <ClickAwayListener onClickAway={() => setIsOpen(false)}>
                     <MenuList>
                         <MenuItem
-                            onClick={() => onSelectAll()}
+                            onClick={onSelectAll}
                             sx={{ fontSize: 'small' }}
                         >
                             {formatMessage(MESSAGES.selectAll)}
                         </MenuItem>
                         <MenuItem
-                            onClick={() => onInvertSelection()}
+                            onClick={onInvertSelection}
                             sx={{ fontSize: 'small' }}
                         >
                             {formatMessage(MESSAGES.invertSelection)}

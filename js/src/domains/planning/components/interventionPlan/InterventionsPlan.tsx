@@ -67,8 +67,8 @@ export const InterventionsPlan: FC<Props> = ({
     const [isRemovingOrgUnits, setIsRemovingOrgUnits] =
         useState<boolean>(false);
     const [selectedInterventionId, setSelectedInterventionId] = useState<
-        number | null
-    >(null);
+        number | undefined
+    >(undefined);
 
     const assignedOrgUnitCount = useMemo(() => {
         return interventionPlans.reduce((acc, plan) => {
@@ -124,7 +124,7 @@ export const InterventionsPlan: FC<Props> = ({
     };
 
     const onCloseInterventionPlanDetails = () => {
-        setSelectedInterventionId(null);
+        setSelectedInterventionId(undefined);
     };
 
     const runBudget = useCallback(() => {
