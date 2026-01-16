@@ -25,8 +25,6 @@ import { useGetMetricCategories } from '../../../planning/hooks/useGetMetrics';
 import { MetricTypeCategory } from '../../../planning/types/metrics';
 import { MESSAGES } from '../../messages';
 
-type Props = {};
-
 const styles: SxStyles = {
     card: { padding: 2 },
     category: { color: 'text.primary', px: 0 },
@@ -54,7 +52,7 @@ const styles: SxStyles = {
     },
 };
 
-export const MetricTypeSettings: FC<Props> = () => {
+export const MetricTypeSettings: FC = () => {
     const [searchTerm, setSearchTerm] = React.useState<string>('');
     const { formatMessage } = useSafeIntl();
     const { data: metricCategories, isLoading: isLoadingMetricCategories } =
@@ -186,7 +184,9 @@ export const MetricTypeSettings: FC<Props> = () => {
                                                             </Typography>
 
                                                             <Typography variant="body2">
-                                                                OpenHexa
+                                                                {
+                                                                    metricType.origin
+                                                                }
                                                             </Typography>
                                                         </Box>
                                                     </ListItem>
