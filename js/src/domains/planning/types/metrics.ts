@@ -14,6 +14,7 @@ export type MetricType = {
     category: string;
     legend_config: ScaleDomainRange;
     legend_type: string;
+    origin: string;
 };
 
 export type MetricValue = {
