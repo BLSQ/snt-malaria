@@ -4,6 +4,11 @@ import { theme as defaultTheme } from 'bluesquare-components';
 
 const primaryMain = '#673AB7';
 
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+
 export const theme = createTheme({
     ...defaultTheme,
     palette: {
@@ -103,6 +108,13 @@ export const theme = createTheme({
             styleOverrides: {
                 root: {
                     textTransform: 'none',
+                },
+            },
+        },
+        MuiCard: {
+            styleOverrides: {
+                root: {
+                    borderRadius: '16px',
                 },
             },
         },
