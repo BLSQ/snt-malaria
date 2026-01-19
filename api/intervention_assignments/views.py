@@ -72,7 +72,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
                 InterventionAssignment.objects.bulk_create(assignments)
 
             return Response(
-                {"message": _("{delta} districts added to plan").format(delta=delta)},
+                {"message": _("{delta} assignment(s) added to plan").format(delta=delta)},
                 status=status.HTTP_201_CREATED,
             )
 
