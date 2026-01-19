@@ -11,17 +11,14 @@ import { SxStyles } from 'Iaso/types/general';
 import { InterventionSelect } from '../../../../components/InterventionSelect';
 import { Map as SNTMap } from '../../../../components/Map';
 import { MapActionBox } from '../../../../components/MapActionBox';
+import { MapSelectionWidget } from '../../../../components/MapSelectionWidget';
 import { MESSAGES } from '../../../messages';
 import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
-import { useRemoveOrgUnitFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import { defaultLegend, getColorRange } from '../../libs/color-utils';
-import {
-    Intervention,
-    InterventionOrgUnit,
-    InterventionPlan,
-} from '../../types/interventions';
+import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
+import { defaultLegend, getRandomColor, purples } from '../../libs/color-utils';
+import { Intervention, InterventionPlan } from '../../types/interventions';
 
 const defaultLegendConfig = {
     units: '',
@@ -33,8 +30,6 @@ const defaultLegendConfig = {
     unit_symbol: '',
 };
 
-const defaultColor = 'var(--deepPurple-300, #9575CD)';
-
 interface InterventionColorMap {
     color: string;
     interventionsKey: string;
@@ -45,6 +40,7 @@ interface InterventionColorMap {
 type Props = {
     scenarioId: number | undefined;
     disabled?: boolean;
+    interventions: Intervention[];
 };
 
 const styles: SxStyles = {
@@ -62,19 +58,6 @@ const styles: SxStyles = {
     },
 };
 
-const getSelectedOrgUnitsFromId = (
-    selectedId: number,
-    orgUnitInterventions: Map<number, Intervention[]>,
-) => {
-    const filteredOrgUnitIds = [...orgUnitInterventions]
-        .filter(([_key, value]) =>
-            value.some((v: { id: number }) => v.id === selectedId),
-        )
-        .map(([key, _value]) => key);
-
-    return filteredOrgUnitIds;
-};
-
 const getInterventionsGroupKey = (interventions: Intervention[]) => {
     return interventions.map(i => i.id).join('--');
 };
@@ -86,44 +69,30 @@ const getInterventionsGroupLabel = (interventions: Intervention[]) => {
 export const InterventionsPlanMap: FunctionComponent<Props> = ({
     scenarioId,
     disabled = false,
+    interventions = [],
 }) => {
     const { formatMessage } = useSafeIntl();
     const { data: orgUnits, isLoading: loadingOrgUnits } = useGetOrgUnits();
     const [editMode, setEditMode] = useState<boolean>(false);
-    const { mutateAsync: removeOrgUnitsFromIntervention } =
-        useRemoveOrgUnitFromInterventionPlan({ showSuccessSnackBar: false });
-    const { mutateAsync: createInterventionAssignment } =
-        useCreateInterventionAssignment();
-
+    const [selectedOrgUnits, setSelectedOrgUnits] = useState<number[]>([]);
+    const [selectedInterventionId, setSelectedInterventionId] = useState<
+        number | null
+    >(null);
     const {
         data: interventionAssignments,
         isLoading: isLoadinginterventionAssignments,
     } = useGetInterventionAssignments(scenarioId);
+    const { mutateAsync: removeManyOrgUnitsFromPlan } =
+        useRemoveManyOrgUnitsFromInterventionPlan();
+    const { mutateAsync: createInterventionAssignment } =
+        useCreateInterventionAssignment();
 
-    const [selectedInterventionId, setSelectedInterventionId] = useState<
-        number | null
-    >(null);
+    const interventionIds = useMemo(
+        () => interventions.map(i => i.id),
+        [interventions],
+    );
 
-    useEffect(() => {
-        if (
-            selectedInterventionId &&
-            interventionAssignments?.some(
-                i => i.intervention.id === selectedInterventionId,
-            )
-        )
-            return;
-
-        const defaultId =
-            interventionAssignments && interventionAssignments.length === 1
-                ? interventionAssignments[0].intervention?.id
-                : 0;
-        setSelectedInterventionId(defaultId);
-    }, [
-        interventionAssignments,
-        selectedInterventionId,
-        setSelectedInterventionId,
-    ]);
-
+    // Helper to map org unit IDs to their interventions
     const getOrgUnitInterventions = (plans: InterventionPlan[]) => {
         return plans.reduce((acc, plan) => {
             plan.org_units.forEach(orgUnit => {
@@ -135,77 +104,79 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
         }, new Map<number, Intervention[]>());
     };
 
-    const [localInterventionAssignments, setLocalInterventionAssignments] =
-        useState<InterventionPlan[]>(interventionAssignments || []);
-
-    useEffect(
-        () => setLocalInterventionAssignments(interventionAssignments || []),
-        [interventionAssignments],
-    );
-
     const orgUnitInterventions = useMemo(() => {
         if (isLoadinginterventionAssignments)
             return new Map<number, Intervention[]>();
         const ouInterventions = getOrgUnitInterventions(
-            localInterventionAssignments ?? [],
+            interventionAssignments ?? [],
         );
         return ouInterventions;
-    }, [localInterventionAssignments, isLoadinginterventionAssignments]);
+    }, [interventionAssignments, isLoadinginterventionAssignments]);
 
+    useEffect(() => {
+        if (editMode === false) {
+            setSelectedInterventionId(null);
+            setSelectedOrgUnits([]);
+        }
+    }, [editMode]);
+
+    useEffect(() => setSelectedInterventionId(null), [interventions]);
+
+    // Get OrgUnits relevant to the selected interventions
     const highlightedOrgUnits = useMemo(
         () =>
-            selectedInterventionId
-                ? getSelectedOrgUnitsFromId(
-                      selectedInterventionId,
-                      orgUnitInterventions,
-                  )
+            interventionIds && interventionIds.length > 0
+                ? [...orgUnitInterventions]
+                      .filter(([_ouId, ouInterventions]) =>
+                          ouInterventions.some(i =>
+                              interventionIds.includes(i.id),
+                          ),
+                      )
+                      .map(([ouId, _interventions]) => ouId)
                 : [...orgUnitInterventions.keys()],
-        [selectedInterventionId, orgUnitInterventions],
+        [interventionIds, orgUnitInterventions],
     );
 
     const interventionGroupColors = useMemo(() => {
-        const colorMap = [...orgUnitInterventions].reduce(
-            (acc, [key, interventions]) => {
-                const interventionGroupKey =
-                    getInterventionsGroupKey(interventions);
+        const groupMap = new Map<string, InterventionColorMap>();
 
-                // We don't want to generate new color if one was already assigned for this group.
-                const existingMap = acc.find(
-                    c => c.interventionsKey === interventionGroupKey,
-                );
-                if (existingMap) {
-                    existingMap.orgUnitIds.push(key);
-                    return acc;
-                }
+        for (const [ouId, interventions] of orgUnitInterventions) {
+            const key = getInterventionsGroupKey(interventions);
+            if (!groupMap.has(key)) {
+                groupMap.set(key, {
+                    interventionsKey: key,
+                    color: getRandomColor(key),
+                    label: getInterventionsGroupLabel(interventions),
+                    orgUnitIds: [],
+                });
+            }
+            groupMap.get(key)!.orgUnitIds.push(ouId);
+        }
 
-                return [
-                    ...acc,
-                    {
-                        interventionsKey: interventionGroupKey,
-                        color: defaultLegend,
-                        label: getInterventionsGroupLabel(interventions),
-                        orgUnitIds: [key],
-                    },
-                ];
-            },
-            [] as InterventionColorMap[],
-        );
-
-        getColorRange(colorMap.length).forEach((c, index) => {
-            colorMap[index].color = c;
-        });
+        const colorMap = Array.from(groupMap.values());
 
         return colorMap;
     }, [orgUnitInterventions]);
 
     const getOrgUnitMapMisc = useCallback(
-        orgUnitId => {
+        (orgUnitId: number) => {
             if (!highlightedOrgUnits.includes(orgUnitId)) {
                 return { color: defaultLegend, label: '' };
             }
 
-            if (selectedInterventionId) {
-                return { color: defaultColor, label: '' };
+            if (interventionIds && interventionIds.length > 0) {
+                const ouInterventions = orgUnitInterventions
+                    .get(orgUnitId)
+                    ?.filter(i => interventionIds.includes(i.id));
+                const uniqueIntervention =
+                    ouInterventions?.length === 1 ? ouInterventions[0] : null;
+                const interventionIndex = interventionIds.indexOf(
+                    uniqueIntervention?.id ?? 0,
+                );
+                return {
+                    color: purples[interventionIndex],
+                    label: uniqueIntervention?.name ?? '',
+                };
             }
 
             const { color, label } =
@@ -214,113 +185,126 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 ) ?? {};
             return { color, label };
         },
-        [interventionGroupColors, highlightedOrgUnits, selectedInterventionId],
+        [
+            highlightedOrgUnits,
+            interventionGroupColors,
+            interventionIds,
+            orgUnitInterventions,
+        ],
     );
 
     const legendConfig = useMemo(() => {
         const domain: string[] = [];
         const range: string[] = [];
-        interventionGroupColors.forEach(v => {
-            range.push(v.color);
-            domain.push(v.label);
-        });
-        return { ...defaultLegendConfig, legend_config: { domain, range } };
-    }, [interventionGroupColors]);
 
-    const removeAssignment = useCallback(
-        async (orgUnitId: number, assignmentId: number) => {
-            await removeOrgUnitsFromIntervention(assignmentId);
-            const updatedAssignments = localInterventionAssignments?.map(
-                plan => {
-                    if (plan.intervention.id !== selectedInterventionId) {
-                        return plan;
-                    }
-                    return {
-                        ...plan,
-                        org_units: plan.org_units.filter(
-                            ou => ou.id !== orgUnitId,
-                        ),
-                    };
-                },
-            );
-            setLocalInterventionAssignments(updatedAssignments || []);
-        },
-        [
-            selectedInterventionId,
-            localInterventionAssignments,
-            removeOrgUnitsFromIntervention,
-        ],
-    );
-
-    const addAssigment = useCallback(
-        async (orgUnitId: number, scenarioId?: number) => {
-            const ouInterventions = orgUnitInterventions.get(orgUnitId) || [];
-
-            await createInterventionAssignment({
-                scenario_id: scenarioId!,
-                orgunit_interventions: {
-                    [orgUnitId]: [
-                        ...ouInterventions.map(i => i.id),
-                        selectedInterventionId,
-                    ],
-                },
+        if (interventions && interventions.length > 0) {
+            interventions.forEach((intervention, index) => {
+                domain.push(intervention?.name || '');
+                range.push(purples[index]);
             });
-            const updatedAssignments = localInterventionAssignments?.map(
-                plan => {
-                    if (plan.intervention.id !== selectedInterventionId) {
-                        return plan;
-                    }
-                    return {
-                        ...plan,
-                        org_units: [
-                            ...plan.org_units,
-                            {
-                                id: orgUnitId,
-                                name:
-                                    orgUnits?.find(ou => ou.id === orgUnitId)
-                                        ?.name || '',
-                                intervention_assignment_id: 0,
-                            } as InterventionOrgUnit,
-                        ],
-                    };
-                },
-            );
-            setLocalInterventionAssignments(updatedAssignments || []);
+        } else {
+            interventionGroupColors.forEach(v => {
+                range.push(v.color);
+                domain.push(v.label);
+            });
+        }
+        return { ...defaultLegendConfig, legend_config: { domain, range } };
+    }, [interventionGroupColors, interventions]);
+
+    const invertSelectedOrgUnits = useCallback(() => {
+        if (!orgUnits) return;
+        const newSelectedOrgUnits = orgUnits
+            .map(ou => ou.id)
+            .filter(ouId => !selectedOrgUnits.includes(ouId));
+        setSelectedOrgUnits(newSelectedOrgUnits);
+    }, [orgUnits, selectedOrgUnits]);
+
+    const removeSelectedOrgUnitsFromPlan = useCallback(
+        (orgUnitIds: number[]) => {
+            const assignmentIds = orgUnitIds
+                .map(ouId =>
+                    interventionAssignments
+                        ?.filter(
+                            plan =>
+                                interventionIds.includes(
+                                    plan.intervention.id,
+                                ) && plan.org_units.some(ou => ou.id === ouId),
+                        )
+                        .map(
+                            plan =>
+                                plan.org_units.find(ou => ou.id === ouId)
+                                    ?.intervention_assignment_id,
+                        ),
+                )
+                .flat();
+
+            removeManyOrgUnitsFromPlan(assignmentIds);
         },
-        [
-            createInterventionAssignment,
-            orgUnitInterventions,
-            selectedInterventionId,
-            localInterventionAssignments,
-            orgUnits,
-        ],
+        [removeManyOrgUnitsFromPlan, interventionAssignments, interventionIds],
     );
-    const onOrgUnitClick = useCallback(
-        orgUnitId => {
-            if (disabled || !editMode || !selectedInterventionId) {
+
+    const applyInterventionToOrgUnits = useCallback(
+        async (orgUnitIds: number[], targetInterventionId: number | null) => {
+            if (orgUnitIds.length === 0 || targetInterventionId === null) {
+                setEditMode(false);
+                setSelectedOrgUnits([]);
                 return;
             }
 
-            const existingAssignment = localInterventionAssignments
-                ?.find(plan => plan.intervention.id === selectedInterventionId)
-                ?.org_units.find(ou => ou.id === orgUnitId);
-            if (existingAssignment) {
-                removeAssignment(
-                    orgUnitId,
-                    existingAssignment.intervention_assignment_id,
+            if (targetInterventionId <= 0) {
+                removeSelectedOrgUnitsFromPlan(orgUnitIds);
+            } else {
+                const orgunitsInterventions = orgUnitIds.reduce(
+                    (acc, orgUnitId) => {
+                        acc[orgUnitId] = [targetInterventionId];
+                        return acc;
+                    },
+                    {} as { [orgUnitId: number]: number[] },
+                );
+                createInterventionAssignment({
+                    scenario_id: scenarioId!,
+                    orgunit_interventions: orgunitsInterventions,
+                });
+            }
+
+            setSelectedOrgUnits([]);
+            setEditMode(false);
+            return;
+        },
+        [
+            setSelectedOrgUnits,
+            setEditMode,
+            removeSelectedOrgUnitsFromPlan,
+            createInterventionAssignment,
+            scenarioId,
+        ],
+    );
+
+    const onOrgUnitClick = useCallback(
+        (orgUnitId: number) => {
+            if (
+                disabled ||
+                !editMode ||
+                !interventions ||
+                interventions.length === 0
+            ) {
+                return;
+            }
+
+            if (selectedOrgUnits.includes(orgUnitId)) {
+                setSelectedOrgUnits(
+                    selectedOrgUnits.filter(id => id !== orgUnitId),
                 );
             } else {
-                addAssigment(orgUnitId, scenarioId);
+                setSelectedOrgUnits([...selectedOrgUnits, orgUnitId]);
             }
         },
         [
             editMode,
-            selectedInterventionId,
-            localInterventionAssignments,
-            removeAssignment,
-            addAssigment,
-            scenarioId,
             disabled,
+            interventions,
+            setSelectedOrgUnits,
+            selectedOrgUnits,
         ],
     );
 
@@ -337,34 +321,66 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 <SNTMap
                     id="intervention_plan_map"
                     orgUnits={orgUnits}
+                    selectedOrgUnits={selectedOrgUnits}
                     getOrgUnitMapMisc={getOrgUnitMapMisc}
                     onOrgUnitClick={onOrgUnitClick}
                     legendConfig={legendConfig}
                     hideLegend={
-                        !!selectedInterventionId ||
-                        !localInterventionAssignments ||
-                        localInterventionAssignments.length <= 0
+                        !interventionAssignments ||
+                        interventionAssignments.length <= 0
                     }
                 />
             )}
 
             <MapActionBox>
-                <InterventionSelect
-                    onInterventionSelect={setSelectedInterventionId}
-                    interventions={localInterventionAssignments?.map(
-                        ({ intervention }) => intervention,
-                    )}
-                    selectedInterventionId={selectedInterventionId}
-                />
-                {disabled ? null : (
+                {editMode && (
+                    <>
+                        <MapSelectionWidget
+                            selectedOrgUnits={selectedOrgUnits}
+                            onClearAll={() => setSelectedOrgUnits([])}
+                            onSelectAll={() =>
+                                setSelectedOrgUnits(
+                                    orgUnits?.map(orgUnit => orgUnit.id) || [],
+                                )
+                            }
+                            onInvertSelection={invertSelectedOrgUnits}
+                            showFilterButton={false}
+                            disabled={disabled}
+                        />
+                        <InterventionSelect
+                            onInterventionSelect={setSelectedInterventionId}
+                            interventions={interventions}
+                            showNoneOption={true}
+                            showAllOption={false}
+                            selectedInterventionId={selectedInterventionId}
+                            placeholder={MESSAGES.changeTo}
+                        />
+                    </>
+                )}
+                {disabled || interventions.length === 0 ? null : (
                     <Tooltip title={formatMessage(MESSAGES.customizeTooltip)}>
-                        <Button
-                            variant={editMode ? 'contained' : 'outlined'}
-                            onClick={() => setEditMode(!editMode)}
-                            sx={styles.customizeButton}
-                        >
-                            {formatMessage(MESSAGES.customize)}
-                        </Button>
+                        {editMode ? (
+                            <Button
+                                variant="contained"
+                                onClick={() =>
+                                    applyInterventionToOrgUnits(
+                                        selectedOrgUnits,
+                                        selectedInterventionId,
+                                    )
+                                }
+                                sx={styles.customizeButton}
+                            >
+                                {formatMessage(MESSAGES.ok)}
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="outlined"
+                                onClick={() => setEditMode(!editMode)}
+                                sx={styles.customizeButton}
+                            >
+                                {formatMessage(MESSAGES.customize)}
+                            </Button>
+                        )}
                     </Tooltip>
                 )}
             </MapActionBox>

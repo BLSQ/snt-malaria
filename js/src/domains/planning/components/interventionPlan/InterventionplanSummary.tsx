@@ -5,12 +5,17 @@ import TableRowsIcon from '@mui/icons-material/TableRows';
 import { Button, Grid, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { IconBoxed } from '../../../../components/IconBoxed';
+import { InterventionCategorySelect } from '../../../../components/InterventionCategorySelect';
 import { MESSAGES } from '../../../messages';
+import { InterventionCategory } from '../../types/interventions';
 
 export type TabValue = 'map' | 'list';
 type Props = {
     setTabValue: Dispatch<SetStateAction<TabValue>>;
     tabValue: TabValue;
+    setInterventionCategory: Dispatch<
+        SetStateAction<InterventionCategory | null>
+    >;
     onRunBudget: () => void;
     isCalculatingBudget: boolean;
     assignedOrgUnits: number;
@@ -19,6 +24,7 @@ type Props = {
 export const InterventionPlanSummary: FC<Props> = ({
     setTabValue,
     tabValue,
+    setInterventionCategory,
     onRunBudget,
     isCalculatingBudget,
     assignedOrgUnits = 0,
@@ -48,6 +54,13 @@ export const InterventionPlanSummary: FC<Props> = ({
                     alignItems="center"
                     sx={{ color: '#1F2B3D99' }}
                 >
+                    {tabValue === 'map' && (
+                        <InterventionCategorySelect
+                            onInterventionCategoryChange={
+                                setInterventionCategory
+                            }
+                        />
+                    )}
                     <Typography variant="body2">
                         {assignedOrgUnits} / {totalOrgUnits}
                     </Typography>
