@@ -28,17 +28,17 @@ const styles: SxStyles = {
         overflow: 'hidden',
         position: 'relative',
     }),
-    layerSelectBox: (theme: Theme) => ({
+    actionBox: {
         position: 'absolute',
-        right: theme.spacing(1),
-        top: theme.spacing(1),
+        top: 0,
+        left: 0,
+        padding: 1,
         zIndex: 500,
-    }),
-    mapSelectionWidgetBox: {
-        position: 'absolute',
-        top: 1,
-        left: 1,
-        zIndex: 500,
+        display: 'flex',
+        flexDirection: 'row-reverse',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%',
     },
 };
 
@@ -122,17 +122,6 @@ export const Map: FC<Props> = ({
 
     return (
         <Box height="100%" sx={styles.mainBox}>
-            {!disabled && (
-                <Box sx={styles.mapSelectionWidgetBox}>
-                    <MapSelectionWidget
-                        selectedOrgUnits={orgUnitIdsOnMap}
-                        onApplyFilters={onApplyFilters}
-                        onClearAll={onClearSelection}
-                        onSelectAll={onSelectAll}
-                        onInvertSelection={onInvertSelected}
-                    />
-                </Box>
-            )}
             {orgUnits && (
                 <>
                     <MapContainer
@@ -191,11 +180,20 @@ export const Map: FC<Props> = ({
                             highlightMetricType={displayedMetric}
                         />
                     )}
-                    <Box sx={styles.layerSelectBox}>
+                    <Box sx={styles.actionBox}>
                         <LayerSelect
                             initialSelection={displayedMetric || ''}
                             onLayerChange={onChangeMetricLayer}
                         />
+                        {!disabled && (
+                            <MapSelectionWidget
+                                selectedOrgUnits={orgUnitIdsOnMap}
+                                onApplyFilters={onApplyFilters}
+                                onClearAll={onClearSelection}
+                                onSelectAll={onSelectAll}
+                                onInvertSelection={onInvertSelected}
+                            />
+                        )}
                     </Box>
                 </>
             )}
