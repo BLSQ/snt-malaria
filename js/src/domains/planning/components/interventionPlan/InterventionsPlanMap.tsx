@@ -76,8 +76,8 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     const [editMode, setEditMode] = useState<boolean>(false);
     const [selectedOrgUnits, setSelectedOrgUnits] = useState<number[]>([]);
     const [selectedInterventionId, setSelectedInterventionId] = useState<
-        number | null
-    >(null);
+        number | undefined
+    >(undefined);
     const {
         data: interventionAssignments,
         isLoading: isLoadinginterventionAssignments,
@@ -115,12 +115,12 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
     useEffect(() => {
         if (editMode === false) {
-            setSelectedInterventionId(null);
+            setSelectedInterventionId(undefined);
             setSelectedOrgUnits([]);
         }
     }, [editMode]);
 
-    useEffect(() => setSelectedInterventionId(null), [interventions]);
+    useEffect(() => setSelectedInterventionId(undefined), [interventions]);
 
     // Get OrgUnits relevant to the selected interventions
     const highlightedOrgUnits = useMemo(
@@ -175,7 +175,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 );
                 return {
                     color: purples[interventionIndex],
-                    label: uniqueIntervention?.name ?? '',
+                    label: uniqueIntervention?.short_name ?? '',
                 };
             }
 
@@ -199,7 +199,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
 
         if (interventions && interventions.length > 0) {
             interventions.forEach((intervention, index) => {
-                domain.push(intervention?.name || '');
+                domain.push(intervention?.short_name || '');
                 range.push(purples[index]);
             });
         } else {
@@ -244,8 +244,11 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     );
 
     const applyInterventionToOrgUnits = useCallback(
-        async (orgUnitIds: number[], targetInterventionId: number | null) => {
-            if (orgUnitIds.length === 0 || targetInterventionId === null) {
+        async (
+            orgUnitIds: number[],
+            targetInterventionId: number | undefined,
+        ) => {
+            if (orgUnitIds.length === 0 || targetInterventionId === undefined) {
                 setEditMode(false);
                 setSelectedOrgUnits([]);
                 return;
