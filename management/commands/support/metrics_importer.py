@@ -106,14 +106,14 @@ class MetricsImporter:
         # Validate CSV files first
         self._validate_csv_files(metadata_file_path, dataset_file_path)
 
-        self.stdout_write("Clearing existing metrics...")
-        MetricValue.objects.filter(metric_type__account=self.account).delete()
-        MetricType.objects.filter(account=self.account).delete()
+        self.stdout_write("Clearing existing metric values...")
+        MetricValue.objects.select_related("metric_type").filter(
+            metric_type__account=self.account, metric_type__origin=MetricType.MetricTypeOrigin.OPENHEXA
+        ).delete()
 
-        self.stdout_write("Creating MetricTypes from metadata file...")
-
+        self.stdout_write("Updating MetricTypes from metadata file...")
         with open(metadata_file_path, newline="", encoding="utf-8") as metafile:
-            metric_types = self._create_metric_types(metafile)
+            metric_types = self._update_metric_types(metafile)
 
         self.stdout_write("Reading values from dataset file...")
         with open(dataset_file_path, newline="", encoding="utf-8") as csvfile:
@@ -124,24 +124,51 @@ class MetricsImporter:
         self.stdout_write(self.style.SUCCESS("Metrics import completed successfully!"))
         return value_count
 
-    def _create_metric_types(self, metafile):
+    def _update_metric_types(self, metafile):
         metric_types = {}
 
         metareader = csv.DictReader(metafile)
+        existing_metric_types = (
+            MetricType.objects.filter(account=self.account, origin=MetricType.MetricTypeOrigin.OPENHEXA)
+            .order_by("code")
+            .distinct("code")
+            .in_bulk(field_name="code")
+        )
+
+        to_create = []
+        to_update = []
+
         for row in metareader:
             try:
-                metric_type = MetricType.objects.create(
-                    account=self.account,
-                    name=row["LABEL"],
-                    code=row["VARIABLE"],
-                    description=row["DESCRIPTION"],
-                    source=row["SOURCE"],
-                    units=row["UNITS"],
-                    category=row["CATEGORY"],
-                    unit_symbol=row["UNIT_SYMBOL"],
-                    legend_type=row["TYPE"].lower(),
-                    is_utility=row.get("IS_UTILITY", "False").lower() == "true",
-                )
+                metric_type = existing_metric_types.get(row["VARIABLE"])
+                if metric_type:
+                    metric_type.name = row["LABEL"]
+                    metric_type.description = row["DESCRIPTION"]
+                    metric_type.source = row["SOURCE"]
+                    metric_type.units = row["UNITS"]
+                    metric_type.category = row["CATEGORY"]
+                    metric_type.unit_symbol = row["UNIT_SYMBOL"]
+                    metric_type.legend_type = row["TYPE"].lower()
+                    metric_type.is_utility = row.get("IS_UTILITY", "False").lower() == "true"
+                    metric_type.origin = MetricType.MetricTypeOrigin.OPENHEXA
+                    to_update.append(metric_type)
+                else:
+                    metric_type = MetricType(
+                        account=self.account,
+                        name=row["LABEL"],
+                        code=row["VARIABLE"],
+                        description=row["DESCRIPTION"],
+                        source=row["SOURCE"],
+                        units=row["UNITS"],
+                        category=row["CATEGORY"],
+                        unit_symbol=row["UNIT_SYMBOL"],
+                        legend_type=row["TYPE"].lower(),
+                        is_utility=row.get("IS_UTILITY", "False").lower() == "true",
+                        origin=MetricType.MetricTypeOrigin.OPENHEXA,
+                    )
+                    to_create.append(metric_type)
+
+                existing_metric_types.pop(row["VARIABLE"], None)
 
                 if metric_type.legend_type not in ["ordinal", "threshold", "linear"]:
                     self.stdout_write(
@@ -159,6 +186,23 @@ class MetricsImporter:
                 metric_types[metric_type.code] = metric_type
             except Exception as e:
                 self.stdout_write(f"ERROR: Error creating MetricType: {row['LABEL']}")
+
+        MetricType.objects.bulk_create(to_create)
+        MetricType.objects.bulk_update(
+            to_update,
+            fields=[
+                "name",
+                "description",
+                "source",
+                "units",
+                "category",
+                "unit_symbol",
+                "legend_type",
+                "is_utility",
+                "origin",
+            ],
+        )
+        MetricType.objects.filter(account=self.account, code__in=existing_metric_types.keys()).delete()
 
         return metric_types
 
