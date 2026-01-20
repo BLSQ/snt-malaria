@@ -20,8 +20,8 @@ msgstr ""
 
 #: plugins/snt_malaria/api/intervention_assignments/views.py
 #, python-brace-format
-msgid "{delta} districts added to plan"
-msgstr "{delta} district(s) ajouté(s) au plan"
+msgid "{delta} assignment(s) added to plan"
+msgstr "{delta} assignation(s) ajoutée(s) au plan"
 
 #: plugins/snt_malaria/api/scenarios/serializers.py
 msgid "Name cannot be empty."
