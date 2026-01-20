@@ -87,6 +87,19 @@ export const Map: FC<Props> = ({
     // Displaying metrics on the map
     const getSelectedMetric = useGetOrgUnitMetric(displayedMetricValues);
 
+    // Format metric value for an org unit
+    const formatMetricValue = useCallback(
+        (orgUnitId: number) => {
+            const selectedMetric = getSelectedMetric(orgUnitId);
+            if (!selectedMetric) return 'N/A';
+            if (typeof selectedMetric.label === 'number') {
+                return Math.round(selectedMetric.label * 100) / 100;
+            }
+            return selectedMetric.label;
+        },
+        [getSelectedMetric],
+    );
+
     // Selecting an org unit on the map
     const [clickedOrgUnit, setClickedOrgUnit] = useState<OrgUnit | null>(null);
     const onOrgUnitClick = (orgUnitId: number) => {
@@ -161,8 +174,7 @@ export const Map: FC<Props> = ({
                                     >
                                         {orgUnit.name}
                                     </Typography>
-                                    {getSelectedMetric(orgUnit.id)?.label ??
-                                        'N/A'}
+                                    {formatMetricValue(orgUnit.id)}
                                 </Tooltip>
                             </GeoJSON>
                         ))}
