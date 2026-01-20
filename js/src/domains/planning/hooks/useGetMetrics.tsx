@@ -21,7 +21,7 @@ export const useGetMetricTypes: <T = MetricType>(
     transformData?: (data: MetricType[]) => any,
 ) => {
     return useSnackQuery({
-        queryKey: ['metricTypesFlat'],
+        queryKey: ['metricTypes'],
         queryFn: () => getRequest('/api/metrictypes/'),
         options: {
             cacheTime: Infinity, // disable auto fetch on cache expiration
@@ -35,17 +35,12 @@ export const useGetMetricCategories = (): UseQueryResult<
     MetricTypeCategory[],
     Error
 > => {
-    return useGetMetricTypes((data: MetricType[]) => {
-        const groupedPerCategory = Object.groupBy(
-            data,
-            ({ category }) => category,
-        );
-        return Object.keys(groupedPerCategory).map(category => {
-            return {
-                name: category,
-                items: groupedPerCategory[category],
-            };
-        });
+    return useSnackQuery({
+        queryKey: ['metricTypes', 'metricCategories'],
+        queryFn: () => getRequest('/api/metrictypes/grouped_per_category/'),
+        options: {
+            cacheTime: Infinity, // disable auto fetch on cache expiration
+        },
     });
 };
 
