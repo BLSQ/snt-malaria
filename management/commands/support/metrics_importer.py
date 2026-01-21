@@ -138,6 +138,8 @@ class MetricsImporter:
         to_create = []
         to_update = []
 
+        self.stdout_write(f"existing_metric_types keys: {list(existing_metric_types.keys())}")
+
         for row in metareader:
             try:
                 metric_type = existing_metric_types.get(row["VARIABLE"])
@@ -152,6 +154,9 @@ class MetricsImporter:
                     metric_type.is_utility = row.get("IS_UTILITY", "False").lower() == "true"
                     metric_type.origin = MetricType.MetricTypeOrigin.OPENHEXA
                     to_update.append(metric_type)
+                    self.stdout_write(
+                        f"Update metric type: {metric_type.name} with legend type: {metric_type.legend_type}"
+                    )
                 else:
                     metric_type = MetricType(
                         account=self.account,
@@ -167,6 +172,9 @@ class MetricsImporter:
                         origin=MetricType.MetricTypeOrigin.OPENHEXA,
                     )
                     to_create.append(metric_type)
+                    self.stdout_write(
+                        f"Create metric type: {metric_type.name} with legend type: {metric_type.legend_type}"
+                    )
 
                 existing_metric_types.pop(row["VARIABLE"], None)
 
@@ -177,18 +185,15 @@ class MetricsImporter:
                             "should be one of 'ordinal', 'threshold', or 'linear'. Defaulting to 'threshold'."
                         )
                     )
-                else:
-                    self.stdout_write(
-                        f"Created metric type: {metric_type.name} with legend type: {metric_type.legend_type}"
-                    )
 
                 self.metric_type_scales[metric_type.code] = row["SCALE"]
                 metric_types[metric_type.code] = metric_type
             except Exception as e:
                 self.stdout_write(f"ERROR: Error creating MetricType: {row['LABEL']}")
 
-        MetricType.objects.bulk_create(to_create)
-        MetricType.objects.bulk_update(
+        created_metrics = MetricType.objects.bulk_create(to_create)
+        self.stdout_write(f"Created {len(created_metrics)} new MetricTypes.")
+        amount_of_updates = MetricType.objects.bulk_update(
             to_update,
             fields=[
                 "name",
@@ -202,7 +207,11 @@ class MetricsImporter:
                 "origin",
             ],
         )
-        MetricType.objects.filter(account=self.account, code__in=existing_metric_types.keys()).delete()
+        self.stdout_write(f"Updated {amount_of_updates} existing MetricTypes.")
+        deleted_count, _ = MetricType.objects.filter(
+            account=self.account, code__in=existing_metric_types.keys()
+        ).delete()
+        self.stdout_write(f"Deleted {deleted_count} MetricTypes.")
 
         return metric_types
 
