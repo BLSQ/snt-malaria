@@ -69,4 +69,29 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.noCostBreakdownLines',
         defaultMessage: 'No cost configured.',
     },
+    dataLayersTitle: {
+        id: 'iaso.snt_malaria.settings.dataLayers.title',
+        defaultMessage: 'Data Layers',
+    },
+    dataLayersSubtitle: {
+        id: 'iaso.snt_malaria.settings.dataLayers.subtitle',
+        defaultMessage:
+            'Manage the covariate maps available when creating an intervention plan.',
+    },
+    more: {
+        id: 'iaso.snt_malaria.more',
+        defaultMessage: 'More',
+    },
+    createLayer: {
+        id: 'iaso.snt_malaria.settings.dataLayers.createLayer',
+        defaultMessage: 'Create layer',
+    },
+    searchByName: {
+        id: 'iaso.snt_malaria.settings.dataLayers.searchByName',
+        defaultMessage: 'Search by name',
+    },
+    noMetricTypesFound: {
+        id: 'iaso.snt_malaria.settings.metricTypes.noMetricTypesFound',
+        defaultMessage: 'No metric types found.',
+    },
 });

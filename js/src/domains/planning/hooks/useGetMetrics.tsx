@@ -15,27 +15,31 @@ export type DropdownOptions<T> = {
     original: Form;
 };
 
-export const useGetMetricCategories = (): UseQueryResult<
-    MetricTypeCategory[],
-    Error
-> => {
+export const useGetMetricTypes: <T = MetricType>(
+    transformData?: (data: MetricType[]) => T[],
+) => UseQueryResult<T[], Error> = (
+    transformData?: (data: MetricType[]) => any,
+) => {
     return useSnackQuery({
         queryKey: ['metricTypes'],
         queryFn: () => getRequest('/api/metrictypes/'),
         options: {
             cacheTime: Infinity, // disable auto fetch on cache expiration
-            select: (data: MetricType[]) => {
-                const groupedPerCategory = Object.groupBy(
-                    data,
-                    ({ category }) => category,
-                );
-                return Object.keys(groupedPerCategory).map(category => {
-                    return {
-                        name: category,
-                        items: groupedPerCategory[category],
-                    };
-                });
-            },
+            select: (data: MetricType[]) =>
+                transformData ? transformData(data) : data,
+        },
+    });
+};
+
+export const useGetMetricCategories = (): UseQueryResult<
+    MetricTypeCategory[],
+    Error
+> => {
+    return useSnackQuery({
+        queryKey: ['metricTypes', 'metricCategories'],
+        queryFn: () => getRequest('/api/metrictypes/grouped_per_category/'),
+        options: {
+            cacheTime: Infinity, // disable auto fetch on cache expiration
         },
     });
 };
