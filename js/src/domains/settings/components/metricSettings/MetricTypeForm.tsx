@@ -1,72 +1,79 @@
-import React, { FC, useCallback, useMemo } from 'react';
-import { Box, Grid, Typography } from '@mui/material';
+import React, { FC, useCallback, useEffect, useMemo } from 'react';
+import { Box, Grid } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useGetLegendTypes } from '../../../planning/hooks/useGetLegendTypes';
-import { MetricType } from '../../../planning/types/metrics';
+import { MetricTypeFormModel } from '../../../planning/types/metrics';
 import { MESSAGES } from '../../messages';
-import { SxStyles } from 'Iaso/types/general';
 
 type MetricTypeFormProps = {
-    metricType?: MetricType;
+    metricType?: MetricTypeFormModel;
+    onSubmitFormRef: (callback: () => void) => void;
+    onSubmit?: (metricType: MetricTypeFormModel) => void;
 };
 
-const DEFAULT_METRIC_TYPE: MetricType = {
-    id: 0,
+const DEFAULT_METRIC_TYPE: MetricTypeFormModel = {
+    id: undefined,
     name: '',
     description: '',
-    origin: '',
+    origin: 'custom',
     category: '',
     code: '',
     source: '',
     units: '',
     unit_symbol: '',
     comments: '',
-    legend_config: {
-        domain: [],
-        range: [],
-    },
+    scale: '',
     legend_type: '',
 };
 
 export const MetricTypeForm: FC<MetricTypeFormProps> = ({
     metricType = undefined,
+    onSubmitFormRef,
+    onSubmit,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { data: legendTypeOptions, isLoading: loadingLegendTypeOptions } =
         useGetLegendTypes();
+
     const validationSchema = useMemo(
         () =>
             Yup.object().shape({
+                code: Yup.string().required(formatMessage(MESSAGES.required)),
                 name: Yup.string().required(formatMessage(MESSAGES.required)),
                 description: Yup.string(),
-                origin: Yup.string().required(formatMessage(MESSAGES.required)),
                 category: Yup.string().required(
                     formatMessage(MESSAGES.required),
                 ),
+                units: Yup.string(),
+                unit_symbol: Yup.string(),
+                legend_type: Yup.string().required(
+                    formatMessage(MESSAGES.required),
+                ),
+                scale: Yup.string()
+                    .trim()
+                    // TODO Validate max scale items length?
+                    // TODO All scale types
+                    .matches(
+                        /^\[(\s*(\d+|"[^"]*")\s*,)*\s*(\d+|"[^"]*")\s*\]$|^\[\s*\]$/,
+                        formatMessage(MESSAGES.invalidJsonArray),
+                    ),
             }),
         [formatMessage],
     );
 
-    const {
-        values,
-        setFieldValue,
-        // setFieldError,
-        isValid,
-        handleSubmit,
-        errors,
-        touched,
-        setFieldTouched,
-    } = useFormik({
-        initialValues: metricType || DEFAULT_METRIC_TYPE,
-        validationSchema,
-        onSubmit: () => {},
-        // onConfirm({
-        //     cost_breakdown_lines: values.cost_breakdown_lines ?? [],
-        // }),
-    });
+    const { values, setFieldValue, handleSubmit, errors, setFieldTouched } =
+        useFormik({
+            initialValues: metricType || DEFAULT_METRIC_TYPE,
+            validationSchema,
+            onSubmit: () => {
+                if (onSubmit) {
+                    onSubmit(values);
+                }
+            },
+        });
 
     const setFieldValueAndState = useCallback(
         (field: string, value: any) => {
@@ -75,6 +82,10 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
         },
         [setFieldTouched, setFieldValue],
     );
+
+    useEffect(() => {
+        onSubmitFormRef(handleSubmit);
+    }, [handleSubmit, onSubmitFormRef]);
 
     return (
         <Box>
@@ -88,7 +99,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 errors={errors.code ? [errors.code] : []}
             />
             <InputComponent
-                keyValue="label"
+                keyValue="name"
                 onChange={setFieldValueAndState}
                 value={values.name}
                 type="text"
@@ -148,7 +159,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                     />
                 </Grid>
             </Grid>
-            {/* <InputComponent
+            <InputComponent
                 keyValue="scale"
                 onChange={setFieldValueAndState}
                 value={values.scale}
@@ -156,7 +167,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 label={MESSAGES.scale}
                 required
                 errors={errors.scale ? [errors.scale] : []}
-            /> */}
+            />
         </Box>
     );
 };

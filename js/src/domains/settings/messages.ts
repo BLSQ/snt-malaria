@@ -1,6 +1,14 @@
 import { defineMessages } from 'react-intl';
 
 export const MESSAGES = defineMessages({
+    create: {
+        defaultMessage: 'Create',
+        id: 'iaso.label.create',
+    },
+    cancel: {
+        defaultMessage: 'Cancel',
+        id: 'iaso.label.cancel',
+    },
     title: {
         id: 'iaso.snt_malaria.settings.title',
         defaultMessage: 'Settings',
@@ -57,6 +65,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.errors.required',
         defaultMessage: 'Required',
     },
+    invalidJsonArray: {
+        id: 'iaso.snt_malaria.settings.intervention.errors.invalidJsonArray',
+        defaultMessage: 'Invalid format, must be [value1, value2, ...]',
+    },
     negativeValueNotAllowed: {
         id: 'iaso.snt_malaria.settings.intervention.errors.negativeValueNotAllowed',
         defaultMessage: 'Negative value not allowed',
@@ -93,5 +105,45 @@ export const MESSAGES = defineMessages({
     noMetricTypesFound: {
         id: 'iaso.snt_malaria.settings.metricTypes.noMetricTypesFound',
         defaultMessage: 'No metric types found.',
+    },
+    variable: {
+        id: 'iaso.snt_malaria.settings.metricTypes.variable',
+        defaultMessage: 'Variable',
+    },
+    label: {
+        id: 'iaso.snt_malaria.settings.metricTypes.label',
+        defaultMessage: 'Label',
+    },
+    category: {
+        id: 'iaso.snt_malaria.settings.metricTypes.category',
+        defaultMessage: 'Category',
+    },
+    description: {
+        id: 'iaso.snt_malaria.settings.metricTypes.description',
+        defaultMessage: 'Description',
+    },
+    units: {
+        id: 'iaso.snt_malaria.settings.metricTypes.units',
+        defaultMessage: 'Units',
+    },
+    unitSymbol: {
+        id: 'iaso.snt_malaria.settings.metricTypes.unitSymbol',
+        defaultMessage: 'Unit Symbol',
+    },
+    scale: {
+        id: 'iaso.snt_malaria.settings.metricTypes.scale',
+        defaultMessage: 'Scale',
+    },
+    legendType: {
+        id: 'iaso.snt_malaria.settings.metricTypes.legendType',
+        defaultMessage: 'Legend Type',
+    },
+    createMetricType: {
+        id: 'iaso.snt_malaria.settings.metricTypes.createMetricType',
+        defaultMessage: 'Create Layer',
+    },
+    editMetricType: {
+        id: 'iaso.snt_malaria.settings.metricTypes.editMetricType',
+        defaultMessage: 'Edit Layer',
     },
 });
