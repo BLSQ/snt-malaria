@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 import {
     Box,
     Card,
@@ -127,6 +127,26 @@ export const PlanningFiltersSidebar: FC<Props> = ({
         return selectedType?.label ?? null;
     }, [selectedOrgUnitTypeId, filteredOrgUnitTypes]);
 
+    // Auto-select the highest ancestor (lowest depth) when org unit types load
+    // TODO: Same here, this should be easier to determine
+    useEffect(() => {
+        if (filteredOrgUnitTypes.length > 0 && selectedOrgUnitTypeId === null) {
+            // Find the org unit type with the lowest depth (highest ancestor)
+            const highestAncestor = filteredOrgUnitTypes.reduce(
+                (prev, curr) => {
+                    const prevDepth =
+                        (prev.original as { depth?: number | null }).depth ??
+                        Infinity;
+                    const currDepth =
+                        (curr.original as { depth?: number | null }).depth ??
+                        Infinity;
+                    return currDepth < prevDepth ? curr : prev;
+                },
+            );
+            setSelectedOrgUnitTypeId(Number(highestAncestor.value));
+        }
+    }, [filteredOrgUnitTypes, selectedOrgUnitTypeId]);
+
     const handleTypeChange = (event: { target: { value: unknown } }) => {
         const value = event.target.value;
         const newTypeId = value === '' ? null : Number(value);
@@ -142,7 +162,7 @@ export const PlanningFiltersSidebar: FC<Props> = ({
 
     return (
         <Card elevation={2} sx={styles.sidebarCard}>
-            <CardHeader title={formatMessage(MESSAGES.filter)} />
+            <CardHeader title={formatMessage(MESSAGES.sidebarTitle)} />
             <CardContent sx={styles.sidebarCardContent}>
                 <Box>
                     <Typography sx={styles.label}>
@@ -155,13 +175,9 @@ export const PlanningFiltersSidebar: FC<Props> = ({
                             variant="outlined"
                             IconComponent={ArrowDropDownIcon}
                             sx={styles.select}
-                            displayEmpty
                             size="small"
                             disabled={isLoadingTypes}
                         >
-                            <MenuItem value="">
-                                {formatMessage(MESSAGES.allDisplayLevels)}
-                            </MenuItem>
                             {filteredOrgUnitTypes.map(type => (
                                 <MenuItem
                                     key={type.value}
