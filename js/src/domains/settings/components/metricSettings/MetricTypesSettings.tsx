@@ -104,7 +104,7 @@ export const MetricTypeSettings: FC = () => {
                         />
                         {(filteredMetricCategories.length === 0 && (
                             <Typography variant="body2" color="textSecondary">
-                                {formatMessage(MESSAGES.noMetricTypesFound)}
+                                {formatMessage(MESSAGES.noLayersFound)}
                             </Typography>
                         )) || (
                             <List>

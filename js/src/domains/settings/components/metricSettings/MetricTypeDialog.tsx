@@ -70,8 +70,8 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
             dataTestId={''}
             titleMessage={
                 metricType
-                    ? formatMessage(MESSAGES.editMetricType)
-                    : formatMessage(MESSAGES.createMetricType)
+                    ? formatMessage(MESSAGES.editLayer)
+                    : formatMessage(MESSAGES.editLayer)
             }
             closeDialog={closeDialog}
             onConfirm={handleConfirm}

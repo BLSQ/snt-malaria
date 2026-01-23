@@ -22,7 +22,7 @@ import { MESSAGES } from '../../messages';
 type MetricTypeLineProps = {
     metricType: MetricType;
     onEdit: (metricType: MetricType) => void;
-    onDelete: (metricType: MetricType) => void;
+    onDelete: (metricType: number) => void;
     readonly?: boolean;
 };
 
@@ -106,20 +106,18 @@ export const MetricTypeLine: FC<MetricTypeLineProps> = ({
                 >
                     <MenuList>
                         <MenuItem onClick={() => onEdit(metricType)}>
-                            {formatMessage(MESSAGES.editMetricType)}
+                            {formatMessage(MESSAGES.editLayer)}
                         </MenuItem>
                         <DeleteModal
                             type="menuItem"
-                            onConfirm={() => onDelete(metricType)}
+                            onConfirm={() => onDelete(metricType.id)}
                             onCancel={() => setShowMoreActions(false)}
-                            titleMessage={MESSAGES.deleteMetricType}
+                            titleMessage={MESSAGES.deleteLayer}
                             iconProps={{}}
-                            key={`delete-metric-type-${metricType.id}`}
+                            key={`delete-layer-${metricType.id}`}
                             backdropClick={true}
                         >
-                            {formatMessage(
-                                MESSAGES.deleteMetricTypeConfirmMessage,
-                            )}
+                            {formatMessage(MESSAGES.deleteLayerConfirmMessage)}
                         </DeleteModal>
                     </MenuList>
                 </ClickAwayListener>

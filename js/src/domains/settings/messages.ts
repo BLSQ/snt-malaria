@@ -66,32 +66,32 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Required',
     },
     invalidJsonArray: {
-        id: 'iaso.snt_malaria.settings.intervention.errors.invalidJsonArray',
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.invalidJsonArray',
         defaultMessage: 'Invalid format, must be [value1, value2, ...]',
     },
     uniqueCodeErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.metricTypes.errors.uniqueCodeErrorHeadline',
-        defaultMessage: 'MetricType with this code already exists.',
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeErrorHeadline',
+        defaultMessage: 'Layer with this code already exists.',
     },
     uniqueCodeError: {
-        id: 'iaso.snt_malaria.settings.metricTypes.errors.uniqueCodeError',
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeError',
         defaultMessage:
-            'A Metric Type with this code already exists. Please choose a different code.',
+            'A Layer with this code already exists. Please choose a different code.',
     },
     codeImmutableErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.metricTypes.errors.codeImmutableHeadline',
-        defaultMessage: 'MetricType code is immutable.',
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.codeImmutableHeadline',
+        defaultMessage: 'Layer code is immutable.',
     },
     codeImmutableError: {
-        id: 'iaso.snt_malaria.settings.metricTypes.errors.codeImmutable',
-        defaultMessage: 'The code of a Metric Type cannot be changed.',
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.codeImmutable',
+        defaultMessage: 'The code of a Layer cannot be changed.',
     },
     genericErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.metricTypes.errors.genericErrorHeadline',
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.genericErrorHeadline',
         defaultMessage: 'An unexpected error occurred.',
     },
     genericError: {
-        id: 'iaso.snt_malaria.settings.metricTypes.errors.genericError',
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.genericError',
         defaultMessage: 'Please try again.',
     },
     negativeValueNotAllowed: {
@@ -123,60 +123,56 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.createLayer',
         defaultMessage: 'Create layer',
     },
+    editLayer: {
+        id: 'iaso.snt_malaria.settings.dataLayers.editLayer',
+        defaultMessage: 'Edit Layer',
+    },
+    deleteLayer: {
+        id: 'iaso.snt_malaria.settings.dataLayers.deleteLayer',
+        defaultMessage: 'Delete Layer',
+    },
     searchByName: {
         id: 'iaso.snt_malaria.settings.dataLayers.searchByName',
         defaultMessage: 'Search by name',
     },
-    noMetricTypesFound: {
-        id: 'iaso.snt_malaria.settings.metricTypes.noMetricTypesFound',
-        defaultMessage: 'No metric types found.',
+    noLayersFound: {
+        id: 'iaso.snt_malaria.settings.dataLayers.noLayersFound',
+        defaultMessage: 'No layers found.',
     },
     variable: {
-        id: 'iaso.snt_malaria.settings.metricTypes.variable',
+        id: 'iaso.snt_malaria.settings.dataLayers.variable',
         defaultMessage: 'Variable',
     },
     label: {
-        id: 'iaso.snt_malaria.settings.metricTypes.label',
+        id: 'iaso.snt_malaria.settings.dataLayers.label',
         defaultMessage: 'Label',
     },
     category: {
-        id: 'iaso.snt_malaria.settings.metricTypes.category',
+        id: 'iaso.snt_malaria.settings.dataLayers.category',
         defaultMessage: 'Category',
     },
     description: {
-        id: 'iaso.snt_malaria.settings.metricTypes.description',
+        id: 'iaso.snt_malaria.settings.dataLayers.description',
         defaultMessage: 'Description',
     },
     units: {
-        id: 'iaso.snt_malaria.settings.metricTypes.units',
+        id: 'iaso.snt_malaria.settings.dataLayers.units',
         defaultMessage: 'Units',
     },
     unitSymbol: {
-        id: 'iaso.snt_malaria.settings.metricTypes.unitSymbol',
+        id: 'iaso.snt_malaria.settings.dataLayers.unitSymbol',
         defaultMessage: 'Unit Symbol',
     },
     scale: {
-        id: 'iaso.snt_malaria.settings.metricTypes.scale',
+        id: 'iaso.snt_malaria.settings.dataLayers.scale',
         defaultMessage: 'Scale',
     },
     legendType: {
-        id: 'iaso.snt_malaria.settings.metricTypes.legendType',
+        id: 'iaso.snt_malaria.settings.dataLayers.legendType',
         defaultMessage: 'Legend Type',
     },
-    createMetricType: {
-        id: 'iaso.snt_malaria.settings.metricTypes.createMetricType',
-        defaultMessage: 'Create Layer',
-    },
-    editMetricType: {
-        id: 'iaso.snt_malaria.settings.metricTypes.editMetricType',
-        defaultMessage: 'Edit Layer',
-    },
-    deleteMetricType: {
-        id: 'iaso.snt_malaria.settings.metricTypes.deleteMetricType',
-        defaultMessage: 'Delete Layer',
-    },
-    deleteMetricTypeConfirmMessage: {
-        id: 'iaso.snt_malaria.settings.metricTypes.deleteMetricTypeConfirmMessage',
-        defaultMessage: 'Are you sure you want to delete this metric type?',
+    deleteLayerConfirmMessage: {
+        id: 'iaso.snt_malaria.settings.dataLayers.deleteLayerConfirmMessage',
+        defaultMessage: 'Are you sure you want to delete this layer?',
     },
 });
