@@ -538,17 +538,13 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.allParentOrgUnits',
         defaultMessage: 'All',
     },
-    orgUnitType: {
-        id: 'iaso.snt_malaria.label.orgUnitType',
-        defaultMessage: 'Org unit type',
+    displayLevel: {
+        id: 'iaso.snt_malaria.label.displayLevel',
+        defaultMessage: 'Display level',
     },
-    allOrgUnitTypes: {
-        id: 'iaso.snt_malaria.label.allOrgUnitTypes',
+    allDisplayLevels: {
+        id: 'iaso.snt_malaria.label.allDisplayLevels',
         defaultMessage: 'All',
-    },
-    orgUnit: {
-        id: 'iaso.snt_malaria.label.orgUnit',
-        defaultMessage: 'Org unit',
     },
     allOrgUnits: {
         id: 'iaso.snt_malaria.label.allOrgUnits',
