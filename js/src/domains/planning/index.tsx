@@ -1,5 +1,5 @@
-import React, { FC, useCallback, useEffect, useState } from 'react';
-import { Box, Card, CardContent, CardHeader, Grid } from '@mui/material';
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { Grid } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
@@ -21,6 +21,7 @@ import { InterventionAssignments } from './components/interventionAssignment/Int
 import { InterventionsPlan } from './components/interventionPlan/InterventionsPlan';
 import { Map } from './components/map';
 import { SideMapList } from './components/maps/SideMapList';
+import { PlanningFiltersSidebar } from './components/PlanningFiltersSidebar';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetLatestCalculatedBudget } from './hooks/useGetLatestCalculatedBudget';
@@ -39,22 +40,6 @@ type PlanningParams = {
 
 const styles: SxStyles = {
     assignmentContainer: { height: '630px' },
-    sidebarCard: {
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        borderRadius: theme => theme.spacing(2),
-        boxShadow: 'none',
-    },
-    sidebarCardContent: {
-        padding: 2,
-        height: '100%',
-        overflow: 'auto',
-        '&:last-child': {
-            paddingBottom: 2,
-        },
-    },
 };
 
 export const Planning: FC = () => {
@@ -68,6 +53,24 @@ export const Planning: FC = () => {
     const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
     const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [selectedParentId, setSelectedParentId] = useState<number | null>(
+        null,
+    );
+
+    // Filter org units by selected parent
+    const filteredOrgUnits = useMemo(() => {
+        if (!orgUnits) return undefined;
+        if (selectedParentId === null) return orgUnits;
+        return orgUnits.filter(
+            orgUnit => orgUnit.parent_id === selectedParentId,
+        );
+    }, [orgUnits, selectedParentId]);
+
+    const handleParentChange = useCallback((parentId: number | null) => {
+        setSelectedParentId(parentId);
+        // Clear selection when parent filter changes
+        setSelectionOnMap([]);
+    }, []);
 
     const handleToggleSidebar = useCallback(() => {
         setIsSidebarOpen(prev => !prev);
@@ -124,7 +127,7 @@ export const Planning: FC = () => {
     );
 
     useGetMetricOrgUnits(metricFilters, metricOrgUnitIds => {
-        const newOrgUnitSelection = orgUnits?.filter(orgUnit =>
+        const newOrgUnitSelection = filteredOrgUnits?.filter(orgUnit =>
             metricOrgUnitIds.includes(orgUnit.id),
         );
 
@@ -163,19 +166,19 @@ export const Planning: FC = () => {
     }, [formatMessage]);
 
     const handleSelectAllOnMap = useCallback(
-        () => setSelectionOnMap(orgUnits || []),
-        [orgUnits],
+        () => setSelectionOnMap(filteredOrgUnits || []),
+        [filteredOrgUnits],
     );
 
     const handleInvertSelectionOnMap = useCallback(() => {
         setSelectionOnMap(prevSelected => {
-            if (!orgUnits) return prevSelected;
-            const newSelection = orgUnits.filter(
+            if (!filteredOrgUnits) return prevSelected;
+            const newSelection = filteredOrgUnits.filter(
                 orgUnit => !prevSelected.some(sel => sel.id === orgUnit.id),
             );
             return newSelection;
         });
-    }, [orgUnits]);
+    }, [filteredOrgUnits]);
 
     return (
         <>
@@ -195,7 +198,7 @@ export const Planning: FC = () => {
                             <PaperFullHeight>
                                 {isLoading && <p>Loading data...</p>}
                                 <Map
-                                    orgUnits={orgUnits}
+                                    orgUnits={filteredOrgUnits}
                                     displayedMetric={displayedMetric}
                                     displayedMetricValues={
                                         displayedMetricValues
@@ -228,25 +231,22 @@ export const Planning: FC = () => {
                     >
                         <PaperFullHeight>
                             {isLoading && <p>Loading data...</p>}
-                            {metricCategories && orgUnits && (
+                            {metricCategories && filteredOrgUnits && (
                                 <SideMapList
-                                    orgUnits={orgUnits}
+                                    orgUnits={filteredOrgUnits}
                                     metricCategories={metricCategories}
                                 />
                             )}
                         </PaperFullHeight>
                     </Grid>
-                    {isSidebarOpen && (
+                    {isSidebarOpen && orgUnits && (
                         <Grid item xs={12} md={2}>
                             <PaperFullHeight>
-                                <Card elevation={2} sx={styles.sidebarCard}>
-                                    <CardHeader title="Sidebar" />
-                                    <CardContent sx={styles.sidebarCardContent}>
-                                        <Box>
-                                            {/* Sidebar content goes here */}
-                                        </Box>
-                                    </CardContent>
-                                </Card>
+                                <PlanningFiltersSidebar
+                                    orgUnits={orgUnits}
+                                    selectedParentId={selectedParentId}
+                                    onParentChange={handleParentChange}
+                                />
                             </PaperFullHeight>
                         </Grid>
                     )}
