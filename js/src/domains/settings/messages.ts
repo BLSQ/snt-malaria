@@ -175,4 +175,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.metricTypes.deleteMetricType',
         defaultMessage: 'Delete Layer',
     },
+    deleteMetricTypeConfirmMessage: {
+        id: 'iaso.snt_malaria.settings.metricTypes.deleteMetricTypeConfirmMessage',
+        defaultMessage: 'Are you sure you want to delete this metric type?',
+    },
 });

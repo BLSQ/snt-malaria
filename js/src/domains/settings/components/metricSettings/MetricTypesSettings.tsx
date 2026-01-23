@@ -14,6 +14,7 @@ import {
     MetricType,
     MetricTypeCategory,
 } from '../../../planning/types/metrics';
+import { useDeleteMetricType } from '../../hooks/useDeleteMetricType';
 import { MESSAGES } from '../../messages';
 import { MetricTypeDialog } from './MetricTypeDialog';
 import { MetricTypeLine } from './MetricTypeLine';
@@ -28,6 +29,7 @@ export const MetricTypeSettings: FC = () => {
     const { formatMessage } = useSafeIntl();
     const { data: metricCategories, isLoading: isLoadingMetricCategories } =
         useGetMetricCategories();
+    const { mutate: deleteMetricType } = useDeleteMetricType();
 
     const [filteredMetricCategories, setFilteredMetricCategories] = useState<
         MetricTypeCategory[]
@@ -44,16 +46,14 @@ export const MetricTypeSettings: FC = () => {
         setSelectedMetricType(undefined);
     }, [setIsMetricTypeFormOpen, setSelectedMetricType]);
 
-    const onEditMetricType = (metricType: MetricType) => {
-        setSelectedMetricType(metricType);
-        setIsMetricTypeFormOpen(true);
-    };
+    const onEditMetricType = useCallback(
+        (metricType: MetricType) => {
+            setSelectedMetricType(metricType);
+            setIsMetricTypeFormOpen(true);
+        },
+        [setSelectedMetricType, setIsMetricTypeFormOpen],
+    );
 
-    const onDeleteMetricType = useCallback((metricType: MetricType) => {
-        alert(`Delete metric type ${metricType.name} (ID: ${metricType.id})`);
-        // setSelectedMetricType(metricType);
-        // setIsMetricTypeFormOpen(true);
-    }, []);
     const applySearch = useCallback(
         (searchTerm: string) => {
             if (!metricCategories) {
@@ -123,7 +123,11 @@ export const MetricTypeSettings: FC = () => {
                                                             onEditMetricType
                                                         }
                                                         onDelete={
-                                                            onDeleteMetricType
+                                                            deleteMetricType
+                                                        }
+                                                        readonly={
+                                                            metricType.origin ===
+                                                            'openhexa'
                                                         }
                                                     />
                                                 ),

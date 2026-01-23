@@ -9,10 +9,12 @@ import {
     MenuItem,
     MenuList,
     Popover,
+    SxProps,
     Tooltip,
     Typography,
 } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
+import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';
 import { MetricType } from '../../../planning/types/metrics';
 import { MESSAGES } from '../../messages';
@@ -21,15 +23,18 @@ type MetricTypeLineProps = {
     metricType: MetricType;
     onEdit: (metricType: MetricType) => void;
     onDelete: (metricType: MetricType) => void;
+    readonly?: boolean;
 };
 
 const styles: SxStyles = {
     metricType: {
         borderRadius: 2,
-        width: 'auto',
         '&:nth-child(odd of .MuiListItem-root)': {
             backgroundColor: 'action.hover',
         },
+    },
+    metricTypeReadOnly: {
+        pr: '48px',
     },
     metricTypeIcon: { minWidth: 20, mr: 2 },
     metricTypeDetails: {
@@ -44,6 +49,7 @@ export const MetricTypeLine: FC<MetricTypeLineProps> = ({
     metricType,
     onEdit,
     onDelete,
+    readonly = false,
 }) => {
     const anchorRef = React.useRef<HTMLLIElement>(null);
     const [showMoreActions, setShowMoreActions] = React.useState(false);
@@ -55,15 +61,22 @@ export const MetricTypeLine: FC<MetricTypeLineProps> = ({
     return (
         <ListItem
             key={metricType.id}
-            sx={styles.metricType}
+            sx={
+                {
+                    ...styles.metricType,
+                    ...(readonly ? styles.metricTypeReadOnly : {}),
+                } as SxProps
+            }
             ref={anchorRef}
             secondaryAction={
-                <IconButton
-                    aria-label="more-info"
-                    overrideIcon={MoreHorizIcon}
-                    tooltipMessage={MESSAGES.more}
-                    onClick={toggleMoreActions}
-                ></IconButton>
+                readonly ? null : (
+                    <IconButton
+                        aria-label="more-info"
+                        overrideIcon={MoreHorizIcon}
+                        tooltipMessage={MESSAGES.more}
+                        onClick={toggleMoreActions}
+                    ></IconButton>
+                )
             }
         >
             <ListItemIcon sx={styles.metricTypeIcon}>
@@ -95,9 +108,19 @@ export const MetricTypeLine: FC<MetricTypeLineProps> = ({
                         <MenuItem onClick={() => onEdit(metricType)}>
                             {formatMessage(MESSAGES.editMetricType)}
                         </MenuItem>
-                        <MenuItem onClick={() => onDelete(metricType)}>
-                            {formatMessage(MESSAGES.deleteMetricType)}
-                        </MenuItem>
+                        <DeleteModal
+                            type="menuItem"
+                            onConfirm={() => onDelete(metricType)}
+                            onCancel={() => setShowMoreActions(false)}
+                            titleMessage={MESSAGES.deleteMetricType}
+                            iconProps={{}}
+                            key={`delete-metric-type-${metricType.id}`}
+                            backdropClick={true}
+                        >
+                            {formatMessage(
+                                MESSAGES.deleteMetricTypeConfirmMessage,
+                            )}
+                        </DeleteModal>
                     </MenuList>
                 </ClickAwayListener>
             </Popover>
