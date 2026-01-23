@@ -47,28 +47,25 @@ export const Planning: FC = () => {
         baseUrls.planning,
     ) as unknown as PlanningParams;
     const { data: scenario } = useGetScenario(params.scenarioId);
-    const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits();
     const { formatMessage } = useSafeIntl();
 
     const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
     const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [selectedParentId, setSelectedParentId] = useState<number | null>(
+    const [selectedOrgUnitId, setSelectedOrgUnitId] = useState<number | null>(
         null,
     );
 
-    // Filter org units by selected parent
-    const filteredOrgUnits = useMemo(() => {
-        if (!orgUnits) return undefined;
-        if (selectedParentId === null) return orgUnits;
-        return orgUnits.filter(
-            orgUnit => orgUnit.parent_id === selectedParentId,
-        );
-    }, [orgUnits, selectedParentId]);
+    // Fetch org units with optional parent filter (API handles filtering)
+    const { data: orgUnits, isLoading: isLoadingOrgUnits } =
+        useGetOrgUnits(selectedOrgUnitId);
 
-    const handleParentChange = useCallback((parentId: number | null) => {
-        setSelectedParentId(parentId);
-        // Clear selection when parent filter changes
+    // Use orgUnits directly - filtering is done via API when selectedOrgUnitId is set
+    const filteredOrgUnits = orgUnits;
+
+    const handleOrgUnitChange = useCallback((orgUnitId: number | null) => {
+        setSelectedOrgUnitId(orgUnitId);
+        // Clear selection when filter changes
         setSelectionOnMap([]);
     }, []);
 
@@ -244,8 +241,8 @@ export const Planning: FC = () => {
                             <PaperFullHeight>
                                 <PlanningFiltersSidebar
                                     orgUnits={orgUnits}
-                                    selectedParentId={selectedParentId}
-                                    onParentChange={handleParentChange}
+                                    selectedOrgUnitId={selectedOrgUnitId}
+                                    onOrgUnitChange={handleOrgUnitChange}
                                 />
                             </PaperFullHeight>
                         </Grid>
