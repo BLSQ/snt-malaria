@@ -160,69 +160,82 @@ export const PlanningFiltersSidebar: FC<Props> = ({
         onOrgUnitChange(value === '' ? null : (value as number));
     };
 
+    // Show loading state while org unit types are loading or before auto-selection completes
+    const isInitializing =
+        isLoadingTypes ||
+        (filteredOrgUnitTypes.length > 0 && selectedOrgUnitTypeId === null);
+
     return (
         <Card elevation={2} sx={styles.sidebarCard}>
             <CardHeader title={formatMessage(MESSAGES.sidebarTitle)} />
             <CardContent sx={styles.sidebarCardContent}>
-                <Box>
-                    <Typography sx={styles.label}>
-                        {formatMessage(MESSAGES.displayLevel)}
-                    </Typography>
-                    <FormControl sx={styles.formControl}>
-                        <Select
-                            value={selectedOrgUnitTypeId ?? ''}
-                            onChange={handleTypeChange}
-                            variant="outlined"
-                            IconComponent={ArrowDropDownIcon}
-                            sx={styles.select}
-                            size="small"
-                            disabled={isLoadingTypes}
-                        >
-                            {filteredOrgUnitTypes.map(type => (
-                                <MenuItem
-                                    key={type.value}
-                                    value={Number(type.value)}
+                {isInitializing ? (
+                    <Box sx={styles.loadingContainer}>
+                        <CircularProgress size={24} />
+                    </Box>
+                ) : (
+                    <>
+                        <Box>
+                            <Typography sx={styles.label}>
+                                {formatMessage(MESSAGES.displayLevel)}
+                            </Typography>
+                            <FormControl sx={styles.formControl}>
+                                <Select
+                                    value={selectedOrgUnitTypeId ?? ''}
+                                    onChange={handleTypeChange}
+                                    variant="outlined"
+                                    IconComponent={ArrowDropDownIcon}
+                                    sx={styles.select}
+                                    size="small"
                                 >
-                                    {type.label}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </Box>
-                <Box>
-                    <Typography sx={styles.label}>
-                        {selectedOrgUnitTypeLabel ??
-                            formatMessage(MESSAGES.displayLevel)}
-                    </Typography>
-                    <FormControl sx={styles.formControl}>
-                        <Select
-                            value={selectedOrgUnitId ?? ''}
-                            onChange={handleOrgUnitChange}
-                            variant="outlined"
-                            IconComponent={ArrowDropDownIcon}
-                            sx={styles.select}
-                            displayEmpty
-                            size="small"
-                            disabled={
-                                !selectedOrgUnitTypeId || isLoadingOrgUnits
-                            }
-                        >
-                            <MenuItem value="">
-                                {formatMessage(MESSAGES.allOrgUnits)}
-                            </MenuItem>
-                            {sortedOrgUnitsByType.map(orgUnit => (
-                                <MenuItem key={orgUnit.id} value={orgUnit.id}>
-                                    {orgUnit.name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    {isLoadingOrgUnits && (
-                        <Box sx={styles.loadingContainer}>
-                            <CircularProgress size={24} />
+                                    {filteredOrgUnitTypes.map(type => (
+                                        <MenuItem
+                                            key={type.value}
+                                            value={Number(type.value)}
+                                        >
+                                            {type.label}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
                         </Box>
-                    )}
-                </Box>
+                        <Box>
+                            <Typography sx={styles.label}>
+                                {selectedOrgUnitTypeLabel ??
+                                    formatMessage(MESSAGES.displayLevel)}
+                            </Typography>
+                            <FormControl sx={styles.formControl}>
+                                <Select
+                                    value={selectedOrgUnitId ?? ''}
+                                    onChange={handleOrgUnitChange}
+                                    variant="outlined"
+                                    IconComponent={ArrowDropDownIcon}
+                                    sx={styles.select}
+                                    displayEmpty
+                                    size="small"
+                                    disabled={isLoadingOrgUnits}
+                                >
+                                    <MenuItem value="">
+                                        {formatMessage(MESSAGES.allOrgUnits)}
+                                    </MenuItem>
+                                    {sortedOrgUnitsByType.map(orgUnit => (
+                                        <MenuItem
+                                            key={orgUnit.id}
+                                            value={orgUnit.id}
+                                        >
+                                            {orgUnit.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                            {isLoadingOrgUnits && (
+                                <Box sx={styles.loadingContainer}>
+                                    <CircularProgress size={24} />
+                                </Box>
+                            )}
+                        </Box>
+                    </>
+                )}
             </CardContent>
         </Card>
     );
