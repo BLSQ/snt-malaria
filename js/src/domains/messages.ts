@@ -530,4 +530,12 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.hideSidebar',
         defaultMessage: 'Hide sidebar',
     },
+    parentOrgUnit: {
+        id: 'iaso.snt_malaria.label.parentOrgUnit',
+        defaultMessage: 'Parent',
+    },
+    allParentOrgUnits: {
+        id: 'iaso.snt_malaria.label.allParentOrgUnits',
+        defaultMessage: 'All',
+    },
 });
