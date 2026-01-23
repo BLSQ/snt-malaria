@@ -48,7 +48,7 @@ export const MetricTypeLine: FC<MetricTypeLineProps> = ({ metricType }) => {
             }
         >
             <ListItemIcon sx={styles.metricTypeIcon}>
-                <Tooltip title={metricType.description || ''}>
+                <Tooltip title={metricType.description || 'N/A'}>
                     <InfoOutlinedIcon />
                 </Tooltip>
             </ListItemIcon>

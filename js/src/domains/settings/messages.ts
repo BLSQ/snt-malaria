@@ -69,6 +69,23 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.errors.invalidJsonArray',
         defaultMessage: 'Invalid format, must be [value1, value2, ...]',
     },
+    duplicateCodeErrorHeadline: {
+        id: 'iaso.snt_malaria.settings.metricTypes.errors.duplicateCodeErrorHeadline',
+        defaultMessage: 'MetricType with this code already exists.',
+    },
+    duplicateCodeError: {
+        id: 'iaso.snt_malaria.settings.metricTypes.errors.duplicateCodeError',
+        defaultMessage:
+            'A Metric Type with this code already exists. Please choose a different code.',
+    },
+    genericErrorHeadline: {
+        id: 'iaso.snt_malaria.settings.metricTypes.errors.genericErrorHeadline',
+        defaultMessage: 'An unexpected error occurred.',
+    },
+    genericError: {
+        id: 'iaso.snt_malaria.settings.metricTypes.errors.genericError',
+        defaultMessage: 'Please try again.',
+    },
     negativeValueNotAllowed: {
         id: 'iaso.snt_malaria.settings.intervention.errors.negativeValueNotAllowed',
         defaultMessage: 'Negative value not allowed',

@@ -1,9 +1,7 @@
-import React, { FC, useCallback, useMemo, useRef } from 'react';
+import React, { FC, useMemo, useRef, useState } from 'react';
+import { Alert, AlertTitle } from '@mui/material';
 import { ConfirmCancelModal, useSafeIntl } from 'bluesquare-components';
-import {
-    MetricType,
-    MetricTypeFormModel,
-} from '../../../planning/types/metrics';
+import { MetricType } from '../../../planning/types/metrics';
 import { useCreateOrUpdateMetricType } from '../../hooks/useCreateOrUpdateMetricType';
 import { MESSAGES } from '../../messages';
 import { MetricTypeForm } from './MetricTypeForm';
@@ -19,8 +17,16 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
     closeDialog,
     metricType = undefined,
 }) => {
+    const [errorCode, setErrorCode] = useState<string | undefined>(undefined);
     const { formatMessage } = useSafeIntl();
-    const { mutate: submitMetricType } = useCreateOrUpdateMetricType();
+    const { mutate: submitMetricType } = useCreateOrUpdateMetricType({
+        onError: setErrorCode,
+        onSuccess: () => {
+            setErrorCode(undefined);
+            closeDialog();
+        },
+    });
+    const callbackRef = useRef<() => void>();
     const handleOnRef = (callback: () => void) => {
         callbackRef.current = callback;
     };
@@ -51,17 +57,8 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
         }
     };
 
-    const handleSubmit = useCallback(
-        (metricType: MetricTypeFormModel) => {
-            submitMetricType(metricType);
-            // You can handle the submitted metricType here if needed
-            // closeDialog();
-        },
-        [closeDialog],
-    );
-
     const handleCancel = () => {
-        // TODO: Clean the form
+        setErrorCode(undefined);
         closeDialog();
     };
 
@@ -86,8 +83,16 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
             <MetricTypeForm
                 metricType={metricTypeFormModel}
                 onSubmitFormRef={handleOnRef}
-                onSubmit={handleSubmit}
+                onSubmit={submitMetricType}
             />
+            {errorCode && (
+                <Alert severity="error" variant="filled" sx={{ mt: 2 }}>
+                    <AlertTitle>
+                        {formatMessage(MESSAGES[errorCode + 'Headline'])}
+                    </AlertTitle>
+                    {formatMessage(MESSAGES[errorCode])}
+                </Alert>
+            )}
         </ConfirmCancelModal>
     );
 };
