@@ -10,7 +10,10 @@ import {
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetMetricCategories } from '../../../planning/hooks/useGetMetrics';
-import { MetricTypeCategory } from '../../../planning/types/metrics';
+import {
+    MetricType,
+    MetricTypeCategory,
+} from '../../../planning/types/metrics';
 import { MESSAGES } from '../../messages';
 import { MetricTypeDialog } from './MetricTypeDialog';
 import { MetricTypeLine } from './MetricTypeLine';
@@ -30,9 +33,27 @@ export const MetricTypeSettings: FC = () => {
         MetricTypeCategory[]
     >(metricCategories || []);
 
-    const [isCreatingMetricType, setIsCreatingMetricType] =
+    const [isMetricTypeFormOpen, setIsMetricTypeFormOpen] =
         useState<boolean>(false);
+    const [selectedMetricType, setSelectedMetricType] = useState<
+        MetricType | undefined
+    >(undefined);
 
+    const onDialogClose = useCallback(() => {
+        setIsMetricTypeFormOpen(false);
+        setSelectedMetricType(undefined);
+    }, [setIsMetricTypeFormOpen, setSelectedMetricType]);
+
+    const onEditMetricType = (metricType: MetricType) => {
+        setSelectedMetricType(metricType);
+        setIsMetricTypeFormOpen(true);
+    };
+
+    const onDeleteMetricType = useCallback((metricType: MetricType) => {
+        alert(`Delete metric type ${metricType.name} (ID: ${metricType.id})`);
+        // setSelectedMetricType(metricType);
+        // setIsMetricTypeFormOpen(true);
+    }, []);
     const applySearch = useCallback(
         (searchTerm: string) => {
             if (!metricCategories) {
@@ -79,7 +100,7 @@ export const MetricTypeSettings: FC = () => {
                     <>
                         <MetricTypeSettingsActionBar
                             onSearchChange={applySearch}
-                            onCreateClick={() => setIsCreatingMetricType(true)}
+                            onCreateClick={() => setIsMetricTypeFormOpen(true)}
                         />
                         {(filteredMetricCategories.length === 0 && (
                             <Typography variant="body2" color="textSecondary">
@@ -98,6 +119,12 @@ export const MetricTypeSettings: FC = () => {
                                                     <MetricTypeLine
                                                         metricType={metricType}
                                                         key={metricType.id}
+                                                        onEdit={
+                                                            onEditMetricType
+                                                        }
+                                                        onDelete={
+                                                            onDeleteMetricType
+                                                        }
                                                     />
                                                 ),
                                             )}
@@ -109,11 +136,11 @@ export const MetricTypeSettings: FC = () => {
                     </>
                 )}
             </CardContent>
-            {isCreatingMetricType && (
+            {isMetricTypeFormOpen && (
                 <MetricTypeDialog
-                    open={isCreatingMetricType}
-                    closeDialog={() => setIsCreatingMetricType(false)}
-                    metricType={undefined}
+                    open={isMetricTypeFormOpen}
+                    closeDialog={onDialogClose}
+                    metricType={selectedMetricType}
                 />
             )}
         </Card>

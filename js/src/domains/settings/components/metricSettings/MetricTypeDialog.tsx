@@ -20,7 +20,7 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
     const [errorCode, setErrorCode] = useState<string | undefined>(undefined);
     const { formatMessage } = useSafeIntl();
     const { mutate: submitMetricType } = useCreateOrUpdateMetricType({
-        onError: setErrorCode,
+        onError: errorCode => setErrorCode(`${errorCode}Error`),
         onSuccess: () => {
             setErrorCode(undefined);
             closeDialog();
@@ -88,9 +88,14 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
             {errorCode && (
                 <Alert severity="error" variant="filled" sx={{ mt: 2 }}>
                     <AlertTitle>
-                        {formatMessage(MESSAGES[errorCode + 'Headline'])}
+                        {formatMessage(
+                            MESSAGES[errorCode + 'Headline'] ||
+                                MESSAGES.genericErrorHeadline,
+                        )}
                     </AlertTitle>
-                    {formatMessage(MESSAGES[errorCode])}
+                    {formatMessage(
+                        MESSAGES[errorCode] || MESSAGES.genericError,
+                    )}
                 </Alert>
             )}
         </ConfirmCancelModal>

@@ -69,14 +69,22 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.errors.invalidJsonArray',
         defaultMessage: 'Invalid format, must be [value1, value2, ...]',
     },
-    duplicateCodeErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.metricTypes.errors.duplicateCodeErrorHeadline',
+    uniqueCodeErrorHeadline: {
+        id: 'iaso.snt_malaria.settings.metricTypes.errors.uniqueCodeErrorHeadline',
         defaultMessage: 'MetricType with this code already exists.',
     },
-    duplicateCodeError: {
-        id: 'iaso.snt_malaria.settings.metricTypes.errors.duplicateCodeError',
+    uniqueCodeError: {
+        id: 'iaso.snt_malaria.settings.metricTypes.errors.uniqueCodeError',
         defaultMessage:
             'A Metric Type with this code already exists. Please choose a different code.',
+    },
+    codeImmutableErrorHeadline: {
+        id: 'iaso.snt_malaria.settings.metricTypes.errors.codeImmutableHeadline',
+        defaultMessage: 'MetricType code is immutable.',
+    },
+    codeImmutableError: {
+        id: 'iaso.snt_malaria.settings.metricTypes.errors.codeImmutable',
+        defaultMessage: 'The code of a Metric Type cannot be changed.',
     },
     genericErrorHeadline: {
         id: 'iaso.snt_malaria.settings.metricTypes.errors.genericErrorHeadline',
@@ -162,5 +170,9 @@ export const MESSAGES = defineMessages({
     editMetricType: {
         id: 'iaso.snt_malaria.settings.metricTypes.editMetricType',
         defaultMessage: 'Edit Layer',
+    },
+    deleteMetricType: {
+        id: 'iaso.snt_malaria.settings.metricTypes.deleteMetricType',
+        defaultMessage: 'Delete Layer',
     },
 });

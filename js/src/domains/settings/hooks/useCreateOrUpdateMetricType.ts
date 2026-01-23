@@ -16,15 +16,7 @@ export const useCreateOrUpdateMetricType = ({
         ignoreErrorCodes: [400],
         options: {
             onError: (error: ApiError) => {
-                if (
-                    error.details.code?.includes(
-                        'MetricType with this code already exists.',
-                    )
-                ) {
-                    onError('duplicateCodeError');
-                } else {
-                    onError('genericError');
-                }
+                onError(error.details.code?.[0] || 'generic');
             },
             onSuccess: onSuccess,
         },
