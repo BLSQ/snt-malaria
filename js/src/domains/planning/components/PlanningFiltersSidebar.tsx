@@ -1,9 +1,10 @@
-import React, { FC, useMemo } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import {
     Box,
     Card,
     CardContent,
     CardHeader,
+    CircularProgress,
     FormControl,
     MenuItem,
     Select,
@@ -12,8 +13,10 @@ import {
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { useGetOrgUnitTypesDropdownOptions } from 'Iaso/domains/orgUnits/orgUnitTypes/hooks/useGetOrgUnitTypesDropdownOptions';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
+import { useGetOrgUnitsByType } from '../hooks/useGetOrgUnits';
 
 const styles: SxStyles = {
     sidebarCard: {
@@ -34,6 +37,7 @@ const styles: SxStyles = {
     },
     formControl: {
         width: '100%',
+        marginBottom: 2,
     },
     select: theme => ({
         backgroundColor: 'white',
@@ -48,42 +52,83 @@ const styles: SxStyles = {
         fontSize: '0.875rem',
         color: 'text.secondary',
     },
-};
-
-type ParentOption = {
-    id: number;
-    name: string;
+    loadingContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        padding: 2,
+    },
 };
 
 type Props = {
     orgUnits: OrgUnit[];
-    selectedParentId: number | null;
-    onParentChange: (parentId: number | null) => void;
+    selectedOrgUnitId: number | null;
+    onOrgUnitChange: (orgUnitId: number | null) => void;
 };
 
 export const PlanningFiltersSidebar: FC<Props> = ({
     orgUnits,
-    selectedParentId,
-    onParentChange,
+    selectedOrgUnitId,
+    onOrgUnitChange,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const [selectedOrgUnitTypeId, setSelectedOrgUnitTypeId] = useState<
+        number | null
+    >(null);
 
-    const parentOptions: ParentOption[] = useMemo(() => {
-        const parentsMap = new Map<number, string>();
-        orgUnits.forEach(orgUnit => {
-            if (orgUnit.parent_id && orgUnit.parent_name) {
-                parentsMap.set(orgUnit.parent_id, orgUnit.parent_name);
-            }
-        });
+    const { data: orgUnitTypes, isLoading: isLoadingTypes } =
+        useGetOrgUnitTypesDropdownOptions();
 
-        return Array.from(parentsMap.entries())
-            .map(([id, name]) => ({ id, name }))
-            .sort((a, b) => a.name.localeCompare(b.name));
+    const { data: orgUnitsByType, isLoading: isLoadingOrgUnits } =
+        useGetOrgUnitsByType(selectedOrgUnitTypeId);
+
+    // Determine the parent type depth from the org units data.
+    //
+    // TODO:
+    // We're hitting the limits of what we can do with our simple "just fetch
+    // valid OUs that have geometry set". Ideally, we also have shapefiles for the
+    // ancestors of the districts/zones de sante, so we can show these borders on the
+    // map.
+    // I think this will require us to configure somewhere the OU type that we're
+    // assigning interventions on.
+    const parentTypeDepth = useMemo(() => {
+        if (!orgUnits || orgUnits.length === 0) return null;
+        const firstOrgUnit = orgUnits[0];
+        if (
+            firstOrgUnit.org_unit_type_depth !== null &&
+            firstOrgUnit.org_unit_type_depth !== undefined
+        ) {
+            return firstOrgUnit.org_unit_type_depth - 1;
+        }
+        return null;
     }, [orgUnits]);
 
-    const handleChange = (event: { target: { value: unknown } }) => {
+    // Filter org unit types to show only types with depth <= parentTypeDepth
+    // Note: The original object from API includes depth, but OriginalOrgUnitType type doesn't declare it
+    const filteredOrgUnitTypes = useMemo(() => {
+        if (!orgUnitTypes || parentTypeDepth === null) return [];
+        return orgUnitTypes.filter(type => {
+            const depth = (type.original as { depth?: number | null }).depth;
+            return depth && depth <= parentTypeDepth;
+        });
+    }, [orgUnitTypes, parentTypeDepth]);
+
+    // Sort org units alphabetically for the dropdown
+    const sortedOrgUnitsByType = useMemo(() => {
+        if (!orgUnitsByType) return [];
+        return [...orgUnitsByType].sort((a, b) => a.name.localeCompare(b.name));
+    }, [orgUnitsByType]);
+
+    const handleTypeChange = (event: { target: { value: unknown } }) => {
         const value = event.target.value;
-        onParentChange(value === '' ? null : (value as number));
+        const newTypeId = value === '' ? null : Number(value);
+        setSelectedOrgUnitTypeId(newTypeId);
+        // Clear org unit selection when type changes
+        onOrgUnitChange(null);
+    };
+
+    const handleOrgUnitChange = (event: { target: { value: unknown } }) => {
+        const value = event.target.value;
+        onOrgUnitChange(value === '' ? null : (value as number));
     };
 
     return (
@@ -92,28 +137,65 @@ export const PlanningFiltersSidebar: FC<Props> = ({
             <CardContent sx={styles.sidebarCardContent}>
                 <Box>
                     <Typography sx={styles.label}>
-                        {formatMessage(MESSAGES.parentOrgUnit)}
+                        {formatMessage(MESSAGES.orgUnitType)}
                     </Typography>
                     <FormControl sx={styles.formControl}>
                         <Select
-                            value={selectedParentId ?? ''}
-                            onChange={handleChange}
+                            value={selectedOrgUnitTypeId ?? ''}
+                            onChange={handleTypeChange}
                             variant="outlined"
                             IconComponent={ArrowDropDownIcon}
                             sx={styles.select}
                             displayEmpty
                             size="small"
+                            disabled={isLoadingTypes}
                         >
                             <MenuItem value="">
-                                {formatMessage(MESSAGES.allParentOrgUnits)}
+                                {formatMessage(MESSAGES.allOrgUnitTypes)}
                             </MenuItem>
-                            {parentOptions.map(parent => (
-                                <MenuItem key={parent.id} value={parent.id}>
-                                    {parent.name}
+                            {filteredOrgUnitTypes.map(type => (
+                                <MenuItem
+                                    key={type.value}
+                                    value={Number(type.value)}
+                                >
+                                    {type.label}
                                 </MenuItem>
                             ))}
                         </Select>
                     </FormControl>
+                </Box>
+                <Box>
+                    <Typography sx={styles.label}>
+                        {formatMessage(MESSAGES.orgUnit)}
+                    </Typography>
+                    <FormControl sx={styles.formControl}>
+                        <Select
+                            value={selectedOrgUnitId ?? ''}
+                            onChange={handleOrgUnitChange}
+                            variant="outlined"
+                            IconComponent={ArrowDropDownIcon}
+                            sx={styles.select}
+                            displayEmpty
+                            size="small"
+                            disabled={
+                                !selectedOrgUnitTypeId || isLoadingOrgUnits
+                            }
+                        >
+                            <MenuItem value="">
+                                {formatMessage(MESSAGES.allOrgUnits)}
+                            </MenuItem>
+                            {sortedOrgUnitsByType.map(orgUnit => (
+                                <MenuItem key={orgUnit.id} value={orgUnit.id}>
+                                    {orgUnit.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    {isLoadingOrgUnits && (
+                        <Box sx={styles.loadingContainer}>
+                            <CircularProgress size={24} />
+                        </Box>
+                    )}
                 </Box>
             </CardContent>
         </Card>
