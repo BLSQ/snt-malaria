@@ -1,7 +1,14 @@
 import React, { FC, useCallback } from 'react';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import { Box, Typography, Theme } from '@mui/material';
+import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
+import {
+    Box,
+    IconButton,
+    Theme,
+    Tooltip,
+    Typography,
+} from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { useNavigate } from 'react-router-dom';
 import ConfirmDialog from 'Iaso/components/dialogs/ConfirmDialogComponent';
@@ -38,9 +45,15 @@ const styles: SxStyles = {
 
 type Props = {
     scenario: Scenario;
+    isSidebarOpen: boolean;
+    onToggleSidebar: () => void;
 };
 
-export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
+export const ScenarioTopBar: FC<Props> = ({
+    scenario,
+    isSidebarOpen,
+    onToggleSidebar,
+}) => {
     const csvUrl = `${exportScenarioAPIPath}?id=${scenario.id}`;
 
     const navigate = useNavigate();
@@ -121,6 +134,17 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                         />
                     </>
                 )}
+                <Tooltip
+                    title={formatMessage(
+                        isSidebarOpen
+                            ? MESSAGES.hideSidebar
+                            : MESSAGES.showSidebar,
+                    )}
+                >
+                    <IconButton onClick={onToggleSidebar} color="primary">
+                        <ViewSidebarIcon />
+                    </IconButton>
+                </Tooltip>
             </Box>
         </Box>
     );

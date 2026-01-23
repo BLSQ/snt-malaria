@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { Grid } from '@mui/material';
+import { Box, Card, CardContent, CardHeader, Grid } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
@@ -39,6 +39,22 @@ type PlanningParams = {
 
 const styles: SxStyles = {
     assignmentContainer: { height: '630px' },
+    sidebarCard: {
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        borderRadius: theme => theme.spacing(2),
+        boxShadow: 'none',
+    },
+    sidebarCardContent: {
+        padding: 2,
+        height: '100%',
+        overflow: 'auto',
+        '&:last-child': {
+            paddingBottom: 2,
+        },
+    },
 };
 
 export const Planning: FC = () => {
@@ -51,6 +67,11 @@ export const Planning: FC = () => {
 
     const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
     const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    const handleToggleSidebar = useCallback(() => {
+        setIsSidebarOpen(prev => !prev);
+    }, []);
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: Intervention;
     }>({});
@@ -161,7 +182,13 @@ export const Planning: FC = () => {
             {isLoadingOrgUnits && <LoadingSpinner />}
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
             <PageContainer>
-                {scenario && <ScenarioTopBar scenario={scenario} />}
+                {scenario && (
+                    <ScenarioTopBar
+                        scenario={scenario}
+                        isSidebarOpen={isSidebarOpen}
+                        onToggleSidebar={handleToggleSidebar}
+                    />
+                )}
                 <Grid container spacing={1}>
                     <Grid item xs={12} md={7}>
                         <PaperContainer>
@@ -191,7 +218,14 @@ export const Planning: FC = () => {
                             </PaperFullHeight>
                         </PaperContainer>
                     </Grid>
-                    <Grid item xs={12} md={5}>
+                    <Grid
+                        item
+                        xs={12}
+                        md={isSidebarOpen ? 3 : 5}
+                        sx={{
+                            transition: 'flex-basis 0.3s ease-in-out',
+                        }}
+                    >
                         <PaperFullHeight>
                             {isLoading && <p>Loading data...</p>}
                             {metricCategories && orgUnits && (
@@ -202,6 +236,20 @@ export const Planning: FC = () => {
                             )}
                         </PaperFullHeight>
                     </Grid>
+                    {isSidebarOpen && (
+                        <Grid item xs={12} md={2}>
+                            <PaperFullHeight>
+                                <Card elevation={2} sx={styles.sidebarCard}>
+                                    <CardHeader title="Sidebar" />
+                                    <CardContent sx={styles.sidebarCardContent}>
+                                        <Box>
+                                            {/* Sidebar content goes here */}
+                                        </Box>
+                                    </CardContent>
+                                </Card>
+                            </PaperFullHeight>
+                        </Grid>
+                    )}
                 </Grid>
                 <Grid container spacing={1} sx={{ mt: 0 }}>
                     {scenario?.is_locked ? null : (
