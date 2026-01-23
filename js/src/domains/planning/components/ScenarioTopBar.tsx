@@ -4,7 +4,15 @@ import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import { Box, Typography, IconButton, Theme, Button } from '@mui/material';
+import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
+import {
+    Box,
+    Typography,
+    IconButton,
+    Theme,
+    Button,
+    Tooltip,
+} from '@mui/material';
 import { blueGrey } from '@mui/material/colors';
 import { useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
@@ -89,9 +97,15 @@ const validationSchema = Yup.object().shape({
 
 type Props = {
     scenario: Scenario;
+    isSidebarOpen: boolean;
+    onToggleSidebar: () => void;
 };
 
-export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
+export const ScenarioTopBar: FC<Props> = ({
+    scenario,
+    isSidebarOpen,
+    onToggleSidebar,
+}) => {
     const csvUrl = `${exportScenarioAPIPath}?id=${scenario.id}`;
 
     const navigate = useNavigate();
@@ -266,6 +280,17 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                     iconColor={'primary'}
                     message={MESSAGES.modalDeleteScenarioConfirm}
                 />
+                <Tooltip
+                    title={formatMessage(
+                        isSidebarOpen
+                            ? MESSAGES.hideSidebar
+                            : MESSAGES.showSidebar,
+                    )}
+                >
+                    <IconButton onClick={onToggleSidebar} color="primary">
+                        <ViewSidebarIcon />
+                    </IconButton>
+                </Tooltip>
             </Box>
         </Box>
     );
