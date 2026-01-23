@@ -118,6 +118,15 @@ export const PlanningFiltersSidebar: FC<Props> = ({
         return [...orgUnitsByType].sort((a, b) => a.name.localeCompare(b.name));
     }, [orgUnitsByType]);
 
+    // Get the selected org unit type's label for the dynamic dropdown label
+    const selectedOrgUnitTypeLabel = useMemo(() => {
+        if (!selectedOrgUnitTypeId || !filteredOrgUnitTypes) return null;
+        const selectedType = filteredOrgUnitTypes.find(
+            type => Number(type.value) === selectedOrgUnitTypeId,
+        );
+        return selectedType?.label ?? null;
+    }, [selectedOrgUnitTypeId, filteredOrgUnitTypes]);
+
     const handleTypeChange = (event: { target: { value: unknown } }) => {
         const value = event.target.value;
         const newTypeId = value === '' ? null : Number(value);
@@ -137,7 +146,7 @@ export const PlanningFiltersSidebar: FC<Props> = ({
             <CardContent sx={styles.sidebarCardContent}>
                 <Box>
                     <Typography sx={styles.label}>
-                        {formatMessage(MESSAGES.orgUnitType)}
+                        {formatMessage(MESSAGES.displayLevel)}
                     </Typography>
                     <FormControl sx={styles.formControl}>
                         <Select
@@ -151,7 +160,7 @@ export const PlanningFiltersSidebar: FC<Props> = ({
                             disabled={isLoadingTypes}
                         >
                             <MenuItem value="">
-                                {formatMessage(MESSAGES.allOrgUnitTypes)}
+                                {formatMessage(MESSAGES.allDisplayLevels)}
                             </MenuItem>
                             {filteredOrgUnitTypes.map(type => (
                                 <MenuItem
@@ -166,7 +175,8 @@ export const PlanningFiltersSidebar: FC<Props> = ({
                 </Box>
                 <Box>
                     <Typography sx={styles.label}>
-                        {formatMessage(MESSAGES.orgUnit)}
+                        {selectedOrgUnitTypeLabel ??
+                            formatMessage(MESSAGES.displayLevel)}
                     </Typography>
                     <FormControl sx={styles.formControl}>
                         <Select
