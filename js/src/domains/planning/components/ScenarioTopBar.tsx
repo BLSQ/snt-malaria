@@ -1,7 +1,7 @@
 import React, { FC, useCallback } from 'react';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
+import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
 import {
     Box,
     IconButton,
@@ -41,6 +41,17 @@ const styles: SxStyles = {
         flexDirection: 'row',
         alignItems: 'center',
     },
+    sidebarToggle: {
+        transition: 'all 0.2s ease-in-out',
+    },
+    sidebarToggleActive: (theme: Theme) => ({
+        transition: 'all 0.2s ease-in-out',
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.primary.contrastText,
+        '&:hover': {
+            backgroundColor: theme.palette.primary.dark,
+        },
+    }),
 };
 
 type Props = {
@@ -141,8 +152,20 @@ export const ScenarioTopBar: FC<Props> = ({
                             : MESSAGES.showSidebar,
                     )}
                 >
-                    <IconButton onClick={onToggleSidebar} color="primary">
-                        <ViewSidebarIcon />
+                    <IconButton
+                        onClick={onToggleSidebar}
+                        color="primary"
+                        sx={
+                            isSidebarOpen
+                                ? styles.sidebarToggleActive
+                                : styles.sidebarToggle
+                        }
+                    >
+                        <ViewSidebarOutlinedIcon
+                            sx={{
+                                transition: 'transform 0.2s ease-in-out',
+                            }}
+                        />
                     </IconButton>
                 </Tooltip>
             </Box>
