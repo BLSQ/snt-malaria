@@ -4,7 +4,7 @@ import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
+import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
 import {
     Box,
     Typography,
@@ -87,6 +87,17 @@ const styles: SxStyles = {
     submitButton: {
         marginLeft: 1,
     },
+    sidebarToggle: {
+        transition: 'all 0.2s ease-in-out',
+    },
+    sidebarToggleActive: (theme: Theme) => ({
+        transition: 'all 0.2s ease-in-out',
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.primary.contrastText,
+        '&:hover': {
+            backgroundColor: theme.palette.primary.dark,
+        },
+    }),
 };
 
 const validationSchema = Yup.object().shape({
@@ -287,8 +298,20 @@ export const ScenarioTopBar: FC<Props> = ({
                             : MESSAGES.showSidebar,
                     )}
                 >
-                    <IconButton onClick={onToggleSidebar} color="primary">
-                        <ViewSidebarIcon />
+                    <IconButton
+                        onClick={onToggleSidebar}
+                        color="primary"
+                        sx={
+                            isSidebarOpen
+                                ? styles.sidebarToggleActive
+                                : styles.sidebarToggle
+                        }
+                    >
+                        <ViewSidebarOutlinedIcon
+                            sx={{
+                                transition: 'transform 0.2s ease-in-out',
+                            }}
+                        />
                     </IconButton>
                 </Tooltip>
             </Box>
