@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { FC, useEffect, useMemo } from 'react';
 import {
     Box,
     Card,
@@ -61,19 +61,20 @@ const styles: SxStyles = {
 
 type Props = {
     orgUnits: OrgUnit[];
+    selectedOrgUnitTypeId: number | null;
     selectedOrgUnitId: number | null;
+    onOrgUnitTypeChange: (orgUnitTypeId: number | null) => void;
     onOrgUnitChange: (orgUnitId: number | null) => void;
 };
 
 export const PlanningFiltersSidebar: FC<Props> = ({
     orgUnits,
+    selectedOrgUnitTypeId,
     selectedOrgUnitId,
+    onOrgUnitTypeChange,
     onOrgUnitChange,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const [selectedOrgUnitTypeId, setSelectedOrgUnitTypeId] = useState<
-        number | null
-    >(null);
 
     const { data: orgUnitTypes, isLoading: isLoadingTypes } =
         useGetOrgUnitTypesDropdownOptions();
@@ -143,16 +144,14 @@ export const PlanningFiltersSidebar: FC<Props> = ({
                     return currDepth < prevDepth ? curr : prev;
                 },
             );
-            setSelectedOrgUnitTypeId(Number(highestAncestor.value));
+            onOrgUnitTypeChange(Number(highestAncestor.value));
         }
-    }, [filteredOrgUnitTypes, selectedOrgUnitTypeId]);
+    }, [filteredOrgUnitTypes, selectedOrgUnitTypeId, onOrgUnitTypeChange]);
 
     const handleTypeChange = (event: { target: { value: unknown } }) => {
         const value = event.target.value;
         const newTypeId = value === '' ? null : Number(value);
-        setSelectedOrgUnitTypeId(newTypeId);
-        // Clear org unit selection when type changes
-        onOrgUnitChange(null);
+        onOrgUnitTypeChange(newTypeId);
     };
 
     const handleOrgUnitChange = (event: { target: { value: unknown } }) => {
