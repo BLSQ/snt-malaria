@@ -65,6 +65,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.errors.required',
         defaultMessage: 'Required',
     },
+    noWhitespace: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.noWhitespace',
+        defaultMessage: 'Whitespace not allowed',
+    },
     invalidJsonArray: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.invalidJsonArray',
         defaultMessage: 'Invalid format, must be [value1, value2, ...]',

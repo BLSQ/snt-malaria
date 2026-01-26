@@ -60,6 +60,7 @@
     "iaso.snt_malaria.settings.intervention.detailedCostUnitLabel": "Cost Unit",
     "iaso.snt_malaria.settings.intervention.detailedCostCategoryLabel": "Category",
     "iaso.snt_malaria.settings.intervention.errors.required": "Required",
+    "iaso.snt_malaria.settings.dataLayers.errors.noWhitespace": "Whitespace not allowed",
     "iaso.snt_malaria.settings.dataLayers.errors.invalidJsonArray": "Invalid format, must be [value1, value2, ...]",
     "iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeErrorHeadline": "Layer with this code already exists.",
     "iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeError": "A Layer with this code already exists. Please choose a different code.",

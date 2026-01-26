@@ -59,6 +59,7 @@
     "iaso.snt_malaria.settings.intervention.detailedCostUnitLabel": "Unité",
     "iaso.snt_malaria.settings.intervention.detailedCostCategoryLabel": "Catégorie",
     "iaso.snt_malaria.settings.intervention.errors.required": "Requis",
+    "iaso.snt_malaria.settings.dataLayers.errors.noWhitespace": "Les espaces ne sont pas autorisés",
     "iaso.snt_malaria.settings.dataLayers.errors.invalidJsonArray": "Format invalide, doit être [valeur1, valeur2, ...]",
     "iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeErrorHeadline": "Une couche avec ce code existe déjà.",
     "iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeError": "Une couche avec ce code existe déjà. Veuillez choisir un code différent.",

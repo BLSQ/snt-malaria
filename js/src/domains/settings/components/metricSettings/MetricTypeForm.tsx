@@ -41,7 +41,9 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
     const validationSchema = useMemo(
         () =>
             Yup.object().shape({
-                code: Yup.string().required(formatMessage(MESSAGES.required)),
+                code: Yup.string()
+                    .required(formatMessage(MESSAGES.required))
+                    .matches(/^\S*$/, formatMessage(MESSAGES.noWhitespace)),
                 name: Yup.string().required(formatMessage(MESSAGES.required)),
                 description: Yup.string(),
                 category: Yup.string().required(
