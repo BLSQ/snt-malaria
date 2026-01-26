@@ -9,7 +9,7 @@ import { paginationPathParams } from 'Iaso/routing/common';
 export const RouteConfigs: Record<string, RouteConfig> = {
     planning: {
         url: 'snt_malaria/planning',
-        params: ['scenarioId'],
+        params: ['scenarioId', 'displayOrgUnitTypeId', 'displayOrgUnitId'],
     },
     planningV2: {
         url: 'snt_malaria/planning-v2',

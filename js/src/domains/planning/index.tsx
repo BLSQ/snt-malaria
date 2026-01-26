@@ -1,6 +1,10 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import { Grid } from '@mui/material';
-import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import {
+    LoadingSpinner,
+    useRedirectToReplace,
+    useSafeIntl,
+} from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
 import { succesfullSnackBar } from 'Iaso/constants/snackBars';
@@ -35,7 +39,9 @@ import { Intervention } from './types/interventions';
 import { MetricsFilters, MetricType } from './types/metrics';
 
 type PlanningParams = {
-    scenarioId: number;
+    scenarioId: string;
+    displayOrgUnitTypeId?: string;
+    displayOrgUnitId?: string;
 };
 
 const styles: SxStyles = {
@@ -46,28 +52,54 @@ export const Planning: FC = () => {
     const params = useParamsObject(
         baseUrls.planning,
     ) as unknown as PlanningParams;
+    const redirectToReplace = useRedirectToReplace();
     const { data: scenario } = useGetScenario(params.scenarioId);
     const { formatMessage } = useSafeIntl();
 
     const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
     const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [selectedOrgUnitId, setSelectedOrgUnitId] = useState<number | null>(
-        null,
-    );
+
+    // Read display options from URL params
+    const selectedDisplayOrgUnitTypeId = params.displayOrgUnitTypeId
+        ? Number(params.displayOrgUnitTypeId)
+        : null;
+    const selectedDisplayOrgUnitId = params.displayOrgUnitId
+        ? Number(params.displayOrgUnitId)
+        : null;
 
     // Fetch org units with optional parent filter (API handles filtering)
-    const { data: orgUnits, isLoading: isLoadingOrgUnits } =
-        useGetOrgUnits(selectedOrgUnitId);
+    const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits(
+        selectedDisplayOrgUnitId,
+    );
 
-    // Use orgUnits directly - filtering is done via API when selectedOrgUnitId is set
+    // Use orgUnits directly - filtering is done via API when selectedDisplayOrgUnitId is set
     const filteredOrgUnits = orgUnits;
 
-    const handleOrgUnitChange = useCallback((orgUnitId: number | null) => {
-        setSelectedOrgUnitId(orgUnitId);
-        // Clear selection when filter changes
-        setSelectionOnMap([]);
-    }, []);
+    const handleDisplayOrgUnitTypeChange = useCallback(
+        (orgUnitTypeId: number | null) => {
+            redirectToReplace(baseUrls.planning, {
+                ...params,
+                displayOrgUnitTypeId: orgUnitTypeId ?? undefined,
+                displayOrgUnitId: undefined, // Clear org unit when type changes
+            });
+            // Clear selection when filter changes
+            setSelectionOnMap([]);
+        },
+        [params, redirectToReplace],
+    );
+
+    const handleDisplayOrgUnitChange = useCallback(
+        (orgUnitId: number | null) => {
+            redirectToReplace(baseUrls.planning, {
+                ...params,
+                displayOrgUnitId: orgUnitId ?? undefined,
+            });
+            // Clear selection when filter changes
+            setSelectionOnMap([]);
+        },
+        [params, redirectToReplace],
+    );
 
     const handleToggleSidebar = useCallback(() => {
         setIsSidebarOpen(prev => !prev);
@@ -241,8 +273,14 @@ export const Planning: FC = () => {
                             <PaperFullHeight>
                                 <PlanningFiltersSidebar
                                     orgUnits={orgUnits}
-                                    selectedOrgUnitId={selectedOrgUnitId}
-                                    onOrgUnitChange={handleOrgUnitChange}
+                                    selectedOrgUnitTypeId={
+                                        selectedDisplayOrgUnitTypeId
+                                    }
+                                    selectedOrgUnitId={selectedDisplayOrgUnitId}
+                                    onOrgUnitTypeChange={
+                                        handleDisplayOrgUnitTypeChange
+                                    }
+                                    onOrgUnitChange={handleDisplayOrgUnitChange}
                                 />
                             </PaperFullHeight>
                         </Grid>
