@@ -10,6 +10,8 @@ import {
 import { InterventionSettings } from './components/interventionSettings/InterventionSettings';
 import { MetricTypeSettings } from './components/metricSettings/MetricTypesSettings';
 import { MESSAGES } from './messages';
+import { hasFeatureFlag } from 'Iaso/utils/featureFlags';
+import { useCurrentUser } from 'Iaso/utils/usersUtils';
 
 type TabKey = 'interventionSettings' | 'dataLayersSettings';
 
@@ -23,8 +25,11 @@ const styles: SxStyles = {
 export const Settings: React.FC = () => {
     const { formatMessage } = useSafeIntl();
 
-    const [currentTab, setCurrentTab] =
-        React.useState<TabKey>('dataLayersSettings');
+    const currentUser = useCurrentUser();
+    const showLayersTab = hasFeatureFlag(currentUser, 'SHOW_DEV_FEATURES');
+    const [currentTab, setCurrentTab] = React.useState<TabKey>(
+        showLayersTab ? 'dataLayersSettings' : 'interventionSettings',
+    );
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: TabKey) => {
         setCurrentTab(newValue);
@@ -36,11 +41,13 @@ export const Settings: React.FC = () => {
             <PageContainer>
                 <Paper elevation={2} sx={styles.tabsContainer}>
                     <Tabs value={currentTab} onChange={handleTabChange}>
-                        <Tab
-                            label={formatMessage(MESSAGES.dataLayersTitle)}
-                            value="dataLayersSettings"
-                            sx={styles.tabItems}
-                        />
+                        {showLayersTab && (
+                            <Tab
+                                label={formatMessage(MESSAGES.dataLayersTitle)}
+                                value="dataLayersSettings"
+                                sx={styles.tabItems}
+                            />
+                        )}
                         <Tab
                             label={formatMessage(MESSAGES.interventionsTitle)}
                             value="interventionSettings"
@@ -52,7 +59,7 @@ export const Settings: React.FC = () => {
                     {currentTab === 'interventionSettings' && (
                         <InterventionSettings />
                     )}
-                    {currentTab === 'dataLayersSettings' && (
+                    {currentTab === 'dataLayersSettings' && showLayersTab && (
                         <MetricTypeSettings />
                     )}
                 </ContentsContainer>
