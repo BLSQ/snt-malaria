@@ -55,9 +55,8 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                     formatMessage(MESSAGES.required),
                 ),
                 scale: Yup.string()
+                    .required(formatMessage(MESSAGES.required))
                     .trim()
-                    // TODO Validate max scale items length?
-                    // TODO All scale types
                     .matches(
                         /^\[(\s*(\d+|"[^"]*")\s*,)*\s*(\d+|"[^"]*")\s*\]$|^\[\s*\]$/,
                         formatMessage(MESSAGES.invalidJsonArray),
@@ -99,6 +98,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 label={MESSAGES.variable}
                 required
                 errors={errors.code ? [errors.code] : []}
+                disabled={!!metricType?.id}
             />
             <InputComponent
                 keyValue="name"
