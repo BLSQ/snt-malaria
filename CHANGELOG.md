@@ -1,5 +1,45 @@
 # Changelog
 
+## [2.6.0](https://github.com/BLSQ/snt-malaria/compare/2.5.0...2.6.0) (2026-01-27)
+
+
+### Features
+
+* Add dummy population for DRC ([#138](https://github.com/BLSQ/snt-malaria/issues/138)) ([baf7766](https://github.com/BLSQ/snt-malaria/commit/baf7766195055de732afe9b66acc5cfb15af9018))
+* Allow to override interventions for an account ([#137](https://github.com/BLSQ/snt-malaria/issues/137)) ([dcbec33](https://github.com/BLSQ/snt-malaria/commit/dcbec339f673b87aef8da11f8e2541461d5b6ed9))
+* **data:** SNT-268 Update demo dummy data for BFA ([#171](https://github.com/BLSQ/snt-malaria/issues/171)) ([a774321](https://github.com/BLSQ/snt-malaria/commit/a774321cd76f546307821cfadacb84f75d7d5578))
+* **frontend:** SNT-230 use short name for intervention map tooltip ([#161](https://github.com/BLSQ/snt-malaria/issues/161)) ([5d0e292](https://github.com/BLSQ/snt-malaria/commit/5d0e29277efa624db97b185de60a42aeb4a104ce))
+* Snt 203 apply cost overrides ([#142](https://github.com/BLSQ/snt-malaria/issues/142)) ([1f0f04d](https://github.com/BLSQ/snt-malaria/commit/1f0f04d4cd504d151e6e55f8d18d12c1510ff4b5))
+* SNT-170: Import population metadata ([#144](https://github.com/BLSQ/snt-malaria/issues/144)) ([c5c6aca](https://github.com/BLSQ/snt-malaria/commit/c5c6acaeb8d9a4a839c985db22b64363425b805a))
+* SNT-179 lock a scenario ([#158](https://github.com/BLSQ/snt-malaria/issues/158)) ([235326e](https://github.com/BLSQ/snt-malaria/commit/235326e909f48d088e336b251434ec329e392a56))
+* SNT-198 import nsp fine tunnings ([#132](https://github.com/BLSQ/snt-malaria/issues/132)) ([ec32e18](https://github.com/BLSQ/snt-malaria/commit/ec32e18e36ed4bb89e866fe781d54d5414214d31))
+* SNT-201 show cost override settings panel ([#134](https://github.com/BLSQ/snt-malaria/issues/134)) ([a596fe7](https://github.com/BLSQ/snt-malaria/commit/a596fe7112a38b24565d2a6f52bd9da78a3a30c2))
+* SNT-210 Add a cron job to recreate "demo" account every night ([#140](https://github.com/BLSQ/snt-malaria/issues/140)) ([7384d34](https://github.com/BLSQ/snt-malaria/commit/7384d34494d3d40beb5633c54f749fabe5357c59))
+* SNT-211 improve data for burkina faso demo account ([#135](https://github.com/BLSQ/snt-malaria/issues/135)) ([5fca75a](https://github.com/BLSQ/snt-malaria/commit/5fca75add2bcea23f30d6f32823d461819495897))
+* SNT-218: UI overflow improvement ([#141](https://github.com/BLSQ/snt-malaria/issues/141)) ([0d78ac3](https://github.com/BLSQ/snt-malaria/commit/0d78ac3106873d83d13bb23a21fa4fdfa696ff7f))
+* SNT-220 improve charts legend display ([#143](https://github.com/BLSQ/snt-malaria/issues/143)) ([5a5ffb5](https://github.com/BLSQ/snt-malaria/commit/5a5ffb534fa306c174b50e9c77ba1d3bb6989d64))
+* SNT-224: User can view the cost configuration on the cost settings page ([#154](https://github.com/BLSQ/snt-malaria/issues/154)) ([b405c83](https://github.com/BLSQ/snt-malaria/commit/b405c837ecc508d0a42c9cc6ab0d66e1e9836acf))
+* SNT-234 intervention plan editable map per category ([#165](https://github.com/BLSQ/snt-malaria/issues/165)) ([2ff13f0](https://github.com/BLSQ/snt-malaria/commit/2ff13f0446db958ce2ab5cba3edb03a5ba4468f3))
+* SNT-236: Set intervention id when saving intervention costs ([#159](https://github.com/BLSQ/snt-malaria/issues/159)) ([e723981](https://github.com/BLSQ/snt-malaria/commit/e723981ae0a6276963adf65264fd7d0bbf0ea9bf))
+* SNT-238 Add utility to dummy metadata and handle when importing ([#160](https://github.com/BLSQ/snt-malaria/issues/160)) ([04768f3](https://github.com/BLSQ/snt-malaria/commit/04768f38b5cae1f027cd7bd524291ffac87a80ed))
+* SNT-241: update BFA dummy scenario plan ([#162](https://github.com/BLSQ/snt-malaria/issues/162)) ([8d185ec](https://github.com/BLSQ/snt-malaria/commit/8d185eca7b5d668b713cbd9d02de52cd371fbdc2))
+* SNT-260 As a user i can access a list of available layers ([#167](https://github.com/BLSQ/snt-malaria/issues/167)) ([2ed36c2](https://github.com/BLSQ/snt-malaria/commit/2ed36c2e8c13284411cd00c7b91dcfbff561ab9f))
+* SNT-267: Use roboto font ([#166](https://github.com/BLSQ/snt-malaria/issues/166)) ([f25944c](https://github.com/BLSQ/snt-malaria/commit/f25944cd3945f0be3aec89254ca228b39750d7d7))
+* SNT-279 Hide metric type settings behind dev feature flag ([#177](https://github.com/BLSQ/snt-malaria/issues/177)) ([651cebe](https://github.com/BLSQ/snt-malaria/commit/651cebe1a46f91c1a6bcc9685b2ef4bb656a85f1))
+* SNT-64: Import metric type update, add or create instead of destructive ([#174](https://github.com/BLSQ/snt-malaria/issues/174)) ([04533f5](https://github.com/BLSQ/snt-malaria/commit/04533f59ae0b27813b63b3265180ef58f15c392b))
+
+
+### Bug Fixes
+
+* **deploy:** Update deployment python deploy version ([#172](https://github.com/BLSQ/snt-malaria/issues/172)) ([b2b4259](https://github.com/BLSQ/snt-malaria/commit/b2b42590e241b7231f686ea2469d67b6d3e944b6))
+* SNT-121 Improve NSP Import ([#136](https://github.com/BLSQ/snt-malaria/issues/136)) ([f3b7473](https://github.com/BLSQ/snt-malaria/commit/f3b7473183c7ce21be0510319604a443fc65adf9))
+* SNT-217 Setup scripts fine tuning ([#139](https://github.com/BLSQ/snt-malaria/issues/139)) ([cf87b1c](https://github.com/BLSQ/snt-malaria/commit/cf87b1cd3b323643a36ba750d55f5e036ec52aa9))
+* SNT-246 Round numbers on hover to 2 decimales ([#169](https://github.com/BLSQ/snt-malaria/issues/169)) ([a737302](https://github.com/BLSQ/snt-malaria/commit/a7373025f1003373a86260503d3c0b877135a335))
+* SNT-248: Accept strictly greater and smaller than ([#170](https://github.com/BLSQ/snt-malaria/issues/170)) ([4ccd756](https://github.com/BLSQ/snt-malaria/commit/4ccd75674cbf345decf6237f0e98fe7980d947c6))
+* SNT-255: Use short name in legend and tooltip of intervention plan map ([#168](https://github.com/BLSQ/snt-malaria/issues/168)) ([a261e17](https://github.com/BLSQ/snt-malaria/commit/a261e17a9de5124af9ddb6449bebc2491e0140f7))
+* SNT-273: Update message when adding assignment to plan ([#173](https://github.com/BLSQ/snt-malaria/issues/173)) ([2c9eba0](https://github.com/BLSQ/snt-malaria/commit/2c9eba08bb88e89d221549cf07965f96ef1a3711))
+* Some typos, store cost input on the budget ([#148](https://github.com/BLSQ/snt-malaria/issues/148)) ([0b0c693](https://github.com/BLSQ/snt-malaria/commit/0b0c69333cc1a0530d861e595c95d9012eecb850))
+
 ## [2.5.0](https://github.com/BLSQ/snt-malaria/compare/2.4.0...2.5.0) (2025-12-02)
 
 
