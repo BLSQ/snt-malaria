@@ -66,8 +66,8 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
         <ConfirmCancelModal
             open={open}
             onClose={closeDialog}
-            id={''}
-            dataTestId={''}
+            id={'metric-type-dialog'}
+            dataTestId={'metric-type-dialog'}
             titleMessage={
                 metricType
                     ? formatMessage(MESSAGES.editLayer)

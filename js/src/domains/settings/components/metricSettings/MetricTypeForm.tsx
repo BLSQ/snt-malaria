@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react';
 import { Box, Grid } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import InputComponent from 'Iaso/components/forms/InputComponent';
@@ -11,7 +11,7 @@ import { MESSAGES } from '../../messages';
 type MetricTypeFormProps = {
     metricType?: MetricTypeFormModel;
     onSubmitFormRef: (callback: () => void) => void;
-    onSubmit?: (metricType: MetricTypeFormModel) => void;
+    onSubmit: (metricType: MetricTypeFormModel) => void;
 };
 
 const DEFAULT_METRIC_TYPE: MetricTypeFormModel = {
@@ -65,16 +65,19 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
         [formatMessage],
     );
 
-    const { values, setFieldValue, handleSubmit, errors, setFieldTouched } =
-        useFormik({
-            initialValues: metricType || DEFAULT_METRIC_TYPE,
-            validationSchema,
-            onSubmit: () => {
-                if (onSubmit) {
-                    onSubmit(values);
-                }
-            },
-        });
+    const {
+        values,
+        setFieldValue,
+        handleSubmit,
+        errors,
+        touched,
+        setFieldTouched,
+    } = useFormik({
+        initialValues: metricType || DEFAULT_METRIC_TYPE,
+        validationSchema,
+        validateOnBlur: true,
+        onSubmit: () => onSubmit(values),
+    });
 
     const setFieldValueAndState = useCallback(
         (field: string, value: any) => {
@@ -83,6 +86,13 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
         },
         [setFieldTouched, setFieldValue],
     );
+
+    const getErrors = useTranslatedErrors({
+        errors,
+        touched,
+        formatMessage,
+        messages: MESSAGES,
+    });
 
     useEffect(() => {
         onSubmitFormRef(handleSubmit);
@@ -97,7 +107,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 type="text"
                 label={MESSAGES.variable}
                 required
-                errors={errors.code ? [errors.code] : []}
+                errors={getErrors('code')}
                 disabled={!!metricType?.id}
             />
             <InputComponent
@@ -107,7 +117,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 type="text"
                 label={MESSAGES.label}
                 required
-                errors={errors.name ? [errors.name] : []}
+                errors={getErrors('name')}
             />
             <InputComponent
                 keyValue="category"
@@ -116,7 +126,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 type="text"
                 label={MESSAGES.category}
                 required
-                errors={errors.category ? [errors.category] : []}
+                errors={getErrors('category')}
             />
             <InputComponent
                 keyValue="description"
@@ -124,7 +134,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 value={values.description}
                 type="textarea"
                 label={MESSAGES.description}
-                errors={errors.description ? [errors.description] : []}
+                errors={getErrors('description')}
             />
             <InputComponent
                 keyValue="units"
@@ -132,7 +142,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 value={values.units}
                 type="text"
                 label={MESSAGES.units}
-                errors={errors.units ? [errors.units] : []}
+                errors={getErrors('units')}
             />
             <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
@@ -146,7 +156,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                         value={values.legend_type}
                         onChange={setFieldValueAndState}
                         label={MESSAGES.legendType}
-                        errors={errors.legend_type ? [errors.legend_type] : []}
+                        errors={getErrors('legend_type')}
                         loading={loadingLegendTypeOptions}
                     />
                 </Grid>
@@ -157,7 +167,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                         value={values.unit_symbol}
                         type="text"
                         label={MESSAGES.unitSymbol}
-                        errors={errors.unit_symbol ? [errors.unit_symbol] : []}
+                        errors={getErrors('unit_symbol')}
                     />
                 </Grid>
             </Grid>
@@ -168,7 +178,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 type="text"
                 label={MESSAGES.scale}
                 required
-                errors={errors.scale ? [errors.scale] : []}
+                errors={getErrors('scale')}
             />
         </Box>
     );

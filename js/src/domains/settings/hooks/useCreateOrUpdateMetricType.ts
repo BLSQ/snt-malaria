@@ -1,5 +1,5 @@
 import { UseMutationResult } from 'react-query';
-import { ApiError, postRequest, putRequest } from 'Iaso/libs/Api';
+import { ApiError, patchRequest, postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { MetricTypeFormModel } from '../../planning/types/metrics';
 
@@ -11,7 +11,7 @@ export const useCreateOrUpdateMetricType = ({
         invalidateQueryKey: ['metricTypes', 'metricCategories'],
         mutationFn: (body: MetricTypeFormModel) =>
             body.id
-                ? putRequest(`/api/metrictypes/${body.id}/`, body)
+                ? patchRequest(`/api/metrictypes/${body.id}/`, body)
                 : postRequest(`/api/metrictypes/`, body),
         ignoreErrorCodes: [400],
         options: {
