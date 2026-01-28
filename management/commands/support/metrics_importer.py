@@ -11,6 +11,7 @@ from django.core.management.base import CommandError
 from django.db import transaction
 
 from iaso.models import MetricType, MetricValue, OrgUnit
+from iaso.utils.legend import get_legend_config
 
 
 class MetricsImporter:
@@ -287,9 +288,6 @@ class MetricsImporter:
             raise
 
     def _configure_legends(self):
-        # Import legend functionality
-        from .legend import get_legend_config
-
         for metric_type in MetricType.objects.filter(account=self.account):
             metric_type.legend_config = get_legend_config(metric_type, self.metric_type_scales[metric_type.code])
             metric_type.save()

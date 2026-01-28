@@ -1,6 +1,6 @@
+from iaso.api.common import DropdownOptionsWithRepresentationSerializer
 from iaso.models.base import Account
 from iaso.test import APITestCase
-from plugins.snt_malaria.api.cost_breakdown_line.serializers import DropdownOptionsWithRepresentationSerializer
 
 
 class InterventionCostBreakdownLineSerializerTests(APITestCase):

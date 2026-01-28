@@ -6,6 +6,7 @@ export type MetricTypeCategory = {
 export type MetricType = {
     id: number;
     name: string;
+    code: string;
     description: string;
     source: string;
     units: string;
@@ -13,6 +14,21 @@ export type MetricType = {
     comments: string;
     category: string;
     legend_config: ScaleDomainRange;
+    legend_type: string;
+    origin: string;
+};
+
+export type MetricTypeFormModel = {
+    id?: number;
+    name: string;
+    code: string;
+    description: string;
+    source: string;
+    units: string;
+    unit_symbol: string;
+    comments: string;
+    category: string;
+    scale: string;
     legend_type: string;
     origin: string;
 };

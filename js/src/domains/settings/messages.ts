@@ -1,6 +1,14 @@
 import { defineMessages } from 'react-intl';
 
 export const MESSAGES = defineMessages({
+    create: {
+        defaultMessage: 'Create',
+        id: 'iaso.label.create',
+    },
+    cancel: {
+        defaultMessage: 'Cancel',
+        id: 'iaso.label.cancel',
+    },
     title: {
         id: 'iaso.snt_malaria.settings.title',
         defaultMessage: 'Settings',
@@ -57,6 +65,39 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.errors.required',
         defaultMessage: 'Required',
     },
+    noWhitespace: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.noWhitespace',
+        defaultMessage: 'Whitespace not allowed',
+    },
+    invalidJsonArray: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.invalidJsonArray',
+        defaultMessage: 'Invalid format, must be [value1, value2, ...]',
+    },
+    uniqueCodeErrorHeadline: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeErrorHeadline',
+        defaultMessage: 'Layer with this code already exists.',
+    },
+    uniqueCodeError: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeError',
+        defaultMessage:
+            'A Layer with this code already exists. Please choose a different code.',
+    },
+    codeImmutableErrorHeadline: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.codeImmutableHeadline',
+        defaultMessage: 'Layer code is immutable.',
+    },
+    codeImmutableError: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.codeImmutable',
+        defaultMessage: 'The code of a Layer cannot be changed.',
+    },
+    genericErrorHeadline: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.genericErrorHeadline',
+        defaultMessage: 'An unexpected error occurred.',
+    },
+    genericError: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.genericError',
+        defaultMessage: 'Please try again.',
+    },
     negativeValueNotAllowed: {
         id: 'iaso.snt_malaria.settings.intervention.errors.negativeValueNotAllowed',
         defaultMessage: 'Negative value not allowed',
@@ -86,12 +127,56 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.createLayer',
         defaultMessage: 'Create layer',
     },
+    editLayer: {
+        id: 'iaso.snt_malaria.settings.dataLayers.editLayer',
+        defaultMessage: 'Edit Layer',
+    },
+    deleteLayer: {
+        id: 'iaso.snt_malaria.settings.dataLayers.deleteLayer',
+        defaultMessage: 'Delete Layer',
+    },
     searchByName: {
         id: 'iaso.snt_malaria.settings.dataLayers.searchByName',
         defaultMessage: 'Search by name',
     },
-    noMetricTypesFound: {
-        id: 'iaso.snt_malaria.settings.metricTypes.noMetricTypesFound',
-        defaultMessage: 'No metric types found.',
+    noLayersFound: {
+        id: 'iaso.snt_malaria.settings.dataLayers.noLayersFound',
+        defaultMessage: 'No layers found.',
+    },
+    variable: {
+        id: 'iaso.snt_malaria.settings.dataLayers.variable',
+        defaultMessage: 'Variable',
+    },
+    label: {
+        id: 'iaso.snt_malaria.settings.dataLayers.label',
+        defaultMessage: 'Label',
+    },
+    category: {
+        id: 'iaso.snt_malaria.settings.dataLayers.category',
+        defaultMessage: 'Category',
+    },
+    description: {
+        id: 'iaso.snt_malaria.settings.dataLayers.description',
+        defaultMessage: 'Description',
+    },
+    units: {
+        id: 'iaso.snt_malaria.settings.dataLayers.units',
+        defaultMessage: 'Units',
+    },
+    unitSymbol: {
+        id: 'iaso.snt_malaria.settings.dataLayers.unitSymbol',
+        defaultMessage: 'Unit Symbol',
+    },
+    scale: {
+        id: 'iaso.snt_malaria.settings.dataLayers.scale',
+        defaultMessage: 'Scale',
+    },
+    legendType: {
+        id: 'iaso.snt_malaria.settings.dataLayers.legendType',
+        defaultMessage: 'Legend Type',
+    },
+    deleteLayerConfirmMessage: {
+        id: 'iaso.snt_malaria.settings.dataLayers.deleteLayerConfirmMessage',
+        defaultMessage: 'Are you sure you want to delete this layer?',
     },
 });
