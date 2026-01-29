@@ -4,12 +4,12 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from iaso.api.common import DropdownOptionsWithRepresentationSerializer
 from plugins.snt_malaria.models import InterventionCostBreakdownLine
 from plugins.snt_malaria.models.cost_breakdown import InterventionCostUnitType
 
 from .filters import InterventionCostBreakdownLineListFilter
 from .serializers import (
-    DropdownOptionsWithRepresentationSerializer,
     InterventionCostBreakdownLineSerializer,
     InterventionCostBreakdownLinesWriteSerializer,
 )
