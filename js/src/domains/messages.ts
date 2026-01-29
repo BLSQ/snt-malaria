@@ -261,7 +261,7 @@ export const MESSAGES = defineMessages({
     },
     importCSV: {
         id: 'iaso.snt_malaria.scenario.importCSV',
-        defaultMessage: 'Import CSV',
+        defaultMessage: 'Import metric values',
     },
     createScenario: {
         id: 'iaso.snt_malaria.scenario.createScenario',

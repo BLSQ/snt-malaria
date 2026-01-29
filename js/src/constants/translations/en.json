@@ -86,6 +86,8 @@
     "iaso.snt_malaria.settings.dataLayers.editLayer": "Edit Layer",
     "iaso.snt_malaria.settings.dataLayers.deleteLayer": "Delete Layer",
     "iaso.snt_malaria.settings.dataLayers.deleteLayerConfirmMessage": "Are you sure you want to delete this layer?",
+    "iaso.snt_malaria.settings.dataLayers.downloadCSVTemplate": "Download CSV Template",
+    "iaso.snt_malaria.settings.dataLayers.importCSV": "Import metric values",
     "iaso.snt_malaria.label.runInterventionPlanBudget": "Run Budget",
     "iaso.snt_malaria.cost-breakdown-chart.title": "Cost per intervention category",
     "iaso.snt_malaria.proportion-chart.title": "Cost per intervention",
