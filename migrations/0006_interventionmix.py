@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("snt_malaria", "0005_alter_scenario_options"),
     ]
@@ -19,7 +18,14 @@ class Migration(migrations.Migration):
                 ("deleted_at", models.DateTimeField(blank=True, default=None, null=True)),
                 ("name", models.CharField(max_length=255)),
                 ("interventions", models.ManyToManyField(to="snt_malaria.intervention")),
-                ("scenario", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="intervention_mixes", to="snt_malaria.scenario")),
+                (
+                    "scenario",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="intervention_mixes",
+                        to="snt_malaria.scenario",
+                    ),
+                ),
             ],
         ),
     ]

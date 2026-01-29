@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('snt_malaria', '0016_alter_budgetassumptions_unique_together_and_more'),
+        ("snt_malaria", "0016_alter_budgetassumptions_unique_together_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='intervention',
-            name='short_name',
+            model_name="intervention",
+            name="short_name",
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
         migrations.AddField(
-            model_name='interventioncategory',
-            name='short_name',
+            model_name="interventioncategory",
+            name="short_name",
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
     ]
