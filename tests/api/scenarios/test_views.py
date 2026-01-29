@@ -1,6 +1,5 @@
 from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.urls import reverse
 from rest_framework import status
 
 from iaso.models import Account, OrgUnit, OrgUnitType
@@ -8,18 +7,25 @@ from iaso.models.data_source import DataSource, SourceVersion
 from iaso.models.project import Project
 from iaso.test import APITestCase
 from plugins.snt_malaria.models import Intervention, InterventionAssignment, InterventionCategory, Scenario
+from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
 
 
 class ScenarioAPITestCase(APITestCase):
+    BASE_URL = "/api/snt_malaria/scenarios/"
+
     def setUp(cls):
         # Create a user and account for testing
         cls.account = Account.objects.create(name="Test Account")
-        cls.user = cls.create_user_with_profile(username="testuser", account=cls.account)
-
+        cls.user_with_full_perm, cls.anon, cls.user_no_perms = cls.create_base_users(
+            cls.account, [SNT_SCENARIO_FULL_WRITE_PERMISSION], "testuser"
+        )
+        cls.user_with_basic_perm = cls.create_user_with_profile(
+            username="testuserbasic", account=cls.account, permissions=[SNT_SCENARIO_BASIC_WRITE_PERMISSION]
+        )
         # Create a scenario
         cls.scenario = Scenario.objects.create(
             account=cls.account,
-            created_by=cls.user,
+            created_by=cls.user_with_full_perm,
             name="Test Scenario",
             description="A test scenario description.",
             start_year=2025,
@@ -30,31 +36,31 @@ class ScenarioAPITestCase(APITestCase):
         cls.int_category_vaccination = InterventionCategory.objects.create(
             name="Vaccination",
             account=cls.account,
-            created_by=cls.user,
+            created_by=cls.user_with_full_perm,
         )
 
         cls.int_category_chemoprevention = InterventionCategory.objects.create(
             name="Preventive Chemotherapy",
             account=cls.account,
-            created_by=cls.user,
+            created_by=cls.user_with_full_perm,
         )
 
         # Create interventions
         cls.intervention_vaccination_rts = Intervention.objects.create(
             name="RTS,S",
-            created_by=cls.user,
+            created_by=cls.user_with_full_perm,
             intervention_category=cls.int_category_vaccination,
             code="rts_s",
         )
         cls.intervention_chemo_smc = Intervention.objects.create(
             name="SMC",
-            created_by=cls.user,
+            created_by=cls.user_with_full_perm,
             intervention_category=cls.int_category_chemoprevention,
             code="smc",
         )
         cls.intervention_chemo_iptp = Intervention.objects.create(
             name="IPTp",
-            created_by=cls.user,
+            created_by=cls.user_with_full_perm,
             intervention_category=cls.int_category_chemoprevention,
             code="iptp",
         )
@@ -95,54 +101,110 @@ class ScenarioAPITestCase(APITestCase):
             scenario=cls.scenario,
             org_unit=cls.district1,
             intervention=cls.intervention_chemo_iptp,
-            created_by=cls.user,
+            created_by=cls.user_with_full_perm,
         )
         cls.assignment = InterventionAssignment.objects.create(
             scenario=cls.scenario,
             org_unit=cls.district2,
             intervention=cls.intervention_chemo_smc,
-            created_by=cls.user,
+            created_by=cls.user_with_full_perm,
         )
         cls.assignment = InterventionAssignment.objects.create(
             scenario=cls.scenario,
             org_unit=cls.district2,
             intervention=cls.intervention_vaccination_rts,
-            created_by=cls.user,
+            created_by=cls.user_with_full_perm,
         )
 
-        cls.client.force_authenticate(user=cls.user)
-
     def test_scenario_list(self):
-        url = reverse("scenarios-list")
-        response = self.client.get(url)
+        """
+        This endpoint is available to all authenticated users, regardless of permissions.
+        """
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.get(self.BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         scenario = response.data[0]
         self.assertEqual(scenario["name"], "Test Scenario")
         self.assertEqual(scenario["description"], "A test scenario description.")
-        self.assertEqual(scenario["created_by"]["id"], self.user.id)
+        self.assertEqual(scenario["created_by"]["id"], self.user_with_full_perm.id)
+
+        self.client.force_authenticate(self.user_with_basic_perm)
+        response = self.client.get(self.BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        scenario = response.data[0]
+        self.assertEqual(scenario["id"], self.scenario.id)
+
+        self.client.force_authenticate(self.user_no_perms)
+        response = self.client.get(self.BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        scenario = response.data[0]
+        self.assertEqual(scenario["id"], self.scenario.id)
+
+    def test_scenario_list_unauthenticated(self):
+        response = self.client.get(self.BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_scenario_retrieve(self):
-        url = reverse("scenarios-detail", args=[self.scenario.id])
-        response = self.client.get(url)
+        """
+        This endpoint is available to all authenticated users, regardless of permissions.
+        """
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.get(f"{self.BASE_URL}{self.scenario.id}/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "Test Scenario")
         self.assertEqual(response.data["description"], "A test scenario description.")
-        self.assertEqual(response.data["created_by"]["id"], self.user.id)
+        self.assertEqual(response.data["created_by"]["id"], self.user_with_full_perm.id)
 
-    def test_scenario_create(self):
-        url = reverse("scenarios-list")
-        response = self.client.post(url, {"name": "New Scenario", "start_year": 2025, "end_year": 2026}, format="json")
+        self.client.force_authenticate(self.user_with_basic_perm)
+        response = self.client.get(f"{self.BASE_URL}{self.scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], self.scenario.id)
+        self.assertEqual(response.data["created_by"]["id"], self.user_with_full_perm.id)
+
+        self.client.force_authenticate(self.user_no_perms)
+        response = self.client.get(f"{self.BASE_URL}{self.scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], self.scenario.id)
+        self.assertEqual(response.data["created_by"]["id"], self.user_with_full_perm.id)
+
+    def test_scenario_retrieve_unauthenticated(self):
+        response = self.client.get(f"{self.BASE_URL}{self.scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_scenario_create_full_perm(self):
+        self.client.force_authenticate(self.user_with_full_perm)
+        data = {"name": "New Scenario", "start_year": 2025, "end_year": 2026}
+        response = self.client.post(self.BASE_URL, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Scenario.objects.count(), 2)
         new_scenario = Scenario.objects.latest("id")
         self.assertEqual(new_scenario.name, "New Scenario")
         self.assertEqual(new_scenario.account, self.account)
-        self.assertEqual(new_scenario.created_by, self.user)
+        self.assertEqual(new_scenario.created_by, self.user_with_full_perm)
+
+    def test_scenario_create_basic_perm(self):
+        self.client.force_authenticate(self.user_with_basic_perm)
+        data = {"name": "New Scenario Basic", "start_year": 2025, "end_year": 2026}
+        response = self.client.post(self.BASE_URL, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Scenario.objects.count(), 2)
+        new_scenario = Scenario.objects.latest("id")
+        self.assertEqual(new_scenario.name, "New Scenario Basic")
+        self.assertEqual(new_scenario.account, self.account)
+        self.assertEqual(new_scenario.created_by, self.user_with_basic_perm)
+
+    def test_scenario_create_no_perms(self):
+        self.client.force_authenticate(self.user_no_perms)
+        data = {"name": "New Scenario No Perms", "start_year": 2025, "end_year": 2026}
+        response = self.client.post(self.BASE_URL, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Scenario.objects.count(), 1)  # No new scenario created
 
     def test_scenario_create_name_already_taken(self):
-        url = reverse("scenarios-list")
-        response = self.client.post(url, {"name": "Test Scenario", "start_year": 2025, "end_year": 2026}, format="json")
+        response = self.client.post(self.BASE_URL, {"name": "Test Scenario", "start_year": 2025, "end_year": 2026}, format="json")
         jsonResponse = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(jsonResponse["name"], ["A scenario with this name already exists for your account."])
         self.assertEqual(Scenario.objects.count(), 1)
@@ -152,8 +214,7 @@ class ScenarioAPITestCase(APITestCase):
         other_user = self.create_user_with_profile(username="otheruser", account=other_account)
         self.client.force_authenticate(user=other_user)
 
-        url = reverse("scenarios-list")
-        response = self.client.post(url, {"name": "Test Scenario", "start_year": 2025, "end_year": 2026}, format="json")
+        response = self.client.post(self.BASE_URL, {"name": "Test Scenario", "start_year": 2025, "end_year": 2026}, format="json")
         self.assertJSONResponse(response, status.HTTP_201_CREATED)
         self.assertEqual(Scenario.objects.count(), 2)
         new_scenario = Scenario.objects.latest("id")
@@ -162,16 +223,14 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(new_scenario.created_by, other_user)
 
     def test_scenario_create_empty_name(self):
-        url = reverse("scenarios-list")
-        response = self.client.post(url, {"name": "", "start_year": 2025, "end_year": 2026}, format="json")
+        response = self.client.post(self.BASE_URL, {"name": "", "start_year": 2025, "end_year": 2026}, format="json")
         jsonResponse = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(jsonResponse["name"], ["This field may not be blank."])
         self.assertEqual(Scenario.objects.count(), 1)
 
     def test_scenario_create_start_year_greater_than_end_year(self):
-        url = reverse("scenarios-list")
         response = self.client.post(
-            url, {"name": "Invalid Scenario", "start_year": 2027, "end_year": 2026}, format="json"
+            self.BASE_URL, {"name": "Invalid Scenario", "start_year": 2027, "end_year": 2026}, format="json"
         )
         jsonResponse = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(jsonResponse["start_year"], ["Start year should be lower or equal end year."])
@@ -179,36 +238,136 @@ class ScenarioAPITestCase(APITestCase):
 
     def test_scenario_create_unauthenticated(self):
         self.client.force_authenticate(user=None)
-        url = reverse("scenarios-list")
-        response = self.client.post(url, {"name": "New Scenario", "start_year": 2025, "end_year": 2026}, format="json")
+        response = self.client.post(self.BASE_URL, {"name": "New Scenario", "start_year": 2025, "end_year": 2026}, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(Scenario.objects.count(), 1)
 
-    def test_scenario_update(self):
-        url = reverse("scenarios-detail", args=[self.scenario.id])
-        payload = {"id": self.scenario.id, "name": "Updated Scenario Name", "start_year": 2025, "end_year": 2028}
-        response = self.client.put(url, payload, format="json")
+    def test_scenario_create_unauthenticated(self):
+        data = {"name": "New Scenario Unauth", "start_year": 2025, "end_year": 2026}
+        response = self.client.post(self.BASE_URL, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Scenario.objects.count(), 1)  # No new scenario created
+
+    def test_update_own_scenario_full_perm(self):
+        self.client.force_authenticate(self.user_with_full_perm)
+        payload = {"id": self.scenario.id, "name": "Updated Scenario Name", "start_year": 2026, "end_year": 2028}
+        response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.scenario.refresh_from_db()
         self.assertEqual(self.scenario.name, "Updated Scenario Name")
+        self.assertEqual(self.scenario.start_year, 2026)
+        self.assertEqual(self.scenario.end_year, 2028)
+
+    def test_update_own_scenario_basic_perm(self):
+        basic_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_with_basic_perm,
+            name="Basic User Scenario",
+            description="A basic user scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        self.client.force_authenticate(self.user_with_basic_perm)
+        payload = {"id": self.scenario.id, "name": "Updated basic scenario", "start_year": 2026, "end_year": 2028}
+        response = self.client.put(f"{self.BASE_URL}{basic_scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        basic_scenario.refresh_from_db()
+        self.assertEqual(basic_scenario.name, "Updated basic scenario")
+        self.assertEqual(basic_scenario.start_year, 2026)
+        self.assertEqual(basic_scenario.end_year, 2028)
+
+    def test_update_own_scenario_no_perms(self):
+        """
+        This shouldn't happen because the user without permissions can't create scenarios, but just in case.
+        """
+        own_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_no_perms,
+            name="No Perms User Scenario",
+            description="A no perms user scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        self.client.force_authenticate(self.user_no_perms)
+        payload = {"id": own_scenario.id, "name": "Updated Scenario Name", "start_year": 2026, "end_year": 2028}
+        response = self.client.put(f"{self.BASE_URL}{own_scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        own_scenario.refresh_from_db()
+        self.assertEqual(own_scenario.name, "No Perms User Scenario")  # No changes made
+
+    def test_update_other_scenario_full_perm(self):
+        other_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_with_basic_perm,
+            name="Other User Scenario",
+            description="An other user scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        self.client.force_authenticate(self.user_with_full_perm)
+        payload = {"id": other_scenario.id, "name": "Updated Other Scenario", "start_year": 2026, "end_year": 2028}
+        response = self.client.put(f"{self.BASE_URL}{other_scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        other_scenario.refresh_from_db()
+        self.assertEqual(other_scenario.name, "Updated Other Scenario")
+        self.assertEqual(other_scenario.start_year, 2026)
+        self.assertEqual(other_scenario.end_year, 2028)
+
+    def test_update_other_scenario_basic_perm(self):
+        self.client.force_authenticate(self.user_with_basic_perm)
+        payload = {"id": self.scenario.id, "name": "Updated Scenario Name", "start_year": 2026, "end_year": 2028}
+        response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.scenario.refresh_from_db()
+        self.assertEqual(self.scenario.name, "Test Scenario")  # No changes made
+
+    def test_update_other_scenario_no_perms(self):
+        self.client.force_authenticate(self.user_no_perms)
+        payload = {"id": self.scenario.id, "name": "Updated Scenario Name", "start_year": 2026, "end_year": 2028}
+        response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.scenario.refresh_from_db()
+        self.assertEqual(self.scenario.name, "Test Scenario")  # No changes made
+
+    def test_update_scenario_unauthenticated(self):
+        payload = {"id": self.scenario.id, "name": "Updated Scenario Name", "start_year": 2026, "end_year": 2028}
+        response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.scenario.refresh_from_db()
+        self.assertEqual(self.scenario.name, "Test Scenario")  # No changes made
 
     def test_scenario_update_name_already_taken(self):
         self.scenario2 = Scenario.objects.create(
             account=self.account,
-            created_by=self.user,
+            created_by=self.user_with_full_perm,
             name="Test Scenario 2",
             description="A test scenario 2 description.",
             start_year=2025,
             end_year=2026,
         )
-        url = reverse("scenarios-detail", args=[self.scenario.id])
         payload = {"id": self.scenario.id, "name": "Test Scenario 2", "start_year": 2025, "end_year": 2026}
-        response = self.client.put(url, payload, format="json")
-        jsonResponse = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
+        json_response = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(jsonResponse["name"], ["A scenario with this name already exists for your account."])
 
-    def test_scenario_duplicate_success(self):
-        url = reverse("scenarios-duplicate")
+    def test_scenario_update_start_year_greater_than_end_year(self):
+        payload = {"id": self.scenario.id, "name": "Test Scenario", "start_year": 2027, "end_year": 2026}
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
+        json_response = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(json_response, ["Start year should be lower or equal end year."])
+
+    def test_scenario_duplicate_with_full_perm(self):
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}duplicate/", {"id_to_duplicate": self.scenario.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Scenario.objects.count(), 2)
+        duplicated_scenario = Scenario.objects.latest("id")
+        self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
+        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
+
+    def test_scenario_duplicate_with_basic_perm(self):
         payload = {
             "scenario_to_duplicate": self.scenario.id,
             "name": f"Copy of {self.scenario.name}",
@@ -217,6 +376,8 @@ class ScenarioAPITestCase(APITestCase):
             "end_year": 2026,
         }
         response = self.client.post(url, payload, format="json")
+        self.client.force_authenticate(self.user_with_basic_perm)
+        response = self.client.post(f"{self.BASE_URL}duplicate/", {"id_to_duplicate": self.scenario.id}, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Scenario.objects.count(), 2)
         duplicated_scenario = Scenario.objects.latest("id")
@@ -229,6 +390,16 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(duplicated_scenario.description, self.scenario.description)
         self.assertEqual(duplicated_scenario.name, payload["name"])
 
+    def test_scenario_duplicate_no_perms(self):
+        self.client.force_authenticate(self.user_no_perms)
+        response = self.client.post(f"{self.BASE_URL}duplicate/", {"id_to_duplicate": self.scenario.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Scenario.objects.count(), 1)
+
+    def test_scenario_duplicate_unauthenticated(self):
+        response = self.client.post(f"{self.BASE_URL}duplicate/", {"id_to_duplicate": self.scenario.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_scenario_duplicate_missing_body(self):
         url = reverse("scenarios-duplicate")
         response = self.client.post(url, format="json")
@@ -239,6 +410,25 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(json_result["end_year"][0], "This field is required.")
 
         self.assertEqual(Scenario.objects.count(), 1)
+
+    def test_scenario_duplicate_multiple_times_success(self):
+        # First duplication
+        response = self.client.post(f"{self.BASE_URL}duplicate/", {"id_to_duplicate": self.scenario.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Scenario.objects.count(), 2)
+        duplicated_scenario = Scenario.objects.latest("id")
+
+        self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
+        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
+
+        # Second duplication
+        response = self.client.post(f"{self.BASE_URL}duplicate/", {"id_to_duplicate": self.scenario.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Scenario.objects.count(), 3)
+        duplicated_scenario = Scenario.objects.latest("id")
+
+        self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
+        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
 
     def test_scenario_export_to_csv(self):
         url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id}"
@@ -273,7 +463,7 @@ class ScenarioAPITestCase(APITestCase):
         self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "0", "0"])
 
     def test_scenario_export_to_csv_unauthenticated(self):
-        self.client.force_authenticate(user=None)
+        self.client.force_authenticate(user=self.anon)
         url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id}"
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

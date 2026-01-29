@@ -27,8 +27,6 @@ class BudgetCreateSerializer(serializers.ModelSerializer):
 
     def validate_scenario(self, value):
         if (value.start_year is None) or (value.end_year is None):
-            raise serializers.ValidationError(
-                "Scenario must have start_year and end_year defined."
-            )
+            raise serializers.ValidationError("Scenario must have start_year and end_year defined.")
 
         return value

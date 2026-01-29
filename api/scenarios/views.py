@@ -29,6 +29,7 @@ from .serializers import (
     ScenarioSerializer,
     ScenarioWriteSerializer,
 )
+from .permissions import ScenarioPermission
 
 
 class ScenarioViewSet(viewsets.ModelViewSet):
@@ -48,6 +49,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     serializer_class = ScenarioSerializer
     ordering_fields = ["id", "name"]
     http_method_names = ["get", "post", "put", "delete"]
+    permission_classes = [ScenarioPermission]
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -57,7 +59,10 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         return ScenarioWriteSerializer
 
     def get_queryset(self):
-        return Scenario.objects.filter(account=self.request.user.iaso_profile.account)
+        user = self.request.user
+        if not user or not user.is_authenticated or not hasattr(user, "iaso_profile"):
+            return Scenario.objects.none()
+        return Scenario.objects.filter(account=user.iaso_profile.account)
 
     def perform_create(self, serializer):
         serializer.validated_data["created_by"] = self.request.user
@@ -65,13 +70,12 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     def perform_update(self, serializer):
-        serializer.validated_data["updated_by"] = self.request.user
         try:
             serializer.save()
         except IntegrityError as e:
             if "duplicate" in str(e).lower() and "(account_id, name)" in str(e).lower():
                 raise serializers.ValidationError(_("Scenario with this name already exists."))
-            if "snt_malaria_scenario_end_year_gte_start_year" in str(e).lower():
+            if "snt_malaria_scenario_start_year_lte_end_year" in str(e).lower():
                 raise serializers.ValidationError(_("Start year should be lower or equal end year."))
             raise serializers.ValidationError(str(e))
 
