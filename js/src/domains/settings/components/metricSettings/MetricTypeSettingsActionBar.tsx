@@ -5,6 +5,7 @@ import { IconButton, SearchInput, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { exportMetricValuesTemplateAPIPath } from '../../../../constants/api-urls';
 import { MESSAGES } from '../../messages';
+import { ImportMetricValuesDialog } from './MetricValuesImportDialog';
 
 type Props = {
     onSearchChange: (searchTerm: string) => void;
@@ -28,7 +29,6 @@ export const MetricTypeSettingsActionBar: FC<Props> = ({
 }) => {
     const anchorRef = React.useRef<HTMLButtonElement>(null);
     const [isExtraActionOpen, setIsExtraActionOpen] = React.useState(false);
-
     const [searchTerm, setSearchTerm] = React.useState<string>('');
     const { formatMessage } = useSafeIntl();
     return (
@@ -62,12 +62,10 @@ export const MetricTypeSettingsActionBar: FC<Props> = ({
                         horizontal: 'left',
                     }}
                 >
-                    <MenuItem
-                        component={Link}
-                        href={exportMetricValuesTemplateAPIPath}
-                    >
-                        {formatMessage(MESSAGES.importCSV)}
-                    </MenuItem>
+                    <ImportMetricValuesDialog
+                        iconProps={{}}
+                        onClose={() => setIsExtraActionOpen(false)}
+                    />
                     <MenuItem
                         component={Link}
                         href={exportMetricValuesTemplateAPIPath}

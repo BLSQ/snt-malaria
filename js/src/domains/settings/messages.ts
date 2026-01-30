@@ -187,4 +187,12 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.deleteLayerConfirmMessage',
         defaultMessage: 'Are you sure you want to delete this layer?',
     },
+    metricValuesImportSuccess: {
+        id: 'iaso.snt_malaria.settings.dataLayers.metricValuesImportSuccess',
+        defaultMessage: 'Metric values imported successfully.',
+    },
+    metricValuesImportError: {
+        id: 'iaso.snt_malaria.settings.dataLayers.metricValuesImportError',
+        defaultMessage: 'Error importing metric values. Please try again.',
+    },
 });

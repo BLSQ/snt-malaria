@@ -88,6 +88,8 @@
     "iaso.snt_malaria.settings.dataLayers.deleteLayerConfirmMessage": "Êtes-vous sûr de vouloir supprimer ce type de métrique ?",
     "iaso.snt_malaria.settings.dataLayers.downloadCSVTemplate": "Télécharger le Template CSV",
     "iaso.snt_malaria.settings.dataLayers.importCSV": "Importer les valeurs métriques",
+    "iaso.snt_malaria.settings.dataLayers.metricValuesImportSuccess'": "Importation des valeurs métriques réussie.",
+    "iaso.snt_malaria.settings.dataLayers.metricValuesImportError": "Erreur lors de l'importation des valeurs métriques.",
     "iaso.snt_malaria.label.runInterventionPlanBudget": "Exécuter Budget",
     "iaso.snt_malaria.cost-breakdown-chart.title": "Répartition des coûts par catégorie et par intervention",
     "iaso.snt_malaria.proportion-chart.title": "Proportion du budget total par intervention",
