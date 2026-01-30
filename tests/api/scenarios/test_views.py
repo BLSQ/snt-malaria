@@ -174,6 +174,29 @@ class ScenarioAPITestCase(APITestCase):
         response = self.client.get(f"{self.BASE_URL}{self.scenario.id}/")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_scenario_retrieve_non_existing(self):
+        self.client.force_authenticate(self.user_with_full_perm)
+        non_existing_scenario_id = 1234567890
+        response = self.client.get(f"{self.BASE_URL}{non_existing_scenario_id}/")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_scenario_retrieve_from_another_account(self):
+        other_account = Account.objects.create(name="Other Account")
+        other_user = self.create_user_with_profile(
+            username="otheruser", account=other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
+        )
+        other_scenario = Scenario.objects.create(
+            account=other_account,
+            created_by=other_user,
+            name="Other Account Scenario",
+            description="An other account scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.get(f"{self.BASE_URL}{other_scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_scenario_create_full_perm(self):
         self.client.force_authenticate(self.user_with_full_perm)
         data = {"name": "New Scenario", "start_year": 2025, "end_year": 2026}
@@ -336,6 +359,43 @@ class ScenarioAPITestCase(APITestCase):
         self.scenario.refresh_from_db()
         self.assertEqual(self.scenario.name, "Test Scenario")  # No changes made
 
+    def test_update_scenario_from_another_account(self):
+        other_account = Account.objects.create(name="Other Account")
+        other_user = self.create_user_with_profile(
+            username="otheruser", account=other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
+        )
+        other_scenario = Scenario.objects.create(
+            account=other_account,
+            created_by=other_user,
+            name="Other Account Scenario",
+            description="An other account scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        self.client.force_authenticate(self.user_with_full_perm)
+        payload = {
+            "id": other_scenario.id,
+            "name": "Updated Other Account Scenario",
+            "start_year": 2026,
+            "end_year": 2028,
+        }
+        response = self.client.put(f"{self.BASE_URL}{other_scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        other_scenario.refresh_from_db()
+        self.assertEqual(other_scenario.name, "Other Account Scenario")  # No changes made
+
+    def test_update_scenario_non_existing(self):
+        self.client.force_authenticate(self.user_with_full_perm)
+        non_existing_scenario_id = 1234567890
+        payload = {
+            "id": non_existing_scenario_id,
+            "name": "Updated Scenario Name",
+            "start_year": 2026,
+            "end_year": 2028,
+        }
+        response = self.client.put(f"{self.BASE_URL}{non_existing_scenario_id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_scenario_update_name_already_taken(self):
         self.scenario2 = Scenario.objects.create(
             account=self.account,
@@ -411,8 +471,38 @@ class ScenarioAPITestCase(APITestCase):
 
         self.assertEqual(Scenario.objects.count(), 1)
 
+    def test_scenario_duplicate_from_another_account(self):
+        other_account = Account.objects.create(name="Other Account")
+        other_user = self.create_user_with_profile(
+            username="otheruser", account=other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
+        )
+        other_scenario = Scenario.objects.create(
+            account=other_account,
+            created_by=other_user,
+            name="Other Account Scenario",
+            description="An other account scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}duplicate/", {"id_to_duplicate": other_scenario.id}, format="json")
+        # 400 instead of 404 because the serializer is bad
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Scenario.objects.count(), 2)  # one in setup & one here
+
+    def test_scenario_duplicate_non_existing(self):
+        self.client.force_authenticate(self.user_with_full_perm)
+        non_existing_scenario_id = 1234567890
+        response = self.client.post(
+            f"{self.BASE_URL}duplicate/", {"id_to_duplicate": non_existing_scenario_id}, format="json"
+        )
+        # 400 instead of 404 because the serializer is bad
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Scenario.objects.count(), 1)
+
     def test_scenario_duplicate_multiple_times_success(self):
         # First duplication
+        self.client.force_authenticate(self.user_with_full_perm)
         response = self.client.post(f"{self.BASE_URL}duplicate/", {"id_to_duplicate": self.scenario.id}, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Scenario.objects.count(), 2)
@@ -431,8 +521,11 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
 
     def test_scenario_export_to_csv(self):
-        url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id}"
-        response = self.client.get(url)
+        """
+        This endpoint is available to all authenticated users, regardless of permissions.
+        """
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.get(f"{self.BASE_URL}export_to_csv/?id={self.scenario.id}")
 
         csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
         self.assertEqual(len(csv_list), 3)  # Headers + 2 org units
@@ -446,9 +539,41 @@ class ScenarioAPITestCase(APITestCase):
         self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "1", "0", "0"])
         self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "1", "1"])
 
+        self.client.force_authenticate(self.user_with_basic_perm)
+        response = self.client.get(f"{self.BASE_URL}export_to_csv/?id={self.scenario.id}")
+        csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
+        self.assertEqual(len(csv_list), 3)  # Headers + 2 org units
+        csv_headers = csv_list[0]
+        csv_district_1 = csv_list[1]
+        csv_district_2 = csv_list[2]
+
+        self.assertSequenceEqual(
+            csv_headers, ["org_unit_id", "org_unit_name", "IPTp - iptp", "RTS,S - rts_s", "SMC - smc"]
+        )
+        self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "1", "0", "0"])
+        self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "1", "1"])
+
+        self.client.force_authenticate(self.user_no_perms)
+        response = self.client.get(f"{self.BASE_URL}export_to_csv/?id={self.scenario.id}")
+        csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
+        self.assertEqual(len(csv_list), 3)  # Headers + 2 org units
+        csv_headers = csv_list[0]
+        csv_district_1 = csv_list[1]
+        csv_district_2 = csv_list[2]
+
+        self.assertSequenceEqual(
+            csv_headers, ["org_unit_id", "org_unit_name", "IPTp - iptp", "RTS,S - rts_s", "SMC - smc"]
+        )
+        self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "1", "0", "0"])
+        self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "1", "1"])
+
+    def test_scenario_export_to_csv_unauthenticated(self):
+        response = self.client.get(f"{self.BASE_URL}export_to_csv/?id={self.scenario.id}")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_scenario_export_to_csv_no_scenario_id_returns_template(self):
-        url = "/api/snt_malaria/scenarios/export_to_csv/"
-        response = self.client.get(url)
+        self.client.force_authenticate(self.user_no_perms)
+        response = self.client.get(f"{self.BASE_URL}export_to_csv/")
 
         csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
         self.assertEqual(len(csv_list), 3)  # Headers + 2 org units
@@ -462,66 +587,59 @@ class ScenarioAPITestCase(APITestCase):
         self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "0", "0", "0"])
         self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "0", "0"])
 
-    def test_scenario_export_to_csv_unauthenticated(self):
-        self.client.force_authenticate(user=self.anon)
-        url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id}"
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
     def test_scenario_export_to_csv_non_existing_scenario(self):
-        url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id + 1}"
-        response = self.client.get(url)
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.get(f"{self.BASE_URL}export_to_csv/?id={self.scenario.id + 1}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_scenario_export_to_csv_no_acces_to_scenario(self):
+    def test_scenario_export_to_csv_no_access_to_scenario(self):
         wrong_account = Account.objects.create(name="Test Account Invalid")
         wrong_user = self.create_user_with_profile(username="testuserinvalid", account=wrong_account)
-        self.client.force_authenticate(user=wrong_user)
 
-        url = f"/api/snt_malaria/scenarios/export_to_csv/?id={self.scenario.id + 1}"
-        response = self.client.get(url)
+        self.client.force_authenticate(user=wrong_user)
+        response = self.client.get(f"{self.BASE_URL}export_to_csv/?id={self.scenario.id}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_scenario_import_csv_unauthenticated(self):
-        self.client.force_authenticate(user=None)
-        url = "/api/snt_malaria/scenarios/import_from_csv/"
-        response = self.client.post(url, {}, format="multipart")
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {}, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_scenario_import_csv_missing_file(self):
-        url = "/api/snt_malaria/scenarios/import_from_csv/"
-        response = self.client.post(url, {}, format="multipart")
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {}, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("file", response.data)
         self.assertEqual(str(response.data["file"][0]), "No file was submitted.")
 
     def test_scenario_import_csv_invalid_file_type(self):
-        url = "/api/snt_malaria/scenarios/import_from_csv/"
         invalid_file = SimpleUploadedFile("test.txt", b"Invalid content", content_type="text/plain")
-        response = self.client.post(url, {"file": invalid_file}, format="multipart")
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": invalid_file}, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("file", response.data)
         self.assertEqual(str(response.data["file"][0]), "The file must be a CSV.")
 
     def test_scenario_import_csv_missing_org_unit_id_column(self):
-        url = "/api/snt_malaria/scenarios/import_from_csv/"
         csv_content = b"org_unit_name,IPTp - iptp,RTS,S - rts_s,SMC - smc\nDistrict 1,1,0,0\nDistrict 2,0,1,1\n"
         invalid_file = SimpleUploadedFile("test.csv", csv_content, content_type="text/csv")
-        response = self.client.post(url, {"file": invalid_file}, format="multipart")
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": invalid_file}, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("file", response.data)
         self.assertEqual(str(response.data["file"][0]), "The CSV must contain an 'org_unit_id' column.")
 
     def test_scenario_import_csv_missing_header(self):
-        url = "/api/snt_malaria/scenarios/import_from_csv/"
         csv_content = (
             'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s"\n'
             f"{self.district1.id},District 1,1,0\n"
             f"{self.district2.id},District 2,0,1\n"
         )
-
         valid_file = SimpleUploadedFile("test.csv", csv_content.encode(), content_type="text/csv")
-        response = self.client.post(url, {"file": valid_file}, format="multipart")
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": valid_file}, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("file", response.data)
@@ -529,51 +647,109 @@ class ScenarioAPITestCase(APITestCase):
         self.assertIn("SMC - smc", response.data["file"]["header_errors"])
 
     def test_scenario_import_csv_no_assignments(self):
-        url = "/api/snt_malaria/scenarios/import_from_csv/"
         csv_content = (
             'org_unit_id,org_unit_name,"IPTp - iptp","RTS,S - rts_s","SMC - smc"\n'
             f"{self.district1.id},District 1,0,0,0\n"
             f"{self.district2.id},District 2,0,0,0\n"
         )
-
         valid_file = SimpleUploadedFile("test.csv", csv_content.encode(), content_type="text/csv")
-        response = self.client.post(url, {"file": valid_file}, format="multipart")
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": valid_file}, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(str(response.data[0]), "No assignments to create from the provided CSV data.")
 
     def test_scenario_import_csv_org_unit_not_found(self):
-        url = "/api/snt_malaria/scenarios/import_from_csv/"
-        csv_content = 'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n9999,District Unknown,1,0,0\n'
-
+        unknown_org_unit_id = 9999
+        csv_content = f'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n{unknown_org_unit_id},District Unknown,1,0,0\n'
         valid_file = SimpleUploadedFile("test.csv", csv_content.encode(), content_type="text/csv")
-        response = self.client.post(url, {"file": valid_file}, format="multipart")
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": valid_file}, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("file", response.data)
         self.assertIn("not_found_org_units", response.data["file"])
-        self.assertIn("9999", response.data["file"]["not_found_org_units"])
+        self.assertIn(str(unknown_org_unit_id), response.data["file"]["not_found_org_units"])
         self.assertIn("missing_org_units_from_file", response.data["file"])
         self.assertIn(str(self.district1.id), response.data["file"]["missing_org_units_from_file"])
         self.assertIn(str(self.district2.id), response.data["file"]["missing_org_units_from_file"])
 
-    def test_scenario_import_csv_success(self):
-        url = "/api/snt_malaria/scenarios/import_from_csv/"
+    def test_scenario_import_csv_with_full_perm(self):
+        csv_content = self._generate_csv_content_for_import()
+        valid_file = SimpleUploadedFile("test.csv", csv_content, content_type="text/csv")
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": valid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("id", response.data)
+
+        new_scenario = Scenario.objects.get(id=response.data["id"])
+        self._assert_valid_scenario_import(new_scenario)
+
+    def test_scenario_import_csv_with_basic_perm(self):
+        csv_content = self._generate_csv_content_for_import()
+        valid_file = SimpleUploadedFile("test.csv", csv_content, content_type="text/csv")
+
+        self.client.force_authenticate(self.user_with_basic_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": valid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("id", response.data)
+
+        new_scenario = Scenario.objects.get(id=response.data["id"])
+        self._assert_valid_scenario_import(new_scenario)
+
+    def test_scenario_import_csv_no_perms(self):
+        csv_content = self._generate_csv_content_for_import()
+        valid_file = SimpleUploadedFile("test.csv", csv_content, content_type="text/csv")
+
+        self.client.force_authenticate(self.user_no_perms)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": valid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_scenario_import_csv_org_units_from_different_account(self):
+        other_account, _, other_version, other_project = self.create_account_datasource_version_project(
+            account_name="other_account", project_name="other_project", source_name="other_data_source"
+        )
+        other_org_unit_type = OrgUnitType.objects.create(name="OTHER_TYPE")
+        other_org_unit_type.projects.add(other_project)
+        other_org_unit = OrgUnit.objects.create(
+            org_unit_type=other_org_unit_type,
+            name="Other Account District",
+            validation_status=OrgUnit.VALIDATION_VALID,
+            version=other_version,
+            location=Point(x=4, y=50, z=100),
+            geom=self.mock_multipolygon,
+        )
+
+        csv_content = (
+            'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n'
+            f"{other_org_unit.id},Other Account Distrinct,1,0,0\n"
+            f"{self.district1.id},District 1,1,0,0\n"
+            f"{self.district2.id},District 2,0,1,1\n"
+        ).encode()
+        valid_file = SimpleUploadedFile("test.csv", csv_content, content_type="text/csv")
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": valid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("file", response.data)
+        self.assertIn("not_found_org_units", response.data["file"])
+        self.assertIn(str(other_org_unit.id), response.data["file"]["not_found_org_units"])
+
+    def _generate_csv_content_for_import(self) -> bytes:
         csv_content = (
             'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n'
             f"{self.district1.id},District 1,1,0,0\n"
             f"{self.district2.id},District 2,0,1,1\n"
-        )
+        ).encode()
+        return csv_content
 
-        valid_file = SimpleUploadedFile("test.csv", csv_content.encode(), content_type="text/csv")
-        response = self.client.post(url, {"file": valid_file}, format="multipart")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn("id", response.data)
-
+    def _assert_valid_scenario_import(self, scenario: Scenario):
         # Verify that the scenario and assignments were created
-        new_scenario = Scenario.objects.get(id=response.data["id"])
-        self.assertEqual(new_scenario.intervention_assignments.count(), 3)
+        self.assertEqual(scenario.intervention_assignments.count(), 3)
 
-        assignments_district_1 = InterventionAssignment.objects.filter(scenario=new_scenario, org_unit=self.district1)
-        assignments_district_2 = InterventionAssignment.objects.filter(scenario=new_scenario, org_unit=self.district2)
+        assignments_district_1 = InterventionAssignment.objects.filter(scenario=scenario, org_unit=self.district1)
+        assignments_district_2 = InterventionAssignment.objects.filter(scenario=scenario, org_unit=self.district2)
 
         self.assertEqual(assignments_district_1.count(), 1)
         self.assertEqual(assignments_district_1.first().intervention, self.intervention_chemo_iptp)
