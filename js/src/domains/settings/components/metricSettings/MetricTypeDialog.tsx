@@ -43,7 +43,9 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
                 unit_symbol: metricType.unit_symbol,
                 comments: metricType.comments,
                 category: metricType.category,
-                scale: JSON.stringify(metricType.legend_config.domain),
+                scale: JSON.stringify(
+                    metricType.legend_config.domain,
+                ).replaceAll('"', ''),
                 legend_type: metricType.legend_type,
                 origin: metricType.origin,
             };
