@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-16 13:52+0000\n"
+"POT-Creation-Date: 2026-01-28 17:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -118,3 +118,19 @@ msgstr "Opérationnel"
 #: plugins/snt_malaria/models/cost_breakdown.py
 msgid "Supportive"
 msgstr "Support"
+
+#: plugins/snt_malaria/permissions.py
+msgid "Scenario - Basic Write"
+msgstr "Scénario - Écriture simple"
+
+#: plugins/snt_malaria/permissions.py
+msgid "Scenario - Full Write"
+msgstr "Scénario - Écriture complète"
+
+#: plugins/snt_malaria/permissions.py
+msgid "Settings - Read"
+msgstr "Configuration - Lecture"
+
+#: plugins/snt_malaria/permissions.py
+msgid "Settings - Write"
+msgstr "Configuration - Écriture"

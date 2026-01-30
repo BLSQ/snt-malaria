@@ -49,6 +49,7 @@ class DuplicateScenarioSerializer(serializers.Serializer):
         account = request.user.iaso_profile.account
 
         if not Scenario.objects.filter(id=value, account=account).exists():
+            # this raises a 400 instead of a 404, fixme - use PrimaryKeyRelatedField
             raise serializers.ValidationError(_("Scenario with this ID does not exist."))
 
         return value
