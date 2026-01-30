@@ -76,7 +76,7 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
             closeDialog={closeDialog}
             onConfirm={handleConfirm}
             onCancel={handleCancel}
-            confirmMessage={MESSAGES.create}
+            confirmMessage={metricType ? MESSAGES.edit : MESSAGES.create}
             cancelMessage={MESSAGES.cancel}
             closeOnConfirm={false}
         >

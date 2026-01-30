@@ -5,6 +5,10 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Create',
         id: 'iaso.label.create',
     },
+    edit: {
+        defaultMessage: 'Edit',
+        id: 'iaso.label.edit',
+    },
     cancel: {
         defaultMessage: 'Cancel',
         id: 'iaso.label.cancel',

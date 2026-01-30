@@ -58,7 +58,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                     .required(formatMessage(MESSAGES.required))
                     .trim()
                     .matches(
-                        /^\[(\s*(\d+|"[^"]*")\s*,)*\s*(\d+|"[^"]*")\s*\]$|^\[\s*\]$/,
+                        /^\[(\s*(-?\d+(\.\d+)?|"[^"]*")\s*,)*\s*(-?\d+(\.\d+)?|"[^"]*")\s*\]$|^\[\s*\]$/,
                         formatMessage(MESSAGES.invalidJsonArray),
                     ),
             }),
