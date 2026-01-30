@@ -62,6 +62,7 @@
     "iaso.snt_malaria.settings.intervention.errors.required": "Required",
     "iaso.snt_malaria.settings.dataLayers.errors.noWhitespace": "Whitespace not allowed",
     "iaso.snt_malaria.settings.dataLayers.errors.invalidJsonArray": "Invalid format, must be [value1, value2, ...]",
+    "iaso.snt_malaria.settings.dataLayers.errors.scaleItemsCount": "Invalid number of scale items for the selected legend type",
     "iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeErrorHeadline": "Layer with this code already exists.",
     "iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeError": "A Layer with this code already exists. Please choose a different code.",
     "iaso.snt_malaria.settings.dataLayers.errors.codeImmutableHeadline": "Layer code is immutable.",

@@ -61,6 +61,7 @@
     "iaso.snt_malaria.settings.intervention.errors.required": "Requis",
     "iaso.snt_malaria.settings.dataLayers.errors.noWhitespace": "Les espaces ne sont pas autorisés",
     "iaso.snt_malaria.settings.dataLayers.errors.invalidJsonArray": "Format invalide, doit être [valeur1, valeur2, ...]",
+    "iaso.snt_malaria.settings.dataLayers.errors.scaleItemsCount": "Nombre invalide d'éléments d'échelle pour le type de légende sélectionné",
     "iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeErrorHeadline": "Une couche avec ce code existe déjà.",
     "iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeError": "Une couche avec ce code existe déjà. Veuillez choisir un code différent.",
     "iaso.snt_malaria.settings.dataLayers.errors.codeImmutableHeadline": "Le code de la couche est immuable.",

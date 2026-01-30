@@ -77,6 +77,11 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.errors.invalidJsonArray',
         defaultMessage: 'Invalid format, must be [value1, value2, ...]',
     },
+    scaleItemsCount: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.scaleItemsCount',
+        defaultMessage:
+            'Invalid number of scale items for the selected legend type',
+    },
     uniqueCodeErrorHeadline: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeErrorHeadline',
         defaultMessage: 'Layer with this code already exists.',

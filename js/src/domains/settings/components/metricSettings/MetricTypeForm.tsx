@@ -60,7 +60,31 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                     .matches(
                         /^\[\s*([a-zA-Z0-9_.-]+(\s*,\s*[a-zA-Z0-9_.-]+)*)?\s*\]$/,
                         formatMessage(MESSAGES.invalidJsonArray),
+                    )
+                    .test(
+                        'scale length',
+                        formatMessage(MESSAGES.scaleItemsCount),
+                        value => {
+                            if (!value) return false;
+                            const cleanedValue = value.replaceAll(' ', '');
+                            const count = cleanedValue
+                                .substring(1, cleanedValue.length - 1)
+                                .split(',').length;
+
+                            switch (values.legend_type) {
+                                case 'ordinal':
+                                    return count >= 2 && count <= 4;
+                                case 'threshold':
+                                    return count >= 2 && count <= 9;
+                                case 'linear':
+                                    return count === 2;
+                                default:
+                                    return false;
+                            }
+                        },
                     ),
+                minValue: Yup.number().nullable(),
+                maxValue: Yup.number().nullable(),
             }),
         [formatMessage],
     );
