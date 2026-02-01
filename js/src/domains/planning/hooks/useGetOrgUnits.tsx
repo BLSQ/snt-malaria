@@ -37,6 +37,7 @@ export const useGetOrgUnitsByType = (
         validation_status: 'VALID',
         defaultVersion: true,
         limit: 8000,
+        smallSearch: true,
     };
     if (orgUnitTypeId) {
         params.orgUnitTypeId = orgUnitTypeId;
