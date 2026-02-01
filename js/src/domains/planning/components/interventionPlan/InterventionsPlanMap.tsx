@@ -42,6 +42,7 @@ type Props = {
     scenarioId: number | undefined;
     disabled?: boolean;
     interventions: Intervention[];
+    displayOrgUnitId?: number | null;
 };
 
 const styles: SxStyles = {
@@ -71,9 +72,11 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     scenarioId,
     disabled = false,
     interventions = [],
+    displayOrgUnitId,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const { data: orgUnits, isLoading: loadingOrgUnits } = useGetOrgUnits();
+    const { data: orgUnits, isLoading: loadingOrgUnits } =
+        useGetOrgUnits(displayOrgUnitId);
     const [editMode, setEditMode] = useState<boolean>(false);
     const [selectedOrgUnits, setSelectedOrgUnits] = useState<number[]>([]);
     const [selectedInterventionId, setSelectedInterventionId] = useState<
