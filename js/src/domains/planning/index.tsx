@@ -341,6 +341,7 @@ export const Planning: FC = () => {
                             interventionPlans={filteredInterventionPlans}
                             isLoadingPlans={isLoadingPlans}
                             disabled={scenario?.is_locked}
+                            displayOrgUnitId={selectedDisplayOrgUnitId}
                         />
                     </Grid>
                     {filteredOrgUnits && budget && (
