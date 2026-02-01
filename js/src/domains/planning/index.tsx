@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Grid } from '@mui/material';
 import {
     LoadingSpinner,
@@ -126,6 +126,21 @@ export const Planning: FC = () => {
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(scenario?.id);
+
+    const filteredInterventionPlans = useMemo(() => {
+        if (!interventionPlans) return [];
+        if (!filteredOrgUnits) return interventionPlans;
+        const filteredOrgUnitIds = new Set(filteredOrgUnits.map(ou => ou.id));
+
+        return interventionPlans
+            .map(plan => ({
+                ...plan,
+                org_units: plan.org_units.filter(ou =>
+                    filteredOrgUnitIds.has(ou.id),
+                ),
+            }))
+            .filter(plan => plan.org_units.length > 0);
+    }, [interventionPlans, filteredOrgUnits]);
 
     useEffect(() => {
         if (
@@ -322,8 +337,8 @@ export const Planning: FC = () => {
                     >
                         <InterventionsPlan
                             scenarioId={params.scenarioId}
-                            totalOrgUnitCount={orgUnits?.length ?? 0}
-                            interventionPlans={interventionPlans ?? []}
+                            totalOrgUnitCount={filteredOrgUnits?.length ?? 0}
+                            interventionPlans={filteredInterventionPlans}
                             isLoadingPlans={isLoadingPlans}
                             disabled={scenario?.is_locked}
                         />
