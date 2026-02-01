@@ -34,7 +34,7 @@ import {
     useGetMetricOrgUnits,
     useGetMetricValues,
 } from './hooks/useGetMetrics';
-import { useGetOrgUnits } from './hooks/useGetOrgUnits';
+import { useGetOrgUnits, useGetOrgUnitsByType } from './hooks/useGetOrgUnits';
 import { Intervention } from './types/interventions';
 import { MetricsFilters, MetricType } from './types/metrics';
 
@@ -75,6 +75,14 @@ export const Planning: FC = () => {
 
     // Use orgUnits directly - filtering is done via API when selectedDisplayOrgUnitId is set
     const filteredOrgUnits = orgUnits;
+
+    // Look up the selected display org unit name (served from React Query cache)
+    const { data: orgUnitsByType } = useGetOrgUnitsByType(
+        selectedDisplayOrgUnitTypeId,
+    );
+    const selectedDisplayOrgUnitName = selectedDisplayOrgUnitId
+        ? orgUnitsByType?.find(ou => ou.id === selectedDisplayOrgUnitId)?.name
+        : undefined;
 
     const handleDisplayOrgUnitTypeChange = useCallback(
         (orgUnitTypeId: number | null) => {
@@ -324,6 +332,7 @@ export const Planning: FC = () => {
                         <Budgeting
                             budgets={budget?.results}
                             orgUnits={filteredOrgUnits}
+                            filterLabel={selectedDisplayOrgUnitName}
                         />
                     )}
                 </Grid>

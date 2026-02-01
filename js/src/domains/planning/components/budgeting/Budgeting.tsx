@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import { Box, Grid, Typography } from '@mui/material';
+import { Box, Chip, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
@@ -21,9 +21,10 @@ import { ProportionChart } from './ProportionChart';
 type Props = {
     budgets: Budget[];
     orgUnits: OrgUnit[];
+    filterLabel?: string;
 };
 
-export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
+export const Budgeting: FC<Props> = ({ budgets, orgUnits, filterLabel }) => {
     const { formatMessage } = useSafeIntl();
     const [selectedYear, setSelectedYear] = useState<number | null>(0);
     const defaultBudgetOption = useMemo(
@@ -217,10 +218,15 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
                                 clearable={false}
                             />
                         </Box>
-                        <Typography>
-                            {formatMessage(MESSAGES.total)} :{' '}
-                            {formatBigNumber(totalCost)}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography>
+                                {formatMessage(MESSAGES.budget)} :{' '}
+                                {formatBigNumber(totalCost)}
+                            </Typography>
+                            {filterLabel && (
+                                <Chip label={filterLabel} size="small" />
+                            )}
+                        </Box>
                     </Box>
                 </Grid>
             )}
