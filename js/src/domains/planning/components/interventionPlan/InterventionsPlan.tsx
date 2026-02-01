@@ -21,6 +21,7 @@ type Props = {
     interventionPlans: InterventionPlan[];
     isLoadingPlans: boolean;
     totalOrgUnitCount: number;
+    displayOrgUnitId?: number | null;
 };
 
 const styles: SxStyles = {
@@ -59,6 +60,7 @@ export const InterventionsPlan: FC<Props> = ({
     interventionPlans,
     isLoadingPlans,
     totalOrgUnitCount = 0,
+    displayOrgUnitId,
 }) => {
     const [tabValue, setTabValue] = useState<TabValue>('map');
     const [interventionCategory, setInterventionCategory] =
@@ -170,6 +172,7 @@ export const InterventionsPlan: FC<Props> = ({
                                 interventions={
                                     interventionCategory?.interventions || []
                                 }
+                                displayOrgUnitId={displayOrgUnitId}
                             />
                         </TabPanel>
                     </CardContent>
