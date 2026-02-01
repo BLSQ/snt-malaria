@@ -320,10 +320,10 @@ export const Planning: FC = () => {
                             disabled={scenario?.is_locked}
                         />
                     </Grid>
-                    {orgUnits && budget && (
+                    {filteredOrgUnits && budget && (
                         <Budgeting
                             budgets={budget?.results}
-                            orgUnits={orgUnits}
+                            orgUnits={filteredOrgUnits}
                         />
                     )}
                 </Grid>

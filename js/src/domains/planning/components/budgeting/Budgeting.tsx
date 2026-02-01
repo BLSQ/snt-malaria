@@ -34,6 +34,23 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
         [formatMessage],
     );
 
+    // Filter budget data to only include visible org units
+    const visibleOrgUnitIds = useMemo(
+        () => new Set(orgUnits.map(ou => ou.id)),
+        [orgUnits],
+    );
+
+    const filteredBudgets = useMemo(() => {
+        if (!budgets) return [];
+
+        return budgets.map(budget => ({
+            ...budget,
+            org_units_costs: (budget.org_units_costs ?? []).filter(ouc =>
+                visibleOrgUnitIds.has(ouc.org_unit_id),
+            ),
+        }));
+    }, [budgets, visibleOrgUnitIds]);
+
     const mergeCostBreakdown = useCallback(
         (
             sourceCostBreakdown: BudgetInterventionCostLine[] = [],
@@ -94,20 +111,23 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
         ],
         [budgets, defaultBudgetOption],
     );
-    const interventionCosts = useMemo(
-        () =>
-            selectedYear || yearOptions.length <= 2
-                ? budgets.find(b => b.year === selectedYear)?.interventions
-                : budgets.reduce(
-                      (interventions, b) =>
-                          mergeInterventionCosts(
-                              interventions,
-                              b.interventions,
-                          ),
-                      [],
-                  ),
-        [budgets, yearOptions, selectedYear, mergeInterventionCosts],
-    );
+    // Aggregate intervention costs from filtered org unit costs
+    // This ensures the totals reflect only the visible org units
+    const interventionCosts = useMemo(() => {
+        let relevantBudgets = filteredBudgets;
+        if (selectedYear || yearOptions.length <= 2) {
+            const match = filteredBudgets.find(b => b.year === selectedYear);
+            relevantBudgets = match ? [match] : [];
+        }
+
+        return relevantBudgets
+            .flatMap(budget => budget.org_units_costs)
+            .reduce(
+                (acc, ouc) =>
+                    mergeInterventionCosts(acc, ouc.interventions),
+                [] as BudgetIntervention[],
+            );
+    }, [filteredBudgets, yearOptions, selectedYear, mergeInterventionCosts]);
 
     const sortedInterventionCosts = useMemo(
         () =>
@@ -144,13 +164,14 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
     const orgUnitCosts = useMemo(
         () =>
             selectedYear || yearOptions.length <= 2
-                ? budgets.find(b => b.year === selectedYear)?.org_units_costs
-                : budgets.reduce(
+                ? filteredBudgets.find(b => b.year === selectedYear)
+                      ?.org_units_costs
+                : filteredBudgets.reduce(
                       (org_units_costs, b) =>
                           mergeOrgUnitCosts(org_units_costs, b.org_units_costs),
                       [] as BudgetOrgUnit[],
                   ),
-        [mergeOrgUnitCosts, budgets, selectedYear, yearOptions],
+        [mergeOrgUnitCosts, filteredBudgets, selectedYear, yearOptions],
     );
 
     const totalCost = useMemo(
