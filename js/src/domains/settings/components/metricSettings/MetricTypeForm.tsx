@@ -64,14 +64,14 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                     .test(
                         'scale length',
                         formatMessage(MESSAGES.scaleItemsCount),
-                        value => {
+                        (value, testContext) => {
                             if (!value) return false;
                             const cleanedValue = value.replaceAll(' ', '');
                             const count = cleanedValue
                                 .substring(1, cleanedValue.length - 1)
                                 .split(',').length;
 
-                            switch (values.legend_type) {
+                            switch (testContext.parent.legend_type) {
                                 case 'ordinal':
                                     return count >= 2 && count <= 4;
                                 case 'threshold':
