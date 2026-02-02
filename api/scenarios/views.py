@@ -13,12 +13,13 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from iaso.api.common import CONTENT_TYPE_CSV
+from iaso.api.org_unit_tree.filters import OrgUnitTreeFilter
+from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.api.scenarios.utils import (
     get_assignments_from_row,
     get_csv_headers,
     get_csv_row,
     get_scenario,
-    get_valid_org_units_for_account,
 )
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 from plugins.snt_malaria.models.intervention import Intervention
@@ -106,7 +107,9 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             intervention_category__account=self.request.user.iaso_profile.account
         )
 
-        org_units = get_valid_org_units_for_account(self.request.user.iaso_profile.account)
+        org_units = OrgUnitTreeFilter.filter_valid_org_units_for_account(
+            OrgUnit.objects.all(), self.request.user.iaso_profile.account
+        )
 
         assignments = (
             InterventionAssignment.objects.select_related("org_unit", "intervention").filter(scenario__id=scenario_id)
