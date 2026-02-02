@@ -54,13 +54,11 @@ export const InterventionCategorySelect: FunctionComponent<Props> = ({
                     setSelectedInterventionCategory(Number(event.target.value))
                 }
             >
-                {interventionCategories.length > 1 && (
-                    <MenuItem value={0}>
-                        <Typography variant="body2">
-                            {formatMessage(MESSAGES.allInterventionCategories)}
-                        </Typography>
-                    </MenuItem>
-                )}
+                <MenuItem value={0}>
+                    <Typography variant="body2">
+                        {formatMessage(MESSAGES.allInterventionCategories)}
+                    </Typography>
+                </MenuItem>
                 {interventionCategories.map(category => (
                     <MenuItem key={category.id} value={category.id}>
                         <Typography variant="body2">{category.name}</Typography>
