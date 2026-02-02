@@ -83,8 +83,6 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                             }
                         },
                     ),
-                minValue: Yup.number().nullable(),
-                maxValue: Yup.number().nullable(),
             }),
         [formatMessage],
     );
