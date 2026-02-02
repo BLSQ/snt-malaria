@@ -139,9 +139,12 @@
     "iaso.snt_malaria.budgetAssumptions.path": "Méthodologie de budgétisation basée sur les outils et la documentation développés par PATH.",
     "iaso.snt_malaria.budgetAssumptions.minValue": "La valeur doit être au minimum {min}",
     "iaso.snt_malaria.budgetAssumptions.maxValue": "La valeur doit être au maximum {max}",
-    "iaso.snt_malaria.label.showLegend": "Afficher la légende",
-    "iaso.snt_malaria.label.hideLegend": "Masquer la légende",
+    "iaso.snt_malaria.label.allDisplayLevels": "Tous",
+    "iaso.snt_malaria.label.allOrgUnits": "Tous",
+    "iaso.snt_malaria.label.allParentOrgUnits": "Tous",
+    "iaso.snt_malaria.label.displayLevel": "Niveau d'affichage",
     "iaso.snt_malaria.label.duplicate": "Dupliquer",
+    "iaso.snt_malaria.label.hideLegend": "Masquer la légende",
     "iaso.snt_malaria.scenarioRule.apply": "Appliquer les règles",
     "iaso.snt_malaria.scenarioRule.create": "Créer une règle",
     "iaso.snt_malaria.scenarioRule.edit": "Modifier la règle",
@@ -157,5 +160,10 @@
     "iaso.snt_malaria.scenarioRule.operator": "Opérateur",
     "iaso.snt_malaria.scenarioRule.value": "Valeur",
     "iaso.snt_malaria.scenarioRule.selectionCriteria": "Critères de sélection",
-    "iaso.snt_malaria.scenarioRule.interventionProperties": "Interventions"
+    "iaso.snt_malaria.scenarioRule.interventionProperties": "Interventions",
+    "iaso.snt_malaria.label.hideSidebar": "Masquer le panneau latéral",
+    "iaso.snt_malaria.label.parentOrgUnit": "Parent",
+    "iaso.snt_malaria.label.showLegend": "Afficher la légende",
+    "iaso.snt_malaria.label.showSidebar": "Afficher le panneau latéral",
+    "iaso.snt_malaria.label.sidebarTitle": "Options d'affichage"
 }
