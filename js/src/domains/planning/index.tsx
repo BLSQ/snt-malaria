@@ -73,9 +73,6 @@ export const Planning: FC = () => {
         selectedDisplayOrgUnitId,
     );
 
-    // Use orgUnits directly - filtering is done via API when selectedDisplayOrgUnitId is set
-    const filteredOrgUnits = orgUnits;
-
     // Look up the selected display org unit name (served from React Query cache)
     const { data: orgUnitsByType } = useGetOrgUnitsByType(
         selectedDisplayOrgUnitTypeId,
@@ -129,8 +126,8 @@ export const Planning: FC = () => {
 
     const filteredInterventionPlans = useMemo(() => {
         if (!interventionPlans) return [];
-        if (!filteredOrgUnits) return interventionPlans;
-        const filteredOrgUnitIds = new Set(filteredOrgUnits.map(ou => ou.id));
+        if (!orgUnits) return interventionPlans;
+        const filteredOrgUnitIds = new Set(orgUnits.map(ou => ou.id));
 
         return interventionPlans
             .map(plan => ({
@@ -140,7 +137,7 @@ export const Planning: FC = () => {
                 ),
             }))
             .filter(plan => plan.org_units.length > 0);
-    }, [interventionPlans, filteredOrgUnits]);
+    }, [interventionPlans, orgUnits]);
 
     useEffect(() => {
         if (
@@ -179,7 +176,7 @@ export const Planning: FC = () => {
     );
 
     useGetMetricOrgUnits(metricFilters, metricOrgUnitIds => {
-        const newOrgUnitSelection = filteredOrgUnits?.filter(orgUnit =>
+        const newOrgUnitSelection = orgUnits?.filter(orgUnit =>
             metricOrgUnitIds.includes(orgUnit.id),
         );
 
@@ -218,19 +215,19 @@ export const Planning: FC = () => {
     }, [formatMessage]);
 
     const handleSelectAllOnMap = useCallback(
-        () => setSelectionOnMap(filteredOrgUnits || []),
-        [filteredOrgUnits],
+        () => setSelectionOnMap(orgUnits || []),
+        [orgUnits],
     );
 
     const handleInvertSelectionOnMap = useCallback(() => {
         setSelectionOnMap(prevSelected => {
-            if (!filteredOrgUnits) return prevSelected;
-            const newSelection = filteredOrgUnits.filter(
+            if (!orgUnits) return prevSelected;
+            const newSelection = orgUnits.filter(
                 orgUnit => !prevSelected.some(sel => sel.id === orgUnit.id),
             );
             return newSelection;
         });
-    }, [filteredOrgUnits]);
+    }, [orgUnits]);
 
     return (
         <>
@@ -250,7 +247,7 @@ export const Planning: FC = () => {
                             <PaperFullHeight>
                                 {isLoading && <p>Loading data...</p>}
                                 <Map
-                                    orgUnits={filteredOrgUnits}
+                                    orgUnits={orgUnits}
                                     displayedMetric={displayedMetric}
                                     displayedMetricValues={
                                         displayedMetricValues
@@ -283,9 +280,9 @@ export const Planning: FC = () => {
                     >
                         <PaperFullHeight>
                             {isLoading && <p>Loading data...</p>}
-                            {metricCategories && filteredOrgUnits && (
+                            {metricCategories && orgUnits && (
                                 <SideMapList
-                                    orgUnits={filteredOrgUnits}
+                                    orgUnits={orgUnits}
                                     metricCategories={metricCategories}
                                 />
                             )}
@@ -337,17 +334,17 @@ export const Planning: FC = () => {
                     >
                         <InterventionsPlan
                             scenarioId={params.scenarioId}
-                            totalOrgUnitCount={filteredOrgUnits?.length ?? 0}
+                            totalOrgUnitCount={orgUnits?.length ?? 0}
                             interventionPlans={filteredInterventionPlans}
                             isLoadingPlans={isLoadingPlans}
                             disabled={scenario?.is_locked}
                             displayOrgUnitId={selectedDisplayOrgUnitId}
                         />
                     </Grid>
-                    {filteredOrgUnits && budget && (
+                    {orgUnits && budget && (
                         <Budgeting
                             budgets={budget?.results}
-                            orgUnits={filteredOrgUnits}
+                            orgUnits={orgUnits}
                             filterLabel={selectedDisplayOrgUnitName}
                         />
                     )}
