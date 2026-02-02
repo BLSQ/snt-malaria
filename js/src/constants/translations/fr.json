@@ -68,6 +68,7 @@
     "iaso.snt_malaria.settings.dataLayers.errors.codeImmutable": "Le code d'une couche ne peut pas être modifié.",
     "iaso.snt_malaria.settings.dataLayers.errors.genericErrorHeadline": "Une erreur inattendue s'est produite.",
     "iaso.snt_malaria.settings.dataLayers.errors.genericError": "Veuillez réessayer.",
+    "iaso.snt_malaria.settings.dataLayers.errors.maxLength": "La valeur doit comporter au maximum {max} caractères",
     "iaso.snt_malaria.settings.intervention.errors.negativeValueNotAllowed": "La valeur négative n'est pas autorisée",
     "iaso.snt_malaria.settings.intervention.noCostBreakdownLines": "Aucun coût configuré.",
     "iaso.snt_malaria.settings.intervention.addInterventionCostBreakdownLine": "Ajouter un coût",

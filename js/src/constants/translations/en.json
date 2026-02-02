@@ -69,6 +69,7 @@
     "iaso.snt_malaria.settings.dataLayers.errors.codeImmutable": "The code of a Layer cannot be changed.",
     "iaso.snt_malaria.settings.dataLayers.errors.genericErrorHeadline": "An unexpected error occurred.",
     "iaso.snt_malaria.settings.dataLayers.errors.genericError": "Please try again.",
+    "iaso.snt_malaria.settings.dataLayers.errors.maxLength": "Value must be at most {max} characters long",
     "iaso.snt_malaria.settings.intervention.errors.negativeValueNotAllowed": "Negative value not allowed",
     "iaso.snt_malaria.settings.intervention.noCostBreakdownLines": "No cost configured.",
     "iaso.snt_malaria.settings.dataLayers.title": "Data Layers",

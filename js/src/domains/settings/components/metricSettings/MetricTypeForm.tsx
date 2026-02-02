@@ -50,7 +50,10 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                     formatMessage(MESSAGES.required),
                 ),
                 units: Yup.string(),
-                unit_symbol: Yup.string(),
+                unit_symbol: Yup.string().max(
+                    2,
+                    formatMessage(MESSAGES.maxLength, { max: 2 }),
+                ),
                 legend_type: Yup.string().required(
                     formatMessage(MESSAGES.required),
                 ),

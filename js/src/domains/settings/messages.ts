@@ -77,6 +77,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.errors.invalidJsonArray',
         defaultMessage: 'Invalid format, must be [value1, value2, ...]',
     },
+    maxLength: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.maxLength',
+        defaultMessage: 'Value must be at most {max} characters long',
+    },
     scaleItemsCount: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.scaleItemsCount',
         defaultMessage:
