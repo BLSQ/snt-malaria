@@ -1,20 +1,18 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, Theme, Typography } from '@mui/material';
 
 import L from 'leaflet';
-import {
-    GeoJSON,
-    MapContainer,
-    Tooltip,
-    ZoomControl,
-    useMap,
-} from 'react-leaflet';
+import { GeoJSON, MapContainer, Tooltip, ZoomControl } from 'react-leaflet';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
+import {
+    FitBounds,
+    InvalidateOnResize,
+} from '../../../components/InvalidateOnResize';
 import { MapSelectionWidget } from '../../../components/MapSelectionWidget';
 import { mapTheme } from '../../../constants/map-theme';
 import {
@@ -27,22 +25,6 @@ import { MetricsFilters, MetricType, MetricValue } from '../types/metrics';
 import { MapLegend } from './MapLegend';
 import { MapOrgUnitDetails } from './MapOrgUnitDetails';
 import { LayerSelect } from './maps/LayerSelect';
-
-// Component to handle dynamic bounds fitting when orgUnits change
-const FitBounds: FC<{
-    bounds: L.LatLngBounds | undefined;
-    boundsOptions: Record<string, any>;
-}> = ({ bounds, boundsOptions }) => {
-    const map = useMap();
-
-    useEffect(() => {
-        if (bounds && map) {
-            map.fitBounds(bounds, boundsOptions);
-        }
-    }, [bounds, boundsOptions, map]);
-
-    return null;
-};
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({
@@ -178,6 +160,7 @@ export const Map: FC<Props> = ({
                         zoomSnap={defaultZoomSnap}
                         zoomDelta={defaultZoomDelta}
                     >
+                        <InvalidateOnResize />
                         <FitBounds
                             bounds={bounds}
                             boundsOptions={boundsOptions}
