@@ -18,6 +18,7 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
     metricType = undefined,
 }) => {
     const [errorCode, setErrorCode] = useState<string | undefined>(undefined);
+    const [allowConfirm, setAllowConfirm] = useState(true);
     const { formatMessage } = useSafeIntl();
     const { mutate: submitMetricType } = useCreateOrUpdateMetricType({
         onError: errorCode => setErrorCode(`${errorCode}Error`),
@@ -26,6 +27,7 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
             closeDialog();
         },
     });
+
     const callbackRef = useRef<() => void>();
     const handleOnRef = (callback: () => void) => {
         callbackRef.current = callback;
@@ -73,7 +75,7 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
             titleMessage={
                 metricType
                     ? formatMessage(MESSAGES.editLayer)
-                    : formatMessage(MESSAGES.editLayer)
+                    : formatMessage(MESSAGES.create)
             }
             closeDialog={closeDialog}
             onConfirm={handleConfirm}
@@ -81,11 +83,13 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
             confirmMessage={metricType ? MESSAGES.edit : MESSAGES.create}
             cancelMessage={MESSAGES.cancel}
             closeOnConfirm={false}
+            allowConfirm={allowConfirm}
         >
             <MetricTypeForm
                 metricType={metricTypeFormModel}
                 onSubmitFormRef={handleOnRef}
                 onSubmit={submitMetricType}
+                onStatusChange={setAllowConfirm}
             />
             {errorCode && (
                 <Alert severity="error" variant="filled" sx={{ mt: 2 }}>

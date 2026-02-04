@@ -13,8 +13,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from iaso.api.common import CONTENT_TYPE_CSV
-from iaso.api.org_unit_tree.filters import OrgUnitTreeFilter
-from iaso.models.org_unit import OrgUnit
+from iaso.utils.org_units import get_valid_org_units_with_geography
 from plugins.snt_malaria.api.scenarios.utils import (
     get_assignments_from_row,
     get_csv_headers,
@@ -107,9 +106,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             intervention_category__account=self.request.user.iaso_profile.account
         )
 
-        org_units = OrgUnitTreeFilter.filter_valid_org_units_for_account(
-            OrgUnit.objects.all(), self.request.user.iaso_profile.account
-        )
+        org_units = get_valid_org_units_with_geography(self.request.user.iaso_profile.account).order_by("name")
 
         assignments = (
             InterventionAssignment.objects.select_related("org_unit", "intervention").filter(scenario__id=scenario_id)
