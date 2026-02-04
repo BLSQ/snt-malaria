@@ -13,19 +13,19 @@ from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION,
 class ScenarioAPITestCase(APITestCase):
     BASE_URL = "/api/snt_malaria/scenarios/"
 
-    def setUp(cls):
+    def setUp(self):
         # Create a user and account for testing
-        cls.account = Account.objects.create(name="Test Account")
-        cls.user_with_full_perm, cls.anon, cls.user_no_perms = cls.create_base_users(
-            cls.account, [SNT_SCENARIO_FULL_WRITE_PERMISSION], "testuser"
+        self.account = Account.objects.create(name="Test Account")
+        self.user_with_full_perm, self.anon, self.user_no_perms = self.create_base_users(
+            self.account, [SNT_SCENARIO_FULL_WRITE_PERMISSION], "testuser"
         )
-        cls.user_with_basic_perm = cls.create_user_with_profile(
-            username="testuserbasic", account=cls.account, permissions=[SNT_SCENARIO_BASIC_WRITE_PERMISSION]
+        self.user_with_basic_perm = self.create_user_with_profile(
+            username="testuserbasic", account=self.account, permissions=[SNT_SCENARIO_BASIC_WRITE_PERMISSION]
         )
         # Create a scenario
-        cls.scenario = Scenario.objects.create(
-            account=cls.account,
-            created_by=cls.user_with_full_perm,
+        self.scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_with_full_perm,
             name="Test Scenario",
             description="A test scenario description.",
             start_year=2025,
@@ -33,87 +33,87 @@ class ScenarioAPITestCase(APITestCase):
         )
 
         # Create intervention categories
-        cls.int_category_vaccination = InterventionCategory.objects.create(
+        self.int_category_vaccination = InterventionCategory.objects.create(
             name="Vaccination",
-            account=cls.account,
-            created_by=cls.user_with_full_perm,
+            account=self.account,
+            created_by=self.user_with_full_perm,
         )
 
-        cls.int_category_chemoprevention = InterventionCategory.objects.create(
+        self.int_category_chemoprevention = InterventionCategory.objects.create(
             name="Preventive Chemotherapy",
-            account=cls.account,
-            created_by=cls.user_with_full_perm,
+            account=self.account,
+            created_by=self.user_with_full_perm,
         )
 
         # Create interventions
-        cls.intervention_vaccination_rts = Intervention.objects.create(
+        self.intervention_vaccination_rts = Intervention.objects.create(
             name="RTS,S",
-            created_by=cls.user_with_full_perm,
-            intervention_category=cls.int_category_vaccination,
+            created_by=self.user_with_full_perm,
+            intervention_category=self.int_category_vaccination,
             code="rts_s",
         )
-        cls.intervention_chemo_smc = Intervention.objects.create(
+        self.intervention_chemo_smc = Intervention.objects.create(
             name="SMC",
-            created_by=cls.user_with_full_perm,
-            intervention_category=cls.int_category_chemoprevention,
+            created_by=self.user_with_full_perm,
+            intervention_category=self.int_category_chemoprevention,
             code="smc",
         )
-        cls.intervention_chemo_iptp = Intervention.objects.create(
+        self.intervention_chemo_iptp = Intervention.objects.create(
             name="IPTp",
-            created_by=cls.user_with_full_perm,
-            intervention_category=cls.int_category_chemoprevention,
+            created_by=self.user_with_full_perm,
+            intervention_category=self.int_category_chemoprevention,
             code="iptp",
         )
 
         # Create Org Units
-        cls.project = project = Project.objects.create(
+        self.project = project = Project.objects.create(
             name="Project",
             app_id="APP_ID",
-            account=cls.account,
+            account=self.account,
         )
         sw_source = DataSource.objects.create(name="data_source")
         sw_source.projects.add(project)
-        cls.sw_source = sw_source
-        cls.sw_version_1 = sw_version_1 = SourceVersion.objects.create(data_source=sw_source, number=1)
-        cls.account.default_version = sw_version_1
-        cls.account.save()
-        cls.out_district = OrgUnitType.objects.create(name="DISTRICT")
-        cls.mock_multipolygon = MultiPolygon(Polygon([[-1.3, 2.5], [-1.7, 2.8], [-1.1, 4.1], [-1.3, 2.5]]))
-        cls.district1 = OrgUnit.objects.create(
-            org_unit_type=cls.out_district,
+        self.sw_source = sw_source
+        self.sw_version_1 = sw_version_1 = SourceVersion.objects.create(data_source=sw_source, number=1)
+        self.account.default_version = sw_version_1
+        self.account.save()
+        self.out_district = OrgUnitType.objects.create(name="DISTRICT")
+        self.mock_multipolygon = MultiPolygon(Polygon([[-1.3, 2.5], [-1.7, 2.8], [-1.1, 4.1], [-1.3, 2.5]]))
+        self.district1 = OrgUnit.objects.create(
+            org_unit_type=self.out_district,
             name="District 1",
             validation_status=OrgUnit.VALIDATION_VALID,
             version=sw_version_1,
             location=Point(x=4, y=50, z=100),
-            geom=cls.mock_multipolygon,
+            geom=self.mock_multipolygon,
         )
-        cls.district2 = OrgUnit.objects.create(
-            org_unit_type=cls.out_district,
+        self.district2 = OrgUnit.objects.create(
+            org_unit_type=self.out_district,
             name="District 2",
             validation_status=OrgUnit.VALIDATION_VALID,
             version=sw_version_1,
             location=Point(x=4, y=50, z=100),
-            geom=cls.mock_multipolygon,
+            geom=self.mock_multipolygon,
         )
 
         # Create assignments related to the scenario
-        cls.assignment = InterventionAssignment.objects.create(
-            scenario=cls.scenario,
-            org_unit=cls.district1,
-            intervention=cls.intervention_chemo_iptp,
-            created_by=cls.user_with_full_perm,
+        self.assignment = InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_chemo_iptp,
+            created_by=self.user_with_full_perm,
         )
-        cls.assignment = InterventionAssignment.objects.create(
-            scenario=cls.scenario,
-            org_unit=cls.district2,
-            intervention=cls.intervention_chemo_smc,
-            created_by=cls.user_with_full_perm,
+        self.assignment = InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district2,
+            intervention=self.intervention_chemo_smc,
+            created_by=self.user_with_full_perm,
         )
-        cls.assignment = InterventionAssignment.objects.create(
-            scenario=cls.scenario,
-            org_unit=cls.district2,
-            intervention=cls.intervention_vaccination_rts,
-            created_by=cls.user_with_full_perm,
+        self.assignment = InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district2,
+            intervention=self.intervention_vaccination_rts,
+            created_by=self.user_with_full_perm,
         )
 
     def test_scenario_list(self):
