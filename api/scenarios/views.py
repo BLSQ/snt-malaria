@@ -32,7 +32,11 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     POST /api/scenarios/duplicate
     Duplicate scenario for specified id
     {
-        "id_to_duplicate": Int
+        "scenario_to_duplicate": Int,
+        "name": String,
+        "description": String,
+        "start_year": Int,
+        "end_year": Int
     }
     """
 
@@ -61,36 +65,17 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
     # Custom action to duplicate a scenario
     @swagger_auto_schema(request_body=DuplicateScenarioSerializer(many=False))
-    @action(detail=False, methods=["post"], url_path="duplicate")
+    @action(detail=False, methods=["post"], url_path="duplicate", serializer_class=DuplicateScenarioSerializer)
     def duplicate(self, request):
-        serializer = DuplicateScenarioSerializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Duplicate the scenario
-        id_to_duplicate = serializer.validated_data.get("id_to_duplicate")
-        scenario = get_object_or_404(Scenario, pk=id_to_duplicate)
-        scenario.pk = None
-
-        scenario.name = f"Copy of {scenario.name}"
-
-        duplicate = Scenario.objects.filter(name=scenario.name)
-        if duplicate.exists():
-            # If a scenario with the same name already exists, append a timestamp to the name
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-            scenario.name = f"{scenario.name} - {timestamp}"
-
         try:
-            scenario.save()
+            scenario = serializer.save(account=request.user.iaso_profile.account, created_by=request.user)
         except Exception as e:
             raise ValidationError(f"Error saving scenario: {e}")
 
-        # Duplicate related intevention assignments
-        assignments = InterventionAssignment.objects.filter(scenario_id=id_to_duplicate)
-        for assignment in assignments:
-            assignment.pk = None
-            assignment.scenario = scenario
-            assignment.save()
-        serializer = self.get_serializer(scenario)
+        serializer = ScenarioSerializer(scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     # Custom action to download scenario as CSV
