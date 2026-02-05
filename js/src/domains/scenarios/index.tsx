@@ -2,7 +2,6 @@ import React, { FC, useState } from 'react';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import {
     Box,
-    Button,
     ClickAwayListener,
     Link,
     MenuItem,
@@ -24,7 +23,7 @@ import { baseUrls } from '../../constants/urls';
 import { MESSAGES } from '../messages';
 import { ImportScenarioModal } from './components/ImportScenario';
 import { ScenarioComponent } from './components/Scenario';
-import { useCreateScenario } from './hooks/useCreateScenario';
+import { CreateScenarioModal } from './components/ScenarioModal';
 import { useGetScenarios } from './hooks/useGetScenarios';
 import { Scenario } from './types';
 
@@ -37,12 +36,6 @@ const styles: SxStyles = {
         marginBottom: theme.spacing(4),
         gap: 2,
     }),
-    button: {
-        color: 'white',
-        fontSize: '0.875rem',
-        fontWeight: 'bold',
-        textTransform: 'none',
-    },
     moreButton: {
         paddingLeft: 1,
         paddingRight: 1,
@@ -56,12 +49,10 @@ export const Scenarios: FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const anchorRef = React.useRef<HTMLDivElement>(null);
 
-    const { mutateAsync: createScenario, isLoading: isLoadingCreateScenario } =
-        useCreateScenario();
-
-    const handleCreateScenario = async () => {
-        const scenario = (await createScenario(null)) as Scenario;
-        navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
+    const redirectToScenario = (scenarioId: number) => {
+        if (scenarioId) {
+            navigate(`/${baseUrls.planning}/scenarioId/${scenarioId}`);
+        }
     };
 
     const togglePopover = () => {
@@ -85,16 +76,10 @@ export const Scenarios: FC = () => {
             <PageContainer>
                 <ContentsContainer>
                     <Box sx={styles.buttonsBox}>
-                        <Button
-                            sx={styles.button}
-                            variant="contained"
-                            color="primary"
-                            size="small"
-                            onClick={handleCreateScenario}
-                            disabled={isLoadingCreateScenario}
-                        >
-                            {formatMessage(MESSAGES.createScenario)}
-                        </Button>
+                        <CreateScenarioModal
+                            onClose={redirectToScenario}
+                            iconProps={{}}
+                        />
                         <Box ref={anchorRef}>
                             <IconButton
                                 overrideIcon={MoreHorizIcon}

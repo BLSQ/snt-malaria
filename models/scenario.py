@@ -21,7 +21,7 @@ class Scenario(SoftDeletableModel):
 
     account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, blank=False, null=False)
     description = models.TextField(blank=True)
     start_year = models.IntegerField(blank=False, null=False)
     end_year = models.IntegerField(blank=False, null=False)

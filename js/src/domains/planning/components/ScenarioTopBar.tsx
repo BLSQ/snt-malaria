@@ -1,37 +1,25 @@
-import React, { FC, useCallback, useState } from 'react';
-import CloseIcon from '@mui/icons-material/Close';
-import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import React, { FC } from 'react';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import { Box, Typography, IconButton, Theme, Button } from '@mui/material';
-import { blueGrey } from '@mui/material/colors';
+import { Box, Typography, Theme } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { useFormik } from 'formik';
 import { useNavigate } from 'react-router-dom';
-import * as Yup from 'yup';
 import ConfirmDialog from 'Iaso/components/dialogs/ConfirmDialogComponent';
 import DeleteDialog from 'Iaso/components/dialogs/DeleteDialogComponent';
 import DownloadButtonsComponent from 'Iaso/components/DownloadButtonsComponent';
-import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
+import { noOp } from 'Iaso/utils';
 import { exportScenarioAPIPath } from '../../../constants/api-urls';
 import { baseUrls } from '../../../constants/urls';
 
 import { MESSAGES } from '../../messages';
+import {
+    DuplicateScenarioModal,
+    UpdateScenarioModal,
+} from '../../scenarios/components/ScenarioModal';
 import { useDeleteScenario } from '../../scenarios/hooks/useDeleteScenario';
-import { useDuplicateScenario } from '../../scenarios/hooks/useDuplicateScenario';
-import { useUpdateScenario } from '../../scenarios/hooks/useUpdateScenario';
 import { Scenario } from '../../scenarios/types';
-
-const actionBtnStyles = (theme: Theme) => ({
-    color: theme.palette.primary.main,
-    fontWeight: 'bold', // medium not working?
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: theme.spacing(2),
-});
+import { useUpdateScenario } from '../../scenarios/hooks/useUpdateScenario';
 
 const styles: SxStyles = {
     content: (theme: Theme) => ({
@@ -41,51 +29,12 @@ const styles: SxStyles = {
         alignItems: 'center',
         marginBottom: theme.spacing(1),
     }),
-    formContainer: {
-        position: 'relative',
-        display: 'inline-flex',
-        alignItems: 'center',
-        '&:hover .editButton': {
-            opacity: 1,
-        },
-        '& .MuiFormLabel-root': {
-            backgroundColor: blueGrey[50],
-        },
-    },
-    editNameBtn: {
-        opacity: 0,
-        transition: 'opacity 0.3s',
-    },
     actionBtns: {
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
     },
-    actionBtn: (theme: Theme) => ({
-        ...actionBtnStyles(theme),
-        textTransform: 'none',
-    }),
-    actionBtnSaving: (theme: Theme) => ({
-        ...actionBtnStyles(theme),
-        color: theme.palette.text.secondary,
-    }),
-    icon: {
-        marginRight: '0.5rem',
-    },
-    yearInputWrapper: {
-        maxWidth: '75px',
-        marginLeft: 1,
-    },
-    submitButton: {
-        marginLeft: 1,
-    },
 };
-
-const validationSchema = Yup.object().shape({
-    name: Yup.string().required(),
-    start_year: Yup.number().required().min(2024).max(2035),
-    end_year: Yup.number().required().min(2024).max(2035),
-});
 
 type Props = {
     scenario: Scenario;
@@ -96,45 +45,12 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
 
     const navigate = useNavigate();
     const { formatMessage } = useSafeIntl();
-    const [isEditing, setIsEditing] = useState(false);
-    const currentYear = new Date().getFullYear();
 
-    const { mutate: updateScenario } = useUpdateScenario(scenario.id, () =>
-        setIsEditing(false),
-    );
     const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
         navigate('/');
     });
-    const { mutateAsync: duplicateScenario } = useDuplicateScenario(
-        duplicatedScenario => {
-            navigate(
-                `/${baseUrls.planning}/scenarioId/${duplicatedScenario.id}`,
-            );
-        },
-    );
 
-    const {
-        values,
-        setFieldValue,
-        // setFieldError,
-        isValid,
-        handleSubmit,
-        // errors,
-        // touched,
-        setFieldTouched,
-    } = useFormik({
-        initialValues: {
-            name: scenario.name,
-            start_year: scenario.start_year ?? currentYear,
-            end_year: scenario.end_year ?? currentYear,
-        },
-        validationSchema,
-        onSubmit: () => updateScenario({ ...scenario, ...values }),
-    });
-
-    const handleDuplicateClick = () => {
-        duplicateScenario(scenario.id);
-    };
+    const { mutateAsync: updateScenario } = useUpdateScenario(scenario.id);
 
     const handleDeleteClick = () => {
         deleteScenario(scenario.id);
@@ -144,13 +60,11 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
         updateScenario({ ...scenario, is_locked: !scenario.is_locked });
     };
 
-    const setFieldValueAndState = useCallback(
-        (field: string, value: any) => {
-            setFieldTouched(field, true);
-            setFieldValue(field, value);
-        },
-        [setFieldTouched, setFieldValue],
-    );
+    const redirectToScenario = (scenarioId: number) => {
+        if (scenarioId) {
+            navigate(`/${baseUrls.planning}/scenarioId/${scenarioId}`);
+        }
+    };
 
     if (!scenario) {
         return null;
@@ -158,88 +72,17 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
 
     return (
         <Box sx={styles.content}>
-            <Box sx={styles.formContainer}>
-                {isEditing ? (
-                    <>
-                        <InputComponent
-                            type="text"
-                            keyValue="name"
-                            value={values.name}
-                            onChange={setFieldValueAndState}
-                            withMarginTop={false}
-                            label={MESSAGES.name}
-                        />
-                        <Box sx={styles.yearInputWrapper}>
-                            <InputComponent
-                                type="number"
-                                keyValue="start_year"
-                                value={values.start_year}
-                                onChange={setFieldValueAndState}
-                                withMarginTop={false}
-                                label={MESSAGES.startYear}
-                                numberInputOptions={{
-                                    thousandSeparator: '.',
-                                    decimalSeparator: ',',
-                                }}
-                            />
-                        </Box>
-                        <Box sx={styles.yearInputWrapper}>
-                            <InputComponent
-                                type="number"
-                                keyValue="end_year"
-                                value={values.end_year}
-                                onChange={setFieldValueAndState}
-                                withMarginTop={false}
-                                label={MESSAGES.endYear}
-                                numberInputOptions={{
-                                    thousandSeparator: '.',
-                                    decimalSeparator: ',',
-                                }}
-                            />
-                        </Box>
-                        <Button
-                            onClick={() => handleSubmit()}
-                            sx={styles.submitButton}
-                            disabled={!isValid}
-                        >
-                            {formatMessage(MESSAGES.apply)}
-                        </Button>
-                        <IconButton
-                            className="editButton"
-                            sx={styles.editNameBtn}
-                            onClick={() => setIsEditing(false)}
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                    </>
-                ) : (
-                    <>
-                        <Typography variant="h6">
-                            {scenario.name} {scenario.start_year} -{' '}
-                            {scenario.end_year}
-                        </Typography>
-                        {!scenario.is_locked && (
-                            <IconButton
-                                className="editButton"
-                                sx={styles.editNameBtn}
-                                onClick={() => setIsEditing(true)}
-                            >
-                                <EditOutlinedIcon />
-                            </IconButton>
-                        )}
-                    </>
-                )}
-            </Box>
+            <Typography variant="h6">
+                {scenario.name} {scenario.start_year} - {scenario.end_year}
+            </Typography>
             <Box sx={styles.actionBtns}>
                 <DownloadButtonsComponent variant="text" csvUrl={csvUrl} />
-                <Button
-                    variant="text"
-                    sx={styles.actionBtn}
-                    onClick={handleDuplicateClick}
-                >
-                    <CopyAllOutlinedIcon sx={styles.icon} />
-                    {formatMessage(MESSAGES.duplicate)}
-                </Button>
+                <DuplicateScenarioModal
+                    scenario={scenario}
+                    onClose={redirectToScenario}
+                    iconProps={{}}
+                    titleMessage={formatMessage(MESSAGES.duplicate)}
+                />
                 <ConfirmDialog
                     BtnIcon={scenario.is_locked ? LockIcon : LockOpenIcon}
                     message={formatMessage(
@@ -260,12 +103,21 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                             : formatMessage(MESSAGES.lockScenario)
                     }
                 />
-                <DeleteDialog
-                    onConfirm={handleDeleteClick}
-                    titleMessage={MESSAGES.modalDeleteScenarioTitle}
-                    iconColor={'primary'}
-                    message={MESSAGES.modalDeleteScenarioConfirm}
-                />
+                {!scenario.is_locked && (
+                    <>
+                        <UpdateScenarioModal
+                            onClose={noOp}
+                            iconProps={{ color: 'primary' }}
+                            scenario={scenario}
+                        />
+                        <DeleteDialog
+                            onConfirm={handleDeleteClick}
+                            titleMessage={MESSAGES.modalDeleteScenarioTitle}
+                            iconColor={'primary'}
+                            message={MESSAGES.modalDeleteScenarioConfirm}
+                        />
+                    </>
+                )}
             </Box>
         </Box>
     );
