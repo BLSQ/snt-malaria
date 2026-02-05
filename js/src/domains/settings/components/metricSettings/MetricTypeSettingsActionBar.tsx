@@ -1,9 +1,11 @@
 import React, { FC } from 'react';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { Box, Button } from '@mui/material';
+import { Box, Button, Link, MenuItem, Popover } from '@mui/material';
 import { IconButton, SearchInput, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { exportMetricValuesTemplateAPIPath } from '../../../../constants/api-urls';
 import { MESSAGES } from '../../messages';
+import { ImportMetricValuesDialog } from './MetricValuesImportDialog';
 
 type Props = {
     onSearchChange: (searchTerm: string) => void;
@@ -25,6 +27,8 @@ export const MetricTypeSettingsActionBar: FC<Props> = ({
     onSearchChange,
     onCreateClick,
 }) => {
+    const anchorRef = React.useRef<HTMLButtonElement>(null);
+    const [isExtraActionOpen, setIsExtraActionOpen] = React.useState(false);
     const [searchTerm, setSearchTerm] = React.useState<string>('');
     const { formatMessage } = useSafeIntl();
     return (
@@ -41,12 +45,34 @@ export const MetricTypeSettingsActionBar: FC<Props> = ({
                     autoComplete={''}
                 />
             </Box>
-            <Box>
+            <Box ref={anchorRef}>
                 <IconButton
                     aria-label="more-info"
                     overrideIcon={MoreHorizIcon}
                     tooltipMessage={MESSAGES.more}
+                    onClick={() => setIsExtraActionOpen(true)}
                 ></IconButton>
+                <Popover
+                    id="more-info-popover"
+                    open={isExtraActionOpen}
+                    anchorEl={anchorRef.current}
+                    onClose={() => setIsExtraActionOpen(false)}
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'left',
+                    }}
+                >
+                    <ImportMetricValuesDialog
+                        iconProps={{}}
+                        onClose={() => setIsExtraActionOpen(false)}
+                    />
+                    <MenuItem
+                        component={Link}
+                        href={exportMetricValuesTemplateAPIPath}
+                    >
+                        {formatMessage(MESSAGES.downloadCSVTemplate)}
+                    </MenuItem>
+                </Popover>
                 <Button
                     variant="contained"
                     color="primary"

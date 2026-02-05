@@ -5,6 +5,10 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Create',
         id: 'iaso.label.create',
     },
+    edit: {
+        defaultMessage: 'Edit',
+        id: 'iaso.label.edit',
+    },
     cancel: {
         defaultMessage: 'Cancel',
         id: 'iaso.label.cancel',
@@ -73,6 +77,15 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.errors.invalidJsonArray',
         defaultMessage: 'Invalid format, must be [value1, value2, ...]',
     },
+    maxLength: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.maxLength',
+        defaultMessage: 'Value must be at most {max} characters long',
+    },
+    scaleItemsCount: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.scaleItemsCount',
+        defaultMessage:
+            'Invalid number of scale items for the selected legend type',
+    },
     uniqueCodeErrorHeadline: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeErrorHeadline',
         defaultMessage: 'Layer with this code already exists.',
@@ -97,6 +110,14 @@ export const MESSAGES = defineMessages({
     genericError: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.genericError',
         defaultMessage: 'Please try again.',
+    },
+    downloadCSVTemplate: {
+        id: 'iaso.snt_malaria.settings.dataLayers.downloadCSVTemplate',
+        defaultMessage: 'Download CSV Template',
+    },
+    importCSV: {
+        id: 'iaso.snt_malaria.settings.dataLayers.importCSV',
+        defaultMessage: 'Import CSV',
     },
     negativeValueNotAllowed: {
         id: 'iaso.snt_malaria.settings.intervention.errors.negativeValueNotAllowed',
@@ -178,5 +199,13 @@ export const MESSAGES = defineMessages({
     deleteLayerConfirmMessage: {
         id: 'iaso.snt_malaria.settings.dataLayers.deleteLayerConfirmMessage',
         defaultMessage: 'Are you sure you want to delete this layer?',
+    },
+    metricValuesImportSuccess: {
+        id: 'iaso.snt_malaria.settings.dataLayers.metricValuesImportSuccess',
+        defaultMessage: 'Metric values imported successfully.',
+    },
+    metricValuesImportError: {
+        id: 'iaso.snt_malaria.settings.dataLayers.metricValuesImportError',
+        defaultMessage: 'Error importing metric values. Please try again.',
     },
 });

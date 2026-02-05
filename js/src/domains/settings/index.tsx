@@ -3,6 +3,8 @@ import { Paper, Tab, Tabs } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { SxStyles } from 'Iaso/types/general';
+import { hasFeatureFlag } from 'Iaso/utils/featureFlags';
+import { useCurrentUser } from 'Iaso/utils/usersUtils';
 import {
     ContentsContainer,
     PageContainer,
@@ -10,8 +12,6 @@ import {
 import { InterventionSettings } from './components/interventionSettings/InterventionSettings';
 import { MetricTypeSettings } from './components/metricSettings/MetricTypesSettings';
 import { MESSAGES } from './messages';
-import { hasFeatureFlag } from 'Iaso/utils/featureFlags';
-import { useCurrentUser } from 'Iaso/utils/usersUtils';
 
 type TabKey = 'interventionSettings' | 'dataLayersSettings';
 
