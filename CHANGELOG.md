@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.0](https://github.com/BLSQ/snt-malaria/compare/2.6.0...2.7.0) (2026-02-05)
+
+
+### Features
+
+* SNT-261 i can create a new metric layer ([#176](https://github.com/BLSQ/snt-malaria/issues/176)) ([26ea6c5](https://github.com/BLSQ/snt-malaria/commit/26ea6c51f2a73d910ffacb7c100d4f949ac95f82))
+
 ## [2.6.0](https://github.com/BLSQ/snt-malaria/compare/2.5.0...2.6.0) (2026-01-27)
 
 
