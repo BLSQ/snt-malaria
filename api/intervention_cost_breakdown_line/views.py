@@ -29,44 +29,26 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
         return InterventionCostBreakdownLineSerializer
 
     def get_queryset(self):
-        return InterventionCostBreakdownLine.objects.select_related("intervention").filter(
-            intervention__intervention_category__account=self.request.user.iaso_profile.account
+        return (
+            InterventionCostBreakdownLine.objects.select_related("intervention")
+            .filter(intervention__intervention_category__account=self.request.user.iaso_profile.account)
+            .order_by("id")
         )
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Get validated objects
         intervention = serializer.validated_data["intervention"]
         year = serializer.validated_data["year"]
         costs = serializer.validated_data["costs"]
-        # Create InterventionAssignment objects
+
         with transaction.atomic():
             existing_costs = InterventionCostBreakdownLine.objects.filter(intervention=intervention, year=year)
-            costs_with_id = {}
-            costs_without_id = []
+            existing_costs.delete()
+            new_costs = []
             for cost in costs:
-                if "id" in cost and cost["id"] is not None:
-                    costs_with_id[cost["id"]] = cost
-                else:
-                    costs_without_id.append(cost)
-            for item in existing_costs:
-                cost = costs_with_id.get(item.id, None)
-                if cost:
-                    item.name = cost["name"]
-                    item.category = cost["category"]
-                    item.unit_cost = cost["unit_cost"]
-                    item.unit_type = cost["unit_type"]
-                    item.intervention = intervention
-                    item.year = year
-                    item.updated_by = request.user
-                    item.save()
-                else:
-                    item.delete()
-
-            bulk_create_objs = [
-                InterventionCostBreakdownLine(
+                new_cost = InterventionCostBreakdownLine(
                     name=cost["name"],
                     category=cost["category"],
                     unit_cost=cost["unit_cost"],
@@ -75,9 +57,8 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
                     year=year,
                     created_by=request.user,
                 )
-                for cost in costs_without_id
-            ]
-            InterventionCostBreakdownLine.objects.bulk_create(bulk_create_objs)
+                new_costs.append(new_cost)
+            InterventionCostBreakdownLine.objects.bulk_create(new_costs)
 
         return Response(
             {"message": "intervention costs created successfully."},
