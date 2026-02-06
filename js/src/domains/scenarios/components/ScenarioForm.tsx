@@ -35,6 +35,7 @@ const ScenarioForm: React.FC<{
             Yup.object({
                 name: Yup.string()
                     .max(255)
+                    .trim()
                     .required(formatMessage(MESSAGES.required)),
                 description: Yup.string(),
                 start_year: Yup.number()
