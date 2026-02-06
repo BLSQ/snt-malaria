@@ -1,6 +1,6 @@
 from iaso.models.base import Account
 from iaso.test import APITestCase
-from plugins.snt_malaria.api.cost_breakdown_line.serializers import (
+from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
     InterventionCostBreakdownLineSerializer,
     InterventionCostBreakdownLinesWriteSerializer,
 )

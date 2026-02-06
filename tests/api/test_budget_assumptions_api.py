@@ -76,7 +76,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
                 OrderedDict(
                     [
                         ("id", None),
-                        ("scenario", 1),
+                        ("scenario", self.scenario.id),
                         ("intervention_code", "iptp"),
                         ("coverage", "0.80"),
                         ("divisor", "0.00"),
@@ -95,7 +95,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
                 OrderedDict(
                     [
                         ("id", None),
-                        ("scenario", 1),
+                        ("scenario", self.scenario.id),
                         ("intervention_code", "rts_s"),
                         ("coverage", "0.00"),
                         ("divisor", "0.00"),
@@ -114,7 +114,7 @@ class BudgetAssumptionsAPITestCase(APITestCase):
                 OrderedDict(
                     [
                         ("id", None),
-                        ("scenario", 1),
+                        ("scenario", self.scenario.id),
                         ("intervention_code", "smc"),
                         ("coverage", "1.00"),
                         ("divisor", "0.00"),

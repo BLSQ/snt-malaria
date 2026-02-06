@@ -21,7 +21,7 @@ class SNTPermission(IasoPermission):
 PERMISSION_GROUP_SNT = "snt_malaria"
 
 
-# Add here any new saas permission - it must start with the "SNT_" prefix and end with "_PERMISSION"
+# Add here any new SNT permission - it must start with the "SNT_" prefix and end with "_PERMISSION"
 SNT_SCENARIO_BASIC_WRITE_PERMISSION = SNTPermission(
     codename="iaso_snt_scenario_basic_write",
     label=_("Scenario - Basic Write"),
