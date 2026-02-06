@@ -1,9 +1,11 @@
-from rest_framework import serializers
+from rest_framework import exceptions, serializers
 
 from iaso.models.org_unit import OrgUnit
+from iaso.utils.org_units import get_valid_org_units_with_geography
 from plugins.snt_malaria.api.interventions.serializers import InterventionSerializer
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 from plugins.snt_malaria.models.intervention import Intervention
+from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
 
 
 class InterventionAssignmentToOrgUnitSerializer(serializers.ModelSerializer):
@@ -73,8 +75,13 @@ class InterventionAssignmentWriteSerializer(serializers.ModelSerializer):
         if scenario.is_locked:
             raise serializers.ValidationError({"scenario_id": "The scenario is locked and cannot be modified."})
 
+        if scenario.created_by != request.user and not request.user.has_perm(
+            SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()
+        ):
+            raise exceptions.PermissionDenied()
+
         # Check the existence of selected orgUnits
-        valid_org_units = OrgUnit.objects.filter(id__in=org_unit_ids)
+        valid_org_units = get_valid_org_units_with_geography(account).filter(id__in=org_unit_ids)
         missing_org_units = set(org_unit_ids) - set(valid_org_units.values_list("id", flat=True))
         if missing_org_units:
             raise serializers.ValidationError({"org_unit_ids": f"Invalid org_unit IDs: {missing_org_units}"})

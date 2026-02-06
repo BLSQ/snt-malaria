@@ -4,7 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from iaso.api.common import UserSerializer
-from iaso.models.org_unit import OrgUnit
 from iaso.utils.org_units import get_valid_org_units_with_geography
 from plugins.snt_malaria.api.scenarios.utils import (
     get_interventions,
@@ -50,6 +49,7 @@ class DuplicateScenarioSerializer(serializers.Serializer):
         account = request.user.iaso_profile.account
 
         if not Scenario.objects.filter(id=value, account=account).exists():
+            # this raises a 400 instead of a 404, fixme - use PrimaryKeyRelatedField
             raise serializers.ValidationError(_("Scenario with this ID does not exist."))
 
         return value
