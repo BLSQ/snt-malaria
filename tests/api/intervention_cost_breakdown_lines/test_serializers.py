@@ -1,64 +1,19 @@
 from unittest.mock import Mock
 
-from iaso.models.base import Account
-from iaso.test import APITestCase
+from iaso.api.common import DropdownOptionsWithRepresentationSerializer
 from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
     InterventionCostBreakdownLineSerializer,
     InterventionCostBreakdownLinesWriteSerializer,
 )
-from plugins.snt_malaria.models.cost_breakdown import InterventionCostBreakdownLine
-from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
+from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base import (
+    InterventionCostBreakdownLineBase,
+)
 
 
-class InterventionCostBreakdownLineSerializerTests(APITestCase):
+class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLineBase):
     def setUp(self):
-        self.account = Account.objects.create(name="Test Account")
-        self.user = self.create_user_with_profile(username="testuser", account=self.account)
-        self.int_category_vaccination = InterventionCategory.objects.create(
-            name="Vaccination",
-            account=self.account,
-            created_by=self.user,
-        )
-        self.int_category_chemoprevention = InterventionCategory.objects.create(
-            name="Preventive Chemotherapy",
-            account=self.account,
-            created_by=self.user,
-        )
-        self.intervention_vaccination_rts = Intervention.objects.create(
-            name="RTS,S",
-            created_by=self.user,
-            intervention_category=self.int_category_vaccination,
-            code="rts_s",
-        )
-        self.intervention_chemo_smc = Intervention.objects.create(
-            name="SMC",
-            created_by=self.user,
-            intervention_category=self.int_category_chemoprevention,
-            code="smc",
-        )
-        self.intervention_chemo_iptp = Intervention.objects.create(
-            name="IPTp",
-            created_by=self.user,
-            intervention_category=self.int_category_chemoprevention,
-            code="iptp",
-        )
-        self.cost_line1 = InterventionCostBreakdownLine.objects.create(
-            name="Cost Line 1",
-            intervention=self.intervention_vaccination_rts,
-            unit_cost=10,
-            category="Procurement",
-            year=2025,
-            created_by=self.user,
-        )
-        self.cost_line2 = InterventionCostBreakdownLine.objects.create(
-            name="Cost Line 2",
-            intervention=self.intervention_chemo_smc,
-            unit_cost=5,
-            category="Procurement",
-            year=2025,
-            created_by=self.user,
-        )
-        self.context = {"request": Mock(user=self.user)}
+        super().setUp()
+        self.context = {"request": Mock(user=self.user_write)}
 
     def test_create_cost_breakdown_line_missing_intervention(self):
         data = {
@@ -121,3 +76,8 @@ class InterventionCostBreakdownLineSerializerTests(APITestCase):
         serializer = InterventionCostBreakdownLineSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("category", serializer.errors)
+
+    def test_serializer_categories_to_representation(self):
+        serializer = DropdownOptionsWithRepresentationSerializer()
+        data = serializer.to_representation(("Procurement", "Procurement"))
+        self.assertEqual(data, {"value": "Procurement", "label": "Procurement"})
