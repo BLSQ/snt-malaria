@@ -4,7 +4,15 @@ import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import { Box, Typography, IconButton, Theme, Button } from '@mui/material';
+import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
+import {
+    Box,
+    Typography,
+    IconButton,
+    Theme,
+    Button,
+    Tooltip,
+} from '@mui/material';
 import { blueGrey } from '@mui/material/colors';
 import { useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
@@ -79,6 +87,17 @@ const styles: SxStyles = {
     submitButton: {
         marginLeft: 1,
     },
+    sidebarToggle: {
+        transition: 'all 0.2s ease-in-out',
+    },
+    sidebarToggleActive: (theme: Theme) => ({
+        transition: 'all 0.2s ease-in-out',
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.primary.contrastText,
+        '&:hover': {
+            backgroundColor: theme.palette.primary.dark,
+        },
+    }),
 };
 
 const validationSchema = Yup.object().shape({
@@ -89,9 +108,15 @@ const validationSchema = Yup.object().shape({
 
 type Props = {
     scenario: Scenario;
+    isSidebarOpen: boolean;
+    onToggleSidebar: () => void;
 };
 
-export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
+export const ScenarioTopBar: FC<Props> = ({
+    scenario,
+    isSidebarOpen,
+    onToggleSidebar,
+}) => {
     const csvUrl = `${exportScenarioAPIPath}?id=${scenario.id}`;
 
     const navigate = useNavigate();
@@ -266,6 +291,29 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
                     iconColor={'primary'}
                     message={MESSAGES.modalDeleteScenarioConfirm}
                 />
+                <Tooltip
+                    title={formatMessage(
+                        isSidebarOpen
+                            ? MESSAGES.hideSidebar
+                            : MESSAGES.showSidebar,
+                    )}
+                >
+                    <IconButton
+                        onClick={onToggleSidebar}
+                        color="primary"
+                        sx={
+                            isSidebarOpen
+                                ? styles.sidebarToggleActive
+                                : styles.sidebarToggle
+                        }
+                    >
+                        <ViewSidebarOutlinedIcon
+                            sx={{
+                                transition: 'transform 0.2s ease-in-out',
+                            }}
+                        />
+                    </IconButton>
+                </Tooltip>
             </Box>
         </Box>
     );

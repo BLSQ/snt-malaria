@@ -9,6 +9,10 @@ import tiles from 'Iaso/constants/mapTiles';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
+import {
+    FitBounds,
+    InvalidateOnResize,
+} from '../../../components/InvalidateOnResize';
 import { MapSelectionWidget } from '../../../components/MapSelectionWidget';
 import { mapTheme } from '../../../constants/map-theme';
 import {
@@ -154,6 +158,11 @@ export const Map: FC<Props> = ({
                         zoomSnap={defaultZoomSnap}
                         zoomDelta={defaultZoomDelta}
                     >
+                        <InvalidateOnResize />
+                        <FitBounds
+                            bounds={bounds}
+                            boundsOptions={boundsOptions}
+                        />
                         <ZoomControl position="bottomright" />
                         {orgUnits.map(orgUnit => (
                             <GeoJSON
