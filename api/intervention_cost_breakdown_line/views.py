@@ -9,6 +9,7 @@ from plugins.snt_malaria.models import InterventionCostBreakdownLine
 from plugins.snt_malaria.models.cost_breakdown import InterventionCostUnitType
 
 from .filters import InterventionCostBreakdownLineListFilter
+from .permissions import InterventionCostBreakdownLinePermission
 from .serializers import (
     InterventionCostBreakdownLineSerializer,
     InterventionCostBreakdownLinesWriteSerializer,
@@ -20,6 +21,7 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "options", "post"]
     filter_backends = [DjangoFilterBackend]
     filterset_class = InterventionCostBreakdownLineListFilter
+    permission_classes = [InterventionCostBreakdownLinePermission]
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -53,12 +55,12 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
                 cost = costs_with_id.get(item.id, None)
                 if cost:
                     item.name = cost["name"]
-                    item.unit_cost = cost["unit_cost"]
                     item.category = cost["category"]
-                    item.intervention = intervention
-                    item.updated_by = request.user
-                    item.year = cost["year"]
+                    item.unit_cost = cost["unit_cost"]
                     item.unit_type = cost["unit_type"]
+                    item.intervention = intervention
+                    item.year = year
+                    item.updated_by = request.user
                     item.save()
                 else:
                     item.delete()
@@ -66,12 +68,12 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
             bulk_create_objs = [
                 InterventionCostBreakdownLine(
                     name=cost["name"],
+                    category=cost["category"],
                     unit_cost=cost["unit_cost"],
                     unit_type=cost["unit_type"],
-                    category=cost["category"],
                     intervention=intervention,
+                    year=year,
                     created_by=request.user,
-                    year=cost["year"],
                 )
                 for cost in costs_without_id
             ]

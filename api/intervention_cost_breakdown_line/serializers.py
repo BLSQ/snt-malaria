@@ -28,19 +28,36 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
         ]
 
     def get_unit_type_label(self, obj):
-        choices = dict(InterventionCostUnitType.choices)
-        return choices.get(obj.unit_type, obj.unit_type)
+        return InterventionCostUnitType(obj.unit_type).label
 
     def get_category_label(self, obj):
-        choices = dict(InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.choices)
-        return choices.get(obj.category, obj.category)
+        return InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory(obj.category).label
+
+
+class CostsWriteSerializer(serializers.Serializer):
+    name = serializers.CharField(required=True)
+    unit_cost = serializers.DecimalField(max_digits=19, decimal_places=2, required=True, min_value=0)
+    category = serializers.ChoiceField(
+        choices=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.choices,
+        required=True,
+    )
+    unit_type = serializers.ChoiceField(
+        choices=InterventionCostUnitType.choices,
+        required=True,
+    )
 
 
 class InterventionCostBreakdownLinesWriteSerializer(serializers.ModelSerializer):
-    intervention = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all(), required=True)
-    costs = InterventionCostBreakdownLineSerializer(many=True)
-    year = serializers.IntegerField(required=True)
+    intervention = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all())
+    costs = CostsWriteSerializer(many=True)
+    year = serializers.IntegerField()
 
     class Meta:
         model = InterventionCostBreakdownLine
         fields = ["intervention", "year", "costs"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user = self.context["request"].user
+        account = user.iaso_profile.account
+        self.fields["intervention"].queryset = Intervention.objects.filter(intervention_category__account=account)
