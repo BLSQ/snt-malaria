@@ -11,19 +11,19 @@ export const MESSAGES = defineMessages({
     },
 
     required: {
-        id: 'iaso.snt_malaria.settings.intervention.errors.required',
+        id: 'iaso.snt_malaria.label.required',
         defaultMessage: 'Required',
     },
     maxYear: {
-        id: 'iaso.snt_malaria.settings.intervention.errors.maxYear',
+        id: 'iaso.snt_malaria.scenario.errors.maxYear',
         defaultMessage: 'Year must be at most {year}',
     },
     minYear: {
-        id: 'iaso.snt_malaria.settings.intervention.errors.minYear',
+        id: 'iaso.snt_malaria.scenario.errors.minYear',
         defaultMessage: 'Year must be at least {year}',
     },
     endYearMin: {
-        id: 'iaso.snt_malaria.settings.intervention.errors.endYearMin',
+        id: 'iaso.snt_malaria.scenario.errors.endYearMin',
         defaultMessage:
             'End year must be greater than or equal to start year ({year})',
     },
