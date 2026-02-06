@@ -66,7 +66,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Category',
     },
     required: {
-        id: 'iaso.snt_malaria.settings.intervention.errors.required',
+        id: 'iaso.snt_malaria.label.required',
         defaultMessage: 'Required',
     },
     noWhitespace: {
@@ -177,7 +177,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Category',
     },
     description: {
-        id: 'iaso.snt_malaria.settings.dataLayers.description',
+        id: 'iaso.snt_malaria.label.description',
         defaultMessage: 'Description',
     },
     units: {

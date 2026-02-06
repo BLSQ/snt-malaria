@@ -14,15 +14,28 @@ const MESSAGES = defineMessages({
     },
 });
 
-export const useDuplicateScenario = (
-    onSuccess: (data: any) => void = _data => null,
-): UseMutationResult =>
+export const useDuplicateScenario = (): UseMutationResult =>
     useSnackMutation({
-        mutationFn: (idToDuplicate: number) =>
+        mutationFn: ({
+            id,
+            name,
+            description,
+            start_year,
+            end_year,
+        }: {
+            id: number;
+            name: string;
+            description: string;
+            start_year: number;
+            end_year: number;
+        }) =>
             postRequest(`/api/snt_malaria/scenarios/duplicate/`, {
-                id_to_duplicate: idToDuplicate,
+                scenario_to_duplicate: id,
+                name,
+                description,
+                start_year,
+                end_year,
             }),
-        options: { onSuccess },
         invalidateQueryKey: ['scenarios'],
         snackSuccessMessage: MESSAGES.duplicateSuccess,
         snackErrorMsg: MESSAGES.duplicateError,
