@@ -4,7 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from iaso.api.common import UserSerializer
-from iaso.models.org_unit import OrgUnit
 from iaso.utils.org_units import get_valid_org_units_with_geography
 from plugins.snt_malaria.api.scenarios.utils import (
     get_interventions,

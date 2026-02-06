@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 from iaso.models.base import Account
 from iaso.test import APITestCase
 from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
@@ -9,59 +11,60 @@ from plugins.snt_malaria.models.intervention import Intervention, InterventionCa
 
 
 class InterventionCostBreakdownLineSerializerTests(APITestCase):
-    def setUp(cls):
-        cls.account = Account.objects.create(name="Test Account")
-        cls.user = cls.create_user_with_profile(username="testuser", account=cls.account)
-        cls.int_category_vaccination = InterventionCategory.objects.create(
+    def setUp(self):
+        self.account = Account.objects.create(name="Test Account")
+        self.user = self.create_user_with_profile(username="testuser", account=self.account)
+        self.int_category_vaccination = InterventionCategory.objects.create(
             name="Vaccination",
-            account=cls.account,
-            created_by=cls.user,
+            account=self.account,
+            created_by=self.user,
         )
-        cls.int_category_chemoprevention = InterventionCategory.objects.create(
+        self.int_category_chemoprevention = InterventionCategory.objects.create(
             name="Preventive Chemotherapy",
-            account=cls.account,
-            created_by=cls.user,
+            account=self.account,
+            created_by=self.user,
         )
-        cls.intervention_vaccination_rts = Intervention.objects.create(
+        self.intervention_vaccination_rts = Intervention.objects.create(
             name="RTS,S",
-            created_by=cls.user,
-            intervention_category=cls.int_category_vaccination,
+            created_by=self.user,
+            intervention_category=self.int_category_vaccination,
             code="rts_s",
         )
-        cls.intervention_chemo_smc = Intervention.objects.create(
+        self.intervention_chemo_smc = Intervention.objects.create(
             name="SMC",
-            created_by=cls.user,
-            intervention_category=cls.int_category_chemoprevention,
+            created_by=self.user,
+            intervention_category=self.int_category_chemoprevention,
             code="smc",
         )
-        cls.intervention_chemo_iptp = Intervention.objects.create(
+        self.intervention_chemo_iptp = Intervention.objects.create(
             name="IPTp",
-            created_by=cls.user,
-            intervention_category=cls.int_category_chemoprevention,
+            created_by=self.user,
+            intervention_category=self.int_category_chemoprevention,
             code="iptp",
         )
-        cls.cost_line1 = InterventionCostBreakdownLine.objects.create(
+        self.cost_line1 = InterventionCostBreakdownLine.objects.create(
             name="Cost Line 1",
-            intervention=cls.intervention_vaccination_rts,
+            intervention=self.intervention_vaccination_rts,
             unit_cost=10,
             category="Procurement",
             year=2025,
-            created_by=cls.user,
+            created_by=self.user,
         )
-        cls.cost_line2 = InterventionCostBreakdownLine.objects.create(
+        self.cost_line2 = InterventionCostBreakdownLine.objects.create(
             name="Cost Line 2",
-            intervention=cls.intervention_chemo_smc,
+            intervention=self.intervention_chemo_smc,
             unit_cost=5,
             category="Procurement",
             year=2025,
-            created_by=cls.user,
+            created_by=self.user,
         )
+        self.context = {"request": Mock(user=self.user)}
 
     def test_create_cost_breakdown_line_missing_intervention(self):
         data = {
             "costs": [{"category": "Procurement"}],
         }
-        serializer = InterventionCostBreakdownLinesWriteSerializer(data=data)
+        serializer = InterventionCostBreakdownLinesWriteSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("intervention", serializer.errors)
 
@@ -69,7 +72,7 @@ class InterventionCostBreakdownLineSerializerTests(APITestCase):
         data = {
             "intervention": self.intervention_chemo_iptp.id,
         }
-        serializer = InterventionCostBreakdownLinesWriteSerializer(data=data)
+        serializer = InterventionCostBreakdownLinesWriteSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("costs", serializer.errors)
 
@@ -78,7 +81,7 @@ class InterventionCostBreakdownLineSerializerTests(APITestCase):
             "intervention": self.intervention_chemo_iptp.id,
             "costs": [{"unit_cost": -5, "name": "test", "category": "Procurement"}],
         }
-        serializer = InterventionCostBreakdownLineSerializer(data=data)
+        serializer = InterventionCostBreakdownLineSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("unit_cost", serializer.errors)
 
@@ -87,7 +90,7 @@ class InterventionCostBreakdownLineSerializerTests(APITestCase):
             "intervention": self.intervention_chemo_iptp.id,
             "costs": [{"unit_cost": 15, "category": "Procurement"}],
         }
-        serializer = InterventionCostBreakdownLineSerializer(data=data)
+        serializer = InterventionCostBreakdownLineSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("name", serializer.errors)
 
@@ -96,7 +99,7 @@ class InterventionCostBreakdownLineSerializerTests(APITestCase):
             "intervention": self.intervention_chemo_iptp.id,
             "costs": [{"name": "test", "category": "Procurement"}],
         }
-        serializer = InterventionCostBreakdownLineSerializer(data=data)
+        serializer = InterventionCostBreakdownLineSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("unit_cost", serializer.errors)
 
@@ -105,7 +108,7 @@ class InterventionCostBreakdownLineSerializerTests(APITestCase):
             "intervention": self.intervention_chemo_iptp.id,
             "costs": [{"name": "test", "unit_cost": 15}],
         }
-        serializer = InterventionCostBreakdownLineSerializer(data=data)
+        serializer = InterventionCostBreakdownLineSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("category", serializer.errors)
 
@@ -115,6 +118,6 @@ class InterventionCostBreakdownLineSerializerTests(APITestCase):
             "intervention": self.intervention_chemo_iptp.id,
             "costs": [{"name": "test", "unit_cost": 15, "category": invalid_category_id}],
         }
-        serializer = InterventionCostBreakdownLineSerializer(data=data)
+        serializer = InterventionCostBreakdownLineSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("category", serializer.errors)
