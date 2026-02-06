@@ -178,3 +178,32 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.assertNotEqual(cost.unit_type, old_unit_type)
         self.assertNotEqual(cost.name, old_name)
         self.assertNotEqual(cost.category, old_category)
+
+    def test_get_cost_breakdown_line_categories_with_write_perm(self):
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.get(f"{self.BASE_URL}categories/")
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        expected_categories = [
+            {"value": choice[0], "label": choice[1]}
+            for choice in InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.choices
+        ]
+        self.assertCountEqual(result, expected_categories)
+
+    def test_get_cost_breakdown_line_categories_with_read_perm(self):
+        self.client.force_authenticate(user=self.user_read)
+        response = self.client.get(f"{self.BASE_URL}categories/")
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        expected_categories = [
+            {"value": choice[0], "label": choice[1]}
+            for choice in InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.choices
+        ]
+        self.assertCountEqual(result, expected_categories)
+
+    def test_get_cost_breakdown_line_categories_with_no_perm(self):
+        self.client.force_authenticate(user=self.user_no_perm)
+        response = self.client.get(f"{self.BASE_URL}categories/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_cost_breakdown_line_categories_unauthenticated(self):
+        response = self.client.get(f"{self.BASE_URL}categories/")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
