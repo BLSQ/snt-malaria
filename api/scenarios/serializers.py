@@ -35,6 +35,15 @@ class ScenarioSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def validate_start_year(self, value):
+        if value < 2024 or value > 2035:
+            raise serializers.ValidationError(_("Start year must be between 2024 and 2035."))
+
+        if self.initial_data.get("end_year") and value > int(self.initial_data["end_year"]):
+            raise serializers.ValidationError(_("Start year should be lower or equal end year."))
+
+        return value
+
     def validate_name(self, value):
         if not value:
             raise serializers.ValidationError(_("Name cannot be empty."))
