@@ -98,6 +98,9 @@ const styles: SxStyles = {
             backgroundColor: theme.palette.primary.dark,
         },
     }),
+    sidebarIcon: {
+        transition: 'transform 0.2s ease-in-out',
+    },
 };
 
 const validationSchema = Yup.object().shape({
@@ -308,9 +311,7 @@ export const ScenarioTopBar: FC<Props> = ({
                         }
                     >
                         <ViewSidebarOutlinedIcon
-                            sx={{
-                                transition: 'transform 0.2s ease-in-out',
-                            }}
+                            sx={styles.sidebarIcon}
                         />
                     </IconButton>
                 </Tooltip>
