@@ -4,6 +4,7 @@ import { Box, Chip, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
 import { IconBoxed } from '../../../../components/IconBoxed';
 import { PaperContainer } from '../../../../components/styledComponents';
 import { MESSAGES } from '../../../messages';
@@ -17,6 +18,36 @@ import {
 import { CostBreakdownChart } from './CostBreakdownChart';
 import { OrgUnitCostMap } from './OrgUnitCostMap';
 import { ProportionChart } from './ProportionChart';
+
+const styles: SxStyles = {
+    toolbar: {
+        py: 1,
+        px: 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: 'white',
+        borderRadius: 4,
+    },
+    toolbarLeft: {
+        display: 'flex',
+        alignItems: 'center',
+    },
+    budgetLabel: {
+        mx: 2,
+    },
+    toolbarRight: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+    },
+    mapGrid: {
+        height: '493px',
+    },
+    mapContainer: {
+        height: '100%',
+    },
+};
 
 type Props = {
     budgets: Budget[];
@@ -124,8 +155,7 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits, filterLabel }) => {
         return relevantBudgets
             .flatMap(budget => budget.org_units_costs)
             .reduce(
-                (acc, ouc) =>
-                    mergeInterventionCosts(acc, ouc.interventions),
+                (acc, ouc) => mergeInterventionCosts(acc, ouc.interventions),
                 [] as BudgetIntervention[],
             );
     }, [filteredBudgets, yearOptions, selectedYear, mergeInterventionCosts]);
@@ -188,20 +218,10 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits, filterLabel }) => {
         <>
             {yearOptions && yearOptions.length > 2 && (
                 <Grid item xs={12} md={12}>
-                    <Box
-                        sx={{
-                            py: 1,
-                            px: 2,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            backgroundColor: 'white',
-                            borderRadius: 4,
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box sx={styles.toolbar}>
+                        <Box sx={styles.toolbarLeft}>
                             <IconBoxed Icon={AttachMoneyIcon} />
-                            <Typography sx={{ mx: 2 }}>
+                            <Typography sx={styles.budgetLabel}>
                                 {formatMessage(MESSAGES.budget)}
                             </Typography>
 
@@ -218,7 +238,7 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits, filterLabel }) => {
                                 clearable={false}
                             />
                         </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={styles.toolbarRight}>
                             <Typography>
                                 {formatMessage(MESSAGES.budget)} :{' '}
                                 {formatBigNumber(totalCost)}
@@ -246,8 +266,8 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits, filterLabel }) => {
                             />
                         </PaperContainer>
                     </Grid>
-                    <Grid item xs={12} md={12} sx={{ height: '493px' }}>
-                        <PaperContainer sx={{ height: '100%' }}>
+                    <Grid item xs={12} md={12} sx={styles.mapGrid}>
+                        <PaperContainer sx={styles.mapContainer}>
                             <OrgUnitCostMap
                                 orgUnitCosts={orgUnitCosts}
                                 orgUnits={orgUnits}
