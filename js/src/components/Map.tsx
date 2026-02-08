@@ -12,7 +12,8 @@ import tiles from 'Iaso/constants/mapTiles';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { noOp } from 'Iaso/utils';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
-import { FitBounds, InvalidateOnResize } from './InvalidateOnResize';
+import { FitBounds } from './FitBounds';
+import { InvalidateOnResize } from './InvalidateOnResize';
 import { mapTheme } from '../constants/map-theme';
 import { MapLegend } from '../domains/planning/components/MapLegend';
 import {
