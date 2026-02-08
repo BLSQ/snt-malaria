@@ -9,10 +9,8 @@ import tiles from 'Iaso/constants/mapTiles';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
-import {
-    FitBounds,
-    InvalidateOnResize,
-} from '../../../components/InvalidateOnResize';
+import { FitBounds } from '../../../components/FitBounds';
+import { InvalidateOnResize } from '../../../components/InvalidateOnResize';
 import { MapSelectionWidget } from '../../../components/MapSelectionWidget';
 import { mapTheme } from '../../../constants/map-theme';
 import {
