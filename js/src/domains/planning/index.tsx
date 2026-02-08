@@ -106,9 +106,6 @@ export const Planning: FC = () => {
         [params, redirectToReplace],
     );
 
-    const handleToggleSidebar = useCallback(() => {
-        setIsSidebarOpen(prev => !prev);
-    }, []);
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: Intervention;
     }>({});
@@ -238,7 +235,7 @@ export const Planning: FC = () => {
                     <ScenarioTopBar
                         scenario={scenario}
                         isSidebarOpen={isSidebarOpen}
-                        onToggleSidebar={handleToggleSidebar}
+                        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
                     />
                 )}
                 <Grid container spacing={1}>
