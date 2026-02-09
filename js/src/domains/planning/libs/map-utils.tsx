@@ -39,7 +39,12 @@ export const getColorForShape = (
     legend_type?: string,
     legend_config?: ScaleDomainRange,
 ) => {
-    if (!value || !legend_type || !legend_config) {
+    if (
+        value === undefined ||
+        value === null ||
+        !legend_type ||
+        !legend_config
+    ) {
         return defaultLegend;
     }
 
@@ -127,7 +132,7 @@ export const useGetOrgUnitMetric = (
                 return undefined;
             }
 
-            if (metricValue.value) {
+            if (metricValue.value || metricValue.value === 0) {
                 return { label: metricValue.value, value: metricValue.value };
             }
 
