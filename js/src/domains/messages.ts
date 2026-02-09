@@ -461,4 +461,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.allOrgUnits',
         defaultMessage: 'All',
     },
+    national: {
+        id: 'iaso.snt_malaria.label.national',
+        defaultMessage: 'National',
+    },
 });
