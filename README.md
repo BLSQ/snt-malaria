@@ -65,6 +65,21 @@ docker compose run iaso manage set_up_burkina_faso_account
 
 6. Using the credentials you just received, you should now be able to log in and create a first scenario.
 
+## Configuration
+
+The planning page requires a configuration entry in the Iaso datastore to know which org unit types represent the country level and the intervention level. Without this configuration (or if it contains invalid values), the planning sidebar will only show the "National" display level.
+
+To set it up, go to the Django admin for your account and create a datastore entry with the key `snt_malaria_config` and the following JSON data:
+
+```json
+{
+  "country_org_unit_type_id": <id>,
+  "intervention_org_unit_type_id": <id>
+}
+```
+
+Replace `<id>` with the actual org unit type IDs for your country. Both values must be numbers.
+
 ## OpenHEXA import
 
 This section describes how to fetch real data layers from OpenHEXA.

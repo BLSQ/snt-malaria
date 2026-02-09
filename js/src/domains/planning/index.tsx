@@ -289,7 +289,6 @@ export const Planning: FC = () => {
                         <Grid item xs={12} md={2}>
                             <PaperFullHeight>
                                 <PlanningFiltersSidebar
-                                    orgUnits={orgUnits}
                                     selectedOrgUnitTypeId={
                                         selectedDisplayOrgUnitTypeId
                                     }
