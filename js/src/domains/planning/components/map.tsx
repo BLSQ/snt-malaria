@@ -91,7 +91,9 @@ export const Map: FC<Props> = ({
     const formatMetricValue = useCallback(
         (orgUnitId: number) => {
             const selectedMetric = getSelectedMetric(orgUnitId);
-            if (!selectedMetric) return 'N/A';
+            if (selectedMetric === undefined || selectedMetric === null)
+                return 'N/A';
+
             if (typeof selectedMetric.label === 'number') {
                 return Math.round(selectedMetric.label * 100) / 100;
             }
