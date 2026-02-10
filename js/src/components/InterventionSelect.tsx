@@ -66,7 +66,7 @@ export const InterventionSelect: FunctionComponent<Props> = ({
                     {formatMessage(placeholder)}
                 </MenuItem>
             )}
-            {showAllOption && (
+            {showAllOption && sortedInterventions.length > 1 && (
                 <MenuItem value={0}>
                     <Typography variant="body2">
                         {formatMessage(MESSAGES.allInterventions)}
