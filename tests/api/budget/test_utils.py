@@ -8,15 +8,15 @@ from plugins.snt_malaria.models.scenario import Scenario
 
 
 class BudgetUtilsTestCase(TestCase):
-    def setUp(cls):
+    def setUp(self):
         # Create a user and account for testing
-        cls.account = Account.objects.create(name="Test Account")
-        cls.user = cls.create_user_with_profile(username="testuser", account=cls.account)
+        self.account = Account.objects.create(name="Test Account")
+        self.user = self.create_user_with_profile(username="testuser", account=self.account)
 
         # Create a scenario
-        cls.scenario = Scenario.objects.create(
-            account=cls.account,
-            created_by=cls.user,
+        self.scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user,
             name="Test Scenario",
             description="A test scenario description.",
             start_year=2025,
