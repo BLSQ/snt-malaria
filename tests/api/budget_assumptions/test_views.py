@@ -11,15 +11,15 @@ BASE_URL = "/api/snt_malaria/budget_assumptions/"
 
 
 class BudgetAssumptionsAPITestCase(APITestCase):
-    def setUp(cls):
+    def setUp(self):
         # Create a user and account for testing
-        cls.account = Account.objects.create(name="Test Account")
-        cls.user = cls.create_user_with_profile(username="testuser", account=cls.account)
+        self.account = Account.objects.create(name="Test Account")
+        self.user = self.create_user_with_profile(username="testuser", account=self.account)
 
         # Create a scenario
-        cls.scenario = Scenario.objects.create(
-            account=cls.account,
-            created_by=cls.user,
+        self.scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user,
             name="Test Scenario",
             description="A test scenario description.",
             start_year=2025,
@@ -27,39 +27,39 @@ class BudgetAssumptionsAPITestCase(APITestCase):
         )
 
         # Create intervention categories
-        cls.int_category_vaccination = InterventionCategory.objects.create(
+        self.int_category_vaccination = InterventionCategory.objects.create(
             name="Vaccination",
-            account=cls.account,
-            created_by=cls.user,
+            account=self.account,
+            created_by=self.user,
         )
 
-        cls.int_category_chemoprevention = InterventionCategory.objects.create(
+        self.int_category_chemoprevention = InterventionCategory.objects.create(
             name="Preventive Chemotherapy",
-            account=cls.account,
-            created_by=cls.user,
+            account=self.account,
+            created_by=self.user,
         )
 
         # Create interventions
-        cls.intervention_vaccination_rts = Intervention.objects.create(
+        self.intervention_vaccination_rts = Intervention.objects.create(
             name="RTS,S",
-            created_by=cls.user,
-            intervention_category=cls.int_category_vaccination,
+            created_by=self.user,
+            intervention_category=self.int_category_vaccination,
             code="rts_s",
         )
-        cls.intervention_chemo_smc = Intervention.objects.create(
+        self.intervention_chemo_smc = Intervention.objects.create(
             name="SMC",
-            created_by=cls.user,
-            intervention_category=cls.int_category_chemoprevention,
+            created_by=self.user,
+            intervention_category=self.int_category_chemoprevention,
             code="smc",
         )
-        cls.intervention_chemo_iptp = Intervention.objects.create(
+        self.intervention_chemo_iptp = Intervention.objects.create(
             name="IPTp",
-            created_by=cls.user,
-            intervention_category=cls.int_category_chemoprevention,
+            created_by=self.user,
+            intervention_category=self.int_category_chemoprevention,
             code="iptp",
         )
 
-        cls.client.force_authenticate(user=cls.user)
+        self.client.force_authenticate(user=self.user)
 
     def test_get_budget_assumptions_unauthenticated(self):
         self.client.force_authenticate(user=None)

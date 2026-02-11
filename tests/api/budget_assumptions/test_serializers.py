@@ -11,14 +11,14 @@ from plugins.snt_malaria.models.scenario import Scenario
 
 
 class BudgetAssumptionsQuerySerializerTests(APITestCase):
-    def setUp(cls):
-        cls.account = Account.objects.create(name="Test Account")
-        cls.user = cls.create_user_with_profile(username="testuser", account=cls.account)
+    def setUp(self):
+        self.account = Account.objects.create(name="Test Account")
+        self.user = self.create_user_with_profile(username="testuser", account=self.account)
 
         # Create a scenario
-        cls.scenario = Scenario.objects.create(
-            account=cls.account,
-            created_by=cls.user,
+        self.scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user,
             name="Test Scenario",
             description="A test scenario description.",
             start_year=2025,
@@ -47,37 +47,37 @@ class BudgetAssumptionsQuerySerializerTests(APITestCase):
 
 
 class BudgetAssumptionsSerializerTests(APITestCase):
-    def setUp(cls):
-        cls.account = Account.objects.create(name="Test Account")
-        cls.user = cls.create_user_with_profile(username="testuser", account=cls.account)
+    def setUp(self):
+        self.account = Account.objects.create(name="Test Account")
+        self.user = self.create_user_with_profile(username="testuser", account=self.account)
 
         # Create a scenario
-        cls.scenario = Scenario.objects.create(
-            account=cls.account,
-            created_by=cls.user,
+        self.scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user,
             name="Test Scenario",
             description="A test scenario description.",
             start_year=2025,
             end_year=2028,
         )
 
-        cls.int_category_vaccination = InterventionCategory.objects.create(
+        self.int_category_vaccination = InterventionCategory.objects.create(
             name="Vaccination",
-            account=cls.account,
-            created_by=cls.user,
+            account=self.account,
+            created_by=self.user,
         )
 
-        cls.intervention_vaccination_rts = Intervention.objects.create(
+        self.intervention_vaccination_rts = Intervention.objects.create(
             name="RTS,S",
-            created_by=cls.user,
-            intervention_category=cls.int_category_vaccination,
+            created_by=self.user,
+            intervention_category=self.int_category_vaccination,
             code="rts_s",
         )
 
-        cls.intervention_vaccination_rts2 = Intervention.objects.create(
+        self.intervention_vaccination_rts2 = Intervention.objects.create(
             name="RTS,S2",
-            created_by=cls.user,
-            intervention_category=cls.int_category_vaccination,
+            created_by=self.user,
+            intervention_category=self.int_category_vaccination,
             code="rts_s2",
         )
 
@@ -255,30 +255,30 @@ class BudgetAssumptionsSerializerTests(APITestCase):
 
 
 class BudgetAssumptionsWriteSerializerTests(APITestCase):
-    def setUp(cls):
-        cls.account = Account.objects.create(name="Test Account")
-        cls.user = cls.create_user_with_profile(username="testuser", account=cls.account)
+    def setUp(self):
+        self.account = Account.objects.create(name="Test Account")
+        self.user = self.create_user_with_profile(username="testuser", account=self.account)
 
         # Create a scenario
-        cls.scenario = Scenario.objects.create(
-            account=cls.account,
-            created_by=cls.user,
+        self.scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user,
             name="Test Scenario",
             description="A test scenario description.",
             start_year=2025,
             end_year=2028,
         )
 
-        cls.int_category_vaccination = InterventionCategory.objects.create(
+        self.int_category_vaccination = InterventionCategory.objects.create(
             name="Vaccination",
-            account=cls.account,
-            created_by=cls.user,
+            account=self.account,
+            created_by=self.user,
         )
 
-        cls.intervention_vaccination_rts = Intervention.objects.create(
+        self.intervention_vaccination_rts = Intervention.objects.create(
             name="RTS,S",
-            created_by=cls.user,
-            intervention_category=cls.int_category_vaccination,
+            created_by=self.user,
+            intervention_category=self.int_category_vaccination,
             code="rts_s",
         )
 
