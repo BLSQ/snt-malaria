@@ -6,7 +6,7 @@ on:
         inputs:
             # Branch is chosen by default in github manual actions
             environment:
-                description: Env (staging/prod) or exact env name (e.g. snt-malaria)
+                description: Env (staging/demo/prod) or exact env name (snt-malaria, snt-malaria-staging, snt-malaria-demo)
                 required: true
                 default: snt-malaria-staging
             iaso_ref:
@@ -14,9 +14,9 @@ on:
                 required: false
                 default: main
             slack_channel:
-                description: Slack Channel for notification (snt-iaso-task-force by default)
+                description: Slack Channel for notification (snt-ops by default)
                 required: false
-                default: snt-iaso-task-force
+                default: snt-ops
     # On push to development deploy to staging
     # TODO
     # push:
@@ -52,7 +52,7 @@ jobs:
               env: # TODO: change to development
                   DEFAULT_GIT_REFERENCE: main
                   DEFAULT_ENVIRONMENT: staging
-                  DEFAULT_SLACK_CHANNEL: snt-iaso-task-force
+                  DEFAULT_SLACK_CHANNEL: snt-ops
               run: |
                   echo "::set-output name=GIT_REFERENCE::${{ github.ref_name || env.DEFAULT_GIT_REFERENCE }}"
                   echo "::set-output name=ENVIRONMENT::${{ github.event.inputs.environment || env.DEFAULT_ENVIRONMENT }}"
