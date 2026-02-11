@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from snt_malaria_budgeting import BudgetCalculator
 
 from plugins.snt_malaria.api.budget.filters import BudgetListFilter
+from plugins.snt_malaria.api.budget.permissions import BudgetPermission
 from plugins.snt_malaria.api.budget.serializers import (
     BudgetCreateSerializer,
     BudgetSerializer,
@@ -25,6 +26,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "options", "post"]
     serializer_class = BudgetSerializer
     filterset_class = BudgetListFilter
+    permission_classes = [BudgetPermission]
 
     def get_queryset(self):
         return Budget.objects.select_related("scenario").filter(
