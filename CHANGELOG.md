@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.1](https://github.com/BLSQ/snt-malaria/compare/2.7.0...2.7.1) (2026-02-11)
+
+
+### Bug Fixes
+
+* **core:** Fix release pipeline ([#184](https://github.com/BLSQ/snt-malaria/issues/184)) ([2a09a38](https://github.com/BLSQ/snt-malaria/commit/2a09a380db40d73a13f53d2a13a6f50c9bc49627))
+
 ## [2.7.0](https://github.com/BLSQ/snt-malaria/compare/2.6.0...2.7.0) (2026-02-05)
 
 
