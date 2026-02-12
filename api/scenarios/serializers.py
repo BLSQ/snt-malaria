@@ -16,6 +16,9 @@ from plugins.snt_malaria.models.intervention import InterventionAssignment
 class ScenarioSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
 
+    SCENARIO_MIN_YEAR = 2024
+    SCENARIO_MAX_YEAR = 2035
+
     class Meta:
         model = Scenario
         fields = [
@@ -36,7 +39,7 @@ class ScenarioSerializer(serializers.ModelSerializer):
         ]
 
     def validate_start_year(self, value):
-        if value < 2024 or value > 2035:
+        if value < ScenarioSerializer.SCENARIO_MIN_YEAR or value > ScenarioSerializer.SCENARIO_MAX_YEAR:
             raise serializers.ValidationError(_("Start year must be between 2024 and 2035."))
 
         if self.initial_data.get("end_year") and value > int(self.initial_data["end_year"]):
@@ -76,7 +79,7 @@ class DuplicateScenarioSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         request = self.context.get("request")
         user = getattr(request, "user", None)
-        if user and user.is_authenticated:
+        if user and user.is_authenticated and user.iaso_profile:
             account = user.iaso_profile.account
             self.fields["scenario_to_duplicate"].queryset = Scenario.objects.filter(account=account)
 
@@ -88,7 +91,8 @@ class DuplicateScenarioSerializer(serializers.ModelSerializer):
         for assignment in assignments:
             assignment.pk = None
             assignment.scenario = scenario
-            assignment.save()
+
+        InterventionAssignment.objects.bulk_create(assignments)
 
         return scenario
 

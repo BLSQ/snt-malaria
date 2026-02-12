@@ -29,7 +29,7 @@ msgstr "Le scenario est verouillé et ne peut être modifié."
 
 #: plugins/snt_malaria/api/scenarios/serializers.py
 msgid "Start year must be between 2024 and 2035."
-msgstr L'année de début doit être entre 2024 et 2025."
+msgstr "L'année de début doit être entre 2024 et 2035."
 
 #: plugins/snt_malaria/api/scenarios/serializers.py
 #: plugins/snt_malaria/api/scenarios/views.py

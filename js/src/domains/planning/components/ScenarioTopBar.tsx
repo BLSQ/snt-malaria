@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useCallback } from 'react';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import { Box, Typography, Theme } from '@mui/material';
@@ -18,8 +18,8 @@ import {
     UpdateScenarioModal,
 } from '../../scenarios/components/ScenarioModal';
 import { useDeleteScenario } from '../../scenarios/hooks/useDeleteScenario';
-import { Scenario } from '../../scenarios/types';
 import { useUpdateScenario } from '../../scenarios/hooks/useUpdateScenario';
+import { Scenario } from '../../scenarios/types';
 
 const styles: SxStyles = {
     content: (theme: Theme) => ({
@@ -60,11 +60,14 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
         updateScenario({ ...scenario, is_locked: !scenario.is_locked });
     };
 
-    const redirectToScenario = (scenarioId: number) => {
-        if (scenarioId) {
-            navigate(`/${baseUrls.planning}/scenarioId/${scenarioId}`);
-        }
-    };
+    const redirectToScenario = useCallback(
+        (scenarioId: number | boolean) => {
+            if (scenarioId) {
+                navigate(`/${baseUrls.planning}/scenarioId/${scenarioId}`);
+            }
+        },
+        [navigate],
+    );
 
     if (!scenario) {
         return null;

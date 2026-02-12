@@ -2,6 +2,7 @@ import { defineMessages } from 'react-intl';
 import { UseMutationResult } from 'react-query';
 import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
+import { ScenarioFormValues } from './useScenarioFormState';
 
 const MESSAGES = defineMessages({
     duplicateSuccess: {
@@ -22,13 +23,7 @@ export const useDuplicateScenario = (): UseMutationResult =>
             description,
             start_year,
             end_year,
-        }: {
-            id: number;
-            name: string;
-            description: string;
-            start_year: number;
-            end_year: number;
-        }) =>
+        }: ScenarioFormValues) =>
             postRequest(`/api/snt_malaria/scenarios/duplicate/`, {
                 scenario_to_duplicate: id,
                 name,

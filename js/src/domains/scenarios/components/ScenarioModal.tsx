@@ -1,4 +1,4 @@
-import React, { FC, useMemo, useRef } from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
 import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { Button, IconButton } from '@mui/material';
@@ -8,10 +8,15 @@ import {
     makeFullModal,
     useSafeIntl,
 } from 'bluesquare-components';
+import { FormikProvider } from 'formik';
 import { UseMutateFunction } from 'react-query';
 import { MESSAGES } from '../../messages';
 import { useCreateScenario } from '../hooks/useCreateScenario';
 import { useDuplicateScenario } from '../hooks/useDuplicateScenario';
+import {
+    ScenarioFormValues,
+    useScenarioFormState,
+} from '../hooks/useScenarioFormState';
 import { useUpdateScenario } from '../hooks/useUpdateScenario';
 import { Scenario } from '../types';
 import ScenarioForm from './ScenarioForm';
@@ -67,15 +72,15 @@ const DuplicateScenarioDialogAction: FC<ScenarioDialogActionProps> = ({
     );
 };
 
-interface ScenarioDialogProps {
+type ScenarioDialogProps = {
     isOpen: boolean;
     closeDialog: () => void;
     onClose: (shouldRedirect: number | boolean) => void;
     scenario?: Scenario;
     titleMessage?: string;
-    operation: UseMutateFunction<unknown, unknown, Scenario, unknown>;
+    operation: UseMutateFunction<unknown, unknown, ScenarioFormValues, unknown>;
     confirmMessage?: IntlMessage;
-}
+};
 
 const ScenarioDialog: FC<ScenarioDialogProps> = ({
     isOpen,
@@ -88,18 +93,7 @@ const ScenarioDialog: FC<ScenarioDialogProps> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
 
-    const callbackRef = useRef<() => void>();
-    const handleOnRef = (callback: () => void) => {
-        callbackRef.current = callback;
-    };
-
-    const handleConfirm = () => {
-        if (callbackRef?.current) {
-            callbackRef.current();
-        }
-    };
-
-    const handleSubmit = (values: Scenario) => {
+    const onSubmit = (values: ScenarioFormValues) => {
         operation(values, {
             onSuccess: (data: Scenario) => {
                 closeDialog();
@@ -107,6 +101,12 @@ const ScenarioDialog: FC<ScenarioDialogProps> = ({
             },
         });
     };
+    const formik = useScenarioFormState(scenario, onSubmit);
+
+    const handleOnClose = useCallback(() => {
+        formik.resetForm();
+        onClose(false);
+    }, [formik, onClose]);
 
     const title = useMemo(
         () =>
@@ -118,22 +118,20 @@ const ScenarioDialog: FC<ScenarioDialogProps> = ({
     return (
         <ConfirmCancelModal
             open={isOpen}
-            onClose={() => onClose(false)}
+            onClose={handleOnClose}
             id={'scenario-dialog'}
             dataTestId={'scenario-dialog'}
             titleMessage={title}
             closeDialog={closeDialog}
-            onConfirm={handleConfirm}
-            onCancel={() => onClose(false)}
+            onConfirm={formik.handleSubmit}
+            onCancel={handleOnClose}
             confirmMessage={confirmMessage}
             cancelMessage={MESSAGES.cancel}
             closeOnConfirm={false}
         >
-            <ScenarioForm
-                onSubmit={handleSubmit}
-                formValues={scenario}
-                onSubmitFormRef={handleOnRef}
-            />
+            <FormikProvider value={formik}>
+                <ScenarioForm />
+            </FormikProvider>
         </ConfirmCancelModal>
     );
 };

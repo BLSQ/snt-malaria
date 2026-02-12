@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import {
     Box,
@@ -49,11 +49,14 @@ export const Scenarios: FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const anchorRef = React.useRef<HTMLDivElement>(null);
 
-    const redirectToScenario = (scenarioId: number) => {
-        if (scenarioId) {
-            navigate(`/${baseUrls.planning}/scenarioId/${scenarioId}`);
-        }
-    };
+    const redirectToScenario = useCallback(
+        (scenarioId: number | boolean) => {
+            if (scenarioId) {
+                navigate(`/${baseUrls.planning}/scenarioId/${scenarioId}`);
+            }
+        },
+        [navigate],
+    );
 
     const togglePopover = () => {
         setIsOpen(!isOpen);
