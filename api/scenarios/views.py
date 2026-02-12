@@ -23,7 +23,12 @@ from plugins.snt_malaria.api.scenarios.utils import (
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 from plugins.snt_malaria.models.intervention import Intervention
 
-from .serializers import DuplicateScenarioSerializer, ImportScenarioSerializer, ScenarioSerializer
+from .serializers import (
+    DuplicateScenarioSerializer,
+    ImportScenarioSerializer,
+    ScenarioSerializer,
+    ScenarioWriteSerializer,
+)
 
 
 class ScenarioViewSet(viewsets.ModelViewSet):
@@ -43,6 +48,13 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     serializer_class = ScenarioSerializer
     ordering_fields = ["id", "name"]
     http_method_names = ["get", "post", "put", "delete"]
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return ScenarioSerializer
+        if self.action == "duplicate":
+            return DuplicateScenarioSerializer
+        return ScenarioWriteSerializer
 
     def get_queryset(self):
         return Scenario.objects.filter(account=self.request.user.iaso_profile.account)

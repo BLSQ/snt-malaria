@@ -16,9 +16,6 @@ from plugins.snt_malaria.models.intervention import InterventionAssignment
 class ScenarioSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
 
-    SCENARIO_MIN_YEAR = 2024
-    SCENARIO_MAX_YEAR = 2035
-
     class Meta:
         model = Scenario
         fields = [
@@ -38,8 +35,23 @@ class ScenarioSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+
+class ScenarioWriteSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=True)
+    description = serializers.CharField(required=False, allow_blank=True)
+    start_year = serializers.IntegerField(required=True)
+    end_year = serializers.IntegerField(required=True)
+
+    SCENARIO_MIN_YEAR = 2024
+    SCENARIO_MAX_YEAR = 2035
+
+    class Meta:
+        model = Scenario
+        fields = ["id", "name", "description", "start_year", "end_year"]
+        read_ony_fields = ["id"]
+
     def validate_start_year(self, value):
-        if value < ScenarioSerializer.SCENARIO_MIN_YEAR or value > ScenarioSerializer.SCENARIO_MAX_YEAR:
+        if value < ScenarioWriteSerializer.SCENARIO_MIN_YEAR or value > ScenarioWriteSerializer.SCENARIO_MAX_YEAR:
             raise serializers.ValidationError(_("Start year must be between 2024 and 2035."))
 
         if self.initial_data.get("end_year") and value > int(self.initial_data["end_year"]):
@@ -48,9 +60,6 @@ class ScenarioSerializer(serializers.ModelSerializer):
         return value
 
     def validate_name(self, value):
-        if not value:
-            raise serializers.ValidationError(_("Name cannot be empty."))
-
         # If we update, we don't want to check for duplicates as long as the name is not changed
         if self.instance is not None and self.instance.name == value:
             return value
@@ -64,12 +73,8 @@ class ScenarioSerializer(serializers.ModelSerializer):
         return value
 
 
-class DuplicateScenarioSerializer(serializers.ModelSerializer):
+class DuplicateScenarioSerializer(ScenarioWriteSerializer):
     scenario_to_duplicate = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none(), required=True)
-    name = serializers.CharField(required=True)
-    description = serializers.CharField(required=False, allow_blank=True)
-    start_year = serializers.IntegerField(required=True)
-    end_year = serializers.IntegerField(required=True)
 
     class Meta:
         model = Scenario

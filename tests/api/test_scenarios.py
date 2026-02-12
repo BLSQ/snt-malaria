@@ -232,8 +232,12 @@ class ScenarioAPITestCase(APITestCase):
     def test_scenario_duplicate_missing_body(self):
         url = reverse("scenarios-duplicate")
         response = self.client.post(url, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(str(response.data["scenario_to_duplicate"][0]), "This field is required.")
+        json_result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+
+        self.assertEqual(json_result["name"][0], "This field is required.")
+        self.assertEqual(json_result["start_year"][0], "This field is required.")
+        self.assertEqual(json_result["end_year"][0], "This field is required.")
+
         self.assertEqual(Scenario.objects.count(), 1)
 
     def test_scenario_export_to_csv(self):
