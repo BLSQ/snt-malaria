@@ -3,11 +3,12 @@ from unittest.mock import Mock
 from rest_framework.exceptions import PermissionDenied
 
 from iaso.models.base import Account
-from iaso.test import APITestCase, TestCase
+from iaso.test import TestCase
 from plugins.snt_malaria.api.budget_assumptions.serializers import (
+    BudgetAssumptionsCreateSerializer,
     BudgetAssumptionsQuerySerializer,
     BudgetAssumptionsReadSerializer,
-    BudgetAssumptionsCreateSerializer, BudgetAssumptionsUpdateSerializer,
+    BudgetAssumptionsUpdateSerializer,
 )
 from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
@@ -401,7 +402,9 @@ class BudgetAssumptionsCreateSerializerTests(TestCase):
             "doses_per_child": 6,
         }
         serializer = BudgetAssumptionsCreateSerializer(data=data, context=new_context)
-        with self.assertRaisesMessage(PermissionDenied, "User does not have permission to modify assumptions for this scenario"):
+        with self.assertRaisesMessage(
+            PermissionDenied, "User does not have permission to modify assumptions for this scenario"
+        ):
             serializer.is_valid()
 
 
