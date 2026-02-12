@@ -41,7 +41,7 @@ function mergeByKey<T>(
 function mergeCostLines(lines: BudgetInterventionCostLine[]) {
     return mergeByKey(
         lines,
-        l => l.category,
+        l => l.category || l.cost_class,
         (a, b) => ({ ...a, cost: a.cost + b.cost }),
     );
 }
@@ -71,6 +71,10 @@ function mergeOrgUnits(orgUnits: BudgetOrgUnit[]) {
             interventions: mergeInterventions([
                 ...(a.interventions ?? []),
                 ...(b.interventions ?? []),
+            ]),
+            cost_breakdown: mergeCostLines([
+                ...(a.cost_breakdown ?? []),
+                ...(b.cost_breakdown ?? []),
             ]),
         }),
     );
