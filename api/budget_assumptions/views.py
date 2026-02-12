@@ -5,10 +5,11 @@ from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS
 
 from iaso.api.apps import viewsets
 from plugins.snt_malaria.api.budget_assumptions.filters import BudgetAssumptionsListFilter
+from plugins.snt_malaria.api.budget_assumptions.permissions import BudgetAssumptionsPermission
 from plugins.snt_malaria.api.budget_assumptions.serializers import (
     BudgetAssumptionsQuerySerializer,
-    BudgetAssumptionsSerializer,
-    BudgetAssumptionsWriteSerializer,
+    BudgetAssumptionsReadSerializer,
+    BudgetAssumptionsCreateSerializer, BudgetAssumptionsUpdateSerializer,
 )
 from plugins.snt_malaria.models import BudgetAssumptions, Intervention
 
@@ -17,10 +18,13 @@ class BudgetAssumptionsViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "put"]
     filter_backends = [DjangoFilterBackend]
     filterset_class = BudgetAssumptionsListFilter
+    permission_classes = [BudgetAssumptionsPermission]
 
     def get_serializer_class(self):
-        if self.action == "create" or self.action == "update":
-            return BudgetAssumptionsWriteSerializer
+        if self.action == "create":
+            return BudgetAssumptionsCreateSerializer
+        if self.action == "update":
+            return BudgetAssumptionsUpdateSerializer
         return BudgetAssumptionsQuerySerializer
 
     def get_queryset(self):
@@ -72,7 +76,7 @@ class BudgetAssumptionsViewSet(viewsets.ModelViewSet):
 
             all_assumptions.append(default_budget)
 
-        assumptions_serializer = BudgetAssumptionsSerializer(all_assumptions, many=True)
+        assumptions_serializer = BudgetAssumptionsReadSerializer(all_assumptions, many=True)
 
         return Response(assumptions_serializer.data, status=status.HTTP_200_OK)
 
