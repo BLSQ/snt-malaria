@@ -1,6 +1,10 @@
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Grid } from '@mui/material';
-import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import {
+    LoadingSpinner,
+    useRedirectToReplace,
+    useSafeIntl,
+} from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
 import { succesfullSnackBar } from 'Iaso/constants/snackBars';
@@ -21,6 +25,7 @@ import { InterventionAssignments } from './components/interventionAssignment/Int
 import { InterventionsPlan } from './components/interventionPlan/InterventionsPlan';
 import { Map } from './components/map';
 import { SideMapList } from './components/maps/SideMapList';
+import { PlanningFiltersSidebar } from './components/PlanningFiltersSidebar';
 import { ScenarioTopBar } from './components/ScenarioTopBar';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetLatestCalculatedBudget } from './hooks/useGetLatestCalculatedBudget';
@@ -29,12 +34,14 @@ import {
     useGetMetricOrgUnits,
     useGetMetricValues,
 } from './hooks/useGetMetrics';
-import { useGetOrgUnits } from './hooks/useGetOrgUnits';
+import { useGetOrgUnits, useGetOrgUnitsByType } from './hooks/useGetOrgUnits';
 import { Intervention } from './types/interventions';
 import { MetricsFilters, MetricType } from './types/metrics';
 
 type PlanningParams = {
-    scenarioId: number;
+    scenarioId: string;
+    displayOrgUnitTypeId?: string;
+    displayOrgUnitId?: string;
 };
 
 const styles: SxStyles = {
@@ -45,12 +52,60 @@ export const Planning: FC = () => {
     const params = useParamsObject(
         baseUrls.planning,
     ) as unknown as PlanningParams;
+    const redirectToReplace = useRedirectToReplace();
     const { data: scenario } = useGetScenario(params.scenarioId);
-    const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits();
     const { formatMessage } = useSafeIntl();
 
     const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
     const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // Read display options from URL params
+    const selectedDisplayOrgUnitTypeId = params.displayOrgUnitTypeId
+        ? Number(params.displayOrgUnitTypeId)
+        : null;
+    const selectedDisplayOrgUnitId = params.displayOrgUnitId
+        ? Number(params.displayOrgUnitId)
+        : null;
+
+    // Fetch org units with optional parent filter (API handles filtering)
+    const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits(
+        selectedDisplayOrgUnitId,
+    );
+
+    // Look up the selected display org unit name (served from React Query cache)
+    const { data: orgUnitsByType } = useGetOrgUnitsByType(
+        selectedDisplayOrgUnitTypeId,
+    );
+    const selectedDisplayOrgUnitName = selectedDisplayOrgUnitId
+        ? orgUnitsByType?.find(ou => ou.id === selectedDisplayOrgUnitId)?.name
+        : undefined;
+
+    const handleDisplayOrgUnitTypeChange = useCallback(
+        (orgUnitTypeId: number | null) => {
+            redirectToReplace(baseUrls.planning, {
+                ...params,
+                displayOrgUnitTypeId: orgUnitTypeId ?? undefined,
+                displayOrgUnitId: undefined, // Clear org unit when type changes
+            });
+            // Clear selection when filter changes
+            setSelectionOnMap([]);
+        },
+        [params, redirectToReplace],
+    );
+
+    const handleDisplayOrgUnitChange = useCallback(
+        (orgUnitId: number | null) => {
+            redirectToReplace(baseUrls.planning, {
+                ...params,
+                displayOrgUnitId: orgUnitId ?? undefined,
+            });
+            // Clear selection when filter changes
+            setSelectionOnMap([]);
+        },
+        [params, redirectToReplace],
+    );
+
     const [selectedInterventions, setSelectedInterventions] = useState<{
         [categoryId: number]: Intervention;
     }>({});
@@ -65,6 +120,21 @@ export const Planning: FC = () => {
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(scenario?.id);
+
+    const filteredInterventionPlans = useMemo(() => {
+        if (!interventionPlans) return [];
+        if (!orgUnits) return interventionPlans;
+        const filteredOrgUnitIds = new Set(orgUnits.map(ou => ou.id));
+
+        return interventionPlans
+            .map(plan => ({
+                ...plan,
+                org_units: plan.org_units.filter(ou =>
+                    filteredOrgUnitIds.has(ou.id),
+                ),
+            }))
+            .filter(plan => plan.org_units.length > 0);
+    }, [interventionPlans, orgUnits]);
 
     useEffect(() => {
         if (
@@ -161,7 +231,13 @@ export const Planning: FC = () => {
             {isLoadingOrgUnits && <LoadingSpinner />}
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
             <PageContainer>
-                {scenario && <ScenarioTopBar scenario={scenario} />}
+                {scenario && (
+                    <ScenarioTopBar
+                        scenario={scenario}
+                        isSidebarOpen={isSidebarOpen}
+                        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+                    />
+                )}
                 <Grid container spacing={1}>
                     <Grid item xs={12} md={7}>
                         <PaperContainer>
@@ -191,7 +267,14 @@ export const Planning: FC = () => {
                             </PaperFullHeight>
                         </PaperContainer>
                     </Grid>
-                    <Grid item xs={12} md={5}>
+                    <Grid
+                        item
+                        xs={12}
+                        md={isSidebarOpen ? 3 : 5}
+                        sx={{
+                            transition: 'flex-basis 0.3s ease-in-out',
+                        }}
+                    >
                         <PaperFullHeight>
                             {isLoading && <p>Loading data...</p>}
                             {metricCategories && orgUnits && (
@@ -202,6 +285,22 @@ export const Planning: FC = () => {
                             )}
                         </PaperFullHeight>
                     </Grid>
+                    {isSidebarOpen && orgUnits && (
+                        <Grid item xs={12} md={2}>
+                            <PaperFullHeight>
+                                <PlanningFiltersSidebar
+                                    selectedOrgUnitTypeId={
+                                        selectedDisplayOrgUnitTypeId
+                                    }
+                                    selectedOrgUnitId={selectedDisplayOrgUnitId}
+                                    onOrgUnitTypeChange={
+                                        handleDisplayOrgUnitTypeChange
+                                    }
+                                    onOrgUnitChange={handleDisplayOrgUnitChange}
+                                />
+                            </PaperFullHeight>
+                        </Grid>
+                    )}
                 </Grid>
                 <Grid container spacing={1} sx={{ mt: 0 }}>
                     {scenario?.is_locked ? null : (
@@ -232,15 +331,17 @@ export const Planning: FC = () => {
                         <InterventionsPlan
                             scenarioId={params.scenarioId}
                             totalOrgUnitCount={orgUnits?.length ?? 0}
-                            interventionPlans={interventionPlans ?? []}
+                            interventionPlans={filteredInterventionPlans}
                             isLoadingPlans={isLoadingPlans}
                             disabled={scenario?.is_locked}
+                            displayOrgUnitId={selectedDisplayOrgUnitId}
                         />
                     </Grid>
                     {orgUnits && budget && (
                         <Budgeting
                             budgets={budget?.results}
                             orgUnits={orgUnits}
+                            filterLabel={selectedDisplayOrgUnitName}
                         />
                     )}
                 </Grid>

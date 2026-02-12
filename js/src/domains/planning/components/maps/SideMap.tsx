@@ -16,6 +16,8 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
 
+import { FitBounds } from '../../../../components/FitBounds';
+import { InvalidateOnResize } from '../../../../components/InvalidateOnResize';
 import { mapTheme } from '../../../../constants/map-theme';
 import { useGetMetricValues } from '../../hooks/useGetMetrics';
 import {
@@ -110,6 +112,11 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
                 zoomSnap={defaultZoomSnap}
                 zoomDelta={defaultZoomDelta}
             >
+                <InvalidateOnResize />
+                <FitBounds
+                    bounds={bounds}
+                    boundsOptions={boundsOptions}
+                />
                 <ZoomControl position="bottomright" />
                 <TileLayer url="" attribution="" />
                 {orgUnits.map(orgUnit => (
