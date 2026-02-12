@@ -50,7 +50,7 @@ export const Scenarios: FC = () => {
     const anchorRef = React.useRef<HTMLDivElement>(null);
 
     const redirectToScenario = useCallback(
-        (scenarioId: number | boolean) => {
+        (scenarioId: number | false) => {
             if (scenarioId) {
                 navigate(`/${baseUrls.planning}/scenarioId/${scenarioId}`);
             }

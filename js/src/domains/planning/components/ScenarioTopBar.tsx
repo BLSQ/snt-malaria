@@ -61,7 +61,7 @@ export const ScenarioTopBar: FC<Props> = ({ scenario }) => {
     };
 
     const redirectToScenario = useCallback(
-        (scenarioId: number | boolean) => {
+        (scenarioId: number | false) => {
             if (scenarioId) {
                 navigate(`/${baseUrls.planning}/scenarioId/${scenarioId}`);
             }
