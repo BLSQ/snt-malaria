@@ -11,21 +11,21 @@ import {
     MetricTypeCategory,
 } from '../../../planning/types/metrics';
 import { useGetChildError } from '../../hooks/useGetChildError';
-import { MetricTypeRule } from '../../types/scenarioRule';
+import { MetricTypeCriteria } from '../../types/scenarioRule';
 import { DropdownButton } from './DropdownButton';
 
 type Props = {
-    metricTypeRules: MetricTypeRule[];
+    metricTypeCriterion: MetricTypeCriteria[];
     onAdd: (metricTypeId: number) => void;
     onRemove: (index: number) => void;
-    touched: FormikTouched<MetricTypeRule>[] | undefined;
-    errors: string | string[] | FormikErrors<MetricTypeRule>[] | undefined;
+    touched: FormikTouched<MetricTypeCriteria>[] | undefined;
+    errors: string | string[] | FormikErrors<MetricTypeCriteria>[] | undefined;
     onUpdateField: (index: number, field: string, value: any) => void;
     metricTypeCategories: MetricTypeCategory[];
 };
 
 const styles: Record<string, SxProps<Theme>> = {
-    metricRuleContainer: {
+    metricCriteriaContainer: {
         display: 'flex',
         mb: 2,
         gap: 1,
@@ -48,8 +48,8 @@ const styles: Record<string, SxProps<Theme>> = {
     },
 };
 
-export const MetricRulesForm: FC<Props> = ({
-    metricTypeRules,
+export const MetricCriterionForm: FC<Props> = ({
+    metricTypeCriterion,
     onAdd,
     onRemove,
     errors,
@@ -82,15 +82,18 @@ export const MetricRulesForm: FC<Props> = ({
         [metricTypes],
     );
 
-    const getChildError = useGetChildError<MetricTypeRule>({ errors, touched });
+    const getChildError = useGetChildError<MetricTypeCriteria>({
+        errors,
+        touched,
+    });
 
     return (
         <Box>
-            {metricTypeRules.map((rule, index) => (
-                <MetricRuleForm
-                    key={rule.metricType}
-                    metricTypeRule={rule}
-                    metricType={getMetricType(rule.metricType)}
+            {metricTypeCriterion.map((criteria, index) => (
+                <MetricCriteriaForm
+                    key={criteria.metricType}
+                    metricTypeCriteria={criteria}
+                    metricType={getMetricType(criteria.metricType)}
                     onUpdateField={(field, value) =>
                         onUpdateField(index, field, value)
                     }
@@ -99,7 +102,7 @@ export const MetricRulesForm: FC<Props> = ({
                 />
             ))}
             <DropdownButton
-                label={MESSAGES.addMetricRule}
+                label={MESSAGES.addMetricCriteria}
                 options={metricTypeOptions}
                 onClick={onAdd}
                 size="small"
@@ -109,15 +112,15 @@ export const MetricRulesForm: FC<Props> = ({
     );
 };
 
-type MetricRuleFormProps = {
-    metricTypeRule: MetricTypeRule;
+type MetricCriteriaFormProps = {
+    metricTypeCriteria: MetricTypeCriteria;
     metricType?: MetricType;
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
     getErrors: (keyValue: string) => string[];
 };
 
-const ruleOptions = [
+const operatorOptions = [
     { value: '>', label: '>' },
     { value: '>=', label: '>=' },
     { value: '<', label: '<' },
@@ -125,8 +128,8 @@ const ruleOptions = [
     { value: '==', label: '=' },
 ];
 
-export const MetricRuleForm: FC<MetricRuleFormProps> = ({
-    metricTypeRule,
+export const MetricCriteriaForm: FC<MetricCriteriaFormProps> = ({
+    metricTypeCriteria: metricTypeCriteria,
     metricType,
     onUpdateField,
     onRemove,
@@ -152,7 +155,7 @@ export const MetricRuleForm: FC<MetricRuleFormProps> = ({
     );
 
     return (
-        <Box sx={styles.metricRuleContainer}>
+        <Box sx={styles.metricCriteriaContainer}>
             <Box sx={styles.labelWrapper}>
                 <Tooltip title={metricType?.name}>
                     <Typography
@@ -168,8 +171,8 @@ export const MetricRuleForm: FC<MetricRuleFormProps> = ({
             <InputComponent
                 keyValue="operator"
                 type="select"
-                value={metricTypeRule.operator}
-                options={ruleOptions}
+                value={metricTypeCriteria.operator}
+                options={operatorOptions}
                 onChange={onUpdateField}
                 errors={getErrors('operator')}
                 clearable={false}
@@ -178,21 +181,22 @@ export const MetricRuleForm: FC<MetricRuleFormProps> = ({
             />
             {metricType?.legend_type === 'ordinal' ? (
                 <InputComponent
-                    keyValue="value"
+                    keyValue="string_value"
                     type="select"
-                    value={metricTypeRule.value}
+                    value={metricTypeCriteria.string_value}
                     onChange={onUpdateField}
-                    errors={getErrors('value')}
-                    wrapperSx={{ width: 100 }}
+                    errors={getErrors('string_value')}
+                    wrapperSx={{ flexGrow: 1 }}
                     withMarginTop={false}
                     options={ordinalOptions}
+                    clearable={false}
                 />
             ) : (
                 <>
                     <InputComponent
                         keyValue="value"
                         type="number"
-                        value={metricTypeRule.value}
+                        value={metricTypeCriteria.value}
                         onChange={onUpdateField}
                         errors={getErrors('value')}
                         wrapperSx={{ width: 100 }}

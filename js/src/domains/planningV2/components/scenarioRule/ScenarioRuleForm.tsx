@@ -12,8 +12,8 @@ import {
     defaultMetricRule,
     ScenarioRuleFormValues,
 } from '../../hooks/useScenarioRuleFormState';
-import { InterventionRulesForm } from './InterventionRulesForm';
-import { MetricRulesForm } from './MetricRulesForm';
+import { InterventionCriterionForm } from './InterventionCriterionForm';
+import { MetricCriterionForm } from './MetricCriterionForm';
 
 const ScenarioRuleHeading: FC<{ chipLabel: string; label: string }> = ({
     chipLabel,
@@ -68,8 +68,8 @@ export const ScenarioRuleForm: FC<ScenarioRuleFormProps> = ({
             >
                 <Box mb={3}>
                     <ScenarioRuleHeading chipLabel="1" label="Interventions" />
-                    <InterventionRulesForm
-                        interventionRules={values.interventionRules}
+                    <InterventionCriterionForm
+                        interventionCriterion={values.interventionRules}
                         interventionCategories={interventionCategories}
                         onAdd={interventionCategory =>
                             addChildValue(
@@ -100,9 +100,9 @@ export const ScenarioRuleForm: FC<ScenarioRuleFormProps> = ({
                         chipLabel="2"
                         label="Selection rules"
                     />
-                    <MetricRulesForm
+                    <MetricCriterionForm
                         metricTypeCategories={metricTypeCategories}
-                        metricTypeRules={values.metricTypeRules}
+                        metricTypeCriterion={values.metricTypeRules}
                         onAdd={metricType =>
                             addChildValue(
                                 'metricTypeRules',

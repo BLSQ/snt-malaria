@@ -10,11 +10,11 @@ import {
     InterventionCategory,
 } from '../../../planning/types/interventions';
 import { useGetChildError } from '../../hooks/useGetChildError';
-import { InterventionRule } from '../../types/scenarioRule';
+import { InterventionCriteria } from '../../types/scenarioRule';
 import { DropdownButton } from './DropdownButton';
 
 const styles: SxStyles = {
-    interventionRuleContainer: {
+    interventionCriteriaContainer: {
         display: 'flex',
         mb: 2,
         gap: 1,
@@ -41,17 +41,21 @@ const styles: SxStyles = {
 };
 
 type Props = {
-    interventionRules: InterventionRule[];
+    interventionCriterion: InterventionCriteria[];
     onAdd: (interventionCategoryId: number) => void;
     onRemove: (index: number) => void;
-    touched: FormikTouched<InterventionRule>[] | undefined;
-    errors: string | string[] | FormikErrors<InterventionRule>[] | undefined;
+    touched: FormikTouched<InterventionCriteria>[] | undefined;
+    errors:
+        | string
+        | string[]
+        | FormikErrors<InterventionCriteria>[]
+        | undefined;
     onUpdateField: (index: number, field: string, value: any) => void;
     interventionCategories: InterventionCategory[];
 };
 
-export const InterventionRulesForm: FC<Props> = ({
-    interventionRules,
+export const InterventionCriterionForm: FC<Props> = ({
+    interventionCriterion,
     onAdd,
     onRemove,
     errors,
@@ -63,11 +67,11 @@ export const InterventionRulesForm: FC<Props> = ({
         () =>
             interventionCategories.filter(
                 ic =>
-                    !interventionRules.some(
+                    !interventionCriterion.some(
                         ir => ir.interventionCategory === ic.id,
                     ),
             ),
-        [interventionCategories, interventionRules],
+        [interventionCategories, interventionCriterion],
     );
 
     // filter this based on already applied categories.
@@ -88,7 +92,7 @@ export const InterventionRulesForm: FC<Props> = ({
         [interventionCategories],
     );
 
-    const getChildError = useGetChildError<InterventionRule>({
+    const getChildError = useGetChildError<InterventionCriteria>({
         errors,
         touched,
     });
@@ -102,12 +106,12 @@ export const InterventionRulesForm: FC<Props> = ({
         [interventionCategories],
     );
 
-    return interventionRules ? (
+    return interventionCriterion ? (
         <Box>
-            {interventionRules.map((i, index) => (
-                <InterventionRuleForm
-                    key={`intervention_rule_${i.interventionCategory}`}
-                    interventionRule={i}
+            {interventionCriterion.map((i, index) => (
+                <InterventionCriteriaForm
+                    key={`intervention_criteria_${i.interventionCategory}`}
+                    interventionCriteria={i}
                     interventions={getInterventions(i.interventionCategory)}
                     categoryName={getCategoryName(i.interventionCategory)}
                     onUpdateField={(field, value) =>
@@ -118,7 +122,7 @@ export const InterventionRulesForm: FC<Props> = ({
                 />
             ))}
             <DropdownButton
-                label={MESSAGES.addInterventionRule}
+                label={MESSAGES.addInterventionCriteria}
                 options={interventionCategoryOptions}
                 onClick={onAdd}
                 size="small"
@@ -127,9 +131,9 @@ export const InterventionRulesForm: FC<Props> = ({
     ) : null;
 };
 
-type InterventionRuleFormProps = {
+type InterventionCriteriaFormProps = {
     interventions: Intervention[];
-    interventionRule: InterventionRule;
+    interventionCriteria: InterventionCriteria;
     categoryName: string;
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
@@ -150,8 +154,8 @@ const coverageOptions = [
     { value: 100, label: '100%' },
 ];
 
-const InterventionRuleForm: FC<InterventionRuleFormProps> = ({
-    interventionRule,
+const InterventionCriteriaForm: FC<InterventionCriteriaFormProps> = ({
+    interventionCriteria,
     interventions,
     categoryName,
     onUpdateField,
@@ -164,7 +168,7 @@ const InterventionRuleForm: FC<InterventionRuleFormProps> = ({
     );
 
     return (
-        <Box sx={styles.interventionRuleContainer}>
+        <Box sx={styles.interventionCriteriaContainer}>
             <Box sx={styles.labelWrapper}>
                 <Tooltip title={categoryName}>
                     <Typography
@@ -187,7 +191,7 @@ const InterventionRuleForm: FC<InterventionRuleFormProps> = ({
                 clearable={false}
                 options={interventionOptions}
                 value={
-                    interventionRule.intervention ||
+                    interventionCriteria.intervention ||
                     interventionOptions[0]?.value
                 }
                 onChange={onUpdateField}
@@ -201,7 +205,7 @@ const InterventionRuleForm: FC<InterventionRuleFormProps> = ({
                 wrapperSx={styles.coverageWrapper}
                 clearable={false}
                 options={coverageOptions}
-                value={interventionRule.coverage}
+                value={interventionCriteria.coverage}
                 onChange={onUpdateField}
                 errors={getErrors('coverage')}
             />

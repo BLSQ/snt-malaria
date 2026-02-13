@@ -3,22 +3,26 @@ import { useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { MESSAGES } from '../../messages';
-import { InterventionRule, MetricTypeRule } from '../types/scenarioRule';
+import {
+    InterventionCriteria,
+    MetricTypeCriteria,
+} from '../types/scenarioRule';
 
 export type ScenarioRuleFormValues = {
     name: string;
     color: string;
-    interventionRules: InterventionRule[];
-    metricTypeRules: MetricTypeRule[];
+    interventionRules: InterventionCriteria[];
+    metricTypeRules: MetricTypeCriteria[];
 };
 
-export const defaultMetricRule: MetricTypeRule = {
+export const defaultMetricRule: MetricTypeCriteria = {
     metricType: undefined,
     operator: '>',
     value: 0,
+    string_value: '',
 };
 
-export const defaultInterventionRule: InterventionRule = {
+export const defaultInterventionRule: InterventionCriteria = {
     intervention: undefined,
     interventionCategory: undefined,
     coverage: 70,
@@ -59,9 +63,11 @@ const useValidation = () => {
                         operator: Yup.string().required(
                             formatMessage(MESSAGES.required),
                         ),
-                        value: Yup.number().required(
-                            formatMessage(MESSAGES.required),
-                        ),
+                        value: Yup.number(),
+                        // .required(
+                        //     formatMessage(MESSAGES.required),
+                        // ),
+                        string_value: Yup.string(),
                     }),
                 ),
             }),
