@@ -4,8 +4,10 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.management import call_command
 from django.http import HttpResponse
 from django.template import loader
+from rest_framework.exceptions import PermissionDenied
 
 from iaso.models import Account
+from plugins.snt_malaria.permissions import SNT_SETTINGS_WRITE_PERMISSION
 
 
 @staff_member_required
@@ -17,6 +19,10 @@ def import_openhexa_metrics(request):
     with account_id parameter. The workspace slug and dataset slug are automatically
     retrieved from the OpenHEXAWorkspace model associated with the account.
     """
+    user = request.user
+    if not user.has_perm(SNT_SETTINGS_WRITE_PERMISSION.full_name()):
+        raise PermissionDenied("User does not have permission to edit settings")
+
     if request.method == "POST":
         account_id = request.POST.get("account_id", "")
 
