@@ -1,14 +1,22 @@
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
 from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 from plugins.snt_malaria.models.scenario import Scenario
+from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
 
 
 class BudgetAssumptionsQuerySerializer(serializers.Serializer):
-    scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.all())
+    scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user = self.context["request"].user
+        account = user.iaso_profile.account
+        self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
 
 
-class BudgetAssumptionsSerializer(serializers.ModelSerializer):
+class BudgetAssumptionsReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = BudgetAssumptions
         fields = (
@@ -30,10 +38,7 @@ class BudgetAssumptionsSerializer(serializers.ModelSerializer):
         )
 
 
-class BudgetAssumptionsWriteSerializer(serializers.ModelSerializer):
-    scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.all())
-    intervention_code = serializers.CharField(max_length=100)
-
+class BudgetAssumptionsUpdateSerializer(serializers.ModelSerializer):
     divisor = serializers.DecimalField(min_value=0, max_value=9, max_digits=3, decimal_places=2)
     bale_size = serializers.IntegerField(min_value=0, max_value=999)
     buffer_mult = serializers.DecimalField(min_value=0, max_value=9, max_digits=3, decimal_places=2)
@@ -49,10 +54,7 @@ class BudgetAssumptionsWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BudgetAssumptions
-        fields = (
-            "id",
-            "scenario",
-            "intervention_code",
+        fields = [
             "coverage",
             "divisor",
             "bale_size",
@@ -65,4 +67,31 @@ class BudgetAssumptionsWriteSerializer(serializers.ModelSerializer):
             "touchpoints",
             "tablet_factor",
             "doses_per_child",
-        )
+        ]
+
+
+class BudgetAssumptionsCreateSerializer(BudgetAssumptionsUpdateSerializer):
+    scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
+    intervention_code = serializers.CharField(max_length=100)
+
+    class Meta:
+        model = BudgetAssumptions
+        fields = [
+            *BudgetAssumptionsUpdateSerializer.Meta.fields,
+            "id",
+            "scenario",
+            "intervention_code",
+        ]
+        read_only_fields = ["id"]  # id is added so that frontend receives it after creation
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user = self.context["request"].user
+        account = user.iaso_profile.account
+        self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
+
+    def validate_scenario(self, value):
+        user = self.context["request"].user
+        if value.created_by != user and not user.has_perm(SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()):
+            raise PermissionDenied("User does not have permission to modify assumptions for this scenario")
+        return value

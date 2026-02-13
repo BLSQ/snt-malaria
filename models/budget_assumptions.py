@@ -9,6 +9,11 @@ class BudgetAssumptions(models.Model):
         unique_together = [["scenario", "intervention_code"]]
 
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="scenario")
+    # ideally this should be an intervention FK, but this model interacts with the budget calculator, which has
+    # a different intervention list, so codes are reused by multiple interventions.
+    # currently, the frontend prevents assumptions from being created with the same code, but this is currently possible
+    # here at the model level
+    # TODO: make it an enum instead
     intervention_code = models.CharField(max_length=100)
     divisor = models.DecimalField(max_digits=3, decimal_places=2)
     bale_size = models.IntegerField()

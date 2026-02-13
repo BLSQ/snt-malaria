@@ -1,6 +1,6 @@
 import os
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -13,6 +13,12 @@ from plugins.snt_malaria.models import (
     InterventionCategory,
     InterventionCostBreakdownLine,
     Scenario,
+)
+from plugins.snt_malaria.permissions import (
+    SNT_SCENARIO_BASIC_WRITE_PERMISSION,
+    SNT_SCENARIO_FULL_WRITE_PERMISSION,
+    SNT_SETTINGS_READ_PERMISSION,
+    SNT_SETTINGS_WRITE_PERMISSION,
 )
 
 from .support.demo_scenario_seeder import DemoScenarioSeeder
@@ -64,23 +70,36 @@ class Command(BaseCommand):
 
         with transaction.atomic():
             # Demo user
-            admin_user = User(
+            demo_user = User(
                 username="demo",
                 email="demo@bluesquarehub.com",
                 first_name="Demo",
                 last_name="User",
-                is_staff=True,
-                is_superuser=True,
+                is_staff=False,
+                is_superuser=False,
             )
-            admin_user.set_password("demo")
-            admin_user.save()
+            demo_user.set_password("demo")
+            demo_user.save()
+
+            snt_permission_codenames = [
+                permission.codename
+                for permission in [
+                    SNT_SCENARIO_BASIC_WRITE_PERMISSION,
+                    SNT_SCENARIO_FULL_WRITE_PERMISSION,
+                    SNT_SETTINGS_READ_PERMISSION,
+                    SNT_SETTINGS_WRITE_PERMISSION,
+                ]
+            ]
+            snt_permissions = Permission.objects.filter(codename__in=snt_permission_codenames)
+            demo_user.user_permissions.set(snt_permissions)
+
             self.stdout.write(f"Created new admin user: {DEMO_USER_USERNAME} / {DEMO_USER_PASSWORD}")
 
             # Demo account
             account = Account.objects.create(name=DEMO_ACCOUNT_NAME)
             self.stdout.write(f"Created Account: {account.name}")
 
-            profile = Profile.objects.create(user=admin_user, account=account)
+            profile = Profile.objects.create(user=demo_user, account=account)
             project = Project.objects.create(name="Burkina Faso Project", account=account, app_id="burkina")
             profile.projects.add(project)
 
@@ -106,7 +125,7 @@ class Command(BaseCommand):
                     source=data_source,
                     version_number=source_version.number,
                     validation_status="VALID",
-                    user=admin_user,
+                    user=demo_user,
                     description="Burkina Faso OUs imported from GPKG",
                     task=None,
                 )
@@ -142,7 +161,7 @@ class Command(BaseCommand):
                 f"\n  - Project: {project.name} (ID: {project.id})"
                 f"\n  - DataSource: {data_source.name} (ID: {data_source.id})"
                 f"\n  - SourceVersion: {source_version.number} (ID: {source_version.id})"
-                f"\n  - Profile: {admin_user.username} -> {account.name}"
+                f"\n  - Profile: {demo_user.username} -> {account.name}"
             )
             self.stdout.write(self.style.SUCCESS("\nDemo user created with credentials:"))
             self.stdout.write(self.style.SUCCESS(f"\tUsername: {DEMO_USER_USERNAME}"))
