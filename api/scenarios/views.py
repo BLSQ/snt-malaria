@@ -23,13 +23,13 @@ from plugins.snt_malaria.api.scenarios.utils import (
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 from plugins.snt_malaria.models.intervention import Intervention
 
+from .permissions import ScenarioPermission
 from .serializers import (
     DuplicateScenarioSerializer,
     ImportScenarioSerializer,
     ScenarioSerializer,
     ScenarioWriteSerializer,
 )
-from .permissions import ScenarioPermission
 
 
 class ScenarioViewSet(viewsets.ModelViewSet):
