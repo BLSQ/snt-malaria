@@ -1,5 +1,6 @@
 import React from 'react';
 import { FormatListBulletedOutlined, Settings } from '@mui/icons-material';
+import { SETTINGS_READ } from './permissions';
 
 export const menu = [
     {
@@ -11,7 +12,7 @@ export const menu = [
     {
         label: 'Settings',
         key: 'snt_malaria/settings',
-        permissions: ['iaso_snt_malaria_admin'],
+        permissions: [SETTINGS_READ],
         icon: props => <Settings {...props} />,
     },
 ];
