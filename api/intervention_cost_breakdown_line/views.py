@@ -2,6 +2,7 @@ from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from iaso.api.common import DropdownOptionsWithRepresentationSerializer
@@ -65,10 +66,7 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    @action(
-        detail=False,
-        methods=["get"],
-    )
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def categories(self, _):
         serializer = DropdownOptionsWithRepresentationSerializer(
             InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.choices,
