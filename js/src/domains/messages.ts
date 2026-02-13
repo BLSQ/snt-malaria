@@ -1,6 +1,32 @@
 import { defineMessages } from 'react-intl';
 
 export const MESSAGES = defineMessages({
+    create: {
+        defaultMessage: 'Create',
+        id: 'iaso.label.create',
+    },
+    edit: {
+        defaultMessage: 'Edit',
+        id: 'iaso.label.edit',
+    },
+
+    required: {
+        id: 'iaso.snt_malaria.label.required',
+        defaultMessage: 'Required',
+    },
+    maxYear: {
+        id: 'iaso.snt_malaria.scenario.errors.maxYear',
+        defaultMessage: 'Year must be at most {year}',
+    },
+    minYear: {
+        id: 'iaso.snt_malaria.scenario.errors.minYear',
+        defaultMessage: 'Year must be at least {year}',
+    },
+    endYearMin: {
+        id: 'iaso.snt_malaria.scenario.errors.endYearMin',
+        defaultMessage:
+            'End year must be greater than or equal to start year ({year})',
+    },
     title: {
         id: 'iaso.snt_malaria.home.title',
         defaultMessage: 'SNT Malaria',
@@ -12,6 +38,10 @@ export const MESSAGES = defineMessages({
     name: {
         id: 'iaso.snt_malaria.label.name',
         defaultMessage: 'Name',
+    },
+    description: {
+        id: 'iaso.snt_malaria.label.description',
+        defaultMessage: 'Description',
     },
     startYear: {
         id: 'iaso.snt_malaria.label.start_year',

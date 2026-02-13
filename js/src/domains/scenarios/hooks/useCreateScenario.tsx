@@ -1,16 +1,21 @@
 import { UseMutationResult } from 'react-query';
 import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
+import { ScenarioFormValues } from './useScenarioFormState';
 
 export const useCreateScenario = (): UseMutationResult => {
-    const name = `New scenario - ${new Date().toLocaleString()}`;
-    const currentYear = new Date().getFullYear();
     return useSnackMutation({
-        mutationFn: () =>
+        mutationFn: ({
+            name,
+            description,
+            start_year,
+            end_year,
+        }: ScenarioFormValues) =>
             postRequest('/api/snt_malaria/scenarios/', {
                 name,
-                start_year: currentYear,
-                end_year: currentYear + 3,
+                description,
+                start_year,
+                end_year,
             }),
         invalidateQueryKey: ['scenarios'],
     });

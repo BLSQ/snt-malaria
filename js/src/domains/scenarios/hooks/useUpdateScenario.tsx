@@ -1,7 +1,7 @@
 import { UseMutationResult } from 'react-query';
 import { putRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { Scenario } from '../types';
+import { ScenarioFormValues } from './useScenarioFormState';
 
 export const useUpdateScenario = (
     scenarioId: number,
@@ -9,7 +9,7 @@ export const useUpdateScenario = (
     onError?: (error: any, variables: any, context: any) => void,
 ): UseMutationResult =>
     useSnackMutation({
-        mutationFn: (body: Scenario) =>
+        mutationFn: (body: ScenarioFormValues) =>
             putRequest(`/api/snt_malaria/scenarios/${scenarioId}/`, body),
         invalidateQueryKey: ['scenarios', `scenario_${scenarioId}`],
         options: {

@@ -4,13 +4,13 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from iaso.api.common import UserSerializer
-from iaso.models.org_unit import OrgUnit
 from iaso.utils.org_units import get_valid_org_units_with_geography
 from plugins.snt_malaria.api.scenarios.utils import (
     get_interventions,
     get_missing_headers,
 )
 from plugins.snt_malaria.models import Scenario
+from plugins.snt_malaria.models.intervention import InterventionAssignment
 
 
 class ScenarioSerializer(serializers.ModelSerializer):
@@ -35,24 +35,71 @@ class ScenarioSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def validate_name(self, value):
-        if not value:
-            raise serializers.ValidationError(_("Name cannot be empty."))
+
+class ScenarioWriteSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=True)
+    description = serializers.CharField(required=False, allow_blank=True)
+    start_year = serializers.IntegerField(required=True)
+    end_year = serializers.IntegerField(required=True)
+
+    SCENARIO_MIN_YEAR = 2024
+    SCENARIO_MAX_YEAR = 2035
+
+    class Meta:
+        model = Scenario
+        fields = ["id", "name", "description", "start_year", "end_year"]
+        read_ony_fields = ["id"]
+
+    def validate_start_year(self, value):
+        if value < ScenarioWriteSerializer.SCENARIO_MIN_YEAR or value > ScenarioWriteSerializer.SCENARIO_MAX_YEAR:
+            raise serializers.ValidationError(_("Start year must be between 2024 and 2035."))
+
+        if self.initial_data.get("end_year") and value > int(self.initial_data["end_year"]):
+            raise serializers.ValidationError(_("Start year should be lower or equal end year."))
 
         return value
 
+    def validate_name(self, value):
+        # If we update, we don't want to check for duplicates as long as the name is not changed
+        if self.instance is not None and self.instance.name == value:
+            return value
 
-class DuplicateScenarioSerializer(serializers.Serializer):
-    id_to_duplicate = serializers.IntegerField()
-
-    def validate_id_to_duplicate(self, value):
         request = self.context.get("request")
         account = request.user.iaso_profile.account
 
-        if not Scenario.objects.filter(id=value, account=account).exists():
-            raise serializers.ValidationError(_("Scenario with this ID does not exist."))
+        if Scenario.objects.filter(name=value, account=account).exists():
+            raise serializers.ValidationError(_("A scenario with this name already exists for your account."))
 
         return value
+
+
+class DuplicateScenarioSerializer(ScenarioWriteSerializer):
+    scenario_to_duplicate = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none(), required=True)
+
+    class Meta:
+        model = Scenario
+        fields = ["scenario_to_duplicate", "name", "description", "start_year", "end_year"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if user and user.is_authenticated and user.iaso_profile:
+            account = user.iaso_profile.account
+            self.fields["scenario_to_duplicate"].queryset = Scenario.objects.filter(account=account)
+
+    def save(self, **kwargs):
+        scenario_to_duplicate = self.validated_data.pop("scenario_to_duplicate", None)
+        scenario = super().save(**self.validated_data, **kwargs)
+
+        assignments = InterventionAssignment.objects.filter(scenario_id=scenario_to_duplicate.id)
+        for assignment in assignments:
+            assignment.pk = None
+            assignment.scenario = scenario
+
+        InterventionAssignment.objects.bulk_create(assignments)
+
+        return scenario
 
 
 class ImportScenarioSerializer(serializers.Serializer):

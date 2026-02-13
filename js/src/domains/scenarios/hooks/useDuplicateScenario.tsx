@@ -2,6 +2,7 @@ import { defineMessages } from 'react-intl';
 import { UseMutationResult } from 'react-query';
 import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
+import { ScenarioFormValues } from './useScenarioFormState';
 
 const MESSAGES = defineMessages({
     duplicateSuccess: {
@@ -14,15 +15,22 @@ const MESSAGES = defineMessages({
     },
 });
 
-export const useDuplicateScenario = (
-    onSuccess: (data: any) => void = _data => null,
-): UseMutationResult =>
+export const useDuplicateScenario = (): UseMutationResult =>
     useSnackMutation({
-        mutationFn: (idToDuplicate: number) =>
+        mutationFn: ({
+            id,
+            name,
+            description,
+            start_year,
+            end_year,
+        }: ScenarioFormValues) =>
             postRequest(`/api/snt_malaria/scenarios/duplicate/`, {
-                id_to_duplicate: idToDuplicate,
+                scenario_to_duplicate: id,
+                name,
+                description,
+                start_year,
+                end_year,
             }),
-        options: { onSuccess },
         invalidateQueryKey: ['scenarios'],
         snackSuccessMessage: MESSAGES.duplicateSuccess,
         snackErrorMsg: MESSAGES.duplicateError,

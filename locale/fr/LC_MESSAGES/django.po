@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-16 13:52+0000\n"
+"POT-Creation-Date: 2026-02-06 12:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -28,12 +28,21 @@ msgid "The scenario is locked and cannot be modified."
 msgstr "Le scenario est verouillé et ne peut être modifié."
 
 #: plugins/snt_malaria/api/scenarios/serializers.py
+msgid "Start year must be between 2024 and 2035."
+msgstr "L'année de début doit être entre 2024 et 2035."
+
+#: plugins/snt_malaria/api/scenarios/serializers.py
+#: plugins/snt_malaria/api/scenarios/views.py
+msgid "Start year should be lower or equal end year."
+msgstr "L'année de début doit être la même ou avant l'année de fin"
+
+#: plugins/snt_malaria/api/scenarios/serializers.py
 msgid "Name cannot be empty."
 msgstr "Le nom doit être défini"
 
 #: plugins/snt_malaria/api/scenarios/serializers.py
-msgid "Scenario with this ID does not exist."
-msgstr "Aucun scénario pour cet ID"
+msgid "A scenario with this name already exists for your account."
+msgstr "Un scénario pour votre compte existe déjà avec ce nom"
 
 #: plugins/snt_malaria/api/scenarios/serializers.py
 msgid "The file must be a CSV."
@@ -46,10 +55,6 @@ msgstr "Le CSV doit contenir une colone 'org_unit_id'"
 #: plugins/snt_malaria/api/scenarios/views.py
 msgid "Scenario with this name already exists."
 msgstr "Un scénario avec ce nom existe déjà"
-
-#: plugins/snt_malaria/api/scenarios/views.py
-msgid "Start year should be lower or equal end year."
-msgstr "L'année de début doit être la même ou avant l'année de fin"
 
 #: plugins/snt_malaria/models/cost_breakdown.py
 msgid "per ITN"
@@ -118,3 +123,6 @@ msgstr "Opérationnel"
 #: plugins/snt_malaria/models/cost_breakdown.py
 msgid "Supportive"
 msgstr "Support"
+
+#~ msgid "Scenario with this ID does not exist."
+#~ msgstr "Aucun scénario pour cet ID"
