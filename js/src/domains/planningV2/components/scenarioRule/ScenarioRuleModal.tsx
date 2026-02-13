@@ -65,6 +65,7 @@ const ScenarioRuleDialog: FC<Props> = ({
             confirmMessage={MESSAGES.create}
             titleMessage={MESSAGES.createScenarioRule}
             closeOnConfirm={false}
+            allowConfirm={formik.isValid}
         >
             <FormikProvider value={formik}>
                 <ScenarioRuleForm
