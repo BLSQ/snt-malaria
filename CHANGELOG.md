@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.8.0](https://github.com/BLSQ/snt-malaria/compare/2.7.1...2.8.0) (2026-02-13)
+
+
+### Features
+
+* SNT-269 when creating a scenario we should force users to give the scenario a name ([#182](https://github.com/BLSQ/snt-malaria/issues/182)) ([17bfe6d](https://github.com/BLSQ/snt-malaria/commit/17bfe6d9cd4384b5ef9ffa689b3715ad39484e5c))
+* SNT-275 Don't display N/A if value is 0 ([#183](https://github.com/BLSQ/snt-malaria/issues/183)) ([c65a726](https://github.com/BLSQ/snt-malaria/commit/c65a726a1968b3309710cbb3f538f2a1b05321f5))
+
 ## [2.7.1](https://github.com/BLSQ/snt-malaria/compare/2.7.0...2.7.1) (2026-02-11)
 
 
