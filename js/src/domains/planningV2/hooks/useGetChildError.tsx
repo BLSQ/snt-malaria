@@ -10,7 +10,7 @@ export const useGetChildError = <T,>({
     touched,
 }: getChildErrorParams<T>) =>
     useCallback(
-        (field, index) =>
+        (field: string, index: number) =>
             touched?.[index]?.[field] && errors?.[index]?.[field]
                 ? [errors[index][field]]
                 : [],

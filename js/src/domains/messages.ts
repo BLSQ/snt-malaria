@@ -467,13 +467,13 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenarioRule.create',
         defaultMessage: 'Create rule',
     },
-    addInterventionRule: {
-        id: 'iaso.snt_malaria.scenarioRule.addInterventionRule',
-        defaultMessage: 'Add intervention rule',
+    addInterventionCriteria: {
+        id: 'iaso.snt_malaria.scenarioCriteria.addInterventionCriteria',
+        defaultMessage: 'Add intervention criteria',
     },
-    addMetricRule: {
-        id: 'iaso.snt_malaria.scenarioRule.addMetricRule',
-        defaultMessage: 'Add metric rule',
+    addMetricCriteria: {
+        id: 'iaso.snt_malaria.scenarioCriteria.addMetricCriteria',
+        defaultMessage: 'Add metric criteria',
     },
     ruleName: {
         id: 'iaso.snt_malaria.scenarioRule.ruleName',
