@@ -772,6 +772,75 @@ class ScenarioAPITestCase(APITestCase):
         self.assertIn("not_found_org_units", response.data["file"])
         self.assertIn(str(other_org_unit.id), response.data["file"]["not_found_org_units"])
 
+    def test_delete_scenario_with_full_perm_own_scenario(self):
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.delete(f"{self.BASE_URL}{self.scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Scenario.objects.count(), 0)
+
+    def test_delete_scenario_with_full_perm_other_scenario(self):
+        other_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_with_basic_perm,  # created by another user but same account
+            name="Other User Scenario",
+            description="An other user scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.delete(f"{self.BASE_URL}{other_scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Scenario.objects.count(), 1)  # Only the one from setup remains
+
+    def test_delete_scenario_with_basic_perm_own_scenario(self):
+        basic_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_with_basic_perm,
+            name="Basic User Scenario",
+            description="A basic user scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        self.client.force_authenticate(self.user_with_basic_perm)
+        response = self.client.delete(f"{self.BASE_URL}{basic_scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Scenario.objects.count(), 1)  # Only the one from setup remains
+
+    def test_delete_scenario_with_basic_perm_other_scenario(self):
+        self.client.force_authenticate(self.user_with_basic_perm)
+        response = self.client.delete(f"{self.BASE_URL}{self.scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Scenario.objects.count(), 1)
+
+    def test_delete_scenario_no_perms(self):
+        self.client.force_authenticate(self.user_no_perms)
+        response = self.client.delete(f"{self.BASE_URL}{self.scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Scenario.objects.count(), 1)
+
+    def test_delete_scenario_unauthenticated(self):
+        response = self.client.delete(f"{self.BASE_URL}{self.scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Scenario.objects.count(), 1)
+
+    def test_delete_scenario_from_another_account(self):
+        other_account = Account.objects.create(name="Other Account")
+        other_user = self.create_user_with_profile(
+            username="otheruser", account=other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
+        )
+        other_scenario = Scenario.objects.create(
+            account=other_account,
+            created_by=other_user,
+            name="Other Account Scenario",
+            description="An other account scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.delete(f"{self.BASE_URL}{other_scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Scenario.objects.count(), 2)  # both the one from setup and the other account scenario remain
+
     def _generate_csv_content_for_import(self) -> bytes:
         csv_content = (
             'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n'
