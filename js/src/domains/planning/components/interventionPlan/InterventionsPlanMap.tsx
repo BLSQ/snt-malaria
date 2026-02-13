@@ -12,6 +12,7 @@ import { InterventionSelect } from '../../../../components/InterventionSelect';
 import { Map as SNTMap } from '../../../../components/Map';
 import { MapActionBox } from '../../../../components/MapActionBox';
 import { MapSelectionWidget } from '../../../../components/MapSelectionWidget';
+import { LegendTypes } from '../../../../constants/legend';
 import { MESSAGES } from '../../../messages';
 import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
@@ -22,7 +23,7 @@ import { Intervention, InterventionPlan } from '../../types/interventions';
 
 const defaultLegendConfig = {
     units: '',
-    legend_type: 'ordinal', // 'linear' | 'ordinal' | 'threshold';
+    legend_type: LegendTypes.ORDINAL,
     legend_config: {
         domain: [],
         range: [],
