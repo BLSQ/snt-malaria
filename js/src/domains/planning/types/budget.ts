@@ -10,6 +10,7 @@ export type BudgetOrgUnit = {
     org_unit_id: number;
     total_cost: number;
     interventions: BudgetIntervention[];
+    cost_breakdown: BudgetInterventionCostLine[];
 };
 
 export type BudgetIntervention = {
@@ -23,6 +24,7 @@ export type BudgetIntervention = {
 export type BudgetInterventionCostLine = {
     cost: number;
     category: string;
+    cost_class: string;
     name: string;
 };
 
