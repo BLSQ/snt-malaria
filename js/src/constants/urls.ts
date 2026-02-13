@@ -11,6 +11,10 @@ export const RouteConfigs: Record<string, RouteConfig> = {
         url: 'snt_malaria/planning',
         params: ['scenarioId'],
     },
+    planningV2: {
+        url: 'snt_malaria/planning-v2',
+        params: ['scenarioId'],
+    },
     scenarios: {
         url: 'snt_malaria/scenarios/list',
         params: [...paginationPathParams],
@@ -23,6 +27,7 @@ export const RouteConfigs: Record<string, RouteConfig> = {
 
 export type BaseUrls = {
     planning: string;
+    planningV2: string;
     scenarios: string;
     settings: string;
 };

@@ -459,4 +459,24 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.budgetAssumptions.maxValue',
         defaultMessage: 'Value must be at most {max}',
     },
+    applyScenarioRule: {
+        id: 'iaso.snt_malaria.scenarioRule.apply',
+        defaultMessage: 'Apply rules',
+    },
+    createScenarioRule: {
+        id: 'iaso.snt_malaria.scenarioRule.create',
+        defaultMessage: 'Create rule',
+    },
+    addInterventionRule: {
+        id: 'iaso.snt_malaria.scenarioRule.addInterventionRule',
+        defaultMessage: 'Add intervention rule',
+    },
+    addMetricRule: {
+        id: 'iaso.snt_malaria.scenarioRule.addMetricRule',
+        defaultMessage: 'Add metric rule',
+    },
+    ruleName: {
+        id: 'iaso.snt_malaria.scenarioRule.ruleName',
+        defaultMessage: 'Rule name',
+    },
 });

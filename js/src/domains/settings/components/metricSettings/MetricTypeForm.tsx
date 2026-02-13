@@ -4,6 +4,7 @@ import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import InputComponent from 'Iaso/components/forms/InputComponent';
+import { LegendTypes } from '../../../../constants/legend';
 import { useGetLegendTypes } from '../../../planning/hooks/useGetLegendTypes';
 import { MetricTypeFormModel } from '../../../planning/types/metrics';
 import { MESSAGES } from '../../messages';
@@ -71,7 +72,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                         (value, testContext) => {
                             if (!value) return false;
                             switch (testContext.parent.legend_type) {
-                                case 'ordinal':
+                                case LegendTypes.ORDINAL:
                                     return ordinalRegex.test(value);
                                 case 'threshold':
                                 case 'linear':

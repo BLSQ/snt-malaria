@@ -3,6 +3,7 @@ import React from 'react';
 import { RoutePath } from 'Iaso/constants/routes';
 
 import { Planning } from '../domains/planning';
+import { PlanningV2 } from '../domains/planningV2';
 import { Scenarios } from '../domains/scenarios';
 import { Settings } from '../domains/settings';
 import { baseUrls } from './urls';
@@ -12,6 +13,13 @@ export const planningPath: RoutePath = {
     baseUrl: baseUrls.planning,
     routerUrl: `${baseUrls.planning}/*`,
     element: <Planning />,
+    permissions: [],
+};
+
+export const planningV2Path: RoutePath = {
+    baseUrl: baseUrls.planningV2,
+    routerUrl: `${baseUrls.planningV2}/*`,
+    element: <PlanningV2 />,
     permissions: [],
 };
 
@@ -29,4 +37,9 @@ export const settingsPath: RoutePath = {
     permissions: [SETTINGS_READ],
 };
 
-export const routes: RoutePath[] = [planningPath, scenariosPath, settingsPath];
+export const routes: RoutePath[] = [
+    planningPath,
+    planningV2Path,
+    scenariosPath,
+    settingsPath,
+];
