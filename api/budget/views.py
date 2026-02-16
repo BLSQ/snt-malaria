@@ -117,6 +117,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
             scenario=scenario,
             name=f"Budget for {scenario.name}",
             cost_input=cost_df.astype(str).to_dict(orient="records"),
+            population_input=population_df.astype(str).to_dict(orient="records"),
             assumptions=settings,
             results=budgets,
             created_by=request.user,
