@@ -145,6 +145,9 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         old_unit_type = self.cost_line2.unit_type
         old_name = self.cost_line2.name
         old_category = self.cost_line2.category
+        count_smc_before = InterventionCostBreakdownLine.objects.filter(
+            intervention=self.intervention_chemo_smc
+        ).count()
 
         # New payload
         data = {
@@ -178,6 +181,15 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.assertNotEqual(cost.unit_type, old_unit_type)
         self.assertNotEqual(cost.name, old_name)
         self.assertNotEqual(cost.category, old_category)
+
+        # Checking that this did not delete ICBL for other years
+        count_smc_after = InterventionCostBreakdownLine.objects.filter(intervention=self.intervention_chemo_smc).count()
+        self.assertEqual(
+            count_smc_after, count_smc_before
+        )  # since we deleted the old one and created a new one, the total count for chemo_smc should be the same
+        self.assertTrue(
+            InterventionCostBreakdownLine.objects.filter(intervention=self.intervention_chemo_smc, year=2026).exists()
+        )
 
     def test_get_cost_breakdown_line_categories_with_write_perm(self):
         self.client.force_authenticate(user=self.user_write)

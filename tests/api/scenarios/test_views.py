@@ -460,6 +460,11 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(duplicated_scenario.description, self.scenario.description)
         self.assertEqual(duplicated_scenario.name, payload["name"])
 
+        # Making sure that the base scenario didn't change
+        self.scenario.refresh_from_db()
+        self.assertEqual(self.scenario.created_by, self.user_with_full_perm)
+        self.assertNotIn("Copy of", self.scenario.name)
+
     def test_scenario_duplicate_no_perms(self):
         payload = {
             "scenario_to_duplicate": self.scenario.id,
