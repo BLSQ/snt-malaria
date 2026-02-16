@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('snt_malaria', '0017_intervention_short_name_and_more'),
+        ("snt_malaria", "0017_intervention_short_name_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='scenario',
-            name='is_locked',
+            model_name="scenario",
+            name="is_locked",
             field=models.BooleanField(default=False),
         ),
     ]

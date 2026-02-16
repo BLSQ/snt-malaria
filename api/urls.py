@@ -4,9 +4,9 @@ from plugins.snt_malaria.api.budget.views import BudgetViewSet
 from plugins.snt_malaria.api.budget_assumptions.views import BudgetAssumptionsViewSet
 from plugins.snt_malaria.api.budget_settings.views import BudgetSettingsViewSet
 
-from .cost_breakdown_line.views import InterventionCostBreakdownLineViewSet
 from .intervention_assignments.views import InterventionAssignmentViewSet
 from .intervention_categories.views import InterventionCategoryViewSet
+from .intervention_cost_breakdown_line.views import InterventionCostBreakdownLineViewSet
 from .interventions.views import InterventionViewSet
 from .scenarios.views import ScenarioViewSet
 

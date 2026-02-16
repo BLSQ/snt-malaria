@@ -124,5 +124,21 @@ msgstr "Opérationnel"
 msgid "Supportive"
 msgstr "Support"
 
+#: plugins/snt_malaria/permissions.py
+msgid "Scenario - Basic Write"
+msgstr "Scénario - Écriture simple"
+
+#: plugins/snt_malaria/permissions.py
+msgid "Scenario - Full Write"
+msgstr "Scénario - Écriture complète"
+
+#: plugins/snt_malaria/permissions.py
+msgid "Settings - Read"
+msgstr "Configuration - Lecture"
+
+#: plugins/snt_malaria/permissions.py
+msgid "Settings - Write"
+msgstr "Configuration - Écriture"
+
 #~ msgid "Scenario with this ID does not exist."
 #~ msgstr "Aucun scénario pour cet ID"
