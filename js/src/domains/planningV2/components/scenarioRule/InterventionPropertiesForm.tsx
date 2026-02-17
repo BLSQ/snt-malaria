@@ -46,7 +46,7 @@ type Props = {
     onAdd: (
         key: string,
         defaultValues: InterventionProperties,
-        extendedValue: { interventionCategory: number },
+        extendedValue: { intervention_category: number },
     ) => void;
     onRemove: (key: string, index: number) => void;
     touched: FormikTouched<InterventionProperties>[] | undefined;
@@ -80,7 +80,7 @@ export const InterventionPropertiesForm: FC<Props> = ({
             interventionCategories.filter(
                 ic =>
                     !interventionProperties.some(
-                        ir => ir.interventionCategory === ic.id,
+                        ir => ir.intervention_category === ic.id,
                     ),
             ),
         [interventionCategories, interventionProperties],
@@ -122,10 +122,10 @@ export const InterventionPropertiesForm: FC<Props> = ({
         <Box>
             {interventionProperties.map((i, index) => (
                 <InterventionPropertyForm
-                    key={`intervention_property_${i.interventionCategory}`}
+                    key={`intervention_property_${i.intervention_category}`}
                     interventionProperty={i}
-                    interventions={getInterventions(i.interventionCategory)}
-                    categoryName={getCategoryName(i.interventionCategory)}
+                    interventions={getInterventions(i.intervention_category)}
+                    categoryName={getCategoryName(i.intervention_category)}
                     onUpdateField={(field, value) =>
                         onUpdateField(array_field_key, index, field, value)
                     }
@@ -138,7 +138,7 @@ export const InterventionPropertiesForm: FC<Props> = ({
                 options={interventionCategoryOptions}
                 onClick={interventionCategory =>
                     onAdd(array_field_key, defaultInterventionProperties, {
-                        interventionCategory,
+                        intervention_category: interventionCategory,
                     })
                 }
                 size="small"

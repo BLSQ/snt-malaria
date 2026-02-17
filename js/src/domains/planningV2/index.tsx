@@ -15,25 +15,11 @@ import { useGetInterventionCategories } from '../planning/hooks/useGetInterventi
 import { useGetMetricCategories } from '../planning/hooks/useGetMetrics';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { ScenarioRulesContainer } from './components/scenarioRule/ScenarioRulesContainer';
-import { InterventionProperties, ScenarioRule } from './types/scenarioRule';
+import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 
 type PlanningParams = {
     scenarioId: number;
 };
-
-const scenarioRules: ScenarioRule[] = [
-    {
-        id: 1,
-        name: 'Rule 1',
-        priority: 1,
-        matching_criterion: {},
-        org_unit_scope: [] as number[],
-        color: '#ff0000',
-        org_units_excluded: [] as number[],
-        org_units_included: [] as number[],
-        intervention_properties: [] as InterventionProperties[],
-    },
-];
 
 export const PlanningV2: FC = () => {
     const params = useParamsObject(
@@ -44,6 +30,8 @@ export const PlanningV2: FC = () => {
 
     const { data: metricTypeCategories } = useGetMetricCategories();
     const { data: interventionCategories } = useGetInterventionCategories();
+    const { data: scenarioRules, isFetching: isFetchingRules } =
+        useGetScenarioRules(params.scenarioId);
 
     return metricTypeCategories && interventionCategories ? (
         <>
@@ -56,7 +44,8 @@ export const PlanningV2: FC = () => {
                             <ScenarioRulesContainer
                                 onApplyRules={() => {}}
                                 scenarioId={params.scenarioId}
-                                rules={scenarioRules}
+                                rules={scenarioRules || []}
+                                isLoading={isFetchingRules}
                                 metricTypeCategories={metricTypeCategories}
                                 interventionCategories={interventionCategories}
                             />

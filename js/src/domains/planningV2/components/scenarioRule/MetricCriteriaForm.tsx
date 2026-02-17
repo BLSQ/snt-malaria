@@ -20,7 +20,7 @@ type Props = {
     onAdd: (
         list_field_key: string,
         defaultValues: MetricTypeCriterion,
-        extendedValue: { metricType: number },
+        extendedValue: { metric_type: number },
     ) => void;
     onRemove: (list_field_key: string, index: number) => void;
     touched: FormikTouched<MetricTypeCriterion>[] | undefined;
@@ -99,13 +99,15 @@ export const MetricCriteriaForm: FC<Props> = ({
         touched,
     });
 
+    console.log(metricCriteria);
+
     return (
         <Box>
-            {metricCriteria.map((criteria, index) => (
+            {metricCriteria.map((criterion, index) => (
                 <MetricCriterionForm
-                    key={criteria.metricType}
-                    metricTypeCriterion={criteria}
-                    metricType={getMetricType(criteria.metricType)}
+                    key={criterion.metric_type}
+                    metricTypeCriterion={criterion}
+                    metricType={getMetricType(criterion.metric_type)}
                     onUpdateField={(field, value) =>
                         onUpdateField(list_field_key, index, field, value)
                     }
@@ -116,8 +118,10 @@ export const MetricCriteriaForm: FC<Props> = ({
             <DropdownButton
                 label={MESSAGES.addMetricCriteria}
                 options={metricTypeOptions}
-                onClick={(metricType: number) =>
-                    onAdd(list_field_key, defaultMetricCriteria, { metricType })
+                onClick={(metric_type: number) =>
+                    onAdd(list_field_key, defaultMetricCriteria, {
+                        metric_type,
+                    })
                 }
                 size="small"
                 groupOptions={true}

@@ -16,7 +16,7 @@ export type ScenarioRuleFormValues = {
 };
 
 export const defaultMetricCriteria: MetricTypeCriterion = {
-    metricType: undefined,
+    metric_type: undefined,
     operator: '>',
     value: 0,
     string_value: '',
@@ -24,7 +24,7 @@ export const defaultMetricCriteria: MetricTypeCriterion = {
 
 export const defaultInterventionProperties: InterventionProperties = {
     intervention: undefined,
-    interventionCategory: undefined,
+    intervention_category: undefined,
 };
 
 const defaultValues: ScenarioRuleFormValues = {
@@ -43,7 +43,7 @@ const useValidation = () => {
                 name: Yup.string().required(formatMessage(MESSAGES.required)),
                 intervention_properties: Yup.array().of(
                     Yup.object().shape({
-                        interventionCategory: Yup.number().required(
+                        intervention_category: Yup.number().required(
                             formatMessage(MESSAGES.required),
                         ),
                         intervention: Yup.number().required(
@@ -51,9 +51,9 @@ const useValidation = () => {
                         ),
                     }),
                 ),
-                metricTypeRules: Yup.array().of(
+                metric_criteria: Yup.array().of(
                     Yup.object().shape({
-                        metricType: Yup.number().required(
+                        metric_type: Yup.number().required(
                             formatMessage(MESSAGES.required),
                         ),
                         operator: Yup.string().required(

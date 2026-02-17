@@ -1,5 +1,6 @@
 import React, { FC } from 'react';
 import { Card, CardContent, CardHeader } from '@mui/material';
+import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { InterventionCategory } from '../../../planning/types/interventions';
 import { MetricTypeCategory } from '../../../planning/types/metrics';
@@ -20,6 +21,8 @@ const styles: SxStyles = {
     },
     cardContent: {
         overflow: 'auto',
+        position: 'relative',
+        flexGrow: 1,
         '&:last-child': {
             paddingBottom: 0,
         },
@@ -28,6 +31,7 @@ const styles: SxStyles = {
 
 type Props = {
     scenarioId: number;
+    isLoading: boolean;
     onApplyRules?: () => void;
     rules: ScenarioRule[];
     metricTypeCategories: MetricTypeCategory[];
@@ -36,11 +40,15 @@ type Props = {
 
 export const ScenarioRulesContainer: FC<Props> = ({
     scenarioId,
+    isLoading,
     onApplyRules,
     rules,
     metricTypeCategories,
     interventionCategories,
 }) => {
+    const metricTypes = metricTypeCategories.flatMap(
+        category => category.items,
+    );
     return (
         <Card elevation={2} sx={styles.card}>
             <CardHeader
@@ -56,9 +64,17 @@ export const ScenarioRulesContainer: FC<Props> = ({
             />
 
             <CardContent sx={styles.cardContent}>
-                {rules.map(rule => (
-                    <ScenarioRuleLine key={rule.id} rule={rule} />
-                ))}
+                {isLoading ? (
+                    <LoadingSpinner absolute={true} />
+                ) : (
+                    rules.map(rule => (
+                        <ScenarioRuleLine
+                            metricTypes={metricTypes}
+                            key={rule.id}
+                            rule={rule}
+                        />
+                    ))
+                )}
             </CardContent>
         </Card>
     );
