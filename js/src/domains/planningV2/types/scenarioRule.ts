@@ -1,5 +1,5 @@
 export type ScenarioRule = {
-    id: number;
+    id?: number;
     name: string;
     priority: number;
     matching_criteria: MetricTypeCriterion[];

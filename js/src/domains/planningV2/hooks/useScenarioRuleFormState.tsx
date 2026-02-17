@@ -9,6 +9,7 @@ import {
 } from '../types/scenarioRule';
 
 export type ScenarioRuleFormValues = {
+    id?: number;
     name: string;
     color: string;
     intervention_properties: InterventionProperties[];
@@ -71,10 +72,16 @@ const useValidation = () => {
     );
 };
 
-export const useScenarioRuleFormState = ({ onSubmit }) => {
+export const useScenarioRuleFormState = ({
+    onSubmit,
+    initialValues,
+}: {
+    onSubmit: (values: ScenarioRuleFormValues) => void;
+    initialValues?: ScenarioRuleFormValues;
+}) => {
     const validationSchema = useValidation();
     return useFormik({
-        initialValues: defaultValues,
+        initialValues: initialValues || defaultValues,
         validationSchema,
         onSubmit: onSubmit,
     });

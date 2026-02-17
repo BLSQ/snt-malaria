@@ -46,9 +46,6 @@ export const ScenarioRulesContainer: FC<Props> = ({
     metricTypeCategories,
     interventionCategories,
 }) => {
-    const metricTypes = metricTypeCategories.flatMap(
-        category => category.items,
-    );
     return (
         <Card elevation={2} sx={styles.card}>
             <CardHeader
@@ -69,7 +66,9 @@ export const ScenarioRulesContainer: FC<Props> = ({
                 ) : (
                     rules.map(rule => (
                         <ScenarioRuleLine
-                            metricTypes={metricTypes}
+                            scenarioId={scenarioId}
+                            metricTypeCategories={metricTypeCategories}
+                            interventionCategories={interventionCategories}
                             key={rule.id}
                             rule={rule}
                         />

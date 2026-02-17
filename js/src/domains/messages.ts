@@ -467,6 +467,26 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenarioRule.create',
         defaultMessage: 'Create rule',
     },
+    updateScenarioRule: {
+        id: 'iaso.snt_malaria.scenarioRule.update',
+        defaultMessage: 'Update rule',
+    },
+    deleteScenarioRule: {
+        id: 'iaso.snt_malaria.scenarioRule.delete',
+        defaultMessage: 'Delete rule',
+    },
+    deleteScenarioRuleSuccess: {
+        id: 'iaso.snt_malaria.scenarioRule.deleteSuccess',
+        defaultMessage: 'Scenario rule deleted successfully',
+    },
+    deleteScenarioRuleError: {
+        id: 'iaso.snt_malaria.scenarioRule.deleteError',
+        defaultMessage: 'Error deleting scenario rule',
+    },
+    deleteScenarioRuleConfirmMessage: {
+        id: 'iaso.snt_malaria.scenarioRule.deleteConfirmMessage',
+        defaultMessage: 'Do you really want to delete this scenario rule?',
+    },
     addInterventionProperty: {
         id: 'iaso.snt_malaria.scenarioCriteria.addInterventionProperty',
         defaultMessage: 'Add intervention',

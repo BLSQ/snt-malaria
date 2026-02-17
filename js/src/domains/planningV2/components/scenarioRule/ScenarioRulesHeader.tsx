@@ -8,7 +8,7 @@ import { IconBoxed } from '../../../../components/IconBoxed';
 import { MESSAGES } from '../../../messages';
 import { InterventionCategory } from '../../../planning/types/interventions';
 import { MetricTypeCategory } from '../../../planning/types/metrics';
-import { ScenarioRuleModal } from './ScenarioRuleModal';
+import { CreateScenarioRuleModal } from './ScenarioRuleModal';
 
 type Props = {
     scenarioId: number;
@@ -40,7 +40,7 @@ export const ScenarioRulesHeader: FC<Props> = ({
                 </Typography>
             </Stack>
             <Box sx={{ justifySelf: 'flex-end' }}>
-                <ScenarioRuleModal
+                <CreateScenarioRuleModal
                     scenarioId={scenarioId}
                     onClose={noOp}
                     iconProps={{}}

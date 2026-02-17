@@ -1,4 +1,5 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
+import EditIcon from '@mui/icons-material/Edit';
 import { Button } from '@mui/material';
 import {
     ConfirmCancelModal,
@@ -6,6 +7,7 @@ import {
     useSafeIntl,
 } from 'bluesquare-components';
 import { FormikProvider } from 'formik';
+import { EditIconButton } from 'Iaso/components/Buttons/EditIconButton';
 import { MESSAGES } from '../../../messages';
 import { InterventionCategory } from '../../../planning/types/interventions';
 import { MetricTypeCategory } from '../../../planning/types/metrics';
@@ -14,6 +16,7 @@ import {
     ScenarioRuleFormValues,
     useScenarioRuleFormState,
 } from '../../hooks/useScenarioRuleFormState';
+import { ScenarioRule } from '../../types/scenarioRule';
 import { ScenarioRuleForm } from './ScenarioRuleForm';
 
 type ScenarioRuleAction = {
@@ -29,6 +32,11 @@ const ScenarioRuleDialogAction: FC<ScenarioRuleAction> = ({ onClick }) => {
         </Button>
     );
 };
+
+const ScenarioRuleDialogIconAction: FC<ScenarioRuleAction> = ({ onClick }) => {
+    return <EditIconButton onClick={onClick} overrideIcon={EditIcon} />;
+};
+
 type Props = {
     scenarioId: number;
     isOpen: boolean;
@@ -36,6 +44,7 @@ type Props = {
     onClose: () => void;
     metricTypeCategories: MetricTypeCategory[];
     interventionCategories: InterventionCategory[];
+    rule?: ScenarioRule;
 };
 
 const ScenarioRuleDialog: FC<Props> = ({
@@ -45,6 +54,7 @@ const ScenarioRuleDialog: FC<Props> = ({
     onClose,
     metricTypeCategories,
     interventionCategories,
+    rule,
 }) => {
     const { mutate: createScenarioRule, isLoading: isSaving } =
         useCreateScenarioRule(scenarioId);
@@ -56,7 +66,19 @@ const ScenarioRuleDialog: FC<Props> = ({
             },
         });
     };
-    const formik = useScenarioRuleFormState({ onSubmit });
+
+    const initialValues: ScenarioRuleFormValues | undefined = useMemo(
+        () =>
+            rule && {
+                id: rule.id,
+                name: rule.name,
+                color: rule.color,
+                intervention_properties: rule.intervention_properties,
+                metric_criteria: rule.matching_criteria,
+            },
+        [rule],
+    );
+    const formik = useScenarioRuleFormState({ onSubmit, initialValues });
 
     const handleOnClose = useCallback(() => {
         formik.resetForm();
@@ -73,8 +95,10 @@ const ScenarioRuleDialog: FC<Props> = ({
             onClose={handleOnClose}
             onCancel={handleOnClose}
             cancelMessage={MESSAGES.cancel}
-            confirmMessage={MESSAGES.create}
-            titleMessage={MESSAGES.createScenarioRule}
+            confirmMessage={rule ? MESSAGES.edit : MESSAGES.create}
+            titleMessage={
+                rule ? MESSAGES.updateScenarioRule : MESSAGES.createScenarioRule
+            }
             closeOnConfirm={false}
             allowConfirm={formik.isValid && !isSaving}
         >
@@ -88,7 +112,12 @@ const ScenarioRuleDialog: FC<Props> = ({
     );
 };
 
-export const ScenarioRuleModal = makeFullModal(
+export const CreateScenarioRuleModal = makeFullModal(
     ScenarioRuleDialog,
     ScenarioRuleDialogAction,
+);
+
+export const EditScenarioRuleModal = makeFullModal(
+    ScenarioRuleDialog,
+    ScenarioRuleDialogIconAction,
 );

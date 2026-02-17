@@ -48,8 +48,8 @@ const dummyScenarioRulesResponse: ScenarioRule[] = [
         color: '#ff0000',
         intervention_properties: [
             {
-                intervention_category: 1,
-                intervention: 1,
+                intervention_category: 112,
+                intervention: 234,
             },
         ],
     },

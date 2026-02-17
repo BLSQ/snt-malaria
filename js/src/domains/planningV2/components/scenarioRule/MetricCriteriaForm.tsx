@@ -99,22 +99,21 @@ export const MetricCriteriaForm: FC<Props> = ({
         touched,
     });
 
-    console.log(metricCriteria);
-
     return (
         <Box>
-            {metricCriteria.map((criterion, index) => (
-                <MetricCriterionForm
-                    key={criterion.metric_type}
-                    metricTypeCriterion={criterion}
-                    metricType={getMetricType(criterion.metric_type)}
-                    onUpdateField={(field, value) =>
-                        onUpdateField(list_field_key, index, field, value)
-                    }
-                    onRemove={() => onRemove(list_field_key, index)}
-                    getErrors={field => getChildError(field, index)}
-                />
-            ))}
+            {React.Children.toArray(
+                metricCriteria.map((criterion, index) => (
+                    <MetricCriterionForm
+                        metricTypeCriterion={criterion}
+                        metricType={getMetricType(criterion.metric_type)}
+                        onUpdateField={(field, value) =>
+                            onUpdateField(list_field_key, index, field, value)
+                        }
+                        onRemove={() => onRemove(list_field_key, index)}
+                        getErrors={field => getChildError(field, index)}
+                    />
+                )),
+            )}
             <DropdownButton
                 label={MESSAGES.addMetricCriteria}
                 options={metricTypeOptions}
