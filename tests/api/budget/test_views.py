@@ -134,6 +134,7 @@ class ScenarioAPITestCase(APITestCase):
             name="Test Budget 1",
             created_by=self.user_with_full_perm,
             cost_input={},
+            population_input={},
             assumptions={},
             results={},
         )
@@ -153,10 +154,18 @@ class ScenarioAPITestCase(APITestCase):
             units="child",
         )
 
-        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district1, value=10000000)
-        MetricValue.objects.create(metric_type=metric_type_population, org_unit=self.district2, value=15000000)
-        MetricValue.objects.create(metric_type=metric_type_pop_under_5, org_unit=self.district1, value=100000)
-        MetricValue.objects.create(metric_type=metric_type_pop_under_5, org_unit=self.district2, value=150000)
+        MetricValue.objects.create(
+            metric_type=metric_type_population, org_unit=self.district1, value=10000000, year=2025
+        )
+        MetricValue.objects.create(
+            metric_type=metric_type_population, org_unit=self.district2, value=15000000, year=2025
+        )
+        MetricValue.objects.create(
+            metric_type=metric_type_pop_under_5, org_unit=self.district1, value=100000, year=2025
+        )
+        MetricValue.objects.create(
+            metric_type=metric_type_pop_under_5, org_unit=self.district2, value=150000, year=2025
+        )
 
     def test_calculate_budget_no_population_metric(self):
         MetricType.objects.all().delete()
@@ -437,6 +446,19 @@ class ScenarioAPITestCase(APITestCase):
         self.assertAlmostEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 403920.0 * 0.8)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id)
 
+        db_budget = Budget.objects.get(id=result["id"])
+
+        population_df = db_budget.population_input
+
+        for item in population_df:
+            if item.get("org_unit_id") == self.district1.id and item.get("year") == 2025:
+                self.assertEqual(item.get("pop_total"), "10000000")
+                self.assertEqual(item.get("pop_under_5"), "100000")
+
+            if item.get("org_unit_id") == self.district2.id and item.get("year") == 2025:
+                self.assertEqual(item.get("pop_total"), "15000000")
+                self.assertEqual(item.get("pop_under_5"), "150000")
+
     def test_list_budgets(self):
         """
         This endpoint is available to all authenticated users, regardless of permissions.
@@ -446,6 +468,7 @@ class ScenarioAPITestCase(APITestCase):
             name="Test Budget 2",
             created_by=self.user_with_full_perm,
             cost_input={},
+            population_input={},
             assumptions={},
             results={},
         )
@@ -531,6 +554,7 @@ class ScenarioAPITestCase(APITestCase):
             name="Other Budget",
             created_by=other_user,
             cost_input={},
+            population_input={},
             assumptions={},
             results={},
         )
@@ -548,6 +572,7 @@ class ScenarioAPITestCase(APITestCase):
             name="Test Budget 2",
             created_by=self.user_with_full_perm,
             cost_input={},
+            population_input={},
             assumptions={},
             results={},
         )
