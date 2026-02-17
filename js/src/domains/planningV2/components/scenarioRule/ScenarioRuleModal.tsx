@@ -97,7 +97,7 @@ const ScenarioRuleDialog: FC<Props> = ({
             cancelMessage={MESSAGES.cancel}
             confirmMessage={rule ? MESSAGES.edit : MESSAGES.create}
             titleMessage={
-                rule ? MESSAGES.updateScenarioRule : MESSAGES.createScenarioRule
+                rule ? MESSAGES.editScenarioRule : MESSAGES.createScenarioRule
             }
             closeOnConfirm={false}
             allowConfirm={formik.isValid && !isSaving}

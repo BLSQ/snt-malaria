@@ -141,5 +141,21 @@
     "iaso.snt_malaria.budgetAssumptions.maxValue": "La valeur doit être au maximum {max}",
     "iaso.snt_malaria.label.showLegend": "Afficher la légende",
     "iaso.snt_malaria.label.hideLegend": "Masquer la légende",
-    "iaso.snt_malaria.label.duplicate": "Dupliquer"
+    "iaso.snt_malaria.label.duplicate": "Dupliquer",
+    "iaso.snt_malaria.scenarioRule.apply": "Appliquer les règles",
+    "iaso.snt_malaria.scenarioRule.create": "Créer une règle",
+    "iaso.snt_malaria.scenarioRule.edit": "Modifier la règle",
+    "iaso.snt_malaria.scenarioRule.delete": "Supprimer la règle",
+    "iaso.snt_malaria.scenarioRule.deleteSuccess": "Règle du scénario supprimée avec succès",
+    "iaso.snt_malaria.scenarioRule.deleteError": "Erreur lors de la suppression de la règle du scénario",
+    "iaso.snt_malaria.scenarioRule.deleteConfirmMessage": "Voulez-vous vraiment supprimer cette règle du scénario ?",
+    "iaso.snt_malaria.scenarioRule.addInterventionProperty": "Ajouter une intervention",
+    "iaso.snt_malaria.scenarioRule.addMetricCriteria": "Ajouter un critère",
+    "iaso.snt_malaria.scenarioRule.ruleName": "Nom de la règle",
+    "iaso.snt_malaria.scenarioRule.metricCriteria": "Critères de métrique",
+    "iaso.snt_malaria.scenarioRule.metric": "Métrique",
+    "iaso.snt_malaria.scenarioRule.operator": "Opérateur",
+    "iaso.snt_malaria.scenarioRule.value": "Valeur",
+    "iaso.snt_malaria.scenarioRule.selectionCriteria": "Critères de sélection",
+    "iaso.snt_malaria.scenarioRule.interventionProperties": "Interventions"
 }

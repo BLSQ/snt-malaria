@@ -63,7 +63,10 @@ export const ScenarioRuleForm: FC<ScenarioRuleFormProps> = ({
                 }}
             >
                 <Box mb={3}>
-                    <ScenarioRuleHeading chipLabel="1" label="Interventions" />
+                    <ScenarioRuleHeading
+                        chipLabel="1"
+                        label={formatMessage(MESSAGES.interventionProperties)}
+                    />
                     <InterventionPropertiesForm
                         interventionProperties={values.intervention_properties}
                         interventionCategories={interventionCategories}
@@ -79,7 +82,7 @@ export const ScenarioRuleForm: FC<ScenarioRuleFormProps> = ({
                 <Box mb={2}>
                     <ScenarioRuleHeading
                         chipLabel="2"
-                        label="Selection rules"
+                        label={formatMessage(MESSAGES.selectionCriteria)}
                     />
                     <MetricCriteriaForm
                         metricTypeCategories={metricTypeCategories}

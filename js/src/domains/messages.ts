@@ -9,7 +9,10 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Edit',
         id: 'iaso.label.edit',
     },
-
+    requiredField: {
+        id: 'iaso.forms.error.fieldRequired',
+        defaultMessage: 'This field is required',
+    },
     required: {
         id: 'iaso.snt_malaria.label.required',
         defaultMessage: 'Required',
@@ -467,9 +470,9 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenarioRule.create',
         defaultMessage: 'Create rule',
     },
-    updateScenarioRule: {
-        id: 'iaso.snt_malaria.scenarioRule.update',
-        defaultMessage: 'Update rule',
+    editScenarioRule: {
+        id: 'iaso.snt_malaria.scenarioRule.edit',
+        defaultMessage: 'Edit rule',
     },
     deleteScenarioRule: {
         id: 'iaso.snt_malaria.scenarioRule.delete',
@@ -488,15 +491,35 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Do you really want to delete this scenario rule?',
     },
     addInterventionProperty: {
-        id: 'iaso.snt_malaria.scenarioCriteria.addInterventionProperty',
+        id: 'iaso.snt_malaria.scenarioRule.addInterventionProperty',
         defaultMessage: 'Add intervention',
     },
     addMetricCriteria: {
-        id: 'iaso.snt_malaria.scenarioCriteria.addMetricCriteria',
-        defaultMessage: 'Selection Criteria',
+        id: 'iaso.snt_malaria.scenarioRule.addMetricCriteria',
+        defaultMessage: 'Add Criteria',
     },
     ruleName: {
         id: 'iaso.snt_malaria.scenarioRule.ruleName',
         defaultMessage: 'Rule name',
+    },
+    metricType: {
+        id: 'iaso.snt_malaria.scenarioRule.metricType',
+        defaultMessage: 'Metric type',
+    },
+    operator: {
+        id: 'iaso.snt_malaria.scenarioRule.operator',
+        defaultMessage: 'Operator',
+    },
+    value: {
+        id: 'iaso.snt_malaria.scenarioRule.value',
+        defaultMessage: 'Value',
+    },
+    selectionCriteria: {
+        id: 'iaso.snt_malaria.scenarioRule.selectionCriteria',
+        defaultMessage: 'Selection criteria',
+    },
+    interventionProperties: {
+        id: 'iaso.snt_malaria.scenarioRule.interventionProperties',
+        defaultMessage: 'Interventions',
     },
 });

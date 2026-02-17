@@ -44,26 +44,15 @@ const useValidation = () => {
                 name: Yup.string().required(formatMessage(MESSAGES.required)),
                 intervention_properties: Yup.array().of(
                     Yup.object().shape({
-                        intervention_category: Yup.number().required(
-                            formatMessage(MESSAGES.required),
-                        ),
-                        intervention: Yup.number().required(
-                            formatMessage(MESSAGES.required),
-                        ),
+                        intervention_category: Yup.number().required(),
+                        intervention: Yup.number().required(),
                     }),
                 ),
                 metric_criteria: Yup.array().of(
                     Yup.object().shape({
-                        metric_type: Yup.number().required(
-                            formatMessage(MESSAGES.required),
-                        ),
-                        operator: Yup.string().required(
-                            formatMessage(MESSAGES.required),
-                        ),
+                        metric_type: Yup.number().required(),
+                        operator: Yup.string().required(),
                         value: Yup.number(),
-                        // .required(
-                        //     formatMessage(MESSAGES.required),
-                        // ),
                         string_value: Yup.string(),
                     }),
                 ),
