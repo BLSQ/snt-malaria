@@ -450,10 +450,7 @@ class ScenarioAPITestCase(APITestCase):
 
         population_df = db_budget.population_input
 
-        print(population_df[0].get("year"))
-
         for item in population_df:
-            print(item)
             if item.get("org_unit_id") == self.district1.id and item.get("year") == 2025:
                 self.assertEqual(item.get("pop_total"), "10000000")
                 self.assertEqual(item.get("pop_under_5"), "100000")
