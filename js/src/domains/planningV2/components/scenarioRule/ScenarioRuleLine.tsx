@@ -43,7 +43,7 @@ export const ScenarioRuleLine: FC<Props> = ({ rule, onClick = noOp }) => (
             </Typography>
         </Grid>
         <Typography variant="body2" color="textSecondary" sx={styles.rulesText}>
-            {rule?.interventions?.length} intervention rules
+            {rule?.intervention_properties?.length} intervention rules
         </Typography>
     </Box>
 );

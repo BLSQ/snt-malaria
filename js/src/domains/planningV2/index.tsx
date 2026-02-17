@@ -15,7 +15,7 @@ import { useGetInterventionCategories } from '../planning/hooks/useGetInterventi
 import { useGetMetricCategories } from '../planning/hooks/useGetMetrics';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { ScenarioRulesContainer } from './components/scenarioRule/ScenarioRulesContainer';
-import { ScenarioRule } from './types/scenarioRule';
+import { InterventionProperties, ScenarioRule } from './types/scenarioRule';
 
 type PlanningParams = {
     scenarioId: number;
@@ -31,7 +31,7 @@ const scenarioRules: ScenarioRule[] = [
         color: '#ff0000',
         org_units_excluded: [] as number[],
         org_units_included: [] as number[],
-        interventions: [] as number[],
+        intervention_properties: [] as InterventionProperties[],
     },
 ];
 
@@ -55,6 +55,7 @@ export const PlanningV2: FC = () => {
                         <PaperFullHeight>
                             <ScenarioRulesContainer
                                 onApplyRules={() => {}}
+                                scenarioId={params.scenarioId}
                                 rules={scenarioRules}
                                 metricTypeCategories={metricTypeCategories}
                                 interventionCategories={interventionCategories}

@@ -4,35 +4,34 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { MESSAGES } from '../../messages';
 import {
-    InterventionCriteria,
-    MetricTypeCriteria,
+    InterventionProperties,
+    MetricTypeCriterion,
 } from '../types/scenarioRule';
 
 export type ScenarioRuleFormValues = {
     name: string;
     color: string;
-    interventionRules: InterventionCriteria[];
-    metricTypeRules: MetricTypeCriteria[];
+    intervention_properties: InterventionProperties[];
+    metric_criteria: MetricTypeCriterion[];
 };
 
-export const defaultMetricRule: MetricTypeCriteria = {
+export const defaultMetricCriteria: MetricTypeCriterion = {
     metricType: undefined,
     operator: '>',
     value: 0,
     string_value: '',
 };
 
-export const defaultInterventionRule: InterventionCriteria = {
+export const defaultInterventionProperties: InterventionProperties = {
     intervention: undefined,
     interventionCategory: undefined,
-    coverage: 70,
 };
 
 const defaultValues: ScenarioRuleFormValues = {
     name: '',
     color: '#000000',
-    interventionRules: [],
-    metricTypeRules: [],
+    intervention_properties: [],
+    metric_criteria: [],
 };
 
 const useValidation = () => {
@@ -42,15 +41,12 @@ const useValidation = () => {
         () =>
             Yup.object().shape({
                 name: Yup.string().required(formatMessage(MESSAGES.required)),
-                intervention_rules: Yup.array().of(
+                intervention_properties: Yup.array().of(
                     Yup.object().shape({
                         interventionCategory: Yup.number().required(
                             formatMessage(MESSAGES.required),
                         ),
                         intervention: Yup.number().required(
-                            formatMessage(MESSAGES.required),
-                        ),
-                        coverage: Yup.number().required(
                             formatMessage(MESSAGES.required),
                         ),
                     }),

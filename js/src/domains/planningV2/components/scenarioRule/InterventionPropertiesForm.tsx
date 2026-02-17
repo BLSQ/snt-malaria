@@ -10,11 +10,12 @@ import {
     InterventionCategory,
 } from '../../../planning/types/interventions';
 import { useGetChildError } from '../../hooks/useGetChildError';
-import { InterventionCriteria } from '../../types/scenarioRule';
+import { defaultInterventionProperties } from '../../hooks/useScenarioRuleFormState';
+import { InterventionProperties } from '../../types/scenarioRule';
 import { DropdownButton } from './DropdownButton';
 
 const styles: SxStyles = {
-    interventionCriteriaContainer: {
+    interventionPropertiesContainer: {
         display: 'flex',
         mb: 2,
         gap: 1,
@@ -41,21 +42,32 @@ const styles: SxStyles = {
 };
 
 type Props = {
-    interventionCriterion: InterventionCriteria[];
-    onAdd: (interventionCategoryId: number) => void;
-    onRemove: (index: number) => void;
-    touched: FormikTouched<InterventionCriteria>[] | undefined;
+    interventionProperties: InterventionProperties[];
+    onAdd: (
+        key: string,
+        defaultValues: InterventionProperties,
+        extendedValue: { interventionCategory: number },
+    ) => void;
+    onRemove: (key: string, index: number) => void;
+    touched: FormikTouched<InterventionProperties>[] | undefined;
     errors:
         | string
         | string[]
-        | FormikErrors<InterventionCriteria>[]
+        | FormikErrors<InterventionProperties>[]
         | undefined;
-    onUpdateField: (index: number, field: string, value: any) => void;
+    onUpdateField: (
+        key: string,
+        index: number,
+        field: string,
+        value: any,
+    ) => void;
     interventionCategories: InterventionCategory[];
 };
 
-export const InterventionCriterionForm: FC<Props> = ({
-    interventionCriterion,
+const array_field_key = 'intervention_properties';
+
+export const InterventionPropertiesForm: FC<Props> = ({
+    interventionProperties,
     onAdd,
     onRemove,
     errors,
@@ -67,11 +79,11 @@ export const InterventionCriterionForm: FC<Props> = ({
         () =>
             interventionCategories.filter(
                 ic =>
-                    !interventionCriterion.some(
+                    !interventionProperties.some(
                         ir => ir.interventionCategory === ic.id,
                     ),
             ),
-        [interventionCategories, interventionCriterion],
+        [interventionCategories, interventionProperties],
     );
 
     // filter this based on already applied categories.
@@ -92,7 +104,7 @@ export const InterventionCriterionForm: FC<Props> = ({
         [interventionCategories],
     );
 
-    const getChildError = useGetChildError<InterventionCriteria>({
+    const getChildError = useGetChildError<InterventionProperties>({
         errors,
         touched,
     });
@@ -106,56 +118,46 @@ export const InterventionCriterionForm: FC<Props> = ({
         [interventionCategories],
     );
 
-    return interventionCriterion ? (
+    return interventionProperties ? (
         <Box>
-            {interventionCriterion.map((i, index) => (
-                <InterventionCriteriaForm
-                    key={`intervention_criteria_${i.interventionCategory}`}
-                    interventionCriteria={i}
+            {interventionProperties.map((i, index) => (
+                <InterventionPropertyForm
+                    key={`intervention_property_${i.interventionCategory}`}
+                    interventionProperty={i}
                     interventions={getInterventions(i.interventionCategory)}
                     categoryName={getCategoryName(i.interventionCategory)}
                     onUpdateField={(field, value) =>
-                        onUpdateField(index, field, value)
+                        onUpdateField(array_field_key, index, field, value)
                     }
                     getErrors={key => getChildError(key, index)}
-                    onRemove={() => onRemove(index)}
+                    onRemove={() => onRemove(array_field_key, index)}
                 />
             ))}
             <DropdownButton
-                label={MESSAGES.addInterventionCriteria}
+                label={MESSAGES.addInterventionProperty}
                 options={interventionCategoryOptions}
-                onClick={onAdd}
+                onClick={interventionCategory =>
+                    onAdd(array_field_key, defaultInterventionProperties, {
+                        interventionCategory,
+                    })
+                }
                 size="small"
             />
         </Box>
     ) : null;
 };
 
-type InterventionCriteriaFormProps = {
+type InterventionPropertyFormProps = {
     interventions: Intervention[];
-    interventionCriteria: InterventionCriteria;
+    interventionProperty: InterventionProperties;
     categoryName: string;
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
     getErrors: (keyValue: string) => string[];
 };
 
-// TODO: Move this somewhere else
-const coverageOptions = [
-    { value: 10, label: '10%' },
-    { value: 20, label: '20%' },
-    { value: 30, label: '30%' },
-    { value: 40, label: '40%' },
-    { value: 50, label: '50%' },
-    { value: 60, label: '60%' },
-    { value: 70, label: '70%' },
-    { value: 80, label: '80%' },
-    { value: 90, label: '90%' },
-    { value: 100, label: '100%' },
-];
-
-const InterventionCriteriaForm: FC<InterventionCriteriaFormProps> = ({
-    interventionCriteria,
+const InterventionPropertyForm: FC<InterventionPropertyFormProps> = ({
+    interventionProperty,
     interventions,
     categoryName,
     onUpdateField,
@@ -168,7 +170,7 @@ const InterventionCriteriaForm: FC<InterventionCriteriaFormProps> = ({
     );
 
     return (
-        <Box sx={styles.interventionCriteriaContainer}>
+        <Box sx={styles.interventionPropertiesContainer}>
             <Box sx={styles.labelWrapper}>
                 <Tooltip title={categoryName}>
                     <Typography
@@ -191,23 +193,11 @@ const InterventionCriteriaForm: FC<InterventionCriteriaFormProps> = ({
                 clearable={false}
                 options={interventionOptions}
                 value={
-                    interventionCriteria.intervention ||
+                    interventionProperty.intervention ||
                     interventionOptions[0]?.value
                 }
                 onChange={onUpdateField}
                 errors={getErrors('intervention')}
-            />
-            <InputComponent
-                type="select"
-                keyValue="coverage"
-                multi={false}
-                withMarginTop={false}
-                wrapperSx={styles.coverageWrapper}
-                clearable={false}
-                options={coverageOptions}
-                value={interventionCriteria.coverage}
-                onChange={onUpdateField}
-                errors={getErrors('coverage')}
             />
             <DeleteIconButton onClick={() => onRemove()} />
         </Box>

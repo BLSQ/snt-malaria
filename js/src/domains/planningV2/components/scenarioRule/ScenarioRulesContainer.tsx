@@ -27,6 +27,7 @@ const styles: SxStyles = {
 };
 
 type Props = {
+    scenarioId: number;
     onApplyRules?: () => void;
     rules: ScenarioRule[];
     metricTypeCategories: MetricTypeCategory[];
@@ -34,6 +35,7 @@ type Props = {
 };
 
 export const ScenarioRulesContainer: FC<Props> = ({
+    scenarioId,
     onApplyRules,
     rules,
     metricTypeCategories,
@@ -45,6 +47,7 @@ export const ScenarioRulesContainer: FC<Props> = ({
                 sx={styles.cardHeader}
                 title={
                     <ScenarioRulesHeader
+                        scenarioId={scenarioId}
                         onApplyRules={onApplyRules}
                         metricTypeCategories={metricTypeCategories}
                         interventionCategories={interventionCategories}

@@ -9,6 +9,7 @@ import { FormikProvider } from 'formik';
 import { MESSAGES } from '../../../messages';
 import { InterventionCategory } from '../../../planning/types/interventions';
 import { MetricTypeCategory } from '../../../planning/types/metrics';
+import { useCreateScenarioRule } from '../../hooks/useCreateScenarioRule';
 import {
     ScenarioRuleFormValues,
     useScenarioRuleFormState,
@@ -29,21 +30,31 @@ const ScenarioRuleDialogAction: FC<ScenarioRuleAction> = ({ onClick }) => {
     );
 };
 type Props = {
+    scenarioId: number;
     isOpen: boolean;
     closeDialog: () => void;
     onClose: () => void;
     metricTypeCategories: MetricTypeCategory[];
     interventionCategories: InterventionCategory[];
 };
+
 const ScenarioRuleDialog: FC<Props> = ({
+    scenarioId,
     isOpen,
     closeDialog,
     onClose,
     metricTypeCategories,
     interventionCategories,
 }) => {
+    const { mutate: createScenarioRule, isLoading: isSaving } =
+        useCreateScenarioRule(scenarioId);
+
     const onSubmit = (values: ScenarioRuleFormValues) => {
-        console.log(values);
+        createScenarioRule(values, {
+            onSuccess: () => {
+                closeDialog();
+            },
+        });
     };
     const formik = useScenarioRuleFormState({ onSubmit });
 
@@ -65,7 +76,7 @@ const ScenarioRuleDialog: FC<Props> = ({
             confirmMessage={MESSAGES.create}
             titleMessage={MESSAGES.createScenarioRule}
             closeOnConfirm={false}
-            allowConfirm={formik.isValid}
+            allowConfirm={formik.isValid && !isSaving}
         >
             <FormikProvider value={formik}>
                 <ScenarioRuleForm

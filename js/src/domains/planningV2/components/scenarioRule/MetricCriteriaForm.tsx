@@ -11,16 +11,26 @@ import {
     MetricTypeCategory,
 } from '../../../planning/types/metrics';
 import { useGetChildError } from '../../hooks/useGetChildError';
-import { MetricTypeCriteria } from '../../types/scenarioRule';
+import { defaultMetricCriteria } from '../../hooks/useScenarioRuleFormState';
+import { MetricTypeCriterion } from '../../types/scenarioRule';
 import { DropdownButton } from './DropdownButton';
 
 type Props = {
-    metricTypeCriterion: MetricTypeCriteria[];
-    onAdd: (metricTypeId: number) => void;
-    onRemove: (index: number) => void;
-    touched: FormikTouched<MetricTypeCriteria>[] | undefined;
-    errors: string | string[] | FormikErrors<MetricTypeCriteria>[] | undefined;
-    onUpdateField: (index: number, field: string, value: any) => void;
+    metricCriteria: MetricTypeCriterion[];
+    onAdd: (
+        list_field_key: string,
+        defaultValues: MetricTypeCriterion,
+        extendedValue: { metricType: number },
+    ) => void;
+    onRemove: (list_field_key: string, index: number) => void;
+    touched: FormikTouched<MetricTypeCriterion>[] | undefined;
+    errors: string | string[] | FormikErrors<MetricTypeCriterion>[] | undefined;
+    onUpdateField: (
+        list_field_key: string,
+        index: number,
+        field: string,
+        value: any,
+    ) => void;
     metricTypeCategories: MetricTypeCategory[];
 };
 
@@ -48,8 +58,10 @@ const styles: Record<string, SxProps<Theme>> = {
     },
 };
 
-export const MetricCriterionForm: FC<Props> = ({
-    metricTypeCriterion,
+const list_field_key = 'metric_criteria';
+
+export const MetricCriteriaForm: FC<Props> = ({
+    metricCriteria,
     onAdd,
     onRemove,
     errors,
@@ -82,29 +94,31 @@ export const MetricCriterionForm: FC<Props> = ({
         [metricTypes],
     );
 
-    const getChildError = useGetChildError<MetricTypeCriteria>({
+    const getChildError = useGetChildError<MetricTypeCriterion>({
         errors,
         touched,
     });
 
     return (
         <Box>
-            {metricTypeCriterion.map((criteria, index) => (
-                <MetricCriteriaForm
+            {metricCriteria.map((criteria, index) => (
+                <MetricCriterionForm
                     key={criteria.metricType}
-                    metricTypeCriteria={criteria}
+                    metricTypeCriterion={criteria}
                     metricType={getMetricType(criteria.metricType)}
                     onUpdateField={(field, value) =>
-                        onUpdateField(index, field, value)
+                        onUpdateField(list_field_key, index, field, value)
                     }
-                    onRemove={() => onRemove(index)}
+                    onRemove={() => onRemove(list_field_key, index)}
                     getErrors={field => getChildError(field, index)}
                 />
             ))}
             <DropdownButton
                 label={MESSAGES.addMetricCriteria}
                 options={metricTypeOptions}
-                onClick={onAdd}
+                onClick={(metricType: number) =>
+                    onAdd(list_field_key, defaultMetricCriteria, { metricType })
+                }
                 size="small"
                 groupOptions={true}
             />
@@ -113,7 +127,7 @@ export const MetricCriterionForm: FC<Props> = ({
 };
 
 type MetricCriteriaFormProps = {
-    metricTypeCriteria: MetricTypeCriteria;
+    metricTypeCriterion: MetricTypeCriterion;
     metricType?: MetricType;
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
@@ -128,8 +142,8 @@ const operatorOptions = [
     { value: '==', label: '=' },
 ];
 
-export const MetricCriteriaForm: FC<MetricCriteriaFormProps> = ({
-    metricTypeCriteria: metricTypeCriteria,
+export const MetricCriterionForm: FC<MetricCriteriaFormProps> = ({
+    metricTypeCriterion,
     metricType,
     onUpdateField,
     onRemove,
@@ -171,7 +185,7 @@ export const MetricCriteriaForm: FC<MetricCriteriaFormProps> = ({
             <InputComponent
                 keyValue="operator"
                 type="select"
-                value={metricTypeCriteria.operator}
+                value={metricTypeCriterion.operator}
                 options={operatorOptions}
                 onChange={onUpdateField}
                 errors={getErrors('operator')}
@@ -183,7 +197,7 @@ export const MetricCriteriaForm: FC<MetricCriteriaFormProps> = ({
                 <InputComponent
                     keyValue="string_value"
                     type="select"
-                    value={metricTypeCriteria.string_value}
+                    value={metricTypeCriterion.string_value}
                     onChange={onUpdateField}
                     errors={getErrors('string_value')}
                     wrapperSx={{ flexGrow: 1 }}
@@ -196,7 +210,7 @@ export const MetricCriteriaForm: FC<MetricCriteriaFormProps> = ({
                     <InputComponent
                         keyValue="value"
                         type="number"
-                        value={metricTypeCriteria.value}
+                        value={metricTypeCriterion.value}
                         onChange={onUpdateField}
                         errors={getErrors('value')}
                         wrapperSx={{ width: 100 }}

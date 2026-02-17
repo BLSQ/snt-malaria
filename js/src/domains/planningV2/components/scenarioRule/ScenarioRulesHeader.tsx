@@ -11,12 +11,14 @@ import { MetricTypeCategory } from '../../../planning/types/metrics';
 import { ScenarioRuleModal } from './ScenarioRuleModal';
 
 type Props = {
+    scenarioId: number;
     metricTypeCategories: MetricTypeCategory[];
     interventionCategories: InterventionCategory[];
     onApplyRules?: () => void;
 };
 
 export const ScenarioRulesHeader: FC<Props> = ({
+    scenarioId,
     onApplyRules = noOp,
     metricTypeCategories,
     interventionCategories,
@@ -39,6 +41,7 @@ export const ScenarioRulesHeader: FC<Props> = ({
             </Stack>
             <Box sx={{ justifySelf: 'flex-end' }}>
                 <ScenarioRuleModal
+                    scenarioId={scenarioId}
                     onClose={noOp}
                     iconProps={{}}
                     metricTypeCategories={metricTypeCategories}

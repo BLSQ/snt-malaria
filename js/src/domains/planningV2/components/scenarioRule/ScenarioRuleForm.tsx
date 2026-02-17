@@ -7,13 +7,9 @@ import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFor
 import { MESSAGES } from '../../../messages';
 import { InterventionCategory } from '../../../planning/types/interventions';
 import { MetricTypeCategory } from '../../../planning/types/metrics';
-import {
-    defaultInterventionRule,
-    defaultMetricRule,
-    ScenarioRuleFormValues,
-} from '../../hooks/useScenarioRuleFormState';
-import { InterventionCriterionForm } from './InterventionCriterionForm';
-import { MetricCriterionForm } from './MetricCriterionForm';
+import { ScenarioRuleFormValues } from '../../hooks/useScenarioRuleFormState';
+import { InterventionPropertiesForm } from './InterventionPropertiesForm';
+import { MetricCriteriaForm } from './MetricCriteriaForm';
 
 const ScenarioRuleHeading: FC<{ chipLabel: string; label: string }> = ({
     chipLabel,
@@ -68,31 +64,16 @@ export const ScenarioRuleForm: FC<ScenarioRuleFormProps> = ({
             >
                 <Box mb={3}>
                     <ScenarioRuleHeading chipLabel="1" label="Interventions" />
-                    <InterventionCriterionForm
-                        interventionCriterion={values.interventionRules}
+                    <InterventionPropertiesForm
+                        interventionProperties={values.intervention_properties}
                         interventionCategories={interventionCategories}
-                        onAdd={interventionCategory =>
-                            addChildValue(
-                                'interventionRules',
-                                defaultInterventionRule,
-                                {
-                                    interventionCategory,
-                                },
-                            )
+                        onAdd={addChildValue}
+                        onRemove={(list_field_key: string, index: number) =>
+                            removeChildValue(list_field_key, index)
                         }
-                        onRemove={(index: number) =>
-                            removeChildValue('interventionRules', index)
-                        }
-                        errors={errors.interventionRules}
-                        touched={touched.interventionRules}
-                        onUpdateField={(index, field, value) =>
-                            setChildFieldValueAndState(
-                                'interventionRules',
-                                index,
-                                field,
-                                value,
-                            )
-                        }
+                        errors={errors.intervention_properties}
+                        touched={touched.intervention_properties}
+                        onUpdateField={setChildFieldValueAndState}
                     />
                 </Box>
                 <Box mb={2}>
@@ -100,31 +81,16 @@ export const ScenarioRuleForm: FC<ScenarioRuleFormProps> = ({
                         chipLabel="2"
                         label="Selection rules"
                     />
-                    <MetricCriterionForm
+                    <MetricCriteriaForm
                         metricTypeCategories={metricTypeCategories}
-                        metricTypeCriterion={values.metricTypeRules}
-                        onAdd={metricType =>
-                            addChildValue(
-                                'metricTypeRules',
-                                defaultMetricRule,
-                                {
-                                    metricType,
-                                },
-                            )
+                        metricCriteria={values.metric_criteria}
+                        onAdd={addChildValue}
+                        onRemove={(list_field_key: string, index: number) =>
+                            removeChildValue(list_field_key, index)
                         }
-                        onRemove={(index: number) =>
-                            removeChildValue('metricTypeRules', index)
-                        }
-                        errors={errors.metricTypeRules}
-                        touched={touched.metricTypeRules}
-                        onUpdateField={(index, field, value) =>
-                            setChildFieldValueAndState(
-                                'metricTypeRules',
-                                index,
-                                field,
-                                value,
-                            )
-                        }
+                        errors={errors.metric_criteria}
+                        touched={touched.metric_criteria}
+                        onUpdateField={setChildFieldValueAndState}
                     />
                 </Box>
             </Box>

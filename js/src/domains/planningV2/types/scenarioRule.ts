@@ -2,21 +2,21 @@ export type ScenarioRule = {
     id: number;
     name: string;
     priority: number;
-    matching_criterion: Record<number, MetricTypeCriteria>;
-    org_unit_scope: number[];
+    matching_criteria: Record<number, MetricTypeCriterion>;
+    org_unit_scope?: number[];
     color: string;
-    org_units_excluded: number[];
-    org_units_included: number[];
-    interventions: number[];
+    org_units_matched: number[];
+    org_units_excluded?: number[];
+    org_units_included?: number[];
+    intervention_properties: InterventionProperties[];
 };
 
-export type InterventionCriteria = {
+export type InterventionProperties = {
     intervention?: number;
     interventionCategory?: number;
-    coverage: number;
 };
 
-export type MetricTypeCriteria = {
+export type MetricTypeCriterion = {
     metricType?: number;
     operator: string;
     value?: number;
