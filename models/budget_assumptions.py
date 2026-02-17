@@ -4,6 +4,12 @@ from plugins.snt_malaria.models.scenario import Scenario
 
 
 class BudgetAssumptions(models.Model):
+    """
+    This model is deprecated and will soon be removed (after AssignmentV2).
+    Values from this model will be directly stored in `InterventionAssigment` instead,
+    except for `coverage` (in `ScenarioRuleInterventionProperties`).
+    """
+
     class Meta:
         app_label = "snt_malaria"
         unique_together = [["scenario", "intervention_code"]]
