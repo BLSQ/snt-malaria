@@ -4,6 +4,7 @@ from .models import (
     Budget,
     BudgetAssumptions,
     BudgetSettings,
+    ImpactProviderConfig,
     Intervention,
     InterventionAssignment,
     InterventionCategory,
@@ -109,3 +110,11 @@ class BudgetAssumptionsAdmin(admin.ModelAdmin):
     list_display = ("id", "scenario", "intervention_code")
     search_fields = ("id", "scenario", "intervention_code")
     ordering = ("id",)
+
+
+@admin.register(ImpactProviderConfig)
+class ImpactProviderConfigAdmin(admin.ModelAdmin):
+    list_display = ("id", "account", "provider_key")
+    list_filter = ("provider_key",)
+    search_fields = ("account__name",)
+    ordering = ("account__name",)
