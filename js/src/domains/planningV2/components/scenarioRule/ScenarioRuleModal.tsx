@@ -11,7 +11,7 @@ import { EditIconButton } from 'Iaso/components/Buttons/EditIconButton';
 import { MESSAGES } from '../../../messages';
 import { InterventionCategory } from '../../../planning/types/interventions';
 import { MetricTypeCategory } from '../../../planning/types/metrics';
-import { useCreateScenarioRule } from '../../hooks/useCreateScenarioRule';
+import { useCreateUpdateScenarioRule } from '../../hooks/useCreateUpdateScenarioRule';
 import {
     ScenarioRuleFormValues,
     useScenarioRuleFormState,
@@ -56,11 +56,11 @@ const ScenarioRuleDialog: FC<Props> = ({
     interventionCategories,
     rule,
 }) => {
-    const { mutate: createScenarioRule, isLoading: isSaving } =
-        useCreateScenarioRule(scenarioId);
+    const { mutate: createUpdateScenarioRule, isLoading: isSaving } =
+        useCreateUpdateScenarioRule(scenarioId);
 
     const onSubmit = (values: ScenarioRuleFormValues) => {
-        createScenarioRule(values, {
+        createUpdateScenarioRule(values, {
             onSuccess: () => {
                 closeDialog();
             },
@@ -74,7 +74,7 @@ const ScenarioRuleDialog: FC<Props> = ({
                 name: rule.name,
                 color: rule.color,
                 intervention_properties: rule.intervention_properties,
-                metric_criteria: rule.matching_criteria,
+                matching_criteria: rule.matching_criteria,
             },
         [rule],
     );

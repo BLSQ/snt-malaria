@@ -75,6 +75,8 @@ export const InterventionPropertiesForm: FC<Props> = ({
     onUpdateField,
     interventionCategories,
 }) => {
+    // Filter out categories already selected
+    // We want to assure we don't have two interventions of the same category on the rule.
     const filteredInterventionCategories = useMemo(
         () =>
             interventionCategories.filter(
@@ -86,7 +88,6 @@ export const InterventionPropertiesForm: FC<Props> = ({
         [interventionCategories, interventionProperties],
     );
 
-    // filter this based on already applied categories.
     const interventionCategoryOptions = useMemo(
         () =>
             filteredInterventionCategories?.map(category => ({

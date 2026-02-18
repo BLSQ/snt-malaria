@@ -10,11 +10,13 @@ type ScenarioRulePayload = {
     id?: number;
     name: string;
     scenario: number;
-    metric_criteria: MetricTypeCriterion[];
+    matching_criteria: MetricTypeCriterion[];
     intervention_properties: InterventionProperties[];
 };
 
-export const useCreateScenarioRule = (scenarioId: number): UseMutationResult =>
+export const useCreateUpdateScenarioRule = (
+    scenarioId: number,
+): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: ScenarioRulePayload) => {
             return body.id

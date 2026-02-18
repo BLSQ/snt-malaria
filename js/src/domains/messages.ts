@@ -494,8 +494,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenarioRule.addInterventionProperty',
         defaultMessage: 'Add intervention',
     },
-    addMetricCriteria: {
-        id: 'iaso.snt_malaria.scenarioRule.addMetricCriteria',
+    addMatchingCriteria: {
+        id: 'iaso.snt_malaria.scenarioRule.addMatchingCriteria',
         defaultMessage: 'Add Criteria',
     },
     ruleName: {

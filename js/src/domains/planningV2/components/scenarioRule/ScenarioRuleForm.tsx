@@ -9,7 +9,7 @@ import { InterventionCategory } from '../../../planning/types/interventions';
 import { MetricTypeCategory } from '../../../planning/types/metrics';
 import { ScenarioRuleFormValues } from '../../hooks/useScenarioRuleFormState';
 import { InterventionPropertiesForm } from './InterventionPropertiesForm';
-import { MetricCriteriaForm } from './MetricCriteriaForm';
+import { MatchingCriteriaForm } from './MatchingCriteriaForm';
 
 const ScenarioRuleHeading: FC<{ chipLabel: string; label: string }> = ({
     chipLabel,
@@ -84,15 +84,15 @@ export const ScenarioRuleForm: FC<ScenarioRuleFormProps> = ({
                         chipLabel="2"
                         label={formatMessage(MESSAGES.selectionCriteria)}
                     />
-                    <MetricCriteriaForm
+                    <MatchingCriteriaForm
                         metricTypeCategories={metricTypeCategories}
-                        metricCriteria={values.metric_criteria}
+                        matchingCriteria={values.matching_criteria}
                         onAdd={addChildValue}
                         onRemove={(list_field_key: string, index: number) =>
                             removeChildValue(list_field_key, index)
                         }
-                        errors={errors.metric_criteria}
-                        touched={touched.metric_criteria}
+                        errors={errors.matching_criteria}
+                        touched={touched.matching_criteria}
                         onUpdateField={setChildFieldValueAndState}
                     />
                 </Box>

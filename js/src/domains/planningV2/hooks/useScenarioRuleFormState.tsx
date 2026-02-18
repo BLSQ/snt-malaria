@@ -13,10 +13,10 @@ export type ScenarioRuleFormValues = {
     name: string;
     color: string;
     intervention_properties: InterventionProperties[];
-    metric_criteria: MetricTypeCriterion[];
+    matching_criteria: MetricTypeCriterion[];
 };
 
-export const defaultMetricCriteria: MetricTypeCriterion = {
+export const defaultMatchingCriteria: MetricTypeCriterion = {
     metric_type: undefined,
     operator: '>',
     value: 0,
@@ -32,7 +32,7 @@ const defaultValues: ScenarioRuleFormValues = {
     name: '',
     color: '#000000',
     intervention_properties: [],
-    metric_criteria: [],
+    matching_criteria: [],
 };
 
 const useValidation = () => {
@@ -48,7 +48,7 @@ const useValidation = () => {
                         intervention: Yup.number().required(),
                     }),
                 ),
-                metric_criteria: Yup.array().of(
+                matching_criteria: Yup.array().of(
                     Yup.object().shape({
                         metric_type: Yup.number().required(),
                         operator: Yup.string().required(),

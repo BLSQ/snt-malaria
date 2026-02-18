@@ -11,12 +11,12 @@ import {
     MetricTypeCategory,
 } from '../../../planning/types/metrics';
 import { useGetChildError } from '../../hooks/useGetChildError';
-import { defaultMetricCriteria } from '../../hooks/useScenarioRuleFormState';
+import { defaultMatchingCriteria } from '../../hooks/useScenarioRuleFormState';
 import { MetricTypeCriterion } from '../../types/scenarioRule';
 import { DropdownButton } from './DropdownButton';
 
 type Props = {
-    metricCriteria: MetricTypeCriterion[];
+    matchingCriteria: MetricTypeCriterion[];
     onAdd: (
         list_field_key: string,
         defaultValues: MetricTypeCriterion,
@@ -35,7 +35,7 @@ type Props = {
 };
 
 const styles: Record<string, SxProps<Theme>> = {
-    metricCriteriaContainer: {
+    matchingCriteriaContainer: {
         display: 'flex',
         mb: 2,
         gap: 1,
@@ -58,10 +58,10 @@ const styles: Record<string, SxProps<Theme>> = {
     },
 };
 
-const list_field_key = 'metric_criteria';
+const list_field_key = 'matching_criteria';
 
-export const MetricCriteriaForm: FC<Props> = ({
-    metricCriteria,
+export const MatchingCriteriaForm: FC<Props> = ({
+    matchingCriteria,
     onAdd,
     onRemove,
     errors,
@@ -102,8 +102,8 @@ export const MetricCriteriaForm: FC<Props> = ({
     return (
         <Box>
             {React.Children.toArray(
-                metricCriteria.map((criterion, index) => (
-                    <MetricCriterionForm
+                matchingCriteria.map((criterion, index) => (
+                    <MatchingCriterionForm
                         metricTypeCriterion={criterion}
                         metricType={getMetricType(criterion.metric_type)}
                         onUpdateField={(field, value) =>
@@ -115,10 +115,10 @@ export const MetricCriteriaForm: FC<Props> = ({
                 )),
             )}
             <DropdownButton
-                label={MESSAGES.addMetricCriteria}
+                label={MESSAGES.addMatchingCriteria}
                 options={metricTypeOptions}
                 onClick={(metric_type: number) =>
-                    onAdd(list_field_key, defaultMetricCriteria, {
+                    onAdd(list_field_key, defaultMatchingCriteria, {
                         metric_type,
                     })
                 }
@@ -129,7 +129,7 @@ export const MetricCriteriaForm: FC<Props> = ({
     );
 };
 
-type MetricCriteriaFormProps = {
+type MatchingCriterionFormProps = {
     metricTypeCriterion: MetricTypeCriterion;
     metricType?: MetricType;
     onUpdateField: (field: string, value: any) => void;
@@ -145,7 +145,7 @@ const operatorOptions = [
     { value: '==', label: '=' },
 ];
 
-export const MetricCriterionForm: FC<MetricCriteriaFormProps> = ({
+export const MatchingCriterionForm: FC<MatchingCriterionFormProps> = ({
     metricTypeCriterion,
     metricType,
     onUpdateField,
@@ -172,7 +172,7 @@ export const MetricCriterionForm: FC<MetricCriteriaFormProps> = ({
     );
 
     return (
-        <Box sx={styles.metricCriteriaContainer}>
+        <Box sx={styles.matchingCriteriaContainer}>
             <Box sx={styles.labelWrapper}>
                 <Tooltip title={metricType?.name}>
                     <Typography
