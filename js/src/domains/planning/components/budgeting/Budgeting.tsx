@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import { Box, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -23,6 +23,63 @@ type Props = {
     orgUnits: OrgUnit[];
 };
 
+/** Group items by key, merging duplicates by summing via `merge`. */
+function mergeByKey<T>(
+    items: T[],
+    getKey: (item: T) => string,
+    merge: (existing: T, incoming: T) => T,
+): T[] {
+    const map = new Map<string, T>();
+    for (const item of items) {
+        const key = getKey(item);
+        const existing = map.get(key);
+        map.set(key, existing ? merge(existing, item) : { ...item });
+    }
+    return Array.from(map.values());
+}
+
+function mergeCostLines(lines: BudgetInterventionCostLine[]) {
+    return mergeByKey(
+        lines,
+        l => l.category || l.cost_class,
+        (a, b) => ({ ...a, cost: a.cost + b.cost }),
+    );
+}
+
+function mergeInterventions(interventions: BudgetIntervention[]) {
+    return mergeByKey(
+        interventions,
+        i => `${i.type} - ${i.code}`,
+        (a, b) => ({
+            ...a,
+            total_cost: a.total_cost + b.total_cost,
+            cost_breakdown: mergeCostLines([
+                ...(a.cost_breakdown ?? []),
+                ...(b.cost_breakdown ?? []),
+            ]),
+        }),
+    );
+}
+
+function mergeOrgUnits(orgUnits: BudgetOrgUnit[]) {
+    return mergeByKey(
+        orgUnits,
+        ou => String(ou.org_unit_id),
+        (a, b) => ({
+            ...a,
+            total_cost: a.total_cost + b.total_cost,
+            interventions: mergeInterventions([
+                ...(a.interventions ?? []),
+                ...(b.interventions ?? []),
+            ]),
+            cost_breakdown: mergeCostLines([
+                ...(a.cost_breakdown ?? []),
+                ...(b.cost_breakdown ?? []),
+            ]),
+        }),
+    );
+}
+
 export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
     const { formatMessage } = useSafeIntl();
     const [selectedYear, setSelectedYear] = useState<number | null>(0);
@@ -34,56 +91,6 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
         [formatMessage],
     );
 
-    const mergeCostBreakdown = useCallback(
-        (
-            sourceCostBreakdown: BudgetInterventionCostLine[] = [],
-            costBreakdownToAdd: BudgetInterventionCostLine[] = [],
-        ) => {
-            const mergedCosts = {};
-            sourceCostBreakdown.forEach(
-                c => (mergedCosts[c.category] = c.cost),
-            );
-            costBreakdownToAdd.forEach(c => {
-                const cost = mergedCosts[c.category]
-                    ? mergedCosts[c.category] + c.cost
-                    : c.cost;
-                mergedCosts[c.category] = cost;
-            });
-
-            return Object.entries(mergedCosts).map(([category, cost]) => ({
-                category,
-                cost,
-            })) as BudgetInterventionCostLine[];
-        },
-        [],
-    );
-
-    const mergeInterventionCosts = useCallback(
-        (
-            sourceInterventions: BudgetIntervention[],
-            interventionsToAdd: BudgetIntervention[],
-        ) => {
-            const mergedCosts = {};
-            sourceInterventions?.forEach(
-                i => (mergedCosts[`${i.type} - ${i.code}`] = i),
-            );
-            interventionsToAdd.forEach(i => {
-                const existing = mergedCosts[`${i.type} - ${i.code}`];
-                const newVal = { ...i };
-                if (existing) {
-                    newVal.total_cost += existing.total_cost;
-                    newVal.cost_breakdown = mergeCostBreakdown(
-                        existing.cost_breakdown,
-                        newVal.cost_breakdown,
-                    );
-                }
-
-                mergedCosts[`${i.type} - ${i.code}`] = newVal;
-            });
-            return Object.values(mergedCosts) as BudgetIntervention[];
-        },
-        [mergeCostBreakdown],
-    );
     const yearOptions = useMemo(
         () => [
             defaultBudgetOption,
@@ -96,71 +103,33 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
     );
     const interventionCosts = useMemo(
         () =>
-            selectedYear || yearOptions.length <= 2
+            selectedYear || yearOptions.length <= 2 // only one year in selection
                 ? budgets.find(b => b.year === selectedYear)?.interventions
-                : budgets.reduce(
-                      (interventions, b) =>
-                          mergeInterventionCosts(
-                              interventions,
-                              b.interventions,
-                          ),
-                      [],
-                  ),
-        [budgets, yearOptions, selectedYear, mergeInterventionCosts],
+                : mergeInterventions(budgets.flatMap(b => b.interventions)),
+        [budgets, yearOptions, selectedYear],
     );
 
-    const sortedInterventionCosts = useMemo(
-        () =>
-            interventionCosts
-                ? [...interventionCosts].sort(
-                      (a, b) => b.total_cost - a.total_cost,
-                  )
-                : [],
-        [interventionCosts],
-    );
+    const sortedInterventionCosts = useMemo(() => {
+        if (!interventionCosts) return [];
 
-    const mergeOrgUnitCosts = useCallback(
-        (target: BudgetOrgUnit[], source: BudgetOrgUnit[]) => {
-            const mergedCosts = {};
-            target.forEach(i => (mergedCosts[i.org_unit_id] = i));
-            source?.forEach(org_unit_cost => {
-                const org_unit_id = org_unit_cost.org_unit_id;
-                const existing = mergedCosts[org_unit_id];
-                if (existing) {
-                    existing.total_cost += org_unit_cost.total_cost;
-                    existing.interventions = mergeInterventionCosts(
-                        existing.interventions ?? [],
-                        org_unit_cost.interventions ?? [],
-                    );
-                } else {
-                    mergedCosts[org_unit_id] = { ...org_unit_cost };
-                }
-            });
-            return Object.values(mergedCosts) as BudgetOrgUnit[];
-        },
-        [mergeInterventionCosts],
-    );
+        return [...interventionCosts].sort(
+            (a, b) => b.total_cost - a.total_cost,
+        );
+    }, [interventionCosts]);
 
     const orgUnitCosts = useMemo(
         () =>
-            selectedYear || yearOptions.length <= 2
+            selectedYear || yearOptions.length <= 2 // only one year in selection
                 ? budgets.find(b => b.year === selectedYear)?.org_units_costs
-                : budgets.reduce(
-                      (org_units_costs, b) =>
-                          mergeOrgUnitCosts(org_units_costs, b.org_units_costs),
-                      [] as BudgetOrgUnit[],
-                  ),
-        [mergeOrgUnitCosts, budgets, selectedYear, yearOptions],
+                : mergeOrgUnits(budgets.flatMap(b => b.org_units_costs)),
+        [budgets, selectedYear, yearOptions],
     );
 
-    const totalCost = useMemo(
-        () =>
-            interventionCosts?.reduce(
-                (sum, interventionCost) => sum + interventionCost.total_cost,
-                0,
-            ) ?? 0,
-        [interventionCosts],
-    );
+    const totalCost = useMemo(() => {
+        if (!interventionCosts) return 0;
+
+        return interventionCosts.reduce((sum, el) => sum + el.total_cost, 0);
+    }, [interventionCosts]);
 
     return (
         <>

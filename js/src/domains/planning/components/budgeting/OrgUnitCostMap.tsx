@@ -58,11 +58,11 @@ export const OrgUnitCostMap: FC<Props> = ({ orgUnitCosts, orgUnits }) => {
 
     const getOrgUnitMapMisc = useCallback(
         orgUnitId => {
+            const emptyOU = { color: defaultLegend, label: '0' };
             const ouc = orgUnitCosts?.find(c => c.org_unit_id === orgUnitId);
-            if (!ouc || ouc.total_cost <= 0) {
-                return { color: defaultLegend, label: '0' };
-            }
+            if (!ouc || ouc.total_cost <= 0) return emptyOU;
             const cost = getActiveCost(ouc);
+            if (cost <= 0) return emptyOU;
 
             const fillColor = getColorForShape(
                 cost,
