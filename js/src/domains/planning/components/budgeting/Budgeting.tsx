@@ -71,9 +71,14 @@ function mergeByKey<T>(
 }
 
 function mergeCostLines(lines: BudgetInterventionCostLine[]) {
+    // Normalize cost_class → category so chart lookups work uniformly
+    const normalized = lines.map(l => ({
+        ...l,
+        category: l.category || l.cost_class,
+    }));
     return mergeByKey(
-        lines,
-        l => l.category || l.cost_class,
+        normalized,
+        l => l.category,
         (a, b) => ({ ...a, cost: a.cost + b.cost }),
     );
 }
@@ -104,10 +109,6 @@ function mergeOrgUnits(orgUnits: BudgetOrgUnit[]) {
                 ...(a.interventions ?? []),
                 ...(b.interventions ?? []),
             ]),
-            cost_breakdown: mergeCostLines([
-                ...(a.cost_breakdown ?? []),
-                ...(b.cost_breakdown ?? []),
-            ]),
         }),
     );
 }
@@ -133,13 +134,28 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits, filterLabel }) => {
         ],
         [budgets, defaultBudgetOption],
     );
-    const interventionCosts = useMemo(
-        () =>
-            selectedYear || yearOptions.length <= 2 // only one year in selection
-                ? budgets.find(b => b.year === selectedYear)?.interventions
-                : mergeInterventions(budgets.flatMap(b => b.interventions)),
-        [budgets, yearOptions, selectedYear],
+
+    const orgUnitIds = useMemo(
+        () => new Set(orgUnits.map(ou => ou.id)),
+        [orgUnits],
     );
+
+    const orgUnitCosts = useMemo(() => {
+        const allOrgUnitCosts =
+            selectedYear || yearOptions.length <= 2 // only one year in selection
+                ? budgets.find(b => b.year === selectedYear)?.org_units_costs
+                : mergeOrgUnits(budgets.flatMap(b => b.org_units_costs));
+
+        return allOrgUnitCosts?.filter(ouc => orgUnitIds.has(ouc.org_unit_id));
+    }, [budgets, selectedYear, yearOptions, orgUnitIds]);
+
+    const interventionCosts = useMemo(() => {
+        if (!orgUnitCosts) return [];
+
+        return mergeInterventions(
+            orgUnitCosts.flatMap(ouc => ouc.interventions ?? []),
+        );
+    }, [orgUnitCosts]);
 
     const sortedInterventionCosts = useMemo(() => {
         if (!interventionCosts) return [];
@@ -148,14 +164,6 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits, filterLabel }) => {
             (a, b) => b.total_cost - a.total_cost,
         );
     }, [interventionCosts]);
-
-    const orgUnitCosts = useMemo(
-        () =>
-            selectedYear || yearOptions.length <= 2 // only one year in selection
-                ? budgets.find(b => b.year === selectedYear)?.org_units_costs
-                : mergeOrgUnits(budgets.flatMap(b => b.org_units_costs)),
-        [budgets, selectedYear, yearOptions],
-    );
 
     const totalCost = useMemo(() => {
         if (!interventionCosts) return 0;
