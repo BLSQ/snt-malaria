@@ -6,7 +6,7 @@ import {
     LEGEND_TYPE_MAX_ITEMS,
     LEGEND_TYPE_MIN_ITEMS,
 } from '../../../constants/legend';
-import { MetricTypeFormModel, Scale } from '../../planning/types/metrics';
+import { MetricTypeFormModel } from '../../planning/types/metrics';
 import { MESSAGES } from '../messages';
 
 const DEFAULT_METRIC_TYPE: MetricTypeFormModel = {
@@ -92,9 +92,7 @@ const useValidationSchema = () => {
                         formatMessage(MESSAGES.scaleItemsUnique),
                         value => {
                             if (!value) return false;
-                            const values = value.map(
-                                (item: Scale) => item.value,
-                            );
+                            const values = value.map((item: any) => item.value);
                             return new Set(values).size === values.length;
                         },
                     ),
