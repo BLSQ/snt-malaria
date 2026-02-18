@@ -86,6 +86,10 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Invalid number of scale items for the selected legend type',
     },
+    scaleItemsUnique: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.scaleItemsUnique',
+        defaultMessage: 'Scale items must have unique values',
+    },
     uniqueCodeErrorHeadline: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeErrorHeadline',
         defaultMessage: 'Layer with this code already exists.',
@@ -192,6 +196,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.scale',
         defaultMessage: 'Scale',
     },
+    addScaleItem: {
+        id: 'iaso.snt_malaria.settings.dataLayers.addScaleItem',
+        defaultMessage: 'Add range',
+    },
     legendType: {
         id: 'iaso.snt_malaria.settings.dataLayers.legendType',
         defaultMessage: 'Legend Type',
@@ -207,5 +215,9 @@ export const MESSAGES = defineMessages({
     metricValuesImportError: {
         id: 'iaso.snt_malaria.settings.dataLayers.metricValuesImportError',
         defaultMessage: 'Error importing metric values. Please try again.',
+    },
+    invalidColor: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.invalidColor',
+        defaultMessage: 'Invalid color format. Use hex code like #A1B2C3.',
     },
 });

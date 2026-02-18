@@ -2,6 +2,7 @@ import React, { FC, useCallback } from 'react';
 import { Box, Grid } from '@mui/material';
 import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
+import { LEGEND_TYPE_MAX_ITEMS } from '../../../../constants/legend';
 import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
 import { useGetLegendTypes } from '../../../planning/hooks/useGetLegendTypes';
 import { MetricTypeFormModel } from '../../../planning/types/metrics';
@@ -125,6 +126,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 touched={touched?.legend_config}
                 errors={errors?.legend_config}
                 onUpdateField={setChildFieldValueAndState}
+                maxItems={LEGEND_TYPE_MAX_ITEMS[values.legend_type]}
             />
         </Box>
     );

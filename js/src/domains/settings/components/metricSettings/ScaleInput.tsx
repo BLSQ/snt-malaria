@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { FormikErrors, FormikTouched } from 'formik';
 import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
@@ -12,14 +12,13 @@ import { DEFAULT_LEGEND_CONFIG_ITEM } from '../../hooks/useMetricTypeFormState';
 import { MESSAGES } from '../../messages';
 
 const styles: SxStyles = {
+    title: { mx: 2 },
     legendConfigContainer: {
         mt: 2,
+        fontWeight: 'medium',
     },
     scaleContainter: {
-        display: 'flex',
-        alignItems: 'center',
         mb: 2,
-        gap: 1,
         ' button': {
             visibility: 'hidden',
         },
@@ -30,6 +29,7 @@ const styles: SxStyles = {
 };
 
 type Props = {
+    maxItems: number;
     legendConfig: Scale[];
     onAdd: (key: string, defaultValue: any, extendedValue: any) => void;
     onRemove: (key: string, index: number) => void;
@@ -46,6 +46,7 @@ type Props = {
 const list_field_key = 'legend_config';
 
 export const LegendConfigForm: FC<Props> = ({
+    maxItems,
     legendConfig,
     onAdd,
     onRemove,
@@ -54,7 +55,6 @@ export const LegendConfigForm: FC<Props> = ({
     onUpdateField,
 }) => {
     const { formatMessage } = useSafeIntl();
-
     const getChildError = useGetChildError<Scale>({
         errors,
         touched,
@@ -62,7 +62,7 @@ export const LegendConfigForm: FC<Props> = ({
 
     return (
         <Box sx={styles.legendConfigContainer}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="body1" sx={styles.title}>
                 {formatMessage(MESSAGES.scale)}
             </Typography>
             {React.Children.toArray(
@@ -77,10 +77,17 @@ export const LegendConfigForm: FC<Props> = ({
                     />
                 )),
             )}
+
+            {errors && typeof errors === 'string' && (
+                <Typography color="error" gutterBottom mt={2}>
+                    {errors}
+                </Typography>
+            )}
             <Button
                 onClick={() =>
                     onAdd(list_field_key, DEFAULT_LEGEND_CONFIG_ITEM, {})
                 }
+                disabled={legendConfig.length >= maxItems}
             >
                 {formatMessage(MESSAGES.addScaleItem)}
             </Button>
@@ -102,7 +109,7 @@ export const ScaleForm: FC<ScaleFormProps> = ({
     getErrors,
 }) => {
     return (
-        <Box sx={styles.scaleContainter}>
+        <Stack direction="row" spacing={2} sx={styles.scaleContainter}>
             <InputComponent
                 keyValue="value"
                 value={scale.value}
@@ -112,12 +119,14 @@ export const ScaleForm: FC<ScaleFormProps> = ({
                 withMarginTop={false}
                 type={'text'}
             />
-            <ColorPicker
-                currentColor={scale.color}
-                onChangeColor={color => onUpdateField('color', color)}
-                displayLabel={false}
-            />
+            <Box pt={1}>
+                <ColorPicker
+                    currentColor={scale.color}
+                    onChangeColor={color => onUpdateField('color', color)}
+                    displayLabel={false}
+                />
+            </Box>
             <DeleteIconButton onClick={onRemove} />
-        </Box>
+        </Stack>
     );
 };
