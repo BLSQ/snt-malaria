@@ -6,6 +6,7 @@ import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFor
 import { useGetLegendTypes } from '../../../planning/hooks/useGetLegendTypes';
 import { MetricTypeFormModel } from '../../../planning/types/metrics';
 import { MESSAGES } from '../../messages';
+import { LegendConfigForm } from './ScaleInput';
 
 type MetricTypeFormProps = {
     metricType?: MetricTypeFormModel;
@@ -18,8 +19,16 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
     const { data: legendTypeOptions, isLoading: loadingLegendTypeOptions } =
         useGetLegendTypes();
 
-    const { values, setFieldValue, errors, touched, setFieldTouched } =
-        useGetExtendedFormikContext<MetricTypeFormModel>();
+    const {
+        values,
+        setFieldValue,
+        setChildFieldValueAndState,
+        errors,
+        touched,
+        setFieldTouched,
+        addChildValue,
+        removeChildValue,
+    } = useGetExtendedFormikContext<MetricTypeFormModel>();
 
     const setFieldValueAndState = useCallback(
         (field: string, value: any) => {
@@ -109,14 +118,13 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                     />
                 </Grid>
             </Grid>
-            <InputComponent
-                keyValue="scale"
-                onChange={setFieldValueAndState}
-                value={values.scale}
-                type="text"
-                label={MESSAGES.scale}
-                required
-                errors={getErrors('scale')}
+            <LegendConfigForm
+                legendConfig={values.legend_config || []}
+                onAdd={addChildValue}
+                onRemove={removeChildValue}
+                touched={touched?.legend_config}
+                errors={errors?.legend_config}
+                onUpdateField={setChildFieldValueAndState}
             />
         </Box>
     );

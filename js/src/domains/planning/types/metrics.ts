@@ -28,9 +28,9 @@ export type MetricTypeFormModel = {
     unit_symbol: string;
     comments: string;
     category: string;
-    scale: string;
     legend_type: string;
     origin: string;
+    legend_config: Scale[];
 };
 
 export type MetricValue = {
@@ -40,6 +40,11 @@ export type MetricValue = {
     year: number | null;
     value: number;
     string_value: string;
+};
+
+export type Scale = {
+    color: string;
+    value: number | string;
 };
 
 export type ScaleDomainRange = {
