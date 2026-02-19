@@ -48,32 +48,34 @@ export const DropdownButton: FC<Props> = ({
     );
 
     const defaultGroupKey = 'default_group_key';
-    const groupedOptions = useMemo(
-        () =>
-            groupOptions
-                ? options.reduce(
-                      (acc, option) => {
-                          const groupKey = option.groupKey ?? defaultGroupKey;
-                          if (!acc[groupKey]) {
-                              acc[groupKey] = {
-                                  label: option.groupLabel,
-                                  options: [option],
-                              };
-                          } else {
-                              acc[groupKey].options.push(option);
-                          }
-                          return acc;
-                      },
-                      {} as {
-                          [key: string]: {
-                              options: any[];
-                              label: string | undefined;
-                          };
-                      },
-                  )
-                : {},
-        [options, groupOptions],
-    );
+    const groupedOptions = useMemo(() => {
+        if (!groupOptions) return [];
+
+        const result: {
+            label: string | undefined;
+            options: typeof options;
+        }[] = [];
+
+        // Used to keep track of the index of each group in the result array
+        const keyMap = new Map<string, number>();
+
+        options.forEach(option => {
+            const groupKey = option.groupKey ?? defaultGroupKey;
+            const index = keyMap.get(groupKey);
+
+            if (index === undefined) {
+                keyMap.set(groupKey, result.length);
+                result.push({
+                    label: option.groupLabel,
+                    options: [option],
+                });
+            } else {
+                result[index].options.push(option);
+            }
+        });
+
+        return result;
+    }, [options, groupOptions]);
 
     return (
         <>

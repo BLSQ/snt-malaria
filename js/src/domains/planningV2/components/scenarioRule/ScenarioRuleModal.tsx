@@ -59,13 +59,16 @@ const ScenarioRuleDialog: FC<Props> = ({
     const { mutate: createUpdateScenarioRule, isLoading: isSaving } =
         useCreateUpdateScenarioRule(scenarioId);
 
-    const onSubmit = (values: ScenarioRuleFormValues) => {
-        createUpdateScenarioRule(values, {
-            onSuccess: () => {
-                closeDialog();
-            },
-        });
-    };
+    const onSubmit = useCallback(
+        (values: ScenarioRuleFormValues) => {
+            createUpdateScenarioRule(values, {
+                onSuccess: () => {
+                    closeDialog();
+                },
+            });
+        },
+        [createUpdateScenarioRule, closeDialog],
+    );
 
     const initialValues: ScenarioRuleFormValues | undefined = useMemo(
         () =>

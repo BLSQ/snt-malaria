@@ -58,7 +58,7 @@ const styles: Record<string, SxProps<Theme>> = {
     },
 };
 
-const list_field_key = 'matching_criteria';
+const LIST_FIELD_KEY = 'matching_criteria';
 
 export const MatchingCriteriaForm: FC<Props> = ({
     matchingCriteria,
@@ -107,9 +107,9 @@ export const MatchingCriteriaForm: FC<Props> = ({
                         metricTypeCriterion={criterion}
                         metricType={getMetricType(criterion.metric_type)}
                         onUpdateField={(field, value) =>
-                            onUpdateField(list_field_key, index, field, value)
+                            onUpdateField(LIST_FIELD_KEY, index, field, value)
                         }
-                        onRemove={() => onRemove(list_field_key, index)}
+                        onRemove={() => onRemove(LIST_FIELD_KEY, index)}
                         getErrors={field => getChildError(field, index)}
                     />
                 )),
@@ -118,12 +118,12 @@ export const MatchingCriteriaForm: FC<Props> = ({
                 label={MESSAGES.addMatchingCriteria}
                 options={metricTypeOptions}
                 onClick={(metric_type: number) =>
-                    onAdd(list_field_key, defaultMatchingCriteria, {
+                    onAdd(LIST_FIELD_KEY, defaultMatchingCriteria, {
                         metric_type,
                     })
                 }
                 size="small"
-                groupOptions={true}
+                groupOptions
             />
         </Box>
     );
