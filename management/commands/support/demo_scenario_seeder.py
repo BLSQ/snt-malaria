@@ -149,11 +149,8 @@ class DemoScenarioSeeder:
 
         # Create a budget for the scenario
         self.stdout_write("\nCreating budget for scenario...")
-        try:
-            budget = self._create_budget_for_scenario(scenario, created_by)
-            self.stdout_write(f"Created budget: {budget.name}")
-        except Exception as e:
-            self.stdout_write(f"WARNING: Failed to create budget: {e}")
+        budget = self._create_budget_for_scenario(scenario, created_by)
+        self.stdout_write(f"Created budget: {budget.name}")
 
         self.stdout_write("Done creating demo scenario.")
         return scenario
@@ -217,6 +214,7 @@ class DemoScenarioSeeder:
             cost_input={},
             assumptions=settings,
             results=budgets,
+            population_input={},
             created_by=created_by,
             updated_by=created_by,
         )
