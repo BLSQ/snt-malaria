@@ -101,7 +101,7 @@ export const DropdownButton: FC<Props> = ({
                 <ClickAwayListener onClickAway={() => setIsOpen(false)}>
                     <MenuList>
                         {groupOptions ? (
-                            Object.values(groupedOptions).map(group => (
+                            groupedOptions.map(group => (
                                 <Fragment key={group.label}>
                                     <ListSubheader>{group.label}</ListSubheader>
                                     <DropdownOptionItems
