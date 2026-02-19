@@ -8,6 +8,7 @@ from .intervention_assignments.views import InterventionAssignmentViewSet
 from .intervention_categories.views import InterventionCategoryViewSet
 from .intervention_cost_breakdown_line.views import InterventionCostBreakdownLineViewSet
 from .interventions.views import InterventionViewSet
+from .scenario_rules.views import ScenarioRuleViewSet
 from .scenarios.views import ScenarioViewSet
 
 
@@ -20,6 +21,7 @@ router.register(
     basename="intervention_assignments",
 )
 router.register(r"snt_malaria/scenarios", ScenarioViewSet, basename="scenarios")
+router.register(r"snt_malaria/scenario_rules", ScenarioRuleViewSet, basename="scenario_rules")
 
 # Cost api
 router.register(
