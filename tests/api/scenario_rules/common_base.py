@@ -89,7 +89,7 @@ class ScenarioRulesTestBase(APITestCase):
             name="Rule 1",
             priority=1,
             color="#FF0000",
-            matching_criteria={"and": [{"==": [{"var": "org_unit.org_unit_type_id"}, self.out_district.id]}]},
+            matching_criteria={"and": [{"==": [{"var": 2}, self.out_district.id]}]},
             created_by=self.user_with_full_perm,
             scenario=self.scenario,
             org_units_matched=[self.district_1.id, self.district_2.id],
@@ -111,7 +111,7 @@ class ScenarioRulesTestBase(APITestCase):
             name="Rule 2",
             priority=2,
             color="#00FF00",
-            matching_criteria={"and": [{"==": [{"var": "org_unit.org_unit_type_id"}, self.out_district.id]}]},
+            matching_criteria={"and": [{"==": [{"var": 2}, self.out_district.id]}]},
             created_by=self.user_with_full_perm,
             scenario=self.scenario,
             org_units_matched=[self.district_1.id, self.district_2.id],
@@ -181,7 +181,7 @@ class ScenarioRulesTestBase(APITestCase):
             name="Other Rule",
             priority=1,
             color="#0000FF",
-            matching_criteria={"and": [{"==": [{"var": "org_unit.org_unit_type_id"}, self.other_out_district.id]}]},
+            matching_criteria={"and": [{"==": [{"var": 5}, self.other_out_district.id]}]},
             created_by=self.other_user,
             scenario=self.other_scenario,
             org_units_matched=[self.other_district_1.id, self.other_district_2.id],
@@ -189,7 +189,7 @@ class ScenarioRulesTestBase(APITestCase):
             org_units_included=[],
             org_units_scope=[],
         )
-        self.other_rule_internvention = ScenarioRuleInterventionProperties.objects.create(
+        self.other_rule_intervention = ScenarioRuleInterventionProperties.objects.create(
             scenario_rule=self.other_scenario_rule,
             intervention=self.other_intervention,
             coverage=0.90,
