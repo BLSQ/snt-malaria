@@ -9,6 +9,7 @@ from iaso.utils.models.soft_deletable import (
     DefaultSoftDeletableManager,
     SoftDeletableModel,
 )
+from iaso.utils.validators import JSONSchemaValidator
 
 
 class Scenario(SoftDeletableModel):
@@ -39,6 +40,40 @@ class Scenario(SoftDeletableModel):
         return "%s %s %s" % (self.name, self.updated_at, self.id)
 
 
+SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["and"],
+    "additionalProperties": False,
+    "properties": {"and": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/condition"}}},
+    "$defs": {
+        "condition": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 1,
+            "additionalProperties": False,
+            "patternProperties": {
+                "^(==|<=|>=|<|>)$": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": [{"$ref": "#/$defs/varObject"}, {"$ref": "#/$defs/value"}],
+                }
+            },
+        },
+        "varObject": {
+            "type": "object",
+            "required": ["var"],
+            "additionalProperties": False,
+            "properties": {"var": {"type": "integer"}},
+        },
+        "value": {
+            "anyOf": [{"type": "string", "minLength": 1}, {"type": "number"}, {"type": "integer"}, {"type": "boolean"}]
+        },
+    },
+}
+
+
 class ScenarioRule(models.Model):
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="rules")
     name = models.CharField(max_length=255)
@@ -47,7 +82,9 @@ class ScenarioRule(models.Model):
 
     # This should match format for jsonlogic_to_exists_q_clauses in iaso.utils.jsonlogic
     # This should only support one level: e.g. {"and": [{"==": [{"var": "gender"}, "F"]}, {"<": [{"var": "age"}, 25]}]}
-    matching_criteria = models.JSONField(blank=False, null=False)
+    matching_criteria = models.JSONField(
+        blank=False, null=False, validators=[JSONSchemaValidator(schema=SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)]
+    )
 
     # Those fields are mainly used to keep track on org units setup in the UI.
     # Foreign keys to org units are managed by intervention_assignments.
@@ -72,6 +109,10 @@ class ScenarioRule(models.Model):
                 name="scenario_rule_priority_unique",
             )
         ]
+
+    def save(self, *args, **kwargs):
+        self.clean_fields()  # forces validation checks when calling save() directly or indirectly (objects.create())
+        super().save(*args, **kwargs)
 
 
 class ScenarioRuleInterventionProperties(models.Model):

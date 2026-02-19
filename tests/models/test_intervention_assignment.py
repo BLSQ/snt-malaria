@@ -30,7 +30,7 @@ class InterventionAssignmentModelTestCase(TestCase):
             name="Rule 1",
             priority=1,
             color="#FF0000",
-            matching_criteria={"and": [{"==": [{"var": "gender"}, "F"]}, {"<": [{"var": "age"}, 25]}]},
+            matching_criteria={"and": [{"==": [{"var": 2}, "F"]}, {"<": [{"var": 4}, 25]}]},
             created_by=self.user,
             scenario=self.scenario,
             org_units_matched=[],

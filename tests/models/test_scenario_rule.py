@@ -24,7 +24,9 @@ class ScenarioRuleModelTestCase(TestCase):
         )
         self.org_unit_1 = OrgUnit.objects.create(name="Org Unit 1")
         self.org_unit_2 = OrgUnit.objects.create(name="Org Unit 2")
-        self.matching_criteria = {"and": [{"==": [{"var": "gender"}, "F"]}, {"<": [{"var": "age"}, 25]}]}
+        self.matching_criteria = {
+            "and": [{"==": [{"var": 1}, "F"]}, {"<": [{"var": 2}, 25]}, {"<=": [{"var": 3}, True]}]
+        }
 
     def test_default_color(self):
         default_color_rule = ScenarioRule.objects.create(
@@ -56,8 +58,8 @@ class ScenarioRuleModelTestCase(TestCase):
             missing_name_rule.full_clean()
 
     def test_missing_matching_criteria_field(self):
-        with self.assertRaises(IntegrityError):
-            missing_matching_criteria_rule = ScenarioRule.objects.create(
+        with self.assertRaisesMessage(ValidationError, "This field cannot be null."):
+            ScenarioRule.objects.create(
                 name="Rule 2",
                 priority=1,
                 color="#FF0000",
@@ -68,11 +70,10 @@ class ScenarioRuleModelTestCase(TestCase):
                 org_units_included=[],
                 org_units_scope=[],
             )
-            missing_matching_criteria_rule.full_clean()
 
     def test_missing_priority_field(self):
-        with self.assertRaises(IntegrityError):
-            missing_priority_rule = ScenarioRule.objects.create(
+        with self.assertRaisesMessage(ValidationError, "This field cannot be null."):
+            ScenarioRule.objects.create(
                 name="Rule 3",
                 color="#FF0000",
                 matching_criteria=self.matching_criteria,
@@ -83,7 +84,6 @@ class ScenarioRuleModelTestCase(TestCase):
                 org_units_included=[],
                 org_units_scope=[],
             )
-            missing_priority_rule.full_clean()
 
     def test_missing_optional_fields(self):
         rule_with_defaults = ScenarioRule.objects.create(
@@ -117,10 +117,17 @@ class ScenarioRuleModelTestCase(TestCase):
                 matching_criteria=self.matching_criteria,
                 created_by=self.user,
                 scenario=self.scenario,
-                org_units_matched=[],
-                org_units_excluded=[],
-                org_units_included=[],
-                org_units_scope=[],
+            )
+
+    def test_matching_criteria_none(self):
+        with self.assertRaisesMessage(ValidationError, "This field cannot be null."):
+            ScenarioRule.objects.create(
+                name="Rule with invalid matching criteria",
+                priority=2,
+                color="#FF0000",
+                matching_criteria=None,
+                created_by=self.user,
+                scenario=self.scenario,
             )
 
 
@@ -140,7 +147,7 @@ class ScenarioRuleInterventionPropertiesModelTestCase(TestCase):
             name="Rule 1",
             priority=1,
             color="#FF0000",
-            matching_criteria={"and": [{"==": [{"var": "gender"}, "F"]}, {"<": [{"var": "age"}, 25]}]},
+            matching_criteria={"and": [{"==": [{"var": 1}, "F"]}, {"<": [{"var": 2}, 25]}]},
             created_by=self.user,
             scenario=self.scenario,
             org_units_matched=[],
