@@ -2,12 +2,15 @@ import React, { FC, useCallback } from 'react';
 import { Box, Grid } from '@mui/material';
 import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
-import { LEGEND_TYPE_MAX_ITEMS } from '../../../../constants/legend';
+import {
+    LEGEND_TYPE_MAX_ITEMS,
+    LEGEND_TYPE_MIN_ITEMS,
+} from '../../../../constants/legend';
 import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
 import { useGetLegendTypes } from '../../../planning/hooks/useGetLegendTypes';
 import { MetricTypeFormModel } from '../../../planning/types/metrics';
 import { MESSAGES } from '../../messages';
-import { LegendConfigForm } from './ScaleInput';
+import { LegendConfigForm } from './LegendConfigForm';
 
 type MetricTypeFormProps = {
     metricType?: MetricTypeFormModel;
@@ -120,12 +123,14 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 </Grid>
             </Grid>
             <LegendConfigForm
+                legendType={values.legend_type}
                 legendConfig={values.legend_config || []}
                 onAdd={addChildValue}
                 onRemove={removeChildValue}
                 touched={touched?.legend_config}
                 errors={errors?.legend_config}
                 onUpdateField={setChildFieldValueAndState}
+                minItems={LEGEND_TYPE_MIN_ITEMS[values.legend_type]}
                 maxItems={LEGEND_TYPE_MAX_ITEMS[values.legend_type]}
             />
         </Box>

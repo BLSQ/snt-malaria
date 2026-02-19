@@ -5,9 +5,15 @@ import * as Yup from 'yup';
 import {
     LEGEND_TYPE_MAX_ITEMS,
     LEGEND_TYPE_MIN_ITEMS,
+    LegendTypes,
 } from '../../../constants/legend';
 import { MetricTypeFormModel } from '../../planning/types/metrics';
 import { MESSAGES } from '../messages';
+
+export const DEFAULT_LEGEND_CONFIG_ITEM = {
+    color: '#000000',
+    value: '',
+};
 
 const DEFAULT_METRIC_TYPE: MetricTypeFormModel = {
     id: undefined,
@@ -20,13 +26,8 @@ const DEFAULT_METRIC_TYPE: MetricTypeFormModel = {
     units: '',
     unit_symbol: '',
     comments: '',
-    legend_type: '',
-    legend_config: [],
-};
-
-export const DEFAULT_LEGEND_CONFIG_ITEM = {
-    color: '#000000',
-    value: '',
+    legend_type: LegendTypes.THRESHOLD,
+    legend_config: [DEFAULT_LEGEND_CONFIG_ITEM, DEFAULT_LEGEND_CONFIG_ITEM],
 };
 
 const useValidationSchema = () => {
@@ -57,6 +58,7 @@ const useValidationSchema = () => {
                             value: Yup.mixed().required(
                                 formatMessage(MESSAGES.required),
                             ),
+
                             color: Yup.string()
                                 .matches(
                                     /^#([0-9A-F]{3}){1,2}$/i,
