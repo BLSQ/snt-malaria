@@ -9,6 +9,7 @@ from .models import (
     InterventionCategory,
     InterventionCostBreakdownLine,
     Scenario,
+    ScenarioRule,
 )
 
 
@@ -73,6 +74,21 @@ class ScenarioAdmin(admin.ModelAdmin):
     search_fields = ("name", "description")
     list_filter = ("account", "created_by")
     ordering = ("name",)
+
+
+@admin.register(ScenarioRule)
+class ScenarioRuleAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "scenario",
+        "priority",
+        "created_by",
+        "created_at",
+        "updated_at",
+    )
+    search_fields = ("name",)
+    list_filter = ("scenario", "created_by")
+    ordering = ("scenario", "priority")
 
 
 @admin.register(InterventionCostBreakdownLine)

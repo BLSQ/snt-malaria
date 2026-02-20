@@ -5,7 +5,7 @@ from plugins.snt_malaria.models.scenario import ScenarioRuleInterventionProperti
 
 
 class ScenarioRuleInterventionPropertiesSerializer(serializers.ModelSerializer):
-    category = serializers.IntegerField(read_only=True, source="intervention__intervention_category_id")
+    category = serializers.IntegerField(read_only=True, source="intervention.intervention_category_id")
     coverage = serializers.DecimalField(max_digits=3, decimal_places=2)
 
     class Meta:
