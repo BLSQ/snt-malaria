@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.8.0](https://github.com/BLSQ/snt-malaria/compare/2.7.1...2.8.0) (2026-02-20)
+
+
+### Features
+
+* `ScenarioRule` endpoint for GET ([#193](https://github.com/BLSQ/snt-malaria/issues/193)) ([904c640](https://github.com/BLSQ/snt-malaria/commit/904c640fbc67e4f81feeea7d66f39bf90f504070))
+* add `ScenarioRule` to admin + fix serializers ([#196](https://github.com/BLSQ/snt-malaria/issues/196)) ([d54db04](https://github.com/BLSQ/snt-malaria/commit/d54db04de5654379a99226e974c84938b68e7ffb))
+* add models for rule-based scenarios ([#190](https://github.com/BLSQ/snt-malaria/issues/190)) ([c2f7548](https://github.com/BLSQ/snt-malaria/commit/c2f7548d28bfb330076f2f74553e6783acb923d3))
+* add SNT permissions - backend ([#179](https://github.com/BLSQ/snt-malaria/issues/179)) ([5a544cc](https://github.com/BLSQ/snt-malaria/commit/5a544cc990f2f5d6aef3a5c1249fac93542d765a))
+* SNT-269 when creating a scenario we should force users to give the scenario a name ([#182](https://github.com/BLSQ/snt-malaria/issues/182)) ([17bfe6d](https://github.com/BLSQ/snt-malaria/commit/17bfe6d9cd4384b5ef9ffa689b3715ad39484e5c))
+* SNT-275 Don't display N/A if value is 0 ([#183](https://github.com/BLSQ/snt-malaria/issues/183)) ([c65a726](https://github.com/BLSQ/snt-malaria/commit/c65a726a1968b3309710cbb3f538f2a1b05321f5))
+* SNT-285 i can create a assignment rule ([#191](https://github.com/BLSQ/snt-malaria/issues/191)) ([ec959f0](https://github.com/BLSQ/snt-malaria/commit/ec959f0b17d2d53521e72914ae47f4bf60a9a40a))
+* SNT-301: Add population data to budget ([#189](https://github.com/BLSQ/snt-malaria/issues/189)) ([b52598b](https://github.com/BLSQ/snt-malaria/commit/b52598b68878593c120a56679a3f4fd0158c56b2))
+
+
+### Bug Fixes
+
+* Demo account recreate script ([3ab68c9](https://github.com/BLSQ/snt-malaria/commit/3ab68c993a29ec18592ab074d2d1dd9f1a43572a))
+
 ## [2.7.1](https://github.com/BLSQ/snt-malaria/compare/2.7.0...2.7.1) (2026-02-11)
 
 
