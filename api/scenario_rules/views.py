@@ -20,7 +20,11 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user or not user.is_authenticated or not hasattr(user, "iaso_profile"):
             return ScenarioRule.objects.none()
-        return ScenarioRule.objects.select_related("scenario").filter(scenario__account=user.iaso_profile.account)
+        return (
+            ScenarioRule.objects.select_related("scenario")
+            .prefetch_related("intervention_properties", "intervention_properties__intervention")
+            .filter(scenario__account=user.iaso_profile.account)
+        )
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -35,6 +39,6 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         scenario = serializer.validated_data["scenario"]
 
         scenario_rules = self.get_queryset().filter(scenario=scenario)
-        serializer = ScenarioRuleListSerializer(scenario_rules, many=True)
+        list_serializer = ScenarioRuleListSerializer(scenario_rules, many=True)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(list_serializer.data, status=status.HTTP_200_OK)

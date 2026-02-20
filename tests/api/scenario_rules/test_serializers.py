@@ -78,10 +78,12 @@ class ScenarioRuleListSerializerTestCase(ScenarioRulesTestBase):
             [
                 {
                     "intervention": self.rule_intervention_1.intervention.id,
+                    "category": self.rule_intervention_1.intervention.intervention_category_id,
                     "coverage": f"{self.rule_intervention_1.coverage:.2f}",
                 },
                 {
                     "intervention": self.rule_intervention_2.intervention.id,
+                    "category": self.rule_intervention_2.intervention.intervention_category_id,
                     "coverage": f"{self.rule_intervention_2.coverage:.2f}",
                 },
             ],
@@ -103,6 +105,7 @@ class ScenarioRuleListSerializerTestCase(ScenarioRulesTestBase):
             [
                 {
                     "intervention": self.rule_intervention_3.intervention.id,
+                    "category": self.rule_intervention_3.intervention.intervention_category_id,
                     "coverage": f"{self.rule_intervention_3.coverage:.2f}",
                 },
             ],
@@ -128,10 +131,12 @@ class ScenarioRuleRetrieveSerializerTestCase(ScenarioRulesTestBase):
             [
                 {
                     "intervention": self.rule_intervention_1.intervention.id,
+                    "category": self.rule_intervention_1.intervention.intervention_category_id,
                     "coverage": f"{self.rule_intervention_1.coverage:.2f}",
                 },
                 {
                     "intervention": self.rule_intervention_2.intervention.id,
+                    "category": self.rule_intervention_2.intervention.intervention_category_id,
                     "coverage": f"{self.rule_intervention_2.coverage:.2f}",
                 },
             ],
