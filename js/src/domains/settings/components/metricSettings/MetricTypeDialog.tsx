@@ -1,8 +1,13 @@
-import React, { FC, useMemo, useRef, useState } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import { Alert, AlertTitle } from '@mui/material';
 import { ConfirmCancelModal, useSafeIntl } from 'bluesquare-components';
-import { MetricType } from '../../../planning/types/metrics';
+import { FormikProvider } from 'formik';
+import {
+    MetricType,
+    MetricTypeFormModel,
+} from '../../../planning/types/metrics';
 import { useCreateOrUpdateMetricType } from '../../hooks/useCreateOrUpdateMetricType';
+import { useMetricTypeFormState } from '../../hooks/useMetricTypeFormState';
 import { MESSAGES } from '../../messages';
 import { MetricTypeForm } from './MetricTypeForm';
 
@@ -18,7 +23,6 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
     metricType = undefined,
 }) => {
     const [errorCode, setErrorCode] = useState<string | undefined>(undefined);
-    const [allowConfirm, setAllowConfirm] = useState(true);
     const { formatMessage } = useSafeIntl();
     const { mutate: submitMetricType } = useCreateOrUpdateMetricType({
         onError: errorCode => setErrorCode(`${errorCode}Error`),
@@ -27,11 +31,6 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
             closeDialog();
         },
     });
-
-    const callbackRef = useRef<() => void>();
-    const handleOnRef = (callback: () => void) => {
-        callbackRef.current = callback;
-    };
 
     const metricTypeFormModel = useMemo(() => {
         if (metricType) {
@@ -50,16 +49,29 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
                 ).replaceAll('"', ''),
                 legend_type: metricType.legend_type,
                 origin: metricType.origin,
+                legend_config: metricType.legend_config.domain.map(
+                    (value, index) => ({
+                        value,
+                        color: metricType.legend_config.range[index],
+                    }),
+                ),
             };
         }
         return undefined;
     }, [metricType]);
 
-    const handleConfirm = () => {
-        if (callbackRef?.current) {
-            callbackRef.current();
-        }
+    const onSubmit = (values: MetricTypeFormModel) => {
+        const payload = {
+            ...values,
+            legend_config: {
+                domain: values.legend_config.map(item => item.value),
+                range: values.legend_config.map(item => item.color),
+            },
+        };
+        submitMetricType(payload);
     };
+
+    const formik = useMetricTypeFormState(metricTypeFormModel, onSubmit);
 
     const handleCancel = () => {
         setErrorCode(undefined);
@@ -78,19 +90,16 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
                     : formatMessage(MESSAGES.create)
             }
             closeDialog={closeDialog}
-            onConfirm={handleConfirm}
+            onConfirm={formik.handleSubmit}
             onCancel={handleCancel}
             confirmMessage={metricType ? MESSAGES.edit : MESSAGES.create}
             cancelMessage={MESSAGES.cancel}
             closeOnConfirm={false}
-            allowConfirm={allowConfirm}
+            allowConfirm={formik.isValid && !formik.isSubmitting}
         >
-            <MetricTypeForm
-                metricType={metricTypeFormModel}
-                onSubmitFormRef={handleOnRef}
-                onSubmit={submitMetricType}
-                onStatusChange={setAllowConfirm}
-            />
+            <FormikProvider value={formik}>
+                <MetricTypeForm metricType={metricTypeFormModel} />
+            </FormikProvider>
             {errorCode && (
                 <Alert severity="error" variant="filled" sx={{ mt: 2 }}>
                     <AlertTitle>
