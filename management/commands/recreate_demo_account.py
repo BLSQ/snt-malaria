@@ -6,6 +6,7 @@ from django.db import transaction
 
 from iaso.gpkg.import_gpkg import import_gpkg_file2
 from iaso.models import Account, DataSource, MetricType, MetricValue, Profile, Project, Report, SourceVersion, Team
+from iaso.models.data_store import JsonDataStore
 from plugins.snt_malaria.models import (
     Budget,
     Intervention,
@@ -42,18 +43,24 @@ class Command(BaseCommand):
         demo_account = Account.objects.get(name=DEMO_ACCOUNT_NAME)
         projects = Project.objects.filter(account=demo_account)
         data_sources = DataSource.objects.filter(projects__in=projects)
-        scenarios = Scenario.objects.filter(account=demo_account)
-        categories = InterventionCategory.objects.filter(account=demo_account)
-        interventions = Intervention.objects.filter(intervention_category__in=categories)
+        JsonDataStore.objects.filter(account=demo_account).delete()
+        scenarios = Scenario.objects_include_deleted.filter(account=demo_account)
+        categories = InterventionCategory.objects_include_deleted.filter(account=demo_account)
+        interventions = Intervention.objects_include_deleted.filter(intervention_category__in=categories)
         metric_types = MetricType.objects.filter(account=demo_account)
 
         # Delete in order to avoid PROTECT foreign key constraints
         InterventionAssignment.objects.filter(scenario__in=scenarios).delete()
-        Budget.objects.filter(scenario__in=scenarios).delete()
-        scenarios.delete()
+        budgets = Budget.objects_include_deleted.filter(scenario__in=scenarios)
+        for b in budgets:
+            b.delete_hard()
+        for s in scenarios:
+            s.delete_hard()
         InterventionCostBreakdownLine.objects.filter(intervention__in=interventions).delete()
-        interventions.delete()
-        categories.delete()
+        for i in interventions:
+            i.delete_hard()
+        for c in categories:
+            c.delete_hard()
         MetricValue.objects.filter(metric_type__in=metric_types).delete()
         metric_types.delete()
         Team.objects.filter(project__in=projects).delete()
@@ -153,7 +160,7 @@ class Command(BaseCommand):
             InterventionSeeder(account, self.stdout.write).create_interventions()
 
             # Create demo scenario with intervention assignments
-            DemoScenarioSeeder(account, self.stdout.write).create_scenario()
+            DemoScenarioSeeder(account, project, self.stdout.write).create_scenario()
 
             self.stdout.write(self.style.SUCCESS("Setup completed successfully:"))
             self.stdout.write(
