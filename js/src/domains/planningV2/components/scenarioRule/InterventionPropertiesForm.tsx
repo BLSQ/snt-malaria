@@ -14,7 +14,7 @@ type Props = {
     onAdd: (
         key: string,
         defaultValues: InterventionProperties,
-        extendedValue: { intervention_category: number },
+        extendedValue: { intervention_category: number; intervention: number },
     ) => void;
     onRemove: (key: string, index: number) => void;
     touched: FormikTouched<InterventionProperties>[] | undefined;
@@ -56,6 +56,18 @@ export const InterventionPropertiesForm: FC<Props> = ({
         [interventionCategories, interventionProperties],
     );
 
+    const interventionsPerCategory = useMemo(
+        () =>
+            filteredInterventionCategories.reduce(
+                (acc, category) => {
+                    acc[category.id] = category.interventions;
+                    return acc;
+                },
+                {} as Record<number, InterventionCategory['interventions']>,
+            ),
+        [filteredInterventionCategories],
+    );
+
     const interventionCategoryOptions = useMemo(
         () =>
             filteredInterventionCategories?.map(category => ({
@@ -80,11 +92,8 @@ export const InterventionPropertiesForm: FC<Props> = ({
 
     const getInterventions = useCallback(
         (categoryId?: number) =>
-            (categoryId &&
-                interventionCategories?.find(c => c.id === categoryId)
-                    ?.interventions) ||
-            [],
-        [interventionCategories],
+            (categoryId && interventionsPerCategory[categoryId]) || [],
+        [interventionsPerCategory],
     );
 
     return interventionProperties ? (
@@ -108,6 +117,8 @@ export const InterventionPropertiesForm: FC<Props> = ({
                 onClick={interventionCategory =>
                     onAdd(array_field_key, defaultInterventionProperties, {
                         intervention_category: interventionCategory,
+                        intervention:
+                            getInterventions(interventionCategory)[0]?.id,
                     })
                 }
                 size="small"

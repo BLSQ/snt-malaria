@@ -42,20 +42,24 @@ const useValidation = () => {
         () =>
             Yup.object().shape({
                 name: Yup.string().required(formatMessage(MESSAGES.required)),
-                intervention_properties: Yup.array().of(
-                    Yup.object().shape({
-                        intervention_category: Yup.number().required(),
-                        intervention: Yup.number().required(),
-                    }),
-                ),
-                matching_criteria: Yup.array().of(
-                    Yup.object().shape({
-                        metric_type: Yup.number().required(),
-                        operator: Yup.string().required(),
-                        value: Yup.number(),
-                        string_value: Yup.string(),
-                    }),
-                ),
+                intervention_properties: Yup.array()
+                    .of(
+                        Yup.object().shape({
+                            intervention_category: Yup.number().required(),
+                            intervention: Yup.number().required(),
+                        }),
+                    )
+                    .min(1),
+                matching_criteria: Yup.array()
+                    .of(
+                        Yup.object().shape({
+                            metric_type: Yup.number().required(),
+                            operator: Yup.string().required(),
+                            value: Yup.number(),
+                            string_value: Yup.string(),
+                        }),
+                    )
+                    .min(1),
             }),
         [formatMessage],
     );
