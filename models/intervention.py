@@ -4,6 +4,9 @@ from django.db.models import Q
 
 from iaso.models import OrgUnit
 from iaso.utils.models.soft_deletable import (
+    DefaultSoftDeletableManager,
+    IncludeDeletedSoftDeletableManager,
+    OnlyDeletedSoftDeletableManager,
     SoftDeletableModel,
 )
 from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule
@@ -23,6 +26,10 @@ class InterventionCategory(SoftDeletableModel):
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = DefaultSoftDeletableManager()
+    objects_only_deleted = OnlyDeletedSoftDeletableManager()
+    objects_include_deleted = IncludeDeletedSoftDeletableManager()
 
     def __str__(self):
         return "%s %s" % (self.name, self.id)
@@ -45,6 +52,10 @@ class Intervention(SoftDeletableModel):
     updated_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="intervention_updated_set"
     )
+
+    objects = DefaultSoftDeletableManager()
+    objects_only_deleted = OnlyDeletedSoftDeletableManager()
+    objects_include_deleted = IncludeDeletedSoftDeletableManager()
 
     def __str__(self):
         return "%s %s" % (self.name, self.id)

@@ -1,9 +1,10 @@
 import React, { FC, useMemo, useState } from 'react';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import { Box, Grid, Typography } from '@mui/material';
+import { Box, Chip, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
 import { IconBoxed } from '../../../../components/IconBoxed';
 import { PaperContainer } from '../../../../components/styledComponents';
 import { MESSAGES } from '../../../messages';
@@ -18,9 +19,40 @@ import { CostBreakdownChart } from './CostBreakdownChart';
 import { OrgUnitCostMap } from './OrgUnitCostMap';
 import { ProportionChart } from './ProportionChart';
 
+const styles: SxStyles = {
+    toolbar: {
+        py: 1,
+        px: 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: 'white',
+        borderRadius: 4,
+    },
+    toolbarLeft: {
+        display: 'flex',
+        alignItems: 'center',
+    },
+    budgetLabel: {
+        mx: 2,
+    },
+    toolbarRight: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+    },
+    mapGrid: {
+        height: '493px',
+    },
+    mapContainer: {
+        height: '100%',
+    },
+};
+
 type Props = {
     budgets: Budget[];
     orgUnits: OrgUnit[];
+    filterLabel?: string;
 };
 
 /** Group items by key, merging duplicates by summing via `merge`. */
@@ -39,9 +71,14 @@ function mergeByKey<T>(
 }
 
 function mergeCostLines(lines: BudgetInterventionCostLine[]) {
+    // Normalize cost_class → category so chart lookups work uniformly
+    const normalized = lines.map(l => ({
+        ...l,
+        category: l.category || l.cost_class,
+    }));
     return mergeByKey(
-        lines,
-        l => l.category || l.cost_class,
+        normalized,
+        l => l.category,
         (a, b) => ({ ...a, cost: a.cost + b.cost }),
     );
 }
@@ -72,15 +109,11 @@ function mergeOrgUnits(orgUnits: BudgetOrgUnit[]) {
                 ...(a.interventions ?? []),
                 ...(b.interventions ?? []),
             ]),
-            cost_breakdown: mergeCostLines([
-                ...(a.cost_breakdown ?? []),
-                ...(b.cost_breakdown ?? []),
-            ]),
         }),
     );
 }
 
-export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
+export const Budgeting: FC<Props> = ({ budgets, orgUnits, filterLabel }) => {
     const { formatMessage } = useSafeIntl();
     const [selectedYear, setSelectedYear] = useState<number | null>(0);
     const defaultBudgetOption = useMemo(
@@ -101,13 +134,28 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
         ],
         [budgets, defaultBudgetOption],
     );
-    const interventionCosts = useMemo(
-        () =>
-            selectedYear || yearOptions.length <= 2 // only one year in selection
-                ? budgets.find(b => b.year === selectedYear)?.interventions
-                : mergeInterventions(budgets.flatMap(b => b.interventions)),
-        [budgets, yearOptions, selectedYear],
+
+    const orgUnitIds = useMemo(
+        () => new Set(orgUnits.map(ou => ou.id)),
+        [orgUnits],
     );
+
+    const orgUnitCosts = useMemo(() => {
+        const allOrgUnitCosts =
+            selectedYear || yearOptions.length <= 2 // only one year in selection
+                ? budgets.find(b => b.year === selectedYear)?.org_units_costs
+                : mergeOrgUnits(budgets.flatMap(b => b.org_units_costs));
+
+        return allOrgUnitCosts?.filter(ouc => orgUnitIds.has(ouc.org_unit_id));
+    }, [budgets, selectedYear, yearOptions, orgUnitIds]);
+
+    const interventionCosts = useMemo(() => {
+        if (!orgUnitCosts) return [];
+
+        return mergeInterventions(
+            orgUnitCosts.flatMap(ouc => ouc.interventions ?? []),
+        );
+    }, [orgUnitCosts]);
 
     const sortedInterventionCosts = useMemo(() => {
         if (!interventionCosts) return [];
@@ -116,14 +164,6 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
             (a, b) => b.total_cost - a.total_cost,
         );
     }, [interventionCosts]);
-
-    const orgUnitCosts = useMemo(
-        () =>
-            selectedYear || yearOptions.length <= 2 // only one year in selection
-                ? budgets.find(b => b.year === selectedYear)?.org_units_costs
-                : mergeOrgUnits(budgets.flatMap(b => b.org_units_costs)),
-        [budgets, selectedYear, yearOptions],
-    );
 
     const totalCost = useMemo(() => {
         if (!interventionCosts) return 0;
@@ -135,20 +175,10 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
         <>
             {yearOptions && yearOptions.length > 2 && (
                 <Grid item xs={12} md={12}>
-                    <Box
-                        sx={{
-                            py: 1,
-                            px: 2,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            backgroundColor: 'white',
-                            borderRadius: 4,
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box sx={styles.toolbar}>
+                        <Box sx={styles.toolbarLeft}>
                             <IconBoxed Icon={AttachMoneyIcon} />
-                            <Typography sx={{ mx: 2 }}>
+                            <Typography sx={styles.budgetLabel}>
                                 {formatMessage(MESSAGES.budget)}
                             </Typography>
 
@@ -165,10 +195,15 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
                                 clearable={false}
                             />
                         </Box>
-                        <Typography>
-                            {formatMessage(MESSAGES.total)} :{' '}
-                            {formatBigNumber(totalCost)}
-                        </Typography>
+                        <Box sx={styles.toolbarRight}>
+                            <Typography>
+                                {formatMessage(MESSAGES.budget)} :{' '}
+                                {formatBigNumber(totalCost)}
+                            </Typography>
+                            {filterLabel && (
+                                <Chip label={filterLabel} size="small" />
+                            )}
+                        </Box>
                     </Box>
                 </Grid>
             )}
@@ -188,8 +223,8 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits }) => {
                             />
                         </PaperContainer>
                     </Grid>
-                    <Grid item xs={12} md={12} sx={{ height: '493px' }}>
-                        <PaperContainer sx={{ height: '100%' }}>
+                    <Grid item xs={12} md={12} sx={styles.mapGrid}>
+                        <PaperContainer sx={styles.mapContainer}>
                             <OrgUnitCostMap
                                 orgUnitCosts={orgUnitCosts}
                                 orgUnits={orgUnits}
