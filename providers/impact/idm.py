@@ -203,12 +203,12 @@ class IDMImpactProvider(ImpactProvider):
             filter_keys.update(self._map_intervention(intervention))
 
         # Build reverse mapping: idm_admin_name -> org_unit.id
-        idm_name_to_ou_id: dict[str, int] = {}
+        idm_admin_name_to_ou_id: dict[str, int] = {}
         for ou in org_units:
-            idm_name_to_ou_id[_resolve_idm_admin_name(ou.name)] = ou.id
+            idm_admin_name_to_ou_id[_resolve_idm_admin_name(ou.name)] = ou.id
 
         filters = {
-            "admin_info_ref__admin_2_name__in": list(idm_name_to_ou_id.keys()),
+            "admin_info_ref__admin_2_name__in": list(idm_admin_name_to_ou_id.keys()),
             "age_group_ref_id": age_group_id,
         }
         if year_from:
@@ -243,26 +243,26 @@ class IDMImpactProvider(ImpactProvider):
         )
 
         results: dict[int, list[ImpactResult]] = {}
-        seen_years: dict[int, set[int]] = {}
+        seen_years_by_ou: dict[int, set[int]] = {}
         to_count = self._incidence_to_count
 
         for row in impact_rows:
             admin_name = row["admin_info_ref__admin_2_name"]
-            ou_id = idm_name_to_ou_id.get(admin_name)
+            ou_id = idm_admin_name_to_ou_id.get(admin_name)
             if ou_id is None:
                 continue
 
-            if ou_id not in seen_years:
-                seen_years[ou_id] = set()
+            if ou_id not in seen_years_by_ou:
+                seen_years_by_ou[ou_id] = set()
                 results[ou_id] = []
 
-            if row["year"] in seen_years[ou_id]:
+            if row["year"] in seen_years_by_ou[ou_id]:
                 raise ValueError(
                     f"IDM: conflicting rows for year {row['year']} "
                     f"(admin_2_name={admin_name!r}, age_group_id={age_group_id}). "
                     f"Expected identical metric data per year."
                 )
-            seen_years[ou_id].add(row["year"])
+            seen_years_by_ou[ou_id].add(row["year"])
 
             pop = row["admin_info_ref__population"] or 0
 
