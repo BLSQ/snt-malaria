@@ -244,7 +244,6 @@ class IDMImpactProvider(ImpactProvider):
 
         results: dict[int, list[ImpactResult]] = {}
         seen_years_by_ou: dict[int, set[int]] = {}
-        to_count = self._incidence_to_count
 
         for row in impact_rows:
             admin_name = row["admin_info_ref__admin_2_name"]
@@ -269,14 +268,14 @@ class IDMImpactProvider(ImpactProvider):
             results[ou_id].append(ImpactResult(
                 year=row["year"],
                 number_cases=MetricWithCI(
-                    to_count(row["clinical_incidence"], pop),
-                    to_count(row["clinical_incidence_lower"], pop),
-                    to_count(row["clinical_incidence_higher"], pop),
+                    self._incidence_to_count(row["clinical_incidence"], pop),
+                    self._incidence_to_count(row["clinical_incidence_lower"], pop),
+                    self._incidence_to_count(row["clinical_incidence_higher"], pop),
                 ),
                 number_severe_cases=MetricWithCI(
-                    to_count(row["severe_incidence"], pop),
-                    to_count(row["severe_incidence_lower"], pop),
-                    to_count(row["severe_incidence_higher"], pop),
+                    self._incidence_to_count(row["severe_incidence"], pop),
+                    self._incidence_to_count(row["severe_incidence_lower"], pop),
+                    self._incidence_to_count(row["severe_incidence_higher"], pop),
                 ),
                 prevalence_rate=MetricWithCI(
                     float(row["prevalence"]) if row["prevalence"] is not None else None,
