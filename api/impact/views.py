@@ -41,7 +41,7 @@ class ImpactViewSet(viewsets.ViewSet):
     def list(self, request):
         provider = _get_provider(request)
 
-        serializer = ImpactQuerySerializer(data=request.query_params)
+        serializer = ImpactQuerySerializer(data=request.query_params, context={"request": request})
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 

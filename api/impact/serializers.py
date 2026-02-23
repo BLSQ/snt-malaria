@@ -8,12 +8,18 @@ from plugins.snt_malaria.models import Scenario
 
 class ImpactQuerySerializer(serializers.Serializer):
     scenario_id = serializers.PrimaryKeyRelatedField(
-        queryset=Scenario.objects.all(),
+        queryset=Scenario.objects.none(),
         source="scenario",
     )
     age_group = serializers.CharField()
     year_from = serializers.IntegerField(required=False, allow_null=True, default=None)
     year_to = serializers.IntegerField(required=False, allow_null=True, default=None)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user = self.context["request"].user
+        account = user.iaso_profile.account
+        self.fields["scenario_id"].queryset = Scenario.objects.filter(account=account)
 
 
 # -- Response serializers ----------------------------------------------------
