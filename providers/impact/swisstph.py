@@ -12,12 +12,12 @@ from plugins.snt_malaria.types import MetricWithCI
 SWISSTPH_DATABASE_ALIAS = "impact_swisstph"
 
 INTERVENTION_COLUMN_MAP = {
-    "cm_public": "deployed_int_iCCM",
-    "iptp": "deployed_int_IPTSc",
-    "pmc": "deployed_int_PMC",
-    "vacc": "deployed_int_Vaccine",
-    "smc": "deployed_int_SMC",
-    "irs": "deployed_int_IRS",
+    "cm_public": "deployed_int_iccm",
+    "iptp": "deployed_int_iptsc",
+    "pmc": "deployed_int_pmc",
+    "vacc": "deployed_int_vaccine",
+    "smc": "deployed_int_smc",
+    "irs": "deployed_int_irs",
 }
 
 ITN_STANDARD_CODES = {"itn_campaign"}
@@ -25,15 +25,15 @@ PBO_CODES = {"itn_campaign_pbo"}
 IG2_CODES = {"itn_campaign_ig2"}
 
 KNOWN_DEPLOYED_COLUMNS = {
-    "deployed_int_IPTSc",
-    "deployed_int_IG2",
-    "deployed_int_PBO",
-    "deployed_int_PMC",
-    "deployed_int_SMC",
-    "deployed_int_Vaccine",
-    "deployed_int_ITN",
-    "deployed_int_IRS",
-    "deployed_int_iCCM",
+    "deployed_int_iptsc",
+    "deployed_int_ig2",
+    "deployed_int_pbo",
+    "deployed_int_pmc",
+    "deployed_int_smc",
+    "deployed_int_vaccine",
+    "deployed_int_itn",
+    "deployed_int_irs",
+    "deployed_int_iccm",
 }
 
 
@@ -94,19 +94,19 @@ class SwissTPHImpactProvider(ImpactProvider):
             .annotate(
                 seed_count=Count("seed", distinct=True),
                 row_count=Count("impact_index"),
-                avg_nUncomp=Avg("nUncomp"),
-                min_nUncomp=Min("nUncomp"),
-                max_nUncomp=Max("nUncomp"),
-                avg_nSevere=Avg("nSevere"),
-                min_nSevere=Min("nSevere"),
-                max_nSevere=Max("nSevere"),
-                avg_prevalenceRate=Avg("prevalenceRate"),
-                min_prevalenceRate=Min("prevalenceRate"),
-                max_prevalenceRate=Max("prevalenceRate"),
-                avg_nHost=Avg("nHost"),
-                avg_expectedDirectDeaths=Avg("expectedDirectDeaths"),
-                min_expectedDirectDeaths=Min("expectedDirectDeaths"),
-                max_expectedDirectDeaths=Max("expectedDirectDeaths"),
+                avg_n_uncomp=Avg("n_uncomp"),
+                min_n_uncomp=Min("n_uncomp"),
+                max_n_uncomp=Max("n_uncomp"),
+                avg_n_severe=Avg("n_severe"),
+                min_n_severe=Min("n_severe"),
+                max_n_severe=Max("n_severe"),
+                avg_prevalence_rate=Avg("prevalence_rate"),
+                min_prevalence_rate=Min("prevalence_rate"),
+                max_prevalence_rate=Max("prevalence_rate"),
+                avg_n_host=Avg("n_host"),
+                avg_expected_direct_deaths=Avg("expected_direct_deaths"),
+                min_expected_direct_deaths=Min("expected_direct_deaths"),
+                max_expected_direct_deaths=Max("expected_direct_deaths"),
             )
             .order_by("admin_1", "year")
         )
@@ -127,19 +127,19 @@ class SwissTPHImpactProvider(ImpactProvider):
             results.setdefault(ou_id, []).append(ImpactResult(
                 year=row["year"],
                 number_cases=MetricWithCI(
-                    row["avg_nUncomp"], row["min_nUncomp"], row["max_nUncomp"]
+                    row["avg_n_uncomp"], row["min_n_uncomp"], row["max_n_uncomp"]
                 ),
                 number_severe_cases=MetricWithCI(
-                    row["avg_nSevere"], row["min_nSevere"], row["max_nSevere"]
+                    row["avg_n_severe"], row["min_n_severe"], row["max_n_severe"]
                 ),
                 prevalence_rate=MetricWithCI(
-                    row["avg_prevalenceRate"], row["min_prevalenceRate"], row["max_prevalenceRate"]
+                    row["avg_prevalence_rate"], row["min_prevalence_rate"], row["max_prevalence_rate"]
                 ),
-                population=row["avg_nHost"] or 0,
+                population=row["avg_n_host"] or 0,
                 direct_deaths=MetricWithCI(
-                    row["avg_expectedDirectDeaths"],
-                    row["min_expectedDirectDeaths"],
-                    row["max_expectedDirectDeaths"],
+                    row["avg_expected_direct_deaths"],
+                    row["min_expected_direct_deaths"],
+                    row["max_expected_direct_deaths"],
                 ),
             ))
 
@@ -161,19 +161,19 @@ class SwissTPHImpactProvider(ImpactProvider):
         )
 
     def _map_intervention(self, intervention: Intervention) -> set[str]:
-        """Map an Iaso Intervention to SwissTPH deployed_int_* column names."""
+        """Map an Iaso Intervention to SwissTPH deployed_int_* (Pythonic) field names."""
         code = (intervention.code or "").lower().strip()
         name = (intervention.name or "").lower().strip()
         columns: set[str] = set()
 
         if code in PBO_CODES or "pbo" in name:
-            columns.add("deployed_int_PBO")
+            columns.add("deployed_int_pbo")
         elif code in IG2_CODES or "dual ai" in name or "ig2" in name:
-            columns.add("deployed_int_IG2")
+            columns.add("deployed_int_ig2")
         elif code in ITN_STANDARD_CODES and ("standard" in name or "pyrethroid" in name):
-            columns.add("deployed_int_ITN")
+            columns.add("deployed_int_itn")
         elif code in ITN_STANDARD_CODES:
-            columns.add("deployed_int_ITN")
+            columns.add("deployed_int_itn")
         elif code in INTERVENTION_COLUMN_MAP:
             columns.add(INTERVENTION_COLUMN_MAP[code])
 
@@ -183,11 +183,11 @@ class SwissTPHImpactProvider(ImpactProvider):
         """Build the deployed_int_* filter dict for a given set of deployed columns."""
         has_any_net = any(
             col in deployed_columns
-            for col in ["deployed_int_ITN", "deployed_int_PBO", "deployed_int_IG2"]
+            for col in ["deployed_int_itn", "deployed_int_pbo", "deployed_int_ig2"]
         )
         filters = {}
         for column in KNOWN_DEPLOYED_COLUMNS:
-            if column == "deployed_int_ITN":
+            if column == "deployed_int_itn":
                 filters[column] = has_any_net
             else:
                 filters[column] = column in deployed_columns

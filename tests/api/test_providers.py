@@ -34,57 +34,57 @@ class SwissTPHImpactProviderMapInterventionTests(TestCase):
     def test_cm_public_maps_to_iccm(self):
         intervention = MockIntervention(code="cm_public")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_iCCM"})
+        self.assertEqual(result, {"deployed_int_iccm"})
 
     def test_iptp_maps_to_iptsc(self):
         intervention = MockIntervention(code="iptp")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_IPTSc"})
+        self.assertEqual(result, {"deployed_int_iptsc"})
 
     def test_smc_maps_to_smc(self):
         intervention = MockIntervention(code="smc")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_SMC"})
+        self.assertEqual(result, {"deployed_int_smc"})
 
     def test_pmc_maps_to_pmc(self):
         intervention = MockIntervention(code="pmc")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_PMC"})
+        self.assertEqual(result, {"deployed_int_pmc"})
 
     def test_vacc_maps_to_vaccine(self):
         intervention = MockIntervention(code="vacc")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_Vaccine"})
+        self.assertEqual(result, {"deployed_int_vaccine"})
 
     def test_irs_maps_to_irs(self):
         intervention = MockIntervention(code="irs")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_IRS"})
+        self.assertEqual(result, {"deployed_int_irs"})
 
     def test_itn_campaign_standard_maps_to_itn(self):
         intervention = MockIntervention(code="itn_campaign", name="Standard Pyrethroid")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_ITN"})
+        self.assertEqual(result, {"deployed_int_itn"})
 
     def test_itn_campaign_pbo_by_code(self):
         intervention = MockIntervention(code="itn_campaign_pbo")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_PBO"})
+        self.assertEqual(result, {"deployed_int_pbo"})
 
     def test_itn_campaign_ig2_by_code(self):
         intervention = MockIntervention(code="itn_campaign_ig2")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_IG2"})
+        self.assertEqual(result, {"deployed_int_ig2"})
 
     def test_itn_campaign_pbo_by_name(self):
         intervention = MockIntervention(code="itn_campaign", name="PBO")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_PBO"})
+        self.assertEqual(result, {"deployed_int_pbo"})
 
     def test_itn_campaign_ig2_by_name(self):
         intervention = MockIntervention(code="itn_campaign", name="Dual AI")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_IG2"})
+        self.assertEqual(result, {"deployed_int_ig2"})
 
     def test_unknown_code_returns_empty(self):
         intervention = MockIntervention(code="unknown_intervention")
@@ -102,28 +102,26 @@ class SwissTPHImpactProviderBuildFiltersTests(TestCase):
             self.assertFalse(filters[col])
 
     def test_single_intervention(self):
-        filters = self.provider._build_query_filters({"deployed_int_SMC"})
-        self.assertTrue(filters["deployed_int_SMC"])
-        self.assertFalse(filters["deployed_int_IRS"])
+        filters = self.provider._build_query_filters({"deployed_int_smc"})
+        self.assertTrue(filters["deployed_int_smc"])
+        self.assertFalse(filters["deployed_int_irs"])
         # ITN should be False since no net interventions
-        self.assertFalse(filters["deployed_int_ITN"])
+        self.assertFalse(filters["deployed_int_itn"])
 
     def test_itn_pbo_sets_itn_true(self):
-        """When PBO is deployed, deployed_int_ITN should also be True."""
-        filters = self.provider._build_query_filters({"deployed_int_PBO"})
-        self.assertTrue(filters["deployed_int_ITN"])
-        # PBO itself is not in KNOWN_DEPLOYED_COLUMNS as a direct filter target
-        # but it IS in the set, so it should be True
-        self.assertTrue(filters["deployed_int_PBO"])
+        """When PBO is deployed, deployed_int_itn should also be True."""
+        filters = self.provider._build_query_filters({"deployed_int_pbo"})
+        self.assertTrue(filters["deployed_int_itn"])
+        self.assertTrue(filters["deployed_int_pbo"])
 
     def test_multiple_interventions(self):
-        deployed = {"deployed_int_SMC", "deployed_int_IRS", "deployed_int_Vaccine"}
+        deployed = {"deployed_int_smc", "deployed_int_irs", "deployed_int_vaccine"}
         filters = self.provider._build_query_filters(deployed)
-        self.assertTrue(filters["deployed_int_SMC"])
-        self.assertTrue(filters["deployed_int_IRS"])
-        self.assertTrue(filters["deployed_int_Vaccine"])
-        self.assertFalse(filters["deployed_int_iCCM"])
-        self.assertFalse(filters["deployed_int_ITN"])
+        self.assertTrue(filters["deployed_int_smc"])
+        self.assertTrue(filters["deployed_int_irs"])
+        self.assertTrue(filters["deployed_int_vaccine"])
+        self.assertFalse(filters["deployed_int_iccm"])
+        self.assertFalse(filters["deployed_int_itn"])
 
 
 # ---------------------------------------------------------------------------
