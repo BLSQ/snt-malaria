@@ -198,9 +198,9 @@ class IDMImpactProvider(ImpactProvider):
         if age_group_id is None:
             return {}
 
-        deployed_filter_keys: set[str] = set()
+        filter_keys: set[str] = set()
         for intervention in interventions:
-            deployed_filter_keys.update(self._map_intervention(intervention))
+            filter_keys.update(self._map_intervention(intervention))
 
         # Build reverse mapping: idm_admin_name -> org_unit.id
         idm_name_to_ou_id: dict[str, int] = {}
@@ -216,7 +216,7 @@ class IDMImpactProvider(ImpactProvider):
         if year_to:
             filters["year__lte"] = int(year_to)
 
-        filters.update(self._build_query_filters(deployed_filter_keys))
+        filters.update(self._build_query_filters(filter_keys))
 
         # Use .values().distinct() to collapse exact duplicate rows (same
         # metric data, different IDs) at the DB level.
@@ -322,7 +322,7 @@ class IDMImpactProvider(ImpactProvider):
 
         return filter_keys
 
-    def _build_query_filters(self, deployed_filter_keys: set[str]) -> dict:
+    def _build_query_filters(self, filter_keys: set[str]) -> dict:
         """Build ORM filter kwargs for IDM model_output.
 
         For each intervention column, set it to the deployed package ID if the
@@ -330,7 +330,7 @@ class IDMImpactProvider(ImpactProvider):
         """
         # Parse filter keys into {column: package_id} mapping
         active_columns = {}
-        for key in deployed_filter_keys:
+        for key in filter_keys:
             column, package_id = key.split("=")
             active_columns[column] = int(package_id)
 
