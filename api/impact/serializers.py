@@ -1,25 +1,12 @@
 from rest_framework import serializers
 
 from plugins.snt_malaria.models import Scenario
-from plugins.snt_malaria.providers.impact import get_provider_for_account
 
 
 # -- Request serializers -----------------------------------------------------
 
 
-class ImpactProviderSerializer(serializers.Serializer):
-    """Base serializer that resolves the ImpactProvider from the request account."""
-
-    def validate(self, attrs):
-        account = self.context["request"].user.iaso_profile.account
-        provider = get_provider_for_account(account)
-        if provider is None:
-            raise serializers.ValidationError("No impact data provider configured for this account.")
-        attrs["provider"] = provider
-        return attrs
-
-
-class ImpactQuerySerializer(ImpactProviderSerializer):
+class ImpactQuerySerializer(serializers.Serializer):
     scenario_id = serializers.PrimaryKeyRelatedField(
         queryset=Scenario.objects.all(),
         source="scenario",
