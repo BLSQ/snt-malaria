@@ -4,7 +4,7 @@ from django.db.models import Max, Min
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
-from plugins.snt_malaria.models.idm_impact import IdmAgeGroup, IdmModelOutput
+from plugins.snt_malaria.models.idm_impact import IDMAgeGroup, IDMModelOutput
 from plugins.snt_malaria.providers.impact.base import ImpactProvider, ImpactResult
 from plugins.snt_malaria.types import MetricWithCI
 
@@ -235,7 +235,7 @@ class IDMImpactProvider(ImpactProvider):
             "prevalence_higher",
         ]
         impact_rows = (
-            IdmModelOutput.objects.using(IDM_DATABASE_ALIAS)
+            IDMModelOutput.objects.using(IDM_DATABASE_ALIAS)
             .filter(**filters)
             .values(*metric_fields)
             .distinct()
@@ -290,7 +290,7 @@ class IDMImpactProvider(ImpactProvider):
         return results
 
     def get_year_range(self) -> tuple[Optional[int], Optional[int]]:
-        result = IdmModelOutput.objects.using(IDM_DATABASE_ALIAS).aggregate(
+        result = IDMModelOutput.objects.using(IDM_DATABASE_ALIAS).aggregate(
             min_year=Min("year"),
             max_year=Max("year"),
         )
@@ -298,7 +298,7 @@ class IDMImpactProvider(ImpactProvider):
 
     def get_age_groups(self) -> list[str]:
         return list(
-            IdmAgeGroup.objects.using(IDM_DATABASE_ALIAS)
+            IDMAgeGroup.objects.using(IDM_DATABASE_ALIAS)
             .values_list("option", flat=True)
             .order_by("option")
         )
@@ -349,9 +349,9 @@ class IDMImpactProvider(ImpactProvider):
         """Resolve an age group label (e.g. 'under5') to its IDM database ID."""
         try:
             age_group = (
-                IdmAgeGroup.objects.using(IDM_DATABASE_ALIAS)
+                IDMAgeGroup.objects.using(IDM_DATABASE_ALIAS)
                 .get(option=age_group_label)
             )
             return age_group.id
-        except IdmAgeGroup.DoesNotExist:
+        except IDMAgeGroup.DoesNotExist:
             return None

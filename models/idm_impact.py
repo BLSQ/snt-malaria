@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class IdmAdminInfo(models.Model):
+class IDMAdminInfo(models.Model):
     """Geographic administrative units (LGAs) with population data in the IDM database."""
 
     class Meta:
@@ -18,7 +18,7 @@ class IdmAdminInfo(models.Model):
         return f"{self.admin_2_name} ({self.state})"
 
 
-class IdmInterventionPackage(models.Model):
+class IDMInterventionPackage(models.Model):
     """Available intervention types in the IDM database."""
 
     class Meta:
@@ -35,7 +35,7 @@ class IdmInterventionPackage(models.Model):
         return f"{self.option} ({self.id})"
 
 
-class IdmCoverage(models.Model):
+class IDMCoverage(models.Model):
     """Coverage level options in the IDM database."""
 
     class Meta:
@@ -52,7 +52,7 @@ class IdmCoverage(models.Model):
         return f"{self.option} ({self.id})"
 
 
-class IdmAgeGroup(models.Model):
+class IDMAgeGroup(models.Model):
     """Age group demographics in the IDM database."""
 
     class Meta:
@@ -67,7 +67,7 @@ class IdmAgeGroup(models.Model):
         return f"{self.option} ({self.id})"
 
 
-class IdmModelOutput(models.Model):
+class IDMModelOutput(models.Model):
     """Main epidemiological simulation results from the IDM database.
 
     Each row represents simulation output for a specific admin unit, year,
@@ -83,7 +83,7 @@ class IdmModelOutput(models.Model):
 
     # Admin info FK
     admin_info_ref = models.ForeignKey(
-        IdmAdminInfo,
+        IDMAdminInfo,
         on_delete=models.DO_NOTHING,
         db_column="admin_info",
         null=True,
@@ -94,7 +94,7 @@ class IdmModelOutput(models.Model):
 
     # Age group FK
     age_group_ref = models.ForeignKey(
-        IdmAgeGroup,
+        IDMAgeGroup,
         on_delete=models.DO_NOTHING,
         db_column="age_group",
         null=True,
