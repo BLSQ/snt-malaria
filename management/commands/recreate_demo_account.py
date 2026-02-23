@@ -7,6 +7,7 @@ from django.db import transaction
 from iaso.gpkg.import_gpkg import import_gpkg_file2
 from iaso.models import Account, DataSource, MetricType, MetricValue, Profile, Project, Report, SourceVersion, Team
 from iaso.models.data_store import JsonDataStore
+from iaso.permissions.core_permissions import CORE_DATASTORE_READ_PERMISSION
 from plugins.snt_malaria.models import (
     Budget,
     Intervention,
@@ -91,6 +92,7 @@ class Command(BaseCommand):
             snt_permission_codenames = [
                 permission.codename
                 for permission in [
+                    CORE_DATASTORE_READ_PERMISSION,
                     SNT_SCENARIO_BASIC_WRITE_PERMISSION,
                     SNT_SCENARIO_FULL_WRITE_PERMISSION,
                     SNT_SETTINGS_READ_PERMISSION,

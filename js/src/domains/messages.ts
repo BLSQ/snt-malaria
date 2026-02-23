@@ -393,60 +393,60 @@ export const MESSAGES = defineMessages({
     budgetAssumptionsDescription_itn_campaign: {
         id: 'iaso.snt_malaria.budgetAssumptions.description.itn_campaign',
         defaultMessage: `To estimate the number of insecticide-treated nets (ITNs) needed for campaign delivery in targeted areas:<br></br>
-            The <b>target population</b> (default: total pop) of the area is multiplied by the <b>target intervention coverage</b> 
-            (default: 100%) to estimate the target population for the campaign and then divided by the <b>number of people 
-            assumed to use 1 net</b> (default: 1.8). A <b>buffer</b> (default: 10%) is applied to account for wastage and contingency. 
+            The <b>target population</b> (default: total pop) of the area is multiplied by the <b>target intervention coverage</b>
+            (default: 100%) to estimate the target population for the campaign and then divided by the <b>number of people
+            assumed to use 1 net</b> (default: 1.8). A <b>buffer</b> (default: 10%) is applied to account for wastage and contingency.
             The number of <b>bales</b> is calculated by dividing the number of nets by 50 (assuming 50 nets per bale).`,
     },
     budgetAssumptionsDescription_itn_routine: {
         id: 'iaso.snt_malaria.budgetAssumptions.description.itn_routine',
-        defaultMessage: `To estimate the number of nets needed for routine delivery channels often through ANC and EPI 
-        services, the <b>target population</b> (default: total under 5 and pregnant women population) of an area is multiplied 
+        defaultMessage: `To estimate the number of nets needed for routine delivery channels often through ANC and EPI
+        services, the <b>target population</b> (default: total under 5 and pregnant women population) of an area is multiplied
         by the <b>expected routine distribution coverage</b> (default: 30%) and a <b>procurement buffer</b> (default: 10%).`,
     },
     budgetAssumptionsDescription_iptp: {
         id: 'iaso.snt_malaria.budgetAssumptions.description.iptp',
-        defaultMessage: `To estimate the amount of SP (blister packs of 3 pills) to procure for IPTp 
-        we take the <b>target population</b> (default: pregnant women) of an area, 
-        multiply by the <b>expected coverage at ANC attendence</b> (default: 80%) for the scheduled number of <b>touchpoints</b> 
+        defaultMessage: `To estimate the amount of SP (blister packs of 3 pills) to procure for IPTp
+        we take the <b>target population</b> (default: pregnant women) of an area,
+        multiply by the <b>expected coverage at ANC attendence</b> (default: 80%) for the scheduled number of <b>touchpoints</b>
         per woman (default: 3) and multiply this by a <b>procurement buffer</b> (default: 10%).`,
     },
     budgetAssumptionsDescription_smc: {
         id: 'iaso.snt_malaria.budgetAssumptions.description.smc',
-        defaultMessage: `To estimate the number of SP+AQ co-blistered packets required for Seasonal Malaria Chemoprevention (SMC), 
-        we use the following methodology with the default assumptions included here for clarity. 
-        We first assume each packet contains one full course for a single cycle (1 tablet of SP and 3 tablets of AQ). 
-        SMC is at default delivered over 4 <b>monthly cycles</b> and targets two age groups: 
-        children aged 3 to <12 months and children aged >12 to 59 months. 
-        We include the distribution of age-groups as the procurement costs of the co-blistered packets 
+        defaultMessage: `To estimate the number of SP+AQ co-blistered packets required for Seasonal Malaria Chemoprevention (SMC),
+        we use the following methodology with the default assumptions included here for clarity.
+        We first assume each packet contains one full course for a single cycle (1 tablet of SP and 3 tablets of AQ).
+        SMC is at default delivered over 4 <b>monthly cycles</b> and targets two age groups:
+        children aged 3 to <12 months and children aged >12 to 59 months.
+        We include the distribution of age-groups as the procurement costs of the co-blistered packets
         for these different age groups vary as a result of the age-based dosing requirements for SMC drugs.
 
-        We first estimate the <b>target population</b> by applying fixed proportions to the total number of children under 5 years of age. 
-        <b>Coverage</b> of the target population is assumed to be 100%, unless otherwise specified, 
+        We first estimate the <b>target population</b> by applying fixed proportions to the total number of children under 5 years of age.
+        <b>Coverage</b> of the target population is assumed to be 100%, unless otherwise specified,
         and is applied before the buffer is calculated. A <b>10% buffer</b> is then included to account for re-dosing, wastage, and the treatment of children from outside the catchment area.`,
     },
     budgetAssumptionsDescription_pmc: {
         id: 'iaso.snt_malaria.budgetAssumptions.description.pmc',
-        defaultMessage: `To estimate the quantity of sulfadoxine-pyrimethamine (SP) required for Perennial Malaria Chemoprevention (PMC), 
-        we assume delivery is integrated into routine Expanded Programme on Immunization (EPI). 
+        defaultMessage: `To estimate the quantity of sulfadoxine-pyrimethamine (SP) required for Perennial Malaria Chemoprevention (PMC),
+        we assume delivery is integrated into routine Expanded Programme on Immunization (EPI).
         Each eligible child receives SP at four routine immunization touchpoints per year, with age-specific dosing:
         <ul>
         <li>Children aged <b>0-1 years</b> receive 1 tablet of SP per contact.</li>
 
         <li>Children aged <b>1-2 years</b> receive 2 tablets of SP per contact.</li>
         </ul>
-        To account for <b>underdosing due to low weight</b>, which affects approximately <b>25% of children in each age group</b>, 
-        a <b>scaling factor of 0.75</b> is applied to both age groups. 
+        To account for <b>underdosing due to low weight</b>, which affects approximately <b>25% of children in each age group</b>,
+        a <b>scaling factor of 0.75</b> is applied to both age groups.
         This factor reflects the average reduction in tablets required due to dose adjustment (e.g., half tablets for underweight infants).
 
         An <b>85% coverage rate</b> is assumed and a <b>10% procurement buffer</b> is then included to cover wastage, re-dosing, and stockouts.`,
     },
     budgetAssumptionsDescription_vacc: {
         id: 'iaso.snt_malaria.budgetAssumptions.description.vacc',
-        defaultMessage: `To estimate the number of malaria vaccine doses required, at default, 
-        we assume each eligible child will receive a <b>4-dose schedule</b>. 
-        Assuming the first three doses are delivered monthly and start around 5 months of age and the 4th dose is delivered ~12 - 15 months following the 3rd dose. 
-        The vaccine is delivered through routine immunization contacts with an <b>expected coverage of 84%</b> among the target population. 
+        defaultMessage: `To estimate the number of malaria vaccine doses required, at default,
+        we assume each eligible child will receive a <b>4-dose schedule</b>.
+        Assuming the first three doses are delivered monthly and start around 5 months of age and the 4th dose is delivered ~12 - 15 months following the 3rd dose.
+        The vaccine is delivered through routine immunization contacts with an <b>expected coverage of 84%</b> among the target population.
         A 10% buffer is included to account for losses during transportation, storage, and administration.`,
     },
     budgetAssumptionsPath: {
@@ -521,5 +521,41 @@ export const MESSAGES = defineMessages({
     interventionProperties: {
         id: 'iaso.snt_malaria.scenarioRule.interventionProperties',
         defaultMessage: 'Interventions',
+    },
+    showSidebar: {
+        id: 'iaso.snt_malaria.label.showSidebar',
+        defaultMessage: 'Show sidebar',
+    },
+    hideSidebar: {
+        id: 'iaso.snt_malaria.label.hideSidebar',
+        defaultMessage: 'Hide sidebar',
+    },
+    sidebarTitle: {
+        id: 'iaso.snt_malaria.label.sidebarTitle',
+        defaultMessage: 'Display options',
+    },
+    parentOrgUnit: {
+        id: 'iaso.snt_malaria.label.parentOrgUnit',
+        defaultMessage: 'Parent',
+    },
+    allParentOrgUnits: {
+        id: 'iaso.snt_malaria.label.allParentOrgUnits',
+        defaultMessage: 'All',
+    },
+    displayLevel: {
+        id: 'iaso.snt_malaria.label.displayLevel',
+        defaultMessage: 'Display level',
+    },
+    allDisplayLevels: {
+        id: 'iaso.snt_malaria.label.allDisplayLevels',
+        defaultMessage: 'All',
+    },
+    allOrgUnits: {
+        id: 'iaso.snt_malaria.label.allOrgUnits',
+        defaultMessage: 'All',
+    },
+    national: {
+        id: 'iaso.snt_malaria.label.national',
+        defaultMessage: 'National',
     },
 });
