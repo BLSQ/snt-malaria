@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 from plugins.snt_malaria.api.scenario_rules.serializers import (
+    ScenarioRuleCreateSerializer,
     ScenarioRuleListSerializer,
     ScenarioRuleQuerySerializer,
     ScenarioRuleRetrieveSerializer,
@@ -74,7 +75,7 @@ class ScenarioRuleListSerializerTestCase(ScenarioRulesTestBase):
         self.assertEqual(rule["org_units_included"], self.scenario_rule_1.org_units_included)
         self.assertEqual(rule["org_units_scope"], self.scenario_rule_1.org_units_scope)
         self.assertEqual(
-            rule["interventions"],
+            rule["intervention_properties"],
             [
                 {
                     "intervention": self.rule_intervention_1.intervention.id,
@@ -101,7 +102,7 @@ class ScenarioRuleListSerializerTestCase(ScenarioRulesTestBase):
         self.assertEqual(rule_2["org_units_included"], self.scenario_rule_2.org_units_included)
         self.assertEqual(rule_2["org_units_scope"], self.scenario_rule_2.org_units_scope)
         self.assertEqual(
-            rule_2["interventions"],
+            rule_2["intervention_properties"],
             [
                 {
                     "intervention": self.rule_intervention_3.intervention.id,
@@ -127,7 +128,7 @@ class ScenarioRuleRetrieveSerializerTestCase(ScenarioRulesTestBase):
         self.assertEqual(data["org_units_included"], self.scenario_rule_1.org_units_included)
         self.assertEqual(data["org_units_scope"], self.scenario_rule_1.org_units_scope)
         self.assertEqual(
-            data["interventions"],
+            data["intervention_properties"],
             [
                 {
                     "intervention": self.rule_intervention_1.intervention.id,
@@ -146,3 +147,386 @@ class ScenarioRuleRetrieveSerializerTestCase(ScenarioRulesTestBase):
         # don't care about the timestamp value, just want to know that it's there
         self.assertIsNotNone(data["created_at"])
         self.assertIsNotNone(data["updated_at"])
+
+
+class ScenarioRuleCreateSerializerTestCase(ScenarioRulesTestBase):
+    def setUp(self):
+        super().setUp()
+        self.context = {"request": Mock(user=self.user_with_full_perm)}
+
+    def test_happy_path(self):
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "org_units_excluded": [self.district_1.id],
+            "org_units_included": [self.district_2.id],
+            "org_units_scope": [self.district_3.id],
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+                {
+                    "intervention": self.intervention_vaccination_rts.id,
+                    "coverage": 0.50,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+        scenario_rule = serializer.save(created_by=self.user_with_full_perm)
+        # asserts on simple fields
+        self.assertEqual(scenario_rule.scenario, self.scenario)
+        self.assertEqual(scenario_rule.name, data["name"])
+        self.assertEqual(scenario_rule.color, data["color"])
+        self.assertEqual(scenario_rule.matching_criteria, data["matching_criteria"])
+        self.assertEqual(scenario_rule.org_units_excluded, data["org_units_excluded"])
+        self.assertEqual(scenario_rule.org_units_included, data["org_units_included"])
+        self.assertEqual(scenario_rule.org_units_scope, data["org_units_scope"])
+
+        # Making sure that the intervention properties were created correctly
+        self.assertEqual(scenario_rule.intervention_properties.count(), 2)
+        intervention_property_1 = scenario_rule.intervention_properties.get(intervention=self.intervention_chemo_iptp)
+        self.assertEqual(intervention_property_1.coverage, 0.75)
+        intervention_property_2 = scenario_rule.intervention_properties.get(
+            intervention=self.intervention_vaccination_rts
+        )
+        self.assertEqual(intervention_property_2.coverage, 0.50)
+
+        # asserts on computed fields
+        self.assertEqual(scenario_rule.priority, 3)  # 2 rules in setup, so the new one should be 3
+        self.assertEqual(scenario_rule.org_units_matched, [])  # this comes from the view, not the serializer
+        self.assertIsNotNone(scenario_rule.created_at)
+        self.assertIsNotNone(scenario_rule.updated_at)
+
+    def test_missing_required_fields(self):
+        serializer = ScenarioRuleCreateSerializer(data={}, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        errors = serializer.errors
+        self.assertIn("name", errors)
+        self.assertIn("This field is required.", errors["name"][0])
+        self.assertIn("scenario", errors)
+        self.assertIn("This field is required.", errors["scenario"][0])
+        self.assertIn("matching_criteria", errors)
+        self.assertIn("This field is required.", errors["matching_criteria"][0])
+        self.assertIn("intervention_properties", errors)
+        self.assertIn("This field is required.", errors["intervention_properties"][0])
+
+        # optional fields
+        self.assertNotIn("color", errors)
+        self.assertNotIn("org_units_excluded", errors)
+        self.assertNotIn("org_units_included", errors)
+        self.assertNotIn("org_units_scope", errors)
+
+    def test_invalid_matching_criteria_schema_error(self):
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"invalid_operator": [{"var": self.metric_type_population.id}, 1000]},
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("matching_criteria", serializer.errors)
+        self.assertIn("'and' is a required property", serializer.errors["matching_criteria"][0])
+
+    def test_invalid_matching_criteria_unknown_metric_type_id(self):
+        invalid_metric_type_id = 1234567890
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": invalid_metric_type_id}, 1000]}]},
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("matching_criteria", serializer.errors)
+        self.assertIn(f"Invalid metric types: [{invalid_metric_type_id}]", serializer.errors["matching_criteria"][0])
+
+    def test_invalid_matching_criteria_wrong_account_metric_type_id(self):
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {
+                "and": [{"==": [{"var": self.other_metric_type_population.id}, 1000]}]
+            },  # MetricType belongs to another account
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("matching_criteria", serializer.errors)
+        self.assertIn(
+            f"Invalid metric types: [{self.other_metric_type_population.id}]", serializer.errors["matching_criteria"][0]
+        )
+
+    def test_invalid_intervention_coverage_too_low(self):
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": -0.1,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        errors = serializer.errors
+        self.assertIn("intervention_properties", errors)
+        intervention_errors = errors["intervention_properties"][0]
+        self.assertIn("coverage", intervention_errors)
+        self.assertIn("Ensure this value is greater than or equal to 0.", intervention_errors["coverage"][0])
+
+    def test_invalid_intervention_coverage_too_high(self):
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 1.1,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        errors = serializer.errors
+        self.assertIn("intervention_properties", errors)
+        intervention_errors = errors["intervention_properties"][0]
+        self.assertIn("coverage", intervention_errors)
+        self.assertIn("Ensure this value is less than or equal to 1.", intervention_errors["coverage"][0])
+
+    def test_invalid_intervention_coverage_decimals(self):
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.123,  # more than 2 decimal places
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        errors = serializer.errors
+        self.assertIn("intervention_properties", errors)
+        intervention_errors = errors["intervention_properties"][0]
+        self.assertIn("coverage", intervention_errors)
+        self.assertIn("Ensure that there are no more than 2 decimal places.", intervention_errors["coverage"][0])
+
+    def test_invalid_org_units_excluded_unknown_org_unit_id(self):
+        unknown_org_unit_id = 1234567890
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "org_units_excluded": [self.district_1.id, unknown_org_unit_id],
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("org_units_excluded", serializer.errors)
+        self.assertIn(f'Invalid pk "{unknown_org_unit_id}"', serializer.errors["org_units_excluded"][1][0])
+
+    def test_invalid_org_units_excluded_wrong_account(self):
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "org_units_excluded": [
+                self.district_1.id,
+                self.other_district_1.id,
+            ],  # other_district_1 belongs to another account
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("org_units_excluded", serializer.errors)
+        self.assertIn(f'Invalid pk "{self.other_district_1.id}"', serializer.errors["org_units_excluded"][1][0])
+
+    def test_invalid_org_units_included_unknown_org_unit_id(self):
+        unknown_org_unit_id = 1234567890
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "org_units_included": [self.district_2.id, unknown_org_unit_id],
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("org_units_included", serializer.errors)
+        self.assertIn(f'Invalid pk "{unknown_org_unit_id}"', serializer.errors["org_units_included"][1][0])
+
+    def test_invalid_org_units_included_wrong_account(self):
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "org_units_included": [
+                self.district_2.id,
+                self.other_district_2.id,
+            ],  # other_district_2 belongs to another account
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("org_units_included", serializer.errors)
+        self.assertIn(f'Invalid pk "{self.other_district_2.id}"', serializer.errors["org_units_included"][1][0])
+
+    def test_invalid_org_units_scope_unknown_org_unit_id(self):
+        unknown_org_unit_id = 1234567890
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "org_units_scope": [self.district_3.id, unknown_org_unit_id],
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("org_units_scope", serializer.errors)
+        self.assertIn(f'Invalid pk "{unknown_org_unit_id}"', serializer.errors["org_units_scope"][1][0])
+
+    def test_invalid_org_units_scope_wrong_account(self):
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "org_units_scope": [
+                self.district_3.id,
+                self.other_district_3.id,
+            ],  # other_district_3 belongs to another account
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("org_units_scope", serializer.errors)
+        self.assertIn(f'Invalid pk "{self.other_district_3.id}"', serializer.errors["org_units_scope"][1][0])
+
+    def test_invalid_scenario_unknown_scenario(self):
+        unknown_scenario_id = 1234567890
+        data = {
+            "scenario": unknown_scenario_id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("scenario", serializer.errors)
+        self.assertIn(f'Invalid pk "{unknown_scenario_id}"', serializer.errors["scenario"][0])
+
+    def test_invalid_scenario_wrong_account(self):
+        data = {
+            "scenario": self.other_scenario.id,  # other_scenario belongs to another account
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("scenario", serializer.errors)
+        self.assertIn(f'Invalid pk "{self.other_scenario.id}"', serializer.errors["scenario"][0])
+
+    def test_error_duplicated_interventions(self):
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+                {
+                    "intervention": self.intervention_chemo_iptp.id,  # same intervention as above
+                    "coverage": 0.50,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("intervention_properties", serializer.errors)
+        self.assertIn(
+            f"Duplicated interventions: [{self.intervention_chemo_iptp.id}]",
+            serializer.errors["intervention_properties"][0],
+        )
