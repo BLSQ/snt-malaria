@@ -195,10 +195,23 @@ class IDMImpactProviderMapInterventionTests(TestCase):
         result = self.provider._map_intervention(intervention)
         self.assertEqual(result, {"lsm=11"})
 
-    def test_unknown_code_returns_empty(self):
+    def test_unknown_code_raises(self):
         intervention = MockIntervention(code="unknown_intervention")
-        result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, set())
+        with self.assertRaises(ValueError) as ctx:
+            self.provider._map_intervention(intervention)
+        self.assertIn("unknown_intervention", str(ctx.exception))
+        self.assertIn("IDM does not support", str(ctx.exception))
+
+    def test_none_intervention_raises(self):
+        with self.assertRaises(ValueError) as ctx:
+            self.provider._map_intervention(None)
+        self.assertIn("cannot be None", str(ctx.exception))
+
+    def test_empty_code_raises(self):
+        intervention = MockIntervention(code="", name="Some intervention")
+        with self.assertRaises(ValueError) as ctx:
+            self.provider._map_intervention(intervention)
+        self.assertIn("no code", str(ctx.exception))
 
 
 class IDMImpactProviderBuildFiltersTests(TestCase):

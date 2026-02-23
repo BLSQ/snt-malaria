@@ -304,7 +304,13 @@ class IDMImpactProvider(ImpactProvider):
         )
 
     def _map_intervention(self, intervention: Intervention) -> set[str]:
-        """Map a Iaso Intervention to IDM filter keys (column=package_id)."""
+        """Map an Iaso Intervention to IDM filter keys (column=package_id).
+
+        Raises ValueError if the intervention has no mapping in IDM.
+        """
+        if intervention is None:
+            raise ValueError("intervention cannot be None")
+
         code = (intervention.code or "").lower().strip()
         name = (intervention.name or "").lower().strip()
         filter_keys: set[str] = set()
@@ -316,10 +322,16 @@ class IDMImpactProvider(ImpactProvider):
             elif "dual ai" in name or "ig2" in name:
                 code = "itn_campaign_ig2"
 
-        if code in IDM_INTERVENTION_MAP:
-            column, package_id = IDM_INTERVENTION_MAP[code]
-            filter_keys.add(f"{column}={package_id}")
+        if not code:
+            raise ValueError("Intervention has no code")
 
+        if code not in IDM_INTERVENTION_MAP:
+            raise ValueError(
+                f"IDM does not support intervention with code {code!r}."
+            )
+
+        column, package_id = IDM_INTERVENTION_MAP[code]
+        filter_keys.add(f"{column}={package_id}")
         return filter_keys
 
     def _build_query_filters(self, filter_keys: set[str]) -> dict:
