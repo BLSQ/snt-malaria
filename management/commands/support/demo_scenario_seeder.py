@@ -8,7 +8,8 @@ from datetime import date
 
 from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS, BudgetCalculator
 
-from iaso.models import User
+from iaso.models import User, OrgUnitType
+from iaso.models.data_store import JsonDataStore
 from iaso.models.metric import MetricValue
 from plugins.snt_malaria.api.budget.utils import (
     build_cost_dataframe,
@@ -21,8 +22,9 @@ from plugins.snt_malaria.models.scenario import Scenario
 
 
 class DemoScenarioSeeder:
-    def __init__(self, account, stdout_writer=None):
+    def __init__(self, account, project, stdout_writer=None):
         self.account = account
+        self.project = project
         self.stdout_write = stdout_writer or print
 
     def create_scenario(self):
@@ -151,6 +153,18 @@ class DemoScenarioSeeder:
         self.stdout_write("\nCreating budget for scenario...")
         budget = self._create_budget_for_scenario(scenario, created_by)
         self.stdout_write(f"Created budget: {budget.name}")
+
+        # Create an SNT config
+        country_out_id = OrgUnitType.objects.get(projects=self.project, short_name="Country").id
+        district_out_id = OrgUnitType.objects.get(projects=self.project, short_name="District").id
+        JsonDataStore.objects.create(
+            slug="snt_malaria_config",
+            account=self.account,
+            content={
+                "country_org_unit_type_id": country_out_id,
+                "intervention_org_unit_type_id": district_out_id,
+            },
+        )
 
         self.stdout_write("Done creating demo scenario.")
         return scenario

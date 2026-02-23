@@ -7,6 +7,8 @@ from iaso.utils.colors import DEFAULT_COLOR
 from iaso.utils.models.color import ColorField
 from iaso.utils.models.soft_deletable import (
     DefaultSoftDeletableManager,
+    IncludeDeletedSoftDeletableManager,
+    OnlyDeletedSoftDeletableManager,
     SoftDeletableModel,
 )
 from iaso.utils.validators import JSONSchemaValidator
@@ -35,6 +37,8 @@ class Scenario(SoftDeletableModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = DefaultSoftDeletableManager()
+    objects_only_deleted = OnlyDeletedSoftDeletableManager()
+    objects_include_deleted = IncludeDeletedSoftDeletableManager()
 
     def __str__(self):
         return "%s %s %s" % (self.name, self.updated_at, self.id)

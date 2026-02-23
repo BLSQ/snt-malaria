@@ -1,7 +1,12 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from iaso.utils.models.soft_deletable import SoftDeletableModel
+from iaso.utils.models.soft_deletable import (
+    DefaultSoftDeletableManager,
+    IncludeDeletedSoftDeletableManager,
+    OnlyDeletedSoftDeletableManager,
+    SoftDeletableModel,
+)
 from plugins.snt_malaria.models.scenario import Scenario
 
 
@@ -21,3 +26,7 @@ class Budget(SoftDeletableModel):
     # TODO: Not sure we will need this, but I'd rather have them already.
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="budget_edited_set")
+
+    objects = DefaultSoftDeletableManager()
+    objects_only_deleted = OnlyDeletedSoftDeletableManager()
+    objects_include_deleted = IncludeDeletedSoftDeletableManager()
