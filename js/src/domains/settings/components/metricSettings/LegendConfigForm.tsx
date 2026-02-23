@@ -43,7 +43,7 @@ type Props = {
     legendType: string;
 };
 
-const list_field_key = 'legend_config';
+const LIST_FIELD_KEY = 'legend_config';
 
 export const LegendConfigForm: FC<Props> = ({
     minItems,
@@ -74,9 +74,9 @@ export const LegendConfigForm: FC<Props> = ({
                         scale={scale}
                         legendType={legendType}
                         onUpdateField={(field, value) =>
-                            onUpdateField(list_field_key, index, field, value)
+                            onUpdateField(LIST_FIELD_KEY, index, field, value)
                         }
-                        onRemove={() => onRemove(list_field_key, index)}
+                        onRemove={() => onRemove(LIST_FIELD_KEY, index)}
                         getErrors={key => getChildError(key, index)}
                         canBeRemoved={legendConfig.length > minItems}
                     />
@@ -90,7 +90,7 @@ export const LegendConfigForm: FC<Props> = ({
             )}
             <Button
                 onClick={() =>
-                    onAdd(list_field_key, DEFAULT_LEGEND_CONFIG_ITEM, {})
+                    onAdd(LIST_FIELD_KEY, DEFAULT_LEGEND_CONFIG_ITEM, {})
                 }
                 disabled={legendConfig.length >= maxItems}
             >
