@@ -22,7 +22,7 @@ class ImpactMetrics:
 
 
 @dataclass
-class OrgUnitMetrics(ImpactMetrics):
+class OrgUnitImpactMetrics(ImpactMetrics):
     """Impact metrics for a single org unit, used both per-year and across years."""
 
     org_unit_id: int = 0
@@ -34,7 +34,7 @@ class OrgUnitMetrics(ImpactMetrics):
         result: ImpactResult,
         org_unit: OrgUnit,
         cost: Optional[float] = None,
-    ) -> "OrgUnitMetrics":
+    ) -> "OrgUnitImpactMetrics":
         averted_cases = _compute_averted_cases(
             result.population, result.number_cases, result.number_severe_cases
         )
@@ -52,20 +52,20 @@ class OrgUnitMetrics(ImpactMetrics):
 
 
 @dataclass
-class YearMetrics(ImpactMetrics):
+class YearImpactMetrics(ImpactMetrics):
     """Aggregated impact metrics for a single year across all org units."""
 
     year: int = 0
-    org_units: list[OrgUnitMetrics] = field(default_factory=list)
+    org_units: list[OrgUnitImpactMetrics] = field(default_factory=list)
 
 
 @dataclass
-class ScenarioImpact(ImpactMetrics):
+class ScenarioImpactMetrics(ImpactMetrics):
     """Top-level impact result for a scenario, with breakdowns by year and org unit."""
 
     scenario_id: int = 0
-    by_year: list[YearMetrics] = field(default_factory=list)
-    org_units: list[OrgUnitMetrics] = field(default_factory=list)
+    by_year: list[YearImpactMetrics] = field(default_factory=list)
+    org_units: list[OrgUnitImpactMetrics] = field(default_factory=list)
 
 
 def _compute_averted_cases(
@@ -178,7 +178,7 @@ class ImpactService:
         age_group: str,
         year_from: Optional[str] = None,
         year_to: Optional[str] = None,
-    ) -> ScenarioImpact:
+    ) -> ScenarioImpactMetrics:
         """Return the full impact result for a scenario."""
         org_unit_interventions = self._get_org_unit_interventions(scenario)
         cost_map = self._build_cost_map(scenario)
@@ -225,9 +225,9 @@ class ImpactService:
         age_group: str,
         year_from: Optional[str],
         year_to: Optional[str],
-    ) -> dict[int, list[OrgUnitMetrics]]:
+    ) -> dict[int, list[OrgUnitImpactMetrics]]:
         ou_by_id: dict[int, OrgUnit] = {ou.id: ou for ou in org_unit_interventions}
-        year_data: dict[int, list[OrgUnitMetrics]] = defaultdict(list)
+        year_data: dict[int, list[OrgUnitImpactMetrics]] = defaultdict(list)
 
         if self._provider.supports_bulk:
             self._collect_bulk(org_unit_interventions, age_group, year_from, year_to, ou_by_id, cost_map, year_data)
@@ -244,7 +244,7 @@ class ImpactService:
         year_to: Optional[str],
         ou_by_id: dict[int, OrgUnit],
         cost_map: dict[int, dict[int, float]],
-        year_data: dict[int, list[OrgUnitMetrics]],
+        year_data: dict[int, list[OrgUnitImpactMetrics]],
     ) -> None:
         """Fetch impact data using batch queries, grouped by intervention mix."""
         groups: dict[frozenset[int], tuple[list[OrgUnit], list[Intervention]]] = {}
@@ -267,7 +267,7 @@ class ImpactService:
                 org_unit = ou_by_id[ou_id]
                 for result in impact_results:
                     ou_cost = cost_map.get(result.year, {}).get(ou_id)
-                    metrics = OrgUnitMetrics.from_impact_result(result, org_unit, cost=ou_cost)
+                    metrics = OrgUnitImpactMetrics.from_impact_result(result, org_unit, cost=ou_cost)
                     year_data[result.year].append(metrics)
 
     def _collect_individual(
@@ -277,7 +277,7 @@ class ImpactService:
         year_from: Optional[str],
         year_to: Optional[str],
         cost_map: dict[int, dict[int, float]],
-        year_data: dict[int, list[OrgUnitMetrics]],
+        year_data: dict[int, list[OrgUnitImpactMetrics]],
     ) -> None:
         """Fetch impact data one org unit at a time via match_impact."""
         for org_unit, interventions in org_unit_interventions.items():
@@ -291,14 +291,14 @@ class ImpactService:
 
             for result in impact_results:
                 ou_cost = cost_map.get(result.year, {}).get(org_unit.id)
-                metrics = OrgUnitMetrics.from_impact_result(result, org_unit, cost=ou_cost)
+                metrics = OrgUnitImpactMetrics.from_impact_result(result, org_unit, cost=ou_cost)
                 year_data[result.year].append(metrics)
 
     def _aggregate_org_units(
         self,
-        year_data: dict[int, list[OrgUnitMetrics]],
-    ) -> list[OrgUnitMetrics]:
-        per_org_unit: dict[int, list[OrgUnitMetrics]] = defaultdict(list)
+        year_data: dict[int, list[OrgUnitImpactMetrics]],
+    ) -> list[OrgUnitImpactMetrics]:
+        per_org_unit: dict[int, list[OrgUnitImpactMetrics]] = defaultdict(list)
         for year_metrics in year_data.values():
             for m in year_metrics:
                 per_org_unit[m.org_unit_id].append(m)
@@ -306,7 +306,7 @@ class ImpactService:
         results = []
         for ou_id, ou_metrics in per_org_unit.items():
             totals = _aggregate_metrics(ou_metrics)
-            results.append(OrgUnitMetrics(
+            results.append(OrgUnitImpactMetrics(
                 org_unit_id=ou_id,
                 org_unit_name=ou_metrics[0].org_unit_name,
                 **{f.name: getattr(totals, f.name) for f in ImpactMetrics.__dataclass_fields__.values()},
@@ -316,10 +316,10 @@ class ImpactService:
     def _build_response(
         self,
         scenario: Scenario,
-        year_data: dict[int, list[OrgUnitMetrics]],
-    ) -> ScenarioImpact:
+        year_data: dict[int, list[OrgUnitImpactMetrics]],
+    ) -> ScenarioImpactMetrics:
         by_year = []
-        all_metrics: list[OrgUnitMetrics] = []
+        all_metrics: list[OrgUnitImpactMetrics] = []
 
         for year in sorted(year_data.keys()):
             metrics = year_data[year]
@@ -327,7 +327,7 @@ class ImpactService:
                 continue
 
             totals = _aggregate_metrics(metrics)
-            by_year.append(YearMetrics(
+            by_year.append(YearImpactMetrics(
                 year=year,
                 org_units=metrics,
                 **{f.name: getattr(totals, f.name) for f in ImpactMetrics.__dataclass_fields__.values()},
@@ -335,7 +335,7 @@ class ImpactService:
             all_metrics.extend(metrics)
 
         overall = _aggregate_metrics(all_metrics) if all_metrics else ImpactMetrics()
-        return ScenarioImpact(
+        return ScenarioImpactMetrics(
             scenario_id=scenario.id,
             by_year=by_year,
             org_units=self._aggregate_org_units(year_data),
