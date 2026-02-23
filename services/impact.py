@@ -5,20 +5,22 @@ from typing import Optional
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Budget, Intervention, InterventionAssignment, Scenario
 from plugins.snt_malaria.providers.impact.base import ImpactProvider, ImpactResult
-from plugins.snt_malaria.types import MetricWithCI
+from plugins.snt_malaria.types import ImpactMetricWithConfidenceInterval
 
 
 @dataclass
 class ImpactMetrics:
     """Shared impact metrics used at every aggregation level."""
 
-    number_cases: MetricWithCI = field(default_factory=MetricWithCI)
-    number_severe_cases: MetricWithCI = field(default_factory=MetricWithCI)
-    prevalence_rate: MetricWithCI = field(default_factory=MetricWithCI)
-    averted_cases: MetricWithCI = field(default_factory=MetricWithCI)
-    direct_deaths: MetricWithCI = field(default_factory=MetricWithCI)
+    number_cases: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+    number_severe_cases: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+    prevalence_rate: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+    averted_cases: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+    direct_deaths: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
     cost: Optional[float] = None
-    cost_per_averted_case: MetricWithCI = field(default_factory=MetricWithCI)
+    cost_per_averted_case: ImpactMetricWithConfidenceInterval = field(
+        default_factory=ImpactMetricWithConfidenceInterval
+    )
 
 
 @dataclass
@@ -35,9 +37,7 @@ class OrgUnitImpactMetrics(ImpactMetrics):
         org_unit: OrgUnit,
         cost: Optional[float] = None,
     ) -> "OrgUnitImpactMetrics":
-        averted_cases = _compute_averted_cases(
-            result.population, result.number_cases, result.number_severe_cases
-        )
+        averted_cases = _compute_averted_cases(result.population, result.number_cases, result.number_severe_cases)
         return cls(
             org_unit_id=org_unit.id,
             org_unit_name=org_unit.name,
@@ -70,9 +70,9 @@ class ScenarioImpactMetrics(ImpactMetrics):
 
 def _compute_averted_cases(
     population: float,
-    number_cases: MetricWithCI,
-    number_severe_cases: MetricWithCI,
-) -> MetricWithCI:
+    number_cases: ImpactMetricWithConfidenceInterval,
+    number_severe_cases: ImpactMetricWithConfidenceInterval,
+) -> ImpactMetricWithConfidenceInterval:
     """Compute averted cases = population - (cases + severe).
 
     CI bounds invert: lower averted when cases are at their upper bound.
@@ -83,7 +83,7 @@ def _compute_averted_cases(
             return pop - (cases_val + severe_val)
         return None
 
-    return MetricWithCI(
+    return ImpactMetricWithConfidenceInterval(
         value=_subtract(population, number_cases.value, number_severe_cases.value),
         # CI bounds invert: fewer cases (lower bound) → more averted (upper bound)
         lower=_subtract(population, number_cases.upper, number_severe_cases.upper),
@@ -93,21 +93,21 @@ def _compute_averted_cases(
 
 def _compute_cost_per_averted(
     cost: Optional[float],
-    averted_cases: MetricWithCI,
-) -> MetricWithCI:
+    averted_cases: ImpactMetricWithConfidenceInterval,
+) -> ImpactMetricWithConfidenceInterval:
     """Compute cost per averted case = cost / averted.
 
     CI bounds invert: lower cost/averted when most averted (upper).
     """
     if cost is None:
-        return MetricWithCI()
+        return ImpactMetricWithConfidenceInterval()
 
     def _divide(c, averted):
         if averted is not None and averted > 0:
             return c / averted
         return None
 
-    return MetricWithCI(
+    return ImpactMetricWithConfidenceInterval(
         value=_divide(cost, averted_cases.value),
         # CI bounds invert: more averted (upper) → lower cost per averted
         lower=_divide(cost, averted_cases.upper),
@@ -122,14 +122,14 @@ def _aggregate_metrics(metrics: list[ImpactMetrics]) -> ImpactMetrics:
     Averages prevalence. Derives cost_per_averted_case from summed cost
     and summed averted cases (only counting entries that have cost data).
     """
-    sum_cases = MetricWithCI()
-    sum_severe = MetricWithCI()
-    sum_averted = MetricWithCI()
-    sum_deaths = MetricWithCI()
+    sum_cases = ImpactMetricWithConfidenceInterval()
+    sum_severe = ImpactMetricWithConfidenceInterval()
+    sum_averted = ImpactMetricWithConfidenceInterval()
+    sum_deaths = ImpactMetricWithConfidenceInterval()
     sum_cost = 0.0
     has_cost = False
-    sum_costed_averted = MetricWithCI()
-    sum_prevalence = MetricWithCI()
+    sum_costed_averted = ImpactMetricWithConfidenceInterval()
+    sum_prevalence = ImpactMetricWithConfidenceInterval()
     prevalence_count = 0
 
     for m in metrics:
@@ -145,7 +145,7 @@ def _aggregate_metrics(metrics: list[ImpactMetrics]) -> ImpactMetrics:
             sum_prevalence = sum_prevalence + m.prevalence_rate
             prevalence_count += 1
 
-    avg_prevalence = sum_prevalence / prevalence_count if prevalence_count else MetricWithCI()
+    avg_prevalence = sum_prevalence / prevalence_count if prevalence_count else ImpactMetricWithConfidenceInterval()
 
     return ImpactMetrics(
         number_cases=sum_cases,
@@ -154,9 +154,7 @@ def _aggregate_metrics(metrics: list[ImpactMetrics]) -> ImpactMetrics:
         averted_cases=sum_averted,
         direct_deaths=sum_deaths,
         cost=sum_cost if has_cost else None,
-        cost_per_averted_case=_compute_cost_per_averted(
-            sum_cost if has_cost else None, sum_costed_averted
-        ),
+        cost_per_averted_case=_compute_cost_per_averted(sum_cost if has_cost else None, sum_costed_averted),
     )
 
 
@@ -182,9 +180,7 @@ class ImpactService:
         """Return the full impact result for a scenario."""
         org_unit_interventions = self._get_org_unit_interventions(scenario)
         cost_map = self._build_cost_map(scenario)
-        year_data = self._collect_metrics(
-            org_unit_interventions, cost_map, age_group, year_from, year_to
-        )
+        year_data = self._collect_metrics(org_unit_interventions, cost_map, age_group, year_from, year_to)
         return self._build_response(scenario, year_data)
 
     @staticmethod
@@ -306,11 +302,13 @@ class ImpactService:
         results = []
         for ou_id, ou_metrics in per_org_unit.items():
             totals = _aggregate_metrics(ou_metrics)
-            results.append(OrgUnitImpactMetrics(
-                org_unit_id=ou_id,
-                org_unit_name=ou_metrics[0].org_unit_name,
-                **{f.name: getattr(totals, f.name) for f in ImpactMetrics.__dataclass_fields__.values()},
-            ))
+            results.append(
+                OrgUnitImpactMetrics(
+                    org_unit_id=ou_id,
+                    org_unit_name=ou_metrics[0].org_unit_name,
+                    **{f.name: getattr(totals, f.name) for f in ImpactMetrics.__dataclass_fields__.values()},
+                )
+            )
         return results
 
     def _build_response(
@@ -327,11 +325,13 @@ class ImpactService:
                 continue
 
             totals = _aggregate_metrics(metrics)
-            by_year.append(YearImpactMetrics(
-                year=year,
-                org_units=metrics,
-                **{f.name: getattr(totals, f.name) for f in ImpactMetrics.__dataclass_fields__.values()},
-            ))
+            by_year.append(
+                YearImpactMetrics(
+                    year=year,
+                    org_units=metrics,
+                    **{f.name: getattr(totals, f.name) for f in ImpactMetrics.__dataclass_fields__.values()},
+                )
+            )
             all_metrics.extend(metrics)
 
         overall = _aggregate_metrics(all_metrics) if all_metrics else ImpactMetrics()

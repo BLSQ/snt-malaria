@@ -6,7 +6,7 @@ from typing import Optional
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
-from plugins.snt_malaria.types import MetricWithCI
+from plugins.snt_malaria.types import ImpactMetricWithConfidenceInterval
 
 
 @dataclass
@@ -18,10 +18,10 @@ class ImpactResult:
 
     year: int
     population: float
-    number_cases: MetricWithCI = field(default_factory=MetricWithCI)
-    number_severe_cases: MetricWithCI = field(default_factory=MetricWithCI)
-    prevalence_rate: MetricWithCI = field(default_factory=MetricWithCI)
-    direct_deaths: MetricWithCI = field(default_factory=MetricWithCI)
+    number_cases: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+    number_severe_cases: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+    prevalence_rate: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+    direct_deaths: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
 
 
 class ImpactProvider(ABC):
@@ -86,8 +86,7 @@ class ImpactProvider(ABC):
             Dict keyed by org_unit.id -> list of ImpactResult (one per year).
         """
         raise NotImplementedError(
-            f"{type(self).__name__} does not support bulk queries. "
-            f"Check supports_bulk before calling."
+            f"{type(self).__name__} does not support bulk queries. Check supports_bulk before calling."
         )
 
     @abstractmethod

@@ -6,7 +6,7 @@ from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
 from plugins.snt_malaria.models.swisstph_impact import SwissTPHImpactData
 from plugins.snt_malaria.providers.impact.base import ImpactProvider, ImpactResult
-from plugins.snt_malaria.types import MetricWithCI
+from plugins.snt_malaria.types import ImpactMetricWithConfidenceInterval
 
 
 SWISSTPH_DATABASE_ALIAS = "impact_swisstph"
@@ -124,24 +124,26 @@ class SwissTPHImpactProvider(ImpactProvider):
                     f"Each (year, seed) must be unique."
                 )
 
-            results.setdefault(ou_id, []).append(ImpactResult(
-                year=row["year"],
-                number_cases=MetricWithCI(
-                    row["avg_n_uncomp"], row["min_n_uncomp"], row["max_n_uncomp"]
-                ),
-                number_severe_cases=MetricWithCI(
-                    row["avg_n_severe"], row["min_n_severe"], row["max_n_severe"]
-                ),
-                prevalence_rate=MetricWithCI(
-                    row["avg_prevalence_rate"], row["min_prevalence_rate"], row["max_prevalence_rate"]
-                ),
-                population=row["avg_n_host"] or 0,
-                direct_deaths=MetricWithCI(
-                    row["avg_expected_direct_deaths"],
-                    row["min_expected_direct_deaths"],
-                    row["max_expected_direct_deaths"],
-                ),
-            ))
+            results.setdefault(ou_id, []).append(
+                ImpactResult(
+                    year=row["year"],
+                    number_cases=ImpactMetricWithConfidenceInterval(
+                        row["avg_n_uncomp"], row["min_n_uncomp"], row["max_n_uncomp"]
+                    ),
+                    number_severe_cases=ImpactMetricWithConfidenceInterval(
+                        row["avg_n_severe"], row["min_n_severe"], row["max_n_severe"]
+                    ),
+                    prevalence_rate=ImpactMetricWithConfidenceInterval(
+                        row["avg_prevalence_rate"], row["min_prevalence_rate"], row["max_prevalence_rate"]
+                    ),
+                    population=row["avg_n_host"] or 0,
+                    direct_deaths=ImpactMetricWithConfidenceInterval(
+                        row["avg_expected_direct_deaths"],
+                        row["min_expected_direct_deaths"],
+                        row["max_expected_direct_deaths"],
+                    ),
+                )
+            )
 
         return results
 
@@ -170,9 +172,7 @@ class SwissTPHImpactProvider(ImpactProvider):
             columns.add("deployed_int_pbo")
         elif code in IG2_CODES or "dual ai" in name or "ig2" in name:
             columns.add("deployed_int_ig2")
-        elif code in ITN_STANDARD_CODES and ("standard" in name or "pyrethroid" in name):
-            columns.add("deployed_int_itn")
-        elif code in ITN_STANDARD_CODES:
+        elif code in ITN_STANDARD_CODES and ("standard" in name or "pyrethroid" in name) or code in ITN_STANDARD_CODES:
             columns.add("deployed_int_itn")
         elif code in INTERVENTION_COLUMN_MAP:
             columns.add(INTERVENTION_COLUMN_MAP[code])
@@ -182,8 +182,7 @@ class SwissTPHImpactProvider(ImpactProvider):
     def _build_query_filters(self, deployed_columns: set[str]) -> dict:
         """Build the deployed_int_* filter dict for a given set of deployed columns."""
         has_any_net = any(
-            col in deployed_columns
-            for col in ["deployed_int_itn", "deployed_int_pbo", "deployed_int_ig2"]
+            col in deployed_columns for col in ["deployed_int_itn", "deployed_int_pbo", "deployed_int_ig2"]
         )
         filters = {}
         for column in KNOWN_DEPLOYED_COLUMNS:

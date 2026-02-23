@@ -6,7 +6,7 @@ from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
 from plugins.snt_malaria.models.idm_impact import IDMAgeGroup, IDMModelOutput
 from plugins.snt_malaria.providers.impact.base import ImpactProvider, ImpactResult
-from plugins.snt_malaria.types import MetricWithCI
+from plugins.snt_malaria.types import ImpactMetricWithConfidenceInterval
 
 
 IDM_DATABASE_ALIAS = "impact_idm"
@@ -265,26 +265,28 @@ class IDMImpactProvider(ImpactProvider):
 
             pop = row["admin_info_ref__population"] or 0
 
-            results[ou_id].append(ImpactResult(
-                year=row["year"],
-                number_cases=MetricWithCI(
-                    self._incidence_to_count(row["clinical_incidence"], pop),
-                    self._incidence_to_count(row["clinical_incidence_lower"], pop),
-                    self._incidence_to_count(row["clinical_incidence_higher"], pop),
-                ),
-                number_severe_cases=MetricWithCI(
-                    self._incidence_to_count(row["severe_incidence"], pop),
-                    self._incidence_to_count(row["severe_incidence_lower"], pop),
-                    self._incidence_to_count(row["severe_incidence_higher"], pop),
-                ),
-                prevalence_rate=MetricWithCI(
-                    float(row["prevalence"]) if row["prevalence"] is not None else None,
-                    float(row["prevalence_lower"]) if row["prevalence_lower"] is not None else None,
-                    float(row["prevalence_higher"]) if row["prevalence_higher"] is not None else None,
-                ),
-                population=pop,
-                direct_deaths=MetricWithCI(),
-            ))
+            results[ou_id].append(
+                ImpactResult(
+                    year=row["year"],
+                    number_cases=ImpactMetricWithConfidenceInterval(
+                        self._incidence_to_count(row["clinical_incidence"], pop),
+                        self._incidence_to_count(row["clinical_incidence_lower"], pop),
+                        self._incidence_to_count(row["clinical_incidence_higher"], pop),
+                    ),
+                    number_severe_cases=ImpactMetricWithConfidenceInterval(
+                        self._incidence_to_count(row["severe_incidence"], pop),
+                        self._incidence_to_count(row["severe_incidence_lower"], pop),
+                        self._incidence_to_count(row["severe_incidence_higher"], pop),
+                    ),
+                    prevalence_rate=ImpactMetricWithConfidenceInterval(
+                        float(row["prevalence"]) if row["prevalence"] is not None else None,
+                        float(row["prevalence_lower"]) if row["prevalence_lower"] is not None else None,
+                        float(row["prevalence_higher"]) if row["prevalence_higher"] is not None else None,
+                    ),
+                    population=pop,
+                    direct_deaths=ImpactMetricWithConfidenceInterval(),
+                )
+            )
 
         return results
 
@@ -296,11 +298,7 @@ class IDMImpactProvider(ImpactProvider):
         return result["min_year"], result["max_year"]
 
     def get_age_groups(self) -> list[str]:
-        return list(
-            IDMAgeGroup.objects.using(IDM_DATABASE_ALIAS)
-            .values_list("option", flat=True)
-            .order_by("option")
-        )
+        return list(IDMAgeGroup.objects.using(IDM_DATABASE_ALIAS).values_list("option", flat=True).order_by("option"))
 
     def _map_intervention(self, intervention: Intervention) -> set[str]:
         """Map an Iaso Intervention to IDM filter keys (column=package_id).
@@ -325,9 +323,7 @@ class IDMImpactProvider(ImpactProvider):
             raise ValueError("Intervention has no code")
 
         if code not in IDM_INTERVENTION_MAP:
-            raise ValueError(
-                f"IDM does not support intervention with code {code!r}."
-            )
+            raise ValueError(f"IDM does not support intervention with code {code!r}.")
 
         column, package_id = IDM_INTERVENTION_MAP[code]
         filter_keys.add(f"{column}={package_id}")
@@ -359,10 +355,7 @@ class IDMImpactProvider(ImpactProvider):
     def _resolve_age_group_id(self, age_group_label):
         """Resolve an age group label (e.g. 'under5') to its IDM database ID."""
         try:
-            age_group = (
-                IDMAgeGroup.objects.using(IDM_DATABASE_ALIAS)
-                .get(option=age_group_label)
-            )
+            age_group = IDMAgeGroup.objects.using(IDM_DATABASE_ALIAS).get(option=age_group_label)
             return age_group.id
         except IDMAgeGroup.DoesNotExist:
             return None
