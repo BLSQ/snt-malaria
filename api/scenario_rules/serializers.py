@@ -83,8 +83,11 @@ class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
         ]
 
 
-class ScenarioRuleCreateSerializer(serializers.ModelSerializer):
-    scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
+class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
+    """
+    Common base for both create and update serializers
+    """
+
     intervention_properties = ScenarioRuleInterventionPropertiesSerializer(many=True, required=True)
     matching_criteria = JSONSchemaField(SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)
     org_units_excluded = serializers.ListField(
@@ -100,7 +103,6 @@ class ScenarioRuleCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScenarioRule
         fields = [
-            "scenario",
             "name",
             "color",
             "intervention_properties",
@@ -113,9 +115,7 @@ class ScenarioRuleCreateSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         user = self.context["request"].user
-        account = user.iaso_profile.account
-        org_units = get_valid_org_units_with_geography(account)
-        self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
+        org_units = get_valid_org_units_with_geography(user.iaso_profile.account)
         self.fields["org_units_excluded"].child.queryset = org_units
         self.fields["org_units_included"].child.queryset = org_units
         self.fields["org_units_scope"].child.queryset = org_units
@@ -153,6 +153,23 @@ class ScenarioRuleCreateSerializer(serializers.ModelSerializer):
 
         return matching_criteria
 
+
+class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
+    scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
+
+    class Meta:
+        model = ScenarioRule
+        fields = [
+            *ScenarioRuleWriteSerializerBase.Meta.fields,
+            "scenario",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user = self.context["request"].user
+        account = user.iaso_profile.account
+        self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
+
     def validate_scenario(self, scenario):
         user = self.context["request"].user
         if scenario.created_by != user and not user.has_perm(SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()):
@@ -177,3 +194,43 @@ class ScenarioRuleCreateSerializer(serializers.ModelSerializer):
             )
 
         return scenario_rule
+
+
+class ScenarioRuleUpdateSerializer(ScenarioRuleWriteSerializerBase):
+    # overriding parent fields in order to make them optional
+    intervention_properties = ScenarioRuleInterventionPropertiesSerializer(many=True, required=False)
+    matching_criteria = JSONSchemaField(SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA, required=False)
+    name = serializers.CharField(required=False, allow_blank=False, allow_null=False)
+
+    class Meta:
+        model = ScenarioRule
+        fields = [
+            *ScenarioRuleWriteSerializerBase.Meta.fields,
+        ]
+
+    def update(self, instance, validated_data, **kwargs):
+        # we don't really care about the ScenarioRuleInterventionProperties objects, we can always delete and recreate them
+        instance.intervention_properties.all().delete()
+        intervention_properties_data = validated_data.pop("intervention_properties", [])
+        other_values = {
+            "org_units_excluded": [org_unit.id for org_unit in validated_data.pop("org_units_excluded", [])],
+            "org_units_included": [org_unit.id for org_unit in validated_data.pop("org_units_included", [])],
+            "org_units_scope": [org_unit.id for org_unit in validated_data.pop("org_units_scope", [])],
+        }
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        for attr, value in other_values.items():
+            setattr(instance, attr, value)
+        for attr, value in kwargs.items():  # don't pass m2m objects please
+            setattr(instance, attr, value)
+
+        instance.save()
+
+        for data in intervention_properties_data:
+            ScenarioRuleInterventionProperties.objects.create(
+                scenario_rule=instance,
+                intervention=data["intervention"],
+                coverage=data["coverage"],
+            )
+
+        return instance
