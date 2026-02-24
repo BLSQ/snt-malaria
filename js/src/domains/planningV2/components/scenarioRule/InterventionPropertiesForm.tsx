@@ -58,14 +58,14 @@ export const InterventionPropertiesForm: FC<Props> = ({
 
     const interventionsPerCategory = useMemo(
         () =>
-            filteredInterventionCategories.reduce(
+            interventionCategories.reduce(
                 (acc, category) => {
                     acc[category.id] = category.interventions;
                     return acc;
                 },
                 {} as Record<number, InterventionCategory['interventions']>,
             ),
-        [filteredInterventionCategories],
+        [interventionCategories],
     );
 
     const interventionCategoryOptions = useMemo(

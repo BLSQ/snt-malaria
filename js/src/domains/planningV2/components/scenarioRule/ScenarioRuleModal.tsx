@@ -13,6 +13,7 @@ import { InterventionCategory } from '../../../planning/types/interventions';
 import { MetricTypeCategory } from '../../../planning/types/metrics';
 import { useCreateUpdateScenarioRule } from '../../hooks/useCreateUpdateScenarioRule';
 import {
+    defaultScenarioRuleValues,
     ScenarioRuleFormValues,
     useScenarioRuleFormState,
 } from '../../hooks/useScenarioRuleFormState';
@@ -72,14 +73,17 @@ const ScenarioRuleDialog: FC<Props> = ({
 
     const initialValues: ScenarioRuleFormValues | undefined = useMemo(
         () =>
-            rule && {
-                id: rule.id,
-                name: rule.name,
-                color: rule.color,
-                intervention_properties: rule.intervention_properties,
-                matching_criteria: rule.matching_criteria,
-            },
-        [rule],
+            rule
+                ? {
+                      id: rule.id,
+                      scenario: rule.scenario,
+                      name: rule.name,
+                      color: rule.color,
+                      intervention_properties: rule.intervention_properties,
+                      matching_criteria: rule.matching_criteria,
+                  }
+                : { ...defaultScenarioRuleValues, scenario: scenarioId },
+        [rule, scenarioId],
     );
     const formik = useScenarioRuleFormState({ onSubmit, initialValues });
 

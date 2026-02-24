@@ -26,9 +26,10 @@ export const defaultMatchingCriteria: MetricTypeCriterion = {
 export const defaultInterventionProperties: InterventionProperties = {
     intervention: undefined,
     intervention_category: undefined,
+    coverage: 0,
 };
 
-const defaultValues: ScenarioRuleFormValues = {
+export const defaultScenarioRuleValues: ScenarioRuleFormValues = {
     name: '',
     color: '#000000',
     intervention_properties: [],
@@ -74,7 +75,7 @@ export const useScenarioRuleFormState = ({
 }) => {
     const validationSchema = useValidation();
     return useFormik({
-        initialValues: initialValues || defaultValues,
+        initialValues: initialValues || defaultScenarioRuleValues,
         validationSchema,
         onSubmit: onSubmit,
     });

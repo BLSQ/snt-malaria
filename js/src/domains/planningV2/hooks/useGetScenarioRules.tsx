@@ -1,72 +1,32 @@
-// import { getRequest } from 'bluesquare-components';
-import { useQuery, UseQueryResult } from 'react-query';
-import { ScenarioRule } from '../types/scenarioRule';
+import { JsonLogicTree } from '@react-awesome-query-builder/mui';
+import { getRequest } from 'bluesquare-components';
+import { UseQueryResult } from 'react-query';
+import { useSnackQuery } from 'Iaso/libs/apiHooks';
+import { InterventionProperties, ScenarioRule } from '../types/scenarioRule';
+import { mapResponseToScenarioRules } from '../utils/scenarioRuleMapper';
 
-const dummyScenarioRulesResponse: ScenarioRule[] = [
-    {
-        id: 1,
-        name: 'Rule 1',
-        priority: 1,
-        matching_criteria: [
-            {
-                metric_type: 115,
-                operator: '>',
-                value: 10,
-                string_value: '',
-            },
-            {
-                metric_type: 115,
-                operator: '>',
-                value: 10,
-                string_value: '',
-            },
-            {
-                metric_type: 115,
-                operator: '>',
-                value: 10,
-                string_value: '',
-            },
-            {
-                metric_type: 115,
-                operator: '>',
-                value: 10,
-                string_value: '',
-            },
-            {
-                metric_type: 115,
-                operator: '>',
-                value: 10,
-                string_value: '',
-            },
-            {
-                metric_type: 115,
-                operator: '>',
-                value: 10,
-                string_value: '',
-            },
-        ],
-        color: '#ff0000',
-        intervention_properties: [
-            {
-                intervention_category: 112,
-                intervention: 234,
-            },
-        ],
-    },
-];
+export type ScenarioRuleResponse = {
+    id: number;
+    name: string;
+    scenario: number;
+    priority: number;
+    color: string;
+    matching_criteria: JsonLogicTree;
+    intervention_properties: InterventionProperties[];
+};
 
 export const useGetScenarioRules = (
     scenarioId: number,
 ): UseQueryResult<ScenarioRule[], Error> => {
-    return useQuery({
-        queryKey: ['scenarioRules', scenarioId],
-        queryFn: async () => {
-            // const response = await getRequest(
-            //     `/api/snt_malaria/scenario_rules/?scenario=${scenarioId}`,
-            // );
-
-            // return response?.results || [];
-            return dummyScenarioRulesResponse;
+    return useSnackQuery({
+        queryKey: [`scenarioRules_${scenarioId}`],
+        queryFn: () =>
+            getRequest(
+                `/api/snt_malaria/scenario_rules/?scenario=${scenarioId}`,
+            ),
+        options: {
+            cacheTime: Infinity, // disable auto fetch on cache expiration
+            select: mapResponseToScenarioRules,
         },
     });
 };
