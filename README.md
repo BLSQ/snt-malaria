@@ -67,6 +67,8 @@ docker compose run iaso manage set_up_burkina_faso_account
 
 ## Configuration
 
+### Filter org unit per parent
+
 The planning page requires a configuration entry in the Iaso datastore to know which org unit types represent the country level and the intervention level. Without this configuration (or if it contains invalid values), the planning sidebar will only show the "National" display level.
 
 To set it up, go to the Django admin for your account and create a datastore entry with the key `snt_malaria_config` and the following JSON data:
@@ -79,6 +81,9 @@ To set it up, go to the Django admin for your account and create a datastore ent
 ```
 
 Replace `<id>` with the actual org unit type IDs for your country. Both values must be numbers.
+
+You can find relevant ids in the admin panel, go to `org unit type` and filter them based on the account you want to setup.
+Use the id from `Country` and the lowest level, most probably `District` or `Zone de santé`.
 
 ## OpenHEXA import
 
