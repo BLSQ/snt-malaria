@@ -1,5 +1,7 @@
 from rest_framework import status
 
+from iaso.utils.colors import DEFAULT_COLOR
+from plugins.snt_malaria.models import Scenario, ScenarioRule
 from plugins.snt_malaria.tests.api.scenario_rules.common_base import ScenarioRulesTestBase
 
 
@@ -73,10 +75,217 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         response = self.client.get(f"{self.BASE_URL}{self.other_scenario_rule.id}/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_post_scenario_rule_not_allowed(self):
+    def test_post_scenario_rule_with_full_perm_own_scenario(self):
+        payload = {
+            "name": "New Rule",
+            "scenario": self.scenario.id,
+            "matching_criteria": {
+                "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
+            },  # all districts with population >= 1
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.5,
+                },
+                {
+                    "intervention": self.intervention_vaccination_rts.id,
+                    "coverage": 0.8,
+                },
+            ],
+            "org_units_excluded": [self.district_2.id],
+        }
         self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.post(self.BASE_URL, {"name": "New Rule"})
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        response = self.client.post(self.BASE_URL, payload)
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+
+        self.assertIsNotNone(result["id"])
+        new_rule = ScenarioRule.objects.get(id=result["id"])
+
+        self.assertEqual(new_rule.name, payload["name"])
+        self.assertEqual(new_rule.scenario_id, payload["scenario"])
+        self.assertEqual(new_rule.color, DEFAULT_COLOR)
+        self.assertEqual(new_rule.priority, 3)  # 2 rules in setup
+        self.assertCountEqual(new_rule.org_units_matched, [self.district_1.id, self.district_2.id, self.district_3.id])
+        self.assertEqual(new_rule.org_units_excluded, [self.district_2.id])
+        self.assertEqual(new_rule.org_units_included, [])
+        self.assertEqual(new_rule.org_units_scope, [])
+        self.assertEqual(new_rule.created_by, self.user_with_full_perm)
+        self.assertIsNone(new_rule.updated_by)
+
+    def test_post_scenario_rule_with_full_perm_other_scenario(self):
+        new_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_with_basic_perm,
+            name="Other Scenario",
+            description="Description of other scenario - belongs to another user",
+            start_year=2020,
+            end_year=2030,
+        )
+        payload = {
+            "name": "New Rule",
+            "scenario": new_scenario.id,
+            "matching_criteria": {
+                "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
+            },  # all districts with population >= 1
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.5,
+                },
+                {
+                    "intervention": self.intervention_vaccination_rts.id,
+                    "coverage": 0.8,
+                },
+            ],
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(self.BASE_URL, payload)
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+
+        self.assertIsNotNone(result["id"])
+        new_rule = ScenarioRule.objects.get(id=result["id"])
+
+        self.assertEqual(new_rule.name, payload["name"])
+        self.assertEqual(new_rule.scenario_id, payload["scenario"])
+        self.assertEqual(new_rule.color, DEFAULT_COLOR)
+        self.assertEqual(new_rule.priority, 1)  # because it's a new scenario
+        self.assertCountEqual(new_rule.org_units_matched, [self.district_1.id, self.district_2.id, self.district_3.id])
+        self.assertEqual(new_rule.org_units_excluded, [])
+        self.assertEqual(new_rule.org_units_included, [])
+        self.assertEqual(new_rule.org_units_scope, [])
+        self.assertEqual(new_rule.created_by, self.user_with_full_perm)
+        self.assertIsNone(new_rule.updated_by)
+
+    def test_post_scenario_rule_with_basic_perm_own_scenario(self):
+        new_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_with_basic_perm,
+            name="Other Scenario",
+            description="Description of other scenario - belongs to another user",
+            start_year=2020,
+            end_year=2030,
+        )
+        payload = {
+            "name": "New Rule",
+            "scenario": new_scenario.id,
+            "matching_criteria": {
+                "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
+            },  # all districts with population >= 1
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.5,
+                },
+                {
+                    "intervention": self.intervention_vaccination_rts.id,
+                    "coverage": 0.8,
+                },
+            ],
+        }
+        self.client.force_authenticate(user=self.user_with_basic_perm)
+        response = self.client.post(self.BASE_URL, payload)
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+
+        self.assertIsNotNone(result["id"])
+        new_rule = ScenarioRule.objects.get(id=result["id"])
+
+        self.assertEqual(new_rule.name, payload["name"])
+        self.assertEqual(new_rule.scenario_id, payload["scenario"])
+        self.assertEqual(new_rule.color, DEFAULT_COLOR)
+        self.assertEqual(new_rule.priority, 1)  # because it's a new scenario
+        self.assertCountEqual(new_rule.org_units_matched, [self.district_1.id, self.district_2.id, self.district_3.id])
+        self.assertEqual(new_rule.org_units_excluded, [])
+        self.assertEqual(new_rule.org_units_included, [])
+        self.assertEqual(new_rule.org_units_scope, [])
+        self.assertEqual(new_rule.created_by, self.user_with_basic_perm)
+        self.assertIsNone(new_rule.updated_by)
+
+    def test_post_scenario_rule_with_basic_perm_other_scenario(self):
+        payload = {
+            "name": "New Rule",
+            "scenario": self.scenario.id,
+            "matching_criteria": {
+                "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
+            },  # all districts with population >= 1
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.5,
+                }
+            ],
+        }
+        self.client.force_authenticate(user=self.user_with_basic_perm)
+        response = self.client.post(self.BASE_URL, payload)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_post_scenario_rule_with_no_perm(self):
+        payload = {
+            "name": "New Rule",
+            "scenario": self.scenario.id,
+            "matching_criteria": {
+                "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
+            },  # all districts with population >= 1
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.5,
+                }
+            ],
+        }
+        self.client.force_authenticate(user=self.user_no_perm)
+        response = self.client.post(self.BASE_URL, payload)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_post_scenario_rule_unauthenticated(self):
+        payload = {
+            "name": "New Rule",
+            "scenario": self.scenario.id,
+            "matching_criteria": {
+                "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
+            },  # all districts with population >= 1
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.5,
+                }
+            ],
+        }
+        response = self.client.post(self.BASE_URL, payload)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_post_scenario_rule_with_district_filtering_from_matching_criteria(self):
+        payload = {
+            "name": "New Rule",
+            "scenario": self.scenario.id,
+            "matching_criteria": {
+                "and": [
+                    {">=": [{"var": self.metric_type_population.id}, self.metric_value_district_2_pop.value]}
+                ]  # district_1 has a lower population, so it should not be matched
+            },
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.5,
+                }
+            ],
+            "org_units_excluded": [self.district_3.id],
+            "org_units_included": [self.district_1.id],
+            "org_units_scope": [self.district_1.id, self.district_2.id, self.district_3.id],
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(self.BASE_URL, payload)
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+
+        self.assertIsNotNone(result["id"])
+        new_rule = ScenarioRule.objects.get(id=result["id"])
+
+        # district 1 should not appear because its population is lower (self.metric_value_district_1_pop.value)
+        self.assertCountEqual(new_rule.org_units_matched, [self.district_2.id, self.district_3.id])
+
+        # these 3 simply store the passed parameters
+        self.assertCountEqual(new_rule.org_units_excluded, [self.district_3.id])
+        self.assertCountEqual(new_rule.org_units_included, [self.district_1.id])
+        self.assertCountEqual(new_rule.org_units_scope, [self.district_1.id, self.district_2.id, self.district_3.id])
 
     def test_put_scenario_rule_not_allowed(self):
         self.client.force_authenticate(user=self.user_with_full_perm)

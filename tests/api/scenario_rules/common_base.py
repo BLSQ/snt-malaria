@@ -1,6 +1,6 @@
 from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 
-from iaso.models import OrgUnit, OrgUnitType
+from iaso.models import MetricType, MetricValue, OrgUnit, OrgUnitType
 from iaso.test import APITestCase
 from plugins.snt_malaria.models import Intervention, InterventionCategory, Scenario, ScenarioRule
 from plugins.snt_malaria.models.scenario import ScenarioRuleInterventionProperties
@@ -85,11 +85,47 @@ class ScenarioRulesTestBase(APITestCase):
             geom=self.mock_multipolygon,
         )
 
+        self.metric_type_population = MetricType.objects.create(
+            account=self.account,
+            name="Total Population",
+            code="POPULATION",
+            description="Total population data",
+            units="people",
+        )
+        self.metric_type_pop_under_5 = MetricType.objects.create(
+            account=self.account,
+            name="Total Population",
+            code="POP_UNDER_5",
+            description="Population under 5 year",
+            units="child",
+        )
+
+        self.metric_value_district_1_pop = MetricValue.objects.create(
+            metric_type=self.metric_type_population, org_unit=self.district_1, value=10000000, year=2025
+        )
+        self.metric_value_district_2_pop = MetricValue.objects.create(
+            metric_type=self.metric_type_population, org_unit=self.district_2, value=15000000, year=2025
+        )
+        self.metric_value_district_3_pop = MetricValue.objects.create(
+            metric_type=self.metric_type_population, org_unit=self.district_3, value=20000000, year=2025
+        )
+        self.metric_value_district_1_pop_under_5 = MetricValue.objects.create(
+            metric_type=self.metric_type_pop_under_5, org_unit=self.district_1, value=100000, year=2025
+        )
+        self.metric_value_district_2_pop_under_5 = MetricValue.objects.create(
+            metric_type=self.metric_type_pop_under_5, org_unit=self.district_2, value=150000, year=2025
+        )
+        self.metric_value_district_3_pop_under_5 = MetricValue.objects.create(
+            metric_type=self.metric_type_pop_under_5, org_unit=self.district_3, value=200000, year=2025
+        )
+
         self.scenario_rule_1 = ScenarioRule.objects.create(
             name="Rule 1",
             priority=1,
             color="#FF0000",
-            matching_criteria={"and": [{"==": [{"var": 2}, self.out_district.id]}]},
+            matching_criteria={
+                "and": [{"<=": [{"var": self.metric_type_population.id}, self.metric_value_district_2_pop.value]}]
+            },
             created_by=self.user_with_full_perm,
             scenario=self.scenario,
             org_units_matched=[self.district_1.id, self.district_2.id],
@@ -176,15 +212,57 @@ class ScenarioRulesTestBase(APITestCase):
             location=self.point,
             geom=self.mock_multipolygon,
         )
+        self.other_metric_type_population = MetricType.objects.create(
+            account=self.other_account,
+            name="Total Population",
+            code="POPULATION",
+            description="Total population data - account 2",
+            units="people",
+        )
+        self.other_metric_type_pop_under_5 = MetricType.objects.create(
+            account=self.other_account,
+            name="Total Population",
+            code="POP_UNDER_5",
+            description="Population under 5 year - account 2",
+            units="child",
+        )
+
+        self.other_metric_value_district_1_pop = MetricValue.objects.create(
+            metric_type=self.other_metric_type_population, org_unit=self.other_district_1, value=10000, year=2025
+        )
+        self.other_metric_value_district_2_pop = MetricValue.objects.create(
+            metric_type=self.other_metric_type_population, org_unit=self.other_district_2, value=15000, year=2025
+        )
+        self.other_metric_value_district_3_pop = MetricValue.objects.create(
+            metric_type=self.other_metric_type_population, org_unit=self.other_district_3, value=20000, year=2025
+        )
+        self.other_metric_value_district_1_pop_under_5 = MetricValue.objects.create(
+            metric_type=self.other_metric_type_pop_under_5, org_unit=self.other_district_1, value=100, year=2025
+        )
+        self.other_metric_value_district_2_pop_under_5 = MetricValue.objects.create(
+            metric_type=self.other_metric_type_pop_under_5, org_unit=self.other_district_2, value=150, year=2025
+        )
+        self.other_metric_value_district_3_pop_under_5 = MetricValue.objects.create(
+            metric_type=self.other_metric_type_pop_under_5, org_unit=self.other_district_3, value=200, year=2025
+        )
 
         self.other_scenario_rule = ScenarioRule.objects.create(
             name="Other Rule",
             priority=1,
             color="#0000FF",
-            matching_criteria={"and": [{"==": [{"var": 5}, self.other_out_district.id]}]},
+            matching_criteria={
+                "and": [
+                    {
+                        ">=": [
+                            {"var": self.other_metric_type_pop_under_5.id},
+                            self.other_metric_value_district_1_pop_under_5.value,
+                        ]
+                    }
+                ]
+            },
             created_by=self.other_user,
             scenario=self.other_scenario,
-            org_units_matched=[self.other_district_1.id, self.other_district_2.id],
+            org_units_matched=[self.other_district_1.id, self.other_district_2.id, self.other_district_3.id],
             org_units_excluded=[self.other_district_2.id],
             org_units_included=[],
             org_units_scope=[],

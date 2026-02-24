@@ -43,6 +43,22 @@ class Scenario(SoftDeletableModel):
     def __str__(self):
         return "%s %s %s" % (self.name, self.updated_at, self.id)
 
+    def get_next_available_priority(self):
+        """
+        Returns the highest priority of existing rules + 1, or 1 if there is no rule yet.
+        """
+        if not self.rules.exists():
+            return 1
+        return self.rules.aggregate(max_priority=models.Max("priority"))["max_priority"] + 1
+
+    def refresh_assignments(self):
+        # TODO: implement this
+        pass
+        # self.intervention_assignments.all().delete()
+        # new_assignments = {}
+        # for rule in self.rules.all():
+        #     rule.refresh_assignments(new_assignments)
+
 
 SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -117,6 +133,14 @@ class ScenarioRule(models.Model):
     def save(self, *args, **kwargs):
         self.clean_fields()  # forces validation checks when calling save() directly or indirectly (objects.create())
         super().save(*args, **kwargs)
+
+    def refresh_assignments(self, previous_assignments: dict[int, set[int]]) -> None:
+        # TODO: implement this
+        # previous_assignments should be a dict [intervention_category_id: [list of org_unit_ids]]
+        # if you're trying to create a new assignment, check if the category_id is already in the dict, and if so, check if the org unit is already in the list
+        # if it's not in there, you can create the assigment and update the dict by adding the org unit id (and the category id if needed)
+        # if it's already in there, it means that another rule with a higher priority already assigned an intervention so, you skip it and don't create
+        pass
 
 
 class ScenarioRuleInterventionProperties(models.Model):
