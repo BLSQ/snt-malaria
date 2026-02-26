@@ -18,7 +18,7 @@ from .serializers import (
 
 class ScenarioRuleViewSet(viewsets.ModelViewSet):
     ordering_fields = ["scenario", "id"]
-    http_method_names = ["get", "post", "patch", "head", "options"]
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
     permission_classes = [ScenarioRulePermission]
 
     def get_queryset(self):
