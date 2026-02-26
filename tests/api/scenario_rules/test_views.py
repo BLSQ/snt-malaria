@@ -454,6 +454,49 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         response = self.client.patch(f"{self.BASE_URL}{self.other_scenario_rule.id}/", payload)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_patch_only_some_fields(self):
+        # making sure that all optional fields have set values
+        self.scenario_rule_1.org_units_included = [self.district_1.id]
+        self.scenario_rule_1.org_units_scope = [self.district_1.id, self.district_2.id, self.district_3.id]
+        self.scenario_rule_1.save()
+
+        color_before = self.scenario_rule_1.color
+        priority_before = self.scenario_rule_1.priority
+        matching_criteria_before = self.scenario_rule_1.matching_criteria
+        created_by_before = self.scenario_rule_1.created_by
+        org_units_matched_before = self.scenario_rule_1.org_units_matched
+        org_units_excluded_before = self.scenario_rule_1.org_units_excluded
+        org_units_included_before = self.scenario_rule_1.org_units_included
+        org_units_scope_before = self.scenario_rule_1.org_units_scope
+        intervention_properties_ids_before = list(
+            self.scenario_rule_1.intervention_properties.values_list("id", flat=True)
+        )
+
+        payload = {
+            "name": "Updated Rule",  # not changing any other field
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.patch(f"{self.BASE_URL}{self.scenario_rule_1.id}/", payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.scenario_rule_1.refresh_from_db()
+        self.assertEqual(self.scenario_rule_1.name, payload["name"])
+        self.assertEqual(self.scenario_rule_1.updated_by, self.user_with_full_perm)
+
+        # checking that all other fields are unchanged
+        self.assertEqual(self.scenario_rule_1.color, color_before)
+        self.assertEqual(self.scenario_rule_1.priority, priority_before)
+        self.assertEqual(self.scenario_rule_1.matching_criteria, matching_criteria_before)
+        self.assertEqual(self.scenario_rule_1.created_by, created_by_before)
+        self.assertEqual(self.scenario_rule_1.org_units_matched, org_units_matched_before)
+        self.assertEqual(self.scenario_rule_1.org_units_excluded, org_units_excluded_before)
+        self.assertEqual(self.scenario_rule_1.org_units_included, org_units_included_before)
+        self.assertEqual(self.scenario_rule_1.org_units_scope, org_units_scope_before)
+        self.assertCountEqual(
+            self.scenario_rule_1.intervention_properties.values_list("id", flat=True),
+            intervention_properties_ids_before,
+        )
+
     def test_delete_scenario_rule_not_allowed(self):
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.delete(f"{self.BASE_URL}{self.scenario_rule_1.id}/")

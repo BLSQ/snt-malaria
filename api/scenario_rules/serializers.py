@@ -209,28 +209,31 @@ class ScenarioRuleUpdateSerializer(ScenarioRuleWriteSerializerBase):
         ]
 
     def update(self, instance, validated_data, **kwargs):
-        # we don't really care about the ScenarioRuleInterventionProperties objects, we can always delete and recreate them
-        instance.intervention_properties.all().delete()
         intervention_properties_data = validated_data.pop("intervention_properties", [])
-        other_values = {
-            "org_units_excluded": [org_unit.id for org_unit in validated_data.pop("org_units_excluded", [])],
-            "org_units_included": [org_unit.id for org_unit in validated_data.pop("org_units_included", [])],
-            "org_units_scope": [org_unit.id for org_unit in validated_data.pop("org_units_scope", [])],
-        }
+
+        other_optional_values = {}
+        for field in ["org_units_excluded", "org_units_included", "org_units_scope"]:
+            if field in validated_data:
+                other_optional_values[field] = [org_unit.id for org_unit in validated_data.pop(field)]
+
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-        for attr, value in other_values.items():
+        for attr, value in other_optional_values.items():
             setattr(instance, attr, value)
         for attr, value in kwargs.items():  # don't pass m2m objects please
             setattr(instance, attr, value)
 
         instance.save()
 
-        for data in intervention_properties_data:
-            ScenarioRuleInterventionProperties.objects.create(
-                scenario_rule=instance,
-                intervention=data["intervention"],
-                coverage=data["coverage"],
-            )
+        if intervention_properties_data:
+            # we don't really care about the ScenarioRuleInterventionProperties objects, we can always delete and recreate them
+            instance.intervention_properties.all().delete()
+
+            for data in intervention_properties_data:
+                ScenarioRuleInterventionProperties.objects.create(
+                    scenario_rule=instance,
+                    intervention=data["intervention"],
+                    coverage=data["coverage"],
+                )
 
         return instance
