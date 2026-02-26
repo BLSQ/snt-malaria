@@ -1,6 +1,7 @@
 from iaso.models import Account, OrgUnit
 from iaso.test import TestCase
-from plugins.snt_malaria.models import Scenario, ScenarioRule
+from plugins.snt_malaria.models import Scenario, ScenarioRule, ScenarioRuleInterventionProperties
+from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
 
 
 class ScenarioModelTestCase(TestCase):
@@ -17,6 +18,7 @@ class ScenarioModelTestCase(TestCase):
         )
         self.org_unit_1 = OrgUnit.objects.create(name="Org Unit 1")
         self.org_unit_2 = OrgUnit.objects.create(name="Org Unit 2")
+        self.org_unit_3 = OrgUnit.objects.create(name="Org Unit 3")
         self.matching_criteria = {
             "and": [{"==": [{"var": 1}, "F"]}, {"<": [{"var": 2}, 25]}, {"<=": [{"var": 3}, True]}]
         }
@@ -25,6 +27,7 @@ class ScenarioModelTestCase(TestCase):
             priority=1,
             color="#FF0000",
             matching_criteria=self.matching_criteria,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
             created_by=self.user,
             scenario=self.scenario,
         )
@@ -33,8 +36,35 @@ class ScenarioModelTestCase(TestCase):
             priority=2,
             color="#00FF00",
             matching_criteria=self.matching_criteria,
+            org_units_matched=[self.org_unit_2.id, self.org_unit_3.id],
             created_by=self.user,
             scenario=self.scenario,
+        )
+
+        self.intervention_category = InterventionCategory.objects.create(
+            name="Category 1",
+            account=self.account,
+            created_by=self.user,
+        )
+
+        self.intervention_1 = Intervention.objects.create(
+            created_by=self.user,
+            name="Intervention 1",
+            intervention_category=self.intervention_category,
+        )
+        self.intervention_2 = Intervention.objects.create(
+            created_by=self.user,
+            name="Intervention 2",
+            intervention_category=self.intervention_category,
+        )
+
+        self.intervention_property_1 = ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=self.scenario_rule_1,
+            intervention=self.intervention_1,
+            coverage=0.75,
+        )
+        self.intervention_property_2 = ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=self.scenario_rule_2, intervention=self.intervention_2, coverage=0.5
         )
 
     def test_get_next_available_priority(self):
@@ -52,3 +82,9 @@ class ScenarioModelTestCase(TestCase):
         )
         next_priority = new_scenario.get_next_available_priority()
         self.assertEqual(next_priority, 1)
+
+    def test_refresh_assignments(self):
+        self.scenario.refresh_assignments()
+
+        assignments = self.scenario.intervention_assignments.all()
+        self.assertEqual(assignments.count(), 3)

@@ -6,14 +6,36 @@ from django.db import IntegrityError
 from iaso.models import Account, OrgUnit
 from iaso.test import TestCase
 from iaso.utils.colors import DEFAULT_COLOR
-from plugins.snt_malaria.models import Intervention, InterventionCategory, Scenario, ScenarioRule
-from plugins.snt_malaria.models.scenario import ScenarioRuleInterventionProperties
+from plugins.snt_malaria.models import (
+    Intervention,
+    InterventionCategory,
+    Scenario,
+    ScenarioRule,
+    ScenarioRuleInterventionProperties,
+)
 
 
 class ScenarioRuleModelTestCase(TestCase):
     def setUp(self):
         self.account = Account.objects.create(name="account")
         self.user = self.create_user_with_profile(username="user", account=self.account)
+        self.intervention_category = InterventionCategory.objects.create(
+            name="Category 1",
+            account=self.account,
+            created_by=self.user,
+        )
+        self.intervention = Intervention.objects.create(
+            name="Intervention 1",
+            code="INT1",
+            intervention_category=self.intervention_category,
+            created_by=self.user,
+        )
+        self.intervention_2 = Intervention.objects.create(
+            name="Intervention 2",
+            code="INT2",
+            intervention_category=self.intervention_category,
+            created_by=self.user,
+        )
         self.scenario = Scenario.objects.create(
             account=self.account,
             created_by=self.user,
@@ -129,6 +151,286 @@ class ScenarioRuleModelTestCase(TestCase):
                 created_by=self.user,
                 scenario=self.scenario,
             )
+
+    def test_refresh_assignments_it_create_assignments(self):
+        # This is a very basic test just to check that the method runs without error,
+        # more complex logic should be tested in unit tests for this method
+        rule = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        rule.refresh_assignments(previous_assignments={})
+
+        assignments = rule.intervention_assignments.all()
+        self.assertEqual(assignments.count(), 2)
+
+    def test_refresh_assignments_no_intervention_properties(self):
+        rule = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
+        )
+
+        rule.refresh_assignments(previous_assignments={})
+
+        assignments = rule.intervention_assignments.all()
+        self.assertEqual(assignments.count(), 0)
+
+    def test_refresh_assignments_no_matched_org_unit(self):
+        rule = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        rule.refresh_assignments(previous_assignments={})
+
+        assignments = rule.intervention_assignments.all()
+        self.assertEqual(assignments.count(), 0)
+
+    def test_refresh_assignments_overlap_with_previous_assignment(self):
+        rule_1 = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule_1,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        previous_assignments = {self.intervention.intervention_category_id: {self.org_unit_1.id}}
+
+        rule_1.refresh_assignments(previous_assignments=previous_assignments)
+
+        assignments = rule_1.intervention_assignments.all()
+        self.assertEqual(assignments.count(), 1)
+        self.assertEqual(assignments.first().org_unit_id, self.org_unit_2.id)
+
+    def test_refresh_assignments_dict_updated(self):
+        rule_1 = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule_1,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        previous_assignments = {}
+
+        rule_1.refresh_assignments(previous_assignments=previous_assignments)
+
+        # After refreshing the assignments for rule 1, the dict should be updated to include the new assignments
+        self.assertIn(self.intervention.intervention_category_id, previous_assignments)
+        self.assertSetEqual(
+            previous_assignments[self.intervention.intervention_category_id], {self.org_unit_1.id, self.org_unit_2.id}
+        )
+
+    def test_refresh_assignments_multiple_interventions_same_category(self):
+        rule_1 = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule_1,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule_1,
+            intervention=self.intervention_2,
+            coverage=0.50,
+        )
+
+        previous_assignments = {}
+
+        rule_1.refresh_assignments(previous_assignments=previous_assignments)
+
+        # Even if there are 2 interventions in the same category, only 2 assignments should be created (one for each org unit) and not 4
+        assignments = rule_1.intervention_assignments.all()
+        self.assertEqual(assignments.count(), 2)
+        self.assertEqual(
+            set(assignments.values_list("org_unit_id", flat=True)), {self.org_unit_1.id, self.org_unit_2.id}
+        )
+        self.assertEqual(assignments.first().intervention_id, self.intervention.id)
+        self.assertEqual(assignments[1].intervention_id, self.intervention.id)
+
+    def test_refresh_assignments_multiple_rules_same_category(self):
+        rule_1 = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
+        )
+
+        rule_2 = ScenarioRule.objects.create(
+            name="Rule 2",
+            priority=2,
+            color="#00FF00",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule_1,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule_2,
+            intervention=self.intervention_2,
+            coverage=0.50,
+        )
+
+        previous_assignments = {}
+
+        rule_1.refresh_assignments(previous_assignments=previous_assignments)
+        rule_2.refresh_assignments(previous_assignments=previous_assignments)
+
+        assignments_rule_1 = rule_1.intervention_assignments.all()
+        self.assertEqual(assignments_rule_1.count(), 2)
+        self.assertEqual(
+            set(assignments_rule_1.values_list("org_unit_id", flat=True)), {self.org_unit_1.id, self.org_unit_2.id}
+        )
+        self.assertEqual(assignments_rule_1.first().intervention_id, self.intervention.id)
+        self.assertEqual(assignments_rule_1[1].intervention_id, self.intervention.id)
+
+        assignments_rule_2 = rule_2.intervention_assignments.all()
+        self.assertEqual(assignments_rule_2.count(), 0)
+
+        self.assertEqual(
+            previous_assignments[self.intervention.intervention_category_id], {self.org_unit_1.id, self.org_unit_2.id}
+        )
+
+    def test_refresh_assignments_included_org_units(self):
+        rule = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id],
+            org_units_included=[self.org_unit_2.id],
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        rule.refresh_assignments(previous_assignments={})
+
+        assignments = rule.intervention_assignments.all()
+        self.assertEqual(assignments.count(), 2)
+        self.assertEqual(
+            set(assignments.values_list("org_unit_id", flat=True)), {self.org_unit_1.id, self.org_unit_2.id}
+        )
+
+    def test_refresh_assignments_excluded_org_units(self):
+        rule = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
+            org_units_excluded=[self.org_unit_2.id],
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        rule.refresh_assignments(previous_assignments={})
+
+        assignments = rule.intervention_assignments.all()
+        self.assertEqual(assignments.count(), 1)
+        self.assertEqual(assignments.first().org_unit_id, self.org_unit_1.id)
+
+    def test_refresh_assignments_excluded_org_units_over_included_org_units(self):
+        # Inclusion takes precedence over exclusion, so even if org_unit_2 is in the excluded list,
+        # it should still get the assignment because it's also in the included list
+        rule = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
+            org_units_excluded=[self.org_unit_2.id],
+            org_units_included=[self.org_unit_2.id],
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        rule.refresh_assignments(previous_assignments={})
+
+        assignments = rule.intervention_assignments.all()
+        self.assertEqual(assignments.count(), 2)
+        self.assertEqual(assignments.first().org_unit_id, self.org_unit_1.id)
+        self.assertEqual(assignments[1].org_unit_id, self.org_unit_2.id)
 
 
 class ScenarioRuleInterventionPropertiesModelTestCase(TestCase):

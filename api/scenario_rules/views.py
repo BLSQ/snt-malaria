@@ -47,7 +47,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         scenario = serializer.validated_data["scenario"]
 
-        scenario_rules = self.get_queryset().filter(scenario=scenario)
+        scenario_rules = self.get_queryset().filter(scenario=scenario).order_by("priority")
         list_serializer = ScenarioRuleListSerializer(scenario_rules, many=True)
 
         return Response(list_serializer.data, status=status.HTTP_200_OK)
@@ -59,9 +59,8 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         user = self.request.user
         account = user.iaso_profile.account
         org_unit_matched = self._compute_matching_criteria(account, serializer.validated_data["matching_criteria"])
-        rule: ScenarioRule = serializer.save(created_by=user, org_units_matched=org_unit_matched)
-        scenario = rule.scenario
-        scenario.refresh_assignments()
+
+        serializer.save(created_by=user, org_units_matched=org_unit_matched)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -91,9 +90,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
                 account, serializer.validated_data["matching_criteria"]
             )
 
-        rule: ScenarioRule = serializer.save(**extra_values)
-        scenario = rule.scenario
-        scenario.refresh_assignments()  # TODO: do this only if useful parameters have changed (not name nor color)
+        serializer.save(**extra_values)
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
