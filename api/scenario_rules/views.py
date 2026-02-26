@@ -12,12 +12,13 @@ from .serializers import (
     ScenarioRuleListSerializer,
     ScenarioRuleQuerySerializer,
     ScenarioRuleRetrieveSerializer,
+    ScenarioRuleUpdateSerializer,
 )
 
 
 class ScenarioRuleViewSet(viewsets.ModelViewSet):
     ordering_fields = ["scenario", "id"]
-    http_method_names = ["get", "post", "head", "options"]
+    http_method_names = ["get", "post", "patch", "head", "options"]
     permission_classes = [ScenarioRulePermission]
 
     def get_queryset(self):
@@ -37,6 +38,8 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
             return ScenarioRuleRetrieveSerializer
         if self.action == "create":
             return ScenarioRuleCreateSerializer
+        if self.action in ["update", "partial_update"]:
+            return ScenarioRuleUpdateSerializer
         return None
 
     def list(self, request, *args, **kwargs):
@@ -73,6 +76,40 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         result_serializer = ScenarioRuleRetrieveSerializer(rule, context=self.get_serializer_context())
         result_headers = self.get_success_headers(result_serializer.data)
         return Response(result_serializer.data, status=status.HTTP_201_CREATED, headers=result_headers)
+
+    def perform_update(self, serializer):
+        """
+        Prepares required data for updating an existing ScenarioRule that is not directly known by the serializer
+        """
+        user = self.request.user
+        account = user.iaso_profile.account
+        extra_values = {
+            "updated_by": user,
+        }
+        if "matching_criteria" in serializer.validated_data:
+            extra_values["org_units_matched"] = self._compute_matching_criteria(
+                account, serializer.validated_data["matching_criteria"]
+            )
+
+        rule: ScenarioRule = serializer.save(**extra_values)
+        scenario = rule.scenario
+        scenario.refresh_assignments()  # TODO: do this only if useful parameters have changed (not name nor color)
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        """
+        Overriding both update and perform_update to be able to return another type of serializer from the input one
+        """
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        update_serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        update_serializer.is_valid(raise_exception=True)
+        self.perform_update(update_serializer)
+
+        rule = update_serializer.instance
+        result_serializer = ScenarioRuleRetrieveSerializer(rule, context=self.get_serializer_context())
+        result_headers = self.get_success_headers(result_serializer.data)
+        return Response(result_serializer.data, status=status.HTTP_200_OK, headers=result_headers)
 
     def _compute_matching_criteria(self, account, matching_criteria):
         metric_values = MetricValue.objects.filter(metric_type__account=account)

@@ -8,7 +8,7 @@ from datetime import date
 
 from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS, BudgetCalculator
 
-from iaso.models import User, OrgUnitType
+from iaso.models import OrgUnitType, User
 from iaso.models.data_store import JsonDataStore
 from iaso.models.metric import MetricValue
 from plugins.snt_malaria.api.budget.utils import (

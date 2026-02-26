@@ -46,6 +46,8 @@ class Scenario(SoftDeletableModel):
     def get_next_available_priority(self):
         """
         Returns the highest priority of existing rules + 1, or 1 if there is no rule yet.
+        The rule with the highest number has the highest priority, meaning that its assignments
+        will be applied first and will block the ones from other rules in case of conflicts.
         """
         if not self.rules.exists():
             return 1
