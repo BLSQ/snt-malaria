@@ -33,6 +33,12 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "description": "",
                 "cost_settings": [],
             },
+            {
+                "name": "iCCM",
+                "code": "cm",
+                "description": "",
+                "cost_settings": [],
+            },
         ],
     },
     "IPTp": {
@@ -115,6 +121,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                     },
                 ],
             },
+            {"name": "SMC 3", "short_name": "SMC 3", "code": "smc_3", "description": "", "cost_settings": []},
+            {"name": "SMC 4", "short_name": "SMC 4", "code": "smc_4", "description": "", "cost_settings": []},
+            {"name": "SMC 5", "short_name": "SMC 5", "code": "smc_5", "description": "", "cost_settings": []},
         ],
     },
     "ITN Campaign": {
@@ -257,6 +266,76 @@ CATEGORIES_AND_INTERVENTIONS = {
             },
         ],
     },
+    "ITN School": {
+        "interventions": [
+            {
+                "name": "Dual AI",
+                "short_name": "Dual AI (School)",
+                "code": "itn_school",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "name": "Dual AI Procurement",
+                        "unit_cost": "3.49",
+                        "unit_type": InterventionCostUnitType.PER_ITN,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": COST_YEAR,
+                    },
+                    {
+                        "name": "Dual AI Distribution",
+                        "unit_cost": "6.25",
+                        "unit_type": InterventionCostUnitType.PER_BALE,
+                        "category": CostCategory.DELIVERY,
+                        "year": COST_YEAR,
+                    },
+                ],
+            },
+            {
+                "name": "PBO",
+                "short_name": "PBO (School)",
+                "code": "itn_school",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "name": "PBO Procurement",
+                        "unit_cost": "3.49",
+                        "unit_type": InterventionCostUnitType.PER_ITN,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": COST_YEAR,
+                    },
+                    {
+                        "name": "PBO Distribution",
+                        "unit_cost": "6.25",
+                        "unit_type": InterventionCostUnitType.PER_BALE,
+                        "category": CostCategory.DELIVERY,
+                        "year": COST_YEAR,
+                    },
+                ],
+            },
+            {
+                "name": "Standard Pyrethroid",
+                "short_name": "PYR (School)",
+                "code": "itn_school",
+                "description": "",
+                "cost_settings": [
+                    {
+                        "name": "Standard Pyrethroid Procurement",
+                        "unit_cost": "0.87",
+                        "unit_type": InterventionCostUnitType.PER_ITN,
+                        "category": CostCategory.PROCUREMENT,
+                        "year": COST_YEAR,
+                    },
+                    {
+                        "name": "Standard Pyrethroid Distribution",
+                        "unit_cost": "6.25",
+                        "unit_type": InterventionCostUnitType.PER_BALE,
+                        "category": CostCategory.DELIVERY,
+                        "year": COST_YEAR,
+                    },
+                ],
+            },
+        ],
+    },
     "Vaccination": {
         "short_name": "Vacc",
         "interventions": [
@@ -280,7 +359,13 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "year": COST_YEAR,
                     },
                 ],
-            }
+            },
+            {
+                "name": "RTS,S",
+                "code": "vacc",
+                "description": "",
+                "cost_settings": [],
+            },
         ],
     },
     "Vector Control": {
