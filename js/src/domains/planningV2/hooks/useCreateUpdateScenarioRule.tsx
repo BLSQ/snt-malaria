@@ -28,7 +28,7 @@ const useReplaceQueryData = (scenarioId: number) => {
                         rule.id === variables.id ? data : rule,
                     );
                 } else {
-                    return [data, ...(oldData || [])];
+                    return [...(oldData || []), data];
                 }
             },
         );
