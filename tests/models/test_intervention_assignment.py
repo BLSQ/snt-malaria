@@ -90,3 +90,20 @@ class InterventionAssignmentModelTestCase(TestCase):
                 created_by=self.user,
             )
             invalid_assignment.full_clean()
+
+    def test_delete_rule_cascades_to_assignments(self):
+        new_assignment = InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.org_unit_1,
+            intervention=self.intervention,
+            rule=self.scenario_rule,
+            coverage=Decimal("0.5"),
+            created_by=self.user,
+        )
+        self.assertEqual(InterventionAssignment.objects.count(), 1)
+
+        self.scenario_rule.delete()
+        self.assertEqual(InterventionAssignment.objects.count(), 0)
+
+        with self.assertRaises(InterventionAssignment.DoesNotExist):
+            InterventionAssignment.objects.get(id=new_assignment.id)

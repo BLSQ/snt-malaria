@@ -63,11 +63,11 @@ class Intervention(SoftDeletableModel):
 
 class InterventionAssignment(models.Model):
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="intervention_assignments")
-    org_unit = models.ForeignKey(OrgUnit, on_delete=models.PROTECT)
-    intervention = models.ForeignKey(Intervention, on_delete=models.PROTECT)
+    org_unit = models.ForeignKey(OrgUnit, on_delete=models.CASCADE)
+    intervention = models.ForeignKey(Intervention, on_delete=models.CASCADE)
     # rule and coverage are nullable for backward compatibility, but should be set for any new assignment
     rule = models.ForeignKey(
-        ScenarioRule, on_delete=models.PROTECT, related_name="intervention_assignments", null=True, blank=True
+        ScenarioRule, on_delete=models.CASCADE, related_name="intervention_assignments", null=True, blank=True
     )
     coverage = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
 
