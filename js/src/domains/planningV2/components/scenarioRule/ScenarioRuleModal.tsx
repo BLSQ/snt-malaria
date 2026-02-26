@@ -60,17 +60,6 @@ const ScenarioRuleDialog: FC<Props> = ({
     const { mutate: createUpdateScenarioRule, isLoading: isSaving } =
         useCreateUpdateScenarioRule(scenarioId);
 
-    const onSubmit = useCallback(
-        (values: ScenarioRuleFormValues) => {
-            createUpdateScenarioRule(values, {
-                onSuccess: () => {
-                    closeDialog();
-                },
-            });
-        },
-        [createUpdateScenarioRule, closeDialog],
-    );
-
     const initialValues: ScenarioRuleFormValues | undefined = useMemo(
         () =>
             rule
@@ -84,6 +73,38 @@ const ScenarioRuleDialog: FC<Props> = ({
                   }
                 : { ...defaultScenarioRuleValues, scenario: scenarioId },
         [rule, scenarioId],
+    );
+
+    const getModifiedValues = useCallback(
+        (values: ScenarioRuleFormValues) => {
+            if (!rule) return values;
+            return Object.entries(values).reduce((acc, [key, value]) => {
+                if (key === 'id' || key === 'scenario') {
+                    acc[key] = value;
+                } else if (
+                    JSON.stringify(value) !==
+                    JSON.stringify(
+                        initialValues[key as keyof ScenarioRuleFormValues],
+                    )
+                ) {
+                    acc[key] = value;
+                }
+                return acc;
+            }, {} as Partial<ScenarioRuleFormValues>);
+        },
+        [initialValues, rule],
+    );
+
+    const onSubmit = useCallback(
+        (values: ScenarioRuleFormValues) => {
+            const changedValues = getModifiedValues(values);
+            createUpdateScenarioRule(changedValues, {
+                onSuccess: () => {
+                    closeDialog();
+                },
+            });
+        },
+        [createUpdateScenarioRule, closeDialog, getModifiedValues],
     );
     const formik = useScenarioRuleFormState({ onSubmit, initialValues });
 

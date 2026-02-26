@@ -40,10 +40,10 @@ export const useCreateUpdateScenarioRule = (
 ): UseMutationResult => {
     const replaceQueryData = useReplaceQueryData(scenarioId);
     return useSnackMutation({
-        mutationFn: (body: ScenarioRulePayload) => {
-            const matching_criteria = matchingCriteriaToJsonLogic(
-                body.matching_criteria,
-            );
+        mutationFn: (body: Partial<ScenarioRulePayload>) => {
+            const matching_criteria = body.matching_criteria
+                ? matchingCriteriaToJsonLogic(body.matching_criteria)
+                : undefined;
             return body.id
                 ? patchRequest(`/api/snt_malaria/scenario_rules/${body.id}/`, {
                       ...body,
