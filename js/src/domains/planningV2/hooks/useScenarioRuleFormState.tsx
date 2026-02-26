@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
-import { useFormik } from 'formik';
+import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
 import { MESSAGES } from '../../messages';
 import {
@@ -25,7 +25,7 @@ export const defaultMatchingCriteria: MetricTypeCriterion = {
 
 export const defaultInterventionProperties: InterventionProperties = {
     intervention: undefined,
-    intervention_category: undefined,
+    category: undefined,
     coverage: 0,
 };
 
@@ -46,7 +46,7 @@ const useValidation = () => {
                 intervention_properties: Yup.array()
                     .of(
                         Yup.object().shape({
-                            intervention_category: Yup.number().required(),
+                            category: Yup.number().required(),
                             intervention: Yup.number().required(),
                         }),
                     )
@@ -70,7 +70,10 @@ export const useScenarioRuleFormState = ({
     onSubmit,
     initialValues,
 }: {
-    onSubmit: (values: ScenarioRuleFormValues) => void;
+    onSubmit: (
+        values: ScenarioRuleFormValues,
+        formikHelpers: FormikHelpers<ScenarioRuleFormValues>,
+    ) => void;
     initialValues?: ScenarioRuleFormValues;
 }) => {
     const validationSchema = useValidation();

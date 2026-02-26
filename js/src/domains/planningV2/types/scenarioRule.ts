@@ -14,7 +14,7 @@ export type ScenarioRule = {
 
 export type InterventionProperties = {
     intervention?: number;
-    intervention_category?: number;
+    category?: number;
     coverage: number;
 };
 
