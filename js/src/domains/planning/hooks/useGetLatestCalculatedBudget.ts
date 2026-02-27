@@ -15,6 +15,7 @@ export const useGetLatestCalculatedBudget = (
         options: {
             cacheTime: Infinity, // disable auto fetch on cache expiration
             enabled: Boolean(scenarioId),
+            retry: false,
         },
         ignoreErrorCodes: [404],
     });
