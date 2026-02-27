@@ -1,12 +1,11 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../../messages';
-import { InterventionCategory } from '../../../planning/types/interventions';
-import { MetricTypeCategory } from '../../../planning/types/metrics';
+import { usePlanningContext } from '../../contexts/PlanningContext';
 import { ScenarioRuleFormValues } from '../../hooks/useScenarioRuleFormState';
 import { InterventionPropertiesForm } from './InterventionPropertiesForm';
 import { MatchingCriteriaForm } from './MatchingCriteriaForm';
@@ -25,16 +24,13 @@ const ScenarioRuleHeading: FC<{ chipLabel: string; label: string }> = ({
     );
 };
 
-type ScenarioRuleFormProps = {
-    metricTypeCategories: MetricTypeCategory[];
-    interventionCategories: InterventionCategory[];
-};
-
-export const ScenarioRuleForm: FC<ScenarioRuleFormProps> = ({
-    metricTypeCategories,
-    interventionCategories,
-}) => {
+export const ScenarioRuleForm: FC = () => {
     const { formatMessage } = useSafeIntl();
+    const {
+        metricTypeCategories,
+        interventionCategories,
+        orgUnits: allOrgUnits,
+    } = usePlanningContext();
 
     const {
         values,
@@ -52,6 +48,20 @@ export const ScenarioRuleForm: FC<ScenarioRuleFormProps> = ({
         formatMessage,
         messages: MESSAGES,
     });
+
+    const inclusionOrgUnitOptions = useMemo(() => {
+        return allOrgUnits.map(orgUnit => ({
+            value: orgUnit.id,
+            label: orgUnit.name,
+        }));
+    }, [allOrgUnits]);
+
+    const exclusionOrgUnitOptions = useMemo(() => {
+        return allOrgUnits.map(orgUnit => ({
+            value: orgUnit.id,
+            label: orgUnit.name,
+        }));
+    }, [allOrgUnits]);
 
     return (
         <>
@@ -96,6 +106,33 @@ export const ScenarioRuleForm: FC<ScenarioRuleFormProps> = ({
                         onUpdateField={setChildFieldValueAndState}
                     />
                 </Box>
+                <Box>
+                    <ScenarioRuleHeading
+                        chipLabel="3"
+                        label={formatMessage(MESSAGES.ruleExceptions)}
+                    />
+                    <InputComponent
+                        keyValue="org_units_excluded"
+                        type="select"
+                        value={values.org_units_excluded || []}
+                        multi={true}
+                        options={exclusionOrgUnitOptions}
+                        onChange={setFieldValueAndState}
+                        errors={getErrors('org_units_excluded')}
+                        label={MESSAGES.excludedOrgUnits}
+                    />
+
+                    <InputComponent
+                        keyValue="org_units_included"
+                        type="select"
+                        value={values.org_units_included || []}
+                        multi={true}
+                        options={inclusionOrgUnitOptions}
+                        onChange={setFieldValueAndState}
+                        errors={getErrors('org_units_included')}
+                        label={MESSAGES.includedOrgUnits}
+                    />
+                </Box>
             </Box>
             <Box mt={3}>
                 <Typography variant="body2" fontWeight="medium" gutterBottom>
@@ -117,8 +154,8 @@ export const ScenarioRuleForm: FC<ScenarioRuleFormProps> = ({
                         value={values.name}
                         onChange={setFieldValueAndState}
                         errors={getErrors('name')}
-                        withMarginTop={false}
                         wrapperSx={{ flexGrow: 1 }}
+                        labelString={' '}
                     />
                 </Stack>
             </Box>

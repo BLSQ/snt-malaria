@@ -527,6 +527,18 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenarioRule.interventionProperties',
         defaultMessage: 'Interventions',
     },
+    ruleExceptions: {
+        id: 'iaso.snt_malaria.scenarioRule.ruleExceptions',
+        defaultMessage: 'Exceptions',
+    },
+    includedOrgUnits: {
+        id: 'iaso.snt_malaria.scenarioRule.includedOrgUnits',
+        defaultMessage: 'Include',
+    },
+    excludedOrgUnits: {
+        id: 'iaso.snt_malaria.scenarioRule.excludedOrgUnits',
+        defaultMessage: 'Exclude',
+    },
     showSidebar: {
         id: 'iaso.snt_malaria.label.showSidebar',
         defaultMessage: 'Show sidebar',

@@ -7,25 +7,18 @@ import ConfirmDialog from 'Iaso/components/dialogs/ConfirmDialogComponent';
 import { noOp } from 'Iaso/utils';
 import { IconBoxed } from '../../../../components/IconBoxed';
 import { MESSAGES } from '../../../messages';
-import { InterventionCategory } from '../../../planning/types/interventions';
-import { MetricTypeCategory } from '../../../planning/types/metrics';
 import { CreateScenarioRuleModal } from './ScenarioRuleModal';
 
 type Props = {
     scenarioId: number;
-    metricTypeCategories: MetricTypeCategory[];
-    interventionCategories: InterventionCategory[];
     onApplyRules?: () => void;
 };
 
 export const ScenarioRulesHeader: FC<Props> = ({
     scenarioId,
     onApplyRules = noOp,
-    metricTypeCategories,
-    interventionCategories,
 }) => {
     const { formatMessage } = useSafeIntl();
-
     return (
         <Stack
             direction="row"
@@ -45,8 +38,6 @@ export const ScenarioRulesHeader: FC<Props> = ({
                     scenarioId={scenarioId}
                     onClose={noOp}
                     iconProps={{}}
-                    metricTypeCategories={metricTypeCategories}
-                    interventionCategories={interventionCategories}
                 />
 
                 <ConfirmDialog

@@ -15,6 +15,12 @@ export const mapResponseToScenarioRule = (
             response.matching_criteria,
         ),
         intervention_properties: response.intervention_properties,
+        org_units_excluded:
+            response.org_units_excluded &&
+            response.org_units_excluded.join(','),
+        org_units_included:
+            response.org_units_included &&
+            response.org_units_included.join(','),
     };
 };
 

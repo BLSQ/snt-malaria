@@ -15,6 +15,8 @@ type ScenarioRulePayload = {
     scenario: number;
     matching_criteria: MetricTypeCriterion[];
     intervention_properties: InterventionProperties[];
+    org_units_excluded?: string; // comma separated list of org unit ids
+    org_units_included?: string; // comma separated list of org unit ids
 };
 
 const useReplaceQueryData = (scenarioId: number) => {
@@ -44,14 +46,19 @@ export const useCreateUpdateScenarioRule = (
             const matching_criteria = body.matching_criteria
                 ? matchingCriteriaToJsonLogic(body.matching_criteria)
                 : undefined;
+
             return body.id
                 ? patchRequest(`/api/snt_malaria/scenario_rules/${body.id}/`, {
                       ...body,
                       matching_criteria,
+                      org_units_excluded: body.org_units_excluded?.split(','),
+                      org_units_included: body.org_units_included?.split(','),
                   })
                 : postRequest(`/api/snt_malaria/scenario_rules/`, {
                       ...body,
                       matching_criteria,
+                      org_units_excluded: body.org_units_excluded?.split(','),
+                      org_units_included: body.org_units_included?.split(','),
                   });
         },
         options: {
