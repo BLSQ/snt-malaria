@@ -627,44 +627,50 @@ class ScenarioAPITestCase(APITestCase):
         response = self.client.get(f"{self.BASE_URL}export_to_csv/?id={self.scenario.id}")
 
         csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
-        self.assertEqual(len(csv_list), 3)  # Headers + 2 org units
+        self.assertEqual(len(csv_list), 4)  # Headers + 3 org units
         csv_headers = csv_list[0]
         csv_district_1 = csv_list[1]
         csv_district_2 = csv_list[2]
+        csv_district_3 = csv_list[3]
 
         self.assertSequenceEqual(
             csv_headers, ["org_unit_id", "org_unit_name", "IPTp - iptp", "RTS,S - rts_s", "SMC - smc"]
         )
         self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "1", "0", "0"])
-        self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "1", "1"])
+        self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "0", "1"])
+        self.assertSequenceEqual(csv_district_3, [str(self.district3.id), self.district3.name, "0", "1", "0"])
 
         self.client.force_authenticate(self.user_with_basic_perm)
         response = self.client.get(f"{self.BASE_URL}export_to_csv/?id={self.scenario.id}")
         csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
-        self.assertEqual(len(csv_list), 3)  # Headers + 2 org units
+        self.assertEqual(len(csv_list), 4)  # Headers + 3 org units
         csv_headers = csv_list[0]
         csv_district_1 = csv_list[1]
         csv_district_2 = csv_list[2]
+        csv_district_3 = csv_list[3]
 
         self.assertSequenceEqual(
             csv_headers, ["org_unit_id", "org_unit_name", "IPTp - iptp", "RTS,S - rts_s", "SMC - smc"]
         )
         self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "1", "0", "0"])
-        self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "1", "1"])
+        self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "0", "1"])
+        self.assertSequenceEqual(csv_district_3, [str(self.district3.id), self.district3.name, "0", "1", "0"])
 
         self.client.force_authenticate(self.user_no_perms)
         response = self.client.get(f"{self.BASE_URL}export_to_csv/?id={self.scenario.id}")
         csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
-        self.assertEqual(len(csv_list), 3)  # Headers + 2 org units
+        self.assertEqual(len(csv_list), 4)  # Headers + 3 org units
         csv_headers = csv_list[0]
         csv_district_1 = csv_list[1]
         csv_district_2 = csv_list[2]
+        csv_district_3 = csv_list[3]
 
         self.assertSequenceEqual(
             csv_headers, ["org_unit_id", "org_unit_name", "IPTp - iptp", "RTS,S - rts_s", "SMC - smc"]
         )
         self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "1", "0", "0"])
-        self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "1", "1"])
+        self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "0", "1"])
+        self.assertSequenceEqual(csv_district_3, [str(self.district3.id), self.district3.name, "0", "1", "0"])
 
     def test_scenario_export_to_csv_unauthenticated(self):
         response = self.client.get(f"{self.BASE_URL}export_to_csv/?id={self.scenario.id}")
@@ -675,16 +681,18 @@ class ScenarioAPITestCase(APITestCase):
         response = self.client.get(f"{self.BASE_URL}export_to_csv/")
 
         csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
-        self.assertEqual(len(csv_list), 3)  # Headers + 2 org units
+        self.assertEqual(len(csv_list), 4)  # Headers + 3 org units
         csv_headers = csv_list[0]
         csv_district_1 = csv_list[1]
         csv_district_2 = csv_list[2]
+        csv_district_3 = csv_list[3]
 
         self.assertSequenceEqual(
             csv_headers, ["org_unit_id", "org_unit_name", "IPTp - iptp", "RTS,S - rts_s", "SMC - smc"]
         )
         self.assertSequenceEqual(csv_district_1, [str(self.district1.id), self.district1.name, "0", "0", "0"])
         self.assertSequenceEqual(csv_district_2, [str(self.district2.id), self.district2.name, "0", "0", "0"])
+        self.assertSequenceEqual(csv_district_3, [str(self.district3.id), self.district3.name, "0", "0", "0"])
 
     def test_scenario_export_to_csv_non_existing_scenario(self):
         self.client.force_authenticate(self.user_with_full_perm)
@@ -750,6 +758,7 @@ class ScenarioAPITestCase(APITestCase):
             'org_unit_id,org_unit_name,"IPTp - iptp","RTS,S - rts_s","SMC - smc"\n'
             f"{self.district1.id},District 1,0,0,0\n"
             f"{self.district2.id},District 2,0,0,0\n"
+            f"{self.district3.id},District 3,0,0,0\n"
         )
         valid_file = SimpleUploadedFile("test.csv", csv_content.encode(), content_type="text/csv")
 
@@ -905,14 +914,30 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(Scenario.objects.count(), 2)  # both the one from setup and the other account scenario remain
 
     def test_reorder_rules_with_full_perm_own_scenario(self):
+        """
+        This test will also check the result of reordering with conflicts
+        """
+        new_rule = ScenarioRule.objects.create(
+            scenario=self.scenario,
+            priority=4,
+            matching_criteria={"and": [{">=": [{"var": 2}, 40]}]},
+            name="Rule 4",
+            created_by=self.user_with_full_perm,
+            org_units_matched=[self.district2.id],  # same as rule 2
+        )
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=new_rule,
+            intervention=self.intervention_chemo_iptp,  # different intervention but same category as rule 2
+            coverage=0.5,
+        )
         payload = {
-            "new_order": [self.rule_3.id, self.rule_1.id, self.rule_2.id],
+            "new_order": [self.rule_2.id, new_rule.id, self.rule_1.id, self.rule_3.id],
         }
         self.client.force_authenticate(self.user_with_full_perm)
-        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
+        response = self.client.patch(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        for index, rule in enumerate([self.rule_3, self.rule_1, self.rule_2], start=1):
+        for index, rule in enumerate([self.rule_2, new_rule, self.rule_1, self.rule_3], start=1):
             rule.refresh_from_db()
             self.assertEqual(rule.priority, index)
             self.assertEqual(rule.updated_by, self.user_with_full_perm)
@@ -925,7 +950,7 @@ class ScenarioAPITestCase(APITestCase):
 
         # new assignments are there
         assignments = self.scenario.intervention_assignments.order_by("id")
-        self.assertEqual(len(assignments), 2)  # two rule intervention categories overlap
+        self.assertEqual(len(assignments), 3)  # new_rule & rule 2 intervention categories overlap
 
         first_assignment = assignments[0]
         self.assertEqual(first_assignment.rule, self.rule_3)
@@ -934,8 +959,15 @@ class ScenarioAPITestCase(APITestCase):
 
         second_assignment = assignments[1]
         self.assertEqual(second_assignment.rule, self.rule_1)
-        self.assertEqual(second_assignment.intervention, self.intervention_vaccination_iptp)
+        self.assertEqual(second_assignment.intervention, self.intervention_chemo_iptp)
         self.assertEqual(second_assignment.org_unit, self.district1)
+
+        third_assignment = assignments[2]
+        self.assertEqual(third_assignment.rule, new_rule)
+        self.assertEqual(third_assignment.intervention, self.intervention_chemo_iptp)
+        self.assertEqual(third_assignment.org_unit, self.district2)
+
+        self.assertFalse(InterventionAssignment.objects.filter(rule=self.rule_2).exists())
 
     def test_reorder_rules_with_full_perm_other_scenario(self):
         other_scenario = Scenario.objects.create(
@@ -972,7 +1004,7 @@ class ScenarioAPITestCase(APITestCase):
         payload = {
             "new_order": [new_rule_3.id, new_rule_2.id, new_rule_1.id],
         }
-        response = self.client.post(f"{self.BASE_URL}{other_scenario.id}/reorder_rules/", payload, format="json")
+        response = self.client.patch(f"{self.BASE_URL}{other_scenario.id}/reorder_rules/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         for index, rule in enumerate([new_rule_3, new_rule_2, new_rule_1], start=1):
@@ -1016,7 +1048,7 @@ class ScenarioAPITestCase(APITestCase):
             "new_order": [new_rule_3.id, new_rule_2.id, new_rule_1.id],
         }
         self.client.force_authenticate(self.user_with_basic_perm)
-        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
+        response = self.client.patch(f"{self.BASE_URL}{own_scenario.id}/reorder_rules/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         for index, rule in enumerate([new_rule_3, new_rule_2, new_rule_1], start=1):
@@ -1030,7 +1062,7 @@ class ScenarioAPITestCase(APITestCase):
             "new_order": [self.rule_3.id, self.rule_1.id, self.rule_2.id],  # scenario does not belong to user
         }
         self.client.force_authenticate(self.user_with_basic_perm)
-        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
+        response = self.client.patch(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_reorder_rules_no_perms(self):
@@ -1038,14 +1070,14 @@ class ScenarioAPITestCase(APITestCase):
             "new_order": [self.rule_3.id, self.rule_1.id, self.rule_2.id],  # scenario does not belong to user
         }
         self.client.force_authenticate(self.user_no_perms)
-        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
+        response = self.client.patch(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_reorder_rules_unauthenticated(self):
         payload = {
             "new_order": [self.rule_3.id, self.rule_1.id, self.rule_2.id],
         }
-        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
+        response = self.client.patch(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_reorder_rules_unknown_scenario_id(self):
@@ -1053,7 +1085,7 @@ class ScenarioAPITestCase(APITestCase):
             "new_order": [self.rule_3.id, self.rule_1.id, self.rule_2.id],
         }
         self.client.force_authenticate(self.user_with_full_perm)
-        response = self.client.post(f"{self.BASE_URL}999999/reorder_rules/", payload, format="json")
+        response = self.client.patch(f"{self.BASE_URL}999999/reorder_rules/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_reorder_rules_scenario_from_other_account(self):
@@ -1088,14 +1120,15 @@ class ScenarioAPITestCase(APITestCase):
             "new_order": [other_rule_2.id, other_rule_1.id],
         }
         self.client.force_authenticate(self.user_with_full_perm)
-        response = self.client.post(f"{self.BASE_URL}{other_scenario.id}/reorder_rules/", payload, format="json")
+        response = self.client.patch(f"{self.BASE_URL}{other_scenario.id}/reorder_rules/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def _generate_csv_content_for_import(self) -> bytes:
         csv_content = (
             'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n'
             f"{self.district1.id},District 1,1,0,0\n"
-            f"{self.district2.id},District 2,0,1,1\n"
+            f"{self.district2.id},District 2,0,0,1\n"
+            f"{self.district3.id},District 3,0,1,0\n"
         ).encode()
         return csv_content
 
@@ -1105,13 +1138,11 @@ class ScenarioAPITestCase(APITestCase):
 
         assignments_district_1 = InterventionAssignment.objects.filter(scenario=scenario, org_unit=self.district1)
         assignments_district_2 = InterventionAssignment.objects.filter(scenario=scenario, org_unit=self.district2)
+        assignments_district_3 = InterventionAssignment.objects.filter(scenario=scenario, org_unit=self.district3)
 
         self.assertEqual(assignments_district_1.count(), 1)
         self.assertEqual(assignments_district_1.first().intervention, self.intervention_chemo_iptp)
-
-        self.assertEqual(assignments_district_2.count(), 2)
-        intervention_ids_district_2 = set(assignments_district_2.values_list("intervention_id", flat=True))
-        self.assertSetEqual(
-            intervention_ids_district_2,
-            {self.intervention_vaccination_rts.id, self.intervention_chemo_smc.id},
-        )
+        self.assertEqual(assignments_district_2.count(), 1)
+        self.assertEqual(assignments_district_2.first().intervention, self.intervention_chemo_smc)
+        self.assertEqual(assignments_district_3.count(), 1)
+        self.assertEqual(assignments_district_3.first().intervention, self.intervention_vaccination_rts)

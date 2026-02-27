@@ -2,7 +2,7 @@ import csv
 
 from datetime import datetime
 
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -50,7 +50,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
     serializer_class = ScenarioSerializer
     ordering_fields = ["id", "name"]
-    http_method_names = ["get", "post", "put", "delete"]
+    http_method_names = ["get", "post", "put", "patch", "delete"]
     permission_classes = [ScenarioPermission]
 
     def get_serializer_class(self):
@@ -171,28 +171,33 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         scenario.refresh_assignments(request.user)
         return Response({"status": "Assignments refreshed"}, status=status.HTTP_200_OK)
 
-    @transaction.atomic
-    @action(methods=["PATCH"], detail=True, serializer_class=ScenarioRulesReorderSerializer)
-    def reorder_rules(self):
+    @action(methods=["PATCH"], detail=True)
+    def reorder_rules(self, request, pk=None):
         scenario = self.get_object()
         context = self.get_serializer_context()
         context["scenario"] = scenario
 
-        serializer = self.get_serializer(data=self.request.data, context=context)
+        serializer = ScenarioRulesReorderSerializer(data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
 
-        user = self.request.user
+        user = request.user
         now = timezone.now()
 
         new_order = serializer.validated_data["new_order"]
-        for index, rule in enumerate(new_order, start=1):
-            rule.priority = index
-            rule.updated_by = user
-            rule.updated_at = now
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute("SET CONSTRAINTS scenario_rule_priority_unique DEFERRED")
 
-        ScenarioRule.objects.bulk_update(new_order, ["priority", "updated_by", "updated_at"])
+            for index, rule in enumerate(new_order, start=1):
+                rule.priority = index
+                rule.updated_by = user
+                rule.updated_at = now
 
-        # now that priorities have been updated, we need to refresh the assignments of the scenario to reflect the new order of rules
+            ScenarioRule.objects.bulk_update(new_order, ["priority", "updated_by", "updated_at"])
+
+        # now that priorities have been updated,
+        # we need to refresh the assignments of the scenario to reflect the new order of rules
+        # only if transaction commit is successful
         scenario.refresh_assignments(user)
 
         return Response(status=status.HTTP_200_OK)

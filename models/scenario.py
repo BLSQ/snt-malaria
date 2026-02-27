@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
 from django.db import models, transaction
-from django.db.models import Q
+from django.db.models import Deferrable, Q
 
 from iaso.utils.colors import DEFAULT_COLOR
 from iaso.utils.models.color import ColorField
@@ -128,6 +128,7 @@ class ScenarioRule(models.Model):
             models.UniqueConstraint(
                 fields=["scenario", "priority"],
                 name="scenario_rule_priority_unique",
+                deferrable=Deferrable.IMMEDIATE,
             )
         ]
 
