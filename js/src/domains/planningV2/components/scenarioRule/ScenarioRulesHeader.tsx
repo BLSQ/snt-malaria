@@ -1,8 +1,9 @@
 import React, { FC } from 'react';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
-import { Stack, Typography, Box, Button, Tooltip } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import ConfirmDialog from 'Iaso/components/dialogs/ConfirmDialogComponent';
 import { noOp } from 'Iaso/utils';
 import { IconBoxed } from '../../../../components/IconBoxed';
 import { MESSAGES } from '../../../messages';
@@ -39,7 +40,7 @@ export const ScenarioRulesHeader: FC<Props> = ({
                     {formatMessage(MESSAGES.interventionTitle)}
                 </Typography>
             </Stack>
-            <Box sx={{ justifySelf: 'flex-end' }}>
+            <Stack direction="row" sx={{ justifySelf: 'flex-end' }}>
                 <CreateScenarioRuleModal
                     scenarioId={scenarioId}
                     onClose={noOp}
@@ -48,12 +49,17 @@ export const ScenarioRulesHeader: FC<Props> = ({
                     interventionCategories={interventionCategories}
                 />
 
-                <Tooltip title={formatMessage(MESSAGES.applyScenarioRule)}>
-                    <Button onClick={onApplyRules}>
-                        <ChevronRightIcon />
-                    </Button>
-                </Tooltip>
-            </Box>
+                <ConfirmDialog
+                    confirm={onApplyRules}
+                    question={formatMessage(MESSAGES.applyScenarioRule)}
+                    message={formatMessage(
+                        MESSAGES.applyScenarioRuleConfirmation,
+                    )}
+                    BtnIcon={ChevronRightIcon}
+                    btnMessage={''}
+                    tooltipMessage={formatMessage(MESSAGES.applyScenarioRule)}
+                />
+            </Stack>
         </Stack>
     );
 };
