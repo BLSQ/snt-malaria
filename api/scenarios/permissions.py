@@ -23,12 +23,11 @@ class ScenarioPermission(permissions.BasePermission):
             return True
 
         user = request.user
-        if user.has_perm(SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()):  # PUT & DELETE
+        if user.has_perm(SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()):  # PUT, DELETE & reorder
             return True
 
-        # PUT & DELETE
+        # PUT, DELETE & reorder
         if user.has_perm(SNT_SCENARIO_BASIC_WRITE_PERMISSION.full_name()) and obj.created_by == user:
             return True
 
-        # fallback for unexpected cases
         return False

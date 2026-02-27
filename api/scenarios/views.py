@@ -5,6 +5,7 @@ from datetime import datetime
 from django.db import IntegrityError, transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import serializers, status, viewsets
@@ -20,13 +21,14 @@ from plugins.snt_malaria.api.scenarios.utils import (
     get_csv_row,
     get_scenario,
 )
-from plugins.snt_malaria.models import InterventionAssignment, Scenario
+from plugins.snt_malaria.models import InterventionAssignment, Scenario, ScenarioRule
 from plugins.snt_malaria.models.intervention import Intervention
 
 from .permissions import ScenarioPermission
 from .serializers import (
     DuplicateScenarioSerializer,
     ImportScenarioSerializer,
+    ScenarioRulesReorderSerializer,
     ScenarioSerializer,
     ScenarioWriteSerializer,
 )
@@ -168,3 +170,29 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         scenario = self.get_object()
         scenario.refresh_assignments(request.user)
         return Response({"status": "Assignments refreshed"}, status=status.HTTP_200_OK)
+
+    @transaction.atomic
+    @action(methods=["PATCH"], detail=True, serializer_class=ScenarioRulesReorderSerializer)
+    def reorder_rules(self):
+        scenario = self.get_object()
+        context = self.get_serializer_context()
+        context["scenario"] = scenario
+
+        serializer = self.get_serializer(data=self.request.data, context=context)
+        serializer.is_valid(raise_exception=True)
+
+        user = self.request.user
+        now = timezone.now()
+
+        new_order = serializer.validated_data["new_order"]
+        for index, rule in enumerate(new_order, start=1):
+            rule.priority = index
+            rule.updated_by = user
+            rule.updated_at = now
+
+        ScenarioRule.objects.bulk_update(new_order, ["priority", "updated_by", "updated_at"])
+
+        # now that priorities have been updated, we need to refresh the assignments of the scenario to reflect the new order of rules
+        scenario.refresh_assignments(user)
+
+        return Response(status=status.HTTP_200_OK)

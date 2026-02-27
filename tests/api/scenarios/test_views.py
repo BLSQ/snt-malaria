@@ -6,7 +6,14 @@ from iaso.models import Account, OrgUnit, OrgUnitType
 from iaso.models.data_source import DataSource, SourceVersion
 from iaso.models.project import Project
 from iaso.test import APITestCase
-from plugins.snt_malaria.models import Intervention, InterventionAssignment, InterventionCategory, Scenario
+from plugins.snt_malaria.models import (
+    Intervention,
+    InterventionAssignment,
+    InterventionCategory,
+    Scenario,
+    ScenarioRule,
+    ScenarioRuleInterventionProperties,
+)
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
 
 
@@ -92,26 +99,77 @@ class ScenarioAPITestCase(APITestCase):
             name="District 2",
             validation_status=OrgUnit.VALIDATION_VALID,
             version=sw_version_1,
-            location=Point(x=4, y=50, z=100),
+            location=Point(x=4, y=51, z=100),
+            geom=self.mock_multipolygon,
+        )
+        self.district3 = OrgUnit.objects.create(
+            org_unit_type=self.out_district,
+            name="District 3",
+            validation_status=OrgUnit.VALIDATION_VALID,
+            version=sw_version_1,
+            location=Point(x=4, y=52, z=100),
             geom=self.mock_multipolygon,
         )
 
+        self.rule_1 = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria={"and": [{"==": [{"var": 2}, "F"]}]},
+            created_by=self.user_with_full_perm,
+            scenario=self.scenario,
+            org_units_matched=[self.district1.id],
+        )
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=self.rule_1,
+            intervention=self.intervention_chemo_iptp,
+            coverage=0.8,
+        )
+        self.rule_2 = ScenarioRule.objects.create(
+            name="Rule 2",
+            priority=2,
+            color="#00FF00",
+            matching_criteria={"and": [{">=": [{"var": 2}, 10]}]},
+            created_by=self.user_with_full_perm,
+            scenario=self.scenario,
+            org_units_matched=[self.district2.id],
+        )
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=self.rule_2,
+            intervention=self.intervention_chemo_smc,
+            coverage=0.9,
+        )
+        self.rule_3 = ScenarioRule.objects.create(
+            name="Rule 3",
+            priority=3,
+            color="#0000FF",
+            matching_criteria={"and": [{"<": [{"var": 2}, 5]}]},
+            created_by=self.user_with_full_perm,
+            scenario=self.scenario,
+            org_units_matched=[self.district3.id],
+        )
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=self.rule_3,
+            intervention=self.intervention_vaccination_rts,
+            coverage=0.7,
+        )
+
         # Create assignments related to the scenario
-        self.assignment = InterventionAssignment.objects.create(
+        self.assignment_1 = InterventionAssignment.objects.create(
             scenario=self.scenario,
             org_unit=self.district1,
             intervention=self.intervention_chemo_iptp,
             created_by=self.user_with_full_perm,
         )
-        self.assignment = InterventionAssignment.objects.create(
+        self.assignment_2 = InterventionAssignment.objects.create(
             scenario=self.scenario,
             org_unit=self.district2,
             intervention=self.intervention_chemo_smc,
             created_by=self.user_with_full_perm,
         )
-        self.assignment = InterventionAssignment.objects.create(
+        self.assignment_3 = InterventionAssignment.objects.create(
             scenario=self.scenario,
-            org_unit=self.district2,
+            org_unit=self.district3,
             intervention=self.intervention_vaccination_rts,
             created_by=self.user_with_full_perm,
         )
@@ -845,6 +903,193 @@ class ScenarioAPITestCase(APITestCase):
         response = self.client.delete(f"{self.BASE_URL}{other_scenario.id}/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(Scenario.objects.count(), 2)  # both the one from setup and the other account scenario remain
+
+    def test_reorder_rules_with_full_perm_own_scenario(self):
+        payload = {
+            "new_order": [self.rule_3.id, self.rule_1.id, self.rule_2.id],
+        }
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        for index, rule in enumerate([self.rule_3, self.rule_1, self.rule_2], start=1):
+            rule.refresh_from_db()
+            self.assertEqual(rule.priority, index)
+            self.assertEqual(rule.updated_by, self.user_with_full_perm)
+            self.assertIsNotNone(rule.updated_at)
+
+        # old assignments are gone
+        for assignment in [self.assignment_1, self.assignment_2, self.assignment_3]:
+            with self.assertRaises(InterventionAssignment.DoesNotExist):
+                InterventionAssignment.objects.get(id=assignment.id)
+
+        # new assignments are there
+        assignments = self.scenario.intervention_assignments.order_by("id")
+        self.assertEqual(len(assignments), 2)  # two rule intervention categories overlap
+
+        first_assignment = assignments[0]
+        self.assertEqual(first_assignment.rule, self.rule_3)
+        self.assertEqual(first_assignment.intervention, self.intervention_vaccination_rts)
+        self.assertEqual(first_assignment.org_unit, self.district3)
+
+        second_assignment = assignments[1]
+        self.assertEqual(second_assignment.rule, self.rule_1)
+        self.assertEqual(second_assignment.intervention, self.intervention_vaccination_iptp)
+        self.assertEqual(second_assignment.org_unit, self.district1)
+
+    def test_reorder_rules_with_full_perm_other_scenario(self):
+        other_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_with_basic_perm,  # created by another user but same account
+            name="Other User Scenario",
+            description="An other user scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        new_rule_1 = ScenarioRule.objects.create(
+            scenario=other_scenario,
+            priority=1,
+            matching_criteria={"and": [{">=": [{"var": 2}, 10]}]},
+            name="Rule 1",
+            created_by=self.user_with_basic_perm,
+        )
+        new_rule_2 = ScenarioRule.objects.create(
+            scenario=other_scenario,
+            priority=2,
+            matching_criteria={"and": [{">=": [{"var": 2}, 20]}]},
+            name="Rule 2",
+            created_by=self.user_with_basic_perm,
+        )
+        new_rule_3 = ScenarioRule.objects.create(
+            scenario=other_scenario,
+            priority=3,
+            matching_criteria={"and": [{">=": [{"var": 2}, 30]}]},
+            name="Rule 3",
+            created_by=self.user_with_basic_perm,
+        )
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        payload = {
+            "new_order": [new_rule_3.id, new_rule_2.id, new_rule_1.id],
+        }
+        response = self.client.post(f"{self.BASE_URL}{other_scenario.id}/reorder_rules/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        for index, rule in enumerate([new_rule_3, new_rule_2, new_rule_1], start=1):
+            rule.refresh_from_db()
+            self.assertEqual(rule.priority, index)
+            self.assertEqual(rule.updated_by, self.user_with_full_perm)
+            self.assertIsNotNone(rule.updated_at)
+
+    def test_reorder_rules_with_basic_perm_own_scenario(self):
+        own_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_with_basic_perm,
+            name="Basic User Scenario",
+            description="A basic user scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        new_rule_1 = ScenarioRule.objects.create(
+            scenario=own_scenario,
+            priority=1,
+            matching_criteria={"and": [{">=": [{"var": 2}, 10]}]},
+            name="Rule 1",
+            created_by=self.user_with_basic_perm,
+        )
+        new_rule_2 = ScenarioRule.objects.create(
+            scenario=own_scenario,
+            priority=2,
+            matching_criteria={"and": [{">=": [{"var": 2}, 20]}]},
+            name="Rule 2",
+            created_by=self.user_with_basic_perm,
+        )
+        new_rule_3 = ScenarioRule.objects.create(
+            scenario=own_scenario,
+            priority=3,
+            matching_criteria={"and": [{">=": [{"var": 2}, 30]}]},
+            name="Rule 3",
+            created_by=self.user_with_basic_perm,
+        )
+
+        payload = {
+            "new_order": [new_rule_3.id, new_rule_2.id, new_rule_1.id],
+        }
+        self.client.force_authenticate(self.user_with_basic_perm)
+        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        for index, rule in enumerate([new_rule_3, new_rule_2, new_rule_1], start=1):
+            rule.refresh_from_db()
+            self.assertEqual(rule.priority, index)
+            self.assertEqual(rule.updated_by, self.user_with_basic_perm)
+            self.assertIsNotNone(rule.updated_at)
+
+    def test_reorder_rules_with_basic_perm_other_scenario(self):
+        payload = {
+            "new_order": [self.rule_3.id, self.rule_1.id, self.rule_2.id],  # scenario does not belong to user
+        }
+        self.client.force_authenticate(self.user_with_basic_perm)
+        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_reorder_rules_no_perms(self):
+        payload = {
+            "new_order": [self.rule_3.id, self.rule_1.id, self.rule_2.id],  # scenario does not belong to user
+        }
+        self.client.force_authenticate(self.user_no_perms)
+        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_reorder_rules_unauthenticated(self):
+        payload = {
+            "new_order": [self.rule_3.id, self.rule_1.id, self.rule_2.id],
+        }
+        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/reorder_rules/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_reorder_rules_unknown_scenario_id(self):
+        payload = {
+            "new_order": [self.rule_3.id, self.rule_1.id, self.rule_2.id],
+        }
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}999999/reorder_rules/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_reorder_rules_scenario_from_other_account(self):
+        other_account = Account.objects.create(name="Other Account")
+        other_user = self.create_user_with_profile(
+            username="otheruser", account=other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
+        )
+        other_scenario = Scenario.objects.create(
+            account=other_account,
+            created_by=other_user,
+            name="Other Account Scenario",
+            description="An other account scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        other_rule_1 = ScenarioRule.objects.create(
+            scenario=other_scenario,
+            priority=1,
+            matching_criteria={"and": [{">=": [{"var": 2}, 10]}]},
+            name="Rule 1",
+            created_by=other_user,
+        )
+        other_rule_2 = ScenarioRule.objects.create(
+            scenario=other_scenario,
+            priority=2,
+            matching_criteria={"and": [{">=": [{"var": 2}, 20]}]},
+            name="Rule 2",
+            created_by=other_user,
+        )
+
+        payload = {
+            "new_order": [other_rule_2.id, other_rule_1.id],
+        }
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}{other_scenario.id}/reorder_rules/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def _generate_csv_content_for_import(self) -> bytes:
         csv_content = (
