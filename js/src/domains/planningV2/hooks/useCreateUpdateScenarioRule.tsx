@@ -57,7 +57,6 @@ export const useCreateUpdateScenarioRule = (
         options: {
             onSuccess: replaceQueryData,
         },
-        invalidateQueryKey: [`interventionAssignments_${scenarioId}`],
         showSuccessSnackBar: false,
     });
 };
