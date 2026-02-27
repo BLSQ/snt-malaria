@@ -1,4 +1,4 @@
-import React, { FC, useMemo } from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
@@ -63,19 +63,32 @@ export const ScenarioRuleForm: FC = () => {
         messages: MESSAGES,
     });
 
-    const inclusionOrgUnitOptions = useMemo(() => {
+    const allOrgUnitOptions = useMemo(() => {
         return allOrgUnits.map(orgUnit => ({
             value: orgUnit.id,
             label: orgUnit.name,
         }));
     }, [allOrgUnits]);
 
-    const exclusionOrgUnitOptions = useMemo(() => {
-        return allOrgUnits.map(orgUnit => ({
-            value: orgUnit.id,
-            label: orgUnit.name,
-        }));
-    }, [allOrgUnits]);
+    const excludeOrgUnitsFromList = useCallback(
+        (exclusionList: string) =>
+            allOrgUnitOptions.filter(
+                option =>
+                    !exclusionList
+                        ?.split(',')
+                        .includes(option.value.toString()),
+            ),
+        [allOrgUnitOptions],
+    );
+
+    const inclusionOrgUnitOptions = useMemo(
+        () => excludeOrgUnitsFromList(values.org_units_excluded || ''),
+        [excludeOrgUnitsFromList, values.org_units_excluded],
+    );
+    const exclusionOrgUnitOptions = useMemo(
+        () => excludeOrgUnitsFromList(values.org_units_included || ''),
+        [excludeOrgUnitsFromList, values.org_units_included],
+    );
 
     return (
         <>
