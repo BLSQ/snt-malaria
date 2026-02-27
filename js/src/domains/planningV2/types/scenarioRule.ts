@@ -1,5 +1,6 @@
 export type ScenarioRule = {
     id?: number;
+    scenario: number;
     name: string;
     priority: number;
     matching_criteria: MetricTypeCriterion[];
@@ -13,7 +14,8 @@ export type ScenarioRule = {
 
 export type InterventionProperties = {
     intervention?: number;
-    intervention_category?: number;
+    category?: number;
+    coverage: number;
 };
 
 export type MetricTypeCriterion = {

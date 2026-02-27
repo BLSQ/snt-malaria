@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
-import { useFormik } from 'formik';
+import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
 import { MESSAGES } from '../../messages';
 import {
@@ -25,10 +25,11 @@ export const defaultMatchingCriteria: MetricTypeCriterion = {
 
 export const defaultInterventionProperties: InterventionProperties = {
     intervention: undefined,
-    intervention_category: undefined,
+    category: undefined,
+    coverage: 0,
 };
 
-const defaultValues: ScenarioRuleFormValues = {
+export const defaultScenarioRuleValues: ScenarioRuleFormValues = {
     name: '',
     color: '#000000',
     intervention_properties: [],
@@ -42,20 +43,24 @@ const useValidation = () => {
         () =>
             Yup.object().shape({
                 name: Yup.string().required(formatMessage(MESSAGES.required)),
-                intervention_properties: Yup.array().of(
-                    Yup.object().shape({
-                        intervention_category: Yup.number().required(),
-                        intervention: Yup.number().required(),
-                    }),
-                ),
-                matching_criteria: Yup.array().of(
-                    Yup.object().shape({
-                        metric_type: Yup.number().required(),
-                        operator: Yup.string().required(),
-                        value: Yup.number(),
-                        string_value: Yup.string(),
-                    }),
-                ),
+                intervention_properties: Yup.array()
+                    .of(
+                        Yup.object().shape({
+                            category: Yup.number().required(),
+                            intervention: Yup.number().required(),
+                        }),
+                    )
+                    .min(1),
+                matching_criteria: Yup.array()
+                    .of(
+                        Yup.object().shape({
+                            metric_type: Yup.number().required(),
+                            operator: Yup.string().required(),
+                            value: Yup.number(),
+                            string_value: Yup.string(),
+                        }),
+                    )
+                    .min(1),
             }),
         [formatMessage],
     );
@@ -65,12 +70,15 @@ export const useScenarioRuleFormState = ({
     onSubmit,
     initialValues,
 }: {
-    onSubmit: (values: ScenarioRuleFormValues) => void;
+    onSubmit: (
+        values: ScenarioRuleFormValues,
+        formikHelpers: FormikHelpers<ScenarioRuleFormValues>,
+    ) => void;
     initialValues?: ScenarioRuleFormValues;
 }) => {
     const validationSchema = useValidation();
     return useFormik({
-        initialValues: initialValues || defaultValues,
+        initialValues: initialValues || defaultScenarioRuleValues,
         validationSchema,
         onSubmit: onSubmit,
     });

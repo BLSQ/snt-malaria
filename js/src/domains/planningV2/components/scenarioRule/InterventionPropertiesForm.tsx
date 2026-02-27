@@ -14,7 +14,7 @@ type Props = {
     onAdd: (
         key: string,
         defaultValues: InterventionProperties,
-        extendedValue: { intervention_category: number },
+        extendedValue: { category: number; intervention: number },
     ) => void;
     onRemove: (key: string, index: number) => void;
     touched: FormikTouched<InterventionProperties>[] | undefined;
@@ -48,12 +48,21 @@ export const InterventionPropertiesForm: FC<Props> = ({
     const filteredInterventionCategories = useMemo(
         () =>
             interventionCategories.filter(
-                ic =>
-                    !interventionProperties.some(
-                        ir => ir.intervention_category === ic.id,
-                    ),
+                ic => !interventionProperties.some(ir => ir.category === ic.id),
             ),
         [interventionCategories, interventionProperties],
+    );
+
+    const interventionsPerCategory = useMemo(
+        () =>
+            interventionCategories.reduce(
+                (acc, category) => {
+                    acc[category.id] = category.interventions;
+                    return acc;
+                },
+                {} as Record<number, InterventionCategory['interventions']>,
+            ),
+        [interventionCategories],
     );
 
     const interventionCategoryOptions = useMemo(
@@ -80,21 +89,18 @@ export const InterventionPropertiesForm: FC<Props> = ({
 
     const getInterventions = useCallback(
         (categoryId?: number) =>
-            (categoryId &&
-                interventionCategories?.find(c => c.id === categoryId)
-                    ?.interventions) ||
-            [],
-        [interventionCategories],
+            (categoryId && interventionsPerCategory[categoryId]) || [],
+        [interventionsPerCategory],
     );
 
     return interventionProperties ? (
         <Box>
             {interventionProperties.map((i, index) => (
                 <InterventionPropertyForm
-                    key={`intervention_property_${i.intervention_category}`}
+                    key={`intervention_property_${i.category}`}
                     interventionProperty={i}
-                    interventions={getInterventions(i.intervention_category)}
-                    categoryName={getCategoryName(i.intervention_category)}
+                    interventions={getInterventions(i.category)}
+                    categoryName={getCategoryName(i.category)}
                     onUpdateField={(field, value) =>
                         onUpdateField(array_field_key, index, field, value)
                     }
@@ -107,7 +113,9 @@ export const InterventionPropertiesForm: FC<Props> = ({
                 options={interventionCategoryOptions}
                 onClick={interventionCategory =>
                     onAdd(array_field_key, defaultInterventionProperties, {
-                        intervention_category: interventionCategory,
+                        category: interventionCategory,
+                        intervention:
+                            getInterventions(interventionCategory)[0]?.id,
                     })
                 }
                 size="small"

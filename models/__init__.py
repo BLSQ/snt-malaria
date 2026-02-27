@@ -7,7 +7,7 @@ from .intervention import (
     InterventionAssignment,
     InterventionCategory,
 )
-from .scenario import Scenario, ScenarioRule
+from .scenario import Scenario, ScenarioRule, ScenarioRuleInterventionProperties
 
 
 __all__ = [
@@ -16,6 +16,7 @@ __all__ = [
     "InterventionCategory",
     "Scenario",
     "ScenarioRule",
+    "ScenarioRuleInterventionProperties",
     "InterventionCostBreakdownLine",
     "InterventionCostUnitType",
     "Budget",

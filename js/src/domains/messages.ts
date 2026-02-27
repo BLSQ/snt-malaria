@@ -466,6 +466,11 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenarioRule.apply',
         defaultMessage: 'Apply rules',
     },
+    applyScenarioRuleConfirmation: {
+        id: 'iaso.snt_malaria.scenarioRule.applyConfirmation',
+        defaultMessage:
+            'Applying scenario rules will update the intervention assignments on all districts matching the selection criteria of each rule. Custom assignment might be lost. Do you want to proceed?',
+    },
     createScenarioRule: {
         id: 'iaso.snt_malaria.scenarioRule.create',
         defaultMessage: 'Create rule',

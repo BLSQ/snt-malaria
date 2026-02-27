@@ -150,6 +150,7 @@
     "iaso.snt_malaria.label.duplicate": "Dupliquer",
     "iaso.snt_malaria.label.hideLegend": "Masquer la légende",
     "iaso.snt_malaria.scenarioRule.apply": "Appliquer les règles",
+    "iaso.snt_malaria.scenarioRule.applyConfirmation": "L'application des règles du scénario mettra à jour les affectations d'intervention sur tous les districts correspondant aux critères de sélection de chaque règle. Les affectations personnalisées pourraient être perdues. Voulez-vous continuer ?",
     "iaso.snt_malaria.scenarioRule.create": "Créer une règle",
     "iaso.snt_malaria.scenarioRule.edit": "Modifier la règle",
     "iaso.snt_malaria.scenarioRule.delete": "Supprimer la règle",

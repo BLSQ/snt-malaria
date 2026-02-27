@@ -1,10 +1,13 @@
-import { postRequest, putRequest } from 'bluesquare-components';
-import { UseMutationResult } from 'react-query';
+import { patchRequest, postRequest } from 'bluesquare-components';
+import { UseMutationResult, useQueryClient } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import {
     InterventionProperties,
     MetricTypeCriterion,
+    ScenarioRule,
 } from '../types/scenarioRule';
+import { matchingCriteriaToJsonLogic } from '../utils/jsonLogic';
+import { ScenarioRuleResponse } from './useGetScenarioRules';
 
 type ScenarioRulePayload = {
     id?: number;
@@ -14,21 +17,47 @@ type ScenarioRulePayload = {
     intervention_properties: InterventionProperties[];
 };
 
+const useReplaceQueryData = (scenarioId: number) => {
+    const queryClient = useQueryClient();
+    return (data: ScenarioRuleResponse, variables: ScenarioRulePayload) => {
+        queryClient.setQueryData(
+            [`scenarioRules_${scenarioId}`],
+            (oldData: ScenarioRule[]) => {
+                if (variables.id) {
+                    return oldData.map((rule: ScenarioRule) =>
+                        rule.id === variables.id ? data : rule,
+                    );
+                } else {
+                    return [...(oldData || []), data];
+                }
+            },
+        );
+    };
+};
+
 export const useCreateUpdateScenarioRule = (
     scenarioId: number,
-): UseMutationResult =>
-    useSnackMutation({
-        mutationFn: (body: ScenarioRulePayload) => {
+): UseMutationResult => {
+    const replaceQueryData = useReplaceQueryData(scenarioId);
+    return useSnackMutation({
+        mutationFn: (body: Partial<ScenarioRulePayload>) => {
+            const matching_criteria = body.matching_criteria
+                ? matchingCriteriaToJsonLogic(body.matching_criteria)
+                : undefined;
             return body.id
-                ? putRequest(
-                      `/api/snt_malaria/scenario_rules/${body.id}/`,
-                      body,
-                  )
-                : postRequest(`/api/snt_malaria/scenario_rules/`, body);
+                ? patchRequest(`/api/snt_malaria/scenario_rules/${body.id}/`, {
+                      ...body,
+                      matching_criteria,
+                  })
+                : postRequest(`/api/snt_malaria/scenario_rules/`, {
+                      ...body,
+                      matching_criteria,
+                  });
         },
-        invalidateQueryKey: [
-            'scenarioRules',
-            `interventionAssignments_${scenarioId}`,
-        ],
+        options: {
+            onSuccess: replaceQueryData,
+        },
+        invalidateQueryKey: [`interventionAssignments_${scenarioId}`],
         showSuccessSnackBar: false,
     });
+};

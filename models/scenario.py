@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q
 
 from iaso.utils.colors import DEFAULT_COLOR
@@ -53,13 +53,12 @@ class Scenario(SoftDeletableModel):
             return 1
         return self.rules.aggregate(max_priority=models.Max("priority"))["max_priority"] + 1
 
-    def refresh_assignments(self):
-        # TODO: implement this
-        pass
-        # self.intervention_assignments.all().delete()
-        # new_assignments = {}
-        # for rule in self.rules.all():
-        #     rule.refresh_assignments(new_assignments)
+    @transaction.atomic()
+    def refresh_assignments(self, user: User) -> None:
+        self.intervention_assignments.all().delete()
+        new_assignments = {}
+        for rule in self.rules.all():
+            rule.refresh_assignments(user, new_assignments)
 
 
 SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA = {
@@ -136,13 +135,53 @@ class ScenarioRule(models.Model):
         self.clean_fields()  # forces validation checks when calling save() directly or indirectly (objects.create())
         super().save(*args, **kwargs)
 
-    def refresh_assignments(self, previous_assignments: dict[int, set[int]]) -> None:
-        # TODO: implement this
-        # previous_assignments should be a dict [intervention_category_id: [list of org_unit_ids]]
-        # if you're trying to create a new assignment, check if the category_id is already in the dict, and if so, check if the org unit is already in the list
-        # if it's not in there, you can create the assigment and update the dict by adding the org unit id (and the category id if needed)
-        # if it's already in there, it means that another rule with a higher priority already assigned an intervention so, you skip it and don't create
-        pass
+    def refresh_assignments(self, user: User, previous_assignments: dict[int, set[int]]) -> None:
+        # """
+        # Refresh intervention assignment based on this rule.
+        # This method should be called for each rule of a scenario, in the order of their priority (highest priority first),
+        # and with a dict of previous assignments that is updated at each step to make sure that we don't create duplicate assignments for the same org unit and intervention category.
+
+        # If a rule has two intervention of the same category, only the first one will be assigned.
+
+        # previous_assignments is a dict where keys are intervention category ids and values are sets of org unit ids that already have an assignment for this category from a higher priority rule. This is used to make sure that we don't create multiple assignments for the same org unit and intervention category, as the rule priority should determine which intervention gets assigned in case of overlap.
+        # This dict is updated in place with the new assignments created by this method.
+        # """
+        from plugins.snt_malaria.models.intervention import InterventionAssignment
+
+        if (not self.intervention_properties.exists()) or (not self.org_units_matched):
+            # If there is no intervention property or no matched org unit,
+            # we don't need to do anything as there will be no assignment from this rule
+            return
+
+        org_unit_ids = set(self.org_units_matched) - set(self.org_units_excluded) | set(self.org_units_included)
+        intervention_assignments_to_create = []
+        for intervention_property in self.intervention_properties.select_related("intervention").all():
+            category_id = intervention_property.intervention.intervention_category_id
+            if category_id not in previous_assignments:
+                previous_assignments[category_id] = set()
+
+            previous_assignments_for_category = previous_assignments[category_id]
+            for org_unit_id in org_unit_ids:
+                if org_unit_id in previous_assignments_for_category:
+                    # This means that a higher priority rule already assigned an intervention for this category and org unit, so we skip creating this assignment
+                    continue
+
+                # Create the assignment
+                intervention_assignments_to_create.append(
+                    InterventionAssignment(
+                        rule=self,
+                        intervention_id=intervention_property.intervention_id,
+                        org_unit_id=org_unit_id,
+                        coverage=intervention_property.coverage,
+                        created_by=user,
+                        scenario_id=self.scenario_id,
+                    )
+                )
+
+                # Update the dict to keep track of this new assignment
+                previous_assignments_for_category.add(org_unit_id)
+
+        InterventionAssignment.objects.bulk_create(intervention_assignments_to_create)
 
 
 class ScenarioRuleInterventionProperties(models.Model):

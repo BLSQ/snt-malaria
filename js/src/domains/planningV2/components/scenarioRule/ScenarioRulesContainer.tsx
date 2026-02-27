@@ -1,6 +1,6 @@
-import React, { FC } from 'react';
+import React, { FC, useCallback } from 'react';
 import { Card, CardContent, CardHeader } from '@mui/material';
-import { LoadingSpinner } from 'bluesquare-components';
+import { LoadingSpinner, SortableList } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { InterventionCategory } from '../../../planning/types/interventions';
 import { MetricTypeCategory } from '../../../planning/types/metrics';
@@ -27,6 +27,20 @@ const styles: SxStyles = {
             paddingBottom: 0,
         },
     },
+    rulesContainer: {
+        padding: 0,
+        backgroundColor: 'paper.default',
+    },
+    ruleBox: {
+        mb: 2,
+        p: 2,
+        border: 1,
+        borderColor: 'grey.300',
+        borderRadius: 2,
+        overflow: 'auto',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+    },
 };
 
 type Props = {
@@ -46,6 +60,12 @@ export const ScenarioRulesContainer: FC<Props> = ({
     metricTypeCategories,
     interventionCategories,
 }) => {
+    const onRulesReorder = useCallback((newRules: ScenarioRule[]) => {
+        // This function will be called with the new order of rules after drag-and-drop
+        // You can implement the logic to update the order in your backend here
+        console.log('New order of rules:', newRules);
+    }, []);
+
     return (
         <Card elevation={2} sx={styles.card}>
             <CardHeader
@@ -64,15 +84,26 @@ export const ScenarioRulesContainer: FC<Props> = ({
                 {isLoading ? (
                     <LoadingSpinner absolute={true} />
                 ) : (
-                    rules.map(rule => (
-                        <ScenarioRuleLine
-                            scenarioId={scenarioId}
-                            metricTypeCategories={metricTypeCategories}
-                            interventionCategories={interventionCategories}
-                            key={rule.id}
-                            rule={rule}
-                        />
-                    ))
+                    <SortableList
+                        items={rules}
+                        onChange={onRulesReorder}
+                        disabled={true}
+                        listItemSx={styles.ruleBox}
+                        listSx={styles.rulesContainer}
+                        RenderItem={({ item }) => {
+                            return (
+                                <ScenarioRuleLine
+                                    scenarioId={scenarioId}
+                                    metricTypeCategories={metricTypeCategories}
+                                    interventionCategories={
+                                        interventionCategories
+                                    }
+                                    key={item.id}
+                                    rule={item}
+                                />
+                            );
+                        }}
+                    />
                 )}
             </CardContent>
         </Card>

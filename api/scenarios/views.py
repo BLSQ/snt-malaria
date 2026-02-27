@@ -162,3 +162,9 @@ class ScenarioViewSet(viewsets.ModelViewSet):
                 raise ValidationError("No assignments to create from the provided CSV data.")
 
         return Response({"status": "Import successful", "id": scenario.id}, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"])
+    def refresh_assignments(self, request, pk=None):
+        scenario = self.get_object()
+        scenario.refresh_assignments(request.user)
+        return Response({"status": "Assignments refreshed"}, status=status.HTTP_200_OK)
