@@ -54,11 +54,11 @@ class Scenario(SoftDeletableModel):
         return self.rules.aggregate(max_priority=models.Max("priority"))["max_priority"] + 1
 
     @transaction.atomic()
-    def refresh_assignments(self):
+    def refresh_assignments(self, user: User) -> None:
         self.intervention_assignments.all().delete()
         new_assignments = {}
         for rule in self.rules.all():
-            rule.refresh_assignments(new_assignments)
+            rule.refresh_assignments(user, new_assignments)
 
 
 SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA = {
@@ -135,7 +135,7 @@ class ScenarioRule(models.Model):
         self.clean_fields()  # forces validation checks when calling save() directly or indirectly (objects.create())
         super().save(*args, **kwargs)
 
-    def refresh_assignments(self, previous_assignments: dict[int, set[int]]) -> None:
+    def refresh_assignments(self, user: User, previous_assignments: dict[int, set[int]]) -> None:
         # """
         # Refresh intervention assignment based on this rule.
         # This method should be called for each rule of a scenario, in the order of their priority (highest priority first),
@@ -155,10 +155,12 @@ class ScenarioRule(models.Model):
 
         org_unit_ids = set(self.org_units_matched) - set(self.org_units_excluded) | set(self.org_units_included)
         intervention_assignments_to_create = []
-        for intervention_property in self.intervention_properties.prefetch_related("intervention").all():
-            previous_assignments_for_category = previous_assignments.get(
-                intervention_property.intervention.intervention_category_id, set()
-            )
+        for intervention_property in self.intervention_properties.select_related("intervention").all():
+            category_id = intervention_property.intervention.intervention_category_id
+            if category_id not in previous_assignments:
+                previous_assignments[category_id] = set()
+
+            previous_assignments_for_category = previous_assignments[category_id]
             for org_unit_id in org_unit_ids:
                 if org_unit_id in previous_assignments_for_category:
                     # This means that a higher priority rule already assigned an intervention for this category and org unit, so we skip creating this assignment
@@ -171,14 +173,13 @@ class ScenarioRule(models.Model):
                         intervention_id=intervention_property.intervention_id,
                         org_unit_id=org_unit_id,
                         coverage=intervention_property.coverage,
-                        created_by=self.created_by,
+                        created_by=user,
                         scenario_id=self.scenario_id,
                     )
                 )
+
                 # Update the dict to keep track of this new assignment
-                if intervention_property.intervention.intervention_category_id not in previous_assignments:
-                    previous_assignments[intervention_property.intervention.intervention_category_id] = set()
-                previous_assignments[intervention_property.intervention.intervention_category_id].add(org_unit_id)
+                previous_assignments_for_category.add(org_unit_id)
 
         InterventionAssignment.objects.bulk_create(intervention_assignments_to_create)
 

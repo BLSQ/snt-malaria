@@ -171,7 +171,7 @@ class ScenarioRuleModelTestCase(TestCase):
             coverage=0.75,
         )
 
-        rule.refresh_assignments(previous_assignments={})
+        rule.refresh_assignments(self.user, previous_assignments={})
 
         assignments = rule.intervention_assignments.all()
         self.assertEqual(assignments.count(), 2)
@@ -187,7 +187,7 @@ class ScenarioRuleModelTestCase(TestCase):
             org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
         )
 
-        rule.refresh_assignments(previous_assignments={})
+        rule.refresh_assignments(self.user, previous_assignments={})
 
         assignments = rule.intervention_assignments.all()
         self.assertEqual(assignments.count(), 0)
@@ -208,7 +208,7 @@ class ScenarioRuleModelTestCase(TestCase):
             coverage=0.75,
         )
 
-        rule.refresh_assignments(previous_assignments={})
+        rule.refresh_assignments(self.user, previous_assignments={})
 
         assignments = rule.intervention_assignments.all()
         self.assertEqual(assignments.count(), 0)
@@ -232,7 +232,7 @@ class ScenarioRuleModelTestCase(TestCase):
 
         previous_assignments = {self.intervention.intervention_category_id: {self.org_unit_1.id}}
 
-        rule_1.refresh_assignments(previous_assignments=previous_assignments)
+        rule_1.refresh_assignments(self.user, previous_assignments=previous_assignments)
 
         assignments = rule_1.intervention_assignments.all()
         self.assertEqual(assignments.count(), 1)
@@ -257,7 +257,7 @@ class ScenarioRuleModelTestCase(TestCase):
 
         previous_assignments = {}
 
-        rule_1.refresh_assignments(previous_assignments=previous_assignments)
+        rule_1.refresh_assignments(self.user, previous_assignments=previous_assignments)
 
         # After refreshing the assignments for rule 1, the dict should be updated to include the new assignments
         self.assertIn(self.intervention.intervention_category_id, previous_assignments)
@@ -290,7 +290,7 @@ class ScenarioRuleModelTestCase(TestCase):
 
         previous_assignments = {}
 
-        rule_1.refresh_assignments(previous_assignments=previous_assignments)
+        rule_1.refresh_assignments(self.user, previous_assignments=previous_assignments)
 
         # Even if there are 2 interventions in the same category, only 2 assignments should be created (one for each org unit) and not 4
         assignments = rule_1.intervention_assignments.all()
@@ -336,8 +336,8 @@ class ScenarioRuleModelTestCase(TestCase):
 
         previous_assignments = {}
 
-        rule_1.refresh_assignments(previous_assignments=previous_assignments)
-        rule_2.refresh_assignments(previous_assignments=previous_assignments)
+        rule_1.refresh_assignments(self.user, previous_assignments=previous_assignments)
+        rule_2.refresh_assignments(self.user, previous_assignments=previous_assignments)
 
         assignments_rule_1 = rule_1.intervention_assignments.all()
         self.assertEqual(assignments_rule_1.count(), 2)
@@ -372,7 +372,7 @@ class ScenarioRuleModelTestCase(TestCase):
             coverage=0.75,
         )
 
-        rule.refresh_assignments(previous_assignments={})
+        rule.refresh_assignments(self.user, previous_assignments={})
 
         assignments = rule.intervention_assignments.all()
         self.assertEqual(assignments.count(), 2)
@@ -398,7 +398,7 @@ class ScenarioRuleModelTestCase(TestCase):
             coverage=0.75,
         )
 
-        rule.refresh_assignments(previous_assignments={})
+        rule.refresh_assignments(self.user, previous_assignments={})
 
         assignments = rule.intervention_assignments.all()
         self.assertEqual(assignments.count(), 1)
@@ -425,9 +425,9 @@ class ScenarioRuleModelTestCase(TestCase):
             coverage=0.75,
         )
 
-        rule.refresh_assignments(previous_assignments={})
+        rule.refresh_assignments(self.user, previous_assignments={})
 
-        assignments = rule.intervention_assignments.all()
+        assignments = rule.intervention_assignments.all().order_by("org_unit_id")
         self.assertEqual(assignments.count(), 2)
         self.assertEqual(assignments.first().org_unit_id, self.org_unit_1.id)
         self.assertEqual(assignments[1].org_unit_id, self.org_unit_2.id)

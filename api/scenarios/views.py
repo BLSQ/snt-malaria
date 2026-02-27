@@ -165,7 +165,6 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def refresh_assignments(self, request, pk=None):
-        print("Refreshing assignments for scenario", pk)
-        scenario = get_object_or_404(self.get_queryset(), pk=pk)
-        scenario.refresh_assignments()
+        scenario = self.get_object()
+        scenario.refresh_assignments(request.user)
         return Response({"status": "Assignments refreshed"}, status=status.HTTP_200_OK)

@@ -84,7 +84,7 @@ class ScenarioModelTestCase(TestCase):
         self.assertEqual(next_priority, 1)
 
     def test_refresh_assignments(self):
-        self.scenario.refresh_assignments()
+        self.scenario.refresh_assignments(self.user)
 
         assignments = self.scenario.intervention_assignments.all()
         self.assertEqual(assignments.count(), 3)
