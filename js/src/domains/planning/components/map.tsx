@@ -2,7 +2,13 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, Theme, Typography } from '@mui/material';
 
 import L from 'leaflet';
-import { GeoJSON, MapContainer, Tooltip, ZoomControl } from 'react-leaflet';
+import {
+    GeoJSON,
+    MapContainer,
+    TileLayer,
+    Tooltip,
+    ZoomControl,
+} from 'react-leaflet';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
@@ -158,6 +164,10 @@ export const Map: FC<Props> = ({
                         zoomSnap={defaultZoomSnap}
                         zoomDelta={defaultZoomDelta}
                     >
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                        />
                         <InvalidateOnResize />
                         <FitBounds
                             bounds={bounds}

@@ -13,12 +13,13 @@ import { Map as SNTMap } from '../../../../components/Map';
 import { MapActionBox } from '../../../../components/MapActionBox';
 import { MapSelectionWidget } from '../../../../components/MapSelectionWidget';
 import { LegendTypes } from '../../../../constants/legend';
+import { mapTheme } from '../../../../constants/map-theme';
 import { MESSAGES } from '../../../messages';
 import { useCreateInterventionAssignment } from '../../hooks/useCreateInterventionAssignment';
 import { useGetInterventionAssignments } from '../../hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../../hooks/useRemoveOrgUnitFromInterventionPlan';
-import { defaultLegend, getRandomColor, purples } from '../../libs/color-utils';
+import { getRandomColor, purples } from '../../libs/color-utils';
 import { Intervention, InterventionPlan } from '../../types/interventions';
 
 const defaultLegendConfig = {
@@ -165,7 +166,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
     const getOrgUnitMapMisc = useCallback(
         (orgUnitId: number) => {
             if (!highlightedOrgUnits.includes(orgUnitId)) {
-                return { color: defaultLegend, label: '' };
+                return { color: mapTheme.shapeColor, label: '' };
             }
 
             if (interventionIds && interventionIds.length > 0) {

@@ -67,7 +67,7 @@ export const ScenarioRulesContainer: FC<Props> = ({
     }, []);
 
     return (
-        <Card elevation={2} sx={styles.card}>
+        <Card sx={styles.card}>
             <CardHeader
                 sx={styles.cardHeader}
                 title={

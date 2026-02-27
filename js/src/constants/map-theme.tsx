@@ -2,7 +2,8 @@ import theme from './theme';
 
 export const mapTheme = {
     backgroundColor: '#CFD8DC',
-    shapeColor: '#263238',
+    borderColor: '#FFFFFF',
+    shapeColor: '#9fa3af',
     shapeWeight: 1,
     selectedShapeColor: '#263238',
     selectedShapeWeight: 3,

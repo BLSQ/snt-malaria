@@ -112,13 +112,13 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
                 zoomSnap={defaultZoomSnap}
                 zoomDelta={defaultZoomDelta}
             >
-                <InvalidateOnResize />
-                <FitBounds
-                    bounds={bounds}
-                    boundsOptions={boundsOptions}
+                <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                    url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                 />
+                <InvalidateOnResize />
+                <FitBounds bounds={bounds} boundsOptions={boundsOptions} />
                 <ZoomControl position="bottomright" />
-                <TileLayer url="" attribution="" />
                 {orgUnits.map(orgUnit => (
                     <GeoJSON
                         key={orgUnit.id}
