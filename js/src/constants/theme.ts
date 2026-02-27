@@ -79,7 +79,6 @@ export const theme = createTheme({
                 root: {
                     transform: 'translate(14px, 8px) scale(1)',
                     color: 'textSecondary',
-                    backgroundColor: 'inherit',
                 },
                 shrink: {
                     transform: 'translate(14px, -9px) scale(1)',

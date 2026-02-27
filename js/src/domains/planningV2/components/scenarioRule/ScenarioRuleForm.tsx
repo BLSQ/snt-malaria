@@ -3,12 +3,26 @@ import { Box, Chip, Stack, Typography } from '@mui/material';
 import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
 import InputComponent from 'Iaso/components/forms/InputComponent';
+import { SxStyles } from 'Iaso/types/general';
 import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { ScenarioRuleFormValues } from '../../hooks/useScenarioRuleFormState';
 import { InterventionPropertiesForm } from './InterventionPropertiesForm';
 import { MatchingCriteriaForm } from './MatchingCriteriaForm';
+
+const styles: SxStyles = {
+    formWrapper: {
+        p: 2,
+        backgroundColor: 'grey.100',
+        borderRadius: 3,
+    },
+    inputLabel: {
+        ' .MuiInputLabel-shrink': {
+            backgroundColor: 'grey.100',
+        },
+    },
+};
 
 const ScenarioRuleHeading: FC<{ chipLabel: string; label: string }> = ({
     chipLabel,
@@ -65,13 +79,7 @@ export const ScenarioRuleForm: FC = () => {
 
     return (
         <>
-            <Box
-                sx={{
-                    p: 2,
-                    backgroundColor: 'grey.100',
-                    borderRadius: 3,
-                }}
-            >
+            <Box sx={styles.formWrapper}>
                 <Box mb={3}>
                     <ScenarioRuleHeading
                         chipLabel="1"
@@ -120,6 +128,7 @@ export const ScenarioRuleForm: FC = () => {
                         onChange={setFieldValueAndState}
                         errors={getErrors('org_units_excluded')}
                         label={MESSAGES.excludedOrgUnits}
+                        wrapperSx={styles.inputLabel}
                     />
 
                     <InputComponent
@@ -131,6 +140,7 @@ export const ScenarioRuleForm: FC = () => {
                         onChange={setFieldValueAndState}
                         errors={getErrors('org_units_included')}
                         label={MESSAGES.includedOrgUnits}
+                        wrapperSx={styles.inputLabel}
                     />
                 </Box>
             </Box>
