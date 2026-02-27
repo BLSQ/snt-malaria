@@ -497,7 +497,90 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             intervention_properties_ids_before,
         )
 
-    def test_delete_scenario_rule_not_allowed(self):
+    def test_delete_scenario_rule_with_full_perm_own_scenario(self):
+        self.assertEqual(self.scenario.rules.count(), 2)
+
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.delete(f"{self.BASE_URL}{self.scenario_rule_1.id}/")
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertEqual(self.scenario.rules.count(), 1)
+        with self.assertRaises(ScenarioRule.DoesNotExist):
+            ScenarioRule.objects.get(id=self.scenario_rule_1.id)
+
+    def test_delete_scenario_rule_with_full_perm_other_scenario(self):
+        new_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_with_basic_perm,
+            name="Other Scenario",
+            description="Description of other scenario - belongs to another user",
+            start_year=2020,
+            end_year=2030,
+        )
+        new_rule = ScenarioRule.objects.create(
+            scenario=new_scenario,
+            created_by=self.user_with_basic_perm,
+            name="Other Scenario Rule",
+            matching_criteria={"and": [{">=": [{"var": self.metric_type_population.id}, 1]}]},
+            org_units_matched=[self.district_1.id, self.district_2.id, self.district_3.id],
+            priority=1,
+        )
+
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.delete(f"{self.BASE_URL}{new_rule.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertEqual(new_scenario.rules.count(), 0)
+        with self.assertRaises(ScenarioRule.DoesNotExist):
+            ScenarioRule.objects.get(id=new_rule.id)
+
+    def test_delete_scenario_rule_with_basic_perm_own_scenario(self):
+        new_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_with_basic_perm,
+            name="Other Scenario",
+            description="Description of other scenario",
+            start_year=2020,
+            end_year=2030,
+        )
+        new_rule = ScenarioRule.objects.create(
+            scenario=new_scenario,
+            created_by=self.user_with_basic_perm,
+            name="Other Scenario Rule",
+            matching_criteria={"and": [{">=": [{"var": self.metric_type_population.id}, 1]}]},
+            org_units_matched=[self.district_1.id, self.district_2.id, self.district_3.id],
+            priority=1,
+        )
+
+        self.client.force_authenticate(user=self.user_with_basic_perm)
+        response = self.client.delete(f"{self.BASE_URL}{new_rule.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertEqual(new_scenario.rules.count(), 0)
+        with self.assertRaises(ScenarioRule.DoesNotExist):
+            ScenarioRule.objects.get(id=new_rule.id)
+
+    def test_delete_scenario_rule_with_basic_perm_other_scenario(self):
+        self.client.force_authenticate(user=self.user_with_basic_perm)
+        response = self.client.delete(f"{self.BASE_URL}{self.scenario_rule_1.id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_scenario_rule_with_no_perm(self):
+        self.client.force_authenticate(user=self.user_no_perm)
+        response = self.client.delete(f"{self.BASE_URL}{self.scenario_rule_1.id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_scenario_rule_unauthenticated(self):
+        response = self.client.delete(f"{self.BASE_URL}{self.scenario_rule_1.id}/")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete_scenario_rule_unknown_rule_id(self):
+        unknown_rule_id = 1234567890
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.delete(f"{self.BASE_URL}{unknown_rule_id}/")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_scenario_rule_from_another_account(self):
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.delete(f"{self.BASE_URL}{self.other_scenario_rule.id}/")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
