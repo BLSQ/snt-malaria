@@ -1,6 +1,6 @@
 import React, { FC, useCallback } from 'react';
 import { Grid } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import {
@@ -17,6 +17,9 @@ import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { ScenarioRulesContainer } from './components/scenarioRule/ScenarioRulesContainer';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { useRefreshAssignments } from './hooks/useRefreshInterventionAssignment';
+import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
+import { useGetInterventionAssignments } from '../planning/hooks/useGetInterventionAssignments';
+import { InterventionsPlan } from '../planning/components/interventionPlan/InterventionsPlan';
 
 type PlanningParams = {
     scenarioId: number;
@@ -31,6 +34,10 @@ export const PlanningV2: FC = () => {
 
     const { data: metricTypeCategories } = useGetMetricCategories();
     const { data: interventionCategories } = useGetInterventionCategories();
+    const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits();
+
+    const { data: interventionPlans, isLoading: isLoadingPlans } =
+        useGetInterventionAssignments(params.scenarioId);
     const { data: scenarioRules, isFetching: isFetchingRules } =
         useGetScenarioRules(params.scenarioId);
     const { mutate: refreshAssignments } = useRefreshAssignments(
@@ -42,6 +49,7 @@ export const PlanningV2: FC = () => {
 
     return metricTypeCategories && interventionCategories ? (
         <>
+            {isLoadingOrgUnits && <LoadingSpinner />}
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
             <PageContainer>
                 {scenario && <ScenarioTopBar scenario={scenario} />}
@@ -57,6 +65,15 @@ export const PlanningV2: FC = () => {
                                 interventionCategories={interventionCategories}
                             />
                         </PaperFullHeight>
+                    </Grid>
+                    <Grid item xs={12} md={8}>
+                        <InterventionsPlan
+                            scenarioId={params.scenarioId}
+                            disabled={scenario?.is_locked}
+                            interventionPlans={interventionPlans || []}
+                            isLoadingPlans={isLoadingPlans}
+                            totalOrgUnitCount={orgUnits?.length || 0}
+                        />
                     </Grid>
                 </Grid>
             </PageContainer>

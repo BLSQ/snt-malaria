@@ -73,8 +73,16 @@ export const InterventionPlanSummary: FC<Props> = ({
                             },
                         }}
                     >
-                        <Tab value="map" label={<MapIcon />} />
-                        <Tab value="list" label={<TableRowsIcon />} />
+                        <Tab
+                            value="map"
+                            sx={{ minWidth: 0 }}
+                            label={<MapIcon />}
+                        />
+                        <Tab
+                            value="list"
+                            sx={{ minWidth: 0 }}
+                            label={<TableRowsIcon />}
+                        />
                     </Tabs>
                     <Button
                         variant="contained"
