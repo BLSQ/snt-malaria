@@ -57,7 +57,7 @@ class Scenario(SoftDeletableModel):
     def refresh_assignments(self, user: User) -> None:
         self.intervention_assignments.all().delete()
         new_assignments = {}
-        for rule in self.rules.all():
+        for rule in self.rules.order_by("-priority"):
             rule.refresh_assignments(user, new_assignments)
 
 
