@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useCallback } from 'react';
 import { Grid } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
@@ -16,6 +16,7 @@ import { useGetMetricCategories } from '../planning/hooks/useGetMetrics';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { ScenarioRulesContainer } from './components/scenarioRule/ScenarioRulesContainer';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
+import { useRefreshAssignments } from './hooks/useRefreshInterventionAssignment';
 
 type PlanningParams = {
     scenarioId: number;
@@ -32,6 +33,12 @@ export const PlanningV2: FC = () => {
     const { data: interventionCategories } = useGetInterventionCategories();
     const { data: scenarioRules, isFetching: isFetchingRules } =
         useGetScenarioRules(params.scenarioId);
+    const { mutate: refreshAssignments } = useRefreshAssignments(
+        params.scenarioId,
+    );
+    const onApplyRules = useCallback(() => {
+        refreshAssignments({});
+    }, [refreshAssignments]);
 
     return metricTypeCategories && interventionCategories ? (
         <>
@@ -42,7 +49,7 @@ export const PlanningV2: FC = () => {
                     <Grid item xs={12} md={4}>
                         <PaperFullHeight>
                             <ScenarioRulesContainer
-                                onApplyRules={() => {}}
+                                onApplyRules={onApplyRules}
                                 scenarioId={params.scenarioId}
                                 rules={scenarioRules || []}
                                 isLoading={isFetchingRules}
