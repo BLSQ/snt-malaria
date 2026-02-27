@@ -219,7 +219,7 @@ class ScenarioRulesSerializerTestCase(BaseSerializerTestCase):
         serializer = ScenarioRulesReorderSerializer(data=payload, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("new_order", serializer.errors)
-        self.assertIn(
-            f"Missing rule IDs that belong to the scenario - {{{self.rule_1.id}, {self.rule_2.id}}}",
-            serializer.errors["new_order"][0],
-        )
+        error = serializer.errors["new_order"][0]
+        self.assertIn("Missing rule IDs that belong to the scenario - ", error)
+        self.assertIn(str(self.rule_1.id), error)
+        self.assertIn(str(self.rule_2.id), error)
