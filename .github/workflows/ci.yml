@@ -116,7 +116,7 @@ jobs:
                   ls -las plugins
                   ls -las plugins/snt_malaria
             - name: Set up Python 3.9
-              uses: actions/setup-python@v2
+              uses: actions/setup-python@v6
               with:
                   python-version: 3.9
             - name: Install GDAL and gettext
