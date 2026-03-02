@@ -63,12 +63,14 @@ export const ScenarioRuleForm: FC = () => {
         messages: MESSAGES,
     });
 
-    const allOrgUnitOptions = useMemo(() => {
-        return allOrgUnits.map(orgUnit => ({
-            value: orgUnit.id,
-            label: orgUnit.name,
-        }));
-    }, [allOrgUnits]);
+    const allOrgUnitOptions = useMemo(
+        () =>
+            allOrgUnits.map(orgUnit => ({
+                value: orgUnit.id,
+                label: orgUnit.name,
+            })),
+        [allOrgUnits],
+    );
 
     const excludeOrgUnitsFromList = useCallback(
         (exclusionList: string) =>
