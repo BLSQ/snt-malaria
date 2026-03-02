@@ -5,7 +5,6 @@ import {
     ZoomControl,
     Tooltip as LeafletTooltip,
     GeoJSON,
-    TileLayer,
 } from 'react-leaflet';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
@@ -21,6 +20,7 @@ import {
 } from '../domains/planning/libs/map-utils';
 import { FitBounds } from './FitBounds';
 import { InvalidateOnResize } from './InvalidateOnResize';
+import { MapTypeLayer } from './MapTyleLayer';
 
 type Props = {
     id: string;
@@ -88,10 +88,7 @@ export const Map: FC<Props> = ({
             zoomSnap={defaultZoomSnap}
             zoomDelta={defaultZoomDelta}
         >
-            <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            />
+            <MapTypeLayer />
             <InvalidateOnResize />
             <FitBounds bounds={bounds} boundsOptions={boundsOptions} />
             <ZoomControl position="bottomright" />

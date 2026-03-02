@@ -13,8 +13,5 @@ export const postRefreshAssignments = (scenarioId: number): Promise<any> =>
 export const useRefreshAssignments = (scenarioId: number): UseMutationResult =>
     useSnackMutation({
         mutationFn: () => postRefreshAssignments(scenarioId),
-        invalidateQueryKey: [
-            'interventionAssignments',
-            `interventionAssignments_${scenarioId}`,
-        ],
+        invalidateQueryKey: ['interventionAssignments'],
     });
