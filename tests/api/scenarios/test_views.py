@@ -943,31 +943,32 @@ class ScenarioAPITestCase(APITestCase):
             self.assertEqual(rule.updated_by, self.user_with_full_perm)
             self.assertIsNotNone(rule.updated_at)
 
+        # once we refresh assignments on reorder, uncomment the following lines
         # old assignments are gone
-        for assignment in [self.assignment_1, self.assignment_2, self.assignment_3]:
-            with self.assertRaises(InterventionAssignment.DoesNotExist):
-                InterventionAssignment.objects.get(id=assignment.id)
+        # for assignment in [self.assignment_1, self.assignment_2, self.assignment_3]:
+        #     with self.assertRaises(InterventionAssignment.DoesNotExist):
+        #         InterventionAssignment.objects.get(id=assignment.id)
 
         # new assignments are there
-        assignments = self.scenario.intervention_assignments.order_by("id")
-        self.assertEqual(len(assignments), 3)  # new_rule & rule 2 intervention categories overlap
+        # assignments = self.scenario.intervention_assignments.order_by("id")
+        # self.assertEqual(len(assignments), 3)  # new_rule & rule 2 intervention categories overlap
 
-        first_assignment = assignments[0]
-        self.assertEqual(first_assignment.rule, self.rule_3)
-        self.assertEqual(first_assignment.intervention, self.intervention_vaccination_rts)
-        self.assertEqual(first_assignment.org_unit, self.district3)
+        # first_assignment = assignments[0]
+        # self.assertEqual(first_assignment.rule, self.rule_3)
+        # self.assertEqual(first_assignment.intervention, self.intervention_vaccination_rts)
+        # self.assertEqual(first_assignment.org_unit, self.district3)
 
-        second_assignment = assignments[1]
-        self.assertEqual(second_assignment.rule, self.rule_1)
-        self.assertEqual(second_assignment.intervention, self.intervention_chemo_iptp)
-        self.assertEqual(second_assignment.org_unit, self.district1)
+        # second_assignment = assignments[1]
+        # self.assertEqual(second_assignment.rule, self.rule_1)
+        # self.assertEqual(second_assignment.intervention, self.intervention_chemo_iptp)
+        # self.assertEqual(second_assignment.org_unit, self.district1)
 
-        third_assignment = assignments[2]
-        self.assertEqual(third_assignment.rule, new_rule)
-        self.assertEqual(third_assignment.intervention, self.intervention_chemo_iptp)
-        self.assertEqual(third_assignment.org_unit, self.district2)
+        # third_assignment = assignments[2]
+        # self.assertEqual(third_assignment.rule, new_rule)
+        # self.assertEqual(third_assignment.intervention, self.intervention_chemo_iptp)
+        # self.assertEqual(third_assignment.org_unit, self.district2)
 
-        self.assertFalse(InterventionAssignment.objects.filter(rule=self.rule_2).exists())
+        # self.assertFalse(InterventionAssignment.objects.filter(rule=self.rule_2).exists())
 
     def test_reorder_rules_with_full_perm_other_scenario(self):
         other_scenario = Scenario.objects.create(

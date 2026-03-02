@@ -2,7 +2,7 @@ import csv
 
 from datetime import datetime
 
-from django.db import IntegrityError, connection, transaction
+from django.db import IntegrityError, transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -184,20 +184,16 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         now = timezone.now()
 
         new_order = serializer.validated_data["new_order"]
-        with transaction.atomic():
-            with connection.cursor() as cursor:
-                cursor.execute("SET CONSTRAINTS scenario_rule_priority_unique DEFERRED")
 
-            for index, rule in enumerate(new_order, start=1):
-                rule.priority = index
-                rule.updated_by = user
-                rule.updated_at = now
-
-            ScenarioRule.objects.bulk_update(new_order, ["priority", "updated_by", "updated_at"])
+        for index, rule in enumerate(new_order, start=1):
+            rule.priority = index
+            rule.updated_by = user
+            rule.updated_at = now
+        ScenarioRule.objects.bulk_update_with_deferred_constraint(new_order, ["priority", "updated_by", "updated_at"])
 
         # now that priorities have been updated,
         # we need to refresh the assignments of the scenario to reflect the new order of rules
         # only if transaction commit is successful
-        scenario.refresh_assignments(user)
+        # scenario.refresh_assignments(user)
 
         return Response(status=status.HTTP_200_OK)

@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
-from django.db import models, transaction
+from django.db import connection, models, transaction
 from django.db.models import Deferrable, Q
 
 from iaso.utils.colors import DEFAULT_COLOR
@@ -95,6 +95,19 @@ SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA = {
 }
 
 
+class ScenarioRuleQuerySet(models.QuerySet):
+    def bulk_update_with_deferred_constraint(self, objs, fields, batch_size=None):
+        """
+        Use this to bulk update ScenarioRule whose priority have changed.
+        Updating ScenarioRule priorities with vanilla bulk_update fails, because
+        bulk_updates processes rows one by one, which does not respect the unicity constraint on scenario and priority.
+        """
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute("SET CONSTRAINTS scenario_rule_priority_unique DEFERRED")
+            return super().bulk_update(objs, fields, batch_size)
+
+
 class ScenarioRule(models.Model):
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="rules")
     name = models.CharField(max_length=255)
@@ -120,6 +133,8 @@ class ScenarioRule(models.Model):
     updated_by = models.ForeignKey(
         User, on_delete=models.PROTECT, related_name="updated_scenario_rules", null=True, blank=True
     )
+
+    objects = ScenarioRuleQuerySet.as_manager()
 
     class Meta:
         app_label = "snt_malaria"
