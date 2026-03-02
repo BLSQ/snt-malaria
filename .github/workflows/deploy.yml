@@ -8,7 +8,7 @@ on:
       environment:
         description: Env (staging/demo/prod) or exact env name (snt-malaria, snt-malaria-staging, snt-malaria-demo)
         required: true
-        default: snt-malaria-staging
+        default: snt-malaria
       iaso_ref:
         description: The branch, tag or SHA from Iaso to use (main by default)
         required: false
