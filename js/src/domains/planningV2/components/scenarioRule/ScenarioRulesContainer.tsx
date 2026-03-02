@@ -45,6 +45,7 @@ type Props = {
     scenarioId: number;
     isLoading: boolean;
     onApplyRules?: () => void;
+    onReorderRules: (newRules: ScenarioRule[]) => void;
     rules: ScenarioRule[];
 };
 
@@ -52,13 +53,24 @@ export const ScenarioRulesContainer: FC<Props> = ({
     scenarioId,
     isLoading,
     onApplyRules,
+    onReorderRules,
     rules,
 }) => {
-    const onRulesReorder = useCallback((newRules: ScenarioRule[]) => {
-        // This function will be called with the new order of rules after drag-and-drop
-        // You can implement the logic to update the order in your backend here
-        console.log('New order of rules:', newRules);
-    }, []);
+    // Using a happy flow to preserve DND animations
+    const [orderedRules, setOrderedRules] =
+        React.useState<ScenarioRule[]>(rules);
+
+    React.useEffect(() => {
+        setOrderedRules(rules);
+    }, [rules]);
+
+    const handleReorder = useCallback(
+        (newOrder: ScenarioRule[]) => {
+            setOrderedRules(newOrder);
+            onReorderRules(newOrder);
+        },
+        [onReorderRules],
+    );
 
     return (
         <Card sx={styles.card}>
@@ -77,11 +89,12 @@ export const ScenarioRulesContainer: FC<Props> = ({
                     <LoadingSpinner absolute={true} />
                 ) : (
                     <SortableList
-                        items={rules}
-                        onChange={onRulesReorder}
-                        disabled={true}
+                        items={orderedRules}
+                        onChange={handleReorder}
                         listItemSx={styles.ruleBox}
                         listSx={styles.rulesContainer}
+                        dragDelay={250}
+                        disableKeyboard={true}
                         RenderItem={({ item }) => {
                             return (
                                 <ScenarioRuleLine
