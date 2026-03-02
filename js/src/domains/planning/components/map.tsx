@@ -12,6 +12,7 @@ import { Bounds } from 'Iaso/utils/map/mapUtils';
 import { FitBounds } from '../../../components/FitBounds';
 import { InvalidateOnResize } from '../../../components/InvalidateOnResize';
 import { MapSelectionWidget } from '../../../components/MapSelectionWidget';
+import { MapTypeLayer } from '../../../components/MapTyleLayer';
 import { mapTheme } from '../../../constants/map-theme';
 import {
     defaultZoomDelta,
@@ -158,6 +159,7 @@ export const Map: FC<Props> = ({
                         zoomSnap={defaultZoomSnap}
                         zoomDelta={defaultZoomDelta}
                     >
+                        <MapTypeLayer />
                         <InvalidateOnResize />
                         <FitBounds
                             bounds={bounds}

@@ -12,14 +12,15 @@ import tiles from 'Iaso/constants/mapTiles';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { noOp } from 'Iaso/utils';
 import { Bounds } from 'Iaso/utils/map/mapUtils';
-import { FitBounds } from './FitBounds';
-import { InvalidateOnResize } from './InvalidateOnResize';
 import { mapTheme } from '../constants/map-theme';
 import { MapLegend } from '../domains/planning/components/MapLegend';
 import {
     defaultZoomDelta,
     defaultZoomSnap,
 } from '../domains/planning/libs/map-utils';
+import { FitBounds } from './FitBounds';
+import { InvalidateOnResize } from './InvalidateOnResize';
+import { MapTypeLayer } from './MapTyleLayer';
 
 type Props = {
     id: string;
@@ -87,6 +88,7 @@ export const Map: FC<Props> = ({
             zoomSnap={defaultZoomSnap}
             zoomDelta={defaultZoomDelta}
         >
+            <MapTypeLayer />
             <InvalidateOnResize />
             <FitBounds bounds={bounds} boundsOptions={boundsOptions} />
             <ZoomControl position="bottomright" />
@@ -100,7 +102,7 @@ export const Map: FC<Props> = ({
                         key={orgUnit.id}
                         data={orgUnit.geo_json as unknown as GeoJson}
                         style={{
-                            color: 'var(--text-primary,#1F2B3DDE)',
+                            color: mapTheme.borderColor,
                             weight: weight,
                             fillColor: orgUnitMapMisc?.color ?? defaultColor,
                             fillOpacity: 2,

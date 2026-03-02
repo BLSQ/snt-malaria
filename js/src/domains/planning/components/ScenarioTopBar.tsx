@@ -2,13 +2,7 @@ import React, { FC, useCallback } from 'react';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import ViewSidebarOutlinedIcon from '@mui/icons-material/ViewSidebarOutlined';
-import {
-    Box,
-    IconButton,
-    Theme,
-    Tooltip,
-    Typography,
-} from '@mui/material';
+import { Box, IconButton, Theme, Tooltip, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { useNavigate } from 'react-router-dom';
 import ConfirmDialog from 'Iaso/components/dialogs/ConfirmDialogComponent';
@@ -164,9 +158,7 @@ export const ScenarioTopBar: FC<Props> = ({
                                 : styles.sidebarToggle
                         }
                     >
-                        <ViewSidebarOutlinedIcon
-                            sx={styles.sidebarIcon}
-                        />
+                        <ViewSidebarOutlinedIcon sx={styles.sidebarIcon} />
                     </IconButton>
                 </Tooltip>
             </Box>

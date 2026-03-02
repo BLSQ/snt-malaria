@@ -2,13 +2,7 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Box, Theme } from '@mui/material';
 
 import L from 'leaflet';
-import {
-    GeoJSON,
-    MapContainer,
-    TileLayer,
-    Tooltip,
-    ZoomControl,
-} from 'react-leaflet';
+import { GeoJSON, MapContainer, Tooltip, ZoomControl } from 'react-leaflet';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
@@ -18,6 +12,7 @@ import { Bounds } from 'Iaso/utils/map/mapUtils';
 
 import { FitBounds } from '../../../../components/FitBounds';
 import { InvalidateOnResize } from '../../../../components/InvalidateOnResize';
+import { MapTypeLayer } from '../../../../components/MapTyleLayer';
 import { mapTheme } from '../../../../constants/map-theme';
 import { useGetMetricValues } from '../../hooks/useGetMetrics';
 import {
@@ -112,13 +107,10 @@ export const SideMap: FC<Props> = ({ orgUnits, initialDisplayedMetric }) => {
                 zoomSnap={defaultZoomSnap}
                 zoomDelta={defaultZoomDelta}
             >
+                <MapTypeLayer />
                 <InvalidateOnResize />
-                <FitBounds
-                    bounds={bounds}
-                    boundsOptions={boundsOptions}
-                />
+                <FitBounds bounds={bounds} boundsOptions={boundsOptions} />
                 <ZoomControl position="bottomright" />
-                <TileLayer url="" attribution="" />
                 {orgUnits.map(orgUnit => (
                     <GeoJSON
                         key={orgUnit.id}
