@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
-from django.db import models, transaction
-from django.db.models import Q
+from django.db import connection, models, transaction
+from django.db.models import Deferrable, Q
 
 from iaso.utils.colors import DEFAULT_COLOR
 from iaso.utils.models.color import ColorField
@@ -57,7 +57,7 @@ class Scenario(SoftDeletableModel):
     def refresh_assignments(self, user: User) -> None:
         self.intervention_assignments.all().delete()
         new_assignments = {}
-        for rule in self.rules.all():
+        for rule in self.rules.order_by("-priority"):
             rule.refresh_assignments(user, new_assignments)
 
 
@@ -95,6 +95,19 @@ SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA = {
 }
 
 
+class ScenarioRuleQuerySet(models.QuerySet):
+    def bulk_update_with_deferred_constraint(self, objs, fields, batch_size=None):
+        """
+        Use this to bulk update ScenarioRule whose priority have changed.
+        Updating ScenarioRule priorities with vanilla bulk_update fails, because
+        bulk_updates processes rows one by one, which does not respect the unicity constraint on scenario and priority.
+        """
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute("SET CONSTRAINTS scenario_rule_priority_unique DEFERRED")
+            return super().bulk_update(objs, fields, batch_size)
+
+
 class ScenarioRule(models.Model):
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="rules")
     name = models.CharField(max_length=255)
@@ -121,6 +134,8 @@ class ScenarioRule(models.Model):
         User, on_delete=models.PROTECT, related_name="updated_scenario_rules", null=True, blank=True
     )
 
+    objects = ScenarioRuleQuerySet.as_manager()
+
     class Meta:
         app_label = "snt_malaria"
         ordering = ["-updated_at"]
@@ -128,6 +143,7 @@ class ScenarioRule(models.Model):
             models.UniqueConstraint(
                 fields=["scenario", "priority"],
                 name="scenario_rule_priority_unique",
+                deferrable=Deferrable.IMMEDIATE,
             )
         ]
 

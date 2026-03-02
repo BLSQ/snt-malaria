@@ -2,8 +2,12 @@ from unittest.mock import Mock
 
 from iaso.models import Account
 from iaso.test import TestCase
-from plugins.snt_malaria.api.scenarios.serializers import DuplicateScenarioSerializer, ScenarioWriteSerializer
-from plugins.snt_malaria.models import Scenario
+from plugins.snt_malaria.api.scenarios.serializers import (
+    DuplicateScenarioSerializer,
+    ScenarioRulesReorderSerializer,
+    ScenarioWriteSerializer,
+)
+from plugins.snt_malaria.models import Scenario, ScenarioRule
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION
 
 
@@ -135,3 +139,87 @@ class ScenarioWriteSerializerTestCase(BaseSerializerTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("name", serializer.errors)
         self.assertIn("A scenario with this name already exists for your account.", serializer.errors["name"])
+
+
+class ScenarioRulesSerializerTestCase(BaseSerializerTestCase):
+    def setUp(self):
+        super().setUp()
+        self.rule_1 = ScenarioRule.objects.create(
+            scenario=self.scenario,
+            name="Test Rule",
+            color="#FF0000",
+            matching_criteria={"and": [{"==": [{"var": 1}, 1]}]},
+            priority=1,
+            created_by=self.user_with_basic_perm,
+        )
+        self.rule_2 = ScenarioRule.objects.create(
+            scenario=self.scenario,
+            name="Test Rule 2",
+            color="#00FF00",
+            matching_criteria={"and": [{"==": [{"var": 1}, 1]}]},
+            priority=2,
+            created_by=self.user_with_basic_perm,
+        )
+        self.context["scenario"] = self.scenario
+
+    def test_happy_path(self):
+        payload = {
+            "new_order": [self.rule_2.id, self.rule_1.id],
+        }
+        serializer = ScenarioRulesReorderSerializer(data=payload, context=self.context)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+    def test_missing_rule(self):
+        payload = {
+            "new_order": [self.rule_2.id],
+        }
+        serializer = ScenarioRulesReorderSerializer(data=payload, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("new_order", serializer.errors)
+        self.assertIn(
+            f"Missing rule IDs that belong to the scenario - {{{self.rule_1.id}}}", serializer.errors["new_order"]
+        )
+
+    def test_extra_rule(self):
+        another_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user_with_basic_perm,
+            name="Another Scenario",
+            description="Another scenario description.",
+            start_year=2025,
+            end_year=2026,
+        )
+        extra_rule = ScenarioRule.objects.create(
+            scenario=another_scenario,
+            name="Extra Rule",
+            color="#0000FF",
+            matching_criteria={"and": [{"==": [{"var": 1}, 1]}]},
+            priority=1,
+            created_by=self.user_with_basic_perm,
+        )
+        payload = {
+            "new_order": [self.rule_1.id, self.rule_2.id, extra_rule.id],
+        }
+        serializer = ScenarioRulesReorderSerializer(data=payload, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("new_order", serializer.errors)
+        self.assertIn(f'Invalid pk "{extra_rule.id}"', serializer.errors["new_order"][0])
+
+    def test_new_order_missing(self):
+        payload = {}
+        serializer = ScenarioRulesReorderSerializer(data=payload, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("new_order", serializer.errors)
+        self.assertIn("This field is required.", serializer.errors["new_order"])
+
+    def test_new_order_empty(self):
+        payload = {
+            "new_order": [],
+        }
+        serializer = ScenarioRulesReorderSerializer(data=payload, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("new_order", serializer.errors)
+        error = serializer.errors["new_order"][0]
+        self.assertIn("Missing rule IDs that belong to the scenario - ", error)
+        self.assertIn(str(self.rule_1.id), error)
+        self.assertIn(str(self.rule_2.id), error)

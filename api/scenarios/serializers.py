@@ -9,7 +9,7 @@ from plugins.snt_malaria.api.scenarios.utils import (
     get_interventions,
     get_missing_headers,
 )
-from plugins.snt_malaria.models import Scenario
+from plugins.snt_malaria.models import Scenario, ScenarioRule
 from plugins.snt_malaria.models.intervention import InterventionAssignment
 
 
@@ -138,3 +138,23 @@ class ImportScenarioSerializer(serializers.Serializer):
             raise serializers.ValidationError(errors)
 
         return value
+
+
+class ScenarioRulesReorderSerializer(serializers.Serializer):
+    new_order = serializers.PrimaryKeyRelatedField(many=True, queryset=ScenarioRule.objects.none(), required=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        scenario = self.context["scenario"]
+        self.fields["new_order"].child_relation.queryset = ScenarioRule.objects.filter(scenario=scenario)
+
+    def validate_new_order(self, new_order):
+        scenario = self.context["scenario"]
+        received_ids = set(rule.id for rule in new_order)
+        scenario_rules_ids = set(scenario.rules.order_by("id").values_list("id", flat=True))
+
+        missing_rules = scenario_rules_ids - received_ids
+        if missing_rules:
+            raise serializers.ValidationError(f"Missing rule IDs that belong to the scenario - {missing_rules}")
+
+        return new_order
