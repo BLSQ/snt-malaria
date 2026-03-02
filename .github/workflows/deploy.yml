@@ -6,7 +6,7 @@ on:
     inputs:
       # Branch is chosen by default in github manual actions
       environment:
-        description: Env (staging/demo/prod) or exact env name (snt-malaria, snt-malaria-staging, snt-malaria-demo)
+        description: Env (snt-malaria, snt-malaria-staging, snt-malaria-demo) or exact server name (iaso-snt-malaria-staging-worker, iaso-snt-malaria, iaso-snt-malaria-demo-worker)
         required: true
         default: snt-malaria
       iaso_ref:
