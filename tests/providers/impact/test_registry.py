@@ -25,3 +25,12 @@ class ProviderRegistryTests(TestCase):
         ImpactProviderConfig.objects.create(account=self.account, provider_key="idm")
         provider = get_provider_for_account(self.account)
         self.assertIsInstance(provider, IDMImpactProvider)
+
+    def test_unknown_provider_raises(self):
+        ImpactProviderConfig.objects.create(account=self.account, provider_key="unknown")
+        with self.assertRaises(ValueError):
+            get_provider_for_account(self.account)
+
+    def test_none_provider_config_returns_none(self):
+        provider = get_provider_for_account(self.account)
+        self.assertIsNone(provider)
