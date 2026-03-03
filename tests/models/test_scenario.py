@@ -1,3 +1,5 @@
+from django.db import IntegrityError
+
 from iaso.models import Account, OrgUnit
 from iaso.test import TestCase
 from plugins.snt_malaria.models import (
@@ -120,3 +122,41 @@ class ScenarioModelTestCase(TestCase):
         self.assertFalse(
             InterventionAssignment.objects.filter(rule=self.scenario_rule_1, org_unit=self.org_unit_2).exists()
         )
+
+    def test_reuse_soft_deleted_scenario_names(self):
+        self.scenario.delete()
+        new_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user,
+            name=self.scenario.name,  # same name
+            description="Description of new scenario",
+            start_year=2021,
+            end_year=2031,
+        )
+        new_scenario.full_clean()
+        self.assertEqual(new_scenario.name, self.scenario.name)
+
+        # this can be done multiple times in a row
+        new_scenario.delete()
+        another_scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user,
+            name=self.scenario.name,
+            description="Description of another scenario",
+            start_year=2021,
+            end_year=2031,
+        )
+        another_scenario.full_clean()
+        self.assertEqual(another_scenario.name, self.scenario.name)
+        self.assertEqual(another_scenario.name, new_scenario.name)
+
+    def test_account_name_unicity_not_soft_deleted(self):
+        with self.assertRaisesMessage(IntegrityError, "scenario_name_account_unique"):
+            Scenario.objects.create(
+                account=self.account,
+                created_by=self.user,
+                name=self.scenario.name,
+                description="Oh nooooo, I'm stealing a scenario name :(",
+                start_year=2021,
+                end_year=2031,
+            )

@@ -18,12 +18,16 @@ class Scenario(SoftDeletableModel):
     class Meta:
         app_label = "snt_malaria"
         ordering = ["-updated_at"]
-        unique_together = [["account", "name"]]
         constraints = [
             models.CheckConstraint(
                 check=models.Q(start_year__lte=models.F("end_year")),
                 name="%(app_label)s_%(class)s_start_year_lte_end_year",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["account", "name"],
+                name="scenario_name_account_unique",
+                condition=Q(deleted_at__isnull=True),
+            ),
         ]
 
     account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE)
