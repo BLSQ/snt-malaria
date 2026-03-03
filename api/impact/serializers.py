@@ -21,6 +21,13 @@ class ImpactQuerySerializer(serializers.Serializer):
         account = user.iaso_profile.account
         self.fields["scenario_id"].queryset = Scenario.objects.filter(account=account)
 
+    def validate(self, attrs):
+        year_from = attrs.get("year_from")
+        year_to = attrs.get("year_to")
+        if year_from is not None and year_to is not None and year_from > year_to:
+            raise serializers.ValidationError({"year_from": "year_from must be less than or equal to year_to."})
+        return attrs
+
 
 # -- Response serializers ----------------------------------------------------
 
