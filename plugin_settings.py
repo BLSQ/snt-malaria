@@ -21,5 +21,6 @@ DATABASES = {
         "HOST": os.environ.get("IDM_IMPACT_DB_HOST"),
         "PORT": os.environ.get("IDM_IMPACT_DB_PORT", 5432),
         "OPTIONS": {"options": "-c default_transaction_read_only=on"},
+        "TEST": {"MIRROR": "default"},
     },
 }

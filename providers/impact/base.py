@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
@@ -43,8 +42,8 @@ class ImpactProvider(ABC):
         org_unit: OrgUnit,
         interventions: list[Intervention],
         age_group: str,
-        year_from: Optional[int] = None,
-        year_to: Optional[int] = None,
+        year_from: int | None = None,
+        year_to: int | None = None,
     ) -> list[ImpactResult]:
         """Match impact data for a single org unit and set of interventions.
 
@@ -74,8 +73,8 @@ class ImpactProvider(ABC):
         org_units: list[OrgUnit],
         interventions: list[Intervention],
         age_group: str,
-        year_from: Optional[int] = None,
-        year_to: Optional[int] = None,
+        year_from: int | None = None,
+        year_to: int | None = None,
     ) -> dict[int, list[ImpactResult]]:
         """Fetch impact data for multiple org units sharing the same interventions.
 
@@ -90,7 +89,7 @@ class ImpactProvider(ABC):
         )
 
     @abstractmethod
-    def get_year_range(self) -> tuple[Optional[int], Optional[int]]:
+    def get_year_range(self) -> tuple[int | None, int | None]:
         """Return (min_year, max_year) tuple from the provider's data."""
 
     @abstractmethod

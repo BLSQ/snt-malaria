@@ -31,20 +31,35 @@ IDM_ALL_INTERVENTION_COLUMNS = [
     "lsm",
 ]
 
-# Mapping from Iaso intervention code -> (model_output column, intervention_package.id when deployed)
-IDM_INTERVENTION_MAP = {
-    "cm_public": ("cm", 2),
+# IDM intervention_package table: option name -> package ID.
+# See intervention_package table in the IDM database for the full reference.
+IDM_INTERVENTIONS = {
+    "cm": ("cm", 2),
     "cm_subsidy": ("cm_subsidy", 3),
     "smc": ("smc", 4),
-    "pmc": ("smc", 5),  # PMC shares the smc column with type=smc
-    "itn_campaign": ("itn_c", 6),  # All ITN campaign variants map to itn_c
-    "itn_campaign_pbo": ("itn_c", 6),
-    "itn_campaign_ig2": ("itn_c", 6),
-    "itn_routine": ("itn_r", 7),
+    "pmc": ("smc", 5),
+    "itn_c": ("itn_c", 6),
+    "itn_r": ("itn_r", 7),
     "irs": ("irs", 8),
     "vacc": ("vacc", 9),
     "iptp": ("iptp", 10),
     "lsm": ("lsm", 11),
+}
+
+# Mapping from Iaso intervention code -> (model_output column, intervention_package.id)
+IASO_TO_IDM_INTERVENTION_MAP = {
+    "cm_public": IDM_INTERVENTIONS["cm"],
+    "cm_subsidy": IDM_INTERVENTIONS["cm_subsidy"],
+    "smc": IDM_INTERVENTIONS["smc"],
+    "pmc": IDM_INTERVENTIONS["pmc"],
+    "itn_campaign": IDM_INTERVENTIONS["itn_c"],
+    "itn_campaign_pbo": IDM_INTERVENTIONS["itn_c"],
+    "itn_campaign_ig2": IDM_INTERVENTIONS["itn_c"],
+    "itn_routine": IDM_INTERVENTIONS["itn_r"],
+    "irs": IDM_INTERVENTIONS["irs"],
+    "vacc": IDM_INTERVENTIONS["vacc"],
+    "iptp": IDM_INTERVENTIONS["iptp"],
+    "lsm": IDM_INTERVENTIONS["lsm"],
 }
 
 
@@ -322,10 +337,10 @@ class IDMImpactProvider(ImpactProvider):
         if not code:
             raise ValueError("Intervention has no code")
 
-        if code not in IDM_INTERVENTION_MAP:
+        if code not in IASO_TO_IDM_INTERVENTION_MAP:
             raise ValueError(f"IDM does not support intervention with code {code!r}.")
 
-        column, package_id = IDM_INTERVENTION_MAP[code]
+        column, package_id = IASO_TO_IDM_INTERVENTION_MAP[code]
         filter_keys.add(f"{column}={package_id}")
         return filter_keys
 
