@@ -47,18 +47,21 @@ export const useCreateUpdateScenarioRule = (
                 ? matchingCriteriaToJsonLogic(body.matching_criteria)
                 : undefined;
 
+            const org_units_excluded = body.org_units_excluded?.split(',');
+            const org_units_included = body.org_units_included?.split(',');
+
             return body.id
                 ? patchRequest(`/api/snt_malaria/scenario_rules/${body.id}/`, {
                       ...body,
                       matching_criteria,
-                      org_units_excluded: body.org_units_excluded?.split(','),
-                      org_units_included: body.org_units_included?.split(','),
+                      org_units_excluded,
+                      org_units_included,
                   })
                 : postRequest(`/api/snt_malaria/scenario_rules/`, {
                       ...body,
                       matching_criteria,
-                      org_units_excluded: body.org_units_excluded?.split(','),
-                      org_units_included: body.org_units_included?.split(','),
+                      org_units_excluded,
+                      org_units_included,
                   });
         },
         options: {
