@@ -1,0 +1,129 @@
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+
+from iaso.models import OrgUnit
+from plugins.snt_malaria.models import Intervention
+
+
+@dataclass
+class ImpactMetricWithConfidenceInterval:
+    """A metric value with optional confidence interval bounds."""
+
+    value: float | None = None
+    lower: float | None = None
+    upper: float | None = None
+
+    def __add__(self, other: ImpactMetricWithConfidenceInterval) -> ImpactMetricWithConfidenceInterval:
+        """Component-wise addition. None means 'no contribution'."""
+
+        def _add(a: float | None, b: float | None) -> float | None:
+            if a is None and b is None:
+                return None
+            return (a or 0) + (b or 0)
+
+        return ImpactMetricWithConfidenceInterval(
+            value=_add(self.value, other.value),
+            lower=_add(self.lower, other.lower),
+            upper=_add(self.upper, other.upper),
+        )
+
+    def __truediv__(self, divisor: int | float) -> ImpactMetricWithConfidenceInterval:
+        """Component-wise division by a scalar."""
+        if divisor == 0:
+            return ImpactMetricWithConfidenceInterval()
+        return ImpactMetricWithConfidenceInterval(
+            value=self.value / divisor if self.value is not None else None,
+            lower=self.lower / divisor if self.lower is not None else None,
+            upper=self.upper / divisor if self.upper is not None else None,
+        )
+
+
+@dataclass
+class ImpactResult:
+    """Typed result returned by ImpactProvider.match_impact.
+
+    Metrics are wrapped in MetricWithCI to carry confidence interval bounds.
+    """
+
+    year: int
+    population: float
+    number_cases: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+    number_severe_cases: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+    prevalence_rate: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+    direct_deaths: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+
+
+class ImpactProvider(ABC):
+    """Abstract base class for impact data providers.
+
+    Each provider connects to a specific external impact data source
+    and normalizes the data to a common format consumed by the API views.
+    The ABC speaks in Iaso domain objects (OrgUnit, Intervention); each
+    concrete provider handles its own internal translation (name mapping,
+    intervention mapping, query building) as a private concern.
+
+    Contract: implementations must return at most one ImpactResult per year
+    and raise ValueError if their data source contains duplicates.
+    """
+
+    @abstractmethod
+    def match_impact(
+        self,
+        org_unit: OrgUnit,
+        interventions: list[Intervention],
+        age_group: str,
+        year_from: int | None = None,
+        year_to: int | None = None,
+    ) -> list[ImpactResult]:
+        """Match impact data for a single org unit and set of interventions.
+
+        Args:
+            org_unit: The Iaso OrgUnit to match against the provider's admin data.
+            interventions: List of Iaso Intervention instances deployed in this org unit.
+            age_group: Provider-specific age group filter (e.g. "under5", "allAges").
+            year_from: Start year filter (inclusive), or None.
+            year_to: End year filter (inclusive), or None.
+
+        Returns:
+            List of ImpactResult instances, one per year. Implementations must
+            ensure year uniqueness and raise ValueError on duplicates.
+        """
+
+    @property
+    def supports_bulk(self) -> bool:
+        """Whether this provider supports batch queries via match_impact_bulk.
+
+        Providers that override match_impact_bulk should return True.
+        The service layer uses this to decide between bulk and per-org-unit calls.
+        """
+        return False
+
+    def match_impact_bulk(
+        self,
+        org_units: list[OrgUnit],
+        interventions: list[Intervention],
+        age_group: str,
+        year_from: int | None = None,
+        year_to: int | None = None,
+    ) -> dict[int, list[ImpactResult]]:
+        """Fetch impact data for multiple org units sharing the same interventions.
+
+        Default: raises NotImplementedError. Providers that support bulk queries
+        should override both this method and the supports_bulk property.
+
+        Returns:
+            Dict keyed by org_unit.id -> list of ImpactResult (one per year).
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support bulk queries. Check supports_bulk before calling."
+        )
+
+    @abstractmethod
+    def get_year_range(self) -> tuple[int | None, int | None]:
+        """Return (min_year, max_year) tuple from the provider's data."""
+
+    @abstractmethod
+    def get_age_groups(self) -> list[str]:
+        """Return a sorted list of age group labels."""
