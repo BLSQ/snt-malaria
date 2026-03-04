@@ -17,12 +17,12 @@ def get_provider_for_account(account) -> Optional[ImpactProvider]:
     if config is None:
         return None
 
-    if config.provider_key == "swisstph":
+    if config.provider_key == ImpactProviderConfig.ProviderKey.SWISSTPH:
         from plugins.snt_malaria.providers.impact.swisstph import SwissTPHImpactProvider
 
         return SwissTPHImpactProvider()
 
-    elif config.provider_key == "idm":
+    if config.provider_key == ImpactProviderConfig.ProviderKey.IDM:
         from plugins.snt_malaria.providers.impact.idm import IDMImpactProvider
 
         return IDMImpactProvider()

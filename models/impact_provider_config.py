@@ -7,10 +7,9 @@ class ImpactProviderConfig(models.Model):
         verbose_name = "Impact provider configuration"
         verbose_name_plural = "Impact provider configurations"
 
-    PROVIDER_CHOICES = [
-        ("swisstph", "SwissTPH"),
-        ("idm", "IDM"),
-    ]
+    class ProviderKey(models.TextChoices):
+        SWISSTPH = "swisstph", "SwissTPH"
+        IDM = "idm", "IDM"
 
     account = models.OneToOneField(
         "iaso.Account",
@@ -19,7 +18,7 @@ class ImpactProviderConfig(models.Model):
     )
     provider_key = models.CharField(
         max_length=50,
-        choices=PROVIDER_CHOICES,
+        choices=ProviderKey.choices,
         help_text="The impact data provider to use for this account.",
     )
 
