@@ -13,6 +13,8 @@ export type ScenarioRuleResponse = {
     color: string;
     matching_criteria: JsonLogicTree;
     intervention_properties: InterventionProperties[];
+    org_units_excluded?: number[];
+    org_units_included?: number[];
 };
 
 export const useGetScenarioRules = (

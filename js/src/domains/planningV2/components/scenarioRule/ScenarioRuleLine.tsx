@@ -5,8 +5,7 @@ import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';
 import { noOp } from 'Iaso/utils';
 import { MESSAGES } from '../../../messages';
-import { InterventionCategory } from '../../../planning/types/interventions';
-import { MetricTypeCategory } from '../../../planning/types/metrics';
+import { usePlanningContext } from '../../contexts/PlanningContext';
 import { useDeleteScenarioRule } from '../../hooks/useDeleteScenarioRule';
 import { ScenarioRule } from '../../types/scenarioRule';
 import { EditScenarioRuleModal } from './ScenarioRuleModal';
@@ -31,19 +30,14 @@ const styles: SxStyles = {
 type Props = {
     scenarioId: number;
     rule: ScenarioRule;
-    metricTypeCategories: MetricTypeCategory[];
-    interventionCategories: InterventionCategory[];
 };
 
-export const ScenarioRuleLine: FC<Props> = ({
-    scenarioId,
-    rule,
-    metricTypeCategories,
-    interventionCategories,
-}) => {
+export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule }) => {
     const { formatMessage } = useSafeIntl();
     const { mutateAsync: deleteScenarioRule } =
         useDeleteScenarioRule(scenarioId);
+
+    const { metricTypeCategories } = usePlanningContext();
 
     const metricTypes = useMemo(
         () => metricTypeCategories.flatMap(category => category.items),
@@ -87,8 +81,6 @@ export const ScenarioRuleLine: FC<Props> = ({
                     scenarioId={scenarioId}
                     onClose={noOp}
                     iconProps={{}}
-                    metricTypeCategories={metricTypeCategories}
-                    interventionCategories={interventionCategories}
                     rule={rule}
                 />
                 <DeleteModal

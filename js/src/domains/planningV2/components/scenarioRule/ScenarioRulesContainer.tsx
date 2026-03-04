@@ -2,8 +2,6 @@ import React, { FC, useCallback } from 'react';
 import { Card, CardContent, CardHeader } from '@mui/material';
 import { LoadingSpinner, SortableList } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import { InterventionCategory } from '../../../planning/types/interventions';
-import { MetricTypeCategory } from '../../../planning/types/metrics';
 import { ScenarioRule } from '../../types/scenarioRule';
 import { ScenarioRuleLine } from './ScenarioRuleLine';
 import { ScenarioRulesHeader } from './ScenarioRulesHeader';
@@ -48,8 +46,6 @@ type Props = {
     isLoading: boolean;
     onApplyRules?: () => void;
     rules: ScenarioRule[];
-    metricTypeCategories: MetricTypeCategory[];
-    interventionCategories: InterventionCategory[];
 };
 
 export const ScenarioRulesContainer: FC<Props> = ({
@@ -57,8 +53,6 @@ export const ScenarioRulesContainer: FC<Props> = ({
     isLoading,
     onApplyRules,
     rules,
-    metricTypeCategories,
-    interventionCategories,
 }) => {
     const onRulesReorder = useCallback((newRules: ScenarioRule[]) => {
         // This function will be called with the new order of rules after drag-and-drop
@@ -74,8 +68,6 @@ export const ScenarioRulesContainer: FC<Props> = ({
                     <ScenarioRulesHeader
                         scenarioId={scenarioId}
                         onApplyRules={onApplyRules}
-                        metricTypeCategories={metricTypeCategories}
-                        interventionCategories={interventionCategories}
                     />
                 }
             />
@@ -94,10 +86,6 @@ export const ScenarioRulesContainer: FC<Props> = ({
                             return (
                                 <ScenarioRuleLine
                                     scenarioId={scenarioId}
-                                    metricTypeCategories={metricTypeCategories}
-                                    interventionCategories={
-                                        interventionCategories
-                                    }
                                     key={item.id}
                                     rule={item}
                                 />

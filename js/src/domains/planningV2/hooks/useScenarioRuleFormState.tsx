@@ -14,6 +14,8 @@ export type ScenarioRuleFormValues = {
     color: string;
     intervention_properties: InterventionProperties[];
     matching_criteria: MetricTypeCriterion[];
+    org_units_excluded?: string; // comma separated list of org unit ids
+    org_units_included?: string; // comma separated list of org unit ids
 };
 
 export const defaultMatchingCriteria: MetricTypeCriterion = {

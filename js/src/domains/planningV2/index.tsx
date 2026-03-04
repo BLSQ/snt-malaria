@@ -20,6 +20,7 @@ import { useGetMetricCategories } from '../planning/hooks/useGetMetrics';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { ScenarioRulesContainer } from './components/scenarioRule/ScenarioRulesContainer';
+import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { useRefreshAssignments } from './hooks/useRefreshInterventionAssignment';
 
@@ -53,7 +54,12 @@ export const PlanningV2: FC = () => {
     }, [refreshAssignments]);
 
     return metricTypeCategories && interventionCategories ? (
-        <>
+        <PlanningProvider
+            scenarioId={params.scenarioId}
+            orgUnits={orgUnits || []}
+            metricTypeCategories={metricTypeCategories}
+            interventionCategories={interventionCategories}
+        >
             {isLoadingOrgUnits && <LoadingSpinner />}
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
             <PageContainer>
@@ -72,8 +78,6 @@ export const PlanningV2: FC = () => {
                                 scenarioId={params.scenarioId}
                                 rules={scenarioRules || []}
                                 isLoading={isFetchingRules}
-                                metricTypeCategories={metricTypeCategories}
-                                interventionCategories={interventionCategories}
                             />
                         </PaperFullHeight>
                     </Grid>
@@ -94,6 +98,6 @@ export const PlanningV2: FC = () => {
                     )}
                 </Grid>
             </PageContainer>
-        </>
+        </PlanningProvider>
     ) : null;
 };

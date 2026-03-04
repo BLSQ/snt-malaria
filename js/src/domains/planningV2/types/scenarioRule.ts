@@ -7,8 +7,8 @@ export type ScenarioRule = {
     org_unit_scope?: number[];
     color: string;
     org_units_matched?: number[];
-    org_units_excluded?: number[];
-    org_units_included?: number[];
+    org_units_excluded?: string; // comma separated list of org unit ids
+    org_units_included?: string; // comma separated list of org unit ids
     intervention_properties: InterventionProperties[];
 };
 

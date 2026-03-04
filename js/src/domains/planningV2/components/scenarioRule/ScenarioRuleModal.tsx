@@ -9,8 +9,6 @@ import {
 import { FormikProvider } from 'formik';
 import { EditIconButton } from 'Iaso/components/Buttons/EditIconButton';
 import { MESSAGES } from '../../../messages';
-import { InterventionCategory } from '../../../planning/types/interventions';
-import { MetricTypeCategory } from '../../../planning/types/metrics';
 import { useCreateUpdateScenarioRule } from '../../hooks/useCreateUpdateScenarioRule';
 import {
     defaultScenarioRuleValues,
@@ -43,8 +41,6 @@ type Props = {
     isOpen: boolean;
     closeDialog: () => void;
     onClose: () => void;
-    metricTypeCategories: MetricTypeCategory[];
-    interventionCategories: InterventionCategory[];
     rule?: ScenarioRule;
 };
 
@@ -53,8 +49,6 @@ const ScenarioRuleDialog: FC<Props> = ({
     isOpen,
     closeDialog,
     onClose,
-    metricTypeCategories,
-    interventionCategories,
     rule,
 }) => {
     const { mutate: createUpdateScenarioRule, isLoading: isSaving } =
@@ -70,6 +64,8 @@ const ScenarioRuleDialog: FC<Props> = ({
                       color: rule.color,
                       intervention_properties: rule.intervention_properties,
                       matching_criteria: rule.matching_criteria,
+                      org_units_excluded: rule.org_units_excluded,
+                      org_units_included: rule.org_units_included,
                   }
                 : { ...defaultScenarioRuleValues, scenario: scenarioId },
         [rule, scenarioId],
@@ -131,10 +127,7 @@ const ScenarioRuleDialog: FC<Props> = ({
             allowConfirm={formik.dirty && formik.isValid && !isSaving}
         >
             <FormikProvider value={formik}>
-                <ScenarioRuleForm
-                    metricTypeCategories={metricTypeCategories}
-                    interventionCategories={interventionCategories}
-                />
+                <ScenarioRuleForm />
             </FormikProvider>
         </ConfirmCancelModal>
     );
