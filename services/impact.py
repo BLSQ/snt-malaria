@@ -4,8 +4,7 @@ from typing import Optional
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Budget, Intervention, InterventionAssignment, Scenario
-from plugins.snt_malaria.providers.impact.base import ImpactProvider, ImpactResult
-from plugins.snt_malaria.types import ImpactMetricWithConfidenceInterval
+from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProvider, ImpactResult
 
 
 @dataclass

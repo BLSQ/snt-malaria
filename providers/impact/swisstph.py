@@ -5,8 +5,7 @@ from django.db.models import Avg, Count, Max, Min
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
 from plugins.snt_malaria.models.swisstph_impact import SwissTPHImpactData
-from plugins.snt_malaria.providers.impact.base import ImpactProvider, ImpactResult
-from plugins.snt_malaria.types import ImpactMetricWithConfidenceInterval
+from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProvider, ImpactResult
 
 
 SWISSTPH_DATABASE_ALIAS = "impact_swisstph"

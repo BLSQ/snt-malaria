@@ -5,8 +5,7 @@ from django.db.models import Max, Min
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
 from plugins.snt_malaria.models.idm_impact import IDMAgeGroup, IDMModelOutput
-from plugins.snt_malaria.providers.impact.base import ImpactProvider, ImpactResult
-from plugins.snt_malaria.types import ImpactMetricWithConfidenceInterval
+from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProvider, ImpactResult
 
 
 IDM_DATABASE_ALIAS = "impact_idm"

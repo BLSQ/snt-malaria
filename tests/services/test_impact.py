@@ -4,13 +4,12 @@ from unittest.mock import Mock
 from iaso.models import OrgUnit, OrgUnitType
 from iaso.test import TestCase
 from plugins.snt_malaria.models import Budget, Intervention, InterventionAssignment, InterventionCategory, Scenario
-from plugins.snt_malaria.providers.impact.base import ImpactResult
+from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactResult
 from plugins.snt_malaria.services.impact import (
     ImpactService,
     OrgUnitImpactMetrics,
     _aggregate_metrics,
 )
-from plugins.snt_malaria.types import ImpactMetricWithConfidenceInterval
 
 
 def _metric(value=None, lower=None, upper=None):

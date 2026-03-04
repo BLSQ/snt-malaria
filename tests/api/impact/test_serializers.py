@@ -4,12 +4,12 @@ from iaso.models import Account
 from iaso.test import TestCase
 from plugins.snt_malaria.api.impact.serializers import ImpactQuerySerializer, ScenarioImpactSerializer
 from plugins.snt_malaria.models import Scenario
+from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval
 from plugins.snt_malaria.services.impact import (
     OrgUnitImpactMetrics,
     ScenarioImpactMetrics,
     YearImpactMetrics,
 )
-from plugins.snt_malaria.types import ImpactMetricWithConfidenceInterval
 
 
 def _metric(value=None, lower=None, upper=None):
