@@ -1,7 +1,12 @@
 import React, { FC, useCallback } from 'react';
-import { Card, CardContent, CardHeader } from '@mui/material';
-import { LoadingSpinner, SortableList } from 'bluesquare-components';
+import { arrayMove } from '@dnd-kit/helpers';
+import { DragDropProvider } from '@dnd-kit/react';
+import { isSortable } from '@dnd-kit/react/sortable';
+import { Card, CardContent, CardHeader, List } from '@mui/material';
+import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { SortableListItem } from '../../../../components/SortableListItem';
+import { useReorderScenarioRules } from '../../hooks/useReorderScenarioRules';
 import { ScenarioRule } from '../../types/scenarioRule';
 import { ScenarioRuleLine } from './ScenarioRuleLine';
 import { ScenarioRulesHeader } from './ScenarioRulesHeader';
@@ -27,7 +32,6 @@ const styles: SxStyles = {
     },
     rulesContainer: {
         padding: 0,
-        backgroundColor: 'paper.default',
     },
     ruleBox: {
         mb: 2,
@@ -38,6 +42,7 @@ const styles: SxStyles = {
         overflow: 'auto',
         flexDirection: 'column',
         alignItems: 'flex-start',
+        backgroundColor: 'white',
     },
 };
 
@@ -45,7 +50,6 @@ type Props = {
     scenarioId: number;
     isLoading: boolean;
     onApplyRules?: () => void;
-    onReorderRules: (newRules: ScenarioRule[]) => void;
     rules: ScenarioRule[];
 };
 
@@ -53,23 +57,40 @@ export const ScenarioRulesContainer: FC<Props> = ({
     scenarioId,
     isLoading,
     onApplyRules,
-    onReorderRules,
     rules,
 }) => {
-    // Using a happy flow to preserve DND animations
-    const [orderedRules, setOrderedRules] =
-        React.useState<ScenarioRule[]>(rules);
-
-    React.useEffect(() => {
-        setOrderedRules(rules);
-    }, [rules]);
+    const { mutate: reorderScenarioRules } =
+        useReorderScenarioRules(scenarioId);
 
     const handleReorder = useCallback(
-        (newOrder: ScenarioRule[]) => {
-            setOrderedRules(newOrder);
-            onReorderRules(newOrder);
+        (event: {
+            suspend: () => { resume: () => void; abort: () => void };
+            canceled?: boolean;
+            operation: any;
+        }) => {
+            if (event.canceled) return;
+
+            const { source } = event.operation;
+
+            if (isSortable(source)) {
+                const { initialIndex, index } = source as {
+                    initialIndex: number;
+                    index: number;
+                };
+                if (initialIndex === index) return;
+
+                const newOrder = arrayMove(rules, initialIndex, index);
+
+                const { resume, abort } = event.suspend();
+
+                reorderScenarioRules(
+                    newOrder.map(r => r.id),
+                    // abort doesn't work, a topic is open about it: https://github.com/clauderic/dnd-kit/issues/1769
+                    { onSuccess: resume, onError: abort },
+                );
+            }
         },
-        [onReorderRules],
+        [reorderScenarioRules, rules],
     );
 
     return (
@@ -88,23 +109,23 @@ export const ScenarioRulesContainer: FC<Props> = ({
                 {isLoading ? (
                     <LoadingSpinner absolute={true} />
                 ) : (
-                    <SortableList
-                        items={orderedRules}
-                        onChange={handleReorder}
-                        listItemSx={styles.ruleBox}
-                        listSx={styles.rulesContainer}
-                        dragDelay={250}
-                        disableKeyboard={true}
-                        RenderItem={({ item }) => {
-                            return (
-                                <ScenarioRuleLine
-                                    scenarioId={scenarioId}
-                                    key={item.id}
-                                    rule={item}
-                                />
-                            );
-                        }}
-                    />
+                    <DragDropProvider onDragEnd={handleReorder}>
+                        <List sx={styles.rulesContainer}>
+                            {rules.map((rule, index) => (
+                                <SortableListItem
+                                    sx={styles.ruleBox}
+                                    key={rule.id}
+                                    id={rule.id ?? 0}
+                                    index={index}
+                                >
+                                    <ScenarioRuleLine
+                                        scenarioId={scenarioId}
+                                        rule={rule}
+                                    />
+                                </SortableListItem>
+                            ))}
+                        </List>
+                    </DragDropProvider>
                 )}
             </CardContent>
         </Card>

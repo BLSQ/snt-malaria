@@ -23,8 +23,6 @@ import { ScenarioRulesContainer } from './components/scenarioRule/ScenarioRulesC
 import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { useRefreshAssignments } from './hooks/useRefreshInterventionAssignment';
-import { useReorderScenarioRules as useReorderScenarioRules } from './hooks/useReorderScenarioRules';
-import { ScenarioRule } from './types/scenarioRule';
 
 type PlanningParams = {
     scenarioId: number;
@@ -50,17 +48,6 @@ export const PlanningV2: FC = () => {
 
     const { mutate: refreshAssignments } = useRefreshAssignments(
         params.scenarioId,
-    );
-
-    const { mutate: reorderScenarioRules } = useReorderScenarioRules(
-        params.scenarioId,
-    );
-
-    const onReorderRules = useCallback(
-        (newRules: ScenarioRule[]) => {
-            reorderScenarioRules(newRules.map(r => r.id));
-        },
-        [reorderScenarioRules],
     );
 
     const onApplyRules = useCallback(() => {
@@ -92,7 +79,6 @@ export const PlanningV2: FC = () => {
                                 scenarioId={params.scenarioId}
                                 rules={scenarioRules || []}
                                 isLoading={isFetchingRules}
-                                onReorderRules={onReorderRules}
                             />
                         </PaperFullHeight>
                     </Grid>
