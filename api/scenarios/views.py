@@ -82,7 +82,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     # Custom action to duplicate a scenario
     @swagger_auto_schema(request_body=ScenarioWriteSerializer(many=False))
     @action(detail=True, methods=["post"], url_path="duplicate")
-    def duplicate(self, request):
+    def duplicate(self, request, pk=None):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
