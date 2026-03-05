@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { RoutePath } from 'Iaso/constants/routes';
+import { SHOW_DEV_FEATURES } from 'Iaso/utils/featureFlags';
 
 import { Planning } from '../domains/planning';
 import { PlanningV2 } from '../domains/planningV2';
@@ -36,6 +37,7 @@ export const compareOptimizePath: RoutePath = {
     routerUrl: `${baseUrls.compareOptimize}/*`,
     element: <CompareOptimize />,
     permissions: [],
+    featureFlag: SHOW_DEV_FEATURES,
 };
 
 export const settingsPath: RoutePath = {
