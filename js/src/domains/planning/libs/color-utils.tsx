@@ -3,7 +3,14 @@ import { hslToRgb } from '@mui/material';
 const [sat, lightness] = [0.69, 0.84];
 export const maxHue = 350;
 
-export const purples = ['#673AB7', '#7E57C2', '#B39DDB'];
+export const purples = [
+    '#673AB7',
+    '#7E57C2',
+    '#B39DDB',
+    '#CE93D8',
+    '#E1BEE7',
+    '#F3E5F5',
+];
 
 export const INTERVENTION_COLORS = {
     ACTs: '#A2CAEA',
