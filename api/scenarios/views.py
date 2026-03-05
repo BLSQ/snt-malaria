@@ -80,6 +80,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError(str(e))
 
     # Custom action to duplicate a scenario
+    @transaction.atomic
     @swagger_auto_schema(request_body=ScenarioWriteSerializer(many=False))
     @action(detail=True, methods=["post"], url_path="duplicate")
     def duplicate(self, request, pk=None):
@@ -94,6 +95,8 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             raise ValidationError(f"Error saving scenario: {e}")
 
         duplicate_rules(initial_scenario, new_scenario, request.user)
+
+        new_scenario.refresh_assignments(request.user)
 
         serializer = ScenarioSerializer(new_scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

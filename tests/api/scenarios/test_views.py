@@ -479,6 +479,9 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(result["start_year"], ["Start year should be lower or equal end year."])
 
     def test_scenario_duplicate_with_full_perm(self):
+        # Making sure that the right assignments are in place before duplication
+        self.scenario.refresh_assignments(self.user_with_full_perm)
+
         payload = {
             "name": f"Copy of {self.scenario.name}",
             "description": self.scenario.description,
@@ -512,10 +515,22 @@ class ScenarioAPITestCase(APITestCase):
             self.assertEqual(original_rule.org_units_scope, duplicated_rule.org_units_scope)
             self.assertNotEqual(original_rule.id, duplicated_rule.id)
 
-        # right now, we don't refresh assignments when duplicating, but when we do, this should be updated
-        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 0)
+        # assignments are also duplicated (re generated based on the duplicated rules)
+        duplicated_assignments = duplicated_scenario.intervention_assignments.all()
+        initial_assignments = self.scenario.intervention_assignments.all()
+        self.assertEqual(duplicated_assignments.count(), initial_assignments.count())
+
+        # Picking a similar assignment to check if it's indeed a different object
+        duplicated_assignment_district_1 = duplicated_assignments.get(org_unit=self.district1)
+        initial_assignment_district_1 = initial_assignments.get(org_unit=self.district1)
+        self.assertEqual(duplicated_assignment_district_1.intervention, initial_assignment_district_1.intervention)
+        self.assertEqual(duplicated_assignment_district_1.org_unit, initial_assignment_district_1.org_unit)
+        self.assertNotEqual(duplicated_assignment_district_1.id, initial_assignment_district_1.id)
 
     def test_scenario_duplicate_with_basic_perm(self):
+        # Making sure that the right assignments are in place before duplication
+        self.scenario.refresh_assignments(self.user_with_full_perm)
+
         payload = {
             "name": f"Copy of {self.scenario.name}",
             "description": self.scenario.description,
@@ -535,8 +550,17 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(duplicated_scenario.description, self.scenario.description)
         self.assertEqual(duplicated_scenario.name, payload["name"])
 
-        # right now, we don't refresh assignments when duplicating, but when we do, this should be updated
-        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 0)
+        # assignments are also duplicated (re generated based on the duplicated rules)
+        duplicated_assignments = duplicated_scenario.intervention_assignments.all()
+        initial_assignments = self.scenario.intervention_assignments.all()
+        self.assertEqual(duplicated_assignments.count(), initial_assignments.count())
+
+        # Picking a similar assignment to check if it's indeed a different object
+        duplicated_assignment_district_1 = duplicated_assignments.get(org_unit=self.district1)
+        initial_assignment_district_1 = initial_assignments.get(org_unit=self.district1)
+        self.assertEqual(duplicated_assignment_district_1.intervention, initial_assignment_district_1.intervention)
+        self.assertEqual(duplicated_assignment_district_1.org_unit, initial_assignment_district_1.org_unit)
+        self.assertNotEqual(duplicated_assignment_district_1.id, initial_assignment_district_1.id)
 
         # Making sure that the base scenario didn't change
         self.scenario.refresh_from_db()
@@ -602,6 +626,9 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(Scenario.objects.count(), 1)
 
     def test_scenario_duplicate_multiple_times_success(self):
+        # Making sure that the right assignments are in place before duplication
+        self.scenario.refresh_assignments(self.user_with_full_perm)
+
         # First duplication
         payload = {
             "name": f"{self.scenario.name} - copy 1",
@@ -616,8 +643,10 @@ class ScenarioAPITestCase(APITestCase):
         duplicated_scenario = Scenario.objects.latest("id")
 
         self.assertEqual(f"{self.scenario.name} - copy 1", duplicated_scenario.name)
-        # right now, we don't refresh assignments when duplicating, but when we do, this should be updated
-        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 0)
+        # assignments are also duplicated (re generated based on the duplicated rules)
+        duplicated_assignments = duplicated_scenario.intervention_assignments.all()
+        initial_assignments = self.scenario.intervention_assignments.all()
+        self.assertEqual(duplicated_assignments.count(), initial_assignments.count())
 
         # Second duplication
         payload = {
@@ -630,11 +659,14 @@ class ScenarioAPITestCase(APITestCase):
         response = self.client.post(f"{self.BASE_URL}{duplicated_scenario.id}/duplicate/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Scenario.objects.count(), 3)
-        duplicated_scenario = Scenario.objects.latest("id")
+        new_duplicated_scenario = Scenario.objects.latest("id")
 
-        self.assertIn(f"{self.scenario.name} - copy 2", duplicated_scenario.name)
-        # right now, we don't refresh assignments when duplicating, but when we do, this should be updated
-        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 0)
+        self.assertIn(f"{self.scenario.name} - copy 2", new_duplicated_scenario.name)
+        # assignments are also duplicated (re generated based on the duplicated rules)
+        new_duplicated_assignments = new_duplicated_scenario.intervention_assignments.all()
+        initial_assignments = self.scenario.intervention_assignments.all()
+        self.assertEqual(new_duplicated_assignments.count(), initial_assignments.count())
+        self.assertEqual(new_duplicated_assignments.count(), duplicated_assignments.count())
 
     def test_scenario_export_to_csv(self):
         """
