@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from iaso.api.common import CONTENT_TYPE_CSV
 from iaso.utils.org_units import get_valid_org_units_with_geography
 from plugins.snt_malaria.api.scenarios.utils import (
+    duplicate_rules,
     get_assignments_from_row,
     get_csv_headers,
     get_csv_row,
@@ -92,6 +93,8 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             scenario = serializer.save(account=request.user.iaso_profile.account, created_by=request.user)
         except Exception as e:
             raise ValidationError(f"Error saving scenario: {e}")
+
+        duplicate_rules(serializer.validated_data["scenario_to_duplicate"], scenario, request.user)
 
         serializer = ScenarioSerializer(scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -492,8 +492,29 @@ class ScenarioAPITestCase(APITestCase):
 
         self.assertEqual(Scenario.objects.count(), 2)
         duplicated_scenario = Scenario.objects.latest("id")
-        self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
-        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
+        self.assertEqual(duplicated_scenario.name, payload["name"])
+        self.assertEqual(duplicated_scenario.description, payload["description"])
+        self.assertEqual(duplicated_scenario.start_year, payload["start_year"])
+        self.assertEqual(duplicated_scenario.end_year, payload["end_year"])
+
+        duplicated_scenario_rules = duplicated_scenario.rules.all()
+        scenario_rules = self.scenario.rules.all()
+        self.assertEqual(duplicated_scenario_rules.count(), scenario_rules.count())
+        for original_rule, duplicated_rule in zip(
+            scenario_rules.order_by("priority"), duplicated_scenario_rules.order_by("priority")
+        ):
+            self.assertEqual(original_rule.name, duplicated_rule.name)
+            self.assertEqual(original_rule.priority, duplicated_rule.priority)
+            self.assertEqual(original_rule.color, duplicated_rule.color)
+            self.assertEqual(original_rule.matching_criteria, duplicated_rule.matching_criteria)
+            self.assertEqual(original_rule.org_units_matched, duplicated_rule.org_units_matched)
+            self.assertEqual(original_rule.org_units_excluded, duplicated_rule.org_units_excluded)
+            self.assertEqual(original_rule.org_units_included, duplicated_rule.org_units_included)
+            self.assertEqual(original_rule.org_units_scope, duplicated_rule.org_units_scope)
+            self.assertNotEqual(original_rule.id, duplicated_rule.id)
+
+        # right now, we don't refresh assignments when duplicating, but when we do, this should be updated
+        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 0)
 
     def test_scenario_duplicate_with_basic_perm(self):
         payload = {
@@ -509,14 +530,15 @@ class ScenarioAPITestCase(APITestCase):
 
         self.assertEqual(Scenario.objects.count(), 2)
         duplicated_scenario = Scenario.objects.latest("id")
-        self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
-        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
         self.assertEqual(duplicated_scenario.created_by, self.user_with_basic_perm)
         self.assertEqual(duplicated_scenario.account, self.account)
         self.assertEqual(duplicated_scenario.start_year, self.scenario.start_year)
         self.assertEqual(duplicated_scenario.end_year, self.scenario.end_year)
         self.assertEqual(duplicated_scenario.description, self.scenario.description)
         self.assertEqual(duplicated_scenario.name, payload["name"])
+
+        # right now, we don't refresh assignments when duplicating, but when we do, this should be updated
+        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 0)
 
         # Making sure that the base scenario didn't change
         self.scenario.refresh_from_db()
@@ -601,7 +623,8 @@ class ScenarioAPITestCase(APITestCase):
         duplicated_scenario = Scenario.objects.latest("id")
 
         self.assertEqual(f"{self.scenario.name} - copy 1", duplicated_scenario.name)
-        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
+        # right now, we don't refresh assignments when duplicating, but when we do, this should be updated
+        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 0)
 
         # Second duplication
         payload = {
@@ -617,7 +640,8 @@ class ScenarioAPITestCase(APITestCase):
         duplicated_scenario = Scenario.objects.latest("id")
 
         self.assertIn(f"{self.scenario.name} - copy 2", duplicated_scenario.name)
-        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
+        # right now, we don't refresh assignments when duplicating, but when we do, this should be updated
+        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 0)
 
     def test_scenario_export_to_csv(self):
         """

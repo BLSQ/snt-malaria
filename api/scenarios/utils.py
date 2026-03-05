@@ -1,4 +1,7 @@
+from copy import deepcopy
 from datetime import datetime
+
+from django.contrib.auth.models import User
 
 from plugins.snt_malaria.models.intervention import Intervention, InterventionAssignment
 from plugins.snt_malaria.models.scenario import Scenario
@@ -64,3 +67,18 @@ def get_assignments_from_row(user, scenario, row, interventions):
             )
             assignments.append(assignment)
     return assignments
+
+
+def duplicate_rules(scenario_from: Scenario, scenario_to: Scenario, user: User):
+    for rule in scenario_from.rules.all():
+        initial_rule = deepcopy(rule)
+        rule.pk = None
+        rule.scenario = scenario_to
+        rule.created_by = user
+        rule.updated_by = None
+        rule.save()
+
+        for ip in initial_rule.intervention_properties.all():
+            ip.pk = None
+            ip.scenario_rule = rule
+            ip.save()
