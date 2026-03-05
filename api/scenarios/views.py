@@ -27,7 +27,6 @@ from plugins.snt_malaria.models.intervention import Intervention
 
 from .permissions import ScenarioPermission
 from .serializers import (
-    DuplicateScenarioSerializer,
     ImportScenarioSerializer,
     ScenarioRulesReorderSerializer,
     ScenarioSerializer,
@@ -57,8 +56,6 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.method == "GET":
             return ScenarioSerializer
-        if self.action == "duplicate":
-            return DuplicateScenarioSerializer
         return ScenarioWriteSerializer
 
     def get_queryset(self):
@@ -83,20 +80,22 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError(str(e))
 
     # Custom action to duplicate a scenario
-    @swagger_auto_schema(request_body=DuplicateScenarioSerializer(many=False))
-    @action(detail=False, methods=["post"], url_path="duplicate", serializer_class=DuplicateScenarioSerializer)
+    @swagger_auto_schema(request_body=ScenarioWriteSerializer(many=False))
+    @action(detail=True, methods=["post"], url_path="duplicate")
     def duplicate(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        initial_scenario = self.get_object()
+
         try:
-            scenario = serializer.save(account=request.user.iaso_profile.account, created_by=request.user)
+            new_scenario = serializer.save(account=request.user.iaso_profile.account, created_by=request.user)
         except Exception as e:
             raise ValidationError(f"Error saving scenario: {e}")
 
-        duplicate_rules(serializer.validated_data["scenario_to_duplicate"], scenario, request.user)
+        duplicate_rules(initial_scenario, new_scenario, request.user)
 
-        serializer = ScenarioSerializer(scenario)
+        serializer = ScenarioSerializer(new_scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     # Custom action to download scenario as CSV

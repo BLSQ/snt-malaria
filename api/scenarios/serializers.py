@@ -72,27 +72,6 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
         return value
 
 
-class DuplicateScenarioSerializer(ScenarioWriteSerializer):
-    scenario_to_duplicate = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none(), required=True)
-
-    class Meta:
-        model = Scenario
-        fields = ["scenario_to_duplicate", "name", "description", "start_year", "end_year"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        request = self.context.get("request")
-        user = getattr(request, "user", None)
-        if user and user.is_authenticated and user.iaso_profile:
-            account = user.iaso_profile.account
-            self.fields["scenario_to_duplicate"].queryset = Scenario.objects.filter(account=account)
-
-    def save(self, **kwargs):
-        self.validated_data.pop("scenario_to_duplicate", None)
-        scenario = super().save(**self.validated_data, **kwargs)
-        return scenario
-
-
 class ImportScenarioSerializer(serializers.Serializer):
     file = serializers.FileField(required=True)
 
