@@ -4,6 +4,7 @@ import { RoutePath } from 'Iaso/constants/routes';
 
 import { Planning } from '../domains/planning';
 import { PlanningV2 } from '../domains/planningV2';
+import { CompareOptimize } from '../domains/compareOptimize';
 import { Scenarios } from '../domains/scenarios';
 import { Settings } from '../domains/settings';
 import { baseUrls } from './urls';
@@ -30,6 +31,13 @@ export const scenariosPath: RoutePath = {
     permissions: [],
 };
 
+export const compareOptimizePath: RoutePath = {
+    baseUrl: baseUrls.compareOptimize,
+    routerUrl: `${baseUrls.compareOptimize}/*`,
+    element: <CompareOptimize />,
+    permissions: [],
+};
+
 export const settingsPath: RoutePath = {
     baseUrl: baseUrls.settings,
     routerUrl: `${baseUrls.settings}/*`,
@@ -41,5 +49,6 @@ export const routes: RoutePath[] = [
     planningPath,
     planningV2Path,
     scenariosPath,
+    compareOptimizePath,
     settingsPath,
 ];

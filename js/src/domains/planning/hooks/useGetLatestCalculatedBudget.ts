@@ -15,7 +15,9 @@ export const useGetLatestCalculatedBudget = (
         options: {
             cacheTime: Infinity, // disable auto fetch on cache expiration
             enabled: Boolean(scenarioId),
+            // TODO: This might break the planning page if that was intentional to fetch until the budget is calculated
             retry: false,
+            refetchOnWindowFocus: false,
         },
         ignoreErrorCodes: [404],
     });

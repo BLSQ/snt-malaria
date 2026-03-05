@@ -38,6 +38,7 @@ export const theme = createTheme({
         },
         text: {
             primary: '#1F2B3DDE',
+            secondary: alpha('#1F2B3D', 0.6),
         },
         action: {
             hover: alpha(primaryMain, 0.04),
