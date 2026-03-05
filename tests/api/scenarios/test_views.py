@@ -650,7 +650,6 @@ class ScenarioAPITestCase(APITestCase):
 
         # Second duplication
         payload = {
-            "scenario_to_duplicate": duplicated_scenario.id,
             "name": f"{self.scenario.name} - copy 2",
             "description": self.scenario.description,
             "start_year": 2025,
