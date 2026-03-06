@@ -122,32 +122,12 @@ class IDMModelOutput(models.Model):
     lsm_coverage = models.SmallIntegerField(null=True, blank=True)
 
     # Outcome metrics
-    clinical_incidence = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True, blank=True
-    )
-    clinical_incidence_lower = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True, blank=True
-    )
-    clinical_incidence_higher = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True, blank=True
-    )
-    severe_incidence = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True, blank=True
-    )
-    severe_incidence_lower = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True, blank=True
-    )
-    severe_incidence_higher = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True, blank=True
-    )
-    prevalence = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True, blank=True
-    )
-    prevalence_lower = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True, blank=True
-    )
-    prevalence_higher = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True, blank=True
-    )
-
-
+    clinical_incidence = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
+    clinical_incidence_lower = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
+    clinical_incidence_higher = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
+    severe_incidence = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
+    severe_incidence_lower = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
+    severe_incidence_higher = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
+    prevalence = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
+    prevalence_lower = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
+    prevalence_higher = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)

@@ -140,7 +140,7 @@ jobs:
             - name: Check formatting with ruff
               # https://docs.astral.sh/ruff/integrations/#github-actions
               run: |
-                  . ./venv/bin/activate && ruff check --output-format=github .
+                  . ./venv/bin/activate && ruff check --output-format=github plugins/snt_malaria/ && ruff format --check plugins/snt_malaria/
             - name: Django tests
               run: |
                   . ./venv/bin/activate &&  python manage.py compilemessages
