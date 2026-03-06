@@ -10,9 +10,9 @@ import {
     Theme,
 } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
-import { useNavigate } from 'react-router-dom';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { SxStyles } from 'Iaso/types/general';
+import { useNavigate } from 'react-router-dom';
 import {
     ContentsContainer,
     PageContainer,
