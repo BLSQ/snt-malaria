@@ -42,13 +42,14 @@ export const PlanningV2: FC = () => {
 
     const { data: interventionPlans, isLoading: isLoadingPlans } =
         useGetInterventionAssignments(params.scenarioId);
-    const { data: scenarioRules, isFetching: isFetchingRules } =
+    const { data: scenarioRules, isLoading: isFetchingRules } =
         useGetScenarioRules(params.scenarioId);
     const { data: budget } = useGetLatestCalculatedBudget(scenario?.id);
 
     const { mutate: refreshAssignments } = useRefreshAssignments(
         params.scenarioId,
     );
+
     const onApplyRules = useCallback(() => {
         refreshAssignments({});
     }, [refreshAssignments]);

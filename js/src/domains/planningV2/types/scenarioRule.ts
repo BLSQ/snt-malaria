@@ -1,5 +1,5 @@
 export type ScenarioRule = {
-    id?: number;
+    id: number;
     scenario: number;
     name: string;
     priority: number;

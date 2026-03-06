@@ -196,4 +196,4 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         # only if transaction commit is successful
         # scenario.refresh_assignments(user)
 
-        return Response(status=status.HTTP_200_OK)
+        return Response({}, status=status.HTTP_200_OK)

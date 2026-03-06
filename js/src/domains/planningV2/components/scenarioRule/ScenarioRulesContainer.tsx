@@ -1,7 +1,8 @@
 import React, { FC, useCallback } from 'react';
 import { Card, CardContent, CardHeader } from '@mui/material';
-import { LoadingSpinner, SortableList } from 'bluesquare-components';
+import { AsyncSortableList, LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { useReorderScenarioRules } from '../../hooks/useReorderScenarioRules';
 import { ScenarioRule } from '../../types/scenarioRule';
 import { ScenarioRuleLine } from './ScenarioRuleLine';
 import { ScenarioRulesHeader } from './ScenarioRulesHeader';
@@ -27,7 +28,6 @@ const styles: SxStyles = {
     },
     rulesContainer: {
         padding: 0,
-        backgroundColor: 'paper.default',
     },
     ruleBox: {
         mb: 2,
@@ -38,6 +38,7 @@ const styles: SxStyles = {
         overflow: 'auto',
         flexDirection: 'column',
         alignItems: 'flex-start',
+        backgroundColor: 'white',
     },
 };
 
@@ -54,11 +55,27 @@ export const ScenarioRulesContainer: FC<Props> = ({
     onApplyRules,
     rules,
 }) => {
-    const onRulesReorder = useCallback((newRules: ScenarioRule[]) => {
-        // This function will be called with the new order of rules after drag-and-drop
-        // You can implement the logic to update the order in your backend here
-        console.log('New order of rules:', newRules);
-    }, []);
+    const { mutate: reorderScenarioRules } =
+        useReorderScenarioRules(scenarioId);
+
+    const handleReorder = useCallback(
+        ({
+            resume,
+            abort,
+            items,
+        }: {
+            resume: () => void;
+            abort: () => void;
+            items: ScenarioRule[];
+        }) => {
+            reorderScenarioRules(
+                items.map(r => r.id),
+                // abort doesn't work, a topic is open about it: https://github.com/clauderic/dnd-kit/issues/1769
+                { onSuccess: resume, onError: abort },
+            );
+        },
+        [reorderScenarioRules],
+    );
 
     return (
         <Card sx={styles.card}>
@@ -76,22 +93,19 @@ export const ScenarioRulesContainer: FC<Props> = ({
                 {isLoading ? (
                     <LoadingSpinner absolute={true} />
                 ) : (
-                    <SortableList
+                    <AsyncSortableList
                         items={rules}
-                        onChange={onRulesReorder}
-                        disabled={true}
-                        listItemSx={styles.ruleBox}
+                        onDragEnd={handleReorder}
                         listSx={styles.rulesContainer}
-                        RenderItem={({ item }) => {
-                            return (
-                                <ScenarioRuleLine
-                                    scenarioId={scenarioId}
-                                    key={item.id}
-                                    rule={item}
-                                />
-                            );
-                        }}
-                    />
+                        itemSx={styles.ruleBox}
+                        showOverlay={false}
+                        RenderItem={({ item }) => (
+                            <ScenarioRuleLine
+                                scenarioId={scenarioId}
+                                rule={item}
+                            />
+                        )}
+                    ></AsyncSortableList>
                 )}
             </CardContent>
         </Card>
