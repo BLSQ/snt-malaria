@@ -24,8 +24,7 @@ export const useDuplicateScenario = (): UseMutationResult =>
             start_year,
             end_year,
         }: ScenarioFormValues) =>
-            postRequest(`/api/snt_malaria/scenarios/duplicate/`, {
-                scenario_to_duplicate: id,
+            postRequest(`/api/snt_malaria/scenarios/${id}/duplicate/`, {
                 name,
                 description,
                 start_year,

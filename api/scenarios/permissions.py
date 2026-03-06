@@ -19,7 +19,9 @@ class ScenarioPermission(permissions.BasePermission):
         )
 
     def has_object_permission(self, request, view, obj: Scenario):
-        if request.method in permissions.SAFE_METHODS:  # = GET for retrieve
+        if (
+            request.method in permissions.SAFE_METHODS or request.method == "POST"
+        ):  # = GET for retrieve & POST for duplicate
             return True
 
         user = request.user

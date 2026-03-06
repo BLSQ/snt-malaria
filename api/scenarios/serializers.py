@@ -10,7 +10,6 @@ from plugins.snt_malaria.api.scenarios.utils import (
     get_missing_headers,
 )
 from plugins.snt_malaria.models import Scenario, ScenarioRule
-from plugins.snt_malaria.models.intervention import InterventionAssignment
 
 
 class ScenarioSerializer(serializers.ModelSerializer):
@@ -71,35 +70,6 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("A scenario with this name already exists for your account."))
 
         return value
-
-
-class DuplicateScenarioSerializer(ScenarioWriteSerializer):
-    scenario_to_duplicate = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none(), required=True)
-
-    class Meta:
-        model = Scenario
-        fields = ["scenario_to_duplicate", "name", "description", "start_year", "end_year"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        request = self.context.get("request")
-        user = getattr(request, "user", None)
-        if user and user.is_authenticated and user.iaso_profile:
-            account = user.iaso_profile.account
-            self.fields["scenario_to_duplicate"].queryset = Scenario.objects.filter(account=account)
-
-    def save(self, **kwargs):
-        scenario_to_duplicate = self.validated_data.pop("scenario_to_duplicate", None)
-        scenario = super().save(**self.validated_data, **kwargs)
-
-        assignments = InterventionAssignment.objects.filter(scenario_id=scenario_to_duplicate.id)
-        for assignment in assignments:
-            assignment.pk = None
-            assignment.scenario = scenario
-
-        InterventionAssignment.objects.bulk_create(assignments)
-
-        return scenario
 
 
 class ImportScenarioSerializer(serializers.Serializer):

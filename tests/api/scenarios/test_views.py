@@ -479,44 +479,88 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(result["start_year"], ["Start year should be lower or equal end year."])
 
     def test_scenario_duplicate_with_full_perm(self):
+        # Making sure that the right assignments are in place before duplication
+        self.scenario.refresh_assignments(self.user_with_full_perm)
+
         payload = {
-            "scenario_to_duplicate": self.scenario.id,
             "name": f"Copy of {self.scenario.name}",
             "description": self.scenario.description,
             "start_year": 2025,
             "end_year": 2026,
         }
         self.client.force_authenticate(self.user_with_full_perm)
-        response = self.client.post(f"{self.BASE_URL}duplicate/", payload, format="json")
+        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/duplicate/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.assertEqual(Scenario.objects.count(), 2)
         duplicated_scenario = Scenario.objects.latest("id")
-        self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
-        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
+        self.assertEqual(duplicated_scenario.name, payload["name"])
+        self.assertEqual(duplicated_scenario.description, payload["description"])
+        self.assertEqual(duplicated_scenario.start_year, payload["start_year"])
+        self.assertEqual(duplicated_scenario.end_year, payload["end_year"])
+
+        duplicated_scenario_rules = duplicated_scenario.rules.all()
+        scenario_rules = self.scenario.rules.all()
+        self.assertEqual(duplicated_scenario_rules.count(), scenario_rules.count())
+        for original_rule, duplicated_rule in zip(
+            scenario_rules.order_by("priority"), duplicated_scenario_rules.order_by("priority")
+        ):
+            self.assertEqual(original_rule.name, duplicated_rule.name)
+            self.assertEqual(original_rule.priority, duplicated_rule.priority)
+            self.assertEqual(original_rule.color, duplicated_rule.color)
+            self.assertEqual(original_rule.matching_criteria, duplicated_rule.matching_criteria)
+            self.assertEqual(original_rule.org_units_matched, duplicated_rule.org_units_matched)
+            self.assertEqual(original_rule.org_units_excluded, duplicated_rule.org_units_excluded)
+            self.assertEqual(original_rule.org_units_included, duplicated_rule.org_units_included)
+            self.assertEqual(original_rule.org_units_scope, duplicated_rule.org_units_scope)
+            self.assertNotEqual(original_rule.id, duplicated_rule.id)
+
+        # assignments are also duplicated (re generated based on the duplicated rules)
+        duplicated_assignments = duplicated_scenario.intervention_assignments.all()
+        initial_assignments = self.scenario.intervention_assignments.all()
+        self.assertEqual(duplicated_assignments.count(), initial_assignments.count())
+
+        # Picking a similar assignment to check if it's indeed a different object
+        duplicated_assignment_district_1 = duplicated_assignments.get(org_unit=self.district1)
+        initial_assignment_district_1 = initial_assignments.get(org_unit=self.district1)
+        self.assertEqual(duplicated_assignment_district_1.intervention, initial_assignment_district_1.intervention)
+        self.assertEqual(duplicated_assignment_district_1.org_unit, initial_assignment_district_1.org_unit)
+        self.assertNotEqual(duplicated_assignment_district_1.id, initial_assignment_district_1.id)
 
     def test_scenario_duplicate_with_basic_perm(self):
+        # Making sure that the right assignments are in place before duplication
+        self.scenario.refresh_assignments(self.user_with_full_perm)
+
         payload = {
-            "scenario_to_duplicate": self.scenario.id,
             "name": f"Copy of {self.scenario.name}",
             "description": self.scenario.description,
             "start_year": 2025,
             "end_year": 2026,
         }
         self.client.force_authenticate(self.user_with_basic_perm)
-        response = self.client.post(f"{self.BASE_URL}duplicate/", payload, format="json")
+        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/duplicate/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.assertEqual(Scenario.objects.count(), 2)
         duplicated_scenario = Scenario.objects.latest("id")
-        self.assertIn(f"Copy of {self.scenario.name}", duplicated_scenario.name)
-        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
         self.assertEqual(duplicated_scenario.created_by, self.user_with_basic_perm)
         self.assertEqual(duplicated_scenario.account, self.account)
         self.assertEqual(duplicated_scenario.start_year, self.scenario.start_year)
         self.assertEqual(duplicated_scenario.end_year, self.scenario.end_year)
         self.assertEqual(duplicated_scenario.description, self.scenario.description)
         self.assertEqual(duplicated_scenario.name, payload["name"])
+
+        # assignments are also duplicated (re generated based on the duplicated rules)
+        duplicated_assignments = duplicated_scenario.intervention_assignments.all()
+        initial_assignments = self.scenario.intervention_assignments.all()
+        self.assertEqual(duplicated_assignments.count(), initial_assignments.count())
+
+        # Picking a similar assignment to check if it's indeed a different object
+        duplicated_assignment_district_1 = duplicated_assignments.get(org_unit=self.district1)
+        initial_assignment_district_1 = initial_assignments.get(org_unit=self.district1)
+        self.assertEqual(duplicated_assignment_district_1.intervention, initial_assignment_district_1.intervention)
+        self.assertEqual(duplicated_assignment_district_1.org_unit, initial_assignment_district_1.org_unit)
+        self.assertNotEqual(duplicated_assignment_district_1.id, initial_assignment_district_1.id)
 
         # Making sure that the base scenario didn't change
         self.scenario.refresh_from_db()
@@ -525,26 +569,24 @@ class ScenarioAPITestCase(APITestCase):
 
     def test_scenario_duplicate_no_perms(self):
         payload = {
-            "scenario_to_duplicate": self.scenario.id,
             "name": f"Copy of {self.scenario.name}",
             "description": self.scenario.description,
             "start_year": 2025,
             "end_year": 2026,
         }
         self.client.force_authenticate(self.user_no_perms)
-        response = self.client.post(f"{self.BASE_URL}duplicate/", payload, format="json")
+        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/duplicate/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Scenario.objects.count(), 1)
 
     def test_scenario_duplicate_unauthenticated(self):
         payload = {
-            "scenario_to_duplicate": self.scenario.id,
             "name": f"Copy of {self.scenario.name}",
             "description": self.scenario.description,
             "start_year": 2025,
             "end_year": 2026,
         }
-        response = self.client.post(f"{self.BASE_URL}duplicate/", payload, format="json")
+        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/duplicate/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_scenario_duplicate_from_another_account(self):
@@ -561,63 +603,69 @@ class ScenarioAPITestCase(APITestCase):
             end_year=2026,
         )
         payload = {
-            "scenario_to_duplicate": other_scenario.id,
             "name": f"Copy of {other_scenario.name}",
             "description": other_scenario.description,
             "start_year": 2025,
             "end_year": 2026,
         }
         self.client.force_authenticate(self.user_with_full_perm)
-        response = self.client.post(f"{self.BASE_URL}duplicate/", payload, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.post(f"{self.BASE_URL}{other_scenario.id}/duplicate/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(Scenario.objects.count(), 2)  # one in setup & one here
 
     def test_scenario_duplicate_non_existing(self):
         payload = {
-            "scenario_to_duplicate": 1234567890,
             "name": "Copy of Non Existing Scenario",
             "description": "Description",
             "start_year": 2025,
             "end_year": 2026,
         }
         self.client.force_authenticate(self.user_with_full_perm)
-        response = self.client.post(f"{self.BASE_URL}duplicate/", payload, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.post(f"{self.BASE_URL}1234564890/duplicate/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(Scenario.objects.count(), 1)
 
     def test_scenario_duplicate_multiple_times_success(self):
+        # Making sure that the right assignments are in place before duplication
+        self.scenario.refresh_assignments(self.user_with_full_perm)
+
         # First duplication
         payload = {
-            "scenario_to_duplicate": self.scenario.id,
             "name": f"{self.scenario.name} - copy 1",
             "description": self.scenario.description,
             "start_year": 2025,
             "end_year": 2026,
         }
         self.client.force_authenticate(self.user_with_full_perm)
-        response = self.client.post(f"{self.BASE_URL}duplicate/", payload, format="json")
+        response = self.client.post(f"{self.BASE_URL}{self.scenario.id}/duplicate/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Scenario.objects.count(), 2)
         duplicated_scenario = Scenario.objects.latest("id")
 
         self.assertEqual(f"{self.scenario.name} - copy 1", duplicated_scenario.name)
-        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
+        # assignments are also duplicated (re generated based on the duplicated rules)
+        duplicated_assignments = duplicated_scenario.intervention_assignments.all()
+        initial_assignments = self.scenario.intervention_assignments.all()
+        self.assertEqual(duplicated_assignments.count(), initial_assignments.count())
 
         # Second duplication
         payload = {
-            "scenario_to_duplicate": duplicated_scenario.id,
             "name": f"{self.scenario.name} - copy 2",
             "description": self.scenario.description,
             "start_year": 2025,
             "end_year": 2026,
         }
-        response = self.client.post(f"{self.BASE_URL}duplicate/", payload, format="json")
+        response = self.client.post(f"{self.BASE_URL}{duplicated_scenario.id}/duplicate/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Scenario.objects.count(), 3)
-        duplicated_scenario = Scenario.objects.latest("id")
+        new_duplicated_scenario = Scenario.objects.latest("id")
 
-        self.assertIn(f"{self.scenario.name} - copy 2", duplicated_scenario.name)
-        self.assertEqual(duplicated_scenario.intervention_assignments.count(), 3)
+        self.assertIn(f"{self.scenario.name} - copy 2", new_duplicated_scenario.name)
+        # assignments are also duplicated (re generated based on the duplicated rules)
+        new_duplicated_assignments = new_duplicated_scenario.intervention_assignments.all()
+        initial_assignments = self.scenario.intervention_assignments.all()
+        self.assertEqual(new_duplicated_assignments.count(), initial_assignments.count())
+        self.assertEqual(new_duplicated_assignments.count(), duplicated_assignments.count())
 
     def test_scenario_export_to_csv(self):
         """
