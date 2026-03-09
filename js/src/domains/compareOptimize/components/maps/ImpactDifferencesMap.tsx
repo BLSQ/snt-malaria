@@ -14,6 +14,11 @@ import { ScenarioImpactMetrics, ScenarioDisplay } from '../../types';
 import { LabelChip } from './LabelChip';
 
 const styles = {
+    root: {
+        position: 'relative',
+        height: '100%',
+        width: '100%',
+    },
     overlay: {
         position: 'absolute',
         top: 10,
@@ -160,16 +165,18 @@ export const ImpactDifferencesMap: FC<Props> = ({
     );
 
     return (
-        <SNTMap
-            border
-            id="impact_differences_map"
-            orgUnits={orgUnits ?? []}
-            getOrgUnitMapMisc={getOrgUnitMapMisc}
-            legendConfig={legendConfig}
-            hideLegend={!hasData}
-            defaultColor={NO_INTERVENTION_COLOR}
-            dataKey={dataKey}
-            overlay={chipOverlay}
-        />
+        <Box sx={styles.root}>
+            <SNTMap
+                border
+                id="impact_differences_map"
+                orgUnits={orgUnits ?? []}
+                getOrgUnitMapMisc={getOrgUnitMapMisc}
+                legendConfig={legendConfig}
+                hideLegend={!hasData}
+                defaultColor={NO_INTERVENTION_COLOR}
+                dataKey={dataKey}
+            />
+            {chipOverlay}
+        </Box>
     );
 };

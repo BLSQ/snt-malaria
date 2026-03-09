@@ -14,6 +14,11 @@ import {
 import { LabelChip } from './LabelChip';
 
 const styles = {
+    root: {
+        position: 'relative',
+        height: '100%',
+        width: '100%',
+    },
     overlay: {
         position: 'absolute',
         top: 10,
@@ -118,22 +123,22 @@ export const InterventionPlanMap: FC<Props> = ({
     }, [interventionGroups]);
 
     return (
-        <SNTMap
-            border
-            id={mapId}
-            orgUnits={orgUnits ?? []}
-            getOrgUnitMapMisc={getOrgUnitMapMisc}
-            legendConfig={legendConfig}
-            hideLegend={
-                selectedInterventionId > 0 ||
-                !interventionAssignments ||
-                interventionAssignments.length <= 0
-            }
-            overlay={
-                <Box sx={styles.overlay}>
-                    <LabelChip color={titleDotColor} label={titleText} />
-                </Box>
-            }
-        />
+        <Box sx={styles.root}>
+            <SNTMap
+                border
+                id={mapId}
+                orgUnits={orgUnits ?? []}
+                getOrgUnitMapMisc={getOrgUnitMapMisc}
+                legendConfig={legendConfig}
+                hideLegend={
+                    selectedInterventionId > 0 ||
+                    !interventionAssignments ||
+                    interventionAssignments.length <= 0
+                }
+            />
+            <Box sx={styles.overlay}>
+                <LabelChip color={titleDotColor} label={titleText} />
+            </Box>
+        </Box>
     );
 };
