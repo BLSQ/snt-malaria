@@ -18,6 +18,8 @@ import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';
 import { MetricType } from '../../../planning/types/metrics';
 import { MESSAGES } from '../../messages';
+import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
+import * as CorePermission from 'Iaso/utils/permissions';
 
 type MetricTypeLineProps = {
     metricType: MetricType;
@@ -70,12 +72,14 @@ export const MetricTypeLine: FC<MetricTypeLineProps> = ({
             ref={anchorRef}
             secondaryAction={
                 readonly ? null : (
-                    <IconButton
-                        aria-label="more-info"
-                        overrideIcon={MoreHorizIcon}
-                        tooltipMessage={MESSAGES.more}
-                        onClick={toggleMoreActions}
-                    ></IconButton>
+                    <DisplayIfUserHasPerm permissions={[CorePermission.METRIC_TYPES]}>
+                        <IconButton
+                            aria-label="more-info"
+                            overrideIcon={MoreHorizIcon}
+                            tooltipMessage={MESSAGES.more}
+                            onClick={toggleMoreActions}
+                        ></IconButton>
+                    </DisplayIfUserHasPerm>
                 )
             }
         >
