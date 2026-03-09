@@ -26,6 +26,9 @@ import { ScenarioComponent } from './components/Scenario';
 import { CreateScenarioModal } from './components/ScenarioModal';
 import { useGetScenarios } from './hooks/useGetScenarios';
 import { Scenario } from './types';
+import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
+import * as Permission from '../../constants/permissions';
+
 
 const styles: SxStyles = {
     buttonsBox: (theme: Theme) => ({
@@ -78,49 +81,56 @@ export const Scenarios: FC = () => {
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
             <PageContainer>
                 <ContentsContainer>
-                    <Box sx={styles.buttonsBox}>
-                        <CreateScenarioModal
-                            onClose={redirectToScenario}
-                            iconProps={{}}
-                        />
-                        <Box ref={anchorRef}>
-                            <IconButton
-                                overrideIcon={MoreHorizIcon}
-                                onClick={togglePopover}
-                                tooltipMessage={MESSAGES.more}
-                            ></IconButton>
+                    <DisplayIfUserHasPerm
+                        permissions={[
+                            Permission.SCENARIO_BASIC_WRITE,
+                            Permission.SCENARIO_FULL_WRITE,
+                        ]}
+                    >
+                        <Box sx={styles.buttonsBox}>
+                            <CreateScenarioModal
+                                onClose={redirectToScenario}
+                                iconProps={{}}
+                            />
+                            <Box ref={anchorRef}>
+                                <IconButton
+                                    overrideIcon={MoreHorizIcon}
+                                    onClick={togglePopover}
+                                    tooltipMessage={MESSAGES.more}
+                                ></IconButton>
+                            </Box>
+                            <Popover
+                                id="import_scenario"
+                                open={isOpen}
+                                anchorEl={anchorRef.current}
+                                anchorOrigin={{
+                                    vertical: 'bottom',
+                                    horizontal: 'right',
+                                }}
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                            >
+                                <ClickAwayListener onClickAway={handleClose}>
+                                    <MenuList>
+                                        <ImportScenarioModal
+                                            iconProps={{}}
+                                            onClose={() => setIsOpen(false)}
+                                        />
+                                        <MenuItem
+                                            component={Link}
+                                            href={exportScenarioAPIPath}
+                                        >
+                                            {formatMessage(
+                                                MESSAGES.downloadCSVTemplate,
+                                            )}
+                                        </MenuItem>
+                                    </MenuList>
+                                </ClickAwayListener>
+                            </Popover>
                         </Box>
-                        <Popover
-                            id="import_scenario"
-                            open={isOpen}
-                            anchorEl={anchorRef.current}
-                            anchorOrigin={{
-                                vertical: 'bottom',
-                                horizontal: 'right',
-                            }}
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                        >
-                            <ClickAwayListener onClickAway={handleClose}>
-                                <MenuList>
-                                    <ImportScenarioModal
-                                        iconProps={{}}
-                                        onClose={() => setIsOpen(false)}
-                                    />
-                                    <MenuItem
-                                        component={Link}
-                                        href={exportScenarioAPIPath}
-                                    >
-                                        {formatMessage(
-                                            MESSAGES.downloadCSVTemplate,
-                                        )}
-                                    </MenuItem>
-                                </MenuList>
-                            </ClickAwayListener>
-                        </Popover>
-                    </Box>
+                    </DisplayIfUserHasPerm>
 
                     {isLoading && <p>{formatMessage(MESSAGES.loading)}</p>}
                     {!isLoading &&
