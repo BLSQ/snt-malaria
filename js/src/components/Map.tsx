@@ -90,6 +90,7 @@ type Props = {
         label: string | undefined;
         color: string | undefined;
     };
+    RenderTooltip?: (props: { orgUnit: OrgUnit }) => React.ReactNode;
     legendConfig?: {
         units: string;
         legend_type: string; //'linear' | 'ordinal' | 'threshold';
@@ -119,6 +120,7 @@ export const Map: FC<Props> = ({
     onOrgUnitClick = noOp,
     dataKey,
     border = false,
+    RenderTooltip,
 }) => {
     const [currentTile] = useState<Tile>(tiles.osm);
 
@@ -191,21 +193,27 @@ export const Map: FC<Props> = ({
                             }}
                         >
                             <LeafletTooltip>
-                                <b>{orgUnit.short_name}</b>
-                                {orgUnitMapMisc.label && (
-                                    <>
-                                        <br />
-                                        {orgUnitMapMisc.label}
-                                    </>
-                                )}
-                            </LeafletTooltip>
-                        </GeoJSON>
-                    );
-                })}
-                {legendConfig && !hideLegend && (
-                    <MapLegend legendConfig={legendConfig} />
-                )}
-            </MapContainer>
+                            {RenderTooltip ? (
+                                RenderTooltip({ orgUnit })
+                            ) : (
+                                <>
+                                    <b>{orgUnit.short_name}</b>
+                                    {orgUnitMapMisc.label && (
+                                        <>
+                                            <br />
+                                            {orgUnitMapMisc.label}
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </LeafletTooltip>
+                    </GeoJSON>
+                );
+            })}
+            {legendConfig && !hideLegend && (
+                <MapLegend legendConfig={legendConfig} />
+            )}
+        </MapContainer>
         </Box>
     );
 };
