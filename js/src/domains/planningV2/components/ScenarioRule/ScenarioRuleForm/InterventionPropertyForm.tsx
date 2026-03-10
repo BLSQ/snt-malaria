@@ -3,8 +3,8 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
-import { Intervention } from '../../../planning/types/interventions';
-import { InterventionProperties } from '../../types/scenarioRule';
+import { Intervention } from '../../../../planning/types/interventions';
+import { InterventionProperties } from '../../../types/scenarioRule';
 
 const styles: SxStyles = {
     interventionPropertiesContainer: {

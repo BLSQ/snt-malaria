@@ -688,4 +688,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.budgetView',
         defaultMessage: 'Budget',
     },
+    submit: {
+        id: 'iaso.snt_malaria.label.submit',
+        defaultMessage: 'Submit',
+    },
 });
