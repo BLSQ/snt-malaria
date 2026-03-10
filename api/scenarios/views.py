@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from iaso.api.common import CONTENT_TYPE_CSV
 from iaso.utils.org_units import get_valid_org_units_with_geography
 from plugins.snt_malaria.api.scenarios.utils import (
+    duplicate_rules,
     get_assignments_from_row,
     get_csv_headers,
     get_csv_row,
@@ -26,7 +27,6 @@ from plugins.snt_malaria.models.intervention import Intervention
 
 from .permissions import ScenarioPermission
 from .serializers import (
-    DuplicateScenarioSerializer,
     ImportScenarioSerializer,
     ScenarioRulesReorderSerializer,
     ScenarioSerializer,
@@ -56,8 +56,6 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.method == "GET":
             return ScenarioSerializer
-        if self.action == "duplicate":
-            return DuplicateScenarioSerializer
         return ScenarioWriteSerializer
 
     def get_queryset(self):
@@ -82,18 +80,25 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError(str(e))
 
     # Custom action to duplicate a scenario
-    @swagger_auto_schema(request_body=DuplicateScenarioSerializer(many=False))
-    @action(detail=False, methods=["post"], url_path="duplicate", serializer_class=DuplicateScenarioSerializer)
-    def duplicate(self, request):
+    @transaction.atomic
+    @swagger_auto_schema(request_body=ScenarioWriteSerializer(many=False))
+    @action(detail=True, methods=["post"], url_path="duplicate")
+    def duplicate(self, request, pk=None):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        initial_scenario = self.get_object()
+
         try:
-            scenario = serializer.save(account=request.user.iaso_profile.account, created_by=request.user)
+            new_scenario = serializer.save(account=request.user.iaso_profile.account, created_by=request.user)
         except Exception as e:
             raise ValidationError(f"Error saving scenario: {e}")
 
-        serializer = ScenarioSerializer(scenario)
+        duplicate_rules(initial_scenario, new_scenario, request.user)
+
+        new_scenario.refresh_assignments(request.user)
+
+        serializer = ScenarioSerializer(new_scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     # Custom action to download scenario as CSV
