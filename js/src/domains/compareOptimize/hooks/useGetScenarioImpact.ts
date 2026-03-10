@@ -11,7 +11,7 @@ export const useGetScenarioImpact = (
     enabledOverride?: boolean,
 ): UseQueryResult<ScenarioImpactMetrics, Error> => {
     const params = new URLSearchParams();
-    if (scenarioId !== undefined) {
+    if (scenarioId) {
         params.set('scenario_id', String(scenarioId));
     }
     if (yearFrom !== undefined) {

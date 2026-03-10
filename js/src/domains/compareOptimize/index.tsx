@@ -170,7 +170,7 @@ export const CompareOptimize: FC = () => {
         (_key: string, value: unknown) => {
             setSelectedAgeGroup(value as string | undefined);
         },
-        [],
+        [setSelectedAgeGroup],
     );
 
     const {

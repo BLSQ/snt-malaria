@@ -39,8 +39,7 @@ export const getDeltaChip = (
     baseline: number | undefined,
     { relative, positiveIsGreen }: DeltaChipOptions,
 ): DeltaChipProps | undefined => {
-    if (value === undefined || baseline === undefined) return undefined;
-    if (relative && baseline === 0) return undefined;
+    if (!value || !baseline) return undefined;
 
     const delta = relative
         ? (value - baseline) / baseline
@@ -48,10 +47,9 @@ export const getDeltaChip = (
     if (delta === 0) return undefined;
 
     const isPositive = delta > 0;
-    const isGreen = positiveIsGreen ? isPositive : !isPositive;
     return {
         label: `${isPositive ? '+' : ''}${Math.round(delta * 100)}%`,
-        variant: isGreen ? 'green' : 'red',
+        variant: positiveIsGreen === isPositive ? 'green' : 'red',
     };
 };
 
@@ -64,11 +62,11 @@ const styles = {
         fontWeight: 400,
         fontSize: '1rem',
     },
-    positive: {
+    green: {
         backgroundColor: green[50],
         color: 'success.main',
     },
-    negative: {
+    red: {
         backgroundColor: red[50],
         color: 'error.main',
     },
@@ -79,7 +77,7 @@ export const DeltaChip: FC<DeltaChipProps> = ({ label, variant }) => (
         component="span"
         sx={[
             styles.root,
-            variant === 'green' ? styles.positive : styles.negative,
+            styles[variant],
         ]}
     >
         {label}

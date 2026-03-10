@@ -15,7 +15,7 @@ import {
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { ScenarioImpactMetrics, ScenarioDisplay } from '../../types';
-import { formatPercent } from '../../utils/impactCalculations';
+import { formatPercentValue } from '../../../planning/libs/cost-utils';
 import { Card } from '../Card';
 import { ChartEmptyState } from './ChartEmptyState';
 
@@ -107,8 +107,8 @@ export const YearlyPrevalenceCard: FC<Props> = ({
                             <CartesianGrid vertical={false} strokeDasharray="" stroke={theme.palette.divider} />
                             <XAxis dataKey="year" tick={{ fill: axisColor, fontSize: '0.75rem' }} stroke={axisColor} tickMargin={4} />
                             <YAxis
-                                tickFormatter={(v: number) =>
-                                    formatPercent(v)
+                                tickFormatter={(value: number) =>
+                                    formatPercentValue(value)
                                 }
                                 tick={{ fill: axisColor, fontSize: '0.75rem' }}
                                 stroke={axisColor}
@@ -117,7 +117,7 @@ export const YearlyPrevalenceCard: FC<Props> = ({
                             />
                             <Tooltip
                                 formatter={(value: number) =>
-                                    formatPercent(value)
+                                    formatPercentValue(value)
                                 }
                             />
                             {scenarios.map(scenario => (

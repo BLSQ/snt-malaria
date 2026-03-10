@@ -7,11 +7,13 @@ import { Box, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
-import { formatBigNumber } from '../../planning/libs/cost-utils';
+import {
+    formatBigNumber,
+    formatPercentValue,
+} from '../../planning/libs/cost-utils';
 import { BudgetCalculationResponse } from '../../planning/types/budget';
 import { ScenarioImpactMetrics, ScenarioDisplay } from '../types';
 import {
-    formatPercent,
     getCumulativeCosts,
     getPfprReduction,
     nullToUndefined,
@@ -182,7 +184,7 @@ export const MetricsSummary: FC<Props> = ({
     );
     const pfprValues = useMemo(
         () =>
-            buildMetricRows(scenarios, impactsByScenarioId, getPfprReduction, formatPercent, {
+            buildMetricRows(scenarios, impactsByScenarioId, getPfprReduction, formatPercentValue, {
                 relative: false,
                 positiveIsGreen: true,
             }),
@@ -241,7 +243,7 @@ export const MetricsSummary: FC<Props> = ({
                 isLoading={isImpactLoading}
                 values={pfprValues}
                 keyPrefix="pfpr"
-                subtext={targetYearSubtext('prevalence_rate', formatPercent)}
+                subtext={targetYearSubtext('prevalence_rate', formatPercentValue)}
             />
             <MetricCard
                 title={formatMessage(MESSAGES.impactTotalCosts)}

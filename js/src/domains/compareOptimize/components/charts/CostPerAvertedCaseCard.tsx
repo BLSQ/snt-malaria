@@ -57,16 +57,12 @@ export const CostPerAvertedCaseCard: FC<Props> = ({
     const chartData: ChartDatum[] = useMemo(
         () =>
             scenarios
-                .map(scenario => {
+                .map((scenario): ChartDatum | null => {
                     const impact = impactsByScenarioId.get(scenario.id);
                     const metric = impact?.cost_per_averted_case;
                     const costValue = metric?.value;
 
-                    if (
-                        costValue === undefined ||
-                        costValue === null ||
-                        costValue <= 0
-                    ) {
+                    if (!costValue || costValue < 0) {
                         return null;
                     }
 
@@ -76,7 +72,7 @@ export const CostPerAvertedCaseCard: FC<Props> = ({
                         color: scenario.color,
                     };
 
-                    if (metric?.lower != null && metric?.upper != null) {
+                    if (metric.lower != null && metric.upper != null) {
                         datum.error = [
                             costValue - metric.lower,
                             metric.upper - costValue,
@@ -123,9 +119,7 @@ export const CostPerAvertedCaseCard: FC<Props> = ({
                                 allowDecimals
                             />
                             <Tooltip
-                                formatter={(value: number) =>
-                                    formatCostValue(value)
-                                }
+                                formatter={formatCostValue}
                                 cursor={false}
                             />
                             <Bar dataKey="value" maxBarSize={64} radius={[4, 4, 0, 0]}>

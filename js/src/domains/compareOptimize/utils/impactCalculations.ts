@@ -44,13 +44,6 @@ export const getPfprReduction = (
     return (start - end) / start;
 };
 
-/** Formats a number as a locale-aware percentage with up to 2 decimal places. */
-export const formatPercent = (value: number) =>
-    new Intl.NumberFormat(undefined, {
-        style: 'percent',
-        maximumFractionDigits: 2,
-    }).format(value);
-
 /** Converts `null` to `undefined`, leaving other values unchanged. */
 export const nullToUndefined = (
     value: number | null | undefined,

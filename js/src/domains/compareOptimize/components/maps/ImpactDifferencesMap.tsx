@@ -75,14 +75,11 @@ export const ImpactDifferencesMap: FC<Props> = ({
         (event: SelectChangeEvent<number>) => {
             setSelectedComparisonId(Number(event.target.value));
         },
-        [],
+        [setSelectedComparisonId],
     );
 
     const deltaMap = useMemo(() => {
-        if (
-            baselineScenarioId === undefined ||
-            selectedComparisonId === undefined
-        )
+        if (!baselineScenarioId || !selectedComparisonId)
             return new Map<number, number>();
 
         const baselineImpact = impactsByScenarioId.get(baselineScenarioId);
@@ -100,15 +97,21 @@ export const ImpactDifferencesMap: FC<Props> = ({
         return buildDivergingScale(Math.min(...values), Math.max(...values));
     }, [deltaMap]);
 
-    const legendConfig = useMemo(() => {
-        if (scale.labels.length === 0) return undefined;
-        return {
-            units: '',
-            legend_type: 'ordinal',
-            legend_config: { domain: scale.labels, range: scale.colors },
-            unit_symbol: '',
-        };
-    }, [scale]);
+    const legendConfig = useMemo(
+        () =>
+            scale.labels.length === 0
+                ? undefined
+                : {
+                      units: '',
+                      legend_type: 'ordinal',
+                      legend_config: {
+                          domain: scale.labels,
+                          range: scale.colors,
+                      },
+                      unit_symbol: '',
+                  },
+        [scale],
+    );
 
     /**
      * Returns the fill color and tooltip label for a single org unit.
@@ -117,7 +120,7 @@ export const ImpactDifferencesMap: FC<Props> = ({
     const getOrgUnitMapMisc = useCallback(
         (orgUnitId: number) => {
             const delta = deltaMap.get(orgUnitId);
-            if (delta === undefined || delta === 0) {
+            if (!delta) {
                 return {
                     color: NO_INTERVENTION_COLOR,
                     label: delta === 0 ? '+0' : undefined,
