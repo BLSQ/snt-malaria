@@ -136,10 +136,10 @@ export const PlanningV2: FC = () => {
                                         exclusive
                                     >
                                         <ToggleButton value="map" key="map">
-                                            Map
+                                            {formatMessage(MESSAGES.mapView)}
                                         </ToggleButton>
                                         <ToggleButton value="list" key="list">
-                                            List
+                                            {formatMessage(MESSAGES.listView)}
                                         </ToggleButton>
                                     </ToggleButtonGroup>
                                 }

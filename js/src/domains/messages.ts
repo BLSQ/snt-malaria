@@ -676,4 +676,12 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compareOptimize.scenarioLabelWithIndex',
         defaultMessage: 'Scenario {index}',
     },
+    mapView: {
+        id: 'iaso.snt_malaria.label.mapView',
+        defaultMessage: 'Map',
+    },
+    listView: {
+        id: 'iaso.snt_malaria.label.listView',
+        defaultMessage: 'List',
+    },
 });
