@@ -43,8 +43,3 @@ export const getPfprReduction = (
     if (start == null || end == null || start <= 0) return undefined;
     return (start - end) / start;
 };
-
-/** Converts `null` to `undefined`, leaving other values unchanged. */
-export const nullToUndefined = (
-    value: number | null | undefined,
-): number | undefined => (value === null ? undefined : value);

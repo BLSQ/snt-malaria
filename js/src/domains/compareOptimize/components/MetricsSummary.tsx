@@ -16,7 +16,6 @@ import { ScenarioImpactMetrics, ScenarioDisplay } from '../types';
 import {
     getCumulativeCosts,
     getPfprReduction,
-    nullToUndefined,
 } from '../utils/impactCalculations';
 import { Card } from './Card';
 import {
@@ -119,11 +118,11 @@ const buildMetricRows = <TData,>(
     const baselineId = scenarios[0]?.id;
     const baselineValue =
         baselineId !== undefined
-            ? nullToUndefined(extractor(dataMap.get(baselineId)))
+            ? extractor(dataMap.get(baselineId))
             : undefined;
 
     return scenarios.map(scenario => {
-        const raw = nullToUndefined(extractor(dataMap.get(scenario.id)));
+        const raw = extractor(dataMap.get(scenario.id));
         const isBaseline = scenario.id === baselineId;
         return {
             id: scenario.id,
