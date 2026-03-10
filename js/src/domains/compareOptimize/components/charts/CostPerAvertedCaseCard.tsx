@@ -16,6 +16,7 @@ import {
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
+import { buildCostChartData } from '../../utils/chartData';
 import { Card } from '../Card';
 import { ChartEmptyState } from './ChartEmptyState';
 
@@ -24,13 +25,6 @@ const formatCostValue = (value: number): string =>
         minimumFractionDigits: 0,
         maximumFractionDigits: 2,
     }).format(value);
-
-type ChartDatum = {
-    name: string;
-    value: number;
-    error?: [number, number];
-    color: string;
-};
 
 const styles = {
     chartBody: {
@@ -46,34 +40,8 @@ export const CostPerAvertedCaseCard: FC = () => {
     const theme = useTheme();
     const axisColor = theme.palette.text.secondary;
 
-    const chartData: ChartDatum[] = useMemo(
-        () =>
-            scenarios
-                .map((scenario): ChartDatum | null => {
-                    const impact = impactsByScenarioId.get(scenario.id);
-                    const metric = impact?.cost_per_averted_case;
-                    const costValue = metric?.value;
-
-                    if (!costValue || costValue < 0) {
-                        return null;
-                    }
-
-                    const datum: ChartDatum = {
-                        name: scenario.label,
-                        value: costValue,
-                        color: scenario.color,
-                    };
-
-                    if (metric.lower != null && metric.upper != null) {
-                        datum.error = [
-                            costValue - metric.lower,
-                            metric.upper - costValue,
-                        ];
-                    }
-
-                    return datum;
-                })
-                .filter((d): d is ChartDatum => d !== null),
+    const chartData = useMemo(
+        () => buildCostChartData(scenarios, impactsByScenarioId),
         [scenarios, impactsByScenarioId],
     );
 

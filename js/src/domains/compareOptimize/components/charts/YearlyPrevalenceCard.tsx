@@ -16,13 +16,9 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { formatPercentValue } from '../../../planning/libs/cost-utils';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
+import { buildPrevalenceChartData } from '../../utils/chartData';
 import { Card } from '../Card';
 import { ChartEmptyState } from './ChartEmptyState';
-
-type ChartDataPoint = {
-    year: number;
-    [key: string]: number | [number, number] | undefined;
-};
 
 const styles = {
     chartBody: {
@@ -38,40 +34,10 @@ export const YearlyPrevalenceCard: FC = () => {
     const theme = useTheme();
     const axisColor = theme.palette.text.secondary;
 
-    const chartData: ChartDataPoint[] = useMemo(() => {
-        const yearSet = new Set<number>();
-        scenarios.forEach(scenario => {
-            const impact = impactsByScenarioId.get(scenario.id);
-            impact?.by_year?.forEach(yr => yearSet.add(yr.year));
-        });
-
-        const years = Array.from(yearSet).sort((a, b) => a - b);
-        if (years.length === 0) return [];
-
-        return years.map(year => {
-            const point: ChartDataPoint = { year };
-            scenarios.forEach(scenario => {
-                const impact = impactsByScenarioId.get(scenario.id);
-                const yearData = impact?.by_year?.find(
-                    yr => yr.year === year,
-                );
-                const metric = yearData?.prevalence_rate;
-                point[scenario.label] = metric?.value ?? undefined;
-
-                if (
-                    metric?.value != null &&
-                    metric?.lower != null &&
-                    metric?.upper != null
-                ) {
-                    point[`${scenario.label}_ci`] = [
-                        metric.value - metric.lower,
-                        metric.upper - metric.value,
-                    ];
-                }
-            });
-            return point;
-        });
-    }, [scenarios, impactsByScenarioId]);
+    const chartData = useMemo(
+        () => buildPrevalenceChartData(scenarios, impactsByScenarioId),
+        [scenarios, impactsByScenarioId],
+    );
 
     const hasData = chartData.length > 0;
 
