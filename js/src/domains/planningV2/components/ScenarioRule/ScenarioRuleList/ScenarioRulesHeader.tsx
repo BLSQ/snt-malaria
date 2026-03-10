@@ -1,22 +1,21 @@
 import React, { FC } from 'react';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
-import { Stack, Typography } from '@mui/material';
+import { Button, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import ConfirmDialog from 'Iaso/components/dialogs/ConfirmDialogComponent';
 import { noOp } from 'Iaso/utils';
-import { IconBoxed } from '../../../../components/IconBoxed';
-import { MESSAGES } from '../../../messages';
-import { CreateScenarioRuleModal } from './ScenarioRuleModal';
+import { IconBoxed } from '../../../../../components/IconBoxed';
+import { MESSAGES } from '../../../../messages';
 
 type Props = {
-    scenarioId: number;
     onApplyRules?: () => void;
+    onCreateRule: () => void;
 };
 
 export const ScenarioRulesHeader: FC<Props> = ({
-    scenarioId,
     onApplyRules = noOp,
+    onCreateRule,
 }) => {
     const { formatMessage } = useSafeIntl();
     return (
@@ -34,11 +33,9 @@ export const ScenarioRulesHeader: FC<Props> = ({
                 </Typography>
             </Stack>
             <Stack direction="row" sx={{ justifySelf: 'flex-end' }}>
-                <CreateScenarioRuleModal
-                    scenarioId={scenarioId}
-                    onClose={noOp}
-                    iconProps={{}}
-                />
+                <Button onClick={() => onCreateRule()}>
+                    {formatMessage(MESSAGES.createScenarioRule)}
+                </Button>
 
                 <ConfirmDialog
                     confirm={onApplyRules}

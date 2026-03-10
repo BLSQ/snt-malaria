@@ -65,7 +65,7 @@ export const InterventionsPlanRow: FunctionComponent<Props> = ({
                 </Grid>
                 <Grid item xs={1} sx={styles.cellStyle}>
                     <Typography color="primary" variant="body2">
-                        {interventionPlan?.org_units.length}{' '}
+                        {interventionPlan?.org_units.length}
                     </Typography>
                 </Grid>
                 <Grid item xs={4} sx={styles.cellStyle}>

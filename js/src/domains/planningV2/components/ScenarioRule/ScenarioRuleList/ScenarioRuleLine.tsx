@@ -1,14 +1,15 @@
 import React, { FC, useMemo } from 'react';
+import EditIcon from '@mui/icons-material/Edit';
 import { Box, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { EditIconButton } from 'Iaso/components/Buttons/EditIconButton';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';
 import { noOp } from 'Iaso/utils';
-import { MESSAGES } from '../../../messages';
-import { usePlanningContext } from '../../contexts/PlanningContext';
-import { useDeleteScenarioRule } from '../../hooks/useDeleteScenarioRule';
-import { ScenarioRule } from '../../types/scenarioRule';
-import { EditScenarioRuleModal } from './ScenarioRuleModal';
+import { MESSAGES } from '../../../../messages';
+import { usePlanningContext } from '../../../contexts/PlanningContext';
+import { useDeleteScenarioRule } from '../../../hooks/useDeleteScenarioRule';
+import { ScenarioRule } from '../../../types/scenarioRule';
 
 const styles: SxStyles = {
     colorBox: {
@@ -30,9 +31,10 @@ const styles: SxStyles = {
 type Props = {
     scenarioId: number;
     rule: ScenarioRule;
+    onEdit: (rule: ScenarioRule) => void;
 };
 
-export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule }) => {
+export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
     const { formatMessage } = useSafeIntl();
     const { mutateAsync: deleteScenarioRule } =
         useDeleteScenarioRule(scenarioId);
@@ -45,7 +47,10 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule }) => {
     );
     const metricTypeNames = useMemo(
         () =>
-            metricTypes.reduce((acc, mt) => ({ ...acc, [mt.id]: mt.name }), {}),
+            metricTypes.reduce(
+                (acc, mt) => acc.set(mt.id, mt.name),
+                new Map<number, string>(),
+            ),
         [metricTypes],
     );
 
@@ -53,8 +58,8 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule }) => {
         return rule.matching_criteria
             ?.map(ip => {
                 const metricName =
-                    ip.metric_type && metricTypeNames[ip.metric_type]
-                        ? metricTypeNames[ip.metric_type]
+                    ip.metric_type && metricTypeNames.get(ip.metric_type)
+                        ? metricTypeNames.get(ip.metric_type)
                         : ip.metric_type;
                 return `${metricName} ${ip.operator} ${ip.value ?? ip.string_value}`;
             })
@@ -77,11 +82,9 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule }) => {
                 >
                     {rule.name}
                 </Typography>
-                <EditScenarioRuleModal
-                    scenarioId={scenarioId}
-                    onClose={noOp}
-                    iconProps={{}}
-                    rule={rule}
+                <EditIconButton
+                    onClick={() => onEdit(rule)}
+                    overrideIcon={EditIcon}
                 />
                 <DeleteModal
                     type="icon"

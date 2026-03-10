@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -71,17 +71,54 @@ const useValidation = () => {
 export const useScenarioRuleFormState = ({
     onSubmit,
     initialValues,
+    editMode = false,
 }: {
     onSubmit: (
-        values: ScenarioRuleFormValues,
-        formikHelpers: FormikHelpers<ScenarioRuleFormValues>,
+        values: Partial<ScenarioRuleFormValues>,
+        formikHelpers?: FormikHelpers<ScenarioRuleFormValues>,
     ) => void;
     initialValues?: ScenarioRuleFormValues;
+    editMode?: boolean;
 }) => {
     const validationSchema = useValidation();
-    return useFormik({
+
+    const getModifiedValues = useCallback(
+        (values: ScenarioRuleFormValues) => {
+            if (!initialValues || !editMode) return values;
+
+            return Object.entries(values).reduce((acc, [key, value]) => {
+                if (key === 'id' || key === 'scenario') {
+                    (acc as any)[key] = value;
+                } else if (
+                    JSON.stringify(value) !==
+                    JSON.stringify(
+                        initialValues[key as keyof ScenarioRuleFormValues],
+                    )
+                ) {
+                    (acc as any)[key] = value;
+                }
+                return acc;
+            }, {} as Partial<ScenarioRuleFormValues>);
+        },
+        [initialValues, editMode],
+    );
+
+    const submitModifiedValues = useCallback(
+        (
+            values: ScenarioRuleFormValues,
+            formikHelpers: FormikHelpers<ScenarioRuleFormValues>,
+        ) => {
+            const modifiedValues = getModifiedValues(values);
+            onSubmit(modifiedValues, formikHelpers);
+        },
+        [getModifiedValues, onSubmit],
+    );
+
+    const formik = useFormik({
         initialValues: initialValues || defaultScenarioRuleValues,
         validationSchema,
-        onSubmit: onSubmit,
+        onSubmit: submitModifiedValues,
     });
+
+    return formik;
 };
