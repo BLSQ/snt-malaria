@@ -1,9 +1,9 @@
-import React, { FC, ReactNode, useMemo } from 'react';
+import React, { FC, useMemo } from 'react';
 import TrendingDownOutlinedIcon from '@mui/icons-material/TrendingDownOutlined';
 import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
 import SentimentVeryDissatisfiedOutlinedIcon from '@mui/icons-material/SentimentVeryDissatisfiedOutlined';
-import { Box, Grid, Typography } from '@mui/material';
+import { Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
@@ -17,124 +17,13 @@ import {
     getCumulativeCosts,
     getPfprReduction,
 } from '../utils/impactCalculations';
-import { Card } from './Card';
-import {
-    DeltaChip,
-    getDeltaChip,
-    type DeltaChipOptions,
-    type DeltaChipProps,
-} from './DeltaChip';
+import { MetricCard, buildMetricEntries } from './MetricCard';
 
 const styles = {
-    valuesList: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 0.5,
-        mb: 1.5,
-    },
-    valueRow: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        fontWeight: 400,
-        fontSize: '1.5rem',
-        lineHeight: 1.2,
-        m: 0,
-    },
-    dot: {
-        width: theme => theme.spacing(1.75),
-        height: theme => theme.spacing(1.75),
-        borderRadius: '50%',
-        flex: '0 0 auto',
-    },
     subtext: {
         color: 'text.secondary',
     },
 } satisfies SxStyles;
-
-type MetricRow = {
-    id: number;
-    color: string;
-    isBaseline: boolean;
-    value: string;
-    chip?: DeltaChipProps;
-};
-
-type MetricCardProps = {
-    title: string;
-    icon: React.ElementType;
-    isLoading: boolean;
-    values: MetricRow[];
-    keyPrefix: string;
-    subtext?: ReactNode;
-};
-
-const MetricCard: FC<MetricCardProps> = ({
-    title,
-    icon,
-    isLoading,
-    values,
-    keyPrefix,
-    subtext,
-}) => (
-    <Grid item xs={12} md={3}>
-        <Card title={title} icon={icon} isLoading={isLoading}>
-            <Box sx={styles.valuesList}>
-                {values.map(row => (
-                    <Typography
-                        key={`${keyPrefix}-${row.id}`}
-                        variant="h6"
-                        sx={[
-                            styles.valueRow,
-                            row.isBaseline && {
-                                color: 'text.secondary',
-                            },
-                        ]}
-                    >
-                        <Box
-                            component="span"
-                            sx={[
-                                styles.dot,
-                                { backgroundColor: row.color },
-                            ]}
-                        />
-                        {row.value}
-                        {row.chip && <DeltaChip {...row.chip} />}
-                    </Typography>
-                ))}
-            </Box>
-            {subtext}
-        </Card>
-    </Grid>
-);
-
-const buildMetricRows = <TData,>(
-    scenarios: ScenarioDisplay[],
-    dataMap: Map<number, TData | undefined>,
-    extractor: (data: TData | undefined) => number | undefined,
-    formatter: (v: number) => string,
-    delta: DeltaChipOptions,
-): MetricRow[] => {
-    const baselineId = scenarios[0]?.id;
-    const baselineValue =
-        baselineId !== undefined
-            ? extractor(dataMap.get(baselineId))
-            : undefined;
-
-    return scenarios.map(scenario => {
-        const raw = extractor(dataMap.get(scenario.id));
-        const isBaseline = scenario.id === baselineId;
-        return {
-            id: scenario.id,
-            color: scenario.color,
-            isBaseline,
-            value: raw === undefined ? '-' : formatter(raw),
-            chip: isBaseline
-                ? undefined
-                : getDeltaChip(raw, baselineValue, delta),
-        };
-    });
-};
 
 type Props = {
     scenarios: ScenarioDisplay[];
@@ -165,33 +54,33 @@ export const MetricsSummary: FC<Props> = ({
         return impact?.by_year?.find(yr => yr.year === targetYear);
     }, [baselineId, targetYear, impactsByScenarioId]);
 
-    const casesValues = useMemo(
+    const casesEntries = useMemo(
         () =>
-            buildMetricRows(scenarios, impactsByScenarioId, d => d?.number_cases?.value ?? undefined, formatBigNumber, {
+            buildMetricEntries(scenarios, impactsByScenarioId, d => d?.number_cases?.value ?? undefined, formatBigNumber, {
                 relative: true,
                 positiveIsGreen: false,
             }),
         [scenarios, impactsByScenarioId],
     );
-    const severeCasesValues = useMemo(
+    const severeCasesEntries = useMemo(
         () =>
-            buildMetricRows(scenarios, impactsByScenarioId, d => d?.number_severe_cases?.value ?? undefined, formatBigNumber, {
+            buildMetricEntries(scenarios, impactsByScenarioId, d => d?.number_severe_cases?.value ?? undefined, formatBigNumber, {
                 relative: true,
                 positiveIsGreen: false,
             }),
         [scenarios, impactsByScenarioId],
     );
-    const pfprValues = useMemo(
+    const pfprEntries = useMemo(
         () =>
-            buildMetricRows(scenarios, impactsByScenarioId, getPfprReduction, formatPercentValue, {
+            buildMetricEntries(scenarios, impactsByScenarioId, getPfprReduction, formatPercentValue, {
                 relative: false,
                 positiveIsGreen: true,
             }),
         [scenarios, impactsByScenarioId],
     );
-    const costsValues = useMemo(
+    const costsEntries = useMemo(
         () =>
-            buildMetricRows(scenarios, budgetsByScenarioId, getCumulativeCosts, formatBigNumber, {
+            buildMetricEntries(scenarios, budgetsByScenarioId, getCumulativeCosts, formatBigNumber, {
                 relative: true,
                 positiveIsGreen: false,
             }),
@@ -221,7 +110,7 @@ export const MetricsSummary: FC<Props> = ({
                 title={formatMessage(MESSAGES.impactCases)}
                 icon={PersonOutlineOutlinedIcon}
                 isLoading={isImpactLoading}
-                values={casesValues}
+                entries={casesEntries}
                 keyPrefix="cases"
                 subtext={targetYearSubtext('number_cases', formatBigNumber)}
             />
@@ -229,7 +118,7 @@ export const MetricsSummary: FC<Props> = ({
                 title={formatMessage(MESSAGES.impactSevereCases)}
                 icon={SentimentVeryDissatisfiedOutlinedIcon}
                 isLoading={isImpactLoading}
-                values={severeCasesValues}
+                entries={severeCasesEntries}
                 keyPrefix="severe"
                 subtext={targetYearSubtext(
                     'number_severe_cases',
@@ -240,7 +129,7 @@ export const MetricsSummary: FC<Props> = ({
                 title={formatMessage(MESSAGES.impactPfprReduction)}
                 icon={TrendingDownOutlinedIcon}
                 isLoading={isImpactLoading}
-                values={pfprValues}
+                entries={pfprEntries}
                 keyPrefix="pfpr"
                 subtext={targetYearSubtext('prevalence_rate', formatPercentValue)}
             />
@@ -248,7 +137,7 @@ export const MetricsSummary: FC<Props> = ({
                 title={formatMessage(MESSAGES.impactTotalCosts)}
                 icon={MonetizationOnOutlinedIcon}
                 isLoading={isBudgetLoading}
-                values={costsValues}
+                entries={costsEntries}
                 keyPrefix="total-costs"
             />
         </Grid>
