@@ -15,15 +15,9 @@ import {
 } from 'recharts';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
-import { ScenarioImpactMetrics, ScenarioDisplay } from '../../types';
+import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { Card } from '../Card';
 import { ChartEmptyState } from './ChartEmptyState';
-
-type Props = {
-    scenarios: ScenarioDisplay[];
-    impactsByScenarioId: Map<number, ScenarioImpactMetrics | undefined>;
-    isLoading: boolean;
-};
 
 const formatCostValue = (value: number): string =>
     new Intl.NumberFormat(undefined, {
@@ -45,11 +39,9 @@ const styles = {
     },
 } satisfies SxStyles;
 
-export const CostPerAvertedCaseCard: FC<Props> = ({
-    scenarios,
-    impactsByScenarioId,
-    isLoading,
-}) => {
+export const CostPerAvertedCaseCard: FC = () => {
+    const { scenarios, impactsByScenarioId, isImpactLoading: isLoading } =
+        useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
     const theme = useTheme();
     const axisColor = theme.palette.text.secondary;

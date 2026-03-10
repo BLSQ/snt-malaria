@@ -5,12 +5,11 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../messages';
-import { ScenarioDisplay } from '../types';
+import { useComparisonDataContext } from '../ComparisonDataContext';
 import { Card } from './Card';
 import { InterventionPlanMap } from './maps/InterventionPlanMap';
 
 type Props = {
-    scenarios: ScenarioDisplay[];
     selectedInterventionId: number;
     interventionOptions: { label: string; value: number }[];
     hasInterventions: boolean;
@@ -31,12 +30,12 @@ const styles = {
 } satisfies SxStyles;
 
 export const InterventionMaps: FC<Props> = ({
-    scenarios,
     selectedInterventionId,
     interventionOptions,
     hasInterventions,
     onInterventionSelect,
 }) => {
+    const { scenarios } = useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
 
     return (

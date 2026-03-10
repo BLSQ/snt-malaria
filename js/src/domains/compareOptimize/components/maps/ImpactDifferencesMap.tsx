@@ -4,13 +4,13 @@ import { SxStyles } from 'Iaso/types/general';
 import { Map as SNTMap } from '../../../../components/Map';
 import { useGetOrgUnits } from '../../../planning/hooks/useGetOrgUnits';
 import { formatBigNumber } from '../../../planning/libs/cost-utils';
+import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { NO_INTERVENTION_COLOR } from '../../utils/colors';
 import {
     buildDivergingScale,
     computeOrgUnitDeltas,
     getColorForValue,
 } from '../../utils/divergingScale';
-import { ScenarioImpactMetrics, ScenarioDisplay } from '../../types';
 import { LabelChip } from './LabelChip';
 
 const styles = {
@@ -30,22 +30,14 @@ const styles = {
     },
 } satisfies SxStyles;
 
-type Props = {
-    scenarios: ScenarioDisplay[];
-    baselineScenarioId: number | undefined;
-    impactsByScenarioId: Map<number, ScenarioImpactMetrics | undefined>;
-};
-
 /**
  * Displays a diverging color-shaded map of per-org-unit direct-death deltas
  * between the baseline scenario and a selected comparison scenario.
  * Green shades indicate fewer deaths (improvement), red shades more deaths.
  */
-export const ImpactDifferencesMap: FC<Props> = ({
-    scenarios,
-    baselineScenarioId,
-    impactsByScenarioId,
-}) => {
+export const ImpactDifferencesMap: FC = () => {
+    const { scenarios, baselineScenarioId, impactsByScenarioId } =
+        useComparisonDataContext();
     const { data: orgUnits } = useGetOrgUnits();
 
     const comparisonScenarios = useMemo(

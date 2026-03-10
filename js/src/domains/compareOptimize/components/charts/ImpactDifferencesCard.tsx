@@ -4,16 +4,9 @@ import { MenuItem, Select } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
-import { ScenarioImpactMetrics, ScenarioDisplay } from '../../types';
+import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { Card } from '../Card';
 import { ImpactDifferencesMap } from '../maps/ImpactDifferencesMap';
-
-type Props = {
-    scenarios: ScenarioDisplay[];
-    baselineScenarioId: number | undefined;
-    impactsByScenarioId: Map<number, ScenarioImpactMetrics | undefined>;
-    isLoading: boolean;
-};
 
 const styles = {
     metricSelect: {
@@ -26,12 +19,8 @@ const styles = {
     },
 } satisfies SxStyles;
 
-export const ImpactDifferencesCard: FC<Props> = ({
-    scenarios,
-    baselineScenarioId,
-    impactsByScenarioId,
-    isLoading,
-}) => {
+export const ImpactDifferencesCard: FC = () => {
+    const { isImpactLoading: isLoading } = useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
 
     // Placeholder for a future feature: allow switching between impact metrics
@@ -60,11 +49,7 @@ export const ImpactDifferencesCard: FC<Props> = ({
             actions={metricDropdown}
             isLoading={isLoading}
         >
-            <ImpactDifferencesMap
-                scenarios={scenarios}
-                baselineScenarioId={baselineScenarioId}
-                impactsByScenarioId={impactsByScenarioId}
-            />
+            <ImpactDifferencesMap />
         </Card>
     );
 };

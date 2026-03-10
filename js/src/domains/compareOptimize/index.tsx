@@ -10,6 +10,7 @@ import {
 } from '../../components/styledComponents';
 import { MESSAGES } from '../messages';
 import { useGetScenarios } from '../scenarios/hooks/useGetScenarios';
+import { ComparisonDataProvider } from './ComparisonDataContext';
 import { ComparisonCharts } from './components/ComparisonCharts';
 import { InterventionMaps } from './components/InterventionMaps';
 import { ConfigurationPanel } from './components/ConfigurationPanel';
@@ -194,6 +195,16 @@ export const CompareOptimize: FC = () => {
                 title={formatMessage(MESSAGES.compareOptimizeTitle)}
                 disableShadow
             />
+            <ComparisonDataProvider
+                scenarios={displayScenarios}
+                baselineScenarioId={baselineScenarioNumericId}
+                impactsByScenarioId={impactsByScenarioId}
+                budgetsByScenarioId={budgetsByScenarioId}
+                isImpactLoading={isImpactLoading}
+                isBudgetLoading={isBudgetLoading}
+                targetYear={yearTo}
+                yearFrom={yearFrom}
+            >
             <PageContainer sx={styles.pageContainer}>
                 <Grid container spacing={1} sx={styles.gridContainer}>
                     <Grid item xs={12} md={9} sx={styles.leftGridItem}>
@@ -202,7 +213,6 @@ export const CompareOptimize: FC = () => {
                                 <Grid container spacing={1}>
                                     <Grid item xs={12}>
                                         <InterventionMaps
-                                            scenarios={displayScenarios}
                                             selectedInterventionId={
                                                 selectedInterventionId
                                             }
@@ -216,33 +226,9 @@ export const CompareOptimize: FC = () => {
                                         />
                                     </Grid>
                                     <Grid item xs={12}>
-                                        <MetricsSummary
-                                            scenarios={displayScenarios}
-                                            budgetsByScenarioId={
-                                                budgetsByScenarioId
-                                            }
-                                            impactsByScenarioId={
-                                                impactsByScenarioId
-                                            }
-                                            isBudgetLoading={isBudgetLoading}
-                                            isImpactLoading={isImpactLoading}
-                                            targetYear={yearTo}
-                                            yearFrom={yearFrom}
-                                        />
+                                        <MetricsSummary />
                                     </Grid>
-                                    <ComparisonCharts
-                                        scenarios={displayScenarios}
-                                        baselineScenarioId={
-                                            baselineScenarioNumericId
-                                        }
-                                        budgetsByScenarioId={
-                                            budgetsByScenarioId
-                                        }
-                                        impactsByScenarioId={
-                                            impactsByScenarioId
-                                        }
-                                        isImpactLoading={isImpactLoading}
-                                    />
+                                    <ComparisonCharts />
                                 </Grid>
                             </Box>
                         </PaperContainer>
@@ -279,6 +265,7 @@ export const CompareOptimize: FC = () => {
                     </Grid>
                 </Grid>
             </PageContainer>
+            </ComparisonDataProvider>
         </>
     );
 };

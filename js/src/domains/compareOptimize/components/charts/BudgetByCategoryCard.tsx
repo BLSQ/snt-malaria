@@ -15,15 +15,10 @@ import { MESSAGES } from '../../../messages';
 import { ChartLegend } from '../../../planning/components/budgeting/ChartLegend';
 import { formatBigNumber } from '../../../planning/libs/cost-utils';
 import { BudgetCalculationResponse } from '../../../planning/types/budget';
-import { ScenarioDisplay } from '../../types';
+import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { getInterventionGroupShades } from '../../utils/colors';
 import { Card } from '../Card';
 import { ChartEmptyState } from './ChartEmptyState';
-
-type Props = {
-    scenarios: ScenarioDisplay[];
-    budgetsByScenarioId: Map<number, BudgetCalculationResponse | undefined>;
-};
 
 type BudgetCategoryDatum = {
     name: string;
@@ -79,10 +74,8 @@ const getCategoryTotals = (
         .sort((a, b) => b.value - a.value);
 };
 
-export const BudgetByCategoryCard: FC<Props> = ({
-    scenarios,
-    budgetsByScenarioId,
-}) => {
+export const BudgetByCategoryCard: FC = () => {
+    const { scenarios, budgetsByScenarioId } = useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
     const chartData = useMemo(
         () =>

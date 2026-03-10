@@ -11,8 +11,7 @@ import {
     formatBigNumber,
     formatPercentValue,
 } from '../../planning/libs/cost-utils';
-import { BudgetCalculationResponse } from '../../planning/types/budget';
-import { ScenarioImpactMetrics, ScenarioDisplay } from '../types';
+import { useComparisonDataContext } from '../ComparisonDataContext';
 import {
     getCumulativeCosts,
     getPfprReduction,
@@ -25,24 +24,15 @@ const styles = {
     },
 } satisfies SxStyles;
 
-type Props = {
-    scenarios: ScenarioDisplay[];
-    budgetsByScenarioId: Map<number, BudgetCalculationResponse | undefined>;
-    impactsByScenarioId: Map<number, ScenarioImpactMetrics | undefined>;
-    isBudgetLoading: boolean;
-    isImpactLoading: boolean;
-    targetYear?: number;
-    yearFrom?: number;
-};
-
-export const MetricsSummary: FC<Props> = ({
-    scenarios,
-    budgetsByScenarioId,
-    impactsByScenarioId,
-    isBudgetLoading,
-    isImpactLoading,
-    targetYear,
-}) => {
+export const MetricsSummary: FC = () => {
+    const {
+        scenarios,
+        budgetsByScenarioId,
+        impactsByScenarioId,
+        isBudgetLoading,
+        isImpactLoading,
+        targetYear,
+    } = useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
 
     const baselineId = scenarios[0]?.id;

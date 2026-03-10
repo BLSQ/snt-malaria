@@ -14,16 +14,10 @@ import {
 } from 'recharts';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
-import { ScenarioImpactMetrics, ScenarioDisplay } from '../../types';
 import { formatPercentValue } from '../../../planning/libs/cost-utils';
+import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { Card } from '../Card';
 import { ChartEmptyState } from './ChartEmptyState';
-
-type Props = {
-    scenarios: ScenarioDisplay[];
-    impactsByScenarioId: Map<number, ScenarioImpactMetrics | undefined>;
-    isLoading: boolean;
-};
 
 type ChartDataPoint = {
     year: number;
@@ -37,11 +31,9 @@ const styles = {
     },
 } satisfies SxStyles;
 
-export const YearlyPrevalenceCard: FC<Props> = ({
-    scenarios,
-    impactsByScenarioId,
-    isLoading,
-}) => {
+export const YearlyPrevalenceCard: FC = () => {
+    const { scenarios, impactsByScenarioId, isImpactLoading: isLoading } =
+        useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
     const theme = useTheme();
     const axisColor = theme.palette.text.secondary;
