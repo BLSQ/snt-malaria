@@ -198,5 +198,7 @@
     "iaso.snt_malaria.impact.deaths": "Décès",
     "iaso.snt_malaria.compareOptimize.noImpactData": "Aucune donnée d'impact disponible",
     "iaso.snt_malaria.compareOptimize.noBudgetData": "Aucune donnée de budget disponible",
-    "iaso.snt_malaria.compareOptimize.scenarioLabelWithIndex": "Scénario {index}"
+    "iaso.snt_malaria.compareOptimize.scenarioLabelWithIndex": "Scénario {index}",
+    "iaso.snt_malaria.label.mapView": "Carte",
+    "iaso.snt_malaria.label.listView": "Liste"
 }

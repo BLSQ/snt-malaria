@@ -1,4 +1,4 @@
-import React, { Dispatch, FC, useCallback, useMemo } from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
 import SearchIcon from '@mui/icons-material/Search';
 import {
     Box,
@@ -52,7 +52,6 @@ type Props = {
         ordUnitIds: number[],
         shouldCloseModal: boolean,
     ) => void;
-    setIsLoading: Dispatch<boolean>;
     isRemovingOrgUnits: boolean;
 };
 
@@ -60,7 +59,6 @@ export const InterventionOrgUnits: FC<Props> = ({
     disabled = false,
     interventionPlan,
     removeOrgUnitsFromPlan,
-    setIsLoading,
     isRemovingOrgUnits,
 }) => {
     const [search, setSearch] = React.useState<string>('');
@@ -80,9 +78,7 @@ export const InterventionOrgUnits: FC<Props> = ({
             interventionPlan.org_units.map(o => o.intervention_assignment_id),
             true,
         );
-
-        setIsLoading(true);
-    }, [interventionPlan, removeOrgUnitsFromPlan, setIsLoading]);
+    }, [interventionPlan, removeOrgUnitsFromPlan]);
 
     const onRemoveOrgUnitFromPlan = useCallback(
         (interventionAssignmentId: number) => {

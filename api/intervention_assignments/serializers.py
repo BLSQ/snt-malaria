@@ -3,6 +3,7 @@ from rest_framework import exceptions, serializers
 from iaso.models.org_unit import OrgUnit
 from iaso.utils.org_units import get_valid_org_units_with_geography
 from plugins.snt_malaria.api.interventions.serializers import InterventionSerializer
+from plugins.snt_malaria.api.scenario_rules.serializers import ScenarioRuleSmallSerializer
 from plugins.snt_malaria.models import InterventionAssignment, Scenario
 from plugins.snt_malaria.models.intervention import Intervention
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
@@ -28,12 +29,14 @@ class InterventionAssignmentListSerializer(serializers.ModelSerializer):
     """For reading InterventionAssignment"""
 
     intervention = InterventionSerializer(read_only=True)
+    rule = ScenarioRuleSmallSerializer(read_only=True)
     org_unit = OrgUnitSmallSerializer(read_only=True)
 
     class Meta:
         model = InterventionAssignment
         fields = [
             "id",
+            "rule",
             "intervention",
             "org_unit",
             "created_at",

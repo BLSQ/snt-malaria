@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect } from 'react';
 import { Box, Drawer, Tab, Tabs } from '@mui/material';
-import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
 import { MESSAGES } from '../../../messages';
@@ -49,7 +49,6 @@ export const InterventionPlanDetails: FC<Props> = ({
     removeOrgUnitsFromPlan,
     isRemovingOrgUnits = true,
 }) => {
-    const [isLoading, setIsLoading] = React.useState<boolean>(false);
     const [isOpen, setIsOpen] = React.useState<boolean>(false);
     const [activeTab, setActiveTab] = React.useState<
         'budget_settings' | 'districts'
@@ -74,7 +73,6 @@ export const InterventionPlanDetails: FC<Props> = ({
             onClose={onCloseInterventionPlanDetails}
             sx={styles.drawer}
         >
-            {isLoading && <LoadingSpinner />}
             <DrawerHeader
                 title={interventionPlan?.intervention.short_name}
                 hideDivider={true}
@@ -106,7 +104,6 @@ export const InterventionPlanDetails: FC<Props> = ({
                 {activeTab === 'districts' && interventionPlan && (
                     <InterventionOrgUnits
                         disabled={disabled}
-                        setIsLoading={setIsLoading}
                         removeOrgUnitsFromPlan={removeOrgUnitsFromPlan}
                         isRemovingOrgUnits={isRemovingOrgUnits}
                         interventionPlan={interventionPlan}

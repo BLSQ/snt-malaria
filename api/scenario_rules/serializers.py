@@ -59,6 +59,17 @@ class ScenarioRuleListSerializer(serializers.ModelSerializer):
         ]
 
 
+class ScenarioRuleSmallSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScenarioRule
+        fields = [
+            "id",
+            "name",
+            "priority",
+            "color",
+        ]
+
+
 class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
     intervention_properties = ScenarioRuleInterventionPropertiesSerializer(many=True, read_only=True)
 

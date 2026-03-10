@@ -8,7 +8,7 @@ import {
 } from '../types/interventions';
 
 export const useGetInterventionAssignments = (
-    scenarioId,
+    scenarioId: number | undefined,
 ): UseQueryResult<InterventionPlan[], Error> => {
     const params: Record<string, any> = { scenario_id: scenarioId };
     const url = makeUrlWithParams(

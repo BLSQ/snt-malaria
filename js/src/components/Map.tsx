@@ -50,8 +50,7 @@ const styles = {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: theme =>
-                `${theme.shape.borderRadius}px !important`,
+            borderRadius: theme => `${theme.shape.borderRadius}px !important`,
             fontSize: theme => theme.typography.pxToRem(22),
             lineHeight: '1 !important',
             textIndent: '0 !important',
@@ -90,6 +89,7 @@ type Props = {
         label: string | undefined;
         color: string | undefined;
     };
+    RenderTooltip?: (props: { orgUnit: OrgUnit }) => React.ReactNode;
     legendConfig?: {
         units: string;
         legend_type: string; //'linear' | 'ordinal' | 'threshold';
@@ -119,6 +119,7 @@ export const Map: FC<Props> = ({
     onOrgUnitClick = noOp,
     dataKey,
     border = false,
+    RenderTooltip,
 }) => {
     const [currentTile] = useState<Tile>(tiles.osm);
 
@@ -191,11 +192,17 @@ export const Map: FC<Props> = ({
                             }}
                         >
                             <LeafletTooltip>
-                                <b>{orgUnit.short_name}</b>
-                                {orgUnitMapMisc.label && (
+                                {RenderTooltip ? (
+                                    RenderTooltip({ orgUnit })
+                                ) : (
                                     <>
-                                        <br />
-                                        {orgUnitMapMisc.label}
+                                        <b>{orgUnit.short_name}</b>
+                                        {orgUnitMapMisc.label && (
+                                            <>
+                                                <br />
+                                                {orgUnitMapMisc.label}
+                                            </>
+                                        )}
                                     </>
                                 )}
                             </LeafletTooltip>

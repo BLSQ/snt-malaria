@@ -1,4 +1,5 @@
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { ScenarioRule } from '../../planningV2/types/scenarioRule';
 
 export type InterventionCategory = {
     id: number;
@@ -27,6 +28,7 @@ export type InterventionAssignmentResponse = {
     id: number;
     org_unit: OrgUnit;
     intervention: Intervention;
+    rule: ScenarioRule | null;
     scenario_id: number;
 };
 
