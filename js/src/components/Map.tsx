@@ -50,8 +50,7 @@ const styles = {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: theme =>
-                `${theme.shape.borderRadius}px !important`,
+            borderRadius: theme => `${theme.shape.borderRadius}px !important`,
             fontSize: theme => theme.typography.pxToRem(22),
             lineHeight: '1 !important',
             textIndent: '0 !important',
@@ -193,27 +192,27 @@ export const Map: FC<Props> = ({
                             }}
                         >
                             <LeafletTooltip>
-                            {RenderTooltip ? (
-                                RenderTooltip({ orgUnit })
-                            ) : (
-                                <>
-                                    <b>{orgUnit.short_name}</b>
-                                    {orgUnitMapMisc.label && (
-                                        <>
-                                            <br />
-                                            {orgUnitMapMisc.label}
-                                        </>
-                                    )}
-                                </>
-                            )}
-                        </LeafletTooltip>
-                    </GeoJSON>
-                );
-            })}
-            {legendConfig && !hideLegend && (
-                <MapLegend legendConfig={legendConfig} />
-            )}
-        </MapContainer>
+                                {RenderTooltip ? (
+                                    RenderTooltip({ orgUnit })
+                                ) : (
+                                    <>
+                                        <b>{orgUnit.short_name}</b>
+                                        {orgUnitMapMisc.label && (
+                                            <>
+                                                <br />
+                                                {orgUnitMapMisc.label}
+                                            </>
+                                        )}
+                                    </>
+                                )}
+                            </LeafletTooltip>
+                        </GeoJSON>
+                    );
+                })}
+                {legendConfig && !hideLegend && (
+                    <MapLegend legendConfig={legendConfig} />
+                )}
+            </MapContainer>
         </Box>
     );
 };
