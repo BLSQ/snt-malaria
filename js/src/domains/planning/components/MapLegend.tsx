@@ -54,7 +54,7 @@ export const MapLegend: FunctionComponent<Props> = ({ legendConfig }) => {
     const { formatMessage } = useSafeIntl();
 
     return (
-        <Paper elevation={1} sx={styles.root}>
+        <Paper elevation={0} sx={styles.root}>
             {isStretched && legendConfig.units ? (
                 <Box sx={styles.legendUnit}>{legendConfig.units}</Box>
             ) : null}

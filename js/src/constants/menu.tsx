@@ -1,18 +1,33 @@
 import React from 'react';
-import { FormatListBulletedOutlined, Settings } from '@mui/icons-material';
+import { SvgIconProps } from '@mui/material';
+import {
+    CompareOutlined,
+    FormatListBulletedOutlined,
+    Settings,
+} from '@mui/icons-material';
+import { MESSAGES } from '../domains/messages';
 import { SETTINGS_READ } from './permissions';
 
 export const menu = [
     {
-        label: 'Scenarios',
+        label: MESSAGES.scenariosTitle,
         key: 'snt_malaria/scenarios/list',
         permissions: [],
-        icon: props => <FormatListBulletedOutlined {...props} />,
+        icon: (props: SvgIconProps) => (
+            <FormatListBulletedOutlined {...props} />
+        ),
     },
     {
-        label: 'Settings',
+        label: MESSAGES.compareOptimizeTitle,
+        key: 'snt_malaria/compare-optimize',
+        permissions: [],
+        icon: (props: SvgIconProps) => <CompareOutlined {...props} />,
+        dev: true,
+    },
+    {
+        label: MESSAGES.settingsTitle,
         key: 'snt_malaria/settings',
         permissions: [SETTINGS_READ],
-        icon: props => <Settings {...props} />,
+        icon: (props: SvgIconProps) => <Settings {...props} />,
     },
 ];

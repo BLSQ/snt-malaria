@@ -109,7 +109,7 @@ export const getStyleForShape = (
         fillColor:
             legend_config &&
             getColorForShape(value, legend_type, legend_config),
-        fillOpacity: 1,
+        fillOpacity: mapTheme.fillOpacity,
     };
 };
 

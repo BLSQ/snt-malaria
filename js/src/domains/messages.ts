@@ -34,9 +34,41 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.home.title',
         defaultMessage: 'SNT Malaria',
     },
+    compareOptimizeTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.title',
+        defaultMessage: 'Compare & Optimize',
+    },
+    scenarioFallbackLabel: {
+        id: 'iaso.snt_malaria.compareOptimize.scenarioFallbackLabel',
+        defaultMessage: 'Scenario {value}',
+    },
+    impactDifferencesTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.impactDifferencesTitle',
+        defaultMessage: 'Impact differences',
+    },
+    yearlyPrevalenceTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.yearlyPrevalenceTitle',
+        defaultMessage: 'Yearly Prevalence Rate',
+    },
+    costPerAvertedCaseTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.costPerAvertedCaseTitle',
+        defaultMessage: 'Cost per averted case',
+    },
+    budgetByCategoryTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.budgetByCategoryTitle',
+        defaultMessage: 'Budget by Category',
+    },
+    noBudgetData: {
+        id: 'iaso.snt_malaria.compareOptimize.noBudgetData',
+        defaultMessage: 'No budget data available',
+    },
     settingsTitle: {
         id: 'iaso.snt_malaria.settings.title',
         defaultMessage: 'Settings',
+    },
+    scenarioLabel: {
+        id: 'iaso.snt_malaria.label.scenario',
+        defaultMessage: 'Scenario',
     },
     name: {
         id: 'iaso.snt_malaria.label.name',
@@ -390,6 +422,63 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.impactSettings.notIncluded',
         defaultMessage: 'Not included',
     },
+    impactCases: {
+        id: 'iaso.snt_malaria.impact.cases',
+        defaultMessage: 'Cases',
+    },
+    impactSevereCases: {
+        id: 'iaso.snt_malaria.impact.severeCases',
+        defaultMessage: 'Severe cases',
+    },
+    impactPfprReduction: {
+        id: 'iaso.snt_malaria.impact.pfprReduction',
+        defaultMessage: 'PfPR reduction',
+    },
+    impactTotalCosts: {
+        id: 'iaso.snt_malaria.impact.totalCosts',
+        defaultMessage: 'Total Cumulative Costs (USD)',
+    },
+    impactTargetLabel: {
+        id: 'iaso.snt_malaria.impact.targetLabel',
+        defaultMessage: '{year} Target: {value}',
+    },
+    impactBudgetLabel: {
+        id: 'iaso.snt_malaria.impact.budgetLabel',
+        defaultMessage: '2030 Budget: {value}',
+    },
+    displayOptionsTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.displayOptionsTitle',
+        defaultMessage: 'Display options',
+    },
+    noYearRangeOverlapTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.noYearRangeOverlapTitle',
+        defaultMessage: 'No overlapping year range',
+    },
+    noYearRangeOverlap: {
+        id: 'iaso.snt_malaria.compareOptimize.noYearRangeOverlap',
+        defaultMessage:
+            'No overlapping year range between the selected scenarios and the available impact data. Please select scenarios with compatible year ranges.',
+    },
+    yearsLabel: {
+        id: 'iaso.snt_malaria.compareOptimize.yearsLabel',
+        defaultMessage: 'Years',
+    },
+    ageGroupLabel: {
+        id: 'iaso.snt_malaria.compareOptimize.ageGroupLabel',
+        defaultMessage: 'Age group',
+    },
+    scenariosTitle: {
+        id: 'iaso.snt_malaria.scenarios.title',
+        defaultMessage: 'Scenarios',
+    },
+    baselineLabel: {
+        id: 'iaso.snt_malaria.scenarios.baseline',
+        defaultMessage: 'Baseline',
+    },
+    compareScenariosLabel: {
+        id: 'iaso.snt_malaria.scenarios.compare',
+        defaultMessage: 'Compare scenarios',
+    },
     budgetAssumptionsDescription_itn_campaign: {
         id: 'iaso.snt_malaria.budgetAssumptions.description.itn_campaign',
         defaultMessage: `To estimate the number of insecticide-treated nets (ITNs) needed for campaign delivery in targeted areas:<br></br>
@@ -574,5 +663,17 @@ export const MESSAGES = defineMessages({
     national: {
         id: 'iaso.snt_malaria.label.national',
         defaultMessage: 'National',
+    },
+    deaths: {
+        id: 'iaso.snt_malaria.impact.deaths',
+        defaultMessage: 'Deaths',
+    },
+    noImpactData: {
+        id: 'iaso.snt_malaria.compareOptimize.noImpactData',
+        defaultMessage: 'No impact data available',
+    },
+    scenarioLabelWithIndex: {
+        id: 'iaso.snt_malaria.compareOptimize.scenarioLabelWithIndex',
+        defaultMessage: 'Scenario {index}',
     },
 });
