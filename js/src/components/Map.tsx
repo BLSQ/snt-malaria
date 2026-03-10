@@ -1,5 +1,6 @@
 import React, { FC, useMemo, useState } from 'react';
-import { alpha, styled } from '@mui/material/styles';
+import { Box } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import L from 'leaflet';
 import {
     MapContainer,
@@ -7,6 +8,7 @@ import {
     Tooltip as LeafletTooltip,
     GeoJSON,
 } from 'react-leaflet';
+import { SxStyles } from 'Iaso/types/general';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
@@ -24,61 +26,62 @@ import { InvalidateOnResize } from './InvalidateOnResize';
 import { MapTypeLayer } from './MapTyleLayer';
 import { ResetZoomControl } from './ResetZoomControl';
 
-const StyledMapContainer = styled(MapContainer, {
-    shouldForwardProp: prop => prop !== 'bordered',
-})<{ bordered?: boolean }>(({ theme, bordered }) => ({
-    height: '100%',
-    width: '100%',
-    backgroundColor: mapTheme.backgroundColor,
-    ...(bordered && {
-        borderRadius: theme.shape.borderRadius * 2,
+const styles = {
+    root: {
+        height: '100%',
+        width: '100%',
+        backgroundColor: mapTheme.backgroundColor,
+        '& .leaflet-control-zoom': {
+            border: 'none',
+            boxShadow: 'none',
+            backgroundColor: 'transparent',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: theme => theme.spacing(0.25),
+            marginBottom: 1,
+            marginRight: 1,
+        },
+        '& .leaflet-control-zoom a': {
+            backgroundColor: theme => alpha(theme.palette.text.primary, 0.75),
+            color: 'common.white',
+            border: 'none',
+            minWidth: theme => theme.spacing(3.5),
+            minHeight: theme => theme.spacing(3.5),
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: theme =>
+                `${theme.shape.borderRadius}px !important`,
+            fontSize: theme => theme.typography.pxToRem(22),
+            lineHeight: '1 !important',
+            textIndent: '0 !important',
+            margin: 0,
+            padding: 0,
+        },
+        '& .leaflet-control-zoom a span': {
+            display: 'block',
+            lineHeight: 0,
+            transform: 'translateY(-2px)',
+        },
+        '& .leaflet-control-zoom-box': {
+            display: 'none !important',
+        },
+        '& .leaflet-control-zoom-rect': {
+            display: 'none !important',
+        },
+        '& .leaflet-control-zoom a img': {
+            margin: '0 !important',
+        },
+        '& .leaflet-control-attribution': {
+            display: 'none',
+        },
+    },
+    bordered: {
+        borderRadius: theme => `${theme.shape.borderRadius * 2}px`,
         overflow: 'hidden',
-        border: `1px solid ${theme.palette.divider}`,
-    }),
-    '& .leaflet-control-zoom': {
-        border: 'none',
-        boxShadow: 'none',
-        backgroundColor: 'transparent',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: theme.spacing(0.25),
-        marginBottom: theme.spacing(1),
-        marginRight: theme.spacing(1),
+        border: theme => `1px solid ${theme.palette.divider}`,
     },
-    '& .leaflet-control-zoom a': {
-        backgroundColor: alpha(theme.palette.text.primary, 0.75),
-        color: theme.palette.common.white,
-        border: 'none',
-        minWidth: theme.spacing(3.5),
-        minHeight: theme.spacing(3.5),
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: `${theme.shape.borderRadius}px !important`,
-        fontSize: theme.typography.pxToRem(22),
-        lineHeight: '1 !important',
-        textIndent: '0 !important',
-        margin: 0,
-        padding: 0,
-    },
-    '& .leaflet-control-zoom a span': {
-        display: 'block',
-        lineHeight: 0,
-        transform: 'translateY(-2px)',
-    },
-    '& .leaflet-control-zoom-box': {
-        display: 'none !important',
-    },
-    '& .leaflet-control-zoom-rect': {
-        display: 'none !important',
-    },
-    '& .leaflet-control-zoom a img': {
-        margin: '0 !important',
-    },
-    '& .leaflet-control-attribution': {
-        display: 'none',
-    },
-}));
+} satisfies SxStyles;
 
 type Props = {
     id: string;
@@ -134,70 +137,75 @@ export const Map: FC<Props> = ({
     }, [orgUnits]);
 
     return (
-        <StyledMapContainer
-            bordered={border}
-            id={id}
-            doubleClickZoom
-            scrollWheelZoom={false}
-            maxZoom={currentTile.maxZoom}
-            center={[0, 0]}
-            keyboard={false}
-            zoomControl={false}
-            boundsOptions={boundsOptions}
-            bounds={bounds}
-            zoomSnap={defaultZoomSnap}
-            zoomDelta={defaultZoomDelta}
-        >
-            <MapTypeLayer />
-            <InvalidateOnResize
-                bounds={bounds}
+        <Box sx={border ? [styles.root, styles.bordered] : styles.root}>
+            <MapContainer
+                id={id}
+                style={{
+                    height: '100%',
+                    width: '100%',
+                }}
+                doubleClickZoom
+                scrollWheelZoom={false}
+                maxZoom={currentTile.maxZoom}
+                center={[0, 0]}
+                keyboard={false}
+                zoomControl={false}
                 boundsOptions={boundsOptions}
-            />
-            <FitBounds bounds={bounds} boundsOptions={boundsOptions} />
-            <ZoomControl position="bottomright" />
-            <ResetZoomControl
                 bounds={bounds}
-                boundsOptions={boundsOptions}
-            />
-            {orgUnits?.map(orgUnit => {
-                const orgUnitMapMisc = getOrgUnitMapMisc(orgUnit.id);
-                const weight = selectedOrgUnits.includes(orgUnit.id)
-                    ? mapTheme.selectedShapeWeight
-                    : mapTheme.shapeWeight;
-                return (
-                    <GeoJSON
-                        key={
-                            dataKey
-                                ? `${orgUnit.id}-${dataKey}`
-                                : orgUnit.id
-                        }
-                        data={orgUnit.geo_json as unknown as GeoJson}
-                        style={{
-                            color: mapTheme.borderColor,
-                            weight: weight,
-                            fillColor:
-                                orgUnitMapMisc?.color ?? defaultColor,
-                            fillOpacity: mapTheme.fillOpacity,
-                        }}
-                        eventHandlers={{
-                            click: () => onOrgUnitClick(orgUnit.id),
-                        }}
-                    >
-                        <LeafletTooltip>
-                            <b>{orgUnit.short_name}</b>
-                            {orgUnitMapMisc.label && (
-                                <>
-                                    <br />
-                                    {orgUnitMapMisc.label}
-                                </>
-                            )}
-                        </LeafletTooltip>
-                    </GeoJSON>
-                );
-            })}
-            {legendConfig && !hideLegend && (
-                <MapLegend legendConfig={legendConfig} />
-            )}
-        </StyledMapContainer>
+                zoomSnap={defaultZoomSnap}
+                zoomDelta={defaultZoomDelta}
+            >
+                <MapTypeLayer />
+                <InvalidateOnResize
+                    bounds={bounds}
+                    boundsOptions={boundsOptions}
+                />
+                <FitBounds bounds={bounds} boundsOptions={boundsOptions} />
+                <ZoomControl position="bottomright" />
+                <ResetZoomControl
+                    bounds={bounds}
+                    boundsOptions={boundsOptions}
+                />
+                {orgUnits?.map(orgUnit => {
+                    const orgUnitMapMisc = getOrgUnitMapMisc(orgUnit.id);
+                    const weight = selectedOrgUnits.includes(orgUnit.id)
+                        ? mapTheme.selectedShapeWeight
+                        : mapTheme.shapeWeight;
+                    return (
+                        <GeoJSON
+                            key={
+                                dataKey
+                                    ? `${orgUnit.id}-${dataKey}`
+                                    : orgUnit.id
+                            }
+                            data={orgUnit.geo_json as unknown as GeoJson}
+                            style={{
+                                color: mapTheme.borderColor,
+                                weight: weight,
+                                fillColor:
+                                    orgUnitMapMisc?.color ?? defaultColor,
+                                fillOpacity: mapTheme.fillOpacity,
+                            }}
+                            eventHandlers={{
+                                click: () => onOrgUnitClick(orgUnit.id),
+                            }}
+                        >
+                            <LeafletTooltip>
+                                <b>{orgUnit.short_name}</b>
+                                {orgUnitMapMisc.label && (
+                                    <>
+                                        <br />
+                                        {orgUnitMapMisc.label}
+                                    </>
+                                )}
+                            </LeafletTooltip>
+                        </GeoJSON>
+                    );
+                })}
+                {legendConfig && !hideLegend && (
+                    <MapLegend legendConfig={legendConfig} />
+                )}
+            </MapContainer>
+        </Box>
     );
 };

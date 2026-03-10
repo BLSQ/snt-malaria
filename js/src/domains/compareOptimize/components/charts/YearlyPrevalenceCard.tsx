@@ -65,18 +65,14 @@ export const YearlyPrevalenceCard: FC = () => {
                             <CartesianGrid vertical={false} strokeDasharray="" stroke={theme.palette.divider} />
                             <XAxis dataKey="year" tick={{ fill: axisColor, fontSize: '0.75rem' }} stroke={axisColor} tickMargin={4} />
                             <YAxis
-                                tickFormatter={(value: number) =>
-                                    formatPercentValue(value)
-                                }
+                                tickFormatter={formatPercentValue}
                                 tick={{ fill: axisColor, fontSize: '0.75rem' }}
                                 stroke={axisColor}
                                 width={50}
                                 tickMargin={2}
                             />
                             <Tooltip
-                                formatter={(value: number) =>
-                                    formatPercentValue(value)
-                                }
+                                formatter={formatPercentValue}
                             />
                             {scenarios.map(scenario => (
                                 <Line
