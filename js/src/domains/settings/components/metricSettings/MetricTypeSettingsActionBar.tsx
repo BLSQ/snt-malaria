@@ -6,6 +6,8 @@ import { SxStyles } from 'Iaso/types/general';
 import { exportMetricValuesTemplateAPIPath } from '../../../../constants/api-urls';
 import { MESSAGES } from '../../messages';
 import { ImportMetricValuesDialog } from './MetricValuesImportDialog';
+import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
+import * as CorePermission from 'Iaso/utils/permissions';
 
 type Props = {
     onSearchChange: (searchTerm: string) => void;
@@ -46,41 +48,45 @@ export const MetricTypeSettingsActionBar: FC<Props> = ({
                 />
             </Box>
             <Box ref={anchorRef}>
-                <IconButton
-                    aria-label="more-info"
-                    overrideIcon={MoreHorizIcon}
-                    tooltipMessage={MESSAGES.more}
-                    onClick={() => setIsExtraActionOpen(true)}
-                ></IconButton>
-                <Popover
-                    id="more-info-popover"
-                    open={isExtraActionOpen}
-                    anchorEl={anchorRef.current}
-                    onClose={() => setIsExtraActionOpen(false)}
-                    anchorOrigin={{
-                        vertical: 'bottom',
-                        horizontal: 'left',
-                    }}
+                <DisplayIfUserHasPerm
+                    permissions={[CorePermission.METRIC_TYPES]}
                 >
-                    <ImportMetricValuesDialog
-                        iconProps={{}}
+                    <IconButton
+                        aria-label="more-info"
+                        overrideIcon={MoreHorizIcon}
+                        tooltipMessage={MESSAGES.more}
+                        onClick={() => setIsExtraActionOpen(true)}
+                    ></IconButton>
+                    <Popover
+                        id="more-info-popover"
+                        open={isExtraActionOpen}
+                        anchorEl={anchorRef.current}
                         onClose={() => setIsExtraActionOpen(false)}
-                    />
-                    <MenuItem
-                        component={Link}
-                        href={exportMetricValuesTemplateAPIPath}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'left',
+                        }}
                     >
-                        {formatMessage(MESSAGES.downloadCSVTemplate)}
-                    </MenuItem>
-                </Popover>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    sx={styles.createLayerButton}
-                    onClick={onCreateClick}
-                >
-                    {formatMessage(MESSAGES.createLayer)}
-                </Button>
+                        <ImportMetricValuesDialog
+                            iconProps={{}}
+                            onClose={() => setIsExtraActionOpen(false)}
+                        />
+                        <MenuItem
+                            component={Link}
+                            href={exportMetricValuesTemplateAPIPath}
+                        >
+                            {formatMessage(MESSAGES.downloadCSVTemplate)}
+                        </MenuItem>
+                    </Popover>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        sx={styles.createLayerButton}
+                        onClick={onCreateClick}
+                    >
+                        {formatMessage(MESSAGES.createLayer)}
+                    </Button>
+                </DisplayIfUserHasPerm>
             </Box>
         </Box>
     );

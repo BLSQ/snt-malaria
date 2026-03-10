@@ -6,6 +6,8 @@ import { SxStyles } from 'Iaso/types/general';
 import { Intervention } from '../../../planning/types/interventions';
 import { MESSAGES } from '../../messages';
 import { InterventionCostBreakdownLine } from '../../types/InterventionCostBreakdownLine';
+import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
+import * as Permission from '../../../../constants/permissions';
 
 type Props = {
     intervention: Intervention;
@@ -51,12 +53,14 @@ export const InterventionRow: React.FC<Props> = ({
                 >
                     {intervention.name}
                 </Typography>
-                <IconButton
-                    onClick={() => onEditInterventionCost(intervention)}
-                    iconSize="small"
-                    tooltipMessage={MESSAGES.editCost}
-                    overrideIcon={EditIcon}
-                />
+                <DisplayIfUserHasPerm permissions={[Permission.SETTINGS_WRITE]}>
+                    <IconButton
+                        onClick={() => onEditInterventionCost(intervention)}
+                        iconSize="small"
+                        tooltipMessage={MESSAGES.editCost}
+                        overrideIcon={EditIcon}
+                    />
+                </DisplayIfUserHasPerm>
             </Box>
             <Box sx={styles.costList}>
                 {(costBreakdownLines.length > 0 &&
