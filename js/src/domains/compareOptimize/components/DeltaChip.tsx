@@ -59,8 +59,7 @@ const styles = {
         py: 0.5,
         px: 1,
         borderRadius: 4,
-        fontWeight: 400,
-        fontSize: '1rem',
+        typography: 'body1',
     },
     green: {
         backgroundColor: green[50],

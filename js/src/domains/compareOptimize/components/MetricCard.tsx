@@ -38,8 +38,6 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: 1,
-        fontWeight: 400,
-        fontSize: '1.5rem',
         lineHeight: 1.2,
         m: 0,
     },
@@ -93,7 +91,7 @@ export const MetricCard: FC<Props> = ({
                 {entries.map(entry => (
                     <Typography
                         key={`${keyPrefix}-${entry.id}`}
-                        variant="h6"
+                        variant="h5"
                         sx={[
                             styles.valueRow,
                             entry.isBaseline && {

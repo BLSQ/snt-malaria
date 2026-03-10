@@ -80,13 +80,11 @@ const styles = {
     },
     sectionTitle: {
         fontWeight: 550,
-        fontSize: '1rem',
         color: 'text.primary',
         mt: 4,
         mb: 2,
     },
     yearLabel: {
-        fontSize: '0.75rem',
         color: 'text.primary',
         mb: 1,
     },
@@ -102,7 +100,6 @@ const styles = {
         },
     },
     subLabel: {
-        fontSize: '0.75rem',
         color: 'text.primary',
         mt: 2,
         mb: 1,
@@ -269,7 +266,7 @@ export const ConfigurationPanel: FC<Props> = ({
                     )}
                     {!isYearRangeLoading && yearRange && onYearRangeChange && (
                         <>
-                            <Typography variant="body1" sx={styles.yearLabel}>
+                            <Typography variant="caption" sx={styles.yearLabel}>
                                 {formatMessage(MESSAGES.yearsLabel)}
                             </Typography>
                             <Box sx={styles.sliderContainer}>
@@ -288,7 +285,7 @@ export const ConfigurationPanel: FC<Props> = ({
                     )}
                     {ageGroups && ageGroups.length > 0 && selectedAgeGroup && onAgeGroupChange && (
                         <>
-                            <Typography variant="body1" sx={styles.subLabel}>
+                            <Typography variant="caption" sx={styles.subLabel}>
                                 {formatMessage(MESSAGES.ageGroupLabel)}
                             </Typography>
                             <InputComponent
