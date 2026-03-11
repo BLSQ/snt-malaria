@@ -4,7 +4,6 @@ import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import {
     InterventionProperties,
     MetricTypeCriterion,
-    ScenarioRule,
 } from '../types/scenarioRule';
 import { matchingCriteriaToJsonLogic } from '../utils/jsonLogic';
 import { ScenarioRuleResponse } from './useGetScenarioRules';
@@ -24,9 +23,11 @@ const useReplaceQueryData = (scenarioId: number) => {
     return (data: ScenarioRuleResponse, variables: ScenarioRulePayload) => {
         queryClient.setQueryData(
             [`scenarioRules_${scenarioId}`],
-            (oldData: ScenarioRule[]) => {
+            (oldData?: ScenarioRuleResponse[]) => {
+                if (!oldData) return [data];
+
                 if (variables.id) {
-                    return oldData.map((rule: ScenarioRule) =>
+                    return oldData.map((rule: ScenarioRuleResponse) =>
                         rule.id === variables.id ? data : rule,
                     );
                 } else {
@@ -37,9 +38,7 @@ const useReplaceQueryData = (scenarioId: number) => {
     };
 };
 
-export const useCreateUpdateScenarioRule = (
-    scenarioId: number,
-): UseMutationResult => {
+export const useCreateUpdateScenarioRule = (scenarioId: number) => {
     const replaceQueryData = useReplaceQueryData(scenarioId);
     return useSnackMutation({
         mutationFn: (body: Partial<ScenarioRulePayload>) => {
