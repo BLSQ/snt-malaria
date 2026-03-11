@@ -61,7 +61,9 @@ export const InterventionsPlanMap: FC = () => {
             };
 
             const newRules = [
-                ...new Set<ScenarioRule>([...rules, assignment.rule]),
+                ...new Set<ScenarioRule>(
+                    [...rules, assignment.rule].filter(Boolean),
+                ),
             ];
             const newInterventions = [
                 ...new Set<any>([...interventions, assignment.intervention]),
