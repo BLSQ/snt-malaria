@@ -33,8 +33,7 @@ import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { useRefreshAssignments } from './hooks/useRefreshInterventionAssignment';
-import { userCanEditScenario } from './utils/permissions';
-import { useCurrentUser } from 'Iaso/utils/usersUtils';
+import { useUserCanEditScenario } from './utils/permissions';
 
 type PlanningParams = {
     scenarioId: number;
@@ -66,8 +65,7 @@ export const PlanningV2: FC = () => {
     const { mutate: runBudget, isLoading: isCalculatingBudget } =
         useCalculateBudget();
 
-    const currentUser = useCurrentUser();
-    const canEditScenario = userCanEditScenario(scenario, currentUser);
+    const canEditScenario = useUserCanEditScenario(scenario);
 
     const {
         mutate: removeManyOrgUnitsFromPlan,

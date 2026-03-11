@@ -1,25 +1,26 @@
 import { userHasPermission } from 'Iaso/domains/users/utils';
 import * as Permission from '../../../constants/permissions';
 import { Scenario } from '../../scenarios/types';
-import { User } from 'Iaso/utils/usersUtils';
+import { useCurrentUser } from 'Iaso/utils/usersUtils';
 
 /**
- * check if user has the permission to edit this scenario
+ * checks whether the current user is allowed to edit a scenario
  *
  * @param {Scenario} scenario
- * @param {User} user
  * @return {Boolean}
  */
-export const userCanEditScenario = (scenario: Scenario | undefined, user: User) => {
-    if (!user || !scenario) {
+export const useUserCanEditScenario = (scenario: Scenario | undefined) => {
+    if (!scenario) {
         return false;
     }
 
-    if (userHasPermission([Permission.SCENARIO_FULL_WRITE], user)) {
+    const user = useCurrentUser();
+
+    if (userHasPermission(Permission.SCENARIO_FULL_WRITE, user)) {
         return true;
     }
 
-    if (userHasPermission([Permission.SCENARIO_BASIC_WRITE], user) && (scenario.created_by.id === user.id)) {
+    if (userHasPermission(Permission.SCENARIO_BASIC_WRITE, user) && (scenario.created_by.id === user.id)) {
         return true;
     }
 
