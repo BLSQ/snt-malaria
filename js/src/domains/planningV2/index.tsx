@@ -33,6 +33,8 @@ import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { useRefreshAssignments } from './hooks/useRefreshInterventionAssignment';
+import { userCanEditScenario } from './utils/permissions';
+import { useCurrentUser } from 'Iaso/utils/usersUtils';
 
 type PlanningParams = {
     scenarioId: number;
@@ -63,6 +65,9 @@ export const PlanningV2: FC = () => {
     const { mutate: refreshAssignments } = useRefreshAssignments(scenarioId);
     const { mutate: runBudget, isLoading: isCalculatingBudget } =
         useCalculateBudget();
+
+    const currentUser = useCurrentUser();
+    const canEditScenario = userCanEditScenario(scenario, currentUser);
 
     const {
         mutate: removeManyOrgUnitsFromPlan,
@@ -103,6 +108,7 @@ export const PlanningV2: FC = () => {
             metricTypeCategories={metricTypeCategories}
             interventionCategories={interventionCategories}
             interventionAssignments={interventionAssignments || []}
+            canEditScenario={canEditScenario}
         >
             {isLoadingOrgUnits && <LoadingSpinner />}
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />

@@ -21,6 +21,9 @@ import {
 import { useDeleteScenario } from '../../scenarios/hooks/useDeleteScenario';
 import { useUpdateScenario } from '../../scenarios/hooks/useUpdateScenario';
 import { Scenario } from '../../scenarios/types';
+import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
+import * as Permission from '../../../constants/permissions';
+import { usePlanningContext } from '../../planningV2/contexts/PlanningContext';
 
 const styles: SxStyles = {
     content: (theme: Theme) => ({
@@ -63,6 +66,7 @@ export const ScenarioTopBar: FC<Props> = ({
     onToggleSidebar,
 }) => {
     const csvUrl = `${exportScenarioAPIPath}?id=${scenario.id}`;
+    const { canEditScenario } = usePlanningContext();
 
     const navigate = useNavigate();
     const { formatMessage } = useSafeIntl();
@@ -100,46 +104,55 @@ export const ScenarioTopBar: FC<Props> = ({
                 {scenario.name} {scenario.start_year} - {scenario.end_year}
             </Typography>
             <Box sx={styles.actionBtns}>
-                <DownloadButtonsComponent variant="text" csvUrl={csvUrl} />
-                <DuplicateScenarioModal
-                    scenario={scenario}
-                    onClose={redirectToScenario}
-                    iconProps={{}}
-                    titleMessage={formatMessage(MESSAGES.duplicate)}
-                />
-                <ConfirmDialog
-                    BtnIcon={scenario.is_locked ? LockIcon : LockOpenIcon}
-                    message={formatMessage(
-                        scenario.is_locked
-                            ? MESSAGES.modalUnlockScenarioConfirm
-                            : MESSAGES.modalLockScenarioConfirm,
-                    )}
-                    question={formatMessage(
-                        scenario.is_locked
-                            ? MESSAGES.unlockScenario
-                            : MESSAGES.lockScenario,
-                    )}
-                    confirm={handleToggleLockClick}
-                    btnMessage={''}
-                    tooltipMessage={
-                        scenario.is_locked
-                            ? formatMessage(MESSAGES.unlockScenario)
-                            : formatMessage(MESSAGES.lockScenario)
-                    }
-                />
-                {!scenario.is_locked && (
+                <DisplayIfUserHasPerm permissions={[
+                    Permission.SCENARIO_BASIC_WRITE,
+                    Permission.SCENARIO_FULL_WRITE,
+                ]}>
+                    <DownloadButtonsComponent variant="text" csvUrl={csvUrl} />
+                    <DuplicateScenarioModal
+                        scenario={scenario}
+                        onClose={redirectToScenario}
+                        iconProps={{}}
+                        titleMessage={formatMessage(MESSAGES.duplicate)}
+                    />
+                </DisplayIfUserHasPerm>
+                {canEditScenario && (
                     <>
-                        <UpdateScenarioModal
-                            onClose={noOp}
-                            iconProps={{ color: 'primary' }}
-                            scenario={scenario}
+                        <ConfirmDialog
+                            BtnIcon={scenario.is_locked ? LockIcon : LockOpenIcon}
+                            message={formatMessage(
+                                scenario.is_locked
+                                    ? MESSAGES.modalUnlockScenarioConfirm
+                                    : MESSAGES.modalLockScenarioConfirm,
+                            )}
+                            question={formatMessage(
+                                scenario.is_locked
+                                    ? MESSAGES.unlockScenario
+                                    : MESSAGES.lockScenario,
+                            )}
+                            confirm={handleToggleLockClick}
+                            btnMessage={''}
+                            tooltipMessage={
+                                scenario.is_locked
+                                    ? formatMessage(MESSAGES.unlockScenario)
+                                    : formatMessage(MESSAGES.lockScenario)
+                            }
                         />
-                        <DeleteDialog
-                            onConfirm={handleDeleteClick}
-                            titleMessage={MESSAGES.modalDeleteScenarioTitle}
-                            iconColor={'primary'}
-                            message={MESSAGES.modalDeleteScenarioConfirm}
-                        />
+                        {!scenario.is_locked && (
+                            <>
+                                <UpdateScenarioModal
+                                    onClose={noOp}
+                                    iconProps={{ color: 'primary' }}
+                                    scenario={scenario}
+                                />
+                                <DeleteDialog
+                                    onConfirm={handleDeleteClick}
+                                    titleMessage={MESSAGES.modalDeleteScenarioTitle}
+                                    iconColor={'primary'}
+                                    message={MESSAGES.modalDeleteScenarioConfirm}
+                                />
+                            </>
+                        )}
                     </>
                 )}
                 <Tooltip

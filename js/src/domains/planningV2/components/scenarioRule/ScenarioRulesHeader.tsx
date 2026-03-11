@@ -8,6 +8,7 @@ import { noOp } from 'Iaso/utils';
 import { IconBoxed } from '../../../../components/IconBoxed';
 import { MESSAGES } from '../../../messages';
 import { CreateScenarioRuleModal } from './ScenarioRuleModal';
+import { usePlanningContext } from '../../contexts/PlanningContext';
 
 type Props = {
     scenarioId: number;
@@ -19,6 +20,8 @@ export const ScenarioRulesHeader: FC<Props> = ({
     onApplyRules = noOp,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const { canEditScenario } = usePlanningContext();
+
     return (
         <Stack
             direction="row"
@@ -34,22 +37,25 @@ export const ScenarioRulesHeader: FC<Props> = ({
                 </Typography>
             </Stack>
             <Stack direction="row" sx={{ justifySelf: 'flex-end' }}>
-                <CreateScenarioRuleModal
-                    scenarioId={scenarioId}
-                    onClose={noOp}
-                    iconProps={{}}
-                />
-
-                <ConfirmDialog
-                    confirm={onApplyRules}
-                    question={formatMessage(MESSAGES.applyScenarioRule)}
-                    message={formatMessage(
-                        MESSAGES.applyScenarioRuleConfirmation,
-                    )}
-                    BtnIcon={ChevronRightIcon}
-                    btnMessage={''}
-                    tooltipMessage={formatMessage(MESSAGES.applyScenarioRule)}
-                />
+                {canEditScenario && (
+                    <>
+                        <CreateScenarioRuleModal
+                            scenarioId={scenarioId}
+                            onClose={noOp}
+                            iconProps={{}}
+                        />
+                        <ConfirmDialog
+                            confirm={onApplyRules}
+                            question={formatMessage(MESSAGES.applyScenarioRule)}
+                            message={formatMessage(
+                                MESSAGES.applyScenarioRuleConfirmation,
+                            )}
+                            BtnIcon={ChevronRightIcon}
+                            btnMessage={''}
+                            tooltipMessage={formatMessage(MESSAGES.applyScenarioRule)}
+                        />
+                    </>
+                )}
             </Stack>
         </Stack>
     );
