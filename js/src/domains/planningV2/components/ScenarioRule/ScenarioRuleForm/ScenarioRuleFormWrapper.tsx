@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { FormikProvider } from 'formik';
-import { CardStyled } from '../../../../../components/Card';
+import { CardStyled } from '../../../../../components/CardStyled';
 import { MESSAGES } from '../../../../messages';
 import { useCreateUpdateScenarioRule } from '../../../hooks/useCreateUpdateScenarioRule';
 import {

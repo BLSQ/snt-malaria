@@ -1,7 +1,7 @@
 import React, { FC, useCallback } from 'react';
 import { AsyncSortableList } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import { CardStyled } from '../../../../../components/Card';
+import { CardStyled } from '../../../../../components/CardStyled';
 import { useReorderScenarioRules } from '../../../hooks/useReorderScenarioRules';
 import { ScenarioRule } from '../../../types/scenarioRule';
 import { ScenarioRuleLine } from './ScenarioRuleLine';

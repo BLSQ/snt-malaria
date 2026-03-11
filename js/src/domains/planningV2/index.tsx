@@ -3,7 +3,7 @@ import { Card, Grid } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
-import { CardStyled } from '../../components/Card';
+import { CardStyled } from '../../components/CardStyled';
 import {
     PaperFullHeight,
     PageContainer,
