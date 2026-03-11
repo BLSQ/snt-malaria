@@ -1,5 +1,5 @@
 import { patchRequest, postRequest } from 'bluesquare-components';
-import { UseMutationResult, useQueryClient } from 'react-query';
+import { useQueryClient } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import {
     InterventionProperties,
