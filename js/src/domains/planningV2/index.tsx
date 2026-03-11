@@ -195,6 +195,7 @@ export const PlanningV2: FC = () => {
                                                 isRemovingOrgUnits={
                                                     isRemovingOrgUnits
                                                 }
+                                                disabled={scenario?.is_locked || !canEditScenario}
                                             />
                                         </>
                                     )}
