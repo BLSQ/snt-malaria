@@ -1,5 +1,43 @@
 # Changelog
 
+## [2.8.0](https://github.com/BLSQ/snt-malaria/compare/2.7.1...2.8.0) (2026-03-11)
+
+
+### Features
+
+* [SNT-305] add `ScenarioRule` PATCH API endpoint ([#199](https://github.com/BLSQ/snt-malaria/issues/199)) ([deea605](https://github.com/BLSQ/snt-malaria/commit/deea605911847c0453b8cc5ebcbb46c5e17063a2))
+* `ScenarioRule` endpoint for GET ([#193](https://github.com/BLSQ/snt-malaria/issues/193)) ([904c640](https://github.com/BLSQ/snt-malaria/commit/904c640fbc67e4f81feeea7d66f39bf90f504070))
+* add `ScenarioRule` to admin + fix serializers ([#196](https://github.com/BLSQ/snt-malaria/issues/196)) ([d54db04](https://github.com/BLSQ/snt-malaria/commit/d54db04de5654379a99226e974c84938b68e7ffb))
+* add models for rule-based scenarios ([#190](https://github.com/BLSQ/snt-malaria/issues/190)) ([c2f7548](https://github.com/BLSQ/snt-malaria/commit/c2f7548d28bfb330076f2f74553e6783acb923d3))
+* add SNT permissions - backend ([#179](https://github.com/BLSQ/snt-malaria/issues/179)) ([5a544cc](https://github.com/BLSQ/snt-malaria/commit/5a544cc990f2f5d6aef3a5c1249fac93542d765a))
+* SNT-269 when creating a scenario we should force users to give the scenario a name ([#182](https://github.com/BLSQ/snt-malaria/issues/182)) ([17bfe6d](https://github.com/BLSQ/snt-malaria/commit/17bfe6d9cd4384b5ef9ffa689b3715ad39484e5c))
+* SNT-275 Don't display N/A if value is 0 ([#183](https://github.com/BLSQ/snt-malaria/issues/183)) ([c65a726](https://github.com/BLSQ/snt-malaria/commit/c65a726a1968b3309710cbb3f538f2a1b05321f5))
+* SNT-285 i can create a assignment rule ([#191](https://github.com/BLSQ/snt-malaria/issues/191)) ([ec959f0](https://github.com/BLSQ/snt-malaria/commit/ec959f0b17d2d53521e72914ae47f4bf60a9a40a))
+* SNT-286 - add `ScenarioRules` DELETE API endpoint ([#200](https://github.com/BLSQ/snt-malaria/issues/200)) ([94257c0](https://github.com/BLSQ/snt-malaria/commit/94257c0075f1ee2fac5611022fc49329a63cd034))
+* SNT-286 i can delete a rule ([#203](https://github.com/BLSQ/snt-malaria/issues/203)) ([477bf79](https://github.com/BLSQ/snt-malaria/commit/477bf793b21adc988036495aa3bc14f73c4d9e17))
+* SNT-288 i see persisted rules ([#198](https://github.com/BLSQ/snt-malaria/issues/198)) ([86bbe2c](https://github.com/BLSQ/snt-malaria/commit/86bbe2cb7d807564a308d6437b13cb2bf6a8138e))
+* SNT-291 i can define exceptions for a rule ([#206](https://github.com/BLSQ/snt-malaria/issues/206)) ([5957169](https://github.com/BLSQ/snt-malaria/commit/5957169e2b95f8b249113b3c66b17939eec92223))
+* SNT-293 impact data integration ([aa4b889](https://github.com/BLSQ/snt-malaria/commit/aa4b8895beeb986146f9cb1cec8f3ab386fd833a))
+* SNT-294 users can define scales with a UI in which they can select range and colors ([#194](https://github.com/BLSQ/snt-malaria/issues/194)) ([f4a04b8](https://github.com/BLSQ/snt-malaria/commit/f4a04b8d9847805df03b18d646d5552b8d301b50))
+* SNT-301: Add population data to budget ([#189](https://github.com/BLSQ/snt-malaria/issues/189)) ([b52598b](https://github.com/BLSQ/snt-malaria/commit/b52598b68878593c120a56679a3f4fd0158c56b2))
+* SNT-304 create ScenarioRules ([#197](https://github.com/BLSQ/snt-malaria/issues/197)) ([f393cb7](https://github.com/BLSQ/snt-malaria/commit/f393cb78b34c4bed6e02e8e4de977a4dacf4322b))
+* SNT-307 add `ScenarioRules` reorder endpoint ([#205](https://github.com/BLSQ/snt-malaria/issues/205)) ([449b492](https://github.com/BLSQ/snt-malaria/commit/449b492e6069d927c3bf51d7fe58c79a5e1460bd))
+* SNT-307 I can reorder rules inside a scenario ([d7f6d2a](https://github.com/BLSQ/snt-malaria/commit/d7f6d2ab26ff3921126f6771c382013e33217d5f))
+* SNT-316 Update interventions ([#202](https://github.com/BLSQ/snt-malaria/issues/202)) ([134434a](https://github.com/BLSQ/snt-malaria/commit/134434abbd7c31f1cb5b6ec890df18514d51f88f))
+* SNT-317 update CI for develop ([#207](https://github.com/BLSQ/snt-malaria/issues/207)) ([28aa761](https://github.com/BLSQ/snt-malaria/commit/28aa761ca45af501901d862881352f26e513cdab))
+* SNT-318 show intervention assignment map ([#204](https://github.com/BLSQ/snt-malaria/issues/204)) ([e8a6a4b](https://github.com/BLSQ/snt-malaria/commit/e8a6a4b52b7138115d8b42c1197d5a0ecbfbce0c))
+* SNT-328 duplicate `ScenarioRules` ([#210](https://github.com/BLSQ/snt-malaria/issues/210)) ([b0bf931](https://github.com/BLSQ/snt-malaria/commit/b0bf9311328f35f8a47472b2216f70095e4f2ee8))
+* SNT-349 use the rule color to tint district assignments ([#215](https://github.com/BLSQ/snt-malaria/issues/215)) ([dcb6bde](https://github.com/BLSQ/snt-malaria/commit/dcb6bde8f59add50e4345828a006be75799c4a75))
+* SNT-355 permissions on settings page ([#216](https://github.com/BLSQ/snt-malaria/issues/216)) ([e2ff0bd](https://github.com/BLSQ/snt-malaria/commit/e2ff0bd52efed2f24af7580f8da608352eb7801e))
+* SNT-356 permissions scenario list page ([#214](https://github.com/BLSQ/snt-malaria/issues/214)) ([08913ed](https://github.com/BLSQ/snt-malaria/commit/08913ed01e0ba82594b478941d871b8e28eeb0d9))
+
+
+### Bug Fixes
+
+* Demo account recreate script ([3ab68c9](https://github.com/BLSQ/snt-malaria/commit/3ab68c993a29ec18592ab074d2d1dd9f1a43572a))
+* Handle soft deletable models in demo creation script ([#195](https://github.com/BLSQ/snt-malaria/issues/195)) ([80435a4](https://github.com/BLSQ/snt-malaria/commit/80435a4da369f90dcf4758954a89ccd0b455f6b4))
+* SNT-332 update Scenario unicity constraint to handle soft deletion ([#208](https://github.com/BLSQ/snt-malaria/issues/208)) ([1913e50](https://github.com/BLSQ/snt-malaria/commit/1913e506637efe07d386a61c9c7e3450a8ff11c0))
+
 ## [2.7.1](https://github.com/BLSQ/snt-malaria/compare/2.7.0...2.7.1) (2026-02-11)
 
 
