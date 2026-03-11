@@ -6,12 +6,14 @@ import { MESSAGES } from '../../../../messages';
 
 type Props = {
     title: string;
+    disabled?: boolean;
     onCancel: () => void;
     onSubmit: () => void;
 };
 
 export const ScenarioRuleFormHeader: FC<Props> = ({
     title,
+    disabled = false,
     onSubmit,
     onCancel,
 }) => {
@@ -30,7 +32,7 @@ export const ScenarioRuleFormHeader: FC<Props> = ({
             <Typography variant="h6" sx={{ flexGrow: 1 }}>
                 {title}
             </Typography>
-            <Button onClick={onSubmit} variant="contained">
+            <Button onClick={onSubmit} variant="contained" disabled={disabled}>
                 {formatMessage(MESSAGES.submit)}
             </Button>
         </Stack>

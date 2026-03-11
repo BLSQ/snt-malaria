@@ -26,7 +26,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
 
-    const { mutate: createUpdateScenarioRule } =
+    const { mutate: createUpdateScenarioRule, isLoading: isSubmittingRule } =
         useCreateUpdateScenarioRule(scenarioId);
 
     const initialValues: ScenarioRuleFormValues | undefined = useMemo(
@@ -74,8 +74,10 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                     )}
                     onCancel={onClose}
                     onSubmit={formik.handleSubmit}
+                    disabled={isSubmittingRule}
                 />
             }
+            isLoading={isSubmittingRule}
         >
             <FormikProvider value={formik}>
                 <ScenarioRuleForm />
