@@ -11,6 +11,7 @@ import {
 export type ScenarioRuleFormValues = {
     id?: number;
     name: string;
+    scenario: number;
     color: string;
     intervention_properties: InterventionProperties[];
     matching_criteria: MetricTypeCriterion[];

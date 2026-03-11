@@ -1,20 +1,25 @@
 import React, { FC } from 'react';
 import { Button, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import { OrgUnitSelect } from '../../../../components/OrgUnitSelect';
 import { MESSAGES } from '../../../messages';
 
 type Props = {
-    onTabChange: (value: string) => void;
     activeTab: string;
-    onRunBudget: () => void;
     isCalculatingBudget: boolean;
+    selectedOrgUnitId?: number;
+    onTabChange: (value: string) => void;
+    onOrgUnitChange: (orgUnitId?: number) => void;
+    onRunBudget: () => void;
 };
 
 export const InterventionPlanHeader: FC<Props> = ({
-    onTabChange,
     activeTab,
-    onRunBudget,
     isCalculatingBudget,
+    selectedOrgUnitId,
+    onTabChange,
+    onRunBudget,
+    onOrgUnitChange,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -40,6 +45,10 @@ export const InterventionPlanHeader: FC<Props> = ({
                     {formatMessage(MESSAGES.budgetView)}
                 </ToggleButton>
             </ToggleButtonGroup>
+            <OrgUnitSelect
+                onOrgUnitChange={onOrgUnitChange}
+                selectedOrgUnitId={selectedOrgUnitId}
+            />
             {activeTab === 'budget' && (
                 <Button
                     variant="contained"

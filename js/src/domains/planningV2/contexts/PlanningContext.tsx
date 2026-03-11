@@ -10,6 +10,7 @@ import { MetricTypeCategory } from '../../planning/types/metrics';
 
 type PlanningContextType = {
     scenarioId: number;
+    displayOrgUnitId?: number;
     canEditScenario: boolean;
     orgUnits: OrgUnit[];
     metricTypeCategories: MetricTypeCategory[];
@@ -20,6 +21,7 @@ type PlanningContextType = {
 
 const PlanningContext = createContext<PlanningContextType>({
     scenarioId: 0,
+    displayOrgUnitId: undefined,
     canEditScenario: false,
     orgUnits: [],
     metricTypeCategories: [],
@@ -32,6 +34,7 @@ export const usePlanningContext = () => useContext(PlanningContext);
 
 export const PlanningProvider = ({
     scenarioId,
+    displayOrgUnitId,
     canEditScenario,
     orgUnits,
     metricTypeCategories,
@@ -40,6 +43,7 @@ export const PlanningProvider = ({
     children,
 }: {
     scenarioId: number;
+    displayOrgUnitId?: number;
     canEditScenario: boolean;
     orgUnits: OrgUnit[];
     metricTypeCategories: MetricTypeCategory[];
@@ -74,6 +78,7 @@ export const PlanningProvider = ({
         <PlanningContext.Provider
             value={{
                 scenarioId,
+                displayOrgUnitId,
                 canEditScenario,
                 orgUnits,
                 metricTypeCategories,

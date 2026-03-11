@@ -1,6 +1,10 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Card, Grid } from '@mui/material';
-import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import {
+    LoadingSpinner,
+    useRedirectToReplace,
+    useSafeIntl,
+} from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { CardStyled } from '../../components/CardStyled';
@@ -38,12 +42,16 @@ import { useUserCanEditScenario } from './utils/permissions';
 
 type PlanningParams = {
     scenarioId: number;
+    displayOrgUnitId?: number;
 };
 
 export const PlanningV2: FC = () => {
-    const { scenarioId } = useParamsObject(
+    const { scenarioId, displayOrgUnitId } = useParamsObject(
         baseUrls.planning,
     ) as unknown as PlanningParams;
+
+    const redirectToReplace = useRedirectToReplace();
+
     const { data: scenario } = useGetScenario(scenarioId);
     const { formatMessage } = useSafeIntl();
     const [activeTab, setActiveTab] = useState('map');
@@ -54,7 +62,8 @@ export const PlanningV2: FC = () => {
     >(undefined);
     const { data: metricTypeCategories } = useGetMetricCategories();
     const { data: interventionCategories } = useGetInterventionCategories();
-    const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits();
+    const { data: orgUnits, isLoading: isLoadingOrgUnits } =
+        useGetOrgUnits(displayOrgUnitId);
 
     const { data: scenarioRules, isFetching: isFetchingRules } =
         useGetScenarioRules(scenarioId);
@@ -100,9 +109,20 @@ export const PlanningV2: FC = () => {
         [selectedInterventionPlan, budgetAssumptions],
     );
 
+    const handleDisplayOrgUnitChange = useCallback(
+        (orgUnitId?: number) => {
+            redirectToReplace(baseUrls.planning, {
+                scenarioId: scenarioId.toString(),
+                displayOrgUnitId: orgUnitId?.toString(),
+            });
+        },
+        [scenarioId, redirectToReplace],
+    );
+
     return metricTypeCategories && interventionCategories ? (
         <PlanningProvider
             scenarioId={scenarioId}
+            displayOrgUnitId={displayOrgUnitId}
             orgUnits={orgUnits || []}
             metricTypeCategories={metricTypeCategories}
             interventionCategories={interventionCategories}
@@ -150,6 +170,10 @@ export const PlanningV2: FC = () => {
                                             isCalculatingBudget={
                                                 isCalculatingBudget
                                             }
+                                            onOrgUnitChange={
+                                                handleDisplayOrgUnitChange
+                                            }
+                                            selectedOrgUnitId={displayOrgUnitId}
                                         />
                                     }
                                 >
