@@ -8,13 +8,13 @@ import {
     Tooltip as LeafletTooltip,
     GeoJSON,
 } from 'react-leaflet';
-import { SxStyles } from 'Iaso/types/general';
 import { Tile } from 'Iaso/components/maps/tools/TilesSwitchControl';
 import { GeoJson } from 'Iaso/components/maps/types';
 import tiles from 'Iaso/constants/mapTiles';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
 import { noOp } from 'Iaso/utils';
-import { Bounds } from 'Iaso/utils/map/mapUtils';
+import { Bounds, orderOrgUnitsByDepth } from 'Iaso/utils/map/mapUtils';
 import { mapTheme } from '../constants/map-theme';
 import { MapLegend } from '../domains/planning/components/MapLegend';
 import {
@@ -128,14 +128,19 @@ export const Map: FC<Props> = ({
         maxZoom: currentTile.maxZoom,
     };
 
+    const orderedOrgUnits = useMemo(
+        () => orderOrgUnitsByDepth(orgUnits || []),
+        [orgUnits],
+    );
+
     const bounds: Bounds | undefined = useMemo(() => {
-        const geoJsonFeatures = orgUnits
+        const geoJsonFeatures = orderedOrgUnits
             ?.filter(orgUnit => orgUnit?.geo_json)
             .map(orgUnit => orgUnit?.geo_json);
         if (geoJsonFeatures?.length === 0) return undefined;
         const shape = L.geoJSON(geoJsonFeatures);
         return shape.getBounds();
-    }, [orgUnits]);
+    }, [orderedOrgUnits]);
 
     return (
         <Box sx={border ? [styles.root, styles.bordered] : styles.root}>
@@ -167,7 +172,7 @@ export const Map: FC<Props> = ({
                     bounds={bounds}
                     boundsOptions={boundsOptions}
                 />
-                {orgUnits?.map(orgUnit => {
+                {orderedOrgUnits?.map(orgUnit => {
                     const orgUnitMapMisc = getOrgUnitMapMisc(orgUnit.id);
                     const weight = selectedOrgUnits.includes(orgUnit.id)
                         ? mapTheme.selectedShapeWeight

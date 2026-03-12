@@ -37,6 +37,7 @@ import {
 import { useGetOrgUnits, useGetOrgUnitsByType } from './hooks/useGetOrgUnits';
 import { Intervention } from './types/interventions';
 import { MetricsFilters, MetricType } from './types/metrics';
+import { orderOrgUnitsByDepth } from 'Iaso/utils/map/mapUtils';
 
 type PlanningParams = {
     scenarioId: string;
@@ -71,6 +72,11 @@ export const Planning: FC = () => {
     // Fetch org units with optional parent filter (API handles filtering)
     const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits(
         selectedDisplayOrgUnitId,
+    );
+
+    const orderedOrgUnits = useMemo(
+        () => orderOrgUnitsByDepth(orgUnits || []),
+        [orgUnits],
     );
 
     // Look up the selected display org unit name (served from React Query cache)
@@ -244,7 +250,7 @@ export const Planning: FC = () => {
                             <PaperFullHeight>
                                 {isLoading && <p>Loading data...</p>}
                                 <Map
-                                    orgUnits={orgUnits}
+                                    orgUnits={orderedOrgUnits}
                                     displayedMetric={displayedMetric}
                                     displayedMetricValues={
                                         displayedMetricValues
@@ -279,13 +285,13 @@ export const Planning: FC = () => {
                             {isLoading && <p>Loading data...</p>}
                             {metricCategories && orgUnits && (
                                 <SideMapList
-                                    orgUnits={orgUnits}
+                                    orgUnits={orderedOrgUnits}
                                     metricCategories={metricCategories}
                                 />
                             )}
                         </PaperFullHeight>
                     </Grid>
-                    {isSidebarOpen && orgUnits && (
+                    {isSidebarOpen && orderedOrgUnits && (
                         <Grid item xs={12} md={2}>
                             <PaperFullHeight>
                                 <PlanningFiltersSidebar
@@ -330,17 +336,17 @@ export const Planning: FC = () => {
                     >
                         <InterventionsPlan
                             scenarioId={params.scenarioId}
-                            totalOrgUnitCount={orgUnits?.length ?? 0}
+                            totalOrgUnitCount={orderedOrgUnits?.length ?? 0}
                             interventionPlans={filteredInterventionPlans}
                             isLoadingPlans={isLoadingPlans}
                             disabled={scenario?.is_locked}
                             displayOrgUnitId={selectedDisplayOrgUnitId}
                         />
                     </Grid>
-                    {orgUnits && budget && (
+                    {orderedOrgUnits && budget && (
                         <Budgeting
                             budgets={budget?.results}
-                            orgUnits={orgUnits}
+                            orgUnits={orderedOrgUnits}
                             filterLabel={selectedDisplayOrgUnitName}
                         />
                     )}
