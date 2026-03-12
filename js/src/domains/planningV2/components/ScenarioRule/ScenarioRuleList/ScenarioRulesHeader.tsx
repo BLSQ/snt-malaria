@@ -7,7 +7,7 @@ import ConfirmDialog from 'Iaso/components/dialogs/ConfirmDialogComponent';
 import { noOp } from 'Iaso/utils';
 import { IconBoxed } from '../../../../../components/IconBoxed';
 import { MESSAGES } from '../../../../messages';
-import { usePlanningContext } from '../../contexts/PlanningContext';
+import { usePlanningContext } from '../../../contexts/PlanningContext';
 
 type Props = {
     onApplyRules?: () => void;
@@ -50,7 +50,9 @@ export const ScenarioRulesHeader: FC<Props> = ({
                             )}
                             BtnIcon={ChevronRightIcon}
                             btnMessage={''}
-                         tooltipMessage={formatMessage(MESSAGES.applyScenarioRule)}
+                            tooltipMessage={formatMessage(
+                                MESSAGES.applyScenarioRule,
+                            )}
                         />
                     </>
                 )}
