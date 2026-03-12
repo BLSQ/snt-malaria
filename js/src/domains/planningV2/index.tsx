@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, Grid } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
@@ -14,12 +14,16 @@ import { Budgeting } from '../planning/components/budgeting/Budgeting';
 import { InterventionPlanDetails } from '../planning/components/interventionPlan/InterventionPlanDetails';
 import { ScenarioTopBar } from '../planning/components/ScenarioTopBar';
 import { useCalculateBudget } from '../planning/hooks/useCalculateBudget';
+import { useGetBudgetAssumptions } from '../planning/hooks/useGetBudgetAssumptions';
 import { useGetInterventionCategories } from '../planning/hooks/useGetInterventionCategories';
 import { useGetLatestCalculatedBudget } from '../planning/hooks/useGetLatestCalculatedBudget';
 import { useGetMetricCategories } from '../planning/hooks/useGetMetrics';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../planning/hooks/useRemoveOrgUnitFromInterventionPlan';
-import { InterventionPlan } from '../planning/types/interventions';
+import {
+    BudgetAssumptions,
+    InterventionPlan,
+} from '../planning/types/interventions';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { InterventionPlanHeader } from './components/InterventionPlan/InterventionPlanHeader';
 import { InterventionsPlanMap } from './components/InterventionPlanMap/InterventionPlanMap';
@@ -80,6 +84,17 @@ export const PlanningV2: FC = () => {
     const onApplyRules = useCallback(() => {
         refreshAssignments({});
     }, [refreshAssignments]);
+
+    const { data: budgetAssumptions } = useGetBudgetAssumptions(scenarioId);
+    const selectedBudgetAssumptions: BudgetAssumptions | undefined = useMemo(
+        () =>
+            budgetAssumptions?.find(
+                bs =>
+                    bs.intervention_code ===
+                    selectedInterventionPlan?.intervention.code,
+            ),
+        [selectedInterventionPlan, budgetAssumptions],
+    );
 
     return metricTypeCategories && interventionCategories ? (
         <PlanningProvider
@@ -164,6 +179,9 @@ export const PlanningV2: FC = () => {
                                                     setSelectedInterventionPlan(
                                                         undefined,
                                                     )
+                                                }
+                                                budgetAssumptions={
+                                                    selectedBudgetAssumptions
                                                 }
                                                 removeOrgUnitsFromPlan={
                                                     onRemoveOrgUnitsFromPlan
