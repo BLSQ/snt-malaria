@@ -1,8 +1,16 @@
 import React, { FC, useState } from 'react';
 import { MenuItem, Select, SelectChangeEvent } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../domains/messages';
 import { useGetOrgUnitsByType } from '../domains/planning/hooks/useGetOrgUnits';
+import { useGetAccountSettings } from '../domains/planningV2/hooks/useGetAccountSettings';
+
+const styles = {
+    select: {
+        minWidth: '225px',
+    },
+} satisfies SxStyles;
 
 type Props = {
     onOrgUnitChange: (orgUnitId?: number) => void;
@@ -14,15 +22,15 @@ export const OrgUnitSelect: FC<Props> = ({
     selectedOrgUnitId,
 }) => {
     const { formatMessage } = useSafeIntl();
+
     const [orgUnitId, setOrgUnitId] = useState<number | undefined>(
         selectedOrgUnitId,
     );
 
-    // TODO this should not be hardcoded, we should get the org unit type id from the config
-    const orgUnitTypeId = 19;
+    const { data: accountSettings } = useGetAccountSettings();
 
     const { data: orgUnitsByType, isLoading: isLoadingOrgUnits } =
-        useGetOrgUnitsByType(orgUnitTypeId);
+        useGetOrgUnitsByType(accountSettings?.intervention_org_unit_type_id);
 
     const handleOrgUnitChange = (e: SelectChangeEvent<number>) => {
         const id = e.target.value as number;
@@ -35,8 +43,7 @@ export const OrgUnitSelect: FC<Props> = ({
             value={orgUnitId ?? ''}
             onChange={handleOrgUnitChange}
             variant="outlined"
-            // IconComponent={ArrowDropDownIcon}
-            // sx={styles.select}
+            sx={styles.select}
             displayEmpty
             disabled={isLoadingOrgUnits}
         >

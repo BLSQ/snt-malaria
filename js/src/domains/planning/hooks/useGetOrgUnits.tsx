@@ -31,7 +31,7 @@ type OrgUnitsResponse = {
 };
 
 export const useGetOrgUnitsByType = (
-    orgUnitTypeId: number | null,
+    orgUnitTypeId?: number,
 ): UseQueryResult<OrgUnit[], Error> => {
     const params: Record<string, any> = {
         validation_status: 'VALID',
@@ -48,7 +48,7 @@ export const useGetOrgUnitsByType = (
         queryKey: ['orgUnitsByType', params],
         queryFn: () => getRequest(url) as Promise<OrgUnitsResponse>,
         options: {
-            enabled: orgUnitTypeId !== null,
+            enabled: !!orgUnitTypeId,
             cacheTime: Infinity,
             select: (data: OrgUnitsResponse) => data.orgunits ?? [],
         },
