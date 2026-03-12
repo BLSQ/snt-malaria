@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from plugins.snt_malaria.api.account_settings.serializers import AccountSettings
+
 from .models import (
     Budget,
     BudgetAssumptions,
@@ -139,5 +141,12 @@ class BudgetAssumptionsAdmin(admin.ModelAdmin):
 class ImpactProviderConfigAdmin(admin.ModelAdmin):
     list_display = ("id", "account", "provider_key")
     list_filter = ("provider_key",)
+    search_fields = ("account__name",)
+    ordering = ("account__name",)
+
+
+@admin.register(AccountSettings)
+class AccountSettingsAdmin(admin.ModelAdmin):
+    list_display = ("id", "account", "intervention_org_unit_type_id")
     search_fields = ("account__name",)
     ordering = ("account__name",)

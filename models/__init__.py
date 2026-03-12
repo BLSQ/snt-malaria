@@ -1,3 +1,4 @@
+from .account_settings import AccountSettings
 from .budget import Budget
 from .budget_assumptions import BudgetAssumptions
 from .budget_settings import BudgetSettings
@@ -24,4 +25,5 @@ __all__ = [
     "Budget",
     "BudgetSettings",
     "BudgetAssumptions",
+    "AccountSettings",
 ]
