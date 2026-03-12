@@ -5,7 +5,13 @@ from django.db.models import Avg, Count, Max, Min
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
 from plugins.snt_malaria.models.swisstph_impact import SwissTPHImpactData
-from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProvider, ImpactResult
+from plugins.snt_malaria.providers.impact.base import (
+    DataIntegrityError,
+    ImpactMetricWithConfidenceInterval,
+    ImpactProvider,
+    ImpactResult,
+    InterventionMappingError,
+)
 
 
 SWISSTPH_DATABASE_ALIAS = "impact_swisstph"
@@ -104,7 +110,7 @@ class SwissTPHImpactProvider(ImpactProvider):
                 continue
 
             if row["row_count"] != row["seed_count"]:
-                raise ValueError(
+                raise DataIntegrityError(
                     f"SwissTPH: year {row['year']} (admin_1={row['admin_1']!r}) "
                     f"has {row['row_count']} rows but {row['seed_count']} distinct seeds. "
                     f"Each (year, seed) must be unique."
@@ -156,18 +162,18 @@ class SwissTPHImpactProvider(ImpactProvider):
         or a comma-separated list when one intervention maps to multiple
         columns (e.g. 'deployed_int_pbo,deployed_int_itn').
 
-        Raises ValueError if the impact_ref is empty or contains unrecognised
-        column names.
+        Raises InterventionMappingError if the impact_ref is empty or contains
+        unrecognised column names.
         """
         raw_reference = (intervention.impact_ref or "").strip()
         if not raw_reference:
-            raise ValueError(f"Intervention '{intervention}' has no impact_ref")
+            raise InterventionMappingError(f"Intervention '{intervention}' has no impact_ref")
 
         matched_columns = set()
         for column_name in raw_reference.split(","):
             column_name = column_name.strip()
             if column_name not in KNOWN_DEPLOYED_COLUMNS:
-                raise ValueError(
+                raise InterventionMappingError(
                     f"Unknown SwissTPH column {column_name!r} in impact_ref "
                     f"for intervention '{intervention}'. "
                     f"Known columns: {sorted(KNOWN_DEPLOYED_COLUMNS)}"

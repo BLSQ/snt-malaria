@@ -5,7 +5,13 @@ from django.db.models import Max, Min
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
 from plugins.snt_malaria.models.idm_impact import IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
-from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProvider, ImpactResult
+from plugins.snt_malaria.providers.impact.base import (
+    DataIntegrityError,
+    ImpactMetricWithConfidenceInterval,
+    ImpactProvider,
+    ImpactResult,
+    InterventionMappingError,
+)
 
 
 IDM_DATABASE_ALIAS = "impact_idm"
@@ -148,8 +154,7 @@ class IDMImpactProvider(ImpactProvider):
     def __init__(self):
         """Cache IDM intervention packages by (type, option) to avoid repeated database queries."""
         self._cached_intervention_packages = {
-            (pkg.type, pkg.option): pkg
-            for pkg in IDMInterventionPackage.objects.using(IDM_DATABASE_ALIAS).all()
+            (pkg.type, pkg.option): pkg for pkg in IDMInterventionPackage.objects.using(IDM_DATABASE_ALIAS).all()
         }
 
     @property
@@ -246,7 +251,7 @@ class IDMImpactProvider(ImpactProvider):
                 results[ou_id] = []
 
             if row["year"] in seen_years_by_ou[ou_id]:
-                raise ValueError(
+                raise DataIntegrityError(
                     f"IDM: conflicting rows for year {row['year']} "
                     f"(admin_2_name={admin_name!r}, age_group_id={age_group_id}). "
                     f"Expected identical metric data per year."
@@ -297,29 +302,27 @@ class IDMImpactProvider(ImpactProvider):
         and option correspond to the columns of the IDM intervention_package table.
         Intervention resolution uses cached intervention packages to avoid repeated database queries.
 
-        Raises ValueError if the intervention is None, has no impact_ref,
+        Raises InterventionMappingError if the intervention is None, has no impact_ref,
         the format is invalid, or no matching intervention_package row exists.
         """
         if intervention is None:
-            raise ValueError("intervention cannot be None")
+            raise InterventionMappingError("intervention cannot be None")
 
         impact_reference = (intervention.impact_ref or "").strip()
         if not impact_reference:
-            raise ValueError(f"Intervention '{intervention}' has no impact_ref")
+            raise InterventionMappingError(f"Intervention '{intervention}' has no impact_ref")
 
         parts = impact_reference.split(":")
         if len(parts) != 2:
-            raise ValueError(
-                f"Invalid impact_ref format {impact_reference!r}. "
-                f"Expected 'type:option' (e.g. 'smc:pmc')."
+            raise InterventionMappingError(
+                f"Invalid impact_ref format {impact_reference!r}. Expected 'type:option' (e.g. 'smc:pmc')."
             )
 
         type_value, option_value = parts
         package = self._cached_intervention_packages.get((type_value, option_value))
         if package is None:
-            raise ValueError(
-                f"IDM intervention_package not found for "
-                f"option={option_value!r}, type={type_value!r}."
+            raise InterventionMappingError(
+                f"IDM intervention_package not found for option={option_value!r}, type={type_value!r}."
             )
 
         return {f"{package.type}={package.id}"}

@@ -1,5 +1,6 @@
 from django.test import TestCase
 
+from plugins.snt_malaria.providers.impact.base import InterventionMappingError
 from plugins.snt_malaria.providers.impact.swisstph import (
     KNOWN_DEPLOYED_COLUMNS,
     SwissTPHImpactProvider,
@@ -36,15 +37,15 @@ class SwissTPHMapInterventionTests(TestCase):
                 result = self.provider._map_intervention(intervention)
                 self.assertEqual(result, expected_columns)
 
-    def test_empty_impact_ref_raises_value_error(self):
+    def test_empty_impact_ref_raises_mapping_error(self):
         intervention = MockIntervention(impact_ref="")
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(InterventionMappingError) as context:
             self.provider._map_intervention(intervention)
         self.assertIn("no impact_ref", str(context.exception))
 
-    def test_unrecognised_impact_ref_raises_value_error(self):
+    def test_unrecognised_impact_ref_raises_mapping_error(self):
         intervention = MockIntervention(impact_ref="unknown_column")
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(InterventionMappingError) as context:
             self.provider._map_intervention(intervention)
         self.assertIn("Unknown SwissTPH column", str(context.exception))
 
@@ -64,9 +65,9 @@ class SwissTPHMapInterventionTests(TestCase):
         result = self.provider._map_intervention(intervention)
         self.assertEqual(result, {"deployed_int_pbo", "deployed_int_itn"})
 
-    def test_comma_separated_with_unrecognised_entry_raises_value_error(self):
+    def test_comma_separated_with_unrecognised_entry_raises_mapping_error(self):
         intervention = MockIntervention(impact_ref="deployed_int_smc,unknown_column")
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(InterventionMappingError) as context:
             self.provider._map_intervention(intervention)
         self.assertIn("Unknown SwissTPH column", str(context.exception))
         self.assertIn("unknown_column", str(context.exception))

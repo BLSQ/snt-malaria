@@ -5,6 +5,7 @@ from django.db import connection
 from django.test import TestCase
 
 from plugins.snt_malaria.models.idm_impact import IDMAdminInfo, IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
+from plugins.snt_malaria.providers.impact.base import DataIntegrityError, InterventionMappingError
 from plugins.snt_malaria.providers.impact.idm import (
     IDM_ALL_INTERVENTION_COLUMNS,
     IDM_DEPLOYED_COVERAGE_ID,
@@ -52,9 +53,7 @@ INTERVENTION_PACKAGES = [
 ]
 
 # Lookup by option for building model_output fixtures: option -> (type/column, package_id)
-_PACKAGE_BY_OPTION = {
-    package["option"]: (package["type"], package["id"]) for package in INTERVENTION_PACKAGES
-}
+_PACKAGE_BY_OPTION = {package["option"]: (package["type"], package["id"]) for package in INTERVENTION_PACKAGES}
 
 
 # ---------------------------------------------------------------------------
@@ -188,34 +187,34 @@ class IDMMapInterventionTests(TestCase):
                 result = self.provider._map_intervention(intervention)
                 self.assertEqual(result, expected_filter_keys)
 
-    def test_none_intervention_raises_value_error(self):
-        with self.assertRaises(ValueError) as context:
+    def test_none_intervention_raises_mapping_error(self):
+        with self.assertRaises(InterventionMappingError) as context:
             self.provider._map_intervention(None)
         self.assertIn("cannot be None", str(context.exception))
 
-    def test_empty_impact_ref_raises_value_error(self):
+    def test_empty_impact_ref_raises_mapping_error(self):
         intervention = MockIntervention(impact_ref="")
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(InterventionMappingError) as context:
             self.provider._map_intervention(intervention)
         self.assertIn("no impact_ref", str(context.exception))
 
-    def test_missing_colon_delimiter_raises_value_error(self):
+    def test_missing_colon_delimiter_raises_mapping_error(self):
         intervention = MockIntervention(impact_ref="cm_only_no_colon")
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(InterventionMappingError) as context:
             self.provider._map_intervention(intervention)
         self.assertIn("Invalid impact_ref format", str(context.exception))
         self.assertIn("type:option", str(context.exception))
 
-    def test_nonexistent_package_raises_value_error(self):
+    def test_nonexistent_package_raises_mapping_error(self):
         intervention = MockIntervention(impact_ref="nonexistent:nonexistent")
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(InterventionMappingError) as context:
             self.provider._map_intervention(intervention)
         self.assertIn("intervention_package not found", str(context.exception))
 
-    def test_mismatched_option_and_type_raises_value_error(self):
+    def test_mismatched_option_and_type_raises_mapping_error(self):
         """An option that exists but with the wrong type should not match."""
         intervention = MockIntervention(impact_ref="smc:cm")
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(InterventionMappingError) as context:
             self.provider._map_intervention(intervention)
         self.assertIn("intervention_package not found", str(context.exception))
 
@@ -533,8 +532,8 @@ class IDMDatabaseIntegrationTests(TestCase):
 
         self.assertEqual(results, {})
 
-    def test_duplicate_year_raises_value_error(self):
-        """Conflicting rows for the same (admin, year, intervention combo) raise ValueError."""
+    def test_duplicate_year_raises_data_integrity_error(self):
+        """Conflicting rows for the same (admin, year, intervention combo) raise DataIntegrityError."""
         IDMModelOutput.objects.using("default").create(
             admin_info_ref=self.admin_kano,
             year=2025,
@@ -553,7 +552,7 @@ class IDMDatabaseIntegrationTests(TestCase):
 
         org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
         case_management = MockIntervention(impact_ref="cm:cm")
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(DataIntegrityError) as context:
             self.provider.match_impact_bulk(
                 [org_unit_kano],
                 interventions=[case_management],
