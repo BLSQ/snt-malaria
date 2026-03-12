@@ -122,6 +122,7 @@ export const PlanningV2: FC = () => {
     return metricTypeCategories && interventionCategories ? (
         <PlanningProvider
             scenarioId={scenarioId}
+            scenario={scenario}
             displayOrgUnitId={displayOrgUnitId}
             orgUnits={orgUnits || []}
             metricTypeCategories={metricTypeCategories}
@@ -206,7 +207,10 @@ export const PlanningV2: FC = () => {
                                                 isRemovingOrgUnits={
                                                     isRemovingOrgUnits
                                                 }
-                                                disabled={scenario?.is_locked || !canEditScenario}
+                                                disabled={
+                                                    scenario?.is_locked ||
+                                                    !canEditScenario
+                                                }
                                             />
                                         </>
                                     )}

@@ -1,7 +1,5 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import CopyAllOutlinedIcon from '@mui/icons-material/CopyAllOutlined';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import { Button, IconButton } from '@mui/material';
+import { Button, MenuItem } from '@mui/material';
 import {
     ConfirmCancelModal,
     IntlMessage,
@@ -52,23 +50,21 @@ const CreateScenarioDialogAction: FC<ScenarioDialogActionProps> = ({
 
 const UpdateScenarioDialogAction: FC<ScenarioDialogActionProps> = ({
     onClick,
-    color = 'primary',
-}) => (
-    <IconButton onClick={onClick} color={color}>
-        <EditOutlinedIcon />
-    </IconButton>
-);
-
-const DuplicateScenarioDialogAction: FC<ScenarioDialogActionProps> = ({
-    onClick,
-    color = 'primary',
 }) => {
     const { formatMessage } = useSafeIntl();
     return (
-        <Button variant="text" onClick={onClick} color={color}>
-            <CopyAllOutlinedIcon sx={{ marginRight: '0.5rem' }} />
+        <MenuItem onClick={onClick}>{formatMessage(MESSAGES.edit)}</MenuItem>
+    );
+};
+
+const DuplicateScenarioDialogAction: FC<ScenarioDialogActionProps> = ({
+    onClick,
+}) => {
+    const { formatMessage } = useSafeIntl();
+    return (
+        <MenuItem onClick={onClick}>
             {formatMessage(MESSAGES.duplicate)}
-        </Button>
+        </MenuItem>
     );
 };
 

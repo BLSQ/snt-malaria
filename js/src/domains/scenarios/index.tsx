@@ -10,15 +10,17 @@ import {
     Theme,
 } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
+import { useNavigate } from 'react-router-dom';
+import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { SxStyles } from 'Iaso/types/general';
-import { useNavigate } from 'react-router-dom';
 import {
     ContentsContainer,
     PageContainer,
 } from '../../components/styledComponents';
 
 import { exportScenarioAPIPath } from '../../constants/api-urls';
+import * as Permission from '../../constants/permissions';
 import { baseUrls } from '../../constants/urls';
 import { MESSAGES } from '../messages';
 import { ImportScenarioModal } from './components/ImportScenario';
@@ -26,9 +28,6 @@ import { ScenarioComponent } from './components/Scenario';
 import { CreateScenarioModal } from './components/ScenarioModal';
 import { useGetScenarios } from './hooks/useGetScenarios';
 import { Scenario } from './types';
-import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
-import * as Permission from '../../constants/permissions';
-
 
 const styles: SxStyles = {
     buttonsBox: (theme: Theme) => ({
