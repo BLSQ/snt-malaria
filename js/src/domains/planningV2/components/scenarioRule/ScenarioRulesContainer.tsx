@@ -6,6 +6,7 @@ import { useReorderScenarioRules } from '../../hooks/useReorderScenarioRules';
 import { ScenarioRule } from '../../types/scenarioRule';
 import { ScenarioRuleLine } from './ScenarioRuleLine';
 import { ScenarioRulesHeader } from './ScenarioRulesHeader';
+import { usePlanningContext } from '../../contexts/PlanningContext';
 
 const styles: SxStyles = {
     card: {
@@ -57,6 +58,7 @@ export const ScenarioRulesContainer: FC<Props> = ({
 }) => {
     const { mutate: reorderScenarioRules } =
         useReorderScenarioRules(scenarioId);
+    const { canEditScenario } = usePlanningContext();
 
     const handleReorder = useCallback(
         ({
@@ -99,6 +101,7 @@ export const ScenarioRulesContainer: FC<Props> = ({
                         listSx={styles.rulesContainer}
                         itemSx={styles.ruleBox}
                         showOverlay={false}
+                        disabled={!canEditScenario}
                         RenderItem={({ item }) => (
                             <ScenarioRuleLine
                                 scenarioId={scenarioId}

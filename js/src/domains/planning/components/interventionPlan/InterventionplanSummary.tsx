@@ -8,6 +8,7 @@ import { IconBoxed } from '../../../../components/IconBoxed';
 import { InterventionCategorySelect } from '../../../../components/InterventionCategorySelect';
 import { MESSAGES } from '../../../messages';
 import { InterventionCategory } from '../../types/interventions';
+import { usePlanningContext } from '../../../planningV2/contexts/PlanningContext';
 
 export type TabValue = 'map' | 'list';
 type Props = {
@@ -31,6 +32,8 @@ export const InterventionPlanSummary: FC<Props> = ({
     totalOrgUnits = 0,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const { canEditScenario } = usePlanningContext();
+
     return (
         <Grid
             container
@@ -84,22 +87,24 @@ export const InterventionPlanSummary: FC<Props> = ({
                             label={<TableRowsIcon />}
                         />
                     </Tabs>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={onRunBudget}
-                        disabled={assignedOrgUnits === 0 || isCalculatingBudget}
-                    >
-                        {formatMessage(MESSAGES.runInterventionPlanBudget)}
-                        {isCalculatingBudget && (
-                            <LoadingSpinner
-                                size={16}
-                                absolute
-                                fixed={false}
-                                transparent
-                            />
-                        )}
-                    </Button>
+                    {canEditScenario && (
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={onRunBudget}
+                            disabled={assignedOrgUnits === 0 || isCalculatingBudget}
+                        >
+                            {formatMessage(MESSAGES.runInterventionPlanBudget)}
+                            {isCalculatingBudget && (
+                                <LoadingSpinner
+                                    size={16}
+                                    absolute
+                                    fixed={false}
+                                    transparent
+                                />
+                            )}
+                        </Button>
+                    )}
                 </Stack>
             </Grid>
         </Grid>

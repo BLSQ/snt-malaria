@@ -37,7 +37,7 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule }) => {
     const { mutateAsync: deleteScenarioRule } =
         useDeleteScenarioRule(scenarioId);
 
-    const { metricTypeCategories } = usePlanningContext();
+    const { metricTypeCategories, canEditScenario } = usePlanningContext();
 
     const metricTypes = useMemo(
         () => metricTypeCategories.flatMap(category => category.items),
@@ -77,22 +77,26 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule }) => {
                 >
                     {rule.name}
                 </Typography>
-                <EditScenarioRuleModal
-                    scenarioId={scenarioId}
-                    onClose={noOp}
-                    iconProps={{}}
-                    rule={rule}
-                />
-                <DeleteModal
-                    type="icon"
-                    onConfirm={() => deleteScenarioRule(rule.id)}
-                    onCancel={noOp}
-                    titleMessage={MESSAGES.deleteScenarioRule}
-                    iconProps={{}}
-                    backdropClick={true}
-                >
-                    {formatMessage(MESSAGES.deleteScenarioRuleConfirmMessage)}
-                </DeleteModal>
+                {canEditScenario && (
+                    <>
+                        <EditScenarioRuleModal
+                            scenarioId={scenarioId}
+                            onClose={noOp}
+                            iconProps={{}}
+                            rule={rule}
+                        />
+                        <DeleteModal
+                            type="icon"
+                            onConfirm={() => deleteScenarioRule(rule.id)}
+                            onCancel={noOp}
+                            titleMessage={MESSAGES.deleteScenarioRule}
+                            iconProps={{}}
+                            backdropClick={true}
+                        >
+                            {formatMessage(MESSAGES.deleteScenarioRuleConfirmMessage)}
+                        </DeleteModal>
+                    </>
+                )}
             </Grid>
             <Typography
                 variant="body2"
