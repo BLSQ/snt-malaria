@@ -158,8 +158,7 @@ class IDMImpactProvider(ImpactProvider):
         """Look up an IDMInterventionPackage by (type, option), lazy-loading the cache on first call."""
         if self._cached_intervention_packages is None:
             self._cached_intervention_packages = {
-                (pkg.type, pkg.option): pkg
-                for pkg in IDMInterventionPackage.objects.using(IDM_DATABASE_ALIAS).all()
+                (pkg.type, pkg.option): pkg for pkg in IDMInterventionPackage.objects.using(IDM_DATABASE_ALIAS).all()
             }
         return self._cached_intervention_packages.get((type_value, option_value))
 
