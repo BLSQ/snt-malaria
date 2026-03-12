@@ -152,10 +152,16 @@ class IDMImpactProvider(ImpactProvider):
     """
 
     def __init__(self):
-        """Cache IDM intervention packages by (type, option) to avoid repeated database queries."""
-        self._cached_intervention_packages = {
-            (pkg.type, pkg.option): pkg for pkg in IDMInterventionPackage.objects.using(IDM_DATABASE_ALIAS).all()
-        }
+        self._cached_intervention_packages = None
+
+    def _resolve_intervention_package(self, type_value, option_value):
+        """Look up an IDMInterventionPackage by (type, option), lazy-loading the cache on first call."""
+        if self._cached_intervention_packages is None:
+            self._cached_intervention_packages = {
+                (pkg.type, pkg.option): pkg
+                for pkg in IDMInterventionPackage.objects.using(IDM_DATABASE_ALIAS).all()
+            }
+        return self._cached_intervention_packages.get((type_value, option_value))
 
     @property
     def supports_bulk(self) -> bool:
@@ -319,7 +325,7 @@ class IDMImpactProvider(ImpactProvider):
             )
 
         type_value, option_value = parts
-        package = self._cached_intervention_packages.get((type_value, option_value))
+        package = self._resolve_intervention_package(type_value, option_value)
         if package is None:
             raise InterventionMappingError(
                 f"IDM intervention_package not found for option={option_value!r}, type={type_value!r}."
