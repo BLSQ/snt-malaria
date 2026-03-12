@@ -111,7 +111,7 @@ export const PlanningV2: FC = () => {
 
     const handleDisplayOrgUnitChange = useCallback(
         (orgUnitId?: number) => {
-            redirectToReplace(baseUrls.planning, {
+            redirectToReplace(baseUrls.planningV2, {
                 scenarioId: scenarioId.toString(),
                 displayOrgUnitId: orgUnitId?.toString(),
             });
