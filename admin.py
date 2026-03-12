@@ -37,13 +37,16 @@ class InterventionAdmin(admin.ModelAdmin):
         "name",
         "short_name",
         "intervention_category",
+        "code",
+        "impact_ref",
         "created_by",
         "created_at",
         "updated_at",
         "updated_by",
         "deleted_at",
     )
-    search_fields = ("name", "description")
+    list_editable = ("impact_ref",)
+    search_fields = ("name", "description", "code", "impact_ref")
     list_filter = (
         "intervention_category__account",
         "created_by",

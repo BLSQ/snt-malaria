@@ -46,6 +46,19 @@ class Intervention(SoftDeletableModel):
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=100, null=True, blank=True)
     code = models.CharField(max_length=50)
+    impact_ref = models.CharField(
+        "Impact Provider Reference",
+        max_length=100,
+        blank=True,
+        default="",
+        help_text=(
+            "Reference used to match this intervention to its counterpart in the "
+            "configured impact data source. The format depends on the provider: "
+            "for SwissTPH, use the deployed_int_* column name (e.g. 'deployed_int_smc') "
+            "or a comma-separated list for multiple columns (e.g. 'deployed_int_pbo,deployed_int_itn'); "
+            "for IDM, use 'type:option' from the intervention_package table (e.g. 'smc:pmc')."
+        ),
+    )
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

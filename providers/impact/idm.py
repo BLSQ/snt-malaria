@@ -4,7 +4,7 @@ from django.db.models import Max, Min
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
-from plugins.snt_malaria.models.idm_impact import IDMAgeGroup, IDMModelOutput
+from plugins.snt_malaria.models.idm_impact import IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
 from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProvider, ImpactResult
 
 
@@ -29,37 +29,6 @@ IDM_ALL_INTERVENTION_COLUMNS = [
     "iptp",
     "lsm",
 ]
-
-# IDM intervention_package table: option name -> package ID.
-# See intervention_package table in the IDM database for the full reference.
-IDM_INTERVENTIONS = {
-    "cm": ("cm", 2),
-    "cm_subsidy": ("cm_subsidy", 3),
-    "smc": ("smc", 4),
-    "pmc": ("smc", 5),
-    "itn_c": ("itn_c", 6),
-    "itn_r": ("itn_r", 7),
-    "irs": ("irs", 8),
-    "vacc": ("vacc", 9),
-    "iptp": ("iptp", 10),
-    "lsm": ("lsm", 11),
-}
-
-# Mapping from Iaso intervention code -> (model_output column, intervention_package.id)
-IASO_TO_IDM_INTERVENTION_MAP = {
-    "cm_public": IDM_INTERVENTIONS["cm"],
-    "cm_subsidy": IDM_INTERVENTIONS["cm_subsidy"],
-    "smc": IDM_INTERVENTIONS["smc"],
-    "pmc": IDM_INTERVENTIONS["pmc"],
-    "itn_campaign": IDM_INTERVENTIONS["itn_c"],
-    "itn_campaign_pbo": IDM_INTERVENTIONS["itn_c"],
-    "itn_campaign_ig2": IDM_INTERVENTIONS["itn_c"],
-    "itn_routine": IDM_INTERVENTIONS["itn_r"],
-    "irs": IDM_INTERVENTIONS["irs"],
-    "vacc": IDM_INTERVENTIONS["vacc"],
-    "iptp": IDM_INTERVENTIONS["iptp"],
-    "lsm": IDM_INTERVENTIONS["lsm"],
-}
 
 
 # Temporary name mapping from Iaso org_unit.name -> IDM admin_info.admin_2_name.
@@ -175,6 +144,13 @@ class IDMImpactProvider(ImpactProvider):
     Matches org units by admin_2_name. Uses intervention_package IDs to filter
     model_output rows by intervention deployment status.
     """
+
+    def __init__(self):
+        """Cache IDM intervention packages by (type, option) to avoid repeated database queries."""
+        self._cached_intervention_packages = {
+            (pkg.type, pkg.option): pkg
+            for pkg in IDMInterventionPackage.objects.using(IDM_DATABASE_ALIAS).all()
+        }
 
     @property
     def supports_bulk(self) -> bool:
@@ -315,54 +291,60 @@ class IDMImpactProvider(ImpactProvider):
         return list(IDMAgeGroup.objects.using(IDM_DATABASE_ALIAS).values_list("option", flat=True).order_by("option"))
 
     def _map_intervention(self, intervention: Intervention) -> set[str]:
-        """Map an Iaso Intervention to IDM filter keys (column=package_id).
+        """Resolve an Intervention's impact_ref to an IDM filter key ('column_name=package_id').
 
-        Raises ValueError if the intervention has no mapping in IDM.
+        The impact_ref is expected to be in 'type:option' format, where type
+        and option correspond to the columns of the IDM intervention_package table.
+        Intervention resolution uses cached intervention packages to avoid repeated database queries.
+
+        Raises ValueError if the intervention is None, has no impact_ref,
+        the format is invalid, or no matching intervention_package row exists.
         """
         if intervention is None:
             raise ValueError("intervention cannot be None")
 
-        code = (intervention.code or "").lower().strip()
-        name = (intervention.name or "").lower().strip()
-        filter_keys: set[str] = set()
+        impact_reference = (intervention.impact_ref or "").strip()
+        if not impact_reference:
+            raise ValueError(f"Intervention '{intervention}' has no impact_ref")
 
-        # Check for ITN campaign variants by name
-        if code == "itn_campaign":
-            if "pbo" in name:
-                code = "itn_campaign_pbo"
-            elif "dual ai" in name or "ig2" in name:
-                code = "itn_campaign_ig2"
+        parts = impact_reference.split(":")
+        if len(parts) != 2:
+            raise ValueError(
+                f"Invalid impact_ref format {impact_reference!r}. "
+                f"Expected 'type:option' (e.g. 'smc:pmc')."
+            )
 
-        if not code:
-            raise ValueError("Intervention has no code")
+        type_value, option_value = parts
+        package = self._cached_intervention_packages.get((type_value, option_value))
+        if package is None:
+            raise ValueError(
+                f"IDM intervention_package not found for "
+                f"option={option_value!r}, type={type_value!r}."
+            )
 
-        if code not in IASO_TO_IDM_INTERVENTION_MAP:
-            raise ValueError(f"IDM does not support intervention with code {code!r}.")
-
-        column, package_id = IASO_TO_IDM_INTERVENTION_MAP[code]
-        filter_keys.add(f"{column}={package_id}")
-        return filter_keys
+        return {f"{package.type}={package.id}"}
 
     def _build_query_filters(self, filter_keys: set[str]) -> dict:
         """Build ORM filter kwargs for IDM model_output.
 
-        For each intervention column, set it to the deployed package ID if the
-        intervention is active, or to IDM_NONE_PACKAGE_ID (1) if not.
+        Each filter key has the format 'column_name=package_id'. For every
+        intervention column in model_output, the filter is set to the deployed
+        package ID if the intervention is active, or to IDM_NONE_PACKAGE_ID (1)
+        if not deployed.
         """
-        # Parse filter keys into {column: package_id} mapping
-        active_columns = {}
+        deployed_interventions: dict[str, int] = {}
         for key in filter_keys:
-            column, package_id = key.split("=")
-            active_columns[column] = int(package_id)
+            column_name, package_id = key.split("=")
+            deployed_interventions[column_name] = int(package_id)
 
-        filters = {}
-        for column in IDM_ALL_INTERVENTION_COLUMNS:
-            if column in active_columns:
-                filters[column] = active_columns[column]
-                filters[f"{column}_coverage"] = IDM_DEPLOYED_COVERAGE_ID
+        filters: dict = {}
+        for column_name in IDM_ALL_INTERVENTION_COLUMNS:
+            if column_name in deployed_interventions:
+                filters[column_name] = deployed_interventions[column_name]
+                filters[f"{column_name}_coverage"] = IDM_DEPLOYED_COVERAGE_ID
             else:
-                filters[column] = IDM_NONE_PACKAGE_ID
-                filters[f"{column}_coverage__isnull"] = True
+                filters[column_name] = IDM_NONE_PACKAGE_ID
+                filters[f"{column_name}_coverage__isnull"] = True
 
         return filters
 
