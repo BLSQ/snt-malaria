@@ -1,23 +1,22 @@
 import React, { FC } from 'react';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
-import { Stack, Typography } from '@mui/material';
+import { Button, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import ConfirmDialog from 'Iaso/components/dialogs/ConfirmDialogComponent';
 import { noOp } from 'Iaso/utils';
-import { IconBoxed } from '../../../../components/IconBoxed';
-import { MESSAGES } from '../../../messages';
-import { CreateScenarioRuleModal } from './ScenarioRuleModal';
-import { usePlanningContext } from '../../contexts/PlanningContext';
+import { IconBoxed } from '../../../../../components/IconBoxed';
+import { MESSAGES } from '../../../../messages';
+import { usePlanningContext } from '../../../contexts/PlanningContext';
 
 type Props = {
-    scenarioId: number;
     onApplyRules?: () => void;
+    onCreateRule: () => void;
 };
 
 export const ScenarioRulesHeader: FC<Props> = ({
-    scenarioId,
     onApplyRules = noOp,
+    onCreateRule,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { canEditScenario } = usePlanningContext();
@@ -39,11 +38,10 @@ export const ScenarioRulesHeader: FC<Props> = ({
             <Stack direction="row" sx={{ justifySelf: 'flex-end' }}>
                 {canEditScenario && (
                     <>
-                        <CreateScenarioRuleModal
-                            scenarioId={scenarioId}
-                            onClose={noOp}
-                            iconProps={{}}
-                        />
+                        <Button onClick={() => onCreateRule()}>
+                            {formatMessage(MESSAGES.createScenarioRule)}
+                        </Button>
+
                         <ConfirmDialog
                             confirm={onApplyRules}
                             question={formatMessage(MESSAGES.applyScenarioRule)}
@@ -52,7 +50,9 @@ export const ScenarioRulesHeader: FC<Props> = ({
                             )}
                             BtnIcon={ChevronRightIcon}
                             btnMessage={''}
-                            tooltipMessage={formatMessage(MESSAGES.applyScenarioRule)}
+                            tooltipMessage={formatMessage(
+                                MESSAGES.applyScenarioRule,
+                            )}
                         />
                     </>
                 )}

@@ -4,14 +4,14 @@ import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
-import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
-import { MESSAGES } from '../../../messages';
-import { usePlanningContext } from '../../contexts/PlanningContext';
-import { ScenarioRuleFormValues } from '../../hooks/useScenarioRuleFormState';
+import { useGetExtendedFormikContext } from '../../../../../hooks/useGetExtendedFormikContext';
+import { MESSAGES } from '../../../../messages';
+import { usePlanningContext } from '../../../contexts/PlanningContext';
+import { ScenarioRuleFormValues } from '../../../hooks/useScenarioRuleFormState';
 import { InterventionPropertiesForm } from './InterventionPropertiesForm';
 import { MatchingCriteriaForm } from './MatchingCriteriaForm';
 
-const styles: SxStyles = {
+const styles = {
     formWrapper: {
         p: 2,
         backgroundColor: 'grey.100',
@@ -22,7 +22,7 @@ const styles: SxStyles = {
             backgroundColor: 'grey.100',
         },
     },
-};
+} satisfies SxStyles;
 
 const ScenarioRuleHeading: FC<{ chipLabel: string; label: string }> = ({
     chipLabel,

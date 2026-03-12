@@ -2,9 +2,9 @@ import React, { FC, useMemo } from 'react';
 import { Box, Typography, SxProps, Theme, Tooltip } from '@mui/material';
 import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
 import InputComponent from 'Iaso/components/forms/InputComponent';
-import { LegendTypes } from '../../../../constants/legend';
-import { MetricType } from '../../../planning/types/metrics';
-import { MetricTypeCriterion } from '../../types/scenarioRule';
+import { LegendTypes } from '../../../../../constants/legend';
+import { MetricType } from '../../../../planning/types/metrics';
+import { MetricTypeCriterion } from '../../../types/scenarioRule';
 
 type Props = {
     metricTypeCriterion: MetricTypeCriterion;

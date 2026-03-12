@@ -1,8 +1,9 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, Grid } from '@mui/material';
+import { Card, Grid } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
+import { CardStyled } from '../../components/CardStyled';
 import {
     PaperFullHeight,
     PageContainer,
@@ -28,7 +29,7 @@ import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { InterventionPlanHeader } from './components/InterventionPlan/InterventionPlanHeader';
 import { InterventionsPlanMap } from './components/InterventionPlanMap/InterventionPlanMap';
 import { InterventionsPlanTable } from './components/InterventionPlanTable/InterventionsPlanTable';
-import { ScenarioRulesContainer } from './components/scenarioRule/ScenarioRulesContainer';
+import { ScenarioRulesPanel } from './components/ScenarioRule/ScenarioRulesPanel';
 import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
@@ -121,7 +122,7 @@ export const PlanningV2: FC = () => {
                 <Grid container spacing={1}>
                     <Grid item xs={12} md={4}>
                         <PaperFullHeight>
-                            <ScenarioRulesContainer
+                            <ScenarioRulesPanel
                                 onApplyRules={onApplyRules}
                                 scenarioId={scenarioId}
                                 rules={scenarioRules || []}
@@ -138,12 +139,8 @@ export const PlanningV2: FC = () => {
                                     flexDirection: 'column',
                                 }}
                             >
-                                <CardHeader
-                                    sx={{
-                                        borderBottom:
-                                            '1px solid rgba(0, 0, 0, 0.12)',
-                                    }}
-                                    title={
+                                <CardStyled
+                                    header={
                                         <InterventionPlanHeader
                                             onTabChange={setActiveTab}
                                             activeTab={activeTab}
@@ -155,14 +152,6 @@ export const PlanningV2: FC = () => {
                                             }
                                         />
                                     }
-                                />
-
-                                <CardContent
-                                    sx={{
-                                        flexGrow: 1,
-                                        overflow: 'auto',
-                                        maxHeight: '100%',
-                                    }}
                                 >
                                     {activeTab === 'map' && (
                                         <InterventionsPlanMap />
@@ -205,7 +194,7 @@ export const PlanningV2: FC = () => {
                                                 orgUnits={orgUnits}
                                             />
                                         )}
-                                </CardContent>
+                                </CardStyled>
                             </Card>
                         </PaperFullHeight>
                     </Grid>

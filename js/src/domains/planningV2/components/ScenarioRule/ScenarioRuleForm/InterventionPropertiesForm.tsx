@@ -1,12 +1,12 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import { Box } from '@mui/material';
 import { FormikErrors, FormikTouched } from 'formik';
-import { useGetChildError } from '../../../../hooks/useGetChildError';
-import { MESSAGES } from '../../../messages';
-import { InterventionCategory } from '../../../planning/types/interventions';
-import { defaultInterventionProperties } from '../../hooks/useScenarioRuleFormState';
-import { InterventionProperties } from '../../types/scenarioRule';
-import { DropdownButton } from './DropdownButton';
+import { DropdownButton } from '../../../../../components/DropdownButton';
+import { useGetChildError } from '../../../../../hooks/useGetChildError';
+import { MESSAGES } from '../../../../messages';
+import { InterventionCategory } from '../../../../planning/types/interventions';
+import { defaultInterventionProperties } from '../../../hooks/useScenarioRuleFormState';
+import { InterventionProperties } from '../../../types/scenarioRule';
 import { InterventionPropertyForm } from './InterventionPropertyForm';
 
 type Props = {

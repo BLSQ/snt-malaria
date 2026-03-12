@@ -2,12 +2,12 @@ import React, { FC, useCallback, useMemo } from 'react';
 import { Box } from '@mui/material';
 import { FormikTouched } from 'formik';
 import { FormikErrors } from 'formik';
-import { useGetChildError } from '../../../../hooks/useGetChildError';
-import { MESSAGES } from '../../../messages';
-import { MetricTypeCategory } from '../../../planning/types/metrics';
-import { defaultMatchingCriteria } from '../../hooks/useScenarioRuleFormState';
-import { MetricTypeCriterion } from '../../types/scenarioRule';
-import { DropdownButton } from './DropdownButton';
+import { DropdownButton } from '../../../../../components/DropdownButton';
+import { useGetChildError } from '../../../../../hooks/useGetChildError';
+import { MESSAGES } from '../../../../messages';
+import { MetricTypeCategory } from '../../../../planning/types/metrics';
+import { defaultMatchingCriteria } from '../../../hooks/useScenarioRuleFormState';
+import { MetricTypeCriterion } from '../../../types/scenarioRule';
 import { MatchingCriterionForm } from './MatchingCriterionForm';
 
 type Props = {

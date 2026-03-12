@@ -1,5 +1,7 @@
 import { hslToRgb } from '@mui/material';
 
+import Color from 'color';
+
 const [sat, lightness] = [0.69, 0.84];
 export const maxHue = 350;
 
@@ -84,7 +86,8 @@ export const blendColors = (colors: string[]) => {
     if (colors.length === 0) return defaultLegend;
     if (colors.length === 1) return colors[0];
 
-    const hslColors = colors.map(hexToHsl);
+    const hslColors = colors.map(c => Color(c).hsl().array());
+
     const avgHue = circularMean(hslColors.map(([hue]) => hue));
     const avgSat =
         hslColors.map(([, sat]) => sat).reduce((a, b) => a + b, 0) /
@@ -96,41 +99,5 @@ export const blendColors = (colors: string[]) => {
     const boostedSat = Math.min(100, avgSat * 0.8);
     const darkenedLight = Math.max(0, avgLight * 0.7);
 
-    return hslToRgb(
-        `hsl(${avgHue},${boostedSat * 100}%,${darkenedLight * 100}%)`,
-    );
-};
-
-const hexToHsl = (hex: string): [number, number, number] => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (!result) return [0, 0, 0];
-
-    let r = parseInt(result[1], 16) / 255;
-    let g = parseInt(result[2], 16) / 255;
-    let b = parseInt(result[3], 16) / 255;
-
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h = 0;
-    let s = 0;
-    const l = (max + min) / 2;
-
-    if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-
-        switch (max) {
-            case r:
-                h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
-                break;
-            case g:
-                h = ((b - r) / d + 2) / 6;
-                break;
-            case b:
-                h = ((r - g) / d + 4) / 6;
-                break;
-        }
-    }
-
-    return [h * 360, s, l];
+    return hslToRgb(`hsl(${avgHue},${boostedSat}%,${darkenedLight}%)`);
 };
