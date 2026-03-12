@@ -14,6 +14,7 @@ import { Budgeting } from '../planning/components/budgeting/Budgeting';
 import { InterventionPlanDetails } from '../planning/components/interventionPlan/InterventionPlanDetails';
 import { ScenarioTopBar } from '../planning/components/ScenarioTopBar';
 import { useCalculateBudget } from '../planning/hooks/useCalculateBudget';
+import { useGetBudgetAssumptions } from '../planning/hooks/useGetBudgetAssumptions';
 import { useGetInterventionCategories } from '../planning/hooks/useGetInterventionCategories';
 import { useGetLatestCalculatedBudget } from '../planning/hooks/useGetLatestCalculatedBudget';
 import { useGetMetricCategories } from '../planning/hooks/useGetMetrics';
@@ -32,7 +33,6 @@ import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { useRefreshAssignments } from './hooks/useRefreshInterventionAssignment';
-import { useGetBudgetAssumptions } from '../planning/hooks/useGetBudgetAssumptions';
 
 type PlanningParams = {
     scenarioId: number;
@@ -180,7 +180,7 @@ export const PlanningV2: FC = () => {
                                                         undefined,
                                                     )
                                                 }
-                                                BudgetAssumptions={
+                                                budgetAssumptions={
                                                     selectedBudgetAssumptions
                                                 }
                                                 removeOrgUnitsFromPlan={
