@@ -1,12 +1,5 @@
 import React, { FC, useCallback, useState } from 'react';
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    Grid,
-    ToggleButton,
-    ToggleButtonGroup,
-} from '@mui/material';
+import { Card, CardContent, CardHeader, Grid } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
@@ -20,6 +13,7 @@ import { MESSAGES } from '../messages';
 import { Budgeting } from '../planning/components/budgeting/Budgeting';
 import { InterventionPlanDetails } from '../planning/components/interventionPlan/InterventionPlanDetails';
 import { ScenarioTopBar } from '../planning/components/ScenarioTopBar';
+import { useCalculateBudget } from '../planning/hooks/useCalculateBudget';
 import { useGetInterventionCategories } from '../planning/hooks/useGetInterventionCategories';
 import { useGetLatestCalculatedBudget } from '../planning/hooks/useGetLatestCalculatedBudget';
 import { useGetMetricCategories } from '../planning/hooks/useGetMetrics';
@@ -27,8 +21,9 @@ import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from '../planning/hooks/useRemoveOrgUnitFromInterventionPlan';
 import { InterventionPlan } from '../planning/types/interventions';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
+import { InterventionPlanHeader } from './components/InterventionPlan/InterventionPlanHeader';
 import { InterventionsPlanMap } from './components/InterventionPlanMap/InterventionPlanMap';
-import { InterventionsPlanTable } from './components/InterventionPlanTable.tsx/InterventionsPlanTable';
+import { InterventionsPlanTable } from './components/InterventionPlanTable/InterventionsPlanTable';
 import { ScenarioRulesContainer } from './components/scenarioRule/ScenarioRulesContainer';
 import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
@@ -62,6 +57,8 @@ export const PlanningV2: FC = () => {
     const { data: budget } = useGetLatestCalculatedBudget(scenario?.id);
 
     const { mutate: refreshAssignments } = useRefreshAssignments(scenarioId);
+    const { mutate: runBudget, isLoading: isCalculatingBudget } =
+        useCalculateBudget();
 
     const {
         mutate: removeManyOrgUnitsFromPlan,
@@ -114,76 +111,81 @@ export const PlanningV2: FC = () => {
                         </PaperFullHeight>
                     </Grid>
                     <Grid item xs={12} md={8}>
-                        <Card
-                            sx={{
-                                height: '100%',
-                                display: 'flex',
-                                flexDirection: 'column',
-                            }}
-                        >
-                            <CardHeader
+                        <PaperFullHeight>
+                            <Card
                                 sx={{
-                                    borderBottom:
-                                        '1px solid rgba(0, 0, 0, 0.12)',
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
                                 }}
-                                title={
-                                    <ToggleButtonGroup
-                                        value={activeTab}
-                                        size="small"
-                                        onChange={(_, value) =>
-                                            setActiveTab(value)
-                                        }
-                                        exclusive
-                                    >
-                                        <ToggleButton value="map" key="map">
-                                            {formatMessage(MESSAGES.mapView)}
-                                        </ToggleButton>
-                                        <ToggleButton value="list" key="list">
-                                            {formatMessage(MESSAGES.listView)}
-                                        </ToggleButton>
-                                    </ToggleButtonGroup>
-                                }
-                            />
+                            >
+                                <CardHeader
+                                    sx={{
+                                        borderBottom:
+                                            '1px solid rgba(0, 0, 0, 0.12)',
+                                    }}
+                                    title={
+                                        <InterventionPlanHeader
+                                            onTabChange={setActiveTab}
+                                            activeTab={activeTab}
+                                            onRunBudget={() =>
+                                                runBudget(scenarioId)
+                                            }
+                                            isCalculatingBudget={
+                                                isCalculatingBudget
+                                            }
+                                        />
+                                    }
+                                />
 
-                            <CardContent sx={{ flexGrow: 1 }}>
-                                {activeTab === 'map' && (
-                                    <InterventionsPlanMap />
-                                )}
-                                {activeTab === 'list' && (
-                                    <>
-                                        <InterventionsPlanTable
-                                            showInterventionPlanDetails={
-                                                setSelectedInterventionPlan
-                                            }
-                                        />
-                                        <InterventionPlanDetails
-                                            interventionPlan={
-                                                selectedInterventionPlan
-                                            }
-                                            scenarioId={scenarioId}
-                                            closeInterventionPlanDetails={() =>
-                                                setSelectedInterventionPlan(
-                                                    undefined,
-                                                )
-                                            }
-                                            removeOrgUnitsFromPlan={
-                                                onRemoveOrgUnitsFromPlan
-                                            }
-                                            isRemovingOrgUnits={
-                                                isRemovingOrgUnits
-                                            }
-                                        />
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
+                                <CardContent
+                                    sx={{
+                                        flexGrow: 1,
+                                        overflow: 'auto',
+                                        maxHeight: '100%',
+                                    }}
+                                >
+                                    {activeTab === 'map' && (
+                                        <InterventionsPlanMap />
+                                    )}
+                                    {activeTab === 'list' && (
+                                        <>
+                                            <InterventionsPlanTable
+                                                showInterventionPlanDetails={
+                                                    setSelectedInterventionPlan
+                                                }
+                                            />
+                                            <InterventionPlanDetails
+                                                interventionPlan={
+                                                    selectedInterventionPlan
+                                                }
+                                                scenarioId={scenarioId}
+                                                closeInterventionPlanDetails={() =>
+                                                    setSelectedInterventionPlan(
+                                                        undefined,
+                                                    )
+                                                }
+                                                removeOrgUnitsFromPlan={
+                                                    onRemoveOrgUnitsFromPlan
+                                                }
+                                                isRemovingOrgUnits={
+                                                    isRemovingOrgUnits
+                                                }
+                                            />
+                                        </>
+                                    )}
+                                    {activeTab === 'budget' &&
+                                        orgUnits &&
+                                        budget && (
+                                            <Budgeting
+                                                budgets={budget?.results}
+                                                orgUnits={orgUnits}
+                                            />
+                                        )}
+                                </CardContent>
+                            </Card>
+                        </PaperFullHeight>
                     </Grid>
-                    {orgUnits && budget && (
-                        <Budgeting
-                            budgets={budget?.results}
-                            orgUnits={orgUnits}
-                        />
-                    )}
                 </Grid>
             </PageContainer>
         </PlanningProvider>

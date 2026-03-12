@@ -178,10 +178,6 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits, filterLabel }) => {
                     <Box sx={styles.toolbar}>
                         <Box sx={styles.toolbarLeft}>
                             <IconBoxed Icon={AttachMoneyIcon} />
-                            <Typography sx={styles.budgetLabel}>
-                                {formatMessage(MESSAGES.budget)}
-                            </Typography>
-
                             <InputComponent
                                 type="select"
                                 multi={false}
@@ -191,7 +187,7 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits, filterLabel }) => {
                                 onChange={(_, value) => setSelectedYear(value)}
                                 keyValue="year_options"
                                 withMarginTop={false}
-                                wrapperSx={{ minWidth: '150px' }}
+                                wrapperSx={{ minWidth: '150px', ml: 2 }}
                                 clearable={false}
                             />
                         </Box>
@@ -209,14 +205,14 @@ export const Budgeting: FC<Props> = ({ budgets, orgUnits, filterLabel }) => {
             )}
             {sortedInterventionCosts && (
                 <>
-                    <Grid item xs={12} md={7}>
+                    <Grid item xs={12} md={12}>
                         <PaperContainer>
                             <CostBreakdownChart
                                 interventionBudgets={sortedInterventionCosts}
                             />
                         </PaperContainer>
                     </Grid>
-                    <Grid item xs={12} md={5}>
+                    <Grid item xs={12} md={12}>
                         <PaperContainer>
                             <ProportionChart
                                 interventionBudgets={sortedInterventionCosts}

@@ -200,5 +200,6 @@
     "iaso.snt_malaria.compareOptimize.noBudgetData": "Aucune donnée de budget disponible",
     "iaso.snt_malaria.compareOptimize.scenarioLabelWithIndex": "Scénario {index}",
     "iaso.snt_malaria.label.mapView": "Carte",
-    "iaso.snt_malaria.label.listView": "Liste"
+    "iaso.snt_malaria.label.listView": "Liste",
+    "iaso.snt_malaria.label.budgetView": "Budget"
 }
