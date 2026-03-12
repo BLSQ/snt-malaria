@@ -35,6 +35,12 @@ type Props = {
     rules: ScenarioRule[];
 };
 
+type ReorderScenarioRulesParams = {
+    resume: () => void;
+    abort: () => void;
+    items: ScenarioRule[];
+};
+
 export const ScenarioRulesContainer: FC<Props> = ({
     scenarioId,
     isLoading,
@@ -46,15 +52,7 @@ export const ScenarioRulesContainer: FC<Props> = ({
         useReorderScenarioRules(scenarioId);
 
     const handleReorder = useCallback(
-        ({
-            resume,
-            abort,
-            items,
-        }: {
-            resume: () => void;
-            abort: () => void;
-            items: ScenarioRule[];
-        }) => {
+        ({ resume, abort, items }: ReorderScenarioRulesParams) => {
             reorderScenarioRules(
                 items.map(r => r.id),
                 // abort doesn't work, a topic is open about it: https://github.com/clauderic/dnd-kit/issues/1769

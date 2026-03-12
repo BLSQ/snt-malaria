@@ -29,6 +29,13 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
     const { mutate: createUpdateScenarioRule, isLoading: isSubmittingRule } =
         useCreateUpdateScenarioRule(scenarioId);
 
+    const title = useMemo(() => {
+        if (rule) {
+            return formatMessage(MESSAGES.editScenarioRule);
+        }
+        return formatMessage(MESSAGES.createScenarioRule);
+    }, [formatMessage, rule]);
+
     const initialValues: ScenarioRuleFormValues | undefined = useMemo(
         () =>
             rule
@@ -60,18 +67,14 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
     const formik = useScenarioRuleFormState({
         onSubmit,
         initialValues,
-        editMode: !!rule,
+        editMode: Boolean(rule),
     });
 
     return (
         <CardStyled
             header={
                 <ScenarioRuleFormHeader
-                    title={formatMessage(
-                        rule
-                            ? MESSAGES.editScenarioRule
-                            : MESSAGES.createScenarioRule,
-                    )}
+                    title={title}
                     onCancel={onClose}
                     onSubmit={formik.handleSubmit}
                     disabled={isSubmittingRule}

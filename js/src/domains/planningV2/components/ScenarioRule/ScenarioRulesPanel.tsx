@@ -27,10 +27,8 @@ export const ScenarioRulesPanel: FC<Props> = ({
     isLoading,
     onApplyRules,
 }) => {
-    const [isEditing, setIsEditing] = useState(false);
-    const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>(
-        undefined,
-    );
+    const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
 
     const handleShowForm = useCallback(
         (rule?: ScenarioRule) => {
