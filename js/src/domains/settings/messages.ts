@@ -99,10 +99,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.errors.genericError',
         defaultMessage: 'Please try again.',
     },
-    downloadCSVTemplate: {
-        id: 'iaso.snt_malaria.settings.dataLayers.downloadCSVTemplate',
-        defaultMessage: 'Download CSV Template',
-    },
     importCSV: {
         id: 'iaso.snt_malaria.settings.dataLayers.importCSV',
         defaultMessage: 'Import CSV',
