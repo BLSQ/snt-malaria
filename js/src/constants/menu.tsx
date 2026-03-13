@@ -1,10 +1,10 @@
 import React from 'react';
-import { SvgIconProps } from '@mui/material';
 import {
     CompareOutlined,
     FormatListBulletedOutlined,
     Settings,
 } from '@mui/icons-material';
+import { SvgIconProps } from '@mui/material';
 import { MESSAGES } from '../domains/messages';
 import { SETTINGS_READ } from './permissions';
 
