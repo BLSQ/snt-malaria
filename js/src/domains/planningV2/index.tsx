@@ -17,7 +17,6 @@ import { baseUrls } from '../../constants/urls';
 import { MESSAGES } from '../messages';
 import { Budgeting } from '../planning/components/budgeting/Budgeting';
 import { InterventionPlanDetails } from '../planning/components/interventionPlan/InterventionPlanDetails';
-import { ScenarioTopBar } from '../planning/components/ScenarioTopBar';
 import { useCalculateBudget } from '../planning/hooks/useCalculateBudget';
 import { useGetBudgetAssumptions } from '../planning/hooks/useGetBudgetAssumptions';
 import { useGetInterventionCategories } from '../planning/hooks/useGetInterventionCategories';
@@ -56,7 +55,6 @@ export const PlanningV2: FC = () => {
     const { formatMessage } = useSafeIntl();
     const [activeTab, setActiveTab] = useState('map');
 
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [selectedInterventionPlan, setSelectedInterventionPlan] = useState<
         InterventionPlan | undefined
     >(undefined);
@@ -119,6 +117,14 @@ export const PlanningV2: FC = () => {
         [scenarioId, redirectToReplace],
     );
 
+    const title = useMemo(
+        () =>
+            scenario
+                ? `${scenario.name} ${scenario.start_year} - ${scenario.end_year}`
+                : formatMessage(MESSAGES.title),
+        [scenario, formatMessage],
+    );
+
     return metricTypeCategories && interventionCategories ? (
         <PlanningProvider
             scenarioId={scenarioId}
@@ -131,25 +137,16 @@ export const PlanningV2: FC = () => {
             canEditScenario={canEditScenario}
         >
             {isLoadingOrgUnits && <LoadingSpinner />}
-            <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
+            <TopBar title={title} disableShadow />
             <PageContainer>
-                {scenario && (
-                    <ScenarioTopBar
-                        scenario={scenario}
-                        isSidebarOpen={isSidebarOpen}
-                        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
-                    />
-                )}
                 <Grid container spacing={1}>
                     <Grid item xs={12} md={4}>
-                        <PaperFullHeight>
-                            <ScenarioRulesPanel
-                                onApplyRules={onApplyRules}
-                                scenarioId={scenarioId}
-                                rules={scenarioRules || []}
-                                isLoading={isFetchingRules}
-                            />
-                        </PaperFullHeight>
+                        <ScenarioRulesPanel
+                            onApplyRules={onApplyRules}
+                            scenarioId={scenarioId}
+                            rules={scenarioRules || []}
+                            isLoading={isFetchingRules}
+                        />
                     </Grid>
                     <Grid item xs={12} md={8}>
                         <PaperFullHeight>
