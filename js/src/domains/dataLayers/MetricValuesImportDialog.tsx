@@ -8,8 +8,8 @@ import {
     useSafeIntl,
 } from 'bluesquare-components';
 import { noOp } from 'Iaso/utils';
-import { useImportMetricValues } from '../../hooks/useImportMetricValues';
-import { MESSAGES } from '../../messages';
+import { useImportMetricValues } from './hooks/useImportMetricValues';
+import { MESSAGES } from './messages';
 
 type ImportActionProps = {
     onClick: () => void;

@@ -5,11 +5,11 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import {
     LEGEND_TYPE_MAX_ITEMS,
     LEGEND_TYPE_MIN_ITEMS,
-} from '../../../../constants/legend';
-import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
-import { useGetLegendTypes } from '../../../planning/hooks/useGetLegendTypes';
-import { MetricTypeFormModel } from '../../../planning/types/metrics';
-import { MESSAGES } from '../../messages';
+} from '../../../constants/legend';
+import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
+import { useGetLegendTypes } from '../../planning/hooks/useGetLegendTypes';
+import { MetricTypeFormModel } from '../../planning/types/metrics';
+import { MESSAGES } from '../messages';
 import { LegendConfigForm } from './LegendConfigForm';
 
 type MetricTypeFormProps = {
