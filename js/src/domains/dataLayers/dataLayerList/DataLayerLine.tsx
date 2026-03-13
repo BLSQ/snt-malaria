@@ -15,13 +15,13 @@ import {
 } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
-import { SxStyles } from 'Iaso/types/general';
-import { MetricType } from '../../../planning/types/metrics';
-import { MESSAGES } from '../../messages';
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
+import { SxStyles } from 'Iaso/types/general';
 import * as CorePermission from 'Iaso/utils/permissions';
+import { MetricType } from '../../planning/types/metrics';
+import { MESSAGES } from '../messages';
 
-type MetricTypeLineProps = {
+type Props = {
     metricType: MetricType;
     onEdit: (metricType: MetricType) => void;
     onDelete: (metricType: number) => void;
@@ -47,7 +47,7 @@ const styles: SxStyles = {
     },
 };
 
-export const MetricTypeLine: FC<MetricTypeLineProps> = ({
+export const DataLayerLine: FC<Props> = ({
     metricType,
     onEdit,
     onDelete,
@@ -72,7 +72,9 @@ export const MetricTypeLine: FC<MetricTypeLineProps> = ({
             ref={anchorRef}
             secondaryAction={
                 readonly ? null : (
-                    <DisplayIfUserHasPerm permissions={[CorePermission.METRIC_TYPES]}>
+                    <DisplayIfUserHasPerm
+                        permissions={[CorePermission.METRIC_TYPES]}
+                    >
                         <IconButton
                             aria-label="more-info"
                             overrideIcon={MoreHorizIcon}

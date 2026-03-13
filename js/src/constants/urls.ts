@@ -7,6 +7,10 @@ import {
 import { paginationPathParams } from 'Iaso/routing/common';
 
 export const RouteConfigs: Record<string, RouteConfig> = {
+    dataLayers: {
+        url: 'snt_malaria/data-layers',
+        params: [],
+    },
     planning: {
         url: 'snt_malaria/planning',
         params: ['scenarioId', 'displayOrgUnitId'],
@@ -26,8 +30,8 @@ export const RouteConfigs: Record<string, RouteConfig> = {
 };
 
 export type BaseUrls = {
+    dataLayers: string;
     planning: string;
-    planningV2: string;
     compareOptimize: string;
     scenarios: string;
     settings: string;

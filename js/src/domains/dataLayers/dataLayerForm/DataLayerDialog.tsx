@@ -2,14 +2,11 @@ import React, { FC, useMemo, useState } from 'react';
 import { Alert, AlertTitle } from '@mui/material';
 import { ConfirmCancelModal, useSafeIntl } from 'bluesquare-components';
 import { FormikProvider } from 'formik';
-import {
-    MetricType,
-    MetricTypeFormModel,
-} from '../../../planning/types/metrics';
-import { useCreateOrUpdateMetricType } from '../../hooks/useCreateOrUpdateMetricType';
-import { useMetricTypeFormState } from '../../hooks/useMetricTypeFormState';
-import { MESSAGES } from '../../messages';
-import { MetricTypeForm } from './MetricTypeForm';
+import { MetricType, MetricTypeFormModel } from '../../planning/types/metrics';
+import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
+import { useMetricTypeFormState } from '../hooks/useMetricTypeFormState';
+import { MESSAGES } from '../messages';
+import { MetricTypeForm } from './DataLayerForm';
 
 interface MetricTypeDialogProps {
     open: boolean;
@@ -17,7 +14,7 @@ interface MetricTypeDialogProps {
     metricType?: MetricType;
 }
 
-export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
+export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
     open,
     closeDialog,
     metricType = undefined,
@@ -25,7 +22,7 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
     const [errorCode, setErrorCode] = useState<string | undefined>(undefined);
     const { formatMessage } = useSafeIntl();
     const { mutate: submitMetricType } = useCreateOrUpdateMetricType({
-        onError: errorCode => setErrorCode(`${errorCode}Error`),
+        onError: (errorCode: string) => setErrorCode(`${errorCode}Error`),
         onSuccess: () => {
             setErrorCode(undefined);
             closeDialog();
@@ -87,12 +84,14 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
             titleMessage={
                 metricType
                     ? formatMessage(MESSAGES.editLayer)
-                    : formatMessage(MESSAGES.create)
+                    : formatMessage(MESSAGES.createLayer)
             }
             closeDialog={closeDialog}
             onConfirm={formik.handleSubmit}
             onCancel={handleCancel}
-            confirmMessage={metricType ? MESSAGES.edit : MESSAGES.create}
+            confirmMessage={
+                metricType ? MESSAGES.editLayer : MESSAGES.createLayer
+            }
             cancelMessage={MESSAGES.cancel}
             closeOnConfirm={false}
             allowConfirm={formik.isValid && !formik.isSubmitting}
@@ -104,12 +103,19 @@ export const MetricTypeDialog: FC<MetricTypeDialogProps> = ({
                 <Alert severity="error" variant="filled" sx={{ mt: 2 }}>
                     <AlertTitle>
                         {formatMessage(
-                            MESSAGES[errorCode + 'Headline'] ||
-                                MESSAGES.genericErrorHeadline,
+                            errorCode && errorCode + 'Headline' in MESSAGES
+                                ? MESSAGES[
+                                      errorCode.concat(
+                                          'Headline',
+                                      ) as keyof typeof MESSAGES
+                                  ]
+                                : MESSAGES.genericErrorHeadline,
                         )}
                     </AlertTitle>
                     {formatMessage(
-                        MESSAGES[errorCode] || MESSAGES.genericError,
+                        errorCode && errorCode in MESSAGES
+                            ? MESSAGES[errorCode as keyof typeof MESSAGES]
+                            : MESSAGES.genericError,
                     )}
                 </Alert>
             )}
