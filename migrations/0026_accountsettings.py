@@ -5,19 +5,30 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('iaso', '0368_alter_corepermissionsupport_options'),
-        ('snt_malaria', '0025_alter_scenario_unique_together_and_more'),
+        ("iaso", "0368_alter_corepermissionsupport_options"),
+        ("snt_malaria", "0025_alter_scenario_unique_together_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AccountSettings',
+            name="AccountSettings",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('account', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='snt_account_settings', to='iaso.account')),
-                ('intervention_org_unit_type', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='iaso.orgunittype')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "account",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="snt_account_settings",
+                        to="iaso.account",
+                    ),
+                ),
+                (
+                    "intervention_org_unit_type",
+                    models.ForeignKey(
+                        blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to="iaso.orgunittype"
+                    ),
+                ),
             ],
         ),
     ]
