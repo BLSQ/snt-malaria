@@ -1,5 +1,6 @@
 from rest_framework import routers
 
+from plugins.snt_malaria.api.account_settings.views import AccountSettingsViewSet
 from plugins.snt_malaria.api.budget.views import BudgetViewSet
 from plugins.snt_malaria.api.budget_assumptions.views import BudgetAssumptionsViewSet
 from plugins.snt_malaria.api.budget_settings.views import BudgetSettingsViewSet
@@ -36,3 +37,4 @@ router.register(r"snt_malaria/budget_assumptions", BudgetAssumptionsViewSet, bas
 router.register(r"snt_malaria/impact", ImpactViewSet, basename="impact")
 router.register(r"snt_malaria/impact_year_range", ImpactYearRangeViewSet, basename="impact_year_range")
 router.register(r"snt_malaria/impact_age_groups", ImpactAgeGroupsViewSet, basename="impact_age_groups")
+router.register(r"snt_malaria/account_settings", AccountSettingsViewSet, basename="account_settings")

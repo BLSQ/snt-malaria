@@ -2,11 +2,11 @@ import React, { FC, useCallback } from 'react';
 import { Card, CardContent, CardHeader } from '@mui/material';
 import { AsyncSortableList, LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { usePlanningContext } from '../../contexts/PlanningContext';
 import { useReorderScenarioRules } from '../../hooks/useReorderScenarioRules';
 import { ScenarioRule } from '../../types/scenarioRule';
 import { ScenarioRuleLine } from './ScenarioRuleLine';
 import { ScenarioRulesHeader } from './ScenarioRulesHeader';
-import { usePlanningContext } from '../../contexts/PlanningContext';
 
 const styles: SxStyles = {
     card: {
@@ -100,7 +100,6 @@ export const ScenarioRulesContainer: FC<Props> = ({
                         onDragEnd={handleReorder}
                         listSx={styles.rulesContainer}
                         itemSx={styles.ruleBox}
-                        showOverlay={false}
                         disabled={!canEditScenario}
                         RenderItem={({ item }) => (
                             <ScenarioRuleLine

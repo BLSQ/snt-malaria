@@ -1,6 +1,11 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Card, Grid } from '@mui/material';
-import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import {
+    LoadingSpinner,
+    useRedirectToReplace,
+    useSafeIntl,
+} from 'bluesquare-components';
+import { useNavigate } from 'react-router';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { CardStyled } from '../../components/CardStyled';
@@ -13,7 +18,6 @@ import { baseUrls } from '../../constants/urls';
 import { MESSAGES } from '../messages';
 import { Budgeting } from '../planning/components/budgeting/Budgeting';
 import { InterventionPlanDetails } from '../planning/components/interventionPlan/InterventionPlanDetails';
-import { ScenarioTopBar } from '../planning/components/ScenarioTopBar';
 import { useCalculateBudget } from '../planning/hooks/useCalculateBudget';
 import { useGetBudgetAssumptions } from '../planning/hooks/useGetBudgetAssumptions';
 import { useGetInterventionCategories } from '../planning/hooks/useGetInterventionCategories';
@@ -25,7 +29,9 @@ import {
     BudgetAssumptions,
     InterventionPlan,
 } from '../planning/types/interventions';
+import { useDeleteScenario } from '../scenarios/hooks/useDeleteScenario';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
+import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
 import { InterventionPlanHeader } from './components/InterventionPlan/InterventionPlanHeader';
 import { InterventionsPlanMap } from './components/InterventionPlanMap/InterventionPlanMap';
 import { InterventionsPlanTable } from './components/InterventionPlanTable/InterventionsPlanTable';
@@ -38,23 +44,28 @@ import { useUserCanEditScenario } from './utils/permissions';
 
 type PlanningParams = {
     scenarioId: number;
+    displayOrgUnitId?: number;
 };
 
 export const PlanningV2: FC = () => {
-    const { scenarioId } = useParamsObject(
+    const { scenarioId, displayOrgUnitId } = useParamsObject(
         baseUrls.planning,
     ) as unknown as PlanningParams;
+
+    const navigate = useNavigate();
+    const redirectToReplace = useRedirectToReplace();
+
     const { data: scenario } = useGetScenario(scenarioId);
     const { formatMessage } = useSafeIntl();
     const [activeTab, setActiveTab] = useState('map');
 
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [selectedInterventionPlan, setSelectedInterventionPlan] = useState<
         InterventionPlan | undefined
     >(undefined);
     const { data: metricTypeCategories } = useGetMetricCategories();
     const { data: interventionCategories } = useGetInterventionCategories();
-    const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits();
+    const { data: orgUnits, isLoading: isLoadingOrgUnits } =
+        useGetOrgUnits(displayOrgUnitId);
 
     const { data: scenarioRules, isFetching: isFetchingRules } =
         useGetScenarioRules(scenarioId);
@@ -65,6 +76,22 @@ export const PlanningV2: FC = () => {
     const { mutate: refreshAssignments } = useRefreshAssignments(scenarioId);
     const { mutate: runBudget, isLoading: isCalculatingBudget } =
         useCalculateBudget();
+
+    const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
+        navigate('/');
+    });
+
+    const { mutateAsync: updateScenario } = useUpdateScenario(scenarioId);
+
+    const handleDeleteScenario = () => {
+        deleteScenario(scenarioId);
+    };
+
+    const handleToggleLockScenario = () => {
+        if (scenario) {
+            updateScenario({ ...scenario, is_locked: !scenario.is_locked });
+        }
+    };
 
     const canEditScenario = useUserCanEditScenario(scenario);
 
@@ -100,9 +127,29 @@ export const PlanningV2: FC = () => {
         [selectedInterventionPlan, budgetAssumptions],
     );
 
+    const handleDisplayOrgUnitChange = useCallback(
+        (orgUnitId?: number) => {
+            redirectToReplace(baseUrls.planning, {
+                scenarioId: scenarioId.toString(),
+                displayOrgUnitId: orgUnitId?.toString(),
+            });
+        },
+        [scenarioId, redirectToReplace],
+    );
+
+    const title = useMemo(
+        () =>
+            scenario
+                ? `${scenario.name} ${scenario.start_year} - ${scenario.end_year}`
+                : formatMessage(MESSAGES.title),
+        [scenario, formatMessage],
+    );
+
     return metricTypeCategories && interventionCategories ? (
         <PlanningProvider
             scenarioId={scenarioId}
+            scenario={scenario}
+            displayOrgUnitId={displayOrgUnitId}
             orgUnits={orgUnits || []}
             metricTypeCategories={metricTypeCategories}
             interventionCategories={interventionCategories}
@@ -110,25 +157,16 @@ export const PlanningV2: FC = () => {
             canEditScenario={canEditScenario}
         >
             {isLoadingOrgUnits && <LoadingSpinner />}
-            <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
+            <TopBar title={title} disableShadow />
             <PageContainer>
-                {scenario && (
-                    <ScenarioTopBar
-                        scenario={scenario}
-                        isSidebarOpen={isSidebarOpen}
-                        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
-                    />
-                )}
                 <Grid container spacing={1}>
                     <Grid item xs={12} md={4}>
-                        <PaperFullHeight>
-                            <ScenarioRulesPanel
-                                onApplyRules={onApplyRules}
-                                scenarioId={scenarioId}
-                                rules={scenarioRules || []}
-                                isLoading={isFetchingRules}
-                            />
-                        </PaperFullHeight>
+                        <ScenarioRulesPanel
+                            onApplyRules={onApplyRules}
+                            scenarioId={scenarioId}
+                            rules={scenarioRules || []}
+                            isLoading={isFetchingRules}
+                        />
                     </Grid>
                     <Grid item xs={12} md={8}>
                         <PaperFullHeight>
@@ -147,9 +185,19 @@ export const PlanningV2: FC = () => {
                                             onRunBudget={() =>
                                                 runBudget(scenarioId)
                                             }
+                                            onDeleteScenario={
+                                                handleDeleteScenario
+                                            }
+                                            onToggleLockScenario={
+                                                handleToggleLockScenario
+                                            }
                                             isCalculatingBudget={
                                                 isCalculatingBudget
                                             }
+                                            onOrgUnitChange={
+                                                handleDisplayOrgUnitChange
+                                            }
+                                            selectedOrgUnitId={displayOrgUnitId}
                                         />
                                     }
                                 >
@@ -182,7 +230,10 @@ export const PlanningV2: FC = () => {
                                                 isRemovingOrgUnits={
                                                     isRemovingOrgUnits
                                                 }
-                                                disabled={scenario?.is_locked || !canEditScenario}
+                                                disabled={
+                                                    scenario?.is_locked ||
+                                                    !canEditScenario
+                                                }
                                             />
                                         </>
                                     )}

@@ -64,10 +64,10 @@ export const Planning: FC = () => {
     // Read display options from URL params
     const selectedDisplayOrgUnitTypeId = params.displayOrgUnitTypeId
         ? Number(params.displayOrgUnitTypeId)
-        : null;
+        : undefined;
     const selectedDisplayOrgUnitId = params.displayOrgUnitId
         ? Number(params.displayOrgUnitId)
-        : null;
+        : undefined;
 
     // Fetch org units with optional parent filter (API handles filtering)
     const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits(

@@ -46,7 +46,7 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Scenario
-        fields = ["id", "name", "description", "start_year", "end_year"]
+        fields = ["id", "name", "description", "start_year", "end_year", "is_locked"]
         read_ony_fields = ["id"]
 
     def validate_start_year(self, value):
