@@ -27,8 +27,6 @@ import {
     DuplicateScenarioModal,
     UpdateScenarioModal,
 } from '../../../scenarios/components/ScenarioModal';
-import { useDeleteScenario } from '../../../scenarios/hooks/useDeleteScenario';
-import { useUpdateScenario } from '../../../scenarios/hooks/useUpdateScenario';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 
 type Props = {
@@ -38,6 +36,8 @@ type Props = {
     onTabChange: (value: string) => void;
     onOrgUnitChange: (orgUnitId?: number) => void;
     onRunBudget: () => void;
+    onDeleteScenario: () => void;
+    onToggleLockScenario: () => void;
 };
 
 export const InterventionPlanHeader: FC<Props> = ({
@@ -47,6 +47,8 @@ export const InterventionPlanHeader: FC<Props> = ({
     onTabChange,
     onRunBudget,
     onOrgUnitChange,
+    onDeleteScenario,
+    onToggleLockScenario,
 }) => {
     const { scenarioId, scenario, canEditScenario } = usePlanningContext();
     const csvUrl = `${exportScenarioAPIPath}?id=${scenarioId}`;
@@ -54,20 +56,6 @@ export const InterventionPlanHeader: FC<Props> = ({
     const { formatMessage } = useSafeIntl();
 
     const navigate = useNavigate();
-
-    const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
-        navigate('/');
-    });
-
-    const { mutateAsync: updateScenario } = useUpdateScenario(scenarioId);
-
-    const handleDeleteClick = () => {
-        deleteScenario(scenarioId);
-    };
-
-    const handleToggleLockClick = () => {
-        updateScenario({ ...scenario, is_locked: !scenario?.is_locked });
-    };
 
     const redirectToScenario = useCallback(
         (scenarioId: number | boolean) => {
@@ -136,7 +124,7 @@ export const InterventionPlanHeader: FC<Props> = ({
                                 ? MESSAGES.unlockScenario
                                 : MESSAGES.lockScenario,
                         )}
-                        confirm={handleToggleLockClick}
+                        confirm={onToggleLockScenario}
                         btnMessage={''}
                         tooltipMessage={
                             scenario?.is_locked
@@ -171,7 +159,7 @@ export const InterventionPlanHeader: FC<Props> = ({
                                 scenario={scenario}
                             />
                             <DeleteModal
-                                onConfirm={handleDeleteClick}
+                                onConfirm={onDeleteScenario}
                                 titleMessage={MESSAGES.modalDeleteScenarioTitle}
                                 type="menuItem"
                             >

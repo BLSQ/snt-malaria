@@ -5,6 +5,7 @@ import {
     useRedirectToReplace,
     useSafeIntl,
 } from 'bluesquare-components';
+import { useNavigate } from 'react-router';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { CardStyled } from '../../components/CardStyled';
@@ -28,7 +29,9 @@ import {
     BudgetAssumptions,
     InterventionPlan,
 } from '../planning/types/interventions';
+import { useDeleteScenario } from '../scenarios/hooks/useDeleteScenario';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
+import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
 import { InterventionPlanHeader } from './components/InterventionPlan/InterventionPlanHeader';
 import { InterventionsPlanMap } from './components/InterventionPlanMap/InterventionPlanMap';
 import { InterventionsPlanTable } from './components/InterventionPlanTable/InterventionsPlanTable';
@@ -49,6 +52,7 @@ export const PlanningV2: FC = () => {
         baseUrls.planning,
     ) as unknown as PlanningParams;
 
+    const navigate = useNavigate();
     const redirectToReplace = useRedirectToReplace();
 
     const { data: scenario } = useGetScenario(scenarioId);
@@ -72,6 +76,22 @@ export const PlanningV2: FC = () => {
     const { mutate: refreshAssignments } = useRefreshAssignments(scenarioId);
     const { mutate: runBudget, isLoading: isCalculatingBudget } =
         useCalculateBudget();
+
+    const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
+        navigate('/');
+    });
+
+    const { mutateAsync: updateScenario } = useUpdateScenario(scenarioId);
+
+    const handleDeleteScenario = () => {
+        deleteScenario(scenarioId);
+    };
+
+    const handleToggleLockScenario = () => {
+        if (scenario) {
+            updateScenario({ ...scenario, is_locked: !scenario.is_locked });
+        }
+    };
 
     const canEditScenario = useUserCanEditScenario(scenario);
 
@@ -164,6 +184,12 @@ export const PlanningV2: FC = () => {
                                             activeTab={activeTab}
                                             onRunBudget={() =>
                                                 runBudget(scenarioId)
+                                            }
+                                            onDeleteScenario={
+                                                handleDeleteScenario
+                                            }
+                                            onToggleLockScenario={
+                                                handleToggleLockScenario
                                             }
                                             isCalculatingBudget={
                                                 isCalculatingBudget
