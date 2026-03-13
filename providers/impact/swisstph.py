@@ -5,23 +5,16 @@ from django.db.models import Avg, Count, Max, Min
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
 from plugins.snt_malaria.models.swisstph_impact import SwissTPHImpactData
-from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProvider, ImpactResult
+from plugins.snt_malaria.providers.impact.base import (
+    DataIntegrityError,
+    ImpactMetricWithConfidenceInterval,
+    ImpactProvider,
+    ImpactResult,
+    InterventionMappingError,
+)
 
 
 SWISSTPH_DATABASE_ALIAS = "impact_swisstph"
-
-INTERVENTION_COLUMN_MAP = {
-    "cm_public": "deployed_int_iccm",
-    "iptp": "deployed_int_iptsc",
-    "pmc": "deployed_int_pmc",
-    "vacc": "deployed_int_vaccine",
-    "smc": "deployed_int_smc",
-    "irs": "deployed_int_irs",
-}
-
-ITN_STANDARD_CODES = {"itn_campaign"}
-PBO_CODES = {"itn_campaign_pbo"}
-IG2_CODES = {"itn_campaign_ig2"}
 
 KNOWN_DEPLOYED_COLUMNS = {
     "deployed_int_iptsc",
@@ -117,7 +110,7 @@ class SwissTPHImpactProvider(ImpactProvider):
                 continue
 
             if row["row_count"] != row["seed_count"]:
-                raise ValueError(
+                raise DataIntegrityError(
                     f"SwissTPH: year {row['year']} (admin_1={row['admin_1']!r}) "
                     f"has {row['row_count']} rows but {row['seed_count']} distinct seeds. "
                     f"Each (year, seed) must be unique."
@@ -151,6 +144,7 @@ class SwissTPHImpactProvider(ImpactProvider):
             min_year=Min("year"),
             max_year=Max("year"),
         )
+        # TODO: get distinct years from the database
         return result["min_year"], result["max_year"]
 
     def get_age_groups(self) -> list[str]:
@@ -162,31 +156,37 @@ class SwissTPHImpactProvider(ImpactProvider):
         )
 
     def _map_intervention(self, intervention: Intervention) -> set[str]:
-        """Map an Iaso Intervention to SwissTPH deployed_int_* (Pythonic) field names."""
-        code = (intervention.code or "").lower().strip()
-        name = (intervention.name or "").lower().strip()
-        columns: set[str] = set()
+        """Resolve an Intervention's impact_ref to SwissTPH deployed_int_* columns.
 
-        if code in PBO_CODES or "pbo" in name:
-            columns.add("deployed_int_pbo")
-        elif code in IG2_CODES or "dual ai" in name or "ig2" in name:
-            columns.add("deployed_int_ig2")
-        elif code in ITN_STANDARD_CODES and ("standard" in name or "pyrethroid" in name) or code in ITN_STANDARD_CODES:
-            columns.add("deployed_int_itn")
-        elif code in INTERVENTION_COLUMN_MAP:
-            columns.add(INTERVENTION_COLUMN_MAP[code])
+        The impact_ref can be a single column name (e.g. 'deployed_int_smc')
+        or a comma-separated list when one intervention maps to multiple
+        columns (e.g. 'deployed_int_pbo,deployed_int_itn').
 
-        return columns
+        Raises InterventionMappingError if the impact_ref is empty or contains
+        unrecognised column names.
+        """
+        raw_reference = (intervention.impact_ref or "").strip()
+        if not raw_reference:
+            raise InterventionMappingError(f"Intervention '{intervention}' has no impact_ref")
+
+        matched_columns = set()
+        for column_name in raw_reference.split(","):
+            column_name = column_name.strip()
+            if column_name not in KNOWN_DEPLOYED_COLUMNS:
+                raise InterventionMappingError(
+                    f"Unknown SwissTPH column {column_name!r} in impact_ref "
+                    f"for intervention '{intervention}'. "
+                    f"Known columns: {sorted(KNOWN_DEPLOYED_COLUMNS)}"
+                )
+            matched_columns.add(column_name)
+
+        return matched_columns
 
     def _build_query_filters(self, deployed_columns: set[str]) -> dict:
-        """Build the deployed_int_* filter dict for a given set of deployed columns."""
-        has_any_net = any(
-            col in deployed_columns for col in ["deployed_int_itn", "deployed_int_pbo", "deployed_int_ig2"]
-        )
-        filters = {}
-        for column in KNOWN_DEPLOYED_COLUMNS:
-            if column == "deployed_int_itn":
-                filters[column] = has_any_net
-            else:
-                filters[column] = column in deployed_columns
-        return filters
+        """Build a filter dict for all deployed_int_* boolean columns.
+
+        Each known column is set to True if it appears in deployed_columns,
+        False otherwise. This ensures the query matches only rows with the
+        exact combination of deployed interventions.
+        """
+        return {column: column in deployed_columns for column in KNOWN_DEPLOYED_COLUMNS}

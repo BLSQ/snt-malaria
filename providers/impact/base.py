@@ -55,6 +55,18 @@ class ImpactResult:
     direct_deaths: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
 
 
+class ImpactProviderError(Exception):
+    """Base exception for all impact provider errors."""
+
+
+class InterventionMappingError(ImpactProviderError):
+    """Raised when an intervention's impact_ref cannot be resolved by the provider."""
+
+
+class DataIntegrityError(ImpactProviderError):
+    """Raised when the external impact database contains conflicting or invalid data."""
+
+
 class ImpactProvider(ABC):
     """Abstract base class for impact data providers.
 
@@ -65,7 +77,7 @@ class ImpactProvider(ABC):
     intervention mapping, query building) as a private concern.
 
     Contract: implementations must return at most one ImpactResult per year
-    and raise ValueError if their data source contains duplicates.
+    and raise DataIntegrityError if their data source contains duplicates.
     """
 
     @abstractmethod
@@ -88,7 +100,7 @@ class ImpactProvider(ABC):
 
         Returns:
             List of ImpactResult instances, one per year. Implementations must
-            ensure year uniqueness and raise ValueError on duplicates.
+            ensure year uniqueness and raise DataIntegrityError on duplicates.
         """
 
     @property
