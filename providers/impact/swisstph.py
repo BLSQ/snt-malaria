@@ -33,8 +33,9 @@ class SwissTPHImpactProvider(ImpactProvider):
     """Impact data provider for SwissTPH database.
 
     Connects to the SwissTPH impact database via the database alias.
-    Matches org units by admin_1 name. Uses boolean deployed_int_* columns
-    to filter by intervention deployment status.
+    Matches org units to SwissTPH admin_1 values using source_ref when
+    available, falling back to org_unit.name otherwise.
+    Uses boolean deployed_int_* columns to filter by intervention deployment status.
 
     Confidence intervals are derived by aggregating across all statistical seeds:
     value = Avg, lower = Min, upper = Max.
@@ -64,10 +65,10 @@ class SwissTPHImpactProvider(ImpactProvider):
         for intervention in interventions:
             deployed_columns.update(self._map_intervention(intervention))
 
-        name_to_ou_id: dict[str, int] = {ou.name: ou.id for ou in org_units}
+        reference_to_ou_id: dict[str, int] = {(ou.source_ref or ou.name): ou.id for ou in org_units}
 
         filters = {
-            "admin_1__in": list(name_to_ou_id.keys()),
+            "admin_1__in": list(reference_to_ou_id.keys()),
             "age_group": age_group,
         }
         if year_from:
@@ -105,7 +106,7 @@ class SwissTPHImpactProvider(ImpactProvider):
 
         results: dict[int, list[ImpactResult]] = {}
         for row in rows:
-            ou_id = name_to_ou_id.get(row["admin_1"])
+            ou_id = reference_to_ou_id.get(row["admin_1"])
             if ou_id is None:
                 continue
 
