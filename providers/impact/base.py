@@ -67,6 +67,10 @@ class DataIntegrityError(ImpactProviderError):
     """Raised when the external impact database contains conflicting or invalid data."""
 
 
+class OrgUnitMappingError(ImpactProviderError):
+    """Raised when requested org units cannot be found in the external impact database."""
+
+
 class ImpactProvider(ABC):
     """Abstract base class for impact data providers.
 
