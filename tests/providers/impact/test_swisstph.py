@@ -4,7 +4,7 @@ from django.db import connection
 from django.test import TestCase
 
 from plugins.snt_malaria.models.swisstph_impact import SwissTPHImpactData
-from plugins.snt_malaria.providers.impact.base import InterventionMappingError
+from plugins.snt_malaria.providers.impact.base import InterventionMappingError, OrgUnitMappingError
 from plugins.snt_malaria.providers.impact.swisstph import (
     KNOWN_DEPLOYED_COLUMNS,
     SwissTPHImpactProvider,
@@ -230,10 +230,36 @@ class SwissTPHSourceRefIntegrationTests(TestCase):
         self.assertIn(1, results)
         self.assertEqual(len(results[1]), 1)
 
-    def test_no_match_when_source_ref_wrong(self):
-        """A wrong source_ref should not match even if the name would."""
+    def test_wrong_source_ref_raises_org_unit_mapping_error(self):
+        """A source_ref that doesn't exist in the impact DB should raise OrgUnitMappingError."""
         org_unit = MockOrgUnit(id=1, name="Bern", source_ref="Zurich")
         intervention = MockIntervention(impact_ref="deployed_int_smc")
+
+        with self.assertRaises(OrgUnitMappingError) as context:
+            self.provider.match_impact_bulk(
+                [org_unit],
+                interventions=[intervention],
+                age_group="allAges",
+            )
+        self.assertIn("Zurich", str(context.exception))
+
+    def test_nonexistent_org_unit_raises_org_unit_mapping_error(self):
+        """An org unit whose name doesn't exist in the impact DB should raise OrgUnitMappingError."""
+        org_unit = MockOrgUnit(id=1, name="Nonexistent Canton")
+        intervention = MockIntervention(impact_ref="deployed_int_smc")
+
+        with self.assertRaises(OrgUnitMappingError) as context:
+            self.provider.match_impact_bulk(
+                [org_unit],
+                interventions=[intervention],
+                age_group="allAges",
+            )
+        self.assertIn("Nonexistent Canton", str(context.exception))
+
+    def test_no_error_when_org_unit_exists_but_intervention_mix_unmatched(self):
+        """An org unit that exists but has no data for the queried interventions returns empty."""
+        org_unit = MockOrgUnit(id=1, name="Bern")
+        intervention = MockIntervention(impact_ref="deployed_int_irs")
 
         results = self.provider.match_impact_bulk(
             [org_unit],

@@ -11,6 +11,7 @@ from plugins.snt_malaria.providers.impact.base import (
     ImpactProvider,
     ImpactResult,
     InterventionMappingError,
+    OrgUnitMappingError,
 )
 
 
@@ -105,10 +106,13 @@ class SwissTPHImpactProvider(ImpactProvider):
         )
 
         results: dict[int, list[ImpactResult]] = {}
+        matched_references: set[str] = set()
         for row in rows:
             ou_id = reference_to_ou_id.get(row["admin_1"])
             if ou_id is None:
                 continue
+
+            matched_references.add(row["admin_1"])
 
             if row["row_count"] != row["seed_count"]:
                 raise DataIntegrityError(
@@ -138,6 +142,7 @@ class SwissTPHImpactProvider(ImpactProvider):
                 )
             )
 
+        self._check_unmatched_org_units(reference_to_ou_id, matched_references)
         return results
 
     def get_year_range(self) -> tuple[Optional[int], Optional[int]]:
@@ -155,6 +160,26 @@ class SwissTPHImpactProvider(ImpactProvider):
             .distinct()
             .order_by("age_group")
         )
+
+    def _check_unmatched_org_units(self, reference_to_ou_id, matched_references):
+        """Verify unmatched org units actually exist in the impact DB.
+
+        Only runs an extra query when some org units got no results.
+        Raises OrgUnitMappingError for references that don't exist at all,
+        as opposed to those that simply have no data for the queried intervention mix.
+        """
+        unmatched = set(reference_to_ou_id.keys()) - matched_references
+        if not unmatched:
+            return
+        known = set(
+            SwissTPHImpactData.objects.using(SWISSTPH_DATABASE_ALIAS)
+            .filter(admin_1__in=unmatched)
+            .values_list("admin_1", flat=True)
+            .distinct()
+        )
+        not_found = unmatched - known
+        if not_found:
+            raise OrgUnitMappingError(f"Org units not found in SwissTPH impact data: {sorted(not_found)}")
 
     def _map_intervention(self, intervention: Intervention) -> set[str]:
         """Resolve an Intervention's impact_ref to SwissTPH deployed_int_* columns.

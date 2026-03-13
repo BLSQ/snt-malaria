@@ -4,13 +4,14 @@ from django.db.models import Max, Min
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
-from plugins.snt_malaria.models.idm_impact import IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
+from plugins.snt_malaria.models.idm_impact import IDMAdminInfo, IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
 from plugins.snt_malaria.providers.impact.base import (
     DataIntegrityError,
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
     ImpactResult,
     InterventionMappingError,
+    OrgUnitMappingError,
 )
 
 
@@ -137,12 +138,15 @@ class IDMImpactProvider(ImpactProvider):
 
         results: dict[int, list[ImpactResult]] = {}
         seen_years_by_ou: dict[int, set[int]] = {}
+        matched_references: set[str] = set()
 
         for row in impact_rows:
             admin_name = row["admin_info_ref__admin_2_name"]
             ou_id = reference_to_ou_id.get(admin_name)
             if ou_id is None:
                 continue
+
+            matched_references.add(admin_name)
 
             if ou_id not in seen_years_by_ou:
                 seen_years_by_ou[ou_id] = set()
@@ -181,6 +185,7 @@ class IDMImpactProvider(ImpactProvider):
                 )
             )
 
+        self._check_unmatched_org_units(reference_to_ou_id, matched_references)
         return results
 
     def get_year_range(self) -> tuple[Optional[int], Optional[int]]:
@@ -192,6 +197,26 @@ class IDMImpactProvider(ImpactProvider):
 
     def get_age_groups(self) -> list[str]:
         return list(IDMAgeGroup.objects.using(IDM_DATABASE_ALIAS).values_list("option", flat=True).order_by("option"))
+
+    def _check_unmatched_org_units(self, reference_to_ou_id, matched_references):
+        """Verify unmatched org units actually exist in the impact DB.
+
+        Only runs an extra query when some org units got no results.
+        Raises OrgUnitMappingError for references that don't exist at all,
+        as opposed to those that simply have no data for the queried intervention mix.
+        """
+        unmatched = set(reference_to_ou_id.keys()) - matched_references
+        if not unmatched:
+            return
+        known = set(
+            IDMAdminInfo.objects.using(IDM_DATABASE_ALIAS)
+            .filter(admin_2_name__in=unmatched)
+            .values_list("admin_2_name", flat=True)
+            .distinct()
+        )
+        not_found = unmatched - known
+        if not_found:
+            raise OrgUnitMappingError(f"Org units not found in IDM impact data: {sorted(not_found)}")
 
     def _map_intervention(self, intervention: Intervention) -> set[str]:
         """Resolve an Intervention's impact_ref to an IDM filter key ('column_name=package_id').
