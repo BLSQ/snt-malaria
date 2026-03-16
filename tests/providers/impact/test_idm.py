@@ -4,22 +4,24 @@ from unittest.mock import patch
 from django.db import connection
 from django.test import TestCase
 
-from plugins.snt_malaria.models.idm_impact import IDMAdminInfo, IDMAgeGroup, IDMModelOutput
+from plugins.snt_malaria.models.idm_impact import IDMAdminInfo, IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
+from plugins.snt_malaria.providers.impact.base import DataIntegrityError, InterventionMappingError
 from plugins.snt_malaria.providers.impact.idm import (
     IDM_ALL_INTERVENTION_COLUMNS,
     IDM_DEPLOYED_COVERAGE_ID,
-    IDM_INTERVENTIONS,
     IDM_NONE_PACKAGE_ID,
     IDMImpactProvider,
 )
 
 
 class MockIntervention:
-    """Minimal mock for Intervention model instances."""
+    """Minimal mock for Intervention model instances used in IDM tests."""
 
-    def __init__(self, code, name=""):
-        self.code = code
-        self.name = name
+    def __init__(self, impact_ref=""):
+        self.impact_ref = impact_ref
+
+    def __str__(self):
+        return f"MockIntervention(impact_ref={self.impact_ref!r})"
 
 
 class MockOrgUnit:
@@ -30,66 +32,85 @@ class MockOrgUnit:
         self.name = name
 
 
-class IDMImpactProviderMapInterventionTests(TestCase):
-    def setUp(self):
-        self.provider = IDMImpactProvider()
+# ---------------------------------------------------------------------------
+# Intervention package reference data (mirrors the IDM intervention_package table).
+# Used both for seeding IDMInterventionPackage rows and for building
+# IDMModelOutput test fixtures.
+# ---------------------------------------------------------------------------
 
-    def test_intervention_mapping(self):
-        cases = [
-            ("cm_public", "", {"cm=2"}),
-            ("cm_subsidy", "", {"cm_subsidy=3"}),
-            ("smc", "", {"smc=4"}),
-            ("pmc", "", {"smc=5"}),
-            ("itn_campaign", "", {"itn_c=6"}),
-            ("itn_campaign", "PBO", {"itn_c=6"}),
-            ("itn_campaign", "Dual AI", {"itn_c=6"}),
-            ("itn_routine", "", {"itn_r=7"}),
-            ("irs", "", {"irs=8"}),
-            ("vacc", "", {"vacc=9"}),
-            ("iptp", "", {"iptp=10"}),
-            ("lsm", "", {"lsm=11"}),
-        ]
-        for code, name, expected in cases:
-            with self.subTest(code=code, name=name):
-                intervention = MockIntervention(code=code, name=name)
-                result = self.provider._map_intervention(intervention)
-                self.assertEqual(result, expected)
+INTERVENTION_PACKAGES = [
+    {"id": 1, "option": "none", "type": "none"},
+    {"id": 2, "option": "cm", "type": "cm"},
+    {"id": 3, "option": "cm_subsidy", "type": "cm_subsidy"},
+    {"id": 4, "option": "smc", "type": "smc"},
+    {"id": 5, "option": "pmc", "type": "smc"},
+    {"id": 6, "option": "itn_c", "type": "itn_c"},
+    {"id": 7, "option": "itn_r", "type": "itn_r"},
+    {"id": 8, "option": "irs", "type": "irs"},
+    {"id": 9, "option": "vacc", "type": "vacc"},
+    {"id": 10, "option": "iptp", "type": "iptp"},
+    {"id": 11, "option": "lsm", "type": "lsm"},
+]
 
-    def test_unknown_code_raises(self):
-        intervention = MockIntervention(code="unknown_intervention")
-        with self.assertRaises(ValueError) as ctx:
-            self.provider._map_intervention(intervention)
-        self.assertIn("unknown_intervention", str(ctx.exception))
-        self.assertIn("IDM does not support", str(ctx.exception))
-
-    def test_none_intervention_raises(self):
-        with self.assertRaises(ValueError) as ctx:
-            self.provider._map_intervention(None)
-        self.assertIn("cannot be None", str(ctx.exception))
-
-    def test_empty_code_raises(self):
-        intervention = MockIntervention(code="", name="Some intervention")
-        with self.assertRaises(ValueError) as ctx:
-            self.provider._map_intervention(intervention)
-        self.assertIn("no code", str(ctx.exception))
+# Lookup by option for building model_output fixtures: option -> (type/column, package_id)
+_PACKAGE_BY_OPTION = {package["option"]: (package["type"], package["id"]) for package in INTERVENTION_PACKAGES}
 
 
-class IDMImpactProviderBuildFiltersTests(TestCase):
+# ---------------------------------------------------------------------------
+# Helpers for building IDMModelOutput test fixtures
+# ---------------------------------------------------------------------------
+
+
+def _baseline_intervention_fields():
+    """Return IDMModelOutput kwargs with all interventions set to 'none' (not deployed)."""
+    fields = {}
+    for column_name in IDM_ALL_INTERVENTION_COLUMNS:
+        fields[column_name] = IDM_NONE_PACKAGE_ID
+        fields[f"{column_name}_coverage"] = None
+    return fields
+
+
+def _deploy_intervention_fields(deployed_options: list[str]) -> dict:
+    """Return IDMModelOutput kwargs with the given interventions deployed.
+
+    Starts from baseline (all fields = none) then activates each listed
+    intervention by setting its column to the package ID and its coverage
+    to IDM_DEPLOYED_COVERAGE_ID.
+    """
+    fields = _baseline_intervention_fields()
+    for option in deployed_options:
+        column_name, package_id = _PACKAGE_BY_OPTION[option]
+        fields[column_name] = package_id
+        fields[f"{column_name}_coverage"] = IDM_DEPLOYED_COVERAGE_ID
+    return fields
+
+
+# ---------------------------------------------------------------------------
+# Build query filter tests (no DB needed -- operates on parsed filter keys)
+# ---------------------------------------------------------------------------
+
+
+class IDMBuildQueryFiltersTests(TestCase):
     def setUp(self):
         self.provider = IDMImpactProvider()
 
     def test_no_interventions_all_baseline(self):
         filters = self.provider._build_query_filters(set())
-        for col in ["cm", "cm_subsidy", "smc", "itn_c", "itn_r", "irs", "vacc", "iptp", "lsm"]:
-            self.assertEqual(filters[col], IDM_NONE_PACKAGE_ID, f"{col} should be baseline (1)")
+        for column_name in IDM_ALL_INTERVENTION_COLUMNS:
+            self.assertEqual(
+                filters[column_name],
+                IDM_NONE_PACKAGE_ID,
+                f"{column_name} should be baseline ({IDM_NONE_PACKAGE_ID})",
+            )
 
     def test_single_intervention_deployed(self):
         filters = self.provider._build_query_filters({"cm=2"})
         self.assertEqual(filters["cm"], 2)
+        self.assertEqual(filters["cm_coverage"], IDM_DEPLOYED_COVERAGE_ID)
         self.assertEqual(filters["smc"], IDM_NONE_PACKAGE_ID)
         self.assertEqual(filters["itn_c"], IDM_NONE_PACKAGE_ID)
 
-    def test_multiple_interventions(self):
+    def test_multiple_interventions_deployed(self):
         filters = self.provider._build_query_filters({"cm=2", "smc=4", "vacc=9"})
         self.assertEqual(filters["cm"], 2)
         self.assertEqual(filters["smc"], 4)
@@ -98,50 +119,107 @@ class IDMImpactProviderBuildFiltersTests(TestCase):
         self.assertEqual(filters["itn_c"], IDM_NONE_PACKAGE_ID)
         self.assertEqual(filters["lsm"], IDM_NONE_PACKAGE_ID)
 
-    def test_pmc_overrides_smc_column(self):
-        """PMC (id=5) and SMC (id=4) both use the smc column; last write wins."""
+    def test_pmc_uses_smc_column(self):
+        """PMC (id=5) uses the smc column in model_output."""
         filters = self.provider._build_query_filters({"smc=5"})
         self.assertEqual(filters["smc"], 5)
+        self.assertEqual(filters["smc_coverage"], IDM_DEPLOYED_COVERAGE_ID)
 
 
 # ---------------------------------------------------------------------------
-# Helpers for database integration tests
+# Database-backed tests (intervention mapping + integration)
 # ---------------------------------------------------------------------------
 
-_IDM_MODELS = [IDMAdminInfo, IDMAgeGroup, IDMModelOutput]
+_IDM_MODELS = [IDMAdminInfo, IDMAgeGroup, IDMInterventionPackage, IDMModelOutput]
 
 
-def _baseline_interventions():
-    """Build all IDMModelOutput intervention fields with no interventions deployed
-    and return them as kwargs for IDMModelOutput.objects.create().
+class IDMMapInterventionTests(TestCase):
+    """Tests for _map_intervention which queries the IDMInterventionPackage table."""
 
-    Every intervention field (cm, smc, itn_c, ...) is set to IDM_NONE_PACKAGE_ID
-    and every coverage field (cm_coverage, smc_coverage, ...) to None.
-    """
-    fields = {}
-    for col in IDM_ALL_INTERVENTION_COLUMNS:
-        fields[col] = IDM_NONE_PACKAGE_ID
-        fields[f"{col}_coverage"] = None
-    return fields
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        with connection.schema_editor() as schema_editor:
+            for model in _IDM_MODELS:
+                model._meta.managed = True
+                schema_editor.create_model(model)
+
+    @classmethod
+    def tearDownClass(cls):
+        with connection.schema_editor() as schema_editor:
+            for model in reversed(_IDM_MODELS):
+                schema_editor.delete_model(model)
+        for model in _IDM_MODELS:
+            model._meta.managed = False
+        super().tearDownClass()
+
+    def setUp(self):
+        self._alias_patcher = patch(
+            "plugins.snt_malaria.providers.impact.idm.IDM_DATABASE_ALIAS",
+            "default",
+        )
+        self._alias_patcher.start()
+        self.provider = IDMImpactProvider()
+
+        for package in INTERVENTION_PACKAGES:
+            IDMInterventionPackage.objects.using("default").create(**package)
+
+    def tearDown(self):
+        self._alias_patcher.stop()
+
+    def test_valid_impact_ref_resolves_to_filter_key(self):
+        """Each 'type:option' impact_ref should resolve to the correct 'column=package_id' filter key."""
+        test_cases = [
+            ("cm:cm", {"cm=2"}),
+            ("cm_subsidy:cm_subsidy", {"cm_subsidy=3"}),
+            ("smc:smc", {"smc=4"}),
+            ("smc:pmc", {"smc=5"}),
+            ("itn_c:itn_c", {"itn_c=6"}),
+            ("itn_r:itn_r", {"itn_r=7"}),
+            ("irs:irs", {"irs=8"}),
+            ("vacc:vacc", {"vacc=9"}),
+            ("iptp:iptp", {"iptp=10"}),
+            ("lsm:lsm", {"lsm=11"}),
+        ]
+        for impact_ref, expected_filter_keys in test_cases:
+            with self.subTest(impact_ref=impact_ref):
+                intervention = MockIntervention(impact_ref=impact_ref)
+                result = self.provider._map_intervention(intervention)
+                self.assertEqual(result, expected_filter_keys)
+
+    def test_none_intervention_raises_mapping_error(self):
+        with self.assertRaises(InterventionMappingError) as context:
+            self.provider._map_intervention(None)
+        self.assertIn("cannot be None", str(context.exception))
+
+    def test_empty_impact_ref_raises_mapping_error(self):
+        intervention = MockIntervention(impact_ref="")
+        with self.assertRaises(InterventionMappingError) as context:
+            self.provider._map_intervention(intervention)
+        self.assertIn("no impact_ref", str(context.exception))
+
+    def test_missing_colon_delimiter_raises_mapping_error(self):
+        intervention = MockIntervention(impact_ref="cm_only_no_colon")
+        with self.assertRaises(InterventionMappingError) as context:
+            self.provider._map_intervention(intervention)
+        self.assertIn("Invalid impact_ref format", str(context.exception))
+        self.assertIn("type:option", str(context.exception))
+
+    def test_nonexistent_package_raises_mapping_error(self):
+        intervention = MockIntervention(impact_ref="nonexistent:nonexistent")
+        with self.assertRaises(InterventionMappingError) as context:
+            self.provider._map_intervention(intervention)
+        self.assertIn("intervention_package not found", str(context.exception))
+
+    def test_mismatched_option_and_type_raises_mapping_error(self):
+        """An option that exists but with the wrong type should not match."""
+        intervention = MockIntervention(impact_ref="smc:cm")
+        with self.assertRaises(InterventionMappingError) as context:
+            self.provider._map_intervention(intervention)
+        self.assertIn("intervention_package not found", str(context.exception))
 
 
-def _deploy_interventions(interventions: list[str]) -> dict:
-    """Build all IDMModelOutput intervention fields with the given interventions
-    deployed and return them as kwargs for IDMModelOutput.objects.create().
-
-    Starts from baseline (all fields = none) then for each identifier
-    (e.g. "cm", "smc", "pmc") sets its intervention field to the matching
-    package ID and its coverage field to IDM_DEPLOYED_COVERAGE_ID.
-    """
-    fields = _baseline_interventions()
-    for intervention in interventions:
-        col, pkg_id = IDM_INTERVENTIONS[intervention]
-        fields[col] = pkg_id
-        fields[f"{col}_coverage"] = IDM_DEPLOYED_COVERAGE_ID
-    return fields
-
-
-class IDMImpactProviderDatabaseTests(TestCase):
+class IDMDatabaseIntegrationTests(TestCase):
     """Integration tests that query actual IDM tables seeded with test data.
 
     The IDM models are unmanaged (managed=False) and normally live in a
@@ -176,6 +254,10 @@ class IDMImpactProviderDatabaseTests(TestCase):
         self.provider = IDMImpactProvider()
         using = "default"
 
+        # -- Seed intervention packages --
+        for package in INTERVENTION_PACKAGES:
+            IDMInterventionPackage.objects.using(using).create(**package)
+
         # -- Reference data --
         self.admin_kano = IDMAdminInfo.objects.using(using).create(
             admin_2_name="Kano Municipal",
@@ -209,7 +291,7 @@ class IDMImpactProviderDatabaseTests(TestCase):
             prevalence=Decimal("0.35"),
             prevalence_lower=Decimal("0.30"),
             prevalence_higher=Decimal("0.40"),
-            **_deploy_interventions(["cm"]),
+            **_deploy_intervention_fields(["cm"]),
         )
         IDMModelOutput.objects.using(using).create(
             admin_info_ref=self.admin_kano,
@@ -224,7 +306,7 @@ class IDMImpactProviderDatabaseTests(TestCase):
             prevalence=Decimal("0.33"),
             prevalence_lower=Decimal("0.28"),
             prevalence_higher=Decimal("0.38"),
-            **_deploy_interventions(["cm"]),
+            **_deploy_intervention_fields(["cm"]),
         )
 
         # -- Ikeja: CM + SMC deployed, 2025, allAges --
@@ -241,7 +323,7 @@ class IDMImpactProviderDatabaseTests(TestCase):
             prevalence=Decimal("0.42"),
             prevalence_lower=Decimal("0.37"),
             prevalence_higher=Decimal("0.47"),
-            **_deploy_interventions(["cm", "smc"]),
+            **_deploy_intervention_fields(["cm", "smc"]),
         )
 
         # -- Kano: CM + SMC deployed, 2025, allAges --
@@ -258,7 +340,7 @@ class IDMImpactProviderDatabaseTests(TestCase):
             prevalence=Decimal("0.28"),
             prevalence_lower=Decimal("0.23"),
             prevalence_higher=Decimal("0.33"),
-            **_deploy_interventions(["cm", "smc"]),
+            **_deploy_intervention_fields(["cm", "smc"]),
         )
 
         # -- Aboh-Mbaise: CM deployed, 2025, allAges (name mapping test) --
@@ -275,7 +357,7 @@ class IDMImpactProviderDatabaseTests(TestCase):
             prevalence=Decimal("0.38"),
             prevalence_lower=Decimal("0.33"),
             prevalence_higher=Decimal("0.43"),
-            **_deploy_interventions(["cm"]),
+            **_deploy_intervention_fields(["cm"]),
         )
 
         # -- Kano: CM deployed, 2025, under5 (age group filtering test) --
@@ -292,7 +374,7 @@ class IDMImpactProviderDatabaseTests(TestCase):
             prevalence=Decimal("0.22"),
             prevalence_lower=Decimal("0.18"),
             prevalence_higher=Decimal("0.26"),
-            **_deploy_interventions(["cm"]),
+            **_deploy_intervention_fields(["cm"]),
         )
 
     def tearDown(self):
@@ -302,13 +384,13 @@ class IDMImpactProviderDatabaseTests(TestCase):
 
     def test_match_with_single_intervention(self):
         """CM deployed: returns matching rows for two districts across years."""
-        ou_kano = MockOrgUnit(id=101, name="Kano Municipal")
-        ou_aboh = MockOrgUnit(id=103, name="Aboh Mbaise")
-        cm = MockIntervention(code="cm_public")
+        org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
+        org_unit_aboh = MockOrgUnit(id=103, name="Aboh Mbaise")
+        case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
-            [ou_kano, ou_aboh],
-            interventions=[cm],
+            [org_unit_kano, org_unit_aboh],
+            interventions=[case_management],
             age_group="allAges",
         )
 
@@ -331,14 +413,14 @@ class IDMImpactProviderDatabaseTests(TestCase):
 
     def test_match_with_multiple_interventions(self):
         """CM + SMC deployed: only rows with that exact package combo are returned."""
-        ou_kano = MockOrgUnit(id=101, name="Kano Municipal")
-        ou_ikeja = MockOrgUnit(id=102, name="Ikeja")
-        cm = MockIntervention(code="cm_public")
-        smc = MockIntervention(code="smc")
+        org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
+        org_unit_ikeja = MockOrgUnit(id=102, name="Ikeja")
+        case_management = MockIntervention(impact_ref="cm:cm")
+        seasonal_malaria_chemoprevention = MockIntervention(impact_ref="smc:smc")
 
         results = self.provider.match_impact_bulk(
-            [ou_kano, ou_ikeja],
-            interventions=[cm, smc],
+            [org_unit_kano, org_unit_ikeja],
+            interventions=[case_management, seasonal_malaria_chemoprevention],
             age_group="allAges",
         )
 
@@ -352,12 +434,12 @@ class IDMImpactProviderDatabaseTests(TestCase):
 
     def test_different_intervention_packages_do_not_mix(self):
         """CM-only query should NOT return CM+SMC rows."""
-        ou_kano = MockOrgUnit(id=101, name="Kano Municipal")
-        cm = MockIntervention(code="cm_public")
+        org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
+        case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
-            [ou_kano],
-            interventions=[cm],
+            [org_unit_kano],
+            interventions=[case_management],
             age_group="allAges",
             year_from=2025,
             year_to=2025,
@@ -368,12 +450,12 @@ class IDMImpactProviderDatabaseTests(TestCase):
         self.assertAlmostEqual(results[101][0].number_cases.value, 75_250.0, places=1)
 
     def test_match_impact_delegates_to_bulk(self):
-        ou_kano = MockOrgUnit(id=101, name="Kano Municipal")
-        cm = MockIntervention(code="cm_public")
+        org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
+        case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact(
-            ou_kano,
-            interventions=[cm],
+            org_unit_kano,
+            interventions=[case_management],
             age_group="allAges",
         )
 
@@ -382,12 +464,12 @@ class IDMImpactProviderDatabaseTests(TestCase):
         self.assertEqual(results[1].year, 2026)
 
     def test_filters_by_year_range(self):
-        ou_kano = MockOrgUnit(id=101, name="Kano Municipal")
-        cm = MockIntervention(code="cm_public")
+        org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
+        case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
-            [ou_kano],
-            interventions=[cm],
+            [org_unit_kano],
+            interventions=[case_management],
             age_group="allAges",
             year_from=2026,
             year_to=2026,
@@ -398,12 +480,12 @@ class IDMImpactProviderDatabaseTests(TestCase):
 
     def test_filters_by_age_group(self):
         """under5 age group only returns the under5 row, not the allAges rows."""
-        ou_kano = MockOrgUnit(id=101, name="Kano Municipal")
-        cm = MockIntervention(code="cm_public")
+        org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
+        case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
-            [ou_kano],
-            interventions=[cm],
+            [org_unit_kano],
+            interventions=[case_management],
             age_group="under5",
         )
 
@@ -413,12 +495,12 @@ class IDMImpactProviderDatabaseTests(TestCase):
 
     def test_name_mapping(self):
         """Iaso name 'Aboh Mbaise' resolves to IDM 'Aboh-Mbaise'."""
-        ou_aboh = MockOrgUnit(id=103, name="Aboh Mbaise")
-        cm = MockIntervention(code="cm_public")
+        org_unit_aboh = MockOrgUnit(id=103, name="Aboh Mbaise")
+        case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
-            [ou_aboh],
-            interventions=[cm],
+            [org_unit_aboh],
+            interventions=[case_management],
             age_group="allAges",
         )
 
@@ -427,31 +509,31 @@ class IDMImpactProviderDatabaseTests(TestCase):
         self.assertEqual(results[103][0].year, 2025)
 
     def test_no_match_returns_empty(self):
-        ou_unknown = MockOrgUnit(id=999, name="Nonexistent District")
-        cm = MockIntervention(code="cm_public")
+        org_unit_unknown = MockOrgUnit(id=999, name="Nonexistent District")
+        case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
-            [ou_unknown],
-            interventions=[cm],
+            [org_unit_unknown],
+            interventions=[case_management],
             age_group="allAges",
         )
 
         self.assertEqual(results, {})
 
     def test_unknown_age_group_returns_empty(self):
-        ou_kano = MockOrgUnit(id=101, name="Kano Municipal")
-        cm = MockIntervention(code="cm_public")
+        org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
+        case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
-            [ou_kano],
-            interventions=[cm],
+            [org_unit_kano],
+            interventions=[case_management],
             age_group="nonexistent",
         )
 
         self.assertEqual(results, {})
 
-    def test_duplicate_year_raises(self):
-        """Conflicting rows for the same (admin, year, intervention combo) raise ValueError."""
+    def test_duplicate_year_raises_data_integrity_error(self):
+        """Conflicting rows for the same (admin, year, intervention combo) raise DataIntegrityError."""
         IDMModelOutput.objects.using("default").create(
             admin_info_ref=self.admin_kano,
             year=2025,
@@ -465,18 +547,18 @@ class IDMImpactProviderDatabaseTests(TestCase):
             prevalence=Decimal("0.99"),
             prevalence_lower=Decimal("0.95"),
             prevalence_higher=Decimal("1.00"),
-            **_deploy_interventions(["cm"]),
+            **_deploy_intervention_fields(["cm"]),
         )
 
-        ou_kano = MockOrgUnit(id=101, name="Kano Municipal")
-        cm = MockIntervention(code="cm_public")
-        with self.assertRaises(ValueError) as ctx:
+        org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
+        case_management = MockIntervention(impact_ref="cm:cm")
+        with self.assertRaises(DataIntegrityError) as context:
             self.provider.match_impact_bulk(
-                [ou_kano],
-                interventions=[cm],
+                [org_unit_kano],
+                interventions=[case_management],
                 age_group="allAges",
             )
-        self.assertIn("conflicting rows", str(ctx.exception))
+        self.assertIn("conflicting rows", str(context.exception))
 
     def test_get_year_range(self):
         min_year, max_year = self.provider.get_year_range()
