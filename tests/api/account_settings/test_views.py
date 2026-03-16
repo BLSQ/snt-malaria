@@ -26,7 +26,6 @@ class AccountSettingsAPITests(APITestCase):
         self.assertEqual(len(response.data), 1)
         account_settings = next((item for item in response.data if item["id"] == self.account_settings.id), None)
         self.assertIsNotNone(account_settings)
-        print(account_settings)
         self.assertEqual(account_settings["intervention_org_unit_type_id"], self.out_district.id)
 
     def test_list_account_settings_unauthenticated(self):
