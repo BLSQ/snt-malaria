@@ -14,7 +14,7 @@ export const menu = [
     {
         label: dataLayersMessages.dataLayersTitle,
         key: 'snt_malaria/data-layers',
-        permissions: [],
+        permissions: [SETTINGS_READ],
         icon: (props: SvgIconProps) => <Layers {...props} />,
     },
     {

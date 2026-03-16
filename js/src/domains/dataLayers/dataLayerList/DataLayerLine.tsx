@@ -1,16 +1,13 @@
 import React, { FC, useCallback } from 'react';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import {
     Box,
     ClickAwayListener,
     ListItem,
-    ListItemIcon,
     MenuItem,
     MenuList,
     Popover,
     SxProps,
-    Tooltip,
     Typography,
 } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';

@@ -3,6 +3,8 @@ import AddIcon from '@mui/icons-material/Add';
 import LayersIcon from '@mui/icons-material/Layers';
 import { Link, MenuItem, Stack, SxProps, Typography } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
+import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
+import * as CorePermission from 'Iaso/utils/permissions';
 import { IconBoxed } from '../../../components/IconBoxed';
 import { MoreActions } from '../../../components/MoreActions';
 import { exportMetricValuesTemplateAPIPath } from '../../../constants/api-urls';
@@ -30,21 +32,23 @@ export const DataLayerListHeader: FC<Props> = ({ onCreate }) => {
             <Typography variant="h6" sx={styles.title}>
                 {formatMessage(MESSAGES.dataLayersTitle)}
             </Typography>
-            <IconButton
-                onClick={onCreate}
-                color="primary"
-                overrideIcon={AddIcon}
-                tooltipMessage={MESSAGES.createLayer}
-            />
-            <MoreActions>
-                <ImportMetricValuesDialog iconProps={{}} />
-                <MenuItem
-                    component={Link}
-                    href={exportMetricValuesTemplateAPIPath}
-                >
-                    {formatMessage(MESSAGES.downloadCSVTemplate)}
-                </MenuItem>
-            </MoreActions>
+            <DisplayIfUserHasPerm permissions={[CorePermission.METRIC_TYPES]}>
+                <IconButton
+                    onClick={onCreate}
+                    color="primary"
+                    overrideIcon={AddIcon}
+                    tooltipMessage={MESSAGES.createLayer}
+                />
+                <MoreActions>
+                    <ImportMetricValuesDialog iconProps={{}} />
+                    <MenuItem
+                        component={Link}
+                        href={exportMetricValuesTemplateAPIPath}
+                    >
+                        {formatMessage(MESSAGES.downloadCSVTemplate)}
+                    </MenuItem>
+                </MoreActions>
+            </DisplayIfUserHasPerm>
         </Stack>
     );
 };
