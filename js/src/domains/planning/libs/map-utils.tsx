@@ -38,7 +38,7 @@ export const getColorForShape = (
     value?: string | number,
     legend_type?: string,
     legend_config?: ScaleDomainRange,
-) => {
+): string => {
     if (
         value === undefined ||
         value === null ||
@@ -72,10 +72,8 @@ export const getColorForShape = (
     }
 
     if (legend_type === 'linear') {
-        const colorScale = d3
-            .scaleLinear()
-            .domain(numericDomain)
-            .range(legend_config.range);
+        const range = legend_config.range as Iterable<number>;
+        const colorScale = d3.scaleLinear().domain(numericDomain).range(range);
         return colorScale(numericValue);
     }
 

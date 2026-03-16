@@ -4,7 +4,6 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { Map as SNTMap } from '../../../components/Map';
 import {
     getColorForShape,
-    getStyleForShape,
     useGetOrgUnitMetric,
 } from '../../planning/libs/map-utils';
 import { MetricType, MetricValue } from '../../planning/types/metrics';
@@ -52,7 +51,7 @@ export const DataLayerMap: FC<Props> = ({
 
     return (
         <SNTMap
-            id={''}
+            id={'data-layer-map'}
             orgUnits={orgUnits}
             legendConfig={metricType}
             getOrgUnitMapMisc={getMapStyleForOrgUnit}
