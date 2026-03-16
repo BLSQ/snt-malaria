@@ -14,5 +14,8 @@ export const useReorderScenarioRules = (
                 },
             ),
         showSuccessSnackBar: false,
-        invalidateQueryKey: [`scenarioRules_${scenarioId}`],
+        invalidateQueryKey: [
+            `scenarioRules_${scenarioId}`,
+            'interventionAssignments',
+        ],
     });

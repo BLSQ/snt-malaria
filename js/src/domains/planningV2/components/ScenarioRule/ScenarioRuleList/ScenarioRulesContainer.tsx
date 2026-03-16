@@ -30,7 +30,6 @@ const styles: SxStyles = {
 type Props = {
     scenarioId: number;
     isLoading: boolean;
-    onApplyRules?: () => void;
     onShowForm: (rule?: ScenarioRule) => void;
     rules: ScenarioRule[];
 };
@@ -44,7 +43,6 @@ type ReorderScenarioRulesParams = {
 export const ScenarioRulesContainer: FC<Props> = ({
     scenarioId,
     isLoading,
-    onApplyRules,
     onShowForm,
     rules,
 }) => {
@@ -64,12 +62,7 @@ export const ScenarioRulesContainer: FC<Props> = ({
 
     return (
         <CardStyled
-            header={
-                <ScenarioRulesHeader
-                    onApplyRules={onApplyRules}
-                    onCreateRule={onShowForm}
-                />
-            }
+            header={<ScenarioRulesHeader onCreateRule={onShowForm} />}
             isLoading={isLoading}
         >
             <AsyncSortableList

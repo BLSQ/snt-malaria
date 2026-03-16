@@ -7,7 +7,10 @@ export const useDeleteScenarioRule = (scenarioId: number): UseMutationResult =>
     useSnackMutation({
         mutationFn: (ruleId: number) =>
             deleteRequest(`/api/snt_malaria/scenario_rules/${ruleId}/`),
-        invalidateQueryKey: [`scenarioRules_${scenarioId}`],
+        invalidateQueryKey: [
+            `scenarioRules_${scenarioId}`,
+            'interventionAssignments',
+        ],
         snackSuccessMessage: MESSAGES.deleteScenarioRuleSuccess,
         snackErrorMsg: MESSAGES.deleteScenarioRuleError,
     });

@@ -63,6 +63,7 @@ export const useCreateUpdateScenarioRule = (scenarioId: number) => {
                       org_units_included,
                   });
         },
+        invalidateQueryKey: ['interventionAssignments'],
         options: {
             onSuccess: replaceQueryData,
         },
