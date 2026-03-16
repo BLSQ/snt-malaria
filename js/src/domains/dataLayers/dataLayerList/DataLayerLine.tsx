@@ -23,6 +23,8 @@ import { MESSAGES } from '../messages';
 
 type Props = {
     metricType: MetricType;
+    selected?: boolean;
+    onClick: () => void;
     onEdit: (metricType: MetricType) => void;
     onDelete: (metricType: number) => void;
     readonly?: boolean;
@@ -31,12 +33,20 @@ type Props = {
 const styles: SxStyles = {
     metricType: {
         borderRadius: 2,
+        border: '1px solid transparent',
+        cursor: 'pointer',
         '&:nth-child(odd of .MuiListItem-root)': {
             backgroundColor: 'action.hover',
         },
     },
     metricTypeReadOnly: {
         pr: '48px',
+    },
+    metricTypeSelected: {
+        bgcolor: 'primary.light',
+        borderColor: 'primary.main',
+        borderWidth: 1,
+        borderStyle: 'solid',
     },
     metricTypeIcon: { minWidth: 20, mr: 2 },
     metricTypeDetails: {
@@ -49,6 +59,8 @@ const styles: SxStyles = {
 
 export const DataLayerLine: FC<Props> = ({
     metricType,
+    selected = false,
+    onClick,
     onEdit,
     onDelete,
     readonly = false,
@@ -67,6 +79,7 @@ export const DataLayerLine: FC<Props> = ({
                 {
                     ...styles.metricType,
                     ...(readonly ? styles.metricTypeReadOnly : {}),
+                    ...(selected ? styles.metricTypeSelected : {}),
                 } as SxProps
             }
             ref={anchorRef}
@@ -84,6 +97,7 @@ export const DataLayerLine: FC<Props> = ({
                     </DisplayIfUserHasPerm>
                 )
             }
+            onClick={onClick}
         >
             <ListItemIcon sx={styles.metricTypeIcon}>
                 <Tooltip title={metricType.description || 'N/A'}>

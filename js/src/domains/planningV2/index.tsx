@@ -8,6 +8,7 @@ import {
 import { useNavigate } from 'react-router';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
+import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
 import {
     PaperFullHeight,
@@ -42,6 +43,14 @@ import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { usePreviewScenarioRule } from './hooks/usePreviewScenarioRule';
 import { ScenarioRule } from './types/scenarioRule';
 import { useUserCanEditScenario } from './utils/permissions';
+
+const styles = {
+    card: {
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+    },
+} satisfies SxStyles;
 
 type PlanningParams = {
     scenarioId: number;
@@ -185,13 +194,7 @@ export const PlanningV2: FC = () => {
                     </Grid>
                     <Grid item xs={12} md={8}>
                         <PaperFullHeight>
-                            <Card
-                                sx={{
-                                    height: '100%',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                }}
-                            >
+                            <Card sx={styles.card}>
                                 <CardStyled
                                     header={
                                         <InterventionPlanHeader

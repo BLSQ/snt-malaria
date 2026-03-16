@@ -7,6 +7,7 @@ const styles: SxStyles = {
     cardHeader: {
         borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
         pb: 1,
+        minHeight: '65px',
     },
     cardContent: {
         overflow: 'auto',

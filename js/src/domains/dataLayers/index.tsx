@@ -1,31 +1,55 @@
 import React, { FC, useCallback, useState } from 'react';
 import { Card, Grid } from '@mui/material';
-import { LoadingSpinner, TopBar, useSafeIntl } from 'bluesquare-components';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import TopBar from 'Iaso/components/nav/TopBarComponent';
+
+import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
 import {
     PageContainer,
     PaperFullHeight,
 } from '../../components/styledComponents';
-import { useGetMetricCategories } from '../planning/hooks/useGetMetrics';
+import {
+    useGetMetricCategories,
+    useGetMetricValues,
+} from '../planning/hooks/useGetMetrics';
+import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { MetricType } from '../planning/types/metrics';
 import { DataLayerDialog } from './dataLayerForm/DataLayerDialog';
 import { DataLayerList } from './dataLayerList/DataLayerList';
 import { DataLayerListHeader } from './dataLayerList/DataLayerListHeader';
+import { DataLayerMap } from './dataLayerMap/DataLayerMap';
 import { useDeleteMetricType } from './hooks/useDeleteMetricType';
 import { MESSAGES } from './messages';
+
+const styles = {
+    card: {
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+    },
+} satisfies SxStyles;
 
 export const DataLayers: FC = () => {
     const { formatMessage } = useSafeIntl();
 
+    const [displayedMetricType, setDisplayedMetricType] =
+        useState<MetricType>();
+    const { data: orgUnits } = useGetOrgUnits();
+
     const { data: metricCategories, isLoading: isLoadingMetricLayers } =
         useGetMetricCategories();
+
+    const { data: displayedMetricValues } = useGetMetricValues({
+        metricTypeId: displayedMetricType?.id || null,
+    });
+
     const { mutate: deleteMetricType } = useDeleteMetricType();
 
     const [isMetricTypeFormOpen, setIsMetricTypeFormOpen] =
         useState<boolean>(false);
-    const [selectedMetricType, setSelectedMetricType] = useState<
-        MetricType | undefined
-    >(undefined);
+
+    const [selectedMetricType, setSelectedMetricType] = useState<MetricType>();
 
     const onDialogClose = useCallback(() => {
         setIsMetricTypeFormOpen(false);
@@ -56,7 +80,7 @@ export const DataLayers: FC = () => {
                 <Grid container spacing={1}>
                     <Grid item xs={12} md={4}>
                         <PaperFullHeight>
-                            <Card>
+                            <Card sx={styles.card}>
                                 <CardStyled
                                     header={
                                         <DataLayerListHeader
@@ -68,6 +92,9 @@ export const DataLayers: FC = () => {
                                         metricCategories={
                                             metricCategories || []
                                         }
+                                        onSelectMetricType={
+                                            setDisplayedMetricType
+                                        }
                                         onEditMetricType={onEditMetricType}
                                         deleteMetricType={deleteMetricType}
                                     />
@@ -77,8 +104,16 @@ export const DataLayers: FC = () => {
                     </Grid>
                     <Grid item xs={12} md={8}>
                         <PaperFullHeight>
-                            <Card>
-                                <CardStyled>smth</CardStyled>
+                            <Card sx={styles.card}>
+                                <CardStyled
+                                    header={displayedMetricType?.name || ''}
+                                >
+                                    <DataLayerMap
+                                        metricType={displayedMetricType}
+                                        metricValues={displayedMetricValues}
+                                        orgUnits={orgUnits || []}
+                                    />
+                                </CardStyled>
                             </Card>
                         </PaperFullHeight>
                     </Grid>
