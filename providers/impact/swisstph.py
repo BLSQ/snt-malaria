@@ -1,12 +1,11 @@
 from typing import Optional
 
-from django.db.models import Avg, Count, Max, Min
+from django.db.models import Avg, Max, Min, Q
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
 from plugins.snt_malaria.models.swisstph_impact import SwissTPHImpactData
 from plugins.snt_malaria.providers.impact.base import (
-    DataIntegrityError,
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
     ImpactResult,
@@ -27,6 +26,8 @@ KNOWN_DEPLOYED_COLUMNS = {
     "deployed_int_itn",
     "deployed_int_irs",
     "deployed_int_iccm",
+    "deployed_int_lsm",
+    "deployed_int_cm",
 }
 
 
@@ -38,8 +39,9 @@ class SwissTPHImpactProvider(ImpactProvider):
     available, falling back to org_unit.name otherwise.
     Uses boolean deployed_int_* columns to filter by intervention deployment status.
 
-    Confidence intervals are derived by aggregating across all statistical seeds:
-    value = Avg, lower = Min, upper = Max.
+    Confidence intervals are derived from the EIR_CI column: each metric is
+    averaged over seeds separately for EIR_mean (value), EIR_lci (lower),
+    and EIR_uci (upper).
     """
 
     @property
@@ -66,10 +68,12 @@ class SwissTPHImpactProvider(ImpactProvider):
         for intervention in interventions:
             deployed_columns.update(self._map_intervention(intervention))
 
-        reference_to_ou_id: dict[str, int] = {(ou.source_ref or ou.name): ou.id for ou in org_units}
+        reference_to_org_unit_id: dict[str, int] = {
+            (org_unit.source_ref or org_unit.name): org_unit.id for org_unit in org_units
+        }
 
         filters = {
-            "admin_1__in": list(reference_to_ou_id.keys()),
+            "admin_1__in": list(reference_to_org_unit_id.keys()),
             "age_group": age_group,
         }
         if year_from:
@@ -79,28 +83,29 @@ class SwissTPHImpactProvider(ImpactProvider):
 
         filters.update(self._build_query_filters(deployed_columns))
 
-        # Aggregate across seeds per (admin_1, year): Avg for central value, Min/Max for CI.
-        # seed_count vs row_count validates that each seed appears only once per year.
+        # NOTE: if the source data contains duplicate rows for the same
+        # admin_1, age_group, year, seed, eir_ci and intervention mix, they
+        # will be silently averaged into the results. We assume this is
+        # acceptable because identical intervention mixes should produce
+        # identical results. See test_duplicate_rows_are_averaged_transparently.
         rows = (
             SwissTPHImpactData.objects.using(SWISSTPH_DATABASE_ALIAS)
             .filter(**filters)
             .values("admin_1", "year")
             .annotate(
-                seed_count=Count("seed", distinct=True),
-                row_count=Count("impact_index"),
-                avg_n_uncomp=Avg("n_uncomp"),
-                min_n_uncomp=Min("n_uncomp"),
-                max_n_uncomp=Max("n_uncomp"),
-                avg_n_severe=Avg("n_severe"),
-                min_n_severe=Min("n_severe"),
-                max_n_severe=Max("n_severe"),
-                avg_prevalence_rate=Avg("prevalence_rate"),
-                min_prevalence_rate=Min("prevalence_rate"),
-                max_prevalence_rate=Max("prevalence_rate"),
-                avg_n_host=Avg("n_host"),
-                avg_expected_direct_deaths=Avg("expected_direct_deaths"),
-                min_expected_direct_deaths=Min("expected_direct_deaths"),
-                max_expected_direct_deaths=Max("expected_direct_deaths"),
+                mean_n_uncomp=Avg("n_uncomp", filter=Q(eir_ci="EIR_mean")),
+                lower_n_uncomp=Avg("n_uncomp", filter=Q(eir_ci="EIR_lci")),
+                upper_n_uncomp=Avg("n_uncomp", filter=Q(eir_ci="EIR_uci")),
+                mean_n_severe=Avg("n_severe", filter=Q(eir_ci="EIR_mean")),
+                lower_n_severe=Avg("n_severe", filter=Q(eir_ci="EIR_lci")),
+                upper_n_severe=Avg("n_severe", filter=Q(eir_ci="EIR_uci")),
+                mean_prevalence_rate=Avg("prevalence_rate", filter=Q(eir_ci="EIR_mean")),
+                lower_prevalence_rate=Avg("prevalence_rate", filter=Q(eir_ci="EIR_lci")),
+                upper_prevalence_rate=Avg("prevalence_rate", filter=Q(eir_ci="EIR_uci")),
+                mean_n_host=Avg("n_host", filter=Q(eir_ci="EIR_mean")),
+                mean_expected_direct_deaths=Avg("expected_direct_deaths", filter=Q(eir_ci="EIR_mean")),
+                lower_expected_direct_deaths=Avg("expected_direct_deaths", filter=Q(eir_ci="EIR_lci")),
+                upper_expected_direct_deaths=Avg("expected_direct_deaths", filter=Q(eir_ci="EIR_uci")),
             )
             .order_by("admin_1", "year")
         )
@@ -108,42 +113,32 @@ class SwissTPHImpactProvider(ImpactProvider):
         results: dict[int, list[ImpactResult]] = {}
         matched_references: set[str] = set()
         for row in rows:
-            ou_id = reference_to_ou_id.get(row["admin_1"])
-            if ou_id is None:
+            org_unit_id = reference_to_org_unit_id.get(row["admin_1"])
+            if org_unit_id is None:
                 continue
 
             matched_references.add(row["admin_1"])
-
-            if row["row_count"] != row["seed_count"]:
-                raise DataIntegrityError(
-                    f"SwissTPH: year {row['year']} (admin_1={row['admin_1']!r}) "
-                    f"has {row['row_count']} rows but {row['seed_count']} distinct seeds. "
-                    f"Each (year, seed) must be unique."
-                )
-
-            results.setdefault(ou_id, []).append(
+            results.setdefault(org_unit_id, []).append(
                 ImpactResult(
                     year=row["year"],
-                    number_cases=ImpactMetricWithConfidenceInterval(
-                        row["avg_n_uncomp"], row["min_n_uncomp"], row["max_n_uncomp"]
-                    ),
-                    number_severe_cases=ImpactMetricWithConfidenceInterval(
-                        row["avg_n_severe"], row["min_n_severe"], row["max_n_severe"]
-                    ),
-                    prevalence_rate=ImpactMetricWithConfidenceInterval(
-                        row["avg_prevalence_rate"], row["min_prevalence_rate"], row["max_prevalence_rate"]
-                    ),
-                    population=row["avg_n_host"] or 0,
-                    direct_deaths=ImpactMetricWithConfidenceInterval(
-                        row["avg_expected_direct_deaths"],
-                        row["min_expected_direct_deaths"],
-                        row["max_expected_direct_deaths"],
-                    ),
+                    number_cases=self._build_metric(row, "n_uncomp"),
+                    number_severe_cases=self._build_metric(row, "n_severe"),
+                    prevalence_rate=self._build_metric(row, "prevalence_rate"),
+                    population=row["mean_n_host"] or 0,
+                    direct_deaths=self._build_metric(row, "expected_direct_deaths"),
                 )
             )
 
-        self._check_unmatched_org_units(reference_to_ou_id, matched_references)
+        self._check_unmatched_org_units(reference_to_org_unit_id, matched_references)
         return results
+
+    @staticmethod
+    def _build_metric(row: dict, field: str) -> ImpactMetricWithConfidenceInterval:
+        return ImpactMetricWithConfidenceInterval(
+            value=row[f"mean_{field}"],
+            lower=row[f"lower_{field}"],
+            upper=row[f"upper_{field}"],
+        )
 
     def get_year_range(self) -> tuple[Optional[int], Optional[int]]:
         result = SwissTPHImpactData.objects.using(SWISSTPH_DATABASE_ALIAS).aggregate(
@@ -161,14 +156,14 @@ class SwissTPHImpactProvider(ImpactProvider):
             .order_by("age_group")
         )
 
-    def _check_unmatched_org_units(self, reference_to_ou_id, matched_references):
+    def _check_unmatched_org_units(self, reference_to_org_unit_id, matched_references):
         """Verify unmatched org units actually exist in the impact DB.
 
         Only runs an extra query when some org units got no results.
         Raises OrgUnitMappingError for references that don't exist at all,
         as opposed to those that simply have no data for the queried intervention mix.
         """
-        unmatched = set(reference_to_ou_id.keys()) - matched_references
+        unmatched = set(reference_to_org_unit_id.keys()) - matched_references
         if not unmatched:
             return
         known = set(

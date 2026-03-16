@@ -119,7 +119,7 @@ class SwissTPHBuildQueryFiltersTests(TestCase):
 
 
 # ---------------------------------------------------------------------------
-# Database-backed integration tests for source_ref org unit matching
+# Database-backed integration tests for match_impact_bulk
 # ---------------------------------------------------------------------------
 
 _SWISSTPH_MODELS = [SwissTPHImpactData]
@@ -138,9 +138,9 @@ def _deploy_fields(deployed_columns: set[str]) -> dict:
     return fields
 
 
-class SwissTPHSourceRefIntegrationTests(TestCase):
-    """Integration tests verifying that match_impact_bulk uses source_ref for
-    org unit matching, falling back to name when source_ref is not set.
+class SwissTPHMatchImpactBulkTests(TestCase):
+    """Integration tests for match_impact_bulk: org unit matching, EIR_CI-based
+    confidence intervals, and edge cases.
 
     SwissTPHImpactData is unmanaged; we create the table in the default test
     database and patch SWISSTPH_DATABASE_ALIAS to 'default'.
@@ -171,31 +171,70 @@ class SwissTPHSourceRefIntegrationTests(TestCase):
         self._alias_patcher.start()
         self.provider = SwissTPHImpactProvider()
 
+        deploy = _deploy_fields({"deployed_int_smc"})
+        base = dict(admin_1="Bern", year=2025, age_group="allAges", n_host=50000.0, **deploy)
+
+        # Seed 1 — three EIR_CI categories
         SwissTPHImpactData.objects.using("default").create(
             impact_index=1,
-            admin_1="Bern",
-            year=2025,
             seed=1,
-            age_group="allAges",
+            eir_ci="EIR_mean",
             n_uncomp=100.0,
             n_severe=10.0,
             prevalence_rate=0.05,
-            n_host=50000.0,
             expected_direct_deaths=1.0,
-            **_deploy_fields({"deployed_int_smc"}),
+            **base,
         )
         SwissTPHImpactData.objects.using("default").create(
             impact_index=2,
-            admin_1="Bern",
-            year=2025,
+            seed=1,
+            eir_ci="EIR_lci",
+            n_uncomp=80.0,
+            n_severe=8.0,
+            prevalence_rate=0.04,
+            expected_direct_deaths=0.8,
+            **base,
+        )
+        SwissTPHImpactData.objects.using("default").create(
+            impact_index=3,
+            seed=1,
+            eir_ci="EIR_uci",
+            n_uncomp=120.0,
+            n_severe=12.0,
+            prevalence_rate=0.06,
+            expected_direct_deaths=1.2,
+            **base,
+        )
+        # Seed 2 — three EIR_CI categories
+        SwissTPHImpactData.objects.using("default").create(
+            impact_index=4,
             seed=2,
-            age_group="allAges",
+            eir_ci="EIR_mean",
             n_uncomp=110.0,
             n_severe=12.0,
             prevalence_rate=0.06,
-            n_host=50000.0,
             expected_direct_deaths=1.5,
-            **_deploy_fields({"deployed_int_smc"}),
+            **base,
+        )
+        SwissTPHImpactData.objects.using("default").create(
+            impact_index=5,
+            seed=2,
+            eir_ci="EIR_lci",
+            n_uncomp=90.0,
+            n_severe=9.0,
+            prevalence_rate=0.045,
+            expected_direct_deaths=1.0,
+            **base,
+        )
+        SwissTPHImpactData.objects.using("default").create(
+            impact_index=6,
+            seed=2,
+            eir_ci="EIR_uci",
+            n_uncomp=130.0,
+            n_severe=14.0,
+            prevalence_rate=0.07,
+            expected_direct_deaths=2.0,
+            **base,
         )
 
     def tearDown(self):
@@ -268,3 +307,151 @@ class SwissTPHSourceRefIntegrationTests(TestCase):
         )
 
         self.assertEqual(results, {})
+
+    def test_ci_values_derived_from_eir_ci_column(self):
+        """value/lower/upper come from averaging EIR_mean/EIR_lci/EIR_uci rows over seeds."""
+        org_unit = MockOrgUnit(id=1, name="Bern")
+        intervention = MockIntervention(impact_ref="deployed_int_smc")
+
+        results = self.provider.match_impact_bulk(
+            [org_unit],
+            interventions=[intervention],
+            age_group="allAges",
+        )
+
+        self.assertEqual(len(results[1]), 1)
+        result = results[1][0]
+
+        # value = avg of EIR_mean seeds: (100+110)/2, (10+12)/2, ...
+        self.assertAlmostEqual(result.number_cases.value, 105.0)
+        self.assertAlmostEqual(result.number_severe_cases.value, 11.0)
+        self.assertAlmostEqual(result.prevalence_rate.value, 0.055)
+        self.assertAlmostEqual(result.direct_deaths.value, 1.25)
+
+        # lower = avg of EIR_lci seeds: (80+90)/2, (8+9)/2, ...
+        self.assertAlmostEqual(result.number_cases.lower, 85.0)
+        self.assertAlmostEqual(result.number_severe_cases.lower, 8.5)
+        self.assertAlmostEqual(result.prevalence_rate.lower, 0.0425)
+        self.assertAlmostEqual(result.direct_deaths.lower, 0.9)
+
+        # upper = avg of EIR_uci seeds: (120+130)/2, (12+14)/2, ...
+        self.assertAlmostEqual(result.number_cases.upper, 125.0)
+        self.assertAlmostEqual(result.number_severe_cases.upper, 13.0)
+        self.assertAlmostEqual(result.prevalence_rate.upper, 0.065)
+        self.assertAlmostEqual(result.direct_deaths.upper, 1.6)
+
+        self.assertAlmostEqual(result.population, 50000.0)
+
+    def test_duplicate_rows_are_averaged_transparently(self):
+        """Identical duplicate rows (e.g. from different scenario_names) are absorbed by Avg."""
+        deploy = _deploy_fields({"deployed_int_smc"})
+        base = dict(admin_1="Geneva", year=2025, age_group="allAges", n_host=50000.0, **deploy)
+
+        SwissTPHImpactData.objects.using("default").create(
+            impact_index=100,
+            seed=1,
+            eir_ci="EIR_mean",
+            scenario_name="bau",
+            n_uncomp=100.0,
+            n_severe=10.0,
+            prevalence_rate=0.05,
+            expected_direct_deaths=1.0,
+            **base,
+        )
+        SwissTPHImpactData.objects.using("default").create(
+            impact_index=101,
+            seed=1,
+            eir_ci="EIR_mean",
+            scenario_name="nsp",
+            n_uncomp=100.0,
+            n_severe=10.0,
+            prevalence_rate=0.05,
+            expected_direct_deaths=1.0,
+            **base,
+        )
+
+        org_unit = MockOrgUnit(id=1, name="Geneva")
+        intervention = MockIntervention(impact_ref="deployed_int_smc")
+
+        results = self.provider.match_impact_bulk(
+            [org_unit],
+            interventions=[intervention],
+            age_group="allAges",
+        )
+
+        result = results[1][0]
+        self.assertAlmostEqual(result.number_cases.value, 100.0)
+        self.assertAlmostEqual(result.number_severe_cases.value, 10.0)
+
+    def test_missing_eir_ci_categories_yield_none_bounds(self):
+        """When only EIR_mean rows exist, lower and upper should be None."""
+        deploy = _deploy_fields({"deployed_int_smc"})
+        base = dict(admin_1="Geneva", year=2025, age_group="allAges", n_host=50000.0, **deploy)
+
+        SwissTPHImpactData.objects.using("default").create(
+            impact_index=200,
+            seed=1,
+            eir_ci="EIR_mean",
+            n_uncomp=100.0,
+            n_severe=10.0,
+            prevalence_rate=0.05,
+            expected_direct_deaths=1.0,
+            **base,
+        )
+
+        org_unit = MockOrgUnit(id=1, name="Geneva")
+        intervention = MockIntervention(impact_ref="deployed_int_smc")
+
+        results = self.provider.match_impact_bulk(
+            [org_unit],
+            interventions=[intervention],
+            age_group="allAges",
+        )
+
+        result = results[1][0]
+        self.assertAlmostEqual(result.number_cases.value, 100.0)
+        self.assertIsNone(result.number_cases.lower)
+        self.assertIsNone(result.number_cases.upper)
+        self.assertAlmostEqual(result.number_severe_cases.value, 10.0)
+        self.assertIsNone(result.number_severe_cases.lower)
+        self.assertIsNone(result.number_severe_cases.upper)
+
+    def test_rows_without_eir_ci_are_excluded(self):
+        """Rows with eir_ci=NULL or an unrecognised value are not included."""
+        deploy = _deploy_fields({"deployed_int_smc"})
+        base = dict(admin_1="Geneva", year=2025, age_group="allAges", n_host=50000.0, **deploy)
+
+        SwissTPHImpactData.objects.using("default").create(
+            impact_index=300,
+            seed=1,
+            eir_ci=None,
+            n_uncomp=999.0,
+            n_severe=999.0,
+            prevalence_rate=0.99,
+            expected_direct_deaths=99.0,
+            **base,
+        )
+        SwissTPHImpactData.objects.using("default").create(
+            impact_index=301,
+            seed=1,
+            eir_ci="EIR_mean",
+            n_uncomp=100.0,
+            n_severe=10.0,
+            prevalence_rate=0.05,
+            expected_direct_deaths=1.0,
+            **base,
+        )
+
+        org_unit = MockOrgUnit(id=1, name="Geneva")
+        intervention = MockIntervention(impact_ref="deployed_int_smc")
+
+        results = self.provider.match_impact_bulk(
+            [org_unit],
+            interventions=[intervention],
+            age_group="allAges",
+        )
+
+        result = results[1][0]
+        self.assertAlmostEqual(result.number_cases.value, 100.0)
+        self.assertIsNone(result.number_cases.lower)
+        self.assertIsNone(result.number_cases.upper)
