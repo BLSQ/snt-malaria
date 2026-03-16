@@ -35,8 +35,14 @@ const styles: SxStyles = {
         borderRadius: 2,
         border: '1px solid transparent',
         cursor: 'pointer',
-        '&:nth-child(odd of .MuiListItem-root)': {
-            backgroundColor: 'action.hover',
+        ' .MuiListItemSecondaryAction-root': {
+            visibility: 'hidden',
+        },
+        '&:hover': {
+            bgcolor: 'action.hover',
+            ' .MuiListItemSecondaryAction-root': {
+                visibility: 'visible',
+            },
         },
     },
     metricTypeReadOnly: {
@@ -99,14 +105,8 @@ export const DataLayerLine: FC<Props> = ({
             }
             onClick={onClick}
         >
-            <ListItemIcon sx={styles.metricTypeIcon}>
-                <Tooltip title={metricType.description || 'N/A'}>
-                    <InfoOutlinedIcon />
-                </Tooltip>
-            </ListItemIcon>
             <Box sx={styles.metricTypeDetails}>
                 <Typography variant="body2">{metricType.name}</Typography>
-                <Typography variant="body2">{metricType.origin}</Typography>
             </Box>
             <Popover
                 id="metric_type_line_actions"
