@@ -25,9 +25,11 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
     permission_classes = [InterventionAssignmentsPermission]
 
     def get_queryset(self):
-        return InterventionAssignment.objects.prefetch_related(
-            "intervention__intervention_category__account", "org_unit"
-        ).filter(intervention__intervention_category__account=self.request.user.iaso_profile.account)
+        return (
+            InterventionAssignment.objects.prefetch_related("intervention__intervention_category__account", "org_unit")
+            .select_related("rule")
+            .filter(intervention__intervention_category__account=self.request.user.iaso_profile.account)
+        )
 
     def get_serializer_class(self):
         if self.request.method == "GET":
