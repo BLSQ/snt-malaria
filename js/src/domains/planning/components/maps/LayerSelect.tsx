@@ -5,6 +5,7 @@ import {
     ListSubheader,
     MenuItem,
     Select,
+    SelectChangeEvent,
     Theme,
     Typography,
 } from '@mui/material';
@@ -69,8 +70,8 @@ export const LayerSelect: FC<Props> = ({
         MetricType | ''
     >(initialSelection);
 
-    const handleChange = event => {
-        const newMetric = event.target.value;
+    const handleChange = (event: SelectChangeEvent<MetricType>) => {
+        const newMetric = event.target.value as MetricType;
         onLayerChange(newMetric);
         if (!createsNewMap) {
             setSelectedMetricType(newMetric);

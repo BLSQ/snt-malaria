@@ -18,12 +18,14 @@ type Props = {
     scenarioId: number;
     rules: ScenarioRule[];
     isLoading: boolean;
+    onPreviewScenarioRule?: (rule: Partial<ScenarioRule>) => void;
 };
 
 export const ScenarioRulesPanel: FC<Props> = ({
     scenarioId,
     rules,
     isLoading,
+    onPreviewScenarioRule,
 }) => {
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
@@ -41,6 +43,20 @@ export const ScenarioRulesPanel: FC<Props> = ({
         setIsEditing(false);
     }, [setEditingRule, setIsEditing]);
 
+    const handleFormChange = useCallback(
+        (values: Partial<ScenarioRule>) => {
+            if (
+                (values.matching_criteria ?? []).length <= 0 ||
+                !onPreviewScenarioRule
+            ) {
+                return;
+            }
+
+            onPreviewScenarioRule(values);
+        },
+        [onPreviewScenarioRule],
+    );
+
     return (
         <Card sx={styles.card}>
             {isEditing ? (
@@ -48,6 +64,7 @@ export const ScenarioRulesPanel: FC<Props> = ({
                     scenarioId={scenarioId}
                     rule={editingRule}
                     onClose={handleCloseForm}
+                    onBlur={handleFormChange}
                 />
             ) : (
                 <ScenarioRulesContainer

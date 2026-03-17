@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
-import { FormikProvider } from 'formik';
 import { CardStyled } from '../../../../../components/CardStyled';
+import { ExtendedFormikProvider } from '../../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../../../messages';
 import { useCreateUpdateScenarioRule } from '../../../hooks/useCreateUpdateScenarioRule';
 import {
@@ -17,12 +17,14 @@ type Props = {
     scenarioId: number;
     rule?: ScenarioRule;
     onClose: () => void;
+    onBlur?: (values: Partial<ScenarioRuleFormValues>) => void;
 };
 
 export const ScenarioRuleFormWrapper: FC<Props> = ({
     scenarioId,
     rule,
     onClose,
+    onBlur,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -70,6 +72,13 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         editMode: Boolean(rule),
     });
 
+    const handleBlur = useCallback(() => {
+        if (onBlur) {
+            onBlur(formik.values);
+        }
+        // We are not checking the field on blur as we only trigger this for fields which should trigger the preview call.
+    }, [onBlur, formik.values]);
+
     return (
         <CardStyled
             header={
@@ -82,9 +91,9 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
             }
             isLoading={isSubmittingRule}
         >
-            <FormikProvider value={formik}>
+            <ExtendedFormikProvider formik={formik} onBlur={handleBlur}>
                 <ScenarioRuleForm />
-            </FormikProvider>
+            </ExtendedFormikProvider>
         </CardStyled>
     );
 };

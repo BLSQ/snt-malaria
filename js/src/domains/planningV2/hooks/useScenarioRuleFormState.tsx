@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -33,6 +33,7 @@ export const defaultInterventionProperties: InterventionProperties = {
 };
 
 export const defaultScenarioRuleValues: ScenarioRuleFormValues = {
+    scenario: 0,
     name: '',
     color: '#000000',
     intervention_properties: [],
@@ -121,5 +122,5 @@ export const useScenarioRuleFormState = ({
         onSubmit: submitModifiedValues,
     });
 
-    return formik;
+    return { ...formik };
 };

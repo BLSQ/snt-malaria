@@ -20,7 +20,7 @@ export type InterventionProperties = {
 
 export type MetricTypeCriterion = {
     metric_type?: number;
-    operator: string;
+    operator: '>=' | '<=' | '==' | '!=' | '>' | '<';
     value?: number;
     string_value?: string;
 };

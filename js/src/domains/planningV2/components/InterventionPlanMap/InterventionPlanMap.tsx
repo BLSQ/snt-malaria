@@ -34,7 +34,11 @@ const styles: SxStyles = {
     },
 };
 
-export const InterventionsPlanMap: FC = () => {
+type Props = {
+    selectedOrgUnitIds?: number[];
+};
+
+export const InterventionsPlanMap: FC<Props> = ({ selectedOrgUnitIds }) => {
     const { orgUnits, interventionAssignments } = usePlanningContext();
 
     const getColorForRules = useCallback((rules: ScenarioRule[]) => {
@@ -131,6 +135,7 @@ export const InterventionsPlanMap: FC = () => {
                     id="intervention_plan_map"
                     orgUnits={orgUnits}
                     getOrgUnitMapMisc={getOrgUnitMapMisc}
+                    selectedOrgUnits={selectedOrgUnitIds}
                     legendConfig={legendConfig}
                     RenderTooltip={({ orgUnit }) => (
                         <Stack direction="column" p={1}>

@@ -35,10 +35,12 @@ import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
 import { InterventionPlanHeader } from './components/InterventionPlan/InterventionPlanHeader';
 import { InterventionsPlanMap } from './components/InterventionPlanMap/InterventionPlanMap';
 import { InterventionsPlanTable } from './components/InterventionPlanTable/InterventionsPlanTable';
-import { ScenarioRulesPanel } from './components/ScenarioRule/ScenarioRulesPanel';
+import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
 import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
+import { ScenarioRule } from './types/scenarioRule';
+import { usePreviewScenarioRule } from './hooks/usePreviewScenarioRule';
 import { useUserCanEditScenario } from './utils/permissions';
 
 type PlanningParams = {
@@ -61,6 +63,7 @@ export const PlanningV2: FC = () => {
     const [selectedInterventionPlan, setSelectedInterventionPlan] = useState<
         InterventionPlan | undefined
     >(undefined);
+
     const { data: metricTypeCategories } = useGetMetricCategories();
     const { data: interventionCategories } = useGetInterventionCategories();
     const { data: orgUnits, isLoading: isLoadingOrgUnits } =
@@ -140,6 +143,18 @@ export const PlanningV2: FC = () => {
         [scenario, formatMessage],
     );
 
+    // TODO Find a better place for this
+    const [selectedOrgUnitIds, setSelectedOrgUnitIds] = useState<number[]>([]);
+    const { mutate: previewScenarioRule } = usePreviewScenarioRule();
+
+    const onPreviewScenarioRule = useCallback(
+        (rule: ScenarioRule) =>
+            previewScenarioRule(rule, {
+                onSuccess: data => setSelectedOrgUnitIds(data as number[]),
+            }),
+        [previewScenarioRule],
+    );
+
     return metricTypeCategories && interventionCategories ? (
         <PlanningProvider
             scenarioId={scenarioId}
@@ -157,6 +172,7 @@ export const PlanningV2: FC = () => {
                 <Grid container spacing={1}>
                     <Grid item xs={12} md={4}>
                         <ScenarioRulesPanel
+                            onPreviewScenarioRule={onPreviewScenarioRule}
                             scenarioId={scenarioId}
                             rules={scenarioRules || []}
                             isLoading={isFetchingRules}
@@ -196,7 +212,11 @@ export const PlanningV2: FC = () => {
                                     }
                                 >
                                     {activeTab === 'map' && (
-                                        <InterventionsPlanMap />
+                                        <InterventionsPlanMap
+                                            selectedOrgUnitIds={
+                                                selectedOrgUnitIds
+                                            }
+                                        />
                                     )}
                                     {activeTab === 'list' && (
                                         <>
