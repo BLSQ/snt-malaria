@@ -65,8 +65,12 @@ Nesting can be arbitrarily deep."""
         parser.add_argument(
             "--account",
             type=str,
-            required=True,
             help="Name of the account whose org units should be updated.",
+        )
+        parser.add_argument(
+            "--account-id",
+            type=int,
+            help="ID of the account whose org units should be updated.",
         )
         parser.add_argument(
             "--mapping-file",
@@ -83,8 +87,14 @@ Nesting can be arbitrarily deep."""
 
     def handle(self, *args, **options):
         account_name = options["account"]
+        account_id = options["account_id"]
         mapping_file_path = options["mapping_file"]
         overwrite = options["overwrite"]
+
+        if not account_name and not account_id:
+            raise CommandError("Provide either --account (name) or --account-id (ID).")
+        if account_name and account_id:
+            raise CommandError("Provide only one of --account or --account-id, not both.")
 
         try:
             with open(mapping_file_path) as f:
@@ -99,14 +109,18 @@ Nesting can be arbitrarily deep."""
 
         lookup = _build_lookup(mapping_nodes)
 
+        identifier = account_id if account_id else account_name
         try:
-            account = Account.objects.get(name=account_name)
+            if account_id:
+                account = Account.objects.get(id=account_id)
+            else:
+                account = Account.objects.get(name=account_name)
         except Account.DoesNotExist:
-            raise CommandError(f"Account '{account_name}' does not exist.")
+            raise CommandError(f"Account '{identifier}' does not exist.")
 
         default_version = account.default_version
         if default_version is None:
-            raise CommandError(f"Account '{account_name}' has no default version.")
+            raise CommandError(f"Account '{identifier}' has no default version.")
 
         org_units = OrgUnit.objects.filter(version=default_version).select_related("parent__parent")
         if not overwrite:
@@ -129,7 +143,7 @@ Nesting can be arbitrarily deep."""
                 updated_count += 1
 
         self.stdout.write(
-            self.style.SUCCESS(f"Updated source_ref on {updated_count} org units for account '{account_name}'.")
+            self.style.SUCCESS(f"Updated source_ref on {updated_count} org units for account '{identifier}'.")
         )
 
     def _validate_uniqueness(self, org_unit_list, lookup):
