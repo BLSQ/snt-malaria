@@ -135,7 +135,7 @@ export const InterventionsPlanMap: FC<Props> = ({ selectedOrgUnitIds }) => {
                     id="intervention_plan_map"
                     orgUnits={orgUnits}
                     getOrgUnitMapMisc={getOrgUnitMapMisc}
-                    selectedOrgUnits={selectedOrgUnitIds}
+                    selectedOrgUnitIds={selectedOrgUnitIds}
                     legendConfig={legendConfig}
                     RenderTooltip={({ orgUnit }) => (
                         <Stack direction="column" p={1}>
