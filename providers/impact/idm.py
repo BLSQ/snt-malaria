@@ -4,13 +4,14 @@ from django.db.models import Max, Min
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
-from plugins.snt_malaria.models.idm_impact import IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
+from plugins.snt_malaria.models.idm_impact import IDMAdminInfo, IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
 from plugins.snt_malaria.providers.impact.base import (
     DataIntegrityError,
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
     ImpactResult,
     InterventionMappingError,
+    OrgUnitMappingError,
 )
 
 
@@ -37,118 +38,14 @@ IDM_ALL_INTERVENTION_COLUMNS = [
 ]
 
 
-# Temporary name mapping from Iaso org_unit.name -> IDM admin_info.admin_2_name.
-# This is a workaround until we match by ID instead of name.
-# The IDM database uses hyphens and suffixed duplicates where Iaso uses
-# spaces, slashes, and repeated names with different org_unit IDs.
-IASO_TO_IDM_NAME_MAP = {
-    "Aboh Mbaise": "Aboh-Mbaise",
-    "Abua/Odual": "Abua-Odual",
-    "Ado Odo/Ota": "Ado-Odo-Ota",
-    "Ahiazu Mbaise": "Ahiazu-Mbaise",
-    "Aiyekire (Gboyin)": "Gboyin",
-    "Ajeromi Ifelodun": "Ajeromi-Ifelodun",
-    "Akoko Edo": "Akoko-Edo",
-    "Amuwo Odofin": "Amuwo-Odofin",
-    "Ardo Kola": "Ardo-Kola",
-    "Arewa Dandi": "Arewa-Dandi",
-    "Asari Toru": "Asari-Toru",
-    "Askira/Uba": "Askira-Uba",
-    "Birnin Gwari": "Birnin-Gwari",
-    "Birnin Kudu": "Birni Kudu",
-    "Calabar Municipal": "Calabar-Municipal",
-    "Dange Shuni": "Dange-Shnsi",
-    "Dutsin Ma": "Dutsin-Ma",
-    "Efon Alayee": "Efon-Alayee",
-    "Ehime Mbano": "Ehime-Mbano",
-    "Ese Odo": "Ese-Odo",
-    "Eti Osa": "Eti-Osa",
-    "Ganye": "Ganaye",
-    "Girei": "Gireri",
-    "Gwadabawa": "Gawabawa",
-    "Ibadan Central (Ibadan North East)": "Ibadan North East",
-    "Ibeju/Lekki": "Ibeju-Lekki",
-    "Idosi Osi": "Idosi-Osi",
-    "Ifako Ijaye": "Ifako-Ijaye",
-    "Igalamela Odolu": "Igalamela-Odolu",
-    "Igbo Etiti": "Igbo-Etiti",
-    "Igbo Eze North": "Igbo-Eze North",
-    "Igbo Eze South": "Igbo-Eze South",
-    "Ihitte/Uboma": "Ihitte-Uboma",
-    "Ijebu Ode": "Ijebu ode",
-    "Ikpoba Okha": "Ikpoba-Okha",
-    "Ile Oluji Okeigbo": "Ile-Oluji-Okeigbo",
-    "Ilejemeje": "Ilemeji",
-    "Imeko Afon": "Imeko-Afon",
-    "Irepodun/Ifelodun": "Irepodun-Ifelodun",
-    "Ise/Orun": "Ise-Orun",
-    "Isi Uzo": "Isi-Uzo",
-    "Isiala Ngwa North": "Isiala-Ngwa North",
-    "Isiala Ngwa South": "Isiala-Ngwa South",
-    "Itas/Gadau": "Itas-Gadau",
-    "Kabba/Bunu": "Kabba-Bunu",
-    "Kala/Balge": "Kala-Balge",
-    "Karin Lamido": "Karin-Lamido",
-    "Katsina Ala": "Katsina-Ala",
-    "Kaura Namoda": "Kaura-Namoda",
-    "Koko/Besse": "Koko-Besse",
-    "Kolokuma/Opokuma": "Kolokuma-Opokuma",
-    "Mai'adua": "Mai'Adua",
-    "Matazu": "Matazuu",
-    "Mayo Belwa": "Mayo-Belwa",
-    "Mopa Muro": "Mopa-Muro",
-    "Nafada (Bajoga)": "Nafada",
-    "Nasarawa Eggon": "Nasarawa-Eggon",
-    "Ngor Okpala": "Ngor-Okpala",
-    "Obafemi Owode": "Obafemi-Owode",
-    "Obia/Akpor": "Obia-Akpor",
-    "Odo Otin": "Odo-Otin",
-    "Ogba/Egbema/Ndoni": "Ogba-Egbema-Ndoni",
-    "Ogori/Mangongo": "Ogori-Mangongo",
-    "Ogu/Bolo": "Ogu-Bolo",
-    "Ogun Waterside": "Ogun waterside",
-    "Ohaji/Egbema": "Ohaji-Egbema",
-    "Oji River": "Oji-River",
-    "Oke Ero": "Oke-Ero",
-    "Ola Oluwa": "Ola-oluwa",
-    "Ona Ara": "Ona-Ara",
-    "Opobo/Nkoro": "Opobo-Nkoro",
-    "Oshodi Isolo": "Oshodi-Isolo",
-    "Owerri Municipal": "Owerri-Municipal",
-    "Paikoro": "Pailoro",
-    "Port Harcourt": "Port-Harcourt",
-    "Sabon Gari": "Sabon-Gari",
-    "Sule Tankarkar": "Sule-Tankarkar",
-    "Tafawa Balewa": "Tafawa-Balewa",
-    "Takai": "Takali",
-    "Umu Nneochi": "Umu-Neochi",
-    "Urue Offong/Oruko": "Urue-Offong-Oruko",
-    "Uzo Uwani": "Uzo-Uwani",
-    "Wasagu/Danko": "Wasagu-Danko",
-    "Yamaltu/Deba": "Yamaltu-Deba",
-    "Yewa North": "Egbado North",
-    "Yewa South": "Egbado South",
-    "Zango Kataf": "Zango-Kataf",
-}
-
-
-def _resolve_idm_admin_name(org_unit_name):
-    """Resolve a Iaso org_unit name to the corresponding IDM admin_2_name.
-
-    Temporary: uses a hardcoded mapping for names that differ between systems.
-    This will be replaced by ID-based matching in the future.
-    """
-    if org_unit_name in IASO_TO_IDM_NAME_MAP:
-        return IASO_TO_IDM_NAME_MAP[org_unit_name]
-    return org_unit_name
-
-
 class IDMImpactProvider(ImpactProvider):
     """Impact data provider for IDM database.
 
     Connects to the IDM impact database via the database alias.
-    Matches org units by admin_2_name. Uses intervention_package IDs to filter
-    model_output rows by intervention deployment status.
+    Matches org units to IDM admin_2_name values using source_ref when
+    available, falling back to org_unit.name otherwise.
+    Uses intervention_package IDs to filter model_output rows by
+    intervention deployment status.
     """
 
     def __init__(self):
@@ -202,13 +99,10 @@ class IDMImpactProvider(ImpactProvider):
         for intervention in interventions:
             filter_keys.update(self._map_intervention(intervention))
 
-        # Build reverse mapping: idm_admin_name -> org_unit.id
-        idm_admin_name_to_ou_id: dict[str, int] = {}
-        for ou in org_units:
-            idm_admin_name_to_ou_id[_resolve_idm_admin_name(ou.name)] = ou.id
+        reference_to_ou_id: dict[str, int] = {(ou.source_ref or ou.name): ou.id for ou in org_units}
 
         filters = {
-            "admin_info_ref__admin_2_name__in": list(idm_admin_name_to_ou_id.keys()),
+            "admin_info_ref__admin_2_name__in": list(reference_to_ou_id.keys()),
             "age_group_ref_id": age_group_id,
         }
         if year_from:
@@ -244,12 +138,15 @@ class IDMImpactProvider(ImpactProvider):
 
         results: dict[int, list[ImpactResult]] = {}
         seen_years_by_ou: dict[int, set[int]] = {}
+        matched_references: set[str] = set()
 
         for row in impact_rows:
             admin_name = row["admin_info_ref__admin_2_name"]
-            ou_id = idm_admin_name_to_ou_id.get(admin_name)
+            ou_id = reference_to_ou_id.get(admin_name)
             if ou_id is None:
                 continue
+
+            matched_references.add(admin_name)
 
             if ou_id not in seen_years_by_ou:
                 seen_years_by_ou[ou_id] = set()
@@ -288,6 +185,7 @@ class IDMImpactProvider(ImpactProvider):
                 )
             )
 
+        self._check_unmatched_org_units(reference_to_ou_id, matched_references)
         return results
 
     def get_year_range(self) -> tuple[Optional[int], Optional[int]]:
@@ -299,6 +197,26 @@ class IDMImpactProvider(ImpactProvider):
 
     def get_age_groups(self) -> list[str]:
         return list(IDMAgeGroup.objects.using(IDM_DATABASE_ALIAS).values_list("option", flat=True).order_by("option"))
+
+    def _check_unmatched_org_units(self, reference_to_ou_id, matched_references):
+        """Verify unmatched org units actually exist in the impact DB.
+
+        Only runs an extra query when some org units got no results.
+        Raises OrgUnitMappingError for references that don't exist at all,
+        as opposed to those that simply have no data for the queried intervention mix.
+        """
+        unmatched = set(reference_to_ou_id.keys()) - matched_references
+        if not unmatched:
+            return
+        known = set(
+            IDMAdminInfo.objects.using(IDM_DATABASE_ALIAS)
+            .filter(admin_2_name__in=unmatched)
+            .values_list("admin_2_name", flat=True)
+            .distinct()
+        )
+        not_found = unmatched - known
+        if not_found:
+            raise OrgUnitMappingError(f"Org units not found in IDM impact data: {sorted(not_found)}")
 
     def _map_intervention(self, intervention: Intervention) -> set[str]:
         """Resolve an Intervention's impact_ref to an IDM filter key ('column_name=package_id').

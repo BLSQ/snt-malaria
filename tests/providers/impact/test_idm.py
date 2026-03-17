@@ -5,7 +5,7 @@ from django.db import connection
 from django.test import TestCase
 
 from plugins.snt_malaria.models.idm_impact import IDMAdminInfo, IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
-from plugins.snt_malaria.providers.impact.base import DataIntegrityError, InterventionMappingError
+from plugins.snt_malaria.providers.impact.base import DataIntegrityError, InterventionMappingError, OrgUnitMappingError
 from plugins.snt_malaria.providers.impact.idm import (
     IDM_ALL_INTERVENTION_COLUMNS,
     IDM_DEPLOYED_COVERAGE_ID,
@@ -27,9 +27,10 @@ class MockIntervention:
 class MockOrgUnit:
     """Minimal mock for OrgUnit model instances."""
 
-    def __init__(self, id, name):
+    def __init__(self, id, name, source_ref=None):
         self.id = id
         self.name = name
+        self.source_ref = source_ref
 
 
 # ---------------------------------------------------------------------------
@@ -385,7 +386,7 @@ class IDMDatabaseIntegrationTests(TestCase):
     def test_match_with_single_intervention(self):
         """CM deployed: returns matching rows for two districts across years."""
         org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
-        org_unit_aboh = MockOrgUnit(id=103, name="Aboh Mbaise")
+        org_unit_aboh = MockOrgUnit(id=103, name="Aboh Mbaise", source_ref="Aboh-Mbaise")
         case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
@@ -493,13 +494,40 @@ class IDMDatabaseIntegrationTests(TestCase):
         # 95.0 * 500_000 / 1000 = 47_500
         self.assertAlmostEqual(results[101][0].number_cases.value, 47_500.0, places=1)
 
-    def test_name_mapping(self):
-        """Iaso name 'Aboh Mbaise' resolves to IDM 'Aboh-Mbaise'."""
-        org_unit_aboh = MockOrgUnit(id=103, name="Aboh Mbaise")
+    def test_name_fallback_when_no_source_ref(self):
+        """Without source_ref, the org unit name is used directly to match admin_2_name."""
+        org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
         case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
-            [org_unit_aboh],
+            [org_unit_kano],
+            interventions=[case_management],
+            age_group="allAges",
+        )
+
+        self.assertIn(101, results)
+        self.assertEqual(len(results[101]), 2)
+
+    def test_name_fallback_no_match_raises_org_unit_mapping_error(self):
+        """Without source_ref, a name that doesn't exist in admin_info raises OrgUnitMappingError."""
+        org_unit_aboh = MockOrgUnit(id=103, name="Aboh Mbaise")
+        case_management = MockIntervention(impact_ref="cm:cm")
+
+        with self.assertRaises(OrgUnitMappingError) as context:
+            self.provider.match_impact_bulk(
+                [org_unit_aboh],
+                interventions=[case_management],
+                age_group="allAges",
+            )
+        self.assertIn("Aboh Mbaise", str(context.exception))
+
+    def test_source_ref_used_for_matching(self):
+        """When source_ref is set, it is used to match against admin_2_name."""
+        org_unit = MockOrgUnit(id=103, name="Wrong Name", source_ref="Aboh-Mbaise")
+        case_management = MockIntervention(impact_ref="cm:cm")
+
+        results = self.provider.match_impact_bulk(
+            [org_unit],
             interventions=[case_management],
             age_group="allAges",
         )
@@ -508,13 +536,55 @@ class IDMDatabaseIntegrationTests(TestCase):
         self.assertEqual(len(results[103]), 1)
         self.assertEqual(results[103][0].year, 2025)
 
-    def test_no_match_returns_empty(self):
-        org_unit_unknown = MockOrgUnit(id=999, name="Nonexistent District")
+    def test_source_ref_takes_precedence_over_name(self):
+        """source_ref should be used instead of the org unit name."""
+        org_unit = MockOrgUnit(id=103, name="Ikeja", source_ref="Kano Municipal")
         case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
-            [org_unit_unknown],
+            [org_unit],
             interventions=[case_management],
+            age_group="allAges",
+        )
+
+        self.assertIn(103, results)
+        self.assertEqual(len(results[103]), 2)
+        self.assertEqual(results[103][0].year, 2025)
+        self.assertEqual(results[103][1].year, 2026)
+
+    def test_wrong_source_ref_raises_org_unit_mapping_error(self):
+        """A source_ref that doesn't exist in admin_info raises OrgUnitMappingError."""
+        org_unit = MockOrgUnit(id=103, name="Kano Municipal", source_ref="Nonexistent")
+        case_management = MockIntervention(impact_ref="cm:cm")
+
+        with self.assertRaises(OrgUnitMappingError) as context:
+            self.provider.match_impact_bulk(
+                [org_unit],
+                interventions=[case_management],
+                age_group="allAges",
+            )
+        self.assertIn("Nonexistent", str(context.exception))
+
+    def test_nonexistent_org_unit_raises_org_unit_mapping_error(self):
+        org_unit_unknown = MockOrgUnit(id=999, name="Nonexistent District")
+        case_management = MockIntervention(impact_ref="cm:cm")
+
+        with self.assertRaises(OrgUnitMappingError) as context:
+            self.provider.match_impact_bulk(
+                [org_unit_unknown],
+                interventions=[case_management],
+                age_group="allAges",
+            )
+        self.assertIn("Nonexistent District", str(context.exception))
+
+    def test_no_error_when_org_unit_exists_but_intervention_mix_unmatched(self):
+        """An org unit that exists in admin_info but has no data for the queried interventions."""
+        org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
+        lsm = MockIntervention(impact_ref="lsm:lsm")
+
+        results = self.provider.match_impact_bulk(
+            [org_unit_kano],
+            interventions=[lsm],
             age_group="allAges",
         )
 
