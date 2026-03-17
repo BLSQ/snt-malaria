@@ -34,8 +34,11 @@ export const ScenarioRulesPanel: FC<Props> = ({
         (rule?: ScenarioRule) => {
             setEditingRule(rule);
             setIsEditing(true);
+            if (rule) {
+                onPreviewScenarioRule?.(rule);
+            }
         },
-        [setEditingRule, setIsEditing],
+        [setEditingRule, setIsEditing, onPreviewScenarioRule],
     );
 
     const handleCloseForm = useCallback(() => {

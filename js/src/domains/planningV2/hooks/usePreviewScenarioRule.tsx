@@ -17,8 +17,12 @@ export const usePreviewScenarioRule = (): UseMutationResult =>
                 ? matchingCriteriaToJsonLogic(body.matching_criteria)
                 : undefined;
 
-            const org_units_excluded = body.org_units_excluded?.split(',');
-            const org_units_included = body.org_units_included?.split(',');
+            const org_units_excluded = !!body.org_units_excluded
+                ? body.org_units_excluded.split(',')
+                : undefined;
+            const org_units_included = !!body.org_units_included
+                ? body.org_units_included.split(',')
+                : undefined;
 
             return postRequest(`/api/snt_malaria/scenario_rules/preview/`, {
                 matching_criteria,

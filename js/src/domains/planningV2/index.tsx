@@ -148,7 +148,7 @@ export const PlanningV2: FC = () => {
     const { mutate: previewScenarioRule } = usePreviewScenarioRule();
 
     const onPreviewScenarioRule = useCallback(
-        (rule?: ScenarioRule) => {
+        (rule?: Partial<ScenarioRule>) => {
             if (!rule) {
                 setSelectedOrgUnitIds([]);
                 return;
