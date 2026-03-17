@@ -39,8 +39,8 @@ import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel
 import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
-import { ScenarioRule } from './types/scenarioRule';
 import { usePreviewScenarioRule } from './hooks/usePreviewScenarioRule';
+import { ScenarioRule } from './types/scenarioRule';
 import { useUserCanEditScenario } from './utils/permissions';
 
 type PlanningParams = {
@@ -148,10 +148,15 @@ export const PlanningV2: FC = () => {
     const { mutate: previewScenarioRule } = usePreviewScenarioRule();
 
     const onPreviewScenarioRule = useCallback(
-        (rule: ScenarioRule) =>
-            previewScenarioRule(rule, {
+        (rule?: ScenarioRule) => {
+            if (!rule) {
+                setSelectedOrgUnitIds([]);
+                return;
+            }
+            return previewScenarioRule(rule, {
                 onSuccess: data => setSelectedOrgUnitIds(data as number[]),
-            }),
+            });
+        },
         [previewScenarioRule],
     );
 

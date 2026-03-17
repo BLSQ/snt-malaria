@@ -18,7 +18,7 @@ type Props = {
     scenarioId: number;
     rules: ScenarioRule[];
     isLoading: boolean;
-    onPreviewScenarioRule?: (rule: Partial<ScenarioRule>) => void;
+    onPreviewScenarioRule?: (rule?: Partial<ScenarioRule>) => void;
 };
 
 export const ScenarioRulesPanel: FC<Props> = ({
@@ -39,9 +39,10 @@ export const ScenarioRulesPanel: FC<Props> = ({
     );
 
     const handleCloseForm = useCallback(() => {
+        onPreviewScenarioRule?.(undefined);
         setEditingRule(undefined);
         setIsEditing(false);
-    }, [setEditingRule, setIsEditing]);
+    }, [onPreviewScenarioRule, setEditingRule, setIsEditing]);
 
     const handleFormChange = useCallback(
         (values: Partial<ScenarioRule>) => {

@@ -174,9 +174,13 @@ export const Map: FC<Props> = ({
                 />
                 {orderedOrgUnits?.map(orgUnit => {
                     const orgUnitMapMisc = getOrgUnitMapMisc(orgUnit.id);
-                    const weight = selectedOrgUnits.includes(orgUnit.id)
-                        ? mapTheme.selectedShapeWeight
-                        : mapTheme.shapeWeight;
+
+                    let weight = mapTheme.shapeWeight;
+                    let color = mapTheme.borderColor;
+                    if (selectedOrgUnits.includes(orgUnit.id)) {
+                        weight = mapTheme.selectedShapeWeight;
+                        color = mapTheme.selectedShapeColor;
+                    }
                     return (
                         <GeoJSON
                             key={
@@ -186,7 +190,7 @@ export const Map: FC<Props> = ({
                             }
                             data={orgUnit.geo_json as unknown as GeoJson}
                             style={{
-                                color: mapTheme.borderColor,
+                                color: color,
                                 weight: weight,
                                 fillColor:
                                     orgUnitMapMisc?.color ?? defaultColor,
