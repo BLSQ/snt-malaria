@@ -1,23 +1,16 @@
 import React, { FC } from 'react';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
 import { Button, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import ConfirmDialog from 'Iaso/components/dialogs/ConfirmDialogComponent';
-import { noOp } from 'Iaso/utils';
 import { IconBoxed } from '../../../../../components/IconBoxed';
 import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 
 type Props = {
-    onApplyRules?: () => void;
     onCreateRule: () => void;
 };
 
-export const ScenarioRulesHeader: FC<Props> = ({
-    onApplyRules = noOp,
-    onCreateRule,
-}) => {
+export const ScenarioRulesHeader: FC<Props> = ({ onCreateRule }) => {
     const { formatMessage } = useSafeIntl();
     const { canEditScenario } = usePlanningContext();
 
@@ -35,28 +28,11 @@ export const ScenarioRulesHeader: FC<Props> = ({
                     {formatMessage(MESSAGES.interventionTitle)}
                 </Typography>
             </Stack>
-            <Stack direction="row" sx={{ justifySelf: 'flex-end' }}>
-                {canEditScenario && (
-                    <>
-                        <Button onClick={() => onCreateRule()}>
-                            {formatMessage(MESSAGES.createScenarioRule)}
-                        </Button>
-
-                        <ConfirmDialog
-                            confirm={onApplyRules}
-                            question={formatMessage(MESSAGES.applyScenarioRule)}
-                            message={formatMessage(
-                                MESSAGES.applyScenarioRuleConfirmation,
-                            )}
-                            BtnIcon={ChevronRightIcon}
-                            btnMessage={''}
-                            tooltipMessage={formatMessage(
-                                MESSAGES.applyScenarioRule,
-                            )}
-                        />
-                    </>
-                )}
-            </Stack>
+            {canEditScenario && (
+                <Button onClick={() => onCreateRule()}>
+                    {formatMessage(MESSAGES.createScenarioRule)}
+                </Button>
+            )}
         </Stack>
     );
 };

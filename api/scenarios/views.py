@@ -170,12 +170,6 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
         return Response({"status": "Import successful", "id": scenario.id}, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["post"])
-    def refresh_assignments(self, request, pk=None):
-        scenario = self.get_object()
-        scenario.refresh_assignments(request.user)
-        return Response({"status": "Assignments refreshed"}, status=status.HTTP_200_OK)
-
     @action(methods=["PATCH"], detail=True)
     def reorder_rules(self, request, pk=None):
         scenario = self.get_object()
@@ -199,6 +193,6 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         # now that priorities have been updated,
         # we need to refresh the assignments of the scenario to reflect the new order of rules
         # only if transaction commit is successful
-        # scenario.refresh_assignments(user)
+        scenario.refresh_assignments(user)
 
         return Response({}, status=status.HTTP_200_OK)

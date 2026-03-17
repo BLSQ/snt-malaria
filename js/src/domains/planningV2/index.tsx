@@ -39,7 +39,6 @@ import { ScenarioRulesPanel } from './components/ScenarioRule/ScenarioRulesPanel
 import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
-import { useRefreshAssignments } from './hooks/useRefreshInterventionAssignment';
 import { useUserCanEditScenario } from './utils/permissions';
 
 type PlanningParams = {
@@ -73,7 +72,6 @@ export const PlanningV2: FC = () => {
         useGetInterventionAssignments(scenarioId);
     const { data: budget } = useGetLatestCalculatedBudget(scenario?.id);
 
-    const { mutate: refreshAssignments } = useRefreshAssignments(scenarioId);
     const { mutate: runBudget, isLoading: isCalculatingBudget } =
         useCalculateBudget();
 
@@ -112,9 +110,6 @@ export const PlanningV2: FC = () => {
             },
         });
     };
-    const onApplyRules = useCallback(() => {
-        refreshAssignments({});
-    }, [refreshAssignments]);
 
     const { data: budgetAssumptions } = useGetBudgetAssumptions(scenarioId);
     const selectedBudgetAssumptions: BudgetAssumptions | undefined = useMemo(
@@ -162,7 +157,6 @@ export const PlanningV2: FC = () => {
                 <Grid container spacing={1}>
                     <Grid item xs={12} md={4}>
                         <ScenarioRulesPanel
-                            onApplyRules={onApplyRules}
                             scenarioId={scenarioId}
                             rules={scenarioRules || []}
                             isLoading={isFetchingRules}

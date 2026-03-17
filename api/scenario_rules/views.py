@@ -60,7 +60,9 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         account = user.iaso_profile.account
         org_unit_matched = self._compute_matching_criteria(account, serializer.validated_data["matching_criteria"])
 
-        serializer.save(created_by=user, org_units_matched=org_unit_matched)
+        rule: ScenarioRule = serializer.save(created_by=user, org_units_matched=org_unit_matched)
+        scenario = rule.scenario
+        scenario.refresh_assignments(user)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -90,7 +92,9 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
                 account, serializer.validated_data["matching_criteria"]
             )
 
-        serializer.save(**extra_values)
+        rule: ScenarioRule = serializer.save(**extra_values)
+        scenario = rule.scenario
+        scenario.refresh_assignments(user)
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
@@ -107,6 +111,11 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         result_serializer = ScenarioRuleRetrieveSerializer(rule, context=self.get_serializer_context())
         result_headers = self.get_success_headers(result_serializer.data)
         return Response(result_serializer.data, status=status.HTTP_200_OK, headers=result_headers)
+
+    def perform_destroy(self, instance):
+        scenario = instance.scenario
+        super().perform_destroy(instance)
+        scenario.refresh_assignments(self.request.user)
 
     def _compute_matching_criteria(self, account, matching_criteria):
         metric_values = MetricValue.objects.filter(metric_type__account=account)

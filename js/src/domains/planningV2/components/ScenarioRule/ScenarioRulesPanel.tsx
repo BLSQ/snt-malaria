@@ -18,14 +18,12 @@ type Props = {
     scenarioId: number;
     rules: ScenarioRule[];
     isLoading: boolean;
-    onApplyRules?: () => void;
 };
 
 export const ScenarioRulesPanel: FC<Props> = ({
     scenarioId,
     rules,
     isLoading,
-    onApplyRules,
 }) => {
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
@@ -53,7 +51,6 @@ export const ScenarioRulesPanel: FC<Props> = ({
                 />
             ) : (
                 <ScenarioRulesContainer
-                    onApplyRules={onApplyRules}
                     onShowForm={handleShowForm}
                     scenarioId={scenarioId}
                     isLoading={isLoading}
