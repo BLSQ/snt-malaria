@@ -17,7 +17,7 @@ import {
 } from '../domains/planning/libs/map-utils';
 import { FitBounds } from './FitBounds';
 import { InvalidateOnResize } from './InvalidateOnResize';
-import { MapGeoJSON } from './MapGeoJson';
+import { MapGeoJSON } from './MapGeoJSON';
 import { MapTypeLayer } from './MapTyleLayer';
 import { ResetZoomControl } from './ResetZoomControl';
 
@@ -138,14 +138,14 @@ export const Map: FC<Props> = ({
     }, [orderedOrgUnits]);
 
     const [pristineOrgUnits, setPristineOrgUnits] = useState<OrgUnit[]>(
-        orgUnits || [],
+        orderedOrgUnits || [],
     );
     const [selectedOrgUnits, setSelectedOrgUnits] = useState<OrgUnit[]>([]);
 
     useEffect(() => {
         const selectedOrgUnits: OrgUnit[] = [];
         const unselectedOrgUnits: OrgUnit[] = [];
-        orgUnits.forEach(orgUnit => {
+        orderedOrgUnits.forEach(orgUnit => {
             if (selectedOrgUnitIds.includes(orgUnit.id)) {
                 selectedOrgUnits.push(orgUnit);
             } else {
@@ -155,7 +155,7 @@ export const Map: FC<Props> = ({
 
         setPristineOrgUnits(unselectedOrgUnits);
         setSelectedOrgUnits(selectedOrgUnits);
-    }, [orgUnits, selectedOrgUnitIds]);
+    }, [orderedOrgUnits, selectedOrgUnitIds]);
 
     return (
         <Box sx={border ? [styles.root, styles.bordered] : styles.root}>
