@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('snt_malaria', '0027_intervention_impact_ref'),
+        ("snt_malaria", "0027_intervention_impact_ref"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='impactproviderconfig',
-            name='provider_key',
-            field=models.CharField(choices=[('swisstph', 'SwissTPH'), ('swisstph_cmr', 'SwissTPH CMR'), ('idm', 'IDM')], help_text='The impact data provider to use for this account.', max_length=50),
+            model_name="impactproviderconfig",
+            name="provider_key",
+            field=models.CharField(
+                choices=[("swisstph", "SwissTPH"), ("swisstph_cmr", "SwissTPH CMR"), ("idm", "IDM")],
+                help_text="The impact data provider to use for this account.",
+                max_length=50,
+            ),
         ),
     ]
