@@ -3,7 +3,7 @@ from decimal import Decimal
 from rest_framework import status
 
 from iaso.utils.colors import DEFAULT_COLOR
-from plugins.snt_malaria.models import Scenario, ScenarioRule
+from plugins.snt_malaria.models import InterventionAssignment, Scenario, ScenarioRule
 from plugins.snt_malaria.tests.api.scenario_rules.common_base import ScenarioRulesTestBase
 
 
@@ -534,6 +534,9 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         with self.assertRaises(ScenarioRule.DoesNotExist):
             ScenarioRule.objects.get(id=new_rule.id)
 
+        assignments = InterventionAssignment.objects.filter(rule_id=new_rule.id)
+        self.assertEqual(assignments.count(), 0)  # all related assignments should be deleted
+
     def test_delete_scenario_rule_with_basic_perm_own_scenario(self):
         new_scenario = Scenario.objects.create(
             account=self.account,
@@ -560,6 +563,9 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         with self.assertRaises(ScenarioRule.DoesNotExist):
             ScenarioRule.objects.get(id=new_rule.id)
 
+        assignments = InterventionAssignment.objects.filter(rule_id=new_rule.id)
+        self.assertEqual(assignments.count(), 0)  # all related assignments should be deleted
+
     def test_delete_scenario_rule_with_basic_perm_other_scenario(self):
         self.client.force_authenticate(user=self.user_with_basic_perm)
         response = self.client.delete(f"{self.BASE_URL}{self.scenario_rule_1.id}/")
@@ -584,3 +590,113 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.delete(f"{self.BASE_URL}{self.other_scenario_rule.id}/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_preview_scenario_rule_unauthenticated(self):
+        payload = {
+            "matching_criteria": {"and": [{">=": [{"var": self.metric_type_population.id}, 13000000]}]},
+        }
+        response = self.client.post(f"{self.BASE_URL}preview/", payload)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_preview_scenario_rule_with_no_perm(self):
+        payload = {
+            "matching_criteria": {"and": [{">=": [{"var": self.metric_type_population.id}, 13000000]}]},
+        }
+        self.client.force_authenticate(user=self.user_no_perm)
+        response = self.client.post(f"{self.BASE_URL}preview/", payload)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_preview_scenario_rule_with_basic_perm(self):
+        payload = {
+            "matching_criteria": {"and": [{">=": [{"var": self.metric_type_population.id}, 13000000]}]},
+        }
+        self.client.force_authenticate(user=self.user_with_basic_perm)
+        response = self.client.post(f"{self.BASE_URL}preview/", payload)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.assertEqual(len(result), 2)
+        self.assertNotIn(self.district_1.id, result)
+        self.assertIn(self.district_2.id, result)
+        self.assertIn(self.district_3.id, result)
+
+    def test_preview_scenario_rule_with_full_perm_other_scenario(self):
+        payload = {
+            "matching_criteria": {"and": [{">=": [{"var": self.metric_type_population.id}, 13000000]}]},
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}preview/", payload)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.assertEqual(len(result), 2)
+        self.assertNotIn(self.district_1.id, result)
+        self.assertIn(self.district_2.id, result)
+        self.assertIn(self.district_3.id, result)
+
+    def test_preview_scenario_rule_withbasic_perm_other_scenario(self):
+        payload = {
+            "matching_criteria": {"and": [{">=": [{"var": self.metric_type_population.id}, 13000000]}]},
+        }
+        self.client.force_authenticate(user=self.user_with_basic_perm)
+        response = self.client.post(f"{self.BASE_URL}preview/", payload)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.assertEqual(len(result), 2)
+        self.assertNotIn(self.district_1.id, result)
+        self.assertIn(self.district_2.id, result)
+        self.assertIn(self.district_3.id, result)
+
+    def test_preview_scenario_rule_with_full_perm_own_scenario(self):
+        payload = {
+            "matching_criteria": {"and": [{">=": [{"var": self.metric_type_population.id}, 13000000]}]},
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}preview/", payload)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.assertEqual(len(result), 2)
+        self.assertNotIn(self.district_1.id, result)
+        self.assertIn(self.district_2.id, result)
+        self.assertIn(self.district_3.id, result)
+
+    def test_preview_scenario_rule_with_inclusion(self):
+        payload = {
+            "matching_criteria": {"and": [{">=": [{"var": self.metric_type_population.id}, 13000000]}]},
+            "org_units_included": [self.district_1.id],
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}preview/", payload)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.assertEqual(len(result), 3)
+        self.assertIn(self.district_1.id, result)
+        self.assertIn(self.district_2.id, result)
+        self.assertIn(self.district_3.id, result)
+
+    def test_preview_scenario_rule_with_exclusion(self):
+        payload = {
+            "matching_criteria": {"and": [{">=": [{"var": self.metric_type_population.id}, 13000000]}]},
+            "org_units_excluded": [self.district_3.id],  # district_1 meets the criteria but should be excluded anyway
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}preview/", payload)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.assertEqual(len(result), 1)
+        self.assertNotIn(self.district_1.id, result)
+        self.assertIn(self.district_2.id, result)
+        self.assertNotIn(self.district_3.id, result)
+
+    def test_preview_scenario_rule_with_exclusion_and_inclusion(self):
+        payload = {
+            "matching_criteria": {"and": [{">=": [{"var": self.metric_type_population.id}, 13000000]}]},
+            "org_units_excluded": [self.district_3.id],
+            "org_units_included": [self.district_1.id],
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}preview/", payload)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.assertEqual(len(result), 2)
+        self.assertIn(self.district_1.id, result)
+        self.assertIn(self.district_2.id, result)
+        self.assertNotIn(self.district_3.id, result)
