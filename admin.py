@@ -172,11 +172,25 @@ class ImpactProviderConfigAdmin(admin.ModelAdmin):
 
 @admin.register(ImpactOrgUnitMapping)
 class ImpactOrgUnitMappingAdmin(admin.ModelAdmin):
-    list_display = ("id", "org_unit", "reference")
+    list_display = ("id", "org_unit", "reference", "get_account")
     list_editable = ("reference",)
-    raw_id_fields = ("org_unit",)
+    autocomplete_fields = ("org_unit",)
     search_fields = ("org_unit__name", "reference")
+    list_filter = ("org_unit__version__data_source__projects__account",)
     ordering = ("org_unit__name",)
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("org_unit__version__data_source")
+            .prefetch_related("org_unit__version__data_source__projects__account")
+        )
+
+    @admin.display(description="Account")
+    def get_account(self, obj):
+        accounts = {project.account.name for project in obj.org_unit.version.data_source.projects.all()}
+        return ", ".join(sorted(accounts)) if accounts else "-"
 
 
 @admin.register(AccountSettings)
