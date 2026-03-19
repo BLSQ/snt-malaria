@@ -17,7 +17,7 @@ def _build_db_config(config: dict, secret: str) -> dict:
         "ENGINE": "django.db.backends.postgresql",
         "NAME": config.get("db_name", ""),
         "USER": config.get("db_username", ""),
-        "PASSWORD": secret,
+        "PASSWORD": secret or "",
         "HOST": config.get("db_host", ""),
         "PORT": config.get("db_port", 5432),
         "OPTIONS": {"options": "-c default_transaction_read_only=on"},
