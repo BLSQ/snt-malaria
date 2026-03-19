@@ -26,6 +26,7 @@ class Migration(migrations.Migration):
             field=iaso.utils.models.encrypted_text_field.EncryptedTextField(
                 blank=True,
                 null=True,
+                default="",
                 help_text="Provider secret (password, token, API key). For database providers this is the database password.",
             ),
         ),
