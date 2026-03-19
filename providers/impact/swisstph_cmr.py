@@ -12,9 +12,8 @@ from plugins.snt_malaria.providers.impact.base import (
     InterventionMappingError,
     OrgUnitMappingError,
 )
+from plugins.snt_malaria.providers.impact.db import ensure_db_connection
 
-
-SWISSTPH_CMR_DATABASE_ALIAS = "impact_swisstph_cmr"
 
 KNOWN_DEPLOYED_COLUMNS = {
     "deployed_int_iptsc",
@@ -34,7 +33,8 @@ KNOWN_DEPLOYED_COLUMNS = {
 class SwissTPHCMRImpactProvider(ImpactProvider):
     """Impact data provider for SwissTPH CMR database.
 
-    Connects to the SwissTPH CMR impact database via the database alias.
+    Connects to the SwissTPH CMR impact database via a dynamically registered
+    database alias derived from the provider configuration.
     Matches org units to SwissTPH admin_2 values using source_ref when
     available, falling back to org_unit.name otherwise.
     Uses boolean deployed_int_* columns to filter by intervention deployment status.
@@ -43,6 +43,10 @@ class SwissTPHCMRImpactProvider(ImpactProvider):
     averaged over seeds separately for middle (value), low (lower),
     and high (upper).
     """
+
+    def __init__(self, config_id: int, config: dict, secret: str):
+        super().__init__(config_id, config, secret)
+        self._db_alias = ensure_db_connection(config_id, config, secret)
 
     @property
     def supports_bulk(self) -> bool:
@@ -89,7 +93,7 @@ class SwissTPHCMRImpactProvider(ImpactProvider):
         # acceptable because identical intervention mixes should produce
         # identical results. See test_duplicate_rows_are_averaged_transparently.
         rows = (
-            SwissTPHImpactData.objects.using(SWISSTPH_CMR_DATABASE_ALIAS)
+            SwissTPHImpactData.objects.using(self._db_alias)
             .filter(**filters)
             .values("admin_2", "year")
             .annotate(
@@ -141,7 +145,7 @@ class SwissTPHCMRImpactProvider(ImpactProvider):
         )
 
     def get_year_range(self) -> tuple[Optional[int], Optional[int]]:
-        result = SwissTPHImpactData.objects.using(SWISSTPH_CMR_DATABASE_ALIAS).aggregate(
+        result = SwissTPHImpactData.objects.using(self._db_alias).aggregate(
             min_year=Min("year"),
             max_year=Max("year"),
         )
@@ -150,7 +154,7 @@ class SwissTPHCMRImpactProvider(ImpactProvider):
 
     def get_age_groups(self) -> list[str]:
         return list(
-            SwissTPHImpactData.objects.using(SWISSTPH_CMR_DATABASE_ALIAS)
+            SwissTPHImpactData.objects.using(self._db_alias)
             .values_list("age_group", flat=True)
             .distinct()
             .order_by("age_group")
@@ -167,7 +171,7 @@ class SwissTPHCMRImpactProvider(ImpactProvider):
         if not unmatched:
             return
         known = set(
-            SwissTPHImpactData.objects.using(SWISSTPH_CMR_DATABASE_ALIAS)
+            SwissTPHImpactData.objects.using(self._db_alias)
             .filter(admin_2__in=unmatched)
             .values_list("admin_2", flat=True)
             .distinct()

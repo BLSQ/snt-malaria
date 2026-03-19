@@ -11,6 +11,9 @@ from plugins.snt_malaria.providers.impact.swisstph import (
 )
 
 
+_PROVIDER_KWARGS = {"config_id": 0, "config": {}, "secret": ""}
+
+
 class MockIntervention:
     """Minimal mock for Intervention model instances used in SwissTPH tests."""
 
@@ -29,7 +32,8 @@ class MockOrgUnit:
 
 class SwissTPHMapInterventionTests(TestCase):
     def setUp(self):
-        self.provider = SwissTPHImpactProvider()
+        with patch("plugins.snt_malaria.providers.impact.swisstph.ensure_db_connection", return_value="default"):
+            self.provider = SwissTPHImpactProvider(**_PROVIDER_KWARGS)
 
     def test_valid_impact_ref_returns_matching_column(self):
         """Each known deployed_int_* column name should be accepted as a valid impact_ref."""
@@ -88,7 +92,8 @@ class SwissTPHMapInterventionTests(TestCase):
 
 class SwissTPHBuildQueryFiltersTests(TestCase):
     def setUp(self):
-        self.provider = SwissTPHImpactProvider()
+        with patch("plugins.snt_malaria.providers.impact.swisstph.ensure_db_connection", return_value="default"):
+            self.provider = SwissTPHImpactProvider(**_PROVIDER_KWARGS)
 
     def test_no_deployed_columns_all_false(self):
         filters = self.provider._build_query_filters(set())
@@ -143,7 +148,7 @@ class SwissTPHMatchImpactBulkTests(TestCase):
     confidence intervals, and edge cases.
 
     SwissTPHImpactData is unmanaged; we create the table in the default test
-    database and patch SWISSTPH_DATABASE_ALIAS to 'default'.
+    database and patch ensure_db_connection to return 'default'.
     """
 
     @classmethod
@@ -164,12 +169,11 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         super().tearDownClass()
 
     def setUp(self):
-        self._alias_patcher = patch(
-            "plugins.snt_malaria.providers.impact.swisstph.SWISSTPH_DATABASE_ALIAS",
-            "default",
-        )
-        self._alias_patcher.start()
-        self.provider = SwissTPHImpactProvider()
+        with patch(
+            "plugins.snt_malaria.providers.impact.swisstph.ensure_db_connection",
+            return_value="default",
+        ):
+            self.provider = SwissTPHImpactProvider(**_PROVIDER_KWARGS)
 
         deploy = _deploy_fields({"deployed_int_smc"})
         base = dict(admin_1="Bern", year=2025, age_group="allAges", n_host=50000.0, **deploy)
@@ -236,9 +240,6 @@ class SwissTPHMatchImpactBulkTests(TestCase):
             expected_direct_deaths=2.0,
             **base,
         )
-
-    def tearDown(self):
-        self._alias_patcher.stop()
 
     def test_source_ref_used_for_matching(self):
         """When source_ref is set, it is used to match against admin_1."""

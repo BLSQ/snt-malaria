@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 
 from plugins.snt_malaria.api.account_settings.serializers import AccountSettings
@@ -140,12 +141,29 @@ class BudgetAssumptionsAdmin(admin.ModelAdmin):
     ordering = ("id",)
 
 
+class ImpactProviderConfigForm(forms.ModelForm):
+    secret = forms.CharField(
+        widget=forms.PasswordInput(attrs={"autocomplete": "off"}, render_value=True),
+        required=False,
+        help_text=ImpactProviderConfig._meta.get_field("secret").help_text,
+    )
+
+    class Meta:
+        model = ImpactProviderConfig
+        fields = "__all__"
+
+
 @admin.register(ImpactProviderConfig)
 class ImpactProviderConfigAdmin(admin.ModelAdmin):
+    form = ImpactProviderConfigForm
     list_display = ("id", "account", "provider_key")
     list_filter = ("provider_key",)
     search_fields = ("account__name",)
     ordering = ("account__name",)
+    fieldsets = (
+        (None, {"fields": ("account", "provider_key")}),
+        ("Provider configuration", {"fields": ("config", "secret")}),
+    )
 
 
 @admin.register(AccountSettings)
