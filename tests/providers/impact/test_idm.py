@@ -1,3 +1,5 @@
+import types
+
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -28,12 +30,17 @@ class MockIntervention:
 
 
 class MockOrgUnit:
-    """Minimal mock for OrgUnit model instances."""
+    """Minimal mock for OrgUnit model instances.
 
-    def __init__(self, id, name, source_ref=None):
+    When impact_reference is provided, a mock impact_mapping relation is
+    attached so that ImpactProvider._impact_reference picks it up.
+    """
+
+    def __init__(self, id, name, impact_reference=None):
         self.id = id
         self.name = name
-        self.source_ref = source_ref
+        if impact_reference is not None:
+            self.impact_mapping = types.SimpleNamespace(reference=impact_reference)
 
 
 # ---------------------------------------------------------------------------
@@ -380,7 +387,7 @@ class IDMDatabaseIntegrationTests(TestCase):
     def test_match_with_single_intervention(self):
         """CM deployed: returns matching rows for two districts across years."""
         org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
-        org_unit_aboh = MockOrgUnit(id=103, name="Aboh Mbaise", source_ref="Aboh-Mbaise")
+        org_unit_aboh = MockOrgUnit(id=103, name="Aboh Mbaise", impact_reference="Aboh-Mbaise")
         case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
@@ -488,8 +495,8 @@ class IDMDatabaseIntegrationTests(TestCase):
         # 95.0 * 500_000 / 1000 = 47_500
         self.assertAlmostEqual(results[101][0].number_cases.value, 47_500.0, places=1)
 
-    def test_name_fallback_when_no_source_ref(self):
-        """Without source_ref, the org unit name is used directly to match admin_2_name."""
+    def test_name_fallback_when_no_mapping(self):
+        """Without an impact mapping, the org unit name is used directly to match admin_2_name."""
         org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
         case_management = MockIntervention(impact_ref="cm:cm")
 
@@ -503,7 +510,7 @@ class IDMDatabaseIntegrationTests(TestCase):
         self.assertEqual(len(results[101]), 2)
 
     def test_name_fallback_no_match_raises_org_unit_mapping_error(self):
-        """Without source_ref, a name that doesn't exist in admin_info raises OrgUnitMappingError."""
+        """Without an impact mapping, a name that doesn't exist in admin_info raises OrgUnitMappingError."""
         org_unit_aboh = MockOrgUnit(id=103, name="Aboh Mbaise")
         case_management = MockIntervention(impact_ref="cm:cm")
 
@@ -515,9 +522,9 @@ class IDMDatabaseIntegrationTests(TestCase):
             )
         self.assertIn("Aboh Mbaise", str(context.exception))
 
-    def test_source_ref_used_for_matching(self):
-        """When source_ref is set, it is used to match against admin_2_name."""
-        org_unit = MockOrgUnit(id=103, name="Wrong Name", source_ref="Aboh-Mbaise")
+    def test_impact_mapping_used_for_matching(self):
+        """When an impact mapping exists, its reference is used to match against admin_2_name."""
+        org_unit = MockOrgUnit(id=103, name="Wrong Name", impact_reference="Aboh-Mbaise")
         case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
@@ -530,9 +537,9 @@ class IDMDatabaseIntegrationTests(TestCase):
         self.assertEqual(len(results[103]), 1)
         self.assertEqual(results[103][0].year, 2025)
 
-    def test_source_ref_takes_precedence_over_name(self):
-        """source_ref should be used instead of the org unit name."""
-        org_unit = MockOrgUnit(id=103, name="Ikeja", source_ref="Kano Municipal")
+    def test_impact_mapping_takes_precedence_over_name(self):
+        """The impact mapping reference should be used instead of the org unit name."""
+        org_unit = MockOrgUnit(id=103, name="Ikeja", impact_reference="Kano Municipal")
         case_management = MockIntervention(impact_ref="cm:cm")
 
         results = self.provider.match_impact_bulk(
@@ -546,9 +553,9 @@ class IDMDatabaseIntegrationTests(TestCase):
         self.assertEqual(results[103][0].year, 2025)
         self.assertEqual(results[103][1].year, 2026)
 
-    def test_wrong_source_ref_raises_org_unit_mapping_error(self):
-        """A source_ref that doesn't exist in admin_info raises OrgUnitMappingError."""
-        org_unit = MockOrgUnit(id=103, name="Kano Municipal", source_ref="Nonexistent")
+    def test_wrong_mapping_raises_org_unit_mapping_error(self):
+        """A mapping reference that doesn't exist in admin_info raises OrgUnitMappingError."""
+        org_unit = MockOrgUnit(id=103, name="Kano Municipal", impact_reference="Nonexistent")
         case_management = MockIntervention(impact_ref="cm:cm")
 
         with self.assertRaises(OrgUnitMappingError) as context:

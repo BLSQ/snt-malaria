@@ -42,8 +42,8 @@ class IDMImpactProvider(ImpactProvider):
 
     Connects to the IDM impact database via a dynamically registered
     database alias derived from the provider configuration.
-    Matches org units to IDM admin_2_name values using source_ref when
-    available, falling back to org_unit.name otherwise.
+    Matches org units to IDM admin_2_name values using ImpactOrgUnitMapping
+    when available, falling back to org_unit.name otherwise.
     Uses intervention_package IDs to filter model_output rows by
     intervention deployment status.
     """
@@ -101,7 +101,7 @@ class IDMImpactProvider(ImpactProvider):
         for intervention in interventions:
             filter_keys.update(self._map_intervention(intervention))
 
-        reference_to_ou_id: dict[str, int] = {(ou.source_ref or ou.name): ou.id for ou in org_units}
+        reference_to_ou_id: dict[str, int] = {self._impact_reference(ou): ou.id for ou in org_units}
 
         filters = {
             "admin_info_ref__admin_2_name__in": list(reference_to_ou_id.keys()),

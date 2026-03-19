@@ -186,7 +186,7 @@ class ImpactService:
     def _get_org_unit_interventions(scenario: Scenario) -> dict[OrgUnit, list[Intervention]]:
         default_version = scenario.account.default_version
         assignments = (
-            InterventionAssignment.objects.select_related("org_unit", "intervention")
+            InterventionAssignment.objects.select_related("org_unit", "org_unit__impact_mapping", "intervention")
             .filter(scenario=scenario, org_unit__version=default_version)
             .order_by("org_unit__id")
         )

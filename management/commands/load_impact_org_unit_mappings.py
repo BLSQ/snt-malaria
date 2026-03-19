@@ -5,39 +5,43 @@ from collections import Counter
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from iaso.models import Account, OrgUnit  # noqa: I001
+from iaso.models import Account, OrgUnit
+from plugins.snt_malaria.models import ImpactOrgUnitMapping
 
 
 class Command(BaseCommand):
-    help = """Populate source_ref on org units for a given account using a JSON mapping file.
+    help = """Load impact org-unit mappings from a JSON mapping file.
+
+Creates or updates ImpactOrgUnitMapping rows that link Iaso org units
+to reference strings used by external impact databases.
 
 The file is an array of nodes, each with:
   - "name" (required): matches an Iaso org unit name
-  - "source_ref" (optional): the value to assign
+  - "reference" (optional): the impact-DB reference to assign
   - "children" (optional): nested array of the same structure, scoped to
     org units under this parent
 
 Hierarchy nodes scope their children to org units under that parent.
-Org units not matched by any node are skipped (source_ref left unchanged).
+Org units not matched by any node are skipped.
 
 Example mapping file:
 
   [
     {
       "name": "Aboh Mbaise",
-      "source_ref": "Aboh-Mbaise"
+      "reference": "Aboh-Mbaise"
     },
     {
       "name": "Kwara",
-      "source_ref": "Kwara-State",
+      "reference": "Kwara-State",
       "children": [
         {
           "name": "Irepodun",
-          "source_ref": "Irepodun1"
+          "reference": "Irepodun1"
         },
         {
           "name": "Ifelodun",
-          "source_ref": "Ifelodun1"
+          "reference": "Ifelodun1"
         }
       ]
     },
@@ -46,11 +50,11 @@ Example mapping file:
       "children": [
         {
           "name": "Irepodun",
-          "source_ref": "Irepodun2"
+          "reference": "Irepodun2"
         },
         {
           "name": "Ifelodun",
-          "source_ref": "Ifelodun2"
+          "reference": "Ifelodun2"
         }
       ]
     }
@@ -58,31 +62,31 @@ Example mapping file:
 
 Flat entries map by name directly. Hierarchy entries disambiguate
 same-name org units by scoping them under a parent. A node can have
-both source_ref (mapped itself) and children (scoping descendants).
+both "reference" (mapped itself) and "children" (scoping descendants).
 Nesting can be arbitrarily deep."""
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--account",
             type=str,
-            help="Name of the account whose org units should be updated.",
+            help="Name of the account whose org units should be mapped.",
         )
         parser.add_argument(
             "--account-id",
             type=int,
-            help="ID of the account whose org units should be updated.",
+            help="ID of the account whose org units should be mapped.",
         )
         parser.add_argument(
             "--mapping-file",
             type=str,
             required=True,
-            help="Path to a JSON mapping file (array of {name, source_ref?, children?} nodes).",
+            help="Path to a JSON mapping file (array of {name, reference?, children?} nodes).",
         )
         parser.add_argument(
             "--overwrite",
             action="store_true",
             default=False,
-            help="Overwrite source_ref even if it is already set.",
+            help="Overwrite existing mappings. Without this flag only unmapped org units are processed.",
         )
 
     def handle(self, *args, **options):
@@ -124,39 +128,45 @@ Nesting can be arbitrarily deep."""
 
         org_units = OrgUnit.objects.filter(version=default_version).select_related("parent__parent")
         if not overwrite:
-            org_units = org_units.filter(source_ref__isnull=True) | org_units.filter(source_ref="")
+            org_units = org_units.exclude(impact_mapping__isnull=False)
 
         org_unit_list = list(org_units)
         if not org_unit_list:
-            self.stdout.write(self.style.WARNING("No org units to update."))
+            self.stdout.write(self.style.WARNING("No org units to process."))
             return
 
         self._validate_uniqueness(org_unit_list, lookup)
 
+        created_count = 0
         updated_count = 0
         skipped_count = 0
         with transaction.atomic():
             for org_unit in org_unit_list:
                 ancestors = _build_ancestors(org_unit)
-                source_ref = _resolve(ancestors, lookup)
-                if source_ref is None:
+                reference = _resolve(ancestors, lookup)
+                if reference is None:
                     skipped_count += 1
                     continue
-                org_unit.source_ref = source_ref
-                org_unit.save(update_fields=["source_ref"])
-                updated_count += 1
+                _, created = ImpactOrgUnitMapping.objects.update_or_create(
+                    org_unit=org_unit,
+                    defaults={"reference": reference},
+                )
+                if created:
+                    created_count += 1
+                else:
+                    updated_count += 1
 
         self.stdout.write(
-            self.style.SUCCESS(f"Updated source_ref on {updated_count} org units for account '{identifier}'.")
+            self.style.SUCCESS(f"Account '{identifier}': created {created_count}, updated {updated_count} mapping(s).")
         )
         if skipped_count:
-            self.stdout.write(f"Skipped {skipped_count} org units with no mapping match.")
+            self.stdout.write(f"Skipped {skipped_count} org unit(s) with no mapping match.")
 
     def _validate_uniqueness(self, org_unit_list, lookup):
         """Validate that every mapping node resolves unambiguously.
 
         For each node in the lookup tree, count how many org units match at
-        that scope level. If a node with a source_ref matches 2+ org units,
+        that scope level. If a node with a reference matches 2+ org units,
         the mapping is ambiguous and a deeper hierarchy is needed.
         """
         name_counts_by_parent = Counter()
@@ -170,7 +180,7 @@ Nesting can be arbitrarily deep."""
 
     def _check_scope(self, scope_lookup, global_name_counts, name_counts_by_parent, scope_label):
         for name, node in scope_lookup.items():
-            if node["source_ref"] is not None:
+            if node["reference"] is not None:
                 if scope_label == "top-level":
                     count = global_name_counts.get(name, 0)
                 else:
@@ -190,7 +200,7 @@ def _build_lookup(nodes):
     for node in nodes:
         name = node["name"]
         lookup[name] = {
-            "source_ref": node.get("source_ref"),
+            "reference": node.get("reference"),
             "children": _build_lookup(node.get("children", [])),
         }
     return lookup
@@ -207,7 +217,7 @@ def _build_ancestors(org_unit):
 
 
 def _resolve(ancestors, top_lookup):
-    """Resolve source_ref by walking the ancestor path against the lookup tree.
+    """Resolve a reference by walking the ancestor path against the lookup tree.
 
     Tries matching from the farthest ancestor down to self. Returns None
     if no mapping matches.
@@ -224,7 +234,7 @@ def _resolve(ancestors, top_lookup):
 def _descend(node, ancestors, depth):
     """Recursively descend through the lookup tree matching ancestor names."""
     if depth < 0:
-        return node["source_ref"]
+        return node["reference"]
     name = ancestors[depth]
     if node["children"] and name in node["children"]:
         return _descend(node["children"][name], ancestors, depth - 1)

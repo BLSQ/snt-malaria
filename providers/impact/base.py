@@ -93,6 +93,17 @@ class ImpactProvider(ABC):
         self.config = config
         self.secret = secret
 
+    @staticmethod
+    def _impact_reference(org_unit: OrgUnit) -> str:
+        """Return the impact reference for an org_unit.
+
+        Uses the ImpactOrgUnitMapping when present (expects the relation to
+        be prefetched via select_related), otherwise falls back to
+        org_unit.name.
+        """
+        mapping = getattr(org_unit, "impact_mapping", None)
+        return mapping.reference if mapping else org_unit.name
+
     @abstractmethod
     def match_impact(
         self,

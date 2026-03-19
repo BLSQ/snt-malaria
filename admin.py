@@ -9,6 +9,7 @@ from .models import (
     Budget,
     BudgetAssumptions,
     BudgetSettings,
+    ImpactOrgUnitMapping,
     ImpactProviderConfig,
     Intervention,
     InterventionAssignment,
@@ -167,6 +168,15 @@ class ImpactProviderConfigAdmin(admin.ModelAdmin):
         (None, {"fields": ("account", "provider_key")}),
         ("Provider configuration", {"fields": ("config", "secret")}),
     )
+
+
+@admin.register(ImpactOrgUnitMapping)
+class ImpactOrgUnitMappingAdmin(admin.ModelAdmin):
+    list_display = ("id", "org_unit", "reference")
+    list_editable = ("reference",)
+    raw_id_fields = ("org_unit",)
+    search_fields = ("org_unit__name", "reference")
+    ordering = ("org_unit__name",)
 
 
 @admin.register(AccountSettings)
