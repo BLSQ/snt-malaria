@@ -24,7 +24,7 @@ def _build_db_config(config: dict, secret: str) -> dict:
         "ATOMIC_REQUESTS": False,
         "AUTOCOMMIT": True,
         "CONN_MAX_AGE": 0,
-        "CONN_HEALTH_CHECKS": False,
+        "CONN_HEALTH_CHECKS": True,
         "TIME_ZONE": None,
         "TEST": {
             "CHARSET": None,
