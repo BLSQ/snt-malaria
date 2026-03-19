@@ -62,7 +62,11 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user or not user.is_authenticated or not hasattr(user, "iaso_profile"):
             return Scenario.objects.none()
-        return Scenario.objects.filter(account=user.iaso_profile.account)
+        return (
+            Scenario.objects.select_related("created_by")
+            .prefetch_related("rules")
+            .filter(account=user.iaso_profile.account)
+        )
 
     def perform_create(self, serializer):
         serializer.validated_data["created_by"] = self.request.user
