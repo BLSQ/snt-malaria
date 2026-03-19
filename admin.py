@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib import admin
+from django.db import models
 
+from iaso.admin import IasoJSONEditorWidget
 from plugins.snt_malaria.api.account_settings.serializers import AccountSettings
 
 from .models import (
@@ -156,6 +158,7 @@ class ImpactProviderConfigForm(forms.ModelForm):
 @admin.register(ImpactProviderConfig)
 class ImpactProviderConfigAdmin(admin.ModelAdmin):
     form = ImpactProviderConfigForm
+    formfield_overrides = {models.JSONField: {"widget": IasoJSONEditorWidget}}
     list_display = ("id", "account", "provider_key")
     list_filter = ("provider_key",)
     search_fields = ("account__name",)
