@@ -1,6 +1,10 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Alert, AlertTitle } from '@mui/material';
-import { ConfirmCancelModal, useSafeIntl } from 'bluesquare-components';
+import {
+    ConfirmCancelModal,
+    IntlMessage,
+    useSafeIntl,
+} from 'bluesquare-components';
 import { FormikProvider } from 'formik';
 import { MetricType, MetricTypeFormModel } from '../../planning/types/metrics';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
@@ -19,8 +23,32 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
     closeDialog,
     metricType = undefined,
 }) => {
-    const [errorCode, setErrorCode] = useState<string | undefined>(undefined);
+    const [errorMessage, setErrorMessage] = useState<IntlMessage | undefined>();
+    const [errorHeadline, setErrorHeadline] = useState<
+        IntlMessage | undefined
+    >();
     const { formatMessage } = useSafeIntl();
+
+    const setErrorCode = useCallback(
+        (code?: string) => {
+            if (!code) {
+                setErrorMessage(undefined);
+                setErrorHeadline(undefined);
+                return;
+            }
+
+            setErrorMessage(
+                MESSAGES[code as keyof typeof MESSAGES] ??
+                    MESSAGES.genericError,
+            );
+            setErrorHeadline(
+                MESSAGES[`${code}Headline` as keyof typeof MESSAGES] ??
+                    MESSAGES.genericErrorHeadline,
+            );
+        },
+        [setErrorMessage, setErrorHeadline],
+    );
+
     const { mutate: submitMetricType } = useCreateOrUpdateMetricType({
         onError: (errorCode: string) => setErrorCode(`${errorCode}Error`),
         onSuccess: () => {
@@ -99,24 +127,10 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
             <FormikProvider value={formik}>
                 <MetricTypeForm metricType={metricTypeFormModel} />
             </FormikProvider>
-            {errorCode && (
+            {errorMessage && (
                 <Alert severity="error" variant="filled" sx={{ mt: 2 }}>
-                    <AlertTitle>
-                        {formatMessage(
-                            errorCode && errorCode + 'Headline' in MESSAGES
-                                ? MESSAGES[
-                                      errorCode.concat(
-                                          'Headline',
-                                      ) as keyof typeof MESSAGES
-                                  ]
-                                : MESSAGES.genericErrorHeadline,
-                        )}
-                    </AlertTitle>
-                    {formatMessage(
-                        errorCode && errorCode in MESSAGES
-                            ? MESSAGES[errorCode as keyof typeof MESSAGES]
-                            : MESSAGES.genericError,
-                    )}
+                    <AlertTitle>{formatMessage(errorHeadline)}</AlertTitle>
+                    {formatMessage(errorMessage)}
                 </Alert>
             )}
         </ConfirmCancelModal>
