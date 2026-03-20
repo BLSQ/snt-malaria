@@ -70,7 +70,16 @@ export type ScaleDomainRange = {
 // TODO: Simplified type, could be more complex I suppose
 export type MetricsFilters = { and: Condition[] } | { or: Condition[] };
 
-type Condition = { '>=': [MetricTypeRef | number, number] };
+export type Condition =
+    | {
+          '>=': [MetricTypeRef | number, number];
+      }
+    | { '<=': [MetricTypeRef | number, number] }
+    | { '==': [MetricTypeRef | number, number | string | boolean] }
+    | { '!=': [MetricTypeRef | number, number | string | boolean] }
+    | { '>': [MetricTypeRef | number, number] }
+    | { '<': [MetricTypeRef | number, number] };
+
 // TODO: For now only greater or eq than, but later maybe:
 //   | { "<=": [MetricTypeRef | number, number] }
 //   | { "==": [MetricTypeRef | number, number | string | boolean] }

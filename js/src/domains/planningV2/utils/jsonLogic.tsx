@@ -1,15 +1,19 @@
 import { JsonLogicTree } from '@react-awesome-query-builder/mui';
+import { Condition, MetricsFilters } from '../../planning/types/metrics';
 import { MetricTypeCriterion } from '../types/scenarioRule';
 
 export const matchingCriteriaToJsonLogic = (
     criteria: MetricTypeCriterion[],
-): { and: any[] } => {
-    const andRules = criteria.map(criterion => ({
-        [criterion.operator]: [
-            { var: criterion.metric_type },
-            criterion.string_value || criterion.value,
-        ],
-    }));
+): MetricsFilters => {
+    const andRules = criteria.map(
+        criterion =>
+            ({
+                [criterion.operator]: [
+                    { var: criterion.metric_type },
+                    criterion.string_value || criterion.value,
+                ],
+            }) as Condition,
+    );
 
     return { and: andRules };
 };

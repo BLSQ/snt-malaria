@@ -27,6 +27,7 @@ type Props = {
         value: any,
     ) => void;
     metricTypeCategories: MetricTypeCategory[];
+    onBlur: (field: string) => void;
 };
 
 const LIST_FIELD_KEY = 'matching_criteria';
@@ -39,6 +40,7 @@ export const MatchingCriteriaForm: FC<Props> = ({
     touched,
     onUpdateField,
     metricTypeCategories,
+    onBlur,
 }) => {
     const metricTypes = useMemo(
         () => metricTypeCategories.flatMap(mtc => mtc.items),
@@ -82,6 +84,9 @@ export const MatchingCriteriaForm: FC<Props> = ({
                         }
                         onRemove={() => onRemove(LIST_FIELD_KEY, index)}
                         getErrors={field => getChildError(field, index)}
+                        onBlur={(field: string) =>
+                            onBlur(`${LIST_FIELD_KEY}[${index}].${field}`)
+                        }
                     />
                 )),
             )}

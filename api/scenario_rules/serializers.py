@@ -94,6 +94,16 @@ class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
         ]
 
 
+class ScenarioRulePreviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScenarioRule
+        fields = [
+            "matching_criteria",
+            "org_units_excluded",
+            "org_units_included",
+        ]
+
+
 class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
     """
     Common base for both create and update serializers
