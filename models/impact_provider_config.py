@@ -9,6 +9,7 @@ class ImpactProviderConfig(models.Model):
 
     class ProviderKey(models.TextChoices):
         SWISSTPH = "swisstph", "SwissTPH"
+        SWISSTPH_CMR = "swisstph_cmr", "SwissTPH CMR"
         IDM = "idm", "IDM"
 
     account = models.OneToOneField(

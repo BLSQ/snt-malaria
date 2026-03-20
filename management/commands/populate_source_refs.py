@@ -18,7 +18,7 @@ The file is an array of nodes, each with:
     org units under this parent
 
 Hierarchy nodes scope their children to org units under that parent.
-Org units not matched by any node keep their own name as source_ref.
+Org units not matched by any node are skipped (source_ref left unchanged).
 
 Example mapping file:
 
@@ -134,10 +134,14 @@ Nesting can be arbitrarily deep."""
         self._validate_uniqueness(org_unit_list, lookup)
 
         updated_count = 0
+        skipped_count = 0
         with transaction.atomic():
             for org_unit in org_unit_list:
                 ancestors = _build_ancestors(org_unit)
                 source_ref = _resolve(ancestors, lookup)
+                if source_ref is None:
+                    skipped_count += 1
+                    continue
                 org_unit.source_ref = source_ref
                 org_unit.save(update_fields=["source_ref"])
                 updated_count += 1
@@ -145,6 +149,8 @@ Nesting can be arbitrarily deep."""
         self.stdout.write(
             self.style.SUCCESS(f"Updated source_ref on {updated_count} org units for account '{identifier}'.")
         )
+        if skipped_count:
+            self.stdout.write(f"Skipped {skipped_count} org units with no mapping match.")
 
     def _validate_uniqueness(self, org_unit_list, lookup):
         """Validate that every mapping node resolves unambiguously.
@@ -203,8 +209,8 @@ def _build_ancestors(org_unit):
 def _resolve(ancestors, top_lookup):
     """Resolve source_ref by walking the ancestor path against the lookup tree.
 
-    Tries matching from the farthest ancestor down to self. Falls back to
-    the org unit's own name if no mapping matches.
+    Tries matching from the farthest ancestor down to self. Returns None
+    if no mapping matches.
     """
     for depth in range(len(ancestors) - 1, -1, -1):
         name = ancestors[depth]
@@ -212,7 +218,7 @@ def _resolve(ancestors, top_lookup):
             ref = _descend(top_lookup[name], ancestors, depth - 1)
             if ref is not None:
                 return ref
-    return ancestors[0]
+    return None
 
 
 def _descend(node, ancestors, depth):

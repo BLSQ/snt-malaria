@@ -22,6 +22,11 @@ def get_provider_for_account(account) -> Optional[ImpactProvider]:
 
         return SwissTPHImpactProvider()
 
+    if config.provider_key == ImpactProviderConfig.ProviderKey.SWISSTPH_CMR:
+        from plugins.snt_malaria.providers.impact.swisstph_cmr import SwissTPHCMRImpactProvider
+
+        return SwissTPHCMRImpactProvider()
+
     if config.provider_key == ImpactProviderConfig.ProviderKey.IDM:
         from plugins.snt_malaria.providers.impact.idm import IDMImpactProvider
 

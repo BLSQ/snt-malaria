@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -85,7 +85,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
     # Custom action to duplicate a scenario
     @transaction.atomic
-    @swagger_auto_schema(request_body=ScenarioWriteSerializer(many=False))
+    @extend_schema(request=ScenarioWriteSerializer(many=False))
     @action(detail=True, methods=["post"], url_path="duplicate")
     def duplicate(self, request, pk=None):
         serializer = self.get_serializer(data=request.data)

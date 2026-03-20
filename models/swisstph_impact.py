@@ -6,10 +6,15 @@ class SwissTPHImpactData(models.Model):
         app_label = "snt_malaria"
         managed = False
         db_table = "impact_data"
+        indexes = [
+            models.Index(fields=["admin_1", "age_group", "year"], name="idx_impact_admin1_age_year"),
+            models.Index(fields=["admin_2", "age_group", "year"], name="idx_impact_admin2_age_year"),
+        ]
 
-    impact_index = models.BigIntegerField(primary_key=True, db_column="index")
+    impact_index = models.BigAutoField(primary_key=True, db_column="index")
 
     admin_1 = models.TextField(null=True, blank=True)
+    admin_2 = models.TextField(null=True, blank=True)
     iso_code = models.TextField(null=True, blank=True)
     country = models.TextField(null=True, blank=True)
     scenario_name = models.TextField(null=True, blank=True)
