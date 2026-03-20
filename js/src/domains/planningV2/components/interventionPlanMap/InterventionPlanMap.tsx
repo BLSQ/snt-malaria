@@ -1,11 +1,19 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import { Box, Chip, Stack, Theme, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
+import { LayerSelect } from '../../../../components/LayerSelect';
 import { Map as SNTMap } from '../../../../components/Map';
 import { LegendTypes } from '../../../../constants/legend';
 import { mapTheme } from '../../../../constants/map-theme';
+import { MESSAGES } from '../../../messages';
+import { useGetMetricValues } from '../../../planning/hooks/useGetMetrics';
 import { blendColors } from '../../../planning/libs/color-utils';
+import {
+    getMapStyleForOrgUnit,
+    useGetOrgUnitMetric,
+} from '../../../planning/libs/map-utils';
 import { Intervention } from '../../../planning/types/interventions';
+import { MetricType } from '../../../planning/types/metrics';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { ScenarioRule } from '../../types/scenarioRule';
 
@@ -32,6 +40,13 @@ const styles: SxStyles = {
             backgroundColor: 'white',
         },
     },
+    actionBox: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        padding: 1,
+        zIndex: 500,
+    },
 };
 
 type Props = {
@@ -39,7 +54,22 @@ type Props = {
 };
 
 export const InterventionsPlanMap: FC<Props> = ({ selectedOrgUnitIds }) => {
-    const { orgUnits, interventionAssignments } = usePlanningContext();
+    const [selectedMetricLayer, setSelectedMetricLayer] = React.useState<
+        MetricType | undefined
+    >(undefined);
+
+    const {
+        orgUnits,
+        interventionAssignments,
+        metricTypeCategories,
+        isEditing,
+    } = usePlanningContext();
+
+    const { data: metricValues } = useGetMetricValues({
+        metricTypeId: selectedMetricLayer?.id || null,
+    });
+
+    const getSelectedMetric = useGetOrgUnitMetric(metricValues);
 
     const getColorForRules = useCallback((rules: ScenarioRule[]) => {
         if (rules.length === 0) {
@@ -116,7 +146,22 @@ export const InterventionsPlanMap: FC<Props> = ({ selectedOrgUnitIds }) => {
         [orgUnitPlans, rulesColors],
     );
 
+    const getOrgUnitMapStyle = useCallback(
+        (orgUnitId: number) => {
+            if (!selectedMetricLayer || !isEditing) {
+                return getOrgUnitMapMisc(orgUnitId);
+            }
+            const metric = getSelectedMetric(orgUnitId);
+            return getMapStyleForOrgUnit(selectedMetricLayer, metric);
+        },
+        [selectedMetricLayer, getSelectedMetric, getOrgUnitMapMisc, isEditing],
+    );
+
     const legendConfig = useMemo(() => {
+        if (isEditing && selectedMetricLayer) {
+            return selectedMetricLayer;
+        }
+
         const legend_config = { domain: [] as string[], range: [] as string[] };
         rulesColors.forEach(({ label, color }) => {
             legend_config.domain.push(label);
@@ -126,7 +171,7 @@ export const InterventionsPlanMap: FC<Props> = ({ selectedOrgUnitIds }) => {
             ...defaultLegendConfig,
             legend_config: legend_config,
         };
-    }, [rulesColors]);
+    }, [rulesColors, isEditing, selectedMetricLayer]);
 
     return (
         <Box height="100%" width="100%" sx={styles.mainBox}>
@@ -134,7 +179,7 @@ export const InterventionsPlanMap: FC<Props> = ({ selectedOrgUnitIds }) => {
                 <SNTMap
                     id="intervention_plan_map"
                     orgUnits={orgUnits}
-                    getOrgUnitMapMisc={getOrgUnitMapMisc}
+                    getOrgUnitMapMisc={getOrgUnitMapStyle}
                     selectedOrgUnitIds={selectedOrgUnitIds}
                     legendConfig={legendConfig}
                     RenderTooltip={({ orgUnit }) => (
@@ -143,7 +188,7 @@ export const InterventionsPlanMap: FC<Props> = ({ selectedOrgUnitIds }) => {
                                 {orgUnit.short_name}
                             </Typography>
                             <Typography variant="caption">
-                                {getOrgUnitMapMisc(orgUnit.id)?.label}
+                                {getOrgUnitMapStyle(orgUnit.id)?.label}
                             </Typography>
                             <Stack direction="row" spacing={0.5} mt={1}>
                                 {orgUnitPlans
@@ -163,6 +208,16 @@ export const InterventionsPlanMap: FC<Props> = ({ selectedOrgUnitIds }) => {
                         </Stack>
                     )}
                 />
+            )}
+            {metricTypeCategories && isEditing && (
+                <Box sx={styles.actionBox}>
+                    <LayerSelect
+                        placeholder={MESSAGES.noLayer}
+                        initialSelection={selectedMetricLayer}
+                        metricCategories={metricTypeCategories}
+                        onLayerChange={setSelectedMetricLayer}
+                    />
+                </Box>
             )}
         </Box>
     );

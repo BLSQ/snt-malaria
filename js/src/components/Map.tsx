@@ -81,7 +81,7 @@ type Props = {
     id: string;
     orgUnits: OrgUnit[];
     getOrgUnitMapMisc: (orgUnitId: number) => {
-        label: string | undefined;
+        label: string | number | undefined;
         color: string | undefined;
     };
     RenderTooltip?: (props: { orgUnit: OrgUnit }) => React.ReactNode;

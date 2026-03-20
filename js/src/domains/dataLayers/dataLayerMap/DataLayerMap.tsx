@@ -2,8 +2,9 @@ import React, { FC, useCallback } from 'react';
 
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { Map as SNTMap } from '../../../components/Map';
+import { mapTheme } from '../../../constants/map-theme';
 import {
-    getColorForShape,
+    getMapStyleForOrgUnit,
     useGetOrgUnitMetric,
 } from '../../planning/libs/map-utils';
 import { MetricType, MetricValue } from '../../planning/types/metrics';
@@ -14,6 +15,11 @@ type Props = {
     orgUnits: OrgUnit[];
 };
 
+const defaultOrgUnitStyle = {
+    label: '',
+    color: mapTheme.shapeColor,
+};
+
 export const DataLayerMap: FC<Props> = ({
     metricType,
     metricValues,
@@ -21,32 +27,16 @@ export const DataLayerMap: FC<Props> = ({
 }) => {
     const getSelectedMetric = useGetOrgUnitMetric(metricValues);
 
-    // Format metric value for an org unit
-    const formatMetricValue = useCallback(
+    const getOrgUnitMapMisc = useCallback(
         (orgUnitId: number) => {
-            const selectedMetric = getSelectedMetric(orgUnitId);
-            if (selectedMetric === undefined || selectedMetric === null)
-                return 'N/A';
-
-            if (typeof selectedMetric.label === 'number') {
-                return Math.round(selectedMetric.label * 100) / 100;
+            if (!metricType) {
+                return defaultOrgUnitStyle;
             }
-            return selectedMetric.label;
-        },
-        [getSelectedMetric],
-    );
-
-    const getMapStyleForOrgUnit = useCallback(
-        (orgUnitId: number) => {
             const selectedMetric = getSelectedMetric(orgUnitId);
-            const color = getColorForShape(
-                selectedMetric?.value,
-                metricType?.legend_type,
-                metricType?.legend_config,
-            );
-            return { color, label: formatMetricValue(orgUnitId) };
+
+            return getMapStyleForOrgUnit(metricType, selectedMetric);
         },
-        [getSelectedMetric, metricType, formatMetricValue],
+        [getSelectedMetric, metricType],
     );
 
     return (
@@ -54,7 +44,7 @@ export const DataLayerMap: FC<Props> = ({
             id={'data-layer-map'}
             orgUnits={orgUnits}
             legendConfig={metricType}
-            getOrgUnitMapMisc={getMapStyleForOrgUnit}
+            getOrgUnitMapMisc={getOrgUnitMapMisc}
         />
     );
 };

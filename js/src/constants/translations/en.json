@@ -170,6 +170,7 @@
     "iaso.snt_malaria.label.displayLevel": "Display level",
     "iaso.snt_malaria.label.duplicate": "Duplicate",
     "iaso.snt_malaria.label.hideLegend": "Hide Legend",
+    "iaso.snt_malaria.label.noLayer": "No layer",
     "iaso.snt_malaria.scenarioRule.create": "Create rule",
     "iaso.snt_malaria.scenarioRule.edit": "Edit rule",
     "iaso.snt_malaria.scenarioRule.delete": "Delete rule",

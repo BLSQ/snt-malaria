@@ -1,6 +1,7 @@
 import React, { FC, useCallback, useState } from 'react';
 import { Card } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
+import { usePlanningContext } from '../../contexts/PlanningContext';
 import { ScenarioRule } from '../../types/scenarioRule';
 import { ScenarioRuleFormWrapper } from './scenarioRuleForm/ScenarioRuleFormWrapper';
 import { ScenarioRulesContainer } from './scenarioRuleList/ScenarioRulesContainer';
@@ -27,25 +28,26 @@ export const ScenarioRulesPanel: FC<Props> = ({
     isLoading,
     onPreviewScenarioRule,
 }) => {
-    const [isEditing, setIsEditing] = useState<boolean>(false);
     const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
+
+    const { isEditing, toggleIsEditing } = usePlanningContext();
 
     const handleShowForm = useCallback(
         (rule?: ScenarioRule) => {
             setEditingRule(rule);
-            setIsEditing(true);
+            toggleIsEditing();
             if (rule) {
                 onPreviewScenarioRule?.(rule);
             }
         },
-        [setEditingRule, setIsEditing, onPreviewScenarioRule],
+        [setEditingRule, toggleIsEditing, onPreviewScenarioRule],
     );
 
     const handleCloseForm = useCallback(() => {
         onPreviewScenarioRule?.(undefined);
         setEditingRule(undefined);
-        setIsEditing(false);
-    }, [onPreviewScenarioRule, setEditingRule, setIsEditing]);
+        toggleIsEditing();
+    }, [onPreviewScenarioRule, setEditingRule, toggleIsEditing]);
 
     const handleFormChange = useCallback(
         (values: Partial<ScenarioRule>) => {
