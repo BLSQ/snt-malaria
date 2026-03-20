@@ -14,6 +14,7 @@ class SwissTPHImpactData(models.Model):
     country = models.TextField(null=True, blank=True)
     scenario_name = models.TextField(null=True, blank=True)
     seed = models.BigIntegerField(null=True, blank=True)
+    eir_ci = models.TextField(null=True, blank=True, db_column="EIR_CI")
     eir = models.FloatField(null=True, blank=True, db_column="EIR")
     year = models.BigIntegerField(null=True, blank=True)
     age_group = models.TextField(null=True, blank=True)
@@ -35,6 +36,8 @@ class SwissTPHImpactData(models.Model):
     deployed_int_ig2 = models.BooleanField(null=True, blank=True, db_column="deployed_int_IG2")
     deployed_int_itn = models.BooleanField(null=True, blank=True, db_column="deployed_int_ITN")
     deployed_int_iccm = models.BooleanField(null=True, blank=True, db_column="deployed_int_iCCM")
+    deployed_int_lsm = models.BooleanField(null=True, blank=True, db_column="deployed_int_LSM")
+    deployed_int_cm = models.BooleanField(null=True, blank=True, db_column="deployed_int_CM")
 
     plan = models.TextField(null=True, blank=True)
     risk_stratum = models.TextField(null=True, blank=True)
@@ -48,6 +51,8 @@ class SwissTPHImpactData(models.Model):
     coverage_int_ig2 = models.FloatField(null=True, blank=True, db_column="coverage_int_IG2")
     coverage_int_itn = models.FloatField(null=True, blank=True, db_column="coverage_int_ITN")
     coverage_int_iccm = models.FloatField(null=True, blank=True, db_column="coverage_int_iCCM")
+    coverage_int_cm = models.FloatField(null=True, blank=True, db_column="coverage_int_CM")
+    coverage_int_lsm = models.FloatField(null=True, blank=True, db_column="coverage_int_LSM")
 
     cum_n_uncomp = models.FloatField(null=True, blank=True, db_column="cum_nUncomp")
     cum_t_uncomp = models.FloatField(null=True, blank=True, db_column="cum_tUncomp")
