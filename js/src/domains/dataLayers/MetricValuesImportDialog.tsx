@@ -8,8 +8,8 @@ import {
     useSafeIntl,
 } from 'bluesquare-components';
 import { noOp } from 'Iaso/utils';
-import { useImportMetricValues } from '../../hooks/useImportMetricValues';
-import { MESSAGES } from '../../messages';
+import { useImportMetricValues } from './hooks/useImportMetricValues';
+import { MESSAGES } from './messages';
 
 type ImportActionProps = {
     onClick: () => void;
@@ -36,26 +36,17 @@ const ImportAction: FunctionComponent<ImportActionProps> = ({
 type Props = {
     isOpen: boolean;
     closeDialog: () => void;
-    onClose: () => void;
 };
-const ImportMetricValuesModal: FC<Props> = ({
-    isOpen,
-    closeDialog,
-    onClose,
-}) => {
+const ImportMetricValuesModal: FC<Props> = ({ isOpen, closeDialog }) => {
     const { formatMessage } = useSafeIntl();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const handleSuccessClose = useCallback(() => {
-        closeDialog();
-        onClose();
-    }, [closeDialog, onClose]);
     const { mutate: importMetricValues } = useImportMetricValues();
 
     const handleSubmit = useCallback(() => {
         if (selectedFile) {
-            importMetricValues(selectedFile, { onSuccess: handleSuccessClose });
+            importMetricValues(selectedFile, { onSuccess: closeDialog });
         }
-    }, [selectedFile, importMetricValues, handleSuccessClose]);
+    }, [selectedFile, importMetricValues, closeDialog]);
 
     const handleOnChange = useCallback(
         (file: File[]) => setSelectedFile(file[0]),
@@ -69,9 +60,9 @@ const ImportMetricValuesModal: FC<Props> = ({
             open={isOpen}
             closeDialog={closeDialog}
             onConfirm={handleSubmit}
-            onClose={onClose || noOp}
+            onClose={closeDialog || noOp}
             allowConfirm={selectedFile !== null}
-            onCancel={onClose || noOp}
+            onCancel={closeDialog || noOp}
             cancelMessage={MESSAGES.cancel}
             confirmMessage={MESSAGES.importCSV}
             titleMessage={MESSAGES.importCSV}

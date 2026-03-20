@@ -1,28 +1,27 @@
 import React, { FC, useCallback } from 'react';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import {
     Box,
     ClickAwayListener,
     ListItem,
-    ListItemIcon,
     MenuItem,
     MenuList,
     Popover,
     SxProps,
-    Tooltip,
     Typography,
 } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
-import { SxStyles } from 'Iaso/types/general';
-import { MetricType } from '../../../planning/types/metrics';
-import { MESSAGES } from '../../messages';
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
+import { SxStyles } from 'Iaso/types/general';
 import * as CorePermission from 'Iaso/utils/permissions';
+import { MetricType } from '../../planning/types/metrics';
+import { MESSAGES } from '../messages';
 
-type MetricTypeLineProps = {
+type Props = {
     metricType: MetricType;
+    selected?: boolean;
+    onClick: () => void;
     onEdit: (metricType: MetricType) => void;
     onDelete: (metricType: number) => void;
     readonly?: boolean;
@@ -31,12 +30,26 @@ type MetricTypeLineProps = {
 const styles: SxStyles = {
     metricType: {
         borderRadius: 2,
-        '&:nth-child(odd of .MuiListItem-root)': {
-            backgroundColor: 'action.hover',
+        border: '1px solid transparent',
+        cursor: 'pointer',
+        ' .MuiListItemSecondaryAction-root': {
+            visibility: 'hidden',
+        },
+        '&:hover': {
+            bgcolor: 'action.hover',
+            ' .MuiListItemSecondaryAction-root': {
+                visibility: 'visible',
+            },
         },
     },
     metricTypeReadOnly: {
         pr: '48px',
+    },
+    metricTypeSelected: {
+        bgcolor: 'primary.light',
+        borderColor: 'primary.main',
+        borderWidth: 1,
+        borderStyle: 'solid',
     },
     metricTypeIcon: { minWidth: 20, mr: 2 },
     metricTypeDetails: {
@@ -47,8 +60,10 @@ const styles: SxStyles = {
     },
 };
 
-export const MetricTypeLine: FC<MetricTypeLineProps> = ({
+export const DataLayerLine: FC<Props> = ({
     metricType,
+    selected = false,
+    onClick,
     onEdit,
     onDelete,
     readonly = false,
@@ -67,12 +82,15 @@ export const MetricTypeLine: FC<MetricTypeLineProps> = ({
                 {
                     ...styles.metricType,
                     ...(readonly ? styles.metricTypeReadOnly : {}),
+                    ...(selected ? styles.metricTypeSelected : {}),
                 } as SxProps
             }
             ref={anchorRef}
             secondaryAction={
                 readonly ? null : (
-                    <DisplayIfUserHasPerm permissions={[CorePermission.METRIC_TYPES]}>
+                    <DisplayIfUserHasPerm
+                        permissions={[CorePermission.METRIC_TYPES]}
+                    >
                         <IconButton
                             aria-label="more-info"
                             overrideIcon={MoreHorizIcon}
@@ -82,15 +100,10 @@ export const MetricTypeLine: FC<MetricTypeLineProps> = ({
                     </DisplayIfUserHasPerm>
                 )
             }
+            onClick={onClick}
         >
-            <ListItemIcon sx={styles.metricTypeIcon}>
-                <Tooltip title={metricType.description || 'N/A'}>
-                    <InfoOutlinedIcon />
-                </Tooltip>
-            </ListItemIcon>
             <Box sx={styles.metricTypeDetails}>
                 <Typography variant="body2">{metricType.name}</Typography>
-                <Typography variant="body2">{metricType.origin}</Typography>
             </Box>
             <Popover
                 id="metric_type_line_actions"

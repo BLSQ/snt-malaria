@@ -4,11 +4,19 @@ import { RoutePath } from 'Iaso/constants/routes';
 import { SHOW_DEV_FEATURES } from 'Iaso/utils/featureFlags';
 
 import { CompareOptimize } from '../domains/compareOptimize';
+import { DataLayers } from '../domains/dataLayers';
 import { PlanningV2 } from '../domains/planningV2';
 import { Scenarios } from '../domains/scenarios';
 import { Settings } from '../domains/settings';
 import { SETTINGS_READ } from './permissions';
 import { baseUrls } from './urls';
+
+export const dataLayersPath: RoutePath = {
+    baseUrl: baseUrls.dataLayers,
+    routerUrl: `${baseUrls.dataLayers}/*`,
+    element: <DataLayers />,
+    permissions: [],
+};
 
 export const planningPath: RoutePath = {
     baseUrl: baseUrls.planning,
@@ -40,6 +48,7 @@ export const settingsPath: RoutePath = {
 };
 
 export const routes: RoutePath[] = [
+    dataLayersPath,
     planningPath,
     scenariosPath,
     compareOptimizePath,

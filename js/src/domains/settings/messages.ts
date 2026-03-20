@@ -90,34 +90,14 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.errors.scaleItemsUnique',
         defaultMessage: 'Scale items must have unique values',
     },
-    uniqueCodeErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeErrorHeadline',
-        defaultMessage: 'Layer with this code already exists.',
-    },
-    uniqueCodeError: {
-        id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeError',
-        defaultMessage:
-            'A Layer with this code already exists. Please choose a different code.',
-    },
-    codeImmutableErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.dataLayers.errors.codeImmutableHeadline',
-        defaultMessage: 'Layer code is immutable.',
-    },
+
     codeImmutableError: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.codeImmutable',
         defaultMessage: 'The code of a Layer cannot be changed.',
     },
-    genericErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.dataLayers.errors.genericErrorHeadline',
-        defaultMessage: 'An unexpected error occurred.',
-    },
     genericError: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.genericError',
         defaultMessage: 'Please try again.',
-    },
-    downloadCSVTemplate: {
-        id: 'iaso.snt_malaria.settings.dataLayers.downloadCSVTemplate',
-        defaultMessage: 'Download CSV Template',
     },
     importCSV: {
         id: 'iaso.snt_malaria.settings.dataLayers.importCSV',
