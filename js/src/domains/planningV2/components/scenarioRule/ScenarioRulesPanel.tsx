@@ -2,8 +2,8 @@ import React, { FC, useCallback, useState } from 'react';
 import { Card } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { ScenarioRule } from '../../types/scenarioRule';
-import { ScenarioRuleFormWrapper } from './ScenarioRuleForm/ScenarioRuleFormWrapper';
-import { ScenarioRulesContainer } from './ScenarioRuleList/ScenarioRulesContainer';
+import { ScenarioRuleFormWrapper } from './scenarioRuleForm/ScenarioRuleFormWrapper';
+import { ScenarioRulesContainer } from './scenarioRuleList/ScenarioRulesContainer';
 
 const styles: SxStyles = {
     card: {
