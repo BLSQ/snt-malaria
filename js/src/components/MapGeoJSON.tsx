@@ -41,7 +41,7 @@ export const MapGeoJSON: FC<Props> = ({
             click: () => onOrgUnitClick(orgUnit.id),
         }}
     >
-        <LeafletTooltip pane={'popupPane'}>
+        <LeafletTooltip pane="popupPane">
             {RenderTooltip ? (
                 RenderTooltip({ orgUnit })
             ) : (
