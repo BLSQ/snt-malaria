@@ -12,6 +12,7 @@ type Props = {
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
     getErrors: (keyValue: string) => string[];
+    onBlur: (field: string) => void;
 };
 
 const styles: Record<string, SxProps<Theme>> = {
@@ -52,6 +53,7 @@ export const MatchingCriterionForm: FC<Props> = ({
     onUpdateField,
     onRemove,
     getErrors,
+    onBlur,
 }) => {
     const scaleLabel = useMemo(() => {
         if (!metricType) return '';
@@ -96,6 +98,7 @@ export const MatchingCriterionForm: FC<Props> = ({
                 clearable={false}
                 wrapperSx={{ width: 75 }}
                 withMarginTop={false}
+                onBlur={() => onBlur('operator')}
             />
             {metricType?.legend_type === LegendTypes.ORDINAL ? (
                 <InputComponent
@@ -108,6 +111,7 @@ export const MatchingCriterionForm: FC<Props> = ({
                     withMarginTop={false}
                     options={ordinalOptions}
                     clearable={false}
+                    onBlur={() => onBlur('string_value')}
                 />
             ) : (
                 <>
@@ -119,6 +123,7 @@ export const MatchingCriterionForm: FC<Props> = ({
                         errors={getErrors('value')}
                         wrapperSx={{ width: 100 }}
                         withMarginTop={false}
+                        onBlur={() => onBlur('value')}
                     />
                     <Box sx={{ ...styles.labelWrapper, flexGrow: 1 }}>
                         <Typography

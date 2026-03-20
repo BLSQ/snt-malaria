@@ -54,6 +54,7 @@ export const ScenarioRuleForm: FC = () => {
         setChildFieldValueAndState,
         addChildValue,
         removeChildValue,
+        handleBlur,
     } = useGetExtendedFormikContext<ScenarioRuleFormValues>();
 
     const getErrors = useTranslatedErrors({
@@ -127,6 +128,7 @@ export const ScenarioRuleForm: FC = () => {
                         errors={errors.matching_criteria}
                         touched={touched.matching_criteria}
                         onUpdateField={setChildFieldValueAndState}
+                        onBlur={handleBlur}
                     />
                 </Box>
                 <Box>
@@ -144,6 +146,7 @@ export const ScenarioRuleForm: FC = () => {
                         errors={getErrors('org_units_excluded')}
                         label={MESSAGES.excludedOrgUnits}
                         wrapperSx={styles.inputLabel}
+                        onBlur={() => handleBlur('org_units_excluded')}
                     />
 
                     <InputComponent
@@ -156,6 +159,7 @@ export const ScenarioRuleForm: FC = () => {
                         errors={getErrors('org_units_included')}
                         label={MESSAGES.includedOrgUnits}
                         wrapperSx={styles.inputLabel}
+                        onBlur={() => handleBlur('org_units_included')}
                     />
                 </Box>
             </Box>

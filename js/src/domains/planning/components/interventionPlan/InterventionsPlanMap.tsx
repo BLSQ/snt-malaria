@@ -329,7 +329,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
                 <SNTMap
                     id="intervention_plan_map"
                     orgUnits={orgUnits}
-                    selectedOrgUnits={selectedOrgUnits}
+                    selectedOrgUnitIds={selectedOrgUnits}
                     getOrgUnitMapMisc={getOrgUnitMapMisc}
                     onOrgUnitClick={onOrgUnitClick}
                     legendConfig={legendConfig}

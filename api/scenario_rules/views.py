@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from iaso.models import MetricValue
@@ -10,6 +11,7 @@ from .permissions import ScenarioRulePermission
 from .serializers import (
     ScenarioRuleCreateSerializer,
     ScenarioRuleListSerializer,
+    ScenarioRulePreviewSerializer,
     ScenarioRuleQuerySerializer,
     ScenarioRuleRetrieveSerializer,
     ScenarioRuleUpdateSerializer,
@@ -40,6 +42,8 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
             return ScenarioRuleCreateSerializer
         if self.action in ["update", "partial_update"]:
             return ScenarioRuleUpdateSerializer
+        if self.action == "preview":
+            return ScenarioRulePreviewSerializer
         return None
 
     def list(self, request, *args, **kwargs):
@@ -116,6 +120,24 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         scenario = instance.scenario
         super().perform_destroy(instance)
         scenario.refresh_assignments(self.request.user)
+
+    @action(detail=False, methods=["post"])
+    def preview(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        account = request.user.iaso_profile.account
+        org_unit_ids = self._compute_matching_criteria(account, serializer.validated_data["matching_criteria"])
+
+        org_unit_ids_set = set(org_unit_ids)
+        excluded_org_unit_ids = set(serializer.validated_data.get("org_units_excluded", []))
+        if excluded_org_unit_ids:
+            org_unit_ids_set -= excluded_org_unit_ids
+
+        included_org_units = set(serializer.validated_data.get("org_units_included", []))
+        if included_org_units:
+            org_unit_ids_set |= included_org_units
+        return Response(list(org_unit_ids_set), status=status.HTTP_200_OK)
 
     def _compute_matching_criteria(self, account, matching_criteria):
         metric_values = MetricValue.objects.filter(metric_type__account=account)
