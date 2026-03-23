@@ -30,6 +30,21 @@ create a new entry for the account.
 | `config`       | JSON with provider-specific settings. The structure varies per provider — see the provider-specific tables below for required and optional keys. |
 | `secret`       | A sensitive credential (password, API key, token, etc.). Always a single string, encrypted at rest using Fernet. Requires `ENCRYPTED_TEXT_FIELD_KEY` to be set in the environment. |
 
+Example JSON for the `config` field:
+
+```json
+{
+  "db_name": "",
+  "db_host": "",
+  "db_port": 5432,
+  "db_username": "",
+  "admin_field": "admin_2",
+  "eir_ci_mean": "middle",
+  "eir_ci_lower": "low",
+  "eir_ci_upper": "high"
+}
+```
+
 > [!NOTE]
 > If the config is incomplete, the registry will gracefully return "no provider configured" instead of erroring, and log a warning.
 
