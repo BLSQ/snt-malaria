@@ -10,11 +10,11 @@ for any data source, whether it's a database, REST API, or other integration.
 Three things must be configured per account:
 
 1. **ImpactProviderConfig** — which provider to use, connection details, and
-  provider-specific settings
+   provider-specific settings
 2. **Intervention.impact_ref** — how IASO interventions map to the provider's
-  intervention schema
+   intervention schema
 3. **ImpactOrgUnitMapping** (optional) — custom mapping from IASO org units to
-  the external source's geographic identifiers (falls back to `org_unit.name`)
+   the external source's geographic identifiers (falls back to `org_unit.name`)
 
 ## 1. ImpactProviderConfig (Django Admin)
 
@@ -153,7 +153,7 @@ Options:
 - `--account` or `--account-id`: identifies the IASO account
 - `--mapping-file`: path to a JSON file with the mapping tree
 - `--overwrite`: update existing mappings (without this flag, existing mappings
-are skipped)
+  are skipped)
 
 ### Mapping file format
 
@@ -189,8 +189,8 @@ After setup, the impact API endpoints should return data:
 - `GET /api/snt_malaria/impact/year_range/` — returns `{min_year, max_year}`
 - `GET /api/snt_malaria/impact/age_groups/` — returns available age groups
 - `GET /api/snt_malaria/impact/?scenario=<id>&age_group=<group>` — returns
-impact metrics if the intervention mix of the scenario is found in the
-impact data
+  impact metrics if the intervention mix of the scenario is found in the
+  impact data
 
 If the provider is not configured or config is incomplete, these endpoints
 return a 404 with "No impact data provider configured for this account."
@@ -201,4 +201,4 @@ they exist in the provider's data.
 
 ## Architecture
 
-Impact module architecture
+![Impact module architecture](./impact_architecture.png)
