@@ -110,7 +110,7 @@ export const Map: FC<Props> = ({
     legendConfig,
     hideLegend = false,
     defaultColor = 'var(--deepPurple-300, #9575CD)',
-    selectedOrgUnitIds = [],
+    selectedOrgUnitIds,
     onOrgUnitClick = noOp,
     dataKey,
     border = false,
@@ -137,24 +137,28 @@ export const Map: FC<Props> = ({
         return shape.getBounds();
     }, [orderedOrgUnits]);
 
-    const [pristineOrgUnits, setPristineOrgUnits] = useState<OrgUnit[]>(
-        orderedOrgUnits || [],
-    );
+    const [pristineOrgUnits, setPristineOrgUnits] = useState<OrgUnit[]>([]);
     const [selectedOrgUnits, setSelectedOrgUnits] = useState<OrgUnit[]>([]);
 
     useEffect(() => {
-        const selectedOrgUnits: OrgUnit[] = [];
+        if (!selectedOrgUnitIds) {
+            setPristineOrgUnits(orderedOrgUnits);
+            setSelectedOrgUnits([]);
+            return;
+        }
+
+        const orgUnitsToSelect: OrgUnit[] = [];
         const unselectedOrgUnits: OrgUnit[] = [];
         orderedOrgUnits.forEach(orgUnit => {
             if (selectedOrgUnitIds.includes(orgUnit.id)) {
-                selectedOrgUnits.push(orgUnit);
+                orgUnitsToSelect.push(orgUnit);
             } else {
                 unselectedOrgUnits.push(orgUnit);
             }
         });
 
         setPristineOrgUnits(unselectedOrgUnits);
-        setSelectedOrgUnits(selectedOrgUnits);
+        setSelectedOrgUnits(orgUnitsToSelect);
     }, [orderedOrgUnits, selectedOrgUnitIds]);
 
     return (
