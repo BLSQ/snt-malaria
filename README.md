@@ -121,7 +121,7 @@ docker compose run --rm iaso manage import_openhexa_metrics --account-id <id>
 
 ## Impact provider setup
 
-See [IMPACT_SETUP.md](IMPACT_SETUP.md) for instructions on configuring impact
+See [IMPACT_SETUP.md](docs/IMPACT_SETUP.md) for instructions on configuring impact
 data providers, intervention mappings, and org_unit mappings.
 
 ## Release workflow
