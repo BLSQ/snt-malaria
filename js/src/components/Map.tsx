@@ -128,28 +128,42 @@ export const Map: FC<Props> = ({
         [orgUnits],
     );
 
+    // Only render the leaf org units (deepest depth level) to avoid stacking
+    // semi-transparent shapes from multiple hierarchy levels on top of each
+    // other, which compounds opacity and hides the tile layer.
+    const leafOrgUnits = useMemo(() => {
+        if (orderedOrgUnits.length === 0) return orderedOrgUnits;
+        const maxDepth = orderedOrgUnits.reduce(
+            (max, ou) => Math.max(max, ou.org_unit_type_depth ?? 0),
+            0,
+        );
+        return orderedOrgUnits.filter(
+            ou => (ou.org_unit_type_depth ?? 0) === maxDepth,
+        );
+    }, [orderedOrgUnits]);
+
     const bounds: Bounds | undefined = useMemo(() => {
-        const geoJsonFeatures = orderedOrgUnits
+        const geoJsonFeatures = leafOrgUnits
             ?.filter(orgUnit => orgUnit?.geo_json)
             .map(orgUnit => orgUnit?.geo_json);
         if (geoJsonFeatures?.length === 0) return undefined;
         const shape = L.geoJSON(geoJsonFeatures);
         return shape.getBounds();
-    }, [orderedOrgUnits]);
+    }, [leafOrgUnits]);
 
     const [pristineOrgUnits, setPristineOrgUnits] = useState<OrgUnit[]>([]);
     const [selectedOrgUnits, setSelectedOrgUnits] = useState<OrgUnit[]>([]);
 
     useEffect(() => {
         if (!selectedOrgUnitIds) {
-            setPristineOrgUnits(orderedOrgUnits);
+            setPristineOrgUnits(leafOrgUnits);
             setSelectedOrgUnits([]);
             return;
         }
 
         const orgUnitsToSelect: OrgUnit[] = [];
         const unselectedOrgUnits: OrgUnit[] = [];
-        orderedOrgUnits.forEach(orgUnit => {
+        leafOrgUnits.forEach(orgUnit => {
             if (selectedOrgUnitIds.includes(orgUnit.id)) {
                 orgUnitsToSelect.push(orgUnit);
             } else {
@@ -159,7 +173,7 @@ export const Map: FC<Props> = ({
 
         setPristineOrgUnits(unselectedOrgUnits);
         setSelectedOrgUnits(orgUnitsToSelect);
-    }, [orderedOrgUnits, selectedOrgUnitIds]);
+    }, [leafOrgUnits, selectedOrgUnitIds]);
 
     return (
         <Box sx={border ? [styles.root, styles.bordered] : styles.root}>
