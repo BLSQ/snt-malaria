@@ -69,6 +69,10 @@ const styles = {
         '& .leaflet-control-attribution': {
             display: 'none',
         },
+        '& .leaflet-tooltip': {
+            maxWidth: '300px !important',
+            width: 'max-content',
+        },
     },
     bordered: {
         borderRadius: theme => `${theme.shape.borderRadius * 2}px`,
@@ -102,6 +106,8 @@ type Props = {
     dataKey?: string;
     /** When true, adds rounded corners and a border around the map. */
     border?: boolean;
+    /** When set, overrides the border color of selected org units (e.g. rule color perimeter). */
+    selectedBorderColor?: string;
 };
 export const Map: FC<Props> = ({
     id,
@@ -114,6 +120,7 @@ export const Map: FC<Props> = ({
     onOrgUnitClick = noOp,
     dataKey,
     border = false,
+    selectedBorderColor,
     RenderTooltip,
 }) => {
     const [currentTile] = useState<Tile>(tiles.osm);
@@ -232,7 +239,10 @@ export const Map: FC<Props> = ({
                                 dataKey={dataKey}
                                 orgUnit={orgUnit}
                                 orgUnitMapMisc={orgUnitMapMisc}
-                                color={mapTheme.selectedShapeColor}
+                                color={
+                                    selectedBorderColor ??
+                                    mapTheme.selectedShapeColor
+                                }
                                 weight={mapTheme.selectedShapeWeight}
                                 defaultColor={defaultColor}
                                 onOrgUnitClick={onOrgUnitClick}

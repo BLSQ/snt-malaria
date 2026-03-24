@@ -154,10 +154,14 @@ export const PlanningV2: FC = () => {
 
     // TODO Find a better place for this
     const [selectedOrgUnitIds, setSelectedOrgUnitIds] = useState<number[]>([]);
+    const [previewRule, setPreviewRule] = useState<
+        Partial<ScenarioRule> | undefined
+    >();
     const { mutate: previewScenarioRule } = usePreviewScenarioRule();
 
     const onPreviewScenarioRule = useCallback(
         (rule?: Partial<ScenarioRule>) => {
+            setPreviewRule(rule);
             if (!rule) {
                 setSelectedOrgUnitIds([]);
                 return;
@@ -224,6 +228,7 @@ export const PlanningV2: FC = () => {
                                             selectedOrgUnitIds={
                                                 selectedOrgUnitIds
                                             }
+                                            previewRule={previewRule}
                                         />
                                     )}
                                     {activeTab === 'list' && (

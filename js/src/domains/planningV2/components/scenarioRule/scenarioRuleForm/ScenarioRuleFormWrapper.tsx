@@ -74,6 +74,9 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         editMode: Boolean(rule),
     });
 
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
+
     const isFirstRender = useRef(true);
     useEffect(() => {
         if (isFirstRender.current) {
@@ -81,10 +84,10 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
             return;
         }
         const timer = setTimeout(() => {
-            onChange?.(formik.values);
+            onChangeRef.current?.(formik.values);
         }, PREVIEW_DEBOUNCE_MS);
         return () => clearTimeout(timer);
-    }, [formik.values, onChange]);
+    }, [formik.values]);
 
     return (
         <CardStyled

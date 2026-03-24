@@ -5,7 +5,7 @@ export const mapTheme = {
     borderColor: '#FFFFFF',
     shapeColor: '#9fa3af',
     shapeWeight: 1,
-    selectedShapeColor: '#1294FB',
+    selectedShapeColor: 'black',
     selectedShapeWeight: 3,
     activeShapeColor: theme.palette.secondary.main,
     activeShapeWeight: 4,
