@@ -40,6 +40,7 @@ export const theme = createTheme({
             primary: '#1F2B3DDE',
             secondary: alpha('#1F2B3D', 0.6),
         },
+        divider: '#e0e0e0',
         action: {
             hover: alpha(primaryMain, 0.04),
         },
@@ -104,6 +105,9 @@ export const theme = createTheme({
             styleOverrides: {
                 inputRoot: {
                     padding: '1px',
+                    '&:has(.MuiAutocomplete-tag)': {
+                        padding: '6px',
+                    },
                 },
                 root: {
                     '&.MuiOutlinedInput-root .MuiAutocomplete-endAdornment': {
@@ -116,6 +120,20 @@ export const theme = createTheme({
             styleOverrides: {
                 root: {
                     textTransform: 'none',
+                },
+            },
+        },
+        MuiChip: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: primaryMain,
+                    color: '#fff',
+                },
+                deleteIcon: {
+                    color: 'rgba(255,255,255,0.7)',
+                    '&:hover': {
+                        color: '#fff',
+                    },
                 },
             },
         },

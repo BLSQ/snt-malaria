@@ -5,7 +5,7 @@ import React, {
     useMemo,
     useState,
 } from 'react';
-import { Box, Button, Theme, Tooltip } from '@mui/material';
+import { Box, Button, Tooltip } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { InterventionSelect } from '../../../../components/InterventionSelect';
@@ -47,11 +47,10 @@ type Props = {
 };
 
 const styles: SxStyles = {
-    mainBox: (theme: Theme) => ({
-        borderRadius: theme.spacing(2),
+    mainBox: {
         overflow: 'hidden',
         position: 'relative',
-    }),
+    },
     customizeButton: {
         marginRight: 1,
         '&.MuiButton-outlined': {
@@ -328,6 +327,7 @@ export const InterventionsPlanMap: FunctionComponent<Props> = ({
             {orgUnits && (
                 <SNTMap
                     id="intervention_plan_map"
+                    border
                     orgUnits={orgUnits}
                     selectedOrgUnitIds={selectedOrgUnits}
                     getOrgUnitMapMisc={getOrgUnitMapMisc}

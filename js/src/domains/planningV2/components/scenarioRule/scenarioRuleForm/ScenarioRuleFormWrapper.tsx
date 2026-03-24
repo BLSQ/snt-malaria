@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo } from 'react';
+import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { CardStyled } from '../../../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../../../hooks/useGetExtendedFormikContext';
@@ -13,18 +13,20 @@ import { ScenarioRule } from '../../../types/scenarioRule';
 import { ScenarioRuleForm } from './ScenarioRuleForm';
 import { ScenarioRuleFormHeader } from './ScenarioRuleFormHeader';
 
+const PREVIEW_DEBOUNCE_MS = 500;
+
 type Props = {
     scenarioId: number;
     rule?: ScenarioRule;
     onClose: () => void;
-    onBlur?: (values: Partial<ScenarioRuleFormValues>) => void;
+    onChange?: (values: Partial<ScenarioRuleFormValues>) => void;
 };
 
 export const ScenarioRuleFormWrapper: FC<Props> = ({
     scenarioId,
     rule,
     onClose,
-    onBlur,
+    onChange,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -72,12 +74,17 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         editMode: Boolean(rule),
     });
 
-    const handleBlur = useCallback(() => {
-        if (onBlur) {
-            onBlur(formik.values);
+    const isFirstRender = useRef(true);
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
         }
-        // We are not checking the field on blur as we only trigger this for fields which should trigger the preview call.
-    }, [onBlur, formik.values]);
+        const timer = setTimeout(() => {
+            onChange?.(formik.values);
+        }, PREVIEW_DEBOUNCE_MS);
+        return () => clearTimeout(timer);
+    }, [formik.values, onChange]);
 
     return (
         <CardStyled
@@ -91,7 +98,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
             }
             isLoading={isSubmittingRule}
         >
-            <ExtendedFormikProvider formik={formik} onBlur={handleBlur}>
+            <ExtendedFormikProvider formik={formik}>
                 <ScenarioRuleForm />
             </ExtendedFormikProvider>
         </CardStyled>

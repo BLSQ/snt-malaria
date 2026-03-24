@@ -5,7 +5,7 @@ import { SxStyles } from 'Iaso/types/general';
 
 const styles: SxStyles = {
     cardHeader: {
-        borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+        borderBottom: theme => `1px solid ${theme.palette.divider}`,
         pb: 1,
         minHeight: '65px',
     },
@@ -13,6 +13,9 @@ const styles: SxStyles = {
         overflow: 'auto',
         position: 'relative',
         flexGrow: 1,
+        '&:last-child': {
+            paddingBottom: 2,
+        },
     },
 };
 

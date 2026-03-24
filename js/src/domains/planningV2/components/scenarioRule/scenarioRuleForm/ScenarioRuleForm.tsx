@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
 import InputComponent from 'Iaso/components/forms/InputComponent';
@@ -24,17 +24,11 @@ const styles = {
     },
 } satisfies SxStyles;
 
-const ScenarioRuleHeading: FC<{ chipLabel: string; label: string }> = ({
-    chipLabel,
-    label,
-}) => {
+const ScenarioRuleHeading: FC<{ label: string }> = ({ label }) => {
     return (
-        <Stack direction="row" spacing={1} alignItems="center" mb={2}>
-            <Chip label={chipLabel} />
-            <Typography variant="body2" fontWeight="medium">
-                {label}
-            </Typography>
-        </Stack>
+        <Typography variant="subtitle1" gutterBottom>
+            {label}
+        </Typography>
     );
 };
 
@@ -54,7 +48,6 @@ export const ScenarioRuleForm: FC = () => {
         setChildFieldValueAndState,
         addChildValue,
         removeChildValue,
-        handleBlur,
     } = useGetExtendedFormikContext<ScenarioRuleFormValues>();
 
     const getErrors = useTranslatedErrors({
@@ -98,7 +91,6 @@ export const ScenarioRuleForm: FC = () => {
             <Box sx={styles.formWrapper}>
                 <Box mb={3}>
                     <ScenarioRuleHeading
-                        chipLabel="1"
                         label={formatMessage(MESSAGES.interventionProperties)}
                     />
                     <InterventionPropertiesForm
@@ -115,7 +107,6 @@ export const ScenarioRuleForm: FC = () => {
                 </Box>
                 <Box mb={2}>
                     <ScenarioRuleHeading
-                        chipLabel="2"
                         label={formatMessage(MESSAGES.selectionCriteria)}
                     />
                     <MatchingCriteriaForm
@@ -128,12 +119,10 @@ export const ScenarioRuleForm: FC = () => {
                         errors={errors.matching_criteria}
                         touched={touched.matching_criteria}
                         onUpdateField={setChildFieldValueAndState}
-                        onBlur={handleBlur}
                     />
                 </Box>
                 <Box>
                     <ScenarioRuleHeading
-                        chipLabel="3"
                         label={formatMessage(MESSAGES.ruleExceptions)}
                     />
                     <InputComponent
@@ -146,7 +135,6 @@ export const ScenarioRuleForm: FC = () => {
                         errors={getErrors('org_units_excluded')}
                         label={MESSAGES.excludedOrgUnits}
                         wrapperSx={styles.inputLabel}
-                        onBlur={() => handleBlur('org_units_excluded')}
                     />
 
                     <InputComponent
@@ -159,7 +147,6 @@ export const ScenarioRuleForm: FC = () => {
                         errors={getErrors('org_units_included')}
                         label={MESSAGES.includedOrgUnits}
                         wrapperSx={styles.inputLabel}
-                        onBlur={() => handleBlur('org_units_included')}
                     />
                 </Box>
             </Box>

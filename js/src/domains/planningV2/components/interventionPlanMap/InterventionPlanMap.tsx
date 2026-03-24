@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Box, Chip, Stack, Theme, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { LayerSelect } from '../../../../components/LayerSelect';
 import { Map as SNTMap } from '../../../../components/Map';
@@ -28,11 +28,10 @@ const defaultLegendConfig = {
 };
 
 const styles: SxStyles = {
-    mainBox: (theme: Theme) => ({
-        borderRadius: theme.spacing(2),
+    mainBox: {
         overflow: 'hidden',
         position: 'relative',
-    }),
+    },
     customizeButton: {
         marginRight: 1,
         '&.MuiButton-outlined': {
@@ -178,6 +177,7 @@ export const InterventionsPlanMap: FC<Props> = ({ selectedOrgUnitIds }) => {
             {orgUnits && (
                 <SNTMap
                     id="intervention_plan_map"
+                    border
                     orgUnits={orgUnits}
                     getOrgUnitMapMisc={getOrgUnitMapStyle}
                     selectedOrgUnitIds={selectedOrgUnitIds}

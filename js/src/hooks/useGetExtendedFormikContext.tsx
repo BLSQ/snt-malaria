@@ -23,11 +23,9 @@ const ExtendedFormikContext = createContext<ExtendedFormikContextType>(
 
 export const ExtendedFormikProvider = ({
     children,
-    onBlur,
     formik,
 }: {
     children: React.ReactNode;
-    onBlur: (field: string) => void;
     formik: any;
 }) => {
     const setFieldValueAndState = useSetFieldValueAndState({
@@ -50,9 +48,8 @@ export const ExtendedFormikProvider = ({
     const handleBlur = useCallback(
         (field: string) => {
             formik.setFieldTouched(field, true);
-            onBlur(field);
         },
-        [onBlur, formik],
+        [formik],
     );
 
     const extendedContext = {

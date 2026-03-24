@@ -13,7 +13,6 @@ import { Intervention } from '../../types/interventions';
 
 const styles: SxStyles = {
     mainBox: {
-        borderRadius: 2,
         overflow: 'hidden',
         position: 'relative',
     },
@@ -116,6 +115,7 @@ export const OrgUnitCostMap: FC<Props> = ({ orgUnitCosts, orgUnits }) => {
             </MapActionBox>
             <Map
                 id="org_unit_cost_map"
+                border
                 orgUnits={orgUnits}
                 getOrgUnitMapMisc={getOrgUnitMapMisc}
                 legendConfig={legendConfig}
