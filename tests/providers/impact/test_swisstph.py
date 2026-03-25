@@ -11,6 +11,16 @@ from plugins.snt_malaria.providers.impact.swisstph import (
 )
 
 
+_PROVIDER_KWARGS = {"config_id": 0, "config": {}, "secret": ""}
+_CMR_CONFIG = {
+    "admin_field": "admin_2",
+    "eir_ci_mean": "middle",
+    "eir_ci_lower": "low",
+    "eir_ci_upper": "high",
+}
+_CMR_PROVIDER_KWARGS = {"config_id": 0, "config": _CMR_CONFIG, "secret": ""}
+
+
 class MockIntervention:
     """Minimal mock for Intervention model instances used in SwissTPH tests."""
 
@@ -29,7 +39,8 @@ class MockOrgUnit:
 
 class SwissTPHMapInterventionTests(TestCase):
     def setUp(self):
-        self.provider = SwissTPHImpactProvider()
+        with patch("plugins.snt_malaria.providers.impact.swisstph.ensure_db_connection", return_value="default"):
+            self.provider = SwissTPHImpactProvider(**_PROVIDER_KWARGS)
 
     def test_valid_impact_ref_returns_matching_column(self):
         """Each known deployed_int_* column name should be accepted as a valid impact_ref."""
@@ -88,7 +99,8 @@ class SwissTPHMapInterventionTests(TestCase):
 
 class SwissTPHBuildQueryFiltersTests(TestCase):
     def setUp(self):
-        self.provider = SwissTPHImpactProvider()
+        with patch("plugins.snt_malaria.providers.impact.swisstph.ensure_db_connection", return_value="default"):
+            self.provider = SwissTPHImpactProvider(**_PROVIDER_KWARGS)
 
     def test_no_deployed_columns_all_false(self):
         filters = self.provider._build_query_filters(set())
@@ -143,7 +155,7 @@ class SwissTPHMatchImpactBulkTests(TestCase):
     confidence intervals, and edge cases.
 
     SwissTPHImpactData is unmanaged; we create the table in the default test
-    database and patch SWISSTPH_DATABASE_ALIAS to 'default'.
+    database and patch ensure_db_connection to return 'default'.
     """
 
     @classmethod
@@ -164,12 +176,11 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         super().tearDownClass()
 
     def setUp(self):
-        self._alias_patcher = patch(
-            "plugins.snt_malaria.providers.impact.swisstph.SWISSTPH_DATABASE_ALIAS",
-            "default",
-        )
-        self._alias_patcher.start()
-        self.provider = SwissTPHImpactProvider()
+        with patch(
+            "plugins.snt_malaria.providers.impact.swisstph.ensure_db_connection",
+            return_value="default",
+        ):
+            self.provider = SwissTPHImpactProvider(**_PROVIDER_KWARGS)
 
         deploy = _deploy_fields({"deployed_int_smc"})
         base = dict(admin_1="Bern", year=2025, age_group="allAges", n_host=50000.0, **deploy)
@@ -236,9 +247,6 @@ class SwissTPHMatchImpactBulkTests(TestCase):
             expected_direct_deaths=2.0,
             **base,
         )
-
-    def tearDown(self):
-        self._alias_patcher.stop()
 
     def test_source_ref_used_for_matching(self):
         """When source_ref is set, it is used to match against admin_1."""
@@ -455,3 +463,96 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         self.assertAlmostEqual(result.number_cases.value, 100.0)
         self.assertIsNone(result.number_cases.lower)
         self.assertIsNone(result.number_cases.upper)
+
+
+class SwissTPHCustomConfigTests(TestCase):
+    """Tests for configurable EIR_CI values and admin_field (e.g. CMR-style config)."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        with connection.schema_editor() as schema_editor:
+            for model in _SWISSTPH_MODELS:
+                model._meta.managed = True
+                schema_editor.create_model(model)
+
+    @classmethod
+    def tearDownClass(cls):
+        with connection.schema_editor() as schema_editor:
+            for model in reversed(_SWISSTPH_MODELS):
+                schema_editor.delete_model(model)
+        for model in _SWISSTPH_MODELS:
+            model._meta.managed = False
+        super().tearDownClass()
+
+    def setUp(self):
+        with patch(
+            "plugins.snt_malaria.providers.impact.swisstph.ensure_db_connection",
+            return_value="default",
+        ):
+            self.provider = SwissTPHImpactProvider(**_CMR_PROVIDER_KWARGS)
+
+        deploy = _deploy_fields({"deployed_int_smc"})
+        base = dict(admin_2="Douala", year=2025, age_group="allAges", n_host=40000.0, **deploy)
+
+        SwissTPHImpactData.objects.using("default").create(
+            impact_index=1,
+            seed=1,
+            eir_ci="middle",
+            n_uncomp=200.0,
+            n_severe=20.0,
+            prevalence_rate=0.10,
+            expected_direct_deaths=2.0,
+            **base,
+        )
+        SwissTPHImpactData.objects.using("default").create(
+            impact_index=2,
+            seed=1,
+            eir_ci="low",
+            n_uncomp=160.0,
+            n_severe=16.0,
+            prevalence_rate=0.08,
+            expected_direct_deaths=1.6,
+            **base,
+        )
+        SwissTPHImpactData.objects.using("default").create(
+            impact_index=3,
+            seed=1,
+            eir_ci="high",
+            n_uncomp=240.0,
+            n_severe=24.0,
+            prevalence_rate=0.12,
+            expected_direct_deaths=2.4,
+            **base,
+        )
+
+    def test_custom_eir_ci_values_and_admin_field(self):
+        """Provider respects eir_ci_mean/lower/upper and admin_field from config."""
+        org_unit = MockOrgUnit(id=1, name="Douala")
+        intervention = MockIntervention(impact_ref="deployed_int_smc")
+
+        results = self.provider.match_impact_bulk(
+            [org_unit],
+            interventions=[intervention],
+            age_group="allAges",
+        )
+
+        self.assertIn(1, results)
+        result = results[1][0]
+        self.assertAlmostEqual(result.number_cases.value, 200.0)
+        self.assertAlmostEqual(result.number_cases.lower, 160.0)
+        self.assertAlmostEqual(result.number_cases.upper, 240.0)
+        self.assertAlmostEqual(result.population, 40000.0)
+
+    def test_default_eir_ci_values_are_original_swisstph(self):
+        """Without config overrides, the defaults match the original SwissTPH values."""
+        with patch(
+            "plugins.snt_malaria.providers.impact.swisstph.ensure_db_connection",
+            return_value="default",
+        ):
+            provider = SwissTPHImpactProvider(**_PROVIDER_KWARGS)
+
+        self.assertEqual(provider._admin_field, "admin_1")
+        self.assertEqual(provider._eir_ci_mean, "EIR_mean")
+        self.assertEqual(provider._eir_ci_lower, "EIR_lci")
+        self.assertEqual(provider._eir_ci_upper, "EIR_uci")

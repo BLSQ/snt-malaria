@@ -14,6 +14,9 @@ from plugins.snt_malaria.providers.impact.idm import (
 )
 
 
+_PROVIDER_KWARGS = {"config_id": 0, "config": {}, "secret": ""}
+
+
 class MockIntervention:
     """Minimal mock for Intervention model instances used in IDM tests."""
 
@@ -93,7 +96,8 @@ def _deploy_intervention_fields(deployed_options: list[str]) -> dict:
 
 class IDMBuildQueryFiltersTests(TestCase):
     def setUp(self):
-        self.provider = IDMImpactProvider()
+        with patch("plugins.snt_malaria.providers.impact.idm.ensure_db_connection", return_value="default"):
+            self.provider = IDMImpactProvider(**_PROVIDER_KWARGS)
 
     def test_no_interventions_all_baseline(self):
         filters = self.provider._build_query_filters(set())
@@ -155,18 +159,14 @@ class IDMMapInterventionTests(TestCase):
         super().tearDownClass()
 
     def setUp(self):
-        self._alias_patcher = patch(
-            "plugins.snt_malaria.providers.impact.idm.IDM_DATABASE_ALIAS",
-            "default",
-        )
-        self._alias_patcher.start()
-        self.provider = IDMImpactProvider()
+        with patch(
+            "plugins.snt_malaria.providers.impact.idm.ensure_db_connection",
+            return_value="default",
+        ):
+            self.provider = IDMImpactProvider(**_PROVIDER_KWARGS)
 
         for package in INTERVENTION_PACKAGES:
             IDMInterventionPackage.objects.using("default").create(**package)
-
-    def tearDown(self):
-        self._alias_patcher.stop()
 
     def test_valid_impact_ref_resolves_to_filter_key(self):
         """Each 'type:option' impact_ref should resolve to the correct 'column=package_id' filter key."""
@@ -224,8 +224,8 @@ class IDMDatabaseIntegrationTests(TestCase):
     """Integration tests that query actual IDM tables seeded with test data.
 
     The IDM models are unmanaged (managed=False) and normally live in a
-    separate database (impact_idm). For testing, we create the tables in the
-    default test database and patch IDM_DATABASE_ALIAS to "default" so the
+    separate database. For testing, we create the tables in the default test
+    database and patch ensure_db_connection to return "default" so the
     provider's ORM queries hit that same database.
     """
 
@@ -247,12 +247,11 @@ class IDMDatabaseIntegrationTests(TestCase):
         super().tearDownClass()
 
     def setUp(self):
-        self._alias_patcher = patch(
-            "plugins.snt_malaria.providers.impact.idm.IDM_DATABASE_ALIAS",
-            "default",
-        )
-        self._alias_patcher.start()
-        self.provider = IDMImpactProvider()
+        with patch(
+            "plugins.snt_malaria.providers.impact.idm.ensure_db_connection",
+            return_value="default",
+        ):
+            self.provider = IDMImpactProvider(**_PROVIDER_KWARGS)
         using = "default"
 
         # -- Seed intervention packages --
@@ -377,11 +376,6 @@ class IDMDatabaseIntegrationTests(TestCase):
             prevalence_higher=Decimal("0.26"),
             **_deploy_intervention_fields(["cm"]),
         )
-
-    def tearDown(self):
-        self._alias_patcher.stop()
-
-    # -- Tests --
 
     def test_match_with_single_intervention(self):
         """CM deployed: returns matching rows for two districts across years."""

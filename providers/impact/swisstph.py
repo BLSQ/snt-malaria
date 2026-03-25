@@ -12,9 +12,8 @@ from plugins.snt_malaria.providers.impact.base import (
     InterventionMappingError,
     OrgUnitMappingError,
 )
+from plugins.snt_malaria.providers.impact.db import ensure_db_connection
 
-
-SWISSTPH_DATABASE_ALIAS = "impact_swisstph"
 
 KNOWN_DEPLOYED_COLUMNS = {
     "deployed_int_iptsc",
@@ -32,17 +31,31 @@ KNOWN_DEPLOYED_COLUMNS = {
 
 
 class SwissTPHImpactProvider(ImpactProvider):
-    """Impact data provider for SwissTPH database.
+    """Impact data provider for SwissTPH databases.
 
-    Connects to the SwissTPH impact database via the database alias.
-    Matches org units to SwissTPH admin_1 values using source_ref when
-    available, falling back to org_unit.name otherwise.
+    Connects to a SwissTPH impact database via a dynamically registered
+    database alias derived from the provider configuration.
+    Matches org units using source_ref when available, falling back to
+    org_unit.name otherwise.
     Uses boolean deployed_int_* columns to filter by intervention deployment status.
 
-    Confidence intervals are derived from the EIR_CI column: each metric is
-    averaged over seeds separately for EIR_mean (value), EIR_lci (lower),
-    and EIR_uci (upper).
+    The following keys in the config JSON control provider behaviour:
+
+    - ``admin_field`` – the SwissTPHImpactData column used for org-unit
+      matching (default ``"admin_1"``).
+    - ``eir_ci_mean``, ``eir_ci_lower``, ``eir_ci_upper`` – the values
+      stored in the ``eir_ci`` column that correspond to the mean, lower,
+      and upper confidence-interval bands (defaults ``"EIR_mean"``,
+      ``"EIR_lci"``, ``"EIR_uci"``).
     """
+
+    def __init__(self, config_id: int, config: dict, secret: str):
+        super().__init__(config_id, config, secret)
+        self._db_alias = ensure_db_connection(config_id, config, secret)
+        self._admin_field = config.get("admin_field", "admin_1")
+        self._eir_ci_mean = config.get("eir_ci_mean", "EIR_mean")
+        self._eir_ci_lower = config.get("eir_ci_lower", "EIR_lci")
+        self._eir_ci_upper = config.get("eir_ci_upper", "EIR_uci")
 
     @property
     def supports_bulk(self) -> bool:
@@ -73,7 +86,7 @@ class SwissTPHImpactProvider(ImpactProvider):
         }
 
         filters = {
-            "admin_1__in": list(reference_to_org_unit_id.keys()),
+            f"{self._admin_field}__in": list(reference_to_org_unit_id.keys()),
             "age_group": age_group,
         }
         if year_from:
@@ -88,36 +101,40 @@ class SwissTPHImpactProvider(ImpactProvider):
         # will be silently averaged into the results. We assume this is
         # acceptable because identical intervention mixes should produce
         # identical results. See test_duplicate_rows_are_averaged_transparently.
+        eir_mean = Q(eir_ci=self._eir_ci_mean)
+        eir_lower = Q(eir_ci=self._eir_ci_lower)
+        eir_upper = Q(eir_ci=self._eir_ci_upper)
+
         rows = (
-            SwissTPHImpactData.objects.using(SWISSTPH_DATABASE_ALIAS)
+            SwissTPHImpactData.objects.using(self._db_alias)
             .filter(**filters)
-            .values("admin_1", "year")
+            .values(self._admin_field, "year")
             .annotate(
-                mean_n_uncomp=Avg("n_uncomp", filter=Q(eir_ci="EIR_mean")),
-                lower_n_uncomp=Avg("n_uncomp", filter=Q(eir_ci="EIR_lci")),
-                upper_n_uncomp=Avg("n_uncomp", filter=Q(eir_ci="EIR_uci")),
-                mean_n_severe=Avg("n_severe", filter=Q(eir_ci="EIR_mean")),
-                lower_n_severe=Avg("n_severe", filter=Q(eir_ci="EIR_lci")),
-                upper_n_severe=Avg("n_severe", filter=Q(eir_ci="EIR_uci")),
-                mean_prevalence_rate=Avg("prevalence_rate", filter=Q(eir_ci="EIR_mean")),
-                lower_prevalence_rate=Avg("prevalence_rate", filter=Q(eir_ci="EIR_lci")),
-                upper_prevalence_rate=Avg("prevalence_rate", filter=Q(eir_ci="EIR_uci")),
-                mean_n_host=Avg("n_host", filter=Q(eir_ci="EIR_mean")),
-                mean_expected_direct_deaths=Avg("expected_direct_deaths", filter=Q(eir_ci="EIR_mean")),
-                lower_expected_direct_deaths=Avg("expected_direct_deaths", filter=Q(eir_ci="EIR_lci")),
-                upper_expected_direct_deaths=Avg("expected_direct_deaths", filter=Q(eir_ci="EIR_uci")),
+                mean_n_uncomp=Avg("n_uncomp", filter=eir_mean),
+                lower_n_uncomp=Avg("n_uncomp", filter=eir_lower),
+                upper_n_uncomp=Avg("n_uncomp", filter=eir_upper),
+                mean_n_severe=Avg("n_severe", filter=eir_mean),
+                lower_n_severe=Avg("n_severe", filter=eir_lower),
+                upper_n_severe=Avg("n_severe", filter=eir_upper),
+                mean_prevalence_rate=Avg("prevalence_rate", filter=eir_mean),
+                lower_prevalence_rate=Avg("prevalence_rate", filter=eir_lower),
+                upper_prevalence_rate=Avg("prevalence_rate", filter=eir_upper),
+                mean_n_host=Avg("n_host", filter=eir_mean),
+                mean_expected_direct_deaths=Avg("expected_direct_deaths", filter=eir_mean),
+                lower_expected_direct_deaths=Avg("expected_direct_deaths", filter=eir_lower),
+                upper_expected_direct_deaths=Avg("expected_direct_deaths", filter=eir_upper),
             )
-            .order_by("admin_1", "year")
+            .order_by(self._admin_field, "year")
         )
 
         results: dict[int, list[ImpactResult]] = {}
         matched_references: set[str] = set()
         for row in rows:
-            org_unit_id = reference_to_org_unit_id.get(row["admin_1"])
+            org_unit_id = reference_to_org_unit_id.get(row[self._admin_field])
             if org_unit_id is None:
                 continue
 
-            matched_references.add(row["admin_1"])
+            matched_references.add(row[self._admin_field])
             results.setdefault(org_unit_id, []).append(
                 ImpactResult(
                     year=row["year"],
@@ -141,7 +158,7 @@ class SwissTPHImpactProvider(ImpactProvider):
         )
 
     def get_year_range(self) -> tuple[Optional[int], Optional[int]]:
-        result = SwissTPHImpactData.objects.using(SWISSTPH_DATABASE_ALIAS).aggregate(
+        result = SwissTPHImpactData.objects.using(self._db_alias).aggregate(
             min_year=Min("year"),
             max_year=Max("year"),
         )
@@ -150,7 +167,7 @@ class SwissTPHImpactProvider(ImpactProvider):
 
     def get_age_groups(self) -> list[str]:
         return list(
-            SwissTPHImpactData.objects.using(SWISSTPH_DATABASE_ALIAS)
+            SwissTPHImpactData.objects.using(self._db_alias)
             .values_list("age_group", flat=True)
             .distinct()
             .order_by("age_group")
@@ -167,9 +184,9 @@ class SwissTPHImpactProvider(ImpactProvider):
         if not unmatched:
             return
         known = set(
-            SwissTPHImpactData.objects.using(SWISSTPH_DATABASE_ALIAS)
-            .filter(admin_1__in=unmatched)
-            .values_list("admin_1", flat=True)
+            SwissTPHImpactData.objects.using(self._db_alias)
+            .filter(**{f"{self._admin_field}__in": unmatched})
+            .values_list(self._admin_field, flat=True)
             .distinct()
         )
         not_found = unmatched - known

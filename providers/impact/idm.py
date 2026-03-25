@@ -13,9 +13,8 @@ from plugins.snt_malaria.providers.impact.base import (
     InterventionMappingError,
     OrgUnitMappingError,
 )
+from plugins.snt_malaria.providers.impact.db import ensure_db_connection
 
-
-IDM_DATABASE_ALIAS = "impact_idm"
 
 # Baseline intervention_package ID (none = no intervention deployed)
 IDM_NONE_PACKAGE_ID = 1
@@ -41,21 +40,24 @@ IDM_ALL_INTERVENTION_COLUMNS = [
 class IDMImpactProvider(ImpactProvider):
     """Impact data provider for IDM database.
 
-    Connects to the IDM impact database via the database alias.
+    Connects to the IDM impact database via a dynamically registered
+    database alias derived from the provider configuration.
     Matches org units to IDM admin_2_name values using source_ref when
     available, falling back to org_unit.name otherwise.
     Uses intervention_package IDs to filter model_output rows by
     intervention deployment status.
     """
 
-    def __init__(self):
+    def __init__(self, config_id: int, config: dict, secret: str):
+        super().__init__(config_id, config, secret)
+        self._db_alias = ensure_db_connection(config_id, config, secret)
         self._cached_intervention_packages = None
 
     def _resolve_intervention_package(self, type_value, option_value):
         """Look up an IDMInterventionPackage by (type, option), lazy-loading the cache on first call."""
         if self._cached_intervention_packages is None:
             self._cached_intervention_packages = {
-                (pkg.type, pkg.option): pkg for pkg in IDMInterventionPackage.objects.using(IDM_DATABASE_ALIAS).all()
+                (pkg.type, pkg.option): pkg for pkg in IDMInterventionPackage.objects.using(self._db_alias).all()
             }
         return self._cached_intervention_packages.get((type_value, option_value))
 
@@ -129,7 +131,7 @@ class IDMImpactProvider(ImpactProvider):
             "prevalence_higher",
         ]
         impact_rows = (
-            IDMModelOutput.objects.using(IDM_DATABASE_ALIAS)
+            IDMModelOutput.objects.using(self._db_alias)
             .filter(**filters)
             .values(*metric_fields)
             .distinct()
@@ -189,14 +191,14 @@ class IDMImpactProvider(ImpactProvider):
         return results
 
     def get_year_range(self) -> tuple[Optional[int], Optional[int]]:
-        result = IDMModelOutput.objects.using(IDM_DATABASE_ALIAS).aggregate(
+        result = IDMModelOutput.objects.using(self._db_alias).aggregate(
             min_year=Min("year"),
             max_year=Max("year"),
         )
         return result["min_year"], result["max_year"]
 
     def get_age_groups(self) -> list[str]:
-        return list(IDMAgeGroup.objects.using(IDM_DATABASE_ALIAS).values_list("option", flat=True).order_by("option"))
+        return list(IDMAgeGroup.objects.using(self._db_alias).values_list("option", flat=True).order_by("option"))
 
     def _check_unmatched_org_units(self, reference_to_ou_id, matched_references):
         """Verify unmatched org units actually exist in the impact DB.
@@ -209,7 +211,7 @@ class IDMImpactProvider(ImpactProvider):
         if not unmatched:
             return
         known = set(
-            IDMAdminInfo.objects.using(IDM_DATABASE_ALIAS)
+            IDMAdminInfo.objects.using(self._db_alias)
             .filter(admin_2_name__in=unmatched)
             .values_list("admin_2_name", flat=True)
             .distinct()
@@ -277,7 +279,7 @@ class IDMImpactProvider(ImpactProvider):
     def _resolve_age_group_id(self, age_group_label):
         """Resolve an age group label (e.g. 'under5') to its IDM database ID."""
         try:
-            age_group = IDMAgeGroup.objects.using(IDM_DATABASE_ALIAS).get(option=age_group_label)
+            age_group = IDMAgeGroup.objects.using(self._db_alias).get(option=age_group_label)
             return age_group.id
         except IDMAgeGroup.DoesNotExist:
             return None

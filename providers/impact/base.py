@@ -59,6 +59,10 @@ class ImpactProviderError(Exception):
     """Base exception for all impact provider errors."""
 
 
+class IncompleteConfigError(ImpactProviderError):
+    """Raised when a provider's configuration is missing required fields."""
+
+
 class InterventionMappingError(ImpactProviderError):
     """Raised when an intervention's impact_ref cannot be resolved by the provider."""
 
@@ -83,6 +87,11 @@ class ImpactProvider(ABC):
     Contract: implementations must return at most one ImpactResult per year
     and raise DataIntegrityError if their data source contains duplicates.
     """
+
+    def __init__(self, config_id: int, config: dict, secret: str):
+        self.config_id = config_id
+        self.config = config
+        self.secret = secret
 
     @abstractmethod
     def match_impact(

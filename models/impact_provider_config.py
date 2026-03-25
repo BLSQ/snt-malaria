@@ -1,5 +1,7 @@
 from django.db import models
 
+from iaso.utils.models.encrypted_text_field import EncryptedTextField
+
 
 class ImpactProviderConfig(models.Model):
     class Meta:
@@ -9,7 +11,6 @@ class ImpactProviderConfig(models.Model):
 
     class ProviderKey(models.TextChoices):
         SWISSTPH = "swisstph", "SwissTPH"
-        SWISSTPH_CMR = "swisstph_cmr", "SwissTPH CMR"
         IDM = "idm", "IDM"
 
     account = models.OneToOneField(
@@ -21,6 +22,19 @@ class ImpactProviderConfig(models.Model):
         max_length=50,
         choices=ProviderKey.choices,
         help_text="The impact data provider to use for this account.",
+    )
+    config = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text=(
+            "Provider-specific configuration (non-secret). "
+            "For database providers: {db_name, db_host, db_port, db_username}."
+        ),
+    )
+    secret = EncryptedTextField(
+        blank=True,
+        null=True,
+        help_text=("Provider secret (password, token, API key). For database providers this is the database password."),
     )
 
     def __str__(self):
