@@ -119,6 +119,11 @@ docker compose run --rm iaso manage import_openhexa_metrics --account-id <id>
 
 2. Via the "hidden" admin (only accessible to superusers) page on http://localhost:8081/snt_malaria/import_openhexa_metrics/ that allows an admin user to manually launch the Django command to import the metrics into a specific account.
 
+## Impact provider setup
+
+See [IMPACT_SETUP.md](docs/IMPACT_SETUP.md) for instructions on configuring impact
+data providers, intervention mappings, and org_unit mappings.
+
 ## Release workflow
 
 This project follows [Semantic Versioning](http://semver.org/) and assumes you are using [Conventional Commit messages](https://www.conventionalcommits.org/).
