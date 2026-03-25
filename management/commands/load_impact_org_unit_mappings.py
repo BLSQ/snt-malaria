@@ -126,22 +126,26 @@ Nesting can be arbitrarily deep."""
         if default_version is None:
             raise CommandError(f"Account '{identifier}' has no default version.")
 
-        org_units = OrgUnit.objects.filter(version=default_version).select_related("parent__parent")
+        self.stdout.write("Loading org units...")
+        org_units = OrgUnit.objects.filter(version=default_version)
         if not overwrite:
             org_units = org_units.exclude(impact_mapping__isnull=False)
 
         org_unit_list = list(org_units)
+        self.stdout.write(f"Loaded {len(org_unit_list)} org units.")
         if not org_unit_list:
             self.stdout.write(self.style.WARNING("No org units to process."))
             return
 
         self._validate_uniqueness(org_unit_list, lookup)
 
+        self.stdout.write("Writing mappings...")
         created_count = 0
         updated_count = 0
         skipped_count = 0
         with transaction.atomic():
             for org_unit in org_unit_list:
+                self.stdout.write(f"  Processing: {org_unit.name} (id={org_unit.id})")
                 ancestors = _build_ancestors(org_unit)
                 reference = _resolve(ancestors, lookup)
                 if reference is None:
@@ -155,6 +159,7 @@ Nesting can be arbitrarily deep."""
                     created_count += 1
                 else:
                     updated_count += 1
+        self.stdout.write("Committed.")
 
         self.stdout.write(
             self.style.SUCCESS(f"Account '{identifier}': created {created_count}, updated {updated_count} mapping(s).")
