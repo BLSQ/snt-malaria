@@ -4,8 +4,9 @@ import { useSafeIntl } from 'bluesquare-components';
 import * as d3 from 'd3-scale';
 import { mapTheme } from '../../../constants/map-theme';
 import { MESSAGES } from '../../messages';
-import { MetricValue, ScaleDomainRange } from '../types/metrics';
+import { MetricType, MetricValue, ScaleDomainRange } from '../types/metrics';
 import { defaultLegend } from './color-utils';
+import { formatMetricValue } from './metric-utils';
 
 export const defaultZoomSnap = 0.25;
 export const defaultZoomDelta = 0.5;
@@ -131,7 +132,10 @@ export const useGetOrgUnitMetric = (
             }
 
             if (metricValue.value || metricValue.value === 0) {
-                return { label: metricValue.value, value: metricValue.value };
+                return {
+                    label: metricValue.value,
+                    value: metricValue.value.toString(),
+                };
             }
 
             if (!metricValue.string_value) {
@@ -146,4 +150,16 @@ export const useGetOrgUnitMetric = (
         },
         [formatMessage, displayedMetricValues],
     );
+};
+
+export const getMapStyleForOrgUnit = (
+    metricType: MetricType,
+    metric?: { label: string; value: string | number },
+) => {
+    const color = getColorForShape(
+        metric?.value,
+        metricType?.legend_type,
+        metricType?.legend_config,
+    );
+    return { color, label: formatMetricValue(metric?.label) };
 };

@@ -1,247 +1,33 @@
 import { defineMessages } from 'react-intl';
 
 export const MESSAGES = defineMessages({
-    create: {
-        defaultMessage: 'Create',
-        id: 'iaso.label.create',
-    },
-    edit: {
-        defaultMessage: 'Edit',
-        id: 'iaso.label.edit',
-    },
-    requiredField: {
-        id: 'iaso.forms.error.fieldRequired',
-        defaultMessage: 'This field is required',
-    },
-    required: {
-        id: 'iaso.snt_malaria.label.required',
-        defaultMessage: 'Required',
-    },
-    maxYear: {
-        id: 'iaso.snt_malaria.scenario.errors.maxYear',
-        defaultMessage: 'Year must be at most {year}',
-    },
-    minYear: {
-        id: 'iaso.snt_malaria.scenario.errors.minYear',
-        defaultMessage: 'Year must be at least {year}',
-    },
-    endYearMin: {
-        id: 'iaso.snt_malaria.scenario.errors.endYearMin',
-        defaultMessage:
-            'End year must be greater than or equal to start year ({year})',
-    },
-    title: {
-        id: 'iaso.snt_malaria.home.title',
-        defaultMessage: 'SNT Malaria',
-    },
-    compareOptimizeTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.title',
-        defaultMessage: 'Compare & Optimize',
-    },
-    scenarioFallbackLabel: {
-        id: 'iaso.snt_malaria.compareOptimize.scenarioFallbackLabel',
-        defaultMessage: 'Scenario {value}',
-    },
-    impactDifferencesTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.impactDifferencesTitle',
-        defaultMessage: 'Impact differences',
-    },
-    yearlyPrevalenceTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.yearlyPrevalenceTitle',
-        defaultMessage: 'Yearly Prevalence Rate',
-    },
-    costPerAvertedCaseTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.costPerAvertedCaseTitle',
-        defaultMessage: 'Cost per averted case',
-    },
-    budgetByCategoryTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.budgetByCategoryTitle',
-        defaultMessage: 'Budget by Category',
-    },
-    noBudgetData: {
-        id: 'iaso.snt_malaria.compareOptimize.noBudgetData',
-        defaultMessage: 'No budget data available',
-    },
-    settingsTitle: {
-        id: 'iaso.snt_malaria.settings.title',
-        defaultMessage: 'Settings',
-    },
-    scenarioLabel: {
-        id: 'iaso.snt_malaria.label.scenario',
-        defaultMessage: 'Scenario',
-    },
-    name: {
-        id: 'iaso.snt_malaria.label.name',
-        defaultMessage: 'Name',
-    },
-    description: {
-        id: 'iaso.snt_malaria.label.description',
-        defaultMessage: 'Description',
-    },
-    startYear: {
-        id: 'iaso.snt_malaria.label.start_year',
-        defaultMessage: 'Start year',
-    },
-    endYear: {
-        id: 'iaso.snt_malaria.label.end_year',
-        defaultMessage: 'End year',
-    },
-    layers: {
-        id: 'iaso.snt_malaria.label.layers',
-        defaultMessage: 'Layers',
-    },
-    above: {
-        id: 'iaso.snt_malaria.label.layers.above',
-        defaultMessage: 'Above',
-    },
-    editedOn: {
-        id: 'iaso.snt_malaria.label.editedOn',
-        defaultMessage: 'Edited on {date}',
-    },
-    interventionTitle: {
-        id: 'iaso.snt_malaria.label.interventionTitle',
-        defaultMessage: 'Interventions',
-    },
-    interventionLabel: {
-        id: 'iaso.snt_malaria.label.interventionLabel',
-        defaultMessage: 'Intervention',
-    },
-    orgUnitDistrict: {
-        id: 'iaso.snt_malaria.label.orgUnitDistricts',
-        defaultMessage: 'Districts',
-    },
-    addToPlan: {
-        id: 'iaso.snt_malaria.label.interventionList.addToPlan',
-        defaultMessage: 'Add to plan',
-    },
-    cancel: {
-        defaultMessage: 'Cancel',
-        id: 'iaso.label.cancel',
-    },
-    duplicate: {
-        id: 'iaso.snt_malaria.label.duplicate',
-        defaultMessage: 'Duplicate',
-    },
-    remove: {
-        id: 'iaso.snt_malaria.label.interventionList.remove',
-        defaultMessage: 'Remove',
-    },
     add: {
         id: 'iaso.snt_malaria.label.interventionList.add',
         defaultMessage: 'Add',
     },
-    interventionPlanTitle: {
-        id: 'iaso.snt_malaria.label.interventionPlanTitle',
-        defaultMessage: 'Intervention plan',
-    },
-    noPlanAvailable: {
-        id: 'iaso.snt_malaria.label.noInterventionPlanAvailable',
-        defaultMessage: 'No intervention plan available',
-    },
-    none: {
-        id: 'iaso.snt_malaria.label.none',
-        defaultMessage: 'None',
-    },
-    ok: {
-        id: 'iaso.snt_malaria.label.ok',
-        defaultMessage: 'OK',
-    },
-    changeTo: {
-        id: 'iaso.snt_malaria.label.changeTo',
-        defaultMessage: 'Change to...',
-    },
-    customize: {
-        id: 'iaso.snt_malaria.label.customize',
-        defaultMessage: 'Customize',
-    },
-    customizeTooltip: {
-        id: 'iaso.snt_malaria.label.customizeTooltip',
-        defaultMessage:
-            'Enable / Disable modification of plan from the map by clicking on a district',
-    },
-    selectOrgUnitsBtn: {
-        id: 'iaso.snt_malaria.label.selectOrgUnitsBtn',
-        defaultMessage: 'Select districts',
-    },
-    selectOrgUnitsSuccess: {
-        id: 'iaso.snt_malaria.label.selectOrgUnitsSuccess',
-        defaultMessage: 'Selected {amount} districts',
-    },
-    noOrgUnitsSelected: {
-        id: 'iaso.snt_malaria.label.noOrgUnitsSelected',
-        defaultMessage:
-            'No districts adhere to filter rules, no districts were selected',
-    },
-    clearOrgUnitSelection: {
-        id: 'iaso.snt_malaria.label.clearOrgUnitSelection',
-        defaultMessage: 'Clear selection',
-    },
-    selectDistrictsMessage: {
-        id: 'iaso.snt_malaria.label.interventionList.selectDistrictsMessage',
-        defaultMessage:
-            'Select districts in the map above and add them to the list',
+    addInterventionProperty: {
+        id: 'iaso.snt_malaria.scenarioRule.addInterventionProperty',
+        defaultMessage: 'Add intervention',
     },
     addMap: {
         id: 'iaso.snt_malaria.label.addMap',
         defaultMessage: 'Add a covariant map',
     },
-    tableNoContent: {
-        id: 'iaso.snt_malaria.label.interventionList.tableNoContent',
-        defaultMessage: 'Intervention and their districts will appear here.',
+    addMatchingCriteria: {
+        id: 'iaso.snt_malaria.scenarioRule.addMatchingCriteria',
+        defaultMessage: 'Add Criteria',
     },
-    selectedOrgUnitsCount: {
-        id: 'iaso.snt_malaria.label.selectOrgUnitsCount',
-        defaultMessage: '{selectionCount} selected',
+    addToPlan: {
+        id: 'iaso.snt_malaria.label.interventionList.addToPlan',
+        defaultMessage: 'Add to plan',
     },
-    clearSelectionTooltip: {
-        id: 'iaso.snt_malaria.label.clearSelectionTooltip',
-        defaultMessage: 'Clear selection',
+    ageGroupLabel: {
+        id: 'iaso.snt_malaria.compareOptimize.ageGroupLabel',
+        defaultMessage: 'Age group',
     },
-    clearedMapSelection: {
-        id: 'iaso.snt_malaria.label.clearedMapSelection',
-        defaultMessage: 'Map selection has been cleared',
-    },
-    showLegend: {
-        id: 'iaso.snt_malaria.label.showLegend',
-        defaultMessage: 'Show Legend',
-    },
-    hideLegend: {
-        id: 'iaso.snt_malaria.label.hideLegend',
-        defaultMessage: 'Hide Legend',
-    },
-    modalDeleteScenarioTitle: {
-        id: 'iaso.snt_malaria.label.delete.title',
-        defaultMessage: 'Delete Scenario',
-    },
-    modalDeleteScenarioConfirm: {
-        id: 'iaso.snt_malaria.label.delete.confirm',
-        defaultMessage: 'Do you really want to delete this scenario?',
-    },
-    interventionAssignmentRemoveAllButton: {
-        id: 'iaso.snt_malaria.interventionAssignment.removeAll',
-        defaultMessage: 'Remove all',
-    },
-    interventionAssignmentRemoveAllTitle: {
-        id: 'iaso.snt_malaria.interventionAssignment.removeAllTitle',
-        defaultMessage: 'Remove all districts',
-    },
-    interventionAssignmentRemoveAllMessage: {
-        id: 'iaso.snt_malaria.interventionAssignment.removeAllMessage',
-        defaultMessage:
-            'Do you really want to remove all districts from this intervention assignment?',
-    },
-    interventionAssignmentRemoveTitle: {
-        id: 'iaso.snt_malaria.interventionAssignment.removeTitle',
-        defaultMessage: 'Remove this district',
-    },
-    interventionAssignmentRemoveMessage: {
-        id: 'iaso.snt_malaria.interventionAssignment.removeMessage',
-        defaultMessage:
-            'Do you really want to remove this district from this intervention assignment?',
-    },
-    searchPlaceholder: {
-        id: 'iaso.snt_malaria.label.searchPlaceholder',
-        defaultMessage: 'Search District',
+    allDisplayLevels: {
+        id: 'iaso.snt_malaria.label.allDisplayLevels',
+        defaultMessage: 'All',
     },
     allInterventionCategories: {
         id: 'iaso.snt_malaria.label.allInterventionCategories',
@@ -251,229 +37,41 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.allInterventions',
         defaultMessage: 'All interventions',
     },
-    resolveConflictTitle: {
-        id: 'iaso.snt_malaria.label.resolveConflictTile',
-        defaultMessage: 'Resolve Conflicts',
+    allOrgUnits: {
+        id: 'iaso.snt_malaria.label.allOrgUnits',
+        defaultMessage: 'All',
+    },
+    allParentOrgUnits: {
+        id: 'iaso.snt_malaria.label.allParentOrgUnits',
+        defaultMessage: 'All',
+    },
+    above: {
+        id: 'iaso.snt_malaria.label.layers.above',
+        defaultMessage: 'Above',
     },
     apply: {
         id: 'iaso.snt_malaria.label.apply',
         defaultMessage: 'Apply',
     },
-    resolveConflictDesc: {
-        id: 'iaso.snt_malaria.label.resolveConflictDesc',
-        defaultMessage:
-            'Some districts already have an intervention from the samegroup.{br} Choose which one to apply, or decide to apply both.',
-    },
-    runInterventionPlanBudget: {
-        id: 'iaso.snt_malaria.label.runInterventionPlanBudget',
-        defaultMessage: 'Run Budget',
-    },
-    selectAll: {
-        id: 'iaso.snt_malaria.label.selectAll',
-        defaultMessage: 'Select All',
-    },
-    unselectAll: {
-        id: 'iaso.snt_malaria.label.unselectAll',
-        defaultMessage: 'Unselect All',
-    },
-    invertSelection: {
-        id: 'iaso.snt_malaria.label.invertSelection',
-        defaultMessage: 'Invert Selection',
-    },
-    filter: {
-        id: 'iaso.snt_malaria.label.filter',
-        defaultMessage: 'Filter',
-    },
-    seasonal: {
-        id: 'iaso.snt_malaria.metrics.seasonal',
-        defaultMessage: 'Seasonal',
-    },
-    'not-seasonal': {
-        id: 'iaso.snt_malaria.metrics.not-seasonal',
-        defaultMessage: 'Not Seasonal',
-    },
-    costBreakdownChartTitle: {
-        id: 'iaso.snt_malaria.cost-breakdown-chart.title',
-        defaultMessage: 'Cost per intervention category',
-    },
-    proportionChart: {
-        id: 'iaso.snt_malaria.proportion-chart.title',
-        defaultMessage: 'Cost per intervention',
+    baselineLabel: {
+        id: 'iaso.snt_malaria.scenarios.baseline',
+        defaultMessage: 'Baseline',
     },
     budget: {
         id: 'iaso.snt_malaria.budgeting.budget',
         defaultMessage: 'Budget',
     },
-    total: {
-        id: 'iaso.snt_malaria.budgeting.total',
-        defaultMessage: 'Total',
-    },
-    entirePeriod: {
-        id: 'iaso.snt_malaria.budgeting.entirePeriod',
-        defaultMessage: 'Entire period',
-    },
-    more: {
-        id: 'iaso.snt_malaria.more',
-        defaultMessage: 'More',
-    },
-    loading: {
-        id: 'iaso.snt_malaria.loading',
-        defaultMessage: 'Loading content...',
-    },
-    downloadCSVTemplate: {
-        id: 'iaso.snt_malaria.scenario.downloadCSVTemplate',
-        defaultMessage: 'Download CSV Template',
-    },
-    createScenario: {
-        id: 'iaso.snt_malaria.scenario.createScenario',
-        defaultMessage: 'Create Scenario',
-    },
-    scenarioCSV: {
-        id: 'iaso.snt_malaria.scenario.scenarioCSV',
-        defaultMessage: 'Scenario CSV',
-    },
-    scenarioImportSuccess: {
-        id: 'iaso.snt_malaria.scenario.scenarioImportSuccess',
-        defaultMessage: 'Scenario imported successfully',
-    },
-    scenarioImportError: {
-        id: 'iaso.snt_malaria.scenario.scenarioImportError',
-        defaultMessage: 'Error importing scenario',
-    },
-    lockScenario: {
-        id: 'iaso.snt_malaria.scenario.lockScenario',
-        defaultMessage: 'Lock Scenario',
-    },
-    unlockScenario: {
-        id: 'iaso.snt_malaria.scenario.unlockScenario',
-        defaultMessage: 'Unlock Scenario',
-    },
-    modalLockScenarioConfirm: {
-        id: 'iaso.snt_malaria.scenario.modalLockScenarioConfirm',
-        defaultMessage:
-            'Do you really want to lock this scenario? Locking a scenario will prevent any further edits to be made.',
-    },
-    modalUnlockScenarioConfirm: {
-        id: 'iaso.snt_malaria.scenario.modalUnlockScenarioConfirm',
-        defaultMessage:
-            'Do you really want to unlock this scenario? Unlocking a scenario allows further edits to be made.',
-    },
-    budgetAssumptionsLabel: {
-        id: 'iaso.snt_malaria.budgetAssumptions.label',
-        defaultMessage: 'Budget settings',
-    },
-    budgetAssumptionsSave: {
-        id: 'iaso.snt_malaria.budgetAssumptions.save',
-        defaultMessage: 'Save Settings',
-    },
-    budgetAssumptionsCoverage: {
-        id: 'iaso.snt_malaria.budgetAssumptions.coverage',
-        defaultMessage: 'Coverage',
+    budgetAssumptionsBaleSize: {
+        id: 'iaso.snt_malaria.budgetAssumptions.bale_size',
+        defaultMessage: 'Bale Sz.',
     },
     budgetAssumptionsBuffer: {
         id: 'iaso.snt_malaria.budgetAssumptions.buffer',
         defaultMessage: 'Buffer',
     },
-    budgetAssumptionsPPN: {
-        id: 'iaso.snt_malaria.budgetAssumptions.ppn',
-        defaultMessage: 'PPN',
-    },
-    budgetAssumptionsTouchpoints: {
-        id: 'iaso.snt_malaria.budgetAssumptions.touchpoints',
-        defaultMessage: 'Tp.',
-    },
-    budgetAssumptionsPopProp3_11: {
-        id: 'iaso.snt_malaria.budgetAssumptions.pop_prop_3_11',
-        defaultMessage: '3-11mo',
-    },
-    budgetAssumptionsPopProp12_59: {
-        id: 'iaso.snt_malaria.budgetAssumptions.pop_prop_12_59',
-        defaultMessage: '12-59mo',
-    },
-    budgetAssumptionsMonthlyRound: {
-        id: 'iaso.snt_malaria.budgetAssumptions.monthly_round',
-        defaultMessage: 'Cycles',
-    },
-    budgetAssumptionsBaleSize: {
-        id: 'iaso.snt_malaria.budgetAssumptions.bale_size',
-        defaultMessage: 'Bale Sz.',
-    },
-    budgetAssumptionsDosesPerPW: {
-        id: 'iaso.snt_malaria.budgetAssumptions.doses_per_pw',
-        defaultMessage: 'PW Doses',
-    },
-    budgetAssumptionsDosesPerChild: {
-        id: 'iaso.snt_malaria.budgetAssumptions.doses_per_child',
-        defaultMessage: 'Child Doses',
-    },
-    budgetAssumptionsTabletFactor: {
-        id: 'iaso.snt_malaria.budgetAssumptions.tablet_factor',
-        defaultMessage: 'Tablet Fac.',
-    },
-    impactSettingsLabel: {
-        id: 'iaso.snt_malaria.impactSettings.label',
-        defaultMessage: 'Impact settings',
-    },
-    impactSettingsNotIncluded: {
-        id: 'iaso.snt_malaria.impactSettings.notIncluded',
-        defaultMessage: 'Not included',
-    },
-    impactCases: {
-        id: 'iaso.snt_malaria.impact.cases',
-        defaultMessage: 'Cases',
-    },
-    impactSevereCases: {
-        id: 'iaso.snt_malaria.impact.severeCases',
-        defaultMessage: 'Severe cases',
-    },
-    impactPfprReduction: {
-        id: 'iaso.snt_malaria.impact.pfprReduction',
-        defaultMessage: 'PfPR reduction',
-    },
-    impactTotalCosts: {
-        id: 'iaso.snt_malaria.impact.totalCosts',
-        defaultMessage: 'Total Cumulative Costs (USD)',
-    },
-    impactTargetLabel: {
-        id: 'iaso.snt_malaria.impact.targetLabel',
-        defaultMessage: '{year} Target: {value}',
-    },
-    impactBudgetLabel: {
-        id: 'iaso.snt_malaria.impact.budgetLabel',
-        defaultMessage: '2030 Budget: {value}',
-    },
-    displayOptionsTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.displayOptionsTitle',
-        defaultMessage: 'Display options',
-    },
-    noYearRangeOverlapTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.noYearRangeOverlapTitle',
-        defaultMessage: 'No overlapping year range',
-    },
-    noYearRangeOverlap: {
-        id: 'iaso.snt_malaria.compareOptimize.noYearRangeOverlap',
-        defaultMessage:
-            'No overlapping year range between the selected scenarios and the available impact data. Please select scenarios with compatible year ranges.',
-    },
-    yearsLabel: {
-        id: 'iaso.snt_malaria.compareOptimize.yearsLabel',
-        defaultMessage: 'Years',
-    },
-    ageGroupLabel: {
-        id: 'iaso.snt_malaria.compareOptimize.ageGroupLabel',
-        defaultMessage: 'Age group',
-    },
-    scenariosTitle: {
-        id: 'iaso.snt_malaria.scenarios.title',
-        defaultMessage: 'Scenarios',
-    },
-    baselineLabel: {
-        id: 'iaso.snt_malaria.scenarios.baseline',
-        defaultMessage: 'Baseline',
-    },
-    compareScenariosLabel: {
-        id: 'iaso.snt_malaria.scenarios.compare',
-        defaultMessage: 'Compare scenarios',
+    budgetAssumptionsCoverage: {
+        id: 'iaso.snt_malaria.budgetAssumptions.coverage',
+        defaultMessage: 'Coverage',
     },
     budgetAssumptionsDescription_itn_campaign: {
         id: 'iaso.snt_malaria.budgetAssumptions.description.itn_campaign',
@@ -496,20 +94,6 @@ export const MESSAGES = defineMessages({
         multiply by the <b>expected coverage at ANC attendence</b> (default: 80%) for the scheduled number of <b>touchpoints</b>
         per woman (default: 3) and multiply this by a <b>procurement buffer</b> (default: 10%).`,
     },
-    budgetAssumptionsDescription_smc: {
-        id: 'iaso.snt_malaria.budgetAssumptions.description.smc',
-        defaultMessage: `To estimate the number of SP+AQ co-blistered packets required for Seasonal Malaria Chemoprevention (SMC),
-        we use the following methodology with the default assumptions included here for clarity.
-        We first assume each packet contains one full course for a single cycle (1 tablet of SP and 3 tablets of AQ).
-        SMC is at default delivered over 4 <b>monthly cycles</b> and targets two age groups:
-        children aged 3 to <12 months and children aged >12 to 59 months.
-        We include the distribution of age-groups as the procurement costs of the co-blistered packets
-        for these different age groups vary as a result of the age-based dosing requirements for SMC drugs.
-
-        We first estimate the <b>target population</b> by applying fixed proportions to the total number of children under 5 years of age.
-        <b>Coverage</b> of the target population is assumed to be 100%, unless otherwise specified,
-        and is applied before the buffer is calculated. A <b>10% buffer</b> is then included to account for re-dosing, wastage, and the treatment of children from outside the catchment area.`,
-    },
     budgetAssumptionsDescription_pmc: {
         id: 'iaso.snt_malaria.budgetAssumptions.description.pmc',
         defaultMessage: `To estimate the quantity of sulfadoxine-pyrimethamine (SP) required for Perennial Malaria Chemoprevention (PMC),
@@ -526,6 +110,20 @@ export const MESSAGES = defineMessages({
 
         An <b>85% coverage rate</b> is assumed and a <b>10% procurement buffer</b> is then included to cover wastage, re-dosing, and stockouts.`,
     },
+    budgetAssumptionsDescription_smc: {
+        id: 'iaso.snt_malaria.budgetAssumptions.description.smc',
+        defaultMessage: `To estimate the number of SP+AQ co-blistered packets required for Seasonal Malaria Chemoprevention (SMC),
+        we use the following methodology with the default assumptions included here for clarity.
+        We first assume each packet contains one full course for a single cycle (1 tablet of SP and 3 tablets of AQ).
+        SMC is at default delivered over 4 <b>monthly cycles</b> and targets two age groups:
+        children aged 3 to <12 months and children aged >12 to 59 months.
+        We include the distribution of age-groups as the procurement costs of the co-blistered packets
+        for these different age groups vary as a result of the age-based dosing requirements for SMC drugs.
+
+        We first estimate the <b>target population</b> by applying fixed proportions to the total number of children under 5 years of age.
+        <b>Coverage</b> of the target population is assumed to be 100%, unless otherwise specified,
+        and is applied before the buffer is calculated. A <b>10% buffer</b> is then included to account for re-dosing, wastage, and the treatment of children from outside the catchment area.`,
+    },
     budgetAssumptionsDescription_vacc: {
         id: 'iaso.snt_malaria.budgetAssumptions.description.vacc',
         defaultMessage: `To estimate the number of malaria vaccine doses required, at default,
@@ -534,149 +132,559 @@ export const MESSAGES = defineMessages({
         The vaccine is delivered through routine immunization contacts with an <b>expected coverage of 84%</b> among the target population.
         A 10% buffer is included to account for losses during transportation, storage, and administration.`,
     },
-    budgetAssumptionsPath: {
-        id: 'iaso.snt_malaria.budgetAssumptions.path',
-        defaultMessage:
-            'Budgeting methodology based on tools and documentation developed by PATH.',
+    budgetAssumptionsDosesPerChild: {
+        id: 'iaso.snt_malaria.budgetAssumptions.doses_per_child',
+        defaultMessage: 'Child Doses',
     },
-    budgetAssumptionsMinValue: {
-        id: 'iaso.snt_malaria.budgetAssumptions.minValue',
-        defaultMessage: 'Value must be at least {min}',
+    budgetAssumptionsDosesPerPW: {
+        id: 'iaso.snt_malaria.budgetAssumptions.doses_per_pw',
+        defaultMessage: 'PW Doses',
+    },
+    budgetAssumptionsLabel: {
+        id: 'iaso.snt_malaria.budgetAssumptions.label',
+        defaultMessage: 'Budget settings',
     },
     budgetAssumptionsMaxValue: {
         id: 'iaso.snt_malaria.budgetAssumptions.maxValue',
         defaultMessage: 'Value must be at most {max}',
     },
-    createScenarioRule: {
-        id: 'iaso.snt_malaria.scenarioRule.create',
-        defaultMessage: 'Create rule',
+    budgetAssumptionsMinValue: {
+        id: 'iaso.snt_malaria.budgetAssumptions.minValue',
+        defaultMessage: 'Value must be at least {min}',
     },
-    editScenarioRule: {
-        id: 'iaso.snt_malaria.scenarioRule.edit',
-        defaultMessage: 'Edit rule',
+    budgetAssumptionsMonthlyRound: {
+        id: 'iaso.snt_malaria.budgetAssumptions.monthly_round',
+        defaultMessage: 'Cycles',
     },
-    deleteScenarioRule: {
-        id: 'iaso.snt_malaria.scenarioRule.delete',
-        defaultMessage: 'Delete rule',
+    budgetAssumptionsPath: {
+        id: 'iaso.snt_malaria.budgetAssumptions.path',
+        defaultMessage:
+            'Budgeting methodology based on tools and documentation developed by PATH.',
     },
-    deleteScenarioRuleSuccess: {
-        id: 'iaso.snt_malaria.scenarioRule.deleteSuccess',
-        defaultMessage: 'Scenario rule deleted successfully',
+    budgetAssumptionsPopProp12_59: {
+        id: 'iaso.snt_malaria.budgetAssumptions.pop_prop_12_59',
+        defaultMessage: '12-59mo',
     },
-    deleteScenarioRuleError: {
-        id: 'iaso.snt_malaria.scenarioRule.deleteError',
-        defaultMessage: 'Error deleting scenario rule',
+    budgetAssumptionsPopProp3_11: {
+        id: 'iaso.snt_malaria.budgetAssumptions.pop_prop_3_11',
+        defaultMessage: '3-11mo',
     },
-    deleteScenarioRuleConfirmMessage: {
-        id: 'iaso.snt_malaria.scenarioRule.deleteConfirmMessage',
-        defaultMessage: 'Do you really want to delete this scenario rule?',
+    budgetAssumptionsPPN: {
+        id: 'iaso.snt_malaria.budgetAssumptions.ppn',
+        defaultMessage: 'PPN',
     },
-    addInterventionProperty: {
-        id: 'iaso.snt_malaria.scenarioRule.addInterventionProperty',
-        defaultMessage: 'Add intervention',
+    budgetAssumptionsSave: {
+        id: 'iaso.snt_malaria.budgetAssumptions.save',
+        defaultMessage: 'Save Settings',
     },
-    addMatchingCriteria: {
-        id: 'iaso.snt_malaria.scenarioRule.addMatchingCriteria',
-        defaultMessage: 'Add Criteria',
+    budgetAssumptionsTabletFactor: {
+        id: 'iaso.snt_malaria.budgetAssumptions.tablet_factor',
+        defaultMessage: 'Tablet Fac.',
     },
-    ruleName: {
-        id: 'iaso.snt_malaria.scenarioRule.ruleName',
-        defaultMessage: 'Rule name',
+    budgetAssumptionsTouchpoints: {
+        id: 'iaso.snt_malaria.budgetAssumptions.touchpoints',
+        defaultMessage: 'Tp.',
     },
-    metricType: {
-        id: 'iaso.snt_malaria.scenarioRule.metricType',
-        defaultMessage: 'Metric type',
-    },
-    operator: {
-        id: 'iaso.snt_malaria.scenarioRule.operator',
-        defaultMessage: 'Operator',
-    },
-    value: {
-        id: 'iaso.snt_malaria.scenarioRule.value',
-        defaultMessage: 'Value',
-    },
-    selectionCriteria: {
-        id: 'iaso.snt_malaria.scenarioRule.selectionCriteria',
-        defaultMessage: 'Selection criteria',
-    },
-    interventionProperties: {
-        id: 'iaso.snt_malaria.scenarioRule.interventionProperties',
-        defaultMessage: 'Interventions',
-    },
-    ruleExceptions: {
-        id: 'iaso.snt_malaria.scenarioRule.ruleExceptions',
-        defaultMessage: 'Exceptions',
-    },
-    includedOrgUnits: {
-        id: 'iaso.snt_malaria.scenarioRule.includedOrgUnits',
-        defaultMessage: 'Include',
-    },
-    excludedOrgUnits: {
-        id: 'iaso.snt_malaria.scenarioRule.excludedOrgUnits',
-        defaultMessage: 'Exclude',
-    },
-    showSidebar: {
-        id: 'iaso.snt_malaria.label.showSidebar',
-        defaultMessage: 'Show sidebar',
-    },
-    hideSidebar: {
-        id: 'iaso.snt_malaria.label.hideSidebar',
-        defaultMessage: 'Hide sidebar',
-    },
-    sidebarTitle: {
-        id: 'iaso.snt_malaria.label.sidebarTitle',
-        defaultMessage: 'Display options',
-    },
-    parentOrgUnit: {
-        id: 'iaso.snt_malaria.label.parentOrgUnit',
-        defaultMessage: 'Parent',
-    },
-    allParentOrgUnits: {
-        id: 'iaso.snt_malaria.label.allParentOrgUnits',
-        defaultMessage: 'All',
-    },
-    displayLevel: {
-        id: 'iaso.snt_malaria.label.displayLevel',
-        defaultMessage: 'Display level',
-    },
-    allDisplayLevels: {
-        id: 'iaso.snt_malaria.label.allDisplayLevels',
-        defaultMessage: 'All',
-    },
-    allOrgUnits: {
-        id: 'iaso.snt_malaria.label.allOrgUnits',
-        defaultMessage: 'All',
-    },
-    national: {
-        id: 'iaso.snt_malaria.label.national',
-        defaultMessage: 'National',
-    },
-    deaths: {
-        id: 'iaso.snt_malaria.impact.deaths',
-        defaultMessage: 'Deaths',
-    },
-    noImpactData: {
-        id: 'iaso.snt_malaria.compareOptimize.noImpactData',
-        defaultMessage: 'No impact data available',
-    },
-    scenarioLabelWithIndex: {
-        id: 'iaso.snt_malaria.compareOptimize.scenarioLabelWithIndex',
-        defaultMessage: 'Scenario {index}',
-    },
-    mapView: {
-        id: 'iaso.snt_malaria.label.mapView',
-        defaultMessage: 'Map',
-    },
-    listView: {
-        id: 'iaso.snt_malaria.label.listView',
-        defaultMessage: 'List',
+    budgetByCategoryTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.budgetByCategoryTitle',
+        defaultMessage: 'Budget by Category',
     },
     budgetView: {
         id: 'iaso.snt_malaria.label.budgetView',
         defaultMessage: 'Budget',
     },
+    cancel: {
+        defaultMessage: 'Cancel',
+        id: 'iaso.label.cancel',
+    },
+    changeTo: {
+        id: 'iaso.snt_malaria.label.changeTo',
+        defaultMessage: 'Change to...',
+    },
+    clearOrgUnitSelection: {
+        id: 'iaso.snt_malaria.label.clearOrgUnitSelection',
+        defaultMessage: 'Clear selection',
+    },
+    clearSelectionTooltip: {
+        id: 'iaso.snt_malaria.label.clearSelectionTooltip',
+        defaultMessage: 'Clear selection',
+    },
+    clearedMapSelection: {
+        id: 'iaso.snt_malaria.label.clearedMapSelection',
+        defaultMessage: 'Map selection has been cleared',
+    },
+    compareOptimizeTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.title',
+        defaultMessage: 'Compare & Optimize',
+    },
+    compareScenariosLabel: {
+        id: 'iaso.snt_malaria.scenarios.compare',
+        defaultMessage: 'Compare scenarios',
+    },
+    costBreakdownChartTitle: {
+        id: 'iaso.snt_malaria.cost-breakdown-chart.title',
+        defaultMessage: 'Cost per intervention category',
+    },
+    costPerAvertedCaseTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.costPerAvertedCaseTitle',
+        defaultMessage: 'Cost per averted case',
+    },
+    create: {
+        defaultMessage: 'Create',
+        id: 'iaso.label.create',
+    },
+    createScenario: {
+        id: 'iaso.snt_malaria.scenario.createScenario',
+        defaultMessage: 'Create Scenario',
+    },
+    createScenarioRule: {
+        id: 'iaso.snt_malaria.scenarioRule.create',
+        defaultMessage: 'Create rule',
+    },
+    customize: {
+        id: 'iaso.snt_malaria.label.customize',
+        defaultMessage: 'Customize',
+    },
+    customizeTooltip: {
+        id: 'iaso.snt_malaria.label.customizeTooltip',
+        defaultMessage:
+            'Enable / Disable modification of plan from the map by clicking on a district',
+    },
+    deleteScenarioRule: {
+        id: 'iaso.snt_malaria.scenarioRule.delete',
+        defaultMessage: 'Delete rule',
+    },
+    deleteScenarioRuleConfirmMessage: {
+        id: 'iaso.snt_malaria.scenarioRule.deleteConfirmMessage',
+        defaultMessage: 'Do you really want to delete this scenario rule?',
+    },
+    deleteScenarioRuleError: {
+        id: 'iaso.snt_malaria.scenarioRule.deleteError',
+        defaultMessage: 'Error deleting scenario rule',
+    },
+    deleteScenarioRuleSuccess: {
+        id: 'iaso.snt_malaria.scenarioRule.deleteSuccess',
+        defaultMessage: 'Scenario rule deleted successfully',
+    },
+    description: {
+        id: 'iaso.snt_malaria.label.description',
+        defaultMessage: 'Description',
+    },
+    displayLevel: {
+        id: 'iaso.snt_malaria.label.displayLevel',
+        defaultMessage: 'Display level',
+    },
+    displayOptionsTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.displayOptionsTitle',
+        defaultMessage: 'Display options',
+    },
+    downloadCSVTemplate: {
+        id: 'iaso.snt_malaria.scenario.downloadCSVTemplate',
+        defaultMessage: 'Download CSV Template',
+    },
+    duplicate: {
+        id: 'iaso.snt_malaria.label.duplicate',
+        defaultMessage: 'Duplicate',
+    },
+    deaths: {
+        id: 'iaso.snt_malaria.impact.deaths',
+        defaultMessage: 'Deaths',
+    },
+    edit: {
+        defaultMessage: 'Edit',
+        id: 'iaso.label.edit',
+    },
+    editScenarioRule: {
+        id: 'iaso.snt_malaria.scenarioRule.edit',
+        defaultMessage: 'Edit rule',
+    },
+    editedOn: {
+        id: 'iaso.snt_malaria.label.editedOn',
+        defaultMessage: 'Edited on {date}',
+    },
+    endYear: {
+        id: 'iaso.snt_malaria.label.end_year',
+        defaultMessage: 'End year',
+    },
+    endYearMin: {
+        id: 'iaso.snt_malaria.scenario.errors.endYearMin',
+        defaultMessage:
+            'End year must be greater than or equal to start year ({year})',
+    },
+    entirePeriod: {
+        id: 'iaso.snt_malaria.budgeting.entirePeriod',
+        defaultMessage: 'Entire period',
+    },
+    excludedOrgUnits: {
+        id: 'iaso.snt_malaria.scenarioRule.excludedOrgUnits',
+        defaultMessage: 'Exclude',
+    },
+    filter: {
+        id: 'iaso.snt_malaria.label.filter',
+        defaultMessage: 'Filter',
+    },
+    hideLegend: {
+        id: 'iaso.snt_malaria.label.hideLegend',
+        defaultMessage: 'Hide Legend',
+    },
+    hideSidebar: {
+        id: 'iaso.snt_malaria.label.hideSidebar',
+        defaultMessage: 'Hide sidebar',
+    },
+    impactBudgetLabel: {
+        id: 'iaso.snt_malaria.impact.budgetLabel',
+        defaultMessage: '2030 Budget: {value}',
+    },
+    impactCases: {
+        id: 'iaso.snt_malaria.impact.cases',
+        defaultMessage: 'Cases',
+    },
+    impactDifferencesTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.impactDifferencesTitle',
+        defaultMessage: 'Impact differences',
+    },
+    impactPfprReduction: {
+        id: 'iaso.snt_malaria.impact.pfprReduction',
+        defaultMessage: 'PfPR reduction',
+    },
+    impactSettingsLabel: {
+        id: 'iaso.snt_malaria.impactSettings.label',
+        defaultMessage: 'Impact settings',
+    },
+    impactSettingsNotIncluded: {
+        id: 'iaso.snt_malaria.impactSettings.notIncluded',
+        defaultMessage: 'Not included',
+    },
+    impactSevereCases: {
+        id: 'iaso.snt_malaria.impact.severeCases',
+        defaultMessage: 'Severe cases',
+    },
+    impactTargetLabel: {
+        id: 'iaso.snt_malaria.impact.targetLabel',
+        defaultMessage: '{year} Target: {value}',
+    },
+    impactTotalCosts: {
+        id: 'iaso.snt_malaria.impact.totalCosts',
+        defaultMessage: 'Total Cumulative Costs (USD)',
+    },
+    importCSV: {
+        id: 'iaso.snt_malaria.scenario.importCSV',
+        defaultMessage: 'Import metric values',
+    },
+    includedOrgUnits: {
+        id: 'iaso.snt_malaria.scenarioRule.includedOrgUnits',
+        defaultMessage: 'Include',
+    },
+    interventionAssignmentRemoveAllButton: {
+        id: 'iaso.snt_malaria.interventionAssignment.removeAll',
+        defaultMessage: 'Remove all',
+    },
+    interventionAssignmentRemoveAllMessage: {
+        id: 'iaso.snt_malaria.interventionAssignment.removeAllMessage',
+        defaultMessage:
+            'Do you really want to remove all districts from this intervention assignment?',
+    },
+    interventionAssignmentRemoveAllTitle: {
+        id: 'iaso.snt_malaria.interventionAssignment.removeAllTitle',
+        defaultMessage: 'Remove all districts',
+    },
+    interventionAssignmentRemoveMessage: {
+        id: 'iaso.snt_malaria.interventionAssignment.removeMessage',
+        defaultMessage:
+            'Do you really want to remove this district from this intervention assignment?',
+    },
+    interventionAssignmentRemoveTitle: {
+        id: 'iaso.snt_malaria.interventionAssignment.removeTitle',
+        defaultMessage: 'Remove this district',
+    },
+    interventionLabel: {
+        id: 'iaso.snt_malaria.label.interventionLabel',
+        defaultMessage: 'Intervention',
+    },
+    interventionPlanTitle: {
+        id: 'iaso.snt_malaria.label.interventionPlanTitle',
+        defaultMessage: 'Intervention plan',
+    },
+    interventionProperties: {
+        id: 'iaso.snt_malaria.scenarioRule.interventionProperties',
+        defaultMessage: 'Interventions',
+    },
+    interventionTitle: {
+        id: 'iaso.snt_malaria.label.interventionTitle',
+        defaultMessage: 'Interventions',
+    },
+    invertSelection: {
+        id: 'iaso.snt_malaria.label.invertSelection',
+        defaultMessage: 'Invert Selection',
+    },
+    layers: {
+        id: 'iaso.snt_malaria.label.layers',
+        defaultMessage: 'Layers',
+    },
+    listView: {
+        id: 'iaso.snt_malaria.label.listView',
+        defaultMessage: 'List',
+    },
+    loading: {
+        id: 'iaso.snt_malaria.loading',
+        defaultMessage: 'Loading content...',
+    },
+    lockScenario: {
+        id: 'iaso.snt_malaria.scenario.lockScenario',
+        defaultMessage: 'Lock Scenario',
+    },
+    mapView: {
+        id: 'iaso.snt_malaria.label.mapView',
+        defaultMessage: 'Map',
+    },
+    maxYear: {
+        id: 'iaso.snt_malaria.scenario.errors.maxYear',
+        defaultMessage: 'Year must be at most {year}',
+    },
+    metricType: {
+        id: 'iaso.snt_malaria.scenarioRule.metricType',
+        defaultMessage: 'Metric type',
+    },
+    minYear: {
+        id: 'iaso.snt_malaria.scenario.errors.minYear',
+        defaultMessage: 'Year must be at least {year}',
+    },
+    modalDeleteScenarioConfirm: {
+        id: 'iaso.snt_malaria.label.delete.confirm',
+        defaultMessage: 'Do you really want to delete this scenario?',
+    },
+    modalDeleteScenarioTitle: {
+        id: 'iaso.snt_malaria.label.delete.title',
+        defaultMessage: 'Delete Scenario',
+    },
+    modalLockScenarioConfirm: {
+        id: 'iaso.snt_malaria.scenario.modalLockScenarioConfirm',
+        defaultMessage:
+            'Do you really want to lock this scenario? Locking a scenario will prevent any further edits to be made.',
+    },
+    modalUnlockScenarioConfirm: {
+        id: 'iaso.snt_malaria.scenario.modalUnlockScenarioConfirm',
+        defaultMessage:
+            'Do you really want to unlock this scenario? Unlocking a scenario allows further edits to be made.',
+    },
+    more: {
+        id: 'iaso.snt_malaria.more',
+        defaultMessage: 'More',
+    },
+    name: {
+        id: 'iaso.snt_malaria.label.name',
+        defaultMessage: 'Name',
+    },
+    national: {
+        id: 'iaso.snt_malaria.label.national',
+        defaultMessage: 'National',
+    },
+    noBudgetData: {
+        id: 'iaso.snt_malaria.compareOptimize.noBudgetData',
+        defaultMessage: 'No budget data available',
+    },
+    noImpactData: {
+        id: 'iaso.snt_malaria.compareOptimize.noImpactData',
+        defaultMessage: 'No impact data available',
+    },
+    noLayer: {
+        id: 'iaso.snt_malaria.label.noLayer',
+        defaultMessage: 'No layer',
+    },
+    noOrgUnitsSelected: {
+        id: 'iaso.snt_malaria.label.noOrgUnitsSelected',
+        defaultMessage:
+            'No districts adhere to filter rules, no districts were selected',
+    },
+    noPlanAvailable: {
+        id: 'iaso.snt_malaria.label.noInterventionPlanAvailable',
+        defaultMessage: 'No intervention plan available',
+    },
+    none: {
+        id: 'iaso.snt_malaria.label.none',
+        defaultMessage: 'None',
+    },
+    'not-seasonal': {
+        id: 'iaso.snt_malaria.metrics.not-seasonal',
+        defaultMessage: 'Not Seasonal',
+    },
+    noYearRangeOverlap: {
+        id: 'iaso.snt_malaria.compareOptimize.noYearRangeOverlap',
+        defaultMessage:
+            'No overlapping year range between the selected scenarios and the available impact data. Please select scenarios with compatible year ranges.',
+    },
+    noYearRangeOverlapTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.noYearRangeOverlapTitle',
+        defaultMessage: 'No overlapping year range',
+    },
+    ok: {
+        id: 'iaso.snt_malaria.label.ok',
+        defaultMessage: 'OK',
+    },
+    operator: {
+        id: 'iaso.snt_malaria.scenarioRule.operator',
+        defaultMessage: 'Operator',
+    },
+    orgUnitDistrict: {
+        id: 'iaso.snt_malaria.label.orgUnitDistricts',
+        defaultMessage: 'Districts',
+    },
+    parentOrgUnit: {
+        id: 'iaso.snt_malaria.label.parentOrgUnit',
+        defaultMessage: 'Parent',
+    },
+    proportionChart: {
+        id: 'iaso.snt_malaria.proportion-chart.title',
+        defaultMessage: 'Cost per intervention',
+    },
+    remove: {
+        id: 'iaso.snt_malaria.label.interventionList.remove',
+        defaultMessage: 'Remove',
+    },
+    required: {
+        id: 'iaso.snt_malaria.label.required',
+        defaultMessage: 'Required',
+    },
+    requiredField: {
+        id: 'iaso.forms.error.fieldRequired',
+        defaultMessage: 'This field is required',
+    },
+    resolveConflictDesc: {
+        id: 'iaso.snt_malaria.label.resolveConflictDesc',
+        defaultMessage:
+            'Some districts already have an intervention from the samegroup.{br} Choose which one to apply, or decide to apply both.',
+    },
+    resolveConflictTitle: {
+        id: 'iaso.snt_malaria.label.resolveConflictTile',
+        defaultMessage: 'Resolve Conflicts',
+    },
+    ruleExceptions: {
+        id: 'iaso.snt_malaria.scenarioRule.ruleExceptions',
+        defaultMessage: 'Exceptions',
+    },
+    ruleName: {
+        id: 'iaso.snt_malaria.scenarioRule.ruleName',
+        defaultMessage: 'Rule name',
+    },
+    runInterventionPlanBudget: {
+        id: 'iaso.snt_malaria.label.runInterventionPlanBudget',
+        defaultMessage: 'Run Budget',
+    },
+    scenarioCSV: {
+        id: 'iaso.snt_malaria.scenario.scenarioCSV',
+        defaultMessage: 'Scenario CSV',
+    },
+    scenarioFallbackLabel: {
+        id: 'iaso.snt_malaria.compareOptimize.scenarioFallbackLabel',
+        defaultMessage: 'Scenario {value}',
+    },
+    scenarioImportError: {
+        id: 'iaso.snt_malaria.scenario.scenarioImportError',
+        defaultMessage: 'Error importing scenario',
+    },
+    scenarioImportSuccess: {
+        id: 'iaso.snt_malaria.scenario.scenarioImportSuccess',
+        defaultMessage: 'Scenario imported successfully',
+    },
+    scenarioLabel: {
+        id: 'iaso.snt_malaria.label.scenario',
+        defaultMessage: 'Scenario',
+    },
+    scenarioLabelWithIndex: {
+        id: 'iaso.snt_malaria.compareOptimize.scenarioLabelWithIndex',
+        defaultMessage: 'Scenario {index}',
+    },
+    scenariosTitle: {
+        id: 'iaso.snt_malaria.scenarios.title',
+        defaultMessage: 'Scenarios',
+    },
+    searchPlaceholder: {
+        id: 'iaso.snt_malaria.label.searchPlaceholder',
+        defaultMessage: 'Search District',
+    },
+    seasonal: {
+        id: 'iaso.snt_malaria.metrics.seasonal',
+        defaultMessage: 'Seasonal',
+    },
+    selectAll: {
+        id: 'iaso.snt_malaria.label.selectAll',
+        defaultMessage: 'Select All',
+    },
+    selectDistrictsMessage: {
+        id: 'iaso.snt_malaria.label.interventionList.selectDistrictsMessage',
+        defaultMessage:
+            'Select districts in the map above and add them to the list',
+    },
+    selectOrgUnitsBtn: {
+        id: 'iaso.snt_malaria.label.selectOrgUnitsBtn',
+        defaultMessage: 'Select districts',
+    },
+    selectOrgUnitsSuccess: {
+        id: 'iaso.snt_malaria.label.selectOrgUnitsSuccess',
+        defaultMessage: 'Selected {amount} districts',
+    },
+    selectedOrgUnitsCount: {
+        id: 'iaso.snt_malaria.label.selectOrgUnitsCount',
+        defaultMessage: '{selectionCount} selected',
+    },
+    selectionCriteria: {
+        id: 'iaso.snt_malaria.scenarioRule.selectionCriteria',
+        defaultMessage: 'Selection criteria',
+    },
+    settingsTitle: {
+        id: 'iaso.snt_malaria.settings.title',
+        defaultMessage: 'Settings',
+    },
+    showLegend: {
+        id: 'iaso.snt_malaria.label.showLegend',
+        defaultMessage: 'Show Legend',
+    },
+    showSidebar: {
+        id: 'iaso.snt_malaria.label.showSidebar',
+        defaultMessage: 'Show sidebar',
+    },
+    sidebarTitle: {
+        id: 'iaso.snt_malaria.label.sidebarTitle',
+        defaultMessage: 'Display options',
+    },
+    startYear: {
+        id: 'iaso.snt_malaria.label.start_year',
+        defaultMessage: 'Start year',
+    },
     submit: {
         id: 'iaso.snt_malaria.label.submit',
         defaultMessage: 'Submit',
+    },
+    tableNoContent: {
+        id: 'iaso.snt_malaria.label.interventionList.tableNoContent',
+        defaultMessage: 'Intervention and their districts will appear here.',
+    },
+    title: {
+        id: 'iaso.snt_malaria.home.title',
+        defaultMessage: 'SNT Malaria',
+    },
+    total: {
+        id: 'iaso.snt_malaria.budgeting.total',
+        defaultMessage: 'Total',
+    },
+    unlockScenario: {
+        id: 'iaso.snt_malaria.scenario.unlockScenario',
+        defaultMessage: 'Unlock Scenario',
+    },
+    unselectAll: {
+        id: 'iaso.snt_malaria.label.unselectAll',
+        defaultMessage: 'Unselect All',
+    },
+    value: {
+        id: 'iaso.snt_malaria.scenarioRule.value',
+        defaultMessage: 'Value',
+    },
+    yearlyPrevalenceTitle: {
+        id: 'iaso.snt_malaria.compareOptimize.yearlyPrevalenceTitle',
+        defaultMessage: 'Yearly Prevalence Rate',
+    },
+    yearsLabel: {
+        id: 'iaso.snt_malaria.compareOptimize.yearsLabel',
+        defaultMessage: 'Years',
     },
 });

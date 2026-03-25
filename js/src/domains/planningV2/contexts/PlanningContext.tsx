@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useState,
+} from 'react';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { sortByStringProp } from '../../planning/libs/list-utils';
 import {
@@ -14,11 +20,13 @@ type PlanningContextType = {
     scenario?: Scenario;
     displayOrgUnitId?: number;
     canEditScenario: boolean;
+    isEditing: boolean;
     orgUnits: OrgUnit[];
     metricTypeCategories: MetricTypeCategory[];
     interventionCategories: InterventionCategory[];
     interventionAssignments: InterventionAssignmentResponse[];
     interventionPlans: InterventionPlan[];
+    toggleIsEditing: () => void;
 };
 
 const PlanningContext = createContext<PlanningContextType>({
@@ -26,11 +34,13 @@ const PlanningContext = createContext<PlanningContextType>({
     scenario: undefined,
     displayOrgUnitId: undefined,
     canEditScenario: false,
+    isEditing: false,
     orgUnits: [],
     metricTypeCategories: [],
     interventionCategories: [],
     interventionAssignments: [],
     interventionPlans: [],
+    toggleIsEditing: () => {},
 });
 
 export const usePlanningContext = () => useContext(PlanningContext);
@@ -79,6 +89,12 @@ export const PlanningProvider = ({
         );
     }, [interventionAssignments, setInterventionPlans]);
 
+    const [isEditing, setIsEditing] = useState(false);
+    const toggleIsEditing = useCallback(
+        () => setIsEditing(e => !e),
+        [setIsEditing],
+    );
+
     return (
         <PlanningContext.Provider
             value={{
@@ -91,6 +107,8 @@ export const PlanningProvider = ({
                 interventionCategories,
                 interventionAssignments,
                 interventionPlans,
+                isEditing,
+                toggleIsEditing,
             }}
         >
             {children}

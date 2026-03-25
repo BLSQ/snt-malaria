@@ -8,7 +8,7 @@ type Props = {
     dataKey?: string;
     orgUnit: OrgUnit;
     orgUnitMapMisc: {
-        label: string | undefined;
+        label: string | number | undefined;
         color: string | undefined;
     };
     color: string;

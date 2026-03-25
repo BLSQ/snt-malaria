@@ -32,10 +32,8 @@ const styles: Record<string, SxProps<Theme>> = {
         maxHeight: 40,
         display: 'flex',
         alignItems: 'center',
-    },
-    metricTypeLabel: {
-        minWidth: 200,
-        maxWidth: 200,
+        flexGrow: 1,
+        overflow: 'hidden',
     },
 };
 
@@ -82,7 +80,6 @@ export const MatchingCriterionForm: FC<Props> = ({
                         variant="body2"
                         color="textSecondary"
                         noWrap={true}
-                        sx={styles.metricTypeLabel}
                     >
                         {metricType?.name}
                     </Typography>
@@ -114,27 +111,18 @@ export const MatchingCriterionForm: FC<Props> = ({
                     onBlur={() => onBlur('string_value')}
                 />
             ) : (
-                <>
+                <Tooltip title={scaleLabel}>
                     <InputComponent
                         keyValue="value"
                         type="number"
                         value={metricTypeCriterion.value}
                         onChange={onUpdateField}
                         errors={getErrors('value')}
-                        wrapperSx={{ width: 100 }}
+                        wrapperSx={{ maxWidth: 85, minWidth: 85 }}
                         withMarginTop={false}
                         onBlur={() => onBlur('value')}
                     />
-                    <Box sx={{ ...styles.labelWrapper, flexGrow: 1 }}>
-                        <Typography
-                            variant="caption"
-                            color="textSecondary"
-                            sx={styles.scaleLabel}
-                        >
-                            {scaleLabel}
-                        </Typography>
-                    </Box>
-                </>
+                </Tooltip>
             )}
             <DeleteIconButton onClick={onRemove} />
         </Box>
