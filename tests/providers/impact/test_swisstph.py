@@ -1,3 +1,5 @@
+import types
+
 from unittest.mock import patch
 
 from django.db import connection
@@ -29,12 +31,17 @@ class MockIntervention:
 
 
 class MockOrgUnit:
-    """Minimal mock for OrgUnit model instances."""
+    """Minimal mock for OrgUnit model instances.
 
-    def __init__(self, id, name, source_ref=None):
+    When impact_reference is provided, a mock impact_mapping relation is
+    attached so that ImpactProvider._impact_reference picks it up.
+    """
+
+    def __init__(self, id, name, impact_reference=None):
         self.id = id
         self.name = name
-        self.source_ref = source_ref
+        if impact_reference is not None:
+            self.impact_mapping = types.SimpleNamespace(reference=impact_reference)
 
 
 class SwissTPHMapInterventionTests(TestCase):
@@ -248,9 +255,9 @@ class SwissTPHMatchImpactBulkTests(TestCase):
             **base,
         )
 
-    def test_source_ref_used_for_matching(self):
-        """When source_ref is set, it is used to match against admin_1."""
-        org_unit = MockOrgUnit(id=1, name="Different Name", source_ref="Bern")
+    def test_impact_mapping_used_for_matching(self):
+        """When an impact mapping exists, its reference is used to match against admin_1."""
+        org_unit = MockOrgUnit(id=1, name="Different Name", impact_reference="Bern")
         intervention = MockIntervention(impact_ref="deployed_int_smc")
 
         results = self.provider.match_impact_bulk(
@@ -263,8 +270,8 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         self.assertEqual(len(results[1]), 1)
         self.assertEqual(results[1][0].year, 2025)
 
-    def test_name_fallback_when_no_source_ref(self):
-        """When source_ref is not set, the org unit name is used."""
+    def test_name_fallback_when_no_mapping(self):
+        """When no impact mapping exists, the org unit name is used."""
         org_unit = MockOrgUnit(id=1, name="Bern")
         intervention = MockIntervention(impact_ref="deployed_int_smc")
 
@@ -277,9 +284,9 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         self.assertIn(1, results)
         self.assertEqual(len(results[1]), 1)
 
-    def test_wrong_source_ref_raises_org_unit_mapping_error(self):
-        """A source_ref that doesn't exist in the impact DB should raise OrgUnitMappingError."""
-        org_unit = MockOrgUnit(id=1, name="Bern", source_ref="Zurich")
+    def test_wrong_mapping_raises_org_unit_mapping_error(self):
+        """A mapping reference that doesn't exist in the impact DB should raise OrgUnitMappingError."""
+        org_unit = MockOrgUnit(id=1, name="Bern", impact_reference="Zurich")
         intervention = MockIntervention(impact_ref="deployed_int_smc")
 
         with self.assertRaises(OrgUnitMappingError) as context:

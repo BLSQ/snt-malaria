@@ -35,8 +35,8 @@ class SwissTPHImpactProvider(ImpactProvider):
 
     Connects to a SwissTPH impact database via a dynamically registered
     database alias derived from the provider configuration.
-    Matches org units using source_ref when available, falling back to
-    org_unit.name otherwise.
+    Matches org units using ImpactOrgUnitMapping when available, falling back
+    to org_unit.name otherwise.
     Uses boolean deployed_int_* columns to filter by intervention deployment status.
 
     The following keys in the config JSON control provider behaviour:
@@ -82,7 +82,7 @@ class SwissTPHImpactProvider(ImpactProvider):
             deployed_columns.update(self._map_intervention(intervention))
 
         reference_to_org_unit_id: dict[str, int] = {
-            (org_unit.source_ref or org_unit.name): org_unit.id for org_unit in org_units
+            self._impact_reference(org_unit): org_unit.id for org_unit in org_units
         }
 
         filters = {
