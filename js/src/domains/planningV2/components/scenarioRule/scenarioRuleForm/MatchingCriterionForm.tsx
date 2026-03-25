@@ -1,7 +1,9 @@
-import React, { FC, useMemo } from 'react';
+import React, { FC, forwardRef, useMemo } from 'react';
 import { Box, Typography, SxProps, Theme, Tooltip } from '@mui/material';
 import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
-import InputComponent from 'Iaso/components/forms/InputComponent';
+import InputComponent, {
+    InputComponentProps,
+} from 'Iaso/components/forms/InputComponent';
 import { LegendTypes } from '../../../../../constants/legend';
 import { MetricType } from '../../../../planning/types/metrics';
 import { MetricTypeCriterion } from '../../../types/scenarioRule';
@@ -112,16 +114,19 @@ export const MatchingCriterionForm: FC<Props> = ({
                 />
             ) : (
                 <Tooltip title={scaleLabel}>
-                    <InputComponent
-                        keyValue="value"
-                        type="number"
-                        value={metricTypeCriterion.value}
-                        onChange={onUpdateField}
-                        errors={getErrors('value')}
-                        wrapperSx={{ maxWidth: 85, minWidth: 85 }}
-                        withMarginTop={false}
-                        onBlur={() => onBlur('value')}
-                    />
+                    {/* This box is needed for the tooltip to work as it required a ref that MUI knows */}
+                    <Box>
+                        <InputComponent
+                            keyValue="value"
+                            type="number"
+                            value={metricTypeCriterion.value}
+                            onChange={onUpdateField}
+                            errors={getErrors('value')}
+                            wrapperSx={{ maxWidth: 85, minWidth: 85 }}
+                            withMarginTop={false}
+                            onBlur={() => onBlur('value')}
+                        />
+                    </Box>
                 </Tooltip>
             )}
             <DeleteIconButton onClick={onRemove} />

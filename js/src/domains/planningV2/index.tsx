@@ -181,7 +181,7 @@ export const PlanningV2: FC = () => {
             canEditScenario={canEditScenario}
         >
             {isLoadingOrgUnits && <LoadingSpinner />}
-            <TopBar title={title} disableShadow />
+            <TopBar title={title} disableShadow sx={{ zIndex: 401 }} />
             <PageContainer>
                 <Grid container spacing={1}>
                     <Grid item xs={12} md={4}>
