@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useState } from 'react';
-import { Card, Grid } from '@mui/material';
+import { Card, Grid, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 
@@ -106,7 +106,11 @@ export const DataLayers: FC = () => {
                         <PaperFullHeight>
                             <Card sx={styles.card}>
                                 <CardStyled
-                                    header={displayedMetricType?.name || ''}
+                                    header={
+                                        <Typography variant="h6">
+                                            {displayedMetricType?.name || ''}
+                                        </Typography>
+                                    }
                                 >
                                     <DataLayerMap
                                         metricType={displayedMetricType}
