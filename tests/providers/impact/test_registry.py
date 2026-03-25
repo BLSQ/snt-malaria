@@ -12,7 +12,8 @@ from plugins.snt_malaria.providers.impact.swisstph import SwissTPHImpactProvider
 DUMMY_CONFIG = {"db_name": "test", "db_host": "localhost", "db_port": 5432, "db_username": "user"}
 DUMMY_SECRET = "s3cret"
 
-_ENSURE_DB_PATCH = "plugins.snt_malaria.providers.impact.db.ensure_db_connection"
+_SWISSTPH_DB_PATCH = "plugins.snt_malaria.providers.impact.swisstph.ensure_db_connection"
+_IDM_DB_PATCH = "plugins.snt_malaria.providers.impact.idm.ensure_db_connection"
 
 
 class ProviderRegistryTests(TestCase):
@@ -24,7 +25,7 @@ class ProviderRegistryTests(TestCase):
         provider = get_provider_for_account(self.account)
         self.assertIsNone(provider)
 
-    @patch(_ENSURE_DB_PATCH, return_value="default")
+    @patch(_SWISSTPH_DB_PATCH, return_value="default")
     def test_swisstph_config_returns_swisstph(self, _mock_ensure):
         ImpactProviderConfig.objects.create(
             account=self.account, provider_key="swisstph", config=DUMMY_CONFIG, secret=DUMMY_SECRET
@@ -34,7 +35,7 @@ class ProviderRegistryTests(TestCase):
         self.assertEqual(provider.config, DUMMY_CONFIG)
         self.assertEqual(provider.secret, DUMMY_SECRET)
 
-    @patch(_ENSURE_DB_PATCH, return_value="default")
+    @patch(_IDM_DB_PATCH, return_value="default")
     def test_idm_config_returns_idm(self, _mock_ensure):
         ImpactProviderConfig.objects.create(
             account=self.account, provider_key="idm", config=DUMMY_CONFIG, secret=DUMMY_SECRET

@@ -1,13 +1,7 @@
-import threading
-
 from django.db import connections
-from django.db.backends.postgresql.base import DatabaseWrapper
 
 from plugins.snt_malaria.providers.impact.base import IncompleteConfigError
 
-
-_lock = threading.Lock()
-_db_configs: dict[str, dict] = {}
 
 REQUIRED_CONFIG_KEYS = {"db_name", "db_host"}
 
@@ -39,13 +33,8 @@ def _build_db_config(config: dict, secret: str) -> dict:
 def ensure_db_connection(config_id: int, config: dict, secret: str) -> str:
     """Register a dynamic Django database connection and return its alias.
 
-    Creates a ``DatabaseWrapper`` and injects it directly into Django's
-    per-thread connection storage.  The connection is **not** added to
-    ``connections.settings`` so it stays invisible to ``connections.all()``
-    and third-party middleware (e.g. ``querycount``) that iterates all
-    known connections.
-
-    The wrapper is read-only (``default_transaction_read_only=on``).
+    The connection is read-only (``default_transaction_read_only=on``)
+    and is managed by Django's standard connection lifecycle.
 
     Raises IncompleteConfigError when required keys (db_name, db_host)
     are missing or empty in the config dict.
@@ -58,16 +47,9 @@ def ensure_db_connection(config_id: int, config: dict, secret: str) -> str:
             f"Fill in the config JSON via the Django admin."
         )
 
-    alias = f"impact_provider_{config_id}"
+    alias = f"impact_{config_id}"
 
-    with _lock:
-        if alias not in _db_configs:
-            _db_configs[alias] = _build_db_config(config, secret)
-
-    # The per-thread Local may not have this alias yet (new thread, or
-    # cleared by Django's request_finished signal).  Re-create if needed.
-    if not hasattr(connections._connections, alias):
-        wrapper = DatabaseWrapper(_db_configs[alias], alias=alias)
-        connections[alias] = wrapper
+    if alias not in connections.databases:
+        connections.databases[alias] = _build_db_config(config, secret)
 
     return alias
