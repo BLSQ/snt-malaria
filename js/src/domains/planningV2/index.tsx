@@ -34,7 +34,7 @@ import { useDeleteScenario } from '../scenarios/hooks/useDeleteScenario';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
 import { InterventionPlanHeader } from './components/interventionPlan/InterventionPlanHeader';
-import { InterventionsPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
+import { InterventionPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
 import { InterventionsPlanTable } from './components/interventionPlanTable/InterventionsPlanTable';
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
 import { PlanningProvider } from './contexts/PlanningContext';
@@ -153,7 +153,7 @@ export const PlanningV2: FC = () => {
     );
 
     // TODO Find a better place for this
-    const [selectedOrgUnitIds, setSelectedOrgUnitIds] = useState<number[]>([]);
+    const [matchedOrgUnitIds, setMatchedOrgUnitIds] = useState<number[]>([]);
     const [previewRule, setPreviewRule] = useState<
         Partial<ScenarioRule> | undefined
     >();
@@ -163,11 +163,11 @@ export const PlanningV2: FC = () => {
         (rule?: Partial<ScenarioRule>) => {
             setPreviewRule(rule);
             if (!rule) {
-                setSelectedOrgUnitIds([]);
+                setMatchedOrgUnitIds([]);
                 return;
             }
             return previewScenarioRule(rule, {
-                onSuccess: data => setSelectedOrgUnitIds(data as number[]),
+                onSuccess: data => setMatchedOrgUnitIds(data as number[]),
             });
         },
         [previewScenarioRule],
@@ -224,9 +224,9 @@ export const PlanningV2: FC = () => {
                                     }
                                 >
                                     {activeTab === 'map' && (
-                                        <InterventionsPlanMap
-                                            selectedOrgUnitIds={
-                                                selectedOrgUnitIds
+                                        <InterventionPlanMap
+                                            matchedOrgUnitIds={
+                                                matchedOrgUnitIds
                                             }
                                             previewRule={previewRule}
                                         />
