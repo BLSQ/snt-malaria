@@ -122,7 +122,7 @@ export const LayerSelect: FC<Props> = ({
                             sx={styles.menuItem}
                             value={metric.id}
                         >
-                            <Typography>{metric.name}</Typography>
+                            {metric.name}
                         </MenuItem>
                     )),
                 ])}
