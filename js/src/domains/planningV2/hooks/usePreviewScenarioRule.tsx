@@ -13,9 +13,12 @@ type Payload = {
 export const usePreviewScenarioRule = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: Partial<Payload>) => {
-            const matching_criteria = body.matching_criteria
-                ? matchingCriteriaToJsonLogic(body.matching_criteria)
-                : undefined;
+            const jsonLogic = matchingCriteriaToJsonLogic(
+                body.matching_criteria ?? [],
+            );
+            if (jsonLogic == null) {
+                return Promise.resolve([]);
+            }
 
             const org_units_excluded = !!body.org_units_excluded
                 ? body.org_units_excluded.split(',')
@@ -25,7 +28,7 @@ export const usePreviewScenarioRule = (): UseMutationResult =>
                 : undefined;
 
             return postRequest(`/api/snt_malaria/scenario_rules/preview/`, {
-                matching_criteria,
+                matching_criteria: jsonLogic,
                 org_units_excluded,
                 org_units_included,
             });

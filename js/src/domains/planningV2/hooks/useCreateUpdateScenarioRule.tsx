@@ -58,7 +58,8 @@ export const useCreateUpdateScenarioRule = (scenarioId: number) => {
     return useSnackMutation({
         mutationFn: (body: Partial<ScenarioRulePayload>) => {
             const matching_criteria = body.matching_criteria
-                ? matchingCriteriaToJsonLogic(body.matching_criteria)
+                ? matchingCriteriaToJsonLogic(body.matching_criteria) ??
+                  undefined
                 : undefined;
 
             const payload: Record<string, unknown> = {
