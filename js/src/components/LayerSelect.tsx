@@ -17,26 +17,40 @@ import { SxStyles } from 'Iaso/types/general';
 import { MetricType } from '../domains/planning/types/metrics';
 import { MetricTypeCategory } from '../domains/planning/types/metrics';
 
+/** Closed control only: match [MapLegend] chip; `sx` is the OutlinedInput root. */
 const styles: SxStyles = {
     formControl: {
         minWidth: '200px',
         maxWidth: '100%',
     },
     select: (theme: Theme) => ({
-        // TODO Should use a theme color, but didn't find any matching.
-        backgroundColor: theme.palette.grey[700],
-        color: theme.palette.common.white,
-        borderRadius: theme.spacing(1),
-        height: '32px',
-        '& .MuiOutlinedInput-notchedOutline': {
-            border: 0,
+        // TODO Should use a theme color; hex matches MapLegend chip for now (#1F2B3DBF).
+        backgroundColor: '#1F2B3DBF',
+        color: 'white',
+        borderRadius: '8px',
+        minHeight: 0,
+        '& fieldset, & .MuiOutlinedInput-notchedOutline': {
+            border: 'none',
+            borderWidth: 0,
         },
-        '& .MuiSelect-select .MuiTypography-root': {
+        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderWidth: '0 !important',
+            borderColor: 'transparent !important',
+        },
+        '& .MuiSelect-select': {
+            py: theme.spacing(0.5),
+            px: theme.spacing(1),
+            pr: theme.spacing(4),
+            display: 'flex',
+            alignItems: 'center',
+            fontSize: theme.typography.body2.fontSize,
+            fontFamily: theme.typography.fontFamily,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
         },
         '& svg': {
-            fill: theme.palette.common.white,
+            fill: 'white',
         },
     }),
     category: {
@@ -85,7 +99,7 @@ export const LayerSelect: FC<Props> = ({
     return (
         <FormControl sx={styles.formControl}>
             <Select
-                id={'layer-select'}
+                id="layer-select"
                 value={selectedMetricType?.id ?? ''}
                 onChange={handleChange}
                 variant="outlined"
