@@ -16,8 +16,8 @@ from rest_framework.response import Response
 from iaso.api.common import CONTENT_TYPE_CSV
 from iaso.utils.org_units import get_valid_org_units_with_geography
 from plugins.snt_malaria.api.scenarios.utils import (
+    create_rules_from_import,
     duplicate_rules,
-    get_assignments_from_row,
     get_csv_headers,
     get_csv_row,
     get_scenario,
@@ -155,22 +155,19 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
         assignment_df = serializer.context.get("assignment_df")
         interventions = serializer.context.get("interventions")
+        all_org_unit_ids = set(
+            get_valid_org_units_with_geography(request.user.iaso_profile.account).values_list("id", flat=True)
+        )
 
-        # Get scenario property from serializer
         scenario = get_scenario(request.user, base_name="Imported Scenario")
         with transaction.atomic():
             scenario.save()
-            intervention_assignments = []
+            rules = create_rules_from_import(scenario, assignment_df, interventions, all_org_unit_ids, request.user)
 
-            for _, row in assignment_df.iterrows():
-                assignments = get_assignments_from_row(request.user, scenario, row, interventions)
-                if assignments:
-                    intervention_assignments.extend(assignments)
-
-            if intervention_assignments:
-                InterventionAssignment.objects.bulk_create(intervention_assignments)
-            else:
+            if not rules:
                 raise ValidationError("No assignments to create from the provided CSV data.")
+
+            scenario.refresh_assignments(request.user)
 
         return Response({"status": "Import successful", "id": scenario.id}, status=status.HTTP_201_CREATED)
 

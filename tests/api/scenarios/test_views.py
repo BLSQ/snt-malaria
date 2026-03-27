@@ -1172,6 +1172,82 @@ class ScenarioAPITestCase(APITestCase):
         response = self.client.patch(f"{self.BASE_URL}{other_scenario.id}/reorder_rules/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_scenario_import_csv_creates_majority_match_all_rule(self):
+        """When an intervention group covers >50% of org units, a 'Match all' rule is created."""
+        csv_content = (
+            'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n'
+            f"{self.district1.id},District 1,1,0,0\n"
+            f"{self.district2.id},District 2,1,0,0\n"
+            f"{self.district3.id},District 3,0,0,1\n"
+        ).encode()
+        valid_file = SimpleUploadedFile("test.csv", csv_content, content_type="text/csv")
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": valid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        new_scenario = Scenario.objects.get(id=response.data["id"])
+        rules = new_scenario.rules.order_by("priority")
+        self.assertEqual(rules.count(), 2)
+
+        iptp_rule = rules.filter(intervention_properties__intervention=self.intervention_chemo_iptp).first()
+        smc_rule = rules.filter(intervention_properties__intervention=self.intervention_chemo_smc).first()
+
+        self.assertIsNotNone(iptp_rule)
+        self.assertEqual(iptp_rule.matching_criteria, {"all": True})
+        self.assertEqual(sorted(iptp_rule.org_units_excluded), sorted([self.district3.id]))
+        self.assertEqual(iptp_rule.org_units_included, [])
+
+        self.assertIsNotNone(smc_rule)
+        self.assertIsNone(smc_rule.matching_criteria)
+        self.assertEqual(smc_rule.org_units_included, [self.district3.id])
+        self.assertEqual(smc_rule.org_units_excluded, [])
+
+        assignments = new_scenario.intervention_assignments.all()
+        self.assertEqual(assignments.count(), 3)
+        self.assertTrue(all(a.rule is not None for a in assignments))
+
+    def test_scenario_import_csv_rule_names_from_short_names(self):
+        """Rule names are built from intervention short_name (falling back to name), joined by ' + '."""
+        self.intervention_chemo_iptp.short_name = "IP"
+        self.intervention_chemo_iptp.save()
+        self.intervention_vaccination_rts.short_name = "RTS"
+        self.intervention_vaccination_rts.save()
+
+        csv_content = (
+            'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n'
+            f"{self.district1.id},District 1,1,1,0\n"
+            f"{self.district2.id},District 2,1,1,0\n"
+            f"{self.district3.id},District 3,0,0,1\n"
+        ).encode()
+        valid_file = SimpleUploadedFile("test.csv", csv_content, content_type="text/csv")
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": valid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        new_scenario = Scenario.objects.get(id=response.data["id"])
+        rules = new_scenario.rules.order_by("priority")
+
+        combo_rule = rules.filter(intervention_properties__intervention=self.intervention_chemo_iptp).first()
+        self.assertIn("IP", combo_rule.name)
+        self.assertIn("RTS", combo_rule.name)
+        self.assertIn(" + ", combo_rule.name)
+
+    def test_scenario_import_csv_assigns_distinct_colors(self):
+        """Each generated rule gets a distinct color from the dispersed palette."""
+        csv_content = self._generate_csv_content_for_import()
+        valid_file = SimpleUploadedFile("test.csv", csv_content, content_type="text/csv")
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": valid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        new_scenario = Scenario.objects.get(id=response.data["id"])
+        rules = new_scenario.rules.order_by("priority")
+        colors = [r.color for r in rules]
+        self.assertEqual(len(colors), len(set(colors)))
+
     def _generate_csv_content_for_import(self) -> bytes:
         csv_content = (
             'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n'
@@ -1182,8 +1258,13 @@ class ScenarioAPITestCase(APITestCase):
         return csv_content
 
     def _assert_valid_scenario_import(self, scenario: Scenario):
-        # Verify that the scenario and assignments were created
         self.assertEqual(scenario.intervention_assignments.count(), 3)
+
+        rules = scenario.rules.order_by("priority")
+        self.assertEqual(rules.count(), 3)
+        for rule in rules:
+            self.assertIsNotNone(rule.color)
+            self.assertTrue(rule.intervention_properties.exists())
 
         assignments_district_1 = InterventionAssignment.objects.filter(scenario=scenario, org_unit=self.district1)
         assignments_district_2 = InterventionAssignment.objects.filter(scenario=scenario, org_unit=self.district2)
@@ -1191,7 +1272,10 @@ class ScenarioAPITestCase(APITestCase):
 
         self.assertEqual(assignments_district_1.count(), 1)
         self.assertEqual(assignments_district_1.first().intervention, self.intervention_chemo_iptp)
+        self.assertIsNotNone(assignments_district_1.first().rule)
         self.assertEqual(assignments_district_2.count(), 1)
         self.assertEqual(assignments_district_2.first().intervention, self.intervention_chemo_smc)
+        self.assertIsNotNone(assignments_district_2.first().rule)
         self.assertEqual(assignments_district_3.count(), 1)
         self.assertEqual(assignments_district_3.first().intervention, self.intervention_vaccination_rts)
+        self.assertIsNotNone(assignments_district_3.first().rule)
