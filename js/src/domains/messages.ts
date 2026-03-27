@@ -22,7 +22,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Add to plan',
     },
     ageGroupLabel: {
-        id: 'iaso.snt_malaria.compareOptimize.ageGroupLabel',
+        id: 'iaso.snt_malaria.compareCustomize.ageGroupLabel',
         defaultMessage: 'Age group',
     },
     allDisplayLevels: {
@@ -186,7 +186,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Tp.',
     },
     budgetByCategoryTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.budgetByCategoryTitle',
+        id: 'iaso.snt_malaria.compareCustomize.budgetByCategoryTitle',
         defaultMessage: 'Budget by Category',
     },
     budgetView: {
@@ -213,9 +213,9 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.clearedMapSelection',
         defaultMessage: 'Map selection has been cleared',
     },
-    compareOptimizeTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.title',
-        defaultMessage: 'Compare & Optimize',
+    compareCustomizeTitle: {
+        id: 'iaso.snt_malaria.compareCustomize.title',
+        defaultMessage: 'Compare & Customize',
     },
     compareScenariosLabel: {
         id: 'iaso.snt_malaria.scenarios.compare',
@@ -226,7 +226,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Cost per intervention category',
     },
     costPerAvertedCaseTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.costPerAvertedCaseTitle',
+        id: 'iaso.snt_malaria.compareCustomize.costPerAvertedCaseTitle',
         defaultMessage: 'Cost per averted case',
     },
     create: {
@@ -275,7 +275,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Display level',
     },
     displayOptionsTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.displayOptionsTitle',
+        id: 'iaso.snt_malaria.compareCustomize.displayOptionsTitle',
         defaultMessage: 'Display options',
     },
     downloadCSVTemplate: {
@@ -340,7 +340,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Cases',
     },
     impactDifferencesTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.impactDifferencesTitle',
+        id: 'iaso.snt_malaria.compareCustomize.impactDifferencesTitle',
         defaultMessage: 'Impact differences',
     },
     impactPfprReduction: {
@@ -480,11 +480,11 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'National',
     },
     noBudgetData: {
-        id: 'iaso.snt_malaria.compareOptimize.noBudgetData',
+        id: 'iaso.snt_malaria.compareCustomize.noBudgetData',
         defaultMessage: 'No budget data available',
     },
     noImpactData: {
-        id: 'iaso.snt_malaria.compareOptimize.noImpactData',
+        id: 'iaso.snt_malaria.compareCustomize.noImpactData',
         defaultMessage: 'No impact data available',
     },
     noLayer: {
@@ -509,12 +509,12 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Not Seasonal',
     },
     noYearRangeOverlap: {
-        id: 'iaso.snt_malaria.compareOptimize.noYearRangeOverlap',
+        id: 'iaso.snt_malaria.compareCustomize.noYearRangeOverlap',
         defaultMessage:
             'No overlapping year range between the selected scenarios and the available impact data. Please select scenarios with compatible year ranges.',
     },
     noYearRangeOverlapTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.noYearRangeOverlapTitle',
+        id: 'iaso.snt_malaria.compareCustomize.noYearRangeOverlapTitle',
         defaultMessage: 'No overlapping year range',
     },
     ok: {
@@ -575,7 +575,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Scenario CSV',
     },
     scenarioFallbackLabel: {
-        id: 'iaso.snt_malaria.compareOptimize.scenarioFallbackLabel',
+        id: 'iaso.snt_malaria.compareCustomize.scenarioFallbackLabel',
         defaultMessage: 'Scenario {value}',
     },
     scenarioImportError: {
@@ -591,7 +591,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Scenario',
     },
     scenarioLabelWithIndex: {
-        id: 'iaso.snt_malaria.compareOptimize.scenarioLabelWithIndex',
+        id: 'iaso.snt_malaria.compareCustomize.scenarioLabelWithIndex',
         defaultMessage: 'Scenario {index}',
     },
     scenariosTitle: {
@@ -680,11 +680,11 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Value',
     },
     yearlyPrevalenceTitle: {
-        id: 'iaso.snt_malaria.compareOptimize.yearlyPrevalenceTitle',
+        id: 'iaso.snt_malaria.compareCustomize.yearlyPrevalenceTitle',
         defaultMessage: 'Yearly Prevalence Rate',
     },
     yearsLabel: {
-        id: 'iaso.snt_malaria.compareOptimize.yearsLabel',
+        id: 'iaso.snt_malaria.compareCustomize.yearsLabel',
         defaultMessage: 'Years',
     },
 });
