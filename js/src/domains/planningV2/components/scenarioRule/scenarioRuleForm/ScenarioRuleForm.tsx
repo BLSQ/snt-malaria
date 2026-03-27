@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Checkbox, FormControlLabel, Stack, Typography } from '@mui/material';
 import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
 import InputComponent from 'Iaso/components/forms/InputComponent';
@@ -106,20 +106,48 @@ export const ScenarioRuleForm: FC = () => {
                     />
                 </Box>
                 <Box mb={2}>
-                    <ScenarioRuleHeading
-                        label={formatMessage(MESSAGES.selectionCriteria)}
-                    />
-                    <MatchingCriteriaForm
-                        metricTypeCategories={metricTypeCategories}
-                        matchingCriteria={values.matching_criteria}
-                        onAdd={addChildValue}
-                        onRemove={(list_field_key: string, index: number) =>
-                            removeChildValue(list_field_key, index)
-                        }
-                        errors={errors.matching_criteria}
-                        touched={touched.matching_criteria}
-                        onUpdateField={setChildFieldValueAndState}
-                    />
+                    <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                    >
+                        <ScenarioRuleHeading
+                            label={formatMessage(
+                                MESSAGES.selectionCriteria,
+                            )}
+                        />
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    size="small"
+                                    checked={values.match_all}
+                                    onChange={e =>
+                                        setFieldValueAndState(
+                                            'match_all',
+                                            e.target.checked,
+                                        )
+                                    }
+                                />
+                            }
+                            label={formatMessage(
+                                MESSAGES.matchAllOrgUnits,
+                            )}
+                        />
+                    </Box>
+                    {!values.match_all && (
+                        <MatchingCriteriaForm
+                            metricTypeCategories={metricTypeCategories}
+                            matchingCriteria={values.matching_criteria}
+                            onAdd={addChildValue}
+                            onRemove={(
+                                list_field_key: string,
+                                index: number,
+                            ) => removeChildValue(list_field_key, index)}
+                            errors={errors.matching_criteria}
+                            touched={touched.matching_criteria}
+                            onUpdateField={setChildFieldValueAndState}
+                        />
+                    )}
                 </Box>
                 <Box>
                     <ScenarioRuleHeading
@@ -142,6 +170,7 @@ export const ScenarioRuleForm: FC = () => {
                         type="select"
                         value={values.org_units_included || []}
                         multi={true}
+                        disabled={values.match_all}
                         options={inclusionOrgUnitOptions}
                         onChange={setFieldValueAndState}
                         errors={getErrors('org_units_included')}

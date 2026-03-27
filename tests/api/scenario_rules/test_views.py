@@ -700,3 +700,91 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertIn(self.district_1.id, result)
         self.assertIn(self.district_2.id, result)
         self.assertNotIn(self.district_3.id, result)
+
+    def test_post_scenario_rule_match_all(self):
+        payload = {
+            "name": "Match all rule",
+            "scenario": self.scenario.id,
+            "matching_criteria": {"all": True},
+            "intervention_properties": [
+                {"intervention": self.intervention_vaccination_rts.id, "coverage": 0.80},
+            ],
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(self.BASE_URL, payload)
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+
+        new_rule = ScenarioRule.objects.get(id=result["id"])
+        self.assertEqual(new_rule.matching_criteria, {"all": True})
+        self.assertCountEqual(
+            new_rule.org_units_matched,
+            [self.district_1.id, self.district_2.id, self.district_3.id],
+        )
+
+    def test_post_scenario_rule_null_matching_criteria(self):
+        payload = {
+            "name": "Inclusion-only rule",
+            "scenario": self.scenario.id,
+            "matching_criteria": None,
+            "intervention_properties": [
+                {"intervention": self.intervention_vaccination_rts.id, "coverage": 0.80},
+            ],
+            "org_units_included": [self.district_1.id],
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(self.BASE_URL, payload)
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+
+        new_rule = ScenarioRule.objects.get(id=result["id"])
+        self.assertIsNone(new_rule.matching_criteria)
+        self.assertEqual(new_rule.org_units_matched, [])
+
+    def test_preview_match_all(self):
+        payload = {"matching_criteria": {"all": True}}
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}preview/", payload)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.assertEqual(len(result), 3)
+        self.assertIn(self.district_1.id, result)
+        self.assertIn(self.district_2.id, result)
+        self.assertIn(self.district_3.id, result)
+
+    def test_preview_match_all_with_exclusion(self):
+        payload = {
+            "matching_criteria": {"all": True},
+            "org_units_excluded": [self.district_2.id],
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}preview/", payload)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.assertEqual(len(result), 2)
+        self.assertIn(self.district_1.id, result)
+        self.assertNotIn(self.district_2.id, result)
+        self.assertIn(self.district_3.id, result)
+
+    def test_preview_null_criteria(self):
+        payload = {
+            "matching_criteria": None,
+            "org_units_included": [self.district_1.id],
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}preview/", payload)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.assertEqual(len(result), 1)
+        self.assertIn(self.district_1.id, result)
+
+    def test_patch_to_match_all(self):
+        payload = {"matching_criteria": {"all": True}}
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.patch(f"{self.BASE_URL}{self.scenario_rule_1.id}/", payload)
+        self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.scenario_rule_1.refresh_from_db()
+        self.assertEqual(self.scenario_rule_1.matching_criteria, {"all": True})
+        self.assertCountEqual(
+            self.scenario_rule_1.org_units_matched,
+            [self.district_1.id, self.district_2.id, self.district_3.id],
+        )

@@ -11,6 +11,7 @@ from iaso.utils.models.soft_deletable import (
     OnlyDeletedSoftDeletableManager,
     SoftDeletableModel,
 )
+from iaso.utils.org_units import get_valid_org_units_with_geography
 from iaso.utils.validators import JSONSchemaValidator
 
 
@@ -67,10 +68,22 @@ class Scenario(SoftDeletableModel):
 
 SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "type": "object",
-    "required": ["and"],
-    "additionalProperties": False,
-    "properties": {"and": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/condition"}}},
+    "oneOf": [
+        {
+            "type": "object",
+            "required": ["and"],
+            "additionalProperties": False,
+            "properties": {
+                "and": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/condition"}},
+            },
+        },
+        {
+            "type": "object",
+            "required": ["all"],
+            "additionalProperties": False,
+            "properties": {"all": {"const": True}},
+        },
+    ],
     "$defs": {
         "condition": {
             "type": "object",
@@ -118,10 +131,12 @@ class ScenarioRule(models.Model):
     priority = models.PositiveSmallIntegerField()
     color = ColorField(default=DEFAULT_COLOR)
 
-    # This should match format for jsonlogic_to_exists_q_clauses in iaso.utils.jsonlogic
-    # This should only support one level: e.g. {"and": [{"==": [{"var": "gender"}, "F"]}, {"<": [{"var": "age"}, 25]}]}
+    # Matching criteria determines how org units are selected for this rule:
+    # - {"and": [...]} — standard jsonlogic criteria evaluated against MetricValues
+    # - {"all": true}  — matches every valid org unit in the account
+    # - null            — inclusion-only rule, org units come solely from org_units_included
     matching_criteria = models.JSONField(
-        blank=False, null=False, validators=[JSONSchemaValidator(schema=SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)]
+        blank=True, null=True, validators=[JSONSchemaValidator(schema=SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)]
     )
 
     # Those fields are mainly used to keep track on org units setup in the UI.
@@ -155,6 +170,17 @@ class ScenarioRule(models.Model):
         self.clean_fields()  # forces validation checks when calling save() directly or indirectly (objects.create())
         super().save(*args, **kwargs)
 
+    def _compute_org_unit_ids(self) -> set[int]:
+        """Resolve the set of org unit ids this rule targets based on its matching mode."""
+        if self.matching_criteria is None:
+            return set(self.org_units_included)
+        if isinstance(self.matching_criteria, dict) and self.matching_criteria.get("all"):
+            all_ids = set(get_valid_org_units_with_geography(self.scenario.account).values_list("id", flat=True))
+            return (all_ids - set(self.org_units_excluded)) | set(self.org_units_included)
+        if not self.org_units_matched:
+            return set()
+        return (set(self.org_units_matched) - set(self.org_units_excluded)) | set(self.org_units_included)
+
     def refresh_assignments(self, user: User, previous_assignments: dict[int, set[int]]) -> None:
         # """
         # Refresh intervention assignment based on this rule.
@@ -168,12 +194,14 @@ class ScenarioRule(models.Model):
         # """
         from plugins.snt_malaria.models.intervention import InterventionAssignment
 
-        if (not self.intervention_properties.exists()) or (not self.org_units_matched):
-            # If there is no intervention property or no matched org unit,
-            # we don't need to do anything as there will be no assignment from this rule
+        if not self.intervention_properties.exists():
             return
 
-        org_unit_ids = set(self.org_units_matched) - set(self.org_units_excluded) | set(self.org_units_included)
+        org_unit_ids = self._compute_org_unit_ids()
+        if not org_unit_ids:
+            # No org units to assign to (no matched, included, or "match all" org units)
+            return
+
         intervention_assignments_to_create = []
         for intervention_property in self.intervention_properties.select_related("intervention").all():
             category_id = intervention_property.intervention.intervention_category_id

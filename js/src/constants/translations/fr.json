@@ -185,6 +185,8 @@
     "iaso.snt_malaria.scenarioRule.metric": "Métrique",
     "iaso.snt_malaria.scenarioRule.operator": "Opérateur",
     "iaso.snt_malaria.scenarioRule.value": "Valeur",
+    "iaso.snt_malaria.scenarioRule.matchAllOrgUnits": "Toutes les unités d'organisation",
+    "iaso.snt_malaria.scenarioRule.manualSelection": "Sélection manuelle",
     "iaso.snt_malaria.scenarioRule.selectionCriteria": "Critères de sélection",
     "iaso.snt_malaria.scenarioRule.interventionProperties": "Interventions",
     "iaso.snt_malaria.scenarioRule.ruleExceptions": "Exceptions",

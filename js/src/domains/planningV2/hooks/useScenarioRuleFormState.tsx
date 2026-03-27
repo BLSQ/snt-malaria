@@ -13,6 +13,7 @@ export type ScenarioRuleFormValues = {
     name: string;
     scenario: number;
     color: string;
+    match_all: boolean;
     intervention_properties: InterventionProperties[];
     matching_criteria: MetricTypeCriterion[];
     org_units_excluded?: string; // comma separated list of org unit ids
@@ -36,6 +37,7 @@ export const defaultScenarioRuleValues: ScenarioRuleFormValues = {
     scenario: 0,
     name: '',
     color: '#000000',
+    match_all: false,
     intervention_properties: [],
     matching_criteria: [],
 };
@@ -47,6 +49,7 @@ const useValidation = () => {
         () =>
             Yup.object().shape({
                 name: Yup.string().required(formatMessage(MESSAGES.required)),
+                match_all: Yup.boolean(),
                 intervention_properties: Yup.array()
                     .of(
                         Yup.object().shape({
@@ -64,7 +67,24 @@ const useValidation = () => {
                             string_value: Yup.string(),
                         }),
                     )
-                    .min(1),
+                    .when('match_all', {
+                        is: false,
+                        then: schema =>
+                            schema.test(
+                                'criteria-or-inclusions',
+                                'required',
+                                function test(value) {
+                                    const { org_units_included } =
+                                        this.parent;
+                                    if (
+                                        org_units_included &&
+                                        String(org_units_included).length > 0
+                                    )
+                                        return true;
+                                    return (value ?? []).length >= 1;
+                                },
+                            ),
+                    }),
             }),
         [formatMessage],
     );

@@ -95,6 +95,8 @@ class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
 
 
 class ScenarioRulePreviewSerializer(serializers.ModelSerializer):
+    matching_criteria = serializers.JSONField(required=False, allow_null=True, default=None)
+
     class Meta:
         model = ScenarioRule
         fields = [
@@ -110,7 +112,7 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
     """
 
     intervention_properties = ScenarioRuleInterventionPropertiesSerializer(many=True, required=True)
-    matching_criteria = JSONSchemaField(SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)
+    matching_criteria = JSONSchemaField(SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA, required=True, allow_null=True)
     org_units_excluded = serializers.ListField(
         child=serializers.PrimaryKeyRelatedField(queryset=OrgUnit.objects.none()), required=False
     )
@@ -157,6 +159,11 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
         return intervention_properties
 
     def validate_matching_criteria(self, matching_criteria):
+        if matching_criteria is None:
+            return matching_criteria
+        if isinstance(matching_criteria, dict) and matching_criteria.get("all"):
+            return matching_criteria
+
         user = self.context["request"].user
         account = user.iaso_profile.account
         account_metric_types = MetricType.objects.filter(account=account).values_list("id", flat=True)
@@ -220,7 +227,7 @@ class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
 class ScenarioRuleUpdateSerializer(ScenarioRuleWriteSerializerBase):
     # overriding parent fields in order to make them optional
     intervention_properties = ScenarioRuleInterventionPropertiesSerializer(many=True, required=False)
-    matching_criteria = JSONSchemaField(SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA, required=False)
+    matching_criteria = JSONSchemaField(SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA, required=False, allow_null=True)
     name = serializers.CharField(required=False, allow_blank=False, allow_null=False)
 
     class Meta:

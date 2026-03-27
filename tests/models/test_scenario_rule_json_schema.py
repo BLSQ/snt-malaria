@@ -176,3 +176,14 @@ class ScenarioRuleMatchingCriteriaJsonValidationTests(TestCase):
         }
         with self.assertRaisesMessage(ValidationError, "Additional properties are not allowed"):
             jsonschema.validate(invalid_criteria, SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)
+
+    def test_valid_match_all_criteria(self):
+        jsonschema.validate({"all": True}, SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)
+
+    def test_invalid_match_all_false(self):
+        with self.assertRaises(ValidationError):
+            jsonschema.validate({"all": False}, SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)
+
+    def test_invalid_match_all_extra_property(self):
+        with self.assertRaisesMessage(ValidationError, "Additional properties are not allowed"):
+            jsonschema.validate({"all": True, "foo": "bar"}, SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)

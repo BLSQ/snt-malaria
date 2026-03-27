@@ -12,6 +12,7 @@ type ScenarioRulePayload = {
     id?: number;
     name: string;
     scenario: number;
+    match_all?: boolean;
     matching_criteria: MetricTypeCriterion[];
     intervention_properties: InterventionProperties[];
     org_units_excluded?: string; // comma separated list of org unit ids
@@ -57,13 +58,22 @@ export const useCreateUpdateScenarioRule = (scenarioId: number) => {
     const replaceQueryData = useReplaceQueryData(scenarioId);
     return useSnackMutation({
         mutationFn: (body: Partial<ScenarioRulePayload>) => {
-            const matching_criteria = body.matching_criteria
-                ? matchingCriteriaToJsonLogic(body.matching_criteria) ??
-                  undefined
-                : undefined;
+            let matching_criteria: Record<string, unknown> | null | undefined;
+            if (body.match_all) {
+                matching_criteria = { all: true };
+            } else if (body.matching_criteria) {
+                matching_criteria =
+                    matchingCriteriaToJsonLogic(body.matching_criteria) ??
+                    null;
+            } else if (
+                Object.prototype.hasOwnProperty.call(body, 'matching_criteria')
+            ) {
+                matching_criteria = null;
+            }
 
+            const { match_all: _matchAll, ...rest } = body;
             const payload: Record<string, unknown> = {
-                ...body,
+                ...rest,
                 matching_criteria,
             };
             if (Object.prototype.hasOwnProperty.call(body, 'org_units_excluded')) {
@@ -79,9 +89,9 @@ export const useCreateUpdateScenarioRule = (scenarioId: number) => {
 
             return body.id
                 ? patchRequest(
-                      `/api/snt_malaria/scenario_rules/${body.id}/`,
-                      payload,
-                  )
+                    `/api/snt_malaria/scenario_rules/${body.id}/`,
+                    payload,
+                )
                 : postRequest(`/api/snt_malaria/scenario_rules/`, payload);
         },
         invalidateQueryKey: ['interventionAssignments'],

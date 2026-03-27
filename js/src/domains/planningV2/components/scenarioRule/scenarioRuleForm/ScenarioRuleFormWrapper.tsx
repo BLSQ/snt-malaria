@@ -44,15 +44,16 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         () =>
             rule
                 ? {
-                      id: rule.id,
-                      scenario: rule.scenario,
-                      name: rule.name,
-                      color: rule.color,
-                      intervention_properties: rule.intervention_properties,
-                      matching_criteria: rule.matching_criteria,
-                      org_units_excluded: rule.org_units_excluded,
-                      org_units_included: rule.org_units_included,
-                  }
+                    id: rule.id,
+                    scenario: rule.scenario,
+                    name: rule.name,
+                    color: rule.color,
+                    match_all: rule.is_match_all ?? false,
+                    intervention_properties: rule.intervention_properties,
+                    matching_criteria: rule.matching_criteria,
+                    org_units_excluded: rule.org_units_excluded,
+                    org_units_included: rule.org_units_included,
+                }
                 : { ...defaultScenarioRuleValues, scenario: scenarioId },
         [rule, scenarioId],
     );
