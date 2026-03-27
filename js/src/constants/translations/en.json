@@ -74,6 +74,7 @@
     "iaso.snt_malaria.settings.intervention.detailedCostLabel": "Item",
     "iaso.snt_malaria.settings.intervention.detailedCostUnitLabel": "Cost Unit",
     "iaso.snt_malaria.settings.intervention.detailedCostCategoryLabel": "Category",
+    "iaso.snt_malaria.settings.dataLayers.errors.required": "This field is required",
     "iaso.snt_malaria.settings.dataLayers.errors.noWhitespace": "Whitespace not allowed",
     "iaso.snt_malaria.settings.dataLayers.errors.invalidJsonArray": "Invalid format, must be [value1, value2, ...]",
     "iaso.snt_malaria.settings.dataLayers.errors.scaleItemsCount": "Invalid number of scale items for the selected legend type",

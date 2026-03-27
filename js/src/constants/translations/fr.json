@@ -73,6 +73,7 @@
     "iaso.snt_malaria.settings.intervention.detailedCostLabel": "Element",
     "iaso.snt_malaria.settings.intervention.detailedCostUnitLabel": "Unité",
     "iaso.snt_malaria.settings.intervention.detailedCostCategoryLabel": "Catégorie",
+    "iaso.snt_malaria.settings.dataLayers.errors.required": "Ce champ est obligatoire",
     "iaso.snt_malaria.settings.dataLayers.errors.noWhitespace": "Les espaces ne sont pas autorisés",
     "iaso.snt_malaria.settings.dataLayers.errors.invalidJsonArray": "Format invalide, doit être [valeur1, valeur2, ...]",
     "iaso.snt_malaria.settings.dataLayers.errors.scaleItemsCount": "Nombre invalide d'éléments d'échelle pour le type de légende sélectionné",
