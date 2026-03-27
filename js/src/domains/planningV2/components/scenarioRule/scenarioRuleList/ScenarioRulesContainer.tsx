@@ -24,6 +24,10 @@ const styles: SxStyles = {
         '&:last-child': {
             mb: 0,
         },
+        cursor: 'grab',
+        '&:active': {
+            cursor: 'grabbing',
+        },
     },
 };
 
