@@ -116,23 +116,25 @@ export const ScenarioRuleForm: FC = () => {
                                 MESSAGES.selectionCriteria,
                             )}
                         />
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    size="small"
-                                    checked={values.match_all}
-                                    onChange={e =>
-                                        setFieldValueAndState(
-                                            'match_all',
-                                            e.target.checked,
-                                        )
-                                    }
-                                />
-                            }
-                            label={formatMessage(
-                                MESSAGES.matchAllOrgUnits,
-                            )}
-                        />
+                        {values.matching_criteria.length === 0 && (
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        size="small"
+                                        checked={values.match_all}
+                                        onChange={e =>
+                                            setFieldValueAndState(
+                                                'match_all',
+                                                e.target.checked,
+                                            )
+                                        }
+                                    />
+                                }
+                                label={formatMessage(
+                                    MESSAGES.matchAllOrgUnits,
+                                )}
+                            />
+                        )}
                     </Box>
                     {!values.match_all && (
                         <MatchingCriteriaForm
