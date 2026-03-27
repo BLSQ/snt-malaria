@@ -4,9 +4,12 @@ import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { SxStyles } from 'Iaso/types/general';
 import {
+    MainColumn,
     PageContainer,
     PaperContainer,
     PaperFullHeight,
+    SidebarColumn,
+    SidebarLayout,
 } from '../../components/styledComponents';
 import { MESSAGES } from '../messages';
 import { useGetScenarios } from '../scenarios/hooks/useGetScenarios';
@@ -27,12 +30,6 @@ import { intersectYearRanges } from './utils/yearRange';
 const styles = {
     pageContainer: {
         overflow: 'hidden',
-    },
-    gridContainer: {
-        height: '100%',
-    },
-    leftGridItem: {
-        height: '100%',
     },
     leftColumn: {
         height: '100%',
@@ -206,8 +203,8 @@ export const CompareOptimize: FC = () => {
                 yearFrom={yearFrom}
             >
             <PageContainer sx={styles.pageContainer}>
-                <Grid container spacing={1} sx={styles.gridContainer}>
-                    <Grid item xs={12} md={9} sx={styles.leftGridItem}>
+                <SidebarLayout>
+                    <MainColumn>
                         <PaperContainer sx={{ height: '100%' }}>
                             <Box sx={styles.leftColumn}>
                                 <Grid container spacing={1}>
@@ -232,8 +229,8 @@ export const CompareOptimize: FC = () => {
                                 </Grid>
                             </Box>
                         </PaperContainer>
-                    </Grid>
-                    <Grid item xs={12} md={3}>
+                    </MainColumn>
+                    <SidebarColumn>
                         <PaperFullHeight sx={styles.rightColumn}>
                             <ConfigurationPanel
                                 baselineScenarioId={baselineScenarioId}
@@ -262,8 +259,8 @@ export const CompareOptimize: FC = () => {
                                 onAgeGroupChange={handleAgeGroupChange}
                             />
                         </PaperFullHeight>
-                    </Grid>
-                </Grid>
+                    </SidebarColumn>
+                </SidebarLayout>
             </PageContainer>
             </ComparisonDataProvider>
         </>

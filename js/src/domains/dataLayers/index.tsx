@@ -1,13 +1,16 @@
 import React, { FC, useCallback, useState } from 'react';
-import { Card, Grid, Typography } from '@mui/material';
+import { Card, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
 import {
+    MainColumn,
     PageContainer,
     PaperFullHeight,
+    SidebarColumn,
+    SidebarLayout,
 } from '../../components/styledComponents';
 import {
     useGetMetricCategories,
@@ -77,8 +80,8 @@ export const DataLayers: FC = () => {
                 disableShadow
             />
             <PageContainer>
-                <Grid container spacing={1}>
-                    <Grid item xs={12} md={4}>
+                <SidebarLayout>
+                    <SidebarColumn>
                         <PaperFullHeight>
                             <Card sx={styles.card}>
                                 <CardStyled
@@ -101,8 +104,8 @@ export const DataLayers: FC = () => {
                                 </CardStyled>
                             </Card>
                         </PaperFullHeight>
-                    </Grid>
-                    <Grid item xs={12} md={8}>
+                    </SidebarColumn>
+                    <MainColumn>
                         <PaperFullHeight>
                             <Card sx={styles.card}>
                                 <CardStyled
@@ -120,8 +123,8 @@ export const DataLayers: FC = () => {
                                 </CardStyled>
                             </Card>
                         </PaperFullHeight>
-                    </Grid>
-                </Grid>
+                    </MainColumn>
+                </SidebarLayout>
                 {isMetricTypeFormOpen && (
                     <DataLayerDialog
                         open={isMetricTypeFormOpen}

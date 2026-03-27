@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import { Card, Grid } from '@mui/material';
+import { Card } from '@mui/material';
 import {
     LoadingSpinner,
     useRedirectToReplace,
@@ -11,8 +11,11 @@ import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
 import {
+    MainColumn,
     PaperFullHeight,
     PageContainer,
+    SidebarColumn,
+    SidebarLayout,
 } from '../../components/styledComponents';
 
 import { baseUrls } from '../../constants/urls';
@@ -187,16 +190,16 @@ export const PlanningV2: FC = () => {
             {isLoadingOrgUnits && <LoadingSpinner />}
             <TopBar title={title} disableShadow sx={{ zIndex: 401 }} />
             <PageContainer>
-                <Grid container spacing={1}>
-                    <Grid item xs={12} md={4}>
+                <SidebarLayout>
+                    <SidebarColumn>
                         <ScenarioRulesPanel
                             onPreviewScenarioRule={onPreviewScenarioRule}
                             scenarioId={scenarioId}
-                            rules={scenarioRules || []}
+                             rules={scenarioRules || []}
                             isLoading={isFetchingRules}
                         />
-                    </Grid>
-                    <Grid item xs={12} md={8}>
+                    </SidebarColumn>
+                    <MainColumn>
                         <PaperFullHeight>
                             <Card sx={styles.card}>
                                 <CardStyled
@@ -275,8 +278,8 @@ export const PlanningV2: FC = () => {
                                 </CardStyled>
                             </Card>
                         </PaperFullHeight>
-                    </Grid>
-                </Grid>
+                    </MainColumn>
+                </SidebarLayout>
             </PageContainer>
         </PlanningProvider>
     ) : null;
