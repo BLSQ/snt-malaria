@@ -145,9 +145,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         if matching_criteria is None:
             return []
         if isinstance(matching_criteria, dict) and matching_criteria.get("all"):
-            return list(
-                get_valid_org_units_with_geography(account).values_list("id", flat=True)
-            )
+            return list(get_valid_org_units_with_geography(account).values_list("id", flat=True))
         metric_values = MetricValue.objects.filter(metric_type__account=account)
         q = jsonlogic_to_exists_q_clauses(matching_criteria, metric_values, "metric_type_id", "org_unit_id")
         org_unit_ids = metric_values.filter(q).distinct().values_list("org_unit_id", flat=True)
