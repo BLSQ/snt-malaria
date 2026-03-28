@@ -381,9 +381,14 @@ class InterventionSeeder:
 
         self.stdout_write(f"Creating interventions for account {self.account.name}:")
         created_by = User.objects.filter(iaso_profile__account=self.account).first()
+        self._create_interventions(created_by)
 
+    def create_interventions_for_api_account(self, user):
+        self._create_interventions(user, print_progress=False)
+
+    def _create_interventions(self, user, print_progress=True):
         # Create budget settings if they don't exist
-        self._create_budget_settings()
+        self._create_budget_settings(print_progress)
 
         for category_name, data in CATEGORIES_AND_INTERVENTIONS.items():
             category, created = InterventionCategory.objects.get_or_create(
@@ -392,10 +397,10 @@ class InterventionSeeder:
                 account=self.account,
                 defaults={
                     # "description": data["description"],
-                    "created_by": created_by,
+                    "created_by": user,
                 },
             )
-            if created:
+            if created and print_progress:
                 self.stdout_write(f"Created category: {category_name}")
 
             for intervention_data in data["interventions"]:
@@ -406,19 +411,21 @@ class InterventionSeeder:
                     code=intervention_data["code"],
                     defaults={
                         "description": intervention_data["description"],
-                        "created_by": created_by,
+                        "created_by": user,
                     },
                 )
                 if created:
-                    self.stdout_write(f"\tCreated intervention: {intervention_data['name']}")
+                    if print_progress:
+                        self.stdout_write(f"\tCreated intervention: {intervention_data['name']}")
                     # Create cost breakdown lines for this intervention
                     cost_settings = intervention_data.get("cost_settings", [])
                     if cost_settings:
-                        self._create_cost_breakdown_lines(intervention, cost_settings, created_by)
+                        self._create_cost_breakdown_lines(intervention, cost_settings, user, print_progress)
 
-        self.stdout_write("Done.")
+        if print_progress:
+            self.stdout_write("Done.")
 
-    def _create_budget_settings(self):
+    def _create_budget_settings(self, print_progress):
         """Create budget settings for the account if they don't exist."""
         if not BudgetSettings.objects.filter(account=self.account).exists():
             BudgetSettings.objects.create(
@@ -427,9 +434,10 @@ class InterventionSeeder:
                 exchange_rate=1.0,  # 1:1 exchange rate with USD as default
                 inflation_rate=0.03,  # 3% inflation rate as default
             )
-            self.stdout_write("Created budget settings")
+            if print_progress:
+                self.stdout_write("Created budget settings")
 
-    def _create_cost_breakdown_lines(self, intervention, cost_settings, created_by):
+    def _create_cost_breakdown_lines(self, intervention, cost_settings, created_by, print_progress):
         """Create cost breakdown lines for a given intervention."""
         for cost_data in cost_settings:
             InterventionCostBreakdownLine.objects.create(
@@ -440,4 +448,5 @@ class InterventionSeeder:
                 unit_cost=cost_data["unit_cost"],
                 created_by=created_by,
             )
-        self.stdout_write(f"\t  Created {len(cost_settings)} cost breakdown lines")
+        if print_progress:
+            self.stdout_write(f"\t  Created {len(cost_settings)} cost breakdown lines")
