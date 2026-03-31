@@ -10,6 +10,7 @@ from plugins.snt_malaria.providers.impact.base import (
     ImpactResult,
     MatchResult,
     MatchWarnings,
+    OrgUnitRef,
 )
 from plugins.snt_malaria.services.impact import (
     ImpactService,
@@ -438,8 +439,8 @@ class ImpactServiceGetScenarioImpactTestCase(TestCase):
     def test_warnings_propagated_bulk(self):
         """Warnings from the provider should appear on the final ScenarioImpactMetrics."""
         warnings = MatchWarnings(
-            org_units_not_found=[self.district1],
-            org_units_with_unmatched_interventions=[self.district2],
+            org_units_not_found=[OrgUnitRef(id=self.district1.id, name=self.district1.name)],
+            org_units_with_unmatched_interventions=[OrgUnitRef(id=self.district2.id, name=self.district2.name)],
         )
         mock_provider = self._make_provider_mock(supports_bulk=True, warnings=warnings)
 
@@ -454,7 +455,7 @@ class ImpactServiceGetScenarioImpactTestCase(TestCase):
     def test_warnings_propagated_individual(self):
         """Warnings from match_impact should appear on the final ScenarioImpactMetrics."""
         warnings = MatchWarnings(
-            org_units_not_found=[self.district3],
+            org_units_not_found=[OrgUnitRef(id=self.district3.id, name=self.district3.name)],
         )
         mock_provider = self._make_provider_mock(supports_bulk=False, warnings=warnings)
 

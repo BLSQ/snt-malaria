@@ -9,6 +9,7 @@ from plugins.snt_malaria.providers.impact.base import (
     ImpactProvider,
     ImpactResult,
     MatchWarnings,
+    OrgUnitRef,
 )
 
 
@@ -70,8 +71,8 @@ class ScenarioImpactMetrics(ImpactMetrics):
     scenario_id: int = 0
     by_year: list[YearImpactMetrics] = field(default_factory=list)
     org_units: list[OrgUnitImpactMetrics] = field(default_factory=list)
-    org_units_not_found: list[OrgUnit] = field(default_factory=list)
-    org_units_with_unmatched_interventions: list[OrgUnit] = field(default_factory=list)
+    org_units_not_found: list[OrgUnitRef] = field(default_factory=list)
+    org_units_with_unmatched_interventions: list[OrgUnitRef] = field(default_factory=list)
 
 
 def _compute_averted_cases(
@@ -334,9 +335,9 @@ class ImpactService:
         return results
 
     @staticmethod
-    def _deduplicate_org_units(org_units: list[OrgUnit]) -> list[OrgUnit]:
-        """Deduplicate by org_unit.id and sort by name."""
-        seen: dict[int, OrgUnit] = {}
+    def _deduplicate_org_units(org_units: list[OrgUnitRef]) -> list[OrgUnitRef]:
+        """Deduplicate by id and sort by name."""
+        seen: dict[int, OrgUnitRef] = {}
         for ou in org_units:
             if ou.id not in seen:
                 seen[ou.id] = ou

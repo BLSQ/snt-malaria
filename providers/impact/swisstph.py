@@ -13,6 +13,7 @@ from plugins.snt_malaria.providers.impact.base import (
     InterventionMappingError,
     MatchResult,
     MatchWarnings,
+    OrgUnitRef,
 )
 from plugins.snt_malaria.providers.impact.db import ensure_db_connection
 
@@ -195,9 +196,13 @@ class SwissTPHImpactProvider(ImpactProvider):
         )
         not_found = unmatched - known
         known_but_unmatched = unmatched & known
-        warnings.org_units_not_found = [reference_to_org_unit[ref] for ref in sorted(not_found)]
+        warnings.org_units_not_found = [
+            OrgUnitRef(id=reference_to_org_unit[ref].id, name=reference_to_org_unit[ref].name)
+            for ref in sorted(not_found)
+        ]
         warnings.org_units_with_unmatched_interventions = [
-            reference_to_org_unit[ref] for ref in sorted(known_but_unmatched)
+            OrgUnitRef(id=reference_to_org_unit[ref].id, name=reference_to_org_unit[ref].name)
+            for ref in sorted(known_but_unmatched)
         ]
         return warnings
 

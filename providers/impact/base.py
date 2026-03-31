@@ -7,6 +7,14 @@ from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
 
 
+@dataclass(frozen=True)
+class OrgUnitRef:
+    """Lightweight reference to an org unit (id + name)."""
+
+    id: int
+    name: str
+
+
 @dataclass
 class ImpactMetricWithConfidenceInterval:
     """A metric value with optional confidence interval bounds."""
@@ -66,8 +74,8 @@ class MatchWarnings:
         combination.
     """
 
-    org_units_not_found: list[OrgUnit] = field(default_factory=list)
-    org_units_with_unmatched_interventions: list[OrgUnit] = field(default_factory=list)
+    org_units_not_found: list[OrgUnitRef] = field(default_factory=list)
+    org_units_with_unmatched_interventions: list[OrgUnitRef] = field(default_factory=list)
 
 
 @dataclass
