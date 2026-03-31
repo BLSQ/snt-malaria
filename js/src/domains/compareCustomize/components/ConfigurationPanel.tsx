@@ -131,6 +131,24 @@ const styles = {
         gap: 0.5,
         mt: 1,
     },
+    cardBackground: {
+        backgroundColor: (theme: Theme) =>
+            alpha(theme.palette.common.white, 0.5),
+    },
+    loadingCenter: {
+        display: 'flex',
+        justifyContent: 'center',
+    },
+    warningTitleRow: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    detailsButton: {
+        p: 0,
+        textTransform: 'none',
+        minWidth: 0,
+    },
 } satisfies SxStyles;
 
 export const ConfigurationPanel: FC<Props> = ({
@@ -201,10 +219,7 @@ export const ConfigurationPanel: FC<Props> = ({
                     <AddOutlinedIcon fontSize="medium" />
                 </IconButton>
             }
-            cardSx={{
-                backgroundColor: (theme: Theme) =>
-                    alpha(theme.palette.common.white, 0.5),
-            }}
+            cardSx={styles.cardBackground}
         >
             <Box sx={styles.scenarioRow}>
                 <Box
@@ -281,7 +296,7 @@ export const ConfigurationPanel: FC<Props> = ({
                         {formatMessage(MESSAGES.displayOptionsTitle)}
                     </Typography>
                     {isYearRangeLoading && (
-                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Box sx={styles.loadingCenter}>
                             <LoadingSpinner />
                         </Box>
                     )}
@@ -335,12 +350,12 @@ export const ConfigurationPanel: FC<Props> = ({
                     )}
                     {orgUnitsNotFound && orgUnitsNotFound.length > 0 && (
                         <Alert severity="warning" sx={styles.warningBox}>
-                            <AlertTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <AlertTitle sx={styles.warningTitleRow}>
                                 {formatMessage(MESSAGES.orgUnitsNotFoundTitle)}
                                 <Button
                                     size="small"
                                     onClick={() => setShowNotFoundDetails(prev => !prev)}
-                                    sx={{ p: 0, textTransform: 'none', minWidth: 0 }}
+                                    sx={styles.detailsButton}
                                 >
                                     {formatMessage(showNotFoundDetails ? MESSAGES.hideDetails : MESSAGES.showDetails)}
                                 </Button>
@@ -368,12 +383,12 @@ export const ConfigurationPanel: FC<Props> = ({
                     )}
                     {orgUnitsWithUnmatchedInterventions && orgUnitsWithUnmatchedInterventions.length > 0 && (
                         <Alert severity="warning" sx={styles.warningBox}>
-                            <AlertTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <AlertTitle sx={styles.warningTitleRow}>
                                 {formatMessage(MESSAGES.orgUnitsWithUnmatchedInterventionsTitle)}
                                 <Button
                                     size="small"
                                     onClick={() => setShowUnmatchedDetails(prev => !prev)}
-                                    sx={{ p: 0, textTransform: 'none', minWidth: 0 }}
+                                    sx={styles.detailsButton}
                                 >
                                     {formatMessage(showUnmatchedDetails ? MESSAGES.hideDetails : MESSAGES.showDetails)}
                                 </Button>
