@@ -191,13 +191,13 @@ export const CompareCustomize: FC = () => {
         );
         const notFound: { scenario: ScenarioDisplay; orgUnits: OrgUnitRef[] }[] = [];
         const unmatched: typeof notFound = [];
+        const sortByName = (a: OrgUnitRef, b: OrgUnitRef) =>
+            a.org_unit_name.localeCompare(b.org_unit_name);
 
-        for (const [scenarioId, impact] of impactsByScenarioId.entries()) {
-            if (!impact) continue;
+        impactsByScenarioId.forEach((impact, scenarioId) => {
+            if (!impact) return;
             const scenario = scenarioMap.get(scenarioId);
-            if (!scenario) continue;
-            const sortByName = (a: OrgUnitRef, b: OrgUnitRef) =>
-                a.org_unit_name.localeCompare(b.org_unit_name);
+            if (!scenario) return;
             if (impact.org_units_not_found?.length) {
                 notFound.push({
                     scenario,
@@ -210,7 +210,7 @@ export const CompareCustomize: FC = () => {
                     orgUnits: [...impact.org_units_with_unmatched_interventions].sort(sortByName),
                 });
             }
-        }
+        });
 
         return {
             orgUnitsNotFound: notFound,
