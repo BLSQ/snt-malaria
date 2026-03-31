@@ -21,9 +21,10 @@ import { MetricsSummary } from './components/MetricsSummary';
 import { useComparisonData } from './hooks/useComparisonData';
 import { useGetImpactAgeGroups } from './hooks/useGetImpactAgeGroups';
 import { useGetImpactYearRange } from './hooks/useGetImpactYearRange';
+import { useMatchWarnings } from './hooks/useMatchWarnings';
 import { useScenarioInterventions } from './hooks/useScenarioInterventions';
 import { useScenarioSelections } from './hooks/useScenarioSelections';
-import { OrgUnitRef, ScenarioDisplay, toNumericId } from './types';
+import { ScenarioDisplay, toNumericId } from './types';
 import { getScenarioColor } from './utils/colors';
 import { intersectYearRanges } from './utils/yearRange';
 
@@ -185,38 +186,10 @@ export const CompareCustomize: FC = () => {
         selectedAgeGroup,
     });
 
-    const { orgUnitsNotFound, orgUnitsWithUnmatchedInterventions } = useMemo(() => {
-        const scenarioMap = new Map(
-            displayScenarios.map(s => [s.id, s]),
-        );
-        const notFound: { scenario: ScenarioDisplay; orgUnits: OrgUnitRef[] }[] = [];
-        const unmatched: typeof notFound = [];
-        const sortByName = (a: OrgUnitRef, b: OrgUnitRef) =>
-            a.org_unit_name.localeCompare(b.org_unit_name);
-
-        impactsByScenarioId.forEach((impact, scenarioId) => {
-            if (!impact) return;
-            const scenario = scenarioMap.get(scenarioId);
-            if (!scenario) return;
-            if (impact.org_units_not_found?.length) {
-                notFound.push({
-                    scenario,
-                    orgUnits: [...impact.org_units_not_found].sort(sortByName),
-                });
-            }
-            if (impact.org_units_with_unmatched_interventions?.length) {
-                unmatched.push({
-                    scenario,
-                    orgUnits: [...impact.org_units_with_unmatched_interventions].sort(sortByName),
-                });
-            }
-        });
-
-        return {
-            orgUnitsNotFound: notFound,
-            orgUnitsWithUnmatchedInterventions: unmatched,
-        };
-    }, [impactsByScenarioId, displayScenarios]);
+    const { orgUnitsNotFound, orgUnitsWithUnmatchedInterventions } = useMatchWarnings({
+        impactsByScenarioId,
+        displayScenarios,
+    });
 
     return (
         <>

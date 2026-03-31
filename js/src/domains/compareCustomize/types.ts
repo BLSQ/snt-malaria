@@ -61,6 +61,11 @@ export type ScenarioImpactMetrics = {
     org_units_with_unmatched_interventions: OrgUnitRef[];
 };
 
+export type ScenarioMatchWarning = {
+    scenario: ScenarioDisplay;
+    orgUnits: OrgUnitRef[];
+};
+
 export type ImpactYearRange = {
     min_year: number;
     max_year: number;

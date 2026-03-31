@@ -19,18 +19,12 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
 import {
-    OrgUnitRef,
-    ScenarioDisplay,
     ScenarioId,
+    ScenarioMatchWarning,
     ScenarioOption,
 } from '../types';
 import { getScenarioColor } from '../utils/colors';
 import { Card } from './Card';
-
-type ScenarioMatchWarning = {
-    scenario: ScenarioDisplay;
-    orgUnits: OrgUnitRef[];
-};
 
 type Props = {
     baselineScenarioId: ScenarioId;
