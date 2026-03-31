@@ -6,12 +6,14 @@ from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
 from plugins.snt_malaria.models.idm_impact import IDMAdminInfo, IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
 from plugins.snt_malaria.providers.impact.base import (
+    BulkMatchResult,
     DataIntegrityError,
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
     ImpactResult,
     InterventionMappingError,
-    OrgUnitMappingError,
+    MatchResult,
+    MatchWarnings,
 )
 from plugins.snt_malaria.providers.impact.db import ensure_db_connection
 
@@ -78,9 +80,11 @@ class IDMImpactProvider(ImpactProvider):
         return None
 
     def match_impact(self, org_unit, interventions, age_group, year_from=None, year_to=None):
-        # Bulk uses the same query logic; delegate to avoid duplication.
-        results = self.match_impact_bulk([org_unit], interventions, age_group, year_from, year_to)
-        return results.get(org_unit.id, [])
+        bulk = self.match_impact_bulk([org_unit], interventions, age_group, year_from, year_to)
+        return MatchResult(
+            results=bulk.results.get(org_unit.id, []),
+            warnings=bulk.warnings,
+        )
 
     def match_impact_bulk(
         self,
@@ -89,22 +93,22 @@ class IDMImpactProvider(ImpactProvider):
         age_group: str,
         year_from: Optional[int] = None,
         year_to: Optional[int] = None,
-    ) -> dict[int, list[ImpactResult]]:
+    ) -> BulkMatchResult:
         if not org_units:
-            return {}
+            return BulkMatchResult()
 
         age_group_id = self._resolve_age_group_id(age_group)
         if age_group_id is None:
-            return {}
+            return BulkMatchResult()
 
         filter_keys: set[str] = set()
         for intervention in interventions:
             filter_keys.update(self._map_intervention(intervention))
 
-        reference_to_ou_id: dict[str, int] = {self._impact_reference(ou): ou.id for ou in org_units}
+        reference_to_org_unit: dict[str, OrgUnit] = {self._impact_reference(ou): ou for ou in org_units}
 
         filters = {
-            "admin_info_ref__admin_2_name__in": list(reference_to_ou_id.keys()),
+            "admin_info_ref__admin_2_name__in": list(reference_to_org_unit.keys()),
             "age_group_ref_id": age_group_id,
         }
         if year_from:
@@ -144,11 +148,12 @@ class IDMImpactProvider(ImpactProvider):
 
         for row in impact_rows:
             admin_name = row["admin_info_ref__admin_2_name"]
-            ou_id = reference_to_ou_id.get(admin_name)
-            if ou_id is None:
+            org_unit = reference_to_org_unit.get(admin_name)
+            if org_unit is None:
                 continue
 
             matched_references.add(admin_name)
+            ou_id = org_unit.id
 
             if ou_id not in seen_years_by_ou:
                 seen_years_by_ou[ou_id] = set()
@@ -187,8 +192,8 @@ class IDMImpactProvider(ImpactProvider):
                 )
             )
 
-        self._check_unmatched_org_units(reference_to_ou_id, matched_references)
-        return results
+        warnings = self._check_unmatched_org_units(reference_to_org_unit, matched_references)
+        return BulkMatchResult(results=results, warnings=warnings)
 
     def get_year_range(self) -> tuple[Optional[int], Optional[int]]:
         result = IDMModelOutput.objects.using(self._db_alias).aggregate(
@@ -200,16 +205,16 @@ class IDMImpactProvider(ImpactProvider):
     def get_age_groups(self) -> list[str]:
         return list(IDMAgeGroup.objects.using(self._db_alias).values_list("option", flat=True).order_by("option"))
 
-    def _check_unmatched_org_units(self, reference_to_ou_id, matched_references):
-        """Verify unmatched org units actually exist in the impact DB.
+    def _check_unmatched_org_units(self, reference_to_org_unit, matched_references) -> MatchWarnings:
+        """Classify unmatched org units into 'not found' vs 'unmatched interventions'.
 
         Only runs an extra query when some org units got no results.
-        Raises OrgUnitMappingError for references that don't exist at all,
-        as opposed to those that simply have no data for the queried intervention mix.
+        Returns MatchWarnings with the two categories populated.
         """
-        unmatched = set(reference_to_ou_id.keys()) - matched_references
+        warnings = MatchWarnings()
+        unmatched = set(reference_to_org_unit.keys()) - matched_references
         if not unmatched:
-            return
+            return warnings
         known = set(
             IDMAdminInfo.objects.using(self._db_alias)
             .filter(admin_2_name__in=unmatched)
@@ -217,8 +222,12 @@ class IDMImpactProvider(ImpactProvider):
             .distinct()
         )
         not_found = unmatched - known
-        if not_found:
-            raise OrgUnitMappingError(f"Org units not found in IDM impact data: {sorted(not_found)}")
+        known_but_unmatched = unmatched & known
+        warnings.org_units_not_found = [reference_to_org_unit[ref] for ref in sorted(not_found)]
+        warnings.org_units_with_unmatched_interventions = [
+            reference_to_org_unit[ref] for ref in sorted(known_but_unmatched)
+        ]
+        return warnings
 
     def _map_intervention(self, intervention: Intervention) -> set[str]:
         """Resolve an Intervention's impact_ref to an IDM filter key ('column_name=package_id').

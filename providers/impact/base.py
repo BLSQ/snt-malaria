@@ -55,6 +55,45 @@ class ImpactResult:
     direct_deaths: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
 
 
+@dataclass
+class MatchWarnings:
+    """Warnings produced during impact matching.
+
+    org_units_not_found: org units whose reference does not exist in the
+        impact database at all.
+    org_units_with_unmatched_interventions: org units that exist in the
+        impact database but have no data for their assigned intervention
+        combination.
+    """
+
+    org_units_not_found: list[OrgUnit] = field(default_factory=list)
+    org_units_with_unmatched_interventions: list[OrgUnit] = field(default_factory=list)
+
+
+@dataclass
+class MatchResult:
+    """Return type for ImpactProvider.match_impact (single org unit).
+
+    results: impact data rows for the queried org unit.
+    warnings: any matching issues encountered during lookup.
+    """
+
+    results: list[ImpactResult] = field(default_factory=list)
+    warnings: MatchWarnings = field(default_factory=MatchWarnings)
+
+
+@dataclass
+class BulkMatchResult:
+    """Return type for ImpactProvider.match_impact_bulk (multiple org units).
+
+    results: dict keyed by org_unit.id -> list of ImpactResult (one per year).
+    warnings: any matching issues encountered during lookup.
+    """
+
+    results: dict[int, list[ImpactResult]] = field(default_factory=dict)
+    warnings: MatchWarnings = field(default_factory=MatchWarnings)
+
+
 class ImpactProviderError(Exception):
     """Base exception for all impact provider errors."""
 
@@ -112,7 +151,7 @@ class ImpactProvider(ABC):
         age_group: str,
         year_from: int | None = None,
         year_to: int | None = None,
-    ) -> list[ImpactResult]:
+    ) -> MatchResult:
         """Match impact data for a single org unit and set of interventions.
 
         Args:
@@ -123,8 +162,9 @@ class ImpactProvider(ABC):
             year_to: End year filter (inclusive), or None.
 
         Returns:
-            List of ImpactResult instances, one per year. Implementations must
-            ensure year uniqueness and raise DataIntegrityError on duplicates.
+            MatchResult containing impact data and any matching warnings.
+            Implementations must ensure year uniqueness and raise
+            DataIntegrityError on duplicates.
         """
 
     @property
@@ -143,14 +183,15 @@ class ImpactProvider(ABC):
         age_group: str,
         year_from: int | None = None,
         year_to: int | None = None,
-    ) -> dict[int, list[ImpactResult]]:
+    ) -> BulkMatchResult:
         """Fetch impact data for multiple org units sharing the same interventions.
 
         Default: raises NotImplementedError. Providers that support bulk queries
         should override both this method and the supports_bulk property.
 
         Returns:
-            Dict keyed by org_unit.id -> list of ImpactResult (one per year).
+            BulkMatchResult containing impact data keyed by org_unit.id and
+            any matching warnings.
         """
         raise NotImplementedError(
             f"{type(self).__name__} does not support bulk queries. Check supports_bulk before calling."

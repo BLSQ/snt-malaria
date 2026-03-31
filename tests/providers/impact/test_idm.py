@@ -7,7 +7,7 @@ from django.db import connection
 from django.test import TestCase
 
 from plugins.snt_malaria.models.idm_impact import IDMAdminInfo, IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
-from plugins.snt_malaria.providers.impact.base import DataIntegrityError, InterventionMappingError, OrgUnitMappingError
+from plugins.snt_malaria.providers.impact.base import DataIntegrityError, InterventionMappingError
 from plugins.snt_malaria.providers.impact.idm import (
     IDM_ALL_INTERVENTION_COLUMNS,
     IDM_DEPLOYED_COVERAGE_ID,
@@ -390,19 +390,19 @@ class IDMDatabaseIntegrationTests(TestCase):
         org_unit_aboh = MockOrgUnit(id=103, name="Aboh Mbaise", impact_reference="Aboh-Mbaise")
         case_management = MockIntervention(impact_ref="cm:cm")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit_kano, org_unit_aboh],
             interventions=[case_management],
             age_group="allAges",
         )
 
-        self.assertIn(101, results)
-        self.assertIn(103, results)
-        self.assertEqual(len(results[101]), 2)
-        self.assertEqual(len(results[103]), 1)
+        self.assertIn(101, bulk.results)
+        self.assertIn(103, bulk.results)
+        self.assertEqual(len(bulk.results[101]), 2)
+        self.assertEqual(len(bulk.results[103]), 1)
 
         # Verify incidence-to-count conversion: 150.5 * 500_000 / 1000 = 75_250
-        kano_2025 = results[101][0]
+        kano_2025 = bulk.results[101][0]
         self.assertEqual(kano_2025.year, 2025)
         self.assertEqual(kano_2025.population, 500_000)
         self.assertAlmostEqual(kano_2025.number_cases.value, 75_250.0, places=1)
@@ -410,7 +410,7 @@ class IDMDatabaseIntegrationTests(TestCase):
         self.assertAlmostEqual(kano_2025.number_cases.upper, 80_500.0, places=1)
         self.assertAlmostEqual(kano_2025.prevalence_rate.value, 0.35, places=2)
 
-        kano_2026 = results[101][1]
+        kano_2026 = bulk.results[101][1]
         self.assertEqual(kano_2026.year, 2026)
 
     def test_match_with_multiple_interventions(self):
@@ -420,26 +420,26 @@ class IDMDatabaseIntegrationTests(TestCase):
         case_management = MockIntervention(impact_ref="cm:cm")
         seasonal_malaria_chemoprevention = MockIntervention(impact_ref="smc:smc")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit_kano, org_unit_ikeja],
             interventions=[case_management, seasonal_malaria_chemoprevention],
             age_group="allAges",
         )
 
         # Kano has a CM+SMC row for 2025 only (not the CM-only rows)
-        self.assertEqual(len(results[101]), 1)
-        self.assertAlmostEqual(results[101][0].number_cases.value, 60_150.0, places=1)
+        self.assertEqual(len(bulk.results[101]), 1)
+        self.assertAlmostEqual(bulk.results[101][0].number_cases.value, 60_150.0, places=1)
 
         # Ikeja has a CM+SMC row for 2025
-        self.assertEqual(len(results[102]), 1)
-        self.assertAlmostEqual(results[102][0].number_cases.value, 160_080.0, places=1)
+        self.assertEqual(len(bulk.results[102]), 1)
+        self.assertAlmostEqual(bulk.results[102][0].number_cases.value, 160_080.0, places=1)
 
     def test_different_intervention_packages_do_not_mix(self):
         """CM-only query should NOT return CM+SMC rows."""
         org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
         case_management = MockIntervention(impact_ref="cm:cm")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit_kano],
             interventions=[case_management],
             age_group="allAges",
@@ -448,28 +448,28 @@ class IDMDatabaseIntegrationTests(TestCase):
         )
 
         # Should get the CM-only row (incidence 150.5), not the CM+SMC row (120.3)
-        self.assertEqual(len(results[101]), 1)
-        self.assertAlmostEqual(results[101][0].number_cases.value, 75_250.0, places=1)
+        self.assertEqual(len(bulk.results[101]), 1)
+        self.assertAlmostEqual(bulk.results[101][0].number_cases.value, 75_250.0, places=1)
 
     def test_match_impact_delegates_to_bulk(self):
         org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
         case_management = MockIntervention(impact_ref="cm:cm")
 
-        results = self.provider.match_impact(
+        match = self.provider.match_impact(
             org_unit_kano,
             interventions=[case_management],
             age_group="allAges",
         )
 
-        self.assertEqual(len(results), 2)
-        self.assertEqual(results[0].year, 2025)
-        self.assertEqual(results[1].year, 2026)
+        self.assertEqual(len(match.results), 2)
+        self.assertEqual(match.results[0].year, 2025)
+        self.assertEqual(match.results[1].year, 2026)
 
     def test_filters_by_year_range(self):
         org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
         case_management = MockIntervention(impact_ref="cm:cm")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit_kano],
             interventions=[case_management],
             age_group="allAges",
@@ -477,131 +477,140 @@ class IDMDatabaseIntegrationTests(TestCase):
             year_to=2026,
         )
 
-        self.assertEqual(len(results[101]), 1)
-        self.assertEqual(results[101][0].year, 2026)
+        self.assertEqual(len(bulk.results[101]), 1)
+        self.assertEqual(bulk.results[101][0].year, 2026)
 
     def test_filters_by_age_group(self):
         """under5 age group only returns the under5 row, not the allAges rows."""
         org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
         case_management = MockIntervention(impact_ref="cm:cm")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit_kano],
             interventions=[case_management],
             age_group="under5",
         )
 
-        self.assertEqual(len(results[101]), 1)
+        self.assertEqual(len(bulk.results[101]), 1)
         # 95.0 * 500_000 / 1000 = 47_500
-        self.assertAlmostEqual(results[101][0].number_cases.value, 47_500.0, places=1)
+        self.assertAlmostEqual(bulk.results[101][0].number_cases.value, 47_500.0, places=1)
 
     def test_name_fallback_when_no_mapping(self):
         """Without an impact mapping, the org unit name is used directly to match admin_2_name."""
         org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
         case_management = MockIntervention(impact_ref="cm:cm")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit_kano],
             interventions=[case_management],
             age_group="allAges",
         )
 
-        self.assertIn(101, results)
-        self.assertEqual(len(results[101]), 2)
+        self.assertIn(101, bulk.results)
+        self.assertEqual(len(bulk.results[101]), 2)
 
-    def test_name_fallback_no_match_raises_org_unit_mapping_error(self):
-        """Without an impact mapping, a name that doesn't exist in admin_info raises OrgUnitMappingError."""
+    def test_name_fallback_no_match_reports_org_unit_not_found(self):
+        """Without an impact mapping, a name that doesn't exist in admin_info appears in org_units_not_found."""
         org_unit_aboh = MockOrgUnit(id=103, name="Aboh Mbaise")
         case_management = MockIntervention(impact_ref="cm:cm")
 
-        with self.assertRaises(OrgUnitMappingError) as context:
-            self.provider.match_impact_bulk(
-                [org_unit_aboh],
-                interventions=[case_management],
-                age_group="allAges",
-            )
-        self.assertIn("Aboh Mbaise", str(context.exception))
+        bulk = self.provider.match_impact_bulk(
+            [org_unit_aboh],
+            interventions=[case_management],
+            age_group="allAges",
+        )
+
+        self.assertEqual(len(bulk.warnings.org_units_not_found), 1)
+        self.assertEqual(bulk.warnings.org_units_not_found[0].name, "Aboh Mbaise")
+        self.assertEqual(bulk.results, {})
 
     def test_impact_mapping_used_for_matching(self):
         """When an impact mapping exists, its reference is used to match against admin_2_name."""
         org_unit = MockOrgUnit(id=103, name="Wrong Name", impact_reference="Aboh-Mbaise")
         case_management = MockIntervention(impact_ref="cm:cm")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit],
             interventions=[case_management],
             age_group="allAges",
         )
 
-        self.assertIn(103, results)
-        self.assertEqual(len(results[103]), 1)
-        self.assertEqual(results[103][0].year, 2025)
+        self.assertIn(103, bulk.results)
+        self.assertEqual(len(bulk.results[103]), 1)
+        self.assertEqual(bulk.results[103][0].year, 2025)
 
     def test_impact_mapping_takes_precedence_over_name(self):
         """The impact mapping reference should be used instead of the org unit name."""
         org_unit = MockOrgUnit(id=103, name="Ikeja", impact_reference="Kano Municipal")
         case_management = MockIntervention(impact_ref="cm:cm")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit],
             interventions=[case_management],
             age_group="allAges",
         )
 
-        self.assertIn(103, results)
-        self.assertEqual(len(results[103]), 2)
-        self.assertEqual(results[103][0].year, 2025)
-        self.assertEqual(results[103][1].year, 2026)
+        self.assertIn(103, bulk.results)
+        self.assertEqual(len(bulk.results[103]), 2)
+        self.assertEqual(bulk.results[103][0].year, 2025)
+        self.assertEqual(bulk.results[103][1].year, 2026)
 
-    def test_wrong_mapping_raises_org_unit_mapping_error(self):
-        """A mapping reference that doesn't exist in admin_info raises OrgUnitMappingError."""
+    def test_wrong_mapping_reports_org_unit_not_found(self):
+        """A mapping reference that doesn't exist in admin_info appears in org_units_not_found."""
         org_unit = MockOrgUnit(id=103, name="Kano Municipal", impact_reference="Nonexistent")
         case_management = MockIntervention(impact_ref="cm:cm")
 
-        with self.assertRaises(OrgUnitMappingError) as context:
-            self.provider.match_impact_bulk(
-                [org_unit],
-                interventions=[case_management],
-                age_group="allAges",
-            )
-        self.assertIn("Nonexistent", str(context.exception))
+        bulk = self.provider.match_impact_bulk(
+            [org_unit],
+            interventions=[case_management],
+            age_group="allAges",
+        )
 
-    def test_nonexistent_org_unit_raises_org_unit_mapping_error(self):
+        self.assertEqual(len(bulk.warnings.org_units_not_found), 1)
+        self.assertEqual(bulk.warnings.org_units_not_found[0].id, 103)
+        self.assertEqual(bulk.results, {})
+
+    def test_nonexistent_org_unit_reports_org_unit_not_found(self):
         org_unit_unknown = MockOrgUnit(id=999, name="Nonexistent District")
         case_management = MockIntervention(impact_ref="cm:cm")
 
-        with self.assertRaises(OrgUnitMappingError) as context:
-            self.provider.match_impact_bulk(
-                [org_unit_unknown],
-                interventions=[case_management],
-                age_group="allAges",
-            )
-        self.assertIn("Nonexistent District", str(context.exception))
+        bulk = self.provider.match_impact_bulk(
+            [org_unit_unknown],
+            interventions=[case_management],
+            age_group="allAges",
+        )
 
-    def test_no_error_when_org_unit_exists_but_intervention_mix_unmatched(self):
+        self.assertEqual(len(bulk.warnings.org_units_not_found), 1)
+        self.assertEqual(bulk.warnings.org_units_not_found[0].name, "Nonexistent District")
+        self.assertEqual(bulk.results, {})
+
+    def test_org_unit_exists_but_intervention_mix_unmatched(self):
         """An org unit that exists in admin_info but has no data for the queried interventions."""
         org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
         lsm = MockIntervention(impact_ref="lsm:lsm")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit_kano],
             interventions=[lsm],
             age_group="allAges",
         )
 
-        self.assertEqual(results, {})
+        self.assertEqual(bulk.results, {})
+        self.assertEqual(len(bulk.warnings.org_units_with_unmatched_interventions), 1)
+        self.assertEqual(bulk.warnings.org_units_with_unmatched_interventions[0].name, "Kano Municipal")
+        self.assertEqual(bulk.warnings.org_units_not_found, [])
 
     def test_unknown_age_group_returns_empty(self):
         org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
         case_management = MockIntervention(impact_ref="cm:cm")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit_kano],
             interventions=[case_management],
             age_group="nonexistent",
         )
 
-        self.assertEqual(results, {})
+        self.assertEqual(bulk.results, {})
 
     def test_duplicate_year_raises_data_integrity_error(self):
         """Conflicting rows for the same (admin, year, intervention combo) raise DataIntegrityError."""
@@ -639,3 +648,18 @@ class IDMDatabaseIntegrationTests(TestCase):
     def test_get_age_groups(self):
         age_groups = self.provider.get_age_groups()
         self.assertEqual(age_groups, ["allAges", "under5"])
+
+    def test_happy_path_has_empty_warnings(self):
+        """Matched org units should produce no warnings."""
+        org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
+        case_management = MockIntervention(impact_ref="cm:cm")
+
+        bulk = self.provider.match_impact_bulk(
+            [org_unit_kano],
+            interventions=[case_management],
+            age_group="allAges",
+        )
+
+        self.assertIn(101, bulk.results)
+        self.assertEqual(bulk.warnings.org_units_not_found, [])
+        self.assertEqual(bulk.warnings.org_units_with_unmatched_interventions, [])

@@ -23,7 +23,7 @@ import { useGetImpactAgeGroups } from './hooks/useGetImpactAgeGroups';
 import { useGetImpactYearRange } from './hooks/useGetImpactYearRange';
 import { useScenarioInterventions } from './hooks/useScenarioInterventions';
 import { useScenarioSelections } from './hooks/useScenarioSelections';
-import { ScenarioDisplay, toNumericId } from './types';
+import { OrgUnitRef, ScenarioDisplay, toNumericId } from './types';
 import { getScenarioColor } from './utils/colors';
 import { intersectYearRanges } from './utils/yearRange';
 
@@ -185,6 +185,39 @@ export const CompareCustomize: FC = () => {
         selectedAgeGroup,
     });
 
+    const { orgUnitsNotFound, orgUnitsWithUnmatchedInterventions } = useMemo(() => {
+        const scenarioMap = new Map(
+            displayScenarios.map(s => [s.id, s]),
+        );
+        const notFound: { scenario: ScenarioDisplay; orgUnits: OrgUnitRef[] }[] = [];
+        const unmatched: typeof notFound = [];
+
+        for (const [scenarioId, impact] of impactsByScenarioId.entries()) {
+            if (!impact) continue;
+            const scenario = scenarioMap.get(scenarioId);
+            if (!scenario) continue;
+            const sortByName = (a: OrgUnitRef, b: OrgUnitRef) =>
+                a.org_unit_name.localeCompare(b.org_unit_name);
+            if (impact.org_units_not_found?.length) {
+                notFound.push({
+                    scenario,
+                    orgUnits: [...impact.org_units_not_found].sort(sortByName),
+                });
+            }
+            if (impact.org_units_with_unmatched_interventions?.length) {
+                unmatched.push({
+                    scenario,
+                    orgUnits: [...impact.org_units_with_unmatched_interventions].sort(sortByName),
+                });
+            }
+        }
+
+        return {
+            orgUnitsNotFound: notFound,
+            orgUnitsWithUnmatchedInterventions: unmatched,
+        };
+    }, [impactsByScenarioId, displayScenarios]);
+
     return (
         <>
             {isLoading && <LoadingSpinner />}
@@ -202,66 +235,69 @@ export const CompareCustomize: FC = () => {
                 targetYear={yearTo}
                 yearFrom={yearFrom}
             >
-            <PageContainer sx={styles.pageContainer}>
-                <SidebarLayout>
-                    <MainColumn>
-                        <PaperContainer sx={{ height: '100%' }}>
-                            <Box sx={styles.leftColumn}>
-                                <Grid container spacing={1}>
-                                    <Grid item xs={12}>
-                                        <InterventionMaps
-                                            selectedInterventionId={
-                                                selectedInterventionId
-                                            }
-                                            interventionOptions={
-                                                interventionOptions
-                                            }
-                                            hasInterventions={hasInterventions}
-                                            onInterventionSelect={
-                                                handleInterventionSelect
-                                            }
-                                        />
+                <PageContainer sx={styles.pageContainer}>
+                    <SidebarLayout>
+                        <MainColumn>
+                            <PaperContainer sx={{ height: '100%' }}>
+                                <Box sx={styles.leftColumn}>
+                                    <Grid container spacing={1}>
+                                        <Grid item xs={12}>
+                                            <InterventionMaps
+                                                selectedInterventionId={
+                                                    selectedInterventionId
+                                                }
+                                                interventionOptions={
+                                                    interventionOptions
+                                                }
+                                                hasInterventions={hasInterventions}
+                                                onInterventionSelect={
+                                                    handleInterventionSelect
+                                                }
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <MetricsSummary />
+                                        </Grid>
+                                        <ComparisonCharts />
                                     </Grid>
-                                    <Grid item xs={12}>
-                                        <MetricsSummary />
-                                    </Grid>
-                                    <ComparisonCharts />
-                                </Grid>
-                            </Box>
-                        </PaperContainer>
-                    </MainColumn>
-                    <SidebarColumn>
-                        <PaperFullHeight sx={styles.rightColumn}>
-                            <ConfigurationPanel
-                                baselineScenarioId={baselineScenarioId}
-                                comparisonScenarioIds={comparisonScenarioIds}
-                                scenarioOptions={scenarioOptions}
-                                comparisonOptions={comparisonOptions}
-                                onBaselineSelect={handleBaselineSelect}
-                                onComparisonSelect={handleComparisonSelect}
-                                onAddComparison={handleAddComparison}
-                                onRemoveComparison={handleRemoveComparison}
-                                yearRange={effectiveYearRange}
-                                selectedYearRange={selectedYearRange}
-                                onYearRangeChange={setSelectedYearRange}
-                                showYearRangeError={
-                                    displayScenarios.length > 0 &&
-                                    !effectiveYearRange
-                                }
-                                isYearRangeLoading={
-                                    displayScenarios.length > 0 &&
-                                    (isLoading ||
-                                        yearRangeQuery.isLoading ||
-                                        yearRangeQuery.isFetching)
-                                }
-                                ageGroups={ageGroupsQuery.data?.age_groups}
-                                selectedAgeGroup={selectedAgeGroup}
-                                onAgeGroupChange={handleAgeGroupChange}
-                            />
-                        </PaperFullHeight>
-                    </SidebarColumn>
-                </SidebarLayout>
-            </PageContainer>
+                                </Box>
+                            </PaperContainer>
+                        </MainColumn>
+                        <SidebarColumn>
+                            <PaperFullHeight sx={styles.rightColumn}>
+                                <ConfigurationPanel
+                                    baselineScenarioId={baselineScenarioId}
+                                    comparisonScenarioIds={comparisonScenarioIds}
+                                    scenarioOptions={scenarioOptions}
+                                    comparisonOptions={comparisonOptions}
+                                    onBaselineSelect={handleBaselineSelect}
+                                    onComparisonSelect={handleComparisonSelect}
+                                    onAddComparison={handleAddComparison}
+                                    onRemoveComparison={handleRemoveComparison}
+                                    yearRange={effectiveYearRange}
+
+                                    selectedYearRange={selectedYearRange}
+                                    onYearRangeChange={setSelectedYearRange}
+                                    showYearRangeError={
+                                        displayScenarios.length > 0 &&
+                                        !effectiveYearRange
+                                    }
+                                    isYearRangeLoading={
+                                        displayScenarios.length > 0 &&
+                                        (isLoading ||
+                                            yearRangeQuery.isLoading ||
+                                            yearRangeQuery.isFetching)
+                                    }
+                                    ageGroups={ageGroupsQuery.data?.age_groups}
+                                    selectedAgeGroup={selectedAgeGroup}
+                                    onAgeGroupChange={handleAgeGroupChange}
+                                    orgUnitsNotFound={orgUnitsNotFound}
+                                    orgUnitsWithUnmatchedInterventions={orgUnitsWithUnmatchedInterventions}
+                                />
+                            </PaperFullHeight>
+                        </SidebarColumn>
+                    </SidebarLayout>
+                </PageContainer>
             </ComparisonDataProvider>
         </>
     );

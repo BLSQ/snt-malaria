@@ -17,6 +17,11 @@ export type ImpactMetricWithConfidenceInterval = {
     upper: number | null;
 };
 
+export type OrgUnitRef = {
+    org_unit_id: number;
+    org_unit_name: string;
+};
+
 export type OrgUnitImpactMetrics = {
     org_unit_id: number;
     org_unit_name: string;
@@ -52,6 +57,8 @@ export type ScenarioImpactMetrics = {
     cost_per_averted_case: ImpactMetricWithConfidenceInterval;
     by_year: YearImpactMetrics[];
     org_units: OrgUnitImpactMetrics[];
+    org_units_not_found: OrgUnitRef[];
+    org_units_with_unmatched_interventions: OrgUnitRef[];
 };
 
 export type ImpactYearRange = {
