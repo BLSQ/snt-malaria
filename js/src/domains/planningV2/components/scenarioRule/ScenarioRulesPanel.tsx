@@ -70,7 +70,7 @@ export const ScenarioRulesPanel: FC<Props> = ({
                     scenarioId={scenarioId}
                     rule={editingRule}
                     onClose={handleCloseForm}
-                    onBlur={handleFormChange}
+                    onChange={handleFormChange}
                 />
             ) : (
                 <ScenarioRulesContainer

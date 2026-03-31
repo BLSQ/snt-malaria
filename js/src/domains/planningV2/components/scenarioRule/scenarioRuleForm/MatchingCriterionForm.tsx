@@ -1,4 +1,4 @@
-import React, { FC, forwardRef, useMemo } from 'react';
+import React, { FC, useMemo } from 'react';
 import { Box, Typography, SxProps, Theme, Tooltip } from '@mui/material';
 import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
 import InputComponent, {
@@ -14,7 +14,6 @@ type Props = {
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
     getErrors: (keyValue: string) => string[];
-    onBlur: (field: string) => void;
 };
 
 const styles: Record<string, SxProps<Theme>> = {
@@ -53,7 +52,6 @@ export const MatchingCriterionForm: FC<Props> = ({
     onUpdateField,
     onRemove,
     getErrors,
-    onBlur,
 }) => {
     const scaleLabel = useMemo(() => {
         if (!metricType) return '';
@@ -97,7 +95,6 @@ export const MatchingCriterionForm: FC<Props> = ({
                 clearable={false}
                 wrapperSx={{ width: 75 }}
                 withMarginTop={false}
-                onBlur={() => onBlur('operator')}
             />
             {metricType?.legend_type === LegendTypes.ORDINAL ? (
                 <InputComponent
@@ -110,7 +107,6 @@ export const MatchingCriterionForm: FC<Props> = ({
                     withMarginTop={false}
                     options={ordinalOptions}
                     clearable={false}
-                    onBlur={() => onBlur('string_value')}
                 />
             ) : (
                 <Tooltip title={scaleLabel}>
@@ -124,7 +120,6 @@ export const MatchingCriterionForm: FC<Props> = ({
                             errors={getErrors('value')}
                             wrapperSx={{ maxWidth: 85, minWidth: 85 }}
                             withMarginTop={false}
-                            onBlur={() => onBlur('value')}
                         />
                     </Box>
                 </Tooltip>

@@ -2,18 +2,30 @@ import { JsonLogicTree } from '@react-awesome-query-builder/mui';
 import { Condition, MetricsFilters } from '../../planning/types/metrics';
 import { MetricTypeCriterion } from '../types/scenarioRule';
 
+/** Returns `null` when nothing valid to send (cleared value / empty list). */
 export const matchingCriteriaToJsonLogic = (
     criteria: MetricTypeCriterion[],
-): MetricsFilters => {
-    const andRules = criteria.map(
-        criterion =>
-            ({
-                [criterion.operator]: [
-                    { var: criterion.metric_type },
-                    criterion.string_value || criterion.value,
-                ],
-            }) as Condition,
-    );
+): MetricsFilters | null => {
+    const andRules = criteria
+        .filter(c => {
+            if (c.metric_type == null) return false;
+            if (c.string_value?.trim()) return true;
+            const v = c.value as unknown;
+            if (v == null || v === '') return false;
+            return Number.isFinite(Number(v));
+        })
+        .map(criterion => {
+            const s = criterion.string_value?.trim();
+            const rhs = s ? s : Number(criterion.value);
+
+            return {
+                [criterion.operator]: [{ var: criterion.metric_type }, rhs],
+            } as Condition;
+        });
+
+    if (andRules.length === 0) {
+        return null;
+    }
 
     return { and: andRules };
 };
@@ -43,7 +55,7 @@ export const jsonLogicToMatchingCriteria = (
         return [];
     }
 
-    const andLogic = jsonLogic['and'];
+    const andLogic = (jsonLogic as Record<string, unknown>)['and'];
     if (!andLogic || !Array.isArray(andLogic)) {
         return [];
     }
@@ -59,7 +71,7 @@ export const jsonLogicToMatchingCriteria = (
 
         criteria.push({
             metric_type,
-            operator,
+            operator: operator as MetricTypeCriterion['operator'],
             value: string_value ? undefined : value,
             string_value,
         });

@@ -22,7 +22,7 @@ const styles: SxStyles = {
     coverageWrapper: {
         width: 75,
     },
-    categoryName: { minWidth: 200, maxWidth: 200 },
+    categoryName: { minWidth: 160, maxWidth: 300 },
     labelWrapper: {
         maxHeight: 40,
         display: 'flex',

@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext } from 'react';
+import React, { createContext, useContext } from 'react';
 import { FormikProvider, useFormikContext } from 'formik';
 import { useAddChildValue } from './useAddChildValue';
 import { useRemoveChildValue } from './useRemoveChildValue';
@@ -14,7 +14,6 @@ type ExtendedFormikContextType = {
     >;
     removeChildValue: ReturnType<typeof useRemoveChildValue>;
     addChildValue: ReturnType<typeof useAddChildValue>;
-    handleBlur: (field: string) => void;
 };
 
 const ExtendedFormikContext = createContext<ExtendedFormikContextType>(
@@ -23,11 +22,9 @@ const ExtendedFormikContext = createContext<ExtendedFormikContextType>(
 
 export const ExtendedFormikProvider = ({
     children,
-    onBlur,
     formik,
 }: {
     children: React.ReactNode;
-    onBlur: (field: string) => void;
     formik: any;
 }) => {
     const setFieldValueAndState = useSetFieldValueAndState({
@@ -47,20 +44,11 @@ export const ExtendedFormikProvider = ({
 
     const addChildValue = useAddChildValue(formik.values, formik.setFieldValue);
 
-    const handleBlur = useCallback(
-        (field: string) => {
-            formik.setFieldTouched(field, true);
-            onBlur(field);
-        },
-        [onBlur, formik],
-    );
-
     const extendedContext = {
         setFieldValueAndState,
         setChildFieldValueAndState,
         removeChildValue,
         addChildValue,
-        handleBlur,
     };
 
     return (

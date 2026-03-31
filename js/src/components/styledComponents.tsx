@@ -30,3 +30,25 @@ export const ContentsContainer = styled(Box)(({ theme }) => ({
     paddingBottom: theme.spacing(2),
     gap: theme.spacing(2),
 }));
+
+export const SidebarLayout = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing(1),
+    height: '100%',
+    [theme.breakpoints.up('md')]: {
+        flexDirection: 'row',
+    },
+}));
+
+export const SidebarColumn = styled(Box)(({ theme }) => ({
+    flex: 2,
+    [theme.breakpoints.up('md')]: {
+        minWidth: 450,
+    },
+}));
+
+export const MainColumn = styled(Box)({
+    flex: 7,
+    minWidth: 0,
+});

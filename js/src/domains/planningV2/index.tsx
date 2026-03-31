@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import { Card, Grid } from '@mui/material';
+import { Card } from '@mui/material';
 import {
     LoadingSpinner,
     useRedirectToReplace,
@@ -11,8 +11,11 @@ import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
 import {
+    MainColumn,
     PaperFullHeight,
     PageContainer,
+    SidebarColumn,
+    SidebarLayout,
 } from '../../components/styledComponents';
 
 import { baseUrls } from '../../constants/urls';
@@ -34,7 +37,7 @@ import { useDeleteScenario } from '../scenarios/hooks/useDeleteScenario';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
 import { InterventionPlanHeader } from './components/interventionPlan/InterventionPlanHeader';
-import { InterventionsPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
+import { InterventionPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
 import { InterventionsPlanTable } from './components/interventionPlanTable/InterventionsPlanTable';
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
 import { PlanningProvider } from './contexts/PlanningContext';
@@ -153,17 +156,21 @@ export const PlanningV2: FC = () => {
     );
 
     // TODO Find a better place for this
-    const [selectedOrgUnitIds, setSelectedOrgUnitIds] = useState<number[]>([]);
+    const [matchedOrgUnitIds, setMatchedOrgUnitIds] = useState<number[]>([]);
+    const [previewRule, setPreviewRule] = useState<
+        Partial<ScenarioRule> | undefined
+    >();
     const { mutate: previewScenarioRule } = usePreviewScenarioRule();
 
     const onPreviewScenarioRule = useCallback(
         (rule?: Partial<ScenarioRule>) => {
+            setPreviewRule(rule);
             if (!rule) {
-                setSelectedOrgUnitIds([]);
+                setMatchedOrgUnitIds([]);
                 return;
             }
             return previewScenarioRule(rule, {
-                onSuccess: data => setSelectedOrgUnitIds(data as number[]),
+                onSuccess: data => setMatchedOrgUnitIds(data as number[]),
             });
         },
         [previewScenarioRule],
@@ -183,16 +190,16 @@ export const PlanningV2: FC = () => {
             {isLoadingOrgUnits && <LoadingSpinner />}
             <TopBar title={title} disableShadow sx={{ zIndex: 401 }} />
             <PageContainer>
-                <Grid container spacing={1}>
-                    <Grid item xs={12} md={4}>
+                <SidebarLayout>
+                    <SidebarColumn>
                         <ScenarioRulesPanel
                             onPreviewScenarioRule={onPreviewScenarioRule}
                             scenarioId={scenarioId}
-                            rules={scenarioRules || []}
+                             rules={scenarioRules || []}
                             isLoading={isFetchingRules}
                         />
-                    </Grid>
-                    <Grid item xs={12} md={8}>
+                    </SidebarColumn>
+                    <MainColumn>
                         <PaperFullHeight>
                             <Card sx={styles.card}>
                                 <CardStyled
@@ -220,10 +227,11 @@ export const PlanningV2: FC = () => {
                                     }
                                 >
                                     {activeTab === 'map' && (
-                                        <InterventionsPlanMap
-                                            selectedOrgUnitIds={
-                                                selectedOrgUnitIds
+                                        <InterventionPlanMap
+                                            matchedOrgUnitIds={
+                                                matchedOrgUnitIds
                                             }
+                                            previewRule={previewRule}
                                         />
                                     )}
                                     {activeTab === 'list' && (
@@ -270,8 +278,8 @@ export const PlanningV2: FC = () => {
                                 </CardStyled>
                             </Card>
                         </PaperFullHeight>
-                    </Grid>
-                </Grid>
+                    </MainColumn>
+                </SidebarLayout>
             </PageContainer>
         </PlanningProvider>
     ) : null;

@@ -42,6 +42,7 @@ export const DataLayerMap: FC<Props> = ({
     return (
         <SNTMap
             id={'data-layer-map'}
+            border
             orgUnits={orgUnits}
             legendConfig={metricType}
             getOrgUnitMapMisc={getOrgUnitMapMisc}

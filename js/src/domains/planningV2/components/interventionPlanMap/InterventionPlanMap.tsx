@@ -1,44 +1,30 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Box, Chip, Stack, Theme, Typography } from '@mui/material';
+import { Box } from '@mui/material';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { LayerSelect } from '../../../../components/LayerSelect';
 import { Map as SNTMap } from '../../../../components/Map';
-import { LegendTypes } from '../../../../constants/legend';
-import { mapTheme } from '../../../../constants/map-theme';
 import { MESSAGES } from '../../../messages';
 import { useGetMetricValues } from '../../../planning/hooks/useGetMetrics';
-import { blendColors } from '../../../planning/libs/color-utils';
 import {
     getMapStyleForOrgUnit,
     useGetOrgUnitMetric,
 } from '../../../planning/libs/map-utils';
-import { Intervention } from '../../../planning/types/interventions';
 import { MetricType } from '../../../planning/types/metrics';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { ScenarioRule } from '../../types/scenarioRule';
-
-const defaultLegendConfig = {
-    units: '',
-    legend_type: LegendTypes.ORDINAL,
-    legend_config: {
-        domain: [],
-        range: [],
-    },
-    unit_symbol: '',
-};
+import {
+    buildPreviewAssignments,
+    buildSavedAssignments,
+} from './buildEffectiveAssignments';
+import { buildAssignmentDisplay } from './buildAssignmentDisplay';
+import { getInterventionMapPresentation } from './getInterventionMapPresentation';
+import { OrgUnitTooltip } from './OrgUnitTooltip';
 
 const styles: SxStyles = {
-    mainBox: (theme: Theme) => ({
-        borderRadius: theme.spacing(2),
+    mainBox: {
         overflow: 'hidden',
         position: 'relative',
-    }),
-    customizeButton: {
-        marginRight: 1,
-        '&.MuiButton-outlined': {
-            borderColor: 'white',
-            backgroundColor: 'white',
-        },
     },
     actionBox: {
         position: 'absolute',
@@ -50,166 +36,117 @@ const styles: SxStyles = {
 };
 
 type Props = {
-    selectedOrgUnitIds?: number[];
+    matchedOrgUnitIds?: number[];
+    previewRule?: Partial<ScenarioRule>;
 };
 
-export const InterventionsPlanMap: FC<Props> = ({ selectedOrgUnitIds }) => {
+export const InterventionPlanMap: FC<Props> = ({
+    matchedOrgUnitIds,
+    previewRule,
+}) => {
+    const {
+        orgUnits,
+        interventionAssignments,
+        interventionCategories,
+        metricTypeCategories,
+        isEditing: isPreviewingRule,
+    } = usePlanningContext();
+
     const [selectedMetricLayer, setSelectedMetricLayer] = React.useState<
         MetricType | undefined
     >(undefined);
 
-    const {
-        orgUnits,
+    const activeMetricLayer = isPreviewingRule ? selectedMetricLayer : undefined;
+
+    const effectiveAssignments = useMemo(() => {
+        if (isPreviewingRule) {
+            return buildPreviewAssignments({
+                matchedOrgUnitIds,
+                previewRule,
+                interventionCategories,
+            });
+        }
+        return buildSavedAssignments(interventionAssignments);
+    }, [
+        isPreviewingRule,
         interventionAssignments,
-        metricTypeCategories,
-        isEditing,
-    } = usePlanningContext();
+        previewRule?.intervention_properties,
+        previewRule?.color,
+        matchedOrgUnitIds,
+        interventionCategories,
+    ]);
+
+    const assignmentDisplay = useMemo(
+        () => buildAssignmentDisplay(effectiveAssignments),
+        [effectiveAssignments],
+    );
 
     const { data: metricValues } = useGetMetricValues({
-        metricTypeId: selectedMetricLayer?.id || null,
+        metricTypeId: activeMetricLayer?.id || null,
     });
-
     const getSelectedMetric = useGetOrgUnitMetric(metricValues);
 
-    const getColorForRules = useCallback((rules: ScenarioRule[]) => {
-        if (rules.length === 0) {
-            return mapTheme.shapeColor;
-        }
-
-        if (rules.length === 1) {
-            return rules[0].color || mapTheme.shapeColor;
-        }
-
-        return blendColors(rules.map(r => r.color || mapTheme.shapeColor));
-    }, []);
-
-    const orgUnitPlans = useMemo(() => {
-        const map = new Map<number, any>();
-        interventionAssignments.forEach(assignment => {
-            const { interventions, rules } = map.get(
-                assignment.org_unit.id,
-            ) || {
-                interventions: [],
-                rules: [],
-                rulesKey: '',
-            };
-
-            const newRules = [
-                ...new Set<ScenarioRule>(
-                    [...rules, assignment.rule].filter(Boolean),
-                ),
-            ];
-            const newInterventions = [
-                ...new Set<any>([...interventions, assignment.intervention]),
-            ];
-
-            const newRulesKey = newRules
-                .map((r: ScenarioRule) => r.id)
-                .join(',');
-
-            map.set(assignment.org_unit.id, {
-                interventions: newInterventions,
-                rules: newRules,
-                rulesKey: newRulesKey,
-            });
-        });
-
-        return map;
-    }, [interventionAssignments]);
-
-    const rulesColors = useMemo(() => {
-        const colorMap = new Map<string, { label: string; color: string }>();
-        orgUnitPlans.forEach(({ rules, interventions, rulesKey }) => {
-            colorMap.set(rulesKey, {
-                label: interventions
-                    .map((r: Intervention) => r.short_name)
-                    .join(', '),
-                color: getColorForRules(rules),
-            });
-        });
-        return colorMap;
-    }, [orgUnitPlans, getColorForRules]);
-
-    const getOrgUnitMapMisc = useCallback(
+    const getOrgUnitStyle = useCallback(
         (orgUnitId: number) => {
-            const plans = orgUnitPlans.get(orgUnitId);
-            const rulesColor = plans
-                ? rulesColors.get(plans.rulesKey)
-                : undefined;
-            return (
-                rulesColor || {
-                    label: '',
-                    color: mapTheme.shapeColor,
-                }
-            );
-        },
-        [orgUnitPlans, rulesColors],
-    );
-
-    const getOrgUnitMapStyle = useCallback(
-        (orgUnitId: number) => {
-            if (!selectedMetricLayer || !isEditing) {
-                return getOrgUnitMapMisc(orgUnitId);
+            if (activeMetricLayer) {
+                const metric = getSelectedMetric(orgUnitId);
+                return getMapStyleForOrgUnit(activeMetricLayer, metric);
             }
-            const metric = getSelectedMetric(orgUnitId);
-            return getMapStyleForOrgUnit(selectedMetricLayer, metric);
+            return assignmentDisplay.getStyle(orgUnitId);
         },
-        [selectedMetricLayer, getSelectedMetric, getOrgUnitMapMisc, isEditing],
+        [activeMetricLayer, getSelectedMetric, assignmentDisplay],
     );
 
-    const legendConfig = useMemo(() => {
-        if (isEditing && selectedMetricLayer) {
-            return selectedMetricLayer;
-        }
+    const mapPresentation = useMemo(
+        () =>
+            getInterventionMapPresentation({
+                isPreviewingRule,
+                activeMetricLayer,
+                previewRule,
+                matchedOrgUnitIds,
+                assignmentLegend: assignmentDisplay.legend,
+            }),
+        [
+            isPreviewingRule,
+            activeMetricLayer,
+            previewRule,
+            matchedOrgUnitIds,
+            assignmentDisplay.legend,
+        ],
+    );
 
-        const legend_config = { domain: [] as string[], range: [] as string[] };
-        rulesColors.forEach(({ label, color }) => {
-            legend_config.domain.push(label);
-            legend_config.range.push(color);
-        });
-        return {
-            ...defaultLegendConfig,
-            legend_config: legend_config,
-        };
-    }, [rulesColors, isEditing, selectedMetricLayer]);
+    const renderTooltip = useCallback(
+        ({ orgUnit }: { orgUnit: OrgUnit }) => (
+            <OrgUnitTooltip
+                orgUnit={orgUnit}
+                chips={assignmentDisplay.getChips(orgUnit.id)}
+                metricLabel={
+                    activeMetricLayer
+                        ? getOrgUnitStyle(orgUnit.id)?.label
+                        : undefined
+                }
+            />
+        ),
+        [assignmentDisplay, activeMetricLayer, getOrgUnitStyle],
+    );
 
     return (
         <Box height="100%" width="100%" sx={styles.mainBox}>
             {orgUnits && (
                 <SNTMap
                     id="intervention_plan_map"
+                    border
                     orgUnits={orgUnits}
-                    getOrgUnitMapMisc={getOrgUnitMapStyle}
-                    selectedOrgUnitIds={selectedOrgUnitIds}
-                    legendConfig={legendConfig}
-                    RenderTooltip={({ orgUnit }) => (
-                        <Stack direction="column" p={1}>
-                            <Typography variant="subtitle2">
-                                {orgUnit.short_name}
-                            </Typography>
-                            <Typography variant="caption">
-                                {getOrgUnitMapStyle(orgUnit.id)?.label}
-                            </Typography>
-                            <Stack direction="row" spacing={0.5} mt={1}>
-                                {orgUnitPlans
-                                    .get(orgUnit.id)
-                                    ?.rules?.map((rule: ScenarioRule) => (
-                                        <Chip
-                                            label={rule.name}
-                                            key={rule.id}
-                                            size="small"
-                                            style={{
-                                                backgroundColor: rule.color,
-                                                color: 'white',
-                                            }}
-                                        />
-                                    ))}
-                            </Stack>
-                        </Stack>
-                    )}
+                    getOrgUnitMapMisc={getOrgUnitStyle}
+                    selectedOrgUnitIds={mapPresentation.highlightedOrgUnitIds}
+                    selectedBorderColor={mapPresentation.selectedBorderColor}
+                    legendConfig={mapPresentation.legendConfig}
+                    hideLegend={mapPresentation.hideLegend}
+                    dataKey={mapPresentation.mapDataKey}
+                    RenderTooltip={renderTooltip}
                 />
             )}
-            {metricTypeCategories && isEditing && (
+            {metricTypeCategories && isPreviewingRule && (
                 <Box sx={styles.actionBox}>
                     <LayerSelect
                         placeholder={MESSAGES.noLayer}
