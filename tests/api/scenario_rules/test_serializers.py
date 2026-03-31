@@ -238,7 +238,7 @@ class ScenarioRuleCreateSerializerTestCase(ScenarioRulesTestBase):
         serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("matching_criteria", serializer.errors)
-        self.assertIn("'and' is a required property", serializer.errors["matching_criteria"][0])
+        self.assertIn("is not valid under any of the given schemas", serializer.errors["matching_criteria"][0])
 
     def test_invalid_matching_criteria_unknown_metric_type_id(self):
         invalid_metric_type_id = 1234567890
@@ -619,7 +619,7 @@ class ScenarioRuleUpdateSerializerTestCase(ScenarioRulesTestBase):
         serializer = ScenarioRuleUpdateSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("matching_criteria", serializer.errors)
-        self.assertIn("'and' is a required property", serializer.errors["matching_criteria"][0])
+        self.assertIn("is not valid under any of the given schemas", serializer.errors["matching_criteria"][0])
 
     def test_invalid_matching_criteria_unknown_metric_type_id(self):
         invalid_metric_type_id = 1234567890
