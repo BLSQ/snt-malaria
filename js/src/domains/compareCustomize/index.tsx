@@ -50,7 +50,7 @@ const styles = {
     },
 } satisfies SxStyles;
 
-export const CompareOptimize: FC = () => {
+export const CompareCustomize: FC = () => {
     const { formatMessage } = useSafeIntl();
     const { data: scenarios, isLoading } = useGetScenarios();
     const {
@@ -189,7 +189,7 @@ export const CompareOptimize: FC = () => {
         <>
             {isLoading && <LoadingSpinner />}
             <TopBar
-                title={formatMessage(MESSAGES.compareOptimizeTitle)}
+                title={formatMessage(MESSAGES.compareCustomizeTitle)}
                 disableShadow
             />
             <ComparisonDataProvider

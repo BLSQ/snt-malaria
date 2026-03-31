@@ -15,8 +15,8 @@ export const RouteConfigs: Record<string, RouteConfig> = {
         url: 'snt_malaria/planning',
         params: ['scenarioId', 'displayOrgUnitId'],
     },
-    compareOptimize: {
-        url: 'snt_malaria/compare-optimize',
+    compareCustomize: {
+        url: 'snt_malaria/compare-customize',
         params: [],
     },
     scenarios: {
@@ -32,7 +32,7 @@ export const RouteConfigs: Record<string, RouteConfig> = {
 export type BaseUrls = {
     dataLayers: string;
     planning: string;
-    compareOptimize: string;
+    compareCustomize: string;
     scenarios: string;
     settings: string;
 };

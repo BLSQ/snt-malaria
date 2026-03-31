@@ -26,8 +26,8 @@ export const menu = [
         ),
     },
     {
-        label: MESSAGES.compareOptimizeTitle,
-        key: 'snt_malaria/compare-optimize',
+        label: MESSAGES.compareCustomizeTitle,
+        key: 'snt_malaria/compare-customize',
         permissions: [],
         icon: (props: SvgIconProps) => <CompareOutlined {...props} />,
         dev: true,

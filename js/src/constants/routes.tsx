@@ -3,7 +3,7 @@ import React from 'react';
 import { RoutePath } from 'Iaso/constants/routes';
 import { SHOW_DEV_FEATURES } from 'Iaso/utils/featureFlags';
 
-import { CompareOptimize } from '../domains/compareOptimize';
+import { CompareCustomize } from '../domains/compareCustomize';
 import { DataLayers } from '../domains/dataLayers';
 import { PlanningV2 } from '../domains/planningV2';
 import { Scenarios } from '../domains/scenarios';
@@ -32,10 +32,10 @@ export const scenariosPath: RoutePath = {
     permissions: [],
 };
 
-export const compareOptimizePath: RoutePath = {
-    baseUrl: baseUrls.compareOptimize,
-    routerUrl: `${baseUrls.compareOptimize}/*`,
-    element: <CompareOptimize />,
+export const compareCustomizePath: RoutePath = {
+    baseUrl: baseUrls.compareCustomize,
+    routerUrl: `${baseUrls.compareCustomize}/*`,
+    element: <CompareCustomize />,
     permissions: [],
     featureFlag: SHOW_DEV_FEATURES,
 };
@@ -51,6 +51,6 @@ export const routes: RoutePath[] = [
     dataLayersPath,
     planningPath,
     scenariosPath,
-    compareOptimizePath,
+    compareCustomizePath,
     settingsPath,
 ];
