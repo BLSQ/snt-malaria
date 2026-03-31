@@ -2,7 +2,7 @@ from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
-from iaso.models import Account, OrgUnit, OrgUnitType
+from iaso.models import Account, MetricType, MetricValue, OrgUnit, OrgUnitType
 from iaso.models.data_source import DataSource, SourceVersion
 from iaso.models.project import Project
 from iaso.test import APITestCase
@@ -110,6 +110,10 @@ class ScenarioAPITestCase(APITestCase):
             location=Point(x=4, y=52, z=100),
             geom=self.mock_multipolygon,
         )
+
+        metric_type = MetricType.objects.create(account=self.account, name="Population", code="POP", units="people")
+        for district in [self.district1, self.district2, self.district3]:
+            MetricValue.objects.create(metric_type=metric_type, org_unit=district, value=1000, year=2025)
 
         self.rule_1 = ScenarioRule.objects.create(
             name="Rule 1",
@@ -1247,6 +1251,24 @@ class ScenarioAPITestCase(APITestCase):
         rules = new_scenario.rules.order_by("priority")
         colors = [r.color for r in rules]
         self.assertEqual(len(colors), len(set(colors)))
+
+    def test_scenario_import_csv_creates_inclusion_only_rules_for_minority_groups(self):
+        """When no intervention group covers >50% of org units, all rules are inclusion-only."""
+        csv_content = self._generate_csv_content_for_import()
+        valid_file = SimpleUploadedFile("test.csv", csv_content, content_type="text/csv")
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": valid_file}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        new_scenario = Scenario.objects.get(id=response.data["id"])
+        rules = new_scenario.rules.order_by("priority")
+        self.assertEqual(rules.count(), 3)
+
+        for rule in rules:
+            self.assertIsNone(rule.matching_criteria)
+            self.assertEqual(rule.org_units_excluded, [])
+            self.assertGreater(len(rule.org_units_included), 0)
 
     def _generate_csv_content_for_import(self) -> bytes:
         csv_content = (

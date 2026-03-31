@@ -161,7 +161,9 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
     def validate_matching_criteria(self, matching_criteria):
         if matching_criteria is None:
             return matching_criteria
-        if isinstance(matching_criteria, dict) and matching_criteria.get("all"):
+
+        is_match_all = isinstance(matching_criteria, dict) and matching_criteria.get("all")
+        if is_match_all:
             return matching_criteria
 
         user = self.context["request"].user

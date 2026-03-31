@@ -74,7 +74,6 @@ def get_assignments_from_row(user, scenario, row, interventions):
     return assignments
 
 
-RULE_NAME_MAX_LENGTH = 255
 DEFAULT_IMPORT_COVERAGE = Decimal("1.00")
 
 
@@ -85,12 +84,13 @@ def _get_dispersed_color(index: int) -> str:
 
 
 def _build_rule_name(interventions: list[Intervention]) -> str:
-    """Build a rule name from intervention short names joined by ' + ', truncated if needed."""
+    """Build a rule name from intervention short names joined by ' + ', truncated to the model's max_length."""
+    max_length = ScenarioRule._meta.get_field("name").max_length
     parts = [i.short_name or i.name for i in sorted(interventions, key=lambda i: i.name)]
     name = " + ".join(parts)
-    if len(name) > RULE_NAME_MAX_LENGTH:
+    if len(name) > max_length:
         suffix = "…"
-        name = name[: RULE_NAME_MAX_LENGTH - len(suffix)] + suffix
+        name = name[: max_length - len(suffix)] + suffix
     return name
 
 
@@ -108,23 +108,26 @@ def _build_intervention_groups(
         }
     """
     intervention_lookup = {}
-    for iv in interventions_qs:
-        col_name = get_intervention_column(iv["name"], iv["code"])
-        intervention_lookup[col_name] = iv["id"]
+    for intervention in interventions_qs:
+        col_name = get_intervention_column(intervention["name"], intervention["code"])
+        intervention_lookup[col_name] = intervention["id"]
 
-    ou_interventions: dict[int, set[int]] = defaultdict(set)
+    org_unit_interventions: dict[int, set[int]] = defaultdict(set)
     for _, row in assignment_df.iterrows():
-        ou_id = int(row["org_unit_id"])
-        for col_name, iv_id in intervention_lookup.items():
+        org_unit_id = int(row["org_unit_id"])
+        for col_name, intervention_id in intervention_lookup.items():
             if row.get(col_name) == 1:
-                ou_interventions[ou_id].add(iv_id)
+                org_unit_interventions[org_unit_id].add(intervention_id)
 
     groups_map: dict[frozenset[int], list[int]] = defaultdict(list)
-    for ou_id, iv_ids in ou_interventions.items():
-        if iv_ids:
-            groups_map[frozenset(iv_ids)].append(ou_id)
+    for org_unit_id, intervention_ids in org_unit_interventions.items():
+        if intervention_ids:
+            groups_map[frozenset(intervention_ids)].append(org_unit_id)
 
-    return [{"intervention_ids": iv_ids, "org_unit_ids": sorted(ou_ids)} for iv_ids, ou_ids in groups_map.items()]
+    return [
+        {"intervention_ids": intervention_ids, "org_unit_ids": sorted(org_unit_ids)}
+        for intervention_ids, org_unit_ids in groups_map.items()
+    ]
 
 
 def create_rules_from_import(
@@ -134,14 +137,12 @@ def create_rules_from_import(
     all_org_unit_ids: set[int],
     user: User,
 ) -> list[ScenarioRule]:
-    """
-    Create ScenarioRules for an imported scenario based on intervention groups.
+    """Create ScenarioRules from a CSV import's assignment DataFrame.
 
-    For each distinct combination of interventions:
-    - If the group covers >50% of org units ("majority"): create a "Match all" rule
-      with org_units_excluded set to the org units NOT in the group.
-    - Otherwise ("minority"): create an inclusion-only rule with
-      org_units_included set to the group's org units.
+    Analyses the DataFrame to group org units by their intervention combination,
+    then creates one rule per group:
+    - Groups covering >50% of org units get a "match all" rule with exclusions.
+    - Smaller groups get an inclusion-only rule.
     """
     groups = _build_intervention_groups(assignment_df, interventions_qs)
     if not groups:
@@ -149,16 +150,15 @@ def create_rules_from_import(
 
     total_count = len(all_org_unit_ids)
     intervention_objects = {
-        iv.id: iv
-        for iv in Intervention.objects.filter(id__in={iv_id for g in groups for iv_id in g["intervention_ids"]})
+        i.id: i for i in Intervention.objects.filter(id__in={iid for g in groups for iid in g["intervention_ids"]})
     }
 
     rules = []
     intervention_properties = []
 
     for idx, group in enumerate(groups):
-        ivs = [intervention_objects[iv_id] for iv_id in group["intervention_ids"]]
-        name = _build_rule_name(ivs)
+        interventions = [intervention_objects[iid] for iid in group["intervention_ids"]]
+        name = _build_rule_name(interventions)
         color = _get_dispersed_color(idx)
         is_majority = len(group["org_unit_ids"]) > total_count / 2
 
@@ -195,11 +195,11 @@ def create_rules_from_import(
     ScenarioRule.objects.bulk_create(rules)
 
     for rule, group in zip(rules, groups):
-        for iv_id in group["intervention_ids"]:
+        for intervention_id in group["intervention_ids"]:
             intervention_properties.append(
                 ScenarioRuleInterventionProperties(
                     scenario_rule=rule,
-                    intervention_id=iv_id,
+                    intervention_id=intervention_id,
                     coverage=DEFAULT_IMPORT_COVERAGE,
                 )
             )

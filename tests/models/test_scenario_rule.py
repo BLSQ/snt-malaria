@@ -4,7 +4,7 @@ from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
-from iaso.models import Account, DataSource, OrgUnit, SourceVersion
+from iaso.models import Account, DataSource, MetricType, MetricValue, OrgUnit, SourceVersion
 from iaso.test import TestCase
 from iaso.utils.colors import DEFAULT_COLOR
 from plugins.snt_malaria.models import (
@@ -144,7 +144,7 @@ class ScenarioRuleModelTestCase(TestCase):
             )
 
     def test_matching_criteria_none(self):
-        """Null matching_criteria is now valid (inclusion-only rule)."""
+        """Null matching_criteria is valid (inclusion-only rule)."""
         rule = ScenarioRule.objects.create(
             name="Inclusion-only rule",
             priority=2,
@@ -540,6 +540,10 @@ class ScenarioRuleMatchAllTestCase(TestCase):
             location=Point(5.0, 6.0, 0.0),
         )
 
+        metric_type = MetricType.objects.create(account=self.account, name="Population", code="POP", units="people")
+        for org_unit in [self.org_unit_1, self.org_unit_2, self.org_unit_3]:
+            MetricValue.objects.create(metric_type=metric_type, org_unit=org_unit, value=1000, year=2025)
+
     def test_refresh_assignments_match_all(self):
         rule = ScenarioRule.objects.create(
             name="Match all rule",
@@ -588,6 +592,8 @@ class ScenarioRuleMatchAllTestCase(TestCase):
         )
 
     def test_refresh_assignments_match_all_with_exclusion_and_inclusion(self):
+        """Edge case: a match-all rule where the same org unit is both excluded and included.
+        Not a typical user-created rule, but verifies that inclusion takes precedence over exclusion."""
         rule = ScenarioRule.objects.create(
             name="Match all with overrides",
             priority=1,

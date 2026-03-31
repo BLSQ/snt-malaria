@@ -3,7 +3,9 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import connection, models, transaction
 from django.db.models import Deferrable, Q
 
+from iaso.models import MetricValue
 from iaso.utils.colors import DEFAULT_COLOR
+from iaso.utils.jsonlogic import jsonlogic_to_exists_q_clauses
 from iaso.utils.models.color import ColorField
 from iaso.utils.models.soft_deletable import (
     DefaultSoftDeletableManager,
@@ -11,7 +13,6 @@ from iaso.utils.models.soft_deletable import (
     OnlyDeletedSoftDeletableManager,
     SoftDeletableModel,
 )
-from iaso.utils.org_units import get_valid_org_units_with_geography
 from iaso.utils.validators import JSONSchemaValidator
 
 
@@ -132,9 +133,10 @@ class ScenarioRule(models.Model):
     color = ColorField(default=DEFAULT_COLOR)
 
     # Matching criteria determines how org units are selected for this rule:
-    # - {"and": [...]} — standard jsonlogic criteria evaluated against MetricValues
-    # - {"all": true}  — matches every valid org unit in the account
-    # - null            — inclusion-only rule, org units come solely from org_units_included
+    # - {"and": [...]} — jsonlogic criteria evaluated against MetricValues
+    #                    (must match format for jsonlogic_to_exists_q_clauses, single nesting level only)
+    # - {"all": true}  — matches every org unit that has MetricValues in the account
+    # - null           — inclusion-only rule, org units come solely from org_units_included
     matching_criteria = models.JSONField(
         blank=True, null=True, validators=[JSONSchemaValidator(schema=SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)]
     )
@@ -170,16 +172,33 @@ class ScenarioRule(models.Model):
         self.clean_fields()  # forces validation checks when calling save() directly or indirectly (objects.create())
         super().save(*args, **kwargs)
 
+    @staticmethod
+    def resolve_matched_org_units(account, matching_criteria):
+        """Evaluate matching_criteria and return the raw list of matched org unit IDs.
+
+        This is the criteria-only result, before exclusion/inclusion overrides.
+        """
+        if matching_criteria is None:
+            return []
+        metric_values = MetricValue.objects.filter(metric_type__account=account, org_unit_id__isnull=False)
+        if isinstance(matching_criteria, dict) and matching_criteria.get("all"):
+            return list(metric_values.values_list("org_unit_id", flat=True).distinct())
+        q = jsonlogic_to_exists_q_clauses(matching_criteria, metric_values, "metric_type_id", "org_unit_id")
+        return list(metric_values.filter(q).distinct().values_list("org_unit_id", flat=True))
+
     def _compute_org_unit_ids(self) -> set[int]:
         """Resolve the set of org unit ids this rule targets based on its matching mode."""
         if self.matching_criteria is None:
             return set(self.org_units_included)
-        if isinstance(self.matching_criteria, dict) and self.matching_criteria.get("all"):
-            all_ids = set(get_valid_org_units_with_geography(self.scenario.account).values_list("id", flat=True))
-            return (all_ids - set(self.org_units_excluded)) | set(self.org_units_included)
-        if not self.org_units_matched:
+        is_match_all = isinstance(self.matching_criteria, dict) and self.matching_criteria.get("all")
+        matched = (
+            set(self.resolve_matched_org_units(self.scenario.account, self.matching_criteria))
+            if is_match_all
+            else set(self.org_units_matched)
+        )
+        if not matched and not self.org_units_included:
             return set()
-        return (set(self.org_units_matched) - set(self.org_units_excluded)) | set(self.org_units_included)
+        return (matched - set(self.org_units_excluded)) | set(self.org_units_included)
 
     def refresh_assignments(self, user: User, previous_assignments: dict[int, set[int]]) -> None:
         # """

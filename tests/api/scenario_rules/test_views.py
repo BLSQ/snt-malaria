@@ -721,7 +721,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             [self.district_1.id, self.district_2.id, self.district_3.id],
         )
 
-    def test_post_scenario_rule_null_matching_criteria(self):
+    def test_post_scenario_rule_inclusion_only(self):
         payload = {
             "name": "Inclusion-only rule",
             "scenario": self.scenario.id,
@@ -764,7 +764,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertNotIn(self.district_2.id, result)
         self.assertIn(self.district_3.id, result)
 
-    def test_preview_null_criteria(self):
+    def test_preview_inclusion_only_rule(self):
         payload = {
             "matching_criteria": None,
             "org_units_included": [self.district_1.id],

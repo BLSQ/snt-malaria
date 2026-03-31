@@ -2,7 +2,7 @@ import pandas as pd
 
 from django.contrib.gis.geos import Point
 
-from iaso.models import Account, OrgUnit, OrgUnitType
+from iaso.models import Account, MetricType, MetricValue, OrgUnit, OrgUnitType
 from iaso.models.data_source import DataSource, SourceVersion
 from iaso.models.project import Project
 from iaso.test import TestCase
@@ -367,6 +367,10 @@ class CreateRulesFromImportTestCase(TestCase):
             validation_status=OrgUnit.VALIDATION_VALID,
             location=Point(3, 3, 0),
         )
+
+        metric_type = MetricType.objects.create(account=self.account, name="Population", code="POP", units="people")
+        for org_unit in [self.ou1, self.ou2, self.ou3]:
+            MetricValue.objects.create(metric_type=metric_type, org_unit=org_unit, value=1000, year=2025)
 
         self.scenario = Scenario.objects.create(
             name="Import Scenario",
