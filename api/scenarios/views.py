@@ -155,9 +155,8 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
         assignment_df = serializer.context.get("assignment_df")
         interventions = serializer.context.get("interventions")
-        all_org_unit_ids = set(
-            get_valid_org_units_with_geography(request.user.iaso_profile.account).values_list("id", flat=True)
-        )
+        account = request.user.iaso_profile.account
+        all_org_unit_ids = set(ScenarioRule.resolve_matched_org_units(account, {"all": True}))
 
         scenario = get_scenario(request.user, base_name="Imported Scenario")
         with transaction.atomic():
