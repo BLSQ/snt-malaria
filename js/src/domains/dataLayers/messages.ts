@@ -61,6 +61,14 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.errors.invalidColor',
         defaultMessage: 'Invalid color format. Use hex code like #A1B2C3.',
     },
+    maxLength: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.maxLength',
+        defaultMessage: 'Must be at most {max} characters',
+    },
+    noWhitespace: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.noWhitespace',
+        defaultMessage: 'Must not contain whitespace',
+    },
     uniqueCodeError: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeError',
         defaultMessage:
@@ -90,9 +98,21 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.noLayersFound',
         defaultMessage: 'No layers found.',
     },
+    required: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.required',
+        defaultMessage: 'This field is required',
+    },
     scale: {
         id: 'iaso.snt_malaria.settings.dataLayers.scale',
         defaultMessage: 'Scale',
+    },
+    scaleItemsCount: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.scaleItemsCount',
+        defaultMessage: 'Invalid number of scale items',
+    },
+    scaleItemsUnique: {
+        id: 'iaso.snt_malaria.settings.dataLayers.errors.scaleItemsUnique',
+        defaultMessage: 'Scale values must be unique',
     },
     searchByName: {
         id: 'iaso.snt_malaria.settings.dataLayers.searchByName',

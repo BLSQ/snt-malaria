@@ -111,6 +111,7 @@ export const useMetricTypeFormState = (
     return useFormik({
         initialValues: initialValue || DEFAULT_METRIC_TYPE,
         validationSchema,
+        validateOnMount: true,
         validateOnBlur: true,
         onSubmit: values => onSubmit(values),
     });

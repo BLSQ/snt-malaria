@@ -5,7 +5,7 @@ import {
     IntlMessage,
     useSafeIntl,
 } from 'bluesquare-components';
-import { FormikProvider } from 'formik';
+import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
 import { MetricType, MetricTypeFormModel } from '../../planning/types/metrics';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
 import { useMetricTypeFormState } from '../hooks/useMetricTypeFormState';
@@ -122,11 +122,11 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
             }
             cancelMessage={MESSAGES.cancel}
             closeOnConfirm={false}
-            allowConfirm={formik.isValid && !formik.isSubmitting}
+            allowConfirm={formik.isValid && formik.dirty && !formik.isSubmitting}
         >
-            <FormikProvider value={formik}>
+            <ExtendedFormikProvider formik={formik}>
                 <MetricTypeForm metricType={metricTypeFormModel} />
-            </FormikProvider>
+            </ExtendedFormikProvider>
             {errorMessage && (
                 <Alert severity="error" variant="filled" sx={{ mt: 2 }}>
                     <AlertTitle>{formatMessage(errorHeadline)}</AlertTitle>
