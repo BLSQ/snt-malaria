@@ -1,7 +1,6 @@
 import React from 'react';
 
 import { RoutePath } from 'Iaso/constants/routes';
-import { SHOW_DEV_FEATURES } from 'Iaso/utils/featureFlags';
 
 import { CompareCustomize } from '../domains/compareCustomize';
 import { DataLayers } from '../domains/dataLayers';
@@ -37,7 +36,6 @@ export const compareCustomizePath: RoutePath = {
     routerUrl: `${baseUrls.compareCustomize}/*`,
     element: <CompareCustomize />,
     permissions: [],
-    featureFlag: SHOW_DEV_FEATURES,
 };
 
 export const settingsPath: RoutePath = {

@@ -30,7 +30,6 @@ export const menu = [
         key: 'snt_malaria/compare-customize',
         permissions: [],
         icon: (props: SvgIconProps) => <CompareOutlined {...props} />,
-        dev: true,
     },
     {
         label: MESSAGES.settingsTitle,
