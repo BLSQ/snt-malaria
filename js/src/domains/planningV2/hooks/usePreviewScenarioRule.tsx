@@ -5,7 +5,6 @@ import { MetricTypeCriterion } from '../types/scenarioRule';
 import { matchingCriteriaToJsonLogic } from '../utils/jsonLogic';
 
 type Payload = {
-    match_all?: boolean;
     is_match_all?: boolean;
     matching_criteria: MetricTypeCriterion[];
     org_units_excluded?: string; // comma separated list of org unit ids
@@ -16,7 +15,7 @@ export const usePreviewScenarioRule = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: Partial<Payload>) => {
             let matchingCriteria: Record<string, unknown> | null;
-            if (body.match_all || body.is_match_all) {
+            if (body.is_match_all) {
                 matchingCriteria = { all: true };
             } else {
                 matchingCriteria = matchingCriteriaToJsonLogic(

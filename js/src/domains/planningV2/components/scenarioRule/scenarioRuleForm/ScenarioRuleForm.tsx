@@ -121,10 +121,10 @@ export const ScenarioRuleForm: FC = () => {
                                 control={
                                     <Checkbox
                                         size="small"
-                                        checked={values.match_all}
+                                        checked={values.is_match_all}
                                         onChange={e =>
                                             setFieldValueAndState(
-                                                'match_all',
+                                                'is_match_all',
                                                 e.target.checked,
                                             )
                                         }
@@ -136,7 +136,7 @@ export const ScenarioRuleForm: FC = () => {
                             />
                         )}
                     </Box>
-                    {!values.match_all && (
+                    {!values.is_match_all && (
                         <MatchingCriteriaForm
                             metricTypeCategories={metricTypeCategories}
                             matchingCriteria={values.matching_criteria}
@@ -172,7 +172,7 @@ export const ScenarioRuleForm: FC = () => {
                         type="select"
                         value={values.org_units_included || []}
                         multi={true}
-                        disabled={values.match_all}
+                        disabled={values.is_match_all}
                         options={inclusionOrgUnitOptions}
                         onChange={setFieldValueAndState}
                         errors={getErrors('org_units_included')}

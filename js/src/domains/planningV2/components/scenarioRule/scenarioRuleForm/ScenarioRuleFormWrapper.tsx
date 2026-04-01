@@ -48,7 +48,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                     scenario: rule.scenario,
                     name: rule.name,
                     color: rule.color,
-                    match_all: rule.is_match_all ?? false,
+                    is_match_all: rule.is_match_all ?? false,
                     intervention_properties: rule.intervention_properties,
                     matching_criteria: rule.matching_criteria,
                     org_units_excluded: rule.org_units_excluded,

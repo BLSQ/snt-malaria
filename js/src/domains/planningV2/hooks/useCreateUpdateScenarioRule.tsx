@@ -12,7 +12,7 @@ type ScenarioRulePayload = {
     id?: number;
     name: string;
     scenario: number;
-    match_all?: boolean;
+    is_match_all?: boolean;
     matching_criteria: MetricTypeCriterion[];
     intervention_properties: InterventionProperties[];
     org_units_excluded?: string; // comma separated list of org unit ids
@@ -59,7 +59,7 @@ export const useCreateUpdateScenarioRule = (scenarioId: number) => {
     return useSnackMutation({
         mutationFn: (body: Partial<ScenarioRulePayload>) => {
             let matching_criteria: Record<string, unknown> | null | undefined;
-            if (body.match_all) {
+            if (body.is_match_all) {
                 matching_criteria = { all: true };
             } else if (body.matching_criteria) {
                 matching_criteria =
@@ -71,7 +71,7 @@ export const useCreateUpdateScenarioRule = (scenarioId: number) => {
                 matching_criteria = null;
             }
 
-            const { match_all: _matchAll, ...rest } = body;
+            const { is_match_all: _isMatchAll, ...rest } = body;
             const payload: Record<string, unknown> = {
                 ...rest,
                 matching_criteria,
