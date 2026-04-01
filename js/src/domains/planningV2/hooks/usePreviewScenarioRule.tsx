@@ -14,7 +14,7 @@ type Payload = {
 export const usePreviewScenarioRule = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: Partial<Payload>) => {
-            let matchingCriteria: Record<string, unknown> | null;
+            let matchingCriteria: Record<string, unknown> | null = null;
             if (body.is_match_all) {
                 matchingCriteria = { all: true };
             } else {
@@ -31,7 +31,7 @@ export const usePreviewScenarioRule = (): UseMutationResult =>
                 : undefined;
 
             if (
-                matchingCriteria == null &&
+                matchingCriteria === null &&
                 !org_units_included?.length
             ) {
                 return Promise.resolve([]);
