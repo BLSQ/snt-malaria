@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -74,8 +74,7 @@ const useValidation = () => {
                                 'criteria-or-inclusions',
                                 'required',
                                 function test(value) {
-                                    const { org_units_included } =
-                                        this.parent;
+                                    const { org_units_included } = this.parent;
                                     if (
                                         org_units_included &&
                                         String(org_units_included).length > 0
