@@ -3,8 +3,6 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from iaso.models import MetricValue
-from iaso.utils.jsonlogic import jsonlogic_to_exists_q_clauses
 from plugins.snt_malaria.models import ScenarioRule
 
 from .permissions import ScenarioRulePermission
@@ -62,9 +60,10 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         account = user.iaso_profile.account
-        org_unit_matched = self._compute_matching_criteria(account, serializer.validated_data["matching_criteria"])
+        matching_criteria = serializer.validated_data.get("matching_criteria")
+        org_units_matched = ScenarioRule.resolve_matched_org_units(account, matching_criteria)
 
-        rule: ScenarioRule = serializer.save(created_by=user, org_units_matched=org_unit_matched)
+        rule: ScenarioRule = serializer.save(created_by=user, org_units_matched=org_units_matched)
         scenario = rule.scenario
         scenario.refresh_assignments(user)
 
@@ -92,9 +91,8 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
             "updated_by": user,
         }
         if "matching_criteria" in serializer.validated_data:
-            extra_values["org_units_matched"] = self._compute_matching_criteria(
-                account, serializer.validated_data["matching_criteria"]
-            )
+            matching_criteria = serializer.validated_data["matching_criteria"]
+            extra_values["org_units_matched"] = ScenarioRule.resolve_matched_org_units(account, matching_criteria)
 
         rule: ScenarioRule = serializer.save(**extra_values)
         scenario = rule.scenario
@@ -127,20 +125,10 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         account = request.user.iaso_profile.account
-        org_unit_ids = self._compute_matching_criteria(account, serializer.validated_data["matching_criteria"])
+        matching_criteria = serializer.validated_data.get("matching_criteria")
+        matched = set(ScenarioRule.resolve_matched_org_units(account, matching_criteria))
 
-        org_unit_ids_set = set(org_unit_ids)
-        excluded_org_unit_ids = set(serializer.validated_data.get("org_units_excluded", []))
-        if excluded_org_unit_ids:
-            org_unit_ids_set -= excluded_org_unit_ids
-
-        included_org_units = set(serializer.validated_data.get("org_units_included", []))
-        if included_org_units:
-            org_unit_ids_set |= included_org_units
-        return Response(list(org_unit_ids_set), status=status.HTTP_200_OK)
-
-    def _compute_matching_criteria(self, account, matching_criteria):
-        metric_values = MetricValue.objects.filter(metric_type__account=account)
-        q = jsonlogic_to_exists_q_clauses(matching_criteria, metric_values, "metric_type_id", "org_unit_id")
-        org_unit_ids = metric_values.filter(q).distinct().values_list("org_unit_id", flat=True)
-        return list(org_unit_ids)
+        excluded = set(serializer.validated_data.get("org_units_excluded", []))
+        included = set(serializer.validated_data.get("org_units_included", []))
+        result = (matched - excluded) | included
+        return Response(list(result), status=status.HTTP_200_OK)

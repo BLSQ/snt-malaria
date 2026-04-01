@@ -2,6 +2,7 @@ import React, { FC, useCallback, useState } from 'react';
 import { Card } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { usePlanningContext } from '../../contexts/PlanningContext';
+import { ScenarioRuleFormValues } from '../../hooks/useScenarioRuleFormState';
 import { ScenarioRule } from '../../types/scenarioRule';
 import { ScenarioRuleFormWrapper } from './scenarioRuleForm/ScenarioRuleFormWrapper';
 import { ScenarioRulesContainer } from './scenarioRuleList/ScenarioRulesContainer';
@@ -50,14 +51,10 @@ export const ScenarioRulesPanel: FC<Props> = ({
     }, [onPreviewScenarioRule, setEditingRule, toggleIsEditing]);
 
     const handleFormChange = useCallback(
-        (values: Partial<ScenarioRule>) => {
-            if (
-                (values.matching_criteria ?? []).length <= 0 ||
-                !onPreviewScenarioRule
-            ) {
+        (values: Partial<ScenarioRuleFormValues>) => {
+            if (!onPreviewScenarioRule) {
                 return;
             }
-
             onPreviewScenarioRule(values);
         },
         [onPreviewScenarioRule],

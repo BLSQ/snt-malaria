@@ -437,9 +437,17 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenario.lockScenario',
         defaultMessage: 'Lock Scenario',
     },
+    manualSelection: {
+        id: 'iaso.snt_malaria.scenarioRule.manualSelection',
+        defaultMessage: 'Manual selection',
+    },
     mapView: {
         id: 'iaso.snt_malaria.label.mapView',
         defaultMessage: 'Map',
+    },
+    matchAllOrgUnits: {
+        id: 'iaso.snt_malaria.scenarioRule.matchAllOrgUnits',
+        defaultMessage: 'All org units',
     },
     maxYear: {
         id: 'iaso.snt_malaria.scenario.errors.maxYear',

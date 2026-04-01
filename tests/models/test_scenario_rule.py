@@ -1,9 +1,10 @@
 from decimal import Decimal
 
+from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
-from iaso.models import Account, OrgUnit
+from iaso.models import Account, DataSource, MetricType, MetricValue, OrgUnit, SourceVersion
 from iaso.test import TestCase
 from iaso.utils.colors import DEFAULT_COLOR
 from plugins.snt_malaria.models import (
@@ -80,18 +81,19 @@ class ScenarioRuleModelTestCase(TestCase):
             missing_name_rule.full_clean()
 
     def test_missing_matching_criteria_field(self):
-        with self.assertRaisesMessage(ValidationError, "This field cannot be null."):
-            ScenarioRule.objects.create(
-                name="Rule 2",
-                priority=1,
-                color="#FF0000",
-                created_by=self.user,
-                scenario=self.scenario,
-                org_units_matched=[],
-                org_units_excluded=[],
-                org_units_included=[],
-                org_units_scope=[],
-            )
+        """Omitting matching_criteria defaults to None (inclusion-only rule)."""
+        rule = ScenarioRule.objects.create(
+            name="Rule 2",
+            priority=1,
+            color="#FF0000",
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[],
+            org_units_excluded=[],
+            org_units_included=[],
+            org_units_scope=[],
+        )
+        self.assertIsNone(rule.matching_criteria)
 
     def test_missing_priority_field(self):
         with self.assertRaisesMessage(ValidationError, "This field cannot be null."):
@@ -142,15 +144,27 @@ class ScenarioRuleModelTestCase(TestCase):
             )
 
     def test_matching_criteria_none(self):
-        with self.assertRaisesMessage(ValidationError, "This field cannot be null."):
-            ScenarioRule.objects.create(
-                name="Rule with invalid matching criteria",
-                priority=2,
-                color="#FF0000",
-                matching_criteria=None,
-                created_by=self.user,
-                scenario=self.scenario,
-            )
+        """Null matching_criteria is valid (inclusion-only rule)."""
+        rule = ScenarioRule.objects.create(
+            name="Inclusion-only rule",
+            priority=2,
+            color="#FF0000",
+            matching_criteria=None,
+            created_by=self.user,
+            scenario=self.scenario,
+        )
+        self.assertIsNone(rule.matching_criteria)
+
+    def test_matching_criteria_match_all(self):
+        rule = ScenarioRule.objects.create(
+            name="Match all rule",
+            priority=3,
+            color="#00FF00",
+            matching_criteria={"all": True},
+            created_by=self.user,
+            scenario=self.scenario,
+        )
+        self.assertEqual(rule.matching_criteria, {"all": True})
 
     def test_refresh_assignments_it_create_assignments(self):
         # This is a very basic test just to check that the method runs without error,
@@ -431,6 +445,175 @@ class ScenarioRuleModelTestCase(TestCase):
         self.assertEqual(assignments.count(), 2)
         self.assertEqual(assignments.first().org_unit_id, self.org_unit_1.id)
         self.assertEqual(assignments[1].org_unit_id, self.org_unit_2.id)
+
+    def test_refresh_assignments_inclusion_only(self):
+        """matching_criteria=None: assignments come solely from org_units_included."""
+        rule = ScenarioRule.objects.create(
+            name="Inclusion-only rule",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=None,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_included=[self.org_unit_1.id, self.org_unit_2.id],
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        rule.refresh_assignments(self.user, previous_assignments={})
+
+        assignments = rule.intervention_assignments.all()
+        self.assertEqual(assignments.count(), 2)
+        self.assertEqual(
+            set(assignments.values_list("org_unit_id", flat=True)),
+            {self.org_unit_1.id, self.org_unit_2.id},
+        )
+
+    def test_refresh_assignments_inclusion_only_empty(self):
+        """matching_criteria=None with no org_units_included produces no assignments."""
+        rule = ScenarioRule.objects.create(
+            name="Empty inclusion rule",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=None,
+            created_by=self.user,
+            scenario=self.scenario,
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        rule.refresh_assignments(self.user, previous_assignments={})
+
+        self.assertEqual(rule.intervention_assignments.count(), 0)
+
+
+class ScenarioRuleMatchAllTestCase(TestCase):
+    """Tests for refresh_assignments with matching_criteria={"all": True}."""
+
+    def setUp(self):
+        data_source = DataSource.objects.create(name="source")
+        source_version = SourceVersion.objects.create(data_source=data_source, number=1)
+        self.account = Account.objects.create(name="account", default_version=source_version)
+        self.user = self.create_user_with_profile(username="user", account=self.account)
+
+        self.intervention_category = InterventionCategory.objects.create(
+            name="Category 1", account=self.account, created_by=self.user
+        )
+        self.intervention = Intervention.objects.create(
+            name="Intervention 1",
+            code="INT1",
+            intervention_category=self.intervention_category,
+            created_by=self.user,
+        )
+        self.scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=self.user,
+            name="Scenario 1",
+            start_year=2020,
+            end_year=2030,
+        )
+
+        self.org_unit_1 = OrgUnit.objects.create(
+            name="OU 1",
+            version=source_version,
+            validation_status=OrgUnit.VALIDATION_VALID,
+            location=Point(1.0, 2.0, 0.0),
+        )
+        self.org_unit_2 = OrgUnit.objects.create(
+            name="OU 2",
+            version=source_version,
+            validation_status=OrgUnit.VALIDATION_VALID,
+            location=Point(3.0, 4.0, 0.0),
+        )
+        self.org_unit_3 = OrgUnit.objects.create(
+            name="OU 3",
+            version=source_version,
+            validation_status=OrgUnit.VALIDATION_VALID,
+            location=Point(5.0, 6.0, 0.0),
+        )
+
+        metric_type = MetricType.objects.create(account=self.account, name="Population", code="POP", units="people")
+        for org_unit in [self.org_unit_1, self.org_unit_2, self.org_unit_3]:
+            MetricValue.objects.create(metric_type=metric_type, org_unit=org_unit, value=1000, year=2025)
+
+    def test_refresh_assignments_match_all(self):
+        rule = ScenarioRule.objects.create(
+            name="Match all rule",
+            priority=1,
+            color="#00FF00",
+            matching_criteria={"all": True},
+            created_by=self.user,
+            scenario=self.scenario,
+        )
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule,
+            intervention=self.intervention,
+            coverage=Decimal("1.00"),
+        )
+
+        rule.refresh_assignments(self.user, previous_assignments={})
+
+        self.assertEqual(rule.intervention_assignments.count(), 3)
+        self.assertEqual(
+            set(rule.intervention_assignments.values_list("org_unit_id", flat=True)),
+            {self.org_unit_1.id, self.org_unit_2.id, self.org_unit_3.id},
+        )
+
+    def test_refresh_assignments_match_all_with_exclusions(self):
+        rule = ScenarioRule.objects.create(
+            name="Match all minus OU3",
+            priority=1,
+            color="#00FF00",
+            matching_criteria={"all": True},
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_excluded=[self.org_unit_3.id],
+        )
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule,
+            intervention=self.intervention,
+            coverage=Decimal("1.00"),
+        )
+
+        rule.refresh_assignments(self.user, previous_assignments={})
+
+        self.assertEqual(rule.intervention_assignments.count(), 2)
+        self.assertEqual(
+            set(rule.intervention_assignments.values_list("org_unit_id", flat=True)),
+            {self.org_unit_1.id, self.org_unit_2.id},
+        )
+
+    def test_refresh_assignments_match_all_with_exclusion_and_inclusion(self):
+        """Edge case: a match-all rule where the same org unit is both excluded and included.
+        Not a typical user-created rule, but verifies that inclusion takes precedence over exclusion."""
+        rule = ScenarioRule.objects.create(
+            name="Match all with overrides",
+            priority=1,
+            color="#00FF00",
+            matching_criteria={"all": True},
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_excluded=[self.org_unit_2.id],
+            org_units_included=[self.org_unit_2.id],
+        )
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule,
+            intervention=self.intervention,
+            coverage=Decimal("1.00"),
+        )
+
+        rule.refresh_assignments(self.user, previous_assignments={})
+
+        # Inclusion overrides exclusion
+        self.assertEqual(rule.intervention_assignments.count(), 3)
 
 
 class ScenarioRuleInterventionPropertiesModelTestCase(TestCase):

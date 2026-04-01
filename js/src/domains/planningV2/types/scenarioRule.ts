@@ -4,6 +4,7 @@ export type ScenarioRule = {
     name: string;
     priority: number;
     matching_criteria: MetricTypeCriterion[];
+    is_match_all?: boolean;
     org_unit_scope?: number[];
     color: string;
     org_units_matched?: number[];

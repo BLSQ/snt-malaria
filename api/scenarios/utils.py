@@ -1,10 +1,15 @@
+from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
+from decimal import Decimal
+
+import pandas as pd
 
 from django.contrib.auth.models import User
 
+from iaso.utils.colors import COLOR_CHOICES, DISPERSED_COLOR_ORDER
 from plugins.snt_malaria.models.intervention import Intervention, InterventionAssignment
-from plugins.snt_malaria.models.scenario import Scenario
+from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule, ScenarioRuleInterventionProperties
 
 
 def get_intervention_column(name, code):
@@ -67,6 +72,141 @@ def get_assignments_from_row(user, scenario, row, interventions):
             )
             assignments.append(assignment)
     return assignments
+
+
+DEFAULT_IMPORT_COVERAGE = Decimal("1.00")
+
+
+def _get_dispersed_color(index: int) -> str:
+    """Return a color from COLOR_CHOICES using the dispersed ordering for visual distinctness."""
+    palette_index = DISPERSED_COLOR_ORDER[index % len(DISPERSED_COLOR_ORDER)]
+    return COLOR_CHOICES[palette_index][0]
+
+
+def _build_rule_name(interventions: list[Intervention]) -> str:
+    """Build a rule name from intervention short names joined by ' + ', truncated to the model's max_length."""
+    max_length = ScenarioRule._meta.get_field("name").max_length
+    parts = [i.short_name or i.name for i in sorted(interventions, key=lambda i: i.name)]
+    name = " + ".join(parts)
+    if len(name) > max_length:
+        suffix = "…"
+        name = name[: max_length - len(suffix)] + suffix
+    return name
+
+
+def _build_intervention_groups(
+    assignment_df: pd.DataFrame,
+    interventions_qs,
+) -> list[dict]:
+    """
+    Group org units by their intervention combination.
+
+    Returns a list of dicts:
+        {
+            "intervention_ids": frozenset of intervention ids,
+            "org_unit_ids": list of org unit ids,
+        }
+    """
+    intervention_lookup = {}
+    for intervention in interventions_qs:
+        col_name = get_intervention_column(intervention["name"], intervention["code"])
+        intervention_lookup[col_name] = intervention["id"]
+
+    org_unit_interventions: dict[int, set[int]] = defaultdict(set)
+    for _, row in assignment_df.iterrows():
+        org_unit_id = int(row["org_unit_id"])
+        for col_name, intervention_id in intervention_lookup.items():
+            if row.get(col_name) == 1:
+                org_unit_interventions[org_unit_id].add(intervention_id)
+
+    groups_map: dict[frozenset[int], list[int]] = defaultdict(list)
+    for org_unit_id, intervention_ids in org_unit_interventions.items():
+        if intervention_ids:
+            groups_map[frozenset(intervention_ids)].append(org_unit_id)
+
+    return [
+        {"intervention_ids": intervention_ids, "org_unit_ids": sorted(org_unit_ids)}
+        for intervention_ids, org_unit_ids in groups_map.items()
+    ]
+
+
+def create_rules_from_import(
+    scenario: Scenario,
+    assignment_df: pd.DataFrame,
+    interventions_qs,
+    all_org_unit_ids: set[int],
+    user: User,
+) -> list[ScenarioRule]:
+    """Create ScenarioRules from a CSV import's assignment DataFrame.
+
+    Analyses the DataFrame to group org units by their intervention combination,
+    then creates one rule per group:
+    - Groups covering >50% of org units get a "match all" rule with exclusions.
+    - Smaller groups get an inclusion-only rule.
+    """
+    groups = _build_intervention_groups(assignment_df, interventions_qs)
+    if not groups:
+        return []
+
+    total_count = len(all_org_unit_ids)
+    intervention_objects = {
+        i.id: i for i in Intervention.objects.filter(id__in={iid for g in groups for iid in g["intervention_ids"]})
+    }
+
+    rules = []
+    intervention_properties = []
+
+    for idx, group in enumerate(groups):
+        interventions = [intervention_objects[iid] for iid in group["intervention_ids"]]
+        name = _build_rule_name(interventions)
+        color = _get_dispersed_color(idx)
+        is_majority = len(group["org_unit_ids"]) > total_count / 2
+
+        if is_majority:
+            excluded = sorted(all_org_unit_ids - set(group["org_unit_ids"]))
+            rule = ScenarioRule(
+                scenario=scenario,
+                name=name,
+                priority=idx + 1,
+                color=color,
+                matching_criteria={"all": True},
+                org_units_matched=[],
+                org_units_excluded=excluded,
+                org_units_included=[],
+                org_units_scope=[],
+                created_by=user,
+            )
+        else:
+            rule = ScenarioRule(
+                scenario=scenario,
+                name=name,
+                priority=idx + 1,
+                color=color,
+                matching_criteria=None,
+                org_units_matched=[],
+                org_units_excluded=[],
+                org_units_included=group["org_unit_ids"],
+                org_units_scope=[],
+                created_by=user,
+            )
+
+        rules.append(rule)
+
+    ScenarioRule.objects.bulk_create(rules)
+
+    for rule, group in zip(rules, groups):
+        for intervention_id in group["intervention_ids"]:
+            intervention_properties.append(
+                ScenarioRuleInterventionProperties(
+                    scenario_rule=rule,
+                    intervention_id=intervention_id,
+                    coverage=DEFAULT_IMPORT_COVERAGE,
+                )
+            )
+
+    ScenarioRuleInterventionProperties.objects.bulk_create(intervention_properties)
+
+    return rules
 
 
 def duplicate_rules(scenario_from: Scenario, scenario_to: Scenario, user: User):

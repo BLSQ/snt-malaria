@@ -3,7 +3,9 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import connection, models, transaction
 from django.db.models import Deferrable, Q
 
+from iaso.models import MetricValue
 from iaso.utils.colors import DEFAULT_COLOR
+from iaso.utils.jsonlogic import jsonlogic_to_exists_q_clauses
 from iaso.utils.models.color import ColorField
 from iaso.utils.models.soft_deletable import (
     DefaultSoftDeletableManager,
@@ -67,10 +69,22 @@ class Scenario(SoftDeletableModel):
 
 SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "type": "object",
-    "required": ["and"],
-    "additionalProperties": False,
-    "properties": {"and": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/condition"}}},
+    "oneOf": [
+        {
+            "type": "object",
+            "required": ["and"],
+            "additionalProperties": False,
+            "properties": {
+                "and": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/condition"}},
+            },
+        },
+        {
+            "type": "object",
+            "required": ["all"],
+            "additionalProperties": False,
+            "properties": {"all": {"const": True}},
+        },
+    ],
     "$defs": {
         "condition": {
             "type": "object",
@@ -118,10 +132,13 @@ class ScenarioRule(models.Model):
     priority = models.PositiveSmallIntegerField()
     color = ColorField(default=DEFAULT_COLOR)
 
-    # This should match format for jsonlogic_to_exists_q_clauses in iaso.utils.jsonlogic
-    # This should only support one level: e.g. {"and": [{"==": [{"var": "gender"}, "F"]}, {"<": [{"var": "age"}, 25]}]}
+    # Matching criteria determines how org units are selected for this rule:
+    # - {"and": [...]} — jsonlogic criteria evaluated against MetricValues
+    #                    (must match format for jsonlogic_to_exists_q_clauses, single nesting level only)
+    # - {"all": true}  — matches every org unit that has MetricValues in the account
+    # - null           — inclusion-only rule, org units come solely from org_units_included
     matching_criteria = models.JSONField(
-        blank=False, null=False, validators=[JSONSchemaValidator(schema=SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)]
+        blank=True, null=True, validators=[JSONSchemaValidator(schema=SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)]
     )
 
     # Those fields are mainly used to keep track on org units setup in the UI.
@@ -155,6 +172,34 @@ class ScenarioRule(models.Model):
         self.clean_fields()  # forces validation checks when calling save() directly or indirectly (objects.create())
         super().save(*args, **kwargs)
 
+    @staticmethod
+    def resolve_matched_org_units(account, matching_criteria):
+        """Evaluate matching_criteria and return the raw list of matched org unit IDs.
+
+        This is the criteria-only result, before exclusion/inclusion overrides.
+        """
+        if matching_criteria is None:
+            return []
+        metric_values = MetricValue.objects.filter(metric_type__account=account, org_unit_id__isnull=False)
+        if isinstance(matching_criteria, dict) and matching_criteria.get("all"):
+            return list(metric_values.values_list("org_unit_id", flat=True).distinct())
+        q = jsonlogic_to_exists_q_clauses(matching_criteria, metric_values, "metric_type_id", "org_unit_id")
+        return list(metric_values.filter(q).distinct().values_list("org_unit_id", flat=True))
+
+    def _compute_org_unit_ids(self) -> set[int]:
+        """Resolve the set of org unit ids this rule targets based on its matching mode."""
+        if self.matching_criteria is None:
+            return set(self.org_units_included)
+        is_match_all = isinstance(self.matching_criteria, dict) and self.matching_criteria.get("all")
+        matched = (
+            set(self.resolve_matched_org_units(self.scenario.account, self.matching_criteria))
+            if is_match_all
+            else set(self.org_units_matched)
+        )
+        if not matched and not self.org_units_included:
+            return set()
+        return (matched - set(self.org_units_excluded)) | set(self.org_units_included)
+
     def refresh_assignments(self, user: User, previous_assignments: dict[int, set[int]]) -> None:
         # """
         # Refresh intervention assignment based on this rule.
@@ -168,12 +213,14 @@ class ScenarioRule(models.Model):
         # """
         from plugins.snt_malaria.models.intervention import InterventionAssignment
 
-        if (not self.intervention_properties.exists()) or (not self.org_units_matched):
-            # If there is no intervention property or no matched org unit,
-            # we don't need to do anything as there will be no assignment from this rule
+        if not self.intervention_properties.exists():
             return
 
-        org_unit_ids = set(self.org_units_matched) - set(self.org_units_excluded) | set(self.org_units_included)
+        org_unit_ids = self._compute_org_unit_ids()
+        if not org_unit_ids:
+            # No org units to assign to (no matched, included, or "match all" org units)
+            return
+
         intervention_assignments_to_create = []
         for intervention_property in self.intervention_properties.select_related("intervention").all():
             category_id = intervention_property.intervention.intervention_category_id

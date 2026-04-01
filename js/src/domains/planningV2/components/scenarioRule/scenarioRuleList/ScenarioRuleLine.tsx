@@ -55,8 +55,14 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
     );
 
     const metricTypeCriterionLabel = useMemo(() => {
+        if (rule.is_match_all) {
+            return formatMessage(MESSAGES.matchAllOrgUnits);
+        }
+        if (!rule.matching_criteria || rule.matching_criteria.length === 0) {
+            return formatMessage(MESSAGES.manualSelection);
+        }
         return rule.matching_criteria
-            ?.map(ip => {
+            .map(ip => {
                 const metricName =
                     ip.metric_type && metricTypeNames.get(ip.metric_type)
                         ? metricTypeNames.get(ip.metric_type)
@@ -64,7 +70,7 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
                 return `${metricName} ${ip.operator} ${ip.value ?? ip.string_value}`;
             })
             .join(', ');
-    }, [rule, metricTypeNames]);
+    }, [rule, metricTypeNames, formatMessage]);
 
     return (
         <React.Fragment key={rule.id}>
