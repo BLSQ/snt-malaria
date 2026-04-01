@@ -46,8 +46,7 @@ const styles = {
         },
     },
     rightColumn: {
-        height: '100%',
-        overflowY: 'auto',
+        overflow: 'hidden',
     },
 } satisfies SxStyles;
 
