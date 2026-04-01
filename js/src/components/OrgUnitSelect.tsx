@@ -30,7 +30,7 @@ export const OrgUnitSelect: FC<Props> = ({
     const { data: accountSettings } = useGetAccountSettings();
 
     const { data: orgUnitsByType, isLoading: isLoadingOrgUnits } =
-        useGetOrgUnitsByType(accountSettings?.intervention_org_unit_type_id);
+        useGetOrgUnitsByType(accountSettings?.focus_org_unit_type_id);
 
     const handleOrgUnitChange = (e: SelectChangeEvent<number>) => {
         const id = e.target.value as number;
