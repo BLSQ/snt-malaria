@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.9.0](https://github.com/BLSQ/snt-malaria/compare/2.8.0...2.9.0) (2026-04-01)
+
+
+### Features
+
+* **compare/optimize:** lift feature toggle ([#248](https://github.com/BLSQ/snt-malaria/issues/248)) ([8a19153](https://github.com/BLSQ/snt-malaria/commit/8a19153edb0612c82c538e9bb2b296dd075274d4))
+* SNT-347 add a navigation entry for manage data leading to a new page displaying the layers list ([#228](https://github.com/BLSQ/snt-malaria/issues/228)) ([c57fec4](https://github.com/BLSQ/snt-malaria/commit/c57fec42b0c881c2cdd4f3372bd0ea59f8e93cb9))
+* SNT-350 bring filter by province into a single drodown and cleanup actions UI ([#225](https://github.com/BLSQ/snt-malaria/issues/225)) ([54d980e](https://github.com/BLSQ/snt-malaria/commit/54d980e36da9a1ed9ffc839f32e69ecead8ff973))
+* SNT-352 bring rule editor inside main view ([#218](https://github.com/BLSQ/snt-malaria/issues/218)) ([74b9746](https://github.com/BLSQ/snt-malaria/commit/74b9746c92004c47ed72bc15a838e381d7d6546a))
+* SNT-352 Bring the budget UI inside the main panel as per prototype ([6a2adf1](https://github.com/BLSQ/snt-malaria/commit/6a2adf1a9f2dca6aa67af15711e527e7f1488bae))
+* SNT-357 frontend permissions on `Scenario` details ([#220](https://github.com/BLSQ/snt-malaria/issues/220)) ([20da40d](https://github.com/BLSQ/snt-malaria/commit/20da40d5fc9ef95568bb9c3e24f3519f7f57c144))
+* SNT-378 Automatically refresh assignments on rule change ([#229](https://github.com/BLSQ/snt-malaria/issues/229)) ([d8128d7](https://github.com/BLSQ/snt-malaria/commit/d8128d7b26e06e81a42f8e18cc3ec1ce195c8ec6))
+* SNT-379 preview rules matching org units ([#232](https://github.com/BLSQ/snt-malaria/issues/232)) ([cfe3f26](https://github.com/BLSQ/snt-malaria/commit/cfe3f26a9d5bf1508cc3eb4b21dfb1f0d7cfb39c))
+
+
+### Bug Fixes
+
+* Fix folder casing ([#236](https://github.com/BLSQ/snt-malaria/issues/236)) ([a5a3501](https://github.com/BLSQ/snt-malaria/commit/a5a350177decd02809715515c607b852a08b8772))
+* **impact:** scroll warning section, consistent styling ([#249](https://github.com/BLSQ/snt-malaria/issues/249)) ([7a4df76](https://github.com/BLSQ/snt-malaria/commit/7a4df76a49f885c30a583ced412700e8943784b1))
+* **impact:** SNT-392 use django's connections.databases for dynamic impact connections ([#241](https://github.com/BLSQ/snt-malaria/issues/241)) ([9fd6936](https://github.com/BLSQ/snt-malaria/commit/9fd693617f3e7c026eba3eff2d8da45162e21700))
+* **scripts:** remove select_related and add logging ([#240](https://github.com/BLSQ/snt-malaria/issues/240)) ([6f74f36](https://github.com/BLSQ/snt-malaria/commit/6f74f36cd171746bf5a0006659a0bdca2d2e6b70))
+* SNT-335 remove duplicate queries ([#231](https://github.com/BLSQ/snt-malaria/issues/231)) ([d976722](https://github.com/BLSQ/snt-malaria/commit/d976722f37da9f5a1c54e217003b68494b8e3242))
+* SNT-369 fix cost assumptions and assignment with no rules ([#222](https://github.com/BLSQ/snt-malaria/issues/222)) ([89c2942](https://github.com/BLSQ/snt-malaria/commit/89c2942089b160508969763c50fc0afd8b03923d))
+* SNT-375: Order org units by depth ([#223](https://github.com/BLSQ/snt-malaria/issues/223)) ([8a72e9d](https://github.com/BLSQ/snt-malaria/commit/8a72e9d865c400a1ddc091348d031327f4f69269))
+* SNT-376 Fix-org-unit-scope-selection ([#227](https://github.com/BLSQ/snt-malaria/issues/227)) ([a4a6a29](https://github.com/BLSQ/snt-malaria/commit/a4a6a295bcb10f40926ab38f99e4bd990ba09d1a))
+
 ## [2.8.0](https://github.com/BLSQ/snt-malaria/compare/2.7.1...2.8.0) (2026-03-11)
 
 
