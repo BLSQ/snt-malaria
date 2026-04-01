@@ -4,7 +4,14 @@ from unittest.mock import Mock
 from iaso.models import OrgUnit, OrgUnitType
 from iaso.test import TestCase
 from plugins.snt_malaria.models import Budget, Intervention, InterventionAssignment, InterventionCategory, Scenario
-from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactResult
+from plugins.snt_malaria.providers.impact.base import (
+    BulkMatchResult,
+    ImpactMetricWithConfidenceInterval,
+    ImpactResult,
+    MatchResult,
+    MatchWarnings,
+    OrgUnitRef,
+)
 from plugins.snt_malaria.services.impact import (
     ImpactService,
     OrgUnitImpactMetrics,
@@ -268,16 +275,22 @@ class ImpactServiceGetScenarioImpactTestCase(TestCase):
             ],
         }
 
-    def _make_provider_mock(self, supports_bulk):
+    def _make_provider_mock(self, supports_bulk, warnings=None):
         """Build a mock provider wired with realistic per-org-unit results."""
         results_by_ou = self._make_impact_results()
         mock_provider = Mock()
         mock_provider.supports_bulk = supports_bulk
 
-        mock_provider.match_impact.side_effect = lambda org_unit, **kw: results_by_ou[org_unit.id]
-        mock_provider.match_impact_bulk.side_effect = lambda org_units, **kw: {
-            ou.id: results_by_ou[ou.id] for ou in org_units
-        }
+        w = warnings or MatchWarnings()
+
+        mock_provider.match_impact.side_effect = lambda org_unit, **kw: MatchResult(
+            results=results_by_ou[org_unit.id],
+            warnings=w,
+        )
+        mock_provider.match_impact_bulk.side_effect = lambda org_units, **kw: BulkMatchResult(
+            results={ou.id: results_by_ou[ou.id] for ou in org_units},
+            warnings=w,
+        )
         return mock_provider
 
     def _assert_scenario_impact(self, result):
@@ -356,6 +369,10 @@ class ImpactServiceGetScenarioImpactTestCase(TestCase):
         self.assertEqual(agg[self.district3.id].direct_deaths.value, 13.0)
         self.assertEqual(agg[self.district3.id].cost, 14500.0)
 
+        # -- warnings should be empty in the happy path --
+        self.assertEqual(result.org_units_not_found, [])
+        self.assertEqual(result.org_units_with_unmatched_interventions, [])
+
     def test_service_calls_match_impact_bulk(self):
         """Test that the service calls match_impact_bulk with correct grouping and produces correct outcomes."""
         mock_provider = self._make_provider_mock(supports_bulk=True)
@@ -418,3 +435,32 @@ class ImpactServiceGetScenarioImpactTestCase(TestCase):
         )
         mock_provider.match_impact_bulk.assert_not_called()
         self._assert_scenario_impact(result)
+
+    def test_warnings_propagated_bulk(self):
+        """Warnings from the provider should appear on the final ScenarioImpactMetrics."""
+        warnings = MatchWarnings(
+            org_units_not_found=[OrgUnitRef(id=self.district1.id, name=self.district1.name)],
+            org_units_with_unmatched_interventions=[OrgUnitRef(id=self.district2.id, name=self.district2.name)],
+        )
+        mock_provider = self._make_provider_mock(supports_bulk=True, warnings=warnings)
+
+        service = ImpactService(provider=mock_provider)
+        result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
+
+        not_found_ids = {ou.id for ou in result.org_units_not_found}
+        unmatched_ids = {ou.id for ou in result.org_units_with_unmatched_interventions}
+        self.assertIn(self.district1.id, not_found_ids)
+        self.assertIn(self.district2.id, unmatched_ids)
+
+    def test_warnings_propagated_individual(self):
+        """Warnings from match_impact should appear on the final ScenarioImpactMetrics."""
+        warnings = MatchWarnings(
+            org_units_not_found=[OrgUnitRef(id=self.district3.id, name=self.district3.name)],
+        )
+        mock_provider = self._make_provider_mock(supports_bulk=False, warnings=warnings)
+
+        service = ImpactService(provider=mock_provider)
+        result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
+
+        not_found_ids = {ou.id for ou in result.org_units_not_found}
+        self.assertIn(self.district3.id, not_found_ids)

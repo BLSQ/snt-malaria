@@ -327,6 +327,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.hideLegend',
         defaultMessage: 'Hide Legend',
     },
+    hideDetails: {
+        id: 'iaso.snt_malaria.label.hideDetails',
+        defaultMessage: 'Hide details',
+    },
     hideSidebar: {
         id: 'iaso.snt_malaria.label.hideSidebar',
         defaultMessage: 'Hide sidebar',
@@ -521,6 +525,24 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.ok',
         defaultMessage: 'OK',
     },
+    orgUnitsNotFoundTitle: {
+        id: 'iaso.snt_malaria.compareCustomize.orgUnitsNotFoundTitle',
+        defaultMessage: 'Org units not found',
+    },
+    orgUnitsNotFound: {
+        id: 'iaso.snt_malaria.compareCustomize.orgUnitsNotFound',
+        defaultMessage:
+            'Some org units could not be found in the impact database.',
+    },
+    orgUnitsWithUnmatchedInterventionsTitle: {
+        id: 'iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventionsTitle',
+        defaultMessage: 'Unmatched interventions',
+    },
+    orgUnitsWithUnmatchedInterventions: {
+        id: 'iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventions',
+        defaultMessage:
+            'Some org units exist in the impact database but have no data for their assigned interventions.',
+    },
     operator: {
         id: 'iaso.snt_malaria.scenarioRule.operator',
         defaultMessage: 'Operator',
@@ -635,6 +657,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.title',
         defaultMessage: 'Settings',
     },
+    showDetails: {
+        id: 'iaso.snt_malaria.label.showDetails',
+        defaultMessage: 'Show details',
+    },
     showLegend: {
         id: 'iaso.snt_malaria.label.showLegend',
         defaultMessage: 'Show Legend',
@@ -678,6 +704,10 @@ export const MESSAGES = defineMessages({
     value: {
         id: 'iaso.snt_malaria.scenarioRule.value',
         defaultMessage: 'Value',
+    },
+    warningsTitle: {
+        id: 'iaso.snt_malaria.compareCustomize.warningsTitle',
+        defaultMessage: 'Warnings',
     },
     yearlyPrevalenceTitle: {
         id: 'iaso.snt_malaria.compareCustomize.yearlyPrevalenceTitle',

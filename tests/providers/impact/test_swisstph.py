@@ -6,7 +6,7 @@ from django.db import connection
 from django.test import TestCase
 
 from plugins.snt_malaria.models.swisstph_impact import SwissTPHImpactData
-from plugins.snt_malaria.providers.impact.base import InterventionMappingError, OrgUnitMappingError
+from plugins.snt_malaria.providers.impact.base import InterventionMappingError
 from plugins.snt_malaria.providers.impact.swisstph import (
     KNOWN_DEPLOYED_COLUMNS,
     SwissTPHImpactProvider,
@@ -260,82 +260,89 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         org_unit = MockOrgUnit(id=1, name="Different Name", impact_reference="Bern")
         intervention = MockIntervention(impact_ref="deployed_int_smc")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit],
             interventions=[intervention],
             age_group="allAges",
         )
 
-        self.assertIn(1, results)
-        self.assertEqual(len(results[1]), 1)
-        self.assertEqual(results[1][0].year, 2025)
+        self.assertIn(1, bulk.results)
+        self.assertEqual(len(bulk.results[1]), 1)
+        self.assertEqual(bulk.results[1][0].year, 2025)
 
     def test_name_fallback_when_no_mapping(self):
         """When no impact mapping exists, the org unit name is used."""
         org_unit = MockOrgUnit(id=1, name="Bern")
         intervention = MockIntervention(impact_ref="deployed_int_smc")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit],
             interventions=[intervention],
             age_group="allAges",
         )
 
-        self.assertIn(1, results)
-        self.assertEqual(len(results[1]), 1)
+        self.assertIn(1, bulk.results)
+        self.assertEqual(len(bulk.results[1]), 1)
 
-    def test_wrong_mapping_raises_org_unit_mapping_error(self):
-        """A mapping reference that doesn't exist in the impact DB should raise OrgUnitMappingError."""
+    def test_wrong_mapping_reports_org_unit_not_found(self):
+        """A mapping reference that doesn't exist in the impact DB should appear in org_units_not_found."""
         org_unit = MockOrgUnit(id=1, name="Bern", impact_reference="Zurich")
         intervention = MockIntervention(impact_ref="deployed_int_smc")
 
-        with self.assertRaises(OrgUnitMappingError) as context:
-            self.provider.match_impact_bulk(
-                [org_unit],
-                interventions=[intervention],
-                age_group="allAges",
-            )
-        self.assertIn("Zurich", str(context.exception))
-
-    def test_nonexistent_org_unit_raises_org_unit_mapping_error(self):
-        """An org unit whose name doesn't exist in the impact DB should raise OrgUnitMappingError."""
-        org_unit = MockOrgUnit(id=1, name="Nonexistent Canton")
-        intervention = MockIntervention(impact_ref="deployed_int_smc")
-
-        with self.assertRaises(OrgUnitMappingError) as context:
-            self.provider.match_impact_bulk(
-                [org_unit],
-                interventions=[intervention],
-                age_group="allAges",
-            )
-        self.assertIn("Nonexistent Canton", str(context.exception))
-
-    def test_no_error_when_org_unit_exists_but_intervention_mix_unmatched(self):
-        """An org unit that exists but has no data for the queried interventions returns empty."""
-        org_unit = MockOrgUnit(id=1, name="Bern")
-        intervention = MockIntervention(impact_ref="deployed_int_irs")
-
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit],
             interventions=[intervention],
             age_group="allAges",
         )
 
-        self.assertEqual(results, {})
+        self.assertEqual(len(bulk.warnings.org_units_not_found), 1)
+        self.assertEqual(bulk.warnings.org_units_not_found[0].id, 1)
+        self.assertEqual(bulk.results, {})
+
+    def test_nonexistent_org_unit_reports_org_unit_not_found(self):
+        """An org unit whose name doesn't exist in the impact DB should appear in org_units_not_found."""
+        org_unit = MockOrgUnit(id=1, name="Nonexistent Canton")
+        intervention = MockIntervention(impact_ref="deployed_int_smc")
+
+        bulk = self.provider.match_impact_bulk(
+            [org_unit],
+            interventions=[intervention],
+            age_group="allAges",
+        )
+
+        self.assertEqual(len(bulk.warnings.org_units_not_found), 1)
+        self.assertEqual(bulk.warnings.org_units_not_found[0].name, "Nonexistent Canton")
+        self.assertEqual(bulk.results, {})
+
+    def test_org_unit_exists_but_intervention_mix_unmatched(self):
+        """An org unit that exists but has no data for the queried interventions appears in warnings."""
+        org_unit = MockOrgUnit(id=1, name="Bern")
+        intervention = MockIntervention(impact_ref="deployed_int_irs")
+
+        bulk = self.provider.match_impact_bulk(
+            [org_unit],
+            interventions=[intervention],
+            age_group="allAges",
+        )
+
+        self.assertEqual(bulk.results, {})
+        self.assertEqual(len(bulk.warnings.org_units_with_unmatched_interventions), 1)
+        self.assertEqual(bulk.warnings.org_units_with_unmatched_interventions[0].name, "Bern")
+        self.assertEqual(bulk.warnings.org_units_not_found, [])
 
     def test_ci_values_derived_from_eir_ci_column(self):
         """value/lower/upper come from averaging EIR_mean/EIR_lci/EIR_uci rows over seeds."""
         org_unit = MockOrgUnit(id=1, name="Bern")
         intervention = MockIntervention(impact_ref="deployed_int_smc")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit],
             interventions=[intervention],
             age_group="allAges",
         )
 
-        self.assertEqual(len(results[1]), 1)
-        result = results[1][0]
+        self.assertEqual(len(bulk.results[1]), 1)
+        result = bulk.results[1][0]
 
         # value = avg of EIR_mean seeds: (100+110)/2, (10+12)/2, ...
         self.assertAlmostEqual(result.number_cases.value, 105.0)
@@ -388,13 +395,13 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         org_unit = MockOrgUnit(id=1, name="Geneva")
         intervention = MockIntervention(impact_ref="deployed_int_smc")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit],
             interventions=[intervention],
             age_group="allAges",
         )
 
-        result = results[1][0]
+        result = bulk.results[1][0]
         self.assertAlmostEqual(result.number_cases.value, 100.0)
         self.assertAlmostEqual(result.number_severe_cases.value, 10.0)
 
@@ -417,13 +424,13 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         org_unit = MockOrgUnit(id=1, name="Geneva")
         intervention = MockIntervention(impact_ref="deployed_int_smc")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit],
             interventions=[intervention],
             age_group="allAges",
         )
 
-        result = results[1][0]
+        result = bulk.results[1][0]
         self.assertAlmostEqual(result.number_cases.value, 100.0)
         self.assertIsNone(result.number_cases.lower)
         self.assertIsNone(result.number_cases.upper)
@@ -460,13 +467,13 @@ class SwissTPHMatchImpactBulkTests(TestCase):
         org_unit = MockOrgUnit(id=1, name="Geneva")
         intervention = MockIntervention(impact_ref="deployed_int_smc")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit],
             interventions=[intervention],
             age_group="allAges",
         )
 
-        result = results[1][0]
+        result = bulk.results[1][0]
         self.assertAlmostEqual(result.number_cases.value, 100.0)
         self.assertIsNone(result.number_cases.lower)
         self.assertIsNone(result.number_cases.upper)
@@ -538,14 +545,14 @@ class SwissTPHCustomConfigTests(TestCase):
         org_unit = MockOrgUnit(id=1, name="Douala")
         intervention = MockIntervention(impact_ref="deployed_int_smc")
 
-        results = self.provider.match_impact_bulk(
+        bulk = self.provider.match_impact_bulk(
             [org_unit],
             interventions=[intervention],
             age_group="allAges",
         )
 
-        self.assertIn(1, results)
-        result = results[1][0]
+        self.assertIn(1, bulk.results)
+        result = bulk.results[1][0]
         self.assertAlmostEqual(result.number_cases.value, 200.0)
         self.assertAlmostEqual(result.number_cases.lower, 160.0)
         self.assertAlmostEqual(result.number_cases.upper, 240.0)

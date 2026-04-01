@@ -4,7 +4,13 @@ from typing import Optional
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Budget, Intervention, InterventionAssignment, Scenario
-from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProvider, ImpactResult
+from plugins.snt_malaria.providers.impact.base import (
+    ImpactMetricWithConfidenceInterval,
+    ImpactProvider,
+    ImpactResult,
+    MatchWarnings,
+    OrgUnitRef,
+)
 
 
 @dataclass
@@ -65,6 +71,8 @@ class ScenarioImpactMetrics(ImpactMetrics):
     scenario_id: int = 0
     by_year: list[YearImpactMetrics] = field(default_factory=list)
     org_units: list[OrgUnitImpactMetrics] = field(default_factory=list)
+    org_units_not_found: list[OrgUnitRef] = field(default_factory=list)
+    org_units_with_unmatched_interventions: list[OrgUnitRef] = field(default_factory=list)
 
 
 def _compute_averted_cases(
@@ -179,8 +187,8 @@ class ImpactService:
         """Return the full impact result for a scenario."""
         org_unit_interventions = self._get_org_unit_interventions(scenario)
         cost_map = self._build_cost_map(scenario)
-        year_data = self._collect_metrics(org_unit_interventions, cost_map, age_group, year_from, year_to)
-        return self._build_response(scenario, year_data)
+        year_data, warnings = self._collect_metrics(org_unit_interventions, cost_map, age_group, year_from, year_to)
+        return self._build_response(scenario, year_data, warnings)
 
     @staticmethod
     def _get_org_unit_interventions(scenario: Scenario) -> dict[OrgUnit, list[Intervention]]:
@@ -221,16 +229,21 @@ class ImpactService:
         age_group: str,
         year_from: Optional[str],
         year_to: Optional[str],
-    ) -> dict[int, list[OrgUnitImpactMetrics]]:
+    ) -> tuple[dict[int, list[OrgUnitImpactMetrics]], MatchWarnings]:
         ou_by_id: dict[int, OrgUnit] = {ou.id: ou for ou in org_unit_interventions}
         year_data: dict[int, list[OrgUnitImpactMetrics]] = defaultdict(list)
+        warnings = MatchWarnings()
 
         if self._provider.supports_bulk:
-            self._collect_bulk(org_unit_interventions, age_group, year_from, year_to, ou_by_id, cost_map, year_data)
+            self._collect_bulk(
+                org_unit_interventions, age_group, year_from, year_to, ou_by_id, cost_map, year_data, warnings
+            )
         else:
-            self._collect_individual(org_unit_interventions, age_group, year_from, year_to, cost_map, year_data)
+            self._collect_individual(
+                org_unit_interventions, age_group, year_from, year_to, cost_map, year_data, warnings
+            )
 
-        return dict(year_data)
+        return dict(year_data), warnings
 
     def _collect_bulk(
         self,
@@ -241,6 +254,7 @@ class ImpactService:
         ou_by_id: dict[int, OrgUnit],
         cost_map: dict[int, dict[int, float]],
         year_data: dict[int, list[OrgUnitImpactMetrics]],
+        warnings: MatchWarnings,
     ) -> None:
         """Fetch impact data using batch queries, grouped by intervention mix."""
         groups: dict[frozenset[int], tuple[list[OrgUnit], list[Intervention]]] = {}
@@ -251,7 +265,7 @@ class ImpactService:
             groups[key][0].append(org_unit)
 
         for org_units, interventions in groups.values():
-            bulk_results = self._provider.match_impact_bulk(
+            bulk = self._provider.match_impact_bulk(
                 org_units=org_units,
                 interventions=interventions,
                 age_group=age_group,
@@ -259,7 +273,10 @@ class ImpactService:
                 year_to=year_to,
             )
 
-            for ou_id, impact_results in bulk_results.items():
+            warnings.org_units_not_found.extend(bulk.warnings.org_units_not_found)
+            warnings.org_units_with_unmatched_interventions.extend(bulk.warnings.org_units_with_unmatched_interventions)
+
+            for ou_id, impact_results in bulk.results.items():
                 org_unit = ou_by_id[ou_id]
                 for result in impact_results:
                     ou_cost = cost_map.get(result.year, {}).get(ou_id)
@@ -274,10 +291,11 @@ class ImpactService:
         year_to: Optional[str],
         cost_map: dict[int, dict[int, float]],
         year_data: dict[int, list[OrgUnitImpactMetrics]],
+        warnings: MatchWarnings,
     ) -> None:
         """Fetch impact data one org unit at a time via match_impact."""
         for org_unit, interventions in org_unit_interventions.items():
-            impact_results = self._provider.match_impact(
+            match = self._provider.match_impact(
                 org_unit=org_unit,
                 interventions=interventions,
                 age_group=age_group,
@@ -285,7 +303,12 @@ class ImpactService:
                 year_to=year_to,
             )
 
-            for result in impact_results:
+            warnings.org_units_not_found.extend(match.warnings.org_units_not_found)
+            warnings.org_units_with_unmatched_interventions.extend(
+                match.warnings.org_units_with_unmatched_interventions
+            )
+
+            for result in match.results:
                 ou_cost = cost_map.get(result.year, {}).get(org_unit.id)
                 metrics = OrgUnitImpactMetrics.from_impact_result(result, org_unit, cost=ou_cost)
                 year_data[result.year].append(metrics)
@@ -311,10 +334,20 @@ class ImpactService:
             )
         return results
 
+    @staticmethod
+    def _deduplicate_org_units(org_units: list[OrgUnitRef]) -> list[OrgUnitRef]:
+        """Deduplicate by id and sort by name."""
+        seen: dict[int, OrgUnitRef] = {}
+        for ou in org_units:
+            if ou.id not in seen:
+                seen[ou.id] = ou
+        return sorted(seen.values(), key=lambda ou: ou.name)
+
     def _build_response(
         self,
         scenario: Scenario,
         year_data: dict[int, list[OrgUnitImpactMetrics]],
+        warnings: MatchWarnings,
     ) -> ScenarioImpactMetrics:
         by_year = []
         all_metrics: list[OrgUnitImpactMetrics] = []
@@ -339,5 +372,9 @@ class ImpactService:
             scenario_id=scenario.id,
             by_year=by_year,
             org_units=self._aggregate_org_units(year_data),
+            org_units_not_found=self._deduplicate_org_units(warnings.org_units_not_found),
+            org_units_with_unmatched_interventions=self._deduplicate_org_units(
+                warnings.org_units_with_unmatched_interventions
+            ),
             **{f.name: getattr(overall, f.name) for f in ImpactMetrics.__dataclass_fields__.values()},
         )

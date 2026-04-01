@@ -1,10 +1,12 @@
-import React, { FC, useCallback, useMemo } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import RemoveOutlinedIcon from '@mui/icons-material/RemoveOutlined';
 import {
     Alert,
     AlertTitle,
     Box,
+    Button,
+    Chip,
     IconButton,
     Slider,
     Theme,
@@ -16,7 +18,11 @@ import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
-import { ScenarioId, ScenarioOption } from '../types';
+import {
+    ScenarioId,
+    ScenarioMatchWarning,
+    ScenarioOption,
+} from '../types';
 import { getScenarioColor } from '../utils/colors';
 import { Card } from './Card';
 
@@ -37,6 +43,8 @@ type Props = {
     ageGroups?: string[];
     selectedAgeGroup?: string;
     onAgeGroupChange?: (_key: string, value: unknown) => void;
+    orgUnitsNotFound?: ScenarioMatchWarning[];
+    orgUnitsWithUnmatchedInterventions?: ScenarioMatchWarning[];
 };
 
 const styles = {
@@ -78,15 +86,15 @@ const styles = {
         width: theme => theme.spacing(4),
         minWidth: theme => theme.spacing(4),
     },
+    section: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+    },
     sectionTitle: {
         fontWeight: 550,
         color: 'text.primary',
-        mt: 4,
-        mb: 2,
-    },
-    yearLabel: {
-        color: 'text.primary',
-        mb: 1,
+        mt: 2,
     },
     sliderContainer: {
         px: 1.5,
@@ -101,8 +109,39 @@ const styles = {
     },
     subLabel: {
         color: 'text.primary',
-        mt: 2,
         mb: 1,
+    },
+    warningBox: {
+        borderRadius: 3,
+        backgroundColor: (theme: Theme) => alpha(theme.palette.warning.light, 0.15),
+        border: 'none',
+        '& .MuiAlert-icon': {
+            color: 'warning.main',
+        },
+    },
+    chipContainer: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 0.5,
+        mt: 1,
+    },
+    cardBackground: {
+        backgroundColor: (theme: Theme) =>
+            alpha(theme.palette.common.white, 0.5),
+    },
+    loadingCenter: {
+        display: 'flex',
+        justifyContent: 'center',
+    },
+    warningTitleRow: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    detailsButton: {
+        p: 0,
+        textTransform: 'none',
+        minWidth: 0,
     },
 } satisfies SxStyles;
 
@@ -123,6 +162,8 @@ export const ConfigurationPanel: FC<Props> = ({
     ageGroups,
     selectedAgeGroup,
     onAgeGroupChange,
+    orgUnitsNotFound,
+    orgUnitsWithUnmatchedInterventions,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -149,9 +190,16 @@ export const ConfigurationPanel: FC<Props> = ({
 
     const hasDisplayOptions =
         (yearRange && selectedYearRange && onYearRangeChange) ||
-        showYearRangeError ||
         isYearRangeLoading ||
         (ageGroups && ageGroups.length > 0 && selectedAgeGroup && onAgeGroupChange);
+
+    const hasWarnings =
+        showYearRangeError ||
+        (orgUnitsNotFound?.length ?? 0) > 0 ||
+        (orgUnitsWithUnmatchedInterventions?.length ?? 0) > 0;
+
+    const [showNotFoundDetails, setShowNotFoundDetails] = useState(false);
+    const [showUnmatchedDetails, setShowUnmatchedDetails] = useState(false);
 
     return (
         <Card
@@ -165,10 +213,7 @@ export const ConfigurationPanel: FC<Props> = ({
                     <AddOutlinedIcon fontSize="medium" />
                 </IconButton>
             }
-            cardSx={{
-                backgroundColor: (theme: Theme) =>
-                    alpha(theme.palette.common.white, 0.5),
-            }}
+            cardSx={styles.cardBackground}
         >
             <Box sx={styles.scenarioRow}>
                 <Box
@@ -240,51 +285,31 @@ export const ConfigurationPanel: FC<Props> = ({
                 );
             })}
             {hasDisplayOptions && (
-                <>
+                <Box sx={styles.section}>
                     <Typography sx={styles.sectionTitle}>
                         {formatMessage(MESSAGES.displayOptionsTitle)}
                     </Typography>
                     {isYearRangeLoading && (
-                        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+                        <Box sx={styles.loadingCenter}>
                             <LoadingSpinner />
                         </Box>
                     )}
-                    {!isYearRangeLoading && showYearRangeError && (
-                        <Alert
-                            severity="warning"
-                            sx={{
-                                mt: 1,
-                                border: '1px solid',
-                                borderColor: 'warning.main',
-                            }}
-                        >
-                            <AlertTitle>
-                                {formatMessage(MESSAGES.noYearRangeOverlapTitle)}
-                            </AlertTitle>
-                            {formatMessage(MESSAGES.noYearRangeOverlap)}
-                        </Alert>
-                    )}
                     {!isYearRangeLoading && yearRange && onYearRangeChange && (
-                        <>
-                            <Typography variant="caption" sx={styles.yearLabel}>
-                                {formatMessage(MESSAGES.yearsLabel)}
-                            </Typography>
-                            <Box sx={styles.sliderContainer}>
-                                <Slider
-                                    value={selectedYearRange ?? yearRange}
-                                    onChange={handleSliderChange}
-                                    min={yearRange[0]}
-                                    max={yearRange[1]}
-                                    step={1}
-                                    marks={marks}
-                                    valueLabelDisplay="auto"
-                                    disableSwap
-                                />
-                            </Box>
-                        </>
+                        <Box sx={styles.sliderContainer}>
+                            <Slider
+                                value={selectedYearRange ?? yearRange}
+                                onChange={handleSliderChange}
+                                min={yearRange[0]}
+                                max={yearRange[1]}
+                                step={1}
+                                marks={marks}
+                                valueLabelDisplay="auto"
+                                disableSwap
+                            />
+                        </Box>
                     )}
                     {ageGroups && ageGroups.length > 0 && selectedAgeGroup && onAgeGroupChange && (
-                        <>
+                        <Box>
                             <Typography variant="caption" sx={styles.subLabel}>
                                 {formatMessage(MESSAGES.ageGroupLabel)}
                             </Typography>
@@ -300,9 +325,90 @@ export const ConfigurationPanel: FC<Props> = ({
                                 onChange={onAgeGroupChange}
                                 withMarginTop={false}
                             />
-                        </>
+                        </Box>
                     )}
-                </>
+                </Box>
+            )}
+            {hasWarnings && (
+                <Box sx={styles.section}>
+                    <Typography sx={styles.sectionTitle}>
+                        {formatMessage(MESSAGES.warningsTitle)}
+                    </Typography>
+                    {showYearRangeError && (
+                        <Alert severity="warning" sx={styles.warningBox}>
+                            <AlertTitle>
+                                {formatMessage(MESSAGES.noYearRangeOverlapTitle)}
+                            </AlertTitle>
+                            {formatMessage(MESSAGES.noYearRangeOverlap)}
+                        </Alert>
+                    )}
+                    {orgUnitsNotFound && orgUnitsNotFound.length > 0 && (
+                        <Alert severity="warning" sx={styles.warningBox}>
+                            <AlertTitle sx={styles.warningTitleRow}>
+                                {formatMessage(MESSAGES.orgUnitsNotFoundTitle)}
+                                <Button
+                                    size="small"
+                                    onClick={() => setShowNotFoundDetails(prev => !prev)}
+                                    sx={styles.detailsButton}
+                                >
+                                    {formatMessage(showNotFoundDetails ? MESSAGES.hideDetails : MESSAGES.showDetails)}
+                                </Button>
+                            </AlertTitle>
+                            {formatMessage(MESSAGES.orgUnitsNotFound)}
+                            {showNotFoundDetails && (
+                                <Box sx={styles.chipContainer}>
+                                    {orgUnitsNotFound.flatMap(({ scenario, orgUnits }) =>
+                                        orgUnits.map(ou => (
+                                            <Chip
+                                                key={`${scenario.id}-${ou.org_unit_id}`}
+                                                label={ou.org_unit_name}
+                                                size="small"
+                                                sx={{
+                                                    backgroundColor: scenario.color,
+                                                    color: '#fff',
+                                                    fontWeight: 500,
+                                                }}
+                                            />
+                                        )),
+                                    )}
+                                </Box>
+                            )}
+                        </Alert>
+                    )}
+                    {orgUnitsWithUnmatchedInterventions && orgUnitsWithUnmatchedInterventions.length > 0 && (
+                        <Alert severity="warning" sx={styles.warningBox}>
+                            <AlertTitle sx={styles.warningTitleRow}>
+                                {formatMessage(MESSAGES.orgUnitsWithUnmatchedInterventionsTitle)}
+                                <Button
+                                    size="small"
+                                    onClick={() => setShowUnmatchedDetails(prev => !prev)}
+                                    sx={styles.detailsButton}
+                                >
+                                    {formatMessage(showUnmatchedDetails ? MESSAGES.hideDetails : MESSAGES.showDetails)}
+                                </Button>
+                            </AlertTitle>
+                            {formatMessage(MESSAGES.orgUnitsWithUnmatchedInterventions)}
+                            {showUnmatchedDetails && (
+                                <Box sx={styles.chipContainer}>
+                                    {orgUnitsWithUnmatchedInterventions.flatMap(({ scenario, orgUnits }) =>
+                                        orgUnits.map(ou => (
+                                            <Chip
+                                                key={`${scenario.id}-${ou.org_unit_id}`}
+                                                label={ou.org_unit_name}
+                                                size="small"
+                                                sx={{
+                                                    backgroundColor: scenario.color,
+                                                    color: '#fff',
+                                                    fontWeight: 500,
+                                                }}
+                                            />
+                                        )),
+                                    )}
+                                </Box>
+                            )}
+                        </Alert>
+                    )}
+                </Box>
             )}
         </Card>
     );

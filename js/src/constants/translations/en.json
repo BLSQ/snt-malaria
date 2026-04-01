@@ -202,5 +202,12 @@
     "iaso.snt_malaria.label.mapView": "Map",
     "iaso.snt_malaria.label.listView": "List",
     "iaso.snt_malaria.label.budgetView": "Budget",
-    "iaso.snt_malaria.label.submit": "Submit"
+    "iaso.snt_malaria.label.submit": "Submit",
+    "iaso.snt_malaria.compareCustomize.orgUnitsNotFoundTitle": "Org units not found",
+    "iaso.snt_malaria.compareCustomize.orgUnitsNotFound": "Some org units could not be found in the impact database.",
+    "iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventionsTitle": "Unmatched interventions",
+    "iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventions": "Some org units exist in the impact database but have no data for their assigned interventions.",
+    "iaso.snt_malaria.compareCustomize.warningsTitle": "Warnings",
+    "iaso.snt_malaria.label.showDetails": "Show details",
+    "iaso.snt_malaria.label.hideDetails": "Hide details"
 }

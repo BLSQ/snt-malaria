@@ -6,11 +6,14 @@ from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention
 from plugins.snt_malaria.models.swisstph_impact import SwissTPHImpactData
 from plugins.snt_malaria.providers.impact.base import (
+    BulkMatchResult,
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
     ImpactResult,
     InterventionMappingError,
-    OrgUnitMappingError,
+    MatchResult,
+    MatchWarnings,
+    OrgUnitRef,
 )
 from plugins.snt_malaria.providers.impact.db import ensure_db_connection
 
@@ -62,9 +65,11 @@ class SwissTPHImpactProvider(ImpactProvider):
         return True
 
     def match_impact(self, org_unit, interventions, age_group, year_from=None, year_to=None):
-        # Bulk uses the same query logic; delegate to avoid duplication.
-        results = self.match_impact_bulk([org_unit], interventions, age_group, year_from, year_to)
-        return results.get(org_unit.id, [])
+        bulk = self.match_impact_bulk([org_unit], interventions, age_group, year_from, year_to)
+        return MatchResult(
+            results=bulk.results.get(org_unit.id, []),
+            warnings=bulk.warnings,
+        )
 
     def match_impact_bulk(
         self,
@@ -73,20 +78,20 @@ class SwissTPHImpactProvider(ImpactProvider):
         age_group: str,
         year_from: Optional[int] = None,
         year_to: Optional[int] = None,
-    ) -> dict[int, list[ImpactResult]]:
+    ) -> BulkMatchResult:
         if not org_units:
-            return {}
+            return BulkMatchResult()
 
         deployed_columns: set[str] = set()
         for intervention in interventions:
             deployed_columns.update(self._map_intervention(intervention))
 
-        reference_to_org_unit_id: dict[str, int] = {
-            self._impact_reference(org_unit): org_unit.id for org_unit in org_units
+        reference_to_org_unit: dict[str, OrgUnit] = {
+            self._impact_reference(org_unit): org_unit for org_unit in org_units
         }
 
         filters = {
-            f"{self._admin_field}__in": list(reference_to_org_unit_id.keys()),
+            f"{self._admin_field}__in": list(reference_to_org_unit.keys()),
             "age_group": age_group,
         }
         if year_from:
@@ -130,12 +135,12 @@ class SwissTPHImpactProvider(ImpactProvider):
         results: dict[int, list[ImpactResult]] = {}
         matched_references: set[str] = set()
         for row in rows:
-            org_unit_id = reference_to_org_unit_id.get(row[self._admin_field])
-            if org_unit_id is None:
+            org_unit = reference_to_org_unit.get(row[self._admin_field])
+            if org_unit is None:
                 continue
 
             matched_references.add(row[self._admin_field])
-            results.setdefault(org_unit_id, []).append(
+            results.setdefault(org_unit.id, []).append(
                 ImpactResult(
                     year=row["year"],
                     number_cases=self._build_metric(row, "n_uncomp"),
@@ -146,8 +151,8 @@ class SwissTPHImpactProvider(ImpactProvider):
                 )
             )
 
-        self._check_unmatched_org_units(reference_to_org_unit_id, matched_references)
-        return results
+        warnings = self._check_unmatched_org_units(reference_to_org_unit, matched_references)
+        return BulkMatchResult(results=results, warnings=warnings)
 
     @staticmethod
     def _build_metric(row: dict, field: str) -> ImpactMetricWithConfidenceInterval:
@@ -173,16 +178,16 @@ class SwissTPHImpactProvider(ImpactProvider):
             .order_by("age_group")
         )
 
-    def _check_unmatched_org_units(self, reference_to_org_unit_id, matched_references):
-        """Verify unmatched org units actually exist in the impact DB.
+    def _check_unmatched_org_units(self, reference_to_org_unit, matched_references) -> MatchWarnings:
+        """Classify unmatched org units into 'not found' vs 'unmatched interventions'.
 
         Only runs an extra query when some org units got no results.
-        Raises OrgUnitMappingError for references that don't exist at all,
-        as opposed to those that simply have no data for the queried intervention mix.
+        Returns MatchWarnings with the two categories populated.
         """
-        unmatched = set(reference_to_org_unit_id.keys()) - matched_references
+        warnings = MatchWarnings()
+        unmatched = set(reference_to_org_unit.keys()) - matched_references
         if not unmatched:
-            return
+            return warnings
         known = set(
             SwissTPHImpactData.objects.using(self._db_alias)
             .filter(**{f"{self._admin_field}__in": unmatched})
@@ -190,8 +195,16 @@ class SwissTPHImpactProvider(ImpactProvider):
             .distinct()
         )
         not_found = unmatched - known
-        if not_found:
-            raise OrgUnitMappingError(f"Org units not found in SwissTPH impact data: {sorted(not_found)}")
+        known_but_unmatched = unmatched & known
+        warnings.org_units_not_found = [
+            OrgUnitRef(id=reference_to_org_unit[ref].id, name=reference_to_org_unit[ref].name)
+            for ref in sorted(not_found)
+        ]
+        warnings.org_units_with_unmatched_interventions = [
+            OrgUnitRef(id=reference_to_org_unit[ref].id, name=reference_to_org_unit[ref].name)
+            for ref in sorted(known_but_unmatched)
+        ]
+        return warnings
 
     def _map_intervention(self, intervention: Intervention) -> set[str]:
         """Resolve an Intervention's impact_ref to SwissTPH deployed_int_* columns.
