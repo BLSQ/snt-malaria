@@ -2,7 +2,7 @@ import React, { FC, useCallback, useMemo } from 'react';
 import { Box } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { Map as SNTMap } from '../../../../components/Map';
-import { useGetInterventionAssignments } from '../../../planning/hooks/useGetInterventionAssignments';
+import { useGetInterventionPlans } from '../../../planning/hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../../planning/hooks/useGetOrgUnits';
 import { Intervention } from '../../../planning/types/interventions';
 import { NO_INTERVENTION_COLOR } from '../../utils/colors';
@@ -66,7 +66,7 @@ export const InterventionPlanMap: FC<Props> = ({
     const {
         data: interventionAssignments,
         isLoading: isLoadingInterventionAssignments,
-    } = useGetInterventionAssignments(scenarioId);
+    } = useGetInterventionPlans(scenarioId);
 
     const orgUnitInterventions = useMemo(() => {
         if (isLoadingInterventionAssignments)
