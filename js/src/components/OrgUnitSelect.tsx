@@ -4,7 +4,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../domains/messages';
 import { useGetOrgUnitsByType } from '../domains/planning/hooks/useGetOrgUnits';
-import { useGetAccountSettings } from '../domains/planningV2/hooks/useGetAccountSettings';
+import { useGetAccountSettings } from '../domains/planning/hooks/useGetAccountSettings';
 
 const styles = {
     select: {

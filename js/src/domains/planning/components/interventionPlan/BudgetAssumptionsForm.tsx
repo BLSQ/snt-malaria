@@ -8,9 +8,9 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
+import { usePlanningContext } from '../../contexts/PlanningContext';
 import { useSaveBudgetAssumptions } from '../../hooks/useSaveBudgetAssumptions';
 import { BudgetAssumptions } from '../../types/interventions';
-import { usePlanningContext } from '../../../planningV2/contexts/PlanningContext';
 
 const styles: SxStyles = {
     inputRow: {
