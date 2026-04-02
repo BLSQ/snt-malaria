@@ -4,12 +4,9 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from iaso.api.common import UserSerializer
-from iaso.utils.org_units import get_valid_org_units_with_geography
-from plugins.snt_malaria.api.scenarios.utils import (
-    get_interventions,
-    get_missing_headers,
-)
+from plugins.snt_malaria.api.scenarios.utils import get_interventions, get_missing_headers
 from plugins.snt_malaria.models import Scenario, ScenarioRule
+from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 
 
 class ScenarioSerializer(serializers.ModelSerializer):
@@ -94,7 +91,7 @@ class ImportScenarioSerializer(serializers.Serializer):
         header_errors = get_missing_headers(df, interventions)
 
         csv_org_unit_ids = set(df["org_unit_id"].dropna().astype(int).unique().tolist())
-        org_units = get_valid_org_units_with_geography(request.user.iaso_profile.account)
+        org_units = get_intervention_org_units(request.user.iaso_profile.account)
         available_org_unit_ids = set(org_units.values_list("id", flat=True))
         not_found_org_units = csv_org_unit_ids - available_org_unit_ids
         missing_org_units_from_file = available_org_unit_ids - csv_org_unit_ids

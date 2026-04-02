@@ -4,9 +4,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from iaso.models import MetricType, OrgUnit
-from iaso.utils.org_units import get_valid_org_units_with_geography
 from iaso.utils.serializer.json_schema_field import JSONSchemaField
 from plugins.snt_malaria.models import Scenario, ScenarioRule
+from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 from plugins.snt_malaria.models.scenario import (
     SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA,
     ScenarioRuleInterventionProperties,
@@ -138,7 +138,7 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         user = self.context["request"].user
-        org_units = get_valid_org_units_with_geography(user.iaso_profile.account)
+        org_units = get_intervention_org_units(user.iaso_profile.account)
         self.fields["org_units_excluded"].child.queryset = org_units
         self.fields["org_units_included"].child.queryset = org_units
         self.fields["org_units_scope"].child.queryset = org_units

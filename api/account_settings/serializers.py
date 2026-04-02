@@ -9,6 +9,7 @@ class AccountSettingsSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "account",
+            "focus_org_unit_type_id",
             "intervention_org_unit_type_id",
         ]
         read_only_fields = [
