@@ -3,8 +3,8 @@ from decimal import Decimal
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
+from iaso.api.common.serializer_fields import JSONSchemaField
 from iaso.models import MetricType, OrgUnit
-from iaso.utils.serializer.json_schema_field import JSONSchemaField
 from plugins.snt_malaria.models import Scenario, ScenarioRule
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 from plugins.snt_malaria.models.scenario import (
