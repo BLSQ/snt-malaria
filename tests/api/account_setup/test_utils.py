@@ -9,7 +9,7 @@ from iaso.models import Account, DataSource, Profile, Project, SourceVersion
 from iaso.modules import MODULE_DEFAULT, MODULE_SNT_MALARIA
 from iaso.permissions.core_permissions import CORE_METRIC_TYPES_PERMISSION
 from iaso.test import TestCase
-from plugins.snt_malaria.api.account_setup.utils import create_snt_account
+from plugins.snt_malaria.api.account_setup.utils import create_snt_account, transform_geo_json_to_gpkg
 from plugins.snt_malaria.models import (
     BudgetSettings,
     Intervention,
@@ -41,7 +41,7 @@ class SNTAccountSetupAPIUtilsTestCase(TestCase):
         self.full_country_name = countries_dict[self.country]
 
     def test_create_snt_account_happy_path(self):
-        create_snt_account(
+        setup = create_snt_account(
             username=self.username,
             password=self.password,
             country=self.country,
@@ -50,16 +50,15 @@ class SNTAccountSetupAPIUtilsTestCase(TestCase):
         )
 
         self.assertEqual(SNTAccountSetup.objects.count(), 1)
-        account_setup = SNTAccountSetup.objects.first()
-        self.assertEqual(account_setup.username, self.username)
-        self.assertEqual(account_setup.country, self.country)
+        self.assertEqual(setup.username, self.username)
+        self.assertEqual(setup.country, self.country)
         file_name_without_extension = self.JSON_FILE_NAME[:-5]
-        self.assertIn(file_name_without_extension, account_setup.geo_json_file.name)
+        self.assertIn(file_name_without_extension, setup.geo_json_file.name)
 
         self.assertEqual(Account.objects.count(), 1)
         account = Account.objects.first()
         self.assertIn(self.full_country_name, account.name)
-        self.assertEqual(account_setup.account, account)
+        self.assertEqual(setup.account, account)
         self.assertCountEqual(account.modules, [MODULE_DEFAULT.codename, MODULE_SNT_MALARIA.codename])
 
         self.assertEqual(DataSource.objects.count(), 1)
@@ -158,3 +157,17 @@ class SNTAccountSetupAPIUtilsTestCase(TestCase):
                 language=self.language,
                 geo_json_file=self.geo_json,
             )
+
+    def test_transform_geo_json_to_gpkg(self):
+        setup = SNTAccountSetup.objects.create(
+            username=self.username,
+            country=self.country,
+            geo_json_file=self.geo_json,
+        )
+
+        self.assertIsNone(setup.gpkg_file.name)
+
+        transform_geo_json_to_gpkg(setup)
+
+        self.assertIsNotNone(setup.gpkg_file.name)
+        self.assertIn(".gpkg", setup.gpkg_file.name)

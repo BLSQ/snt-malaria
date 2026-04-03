@@ -156,29 +156,6 @@ def transform_geo_json_to_gpkg(account_setup: SNTAccountSetup):
         account_setup.gpkg_file.save("org_units.gpkg", open(tmp_path, "rb"))
         account_setup.save()
 
-    # processed_org_units = {}
-    #
-    # with open(geo_json_file) as file:
-    #     geo_json = json.loads(file.read())
-    #
-    # first_location = geo_json["features"][0]
-    # max_level = determine_max_level(first_location)  # we know that we have at least 2 levels thanks to serializer validation
-    #
-    # Prepare country level, which is not always in the geo json
-    # processed_org_units[0] = [{
-    #     "ADM0_ID": country_code,
-    #     "ADM0_NAME": country_name,
-    # }]
-    #
-    # for org_unit in geo_json["features"]:
-    #     process_org_unit(org_unit, max_level, processed_org_units)
-
-    # TODO: build parent geometry based on children
-
-    # level_names = determine_level_names(first_location, max_level)
-    # create the gpkg with each level as a separate layer
-    # return the gpkg
-
 
 def read_geo_json_file(account_setup):
     """
@@ -238,9 +215,6 @@ FINAL_COLUMNS = [
 
 def format_df(df):
     return df[FINAL_COLUMNS]
-    # df = df.rename(columns={"geometry": "geography"})
-    # df["parent_id"] = df.get("parent_id", None)
-    # return df[FINAL_COLUMNS].rename(columns={"geometry": "geography"})
 
 
 def add_empty_groups_table(gpkg_path: str) -> None:
@@ -270,45 +244,3 @@ def add_empty_groups_table(gpkg_path: str) -> None:
         cur.execute(create_groups_table_query)
         cur.execute(insert_table_in_gpkg_content)
         conn.commit()
-
-
-def determine_max_level(json_location):
-    max_level = 0
-    for i in range(1, 15):  # we're probably not going to have 15 levels
-        if f"ADM{i}_ID" in json_location:
-            max_level = i
-        else:
-            break
-    return max_level
-
-
-def determine_level_names(json_location, max_level):
-    level_names = {}
-    for level in range(1, max_level + 1):
-        key = f"ADM{level}_LEVEL_NAME"
-        if key in json_location["properties"]:
-            level_names[level] = json_location["properties"][key]
-        else:
-            level_names[level] = f"ADM{level}"
-    return level_names
-
-
-def process_org_unit(org_unit, max_level, processed_org_units):
-    for level in range(1, max_level + 1):
-        id_key = f"ADM{level}_ID"
-        name_key = f"ADM{level}_NAME"
-
-        current_level_id = org_unit["properties"][id_key]
-        current_level_name = org_unit["properties"][name_key]
-
-        if level not in processed_org_units:
-            processed_org_units[level] = {}
-
-        if current_level_id not in processed_org_units[level]:
-            processed_org_units[level][current_level_id] = {
-                id_key: current_level_id,
-                name_key: current_level_name,
-            }
-
-        if level == max_level:  # we have geometry only for the last level
-            processed_org_units[level][current_level_id]["geometry"] = org_unit["geometry"]

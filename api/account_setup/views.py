@@ -22,8 +22,8 @@ class SNTAccountSetupViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        with transaction.atomic():
-            try:
+        try:
+            with transaction.atomic():
                 account_setup = create_snt_account(
                     username=data["username"],
                     password=data["password"],
@@ -31,10 +31,11 @@ class SNTAccountSetupViewSet(viewsets.ModelViewSet):
                     language=data.get("language"),
                     geo_json_file=data["geo_json_file"],
                 )
-            except ValidationError as e:
-                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
-
-            transform_geo_json_to_gpkg(account_setup)
+                transform_geo_json_to_gpkg(account_setup)
+        except ValidationError as e:
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_201_CREATED)
 
