@@ -1,5 +1,5 @@
 from django.db import transaction
-from rest_framework import viewsets, status
+from rest_framework import status, viewsets
 from rest_framework.response import Response
 
 from plugins.snt_malaria.api.account_setup.permissions import SNTAccountSetupPermission

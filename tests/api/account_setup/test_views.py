@@ -1,13 +1,11 @@
-import tempfile
-
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
-from django_countries import countries
 from rest_framework import status
 
-from iaso.models import Account, DataSource, SourceVersion, OrgUnitType, OrgUnit
+from iaso.models import Account, DataSource, SourceVersion
 from iaso.test import APITestCase
+from plugins.snt_malaria.models import BudgetSettings, Intervention, InterventionCategory, InterventionCostBreakdownLine
 
 
 class SNTAccountSetupAPITestCase(APITestCase):
@@ -37,6 +35,13 @@ class SNTAccountSetupAPITestCase(APITestCase):
         self.assertEqual(DataSource.objects.count(), 1)
         self.assertEqual(SourceVersion.objects.count(), 1)
         self.assertEqual(User.objects.count(), 1)
+
+        # SNT models
+        self.assertEqual(BudgetSettings.objects.count(), 1)
+        # see intervention_seeder.py to understand why these values
+        self.assertEqual(InterventionCategory.objects.count(), 8)
+        self.assertEqual(Intervention.objects.count(), 21)
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 27)
 
         # Checking this after launching task
         # self.assertEqual(OrgUnitType.objects.count(), 3)  # country, region, province

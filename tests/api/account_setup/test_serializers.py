@@ -179,6 +179,6 @@ class SNTAccountSetupSerializerTestCase(TestCase):
         errors = serializer.errors
         self.assertIn("geo_json_file", errors)
         self.assertIn(
-            "Locations in the GeoJSON file lack required properties: ['ADM1_ID', 'ADM1_NAME', 'ADM2_ID', 'ADM2_NAME']",
+            "Locations in the GeoJSON file lack required properties: ['ADM0_ID', 'ADM0_NAME', 'ADM1_ID', 'ADM1_NAME', 'ADM2_ID', 'ADM2_NAME']",
             errors["geo_json_file"][0],
         )

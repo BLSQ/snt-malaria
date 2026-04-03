@@ -1,9 +1,8 @@
-import os.path
 import sqlite3
 import tempfile
 import uuid
-from pathlib import Path
 
+from pathlib import Path
 from typing import Optional
 
 import geopandas as gpd
@@ -37,6 +36,8 @@ GRANTED_PERMISSIONS = [
 ]
 
 REQUIRED_GEO_JSON_LABELS = [
+    "ADM0_ID",
+    "ADM0_NAME",
     "ADM1_ID",
     "ADM1_NAME",
     "ADM2_ID",
@@ -124,13 +125,13 @@ def transform_geo_json_to_gpkg(account_setup: SNTAccountSetup):
 
     adm1["id"] = adm1["ADM1_ID"]
     adm1["name"] = adm1["ADM1_NAME"]
-    adm1["parent_name"] = gdf["COUNTRY"].iloc[0]
+    adm1["parent_name"] = gdf["ADM0_NAME"].iloc[0]
     adm1["parent_id"] = gdf["ADM0_ID"].iloc[0]
 
-    adm0 = gdf.dissolve(by=["ADM0_ID", "COUNTRY"], as_index=False)
+    adm0 = gdf.dissolve(by=["ADM0_ID", "ADM0_NAME"], as_index=False)
 
     adm0["id"] = adm0["ADM0_ID"]
-    adm0["name"] = adm0["COUNTRY"]
+    adm0["name"] = adm0["ADM0_NAME"]
     adm0["parent_name"] = None
     adm0["parent_id"] = None
 
