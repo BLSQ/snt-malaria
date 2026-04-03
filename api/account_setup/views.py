@@ -3,6 +3,9 @@ from rest_framework import status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
+from iaso.api.tasks.serializers import TaskSerializer
+from iaso.models import ImportGPKG, Profile, Task
+from iaso.tasks.import_gpkg_task import import_gpkg_task
 from plugins.snt_malaria.api.account_setup.permissions import SNTAccountSetupPermission
 from plugins.snt_malaria.api.account_setup.serializers import SNTAccountSetupSerializer
 from plugins.snt_malaria.api.account_setup.utils import create_snt_account, transform_geo_json_to_gpkg
@@ -37,6 +40,23 @@ class SNTAccountSetupViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(status=status.HTTP_201_CREATED)
+        # start gpkg import task here
+        import_gpkg = ImportGPKG.objects.create(
+            file=account_setup.gpkg_file,
+            data_source=account_setup.account.default_version.data_source,
+            version_number=1,
+            description=data["country"],
+            default_valid=True,
+        )
 
-        # start gpkg import task
+        user_profile = Profile.objects.get(account=account_setup.account)
+        task: Task = import_gpkg_task(
+            import_gpkg_id=import_gpkg.id,
+            user=user_profile.user,
+        )
+
+        # We return a different serializer than created
+        return Response(
+            {"task": TaskSerializer(instance=task).data},
+            status=status.HTTP_201_CREATED,
+        )
