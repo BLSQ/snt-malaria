@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import status, viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from plugins.snt_malaria.api.account_setup.permissions import SNTAccountSetupPermission
@@ -22,13 +23,17 @@ class SNTAccountSetupViewSet(viewsets.ModelViewSet):
         data = serializer.validated_data
 
         with transaction.atomic():
-            account_setup = create_snt_account(
-                username=data["username"],
-                password=data["password"],
-                country=data["country"],
-                language=data.get("language"),
-                geo_json_file=data["geo_json_file"],
-            )
+            try:
+                account_setup = create_snt_account(
+                    username=data["username"],
+                    password=data["password"],
+                    country=data["country"],
+                    language=data.get("language"),
+                    geo_json_file=data["geo_json_file"],
+                )
+            except ValidationError as e:
+                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+
             transform_geo_json_to_gpkg(account_setup)
 
         return Response(status=status.HTTP_201_CREATED)

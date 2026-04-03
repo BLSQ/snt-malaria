@@ -10,9 +10,8 @@ import geopandas as gpd
 from django.contrib.auth.models import Permission, User
 from django.core.files.uploadedfile import UploadedFile
 from django.db import IntegrityError
-from django.http import JsonResponse
 from django_countries import countries
-from rest_framework import status
+from rest_framework.exceptions import ValidationError
 
 from iaso.models import Account, DataSource, Profile, Project, SourceVersion
 from iaso.modules import MODULE_DEFAULT, MODULE_SNT_MALARIA
@@ -68,21 +67,15 @@ def create_snt_account(
         source_version = SourceVersion.objects.create(data_source=data_source, number=1)
         data_source.default_version = source_version
         data_source.save()
-    except IntegrityError:
-        return JsonResponse(
-            {"error": f"A data source already exists with the name {account_name}"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+    except IntegrityError as e:
+        raise ValidationError(detail=f"A data source already exists with the name {account_name}") from e
 
     # Create Account with modules
     try:
         account_modules = [module.codename for module in DEFAULT_MODULES_TO_ACTIVATE]
         account = Account.objects.create(name=account_name, modules=account_modules, default_version=source_version)
-    except IntegrityError:
-        return JsonResponse(
-            {"error": f"An account already exists with the name {account_name}"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+    except IntegrityError as e:
+        raise ValidationError(detail=f"An account already exists with the name {account_name}") from e
 
     # Create Project
     project = Project.objects.create(name="Main project", account=account, app_id=uuid.uuid4())
@@ -100,13 +93,13 @@ def create_snt_account(
         if language:
             profile.language = language
             profile.save()
-    except IntegrityError:
-        return JsonResponse(
-            {"error": f"The username {username} is already taken."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+    except IntegrityError as e:
+        raise ValidationError(detail=f"The username {username} is already taken") from e
 
     InterventionSeeder(account).create_interventions_for_api_account(user)
+
+    new_setup.account = account
+    new_setup.save()
 
     return new_setup
 
