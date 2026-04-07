@@ -4,7 +4,7 @@ import { RoutePath } from 'Iaso/constants/routes';
 
 import { CompareCustomize } from '../domains/compareCustomize';
 import { DataLayers } from '../domains/dataLayers';
-import { PlanningV2 } from '../domains/planningV2';
+import { Planning } from '../domains/planning';
 import { Scenarios } from '../domains/scenarios';
 import { Settings } from '../domains/settings';
 import { SETTINGS_READ } from './permissions';
@@ -20,7 +20,7 @@ export const dataLayersPath: RoutePath = {
 export const planningPath: RoutePath = {
     baseUrl: baseUrls.planning,
     routerUrl: `${baseUrls.planning}/*`,
-    element: <PlanningV2 />,
+    element: <Planning />,
     permissions: [],
 };
 

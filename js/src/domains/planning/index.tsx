@@ -1,357 +1,283 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { Grid } from '@mui/material';
+import React, { FC, useCallback, useMemo, useState } from 'react';
+import { Card } from '@mui/material';
 import {
     LoadingSpinner,
     useRedirectToReplace,
     useSafeIntl,
 } from 'bluesquare-components';
+import { useNavigate } from 'react-router';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
-import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
-import { succesfullSnackBar } from 'Iaso/constants/snackBars';
-import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { SxStyles } from 'Iaso/types/general';
+import { CardStyled } from '../../components/CardStyled';
 import {
-    PaperContainer,
+    MainColumn,
     PaperFullHeight,
     PageContainer,
+    SidebarColumn,
+    SidebarLayout,
 } from '../../components/styledComponents';
 
 import { baseUrls } from '../../constants/urls';
 import { MESSAGES } from '../messages';
+import { useDeleteScenario } from '../scenarios/hooks/useDeleteScenario';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
+import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
 import { Budgeting } from './components/budgeting/Budgeting';
-import { InterventionAssignments } from './components/interventionAssignment/InterventionAssignments';
-import { InterventionsPlan } from './components/interventionPlan/InterventionsPlan';
-import { Map } from './components/map';
-import { SideMapList } from './components/maps/SideMapList';
-import { PlanningFiltersSidebar } from './components/PlanningFiltersSidebar';
-import { ScenarioTopBar } from './components/ScenarioTopBar';
+import { InterventionPlanDetails } from './components/interventionPlan/InterventionPlanDetails';
+import { InterventionPlanHeader } from './components/interventionPlan/InterventionPlanHeader';
+import { InterventionPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
+import { InterventionsPlanTable } from './components/interventionPlanTable/InterventionsPlanTable';
+import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
+import { PlanningProvider } from './contexts/PlanningContext';
+import { useCalculateBudget } from './hooks/useCalculateBudget';
+import { useGetBudgetAssumptions } from './hooks/useGetBudgetAssumptions';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
+import { useGetInterventionCategories } from './hooks/useGetInterventionCategories';
 import { useGetLatestCalculatedBudget } from './hooks/useGetLatestCalculatedBudget';
-import {
-    useGetMetricCategories,
-    useGetMetricOrgUnits,
-    useGetMetricValues,
-} from './hooks/useGetMetrics';
-import { useGetOrgUnits, useGetOrgUnitsByType } from './hooks/useGetOrgUnits';
-import { Intervention } from './types/interventions';
-import { MetricsFilters, MetricType } from './types/metrics';
-import { orderOrgUnitsByDepth } from 'Iaso/utils/map/mapUtils';
+import { useGetMetricCategories } from './hooks/useGetMetrics';
+import { useGetOrgUnits } from './hooks/useGetOrgUnits';
+import { useGetScenarioRules } from './hooks/useGetScenarioRules';
+import { usePreviewScenarioRule } from './hooks/usePreviewScenarioRule';
+import { useRemoveManyOrgUnitsFromInterventionPlan } from './hooks/useRemoveOrgUnitFromInterventionPlan';
+import { BudgetAssumptions, InterventionPlan } from './types/interventions';
+import { ScenarioRule } from './types/scenarioRule';
+import { useUserCanEditScenario } from './utils/permissions';
+
+const styles = {
+    card: {
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+    },
+} satisfies SxStyles;
 
 type PlanningParams = {
-    scenarioId: string;
-    displayOrgUnitTypeId?: string;
-    displayOrgUnitId?: string;
-};
-
-const styles: SxStyles = {
-    assignmentContainer: { height: '630px' },
+    scenarioId: number;
+    displayOrgUnitId?: number;
 };
 
 export const Planning: FC = () => {
-    const params = useParamsObject(
+    const { scenarioId, displayOrgUnitId } = useParamsObject(
         baseUrls.planning,
     ) as unknown as PlanningParams;
+
+    const navigate = useNavigate();
     const redirectToReplace = useRedirectToReplace();
-    const { data: scenario } = useGetScenario(params.scenarioId);
+
+    const { data: scenario } = useGetScenario(scenarioId);
     const { formatMessage } = useSafeIntl();
+    const [activeTab, setActiveTab] = useState('map');
 
-    const [metricFilters, setMetricFilters] = useState<MetricsFilters>();
-    const [selectionOnMap, setSelectionOnMap] = useState<OrgUnit[]>([]);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [selectedInterventionPlan, setSelectedInterventionPlan] = useState<
+        InterventionPlan | undefined
+    >(undefined);
 
-    // Read display options from URL params
-    const selectedDisplayOrgUnitTypeId = params.displayOrgUnitTypeId
-        ? Number(params.displayOrgUnitTypeId)
-        : undefined;
-    const selectedDisplayOrgUnitId = params.displayOrgUnitId
-        ? Number(params.displayOrgUnitId)
-        : undefined;
+    const { data: metricTypeCategories } = useGetMetricCategories();
+    const { data: interventionCategories } = useGetInterventionCategories();
+    const { data: orgUnits, isLoading: isLoadingOrgUnits } =
+        useGetOrgUnits(displayOrgUnitId);
 
-    // Fetch org units with optional parent filter (API handles filtering)
-    const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits(
-        selectedDisplayOrgUnitId,
-    );
+    const { data: scenarioRules, isFetching: isFetchingRules } =
+        useGetScenarioRules(scenarioId);
+    const { data: interventionAssignments } =
+        useGetInterventionAssignments(scenarioId);
+    const { data: budget } = useGetLatestCalculatedBudget(scenario?.id);
 
-    const orderedOrgUnits = useMemo(
-        () => orderOrgUnitsByDepth(orgUnits || []),
-        [orgUnits],
-    );
+    const { mutate: runBudget, isLoading: isCalculatingBudget } =
+        useCalculateBudget();
 
-    // Look up the selected display org unit name (served from React Query cache)
-    const { data: orgUnitsByType } = useGetOrgUnitsByType(
-        selectedDisplayOrgUnitTypeId,
-    );
-    const selectedDisplayOrgUnitName = selectedDisplayOrgUnitId
-        ? orgUnitsByType?.find(ou => ou.id === selectedDisplayOrgUnitId)?.name
-        : undefined;
+    const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
+        navigate('/');
+    });
 
-    const handleDisplayOrgUnitTypeChange = useCallback(
-        (orgUnitTypeId: number | null) => {
-            redirectToReplace(baseUrls.planning, {
-                ...params,
-                displayOrgUnitTypeId: orgUnitTypeId ?? undefined,
-                displayOrgUnitId: undefined, // Clear org unit when type changes
-            });
-            // Clear selection when filter changes
-            setSelectionOnMap([]);
-        },
-        [params, redirectToReplace],
+    const { mutateAsync: updateScenario } = useUpdateScenario(scenarioId);
+
+    const handleDeleteScenario = () => {
+        deleteScenario(scenarioId);
+    };
+
+    const handleToggleLockScenario = () => {
+        if (scenario) {
+            updateScenario({ ...scenario, is_locked: !scenario.is_locked });
+        }
+    };
+
+    const canEditScenario = useUserCanEditScenario(scenario);
+
+    const {
+        mutate: removeManyOrgUnitsFromPlan,
+        isLoading: isRemovingOrgUnits,
+    } = useRemoveManyOrgUnitsFromInterventionPlan();
+
+    const onRemoveOrgUnitsFromPlan = async (
+        interventionAssignmentIds: number[],
+        shouldCloseDrawer: boolean,
+    ) => {
+        removeManyOrgUnitsFromPlan(interventionAssignmentIds, {
+            onSuccess: () => {
+                if (shouldCloseDrawer) {
+                    setSelectedInterventionPlan(undefined);
+                }
+            },
+        });
+    };
+
+    const { data: budgetAssumptions } = useGetBudgetAssumptions(scenarioId);
+    const selectedBudgetAssumptions: BudgetAssumptions | undefined = useMemo(
+        () =>
+            budgetAssumptions?.find(
+                bs =>
+                    bs.intervention_code ===
+                    selectedInterventionPlan?.intervention.code,
+            ),
+        [selectedInterventionPlan, budgetAssumptions],
     );
 
     const handleDisplayOrgUnitChange = useCallback(
-        (orgUnitId: number | null) => {
+        (orgUnitId?: number) => {
             redirectToReplace(baseUrls.planning, {
-                ...params,
-                displayOrgUnitId: orgUnitId ?? undefined,
+                scenarioId: scenarioId.toString(),
+                displayOrgUnitId: orgUnitId?.toString(),
             });
-            // Clear selection when filter changes
-            setSelectionOnMap([]);
         },
-        [params, redirectToReplace],
+        [scenarioId, redirectToReplace],
     );
 
-    const [selectedInterventions, setSelectedInterventions] = useState<{
-        [categoryId: number]: Intervention;
-    }>({});
-    // Metric selection
-    // v1: display Incidence by default
-    const { data: metricCategories } = useGetMetricCategories();
-    const [displayedMetric, setDisplayedMetric] = useState<MetricType | null>(
-        null,
+    const title = useMemo(
+        () =>
+            scenario
+                ? `${scenario.name} ${scenario.start_year} - ${scenario.end_year}`
+                : formatMessage(MESSAGES.title),
+        [scenario, formatMessage],
     );
 
-    const { data: budget } = useGetLatestCalculatedBudget(scenario?.id);
+    // TODO Find a better place for this
+    const [matchedOrgUnitIds, setMatchedOrgUnitIds] = useState<number[]>([]);
+    const [previewRule, setPreviewRule] = useState<
+        Partial<ScenarioRule> | undefined
+    >();
+    const { mutate: previewScenarioRule } = usePreviewScenarioRule();
 
-    const { data: interventionPlans, isLoading: isLoadingPlans } =
-        useGetInterventionAssignments(scenario?.id);
-
-    const filteredInterventionPlans = useMemo(() => {
-        if (!interventionPlans) return [];
-        if (!orgUnits) return interventionPlans;
-        const filteredOrgUnitIds = new Set(orgUnits.map(ou => ou.id));
-
-        return interventionPlans
-            .map(plan => ({
-                ...plan,
-                org_units: plan.org_units.filter(ou =>
-                    filteredOrgUnitIds.has(ou.id),
-                ),
-            }))
-            .filter(plan => plan.org_units.length > 0);
-    }, [interventionPlans, orgUnits]);
-
-    useEffect(() => {
-        if (
-            metricCategories &&
-            metricCategories.length > 0 &&
-            !displayedMetric
-        ) {
-            setDisplayedMetric(metricCategories[0].items[0]);
-        }
-    }, [metricCategories, displayedMetric]);
-
-    const handleDisplayMetricOnMap = (metric: MetricType) => {
-        setDisplayedMetric(prevSelected =>
-            prevSelected?.name === metric.name ? null : metric,
-        );
-    };
-
-    const { data: displayedMetricValues, isLoading } = useGetMetricValues({
-        metricTypeId: displayedMetric?.id || null,
-    });
-
-    // Manage OU selection from the "Intervention list" section
-    // Manual add/remove
-    const handleAddRemoveOrgUnitToMap = useCallback(
-        (orgUnit: OrgUnit | null) => {
-            if (orgUnit) {
-                setSelectionOnMap(prev => {
-                    if (prev.some(unit => unit.id === orgUnit.id)) {
-                        return prev.filter(unit => unit.id !== orgUnit.id);
-                    }
-                    return [...prev, orgUnit];
-                });
+    const onPreviewScenarioRule = useCallback(
+        (rule?: Partial<ScenarioRule>) => {
+            setPreviewRule(rule);
+            if (!rule) {
+                setMatchedOrgUnitIds([]);
+                return;
             }
-        },
-        [],
-    );
-
-    useGetMetricOrgUnits(metricFilters, metricOrgUnitIds => {
-        const newOrgUnitSelection = orgUnits?.filter(orgUnit =>
-            metricOrgUnitIds.includes(orgUnit.id),
-        );
-
-        setSelectionOnMap(newOrgUnitSelection || []);
-
-        if (newOrgUnitSelection && newOrgUnitSelection.length > 0) {
-            openSnackBar(
-                succesfullSnackBar(
-                    'selectOrgUnitsSuccess',
-                    formatMessage(MESSAGES.selectOrgUnitsSuccess, {
-                        amount: newOrgUnitSelection.length,
-                    }),
-                ),
-            );
-        } else {
-            openSnackBar({
-                messageKey: 'warning',
-                id: 'noOrgUnitsSelected',
-                messageObject: MESSAGES.noOrgUnitsSelected,
-                options: {
-                    variant: 'warning',
-                    persist: false,
-                },
+            return previewScenarioRule(rule, {
+                onSuccess: data => setMatchedOrgUnitIds(data as number[]),
             });
-        }
-    });
-
-    const handleClearSelectionOnMap = useCallback(() => {
-        setSelectionOnMap([]);
-        openSnackBar(
-            succesfullSnackBar(
-                'clearedMapSelection',
-                formatMessage(MESSAGES.clearedMapSelection),
-            ),
-        );
-    }, [formatMessage]);
-
-    const handleSelectAllOnMap = useCallback(
-        () => setSelectionOnMap(orgUnits || []),
-        [orgUnits],
+        },
+        [previewScenarioRule],
     );
 
-    const handleInvertSelectionOnMap = useCallback(() => {
-        setSelectionOnMap(prevSelected => {
-            if (!orgUnits) return prevSelected;
-            const newSelection = orgUnits.filter(
-                orgUnit => !prevSelected.some(sel => sel.id === orgUnit.id),
-            );
-            return newSelection;
-        });
-    }, [orgUnits]);
-
-    return (
-        <>
+    return metricTypeCategories && interventionCategories ? (
+        <PlanningProvider
+            scenarioId={scenarioId}
+            scenario={scenario}
+            displayOrgUnitId={displayOrgUnitId}
+            orgUnits={orgUnits || []}
+            metricTypeCategories={metricTypeCategories}
+            interventionCategories={interventionCategories}
+            interventionAssignments={interventionAssignments || []}
+            canEditScenario={canEditScenario}
+        >
             {isLoadingOrgUnits && <LoadingSpinner />}
-            <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
+            <TopBar title={title} disableShadow sx={{ zIndex: 401 }} />
             <PageContainer>
-                {scenario && (
-                    <ScenarioTopBar
-                        scenario={scenario}
-                        isSidebarOpen={isSidebarOpen}
-                        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
-                    />
-                )}
-                <Grid container spacing={1}>
-                    <Grid item xs={12} md={7}>
-                        <PaperContainer>
-                            <PaperFullHeight>
-                                {isLoading && <p>Loading data...</p>}
-                                <Map
-                                    orgUnits={orderedOrgUnits}
-                                    displayedMetric={displayedMetric}
-                                    displayedMetricValues={
-                                        displayedMetricValues
-                                    }
-                                    orgUnitsOnMap={selectionOnMap}
-                                    onApplyFilters={setMetricFilters}
-                                    onClearSelection={handleClearSelectionOnMap}
-                                    onInvertSelected={
-                                        handleInvertSelectionOnMap
-                                    }
-                                    onSelectAll={handleSelectAllOnMap}
-                                    onChangeMetricLayer={
-                                        handleDisplayMetricOnMap
-                                    }
-                                    onAddRemoveOrgUnit={
-                                        handleAddRemoveOrgUnitToMap
-                                    }
-                                    disabled={scenario?.is_locked}
-                                />
-                            </PaperFullHeight>
-                        </PaperContainer>
-                    </Grid>
-                    <Grid
-                        item
-                        xs={12}
-                        md={isSidebarOpen ? 3 : 5}
-                        sx={{
-                            transition: 'flex-basis 0.3s ease-in-out',
-                        }}
-                    >
+                <SidebarLayout>
+                    <SidebarColumn>
+                        <ScenarioRulesPanel
+                            onPreviewScenarioRule={onPreviewScenarioRule}
+                            scenarioId={scenarioId}
+                            rules={scenarioRules || []}
+                            isLoading={isFetchingRules}
+                        />
+                    </SidebarColumn>
+                    <MainColumn>
                         <PaperFullHeight>
-                            {isLoading && <p>Loading data...</p>}
-                            {metricCategories && orgUnits && (
-                                <SideMapList
-                                    orgUnits={orderedOrgUnits}
-                                    metricCategories={metricCategories}
-                                />
-                            )}
+                            <Card sx={styles.card}>
+                                <CardStyled
+                                    header={
+                                        <InterventionPlanHeader
+                                            onTabChange={setActiveTab}
+                                            activeTab={activeTab}
+                                            onRunBudget={() =>
+                                                runBudget(scenarioId)
+                                            }
+                                            onDeleteScenario={
+                                                handleDeleteScenario
+                                            }
+                                            onToggleLockScenario={
+                                                handleToggleLockScenario
+                                            }
+                                            isCalculatingBudget={
+                                                isCalculatingBudget
+                                            }
+                                            onOrgUnitChange={
+                                                handleDisplayOrgUnitChange
+                                            }
+                                            selectedOrgUnitId={displayOrgUnitId}
+                                        />
+                                    }
+                                >
+                                    {activeTab === 'map' && (
+                                        <InterventionPlanMap
+                                            matchedOrgUnitIds={
+                                                matchedOrgUnitIds
+                                            }
+                                            previewRule={previewRule}
+                                        />
+                                    )}
+                                    {activeTab === 'list' && (
+                                        <>
+                                            <InterventionsPlanTable
+                                                showInterventionPlanDetails={
+                                                    setSelectedInterventionPlan
+                                                }
+                                            />
+                                            <InterventionPlanDetails
+                                                interventionPlan={
+                                                    selectedInterventionPlan
+                                                }
+                                                scenarioId={scenarioId}
+                                                closeInterventionPlanDetails={() =>
+                                                    setSelectedInterventionPlan(
+                                                        undefined,
+                                                    )
+                                                }
+                                                budgetAssumptions={
+                                                    selectedBudgetAssumptions
+                                                }
+                                                removeOrgUnitsFromPlan={
+                                                    onRemoveOrgUnitsFromPlan
+                                                }
+                                                isRemovingOrgUnits={
+                                                    isRemovingOrgUnits
+                                                }
+                                                disabled={
+                                                    scenario?.is_locked ||
+                                                    !canEditScenario
+                                                }
+                                            />
+                                        </>
+                                    )}
+                                    {activeTab === 'budget' &&
+                                        orgUnits &&
+                                        budget && (
+                                            <Budgeting
+                                                budgets={budget?.results}
+                                                orgUnits={orgUnits}
+                                            />
+                                        )}
+                                </CardStyled>
+                            </Card>
                         </PaperFullHeight>
-                    </Grid>
-                    {isSidebarOpen && orderedOrgUnits && (
-                        <Grid item xs={12} md={2}>
-                            <PaperFullHeight>
-                                <PlanningFiltersSidebar
-                                    selectedOrgUnitTypeId={
-                                        selectedDisplayOrgUnitTypeId
-                                    }
-                                    selectedOrgUnitId={selectedDisplayOrgUnitId}
-                                    onOrgUnitTypeChange={
-                                        handleDisplayOrgUnitTypeChange
-                                    }
-                                    onOrgUnitChange={handleDisplayOrgUnitChange}
-                                />
-                            </PaperFullHeight>
-                        </Grid>
-                    )}
-                </Grid>
-                <Grid container spacing={1} sx={{ mt: 0 }}>
-                    {scenario?.is_locked ? null : (
-                        <Grid
-                            item
-                            xs={12}
-                            md={3}
-                            sx={styles.assignmentContainer}
-                        >
-                            <InterventionAssignments
-                                scenarioId={scenario?.id}
-                                selectedOrgUnits={selectionOnMap}
-                                setSelectedInterventions={
-                                    setSelectedInterventions
-                                }
-                                selectedInterventions={selectedInterventions}
-                                interventionPlans={interventionPlans ?? []}
-                                disabled={scenario?.is_locked}
-                            />
-                        </Grid>
-                    )}
-                    <Grid
-                        item
-                        xs={12}
-                        md={scenario?.is_locked ? 12 : 9}
-                        sx={styles.assignmentContainer}
-                    >
-                        <InterventionsPlan
-                            scenarioId={params.scenarioId}
-                            totalOrgUnitCount={orderedOrgUnits?.length ?? 0}
-                            interventionPlans={filteredInterventionPlans}
-                            isLoadingPlans={isLoadingPlans}
-                            disabled={scenario?.is_locked}
-                            displayOrgUnitId={selectedDisplayOrgUnitId}
-                        />
-                    </Grid>
-                    {orderedOrgUnits && budget && (
-                        <Budgeting
-                            budgets={budget?.results}
-                            orgUnits={orderedOrgUnits}
-                            filterLabel={selectedDisplayOrgUnitName}
-                        />
-                    )}
-                </Grid>
+                    </MainColumn>
+                </SidebarLayout>
             </PageContainer>
-        </>
-    );
+        </PlanningProvider>
+    ) : null;
 };

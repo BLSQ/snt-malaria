@@ -1,5 +1,5 @@
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { ScenarioRule } from '../../planningV2/types/scenarioRule';
+import { ScenarioRule } from './scenarioRule';
 
 export type InterventionCategory = {
     id: number;

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { FormikErrors } from 'formik';
-import { ScenarioRuleFormValues } from '../domains/planningV2/hooks/useScenarioRuleFormState';
+import { ScenarioRuleFormValues } from '../domains/planning/hooks/useScenarioRuleFormState';
 
 type useSetFieldValueAndStateProps = {
     setFieldTouched: (
