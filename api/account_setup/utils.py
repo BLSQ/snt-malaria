@@ -8,6 +8,7 @@ from typing import Optional
 import geopandas as gpd
 
 from django.contrib.auth.models import Permission, User
+from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.db import IntegrityError
 from django_countries import countries
@@ -109,24 +110,28 @@ def transform_geo_json_to_gpkg(account_setup: SNTAccountSetup):
 
     adm2 = gdf.copy()
 
-    adm2["id"] = adm2["ADM2_ID"]
+    level_0_name = "Country"
+    level_1_name = str(adm2.at[0, "ADM1_LEVEL_NAME"]).strip()
+    level_2_name = str(adm2.at[0, "ADM2_LEVEL_NAME"]).strip()
+
+    adm2["ref"] = adm2["ADM2_ID"]
     adm2["name"] = adm2["ADM2_NAME"]
     adm2["parent_name"] = adm2["ADM1_NAME"]
-    adm2["parent_id"] = adm2["ADM1_ID"]
+    adm2["parent_ref"] = adm2["ADM1_ID"]
 
     adm1 = gdf.dissolve(by=["ADM1_ID", "ADM1_NAME"], as_index=False)
 
-    adm1["id"] = adm1["ADM1_ID"]
+    adm1["ref"] = adm1["ADM1_ID"]
     adm1["name"] = adm1["ADM1_NAME"]
     adm1["parent_name"] = gdf["ADM0_NAME"].iloc[0]
-    adm1["parent_id"] = gdf["ADM0_ID"].iloc[0]
+    adm1["parent_ref"] = gdf["ADM0_ID"].iloc[0]
 
     adm0 = gdf.dissolve(by=["ADM0_ID", "ADM0_NAME"], as_index=False)
 
-    adm0["id"] = adm0["ADM0_ID"]
+    adm0["ref"] = adm0["ADM0_ID"]
     adm0["name"] = adm0["ADM0_NAME"]
     adm0["parent_name"] = None
-    adm0["parent_id"] = None
+    adm0["parent_ref"] = None
 
     adm0 = add_uuid_to_dataframe(adm0)
     adm1 = add_uuid_to_dataframe(adm1)
@@ -147,14 +152,15 @@ def transform_geo_json_to_gpkg(account_setup: SNTAccountSetup):
     with tempfile.NamedTemporaryFile(suffix=".gpkg") as tmp:
         tmp_path = tmp.name
 
-        adm0.to_file(tmp_path, layer="level0", driver="GPKG")
-        adm1.to_file(tmp_path, layer="level1", driver="GPKG")
-        adm2.to_file(tmp_path, layer="level2", driver="GPKG")
+        adm0.to_file(tmp_path, layer=f"level-0-{level_0_name}", driver="GPKG")
+        adm1.to_file(tmp_path, layer=f"level-1-{level_1_name}", driver="GPKG")
+        adm2.to_file(tmp_path, layer=f"level-2-{level_2_name}", driver="GPKG")
 
         add_empty_groups_table(tmp_path)
 
-        account_setup.gpkg_file.save("org_units.gpkg", open(tmp_path, "rb"))
-        account_setup.save()
+        with open(tmp_path, "rb") as f:
+            account_setup.gpkg_file.save("org_units.gpkg", File(f))
+            account_setup.save()
 
 
 def read_geo_json_file(account_setup):
@@ -184,6 +190,7 @@ def add_uuid_to_dataframe(df):
 
 
 EXTRA_COLUMNS = [
+    "id",
     "code",
     "group_refs",
     "group_names",
@@ -201,8 +208,9 @@ def add_extra_columns_to_dataframe(df):
 FINAL_COLUMNS = [
     "uuid",
     "id",
+    "ref",
     "name",
-    "parent_id",
+    "parent_ref",
     "parent_name",
     "code",
     "group_refs",

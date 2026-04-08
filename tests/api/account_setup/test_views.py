@@ -71,11 +71,12 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         self.runAndValidateTask(task, "SUCCESS")
 
         task.refresh_from_db()
-        # check task message "Imported x OrgUnits"
+        # there's 1 country + 3 regions + 11 provinces (should 10, but since the shape file is flat, there's no region if you don't provide a province)
+        self.assertIn("Imported 15 OrgUnits", task.progress_message)
 
         # Checking import gpkg result
         self.assertEqual(OrgUnitType.objects.count(), 3)  # country, region, province
-        self.assertEqual(OrgUnit.objects.count(), 14)
+        self.assertEqual(OrgUnit.objects.count(), 15)  # 1 country + 3 regions + 11 provinces
 
     def test_post_account_setup_disabled(self):
         """

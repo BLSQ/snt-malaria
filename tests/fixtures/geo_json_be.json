@@ -21,7 +21,8 @@
         "VARADM2_NAME": "BrusselHoofstadt|BrusselseHoof",
         "NL_ADM2_NAME": "NA",
         "TYPE_2": "HoofdstedelijkGewest|RégionCap",
-        "ENGTYPE_2": "CapitalRegion",
+        "ADM1_LEVEL_NAME": "Region",
+        "ADM2_LEVEL_NAME": "Province",
         "CC_2": "NA",
         "HASC_2": "BE.BU"
       },
@@ -296,7 +297,8 @@
         "VARADM2_NAME": "Amberes|Antuérpia|Antwerp|Anvers",
         "NL_ADM2_NAME": "NA",
         "TYPE_2": "Provincie",
-        "ENGTYPE_2": "Province",
+        "ADM1_LEVEL_NAME": "Region",
+        "ADM2_LEVEL_NAME": "Province",
         "CC_2": "NA",
         "HASC_2": "BE.AN"
       },
@@ -1095,7 +1097,8 @@
         "VARADM2_NAME": "Limbourg|Limburgo",
         "NL_ADM2_NAME": "NA",
         "TYPE_2": "Provincie",
-        "ENGTYPE_2": "Province",
+        "ADM1_LEVEL_NAME": "Region",
+        "ADM2_LEVEL_NAME": "Province",
         "CC_2": "NA",
         "HASC_2": "BE.LI"
       },
@@ -2046,7 +2049,8 @@
         "VARADM2_NAME": "FlandresOriental|FiandraOrient",
         "NL_ADM2_NAME": "NA",
         "TYPE_2": "Provincie",
-        "ENGTYPE_2": "Province",
+        "ADM1_LEVEL_NAME": "Region",
+        "ADM2_LEVEL_NAME": "Province",
         "CC_2": "NA",
         "HASC_2": "BE.OV"
       },
@@ -2929,7 +2933,8 @@
         "VARADM2_NAME": "BrabantFlamand|BrabanteFlamenc",
         "NL_ADM2_NAME": "NA",
         "TYPE_2": "Provincie",
-        "ENGTYPE_2": "Province",
+        "ADM1_LEVEL_NAME": "Region",
+        "ADM2_LEVEL_NAME": "Province",
         "CC_2": "NA",
         "HASC_2": "BE.VB"
       },
@@ -4190,7 +4195,8 @@
         "VARADM2_NAME": "FiandraOccidentale|FlandesOcci",
         "NL_ADM2_NAME": "NA",
         "TYPE_2": "Provincie",
-        "ENGTYPE_2": "Province",
+        "ADM1_LEVEL_NAME": "Region",
+        "ADM2_LEVEL_NAME": "Province",
         "CC_2": "NA",
         "HASC_2": "BE.WV"
       },
@@ -5277,7 +5283,8 @@
         "VARADM2_NAME": "WaalsBrabant|WalloonBrabant",
         "NL_ADM2_NAME": "NA",
         "TYPE_2": "Province",
-        "ENGTYPE_2": "Provincie",
+        "ADM1_LEVEL_NAME": "Region",
+        "ADM2_LEVEL_NAME": "Province",
         "CC_2": "NA",
         "HASC_2": "BE.BW"
       },
@@ -5920,7 +5927,8 @@
         "VARADM2_NAME": "Henegouwen|Hennegau",
         "NL_ADM2_NAME": "NA",
         "TYPE_2": "Province",
-        "ENGTYPE_2": "Provincie",
+        "ADM1_LEVEL_NAME": "Region",
+        "ADM2_LEVEL_NAME": "Province",
         "CC_2": "NA",
         "HASC_2": "BE.HT"
       },
@@ -7491,7 +7499,8 @@
         "VARADM2_NAME": "Luik|Liegi|Lieja|Lüttich",
         "NL_ADM2_NAME": "NA",
         "TYPE_2": "Province",
-        "ENGTYPE_2": "Provincie",
+        "ADM1_LEVEL_NAME": "Region",
+        "ADM2_LEVEL_NAME": "Province",
         "CC_2": "NA",
         "HASC_2": "BE.LG"
       },
@@ -9302,7 +9311,8 @@
         "VARADM2_NAME": "Lussemburgo|Luxemburg|Luxemburgo",
         "NL_ADM2_NAME": "NA",
         "TYPE_2": "Province",
-        "ENGTYPE_2": "Provincie",
+        "ADM1_LEVEL_NAME": "Region",
+        "ADM2_LEVEL_NAME": "Province",
         "CC_2": "NA",
         "HASC_2": "BE.LX"
       },
@@ -10597,7 +10607,8 @@
         "VARADM2_NAME": "Namen",
         "NL_ADM2_NAME": "NA",
         "TYPE_2": "Province",
-        "ENGTYPE_2": "Provincie",
+        "ADM1_LEVEL_NAME": "Region",
+        "ADM2_LEVEL_NAME": "Province",
         "CC_2": "NA",
         "HASC_2": "BE.NA"
       },
