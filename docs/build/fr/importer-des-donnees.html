@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Importer des couches de données</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <input id="nav-toggle" class="nav-toggle" type="checkbox" />
+    <div class="lang-float" aria-label="Language">
+      <select class="lang-switch" aria-label="Language" onchange="location.href=this.value">
+<option value="../en/importer-des-donnees.html">EN</option><option value="./importer-des-donnees.html" selected>FR</option>
+</select>
+    </div>
+    <header class="topbar" aria-label="Mobile navigation">
+      <label class="topbar__button" for="nav-toggle" aria-label="Open navigation">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path
+            d="M4 6h16M4 12h16M4 18h16"
+            stroke="#673AB7"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </label>
+      <div class="topbar__text">
+        <div class="topbar__title">SNT Explorer</div>
+        <div class="topbar__subtitle">Documentation</div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar" aria-label="Documentation navigation">
+        <div class="sidebar__header">
+          <label class="sidebar__close" for="nav-toggle" aria-label="Close navigation">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="M6 6l12 12M18 6L6 18"
+                stroke="#1F2B3D"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </label>
+          <a class="sidebar-brand" href="./creer-un-plan.html" aria-label="Documentation home">
+            <span class="sidebar-brand__text">
+              <span class="sidebar-brand__title">SNT Explorer</span>
+              <span class="sidebar-brand__subtitle">Documentation</span>
+            </span>
+          </a>
+        </div>
+        <nav class="nav" aria-label="Table of contents">
+          <ul>
+  <li><a href="./a-propos-du-snt-explorer.html">A propos du SNT Explorer</a></li>
+  <li><a href="./creer-un-plan.html">Créer un plan d&#39;interventions</a></li>
+  <li><a href="./importer-des-donnees.html" aria-current="page">Importer des couches de données</a></li>
+</ul>
+        </nav>
+      </aside>
+      <main class="content" id="main">
+        <header class="page-header">
+          <div class="page-header__row">
+            <h1 class="page-title">Importer des couches de données</h1>
+          </div>
+        </header>
+        <article class="prose">
+          <p>En complément de la <a href="https://www.snt-toolbox.org/fr/snt-pipeline-library/">Bibliothèque de pipelines SNT</a>, l’application SNT Explorer permet également d’importer des données au format CSV. Découvrez dans la vidéo ci-dessous comment faire.</p>
+<div style="position: relative; padding-bottom: 64.98194945848375%; height: 0;"><iframe src="https://www.loom.com/embed/030e43e9b2024316bbaa24d16a330005" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+
+<h2>Etapes</h2>
+<h3>1. Créer une couche</h3>
+<p>La première étape est une étape de définition: il s’agit de nommer et décrire la couche que vous souhaitez importer, et surtout définir l’échelle qui sera utilisée pour son affichage.</p>
+<p>Pour créer une nouvelle couche, cliquez sur le + en haut à droite de la liste, et remplissez les détails utiles.</p>
+<p><img src="../assets/create_layer.png" alt="Create data layer"></p>
+<p>Vous avez à tout le moment la possibilité de modifier chacun de ces détails, à l’exception du nom de variable.</p>
+<p>Les différents types d’échelles disponibles sont</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Seuil</td>
+<td>Permet de stratifier les valeurs “par niveau” (eg de 0 à 20%, de 20 à 40%, etc)</td>
+</tr>
+<tr>
+<td>Ordinal</td>
+<td>Permet de stratifier des valeurs non numériques, ou fixes (eg low, medium, high, ou 1,2,3)</td>
+</tr>
+<tr>
+<td>Linéaire</td>
+<td>Affiche les valeurs sur un dégradé continu entre un minimum et un maximum</td>
+</tr>
+</tbody></table>
+<h3>2. Télécharger le modèle CSV</h3>
+<p>Une fois vos nouvelles couches définies, cliquez sur les … en haut à droite de la liste, et sélectionnez “<strong>Télécharger le modèle CSV.</strong>”</p>
+<p>Ceci téléchargera un fichier CSV dans lequel il ne vous restera plus qu’à remplir les valeurs liées à la couche que vous venez de définir.</p>
+<p><img src="../assets/csv_template.png" alt="Download CSV Template"></p>
+<h3>3. Importer les données</h3>
+<p>Une fois ce fichier CSV rempli, re-cliquez sur les … et sélectionnez “<strong>Importer CSV</strong>” pour finaliser la création de nouvelle couche.</p>
+<p><img src="../assets/prevalence.png" alt="Import data layer"></p>
+
+        </article>
+      </main>
+    </div>
+    <label class="nav-overlay" for="nav-toggle" aria-hidden="true"></label>
+  </body>
+</html>

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="{{htmlLang}}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{title}}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{cssHref}}" />
+  </head>
+  <body>
+    <input id="nav-toggle" class="nav-toggle" type="checkbox" />
+    <div class="lang-float" aria-label="Language">
+      {{languageSelect}}
+    </div>
+    <header class="topbar" aria-label="Mobile navigation">
+      <label class="topbar__button" for="nav-toggle" aria-label="Open navigation">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path
+            d="M4 6h16M4 12h16M4 18h16"
+            stroke="#673AB7"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </label>
+      <div class="topbar__text">
+        <div class="topbar__title">SNT Explorer</div>
+        <div class="topbar__subtitle">Documentation</div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar" aria-label="Documentation navigation">
+        <div class="sidebar__header">
+          <label class="sidebar__close" for="nav-toggle" aria-label="Close navigation">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="M6 6l12 12M18 6L6 18"
+                stroke="#1F2B3D"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </label>
+          <a class="sidebar-brand" href="{{homeHref}}" aria-label="Documentation home">
+            <span class="sidebar-brand__text">
+              <span class="sidebar-brand__title">SNT Explorer</span>
+              <span class="sidebar-brand__subtitle">Documentation</span>
+            </span>
+          </a>
+        </div>
+        <nav class="nav" aria-label="Table of contents">
+          {{sidebar}}
+        </nav>
+      </aside>
+      <main class="content" id="main">
+        <header class="page-header">
+          <div class="page-header__row">
+            <h1 class="page-title">{{title}}</h1>
+          </div>
+        </header>
+        <article class="prose">
+          {{content}}
+        </article>
+      </main>
+    </div>
+    <label class="nav-overlay" for="nav-toggle" aria-hidden="true"></label>
+  </body>
+</html>

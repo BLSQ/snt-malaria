@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Import data layers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <input id="nav-toggle" class="nav-toggle" type="checkbox" />
+    <div class="lang-float" aria-label="Language">
+      <select class="lang-switch" aria-label="Language" onchange="location.href=this.value">
+<option value="./importer-des-donnees.html" selected>EN</option><option value="../fr/importer-des-donnees.html">FR</option>
+</select>
+    </div>
+    <header class="topbar" aria-label="Mobile navigation">
+      <label class="topbar__button" for="nav-toggle" aria-label="Open navigation">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path
+            d="M4 6h16M4 12h16M4 18h16"
+            stroke="#673AB7"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </label>
+      <div class="topbar__text">
+        <div class="topbar__title">SNT Explorer</div>
+        <div class="topbar__subtitle">Documentation</div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar" aria-label="Documentation navigation">
+        <div class="sidebar__header">
+          <label class="sidebar__close" for="nav-toggle" aria-label="Close navigation">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="M6 6l12 12M18 6L6 18"
+                stroke="#1F2B3D"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </label>
+          <a class="sidebar-brand" href="./creer-un-plan.html" aria-label="Documentation home">
+            <span class="sidebar-brand__text">
+              <span class="sidebar-brand__title">SNT Explorer</span>
+              <span class="sidebar-brand__subtitle">Documentation</span>
+            </span>
+          </a>
+        </div>
+        <nav class="nav" aria-label="Table of contents">
+          <ul>
+  <li><a href="./a-propos-du-snt-explorer.html">About SNT Explorer</a></li>
+  <li><a href="./creer-un-plan.html">Create an intervention plan</a></li>
+  <li><a href="./importer-des-donnees.html" aria-current="page">Import data layers</a></li>
+</ul>
+        </nav>
+      </aside>
+      <main class="content" id="main">
+        <header class="page-header">
+          <div class="page-header__row">
+            <h1 class="page-title">Import data layers</h1>
+          </div>
+        </header>
+        <article class="prose">
+          <p>In addition to the <a href="https://www.snt-toolbox.org/en/snt-pipeline-library/">SNT Pipeline Library</a>, the SNT Explorer app also lets you import data in CSV format. Watch the video below to see how.</p>
+<div style="position: relative; padding-bottom: 64.98194945848375%; height: 0;"><iframe src="https://www.loom.com/embed/030e43e9b2024316bbaa24d16a330005" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+
+<h2>Steps</h2>
+<h3>1. Create a layer</h3>
+<p>The first step is definition: name and describe the layer you want to import, and most importantly define the scale that will be used for display.</p>
+<p>To create a new layer, click the <strong>+</strong> at the top right of the list and fill in the relevant details.</p>
+<p><img src="../assets/create_layer.png" alt="Create data layer"></p>
+<p>You can modify each of these details at any time, except for the variable name.</p>
+<p>The available scale types are:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Threshold</td>
+<td>Lets you stratify values “by level” (e.g. 0–20%, 20–40%, etc.)</td>
+</tr>
+<tr>
+<td>Ordinal</td>
+<td>Lets you stratify non-numeric or fixed values (e.g. low/medium/high, or 1/2/3)</td>
+</tr>
+<tr>
+<td>Linear</td>
+<td>Displays values on a continuous gradient between a minimum and a maximum</td>
+</tr>
+</tbody></table>
+<h3>2. Download the CSV template</h3>
+<p>Once your new layers are defined, click the <strong>…</strong> at the top right of the list and select <strong>“Download CSV template.”</strong></p>
+<p>This will download a CSV file where you only need to fill in the values for the layer you just defined.</p>
+<p><img src="../assets/csv_template.png" alt="Download CSV Template"></p>
+<h3>3. Import the data</h3>
+<p>Once this CSV file is filled in, click the <strong>…</strong> again and select <strong>“Import CSV”</strong> to finalize the creation of the new layer.</p>
+<p><img src="../assets/prevalence.png" alt="Import data layer"></p>
+
+        </article>
+      </main>
+    </div>
+    <label class="nav-overlay" for="nav-toggle" aria-hidden="true"></label>
+  </body>
+</html>

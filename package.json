@@ -1,0 +1,11 @@
+{
+  "name": "snt-malaria",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "docs:build": "node docs/scripts/build-docs.mjs"
+  },
+  "dependencies": {
+    "marked": "^9.1.6"
+  }
+}

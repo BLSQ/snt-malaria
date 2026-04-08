@@ -259,8 +259,8 @@ Population used:
 
 Definitions:
 
-- \(target\_pop = pop\_pw\)
-- \(quantity = (pop\_pw \times iptp\_anc\_coverage \times iptp\_doses\_per\_pw) \times iptp\_buffer\_mult\)
+- \(target\_pop = pop_pw\)
+- \(quantity = (pop_pw \times iptp_anc_coverage \times iptp_doses_per_pw) \times iptp_buffer_mult\)
 
 Unit emitted:
 
@@ -275,11 +275,11 @@ Population used (default):
 Definitions:
 
 - **3–11 months SPAQ packs**:
-  - \(quant\_{3-11} = (pop\_0\_5 \times smc\_pop\_prop\_{3\_11} \times smc\_coverage) \times smc\_monthly\_rounds \times smc\_buffer\_mult\)
+  - \(quant_{3-11} = (pop_0_5 \times smc_pop_prop_{3_11} \times smc_coverage) \times smc_monthly_rounds \times smc_buffer_mult\)
 - **12–59 months SPAQ packs**:
-  - \(quant\_{12-59} = (pop\_0\_5 \times smc\_pop\_prop\_{12\_59} \times smc\_coverage) \times smc\_monthly\_rounds \times smc\_buffer\_mult\)
+  - \(quant_{12-59} = (pop_0_5 \times smc_pop_prop_{12_59} \times smc_coverage) \times smc_monthly_rounds \times smc_buffer_mult\)
 - **Target population** (displayed in `total_pop`):
-  - \(target\_pop = pop\_0\_5 \times (smc\_pop\_prop\_{3\_11} + smc\_pop\_prop\_{12\_59}) \times smc\_coverage\)
+  - \(target_pop = pop_0_5 \times (smc_pop_prop_{3_11} + smc_pop_prop_{12_59}) \times smc_coverage\)
 
 Units emitted:
 
@@ -294,10 +294,10 @@ Population used:
 
 Definitions (per the reference implementation):
 
-- \(sp\_{0-1} = pop\_0\_1 \times pmc\_coverage \times pmc\_touchpoints \times 1 \times pmc\_tablet\_factor \times pmc\_buffer\_mult\)
-- \(sp\_{1-2} = pop\_1\_2 \times pmc\_coverage \times pmc\_touchpoints \times 2 \times pmc\_tablet\_factor \times pmc\_buffer\_mult\)
-- \(quantity = sp\_{0-1} + sp\_{1-2}\)
-- \(target\_pop = (pop\_0\_1 \times pmc\_coverage) + (pop\_1\_2 \times pmc\_coverage)\)
+- \(sp_{0-1} = pop_0_1 \times pmc_coverage \times pmc_touchpoints \times 1 \times pmc_tablet_factor \times pmc_buffer_mult\)
+- \(sp_{1-2} = pop_1_2 \times pmc_coverage \times pmc_touchpoints \times 2 \times pmc_tablet_factor \times pmc_buffer_mult\)
+- \(quantity = sp_{0-1} + sp_{1-2}\)
+- \(target_pop = (pop_0_1 \times pmc_coverage) + (pop_1_2 \times pmc_coverage)\)
 
 Unit emitted:
 
@@ -311,9 +311,9 @@ Population used:
 
 Definitions:
 
-- \(quant\_child = pop\_vaccine\_5\_36\_months \times vacc\_coverage\)
-- \(quant\_doses = quant\_child \times vacc\_doses\_per\_child \times vacc\_buffer\_mult\)
-- \(target\_pop = quant\_child\)
+- \(quant_child = pop_vaccine_5_36_months \times vacc_coverage\)
+- \(quant_doses = quant_child \times vacc_doses_per_child \times vacc_buffer_mult\)
+- \(target_pop = quant_child\)
 
 Units emitted:
 

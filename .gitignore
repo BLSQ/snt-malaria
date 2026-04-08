@@ -1,3 +1,6 @@
 __pycache__/
 
 management/commands/fixtures/setuper/
+
+.DS_Store
+node_modules/

@@ -217,3 +217,4 @@ they exist in the provider's data.
 ## Architecture
 
 ![Impact module architecture](./impact_architecture.png)
+
