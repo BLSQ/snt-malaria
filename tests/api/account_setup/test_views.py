@@ -129,8 +129,7 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         """
         Makes sure that nothing is saved when transforming the geo json file raises an error
         """
-        error_str = "something happened while processing the geo json file"
-        mock_geo_json_transform.side_effect = ValueError(error_str)
+        mock_geo_json_transform.side_effect = ValueError("something happened while processing the geo json file")
 
         with open(self.JSON_FILE_PATH, "rb") as json_file:
             payload = {
@@ -145,7 +144,11 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
             }
 
         response = self.client.post(self.BASE_URL, data=payload, format="multipart")
-        self.assertContains(response, error_str, status_code=status.HTTP_400_BAD_REQUEST)
+        self.assertContains(
+            response,
+            "There was an unexpected error, please ask an administrator to check the server logs",
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
 
         self._check_nothing_has_been_created()
 
