@@ -37,8 +37,11 @@ class SNTAccountSetupViewSet(viewsets.ModelViewSet):
                 transform_geo_json_to_gpkg(account_setup)
         except ValidationError as e:
             return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response(
+                "There was an unexpected error, please ask an administrator to check the server logs",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # start gpkg import task here
         import_gpkg = ImportGPKG.objects.create(
