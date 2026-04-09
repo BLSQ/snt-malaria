@@ -46,6 +46,30 @@ REQUIRED_GEO_JSON_LABELS = [
     "ADM2_LEVEL_NAME",
 ]
 
+GDF_COLUMNS_TO_ADD = [
+    "id",
+    "code",
+    "group_refs",
+    "group_names",
+    "opening_date",
+    "closing_date",
+]
+
+GDF_FINAL_COLUMNS = [
+    "uuid",
+    "id",
+    "ref",
+    "name",
+    "parent_ref",
+    "parent_name",
+    "code",
+    "group_refs",
+    "group_names",
+    "opening_date",
+    "closing_date",
+    "geometry",
+]
+
 
 def create_snt_account(
     username: str, password: str, country: str, language: Optional[str], geo_json_file: UploadedFile
@@ -135,17 +159,9 @@ def transform_geo_json_to_gpkg(account_setup: SNTAccountSetup):
     adm0["parent_name"] = None
     adm0["parent_ref"] = None
 
-    adm0 = add_uuid_to_dataframe(adm0)
-    adm1 = add_uuid_to_dataframe(adm1)
-    adm2 = add_uuid_to_dataframe(adm2)
-
-    adm0 = add_extra_columns_to_dataframe(adm0)
-    adm1 = add_extra_columns_to_dataframe(adm1)
-    adm2 = add_extra_columns_to_dataframe(adm2)
-
-    adm0 = format_df(adm0)
-    adm1 = format_df(adm1)
-    adm2 = format_df(adm2)
+    adm0 = format_gdf_for_iaso(adm0)
+    adm1 = format_gdf_for_iaso(adm1)
+    adm2 = format_gdf_for_iaso(adm2)
 
     with tempfile.NamedTemporaryFile(suffix=".gpkg") as tmp:
         tmp_path = tmp.name
@@ -161,7 +177,7 @@ def transform_geo_json_to_gpkg(account_setup: SNTAccountSetup):
             account_setup.save()
 
 
-def read_geo_json_file(account_setup):
+def read_geo_json_file(account_setup: SNTAccountSetup):
     """
     The geopandas.read_file function requires a file path, but depending on the configuration, it might be difficult to provide one:
     - if the file is stored locally, we can use the path directly
@@ -182,45 +198,14 @@ def read_geo_json_file(account_setup):
             return gpd.read_file(tmp.name)
 
 
-def add_uuid_to_dataframe(df):
-    df["uuid"] = [str(uuid.uuid4()) for _ in range(len(df))]
-    return df
-
-
-EXTRA_COLUMNS = [
-    "id",
-    "code",
-    "group_refs",
-    "group_names",
-    "opening_date",
-    "closing_date",
-]
-
-
-def add_extra_columns_to_dataframe(df):
-    for col in EXTRA_COLUMNS:
-        df[col] = None
-    return df
-
-
-FINAL_COLUMNS = [
-    "uuid",
-    "id",
-    "ref",
-    "name",
-    "parent_ref",
-    "parent_name",
-    "code",
-    "group_refs",
-    "group_names",
-    "opening_date",
-    "closing_date",
-    "geometry",
-]
-
-
-def format_df(df):
-    return df[FINAL_COLUMNS]
+def format_gdf_for_iaso(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """
+    Adds the required columns for a IASO gpkg and removes other columns
+    """
+    gdf["uuid"] = [str(uuid.uuid4()) for _ in range(len(gdf))]
+    for col in GDF_COLUMNS_TO_ADD:
+        gdf[col] = None
+    return gdf[GDF_FINAL_COLUMNS]
 
 
 def add_empty_groups_table(gpkg_path: str) -> None:
