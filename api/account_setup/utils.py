@@ -40,8 +40,10 @@ REQUIRED_GEO_JSON_LABELS = [
     "ADM0_NAME",
     "ADM1_ID",
     "ADM1_NAME",
+    "ADM1_LEVEL_NAME",
     "ADM2_ID",
     "ADM2_NAME",
+    "ADM2_LEVEL_NAME",
 ]
 
 
@@ -144,10 +146,6 @@ def transform_geo_json_to_gpkg(account_setup: SNTAccountSetup):
     adm0 = format_df(adm0)
     adm1 = format_df(adm1)
     adm2 = format_df(adm2)
-
-    # adm0 = adm0.rename(columns={"geography": "geometry"})
-    # adm1 = adm1.rename(columns={"geography": "geometry"})
-    # adm2 = adm2.rename(columns={"geography": "geometry"})
 
     with tempfile.NamedTemporaryFile(suffix=".gpkg") as tmp:
         tmp_path = tmp.name
