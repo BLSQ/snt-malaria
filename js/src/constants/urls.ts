@@ -27,6 +27,10 @@ export const RouteConfigs: Record<string, RouteConfig> = {
         url: 'snt_malaria/settings',
         params: [],
     },
+    interventions: {
+        url: 'snt_malaria/interventions',
+        params: [],
+    },
 };
 
 export type BaseUrls = {
@@ -35,6 +39,7 @@ export type BaseUrls = {
     compareCustomize: string;
     scenarios: string;
     settings: string;
+    interventions: string;
 };
 export const baseUrls = extractUrls(RouteConfigs) as BaseUrls;
 export const baseParams = extractParams(RouteConfigs);

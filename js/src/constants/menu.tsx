@@ -4,6 +4,7 @@ import {
     FormatListBulletedOutlined,
     Settings,
     Layers,
+    SettingsInputComponent,
 } from '@mui/icons-material';
 import { SvgIconProps } from '@mui/material';
 import { MESSAGES as dataLayersMessages } from '../domains/dataLayers/messages';
@@ -36,5 +37,11 @@ export const menu = [
         key: 'snt_malaria/settings',
         permissions: [SETTINGS_READ],
         icon: (props: SvgIconProps) => <Settings {...props} />,
+    },
+    {
+        label: MESSAGES.interventionsTitle,
+        key: 'snt_malaria/interventions',
+        permissions: [SETTINGS_READ],
+        icon: (props: SvgIconProps) => <SettingsInputComponent {...props} />,
     },
 ];

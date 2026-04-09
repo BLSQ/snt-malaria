@@ -1,4 +1,4 @@
-import { Paper, Box, AppBar as MuiAppBar } from '@mui/material';
+import { Paper, Box, AppBar as MuiAppBar, Card } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 export const PaperFullHeight = styled(Paper)(({ theme }) => ({
@@ -52,3 +52,10 @@ export const MainColumn = styled(Box)({
     flex: 7,
     minWidth: 0,
 });
+
+export const CardScrollable = styled(Card)(({}) => ({
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+}));

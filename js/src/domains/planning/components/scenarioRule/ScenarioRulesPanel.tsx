@@ -1,20 +1,10 @@
 import React, { FC, useCallback, useState } from 'react';
-import { Card } from '@mui/material';
-import { SxStyles } from 'Iaso/types/general';
+import { CardScrollable } from '../../../../components/styledComponents';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { ScenarioRuleFormValues } from '../../hooks/useScenarioRuleFormState';
 import { ScenarioRule } from '../../types/scenarioRule';
 import { ScenarioRuleFormWrapper } from './scenarioRuleForm/ScenarioRuleFormWrapper';
 import { ScenarioRulesContainer } from './scenarioRuleList/ScenarioRulesContainer';
-
-const styles: SxStyles = {
-    card: {
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-    },
-};
 
 type Props = {
     scenarioId: number;
@@ -61,7 +51,7 @@ export const ScenarioRulesPanel: FC<Props> = ({
     );
 
     return (
-        <Card sx={styles.card}>
+        <CardScrollable>
             {isEditing ? (
                 <ScenarioRuleFormWrapper
                     scenarioId={scenarioId}
@@ -77,6 +67,6 @@ export const ScenarioRulesPanel: FC<Props> = ({
                     rules={rules}
                 />
             )}
-        </Card>
+        </CardScrollable>
     );
 };
