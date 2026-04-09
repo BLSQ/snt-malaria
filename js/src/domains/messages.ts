@@ -225,6 +225,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.cost-breakdown-chart.title',
         defaultMessage: 'Cost per intervention category',
     },
+    costItems: {
+        id: 'iaso.snt_malaria.label.costItems',
+        defaultMessage: 'Cost items',
+    },
     costPerAvertedCaseTitle: {
         id: 'iaso.snt_malaria.compareCustomize.costPerAvertedCaseTitle',
         defaultMessage: 'Cost per averted case',
@@ -269,6 +273,30 @@ export const MESSAGES = defineMessages({
     description: {
         id: 'iaso.snt_malaria.label.description',
         defaultMessage: 'Description',
+    },
+    removeInterventionCostBreakdownLine: {
+        id: 'iaso.snt_malaria.settings.intervention.removeInterventionCostBreakdownLine',
+        defaultMessage: 'Remove cost',
+    },
+    addInterventionCostBreakdownLine: {
+        id: 'iaso.snt_malaria.settings.intervention.addInterventionCostBreakdownLine',
+        defaultMessage: 'Add cost',
+    },
+    detailedCosts: {
+        id: 'iaso.snt_malaria.settings.intervention.detailedCosts',
+        defaultMessage: 'Detailed costs',
+    },
+    detailedCostLabel: {
+        id: 'iaso.snt_malaria.settings.intervention.detailedCostLabel',
+        defaultMessage: 'Item',
+    },
+    detailedCostUnitLabel: {
+        id: 'iaso.snt_malaria.settings.intervention.detailedCostUnitLabel',
+        defaultMessage: 'Cost Unit',
+    },
+    detailedCostCategoryLabel: {
+        id: 'iaso.snt_malaria.settings.intervention.detailedCostCategoryLabel',
+        defaultMessage: 'Category',
     },
     displayLevel: {
         id: 'iaso.snt_malaria.label.displayLevel',
@@ -351,6 +379,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.impact.pfprReduction',
         defaultMessage: 'PfPR reduction',
     },
+    impactRefLabel: {
+        id: 'iaso.snt_malaria.label.impactRef',
+        defaultMessage: 'Impact Provider Reference',
+    },
     impactSettingsLabel: {
         id: 'iaso.snt_malaria.impactSettings.label',
         defaultMessage: 'Impact settings',
@@ -421,6 +453,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.invertSelection',
         defaultMessage: 'Invert Selection',
     },
+    label: {
+        id: 'iaso.label.label',
+        defaultMessage: 'Label',
+    },
     layers: {
         id: 'iaso.snt_malaria.label.layers',
         defaultMessage: 'Layers',
@@ -490,6 +526,10 @@ export const MESSAGES = defineMessages({
     national: {
         id: 'iaso.snt_malaria.label.national',
         defaultMessage: 'National',
+    },
+    negativeValueNotAllowed: {
+        id: 'iaso.snt_malaria.settings.intervention.errors.negativeValueNotAllowed',
+        defaultMessage: 'Negative value not allowed',
     },
     noBudgetData: {
         id: 'iaso.snt_malaria.compareCustomize.noBudgetData',
@@ -704,6 +744,10 @@ export const MESSAGES = defineMessages({
     total: {
         id: 'iaso.snt_malaria.budgeting.total',
         defaultMessage: 'Total',
+    },
+    unit: {
+        id: 'iaso.snt_malaria.settings.intervention.unit',
+        defaultMessage: 'Unit',
     },
     unlockScenario: {
         id: 'iaso.snt_malaria.scenario.unlockScenario',

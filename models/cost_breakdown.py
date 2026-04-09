@@ -32,7 +32,7 @@ class InterventionCostBreakdownLine(models.Model):
     class Meta:
         app_label = "snt_malaria"
 
-    intervention = models.ForeignKey(Intervention, on_delete=models.CASCADE)
+    intervention = models.ForeignKey(Intervention, on_delete=models.CASCADE, related_name="cost_breakdown_lines")
     name = models.TextField(max_length=255, blank=False)
     category = models.CharField(
         max_length=40,

@@ -1,6 +1,6 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC, useCallback, useEffect } from 'react';
 import { SettingsInputComponent } from '@mui/icons-material';
-import { Card, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { CardStyled } from '../../components/CardStyled';
@@ -15,6 +15,7 @@ import {
 import { MESSAGES } from '../messages';
 import { useGetInterventionCategories } from '../planning/hooks/useGetInterventionCategories';
 import { Intervention } from '../planning/types/interventions';
+import { InterventionFormWrapper } from './components/InterventionFormWrapper';
 import { InterventionList } from './components/InterventionList';
 
 export const InterventionSettings: FC = () => {
@@ -31,6 +32,18 @@ export const InterventionSettings: FC = () => {
         },
         [setSelectedIntervention],
     );
+
+    useEffect(() => {
+        if (
+            interventionCategories &&
+            interventionCategories.length > 0 &&
+            !selectedIntervention
+        ) {
+            const firstIntervention =
+                interventionCategories[0].interventions[0] || null;
+            setSelectedIntervention(firstIntervention);
+        }
+    }, [interventionCategories, selectedIntervention, setSelectedIntervention]);
 
     return (
         <>
@@ -72,11 +85,13 @@ export const InterventionSettings: FC = () => {
                         </CardScrollable>
                     </SidebarColumn>
                     <MainColumn>
-                        <Card>
-                            <CardStyled header={selectedIntervention?.name}>
-                                <h1>Coucou</h1>
-                            </CardStyled>
-                        </Card>
+                        <CardScrollable>
+                            {selectedIntervention && (
+                                <InterventionFormWrapper
+                                    interventionId={selectedIntervention.id}
+                                />
+                            )}
+                        </CardScrollable>
                     </MainColumn>
                 </SidebarLayout>
             </PageContainer>

@@ -69,7 +69,7 @@
     "iaso.snt_malaria.settings.intervention.costPerUnit": "Cost per unit",
     "iaso.snt_malaria.settings.intervention.save": "Save intervention",
     "iaso.snt_malaria.settings.intervention.removeInterventionCostBreakdownLine": "Remove cost",
-    "iaso.snt_malaria.settings.intervention.addInterventionCostBreakdownLine": "Add cost",
+    "iaso.snt_malaria.settings.intervention.addInterventionCostBreakdownLine": "Add cost item",
     "iaso.snt_malaria.settings.intervention.detailedCosts": "Detailed costs",
     "iaso.snt_malaria.settings.intervention.detailedCostLabel": "Item",
     "iaso.snt_malaria.settings.intervention.detailedCostUnitLabel": "Cost Unit",
