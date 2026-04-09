@@ -164,3 +164,9 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         self.assertEqual(InterventionCategory.objects.count(), 0)
         self.assertEqual(Intervention.objects.count(), 0)
         self.assertEqual(InterventionCostBreakdownLine.objects.count(), 0)
+
+        # it failed even before creating the import task
+        self.assertEqual(ImportGPKG.objects.count(), 0)
+        self.assertEqual(Task.objects.count(), 0)
+        self.assertEqual(OrgUnitType.objects.count(), 0)
+        self.assertEqual(OrgUnit.objects.count(), 0)
