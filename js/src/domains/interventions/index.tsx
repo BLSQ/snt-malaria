@@ -64,6 +64,9 @@ export const InterventionSettings: FC = () => {
                                     onSelectIntervention={
                                         handleSelectIntervention
                                     }
+                                    activeInterventionId={
+                                        selectedIntervention?.id || null
+                                    }
                                 />
                             </CardStyled>
                         </CardScrollable>
