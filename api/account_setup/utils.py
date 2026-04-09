@@ -136,6 +136,7 @@ def transform_geo_json_to_gpkg(account_setup: SNTAccountSetup):
 
     adm2 = gdf.copy()
 
+    # TODO: fetch and compute all levels dynamically, in order to have any level > 2
     level_0_name = "Country"
     level_1_name = str(adm2.at[0, "ADM1_LEVEL_NAME"]).strip()
     level_2_name = str(adm2.at[0, "ADM2_LEVEL_NAME"]).strip()
