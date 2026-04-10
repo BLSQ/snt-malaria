@@ -1,4 +1,3 @@
-from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,7 +7,7 @@ from plugins.snt_malaria.api.interventions.serializers import (
     InterventionDetailWriteSerializer,
     InterventionSerializer,
 )
-from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
+from plugins.snt_malaria.models import Intervention
 
 
 class InterventionViewSet(viewsets.ModelViewSet):

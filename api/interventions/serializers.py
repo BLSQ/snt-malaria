@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import serializers
 
 from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import InterventionCostBreakdownLineSerializer
@@ -38,7 +39,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
 
 class InterventionDetailWriteSerializer(serializers.ModelSerializer):
-    cost_breakdown_lines = InterventionCostBreakdownLineSerializer(many=True)
+    cost_breakdown_lines = InterventionCostBreakdownLineSerializer(many=True, required=False)
 
     class Meta:
         model = Intervention
@@ -49,24 +50,17 @@ class InterventionDetailWriteSerializer(serializers.ModelSerializer):
             "cost_breakdown_lines",
         ]
 
-    def create(self, validated_data):
-        cost_breakdown_lines_data = validated_data.pop("cost_breakdown_lines", [])
-        intervention = super().create(validated_data)
-        for line_data in cost_breakdown_lines_data:
-            InterventionCostBreakdownLineSerializer.create(
-                InterventionCostBreakdownLineSerializer(), validated_data={**line_data, "intervention": intervention}
-            )
-        return intervention
-
     def update(self, instance, validated_data):
         cost_breakdown_lines_data = validated_data.pop("cost_breakdown_lines", [])
         intervention = super().update(instance, validated_data)
 
         # Delete existing cost breakdown lines and create new ones based on the provided data
-        instance.cost_breakdown_lines.all().delete()
-        for line_data in cost_breakdown_lines_data:
-            InterventionCostBreakdownLineSerializer.create(
-                InterventionCostBreakdownLineSerializer(), validated_data={**line_data, "intervention": intervention}
-            )
+        with transaction.atomic():
+            instance.cost_breakdown_lines.all().delete()
+            for line_data in cost_breakdown_lines_data if cost_breakdown_lines_data else []:
+                InterventionCostBreakdownLineSerializer.create(
+                    InterventionCostBreakdownLineSerializer(),
+                    validated_data={**line_data, "intervention": intervention},
+                )
 
         return intervention
