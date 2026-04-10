@@ -73,7 +73,9 @@ export type BudgetAssumptions = {
 export type InterventionDetails = {
     id: number;
     name: string;
+    code: string;
     impact_ref: string;
+    target_population: string[];
     cost_breakdown_lines: InterventionCostBreakdownLine[];
 };
 

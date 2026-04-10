@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import { Button, Stack, Typography } from '@mui/material';
 import { DropdownOptions, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
@@ -7,16 +7,20 @@ import { useGetChildError } from '../../../hooks/useGetChildError';
 import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../messages';
 import { InterventionDetails } from '../../planning/types/interventions';
+import { MetricType } from '../../planning/types/metrics';
 import { InterventionCostBreakdownLineForm } from './InterventionCostBreakdownLineForm';
+import { TargetPopulationForm } from './TargetPopulationForm';
 
 type Props = {
     interventionCostCategories: DropdownOptions<string>[];
     interventionCostUnitTypes: DropdownOptions<string>[];
+    metricTypes: MetricType[];
 };
 
 export const InterventionForm: FC<Props> = ({
     interventionCostCategories,
     interventionCostUnitTypes,
+    metricTypes,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -62,6 +66,18 @@ export const InterventionForm: FC<Props> = ({
                     errors={getErrors('impact_ref')}
                     labelString={formatMessage(MESSAGES.impactRefLabel)}
                     wrapperSx={{ flexGrow: 1 }}
+                />
+            </Stack>
+            <Stack spacing={1} direction="column" justifyContent="flex-start">
+                <Typography variant="h6">
+                    {formatMessage(MESSAGES.costSettings)}
+                </Typography>
+                <TargetPopulationForm
+                    targetPopulation={values.target_population}
+                    onUpdateField={setFieldValueAndState}
+                    getErrors={getErrors}
+                    metricTypes={metricTypes}
+                    interventionCode={values.code}
                 />
             </Stack>
             <Stack spacing={1} direction="column">

@@ -33,13 +33,18 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
+            "code",
             "impact_ref",
+            "target_population",
             "cost_breakdown_lines",
         ]
 
 
 class InterventionDetailWriteSerializer(serializers.ModelSerializer):
     cost_breakdown_lines = InterventionCostBreakdownLineSerializer(many=True, required=False)
+    target_population = serializers.ListField(
+        child=serializers.CharField(max_length=100), allow_empty=True, required=False
+    )
 
     class Meta:
         model = Intervention
@@ -47,6 +52,7 @@ class InterventionDetailWriteSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "impact_ref",
+            "target_population",
             "cost_breakdown_lines",
         ]
 

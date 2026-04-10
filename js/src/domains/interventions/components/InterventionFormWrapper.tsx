@@ -4,6 +4,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import { CardStyled } from '../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../messages';
+import { useGetMetricTypes } from '../../planning/hooks/useGetMetrics';
 import { InterventionDetails } from '../../planning/types/interventions';
 import { useGetInterventionCostBreakdownLineCategories } from '../hooks/useGetInterventionCostBreakdownLineCategories';
 import { useGetInterventionCostUnitTypes } from '../hooks/useGetInterventionCostUnitType';
@@ -24,6 +25,8 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
 
     const { data: interventionCostUnitTypes = [] } =
         useGetInterventionCostUnitTypes();
+
+    const { data: metricTypes = [] } = useGetMetricTypes();
 
     const { mutate: saveInterventionDetails } =
         useSaveInterventionDetails(interventionId);
@@ -65,6 +68,7 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
                 <InterventionForm
                     interventionCostCategories={interventionCostCategories}
                     interventionCostUnitTypes={interventionCostUnitTypes}
+                    metricTypes={metricTypes}
                 />
             </ExtendedFormikProvider>
         </CardStyled>

@@ -233,6 +233,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compareCustomize.costPerAvertedCaseTitle',
         defaultMessage: 'Cost per averted case',
     },
+    costSettings: {
+        id: 'iaso.snt_malaria.label.costSettings',
+        defaultMessage: 'Cost settings',
+    },
     create: {
         defaultMessage: 'Create',
         id: 'iaso.label.create',
@@ -547,6 +551,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.noLayer',
         defaultMessage: 'No layer',
     },
+    noTargetPopulation: {
+        id: 'iaso.snt_malaria.label.noTargetPopulation',
+        defaultMessage: 'No target population',
+    },
     noOrgUnitsSelected: {
         id: 'iaso.snt_malaria.label.noOrgUnitsSelected',
         defaultMessage:
@@ -610,6 +618,22 @@ export const MESSAGES = defineMessages({
     proportionChart: {
         id: 'iaso.snt_malaria.proportion-chart.title',
         defaultMessage: 'Cost per intervention',
+    },
+    pop_pwLabel: {
+        id: 'iaso.snt_malaria.label.pop_pw',
+        defaultMessage: 'Population Pregnant woman',
+    },
+    pop_0_5Label: {
+        id: 'iaso.snt_malaria.label.pop_0_5',
+        defaultMessage: 'Population 0-5 years',
+    },
+    pop_0_1Label: {
+        id: 'iaso.snt_malaria.label.pop_0_1',
+        defaultMessage: 'Population 0-1 years',
+    },
+    pop_1_2Label: {
+        id: 'iaso.snt_malaria.label.pop_1_2',
+        defaultMessage: 'Population 1-2 years',
     },
     remove: {
         id: 'iaso.snt_malaria.label.interventionList.remove',
@@ -744,6 +768,10 @@ export const MESSAGES = defineMessages({
     tableNoContent: {
         id: 'iaso.snt_malaria.label.interventionList.tableNoContent',
         defaultMessage: 'Intervention and their districts will appear here.',
+    },
+    targetPopulationLabel: {
+        id: 'iaso.snt_malaria.scenarioRule.targetPopulationLabel',
+        defaultMessage: 'Target population',
     },
     title: {
         id: 'iaso.snt_malaria.home.title',

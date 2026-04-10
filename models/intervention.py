@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Q
 
@@ -59,6 +60,7 @@ class Intervention(SoftDeletableModel):
             "for IDM, use 'type:option' from the intervention_package table (e.g. 'smc:pmc')."
         ),
     )
+    target_population = ArrayField(models.CharField(max_length=100), blank=True, default=list)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

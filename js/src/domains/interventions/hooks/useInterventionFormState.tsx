@@ -8,6 +8,7 @@ const defaultInterventionValues = {
     id: undefined,
     name: '',
     impact_ref: '',
+    target_population: [],
     cost_breakdown_lines: [],
 };
 
@@ -21,6 +22,7 @@ const useValidation = () => {
                     .required(formatMessage(MESSAGES.required))
                     .max(255, formatMessage(MESSAGES.maxLength, { max: 255 })),
                 impact_ref: Yup.string(),
+                target_population: Yup.array().of(Yup.string()),
                 cost_breakdown_lines: Yup.array().of(
                     Yup.object().shape({
                         name: Yup.string().required(
