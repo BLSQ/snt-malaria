@@ -83,7 +83,9 @@ export const InterventionForm: FC = () => {
                 <Button
                     variant="text"
                     sx={{ alignSelf: 'flex-start' }}
-                    onClick={() => addChildValue('cost_breakdown_lines', {})}
+                    onClick={() =>
+                        addChildValue('cost_breakdown_lines', { year: 2024 })
+                    }
                 >
                     {formatMessage(MESSAGES.addInterventionCostBreakdownLine)}
                 </Button>

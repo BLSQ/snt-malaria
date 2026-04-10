@@ -280,7 +280,7 @@ export const MESSAGES = defineMessages({
     },
     addInterventionCostBreakdownLine: {
         id: 'iaso.snt_malaria.settings.intervention.addInterventionCostBreakdownLine',
-        defaultMessage: 'Add cost',
+        defaultMessage: 'Add cost item',
     },
     detailedCosts: {
         id: 'iaso.snt_malaria.settings.intervention.detailedCosts',
@@ -728,6 +728,10 @@ export const MESSAGES = defineMessages({
     startYear: {
         id: 'iaso.snt_malaria.label.start_year',
         defaultMessage: 'Start year',
+    },
+    save: {
+        id: 'iaso.snt_malaria.label.save',
+        defaultMessage: 'Save changes',
     },
     submit: {
         id: 'iaso.snt_malaria.label.submit',

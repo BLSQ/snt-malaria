@@ -35,3 +35,38 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "impact_ref",
             "cost_breakdown_lines",
         ]
+
+
+class InterventionDetailWriteSerializer(serializers.ModelSerializer):
+    cost_breakdown_lines = InterventionCostBreakdownLineSerializer(many=True)
+
+    class Meta:
+        model = Intervention
+        fields = [
+            "id",
+            "name",
+            "impact_ref",
+            "cost_breakdown_lines",
+        ]
+
+    def create(self, validated_data):
+        cost_breakdown_lines_data = validated_data.pop("cost_breakdown_lines", [])
+        intervention = super().create(validated_data)
+        for line_data in cost_breakdown_lines_data:
+            InterventionCostBreakdownLineSerializer.create(
+                InterventionCostBreakdownLineSerializer(), validated_data={**line_data, "intervention": intervention}
+            )
+        return intervention
+
+    def update(self, instance, validated_data):
+        cost_breakdown_lines_data = validated_data.pop("cost_breakdown_lines", [])
+        intervention = super().update(instance, validated_data)
+
+        # Delete existing cost breakdown lines and create new ones based on the provided data
+        instance.cost_breakdown_lines.all().delete()
+        for line_data in cost_breakdown_lines_data:
+            InterventionCostBreakdownLineSerializer.create(
+                InterventionCostBreakdownLineSerializer(), validated_data={**line_data, "intervention": intervention}
+            )
+
+        return intervention
