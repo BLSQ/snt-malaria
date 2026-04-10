@@ -22,6 +22,7 @@ import { useComparisonData } from './hooks/useComparisonData';
 import { useGetImpactAgeGroups } from './hooks/useGetImpactAgeGroups';
 import { useGetImpactYearRange } from './hooks/useGetImpactYearRange';
 import { useMatchWarnings } from './hooks/useMatchWarnings';
+import { usePrefetchYearsImpact } from './hooks/usePrefetchYearsImpact';
 import { useScenarioInterventions } from './hooks/useScenarioInterventions';
 import { useScenarioSelections } from './hooks/useScenarioSelections';
 import { ScenarioDisplay, toNumericId } from './types';
@@ -184,6 +185,19 @@ export const CompareCustomize: FC = () => {
         yearTo,
         selectedAgeGroup,
     });
+
+    const scenarioNumericIds = useMemo(
+        () => displayScenarios.map(s => s.id),
+        [displayScenarios],
+    );
+    usePrefetchYearsImpact(
+        yearFrom,
+        yearTo,
+        effectiveYearRange,
+        scenarioNumericIds,
+        selectedAgeGroup,
+        isImpactLoading,
+    );
 
     const { orgUnitsNotFound, orgUnitsWithUnmatchedInterventions } = useMatchWarnings({
         impactsByScenarioId,
