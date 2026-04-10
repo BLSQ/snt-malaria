@@ -66,6 +66,8 @@ class Scenario(SoftDeletableModel):
         new_assignments = {}
         for rule in self.rules.order_by("-priority"):
             rule.refresh_assignments(user, new_assignments)
+        # Bump updated_at so the impact API cache (keyed on this timestamp) self-invalidates.
+        self.save()
 
 
 SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA = {
