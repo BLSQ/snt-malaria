@@ -2,7 +2,6 @@ import React from 'react';
 import {
     CompareOutlined,
     FormatListBulletedOutlined,
-    Settings,
     Layers,
     SettingsInputComponent,
 } from '@mui/icons-material';
@@ -31,12 +30,6 @@ export const menu = [
         key: 'snt_malaria/compare-customize',
         permissions: [],
         icon: (props: SvgIconProps) => <CompareOutlined {...props} />,
-    },
-    {
-        label: MESSAGES.settingsTitle,
-        key: 'snt_malaria/settings',
-        permissions: [SETTINGS_READ],
-        icon: (props: SvgIconProps) => <Settings {...props} />,
     },
     {
         label: MESSAGES.interventionsTitle,

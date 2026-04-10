@@ -1,6 +1,5 @@
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { ScenarioRule } from './scenarioRule';
-import { BudgetInterventionCostLine } from './budget';
 
 export type InterventionCategory = {
     id: number;
