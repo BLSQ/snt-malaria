@@ -5,6 +5,8 @@ import { CardStyled } from '../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../messages';
 import { InterventionDetails } from '../../planning/types/interventions';
+import { useGetInterventionCostBreakdownLineCategories } from '../hooks/useGetInterventionCostBreakdownLineCategories';
+import { useGetInterventionCostUnitTypes } from '../hooks/useGetInterventionCostUnitType';
 import { useGetInterventionDetails } from '../hooks/useGetInterventionDetails';
 import { useInterventionFormState } from '../hooks/useInterventionFormState';
 import { useSaveInterventionDetails } from '../hooks/useSaveInterventionDetails';
@@ -16,6 +18,13 @@ type Props = {
 
 export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
     const { formatMessage } = useSafeIntl();
+
+    const { data: interventionCostCategories = [] } =
+        useGetInterventionCostBreakdownLineCategories();
+
+    const { data: interventionCostUnitTypes = [] } =
+        useGetInterventionCostUnitTypes();
+
     const { mutate: saveInterventionDetails } =
         useSaveInterventionDetails(interventionId);
     const onSubmit = useCallback(
@@ -53,7 +62,10 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
             }
         >
             <ExtendedFormikProvider formik={formik}>
-                <InterventionForm />
+                <InterventionForm
+                    interventionCostCategories={interventionCostCategories}
+                    interventionCostUnitTypes={interventionCostUnitTypes}
+                />
             </ExtendedFormikProvider>
         </CardStyled>
     );

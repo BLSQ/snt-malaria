@@ -1,14 +1,12 @@
 import React, { FC } from 'react';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { Stack } from '@mui/material';
-import { IconButton } from 'bluesquare-components';
+import { DropdownOptions, IconButton } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { noOp } from 'Iaso/utils';
 import { MESSAGES } from '../../messages';
 import { InterventionCostBreakdownLine } from '../../planning/types/interventions';
-import { useGetInterventionCostBreakdownLineCategories } from '../hooks/useGetInterventionCostBreakdownLineCategories';
-import { useGetInterventionCostUnitTypes } from '../hooks/useGetInterventionCostUnitType';
 
 const styles = {
     inputGrow: {
@@ -18,6 +16,8 @@ const styles = {
 
 type Props = {
     costBreakdownLine: InterventionCostBreakdownLine;
+    interventionCostCategories: DropdownOptions<string>[];
+    interventionCostUnitTypes: DropdownOptions<string>[];
     onUpdateField: (field: string | null, value: any) => void;
     onRemove: () => void;
     getErrors: (keyValue: string) => string[];
@@ -28,14 +28,9 @@ export const InterventionCostBreakdownLineForm: FC<Props> = ({
     onUpdateField,
     onRemove = noOp,
     getErrors,
+    interventionCostCategories,
+    interventionCostUnitTypes,
 }) => {
-    // TODO Move this to a context maybe or parent level at least
-    const { data: interventionCostCategories = [] } =
-        useGetInterventionCostBreakdownLineCategories();
-
-    const { data: interventionCostUnitTypes = [] } =
-        useGetInterventionCostUnitTypes();
-
     return (
         <Stack spacing={1} direction="row">
             <InputComponent

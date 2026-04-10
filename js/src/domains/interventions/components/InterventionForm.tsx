@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { Button, Stack, Typography } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { DropdownOptions, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { useGetChildError } from '../../../hooks/useGetChildError';
@@ -9,7 +9,15 @@ import { MESSAGES } from '../../messages';
 import { InterventionDetails } from '../../planning/types/interventions';
 import { InterventionCostBreakdownLineForm } from './InterventionCostBreakdownLineForm';
 
-export const InterventionForm: FC = () => {
+type Props = {
+    interventionCostCategories: DropdownOptions<string>[];
+    interventionCostUnitTypes: DropdownOptions<string>[];
+};
+
+export const InterventionForm: FC<Props> = ({
+    interventionCostCategories,
+    interventionCostUnitTypes,
+}) => {
     const { formatMessage } = useSafeIntl();
 
     const {
@@ -73,6 +81,12 @@ export const InterventionForm: FC = () => {
                                     field,
                                     value,
                                 )
+                            }
+                            interventionCostCategories={
+                                interventionCostCategories
+                            }
+                            interventionCostUnitTypes={
+                                interventionCostUnitTypes
                             }
                             onRemove={() =>
                                 removeChildValue('cost_breakdown_lines', index)
