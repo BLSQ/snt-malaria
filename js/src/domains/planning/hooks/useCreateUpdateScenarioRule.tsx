@@ -91,12 +91,12 @@ export const useCreateUpdateScenarioRule = (scenarioId: number) => {
 
             return body.id
                 ? patchRequest(
-                      `/api/snt_malaria/scenario_rules/${body.id}/`,
-                      payload,
-                  )
+                    `/api/snt_malaria/scenario_rules/${body.id}/`,
+                    payload,
+                )
                 : postRequest(`/api/snt_malaria/scenario_rules/`, payload);
         },
-        invalidateQueryKey: ['interventionAssignments'],
+        invalidateQueryKey: ['interventionAssignments', 'impact'],
         options: {
             onSuccess: replaceQueryData,
         },

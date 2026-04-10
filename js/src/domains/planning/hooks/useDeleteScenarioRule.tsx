@@ -10,6 +10,7 @@ export const useDeleteScenarioRule = (scenarioId: number): UseMutationResult =>
         invalidateQueryKey: [
             `scenarioRules_${scenarioId}`,
             'interventionAssignments',
+            'impact',
         ],
         snackSuccessMessage: MESSAGES.deleteScenarioRuleSuccess,
         snackErrorMsg: MESSAGES.deleteScenarioRuleError,

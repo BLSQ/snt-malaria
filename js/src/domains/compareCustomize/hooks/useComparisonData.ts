@@ -60,11 +60,9 @@ export const useComparisonData = ({
     );
 
     const resolveData = <T,>(query: {
-        isFetching: boolean;
         isError: boolean;
         data: T | undefined;
-    }): T | undefined =>
-        query.isFetching || query.isError ? undefined : query.data;
+    }): T | undefined => (query.isError ? undefined : query.data);
 
     const baselineBudget = resolveData(baselineBudgetQuery);
     const comparisonBudget1 = resolveData(comparisonBudget1Query);
