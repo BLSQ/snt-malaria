@@ -18,15 +18,8 @@ const useValidation = () => {
         () =>
             Yup.object().shape({
                 name: Yup.string()
-                    .required(
-                        formatMessage({ id: 'intervention.validation.name' }),
-                    )
-                    .max(
-                        255,
-                        formatMessage({
-                            id: 'intervention.validation.nameMax',
-                        }),
-                    ),
+                    .required(formatMessage(MESSAGES.required))
+                    .max(255, formatMessage(MESSAGES.maxLength, { max: 255 })),
                 impact_ref: Yup.string(),
                 cost_breakdown_lines: Yup.array().of(
                     Yup.object().shape({

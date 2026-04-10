@@ -485,6 +485,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenarioRule.matchAllOrgUnits',
         defaultMessage: 'All org units',
     },
+    maxLength: {
+        id: 'iaso.snt_malaria.label.maxLength',
+        defaultMessage: 'Maximum length is {max} characters',
+    },
     maxYear: {
         id: 'iaso.snt_malaria.scenario.errors.maxYear',
         defaultMessage: 'Year must be at most {year}',
