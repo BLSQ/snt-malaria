@@ -216,5 +216,6 @@
     "iaso.snt_malaria.label.maxLength": "Longueur maximum de {max} caractères",
     "iaso.snt_malaria.label.costItems": "Éléments de coût",
     "iaso.snt_malaria.label.impactRef": "Référence du fournisseur d'impact",
-    "iaso.snt_malaria.label.save": "Enregistrer les modifications"
+    "iaso.snt_malaria.label.save": "Enregistrer les modifications",
+    "iaso.snt_malaria.label.targetPopulationLabel": "Population cible"
 }

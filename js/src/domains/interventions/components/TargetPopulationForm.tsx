@@ -1,6 +1,5 @@
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
 import { Stack } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { MESSAGES } from '../../messages';
 import { MetricType } from '../../planning/types/metrics';
@@ -25,69 +24,50 @@ export const TargetPopulationForm: FC<Props> = ({
     metricTypes,
     interventionCode,
 }) => {
-    const { formatMessage } = useSafeIntl();
-
     const popMetricOptions = useMemo(
-        () => [
-            {
-                label: formatMessage(MESSAGES.noTargetPopulation),
-                value: '',
-            },
-            ...metricTypes.map(metric => ({
+        () =>
+            metricTypes.map(metric => ({
                 label: metric.name,
                 value: metric.code,
             })),
-        ],
-        [metricTypes, formatMessage],
+        [metricTypes],
     );
 
-    const multipleTargetSettings = useMemo(() => {
+    const inputSettings = useMemo(() => {
         if (!interventionCode) return [];
-        return interventionPopulationSettings[interventionCode] || [];
+        return interventionPopulationSettings[interventionCode] || [''];
     }, [interventionCode]);
 
-    const [settingsValue, setSettingsValue] = useState<{
-        [key: string]: string;
-    }>({});
+    const handleUpdateField = useCallback(
+        (value: string, index: number) => {
+            onUpdateField('target_population', [
+                ...targetPopulation.slice(0, index),
+                value,
+                ...targetPopulation.slice(index + 1),
+            ]);
+        },
+        [onUpdateField, targetPopulation],
+    );
 
-    const handleUpdateField = (pop_prop: string, value: string) => {
-        const newValue = { ...settingsValue, [pop_prop]: value };
-        setSettingsValue(newValue);
-        onUpdateField(
-            'target_population',
-            multipleTargetSettings.map((setting: string) => newValue[setting]),
-        );
-    };
+    const getLabel = (popProp: string) =>
+        popProp
+            ? MESSAGES[`${popProp}Label` as keyof typeof MESSAGES]
+            : MESSAGES.targetPopulationLabel;
 
-    return multipleTargetSettings.length > 0 ? (
+    return (
         <Stack spacing={2}>
-            {multipleTargetSettings.map((popProp, index) => (
+            {inputSettings.map((popProp, index) => (
                 <InputComponent
                     key={popProp}
                     keyValue={popProp}
                     type="select"
-                    options={metricTypes.map(metric => ({
-                        label: metric.name,
-                        value: metric.code,
-                    }))}
-                    value={targetPopulation[index]}
-                    onChange={(key, value) => handleUpdateField(popProp, value)}
-                    label={MESSAGES[`${popProp}Label`]}
+                    options={popMetricOptions}
+                    value={targetPopulation[index] || ''}
+                    onChange={(_, value) => handleUpdateField(value, index)}
+                    label={getLabel(popProp)}
                     errors={getErrors(popProp)}
                 />
             ))}
-        </Stack>
-    ) : (
-        <Stack spacing={2}>
-            <InputComponent
-                keyValue="target_population"
-                type="select"
-                options={popMetricOptions}
-                value={targetPopulation}
-                onChange={(key, value) => onUpdateField(key, [value])}
-                label={formatMessage(MESSAGES.targetPopulationLabel)}
-                errors={getErrors('target_population')}
-            />
         </Stack>
     );
 };

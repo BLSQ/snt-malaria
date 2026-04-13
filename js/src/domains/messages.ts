@@ -551,10 +551,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.noLayer',
         defaultMessage: 'No layer',
     },
-    noTargetPopulation: {
-        id: 'iaso.snt_malaria.label.noTargetPopulation',
-        defaultMessage: 'No target population',
-    },
     noOrgUnitsSelected: {
         id: 'iaso.snt_malaria.label.noOrgUnitsSelected',
         defaultMessage:
@@ -770,7 +766,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Intervention and their districts will appear here.',
     },
     targetPopulationLabel: {
-        id: 'iaso.snt_malaria.scenarioRule.targetPopulationLabel',
+        id: 'iaso.snt_malaria.label.targetPopulationLabel',
         defaultMessage: 'Target population',
     },
     title: {

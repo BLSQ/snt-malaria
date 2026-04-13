@@ -17,6 +17,15 @@ type Props = {
     interventionId?: number;
 };
 
+const defaultTargetPopulationSettings: Record<string, string[]> = {
+    iptp: ['pop_pw'],
+    itn_campaign: ['pop_total'],
+    itn_routine: ['pop_0_5', 'pop_pw'],
+    pmc: ['pop_0_1', 'pop_1_2'],
+    smc: ['pop_0_5'],
+    vacc: ['pop_vaccine_5_36_months'],
+};
+
 export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -45,10 +54,27 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
     });
 
     useEffect(() => {
-        if (interventionDetails) {
-            formik.setValues(interventionDetails);
+        if (!interventionDetails) {
+            return;
         }
-    }, [interventionDetails]); // Only run when interventionDetails changes
+
+        if (
+            !interventionDetails.target_population ||
+            interventionDetails.target_population.length === 0
+        ) {
+            let defaultPop = defaultTargetPopulationSettings[
+                interventionDetails.code
+            ] || [''];
+
+            defaultPop = defaultPop.map(pop =>
+                metricTypes.find(metric => metric.code === pop) ? pop : '',
+            );
+
+            interventionDetails.target_population = defaultPop; // Set default target population if not already set
+        }
+
+        formik.setValues(interventionDetails);
+    }, [interventionDetails, metricTypes]); // Only run when interventionDetails or metricTypes changes
 
     return (
         <CardStyled
