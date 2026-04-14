@@ -15,12 +15,14 @@ type Props = {
     interventionCostCategories: DropdownOptions<string>[];
     interventionCostUnitTypes: DropdownOptions<string>[];
     metricTypes: MetricType[];
+    currency?: string;
 };
 
 export const InterventionForm: FC<Props> = ({
     interventionCostCategories,
     interventionCostUnitTypes,
     metricTypes,
+    currency = 'USD',
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -90,6 +92,7 @@ export const InterventionForm: FC<Props> = ({
                         <InterventionCostBreakdownLineForm
                             key={`cost-details-row-${line.id}`}
                             costBreakdownLine={line}
+                            currency={currency}
                             onUpdateField={(field, value) =>
                                 setChildFieldValueAndState(
                                     'cost_breakdown_lines',

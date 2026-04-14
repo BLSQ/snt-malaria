@@ -6,6 +6,7 @@ import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikConte
 import { MESSAGES } from '../../messages';
 import { useGetMetricTypes } from '../../planning/hooks/useGetMetrics';
 import { InterventionDetails } from '../../planning/types/interventions';
+import { useGetBudgetSettings } from '../hooks/useGetBudgetSettings';
 import { useGetInterventionCostBreakdownLineCategories } from '../hooks/useGetInterventionCostBreakdownLineCategories';
 import { useGetInterventionCostUnitTypes } from '../hooks/useGetInterventionCostUnitType';
 import { useGetInterventionDetails } from '../hooks/useGetInterventionDetails';
@@ -36,6 +37,7 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
         useGetInterventionCostUnitTypes();
 
     const { data: metricTypes = [] } = useGetMetricTypes();
+    const { data: budgetSettings } = useGetBudgetSettings();
 
     const { mutate: saveInterventionDetails } =
         useSaveInterventionDetails(interventionId);
@@ -95,6 +97,7 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
                     interventionCostCategories={interventionCostCategories}
                     interventionCostUnitTypes={interventionCostUnitTypes}
                     metricTypes={metricTypes}
+                    currency={budgetSettings?.currency}
                 />
             </ExtendedFormikProvider>
         </CardStyled>

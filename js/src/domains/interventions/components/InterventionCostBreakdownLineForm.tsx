@@ -14,10 +14,17 @@ const styles = {
     },
 } satisfies SxStyles;
 
+const currencySymbols: Record<string, string> = {
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+};
+
 type Props = {
     costBreakdownLine: InterventionCostBreakdownLine;
     interventionCostCategories: DropdownOptions<string>[];
     interventionCostUnitTypes: DropdownOptions<string>[];
+    currency?: string;
     onUpdateField: (field: string | null, value: any) => void;
     onRemove: () => void;
     getErrors: (keyValue: string) => string[];
@@ -25,12 +32,17 @@ type Props = {
 
 export const InterventionCostBreakdownLineForm: FC<Props> = ({
     costBreakdownLine = {} as InterventionCostBreakdownLine,
+    interventionCostCategories,
+    interventionCostUnitTypes,
+    currency,
     onUpdateField,
     onRemove = noOp,
     getErrors,
-    interventionCostCategories,
-    interventionCostUnitTypes,
 }) => {
+    const currencySymbol = currency
+        ? currencySymbols[currency] || `${currency} `
+        : '';
+
     return (
         <Stack spacing={1} direction="row">
             <InputComponent
@@ -66,7 +78,10 @@ export const InterventionCostBreakdownLineForm: FC<Props> = ({
                 label={MESSAGES.detailedCostUnitLabel}
                 value={costBreakdownLine.unit_cost}
                 errors={getErrors('unit_cost')}
-                numberInputOptions={{ decimalScale: 2 }}
+                numberInputOptions={{
+                    decimalScale: 2,
+                    prefix: currencySymbol,
+                }}
                 wrapperSx={styles.inputGrow}
             />
 
