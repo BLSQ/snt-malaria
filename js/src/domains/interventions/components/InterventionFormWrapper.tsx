@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect } from 'react';
-import { Button, Stack } from '@mui/material';
+import { Button, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { CardStyled } from '../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
@@ -82,7 +82,9 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
         <CardStyled
             header={
                 <Stack direction="row" justifyContent="space-between">
-                    {interventionDetails?.name}
+                    <Typography variant="h6">
+                        {interventionDetails?.name}
+                    </Typography>
                     <Button
                         onClick={() => formik.handleSubmit()}
                         variant="outlined"

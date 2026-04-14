@@ -70,8 +70,8 @@ export const InterventionForm: FC<Props> = ({
                     wrapperSx={{ flexGrow: 1 }}
                 />
             </Stack>
-            <Stack spacing={1} direction="column" justifyContent="flex-start">
-                <Typography variant="h6">
+            <Stack spacing={2} direction="column" justifyContent="flex-start">
+                <Typography variant="subtitle1" fontWeight="medium">
                     {formatMessage(MESSAGES.costSettings)}
                 </Typography>
                 <TargetPopulationForm
@@ -82,8 +82,8 @@ export const InterventionForm: FC<Props> = ({
                     interventionCode={values.code}
                 />
             </Stack>
-            <Stack spacing={1} direction="column">
-                <Typography variant="h6">
+            <Stack spacing={2} direction="column">
+                <Typography variant="subtitle1" fontWeight="medium">
                     {formatMessage(MESSAGES.costItems)}
                 </Typography>
                 {values.cost_breakdown_lines &&
