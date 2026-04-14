@@ -40,6 +40,8 @@ class ImpactViewSet(viewsets.ViewSet):
     http_method_names = ["get", "options"]
 
     def list(self, request):
+        provider = _get_provider(request)
+
         serializer = ImpactQuerySerializer(data=request.query_params, context={"request": request})
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -56,7 +58,6 @@ class ImpactViewSet(viewsets.ViewSet):
             if cached is not None:
                 return Response(cached)
 
-        provider = _get_provider(request)
         service = ImpactService(provider)
         result = service.get_scenario_impact(
             scenario=scenario,
