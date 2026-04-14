@@ -49,6 +49,4 @@ def _scenario_stamp(scenario_id) -> str | None:
 
 def _build_key(scenario_id, age_group, year_from, year_to) -> str | None:
     stamp = _scenario_stamp(scenario_id)
-    if stamp is None:
-        return None
-    return f"{_KEY_PREFIX}:{scenario_id}:{stamp}:{age_group}:{year_from}:{year_to}"
+    return f"{_KEY_PREFIX}:{scenario_id}:{stamp}:{age_group}:{year_from}:{year_to}" if stamp else None
