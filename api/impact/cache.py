@@ -22,29 +22,23 @@ _KEY_PREFIX = "snt_impact"
 
 def get_ttl(account) -> int:
     row = ImpactProviderConfig.objects.filter(account=account).values("cache_ttl_seconds").first()
-    if row:
-        return row["cache_ttl_seconds"]
-    return ImpactProviderConfig.DEFAULT_CACHE_TTL_SECONDS
+    return row["cache_ttl_seconds"] if row else ImpactProviderConfig.DEFAULT_CACHE_TTL_SECONDS
 
 
 def get(scenario_id, age_group, year_from, year_to) -> dict | None:
     key = _build_key(scenario_id, age_group, year_from, year_to)
-    if key is None:
-        return None
-    return cache.get(key)
+    return cache.get(key) if key else None
 
 
 def set(scenario_id, age_group, year_from, year_to, data, ttl) -> None:
     key = _build_key(scenario_id, age_group, year_from, year_to)
-    if key is not None:
+    if key:
         cache.set(key, data, ttl)
 
 
 def _scenario_stamp(scenario_id) -> str | None:
     row = Scenario.objects.filter(pk=scenario_id).values_list("updated_at", flat=True).first()
-    if row is None:
-        return None
-    return str(int(row.timestamp()))
+    return str(int(row.timestamp())) if row else None
 
 
 def _build_key(scenario_id, age_group, year_from, year_to) -> str | None:
