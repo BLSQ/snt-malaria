@@ -115,26 +115,20 @@ class ImpactQuerySerializerTestCase(TestCase):
 
 class ScenarioImpactSerializerTestCase(TestCase):
     def test_full_response_structure(self):
-        """All fields including CI bounds, averted_cases, cost, and cost_per_averted_case are serialized."""
+        """All fields including CI bounds are serialized."""
         metrics = ScenarioImpactMetrics(
             scenario_id=42,
             number_cases=_metric(100.0, 90.0, 110.0),
             number_severe_cases=_metric(10.0, 8.0, 12.0),
             prevalence_rate=_metric(0.05, 0.04, 0.06),
-            averted_cases=_metric(20.0, 15.0, 25.0),
             direct_deaths=_metric(2.0, 1.5, 2.5),
-            cost=5000.0,
-            cost_per_averted_case=_metric(250.0, 200.0, 333.3),
             by_year=[
                 YearImpactMetrics(
                     year=2025,
                     number_cases=_metric(50.0, 45.0, 55.0),
                     number_severe_cases=_metric(5.0, 4.0, 6.0),
                     prevalence_rate=_metric(0.06, 0.05, 0.07),
-                    averted_cases=_metric(10.0, 7.0, 13.0),
                     direct_deaths=_metric(1.0, 0.8, 1.2),
-                    cost=2500.0,
-                    cost_per_averted_case=_metric(250.0, 192.3, 357.1),
                     org_units=[
                         OrgUnitImpactMetrics(
                             org_unit_id=1,
@@ -142,10 +136,7 @@ class ScenarioImpactSerializerTestCase(TestCase):
                             number_cases=_metric(50.0, 45.0, 55.0),
                             number_severe_cases=_metric(5.0, 4.0, 6.0),
                             prevalence_rate=_metric(0.06, 0.05, 0.07),
-                            averted_cases=_metric(10.0, 7.0, 13.0),
                             direct_deaths=_metric(1.0, 0.8, 1.2),
-                            cost=2500.0,
-                            cost_per_averted_case=_metric(250.0, 192.3, 357.1),
                         ),
                     ],
                 ),
@@ -157,31 +148,23 @@ class ScenarioImpactSerializerTestCase(TestCase):
                     number_cases=_metric(100.0, 90.0, 110.0),
                     number_severe_cases=_metric(10.0, 8.0, 12.0),
                     prevalence_rate=_metric(0.05, 0.04, 0.06),
-                    averted_cases=_metric(20.0, 15.0, 25.0),
                     direct_deaths=_metric(2.0, 1.5, 2.5),
-                    cost=5000.0,
-                    cost_per_averted_case=_metric(250.0, 200.0, 333.3),
                 ),
             ],
         )
         data = ScenarioImpactSerializer(metrics).data
 
         self.assertEqual(data["scenario_id"], 42)
-        self.assertEqual(data["cost"], 5000.0)
 
         self._assert_metric(data["number_cases"], 100.0, 90.0, 110.0)
         self._assert_metric(data["number_severe_cases"], 10.0, 8.0, 12.0)
         self._assert_metric(data["prevalence_rate"], 0.05, 0.04, 0.06)
-        self._assert_metric(data["averted_cases"], 20.0, 15.0, 25.0)
         self._assert_metric(data["direct_deaths"], 2.0, 1.5, 2.5)
-        self._assert_metric(data["cost_per_averted_case"], 250.0, 200.0, 333.3)
 
         self.assertEqual(len(data["by_year"]), 1)
         year = data["by_year"][0]
         self.assertEqual(year["year"], 2025)
-        self.assertEqual(year["cost"], 2500.0)
         self._assert_metric(year["number_cases"], 50.0, 45.0, 55.0)
-        self._assert_metric(year["averted_cases"], 10.0, 7.0, 13.0)
 
         self.assertEqual(len(year["org_units"]), 1)
         ou_year = year["org_units"][0]
@@ -194,7 +177,6 @@ class ScenarioImpactSerializerTestCase(TestCase):
         self.assertEqual(ou["org_unit_id"], 1)
         self.assertEqual(ou["org_unit_name"], "OU1")
         self._assert_metric(ou["number_cases"], 100.0, 90.0, 110.0)
-        self._assert_metric(ou["averted_cases"], 20.0, 15.0, 25.0)
 
     def test_empty_results(self):
         """No impact data matched: empty lists and all-None metrics are serialized cleanly."""
@@ -202,12 +184,9 @@ class ScenarioImpactSerializerTestCase(TestCase):
         data = ScenarioImpactSerializer(metrics).data
 
         self.assertEqual(data["scenario_id"], 1)
-        self.assertIsNone(data["cost"])
         self.assertIsNone(data["number_cases"]["value"])
         self.assertIsNone(data["number_cases"]["lower"])
         self.assertIsNone(data["number_cases"]["upper"])
-        self.assertIsNone(data["averted_cases"]["value"])
-        self.assertIsNone(data["cost_per_averted_case"]["value"])
         self.assertEqual(data["by_year"], [])
         self.assertEqual(data["org_units"], [])
 
