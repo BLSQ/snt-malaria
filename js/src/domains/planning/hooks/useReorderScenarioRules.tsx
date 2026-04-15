@@ -17,5 +17,6 @@ export const useReorderScenarioRules = (
         invalidateQueryKey: [
             `scenarioRules_${scenarioId}`,
             'interventionAssignments',
+            'impact',
         ],
     });

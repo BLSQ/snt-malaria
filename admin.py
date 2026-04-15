@@ -167,6 +167,7 @@ class ImpactProviderConfigAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {"fields": ("account", "provider_key")}),
         ("Provider configuration", {"fields": ("config", "secret")}),
+        ("Caching", {"fields": ("cache_ttl_seconds",)}),
     )
 
 

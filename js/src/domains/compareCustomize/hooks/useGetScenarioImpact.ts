@@ -29,11 +29,13 @@ export const useGetScenarioImpact = (
         queryFn: () =>
             getRequest(`/api/snt_malaria/impact/?${params.toString()}`),
         options: {
+            staleTime: Infinity,
             cacheTime: Infinity,
             enabled:
                 (enabledOverride ?? true) &&
                 Boolean(scenarioId) &&
                 Boolean(ageGroup),
+            keepPreviousData: true,
             retry: false,
             refetchOnWindowFocus: false,
         },
