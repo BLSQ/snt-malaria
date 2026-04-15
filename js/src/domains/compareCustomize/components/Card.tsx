@@ -1,11 +1,13 @@
 import React, { FC, ReactNode } from 'react';
-import { Box, Typography } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { Box, Tooltip, Typography } from '@mui/material';
 import { blueGrey } from '@mui/material/colors';
 import { LoadingSpinner } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 
 type Props = {
     title: string;
+    tooltip?: string;
     icon?: React.ElementType;
     iconSx?: Record<string, unknown>;
     actions?: ReactNode;
@@ -71,6 +73,7 @@ const styles = {
 
 export const Card: FC<Props> = ({
     title,
+    tooltip,
     icon,
     iconSx,
     actions,
@@ -91,6 +94,19 @@ export const Card: FC<Props> = ({
                     </Box>
                 )}
                 <Typography sx={styles.title}>{title}</Typography>
+                {tooltip && (
+                    <Tooltip title={tooltip} arrow>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <HelpOutlineIcon
+                                sx={{
+                                    color: blueGrey[300],
+                                    fontSize: '1rem',
+                                    cursor: 'help',
+                                }}
+                            />
+                        </Box>
+                    </Tooltip>
+                )}
             </Box>
             {actions}
         </Box>

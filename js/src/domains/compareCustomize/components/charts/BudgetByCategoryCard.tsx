@@ -19,6 +19,7 @@ import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { getInterventionGroupShades } from '../../utils/colors';
 import { Card } from '../Card';
 import { ChartEmptyState } from './ChartEmptyState';
+import { ChartTooltip } from './ChartTooltip';
 
 type BudgetCategoryDatum = {
     name: string;
@@ -63,7 +64,10 @@ const getCategoryTotals = (
     budget.results.forEach(result => {
         result.interventions?.forEach(intervention => {
             intervention.cost_breakdown?.forEach(line => {
-                totals.set(line.category, (totals.get(line.category) ?? 0) + line.cost);
+                totals.set(
+                    line.category,
+                    (totals.get(line.category) ?? 0) + line.cost,
+                );
             });
         });
     });
@@ -72,6 +76,30 @@ const getCategoryTotals = (
         .map(([name, value]) => ({ name, value }))
         .filter(entry => entry.value > 0)
         .sort((a, b) => b.value - a.value);
+};
+
+type BudgetTooltipProps = {
+    active?: boolean;
+    payload?: { name: string; value: number; payload: { fill?: string } }[];
+    scenarioLabel: string;
+};
+
+const BudgetTooltip: FC<BudgetTooltipProps> = ({
+    active,
+    payload,
+    scenarioLabel,
+}) => {
+    if (!active || !payload?.length) return null;
+    return (
+        <ChartTooltip
+            title={scenarioLabel}
+            rows={payload.map(entry => ({
+                label: entry.name,
+                value: formatBigNumber(entry.value),
+                color: entry.payload?.fill,
+            }))}
+        />
+    );
 };
 
 export const BudgetByCategoryCard: FC = () => {
@@ -105,14 +133,20 @@ export const BudgetByCategoryCard: FC = () => {
                 {chartData.map(({ scenario, data, colors }) => (
                     <Box key={scenario.id} sx={styles.chartItem}>
                         {data.length === 0 ? (
-                            <ChartEmptyState message={formatMessage(MESSAGES.noBudgetData)} />
+                            <ChartEmptyState
+                                message={formatMessage(MESSAGES.noBudgetData)}
+                            />
                         ) : (
                             <Box sx={styles.chartBody}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Tooltip
-                                            formatter={(value: number) =>
-                                                formatBigNumber(value)
+                                            content={
+                                                <BudgetTooltip
+                                                    scenarioLabel={
+                                                        scenario.label
+                                                    }
+                                                />
                                             }
                                         />
                                         <Pie
@@ -140,7 +174,10 @@ export const BudgetByCategoryCard: FC = () => {
                                                     renderValue={entry => (
                                                         <Typography
                                                             variant="body2"
-                                                            sx={{ fontSize: '0.75rem' }}
+                                                            sx={{
+                                                                fontSize:
+                                                                    '0.75rem',
+                                                            }}
                                                         >
                                                             {entry.value}
                                                         </Typography>
