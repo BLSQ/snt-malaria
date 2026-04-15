@@ -28,10 +28,7 @@ export type OrgUnitImpactMetrics = {
     number_cases: ImpactMetricWithConfidenceInterval;
     number_severe_cases: ImpactMetricWithConfidenceInterval;
     prevalence_rate: ImpactMetricWithConfidenceInterval;
-    averted_cases: ImpactMetricWithConfidenceInterval;
     direct_deaths: ImpactMetricWithConfidenceInterval;
-    cost?: number | null;
-    cost_per_averted_case: ImpactMetricWithConfidenceInterval;
 };
 
 export type YearImpactMetrics = {
@@ -39,10 +36,7 @@ export type YearImpactMetrics = {
     number_cases: ImpactMetricWithConfidenceInterval;
     number_severe_cases: ImpactMetricWithConfidenceInterval;
     prevalence_rate: ImpactMetricWithConfidenceInterval;
-    averted_cases: ImpactMetricWithConfidenceInterval;
     direct_deaths: ImpactMetricWithConfidenceInterval;
-    cost: number | null;
-    cost_per_averted_case: ImpactMetricWithConfidenceInterval;
     org_units: OrgUnitImpactMetrics[];
 };
 
@@ -51,10 +45,7 @@ export type ScenarioImpactMetrics = {
     number_cases: ImpactMetricWithConfidenceInterval;
     number_severe_cases: ImpactMetricWithConfidenceInterval;
     prevalence_rate: ImpactMetricWithConfidenceInterval;
-    averted_cases: ImpactMetricWithConfidenceInterval;
     direct_deaths: ImpactMetricWithConfidenceInterval;
-    cost: number | null;
-    cost_per_averted_case: ImpactMetricWithConfidenceInterval;
     by_year: YearImpactMetrics[];
     org_units: OrgUnitImpactMetrics[];
     org_units_not_found: OrgUnitRef[];

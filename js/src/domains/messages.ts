@@ -237,6 +237,33 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.costSettings',
         defaultMessage: 'Cost settings',
     },
+    costPerAvertedCaseTooltip: {
+        id: 'iaso.snt_malaria.compareCustomize.costPerAvertedCaseTooltip',
+        defaultMessage:
+            'The additional cost (or savings) per malaria case prevented, compared to the baseline scenario.',
+    },
+    costPerAvertedCaseLabel: {
+        id: 'iaso.snt_malaria.compareCustomize.costPerAvertedCaseLabel',
+        defaultMessage: 'Cost per averted case',
+    },
+    relativeCostLabel: {
+        id: 'iaso.snt_malaria.compareCustomize.relativeCostLabel',
+        defaultMessage: 'Relative cost',
+    },
+    avertedCasesLabel: {
+        id: 'iaso.snt_malaria.compareCustomize.avertedCasesLabel',
+        defaultMessage: 'Cases averted',
+    },
+    costPerAvertedCaseSelectComparison: {
+        id: 'iaso.snt_malaria.compareCustomize.costPerAvertedCaseSelectComparison',
+        defaultMessage:
+            'Select at least two scenarios to compare cost per averted case',
+    },
+    costPerAvertedCaseNoCasesAverted: {
+        id: 'iaso.snt_malaria.compareCustomize.costPerAvertedCaseNoCasesAverted',
+        defaultMessage:
+            'The compared scenarios do not avert cases relative to the selected baseline.',
+    },
     create: {
         defaultMessage: 'Create',
         id: 'iaso.label.create',

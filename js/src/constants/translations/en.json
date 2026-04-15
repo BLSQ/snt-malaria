@@ -200,6 +200,12 @@
     "iaso.snt_malaria.impact.deaths": "Deaths",
     "iaso.snt_malaria.compareCustomize.noImpactData": "No impact data available",
     "iaso.snt_malaria.compareCustomize.noBudgetData": "No budget data available",
+    "iaso.snt_malaria.compareCustomize.costPerAvertedCaseTooltip": "The additional cost (or savings) per malaria case prevented, compared to the baseline scenario.",
+    "iaso.snt_malaria.compareCustomize.costPerAvertedCaseLabel": "Cost per averted case",
+    "iaso.snt_malaria.compareCustomize.relativeCostLabel": "Relative cost",
+    "iaso.snt_malaria.compareCustomize.avertedCasesLabel": "Cases averted",
+    "iaso.snt_malaria.compareCustomize.costPerAvertedCaseSelectComparison": "Select at least two scenarios to compare cost per averted case",
+    "iaso.snt_malaria.compareCustomize.costPerAvertedCaseNoCasesAverted": "The compared scenarios do not avert cases relative to the selected baseline.",
     "iaso.snt_malaria.compareCustomize.scenarioLabelWithIndex": "Scenario {index}",
     "iaso.snt_malaria.label.mapView": "Map",
     "iaso.snt_malaria.label.listView": "List",
@@ -220,3 +226,4 @@
     "iaso.snt_malaria.label.costSettings": "Cost settings",
     "iaso.snt_malaria.label.targetPopulationLabel": "Target population"
 }
+

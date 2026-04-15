@@ -1,4 +1,6 @@
+import { BudgetCalculationResponse } from '../../planning/types/budget';
 import { ScenarioImpactMetrics, ScenarioDisplay } from '../types';
+import { getCumulativeCosts } from './impactCalculations';
 
 // --- Yearly prevalence chart ---
 
@@ -53,41 +55,112 @@ export const buildPrevalenceChartData = (
 export type CostPerAvertedCaseDatum = {
     name: string;
     value: number;
-    error?: [number, number];
+    relativeCost: number;
+    avertedCases: number;
+    errorLower: number;
+    errorUpper: number;
+    errorBounds: [number, number];
     color: string;
 };
 
+const computeCostPerAverted = (
+    costDiff: number,
+    baselineCases: number | null | undefined,
+    scenarioCases: number | null | undefined,
+): { value: number; averted: number } | undefined => {
+    if (baselineCases == null || scenarioCases == null) return undefined;
+    const averted = baselineCases - scenarioCases;
+    // Cases are absolute counts, so < 1 means no meaningful case was averted.
+    // This also prevents near-zero divisions producing huge values.
+    if (averted < 1) return undefined;
+    return { value: costDiff / averted, averted };
+};
+
+export type CostPerAvertedCaseResult = {
+    data: CostPerAvertedCaseDatum[];
+    /** True when at least one scenario was excluded because it does not
+     *  meaningfully avert cases compared to the baseline. */
+    hasInsufficientAverted: boolean;
+};
+
 /**
- * Extracts cost-per-averted-case bar chart data from impact results.
- * Scenarios with no data, zero, or negative cost are excluded.
+ * Computes comparative cost-per-averted-case for each non-baseline scenario.
+ *
+ * averted_cases       = baseline.cases - scenario.cases
+ * cost_per_averted    = (scenario.cost - baseline.cost) / averted_cases
+ *
+ * Only scenarios that meaningfully avert cases (≥ 1) are included.
+ *
+ * Only uncomplicated cases (excluding severe) are used for averted cases.
+ * Confidence intervals use the worst/best case averted bounds
+ * (baseline.lower − scenario.upper and baseline.upper − scenario.lower).
+ * The baseline itself is never shown (it has no comparison target).
  */
-export const buildCostChartData = (
+export const buildCostPerAvertedCaseChartData = (
     scenarios: ScenarioDisplay[],
     impactsByScenarioId: Map<number, ScenarioImpactMetrics | undefined>,
-): CostPerAvertedCaseDatum[] =>
-    scenarios
+    budgetsByScenarioId: Map<number, BudgetCalculationResponse | undefined>,
+    baselineScenarioId: number | undefined,
+): CostPerAvertedCaseResult => {
+    const empty: CostPerAvertedCaseResult = {
+        data: [],
+        hasInsufficientAverted: false,
+    };
+    if (baselineScenarioId === undefined) return empty;
+
+    const baselineImpact = impactsByScenarioId.get(baselineScenarioId);
+    const b = baselineImpact?.number_cases;
+    const baselineCost = getCumulativeCosts(
+        budgetsByScenarioId.get(baselineScenarioId),
+    );
+
+    if (b?.value == null || baselineCost == null) return empty;
+
+    let hasInsufficientAverted = false;
+
+    const data = scenarios
+        .filter(s => s.id !== baselineScenarioId)
         .map((scenario): CostPerAvertedCaseDatum | null => {
             const impact = impactsByScenarioId.get(scenario.id);
-            const metric = impact?.cost_per_averted_case;
-            const costValue = metric?.value;
+            const s = impact?.number_cases;
+            const cost = getCumulativeCosts(
+                budgetsByScenarioId.get(scenario.id),
+            );
+            if (cost == null) return null;
 
-            if (!costValue || costValue < 0) {
+            const costDiff = cost - baselineCost;
+            const central = computeCostPerAverted(costDiff, b.value, s?.value);
+            if (central === undefined) {
+                if (s?.value != null) {
+                    hasInsufficientAverted = true;
+                }
                 return null;
             }
 
-            const datum: CostPerAvertedCaseDatum = {
-                name: scenario.label,
-                value: costValue,
-                color: scenario.color,
-            };
+            const bound1 = computeCostPerAverted(costDiff, b.lower, s?.upper);
+            const bound2 = computeCostPerAverted(costDiff, b.upper, s?.lower);
 
-            if (metric.lower != null && metric.upper != null) {
-                datum.error = [
-                    costValue - metric.lower,
-                    metric.upper - costValue,
-                ];
+            let errorLower = 0;
+            let errorUpper = 0;
+            if (bound1 !== undefined && bound2 !== undefined) {
+                const ciLower = Math.min(bound1.value, bound2.value);
+                const ciUpper = Math.max(bound1.value, bound2.value);
+                errorLower = central.value - ciLower;
+                errorUpper = ciUpper - central.value;
             }
 
-            return datum;
+            return {
+                name: scenario.label,
+                value: central.value,
+                relativeCost: costDiff,
+                avertedCases: central.averted,
+                errorLower,
+                errorUpper,
+                errorBounds: [errorLower, errorUpper],
+                color: scenario.color,
+            };
         })
         .filter((d): d is CostPerAvertedCaseDatum => d !== null);
+
+    return { data, hasInsufficientAverted };
+};
