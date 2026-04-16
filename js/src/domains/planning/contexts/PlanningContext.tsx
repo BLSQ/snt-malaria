@@ -19,7 +19,8 @@ type PlanningContextType = {
     scenarioId: number;
     scenario?: Scenario;
     displayOrgUnitId?: number;
-    canEditScenario: boolean;
+    canEditScenario: boolean; // This is oriented user, does he have the necessary permissions to edit the scenario
+    isScenarioEditable: boolean; // This is oriented scenario, is it locked or not, if it's locked it can't be edited even if the user has permissions
     isEditing: boolean;
     orgUnits: OrgUnit[];
     metricTypeCategories: MetricTypeCategory[];
@@ -34,6 +35,7 @@ const PlanningContext = createContext<PlanningContextType>({
     scenario: undefined,
     displayOrgUnitId: undefined,
     canEditScenario: false,
+    isScenarioEditable: false,
     isEditing: false,
     orgUnits: [],
     metricTypeCategories: [],
@@ -69,6 +71,10 @@ export const PlanningProvider = ({
     const [interventionPlans, setInterventionPlans] = useState<
         InterventionPlan[]
     >([]);
+    const isScenarioEditable = scenario
+        ? !scenario.is_locked && canEditScenario
+        : canEditScenario;
+
     useEffect(() => {
         const plans = new Map<number, InterventionPlan>();
         interventionAssignments.forEach(assignment => {
@@ -102,6 +108,7 @@ export const PlanningProvider = ({
                 scenario,
                 displayOrgUnitId,
                 canEditScenario,
+                isScenarioEditable,
                 orgUnits,
                 metricTypeCategories,
                 interventionCategories,

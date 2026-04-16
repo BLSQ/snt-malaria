@@ -50,7 +50,8 @@ export const InterventionPlanHeader: FC<Props> = ({
     onDeleteScenario,
     onToggleLockScenario,
 }) => {
-    const { scenarioId, scenario, canEditScenario } = usePlanningContext();
+    const { scenarioId, scenario, canEditScenario, isScenarioEditable } =
+        usePlanningContext();
     const csvUrl = `${exportScenarioAPIPath}?id=${scenarioId}`;
 
     const { formatMessage } = useSafeIntl();
@@ -151,7 +152,7 @@ export const InterventionPlanHeader: FC<Props> = ({
                         />
                     </DisplayIfUserHasPerm>
 
-                    {canEditScenario && !scenario?.is_locked && (
+                    {isScenarioEditable && (
                         <>
                             <UpdateScenarioModal
                                 onClose={noOp}
