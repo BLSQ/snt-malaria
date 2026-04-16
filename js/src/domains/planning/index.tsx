@@ -36,6 +36,7 @@ import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignm
 import { useGetInterventionCategories } from './hooks/useGetInterventionCategories';
 import { useGetLatestCalculatedBudget } from './hooks/useGetLatestCalculatedBudget';
 import { useGetMetricCategories } from './hooks/useGetMetrics';
+import { useGetAccountSettings } from './hooks/useGetAccountSettings';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { usePreviewScenarioRule } from './hooks/usePreviewScenarioRule';
@@ -75,8 +76,14 @@ export const Planning: FC = () => {
 
     const { data: metricTypeCategories } = useGetMetricCategories();
     const { data: interventionCategories } = useGetInterventionCategories();
+    const { data: accountSettings } = useGetAccountSettings();
+    const interventionTypeId =
+        accountSettings?.intervention_org_unit_type_id;
     const { data: orgUnits, isLoading: isLoadingOrgUnits } =
-        useGetOrgUnits(displayOrgUnitId);
+        useGetOrgUnits({
+            orgUnitParentId: displayOrgUnitId,
+            orgUnitTypeId: interventionTypeId,
+        });
 
     const { data: scenarioRules, isFetching: isFetchingRules } =
         useGetScenarioRules(scenarioId);

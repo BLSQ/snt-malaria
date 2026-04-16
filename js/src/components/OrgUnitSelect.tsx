@@ -3,7 +3,7 @@ import { MenuItem, Select, SelectChangeEvent } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../domains/messages';
-import { useGetOrgUnitsByType } from '../domains/planning/hooks/useGetOrgUnits';
+import { useGetOrgUnits } from '../domains/planning/hooks/useGetOrgUnits';
 import { useGetAccountSettings } from '../domains/planning/hooks/useGetAccountSettings';
 
 const styles = {
@@ -30,7 +30,10 @@ export const OrgUnitSelect: FC<Props> = ({
     const { data: accountSettings } = useGetAccountSettings();
 
     const { data: orgUnitsByType, isLoading: isLoadingOrgUnits } =
-        useGetOrgUnitsByType(accountSettings?.focus_org_unit_type_id);
+        useGetOrgUnits({
+            orgUnitTypeId: accountSettings?.focus_org_unit_type_id,
+            withGeometry: false,
+        });
 
     const handleOrgUnitChange = (e: SelectChangeEvent<number>) => {
         const id = e.target.value as number;
