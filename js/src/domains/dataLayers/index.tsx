@@ -78,6 +78,7 @@ export const DataLayers: FC = () => {
             <TopBar
                 title={formatMessage(MESSAGES.dataLayersTitle)}
                 disableShadow
+                sx={{ zIndex: 401 }}
             />
             <PageContainer>
                 <SidebarLayout>
