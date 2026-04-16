@@ -2,6 +2,7 @@ import React, { FC, useCallback, useMemo } from 'react';
 import { Box } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { Map as SNTMap } from '../../../../components/Map';
+import { useGetAccountSettings } from '../../../planning/hooks/useGetAccountSettings';
 import { useGetInterventionPlans } from '../../../planning/hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../../planning/hooks/useGetOrgUnits';
 import { Intervention } from '../../../planning/types/interventions';
@@ -62,7 +63,13 @@ export const InterventionPlanMap: FC<Props> = ({
     titleDotColor,
     titleText,
 }) => {
-    const { data: orgUnits } = useGetOrgUnits();
+    const { data: accountSettings } = useGetAccountSettings();
+    const interventionTypeId =
+        accountSettings?.intervention_org_unit_type_id;
+    const { data: orgUnits } = useGetOrgUnits({
+        orgUnitTypeId: interventionTypeId,
+        enabled: !!interventionTypeId,
+    });
     const {
         data: interventionAssignments,
         isLoading: isLoadingInterventionAssignments,

@@ -49,9 +49,12 @@ export const ScenarioRuleForm: FC = () => {
     // Fetch all intervention-level org units including geometry. The map makes
     // the same request (same query key), so when the page was loaded without a
     // region filter this is an instant cache hit instead of a costly extra call.
+    const interventionTypeId =
+        accountSettings?.intervention_org_unit_type_id;
     const { data: allOrgUnits, isLoading: isLoadingOrgUnits } =
         useGetOrgUnits({
-            orgUnitTypeId: accountSettings?.intervention_org_unit_type_id,
+            orgUnitTypeId: interventionTypeId,
+            enabled: !!interventionTypeId,
         });
 
     const {

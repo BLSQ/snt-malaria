@@ -83,6 +83,7 @@ export const Planning: FC = () => {
         useGetOrgUnits({
             orgUnitParentId: displayOrgUnitId,
             orgUnitTypeId: interventionTypeId,
+            enabled: !!interventionTypeId,
         });
 
     const { data: scenarioRules, isFetching: isFetchingRules } =

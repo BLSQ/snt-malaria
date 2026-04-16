@@ -29,10 +29,12 @@ export const OrgUnitSelect: FC<Props> = ({
 
     const { data: accountSettings } = useGetAccountSettings();
 
+    const focusTypeId = accountSettings?.focus_org_unit_type_id;
     const { data: orgUnitsByType, isLoading: isLoadingOrgUnits } =
         useGetOrgUnits({
-            orgUnitTypeId: accountSettings?.focus_org_unit_type_id,
+            orgUnitTypeId: focusTypeId,
             withGeometry: false,
+            enabled: !!focusTypeId,
         });
 
     const handleOrgUnitChange = (e: SelectChangeEvent<number>) => {

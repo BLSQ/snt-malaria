@@ -8,12 +8,14 @@ type UseGetOrgUnitsOptions = {
     orgUnitParentId?: number | null;
     orgUnitTypeId?: number;
     withGeometry?: boolean;
+    enabled?: boolean;
 };
 
 export const useGetOrgUnits = ({
     orgUnitParentId,
     orgUnitTypeId,
     withGeometry = true,
+    enabled = true,
 }: UseGetOrgUnitsOptions = {}): UseQueryResult<OrgUnit[], Error> => {
     const params: Record<string, any> = {
         validation_status: 'VALID',
@@ -37,7 +39,7 @@ export const useGetOrgUnits = ({
         queryKey: ['orgUnits', params],
         queryFn: () => getRequest(url),
         options: {
-            enabled: !!orgUnitTypeId,
+            enabled,
             cacheTime: Infinity,
             staleTime: Infinity,
             // asLocation returns OrgUnit[] directly; smallSearch returns
