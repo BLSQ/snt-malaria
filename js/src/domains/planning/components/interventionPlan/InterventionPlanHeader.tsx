@@ -141,7 +141,7 @@ export const InterventionPlanHeader: FC<Props> = ({
                         ]}
                     >
                         <MenuItem component={MuiLink} href={csvUrl}>
-                            {formatMessage(MESSAGES.downloadCSVTemplate)}
+                            {formatMessage(MESSAGES.scenarioCSV)}
                         </MenuItem>
                         <DuplicateScenarioModal
                             scenario={scenario}
