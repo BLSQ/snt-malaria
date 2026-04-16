@@ -1,11 +1,12 @@
 from unittest.mock import Mock
 
-from tests.api.intervention_cost_breakdown_lines.common_base import InterventionCostBreakdownLineBase
-
 from iaso.api.common import DropdownOptionsWithRepresentationSerializer
 from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
     InterventionCostBreakdownLineSerializer,
     InterventionCostBreakdownLinesWriteSerializer,
+)
+from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base import (
+    InterventionCostBreakdownLineBase,
 )
 
 
