@@ -272,3 +272,7 @@ class ScenarioRulesTestBase(APITestCase):
             intervention=self.other_intervention,
             coverage=0.90,
         )
+
+    def lock_scenario(self, scenario):
+        scenario.is_locked = True
+        scenario.save()
