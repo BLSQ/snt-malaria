@@ -202,6 +202,10 @@ class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
 
     def validate_scenario(self, scenario):
         user = self.context["request"].user
+
+        if scenario.is_locked:
+            raise serializers.ValidationError("Cannot add rules to a locked scenario")
+
         if scenario.created_by != user and not user.has_perm(SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()):
             raise PermissionDenied("You don't have permission to edit this scenario")
         return scenario

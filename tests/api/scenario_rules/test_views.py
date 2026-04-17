@@ -42,6 +42,15 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         response = self.client.get(self.BASE_URL, {"scenario": self.scenario.id})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_list_locked_scenario_rules(self):
+        self.scenario.is_locked = True
+        self.scenario.save()
+
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.get(self.BASE_URL, {"scenario": self.scenario.id})
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(len(result), 2)
+
     def test_list_scenario_rules_without_scenario_param(self):
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.get(self.BASE_URL)  # missing scenario param
@@ -64,6 +73,15 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(result["id"], self.scenario_rule_1.id)
 
         self.client.force_authenticate(user=self.user_no_perm)
+        response = self.client.get(f"{self.BASE_URL}{self.scenario_rule_1.id}/")
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(result["id"], self.scenario_rule_1.id)
+
+    def test_retrieve_scenario_rule_locked_scenario(self):
+        self.scenario.is_locked = True
+        self.scenario.save()
+
+        self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.get(f"{self.BASE_URL}{self.scenario_rule_1.id}/")
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
         self.assertEqual(result["id"], self.scenario_rule_1.id)
@@ -113,6 +131,29 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(new_rule.org_units_scope, [])
         self.assertEqual(new_rule.created_by, self.user_with_full_perm)
         self.assertIsNone(new_rule.updated_by)
+
+    def test_post_scenario_rule_for_locked_scenario(self):
+        self.scenario.is_locked = True
+        self.scenario.save()
+
+        payload = {
+            "name": "New Rule",
+            "scenario": self.scenario.id,
+            "matching_criteria": {
+                "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
+            },  # all districts with population >= 1
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.5,
+                }
+            ],
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(self.BASE_URL, payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("scenario", response.data)
+        self.assertIn("Cannot add rules to a locked scenario", response.data["scenario"][0])
 
     def test_post_scenario_rule_with_full_perm_other_scenario(self):
         new_scenario = Scenario.objects.create(
@@ -336,6 +377,18 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(self.scenario_rule_1.scenario, self.scenario)
         self.assertEqual(self.scenario_rule_1.priority, 1)
 
+    def test_patch_scenario_rule_for_locked_scenario(self):
+        self.scenario.is_locked = True
+        self.scenario.save()
+
+        payload = {
+            "name": "Updated Rule",
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.patch(f"{self.BASE_URL}{self.scenario_rule_1.id}/", payload)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("You do not have permission to perform this action.", response.data["detail"])
+
     def test_patch_scenario_rule_with_full_perm_other_scenario(self):
         new_scenario = Scenario.objects.create(
             account=self.account,
@@ -507,6 +560,17 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(self.scenario.rules.count(), 1)
         with self.assertRaises(ScenarioRule.DoesNotExist):
             ScenarioRule.objects.get(id=self.scenario_rule_1.id)
+
+    def test_delete_scenario_rule_for_locked_scenario(self):
+        self.scenario.is_locked = True
+        self.scenario.save()
+
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.delete(f"{self.BASE_URL}{self.scenario_rule_1.id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("You do not have permission to perform this action.", response.data["detail"])
+        self.assertEqual(self.scenario.rules.count(), 2)  # rule should not be deleted
+        self.assertIsNotNone(ScenarioRule.objects.get(id=self.scenario_rule_1.id))  # rule should still exist
 
     def test_delete_scenario_rule_with_full_perm_other_scenario(self):
         new_scenario = Scenario.objects.create(
