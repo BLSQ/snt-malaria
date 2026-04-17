@@ -1,6 +1,7 @@
 import React, { FC, useCallback, useEffect } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Button, Stack, Typography } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { CardStyled } from '../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../messages';
@@ -39,15 +40,20 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
     const { data: metricTypes = [] } = useGetMetricTypes();
     const { data: budgetSettings } = useGetBudgetSettings();
 
-    const { mutate: saveInterventionDetails } =
-        useSaveInterventionDetails(interventionId);
+    const {
+        mutate: saveInterventionDetails,
+        isLoading: isSavingInterventionDetails,
+    } = useSaveInterventionDetails(interventionId);
     const onSubmit = useCallback(
         (values: Partial<InterventionDetails>) =>
             saveInterventionDetails(values),
         [saveInterventionDetails],
     );
 
-    const { data: interventionDetails } = useGetInterventionDetails({
+    const {
+        data: interventionDetails,
+        isFetching: isFetchingInterventionDetails,
+    } = useGetInterventionDetails({
         interventionId,
     });
 
@@ -85,15 +91,20 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
                     <Typography variant="h6">
                         {interventionDetails?.name}
                     </Typography>
-                    <Button
+                    <LoadingButton
                         onClick={() => formik.handleSubmit()}
                         variant="outlined"
+                        loading={isSavingInterventionDetails}
                     >
                         {formatMessage(MESSAGES.save)}
-                    </Button>
+                    </LoadingButton>
                 </Stack>
             }
         >
+            {isFetchingInterventionDetails && (
+                <LoadingSpinner absolute={true} />
+            )}
+
             <ExtendedFormikProvider formik={formik}>
                 <InterventionForm
                     interventionCostCategories={interventionCostCategories}
