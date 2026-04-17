@@ -58,15 +58,16 @@ class InterventionDetailWriteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         cost_breakdown_lines_data = validated_data.pop("cost_breakdown_lines", [])
-        intervention = super().update(instance, validated_data)
 
         # Delete existing cost breakdown lines and create new ones based on the provided data
         with transaction.atomic():
+            intervention = super().update(instance, validated_data)
             instance.cost_breakdown_lines.all().delete()
-            for line_data in cost_breakdown_lines_data if cost_breakdown_lines_data else []:
-                InterventionCostBreakdownLineSerializer.create(
-                    InterventionCostBreakdownLineSerializer(),
-                    validated_data={**line_data, "intervention": intervention},
+            for line_data in cost_breakdown_lines_data:
+                line_serializer = InterventionCostBreakdownLineSerializer(
+                    data={**line_data, "intervention": intervention.id}
                 )
+                line_serializer.is_valid(raise_exception=True)
+                line_serializer.save()
 
         return intervention

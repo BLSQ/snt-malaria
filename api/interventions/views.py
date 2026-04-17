@@ -2,6 +2,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from plugins.snt_malaria.api.interventions.permissions import InterventionPermission
 from plugins.snt_malaria.api.interventions.serializers import (
     InterventionDetailSerializer,
     InterventionDetailWriteSerializer,
@@ -14,6 +15,7 @@ class InterventionViewSet(viewsets.ModelViewSet):
     serializer_class = InterventionSerializer
     ordering_fields = ["id", "name"]
     http_method_names = ["get", "options", "put"]
+    permission_classes = [InterventionPermission]
 
     def get_queryset(self):
         return Intervention.objects.filter(intervention_category__account=self.request.user.iaso_profile.account)
@@ -31,4 +33,4 @@ class InterventionViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(InterventionDetailSerializer(intervention).data, status=status.HTTP_200_OK)

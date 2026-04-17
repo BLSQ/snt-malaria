@@ -60,22 +60,22 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
             return;
         }
 
-        if (
-            !interventionDetails.target_population ||
-            interventionDetails.target_population.length === 0
-        ) {
-            let defaultPop = defaultTargetPopulationSettings[
+        let defaultPop = interventionDetails.target_population;
+
+        if (!defaultPop || defaultPop.length === 0) {
+            defaultPop = defaultTargetPopulationSettings[
                 interventionDetails.code
             ] || [''];
 
             defaultPop = defaultPop.map(pop =>
                 metricTypes.find(metric => metric.code === pop) ? pop : '',
             );
-
-            interventionDetails.target_population = defaultPop; // Set default target population if not already set
         }
 
-        formik.setValues(interventionDetails);
+        formik.setValues({
+            ...interventionDetails,
+            target_population: defaultPop,
+        });
     }, [interventionDetails, metricTypes]); // Only run when interventionDetails or metricTypes changes
 
     return (

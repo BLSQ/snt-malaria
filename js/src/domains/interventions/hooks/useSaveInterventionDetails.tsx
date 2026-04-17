@@ -13,7 +13,7 @@ export const useSaveInterventionDetails = (
                 body,
             ),
         invalidateQueryKey: [
-            `interventionDetails_${interventionId}`,
+            ['interventionDetails', interventionId],
             'interventionCategories',
         ],
         showSuccessSnackBar: false,

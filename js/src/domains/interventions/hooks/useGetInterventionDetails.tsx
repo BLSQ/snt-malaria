@@ -9,7 +9,7 @@ export const useGetInterventionDetails = ({
     interventionId?: number;
 }): UseQueryResult<InterventionDetails, Error> => {
     return useSnackQuery({
-        queryKey: [`interventionDetails_${interventionId}`],
+        queryKey: ['interventionDetails', interventionId],
         queryFn: () =>
             getRequest(
                 `/api/snt_malaria/interventions/${interventionId}/details/`,
