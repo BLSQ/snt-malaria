@@ -966,6 +966,15 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(Scenario.objects.count(), 2)  # both the one from setup and the other account scenario remain
 
+    def test_delete_scenario_locked(self):
+        self.scenario.is_locked = True
+        self.scenario.save()
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.delete(f"{self.BASE_URL}{self.scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Scenario.objects.count(), 1)
+
     def test_reorder_rules_with_full_perm_own_scenario(self):
         """
         This test will also check the result of reordering with conflicts
