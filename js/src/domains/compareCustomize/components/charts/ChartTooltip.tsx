@@ -1,5 +1,5 @@
 import React, { FC, ReactNode } from 'react';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 
 export type ChartTooltipRow = {
@@ -27,6 +27,7 @@ const styles = {
     },
     title: {
         fontSize: '0.75rem',
+        fontWeight: 700,
         display: 'block',
         mb: 0.5,
     },
@@ -45,20 +46,24 @@ const styles = {
 
 export const ChartTooltip: FC<Props> = ({ title, rows }) => (
     <Box sx={styles.root}>
-        <Box component="b" sx={styles.title}>
-            {title}
-        </Box>
-        {rows.map(row => (
+        <Typography sx={styles.title}>{title}</Typography>
+        {rows.map((row) => (
             <Box key={row.label} sx={styles.row}>
                 {row.color && (
                     <Box sx={{ ...styles.dot, backgroundColor: row.color }} />
                 )}
-                <Box component="span" sx={{ color: 'text.secondary' }}>
+                <Typography
+                    component="span"
+                    sx={{ fontSize: 'inherit', color: 'text.secondary' }}
+                >
                     {row.label}:
-                </Box>
-                <Box component="span" sx={{ fontWeight: 700 }}>
+                </Typography>
+                <Typography
+                    component="span"
+                    sx={{ fontSize: 'inherit', fontWeight: 700 }}
+                >
                     {row.value}
-                </Box>
+                </Typography>
             </Box>
         ))}
     </Box>

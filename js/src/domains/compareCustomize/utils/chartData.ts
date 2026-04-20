@@ -16,11 +16,11 @@ export type PrevalenceDataPoint = {
  */
 export const buildPrevalenceChartData = (
     scenarios: ScenarioDisplay[],
-    impactsByScenarioId: Map<number, ScenarioImpactMetrics | undefined>,
+    impactMetricsByScenarioId: Map<number, ScenarioImpactMetrics | undefined>,
 ): PrevalenceDataPoint[] => {
     const yearSet = new Set<number>();
     scenarios.forEach(scenario => {
-        const impact = impactsByScenarioId.get(scenario.id);
+        const impact = impactMetricsByScenarioId.get(scenario.id);
         impact?.by_year?.forEach(yr => yearSet.add(yr.year));
     });
 
@@ -30,7 +30,7 @@ export const buildPrevalenceChartData = (
     return years.map(year => {
         const point: PrevalenceDataPoint = { year };
         scenarios.forEach(scenario => {
-            const impact = impactsByScenarioId.get(scenario.id);
+            const impact = impactMetricsByScenarioId.get(scenario.id);
             const yearData = impact?.by_year?.find(yr => yr.year === year);
             const metric = yearData?.prevalence_rate;
             point[scenario.label] = metric?.value ?? undefined;
@@ -63,17 +63,17 @@ export type CostPerAvertedCaseDatum = {
     color: string;
 };
 
-const computeCostPerAverted = (
+/** cost_per_averted = cost_diff / (baseline_cases − scenario_cases) */
+const costPerAverted = (
     costDiff: number,
-    baselineCases: number | null | undefined,
-    scenarioCases: number | null | undefined,
-): { value: number; averted: number } | undefined => {
-    if (baselineCases == null || scenarioCases == null) return undefined;
-    const averted = baselineCases - scenarioCases;
-    // Cases are absolute counts, so < 1 means no meaningful case was averted.
-    // This also prevents near-zero divisions producing huge values.
-    if (averted < 1) return undefined;
-    return { value: costDiff / averted, averted };
+    baselineCases: number,
+    scenarioCases: number,
+): { costPerAvertedCase: number; avertedCases: number } | undefined => {
+    const avertedCases = baselineCases - scenarioCases;
+    // Cases are absolute counts; < 1 means nothing meaningful was averted.
+    if (avertedCases < 1) return undefined;
+    const costPerAvertedCase = costDiff / avertedCases;
+    return { costPerAvertedCase, avertedCases };
 };
 
 export type CostPerAvertedCaseResult = {
@@ -86,19 +86,17 @@ export type CostPerAvertedCaseResult = {
 /**
  * Computes comparative cost-per-averted-case for each non-baseline scenario.
  *
- * averted_cases       = baseline.cases - scenario.cases
- * cost_per_averted    = (scenario.cost - baseline.cost) / averted_cases
+ *   averted_cases    = baseline.cases − scenario.cases
+ *   cost_per_averted = (scenario.cost − baseline.cost) / averted_cases
  *
- * Only scenarios that meaningfully avert cases (≥ 1) are included.
- *
- * Only uncomplicated cases (excluding severe) are used for averted cases.
- * Confidence intervals use the worst/best case averted bounds
- * (baseline.lower − scenario.upper and baseline.upper − scenario.lower).
- * The baseline itself is never shown (it has no comparison target).
+ * Only uncomplicated cases are used (severe cases excluded).
+ * A scenario must avert at least 1 case to be included; otherwise the
+ * metric is meaningless and `hasInsufficientAverted` is flagged.
+ * Confidence intervals repeat the formula with pessimistic/optimistic bounds.
  */
 export const buildCostPerAvertedCaseChartData = (
     scenarios: ScenarioDisplay[],
-    impactsByScenarioId: Map<number, ScenarioImpactMetrics | undefined>,
+    impactMetricsByScenarioId: Map<number, ScenarioImpactMetrics | undefined>,
     budgetsByScenarioId: Map<number, BudgetCalculationResponse | undefined>,
     baselineScenarioId: number | undefined,
 ): CostPerAvertedCaseResult => {
@@ -108,52 +106,46 @@ export const buildCostPerAvertedCaseChartData = (
     };
     if (baselineScenarioId === undefined) return empty;
 
-    const baselineImpact = impactsByScenarioId.get(baselineScenarioId);
-    const b = baselineImpact?.number_cases;
-    const baselineCost = getCumulativeCosts(
-        budgetsByScenarioId.get(baselineScenarioId),
-    );
-
-    if (b?.value == null || baselineCost == null) return empty;
+    const baselineCases = impactMetricsByScenarioId.get(baselineScenarioId)?.number_cases;
+    const baselineCost = getCumulativeCosts(budgetsByScenarioId.get(baselineScenarioId));
+    if (baselineCases?.value == null || baselineCost == null) return empty;
 
     let hasInsufficientAverted = false;
 
     const data = scenarios
-        .filter(s => s.id !== baselineScenarioId)
+        .filter((scenario) => scenario.id !== baselineScenarioId)
         .map((scenario): CostPerAvertedCaseDatum | null => {
-            const impact = impactsByScenarioId.get(scenario.id);
-            const s = impact?.number_cases;
-            const cost = getCumulativeCosts(
-                budgetsByScenarioId.get(scenario.id),
-            );
-            if (cost == null) return null;
 
-            const costDiff = cost - baselineCost;
-            const central = computeCostPerAverted(costDiff, b.value, s?.value);
+            const scenarioCases = impactMetricsByScenarioId.get(scenario.id)?.number_cases;
+            const scenarioCost = getCumulativeCosts(budgetsByScenarioId.get(scenario.id));
+            if (scenarioCost == null || scenarioCases?.value == null) return null;
+
+            const costDiff = scenarioCost - baselineCost;
+
+            const central = costPerAverted(costDiff, baselineCases.value!, scenarioCases.value);
             if (central === undefined) {
-                if (s?.value != null) {
-                    hasInsufficientAverted = true;
-                }
+                hasInsufficientAverted = true;
                 return null;
             }
 
-            const bound1 = computeCostPerAverted(costDiff, b.lower, s?.upper);
-            const bound2 = computeCostPerAverted(costDiff, b.upper, s?.lower);
+            // CI bounds: cross baseline.lower with scenario.upper (and vice-versa)
+            // to get the pessimistic/optimistic averted-cases denominators.
+            const lower = costPerAverted(costDiff, baselineCases.lower ?? 0, scenarioCases.upper ?? 0);
+            const upper = costPerAverted(costDiff, baselineCases.upper ?? 0, scenarioCases.lower ?? 0);
 
+            // Stored as offsets from the central value (Recharts ErrorBar expects deltas).
             let errorLower = 0;
             let errorUpper = 0;
-            if (bound1 !== undefined && bound2 !== undefined) {
-                const ciLower = Math.min(bound1.value, bound2.value);
-                const ciUpper = Math.max(bound1.value, bound2.value);
-                errorLower = central.value - ciLower;
-                errorUpper = ciUpper - central.value;
+            if (lower !== undefined && upper !== undefined) {
+                errorLower = central.costPerAvertedCase - Math.min(lower.costPerAvertedCase, upper.costPerAvertedCase);
+                errorUpper = Math.max(lower.costPerAvertedCase, upper.costPerAvertedCase) - central.costPerAvertedCase;
             }
 
             return {
                 name: scenario.label,
-                value: central.value,
+                value: central.costPerAvertedCase,
                 relativeCost: costDiff,
-                avertedCases: central.averted,
+                avertedCases: central.avertedCases,
                 errorLower,
                 errorUpper,
                 errorBounds: [errorLower, errorUpper],
