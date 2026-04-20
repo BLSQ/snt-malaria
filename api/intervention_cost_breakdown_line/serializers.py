@@ -23,7 +23,6 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
             "unit_type_label",
             "category",
             "category_label",
-            "year",
             "intervention",
         ]
 
@@ -50,11 +49,10 @@ class CostsWriteSerializer(serializers.Serializer):
 class InterventionCostBreakdownLinesWriteSerializer(serializers.ModelSerializer):
     intervention = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all())
     costs = CostsWriteSerializer(many=True)
-    year = serializers.IntegerField()
 
     class Meta:
         model = InterventionCostBreakdownLine
-        fields = ["intervention", "year", "costs"]
+        fields = ["intervention", "costs"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

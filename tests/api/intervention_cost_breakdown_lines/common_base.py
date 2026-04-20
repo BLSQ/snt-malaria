@@ -49,7 +49,6 @@ class InterventionCostBreakdownLineBase(APITestCase):
             unit_cost=10,
             category="Procurement",
             created_by=self.user_write,
-            year=2025,
         )
         self.cost_line2 = InterventionCostBreakdownLine.objects.create(
             name="Cost Line 2",
@@ -57,23 +56,6 @@ class InterventionCostBreakdownLineBase(APITestCase):
             unit_cost=5,
             category="Procurement",
             created_by=self.user_write,
-            year=2025,
-        )
-        self.cost_line3 = InterventionCostBreakdownLine.objects.create(
-            name="Cost Line 3",
-            intervention=self.intervention_chemo_smc,
-            unit_cost=5.55,
-            category="Supportive",
-            created_by=self.user_write,
-            year=2026,
-        )
-        self.cost_line4 = InterventionCostBreakdownLine.objects.create(
-            name="Cost Line 4",
-            intervention=self.intervention_chemo_smc,
-            unit_cost=5.55,
-            category="Supportive",
-            created_by=self.user_write,
-            year=2026,
         )
 
         # Preparing second setup to test tenancy
@@ -98,5 +80,4 @@ class InterventionCostBreakdownLineBase(APITestCase):
             unit_cost=20,
             category="Operational",
             created_by=self.other_user,
-            year=2025,
         )

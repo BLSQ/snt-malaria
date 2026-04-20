@@ -41,11 +41,10 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         intervention = serializer.validated_data["intervention"]
-        year = serializer.validated_data["year"]
         costs = serializer.validated_data["costs"]
 
         with transaction.atomic():
-            existing_costs = InterventionCostBreakdownLine.objects.filter(intervention=intervention, year=year)
+            existing_costs = InterventionCostBreakdownLine.objects.filter(intervention=intervention)
             existing_costs.delete()
             new_costs = []
             for cost in costs:
@@ -55,7 +54,6 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
                     unit_cost=cost["unit_cost"],
                     unit_type=cost["unit_type"],
                     intervention=intervention,
-                    year=year,
                     created_by=request.user,
                 )
                 new_costs.append(new_cost)
