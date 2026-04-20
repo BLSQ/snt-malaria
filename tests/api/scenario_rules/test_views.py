@@ -43,8 +43,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_list_locked_scenario_rules(self):
-        self.scenario.is_locked = True
-        self.scenario.save()
+        self.lock_scenario(self.scenario)
 
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.get(self.BASE_URL, {"scenario": self.scenario.id})
@@ -78,8 +77,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(result["id"], self.scenario_rule_1.id)
 
     def test_retrieve_scenario_rule_locked_scenario(self):
-        self.scenario.is_locked = True
-        self.scenario.save()
+        self.lock_scenario(self.scenario)
 
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.get(f"{self.BASE_URL}{self.scenario_rule_1.id}/")
@@ -133,8 +131,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertIsNone(new_rule.updated_by)
 
     def test_post_scenario_rule_for_locked_scenario(self):
-        self.scenario.is_locked = True
-        self.scenario.save()
+        self.lock_scenario(self.scenario)
 
         payload = {
             "name": "New Rule",
@@ -378,8 +375,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(self.scenario_rule_1.priority, 1)
 
     def test_patch_scenario_rule_for_locked_scenario(self):
-        self.scenario.is_locked = True
-        self.scenario.save()
+        self.lock_scenario(self.scenario)
 
         payload = {
             "name": "Updated Rule",
@@ -562,8 +558,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             ScenarioRule.objects.get(id=self.scenario_rule_1.id)
 
     def test_delete_scenario_rule_for_locked_scenario(self):
-        self.scenario.is_locked = True
-        self.scenario.save()
+        self.lock_scenario(self.scenario)
 
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.delete(f"{self.BASE_URL}{self.scenario_rule_1.id}/")
