@@ -1,4 +1,4 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC } from 'react';
 import { Box, Grid } from '@mui/material';
 import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
@@ -25,22 +25,13 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
 
     const {
         values,
-        setFieldValue,
+        setFieldValueAndState,
         setChildFieldValueAndState,
         errors,
         touched,
-        setFieldTouched,
         addChildValue,
         removeChildValue,
     } = useGetExtendedFormikContext<MetricTypeFormModel>();
-
-    const setFieldValueAndState = useCallback(
-        (field: string, value: any) => {
-            setFieldTouched(field, true);
-            setFieldValue(field, value);
-        },
-        [setFieldTouched, setFieldValue],
-    );
 
     const getErrors = useTranslatedErrors({
         errors,

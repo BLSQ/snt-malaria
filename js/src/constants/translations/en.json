@@ -69,7 +69,7 @@
     "iaso.snt_malaria.settings.intervention.costPerUnit": "Cost per unit",
     "iaso.snt_malaria.settings.intervention.save": "Save intervention",
     "iaso.snt_malaria.settings.intervention.removeInterventionCostBreakdownLine": "Remove cost",
-    "iaso.snt_malaria.settings.intervention.addInterventionCostBreakdownLine": "Add cost",
+    "iaso.snt_malaria.settings.intervention.addInterventionCostBreakdownLine": "Add cost item",
     "iaso.snt_malaria.settings.intervention.detailedCosts": "Detailed costs",
     "iaso.snt_malaria.settings.intervention.detailedCostLabel": "Item",
     "iaso.snt_malaria.settings.intervention.detailedCostUnitLabel": "Cost Unit",
@@ -211,5 +211,12 @@
     "iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventions": "Some org units exist in the impact database but have no data for their assigned interventions.",
     "iaso.snt_malaria.compareCustomize.warningsTitle": "Warnings",
     "iaso.snt_malaria.label.showDetails": "Show details",
-    "iaso.snt_malaria.label.hideDetails": "Hide details"
+    "iaso.snt_malaria.label.hideDetails": "Hide details",
+    "iaso.snt_malaria.interventions.title": "Interventions",
+    "iaso.snt_malaria.label.maxLength": "Maximum length is {max} characters",
+    "iaso.snt_malaria.label.costItems": "Cost items",
+    "iaso.snt_malaria.label.impactRef": "Impact provider reference",
+    "iaso.snt_malaria.label.save": "Save changes",
+    "iaso.snt_malaria.label.costSettings": "Cost settings",
+    "iaso.snt_malaria.label.targetPopulationLabel": "Target population"
 }

@@ -211,5 +211,11 @@
     "iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventions": "Certaines unités d'organisation existent dans la base de données d'impact mais n'ont pas de données pour les interventions qui leur sont assignées.",
     "iaso.snt_malaria.compareCustomize.warningsTitle": "Avertissements",
     "iaso.snt_malaria.label.showDetails": "Voir les détails",
-    "iaso.snt_malaria.label.hideDetails": "Masquer les détails"
+    "iaso.snt_malaria.label.hideDetails": "Masquer les détails",
+    "iaso.snt_malaria.interventions.title": "Interventions",
+    "iaso.snt_malaria.label.maxLength": "Longueur maximum de {max} caractères",
+    "iaso.snt_malaria.label.costItems": "Éléments de coût",
+    "iaso.snt_malaria.label.impactRef": "Référence du fournisseur d'impact",
+    "iaso.snt_malaria.label.save": "Enregistrer les modifications",
+    "iaso.snt_malaria.label.targetPopulationLabel": "Population cible"
 }

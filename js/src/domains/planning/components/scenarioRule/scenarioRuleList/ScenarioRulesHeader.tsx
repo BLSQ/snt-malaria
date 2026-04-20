@@ -24,7 +24,7 @@ export const ScenarioRulesHeader: FC<Props> = ({ onCreateRule }) => {
             <Stack spacing={1} direction="row" alignItems="center">
                 <IconBoxed Icon={SettingsInputComponentOutlinedIcon} />
 
-                <Typography variant="h6" gutterBottom color="#1F2B3D">
+                <Typography variant="h6" gutterBottom>
                     {formatMessage(MESSAGES.interventionTitle)}
                 </Typography>
             </Stack>
