@@ -13,6 +13,8 @@ import { SxStyles } from 'Iaso/types/general';
 import { useGetExtendedFormikContext } from '../../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
+import { useGetAccountSettings } from '../../../hooks/useGetAccountSettings';
+import { useGetOrgUnits } from '../../../hooks/useGetOrgUnits';
 import { ScenarioRuleFormValues } from '../../../hooks/useScenarioRuleFormState';
 import { InterventionPropertiesForm } from './InterventionPropertiesForm';
 import { MatchingCriteriaForm } from './MatchingCriteriaForm';
@@ -40,11 +42,20 @@ const ScenarioRuleHeading: FC<{ label: string }> = ({ label }) => {
 
 export const ScenarioRuleForm: FC = () => {
     const { formatMessage } = useSafeIntl();
-    const {
-        metricTypeCategories,
-        interventionCategories,
-        orgUnits: allOrgUnits,
-    } = usePlanningContext();
+    const { metricTypeCategories, interventionCategories } =
+        usePlanningContext();
+
+    const { data: accountSettings } = useGetAccountSettings();
+    // Fetch all intervention-level org units including geometry. The map makes
+    // the same request (same query key), so when the page was loaded without a
+    // region filter this is an instant cache hit instead of a costly extra call.
+    const interventionTypeId =
+        accountSettings?.intervention_org_unit_type_id;
+    const { data: allOrgUnits, isLoading: isLoadingOrgUnits } =
+        useGetOrgUnits({
+            orgUnitTypeId: interventionTypeId,
+            enabled: !!interventionTypeId,
+        });
 
     const {
         values,
@@ -65,7 +76,7 @@ export const ScenarioRuleForm: FC = () => {
 
     const allOrgUnitOptions = useMemo(
         () =>
-            allOrgUnits.map(orgUnit => ({
+            (allOrgUnits ?? []).map(orgUnit => ({
                 value: orgUnit.id,
                 label: orgUnit.name,
             })),
@@ -161,6 +172,7 @@ export const ScenarioRuleForm: FC = () => {
                         type="select"
                         value={values.org_units_excluded || []}
                         multi={true}
+                        loading={isLoadingOrgUnits}
                         options={exclusionOrgUnitOptions}
                         onChange={setFieldValueAndState}
                         errors={getErrors('org_units_excluded')}
@@ -173,6 +185,7 @@ export const ScenarioRuleForm: FC = () => {
                         type="select"
                         value={values.org_units_included || []}
                         multi={true}
+                        loading={isLoadingOrgUnits}
                         disabled={values.is_match_all}
                         options={inclusionOrgUnitOptions}
                         onChange={setFieldValueAndState}
