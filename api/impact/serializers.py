@@ -42,10 +42,7 @@ class ImpactMetricsSerializer(serializers.Serializer):
     number_cases = MetricWithCISerializer()
     number_severe_cases = MetricWithCISerializer()
     prevalence_rate = MetricWithCISerializer()
-    averted_cases = MetricWithCISerializer()
     direct_deaths = MetricWithCISerializer()
-    cost = serializers.FloatField(allow_null=True)
-    cost_per_averted_case = MetricWithCISerializer()
 
 
 class OrgUnitMetricsSerializer(ImpactMetricsSerializer):

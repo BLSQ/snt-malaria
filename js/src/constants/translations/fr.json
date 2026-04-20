@@ -200,6 +200,12 @@
     "iaso.snt_malaria.impact.deaths": "Décès",
     "iaso.snt_malaria.compareCustomize.noImpactData": "Aucune donnée d'impact disponible",
     "iaso.snt_malaria.compareCustomize.noBudgetData": "Aucune donnée de budget disponible",
+    "iaso.snt_malaria.compareCustomize.costPerAvertedCaseTooltip": "Le coût (ou économie) supplémentaire par cas de paludisme évité, par rapport au scénario de référence.",
+    "iaso.snt_malaria.compareCustomize.costPerAvertedCaseLabel": "Coût par cas évité",
+    "iaso.snt_malaria.compareCustomize.relativeCostLabel": "Coût relatif",
+    "iaso.snt_malaria.compareCustomize.avertedCasesLabel": "Cas évités",
+    "iaso.snt_malaria.compareCustomize.costPerAvertedCaseSelectComparison": "Sélectionnez au moins deux scénarios pour comparer le coût par cas évité",
+    "iaso.snt_malaria.compareCustomize.costPerAvertedCaseNoCasesAverted": "Les scénarios comparés n'évitent pas de cas par rapport au scénario de référence sélectionné.",
     "iaso.snt_malaria.compareCustomize.scenarioLabelWithIndex": "Scénario {index}",
     "iaso.snt_malaria.label.mapView": "Carte",
     "iaso.snt_malaria.label.listView": "Liste",
@@ -219,3 +225,4 @@
     "iaso.snt_malaria.label.save": "Enregistrer les modifications",
     "iaso.snt_malaria.label.targetPopulationLabel": "Population cible"
 }
+
