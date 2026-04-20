@@ -43,7 +43,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
 }) => {
     const percentageNumberOptions = { suffix: '%', decimalScale: 0 };
     const { formatMessage } = useSafeIntl();
-    const { canEditScenario } = usePlanningContext();
+    const { isScenarioEditable } = usePlanningContext();
     const {
         mutateAsync: saveBudgetAssumptions,
         isLoading: isSavingBudgetAssumptions,
@@ -198,7 +198,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 label={MESSAGES.budgetAssumptionsPopProp3_11}
                                 numberInputOptions={percentageNumberOptions}
                                 wrapperSx={styles.inputWrapper}
-                                disabled={!canEditScenario}
+                                disabled={!isScenarioEditable}
                             />
                         )}
                         {validationSchema.fields.pop_prop_12_59 && (
@@ -212,7 +212,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 label={MESSAGES.budgetAssumptionsPopProp12_59}
                                 numberInputOptions={percentageNumberOptions}
                                 wrapperSx={styles.inputWrapper}
-                                disabled={!canEditScenario}
+                                disabled={!isScenarioEditable}
                             />
                         )}
                         <InputComponent
@@ -225,7 +225,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                             label={MESSAGES.budgetAssumptionsCoverage}
                             numberInputOptions={percentageNumberOptions}
                             wrapperSx={styles.inputWrapper}
-                            disabled={!canEditScenario}
+                            disabled={!isScenarioEditable}
                         />
                         {validationSchema.fields.divisor && (
                             <InputComponent
@@ -238,7 +238,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 label={MESSAGES.budgetAssumptionsPPN}
                                 numberInputOptions={{ decimalScale: 1 }}
                                 wrapperSx={styles.inputWrapper}
-                                disabled={!canEditScenario}
+                                disabled={!isScenarioEditable}
                             />
                         )}
                         {validationSchema.fields.touchpoints && (
@@ -252,7 +252,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 label={MESSAGES.budgetAssumptionsTouchpoints}
                                 numberInputOptions={{ decimalScale: 0 }}
                                 wrapperSx={styles.inputWrapper}
-                                disabled={!canEditScenario}
+                                disabled={!isScenarioEditable}
                             />
                         )}
                         {validationSchema.fields.monthly_rounds && (
@@ -266,7 +266,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 label={MESSAGES.budgetAssumptionsMonthlyRound}
                                 numberInputOptions={{ decimalScale: 0 }}
                                 wrapperSx={styles.inputWrapper}
-                                disabled={!canEditScenario}
+                                disabled={!isScenarioEditable}
                             />
                         )}
                         {validationSchema.fields.bale_size && (
@@ -280,7 +280,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 label={MESSAGES.budgetAssumptionsBaleSize}
                                 numberInputOptions={{ decimalScale: 0 }}
                                 wrapperSx={styles.inputWrapper}
-                                disabled={!canEditScenario}
+                                disabled={!isScenarioEditable}
                             />
                         )}
                         {validationSchema.fields.doses_per_pw && (
@@ -294,7 +294,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 label={MESSAGES.budgetAssumptionsDosesPerPW}
                                 numberInputOptions={{ decimalScale: 0 }}
                                 wrapperSx={styles.inputWrapper}
-                                disabled={!canEditScenario}
+                                disabled={!isScenarioEditable}
                             />
                         )}
                         {validationSchema.fields.doses_per_child && (
@@ -308,7 +308,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 label={MESSAGES.budgetAssumptionsDosesPerChild}
                                 numberInputOptions={{ decimalScale: 0 }}
                                 wrapperSx={styles.inputWrapper}
-                                disabled={!canEditScenario}
+                                disabled={!isScenarioEditable}
                             />
                         )}
                         {validationSchema.fields.tablet_factor && (
@@ -322,7 +322,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                                 label={MESSAGES.budgetAssumptionsTabletFactor}
                                 numberInputOptions={percentageNumberOptions}
                                 wrapperSx={styles.inputWrapper}
-                                disabled={!canEditScenario}
+                                disabled={!isScenarioEditable}
                             />
                         )}
 
@@ -336,7 +336,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                             label={MESSAGES.budgetAssumptionsBuffer}
                             numberInputOptions={percentageNumberOptions}
                             wrapperSx={styles.inputWrapper}
-                            disabled={!canEditScenario}
+                            disabled={!isScenarioEditable}
                         />
                     </Box>
                     <Box>
@@ -357,7 +357,7 @@ export const BudgetAssumptionsForm: FC<Props> = ({
                         </Typography>
                     </Box>
                 </Box>
-                {canEditScenario && (
+                {isScenarioEditable && (
                     <Button
                         onClick={() => handleSubmit()}
                         variant="contained"

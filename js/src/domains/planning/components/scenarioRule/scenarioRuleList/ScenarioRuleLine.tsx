@@ -39,7 +39,7 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
     const { mutateAsync: deleteScenarioRule } =
         useDeleteScenarioRule(scenarioId);
 
-    const { metricTypeCategories, canEditScenario } = usePlanningContext();
+    const { metricTypeCategories, isScenarioEditable } = usePlanningContext();
 
     const metricTypes = useMemo(
         () => metricTypeCategories.flatMap(category => category.items),
@@ -88,7 +88,7 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
                 >
                     {rule.name}
                 </Typography>
-                {canEditScenario && (
+                {isScenarioEditable && (
                     <>
                         <EditIconButton
                             onClick={() => onEdit(rule)}

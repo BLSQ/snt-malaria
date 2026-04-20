@@ -44,7 +44,15 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scenario
         fields = ["id", "name", "description", "start_year", "end_year", "is_locked"]
-        read_ony_fields = ["id"]
+        read_only_fields = ["id"]
+
+    def validate(self, data):
+        if self.instance and self.instance.is_locked:
+            # Only allow changing is_locked if scenario is locked
+            changed_fields = {key for key in data if getattr(self.instance, key, None) != data[key]}
+            if not changed_fields.issubset({"is_locked"}):
+                raise serializers.ValidationError(_("Cannot modify a locked scenario."))
+        return data
 
     def validate_start_year(self, value):
         if value < ScenarioWriteSerializer.SCENARIO_MIN_YEAR or value > ScenarioWriteSerializer.SCENARIO_MAX_YEAR:
@@ -117,6 +125,10 @@ class ScenarioRulesReorderSerializer(serializers.Serializer):
 
     def validate_new_order(self, new_order):
         scenario = self.context["scenario"]
+
+        if scenario.is_locked:
+            raise serializers.ValidationError("Cannot reorder rules for a locked scenario.")
+
         received_ids = set(rule.id for rule in new_order)
         scenario_rules_ids = set(scenario.rules.order_by("id").values_list("id", flat=True))
 

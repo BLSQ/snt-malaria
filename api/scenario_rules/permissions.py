@@ -22,6 +22,9 @@ class ScenarioRulePermission(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:  # = GET for retrieve
             return True
 
+        if obj.scenario.is_locked:
+            return False
+
         user = request.user
         if user.has_perm(SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()):  # PATCH & DELETE
             return True

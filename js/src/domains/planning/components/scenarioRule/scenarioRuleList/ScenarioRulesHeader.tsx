@@ -12,7 +12,7 @@ type Props = {
 
 export const ScenarioRulesHeader: FC<Props> = ({ onCreateRule }) => {
     const { formatMessage } = useSafeIntl();
-    const { canEditScenario } = usePlanningContext();
+    const { isScenarioEditable } = usePlanningContext();
 
     return (
         <Stack
@@ -28,7 +28,7 @@ export const ScenarioRulesHeader: FC<Props> = ({ onCreateRule }) => {
                     {formatMessage(MESSAGES.interventionTitle)}
                 </Typography>
             </Stack>
-            {canEditScenario && (
+            {isScenarioEditable && (
                 <Button onClick={() => onCreateRule()}>
                     {formatMessage(MESSAGES.createScenarioRule)}
                 </Button>
