@@ -4,14 +4,28 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('snt_malaria', '0034_intervention_target_population_and_more'),
+        ("snt_malaria", "0034_intervention_target_population_and_more"),
     ]
 
+    def delete_late_year_lines(apps, schema_editor):
+        InterventionCostBreakdownLine = apps.get_model("snt_malaria", "InterventionCostBreakdownLine")
+        db_alias = schema_editor.connection.alias
+        intervention_ids = (
+            InterventionCostBreakdownLine.objects.using(db_alias).values_list("intervention_id", flat=True).distinct()
+        )
+        for intervention_id in intervention_ids:
+            qs = InterventionCostBreakdownLine.objects.using(db_alias).filter(intervention_id=intervention_id)
+            years = list(qs.values_list("year", flat=True))
+            if not years:
+                continue
+            min_year = min(years)
+            qs.filter(year__gt=min_year).delete()
+
     operations = [
+        migrations.RunPython(delete_late_year_lines),
         migrations.RemoveField(
-            model_name='interventioncostbreakdownline',
-            name='year',
+            model_name="interventioncostbreakdownline",
+            name="year",
         ),
     ]
