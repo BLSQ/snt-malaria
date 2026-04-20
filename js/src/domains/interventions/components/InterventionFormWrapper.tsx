@@ -78,9 +78,11 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
             );
         }
 
-        formik.setValues({
-            ...interventionDetails,
-            target_population: defaultPop,
+        formik.resetForm({
+            values: {
+                ...interventionDetails,
+                target_population: defaultPop,
+            },
         });
     }, [interventionDetails, metricTypes]); // Only run when interventionDetails or metricTypes changes
 
