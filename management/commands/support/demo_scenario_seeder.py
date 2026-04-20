@@ -2,23 +2,21 @@
 Create a demo scenario with intervention assignments for Burkina Faso
 """
 
-import random
-
 from datetime import date
 
 from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS, BudgetCalculator
 
 from iaso.models import OrgUnitType, User
 from iaso.models.data_store import JsonDataStore
-from iaso.models.metric import MetricValue
+from iaso.models.metric import MetricType
 from plugins.snt_malaria.api.budget.utils import (
     build_cost_dataframe,
     build_interventions_input,
     build_population_dataframe,
 )
 from plugins.snt_malaria.models.budget import Budget
-from plugins.snt_malaria.models.intervention import Intervention, InterventionAssignment
-from plugins.snt_malaria.models.scenario import Scenario
+from plugins.snt_malaria.models.intervention import Intervention
+from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule, ScenarioRuleInterventionProperties
 
 
 class DemoScenarioSeeder:
@@ -34,7 +32,7 @@ class DemoScenarioSeeder:
         # Check if a demo scenario already exists
         if Scenario.objects.filter(account=self.account, name__icontains="Demo").exists():
             self.stdout_write(f"Skipping scenario creation for {self.account.name}, demo scenario already exists")
-            return None
+            return
 
         self.stdout_write(f"Creating demo scenario for account {self.account.name}:")
 
@@ -42,23 +40,7 @@ class DemoScenarioSeeder:
         created_by = User.objects.filter(iaso_profile__account=self.account).first()
         if not created_by:
             self.stdout_write("ERROR: No user found for this account")
-            return None
-
-        # Create the demo scenario
-        current_year = date.today().year
-        scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=created_by,
-            name=f"Demo Scenario {current_year}-{current_year + 5}",
-            description=(
-                "This is a demonstration scenario for Burkina Faso showing various malaria "
-                "intervention strategies across different districts. The scenario includes "
-                "a mix of preventive measures (ITNs, SMC, IPTp), case management, and vaccination interventions."
-            ),
-            start_year=current_year,
-            end_year=current_year + 5,
-        )
-        self.stdout_write(f"Created scenario: {scenario.name}")
+            return
 
         # Get all interventions for this account
         interventions = Intervention.objects.filter(intervention_category__account=self.account).select_related(
@@ -67,92 +49,25 @@ class DemoScenarioSeeder:
 
         if not interventions.exists():
             self.stdout_write("WARNING: No interventions found for this account. Run intervention_seeder first.")
-            return None
+            return
 
-        metrics = MetricValue.objects.filter(
-            metric_type__code__in=["PF_PR_RATE", "PF_INCIDENCE_RATE"],
-            metric_type__account=self.account,
-        ).select_related("org_unit")
-
-        all_org_units = metrics.values_list("org_unit", flat=True).distinct()
-        incidence_250_ou = (
-            metrics.filter(value__gte=250, metric_type__code="PF_INCIDENCE_RATE")
-            .values_list("org_unit", flat=True)
-            .distinct()
+        metric_types = MetricType.objects.filter(
+            account=self.account, code__in=["PF_PR_RATE", "SEASONALITY_PRECIPITATION"]
         )
-        prevalence_55_ou = (
-            metrics.filter(value__gte=55, metric_type__code="PF_PR_RATE").values_list("org_unit", flat=True).distinct()
+        pf_rate_metric_type = metric_types.filter(code="PF_PR_RATE").first()
+        seasonality_precipitation_metric_type = metric_types.filter(code="SEASONALITY_PRECIPITATION").first()
+
+        scenario_1 = self._create_scenarion_(
+            "NSP 1", created_by, interventions, seasonality_precipitation_metric_type, pf_rate_metric_type, rate=60
         )
-        prevalence_75_ou = (
-            metrics.filter(value__gte=75, metric_type__code="PF_PR_RATE").values_list("org_unit", flat=True).distinct()
+        scenario_2 = self._create_scenarion_(
+            "NSP 2", created_by, interventions, seasonality_precipitation_metric_type, pf_rate_metric_type, rate=80
         )
-
-        incidence_250_prevalence_55_ou = [ou for ou in prevalence_55_ou if ou in incidence_250_ou]
-        incidence_250_prevalence_75_ou = [ou for ou in incidence_250_ou if ou in prevalence_75_ou]
-        intervention_to_assign = {
-            "cm_public": "all",
-            "itn_routine": "all",
-            "itn_campaign": "all",
-            "iptp": "prevalence_55",
-            "vacc": "prevalence_75",
-        }
-        all_assignments = []
-
-        for intervention_code, prevalence_group in intervention_to_assign.items():
-            # Get interventions for this code
-            if intervention_code in ["itn_routine", "itn_campaign"]:
-                code_interventions = interventions.filter(code=intervention_code, name="Dual AI")
-            else:
-                code_interventions = interventions.filter(code=intervention_code)
-
-            if not code_interventions.exists():
-                self.stdout_write(f"WARNING: No interventions found for code '{intervention_code}', skipping...")
-                continue
-
-            # Convert to list for random selection
-            code_interventions_list = list(code_interventions)
-            self.stdout_write(
-                f"Found {len(code_interventions_list)} '{intervention_code}' interventions: "
-                f"{[i.name for i in code_interventions_list]}"
-            )
-
-            # Filter org units by prevalence group if needed
-            filtered_org_units = []
-            if prevalence_group != "all":
-                if prevalence_group == "prevalence_55":
-                    filtered_org_units = incidence_250_prevalence_55_ou
-                elif prevalence_group == "prevalence_75":
-                    filtered_org_units = incidence_250_prevalence_75_ou
-                self.stdout_write(
-                    f"Assigning '{intervention_code}' to {len(filtered_org_units)} org units in prevalence group '{prevalence_group}'"
-                )
-            else:
-                filtered_org_units = all_org_units
-                self.stdout_write(f"Assigning '{intervention_code}' to all {len(filtered_org_units)} org units")
-
-            # Assign one random intervention from this code to each filtered org unit
-            for org_unit in filtered_org_units:
-                intervention = random.choice(code_interventions_list)
-                all_assignments.append(
-                    InterventionAssignment(
-                        scenario=scenario,
-                        org_unit_id=org_unit,
-                        intervention=intervention,
-                        created_by=created_by,
-                    )
-                )
-
-            self.stdout_write(f"Created {len(filtered_org_units)} '{intervention_code}' assignments")
-
-        # Bulk create all assignments
-        total_assignments = len(all_assignments)
-        InterventionAssignment.objects.bulk_create(all_assignments)
-        self.stdout_write(f"\nTotal assignments created: {total_assignments}")
 
         # Create a budget for the scenario
-        self.stdout_write("\nCreating budget for scenario...")
-        budget = self._create_budget_for_scenario(scenario, created_by)
-        self.stdout_write(f"Created budget: {budget.name}")
+        # self.stdout_write("\nCreating budget for scenario...")
+        # budget = self._create_budget_for_scenario(scenario, created_by)
+        # self.stdout_write(f"Created budget: {budget.name}")
 
         # Create an SNT config
         country_out_id = OrgUnitType.objects.get(projects=self.project, short_name="Country").id
@@ -167,7 +82,6 @@ class DemoScenarioSeeder:
         )
 
         self.stdout_write("Done creating demo scenario.")
-        return scenario
 
     def _create_budget_for_scenario(self, scenario, created_by):
         """
@@ -234,3 +148,123 @@ class DemoScenarioSeeder:
         )
 
         return budget
+
+    def _create_scenarion_(
+        self, scenario_name, user, interventions, seasonality_precipitation_metric_type, pf_rate_metric_type, rate
+    ):
+        # Create the demo scenario
+        current_year = date.today().year + 1
+        scenario = Scenario.objects.create(
+            account=self.account,
+            created_by=user,
+            name=f"Demo {scenario_name}",
+            description=(
+                "This is a demonstration scenario for Burkina Faso showing various malaria "
+                "intervention strategies across different districts. The scenario includes "
+                "a mix of preventive measures (ITNs, SMC, IPTp), case management, and vaccination interventions."
+            ),
+            start_year=current_year,
+            end_year=current_year + 4,
+        )
+        self.stdout_write(f"Created scenario: {scenario.name}")
+
+        self.stdout_write("Create rule for all org units...")
+
+        all_orgunits_rules = ScenarioRule.objects.create(
+            scenario=scenario,
+            name="CM + IPTp",
+            created_by=user,
+            priority=1,
+            color="#26C6DA",
+            matching_criteria={"all": True},
+        )
+
+        # Only required for json matching criteria as it uses matching_orgunits field.
+
+        matching_criteria_seasonal = {
+            "and": [
+                {">=": [{"var": seasonality_precipitation_metric_type.id}, "seasonal"]},
+            ]
+        }
+
+        matching_orgunits = ScenarioRule.resolve_matched_org_units(self.account, matching_criteria_seasonal)
+
+        smc_rule = ScenarioRule.objects.create(
+            scenario=scenario,
+            name="SMC",
+            created_by=user,
+            priority=2,
+            color="#42A5F5",
+            org_units_matched=matching_orgunits,
+            matching_criteria=matching_criteria_seasonal,
+        )
+
+        matching_criteria_low = {
+            "and": [
+                {"<=": [{"var": pf_rate_metric_type.id}, rate]},
+            ]
+        }
+
+        matching_criteria_high = {
+            "and": [
+                {">": [{"var": pf_rate_metric_type.id}, rate]},
+            ]
+        }
+
+        matching_orgunits = ScenarioRule.resolve_matched_org_units(self.account, matching_criteria_high)
+
+        itn_dual_ai_rule = ScenarioRule.objects.create(
+            scenario=scenario,
+            name="ITN - Dual AI",
+            created_by=user,
+            priority=3,
+            color="#D4E157",
+            org_units_matched=matching_orgunits,
+            matching_criteria=matching_criteria_high,
+        )
+
+        matching_orgunits = ScenarioRule.resolve_matched_org_units(self.account, matching_criteria_low)
+
+        itn_pbo_rule = ScenarioRule.objects.create(
+            scenario=scenario,
+            name="ITN - PBO",
+            created_by=user,
+            priority=4,
+            color="#F4511E",
+            org_units_matched=matching_orgunits,
+            matching_criteria=matching_criteria_low,
+        )
+
+        self.stdout_write("Create intervention_properties for three scenario rules...")
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=all_orgunits_rules,
+            intervention=interventions.get(code="cm_public"),
+            coverage=1,
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=all_orgunits_rules,
+            intervention=interventions.filter(code="iptp").first(),
+            coverage=1,
+        )
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=smc_rule,
+            intervention=interventions.get(code="smc", name="SMC (SP+AQ)"),
+            coverage=1,
+        )
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=itn_dual_ai_rule,
+            intervention=interventions.filter(code="itn_routine", name="Dual AI").first(),
+            coverage=1,
+        )
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=itn_pbo_rule,
+            intervention=interventions.filter(code="itn_routine", name="PBO").first(),
+            coverage=1,
+        )
+
+        self.stdout_write("Assign interventions to scenario...")
+        scenario.refresh_assignments(user=user)
+        assignment_count = scenario.intervention_assignments.count()
+        self.stdout_write(f"Assigned {assignment_count} interventions to scenario")
