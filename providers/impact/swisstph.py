@@ -3,12 +3,13 @@ from typing import Optional
 from django.db.models import Avg, Max, Min, Q
 
 from iaso.models import OrgUnit
-from plugins.snt_malaria.models import Intervention
+from plugins.snt_malaria.models import ImpactProviderConfig, Intervention
 from plugins.snt_malaria.models.swisstph_impact import SwissTPHImpactData
 from plugins.snt_malaria.providers.impact.base import (
     BulkMatchResult,
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
+    ImpactProviderMeta,
     ImpactResult,
     InterventionMappingError,
     MatchResult,
@@ -51,6 +52,8 @@ class SwissTPHImpactProvider(ImpactProvider):
       and upper confidence-interval bands (defaults ``"EIR_mean"``,
       ``"EIR_lci"``, ``"EIR_uci"``).
     """
+
+    meta = ImpactProviderMeta(provider_key=ImpactProviderConfig.ProviderKey.SWISSTPH)
 
     def __init__(self, config_id: int, config: dict, secret: str):
         super().__init__(config_id, config, secret)

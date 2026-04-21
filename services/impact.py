@@ -7,6 +7,7 @@ from plugins.snt_malaria.models import Intervention, InterventionAssignment, Sce
 from plugins.snt_malaria.providers.impact.base import (
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
+    ImpactProviderMeta,
     ImpactResult,
     MatchWarnings,
     OrgUnitRef,
@@ -63,6 +64,7 @@ class ScenarioImpactMetrics(ImpactMetrics):
     org_units: list[OrgUnitImpactMetrics] = field(default_factory=list)
     org_units_not_found: list[OrgUnitRef] = field(default_factory=list)
     org_units_with_unmatched_interventions: list[OrgUnitRef] = field(default_factory=list)
+    provider_meta: ImpactProviderMeta = field(default_factory=lambda: ImpactProviderMeta(provider_key=""))
 
 
 def _aggregate_metrics(metrics: list[ImpactMetrics]) -> ImpactMetrics:
@@ -274,5 +276,6 @@ class ImpactService:
             org_units_with_unmatched_interventions=self._deduplicate_org_units(
                 warnings.org_units_with_unmatched_interventions
             ),
+            provider_meta=self._provider.get_meta(),
             **{f.name: getattr(overall, f.name) for f in ImpactMetrics.__dataclass_fields__.values()},
         )

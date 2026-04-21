@@ -4,7 +4,7 @@ from iaso.models import Account
 from iaso.test import TestCase
 from plugins.snt_malaria.api.impact.serializers import ImpactQuerySerializer, ScenarioImpactSerializer
 from plugins.snt_malaria.models import Scenario
-from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval
+from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProviderMeta
 from plugins.snt_malaria.services.impact import (
     OrgUnitImpactMetrics,
     ScenarioImpactMetrics,
@@ -151,10 +151,12 @@ class ScenarioImpactSerializerTestCase(TestCase):
                     direct_deaths=_metric(2.0, 1.5, 2.5),
                 ),
             ],
+            provider_meta=ImpactProviderMeta(provider_key="fake"),
         )
         data = ScenarioImpactSerializer(metrics).data
 
         self.assertEqual(data["scenario_id"], 42)
+        self.assertEqual(data["provider_meta"], {"provider_key": "fake"})
 
         self._assert_metric(data["number_cases"], 100.0, 90.0, 110.0)
         self._assert_metric(data["number_severe_cases"], 10.0, 8.0, 12.0)

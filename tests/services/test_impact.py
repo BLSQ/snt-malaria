@@ -7,6 +7,7 @@ from plugins.snt_malaria.models import Intervention, InterventionAssignment, Int
 from plugins.snt_malaria.providers.impact.base import (
     BulkMatchResult,
     ImpactMetricWithConfidenceInterval,
+    ImpactProviderMeta,
     ImpactResult,
     MatchResult,
     MatchWarnings,
@@ -227,11 +228,12 @@ class ImpactServiceGetScenarioImpactTestCase(TestCase):
             ],
         }
 
-    def _make_provider_mock(self, supports_bulk, warnings=None):
+    def _make_provider_mock(self, supports_bulk, warnings=None, meta=None):
         """Build a mock provider wired with realistic per-org-unit results."""
         results_by_ou = self._make_impact_results()
         mock_provider = Mock()
         mock_provider.supports_bulk = supports_bulk
+        mock_provider.get_meta.return_value = meta if meta is not None else ImpactProviderMeta(provider_key="test")
 
         w = warnings or MatchWarnings()
 
@@ -403,3 +405,15 @@ class ImpactServiceGetScenarioImpactTestCase(TestCase):
 
         not_found_ids = {ou.id for ou in result.org_units_not_found}
         self.assertIn(self.district3.id, not_found_ids)
+
+    def test_provider_meta_propagates_to_result(self):
+        """ImpactService should copy the provider's get_meta() onto ScenarioImpactMetrics."""
+        mock_provider = self._make_provider_mock(
+            supports_bulk=True,
+            meta=ImpactProviderMeta(provider_key="fake"),
+        )
+
+        service = ImpactService(provider=mock_provider)
+        result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
+
+        self.assertEqual(result.provider_meta, ImpactProviderMeta(provider_key="fake"))
