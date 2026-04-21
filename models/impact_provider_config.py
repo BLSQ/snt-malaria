@@ -12,6 +12,7 @@ class ImpactProviderConfig(models.Model):
     class ProviderKey(models.TextChoices):
         SWISSTPH = "swisstph", "SwissTPH"
         IDM = "idm", "IDM"
+        FAKE = "fake", "Fake (demo)"
 
     account = models.OneToOneField(
         "iaso.Account",
