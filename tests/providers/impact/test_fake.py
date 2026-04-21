@@ -1,5 +1,4 @@
 from datetime import date
-from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -27,8 +26,7 @@ from plugins.snt_malaria.providers.impact.fake import (
 )
 
 
-_FROZEN_YEAR = 2030
-_FROZEN_DATE = date(_FROZEN_YEAR, 6, 15)
+_CURRENT_YEAR = date.today().year
 
 
 def _cases(result) -> float:
@@ -102,16 +100,11 @@ class FakeProviderYearRangeAndAgeGroupsTests(TestCase):
         self.account = Account.objects.create(name="Year Range Account")
         self.provider = _make_provider(self.account)
 
-    def test_year_range_is_rolling(self):
-        with patch("plugins.snt_malaria.providers.impact.fake.date") as mock_date:
-            mock_date.today.return_value = _FROZEN_DATE
-            self.assertEqual(self.provider.get_year_range(), (_FROZEN_YEAR, _FROZEN_YEAR + YEAR_SPAN))
-
-    def test_year_range_spans_six_years(self):
-        with patch("plugins.snt_malaria.providers.impact.fake.date") as mock_date:
-            mock_date.today.return_value = _FROZEN_DATE
-            lo, hi = self.provider.get_year_range()
-        self.assertEqual(hi - lo + 1, 6)
+    def test_year_range_covers_year_span_plus_one_years_around_today(self):
+        lo, hi = self.provider.get_year_range()
+        self.assertLessEqual(lo, _CURRENT_YEAR)
+        self.assertGreaterEqual(hi, _CURRENT_YEAR)
+        self.assertEqual(hi - lo + 1, YEAR_SPAN + 1)
 
     def test_age_groups_are_fixed(self):
         self.assertEqual(self.provider.get_age_groups(), [AGE_GROUP_UNDER5, AGE_GROUP_ALL])
@@ -165,9 +158,9 @@ class FakeProviderMatchImpactTests(TestCase):
         cls.ou_without_pop = OrgUnit.objects.create(name="OU No Pop", org_unit_type=ou_type, version=version)
 
         metric_type = MetricType.objects.create(account=cls.account, name="Population", code="POP")
-        MetricValue.objects.create(metric_type=metric_type, org_unit=cls.ou1, value=100_000, year=_FROZEN_YEAR - 1)
-        MetricValue.objects.create(metric_type=metric_type, org_unit=cls.ou1, value=120_000, year=_FROZEN_YEAR)
-        MetricValue.objects.create(metric_type=metric_type, org_unit=cls.ou2, value=50_000, year=_FROZEN_YEAR)
+        MetricValue.objects.create(metric_type=metric_type, org_unit=cls.ou1, value=100_000, year=_CURRENT_YEAR - 1)
+        MetricValue.objects.create(metric_type=metric_type, org_unit=cls.ou1, value=120_000, year=_CURRENT_YEAR)
+        MetricValue.objects.create(metric_type=metric_type, org_unit=cls.ou2, value=50_000, year=_CURRENT_YEAR)
 
         category = InterventionCategory.objects.create(name="cat", account=cls.account, created_by=cls.user)
         cls.intervention_1 = Intervention.objects.create(
@@ -185,10 +178,6 @@ class FakeProviderMatchImpactTests(TestCase):
 
     def setUp(self):
         self.provider = _make_provider(self.account)
-        self._patch_date = patch("plugins.snt_malaria.providers.impact.fake.date")
-        mock_date = self._patch_date.start()
-        mock_date.today.return_value = _FROZEN_DATE
-        self.addCleanup(self._patch_date.stop)
 
     def _bulk(self, interventions, org_units=None, age_group=AGE_GROUP_ALL, **kwargs):
         return self.provider.match_impact_bulk(
@@ -201,9 +190,9 @@ class FakeProviderMatchImpactTests(TestCase):
     def test_returns_one_result_per_year_in_the_window(self):
         bulk = self._bulk([])
         self.assertIn(self.ou1.id, bulk.results)
-        self.assertEqual(len(bulk.results[self.ou1.id]), YEAR_SPAN + 1)
+        lo, hi = self.provider.get_year_range()
         years = [r.year for r in bulk.results[self.ou1.id]]
-        self.assertEqual(years, list(range(_FROZEN_YEAR, _FROZEN_YEAR + YEAR_SPAN + 1)))
+        self.assertEqual(years, list(range(lo, hi + 1)))
 
     def test_uses_latest_population_value(self):
         bulk = self._bulk([])
@@ -227,7 +216,7 @@ class FakeProviderMatchImpactTests(TestCase):
         MetricValue.objects.filter(org_unit=self.ou1).delete()
         metric_type = MetricType.objects.get(account=self.account, code="POP")
         MetricValue.objects.create(metric_type=metric_type, org_unit=self.ou1, value=1_000, year=None)
-        MetricValue.objects.create(metric_type=metric_type, org_unit=self.ou1, value=999_000, year=_FROZEN_YEAR)
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.ou1, value=999_000, year=_CURRENT_YEAR)
 
         bulk = self._bulk([], org_units=[self.ou1])
         self.assertEqual(bulk.results[self.ou1.id][0].population, 999_000)
@@ -324,13 +313,10 @@ class FakeProviderMatchImpactTests(TestCase):
         self.assertLess(under5[-1] / under5[0], all_ages[-1] / all_ages[0])
 
     def test_year_from_and_to_clamp_the_window(self):
-        bulk = self._bulk(
-            [],
-            year_from=_FROZEN_YEAR + 1,
-            year_to=_FROZEN_YEAR + 3,
-        )
+        lo, _ = self.provider.get_year_range()
+        bulk = self._bulk([], year_from=lo + 1, year_to=lo + 3)
         years = [r.year for r in bulk.results[self.ou1.id]]
-        self.assertEqual(years, [_FROZEN_YEAR + 1, _FROZEN_YEAR + 2, _FROZEN_YEAR + 3])
+        self.assertEqual(years, [lo + 1, lo + 2, lo + 3])
 
     def test_results_carry_confidence_intervals(self):
         bulk = self._bulk([self.intervention_3])
