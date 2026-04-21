@@ -40,6 +40,10 @@ export type YearImpactMetrics = {
     org_units: OrgUnitImpactMetrics[];
 };
 
+export type ImpactProviderMeta = {
+    provider_key: string;
+};
+
 export type ScenarioImpactMetrics = {
     scenario_id: number;
     number_cases: ImpactMetricWithConfidenceInterval;
@@ -50,6 +54,7 @@ export type ScenarioImpactMetrics = {
     org_units: OrgUnitImpactMetrics[];
     org_units_not_found: OrgUnitRef[];
     org_units_with_unmatched_interventions: OrgUnitRef[];
+    provider_meta: ImpactProviderMeta;
 };
 
 export type ScenarioMatchWarning = {

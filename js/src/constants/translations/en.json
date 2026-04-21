@@ -210,6 +210,8 @@
     "iaso.snt_malaria.label.listView": "List",
     "iaso.snt_malaria.label.budgetView": "Budget",
     "iaso.snt_malaria.label.submit": "Submit",
+    "iaso.snt_malaria.compareCustomize.fakeProviderInfoTitle": "Demo data",
+    "iaso.snt_malaria.compareCustomize.fakeProviderInfoBody": "The impact figures shown are generated for demonstration purposes and are not based on real epidemiological data.",
     "iaso.snt_malaria.compareCustomize.orgUnitsNotFoundTitle": "Org units not found",
     "iaso.snt_malaria.compareCustomize.orgUnitsNotFound": "Some org units could not be found in the impact database.",
     "iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventionsTitle": "Unmatched interventions",
