@@ -139,9 +139,6 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         old_unit_type = self.cost_line2.unit_type
         old_name = self.cost_line2.name
         old_category = self.cost_line2.category
-        count_smc_before = InterventionCostBreakdownLine.objects.filter(
-            intervention=self.intervention_chemo_smc
-        ).count()
 
         # New payload
         data = {
