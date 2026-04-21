@@ -1,10 +1,12 @@
 import React, { FC, useCallback, useState } from 'react';
-import { Card, Typography } from '@mui/material';
-import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import { Card, Stack, Typography } from '@mui/material';
+import { LoadingSpinner, useRedirectToReplace, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
+import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
+import { OrgUnitSelect } from '../../components/OrgUnitSelect';
 import {
     MainColumn,
     PageContainer,
@@ -12,10 +14,12 @@ import {
     SidebarColumn,
     SidebarLayout,
 } from '../../components/styledComponents';
+import { baseUrls } from '../../constants/urls';
 import {
     useGetMetricCategories,
     useGetMetricValues,
 } from '../planning/hooks/useGetMetrics';
+import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { MetricType } from '../planning/types/metrics';
 import { DataLayerDialog } from './dataLayerForm/DataLayerDialog';
@@ -33,12 +37,27 @@ const styles = {
     },
 } satisfies SxStyles;
 
+type DataLayersParams = {
+    displayOrgUnitId?: number;
+};
+
 export const DataLayers: FC = () => {
     const { formatMessage } = useSafeIntl();
+    const { displayOrgUnitId } = useParamsObject(
+        baseUrls.dataLayers,
+    ) as unknown as DataLayersParams;
+    const redirectToReplace = useRedirectToReplace();
 
     const [displayedMetricType, setDisplayedMetricType] =
         useState<MetricType>();
-    const { data: orgUnits } = useGetOrgUnits();
+    const { data: accountSettings } = useGetAccountSettings();
+    const interventionTypeId =
+        accountSettings?.intervention_org_unit_type_id;
+    const { data: orgUnits } = useGetOrgUnits({
+        orgUnitParentId: displayOrgUnitId,
+        orgUnitTypeId: interventionTypeId,
+        enabled: !!interventionTypeId,
+    });
 
     const { data: metricCategories, isLoading: isLoadingMetricLayers } =
         useGetMetricCategories();
@@ -53,6 +72,15 @@ export const DataLayers: FC = () => {
         useState<boolean>(false);
 
     const [selectedMetricType, setSelectedMetricType] = useState<MetricType>();
+
+    const handleDisplayOrgUnitChange = useCallback(
+        (orgUnitId?: number) => {
+            redirectToReplace(baseUrls.dataLayers, {
+                displayOrgUnitId: orgUnitId?.toString(),
+            });
+        },
+        [redirectToReplace],
+    );
 
     const onDialogClose = useCallback(() => {
         setIsMetricTypeFormOpen(false);
@@ -111,9 +139,15 @@ export const DataLayers: FC = () => {
                             <Card sx={styles.card}>
                                 <CardStyled
                                     header={
-                                        <Typography variant="h6">
-                                            {displayedMetricType?.name || ''}
-                                        </Typography>
+                                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                            <Typography variant="h6">
+                                                {displayedMetricType?.name || ''}
+                                            </Typography>
+                                            <OrgUnitSelect
+                                                onOrgUnitChange={handleDisplayOrgUnitChange}
+                                                selectedOrgUnitId={displayOrgUnitId}
+                                            />
+                                        </Stack>
                                     }
                                 >
                                     <DataLayerMap
