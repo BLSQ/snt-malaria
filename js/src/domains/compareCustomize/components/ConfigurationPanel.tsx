@@ -13,7 +13,7 @@ import {
     Typography,
 } from '@mui/material';
 import { blueGrey } from '@mui/material/colors';
-import { alpha, SxProps } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
@@ -157,18 +157,25 @@ const styles = {
         textTransform: 'none',
         minWidth: 0,
     },
-} satisfies SxStyles;
-
-const alertBoxSx = (
-    severity: 'info' | 'warning',
-): SxProps<Theme> => ({
-    borderRadius: 3,
-    backgroundColor: (theme: Theme) => alpha(theme.palette[severity].light, 0.15),
-    border: 'none',
-    '& .MuiAlert-icon': {
-        color: `${severity}.main`,
+    alertBox: {
+        borderRadius: 3,
+        border: 'none',
     },
-});
+    alertBoxWarning: {
+        backgroundColor: (theme: Theme) =>
+            alpha(theme.palette.warning.light, 0.15),
+        '& .MuiAlert-icon': { color: 'warning.main' },
+    },
+    alertBoxInfo: {
+        backgroundColor: (theme: Theme) =>
+            alpha(theme.palette.info.light, 0.15),
+        '& .MuiAlert-icon': { color: 'info.main' },
+    },
+    scenarioChip: {
+        color: (theme: Theme) => theme.palette.common.white,
+        fontWeight: 500,
+    },
+} satisfies SxStyles;
 
 export const ConfigurationPanel: FC<Props> = ({
     baselineScenarioId,
@@ -364,7 +371,10 @@ export const ConfigurationPanel: FC<Props> = ({
             )}
             <Box sx={styles.alertsSection}>
                 {showYearRangeError && (
-                    <Alert severity="warning" sx={alertBoxSx('warning')}>
+                    <Alert
+                        severity="warning"
+                        sx={[styles.alertBox, styles.alertBoxWarning]}
+                    >
                         <AlertTitle>
                             {formatMessage(MESSAGES.noYearRangeOverlapTitle)}
                         </AlertTitle>
@@ -372,7 +382,10 @@ export const ConfigurationPanel: FC<Props> = ({
                     </Alert>
                 )}
                 {orgUnitsNotFound && orgUnitsNotFound.length > 0 && (
-                    <Alert severity="warning" sx={alertBoxSx('warning')}>
+                    <Alert
+                        severity="warning"
+                        sx={[styles.alertBox, styles.alertBoxWarning]}
+                    >
                         <AlertTitle sx={styles.warningTitleRow}>
                             {formatMessage(MESSAGES.orgUnitsNotFoundTitle)}
                             <Button
@@ -392,11 +405,10 @@ export const ConfigurationPanel: FC<Props> = ({
                                             key={`${scenario.id}-${ou.org_unit_id}`}
                                             label={ou.org_unit_name}
                                             size="small"
-                                            sx={{
-                                                backgroundColor: scenario.color,
-                                                color: '#fff',
-                                                fontWeight: 500,
-                                            }}
+                                            sx={[
+                                                styles.scenarioChip,
+                                                { backgroundColor: scenario.color },
+                                            ]}
                                         />
                                     )),
                                 )}
@@ -405,7 +417,10 @@ export const ConfigurationPanel: FC<Props> = ({
                     </Alert>
                 )}
                 {orgUnitsWithUnmatchedInterventions && orgUnitsWithUnmatchedInterventions.length > 0 && (
-                    <Alert severity="warning" sx={alertBoxSx('warning')}>
+                    <Alert
+                        severity="warning"
+                        sx={[styles.alertBox, styles.alertBoxWarning]}
+                    >
                         <AlertTitle sx={styles.warningTitleRow}>
                             {formatMessage(MESSAGES.orgUnitsWithUnmatchedInterventionsTitle)}
                             <Button
@@ -425,11 +440,10 @@ export const ConfigurationPanel: FC<Props> = ({
                                             key={`${scenario.id}-${ou.org_unit_id}`}
                                             label={ou.org_unit_name}
                                             size="small"
-                                            sx={{
-                                                backgroundColor: scenario.color,
-                                                color: '#fff',
-                                                fontWeight: 500,
-                                            }}
+                                            sx={[
+                                                styles.scenarioChip,
+                                                { backgroundColor: scenario.color },
+                                            ]}
                                         />
                                     )),
                                 )}
@@ -438,7 +452,10 @@ export const ConfigurationPanel: FC<Props> = ({
                     </Alert>
                 )}
                 {isFakeProvider && (
-                    <Alert severity="info" sx={alertBoxSx('info')}>
+                    <Alert
+                        severity="info"
+                        sx={[styles.alertBox, styles.alertBoxInfo]}
+                    >
                         <AlertTitle>
                             {formatMessage(MESSAGES.fakeProviderInfoTitle)}
                         </AlertTitle>
