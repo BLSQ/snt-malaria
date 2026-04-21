@@ -210,6 +210,8 @@
     "iaso.snt_malaria.label.listView": "Liste",
     "iaso.snt_malaria.label.budgetView": "Budget",
     "iaso.snt_malaria.label.submit": "Soumettre",
+    "iaso.snt_malaria.compareCustomize.fakeProviderInfoTitle": "Données de démonstration",
+    "iaso.snt_malaria.compareCustomize.fakeProviderInfoBody": "Les chiffres d'impact affichés sont générés à des fins de démonstration et ne reposent pas sur des données épidémiologiques réelles.",
     "iaso.snt_malaria.compareCustomize.orgUnitsNotFoundTitle": "Unités d'organisation introuvables",
     "iaso.snt_malaria.compareCustomize.orgUnitsNotFound": "Certaines unités d'organisation n'ont pas été trouvées dans la base de données d'impact.",
     "iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventionsTitle": "Erreurs d'interventions",

@@ -60,9 +60,14 @@ class OrgUnitRefSerializer(serializers.Serializer):
     org_unit_name = serializers.CharField(source="name")
 
 
+class ImpactProviderMetaSerializer(serializers.Serializer):
+    provider_key = serializers.CharField()
+
+
 class ScenarioImpactSerializer(ImpactMetricsSerializer):
     scenario_id = serializers.IntegerField()
     by_year = YearMetricsSerializer(many=True)
     org_units = OrgUnitMetricsSerializer(many=True)
     org_units_not_found = OrgUnitRefSerializer(many=True, default=[])
     org_units_with_unmatched_interventions = OrgUnitRefSerializer(many=True, default=[])
+    provider_meta = ImpactProviderMetaSerializer()

@@ -608,6 +608,15 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.ok',
         defaultMessage: 'OK',
     },
+    fakeProviderInfoTitle: {
+        id: 'iaso.snt_malaria.compareCustomize.fakeProviderInfoTitle',
+        defaultMessage: 'Demo data',
+    },
+    fakeProviderInfoBody: {
+        id: 'iaso.snt_malaria.compareCustomize.fakeProviderInfoBody',
+        defaultMessage:
+            'The impact figures shown are generated for demonstration purposes and are not based on real epidemiological data.',
+    },
     orgUnitsNotFoundTitle: {
         id: 'iaso.snt_malaria.compareCustomize.orgUnitsNotFoundTitle',
         defaultMessage: 'Org units not found',

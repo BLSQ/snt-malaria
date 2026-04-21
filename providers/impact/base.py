@@ -15,6 +15,13 @@ class OrgUnitRef:
     name: str
 
 
+@dataclass(frozen=True)
+class ImpactProviderMeta:
+    """Descriptor for an impact provider, attached to every impact response."""
+
+    provider_key: str
+
+
 @dataclass
 class ImpactMetricWithConfidenceInterval:
     """A metric value with optional confidence interval bounds."""
@@ -135,10 +142,17 @@ class ImpactProvider(ABC):
     and raise DataIntegrityError if their data source contains duplicates.
     """
 
+    # Subclasses must override with their own ImpactProviderMeta instance.
+    meta: ImpactProviderMeta = ImpactProviderMeta(provider_key="")
+
     def __init__(self, config_id: int, config: dict, secret: str):
         self.config_id = config_id
         self.config = config
         self.secret = secret
+
+    def get_meta(self) -> ImpactProviderMeta:
+        """Provider metadata attached to every impact response."""
+        return self.meta
 
     @staticmethod
     def _impact_reference(org_unit: OrgUnit) -> str:

@@ -3,13 +3,14 @@ from typing import Optional
 from django.db.models import Max, Min
 
 from iaso.models import OrgUnit
-from plugins.snt_malaria.models import Intervention
+from plugins.snt_malaria.models import ImpactProviderConfig, Intervention
 from plugins.snt_malaria.models.idm_impact import IDMAdminInfo, IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
 from plugins.snt_malaria.providers.impact.base import (
     BulkMatchResult,
     DataIntegrityError,
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
+    ImpactProviderMeta,
     ImpactResult,
     InterventionMappingError,
     MatchResult,
@@ -50,6 +51,8 @@ class IDMImpactProvider(ImpactProvider):
     Uses intervention_package IDs to filter model_output rows by
     intervention deployment status.
     """
+
+    meta = ImpactProviderMeta(provider_key=ImpactProviderConfig.ProviderKey.IDM)
 
     def __init__(self, config_id: int, config: dict, secret: str):
         super().__init__(config_id, config, secret)

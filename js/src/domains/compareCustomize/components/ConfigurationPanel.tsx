@@ -19,6 +19,7 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
 import {
+    ImpactProviderMeta,
     ScenarioId,
     ScenarioMatchWarning,
     ScenarioOption,
@@ -45,6 +46,7 @@ type Props = {
     onAgeGroupChange?: (_key: string, value: unknown) => void;
     orgUnitsNotFound?: ScenarioMatchWarning[];
     orgUnitsWithUnmatchedInterventions?: ScenarioMatchWarning[];
+    providerMeta?: ImpactProviderMeta;
 };
 
 const styles = {
@@ -112,14 +114,6 @@ const styles = {
         color: 'text.primary',
         mb: 1,
     },
-    warningBox: {
-        borderRadius: 3,
-        backgroundColor: (theme: Theme) => alpha(theme.palette.warning.light, 0.15),
-        border: 'none',
-        '& .MuiAlert-icon': {
-            color: 'warning.main',
-        },
-    },
     chipContainer: {
         display: 'flex',
         flexWrap: 'wrap',
@@ -143,7 +137,7 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
     },
-    warningsSection: {
+    alertsSection: {
         display: 'flex',
         flexDirection: 'column',
         gap: 2,
@@ -162,6 +156,24 @@ const styles = {
         p: 0,
         textTransform: 'none',
         minWidth: 0,
+    },
+    alertBox: {
+        borderRadius: 3,
+        border: 'none',
+    },
+    alertBoxWarning: {
+        backgroundColor: (theme: Theme) =>
+            alpha(theme.palette.warning.light, 0.15),
+        '& .MuiAlert-icon': { color: 'warning.main' },
+    },
+    alertBoxInfo: {
+        backgroundColor: (theme: Theme) =>
+            alpha(theme.palette.info.light, 0.15),
+        '& .MuiAlert-icon': { color: 'info.main' },
+    },
+    scenarioChip: {
+        color: (theme: Theme) => theme.palette.common.white,
+        fontWeight: 500,
     },
 } satisfies SxStyles;
 
@@ -184,6 +196,7 @@ export const ConfigurationPanel: FC<Props> = ({
     onAgeGroupChange,
     orgUnitsNotFound,
     orgUnitsWithUnmatchedInterventions,
+    providerMeta,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -217,6 +230,7 @@ export const ConfigurationPanel: FC<Props> = ({
         showYearRangeError ||
         (orgUnitsNotFound?.length ?? 0) > 0 ||
         (orgUnitsWithUnmatchedInterventions?.length ?? 0) > 0;
+    const isFakeProvider = providerMeta?.provider_key === 'fake';
 
     const [showNotFoundDetails, setShowNotFoundDetails] = useState(false);
     const [showUnmatchedDetails, setShowUnmatchedDetails] = useState(false);
@@ -351,88 +365,104 @@ export const ConfigurationPanel: FC<Props> = ({
                 </Box>
             )}
             {hasWarnings && (
-                <>
-                    <Typography sx={styles.sectionTitle}>
-                        {formatMessage(MESSAGES.warningsTitle)}
-                    </Typography>
-                    <Box sx={styles.warningsSection}>
-                        {showYearRangeError && (
-                            <Alert severity="warning" sx={styles.warningBox}>
-                                <AlertTitle>
-                                    {formatMessage(MESSAGES.noYearRangeOverlapTitle)}
-                                </AlertTitle>
-                                {formatMessage(MESSAGES.noYearRangeOverlap)}
-                            </Alert>
-                        )}
-                        {orgUnitsNotFound && orgUnitsNotFound.length > 0 && (
-                            <Alert severity="warning" sx={styles.warningBox}>
-                                <AlertTitle sx={styles.warningTitleRow}>
-                                    {formatMessage(MESSAGES.orgUnitsNotFoundTitle)}
-                                    <Button
-                                        size="small"
-                                        onClick={() => setShowNotFoundDetails(prev => !prev)}
-                                        sx={styles.detailsButton}
-                                    >
-                                        {formatMessage(showNotFoundDetails ? MESSAGES.hideDetails : MESSAGES.showDetails)}
-                                    </Button>
-                                </AlertTitle>
-                                {formatMessage(MESSAGES.orgUnitsNotFound)}
-                                {showNotFoundDetails && (
-                                    <Box sx={styles.chipContainer}>
-                                        {orgUnitsNotFound.flatMap(({ scenario, orgUnits }) =>
-                                            orgUnits.map(ou => (
-                                                <Chip
-                                                    key={`${scenario.id}-${ou.org_unit_id}`}
-                                                    label={ou.org_unit_name}
-                                                    size="small"
-                                                    sx={{
-                                                        backgroundColor: scenario.color,
-                                                        color: '#fff',
-                                                        fontWeight: 500,
-                                                    }}
-                                                />
-                                            )),
-                                        )}
-                                    </Box>
-                                )}
-                            </Alert>
-                        )}
-                        {orgUnitsWithUnmatchedInterventions && orgUnitsWithUnmatchedInterventions.length > 0 && (
-                            <Alert severity="warning" sx={styles.warningBox}>
-                                <AlertTitle sx={styles.warningTitleRow}>
-                                    {formatMessage(MESSAGES.orgUnitsWithUnmatchedInterventionsTitle)}
-                                    <Button
-                                        size="small"
-                                        onClick={() => setShowUnmatchedDetails(prev => !prev)}
-                                        sx={styles.detailsButton}
-                                    >
-                                        {formatMessage(showUnmatchedDetails ? MESSAGES.hideDetails : MESSAGES.showDetails)}
-                                    </Button>
-                                </AlertTitle>
-                                {formatMessage(MESSAGES.orgUnitsWithUnmatchedInterventions)}
-                                {showUnmatchedDetails && (
-                                    <Box sx={styles.chipContainer}>
-                                        {orgUnitsWithUnmatchedInterventions.flatMap(({ scenario, orgUnits }) =>
-                                            orgUnits.map(ou => (
-                                                <Chip
-                                                    key={`${scenario.id}-${ou.org_unit_id}`}
-                                                    label={ou.org_unit_name}
-                                                    size="small"
-                                                    sx={{
-                                                        backgroundColor: scenario.color,
-                                                        color: '#fff',
-                                                        fontWeight: 500,
-                                                    }}
-                                                />
-                                            )),
-                                        )}
-                                    </Box>
-                                )}
-                            </Alert>
-                        )}
-                    </Box>
-                </>
+                <Typography sx={styles.sectionTitle}>
+                    {formatMessage(MESSAGES.warningsTitle)}
+                </Typography>
             )}
+            <Box sx={styles.alertsSection}>
+                {showYearRangeError && (
+                    <Alert
+                        severity="warning"
+                        sx={[styles.alertBox, styles.alertBoxWarning]}
+                    >
+                        <AlertTitle>
+                            {formatMessage(MESSAGES.noYearRangeOverlapTitle)}
+                        </AlertTitle>
+                        {formatMessage(MESSAGES.noYearRangeOverlap)}
+                    </Alert>
+                )}
+                {orgUnitsNotFound && orgUnitsNotFound.length > 0 && (
+                    <Alert
+                        severity="warning"
+                        sx={[styles.alertBox, styles.alertBoxWarning]}
+                    >
+                        <AlertTitle sx={styles.warningTitleRow}>
+                            {formatMessage(MESSAGES.orgUnitsNotFoundTitle)}
+                            <Button
+                                size="small"
+                                onClick={() => setShowNotFoundDetails(prev => !prev)}
+                                sx={styles.detailsButton}
+                            >
+                                {formatMessage(showNotFoundDetails ? MESSAGES.hideDetails : MESSAGES.showDetails)}
+                            </Button>
+                        </AlertTitle>
+                        {formatMessage(MESSAGES.orgUnitsNotFound)}
+                        {showNotFoundDetails && (
+                            <Box sx={styles.chipContainer}>
+                                {orgUnitsNotFound.flatMap(({ scenario, orgUnits }) =>
+                                    orgUnits.map(ou => (
+                                        <Chip
+                                            key={`${scenario.id}-${ou.org_unit_id}`}
+                                            label={ou.org_unit_name}
+                                            size="small"
+                                            sx={[
+                                                styles.scenarioChip,
+                                                { backgroundColor: scenario.color },
+                                            ]}
+                                        />
+                                    )),
+                                )}
+                            </Box>
+                        )}
+                    </Alert>
+                )}
+                {orgUnitsWithUnmatchedInterventions && orgUnitsWithUnmatchedInterventions.length > 0 && (
+                    <Alert
+                        severity="warning"
+                        sx={[styles.alertBox, styles.alertBoxWarning]}
+                    >
+                        <AlertTitle sx={styles.warningTitleRow}>
+                            {formatMessage(MESSAGES.orgUnitsWithUnmatchedInterventionsTitle)}
+                            <Button
+                                size="small"
+                                onClick={() => setShowUnmatchedDetails(prev => !prev)}
+                                sx={styles.detailsButton}
+                            >
+                                {formatMessage(showUnmatchedDetails ? MESSAGES.hideDetails : MESSAGES.showDetails)}
+                            </Button>
+                        </AlertTitle>
+                        {formatMessage(MESSAGES.orgUnitsWithUnmatchedInterventions)}
+                        {showUnmatchedDetails && (
+                            <Box sx={styles.chipContainer}>
+                                {orgUnitsWithUnmatchedInterventions.flatMap(({ scenario, orgUnits }) =>
+                                    orgUnits.map(ou => (
+                                        <Chip
+                                            key={`${scenario.id}-${ou.org_unit_id}`}
+                                            label={ou.org_unit_name}
+                                            size="small"
+                                            sx={[
+                                                styles.scenarioChip,
+                                                { backgroundColor: scenario.color },
+                                            ]}
+                                        />
+                                    )),
+                                )}
+                            </Box>
+                        )}
+                    </Alert>
+                )}
+                {isFakeProvider && (
+                    <Alert
+                        severity="info"
+                        sx={[styles.alertBox, styles.alertBoxInfo]}
+                    >
+                        <AlertTitle>
+                            {formatMessage(MESSAGES.fakeProviderInfoTitle)}
+                        </AlertTitle>
+                        {formatMessage(MESSAGES.fakeProviderInfoBody)}
+                    </Alert>
+                )}
+            </Box>
         </Card>
     );
 };
