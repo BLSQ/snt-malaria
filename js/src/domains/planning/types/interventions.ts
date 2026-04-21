@@ -87,6 +87,5 @@ export type InterventionCostBreakdownLine = {
     unit_type_label: string;
     unit_cost: string; // using string to avoid float precision issues
     id: number;
-    year: number;
     intervention: number;
 };

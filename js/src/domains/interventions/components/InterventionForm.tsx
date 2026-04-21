@@ -116,9 +116,7 @@ export const InterventionForm: FC<Props> = ({
                 <Button
                     variant="text"
                     sx={{ alignSelf: 'flex-start' }}
-                    onClick={() =>
-                        addChildValue('cost_breakdown_lines', { year: 2024 })
-                    }
+                    onClick={() => addChildValue('cost_breakdown_lines', {})}
                 >
                     {formatMessage(MESSAGES.addInterventionCostBreakdownLine)}
                 </Button>

@@ -112,20 +112,11 @@ class ScenarioAPITestCase(APITestCase):
             [
                 InterventionCostBreakdownLine(
                     intervention=self.intervention_chemo_smc,
-                    year=2025,
                     name="smc cost line",
                     category="Procurement",
                     unit_type="PER_SPAQ_3_11_MONTHS",
                     unit_cost=2.5,
-                ),
-                InterventionCostBreakdownLine(
-                    intervention=self.intervention_chemo_smc,
-                    year=2026,
-                    name="smc cost line",
-                    category="Procurement",
-                    unit_type="PER_SPAQ_3_11_MONTHS",
-                    unit_cost=2.6,
-                ),
+                )
             ]
         )
 
@@ -355,11 +346,11 @@ class ScenarioAPITestCase(APITestCase):
         )
 
         self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
-        self.assertEqual(smc_intervention["total_cost"], 1009800.0000000001)
+        self.assertEqual(smc_intervention["total_cost"], 495000.00000000006)
         self.assertEqual(smc_intervention["total_pop"], 237500.0)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
         self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
-        self.assertEqual(smc_intervention["cost_breakdown"][0]["cost"], 1009800.0000000001)
+        self.assertEqual(smc_intervention["cost_breakdown"][0]["cost"], 495000.00000000006)
 
         # Find Org unit cost
         smc_org_unit_costs = None
@@ -369,11 +360,11 @@ class ScenarioAPITestCase(APITestCase):
                 break
 
         self.assertIsNotNone(smc_org_unit_costs)
-        self.assertEqual(smc_org_unit_costs["total_cost"], 403920.0)
+        self.assertEqual(smc_org_unit_costs["total_cost"], 198000.0)
         self.assertEqual(len(smc_org_unit_costs["interventions"]), 1)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["code"], "smc")
         self.assertEqual(smc_org_unit_costs["interventions"][0]["type"], "SMC")
-        self.assertEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 403920.0)
+        self.assertEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 198000.0)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id)
 
     # Not going to far into detailed testing of the budget calculator here,
@@ -426,11 +417,11 @@ class ScenarioAPITestCase(APITestCase):
         )
 
         self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
-        self.assertAlmostEqual(smc_intervention["total_cost"], 1009800.0 * 0.8)
+        self.assertAlmostEqual(smc_intervention["total_cost"], 495000.0 * 0.8)
         self.assertAlmostEqual(smc_intervention["total_pop"], 237500.0 * 0.8)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
         self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
-        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["cost"], 1009800.0 * 0.8)
+        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["cost"], 495000.0 * 0.8)
         # Find Org unit cost
         smc_org_unit_costs = None
         for org_unit_costs in budget_2025["org_units_costs"]:
@@ -439,11 +430,11 @@ class ScenarioAPITestCase(APITestCase):
                 break
 
         self.assertIsNotNone(smc_org_unit_costs)
-        self.assertAlmostEqual(smc_org_unit_costs["total_cost"], 403920.0 * 0.8)
+        self.assertAlmostEqual(smc_org_unit_costs["total_cost"], 198000.0 * 0.8)
         self.assertEqual(len(smc_org_unit_costs["interventions"]), 1)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["code"], "smc")
         self.assertEqual(smc_org_unit_costs["interventions"][0]["type"], "SMC")
-        self.assertAlmostEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 403920.0 * 0.8)
+        self.assertAlmostEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 198000.0 * 0.8)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id)
 
         db_budget = Budget.objects.get(id=result["id"])

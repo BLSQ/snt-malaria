@@ -54,7 +54,6 @@ class InterventionAPITests(APITestCase):
             name="Cost Line 1",
             unit_cost=10,
             category="Procurement",
-            year=2024,
         )
 
     def test_list_interventions_authenticated(self):
@@ -128,13 +127,11 @@ class InterventionAPITests(APITestCase):
                     "name": "Updated Cost Line 1",
                     "unit_cost": 15,
                     "category": "Procurement",
-                    "year": 2024,
                 },
                 {
                     "name": "New Cost Line 2",
                     "unit_cost": 20,
                     "category": "Distribution",
-                    "year": 2024,
                 },
             ],
         }
@@ -158,13 +155,11 @@ class InterventionAPITests(APITestCase):
                     "name": "Updated Cost Line 1",
                     "unit_cost": 15,
                     "category": "Procurement",
-                    "year": 2024,
                 },
                 {
                     "name": "New Cost Line 2",
                     "unit_cost": 20,
                     "category": "Distribution",
-                    "year": 2024,
                 },
             ],
         }
@@ -182,13 +177,11 @@ class InterventionAPITests(APITestCase):
                     "name": "Updated Cost Line 1",
                     "unit_cost": 15,
                     "category": "Procurement",
-                    "year": 2024,
                 },
                 {
                     "name": "New Cost Line 2",
                     "unit_cost": 20,
                     "category": "Distribution",
-                    "year": 2024,
                 },
             ],
         }
