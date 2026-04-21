@@ -57,10 +57,10 @@ class DemoScenarioSeeder:
         pf_rate_metric_type = metric_types.filter(code="PF_PR_RATE").first()
         seasonality_precipitation_metric_type = metric_types.filter(code="SEASONALITY_PRECIPITATION").first()
 
-        scenario_1 = self._create_scenarion_(
+        scenario_1 = self._create_scenario_(
             "NSP 1", created_by, interventions, seasonality_precipitation_metric_type, pf_rate_metric_type, rate=60
         )
-        scenario_2 = self._create_scenarion_(
+        scenario_2 = self._create_scenario_(
             "NSP 2", created_by, interventions, seasonality_precipitation_metric_type, pf_rate_metric_type, rate=80
         )
 
@@ -149,7 +149,7 @@ class DemoScenarioSeeder:
 
         return budget
 
-    def _create_scenarion_(
+    def _create_scenario_(
         self, scenario_name, user, interventions, seasonality_precipitation_metric_type, pf_rate_metric_type, rate
     ):
         # Create the demo scenario
@@ -183,7 +183,7 @@ class DemoScenarioSeeder:
 
         matching_criteria_seasonal = {
             "and": [
-                {">=": [{"var": seasonality_precipitation_metric_type.id}, "seasonal"]},
+                {"==": [{"var": seasonality_precipitation_metric_type.id}, "seasonal"]},
             ]
         }
 
@@ -255,12 +255,12 @@ class DemoScenarioSeeder:
         )
         ScenarioRuleInterventionProperties.objects.create(
             scenario_rule=itn_dual_ai_rule,
-            intervention=interventions.filter(code="itn_routine", name="Dual AI").first(),
+            intervention=interventions.get(code="itn_routine", name="Dual AI"),
             coverage=1,
         )
         ScenarioRuleInterventionProperties.objects.create(
             scenario_rule=itn_pbo_rule,
-            intervention=interventions.filter(code="itn_routine", name="PBO").first(),
+            intervention=interventions.get(code="itn_routine", name="PBO"),
             coverage=1,
         )
 
