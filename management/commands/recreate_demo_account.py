@@ -220,7 +220,7 @@ class Command(BaseCommand):
             ImpactProviderConfig.objects.create(
                 account=account,
                 provider_key="fake",
-                config={},
+                config={"population_metric_code": "POPULATION"},
             )
 
             self.stdout.write(self.style.SUCCESS("Setup completed successfully:"))
