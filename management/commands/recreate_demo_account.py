@@ -9,6 +9,7 @@ from iaso.gpkg.import_gpkg import import_gpkg_file2
 from iaso.models import Account, DataSource, MetricType, MetricValue, Profile, Project, Report, SourceVersion, Team
 from iaso.models.data_store import JsonDataStore
 from iaso.models.org_unit import OrgUnitType
+from iaso.modules import MODULE_DEFAULT, MODULE_SNT_MALARIA
 from iaso.permissions.core_permissions import CORE_DATASTORE_READ_PERMISSION
 from plugins.snt_malaria.models import (
     AccountSettings,
@@ -113,7 +114,9 @@ class Command(BaseCommand):
             self.stdout.write(f"Created new admin user: {DEMO_USER_USERNAME} / {DEMO_USER_PASSWORD}")
 
             # Demo account
-            account = Account.objects.create(name=DEMO_ACCOUNT_NAME)
+            modules = [MODULE_DEFAULT, MODULE_SNT_MALARIA]
+            account = Account.objects.create(name=DEMO_ACCOUNT_NAME, modules=[module.codename for module in modules])
+
             self.stdout.write(f"Created Account: {account.name}")
 
             profile = Profile.objects.create(user=demo_user, account=account)
