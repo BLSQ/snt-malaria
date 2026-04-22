@@ -37,6 +37,30 @@ DEMO_ACCOUNT_NAME = "Burkina Faso (demo)"
 DEMO_USER_USERNAME = "demo"
 DEMO_USER_PASSWORD = "demo"
 
+intervention_impact_refs = {
+    "CM": "impact_1",
+    "CM Subsidy": "impact_1",
+    "iCCM": "impact_1",
+    "IPTp": "impact_1",
+    "Dual AI (Campaign)": "impact_5",
+    "PBO (Campaign)": "impact_3",
+    "PYR (Campaign)": "impact_1",
+    "Dual AI (Routine)": "impact_5",
+    "PBO (Routine)": "impact_3",
+    "PYR (Routine)": "impact_1",
+    "Dual AI (School)": "impact_5",
+    "PBO (School)": "impact_3",
+    "PYR (School)": "impact_1",
+    "PMC": "impact_5",
+    "SMC": "impact_2",
+    "SMC3": "impact_2",
+    "SMC4": "impact_2",
+    "SMC5": "impact_2",
+    "R21": "impact_3",
+    "RTS,S": "impact_3",
+    "LSM": "impact_3",
+}
+
 
 class Command(BaseCommand):
     help = "Set up the 'Burkina Faso Demo' account. If the account already exists, it will be deleted and re-created."
@@ -156,7 +180,6 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f"Failed to import GPKG file: {e}"))
                 raise
 
-            # Create account settings
             focus_org_unit_type = OrgUnitType.objects.get(projects=project, name="Region")
             intervention_org_unit_type = OrgUnitType.objects.get(projects=project, name="District")
             AccountSettings.objects.create(
@@ -184,7 +207,9 @@ class Command(BaseCommand):
             # Randomly assign impact ref to interventions
             interventions = Intervention.objects_include_deleted.filter(intervention_category__account=account)
             for intervention in interventions:
-                intervention.impact_ref = f"impact_{random.randint(1, 5)}"
+                intervention.impact_ref = intervention_impact_refs.get(
+                    intervention.short_name, random.choice(list(intervention_impact_refs.values()))
+                )
                 intervention.save()
 
             # Create demo scenario with intervention assignments
