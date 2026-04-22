@@ -9,8 +9,8 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { noOp } from 'Iaso/utils';
 import { Bounds, orderOrgUnitsByDepth } from 'Iaso/utils/map/mapUtils';
+import { MapLegend } from '../components/MapLegend';
 import { mapTheme } from '../constants/map-theme';
-import { MapLegend } from '../domains/planning/components/MapLegend';
 import {
     defaultZoomDelta,
     defaultZoomSnap,

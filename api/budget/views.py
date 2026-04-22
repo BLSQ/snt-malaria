@@ -85,6 +85,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
             local_currency="NGN",
             budget_currency="USD",
             spatial_planning_unit="org_unit_id",
+            unknown_intervention_handling="handle",
         )
 
         for year in range(start_year, end_year + 1):

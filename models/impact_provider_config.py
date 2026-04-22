@@ -12,6 +12,7 @@ class ImpactProviderConfig(models.Model):
     class ProviderKey(models.TextChoices):
         SWISSTPH = "swisstph", "SwissTPH"
         IDM = "idm", "IDM"
+        FAKE = "fake", "Fake (demo)"
 
     account = models.OneToOneField(
         "iaso.Account",
@@ -35,6 +36,13 @@ class ImpactProviderConfig(models.Model):
         blank=True,
         null=True,
         help_text=("Provider secret (password, token, API key). For database providers this is the database password."),
+    )
+
+    DEFAULT_CACHE_TTL_SECONDS = 60 * 60 * 24 * 7  # 7 days
+
+    cache_ttl_seconds = models.PositiveIntegerField(
+        default=DEFAULT_CACHE_TTL_SECONDS,
+        help_text="How long impact API responses are cached, in seconds. Default is 7 days (604800).",
     )
 
     def __str__(self):

@@ -167,6 +167,7 @@ class ImpactProviderConfigAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {"fields": ("account", "provider_key")}),
         ("Provider configuration", {"fields": ("config", "secret")}),
+        ("Caching", {"fields": ("cache_ttl_seconds",)}),
     )
 
 
@@ -195,6 +196,6 @@ class ImpactOrgUnitMappingAdmin(admin.ModelAdmin):
 
 @admin.register(AccountSettings)
 class AccountSettingsAdmin(admin.ModelAdmin):
-    list_display = ("id", "account", "intervention_org_unit_type_id")
+    list_display = ("id", "account", "focus_org_unit_type_id", "intervention_org_unit_type_id")
     search_fields = ("account__name",)
     ordering = ("account__name",)

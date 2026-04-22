@@ -32,7 +32,7 @@ class InterventionCostBreakdownLine(models.Model):
     class Meta:
         app_label = "snt_malaria"
 
-    intervention = models.ForeignKey(Intervention, on_delete=models.CASCADE)
+    intervention = models.ForeignKey(Intervention, on_delete=models.CASCADE, related_name="cost_breakdown_lines")
     name = models.TextField(max_length=255, blank=False)
     category = models.CharField(
         max_length=40,
@@ -43,7 +43,6 @@ class InterventionCostBreakdownLine(models.Model):
         max_length=50, choices=InterventionCostUnitType.choices, default=InterventionCostUnitType.OTHER
     )
     unit_cost = models.DecimalField(max_digits=19, decimal_places=2, null=False, blank=False, default=0)
-    year = models.IntegerField(null=False, blank=False)
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="cost_breakdown_line_created_set"
     )

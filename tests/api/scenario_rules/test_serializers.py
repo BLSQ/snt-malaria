@@ -489,6 +489,25 @@ class ScenarioRuleCreateSerializerTestCase(ScenarioRulesTestBase):
         self.assertIn("scenario", serializer.errors)
         self.assertIn(f'Invalid pk "{unknown_scenario_id}"', serializer.errors["scenario"][0])
 
+    def test_invalid_scenario_locked(self):
+        self.lock_scenario(self.scenario)
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "intervention_properties": [
+                {
+                    "intervention": self.intervention_chemo_iptp.id,
+                    "coverage": 0.75,
+                },
+            ],
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("scenario", serializer.errors)
+        self.assertIn("Cannot add rules to a locked scenario", serializer.errors["scenario"][0])
+
     def test_invalid_scenario_wrong_account(self):
         data = {
             "scenario": self.other_scenario.id,  # other_scenario belongs to another account

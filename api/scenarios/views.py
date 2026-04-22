@@ -14,7 +14,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from iaso.api.common import CONTENT_TYPE_CSV
-from iaso.utils.org_units import get_valid_org_units_with_geography
 from plugins.snt_malaria.api.scenarios.utils import (
     create_rules_from_import,
     duplicate_rules,
@@ -23,6 +22,7 @@ from plugins.snt_malaria.api.scenarios.utils import (
     get_scenario,
 )
 from plugins.snt_malaria.models import InterventionAssignment, Scenario, ScenarioRule
+from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 from plugins.snt_malaria.models.intervention import Intervention
 
 from .permissions import ScenarioPermission
@@ -118,7 +118,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             intervention_category__account=self.request.user.iaso_profile.account
         )
 
-        org_units = get_valid_org_units_with_geography(self.request.user.iaso_profile.account).order_by("name")
+        org_units = get_intervention_org_units(self.request.user.iaso_profile.account).order_by("name")
 
         assignments = (
             InterventionAssignment.objects.select_related("org_unit", "intervention").filter(scenario__id=scenario_id)

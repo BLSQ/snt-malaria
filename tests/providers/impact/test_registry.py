@@ -4,6 +4,8 @@ from django.test import TestCase
 
 from iaso.models.base import Account
 from plugins.snt_malaria.models.impact_provider_config import ImpactProviderConfig
+from plugins.snt_malaria.providers.impact.base import ImpactProviderMeta
+from plugins.snt_malaria.providers.impact.fake import FakeImpactProvider
 from plugins.snt_malaria.providers.impact.idm import IDMImpactProvider
 from plugins.snt_malaria.providers.impact.registry import get_provider_for_account
 from plugins.snt_malaria.providers.impact.swisstph import SwissTPHImpactProvider
@@ -34,6 +36,7 @@ class ProviderRegistryTests(TestCase):
         self.assertIsInstance(provider, SwissTPHImpactProvider)
         self.assertEqual(provider.config, DUMMY_CONFIG)
         self.assertEqual(provider.secret, DUMMY_SECRET)
+        self.assertEqual(provider.meta.provider_key, "swisstph")
 
     @patch(_IDM_DB_PATCH, return_value="default")
     def test_idm_config_returns_idm(self, _mock_ensure):
@@ -44,6 +47,35 @@ class ProviderRegistryTests(TestCase):
         self.assertIsInstance(provider, IDMImpactProvider)
         self.assertEqual(provider.config, DUMMY_CONFIG)
         self.assertEqual(provider.secret, DUMMY_SECRET)
+        self.assertEqual(provider.meta.provider_key, "idm")
+
+    def test_fake_config_returns_fake(self):
+        ImpactProviderConfig.objects.create(
+            account=self.account,
+            provider_key="fake",
+            config={"population_metric_code": "POP"},
+            secret="",
+        )
+        provider = get_provider_for_account(self.account)
+        self.assertIsInstance(provider, FakeImpactProvider)
+        self.assertEqual(provider.meta.provider_key, "fake")
+
+    def test_fake_provider_get_meta_returns_provider_key(self):
+        ImpactProviderConfig.objects.create(
+            account=self.account,
+            provider_key="fake",
+            config={"population_metric_code": "POP"},
+            secret="",
+        )
+        provider = get_provider_for_account(self.account)
+        assert provider is not None
+        self.assertEqual(provider.get_meta(), ImpactProviderMeta(provider_key="fake"))
+
+    def test_fake_incomplete_config_returns_none(self):
+        """Fake provider without population_metric_code should be treated as incomplete."""
+        ImpactProviderConfig.objects.create(account=self.account, provider_key="fake", config={}, secret="")
+        provider = get_provider_for_account(self.account)
+        self.assertIsNone(provider)
 
     def test_unknown_provider_raises(self):
         ImpactProviderConfig.objects.create(account=self.account, provider_key="unknown")

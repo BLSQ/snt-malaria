@@ -12,17 +12,17 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.client.force_authenticate(user=self.user_write)
         response = self.client.get(self.BASE_URL)
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertEqual(len(result), 4)
+        self.assertEqual(len(result), 2)
         ids = [item["id"] for item in result]
-        self.assertCountEqual(ids, [self.cost_line1.id, self.cost_line2.id, self.cost_line3.id, self.cost_line4.id])
+        self.assertCountEqual(ids, [self.cost_line1.id, self.cost_line2.id])
 
     def test_list_cost_breakdown_lines_with_read_perm(self):
         self.client.force_authenticate(user=self.user_read)
         response = self.client.get(self.BASE_URL)
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertEqual(len(result), 4)
+        self.assertEqual(len(result), 2)
         ids = [item["id"] for item in result]
-        self.assertCountEqual(ids, [self.cost_line1.id, self.cost_line2.id, self.cost_line3.id, self.cost_line4.id])
+        self.assertCountEqual(ids, [self.cost_line1.id, self.cost_line2.id])
 
     def test_list_cost_breakdown_lines_with_no_perm(self):
         self.client.force_authenticate(user=self.user_no_perm)
@@ -36,7 +36,6 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
     def test_create_cost_breakdown_line_with_write_perm(self):
         data = {
             "intervention": self.intervention_chemo_iptp.id,
-            "year": 2025,
             "costs": [
                 {
                     "unit_cost": 15,
@@ -51,7 +50,7 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         response = self.client.post(self.BASE_URL, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 6)  # 5 existing + 1 new
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 4)  # 3 existing + 1 new
 
         icbl = InterventionCostBreakdownLine.objects.order_by("id").last()
         self.assertEqual(icbl.unit_cost, 15)
@@ -59,12 +58,10 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.assertEqual(icbl.name, "Cost Line X")
         self.assertEqual(icbl.category, "Procurement")
         self.assertEqual(icbl.intervention.id, self.intervention_chemo_iptp.id)
-        self.assertEqual(icbl.year, 2025)
 
     def test_create_cost_breakdown_line_with_read_perm(self):
         data = {
             "intervention": self.intervention_chemo_iptp.id,
-            "year": 2025,
             "costs": [
                 {
                     "unit_cost": 15,
@@ -78,12 +75,11 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.client.force_authenticate(user=self.user_read)
         response = self.client.post(self.BASE_URL, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 5)  # from setup
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)  # from setup
 
     def test_create_cost_breakdown_line_with_no_perm(self):
         data = {
             "intervention": self.intervention_chemo_iptp.id,
-            "year": 2025,
             "costs": [
                 {
                     "unit_cost": 15,
@@ -97,12 +93,11 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.client.force_authenticate(user=self.user_no_perm)
         response = self.client.post(self.BASE_URL, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 5)
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)  # from setup
 
     def test_create_cost_breakdown_line_unauthenticated(self):
         data = {
             "intervention": self.intervention_chemo_iptp.id,
-            "year": 2025,
             "costs": [
                 {
                     "unit_cost": 15,
@@ -115,12 +110,11 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
 
         response = self.client.post(self.BASE_URL, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 5)
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)
 
     def test_create_breakdown_line_with_intervention_from_other_account(self):
         data = {
             "intervention": self.other_intervention.id,
-            "year": 2025,
             "costs": [
                 {
                     "unit_cost": 20,
@@ -134,7 +128,7 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.client.force_authenticate(user=self.user_write)
         response = self.client.post(self.BASE_URL, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 5)  # from setup
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)  # from setup
         self.assertIn("intervention", response.data)
         self.assertIn(str(self.other_intervention.id), response.data["intervention"][0])
 
@@ -145,14 +139,10 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         old_unit_type = self.cost_line2.unit_type
         old_name = self.cost_line2.name
         old_category = self.cost_line2.category
-        count_smc_before = InterventionCostBreakdownLine.objects.filter(
-            intervention=self.intervention_chemo_smc
-        ).count()
 
         # New payload
         data = {
             "intervention": self.intervention_chemo_smc.id,
-            "year": 2025,
             "costs": [
                 {
                     "unit_cost": 12,
@@ -168,7 +158,7 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Check that old costs for chemo_smc in 2025 are deleted and only the new one exists
-        costs = InterventionCostBreakdownLine.objects.filter(intervention=self.intervention_chemo_smc, year=2025)
+        costs = InterventionCostBreakdownLine.objects.filter(intervention=self.intervention_chemo_smc)
         self.assertEqual(costs.count(), 1)
         cost = costs.first()
         self.assertEqual(cost.unit_cost, 12)
@@ -181,15 +171,6 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.assertNotEqual(cost.unit_type, old_unit_type)
         self.assertNotEqual(cost.name, old_name)
         self.assertNotEqual(cost.category, old_category)
-
-        # Checking that this did not delete ICBL for other years
-        count_smc_after = InterventionCostBreakdownLine.objects.filter(intervention=self.intervention_chemo_smc).count()
-        self.assertEqual(
-            count_smc_after, count_smc_before
-        )  # since we deleted the old one and created a new one, the total count for chemo_smc should be the same
-        self.assertTrue(
-            InterventionCostBreakdownLine.objects.filter(intervention=self.intervention_chemo_smc, year=2026).exists()
-        )
 
     def test_get_cost_breakdown_line_categories_with_write_perm(self):
         self.client.force_authenticate(user=self.user_write)

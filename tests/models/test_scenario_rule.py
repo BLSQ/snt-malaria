@@ -4,10 +4,11 @@ from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
-from iaso.models import Account, DataSource, MetricType, MetricValue, OrgUnit, SourceVersion
+from iaso.models import Account, DataSource, MetricType, MetricValue, OrgUnit, OrgUnitType, SourceVersion
 from iaso.test import TestCase
 from iaso.utils.colors import DEFAULT_COLOR
 from plugins.snt_malaria.models import (
+    AccountSettings,
     Intervention,
     InterventionCategory,
     Scenario,
@@ -683,3 +684,65 @@ class ScenarioRuleInterventionPropertiesModelTestCase(TestCase):
                 coverage=Decimal("1.1"),
             )
             invalid_properties.full_clean()
+
+
+class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(TestCase):
+    """Tests that resolve_matched_org_units respects AccountSettings.intervention_org_unit_type."""
+
+    def setUp(self):
+        data_source = DataSource.objects.create(name="source")
+        source_version = SourceVersion.objects.create(data_source=data_source, number=1)
+        self.account = Account.objects.create(name="account", default_version=source_version)
+        self.user = self.create_user_with_profile(username="user", account=self.account)
+
+        self.region_type = OrgUnitType.objects.create(name="Region")
+        self.district_type = OrgUnitType.objects.create(name="District")
+
+        self.region = OrgUnit.objects.create(
+            name="Region A",
+            org_unit_type=self.region_type,
+            version=source_version,
+            validation_status=OrgUnit.VALIDATION_VALID,
+            location=Point(1.0, 2.0, 0.0),
+        )
+        self.district_1 = OrgUnit.objects.create(
+            name="District 1",
+            org_unit_type=self.district_type,
+            version=source_version,
+            validation_status=OrgUnit.VALIDATION_VALID,
+            location=Point(3.0, 4.0, 0.0),
+        )
+        self.district_2 = OrgUnit.objects.create(
+            name="District 2",
+            org_unit_type=self.district_type,
+            version=source_version,
+            validation_status=OrgUnit.VALIDATION_VALID,
+            location=Point(5.0, 6.0, 0.0),
+        )
+
+        metric_type = MetricType.objects.create(account=self.account, name="Population", code="POP", units="people")
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.region, value=50000, year=2025)
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.district_1, value=20000, year=2025)
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.district_2, value=30000, year=2025)
+
+    def test_match_all_without_settings_returns_all_levels(self):
+        result = ScenarioRule.resolve_matched_org_units(self.account, {"all": True})
+        self.assertCountEqual(result, [self.region.id, self.district_1.id, self.district_2.id])
+
+    def test_match_all_with_intervention_type_excludes_parent(self):
+        AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)
+        result = ScenarioRule.resolve_matched_org_units(self.account, {"all": True})
+        self.assertCountEqual(result, [self.district_1.id, self.district_2.id])
+        self.assertNotIn(self.region.id, result)
+
+    def test_criteria_with_intervention_type_excludes_parent(self):
+        metric_type = MetricType.objects.get(account=self.account, code="POP")
+        AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)
+        criteria = {"and": [{">=": [{"var": metric_type.id}, 1]}]}
+        result = ScenarioRule.resolve_matched_org_units(self.account, criteria)
+        self.assertCountEqual(result, [self.district_1.id, self.district_2.id])
+
+    def test_null_criteria_returns_empty(self):
+        AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)
+        result = ScenarioRule.resolve_matched_org_units(self.account, None)
+        self.assertEqual(result, [])

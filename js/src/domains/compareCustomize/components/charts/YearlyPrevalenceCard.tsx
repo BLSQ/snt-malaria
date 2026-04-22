@@ -19,6 +19,7 @@ import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { buildPrevalenceChartData } from '../../utils/chartData';
 import { Card } from '../Card';
 import { ChartEmptyState } from './ChartEmptyState';
+import { ChartTooltip } from './ChartTooltip';
 
 const styles = {
     chartBody: {
@@ -27,9 +28,36 @@ const styles = {
     },
 } satisfies SxStyles;
 
+type PrevalenceTooltipProps = {
+    active?: boolean;
+    label?: number;
+    payload?: { name: string; value: number; color: string }[];
+};
+
+const PrevalenceTooltip: FC<PrevalenceTooltipProps> = ({
+    active,
+    label,
+    payload,
+}) => {
+    if (!active || !payload?.length) return null;
+    return (
+        <ChartTooltip
+            title={label}
+            rows={payload.map(entry => ({
+                label: entry.name,
+                value: formatPercentValue(entry.value),
+                color: entry.color,
+            }))}
+        />
+    );
+};
+
 export const YearlyPrevalenceCard: FC = () => {
-    const { scenarios, impactsByScenarioId, isImpactLoading: isLoading } =
-        useComparisonDataContext();
+    const {
+        scenarios,
+        impactsByScenarioId,
+        isImpactLoading: isLoading,
+    } = useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
     const theme = useTheme();
     const axisColor = theme.palette.text.secondary;
@@ -49,7 +77,9 @@ export const YearlyPrevalenceCard: FC = () => {
             isLoading={isLoading}
         >
             {!hasData ? (
-                <ChartEmptyState message={formatMessage(MESSAGES.noImpactData)} />
+                <ChartEmptyState
+                    message={formatMessage(MESSAGES.noImpactData)}
+                />
             ) : (
                 <Box sx={styles.chartBody}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -62,8 +92,17 @@ export const YearlyPrevalenceCard: FC = () => {
                                 bottom: -5,
                             }}
                         >
-                            <CartesianGrid vertical={false} strokeDasharray="" stroke={theme.palette.divider} />
-                            <XAxis dataKey="year" tick={{ fill: axisColor, fontSize: '0.75rem' }} stroke={axisColor} tickMargin={4} />
+                            <CartesianGrid
+                                vertical={false}
+                                strokeDasharray=""
+                                stroke={theme.palette.divider}
+                            />
+                            <XAxis
+                                dataKey="year"
+                                tick={{ fill: axisColor, fontSize: '0.75rem' }}
+                                stroke={axisColor}
+                                tickMargin={4}
+                            />
                             <YAxis
                                 tickFormatter={formatPercentValue}
                                 tick={{ fill: axisColor, fontSize: '0.75rem' }}
@@ -71,9 +110,7 @@ export const YearlyPrevalenceCard: FC = () => {
                                 width={50}
                                 tickMargin={2}
                             />
-                            <Tooltip
-                                formatter={formatPercentValue}
-                            />
+                            <Tooltip content={<PrevalenceTooltip />} />
                             {scenarios.map(scenario => (
                                 <Line
                                     key={scenario.id}

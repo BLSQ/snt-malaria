@@ -23,12 +23,13 @@ create a new entry for the account.
 
 ### Fields
 
-| Field          | Description |
-|----------------|-------------|
-| `account`      | The IASO account (one config per account) |
-| `provider_key` | The provider identifier (e.g. `swisstph`, `idm`) |
-| `config`       | JSON with provider-specific settings. The structure varies per provider — see the provider-specific tables below for required and optional keys. |
-| `secret`       | A sensitive credential (password, API key, token, etc.). Always a single string, encrypted at rest using Fernet. Requires `ENCRYPTED_TEXT_FIELD_KEY` to be set in the environment. |
+| Field               | Description |
+|---------------------|-------------|
+| `account`           | The IASO account (one config per account) |
+| `provider_key`      | The provider identifier (e.g. `swisstph`, `idm`, `fake`) |
+| `config`            | JSON with provider-specific settings. The structure varies per provider — see the provider-specific tables below for required and optional keys. |
+| `secret`            | A sensitive credential (password, API key, token, etc.). Always a single string, encrypted at rest using Fernet. Requires `ENCRYPTED_TEXT_FIELD_KEY` to be set in the environment. |
+| `cache_ttl_seconds` | How long impact API responses are cached, in seconds. Defaults to `604800` (7 days). Set to `0` to disable caching. |
 
 Example JSON for the `config` field:
 
@@ -80,6 +81,36 @@ Example JSON for the `config` field:
 | `db_username`  | yes      |         | Database user |
 
 **Secret:** the database password.
+
+### Fake Configuration
+
+The fake provider is a demo-only provider that synthesises epidemiologically
+plausible metrics on the fly, with no external data source. It uses the
+population values from an existing data-layer `MetricType` on the account as
+its only real input, which makes it cheap to enable on any account that
+already has population data loaded.
+
+**Config:**
+
+| Key                      | Required | Default | Description                                                             |
+|--------------------------|----------|---------|-------------------------------------------------------------------------|
+| `population_metric_code` | yes      |         | `code` of the `MetricType` (data layer) holding total population values |
+
+**Secret:** not used (leave empty).
+
+**Caching:** not required. The fake provider is fast enough to compute on every
+request, so you can set `cache_ttl_seconds` to `0` to disable caching.
+
+Example:
+
+```json
+{
+  "population_metric_code": "POPULATION"
+}
+```
+
+> [!NOTE]
+> Responses are tagged with `provider_meta.provider_key = "fake"`. The Compare & Customize UI picks this up and shows an info banner so users know the figures are generated, not real.
 
 ## 2. Intervention impact_ref
 
@@ -133,6 +164,24 @@ filtering `model_output`.
 | R21 / RTS,S                                    | `vacc:vacc`             |
 
 
+### Fake format
+
+Map each real intervention to one of five generic strength tiers, from
+`impact_1` (weakest) to `impact_5` (strongest). Tier choice drives both the
+initial reduction and the multi-year trajectory — weaker tiers let cases
+drift upwards over time, stronger tiers show a sustained decline.
+
+| impact_ref | Rough effect size                           |
+|------------|---------------------------------------------|
+| `impact_1` | ~5% reduction, slight yearly increase       |
+| `impact_2` | ~12% reduction, mild yearly decline         |
+| `impact_3` | ~20% reduction, moderate yearly decline     |
+| `impact_4` | ~28% reduction, strong yearly decline       |
+| `impact_5` | ~38% reduction, sustained strong decline    |
+
+Pick a tier that roughly matches how impactful the real intervention is
+expected to be — the absolute numbers are illustrative, not calibrated.
+
 ### Other providers
 
 New providers define their own `impact_ref` format. The provider's
@@ -145,6 +194,9 @@ By default, providers match org units using `org_unit.name`. When the name in
 IASO doesn't match the identifier in the external data source, create an
 `ImpactOrgUnitMapping` to provide a custom `reference` string. Org units that
 cannot be found in the external data source will raise an `OrgUnitMappingError`.
+
+> [!NOTE]
+> Not applicable to the fake provider, which reads population directly from a Iaso data layer and so matches org units by their internal ID.
 
 ### Existing mapping files
 

@@ -3,10 +3,10 @@ from decimal import Decimal
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
+from iaso.api.common.serializer_fields import JSONSchemaField
 from iaso.models import MetricType, OrgUnit
-from iaso.utils.org_units import get_valid_org_units_with_geography
-from iaso.utils.serializer.json_schema_field import JSONSchemaField
 from plugins.snt_malaria.models import Scenario, ScenarioRule
+from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 from plugins.snt_malaria.models.scenario import (
     SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA,
     ScenarioRuleInterventionProperties,
@@ -138,7 +138,7 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         user = self.context["request"].user
-        org_units = get_valid_org_units_with_geography(user.iaso_profile.account)
+        org_units = get_intervention_org_units(user.iaso_profile.account)
         self.fields["org_units_excluded"].child.queryset = org_units
         self.fields["org_units_included"].child.queryset = org_units
         self.fields["org_units_scope"].child.queryset = org_units
@@ -202,6 +202,10 @@ class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
 
     def validate_scenario(self, scenario):
         user = self.context["request"].user
+
+        if scenario.is_locked:
+            raise serializers.ValidationError("Cannot add rules to a locked scenario")
+
         if scenario.created_by != user and not user.has_perm(SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()):
             raise PermissionDenied("You don't have permission to edit this scenario")
         return scenario

@@ -2,13 +2,13 @@ import React from 'react';
 import {
     CompareOutlined,
     FormatListBulletedOutlined,
-    Settings,
     Layers,
+    SettingsInputComponent,
 } from '@mui/icons-material';
 import { SvgIconProps } from '@mui/material';
 import { MESSAGES as dataLayersMessages } from '../domains/dataLayers/messages';
 import { MESSAGES } from '../domains/messages';
-import { SETTINGS_READ } from './permissions';
+import { SCENARIO_BASIC_WRITE, SETTINGS_READ } from './permissions';
 
 export const menu = [
     {
@@ -20,7 +20,7 @@ export const menu = [
     {
         label: MESSAGES.scenariosTitle,
         key: 'snt_malaria/scenarios/list',
-        permissions: [],
+        permissions: [SCENARIO_BASIC_WRITE],
         icon: (props: SvgIconProps) => (
             <FormatListBulletedOutlined {...props} />
         ),
@@ -28,13 +28,13 @@ export const menu = [
     {
         label: MESSAGES.compareCustomizeTitle,
         key: 'snt_malaria/compare-customize',
-        permissions: [],
+        permissions: [SCENARIO_BASIC_WRITE],
         icon: (props: SvgIconProps) => <CompareOutlined {...props} />,
     },
     {
-        label: MESSAGES.settingsTitle,
-        key: 'snt_malaria/settings',
+        label: MESSAGES.interventionsTitle,
+        key: 'snt_malaria/interventions',
         permissions: [SETTINGS_READ],
-        icon: (props: SvgIconProps) => <Settings {...props} />,
+        icon: (props: SvgIconProps) => <SettingsInputComponent {...props} />,
     },
 ];

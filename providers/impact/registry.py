@@ -39,6 +39,11 @@ def get_provider_for_account(account) -> Optional[ImpactProvider]:
             from plugins.snt_malaria.providers.impact.idm import IDMImpactProvider
 
             return IDMImpactProvider(**kwargs)
+
+        if provider_config.provider_key == ImpactProviderConfig.ProviderKey.FAKE:
+            from plugins.snt_malaria.providers.impact.fake import FakeImpactProvider
+
+            return FakeImpactProvider(**kwargs)
     except IncompleteConfigError:
         logger.warning(
             "Impact provider config %d for account '%s' has incomplete settings; returning no provider.",
@@ -46,5 +51,4 @@ def get_provider_for_account(account) -> Optional[ImpactProvider]:
             account,
         )
         return None
-
     raise ValueError(f"Unknown impact provider: {provider_config.provider_key}")

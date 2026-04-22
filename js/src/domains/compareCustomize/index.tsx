@@ -22,9 +22,10 @@ import { useComparisonData } from './hooks/useComparisonData';
 import { useGetImpactAgeGroups } from './hooks/useGetImpactAgeGroups';
 import { useGetImpactYearRange } from './hooks/useGetImpactYearRange';
 import { useMatchWarnings } from './hooks/useMatchWarnings';
+import { usePrefetchYearsImpact } from './hooks/usePrefetchYearsImpact';
 import { useScenarioInterventions } from './hooks/useScenarioInterventions';
 import { useScenarioSelections } from './hooks/useScenarioSelections';
-import { ScenarioDisplay, toNumericId } from './types';
+import { ImpactProviderMeta, ScenarioDisplay, toNumericId } from './types';
 import { getScenarioColor } from './utils/colors';
 import { intersectYearRanges } from './utils/yearRange';
 
@@ -185,10 +186,32 @@ export const CompareCustomize: FC = () => {
         selectedAgeGroup,
     });
 
+    const scenarioNumericIds = useMemo(
+        () => displayScenarios.map(s => s.id),
+        [displayScenarios],
+    );
+    usePrefetchYearsImpact(
+        yearFrom,
+        yearTo,
+        effectiveYearRange,
+        scenarioNumericIds,
+        selectedAgeGroup,
+        isImpactLoading,
+    );
+
     const { orgUnitsNotFound, orgUnitsWithUnmatchedInterventions } = useMatchWarnings({
         impactsByScenarioId,
         displayScenarios,
     });
+
+    const providerMeta: ImpactProviderMeta | undefined = useMemo(() => {
+        for (const impact of impactsByScenarioId.values()) {
+            if (impact?.provider_meta) {
+                return impact.provider_meta;
+            }
+        }
+        return undefined;
+    }, [impactsByScenarioId]);
 
     return (
         <>
@@ -265,6 +288,7 @@ export const CompareCustomize: FC = () => {
                                     onAgeGroupChange={handleAgeGroupChange}
                                     orgUnitsNotFound={orgUnitsNotFound}
                                     orgUnitsWithUnmatchedInterventions={orgUnitsWithUnmatchedInterventions}
+                                    providerMeta={providerMeta}
                                 />
                             </PaperFullHeight>
                         </SidebarColumn>

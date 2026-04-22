@@ -14,6 +14,7 @@ from iaso.utils.models.soft_deletable import (
     SoftDeletableModel,
 )
 from iaso.utils.validators import JSONSchemaValidator
+from plugins.snt_malaria.models.account_settings import get_intervention_org_unit_type_id, get_intervention_org_units
 
 
 class Scenario(SoftDeletableModel):
@@ -65,6 +66,8 @@ class Scenario(SoftDeletableModel):
         new_assignments = {}
         for rule in self.rules.order_by("-priority"):
             rule.refresh_assignments(user, new_assignments)
+        # Bump updated_at so the impact API cache (keyed on this timestamp) self-invalidates.
+        self.save()
 
 
 SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA = {
@@ -177,12 +180,17 @@ class ScenarioRule(models.Model):
         """Evaluate matching_criteria and return the raw list of matched org unit IDs.
 
         This is the criteria-only result, before exclusion/inclusion overrides.
+        - match-all: returns all valid org units at the configured intervention level.
+        - criteria: evaluates against MetricValues, also scoped to the intervention level.
         """
         if matching_criteria is None:
             return []
-        metric_values = MetricValue.objects.filter(metric_type__account=account, org_unit_id__isnull=False)
         if isinstance(matching_criteria, dict) and matching_criteria.get("all"):
-            return list(metric_values.values_list("org_unit_id", flat=True).distinct())
+            return list(get_intervention_org_units(account).values_list("id", flat=True))
+        metric_values = MetricValue.objects.filter(metric_type__account=account, org_unit_id__isnull=False)
+        type_id = get_intervention_org_unit_type_id(account)
+        if type_id:
+            metric_values = metric_values.filter(org_unit__org_unit_type_id=type_id)
         q = jsonlogic_to_exists_q_clauses(matching_criteria, metric_values, "metric_type_id", "org_unit_id")
         return list(metric_values.filter(q).distinct().values_list("org_unit_id", flat=True))
 

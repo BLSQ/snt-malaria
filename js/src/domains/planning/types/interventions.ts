@@ -1,5 +1,5 @@
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { ScenarioRule } from '../../planningV2/types/scenarioRule';
+import { ScenarioRule } from './scenarioRule';
 
 export type InterventionCategory = {
     id: number;
@@ -68,4 +68,24 @@ export type BudgetAssumptions = {
     tablet_factor: number;
     doses_per_child: number;
     doses_per_pw: number;
+};
+
+export type InterventionDetails = {
+    id: number;
+    name: string;
+    code: string;
+    impact_ref: string;
+    target_population: string[];
+    cost_breakdown_lines: InterventionCostBreakdownLine[];
+};
+
+export type InterventionCostBreakdownLine = {
+    name: string;
+    category: string;
+    category_label: string;
+    unit_type: string;
+    unit_type_label: string;
+    unit_cost: string; // using string to avoid float precision issues
+    id: number;
+    intervention: number;
 };

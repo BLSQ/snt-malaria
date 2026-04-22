@@ -4,12 +4,9 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from iaso.api.common import UserSerializer
-from iaso.utils.org_units import get_valid_org_units_with_geography
-from plugins.snt_malaria.api.scenarios.utils import (
-    get_interventions,
-    get_missing_headers,
-)
+from plugins.snt_malaria.api.scenarios.utils import get_interventions, get_missing_headers
 from plugins.snt_malaria.models import Scenario, ScenarioRule
+from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 
 
 class ScenarioSerializer(serializers.ModelSerializer):
@@ -47,7 +44,15 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scenario
         fields = ["id", "name", "description", "start_year", "end_year", "is_locked"]
-        read_ony_fields = ["id"]
+        read_only_fields = ["id"]
+
+    def validate(self, data):
+        if self.instance and self.instance.is_locked:
+            # Only allow changing is_locked if scenario is locked
+            changed_fields = {key for key in data if getattr(self.instance, key, None) != data[key]}
+            if not changed_fields.issubset({"is_locked"}):
+                raise serializers.ValidationError(_("Cannot modify a locked scenario."))
+        return data
 
     def validate_start_year(self, value):
         if value < ScenarioWriteSerializer.SCENARIO_MIN_YEAR or value > ScenarioWriteSerializer.SCENARIO_MAX_YEAR:
@@ -94,7 +99,7 @@ class ImportScenarioSerializer(serializers.Serializer):
         header_errors = get_missing_headers(df, interventions)
 
         csv_org_unit_ids = set(df["org_unit_id"].dropna().astype(int).unique().tolist())
-        org_units = get_valid_org_units_with_geography(request.user.iaso_profile.account)
+        org_units = get_intervention_org_units(request.user.iaso_profile.account)
         available_org_unit_ids = set(org_units.values_list("id", flat=True))
         not_found_org_units = csv_org_unit_ids - available_org_unit_ids
         missing_org_units_from_file = available_org_unit_ids - csv_org_unit_ids
@@ -120,6 +125,10 @@ class ScenarioRulesReorderSerializer(serializers.Serializer):
 
     def validate_new_order(self, new_order):
         scenario = self.context["scenario"]
+
+        if scenario.is_locked:
+            raise serializers.ValidationError("Cannot reorder rules for a locked scenario.")
+
         received_ids = set(rule.id for rule in new_order)
         scenario_rules_ids = set(scenario.rules.order_by("id").values_list("id", flat=True))
 

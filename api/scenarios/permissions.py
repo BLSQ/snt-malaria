@@ -24,6 +24,9 @@ class ScenarioPermission(permissions.BasePermission):
         ):  # = GET for retrieve & POST for duplicate
             return True
 
+        if obj.is_locked and request.method in ["DELETE"]:
+            return False
+
         user = request.user
         if user.has_perm(SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()):  # PUT, DELETE & reorder
             return True

@@ -7,6 +7,7 @@ from iaso.models.data_source import DataSource, SourceVersion
 from iaso.models.project import Project
 from iaso.test import APITestCase
 from plugins.snt_malaria.models import (
+    AccountSettings,
     Intervention,
     InterventionAssignment,
     InterventionCategory,
@@ -965,6 +966,15 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(Scenario.objects.count(), 2)  # both the one from setup and the other account scenario remain
 
+    def test_delete_scenario_locked(self):
+        self.scenario.is_locked = True
+        self.scenario.save()
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        response = self.client.delete(f"{self.BASE_URL}{self.scenario.id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Scenario.objects.count(), 1)
+
     def test_reorder_rules_with_full_perm_own_scenario(self):
         """
         This test will also check the result of reordering with conflicts
@@ -1301,3 +1311,74 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(assignments_district_3.count(), 1)
         self.assertEqual(assignments_district_3.first().intervention, self.intervention_vaccination_rts)
         self.assertIsNotNone(assignments_district_3.first().rule)
+
+
+class CsvExportInterventionTypeScopeTestCase(APITestCase):
+    """Tests that CSV export respects AccountSettings.intervention_org_unit_type."""
+
+    BASE_URL = "/api/snt_malaria/scenarios/"
+
+    def setUp(self):
+        self.account = Account.objects.create(name="Test Account")
+        self.user, self.anon, self.user_no_perms = self.create_base_users(
+            self.account, [SNT_SCENARIO_FULL_WRITE_PERMISSION], "testuser"
+        )
+
+        project = Project.objects.create(name="Project", app_id="APP_ID", account=self.account)
+        sw_source = DataSource.objects.create(name="data_source")
+        sw_source.projects.add(project)
+        sw_version = SourceVersion.objects.create(data_source=sw_source, number=1)
+        self.account.default_version = sw_version
+        self.account.save()
+
+        self.region_type = OrgUnitType.objects.create(name="Region")
+        self.district_type = OrgUnitType.objects.create(name="District")
+        mock_multipolygon = MultiPolygon(Polygon([[-1.3, 2.5], [-1.7, 2.8], [-1.1, 4.1], [-1.3, 2.5]]))
+
+        self.region = OrgUnit.objects.create(
+            org_unit_type=self.region_type,
+            name="Region A",
+            validation_status=OrgUnit.VALIDATION_VALID,
+            version=sw_version,
+            location=Point(x=4, y=50, z=100),
+            geom=mock_multipolygon,
+        )
+        self.district1 = OrgUnit.objects.create(
+            org_unit_type=self.district_type,
+            name="District 1",
+            validation_status=OrgUnit.VALIDATION_VALID,
+            version=sw_version,
+            location=Point(x=4, y=51, z=100),
+            geom=mock_multipolygon,
+        )
+        self.district2 = OrgUnit.objects.create(
+            org_unit_type=self.district_type,
+            name="District 2",
+            validation_status=OrgUnit.VALIDATION_VALID,
+            version=sw_version,
+            location=Point(x=4, y=52, z=100),
+            geom=mock_multipolygon,
+        )
+
+        self.int_category = InterventionCategory.objects.create(
+            name="Vaccination", account=self.account, created_by=self.user
+        )
+        self.intervention = Intervention.objects.create(
+            name="RTS,S", created_by=self.user, intervention_category=self.int_category, code="rts_s"
+        )
+
+    def test_export_without_settings_includes_all_levels(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.get(f"{self.BASE_URL}export_to_csv/")
+        csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
+        org_unit_ids = {row[0] for row in csv_list[1:]}
+        self.assertEqual(org_unit_ids, {str(self.region.id), str(self.district1.id), str(self.district2.id)})
+
+    def test_export_with_intervention_type_excludes_regions(self):
+        AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)
+        self.client.force_authenticate(self.user)
+        response = self.client.get(f"{self.BASE_URL}export_to_csv/")
+        csv_list = self.assertCsvFileResponse(response, return_as_lists=True)
+        org_unit_ids = {row[0] for row in csv_list[1:]}
+        self.assertEqual(org_unit_ids, {str(self.district1.id), str(self.district2.id)})
+        self.assertNotIn(str(self.region.id), org_unit_ids)
