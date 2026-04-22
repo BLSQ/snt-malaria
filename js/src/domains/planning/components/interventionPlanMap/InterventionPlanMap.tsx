@@ -72,8 +72,7 @@ export const InterventionPlanMap: FC<Props> = ({
     }, [
         isPreviewingRule,
         interventionAssignments,
-        previewRule?.intervention_properties,
-        previewRule?.color,
+        previewRule,
         matchedOrgUnitIds,
         interventionCategories,
     ]);
