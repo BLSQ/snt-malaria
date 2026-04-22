@@ -1,4 +1,5 @@
 import os
+import random
 
 from django.contrib.auth.models import Permission, User
 from django.core.management.base import BaseCommand
@@ -7,9 +8,13 @@ from django.db import transaction
 from iaso.gpkg.import_gpkg import import_gpkg_file2
 from iaso.models import Account, DataSource, MetricType, MetricValue, Profile, Project, Report, SourceVersion, Team
 from iaso.models.data_store import JsonDataStore
+from iaso.models.org_unit import OrgUnitType
+from iaso.modules import MODULE_DEFAULT, MODULE_SNT_MALARIA
 from iaso.permissions.core_permissions import CORE_DATASTORE_READ_PERMISSION
 from plugins.snt_malaria.models import (
+    AccountSettings,
     Budget,
+    ImpactProviderConfig,
     Intervention,
     InterventionAssignment,
     InterventionCategory,
@@ -32,6 +37,30 @@ DEMO_ACCOUNT_NAME = "Burkina Faso (demo)"
 DEMO_USER_USERNAME = "demo"
 DEMO_USER_PASSWORD = "demo"
 
+intervention_impact_refs = {
+    "CM": "impact_1",
+    "CM Subsidy": "impact_1",
+    "iCCM": "impact_1",
+    "IPTp": "impact_1",
+    "Dual AI (Campaign)": "impact_5",
+    "PBO (Campaign)": "impact_3",
+    "PYR (Campaign)": "impact_1",
+    "Dual AI (Routine)": "impact_5",
+    "PBO (Routine)": "impact_3",
+    "PYR (Routine)": "impact_1",
+    "Dual AI (School)": "impact_5",
+    "PBO (School)": "impact_3",
+    "PYR (School)": "impact_1",
+    "PMC": "impact_5",
+    "SMC": "impact_2",
+    "SMC3": "impact_2",
+    "SMC4": "impact_2",
+    "SMC5": "impact_2",
+    "R21": "impact_3",
+    "RTS,S": "impact_3",
+    "LSM": "impact_3",
+}
+
 
 class Command(BaseCommand):
     help = "Set up the 'Burkina Faso Demo' account. If the account already exists, it will be deleted and re-created."
@@ -49,6 +78,8 @@ class Command(BaseCommand):
         categories = InterventionCategory.objects_include_deleted.filter(account=demo_account)
         interventions = Intervention.objects_include_deleted.filter(intervention_category__in=categories)
         metric_types = MetricType.objects.filter(account=demo_account)
+        account_settings = AccountSettings.objects.filter(account=demo_account)
+        impact_provider_configs = ImpactProviderConfig.objects.filter(account=demo_account)
 
         # Delete in order to avoid PROTECT foreign key constraints
         InterventionAssignment.objects.filter(scenario__in=scenarios).delete()
@@ -69,7 +100,9 @@ class Command(BaseCommand):
         data_sources.delete()
         projects.delete()
         User.objects.filter(username=DEMO_USER_USERNAME).delete()
+        account_settings.delete()
         demo_account.delete()
+        impact_provider_configs.delete()
 
         self.stdout.write(self.style.SUCCESS(f"Deleted existing demo account: {DEMO_ACCOUNT_NAME}"))
 
@@ -105,7 +138,9 @@ class Command(BaseCommand):
             self.stdout.write(f"Created new admin user: {DEMO_USER_USERNAME} / {DEMO_USER_PASSWORD}")
 
             # Demo account
-            account = Account.objects.create(name=DEMO_ACCOUNT_NAME)
+            modules = [MODULE_DEFAULT, MODULE_SNT_MALARIA]
+            account = Account.objects.create(name=DEMO_ACCOUNT_NAME, modules=[module.codename for module in modules])
+
             self.stdout.write(f"Created Account: {account.name}")
 
             profile = Profile.objects.create(user=demo_user, account=account)
@@ -145,6 +180,14 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f"Failed to import GPKG file: {e}"))
                 raise
 
+            focus_org_unit_type = OrgUnitType.objects.get(projects=project, name="Region")
+            intervention_org_unit_type = OrgUnitType.objects.get(projects=project, name="District")
+            AccountSettings.objects.create(
+                account=account,
+                focus_org_unit_type=focus_org_unit_type,
+                intervention_org_unit_type=intervention_org_unit_type,
+            )
+
             # Import data layers (metrics)
             metadata_file_path = os.path.join(os.path.dirname(__file__), "fixtures", "BFA_dummy_metadata.csv")
             dataset_file_path = os.path.join(os.path.dirname(__file__), "fixtures", "BFA_dummy_results_dataset.csv")
@@ -161,8 +204,24 @@ class Command(BaseCommand):
             # Seed interventions and intervention costs
             InterventionSeeder(account, self.stdout.write).create_interventions()
 
+            # Randomly assign impact ref to interventions
+            interventions = Intervention.objects_include_deleted.filter(intervention_category__account=account)
+            for intervention in interventions:
+                intervention.impact_ref = intervention_impact_refs.get(
+                    intervention.short_name, random.choice(list(intervention_impact_refs.values()))
+                )
+                intervention.save()
+
             # Create demo scenario with intervention assignments
             DemoScenarioSeeder(account, project, self.stdout.write).create_scenario()
+
+            self.stdout.write("Create Impact Provider Config for demo account.")
+            # Create Impact provider config
+            ImpactProviderConfig.objects.create(
+                account=account,
+                provider_key="fake",
+                config={"population_metric_code": "POPULATION"},
+            )
 
             self.stdout.write(self.style.SUCCESS("Setup completed successfully:"))
             self.stdout.write(
