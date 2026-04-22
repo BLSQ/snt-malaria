@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.10.0](https://github.com/BLSQ/snt-malaria/compare/2.9.0...2.10.0) (2026-04-22)
+
+
+### Features
+
+* add region dropdown to data layers ([#264](https://github.com/BLSQ/snt-malaria/issues/264)) ([d4a48a7](https://github.com/BLSQ/snt-malaria/commit/d4a48a73b0770e03e2911e817314cd3ec30e0cb6))
+* SNT Navigation: Use SCENARIO_BASIC_WRITE permissions ([#268](https://github.com/BLSQ/snt-malaria/issues/268)) ([ef90941](https://github.com/BLSQ/snt-malaria/commit/ef90941ceda485a5ab60906a5042770977acdd7b))
+* SNT-196 correctly handle the years in the budgeting cost dataframe ([#265](https://github.com/BLSQ/snt-malaria/issues/265)) ([c7827a9](https://github.com/BLSQ/snt-malaria/commit/c7827a94f97b10ab26e61a013fd749b2e3354818))
+* SNT-351 Cleanup planning V1 ([#253](https://github.com/BLSQ/snt-malaria/issues/253)) ([622194f](https://github.com/BLSQ/snt-malaria/commit/622194f59cb0136699cac3499cf4ea767c39efca))
+* SNT-359: Handle unknown intervention when calculating budget ([#255](https://github.com/BLSQ/snt-malaria/issues/255)) ([4ca79cc](https://github.com/BLSQ/snt-malaria/commit/4ca79ccfd4723041421dc1350bea93a57d50dbe1))
+* SNT-418 turn the cost settings page into a proper interventions management screen ([#258](https://github.com/BLSQ/snt-malaria/issues/258)) ([47b35b1](https://github.com/BLSQ/snt-malaria/commit/47b35b1eb0ba994e226822de1cd4100bad6b39d7))
+* SNT-431: Add rules to the demo account ([#266](https://github.com/BLSQ/snt-malaria/issues/266)) ([e977a0a](https://github.com/BLSQ/snt-malaria/commit/e977a0a7d29a81fd69335251b7cd1a50ff375be3))
+
+
+### Bug Fixes
+
+* fix org unit filtering for interventions ([#251](https://github.com/BLSQ/snt-malaria/issues/251)) ([17ce770](https://github.com/BLSQ/snt-malaria/commit/17ce7700f34960bc232fab84351ef2a1e577eae7))
+* SNT-396: Added an isScenarioEditable which check on lock and user perms ([#260](https://github.com/BLSQ/snt-malaria/issues/260)) ([95e63a8](https://github.com/BLSQ/snt-malaria/commit/95e63a8f5f11dc6eb07ac2341c8176b8301802aa))
+* SNT-413: Fix message used for scenario CSV ([a6a8cc6](https://github.com/BLSQ/snt-malaria/commit/a6a8cc6ffe32431d48df30d99cc6d40c794d0974))
+* SNT-417: Fix TopBar index on data layer view ([#262](https://github.com/BLSQ/snt-malaria/issues/262)) ([b38f5aa](https://github.com/BLSQ/snt-malaria/commit/b38f5aa0b8bd1c38701804756406c9d9645eabfb))
+* use full type in dependency array ([#247](https://github.com/BLSQ/snt-malaria/issues/247)) ([c4297ae](https://github.com/BLSQ/snt-malaria/commit/c4297ae0b5c2d6d98dcca235571cc73e2afe74a6))
+
 ## [2.9.0](https://github.com/BLSQ/snt-malaria/compare/2.8.0...2.9.0) (2026-04-01)
 
 
