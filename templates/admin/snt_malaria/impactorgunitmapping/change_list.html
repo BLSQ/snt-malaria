@@ -1,0 +1,10 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools-items %}
+<li>
+    <a href="{% url 'admin:snt_malaria_impactorgunitmapping_load_from_file' %}" class="addlink">
+        Load mappings from file
+    </a>
+</li>
+{{ block.super }}
+{% endblock %}
