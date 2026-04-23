@@ -450,6 +450,68 @@ class ScenarioAPITestCase(APITestCase):
                 self.assertEqual(item.get("pop_total"), "15000000")
                 self.assertEqual(item.get("pop_under_5"), "150000")
 
+    def test_calculate_budget_inflation_applied_per_year(self):
+        """
+        Verify that unit_cost in cost_input is compounded by the account inflation_rate
+        for each year after start_year, and that this flows through to higher budget
+        totals in later years.
+
+        start_year offset: (1 + rate)^0 = 1.0  (unchanged)
+        year+1 offset:     (1 + rate)^1
+        year+N offset:     (1 + rate)^N
+        """
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_chemo_smc,
+            created_by=self.user_with_full_perm,
+        )
+
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(BASE_URL, {"scenario": self.scenario.id}, format="json")
+
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+
+        budget = Budget.objects.get(id=result["id"])
+        inflation_rate = float(self.budget_settings.inflation_rate)  # 0.03
+        base_unit_cost = 2.5  # unit_cost of the SMC cost line created in setUp
+        start_year = self.scenario.start_year  # 2025
+        end_year = self.scenario.end_year  # 2028
+
+        # --- Verify cost_input rows: each year's usd_cost must be compounded ---
+        smc_cost_by_year = {}
+        for row in budget.cost_input:
+            if row["code_intervention"] == "smc":
+                year = int(row["cost_year_for_analysis"])
+                smc_cost_by_year[year] = float(row["usd_cost"])
+
+        for year in range(start_year, end_year + 1):
+            expected = base_unit_cost * (1 + inflation_rate) ** (year - start_year)
+            self.assertAlmostEqual(
+                smc_cost_by_year[year],
+                expected,
+                places=6,
+                msg=f"usd_cost for year {year} should be {expected}",
+            )
+
+        # --- Verify results: later years should cost more than start_year ---
+        results_by_year = {r["year"]: r for r in result["results"]}
+
+        def smc_total_cost(year):
+            interventions = results_by_year[year]["interventions"]
+            smc = next(i for i in interventions if i["code"] == "smc")
+            return smc["total_cost"]
+
+        cost_2025 = smc_total_cost(2025)
+        for year in range(start_year + 1, end_year + 1):
+            expected_ratio = (1 + inflation_rate) ** (year - start_year)
+            self.assertAlmostEqual(
+                smc_total_cost(year),
+                cost_2025 * expected_ratio,
+                places=3,
+                msg=f"SMC total_cost for {year} should be {expected_ratio:.4f}x the 2025 cost",
+            )
+
     def test_list_budgets(self):
         """
         This endpoint is available to all authenticated users, regardless of permissions.
