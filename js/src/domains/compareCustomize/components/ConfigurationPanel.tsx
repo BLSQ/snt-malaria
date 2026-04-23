@@ -8,7 +8,6 @@ import {
     Button,
     Chip,
     IconButton,
-    Slider,
     Theme,
     Typography,
 } from '@mui/material';
@@ -16,6 +15,7 @@ import { blueGrey } from '@mui/material/colors';
 import { alpha } from '@mui/material/styles';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
+import { YearRangeSlider } from '../../../components/YearRangeSlider';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../messages';
 import {
@@ -98,17 +98,6 @@ const styles = {
         fontWeight: 500,
         color: 'text.primary',
         mt: 2,
-    },
-    sliderContainer: {
-        px: 1.5,
-        '& .MuiSlider-root': {
-            width: theme => `calc(100% - ${theme.spacing(1)})`,
-            ml: 0.5,
-        },
-        '& .MuiSlider-markLabel': {
-            fontSize: '0.75rem',
-            color: 'text.secondary',
-        },
     },
     subLabel: {
         color: 'text.primary',
@@ -199,27 +188,6 @@ export const ConfigurationPanel: FC<Props> = ({
     providerMeta,
 }) => {
     const { formatMessage } = useSafeIntl();
-
-    const marks = useMemo(() => {
-        if (!yearRange) return [];
-        return [
-            { value: yearRange[0], label: String(yearRange[0]) },
-            { value: yearRange[1], label: String(yearRange[1]) },
-        ];
-    }, [yearRange]);
-
-    const handleSliderChange = useCallback(
-        (_event: Event, newValue: number | number[]) => {
-            if (
-                Array.isArray(newValue) &&
-                newValue.length === 2 &&
-                onYearRangeChange
-            ) {
-                onYearRangeChange([newValue[0], newValue[1]]);
-            }
-        },
-        [onYearRangeChange],
-    );
 
     const hasDisplayOptions =
         (yearRange && selectedYearRange && onYearRangeChange) ||
@@ -330,18 +298,11 @@ export const ConfigurationPanel: FC<Props> = ({
                         </Box>
                     )}
                     {!isYearRangeLoading && yearRange && onYearRangeChange && (
-                        <Box sx={styles.sliderContainer}>
-                            <Slider
-                                value={selectedYearRange ?? yearRange}
-                                onChange={handleSliderChange}
-                                min={yearRange[0]}
-                                max={yearRange[1]}
-                                step={1}
-                                marks={marks}
-                                valueLabelDisplay="auto"
-                                disableSwap
-                            />
-                        </Box>
+                        <YearRangeSlider
+                            yearRange={yearRange}
+                            value={selectedYearRange ?? yearRange}
+                            onChange={onYearRangeChange}
+                        />
                     )}
                     {ageGroups && ageGroups.length > 0 && selectedAgeGroup && onAgeGroupChange && (
                         <Box>
