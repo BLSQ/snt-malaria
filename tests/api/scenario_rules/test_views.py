@@ -3,7 +3,7 @@ from decimal import Decimal
 from rest_framework import status
 
 from iaso.utils.colors import DEFAULT_COLOR
-from plugins.snt_malaria.models import InterventionAssignment, Scenario, ScenarioRule
+from plugins.snt_malaria.models import AccountSettings, InterventionAssignment, Scenario, ScenarioRule
 from plugins.snt_malaria.tests.api.scenario_rules.common_base import ScenarioRulesTestBase
 
 
@@ -847,3 +847,47 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             self.scenario_rule_1.org_units_matched,
             [self.district_1.id, self.district_2.id, self.district_3.id],
         )
+
+    def test_patch_without_matching_criteria_refreshes_org_units_matched(self):
+        """
+        A PATCH that does not include matching_criteria must still refresh org_units_matched
+        so stale cached IDs self-heal when a user edits the rule.
+        """
+        from django.contrib.gis.geos import Point
+
+        from iaso.models import OrgUnit, OrgUnitType
+
+        region_type = OrgUnitType.objects.create(name="REGION")
+        region = OrgUnit.objects.create(
+            org_unit_type=region_type,
+            name="Region 1",
+            version=self.version,
+            validation_status=OrgUnit.VALIDATION_VALID,
+            location=Point(x=4, y=50, z=100),
+        )
+
+        AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.out_district)
+
+        stale_match_all_rule = ScenarioRule.objects.create(
+            name="Stale match-all",
+            priority=3,
+            color="#123456",
+            matching_criteria={"all": True},
+            created_by=self.user_with_full_perm,
+            scenario=self.scenario,
+            org_units_matched=[self.district_1.id, self.district_2.id, self.district_3.id, region.id],
+        )
+
+        payload = {"name": "Renamed"}
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.patch(f"{self.BASE_URL}{stale_match_all_rule.id}/", payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        stale_match_all_rule.refresh_from_db()
+        self.assertEqual(stale_match_all_rule.name, "Renamed")
+        self.assertEqual(stale_match_all_rule.matching_criteria, {"all": True})
+        self.assertCountEqual(
+            stale_match_all_rule.org_units_matched,
+            [self.district_1.id, self.district_2.id, self.district_3.id],
+        )
+        self.assertNotIn(region.id, stale_match_all_rule.org_units_matched)

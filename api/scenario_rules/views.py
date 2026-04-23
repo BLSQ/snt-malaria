@@ -59,13 +59,12 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         Prepares required data for creating a new ScenarioRule that is not directly known by the serializer
         """
         user = self.request.user
-        account = user.iaso_profile.account
+        scenario = serializer.validated_data["scenario"]
         matching_criteria = serializer.validated_data.get("matching_criteria")
-        org_units_matched = ScenarioRule.resolve_matched_org_units(account, matching_criteria)
+        org_units_matched = ScenarioRule.resolve_matched_org_units(scenario.account, matching_criteria)
 
         rule: ScenarioRule = serializer.save(created_by=user, org_units_matched=org_units_matched)
-        scenario = rule.scenario
-        scenario.refresh_assignments(user)
+        rule.scenario.refresh_assignments(user)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -83,20 +82,19 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         """
-        Prepares required data for updating an existing ScenarioRule that is not directly known by the serializer
+        Prepares required data for updating an existing ScenarioRule that is not directly known by the serializer.
+
+        org_units_matched is always recomputed -- using matching_criteria from the PATCH payload when
+        present, otherwise the currently persisted value. This lets edits self-heal stale cached
+        org_units_matched values even when matching_criteria is not part of the PATCH payload.
         """
         user = self.request.user
-        account = user.iaso_profile.account
-        extra_values = {
-            "updated_by": user,
-        }
-        if "matching_criteria" in serializer.validated_data:
-            matching_criteria = serializer.validated_data["matching_criteria"]
-            extra_values["org_units_matched"] = ScenarioRule.resolve_matched_org_units(account, matching_criteria)
+        instance = serializer.instance
+        matching_criteria = serializer.validated_data.get("matching_criteria", instance.matching_criteria)
+        org_units_matched = ScenarioRule.resolve_matched_org_units(instance.scenario.account, matching_criteria)
 
-        rule: ScenarioRule = serializer.save(**extra_values)
-        scenario = rule.scenario
-        scenario.refresh_assignments(user)
+        rule: ScenarioRule = serializer.save(updated_by=user, org_units_matched=org_units_matched)
+        rule.scenario.refresh_assignments(user)
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):

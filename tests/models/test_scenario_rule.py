@@ -553,6 +553,7 @@ class ScenarioRuleMatchAllTestCase(TestCase):
             matching_criteria={"all": True},
             created_by=self.user,
             scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id, self.org_unit_3.id],
         )
         ScenarioRuleInterventionProperties.objects.create(
             scenario_rule=rule,
@@ -576,6 +577,7 @@ class ScenarioRuleMatchAllTestCase(TestCase):
             matching_criteria={"all": True},
             created_by=self.user,
             scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id, self.org_unit_3.id],
             org_units_excluded=[self.org_unit_3.id],
         )
         ScenarioRuleInterventionProperties.objects.create(
@@ -602,6 +604,7 @@ class ScenarioRuleMatchAllTestCase(TestCase):
             matching_criteria={"all": True},
             created_by=self.user,
             scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id, self.org_unit_3.id],
             org_units_excluded=[self.org_unit_2.id],
             org_units_included=[self.org_unit_2.id],
         )
@@ -746,3 +749,23 @@ class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(TestCase):
         AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)
         result = ScenarioRule.resolve_matched_org_units(self.account, None)
         self.assertEqual(result, [])
+
+    def test_unified_pipeline_match_all_and_criteria_produce_same_intervention_scope(self):
+        """Both match-all and JSONLogic go through the same pipeline and apply the
+        intervention_org_unit_type filter, so when all org units
+        satisfy a criteria, both modes return the exact same intervention-level set."""
+        AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)
+        metric_type = MetricType.objects.get(account=self.account, code="POP")
+
+        match_all_result = ScenarioRule.resolve_matched_org_units(self.account, {"all": True})
+
+        # ">=1" is satisfied by every org unit with a POP MetricValue (region + both districts),
+        # so the only thing narrowing the result is the intervention_org_unit_type filter.
+        criteria = {"and": [{">=": [{"var": metric_type.id}, 1]}]}
+        criteria_result = ScenarioRule.resolve_matched_org_units(self.account, criteria)
+
+        expected = [self.district_1.id, self.district_2.id]
+        self.assertCountEqual(match_all_result, expected)
+        self.assertCountEqual(criteria_result, expected)
+        self.assertNotIn(self.region.id, match_all_result)
+        self.assertNotIn(self.region.id, criteria_result)

@@ -170,7 +170,12 @@ class DemoScenarioSeeder:
 
         self.stdout_write("Create rule for all org units...")
 
-        all_orgunits_rules = ScenarioRule.objects.create(
+        def create_rule(**kwargs):
+            matching_criteria = kwargs.get("matching_criteria")
+            org_units_matched = ScenarioRule.resolve_matched_org_units(self.account, matching_criteria)
+            return ScenarioRule.objects.create(org_units_matched=org_units_matched, **kwargs)
+
+        all_orgunits_rules = create_rule(
             scenario=scenario,
             name="CM + IPTp",
             created_by=user,
@@ -179,23 +184,18 @@ class DemoScenarioSeeder:
             matching_criteria={"all": True},
         )
 
-        # Only required for json matching criteria as it uses matching_orgunits field.
-
         matching_criteria_seasonal = {
             "and": [
                 {"==": [{"var": seasonality_precipitation_metric_type.id}, "seasonal"]},
             ]
         }
 
-        matching_orgunits = ScenarioRule.resolve_matched_org_units(self.account, matching_criteria_seasonal)
-
-        smc_rule = ScenarioRule.objects.create(
+        smc_rule = create_rule(
             scenario=scenario,
             name="SMC",
             created_by=user,
             priority=2,
             color="#42A5F5",
-            org_units_matched=matching_orgunits,
             matching_criteria=matching_criteria_seasonal,
         )
 
@@ -211,27 +211,21 @@ class DemoScenarioSeeder:
             ]
         }
 
-        matching_orgunits = ScenarioRule.resolve_matched_org_units(self.account, matching_criteria_high)
-
-        itn_dual_ai_rule = ScenarioRule.objects.create(
+        itn_dual_ai_rule = create_rule(
             scenario=scenario,
             name="ITN - Dual AI",
             created_by=user,
             priority=3,
             color="#D4E157",
-            org_units_matched=matching_orgunits,
             matching_criteria=matching_criteria_high,
         )
 
-        matching_orgunits = ScenarioRule.resolve_matched_org_units(self.account, matching_criteria_low)
-
-        itn_pbo_rule = ScenarioRule.objects.create(
+        itn_pbo_rule = create_rule(
             scenario=scenario,
             name="ITN - PBO",
             created_by=user,
             priority=4,
             color="#F4511E",
-            org_units_matched=matching_orgunits,
             matching_criteria=matching_criteria_low,
         )
 
