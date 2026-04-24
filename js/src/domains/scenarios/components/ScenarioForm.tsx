@@ -3,8 +3,8 @@ import { Box, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { useFormikContext } from 'formik';
 import InputComponent from 'Iaso/components/forms/InputComponent';
-import { YearRangeSlider } from '../../../components/YearRangeSlider';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
+import { YearRangeSlider } from '../../../components/YearRangeSlider';
 import { MESSAGES } from '../../messages';
 import {
     SCENARIO_YEAR_RANGE,
@@ -47,10 +47,7 @@ const ScenarioForm: React.FC = () => {
         values.end_year ?? SCENARIO_YEAR_RANGE.max,
     ];
 
-    const yearErrors = [
-        ...getErrors('start_year'),
-        ...getErrors('end_year'),
-    ];
+    const yearErrors = [...getErrors('start_year'), ...getErrors('end_year')];
 
     return (
         <Box>

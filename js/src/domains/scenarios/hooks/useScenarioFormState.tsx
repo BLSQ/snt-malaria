@@ -9,8 +9,8 @@ export type ScenarioFormValues = {
     id?: number;
     name: string;
     description: string;
-    start_year?: number;
-    end_year?: number;
+    start_year: number;
+    end_year: number;
 };
 
 export const SCENARIO_YEAR_RANGE = {
@@ -82,7 +82,7 @@ const useValidation = () => {
 
 export const useScenarioFormState = (
     scenario: Scenario | undefined,
-    onSubmit,
+    onSubmit: (values: ScenarioFormValues) => void,
 ) => {
     const validationSchema = useValidation();
     const values = useMemo(() => {
