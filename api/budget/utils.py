@@ -139,16 +139,22 @@ def build_cost_dataframe(account, start_year, end_year):
     # Convert to DataFrame
     df = pd.DataFrame(cost_lines_data)
 
-    # Duplicate data across scenario years
+    inflation_rate = float(budget_settings.inflation_rate)
+
+    # Duplicate data across scenario years, applying annual inflation compounding.
+    # unit_cost is treated as the start_year base cost; each subsequent year is
+    # compounded by (1 + inflation_rate) ** years_from_start.
     dfs_by_year = []
-    for year in [year for year in range(start_year, end_year + 1)]:
+    for year in range(start_year, end_year + 1):
         df_year = df.copy()
         df_year["cost_year_for_analysis"] = year
+        years_offset = year - start_year
+        df_year["usd_cost"] = df_year["usd_cost"] * (1 + inflation_rate) ** years_offset
         dfs_by_year.append(df_year)
     df = pd.concat(dfs_by_year, ignore_index=True)
 
     # BudgetSettings fields
-    # NOTE: not supported yet by budget script
+    # inflation_rate is already applied per-year to usd_cost above; kept here for audit.
     df["exchange_rate"] = budget_settings.exchange_rate
     df["inflation_factor"] = budget_settings.inflation_rate
 
