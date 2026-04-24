@@ -16,17 +16,16 @@ export type DropdownOptions<T> = {
 };
 
 export const useGetMetricTypes: <T = MetricType>(
-    transformData?: (data: MetricType[]) => T[],
-) => UseQueryResult<T[], Error> = (
-    transformData?: (data: MetricType[]) => any,
-) => {
+    includeUtility?: boolean,
+) => UseQueryResult<T[], Error> = (includeUtility = false) => {
+    const url = includeUtility
+        ? '/api/metrictypes/?include_utility=true'
+        : '/api/metrictypes/';
     return useSnackQuery({
-        queryKey: ['metricTypes'],
-        queryFn: () => getRequest('/api/metrictypes/'),
+        queryKey: ['metricTypes', { includeUtility }],
+        queryFn: () => getRequest(url),
         options: {
             cacheTime: Infinity, // disable auto fetch on cache expiration
-            select: (data: MetricType[]) =>
-                transformData ? transformData(data) : data,
         },
     });
 };

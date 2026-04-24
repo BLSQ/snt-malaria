@@ -26,10 +26,12 @@ export const TargetPopulationForm: FC<Props> = ({
 }) => {
     const popMetricOptions = useMemo(
         () =>
-            metricTypes.map(metric => ({
-                label: metric.name,
-                value: metric.code,
-            })),
+            metricTypes
+                .filter(metric => metric.is_population)
+                .map(metric => ({
+                    label: metric.name,
+                    value: metric.code,
+                })),
         [metricTypes],
     );
 
