@@ -12,6 +12,7 @@ export const mapResponseToScenarioRule = (
 ): ScenarioRule => ({
     id: response.id,
     name: response.name,
+    has_custom_name: response.has_custom_name,
     scenario: response.scenario,
     priority: response.priority,
     color: response.color,

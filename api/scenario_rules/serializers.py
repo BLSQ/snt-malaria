@@ -48,6 +48,7 @@ class ScenarioRuleListSerializer(serializers.ModelSerializer):
             "id",
             "scenario",
             "name",
+            "has_custom_name",
             "priority",
             "color",
             "intervention_properties",
@@ -79,6 +80,7 @@ class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
             "id",
             "scenario",
             "name",
+            "has_custom_name",
             "priority",
             "color",
             "intervention_properties",
@@ -127,6 +129,7 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
         model = ScenarioRule
         fields = [
             "name",
+            "has_custom_name",
             "color",
             "intervention_properties",
             "matching_criteria",
