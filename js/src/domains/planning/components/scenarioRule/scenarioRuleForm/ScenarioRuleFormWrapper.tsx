@@ -18,6 +18,7 @@ const PREVIEW_DEBOUNCE_MS = 500;
 type Props = {
     scenarioId: number;
     rule?: ScenarioRule;
+    initialColor: string;
     onClose: () => void;
     onChange?: (values: Partial<ScenarioRuleFormValues>) => void;
 };
@@ -25,6 +26,7 @@ type Props = {
 export const ScenarioRuleFormWrapper: FC<Props> = ({
     scenarioId,
     rule,
+    initialColor,
     onClose,
     onChange,
 }) => {
@@ -54,8 +56,12 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                       org_units_excluded: rule.org_units_excluded,
                       org_units_included: rule.org_units_included,
                   }
-                : { ...defaultScenarioRuleValues, scenario: scenarioId },
-        [rule, scenarioId],
+                : {
+                      ...defaultScenarioRuleValues,
+                      scenario: scenarioId,
+                      color: initialColor,
+                  },
+        [rule, scenarioId, initialColor],
     );
 
     const onSubmit = useCallback(

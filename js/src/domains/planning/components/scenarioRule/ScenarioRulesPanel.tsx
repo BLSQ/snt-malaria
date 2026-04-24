@@ -1,7 +1,12 @@
 import React, { FC, useCallback, useState } from 'react';
+import { useGetColors } from 'Iaso/hooks/useGetColors';
 import { CardScrollable } from '../../../../components/styledComponents';
 import { usePlanningContext } from '../../contexts/PlanningContext';
-import { ScenarioRuleFormValues } from '../../hooks/useScenarioRuleFormState';
+import {
+    defaultScenarioRuleValues,
+    ScenarioRuleFormValues,
+} from '../../hooks/useScenarioRuleFormState';
+import { pickRandomPaletteColor } from '../../libs/color-utils';
 import { ScenarioRule } from '../../types/scenarioRule';
 import { ScenarioRuleFormWrapper } from './scenarioRuleForm/ScenarioRuleFormWrapper';
 import { ScenarioRulesContainer } from './scenarioRuleList/ScenarioRulesContainer';
@@ -20,18 +25,34 @@ export const ScenarioRulesPanel: FC<Props> = ({
     onPreviewScenarioRule,
 }) => {
     const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
+    const [newRuleColor, setNewRuleColor] = useState<string>(
+        defaultScenarioRuleValues.color,
+    );
 
     const { isEditing, toggleIsEditing } = usePlanningContext();
+    // Prefetches the palette so the colour is ready by the time the user
+    // clicks "create new rule".
+    const { data: palette } = useGetColors();
 
     const handleShowForm = useCallback(
         (rule?: ScenarioRule) => {
             setEditingRule(rule);
+            if (!rule) {
+                const usedColors = rules.map(r => r.color).filter(Boolean);
+                setNewRuleColor(
+                    pickRandomPaletteColor(
+                        palette ?? [],
+                        usedColors,
+                        defaultScenarioRuleValues.color,
+                    ),
+                );
+            }
             toggleIsEditing();
             if (rule) {
                 onPreviewScenarioRule?.(rule);
             }
         },
-        [setEditingRule, toggleIsEditing, onPreviewScenarioRule],
+        [rules, palette, toggleIsEditing, onPreviewScenarioRule],
     );
 
     const handleCloseForm = useCallback(() => {
@@ -56,6 +77,9 @@ export const ScenarioRulesPanel: FC<Props> = ({
                 <ScenarioRuleFormWrapper
                     scenarioId={scenarioId}
                     rule={editingRule}
+                    initialColor={
+                        editingRule ? editingRule.color : newRuleColor
+                    }
                     onClose={handleCloseForm}
                     onChange={handleFormChange}
                 />

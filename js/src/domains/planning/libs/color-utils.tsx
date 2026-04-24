@@ -1,6 +1,7 @@
 import { hslToRgb } from '@mui/material';
 
 import Color from 'color';
+import { sample } from 'lodash';
 
 const [sat, lightness] = [0.69, 0.84];
 export const maxHue = 350;
@@ -38,6 +39,23 @@ export const severityColorRange = [
 ];
 
 export const defaultLegend = '#999999';
+
+/**
+ * Picks a random colour from `palette`, preferring entries not already in
+ * `usedColors`. Falls back to any palette colour if all are taken, and to
+ * `fallback` if the palette is empty. Comparison is case-insensitive so it
+ * doesn't matter whether callers pass `#abcdef` or `#ABCDEF`.
+ */
+export const pickRandomPaletteColor = (
+    palette: string[],
+    usedColors: string[] = [],
+    fallback = '#000000',
+): string => {
+    if (palette.length === 0) return fallback;
+    const used = new Set(usedColors.map(color => color.toLowerCase()));
+    const unused = palette.filter(color => !used.has(color.toLowerCase()));
+    return sample(unused.length > 0 ? unused : palette) ?? fallback;
+};
 
 export const getColorRange = (count: number = 1) => {
     const colorStep = Math.round(maxHue / count);
