@@ -84,14 +84,17 @@ def _get_dispersed_color(index: int) -> str:
 
 
 def _build_rule_name(interventions: list[Intervention]) -> str:
-    """Build a rule name from intervention short names joined by ' + ', truncated to the model's max_length."""
-    max_length = ScenarioRule._meta.get_field("name").max_length
-    parts = [i.short_name or i.name for i in sorted(interventions, key=lambda i: i.name)]
-    name = " + ".join(parts)
-    if len(name) > max_length:
-        suffix = "…"
-        name = name[: max_length - len(suffix)] + suffix
-    return name
+    """Build a rule name from intervention short names joined by ' + '.
+
+    Interventions are sorted alphabetically by category name first, then by
+    intervention name. The frontend's `generateRuleName` mirrors this ordering
+    and label resolution so a rule's auto-generated name looks the same whether
+    it was produced here (e.g. during import) or in the editor.
+    """
+    parts = [
+        i.short_name or i.name for i in sorted(interventions, key=lambda i: (i.intervention_category.name, i.name))
+    ]
+    return " + ".join(parts)
 
 
 def _build_intervention_groups(

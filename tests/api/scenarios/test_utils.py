@@ -235,20 +235,34 @@ class BuildRuleNameTestCase(TestCase):
         )
         self.assertEqual(_build_rule_name([iv_b, iv_a]), "A + B")
 
-    def test_truncates_long_name(self):
-        interventions = []
-        for i in range(50):
-            iv = Intervention.objects.create(
-                name=f"Intervention{i:03d}",
-                short_name=f"VeryLongShortName{i:03d}",
-                code=f"c{i}",
-                created_by=self.user,
-                intervention_category=self.category,
-            )
-            interventions.append(iv)
-        name = _build_rule_name(interventions)
-        self.assertLessEqual(len(name), 255)
-        self.assertTrue(name.endswith("…"))
+    def test_sorts_by_category_then_name(self):
+        cat_b = InterventionCategory.objects.create(name="Bravo", account=self.account, created_by=self.user)
+        cat_a = InterventionCategory.objects.create(name="Alpha", account=self.account, created_by=self.user)
+        iv_in_b = Intervention.objects.create(
+            name="In B",
+            short_name="B1",
+            code="b1",
+            created_by=self.user,
+            intervention_category=cat_b,
+        )
+        iv_in_a_second = Intervention.objects.create(
+            name="Zeta",
+            short_name="Z",
+            code="z",
+            created_by=self.user,
+            intervention_category=cat_a,
+        )
+        iv_in_a_first = Intervention.objects.create(
+            name="Alpha",
+            short_name="A",
+            code="a",
+            created_by=self.user,
+            intervention_category=cat_a,
+        )
+        self.assertEqual(
+            _build_rule_name([iv_in_b, iv_in_a_second, iv_in_a_first]),
+            "A + Z + B1",
+        )
 
 
 class BuildInterventionGroupsTestCase(TestCase):
