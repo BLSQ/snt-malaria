@@ -227,7 +227,6 @@ class MetricsImporter:
             col
             for col in csvreader.fieldnames
             if str.lower(col) not in ["year", "adm1_id", "adm2_id", "adm1_name", "adm2_name"]
-            # POPULATION is excluded as it is already in other metric file
         )
 
         for col in columns:
@@ -237,8 +236,8 @@ class MetricsImporter:
                     code=col,
                     defaults={
                         "name": col,
-                        "is_utility": True,
-                        "is_population": True,
+                        "is_utility": True,  # Hide it from map
+                        "is_population": True,  # Show it in population dropdown
                         "origin": MetricType.MetricTypeOrigin.OPENHEXA,
                     },
                 )
@@ -282,10 +281,6 @@ class MetricsImporter:
                             string_value = row[column]
 
                         # Create the MetricValue
-                        print(
-                            f"Creating MetricValue for metric '{metric_type.name}' (code: {metric_type.code}), "
-                            f"OrgUnit: {org_unit}, Year: {row.get('YEAR', 'N/A')}, Value: {value}, String Value: '{string_value}'"
-                        )
                         MetricValue.objects.create(
                             metric_type=metric_type,
                             org_unit=org_unit,
