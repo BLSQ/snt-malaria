@@ -11,6 +11,7 @@ from .intervention import (
     InterventionCategory,
 )
 from .scenario import Scenario, ScenarioRule, ScenarioRuleInterventionProperties
+from .snt_account_setup import SNTAccountSetup
 
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "BudgetSettings",
     "BudgetAssumptions",
     "AccountSettings",
+    "SNTAccountSetup",
 ]

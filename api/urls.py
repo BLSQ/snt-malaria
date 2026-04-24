@@ -6,6 +6,7 @@ from plugins.snt_malaria.api.budget_assumptions.views import BudgetAssumptionsVi
 from plugins.snt_malaria.api.budget_settings.views import BudgetSettingsViewSet
 from plugins.snt_malaria.api.impact.views import ImpactAgeGroupsViewSet, ImpactViewSet, ImpactYearRangeViewSet
 
+from .account_setup.views import SNTAccountSetupViewSet
 from .intervention_assignments.views import InterventionAssignmentViewSet
 from .intervention_categories.views import InterventionCategoryViewSet
 from .intervention_cost_breakdown_line.views import InterventionCostBreakdownLineViewSet
@@ -38,3 +39,4 @@ router.register(r"snt_malaria/impact", ImpactViewSet, basename="impact")
 router.register(r"snt_malaria/impact_year_range", ImpactYearRangeViewSet, basename="impact_year_range")
 router.register(r"snt_malaria/impact_age_groups", ImpactAgeGroupsViewSet, basename="impact_age_groups")
 router.register(r"snt_malaria/account_settings", AccountSettingsViewSet, basename="account_settings")
+router.register(r"snt_malaria/account_setup", SNTAccountSetupViewSet, basename="account_setup")
