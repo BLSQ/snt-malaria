@@ -9,16 +9,21 @@ export type ScenarioFormValues = {
     id?: number;
     name: string;
     description: string;
-    start_year?: number;
-    end_year?: number;
+    start_year: number;
+    end_year: number;
 };
+
+export const SCENARIO_YEAR_RANGE = {
+    min: 2024,
+    max: 2035,
+} as const;
 
 const initialValues: ScenarioFormValues = {
     id: undefined,
     name: '',
     description: '',
-    start_year: undefined,
-    end_year: undefined,
+    start_year: SCENARIO_YEAR_RANGE.min,
+    end_year: SCENARIO_YEAR_RANGE.max,
 };
 
 const useValidation = () => {
@@ -34,12 +39,32 @@ const useValidation = () => {
                 description: Yup.string(),
                 start_year: Yup.number()
                     .required()
-                    .min(2024, formatMessage(MESSAGES.minYear, { year: 2024 }))
-                    .max(2035, formatMessage(MESSAGES.maxYear, { year: 2035 })),
+                    .min(
+                        SCENARIO_YEAR_RANGE.min,
+                        formatMessage(MESSAGES.minYear, {
+                            year: SCENARIO_YEAR_RANGE.min,
+                        }),
+                    )
+                    .max(
+                        SCENARIO_YEAR_RANGE.max,
+                        formatMessage(MESSAGES.maxYear, {
+                            year: SCENARIO_YEAR_RANGE.max,
+                        }),
+                    ),
                 end_year: Yup.number()
                     .required()
-                    .min(2024, formatMessage(MESSAGES.minYear, { year: 2024 }))
-                    .max(2035, formatMessage(MESSAGES.maxYear, { year: 2035 }))
+                    .min(
+                        SCENARIO_YEAR_RANGE.min,
+                        formatMessage(MESSAGES.minYear, {
+                            year: SCENARIO_YEAR_RANGE.min,
+                        }),
+                    )
+                    .max(
+                        SCENARIO_YEAR_RANGE.max,
+                        formatMessage(MESSAGES.maxYear, {
+                            year: SCENARIO_YEAR_RANGE.max,
+                        }),
+                    )
                     .when('start_year', (start_year, schema) => {
                         return start_year
                             ? schema.min(
@@ -57,7 +82,7 @@ const useValidation = () => {
 
 export const useScenarioFormState = (
     scenario: Scenario | undefined,
-    onSubmit,
+    onSubmit: (values: ScenarioFormValues) => void,
 ) => {
     const validationSchema = useValidation();
     const values = useMemo(() => {

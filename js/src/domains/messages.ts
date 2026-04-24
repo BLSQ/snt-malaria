@@ -361,15 +361,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.editedOn',
         defaultMessage: 'Edited on {date}',
     },
-    endYear: {
-        id: 'iaso.snt_malaria.label.end_year',
-        defaultMessage: 'End year',
-    },
-    endYearMin: {
-        id: 'iaso.snt_malaria.scenario.errors.endYearMin',
-        defaultMessage:
-            'End year must be greater than or equal to start year ({year})',
-    },
     entirePeriod: {
         id: 'iaso.snt_malaria.budgeting.entirePeriod',
         defaultMessage: 'Entire period',
@@ -784,10 +775,6 @@ export const MESSAGES = defineMessages({
     sidebarTitle: {
         id: 'iaso.snt_malaria.label.sidebarTitle',
         defaultMessage: 'Display options',
-    },
-    startYear: {
-        id: 'iaso.snt_malaria.label.start_year',
-        defaultMessage: 'Start year',
     },
     save: {
         id: 'iaso.snt_malaria.label.save',
