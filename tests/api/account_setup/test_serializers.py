@@ -1,11 +1,11 @@
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from iaso.test import TestCase
+from iaso.test import PasswordValidationTestMixin, TestCase
 from plugins.snt_malaria.api.account_setup.serializers import SNTAccountSetupSerializer
 
 
-class SNTAccountSetupSerializerTestCase(TestCase):
+class SNTAccountSetupSerializerTestCase(TestCase, PasswordValidationTestMixin):
     JSON_FILE_NAME = "geo_json_be.json"
     JSON_FILE_PATH = f"plugins/snt_malaria/tests/fixtures/{JSON_FILE_NAME}"
 
@@ -13,8 +13,8 @@ class SNTAccountSetupSerializerTestCase(TestCase):
         with open(self.JSON_FILE_PATH, "rb") as json_file:
             data = {
                 "username": "username",
-                "password": "password",
-                "password_confirmation": "password",
+                "password": "secret-password-very-secure-much-wow",
+                "password_confirmation": "secret-password-very-secure-much-wow",
                 "country": "BE",
                 "language": "en",
                 "geo_json_file": SimpleUploadedFile(
@@ -28,7 +28,7 @@ class SNTAccountSetupSerializerTestCase(TestCase):
         with open(self.JSON_FILE_PATH, "rb") as json_file:
             data = {
                 "username": "username",
-                "password": "password",
+                "password": "secret-password-very-secure-much-wow",
                 "password_confirmation": "not-the-same-password",
                 "country": "DE",
                 "language": "fr",
@@ -45,8 +45,8 @@ class SNTAccountSetupSerializerTestCase(TestCase):
         with open(self.JSON_FILE_PATH, "rb") as json_file:
             data = {
                 "username": user_bouboule.username,
-                "password": "password",
-                "password_confirmation": "password",
+                "password": "secret-password-very-secure-much-wow",
+                "password_confirmation": "secret-password-very-secure-much-wow",
                 "country": "BE",
                 "language": "fr",
                 "geo_json_file": SimpleUploadedFile(
@@ -63,8 +63,8 @@ class SNTAccountSetupSerializerTestCase(TestCase):
         with open(self.JSON_FILE_PATH, "rb") as json_file:
             data = {
                 "username": "username",
-                "password": "password",
-                "password_confirmation": "password",
+                "password": "secret-password-very-secure-much-wow",
+                "password_confirmation": "secret-password-very-secure-much-wow",
                 "country": "BE",
                 # language is missing
                 "geo_json_file": SimpleUploadedFile(
@@ -127,8 +127,8 @@ class SNTAccountSetupSerializerTestCase(TestCase):
         with open("iaso/tests/fixtures/hydro.xml", "rb") as xml_file:
             data = {
                 "username": "username",
-                "password": "password",
-                "password_confirmation": "password",
+                "password": "secret-password-very-secure-much-wow",
+                "password_confirmation": "secret-password-very-secure-much-wow",
                 "country": "BE",
                 "language": "fr",
                 "geo_json_file": SimpleUploadedFile("hydro.xml", xml_file.read(), content_type="application/xml"),
@@ -144,8 +144,8 @@ class SNTAccountSetupSerializerTestCase(TestCase):
         with open("plugins/snt_malaria/tests/fixtures/geo_json_be_no_features.json", "rb") as json_file:
             data = {
                 "username": "username",
-                "password": "password",
-                "password_confirmation": "password",
+                "password": "secret-password-very-secure-much-wow",
+                "password_confirmation": "secret-password-very-secure-much-wow",
                 "country": "BE",
                 "language": "fr",
                 "geo_json_file": SimpleUploadedFile("file.json", json_file.read(), content_type="application/json"),
@@ -167,8 +167,8 @@ class SNTAccountSetupSerializerTestCase(TestCase):
         with open("plugins/snt_malaria/tests/fixtures/geo_json_be_missing_keys.json", "rb") as json_file:
             data = {
                 "username": "username",
-                "password": "password",
-                "password_confirmation": "password",
+                "password": "secret-password-very-secure-much-wow",
+                "password_confirmation": "secret-password-very-secure-much-wow",
                 "country": "BE",
                 "language": "fr",
                 "geo_json_file": SimpleUploadedFile("file.json", json_file.read(), content_type="application/json"),
@@ -182,3 +182,55 @@ class SNTAccountSetupSerializerTestCase(TestCase):
             "Locations in the GeoJSON file lack required properties: ['ADM0_ID', 'ADM0_NAME', 'ADM1_ID', 'ADM1_NAME', 'ADM1_LEVEL_NAME', 'ADM2_ID', 'ADM2_NAME', 'ADM2_LEVEL_NAME']",
             errors["geo_json_file"][0],
         )
+
+    def test_password_validation_error_too_short_too_common(self):
+        with open(self.JSON_FILE_PATH, "rb") as json_file:
+            data = {
+                "username": "username",
+                "password": "secret",
+                "password_confirmation": "secret",
+                "country": "BE",
+                "geo_json_file": SimpleUploadedFile(
+                    self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
+                ),
+            }
+        serializer = SNTAccountSetupSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        errors = serializer.errors
+        self.assertIn("password", errors)
+        self.assertIn(self.ERROR_PASSWORD_TOO_COMMON, errors["password"])
+        self.assertIn(self.ERROR_PASSWORD_TOO_SHORT, errors["password"])
+
+    def test_password_validation_error_too_similar_username(self):
+        with open(self.JSON_FILE_PATH, "rb") as json_file:
+            data = {
+                "username": "username",
+                "password": "username4",
+                "password_confirmation": "username4",
+                "country": "BE",
+                "geo_json_file": SimpleUploadedFile(
+                    self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
+                ),
+            }
+        serializer = SNTAccountSetupSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        errors = serializer.errors
+        self.assertIn("password", errors)
+        self.assertIn(self.ERROR_PASSWORD_TOO_SIMILAR_USERNAME, errors["password"])
+
+    def test_password_validation_error_not_only_numeric(self):
+        with open(self.JSON_FILE_PATH, "rb") as json_file:
+            data = {
+                "username": "username",
+                "password": "012345679887654054065198",
+                "password_confirmation": "012345679887654054065198",
+                "country": "BE",
+                "geo_json_file": SimpleUploadedFile(
+                    self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
+                ),
+            }
+        serializer = SNTAccountSetupSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        errors = serializer.errors
+        self.assertIn("password", errors)
+        self.assertIn(self.ERROR_PASSWORD_NUMERIC, errors["password"])

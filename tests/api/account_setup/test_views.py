@@ -22,8 +22,8 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         with open(self.JSON_FILE_PATH, "rb") as json_file:
             payload = {
                 "username": "test",
-                "password": "password",
-                "password_confirmation": "password",
+                "password": "secret-password-very-secure-much-wow",
+                "password_confirmation": "secret-password-very-secure-much-wow",
                 "country": "BE",
                 "language": "fr",
                 "geo_json_file": SimpleUploadedFile(
@@ -85,8 +85,8 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         with open(self.JSON_FILE_PATH, "rb") as json_file:
             payload = {
                 "username": "test",
-                "password": "password",
-                "password_confirmation": "password",
+                "password": "secret-password-very-secure-much-wow",
+                "password_confirmation": "secret-password-very-secure-much-wow",
                 "country": "BE",
                 "language": "fr",
                 "geo_json_file": SimpleUploadedFile(
@@ -109,8 +109,8 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         with open(self.JSON_FILE_PATH, "rb") as json_file:
             payload = {
                 "username": "test",
-                "password": "password",
-                "password_confirmation": "password",
+                "password": "secret-password-very-secure-much-wow",
+                "password_confirmation": "secret-password-very-secure-much-wow",
                 "country": "BE",
                 "language": "fr",
                 "geo_json_file": SimpleUploadedFile(
@@ -134,8 +134,8 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         with open(self.JSON_FILE_PATH, "rb") as json_file:
             payload = {
                 "username": "test",
-                "password": "password",
-                "password_confirmation": "password",
+                "password": "secret-password-very-secure-much-wow",
+                "password_confirmation": "secret-password-very-secure-much-wow",
                 "country": "BE",
                 "language": "fr",
                 "geo_json_file": SimpleUploadedFile(

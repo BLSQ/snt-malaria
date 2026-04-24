@@ -1,6 +1,9 @@
 import json
 
+import django.core.exceptions as django_exceptions
+
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
 from plugins.snt_malaria.api.account_setup.utils import REQUIRED_GEO_JSON_LABELS
@@ -57,5 +60,11 @@ class SNTAccountSetupSerializer(serializers.ModelSerializer):
 
         if password != password_confirmation:
             raise serializers.ValidationError("Passwords do not match")
+
+        user = User(username=data["username"])
+        try:
+            validate_password(password=password, user=user)
+        except django_exceptions.ValidationError as e:
+            raise serializers.ValidationError({"password": e.messages})
 
         return data
