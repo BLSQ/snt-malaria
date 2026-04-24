@@ -60,6 +60,7 @@ class SNTAccountSetupAPIUtilsTestCase(TestCase):
         self.assertIn(self.full_country_name, account.name)
         self.assertEqual(setup.account, account)
         self.assertCountEqual(account.modules, [MODULE_DEFAULT.codename, MODULE_SNT_MALARIA.codename])
+        self.assertTrue(account.enforce_password_validation)
 
         self.assertEqual(DataSource.objects.count(), 1)
         data_source = DataSource.objects.first()
