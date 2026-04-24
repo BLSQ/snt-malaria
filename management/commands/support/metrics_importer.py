@@ -226,7 +226,7 @@ class MetricsImporter:
         columns = (
             col
             for col in csvreader.fieldnames
-            if str.lower(col) not in ["year", "adm1_id", "adm2_id", "adm1_name", "adm2_name", "population"]
+            if str.lower(col) not in ["year", "adm1_id", "adm2_id", "adm1_name", "adm2_name"]
             # POPULATION is excluded as it is already in other metric file
         )
 
