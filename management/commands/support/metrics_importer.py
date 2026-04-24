@@ -153,6 +153,7 @@ class MetricsImporter:
                     metric_type.unit_symbol = row["UNIT_SYMBOL"]
                     metric_type.legend_type = row["TYPE"].lower()
                     metric_type.is_utility = row.get("IS_UTILITY", "False").lower() == "true"
+                    metric_type.is_population = False
                     metric_type.origin = MetricType.MetricTypeOrigin.OPENHEXA
                     to_update.append(metric_type)
                     self.stdout_write(
@@ -170,6 +171,7 @@ class MetricsImporter:
                         unit_symbol=row["UNIT_SYMBOL"],
                         legend_type=row["TYPE"].lower(),
                         is_utility=row.get("IS_UTILITY", "False").lower() == "true",
+                        is_population=False,
                         origin=MetricType.MetricTypeOrigin.OPENHEXA,
                     )
                     to_create.append(metric_type)
@@ -205,6 +207,7 @@ class MetricsImporter:
                 "unit_symbol",
                 "legend_type",
                 "is_utility",
+                "is_population",
                 "origin",
             ],
         )
@@ -229,11 +232,15 @@ class MetricsImporter:
 
         for col in columns:
             try:
-                metric_type = MetricType.objects.create(
+                metric_type, _created = MetricType.objects.update_or_create(
                     account=self.account,
-                    name=col,
                     code=col,
-                    is_utility=True,
+                    defaults={
+                        "name": col,
+                        "is_utility": True,
+                        "is_population": True,
+                        "origin": MetricType.MetricTypeOrigin.OPENHEXA,
+                    },
                 )
                 self.stdout_write(f"Created Population MetricType: {metric_type.name}")
                 pop_metric_types[col] = metric_type
@@ -275,8 +282,16 @@ class MetricsImporter:
                             string_value = row[column]
 
                         # Create the MetricValue
+                        print(
+                            f"Creating MetricValue for metric '{metric_type.name}' (code: {metric_type.code}), "
+                            f"OrgUnit: {org_unit}, Year: {row.get('YEAR', 'N/A')}, Value: {value}, String Value: '{string_value}'"
+                        )
                         MetricValue.objects.create(
-                            metric_type=metric_type, org_unit=org_unit, value=value, string_value=string_value
+                            metric_type=metric_type,
+                            org_unit=org_unit,
+                            value=value,
+                            string_value=string_value,
+                            year=int(row.get("YEAR", 0)),
                         )
                         value_count += 1
 
@@ -288,6 +303,6 @@ class MetricsImporter:
             raise
 
     def _configure_legends(self):
-        for metric_type in MetricType.objects.filter(account=self.account):
+        for metric_type in MetricType.objects.filter(account=self.account, origin=MetricType.MetricTypeOrigin.OPENHEXA):
             metric_type.legend_config = get_legend_config(metric_type, self.metric_type_scales[metric_type.code])
             metric_type.save()
