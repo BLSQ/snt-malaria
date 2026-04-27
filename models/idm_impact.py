@@ -13,6 +13,7 @@ class IDMAdminInfo(models.Model):
     admin_2_name = models.CharField(max_length=255, null=True, blank=True)
     state = models.CharField(max_length=255, null=True, blank=True)
     population = models.IntegerField(null=True, blank=True)
+    population_u5 = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.admin_2_name} ({self.state})"
