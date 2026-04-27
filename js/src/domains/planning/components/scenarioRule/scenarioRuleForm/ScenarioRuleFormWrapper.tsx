@@ -1,5 +1,13 @@
-import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, {
+    FC,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { useSafeIntl } from 'bluesquare-components';
+import { useGetColors } from 'Iaso/hooks/useGetColors';
 import { CardStyled } from '../../../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../../../messages';
@@ -9,6 +17,7 @@ import {
     ScenarioRuleFormValues,
     useScenarioRuleFormState,
 } from '../../../hooks/useScenarioRuleFormState';
+import { pickRandomPaletteColor } from '../../../libs/color-utils';
 import { ScenarioRule } from '../../../types/scenarioRule';
 import { ScenarioRuleForm } from './ScenarioRuleForm';
 import { ScenarioRuleFormHeader } from './ScenarioRuleFormHeader';
@@ -18,7 +27,7 @@ const PREVIEW_DEBOUNCE_MS = 500;
 type Props = {
     scenarioId: number;
     rule?: ScenarioRule;
-    initialColor: string;
+    existingRules: ScenarioRule[];
     onClose: () => void;
     onChange?: (values: Partial<ScenarioRuleFormValues>) => void;
 };
@@ -26,11 +35,23 @@ type Props = {
 export const ScenarioRuleFormWrapper: FC<Props> = ({
     scenarioId,
     rule,
-    initialColor,
+    existingRules,
     onClose,
     onChange,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const { data: palette } = useGetColors();
+
+    // useState's lazy initializer runs only on mount, so the random pick is
+    // computed once and survives subsequent re-renders of the form. The
+    // palette is prefetched by the parent so it's already cached here.
+    const [initialColor] = useState(() =>
+        pickRandomPaletteColor(
+            palette ?? [],
+            existingRules.map(r => r.color).filter(Boolean),
+            defaultScenarioRuleValues.color,
+        ),
+    );
 
     const { mutate: createUpdateScenarioRule, isLoading: isSubmittingRule } =
         useCreateUpdateScenarioRule(scenarioId);
