@@ -67,19 +67,20 @@ class ScenarioRuleModelTestCase(TestCase):
         self.assertEqual(default_color_rule.color, DEFAULT_COLOR)
 
     def test_missing_name_field(self):
-        with self.assertRaises(ValidationError):
-            missing_name_rule = ScenarioRule.objects.create(
-                priority=1,
-                color="#FF0000",
-                matching_criteria=self.matching_criteria,
-                created_by=self.user,
-                scenario=self.scenario,
-                org_units_matched=[],
-                org_units_excluded=[],
-                org_units_included=[],
-                org_units_scope=[],
-            )
-            missing_name_rule.full_clean()
+        """Name is optional; rules without a name default to an empty string."""
+        rule = ScenarioRule.objects.create(
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[],
+            org_units_excluded=[],
+            org_units_included=[],
+            org_units_scope=[],
+        )
+        rule.full_clean()
+        self.assertEqual(rule.name, "")
 
     def test_missing_matching_criteria_field(self):
         """Omitting matching_criteria defaults to None (inclusion-only rule)."""
