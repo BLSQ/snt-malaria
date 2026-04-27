@@ -9,8 +9,7 @@ from iaso.models import Account, OrgUnit
 from plugins.snt_malaria.models import ImpactOrgUnitMapping
 
 
-class Command(BaseCommand):
-    help = """Load impact org-unit mappings from a JSON mapping file.
+HELP_TEXT = """Load impact org-unit mappings from a JSON mapping file.
 
 Creates or updates ImpactOrgUnitMapping rows that link Iaso org units
 to reference strings used by external impact databases.
@@ -65,6 +64,79 @@ same-name org units by scoping them under a parent. A node can have
 both "reference" (mapped itself) and "children" (scoping descendants).
 Nesting can be arbitrarily deep."""
 
+
+class MappingLoadError(ValueError):
+    """Raised when the provided mapping data cannot be loaded."""
+
+
+def load_impact_org_unit_mappings(account, mapping_nodes, overwrite=False, logger=None):
+    """Load impact org-unit mappings for a given account.
+
+    Args:
+        account: ``iaso.Account`` instance whose default version will be used.
+        mapping_nodes: parsed JSON payload (a list of mapping nodes).
+        overwrite: when False, existing mappings are left untouched.
+        logger: optional callable accepting a single string, used for
+            progress messages.
+
+    Returns:
+        A dict ``{"created": int, "updated": int, "skipped": int}``.
+
+    Raises:
+        MappingLoadError: when the mapping data is not a list, the account
+            has no default version, or a mapping node is ambiguous.
+    """
+    log = logger or (lambda _msg: None)
+
+    if not isinstance(mapping_nodes, list):
+        raise MappingLoadError("Mapping file must contain a JSON array of nodes.")
+
+    lookup = _build_lookup(mapping_nodes)
+
+    default_version = account.default_version
+    if default_version is None:
+        raise MappingLoadError(f"Account '{account.name}' has no default version.")
+
+    log("Loading org units...")
+    org_units = OrgUnit.objects.filter(version=default_version)
+    if not overwrite:
+        org_units = org_units.exclude(impact_mapping__isnull=False)
+
+    org_unit_list = list(org_units)
+    log(f"Loaded {len(org_unit_list)} org units.")
+    if not org_unit_list:
+        return {"created": 0, "updated": 0, "skipped": 0}
+
+    _validate_uniqueness(org_unit_list, lookup)
+
+    log("Writing mappings...")
+    created_count = 0
+    updated_count = 0
+    skipped_count = 0
+    with transaction.atomic():
+        for org_unit in org_unit_list:
+            log(f"  Processing: {org_unit.name} (id={org_unit.id})")
+            ancestors = _build_ancestors(org_unit)
+            reference = _resolve(ancestors, lookup)
+            if reference is None:
+                skipped_count += 1
+                continue
+            _, created = ImpactOrgUnitMapping.objects.update_or_create(
+                org_unit=org_unit,
+                defaults={"reference": reference},
+            )
+            if created:
+                created_count += 1
+            else:
+                updated_count += 1
+    log("Committed.")
+
+    return {"created": created_count, "updated": updated_count, "skipped": skipped_count}
+
+
+class Command(BaseCommand):
+    help = HELP_TEXT
+
     def add_arguments(self, parser):
         parser.add_argument(
             "--account",
@@ -108,11 +180,6 @@ Nesting can be arbitrarily deep."""
         except json.JSONDecodeError as e:
             raise CommandError(f"Invalid JSON in mapping file: {e}")
 
-        if not isinstance(mapping_nodes, list):
-            raise CommandError("Mapping file must contain a JSON array of nodes.")
-
-        lookup = _build_lookup(mapping_nodes)
-
         identifier = account_id if account_id else account_name
         try:
             if account_id:
@@ -122,81 +189,60 @@ Nesting can be arbitrarily deep."""
         except Account.DoesNotExist:
             raise CommandError(f"Account '{identifier}' does not exist.")
 
-        default_version = account.default_version
-        if default_version is None:
-            raise CommandError(f"Account '{identifier}' has no default version.")
+        try:
+            counts = load_impact_org_unit_mappings(
+                account=account,
+                mapping_nodes=mapping_nodes,
+                overwrite=overwrite,
+                logger=self.stdout.write,
+            )
+        except MappingLoadError as e:
+            raise CommandError(str(e))
 
-        self.stdout.write("Loading org units...")
-        org_units = OrgUnit.objects.filter(version=default_version)
-        if not overwrite:
-            org_units = org_units.exclude(impact_mapping__isnull=False)
-
-        org_unit_list = list(org_units)
-        self.stdout.write(f"Loaded {len(org_unit_list)} org units.")
-        if not org_unit_list:
+        if counts["created"] == 0 and counts["updated"] == 0 and counts["skipped"] == 0:
             self.stdout.write(self.style.WARNING("No org units to process."))
             return
 
-        self._validate_uniqueness(org_unit_list, lookup)
-
-        self.stdout.write("Writing mappings...")
-        created_count = 0
-        updated_count = 0
-        skipped_count = 0
-        with transaction.atomic():
-            for org_unit in org_unit_list:
-                self.stdout.write(f"  Processing: {org_unit.name} (id={org_unit.id})")
-                ancestors = _build_ancestors(org_unit)
-                reference = _resolve(ancestors, lookup)
-                if reference is None:
-                    skipped_count += 1
-                    continue
-                _, created = ImpactOrgUnitMapping.objects.update_or_create(
-                    org_unit=org_unit,
-                    defaults={"reference": reference},
-                )
-                if created:
-                    created_count += 1
-                else:
-                    updated_count += 1
-        self.stdout.write("Committed.")
-
         self.stdout.write(
-            self.style.SUCCESS(f"Account '{identifier}': created {created_count}, updated {updated_count} mapping(s).")
+            self.style.SUCCESS(
+                f"Account '{identifier}': created {counts['created']}, updated {counts['updated']} mapping(s)."
+            )
         )
-        if skipped_count:
-            self.stdout.write(f"Skipped {skipped_count} org unit(s) with no mapping match.")
+        if counts["skipped"]:
+            self.stdout.write(f"Skipped {counts['skipped']} org unit(s) with no mapping match.")
 
-    def _validate_uniqueness(self, org_unit_list, lookup):
-        """Validate that every mapping node resolves unambiguously.
 
-        For each node in the lookup tree, count how many org units match at
-        that scope level. If a node with a reference matches 2+ org units,
-        the mapping is ambiguous and a deeper hierarchy is needed.
-        """
-        name_counts_by_parent = Counter()
-        global_name_counts = Counter()
-        for ou in org_unit_list:
-            parent_name = ou.parent.name if ou.parent else None
-            name_counts_by_parent[(parent_name, ou.name)] += 1
-            global_name_counts[ou.name] += 1
+def _validate_uniqueness(org_unit_list, lookup):
+    """Validate that every mapping node resolves unambiguously.
 
-        self._check_scope(lookup, global_name_counts, name_counts_by_parent, scope_label="top-level")
+    For each node in the lookup tree, count how many org units match at
+    that scope level. If a node with a reference matches 2+ org units,
+    the mapping is ambiguous and a deeper hierarchy is needed.
+    """
+    name_counts_by_parent = Counter()
+    global_name_counts = Counter()
+    for ou in org_unit_list:
+        parent_name = ou.parent.name if ou.parent else None
+        name_counts_by_parent[(parent_name, ou.name)] += 1
+        global_name_counts[ou.name] += 1
 
-    def _check_scope(self, scope_lookup, global_name_counts, name_counts_by_parent, scope_label):
-        for name, node in scope_lookup.items():
-            if node["reference"] is not None:
-                if scope_label == "top-level":
-                    count = global_name_counts.get(name, 0)
-                else:
-                    count = name_counts_by_parent.get((scope_label, name), 0)
-                if count > 1:
-                    raise CommandError(
-                        f"Ambiguous mapping: {count} org units named '{name}' "
-                        f"in scope '{scope_label}'. Use a deeper hierarchy to disambiguate."
-                    )
-            if node["children"]:
-                self._check_scope(node["children"], global_name_counts, name_counts_by_parent, scope_label=name)
+    _check_scope(lookup, global_name_counts, name_counts_by_parent, scope_label="top-level")
+
+
+def _check_scope(scope_lookup, global_name_counts, name_counts_by_parent, scope_label):
+    for name, node in scope_lookup.items():
+        if node["reference"] is not None:
+            if scope_label == "top-level":
+                count = global_name_counts.get(name, 0)
+            else:
+                count = name_counts_by_parent.get((scope_label, name), 0)
+            if count > 1:
+                raise MappingLoadError(
+                    f"Ambiguous mapping: {count} org units named '{name}' "
+                    f"in scope '{scope_label}'. Use a deeper hierarchy to disambiguate."
+                )
+        if node["children"]:
+            _check_scope(node["children"], global_name_counts, name_counts_by_parent, scope_label=name)
 
 
 def _build_lookup(nodes):

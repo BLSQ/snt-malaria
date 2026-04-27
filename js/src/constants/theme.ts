@@ -68,8 +68,16 @@ export const theme = createTheme({
         },
         MuiInputBase: {
             styleOverrides: {
+                // bluesquare-components' TextInput sets `min-height: 56px`
+                // on the input, which makes our text fields look too tall
+                // after some navigation. We set `min-height: 0` to counter
+                // that, but sometimes their rule wins instead of ours
+                // depending on the order things load. The `&&` is a little
+                // trick to make sure our rule always wins.
                 root: {
-                    minHeight: '0',
+                    '&&': {
+                        minHeight: 0,
+                    },
                     input: {
                         padding: '8.5px 14px',
                     },

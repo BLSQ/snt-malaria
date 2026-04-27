@@ -27,6 +27,9 @@ IDM_NONE_PACKAGE_ID = 1
 # 1 = "current" coverage. TODO: implement coverage selection.
 IDM_DEPLOYED_COVERAGE_ID = 1
 
+# Age group label matching the seed row in IDM's age_group table
+IDM_UNDER5_LABEL = "under5"
+
 # All intervention columns in model_output that need to be set when building filters.
 IDM_ALL_INTERVENTION_COLUMNS = [
     "cm",
@@ -128,6 +131,7 @@ class IDMImpactProvider(ImpactProvider):
             "admin_info_ref__admin_2_name",
             "year",
             "admin_info_ref__population",
+            "admin_info_ref__population_u5",
             "clinical_incidence",
             "clinical_incidence_lower",
             "clinical_incidence_higher",
@@ -171,7 +175,10 @@ class IDMImpactProvider(ImpactProvider):
                 )
             seen_years_by_ou[ou_id].add(row["year"])
 
-            pop = row["admin_info_ref__population"] or 0
+            if age_group == IDM_UNDER5_LABEL:
+                pop = row["admin_info_ref__population_u5"] or 0
+            else:
+                pop = row["admin_info_ref__population"] or 0
 
             results[ou_id].append(
                 ImpactResult(

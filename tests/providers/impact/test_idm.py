@@ -6,7 +6,13 @@ from unittest.mock import patch
 from django.db import connection
 from django.test import TestCase
 
-from plugins.snt_malaria.models.idm_impact import IDMAdminInfo, IDMAgeGroup, IDMInterventionPackage, IDMModelOutput
+from plugins.snt_malaria.models.idm_impact import (
+    IDMAdminInfo,
+    IDMAgeGroup,
+    IDMCoverage,
+    IDMInterventionPackage,
+    IDMModelOutput,
+)
 from plugins.snt_malaria.providers.impact.base import DataIntegrityError, InterventionMappingError
 from plugins.snt_malaria.providers.impact.idm import (
     IDM_ALL_INTERVENTION_COLUMNS,
@@ -142,7 +148,9 @@ class IDMBuildQueryFiltersTests(TestCase):
 # Database-backed tests (intervention mapping + integration)
 # ---------------------------------------------------------------------------
 
-_IDM_MODELS = [IDMAdminInfo, IDMAgeGroup, IDMInterventionPackage, IDMModelOutput]
+# Order matters: parent/referenced tables must be created before IDMModelOutput,
+# which has FKs to all of them.
+_IDM_MODELS = [IDMAdminInfo, IDMAgeGroup, IDMInterventionPackage, IDMCoverage, IDMModelOutput]
 
 
 class IDMMapInterventionTests(TestCase):
@@ -265,21 +273,28 @@ class IDMDatabaseIntegrationTests(TestCase):
         for package in INTERVENTION_PACKAGES:
             IDMInterventionPackage.objects.using(using).create(**package)
 
+        # -- Seed coverage rows referenced by IDMModelOutput.*_coverage FKs. Only id=1
+        # (IDM_DEPLOYED_COVERAGE_ID) is needed for fixtures; non-deployed coverage is NULL.
+        IDMCoverage.objects.using(using).create(id=1, option="deployed", key="deployed")
+
         # -- Reference data --
         self.admin_kano = IDMAdminInfo.objects.using(using).create(
             admin_2_name="Kano Municipal",
             state="Kano",
             population=500_000,
+            population_u5=75_000,
         )
         self.admin_ikeja = IDMAdminInfo.objects.using(using).create(
             admin_2_name="Ikeja",
             state="Lagos",
             population=800_000,
+            population_u5=130_000,
         )
         self.admin_aboh = IDMAdminInfo.objects.using(using).create(
             admin_2_name="Aboh-Mbaise",
             state="Imo",
             population=300_000,
+            population_u5=45_000,
         )
         self.age_under5 = IDMAgeGroup.objects.using(using).create(id=1, option="under5")
         self.age_all = IDMAgeGroup.objects.using(using).create(id=2, option="allAges")
@@ -492,8 +507,26 @@ class IDMDatabaseIntegrationTests(TestCase):
         )
 
         self.assertEqual(len(bulk.results[101]), 1)
-        # 95.0 * 500_000 / 1000 = 47_500
-        self.assertAlmostEqual(bulk.results[101][0].number_cases.value, 47_500.0, places=1)
+        # 95.0 * 75_000 / 1000 = 7_125 (uses admin_kano.population_u5, not population)
+        self.assertAlmostEqual(bulk.results[101][0].number_cases.value, 7_125.0, places=1)
+
+    def test_under5_uses_population_u5(self):
+        """For age_group='under5', ImpactResult.population and rate-to-count
+        conversions must use admin_info.population_u5, not the total population."""
+        org_unit_kano = MockOrgUnit(id=101, name="Kano Municipal")
+        case_management = MockIntervention(impact_ref="cm:cm")
+
+        bulk = self.provider.match_impact_bulk(
+            [org_unit_kano],
+            interventions=[case_management],
+            age_group="under5",
+        )
+
+        result = bulk.results[101][0]
+        self.assertEqual(result.population, self.admin_kano.population_u5)
+        # Rate-to-count uses population_u5 (75_000), not population (500_000).
+        self.assertAlmostEqual(result.number_cases.value, 95.0 * 75_000 / 1000, places=1)
+        self.assertAlmostEqual(result.number_severe_cases.value, 9.5 * 75_000 / 1000, places=1)
 
     def test_name_fallback_when_no_mapping(self):
         """Without an impact mapping, the org unit name is used directly to match admin_2_name."""

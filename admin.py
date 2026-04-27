@@ -1,9 +1,21 @@
+import json
+
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.contrib.admin import helpers
 from django.db import models
+from django.shortcuts import redirect, render
+from django.urls import path, reverse
+from django.utils.html import format_html
 
 from iaso.admin import IasoJSONEditorWidget
+from iaso.models import Account
 from plugins.snt_malaria.api.account_settings.serializers import AccountSettings
+from plugins.snt_malaria.management.commands.load_impact_org_unit_mappings import (
+    HELP_TEXT as IMPACT_MAPPING_HELP_TEXT,
+    MappingLoadError,
+    load_impact_org_unit_mappings,
+)
 
 from .models import (
     Budget,
@@ -171,6 +183,29 @@ class ImpactProviderConfigAdmin(admin.ModelAdmin):
     )
 
 
+MAPPING_FILE_HELP = format_html(
+    "<p>JSON array of {{name, reference?, children?}} nodes.</p>"
+    "<details><summary>Expected file format</summary>"
+    '<pre style="white-space: pre-wrap;">{}</pre></details>',
+    IMPACT_MAPPING_HELP_TEXT,
+)
+
+
+class LoadImpactOrgUnitMappingsForm(forms.Form):
+    account = forms.ModelChoiceField(
+        queryset=Account.objects.order_by("name"),
+        help_text="Account whose default version's org units will be mapped.",
+    )
+    mapping_file = forms.FileField(
+        label="Mapping file",
+        help_text=MAPPING_FILE_HELP,
+    )
+    overwrite = forms.BooleanField(
+        required=False,
+        help_text="Overwrite existing mappings. Without this flag only unmapped org units are processed.",
+    )
+
+
 @admin.register(ImpactOrgUnitMapping)
 class ImpactOrgUnitMappingAdmin(admin.ModelAdmin):
     list_display = ("id", "org_unit", "reference", "get_account")
@@ -179,6 +214,7 @@ class ImpactOrgUnitMappingAdmin(admin.ModelAdmin):
     search_fields = ("org_unit__name", "reference")
     list_filter = ("org_unit__version__data_source__projects__account",)
     ordering = ("org_unit__name",)
+    change_list_template = "admin/snt_malaria/impactorgunitmapping/change_list.html"
 
     def get_queryset(self, request):
         return (
@@ -192,6 +228,76 @@ class ImpactOrgUnitMappingAdmin(admin.ModelAdmin):
     def get_account(self, obj):
         accounts = {project.account.name for project in obj.org_unit.version.data_source.projects.all()}
         return ", ".join(sorted(accounts)) if accounts else "-"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "load-from-file/",
+                self.admin_site.admin_view(self.load_from_file_view),
+                name="snt_malaria_impactorgunitmapping_load_from_file",
+            ),
+        ]
+        return custom_urls + urls
+
+    def load_from_file_view(self, request):
+        changelist_url = reverse("admin:snt_malaria_impactorgunitmapping_changelist")
+        if request.method == "POST":
+            form = LoadImpactOrgUnitMappingsForm(request.POST, request.FILES)
+            if form.is_valid():
+                uploaded = form.cleaned_data["mapping_file"]
+                try:
+                    mapping_nodes = json.load(uploaded)
+                except json.JSONDecodeError as e:
+                    form.add_error("mapping_file", f"Invalid JSON: {e}")
+                else:
+                    try:
+                        counts = load_impact_org_unit_mappings(
+                            account=form.cleaned_data["account"],
+                            mapping_nodes=mapping_nodes,
+                            overwrite=form.cleaned_data["overwrite"],
+                        )
+                    except MappingLoadError as e:
+                        form.add_error(None, str(e))
+                    else:
+                        messages.success(
+                            request,
+                            (
+                                f"Account '{form.cleaned_data['account'].name}': "
+                                f"created {counts['created']}, updated {counts['updated']}, "
+                                f"skipped {counts['skipped']} mapping(s)."
+                            ),
+                        )
+                        return redirect(changelist_url)
+        else:
+            form = LoadImpactOrgUnitMappingsForm()
+
+        fieldsets = [(None, {"fields": list(form.fields)})]
+        adminform = helpers.AdminForm(form, fieldsets, prepopulated_fields={}, model_admin=self)
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Load impact org unit mappings from file",
+            "adminform": adminform,
+            "errors": helpers.AdminErrorList(form, []),
+            "media": self.media + form.media,
+            "opts": self.model._meta,
+            "has_file_field": True,
+            "add": True,
+            "change": False,
+            "is_popup": False,
+            "save_as": False,
+            "show_save": True,
+            "show_save_and_add_another": False,
+            "show_save_and_continue": False,
+            "show_delete": False,
+            "has_add_permission": True,
+            "has_change_permission": True,
+            "has_delete_permission": False,
+            "has_view_permission": True,
+            "has_editable_inline_admin_formsets": False,
+        }
+        return render(request, "admin/change_form.html", context)
 
 
 @admin.register(AccountSettings)
