@@ -190,15 +190,14 @@ class ScenarioRule(models.Model):
             return []
 
         org_units = get_intervention_org_units(account)
-        is_match_all = isinstance(matching_criteria, dict) and matching_criteria.get("all")
 
-        if not is_match_all:
-            metric_values = MetricValue.objects.filter(metric_type__account=account, org_unit_id__isnull=False)
-            q = jsonlogic_to_exists_q_clauses(matching_criteria, metric_values, "metric_type_id", "org_unit_id")
-            matched_ids = metric_values.filter(q).distinct().values_list("org_unit_id", flat=True)
-            org_units = org_units.filter(id__in=matched_ids)
+        if isinstance(matching_criteria, dict) and matching_criteria.get("all"):
+            return list(org_units.values_list("id", flat=True).distinct())
 
-        return list(org_units.values_list("id", flat=True).distinct())
+        metric_values = MetricValue.objects.filter(metric_type__account=account, org_unit_id__isnull=False)
+        q = jsonlogic_to_exists_q_clauses(matching_criteria, metric_values, "metric_type_id", "org_unit_id")
+        matched_ids = metric_values.filter(q).distinct().values_list("org_unit_id", flat=True)
+        return list(org_units.filter(id__in=matched_ids).values_list("id", flat=True).distinct())
 
     def _compute_org_unit_ids(self) -> set[int]:
         """Resolve the set of org unit ids this rule targets based on its matching mode."""
