@@ -1,9 +1,10 @@
-import React, { FC, useCallback, useEffect, useMemo } from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
 import {
     Box,
     Checkbox,
     FormControlLabel,
     Stack,
+    TextField,
     Typography,
 } from '@mui/material';
 import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
@@ -62,56 +63,11 @@ export const ScenarioRuleForm: FC = () => {
         values,
         errors,
         touched,
-        setValues,
-        setFieldTouched,
         setFieldValueAndState,
         setChildFieldValueAndState,
         addChildValue,
         removeChildValue,
     } = useGetExtendedFormikContext<ScenarioRuleFormValues>();
-
-    // Auto-fill the rule name from selected interventions while the user has
-    // not taken ownership of the field (`has_custom_name=false`). Ownership is
-    // flipped by `onNameChange` / `onNameBlur` below.
-    useEffect(() => {
-        if (values.has_custom_name) return;
-        const generated = generateRuleName(
-            values.intervention_properties,
-            interventionCategories,
-        );
-        if (values.name !== generated) {
-            setFieldValueAndState('name', generated);
-        }
-    }, [
-        values.has_custom_name,
-        values.name,
-        values.intervention_properties,
-        interventionCategories,
-        setFieldValueAndState,
-    ]);
-
-    // The user has taken ownership of the field, we set `has_custom_name` to true
-    const onNameChange = useCallback(
-        (_field: string | null, value: string) => {
-            setFieldTouched('name', true, false);
-            setValues(
-                prev => ({
-                    ...prev,
-                    name: value,
-                    has_custom_name: true,
-                }),
-                true,
-            );
-        },
-        [setValues, setFieldTouched],
-    );
-
-    // If the user leaves the field empty, flip `has_custom_name` back to false, so the rule name is auto-generated again
-    const onNameBlur = useCallback(() => {
-        if (values.name === '' && values.has_custom_name) {
-            setFieldValueAndState('has_custom_name', false);
-        }
-    }, [values.name, values.has_custom_name, setFieldValueAndState]);
 
     const getErrors = useTranslatedErrors({
         errors,
@@ -255,21 +211,19 @@ export const ScenarioRuleForm: FC = () => {
                             }
                         />
                     </Box>
-                    {/* Wrapper so we can listen for blur: InputComponent does
-                     * not forward onBlur to its inner TextInput for type=text.
-                     * React's onBlur is delegated, so it fires when focus
-                     * leaves any descendant. */}
-                    <Box onBlur={onNameBlur} mt={2} sx={{ flexGrow: 1 }}>
-                        <InputComponent
-                            keyValue="name"
-                            type="text"
-                            value={values.name}
-                            onChange={onNameChange}
-                            errors={getErrors('name')}
-                            labelString={' '}
-                            withMarginTop={false}
-                        />
-                    </Box>
+                    <TextField
+                        fullWidth
+                        size="small"
+                        value={values.name}
+                        onChange={e =>
+                            setFieldValueAndState('name', e.target.value)
+                        }
+                        placeholder={generateRuleName(
+                            values.intervention_properties,
+                            interventionCategories,
+                        )}
+                        sx={{ flexGrow: 1 }}
+                    />
                 </Stack>
             </Box>
         </>

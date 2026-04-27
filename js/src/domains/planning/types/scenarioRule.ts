@@ -2,7 +2,6 @@ export type ScenarioRule = {
     id: number;
     scenario: number;
     name: string;
-    has_custom_name: boolean;
     priority: number;
     matching_criteria: MetricTypeCriterion[];
     is_match_all?: boolean;

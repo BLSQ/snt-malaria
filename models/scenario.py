@@ -131,10 +131,7 @@ class ScenarioRuleQuerySet(models.QuerySet):
 
 class ScenarioRule(models.Model):
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="rules")
-    name = models.CharField(max_length=255)
-    # False: name is auto-generated from selected interventions and kept in sync.
-    # True: user has edited the name and it should be left alone.
-    has_custom_name = models.BooleanField(default=False)
+    name = models.CharField(max_length=255, blank=True)
     priority = models.PositiveSmallIntegerField()
     color = ColorField(default=DEFAULT_COLOR)
 

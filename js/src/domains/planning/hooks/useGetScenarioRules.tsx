@@ -8,7 +8,6 @@ import { mapResponseToScenarioRules } from '../utils/scenarioRuleMapper';
 export type ScenarioRuleResponse = {
     id: number;
     name: string;
-    has_custom_name: boolean;
     scenario: number;
     priority: number;
     color: string;

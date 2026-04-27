@@ -207,8 +207,6 @@ class ScenarioRuleCreateSerializerTestCase(ScenarioRulesTestBase):
         serializer = ScenarioRuleCreateSerializer(data={}, context=self.context)
         self.assertFalse(serializer.is_valid())
         errors = serializer.errors
-        self.assertIn("name", errors)
-        self.assertIn("This field is required.", errors["name"][0])
         self.assertIn("scenario", errors)
         self.assertIn("This field is required.", errors["scenario"][0])
         self.assertIn("matching_criteria", errors)
@@ -217,6 +215,7 @@ class ScenarioRuleCreateSerializerTestCase(ScenarioRulesTestBase):
         self.assertIn("This field is required.", errors["intervention_properties"][0])
 
         # optional fields
+        self.assertNotIn("name", errors)
         self.assertNotIn("color", errors)
         self.assertNotIn("org_units_excluded", errors)
         self.assertNotIn("org_units_included", errors)
@@ -618,9 +617,8 @@ class ScenarioRuleUpdateSerializerTestCase(ScenarioRulesTestBase):
             "name": "",
         }
         serializer = ScenarioRuleUpdateSerializer(instance=self.scenario_rule_1, data=data, context=self.context)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("name", serializer.errors)
-        self.assertIn("This field may not be blank.", serializer.errors["name"][0])
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertNotIn("name", serializer.errors)
 
     def test_name_null(self):
         data = {

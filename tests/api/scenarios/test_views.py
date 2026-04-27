@@ -1221,33 +1221,6 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(assignments.count(), 3)
         self.assertTrue(all(a.rule is not None for a in assignments))
 
-    def test_scenario_import_csv_rule_names_from_short_names(self):
-        """Rule names are built from intervention short_name (falling back to name), joined by ' + '."""
-        self.intervention_chemo_iptp.short_name = "IP"
-        self.intervention_chemo_iptp.save()
-        self.intervention_vaccination_rts.short_name = "RTS"
-        self.intervention_vaccination_rts.save()
-
-        csv_content = (
-            'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n'
-            f"{self.district1.id},District 1,1,1,0\n"
-            f"{self.district2.id},District 2,1,1,0\n"
-            f"{self.district3.id},District 3,0,0,1\n"
-        ).encode()
-        valid_file = SimpleUploadedFile("test.csv", csv_content, content_type="text/csv")
-
-        self.client.force_authenticate(self.user_with_full_perm)
-        response = self.client.post(f"{self.BASE_URL}import_from_csv/", {"file": valid_file}, format="multipart")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        new_scenario = Scenario.objects.get(id=response.data["id"])
-        rules = new_scenario.rules.order_by("priority")
-
-        combo_rule = rules.filter(intervention_properties__intervention=self.intervention_chemo_iptp).first()
-        self.assertIn("IP", combo_rule.name)
-        self.assertIn("RTS", combo_rule.name)
-        self.assertIn(" + ", combo_rule.name)
-
     def test_scenario_import_csv_assigns_distinct_colors(self):
         """Each generated rule gets a distinct color from the dispersed palette."""
         csv_content = self._generate_csv_content_for_import()

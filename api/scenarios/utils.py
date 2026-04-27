@@ -83,20 +83,6 @@ def _get_dispersed_color(index: int) -> str:
     return COLOR_CHOICES[palette_index][0]
 
 
-def _build_rule_name(interventions: list[Intervention]) -> str:
-    """Build a rule name from intervention short names joined by ' + '.
-
-    Interventions are sorted alphabetically by category name first, then by
-    intervention name. The frontend's `generateRuleName` mirrors this ordering
-    and label resolution so a rule's auto-generated name looks the same whether
-    it was produced here (e.g. during import) or in the editor.
-    """
-    parts = [
-        i.short_name or i.name for i in sorted(interventions, key=lambda i: (i.intervention_category.name, i.name))
-    ]
-    return " + ".join(parts)
-
-
 def _build_intervention_groups(
     assignment_df: pd.DataFrame,
     interventions_qs,
@@ -152,16 +138,11 @@ def create_rules_from_import(
         return []
 
     total_count = len(all_org_unit_ids)
-    intervention_objects = {
-        i.id: i for i in Intervention.objects.filter(id__in={iid for g in groups for iid in g["intervention_ids"]})
-    }
 
     rules = []
     intervention_properties = []
 
     for idx, group in enumerate(groups):
-        interventions = [intervention_objects[iid] for iid in group["intervention_ids"]]
-        name = _build_rule_name(interventions)
         color = _get_dispersed_color(idx)
         is_majority = len(group["org_unit_ids"]) > total_count / 2
 
@@ -169,7 +150,6 @@ def create_rules_from_import(
             excluded = sorted(all_org_unit_ids - set(group["org_unit_ids"]))
             rule = ScenarioRule(
                 scenario=scenario,
-                name=name,
                 priority=idx + 1,
                 color=color,
                 matching_criteria={"all": True},
@@ -182,7 +162,6 @@ def create_rules_from_import(
         else:
             rule = ScenarioRule(
                 scenario=scenario,
-                name=name,
                 priority=idx + 1,
                 color=color,
                 matching_criteria=None,
