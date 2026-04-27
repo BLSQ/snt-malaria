@@ -77,10 +77,8 @@ class BudgetViewSet(viewsets.ModelViewSet):
             intervention_population_metric_codes=intervention_population_metric_codes,
         )
 
-
         interventions_input = build_interventions_input(scenario)
         interventions = Intervention.objects.all()
-
 
         # build a quick lookup map ((code, type) -> id) for fast id retrieval
         interventions_map = {(iv.code, iv.short_name): iv.id for iv in interventions}
