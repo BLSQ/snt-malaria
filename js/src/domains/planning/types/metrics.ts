@@ -16,7 +16,7 @@ export type MetricType = {
     legend_config: ScaleDomainRange;
     legend_type: string;
     origin: string;
-    is_population?: boolean;
+    metric_kind?: 'population' | 'any';
 };
 
 export type MetricTypeFormModel = {

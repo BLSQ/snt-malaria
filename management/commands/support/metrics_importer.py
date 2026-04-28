@@ -153,7 +153,7 @@ class MetricsImporter:
                     metric_type.unit_symbol = row["UNIT_SYMBOL"]
                     metric_type.legend_type = row["TYPE"].lower()
                     metric_type.is_utility = row.get("IS_UTILITY", "False").lower() == "true"
-                    metric_type.is_population = False
+                    metric_type.metric_kind = MetricType.MetricKind.ANY
                     metric_type.origin = MetricType.MetricTypeOrigin.OPENHEXA
                     to_update.append(metric_type)
                     self.stdout_write(
@@ -171,7 +171,7 @@ class MetricsImporter:
                         unit_symbol=row["UNIT_SYMBOL"],
                         legend_type=row["TYPE"].lower(),
                         is_utility=row.get("IS_UTILITY", "False").lower() == "true",
-                        is_population=False,
+                        metric_kind=MetricType.MetricKind.ANY,
                         origin=MetricType.MetricTypeOrigin.OPENHEXA,
                     )
                     to_create.append(metric_type)
@@ -207,7 +207,7 @@ class MetricsImporter:
                 "unit_symbol",
                 "legend_type",
                 "is_utility",
-                "is_population",
+                "metric_kind",
                 "origin",
             ],
         )
@@ -237,7 +237,7 @@ class MetricsImporter:
                     defaults={
                         "name": col,
                         "is_utility": True,  # Hide it from map
-                        "is_population": True,  # Show it in population dropdown
+                        "metric_kind": MetricType.MetricKind.POPULATION,  # Show it in population dropdown
                         "origin": MetricType.MetricTypeOrigin.OPENHEXA,
                     },
                 )

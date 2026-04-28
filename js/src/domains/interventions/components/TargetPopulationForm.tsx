@@ -27,7 +27,7 @@ export const TargetPopulationForm: FC<Props> = ({
     const popMetricOptions = useMemo(
         () =>
             metricTypes
-                .filter(metric => metric.is_population)
+                .filter(metric => metric.metric_kind === 'population')
                 .map(metric => ({
                     label: metric.name,
                     value: metric.code,
