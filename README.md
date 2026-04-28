@@ -165,3 +165,6 @@ SAVE_SMOKE_TEST_SCREENSHOT=1
 SMOKE_TEST_MONITOR_CONSOLE_ERRORS=1
 TARGET_SERVER_URL=https://demo.snt-toolbox.org # http://localhost:8081
 ```
+
+Then you can run from iaso base: 
+`npm run test:smoke`
