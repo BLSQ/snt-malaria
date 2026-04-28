@@ -133,7 +133,7 @@
     "iaso.snt_malaria.scenario.errors.endYearMin": "L'année de fin doit être supérieure ou égale à l'année de début ({year})",
     "iaso.snt_malaria.budgetAssumptions.label": "Paramètres du budget",
     "iaso.snt_malaria.budgetAssumptions.save": "Enregistrer les paramètres",
-    "iaso.snt_malaria.budgetAssumptions.coverage": "Couverture",
+    "iaso.snt_malaria.budgetAssumptions.coverage": "Couverture de population",
     "iaso.snt_malaria.budgetAssumptions.buffer": "Marge",
     "iaso.snt_malaria.budgetAssumptions.ppn": "PPN",
     "iaso.snt_malaria.budgetAssumptions.touchpoints": "Pts. de contact",
@@ -226,4 +226,3 @@
     "iaso.snt_malaria.label.save": "Enregistrer les modifications",
     "iaso.snt_malaria.label.targetPopulationLabel": "Population cible"
 }
-

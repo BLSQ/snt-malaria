@@ -1,37 +1,25 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { Box, Button, Collapse, Typography } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 
-import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { useSaveBudgetAssumptions } from '../../hooks/useSaveBudgetAssumptions';
 import { BudgetAssumptions } from '../../types/interventions';
+import { YearCoverage } from './YearCoverage';
 
 const styles: SxStyles = {
-    inputRow: {
+    contentWrapper: {
+        height: '100%',
         display: 'flex',
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 2,
-        marginBottom: 2,
+        flexDirection: 'column',
+        justifyContent: 'space-between',
     },
     formWrapper: {
         maxHeight: '100%',
         overflowY: 'auto',
         mb: 2,
-        pt: 1,
-    },
-    yearHeader: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderBottom: '1px solid #eee',
-        py: 1,
-    },
-    yearContent: {
-        py: 1,
     },
 };
 
@@ -48,7 +36,6 @@ export const BudgetAssumptionsForm: FC<Props> = ({
     interventionAssignmentIds,
     budgetAssumptions,
 }) => {
-    const percentageNumberOptions = { suffix: '%', decimalScale: 0 };
     const { isScenarioEditable } = usePlanningContext();
     const { formatMessage } = useSafeIntl();
     const {
@@ -73,12 +60,6 @@ export const BudgetAssumptionsForm: FC<Props> = ({
         setBudgetAssumptionsByYear(assumptionsByYear);
     }, [budgetAssumptions]);
 
-    const [openByYear, setOpenByYear] = useState<Record<number, boolean>>({});
-
-    const toggleYear = useCallback((year: number) => {
-        setOpenByYear(current => ({ ...current, [year]: !current[year] }));
-    }, []);
-
     const setCoverage = useCallback(
         (year: number, value: any) => {
             setBudgetAssumptionsByYear(current => ({
@@ -94,46 +75,21 @@ export const BudgetAssumptionsForm: FC<Props> = ({
     );
 
     return (
-        <Box sx={styles.formWrapper}>
-            {years.map(year => {
-                const coverage = budgetAssumptionsByYear[year]?.coverage ?? 0;
-                return (
-                    <Box key={year}>
-                        <Box sx={styles.yearHeader}>
-                            <Typography variant="subtitle2">{year}</Typography>
-                            <Button
-                                size="small"
-                                variant="text"
-                                onClick={() => toggleYear(year)}
-                            >
-                                {openByYear[year] ? 'Hide' : 'Edit'}
-                            </Button>
-                        </Box>
-                        <Collapse in={!!openByYear[year]}>
-                            <Box sx={styles.yearContent}>
-                                <Box sx={styles.inputRow}>
-                                    <InputComponent
-                                        type="number"
-                                        keyValue="coverage"
-                                        withMarginTop={false}
-                                        value={coverage}
-                                        onChange={(_, value) =>
-                                            setCoverage(year, value)
-                                        }
-                                        label={
-                                            MESSAGES.budgetAssumptionsCoverage
-                                        }
-                                        numberInputOptions={
-                                            percentageNumberOptions
-                                        }
-                                        disabled={!isScenarioEditable}
-                                    />
-                                </Box>
-                            </Box>
-                        </Collapse>
-                    </Box>
-                );
-            })}
+        <Box sx={styles.contentWrapper}>
+            <Box sx={styles.formWrapper}>
+                {years.map(year => (
+                    <YearCoverage
+                        key={year}
+                        year={year}
+                        budgetAssumptions={
+                            budgetAssumptionsByYear[year] || { year }
+                        }
+                        setCoverage={setCoverage}
+                        disabled={!isScenarioEditable}
+                    />
+                ))}
+            </Box>
+
             {isScenarioEditable && (
                 <Button
                     onClick={() =>

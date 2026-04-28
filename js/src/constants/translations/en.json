@@ -133,7 +133,7 @@
     "iaso.snt_malaria.scenario.errors.endYearMin": "End year must be greater than or equal to start year ({year})",
     "iaso.snt_malaria.budgetAssumptions.label": "Budget settings",
     "iaso.snt_malaria.budgetAssumptions.save": "Save Settings",
-    "iaso.snt_malaria.budgetAssumptions.coverage": "Coverage",
+    "iaso.snt_malaria.budgetAssumptions.coverage": "Population coverage",
     "iaso.snt_malaria.budgetAssumptions.buffer": "Buffer",
     "iaso.snt_malaria.budgetAssumptions.ppn": "PPN",
     "iaso.snt_malaria.budgetAssumptions.touchpoints": "Tp.",
@@ -227,4 +227,3 @@
     "iaso.snt_malaria.label.costSettings": "Cost settings",
     "iaso.snt_malaria.label.targetPopulationLabel": "Target population"
 }
-
