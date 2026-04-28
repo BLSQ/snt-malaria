@@ -1,13 +1,16 @@
+from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
+from plugins.snt_malaria.models.intervention import InterventionAssignment
 from plugins.snt_malaria.models.scenario import Scenario
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
 
 
 class BudgetAssumptionsQuerySerializer(serializers.Serializer):
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
+    year = serializers.IntegerField(required=False, allow_null=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,79 +22,77 @@ class BudgetAssumptionsQuerySerializer(serializers.Serializer):
 class BudgetAssumptionsReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = BudgetAssumptions
-        fields = (
-            "id",
-            "scenario",
-            "intervention_code",
-            "coverage",
-            "divisor",
-            "bale_size",
-            "buffer_mult",
-            "doses_per_pw",
-            "age_string",
-            "pop_prop_3_11",
-            "pop_prop_12_59",
-            "monthly_rounds",
-            "touchpoints",
-            "tablet_factor",
-            "doses_per_child",
-        )
+        fields = ("id", "scenario", "intervention_assignment", "year", "coverage")
 
 
 class BudgetAssumptionsUpdateSerializer(serializers.ModelSerializer):
-    divisor = serializers.DecimalField(min_value=0, max_value=9, max_digits=3, decimal_places=2)
-    bale_size = serializers.IntegerField(min_value=0, max_value=999)
-    buffer_mult = serializers.DecimalField(min_value=0, max_value=9, max_digits=3, decimal_places=2)
     coverage = serializers.DecimalField(min_value=0, max_value=1, max_digits=3, decimal_places=2)
-    doses_per_pw = serializers.IntegerField(min_value=0, max_value=999)
-    age_string = serializers.CharField()
-    pop_prop_3_11 = serializers.DecimalField(max_digits=3, decimal_places=2)
-    pop_prop_12_59 = serializers.DecimalField(max_digits=3, decimal_places=2)
-    monthly_rounds = serializers.IntegerField(min_value=0, max_value=31)
-    touchpoints = serializers.IntegerField(min_value=0, max_value=999)
-    tablet_factor = serializers.DecimalField(min_value=0, max_value=1, max_digits=3, decimal_places=2)
-    doses_per_child = serializers.IntegerField(min_value=0, max_value=999)
+    year = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = BudgetAssumptions
-        fields = [
-            "coverage",
-            "divisor",
-            "bale_size",
-            "buffer_mult",
-            "doses_per_pw",
-            "age_string",
-            "pop_prop_3_11",
-            "pop_prop_12_59",
-            "monthly_rounds",
-            "touchpoints",
-            "tablet_factor",
-            "doses_per_child",
-        ]
+        fields = ["coverage", "year"]
 
 
-class BudgetAssumptionsCreateSerializer(BudgetAssumptionsUpdateSerializer):
+class BudgetAssumptionsUpsertManySerializer(serializers.Serializer):
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
-    intervention_code = serializers.CharField(max_length=100)
 
-    class Meta:
-        model = BudgetAssumptions
-        fields = [
-            *BudgetAssumptionsUpdateSerializer.Meta.fields,
-            "id",
-            "scenario",
-            "intervention_code",
-        ]
-        read_only_fields = ["id"]  # id is added so that frontend receives it after creation
+    intervention_assignments = serializers.PrimaryKeyRelatedField(
+        queryset=InterventionAssignment.objects.none(), many=True
+    )
+    budget_assumptions = BudgetAssumptionsUpdateSerializer(many=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         user = self.context["request"].user
         account = user.iaso_profile.account
         self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
+        self.fields["intervention_assignments"].child_relation.queryset = InterventionAssignment.objects.filter(
+            scenario__account=account
+        )
 
     def validate_scenario(self, value):
         user = self.context["request"].user
         if value.created_by != user and not user.has_perm(SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()):
             raise PermissionDenied("User does not have permission to modify assumptions for this scenario")
         return value
+
+    def validate(self, attrs):
+        scenario = attrs.get("scenario")
+        assignments = attrs.get("intervention_assignments")
+        if assignments is not None and len(assignments) == 0:
+            raise serializers.ValidationError({"intervention_assignments": "At least one assignment is required."})
+        if assignments and scenario and any(assignment.scenario_id != scenario.id for assignment in assignments):
+            raise serializers.ValidationError(
+                {"intervention_assignments": "All assignments must belong to the provided scenario."}
+            )
+
+        return attrs
+
+    def save(self, **kwargs):
+        scenario = self.validated_data["scenario"]
+        assignments = self.validated_data["intervention_assignments"]
+        budget_assumptions_data = self.validated_data["budget_assumptions"]
+
+        with transaction.atomic():
+            BudgetAssumptions.objects.filter(
+                scenario=scenario,
+                intervention_assignment__in=assignments,
+                year__in=[a.get("year") for a in budget_assumptions_data],
+            ).delete()
+            bulk_create_data = []
+            for assumption_data in budget_assumptions_data:
+                intervention_code = assignments[0].intervention.code if assignments else "default"
+                for assignment in assignments:
+                    bulk_create_data.append(
+                        BudgetAssumptions(
+                            scenario=scenario,
+                            intervention_assignment=assignment,
+                            year=assumption_data.get("year"),
+                            coverage=assumption_data[
+                                "coverage"
+                            ],  # TODO - handle default values for missing years/coverage, potentially based on intervention code and year using DEFAULT_COST_ASSUMPTIONS
+                        )
+                    )
+
+            BudgetAssumptions.objects.bulk_create(bulk_create_data)
