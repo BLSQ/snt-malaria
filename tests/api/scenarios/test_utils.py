@@ -9,7 +9,6 @@ from iaso.test import TestCase
 from plugins.snt_malaria.api.scenarios.utils import (
     DEFAULT_IMPORT_COVERAGE,
     _build_intervention_groups,
-    _build_rule_name,
     _get_dispersed_color,
     create_rules_from_import,
     duplicate_rules,
@@ -191,64 +190,6 @@ class ScenarioAPIUtilsTestCase(TestCase):
 
         duplicated_rules = ScenarioRule.objects.filter(scenario=new_scenario)
         self.assertEqual(duplicated_rules.count(), 0)
-
-
-class BuildRuleNameTestCase(TestCase):
-    def setUp(self):
-        self.account = Account.objects.create(name="account")
-        self.user = self.create_user_with_profile(username="user", account=self.account)
-        self.category = InterventionCategory.objects.create(name="Cat", account=self.account, created_by=self.user)
-
-    def test_uses_short_name_when_available(self):
-        iv = Intervention.objects.create(
-            name="Long Name",
-            short_name="LN",
-            code="ln",
-            created_by=self.user,
-            intervention_category=self.category,
-        )
-        self.assertEqual(_build_rule_name([iv]), "LN")
-
-    def test_falls_back_to_name(self):
-        iv = Intervention.objects.create(
-            name="Full Name",
-            code="fn",
-            created_by=self.user,
-            intervention_category=self.category,
-        )
-        self.assertEqual(_build_rule_name([iv]), "Full Name")
-
-    def test_joins_with_plus(self):
-        iv_a = Intervention.objects.create(
-            name="Alpha",
-            short_name="A",
-            code="a",
-            created_by=self.user,
-            intervention_category=self.category,
-        )
-        iv_b = Intervention.objects.create(
-            name="Beta",
-            short_name="B",
-            code="b",
-            created_by=self.user,
-            intervention_category=self.category,
-        )
-        self.assertEqual(_build_rule_name([iv_b, iv_a]), "A + B")
-
-    def test_truncates_long_name(self):
-        interventions = []
-        for i in range(50):
-            iv = Intervention.objects.create(
-                name=f"Intervention{i:03d}",
-                short_name=f"VeryLongShortName{i:03d}",
-                code=f"c{i}",
-                created_by=self.user,
-                intervention_category=self.category,
-            )
-            interventions.append(iv)
-        name = _build_rule_name(interventions)
-        self.assertLessEqual(len(name), 255)
-        self.assertTrue(name.endswith("…"))
 
 
 class BuildInterventionGroupsTestCase(TestCase):
@@ -476,10 +417,10 @@ class CreateRulesFromImportTestCase(TestCase):
             self.user,
         )
         combo_rule = next(r for r in rules if r.intervention_properties.count() == 2)
-        self.assertEqual(combo_rule.name, "A + B")
+        self.assertEqual(combo_rule.name, "")
 
         single_rule = next(r for r in rules if r.intervention_properties.count() == 1)
-        self.assertEqual(single_rule.name, "B")
+        self.assertEqual(single_rule.name, "")
 
     def test_empty_df_returns_no_rules(self):
         df = pd.DataFrame(

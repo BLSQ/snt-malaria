@@ -1,8 +1,6 @@
 import { useCallback, useMemo } from 'react';
-import { useSafeIntl } from 'bluesquare-components';
 import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
-import { MESSAGES } from '../../messages';
 import {
     InterventionProperties,
     MetricTypeCriterion,
@@ -43,12 +41,10 @@ export const defaultScenarioRuleValues: ScenarioRuleFormValues = {
 };
 
 const useValidation = () => {
-    const { formatMessage } = useSafeIntl();
-
     return useMemo(
         () =>
             Yup.object().shape({
-                name: Yup.string().required(formatMessage(MESSAGES.required)),
+                name: Yup.string(),
                 is_match_all: Yup.boolean(),
                 intervention_properties: Yup.array()
                     .of(
@@ -85,7 +81,7 @@ const useValidation = () => {
                             ),
                     }),
             }),
-        [formatMessage],
+        [],
     );
 };
 

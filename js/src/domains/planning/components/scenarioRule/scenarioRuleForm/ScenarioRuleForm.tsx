@@ -4,6 +4,7 @@ import {
     Checkbox,
     FormControlLabel,
     Stack,
+    TextField,
     Typography,
 } from '@mui/material';
 import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
@@ -16,6 +17,7 @@ import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { useGetAccountSettings } from '../../../hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../../../hooks/useGetOrgUnits';
 import { ScenarioRuleFormValues } from '../../../hooks/useScenarioRuleFormState';
+import { generateRuleName } from '../../../libs/rule-utils';
 import { InterventionPropertiesForm } from './InterventionPropertiesForm';
 import { MatchingCriteriaForm } from './MatchingCriteriaForm';
 
@@ -209,14 +211,18 @@ export const ScenarioRuleForm: FC = () => {
                             }
                         />
                     </Box>
-                    <InputComponent
-                        keyValue="name"
-                        type="text"
+                    <TextField
+                        fullWidth
+                        size="small"
                         value={values.name}
-                        onChange={setFieldValueAndState}
-                        errors={getErrors('name')}
-                        wrapperSx={{ flexGrow: 1 }}
-                        labelString={' '}
+                        onChange={e =>
+                            setFieldValueAndState('name', e.target.value)
+                        }
+                        placeholder={generateRuleName(
+                            values.intervention_properties,
+                            interventionCategories,
+                        )}
+                        sx={{ flexGrow: 1 }}
                     />
                 </Stack>
             </Box>

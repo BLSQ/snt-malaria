@@ -9,6 +9,7 @@ import { noOp } from 'Iaso/utils';
 import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { useDeleteScenarioRule } from '../../../hooks/useDeleteScenarioRule';
+import { generateRuleName } from '../../../libs/rule-utils';
 import { ScenarioRule } from '../../../types/scenarioRule';
 
 const styles: SxStyles = {
@@ -39,7 +40,8 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
     const { mutateAsync: deleteScenarioRule } =
         useDeleteScenarioRule(scenarioId);
 
-    const { metricTypeCategories, isScenarioEditable } = usePlanningContext();
+    const { metricTypeCategories, interventionCategories, isScenarioEditable } =
+        usePlanningContext();
 
     const metricTypes = useMemo(
         () => metricTypeCategories.flatMap(category => category.items),
@@ -86,7 +88,11 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
                     fontWeight="medium"
                     sx={{ flexGrow: 1 }}
                 >
-                    {rule.name}
+                    {rule.name ||
+                        generateRuleName(
+                            rule.intervention_properties,
+                            interventionCategories,
+                        )}
                 </Typography>
                 {isScenarioEditable && (
                     <>

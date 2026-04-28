@@ -234,7 +234,7 @@ class ScenarioRuleUpdateSerializer(ScenarioRuleWriteSerializerBase):
     # overriding parent fields in order to make them optional
     intervention_properties = ScenarioRuleInterventionPropertiesSerializer(many=True, required=False)
     matching_criteria = JSONSchemaField(SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA, required=False, allow_null=True)
-    name = serializers.CharField(required=False, allow_blank=False, allow_null=False)
+    name = serializers.CharField(required=False, allow_blank=True, allow_null=False)
 
     class Meta:
         model = ScenarioRule

@@ -131,7 +131,7 @@ class ScenarioRuleQuerySet(models.QuerySet):
 
 class ScenarioRule(models.Model):
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="rules")
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, blank=True)
     priority = models.PositiveSmallIntegerField()
     color = ColorField(default=DEFAULT_COLOR)
 

@@ -1,4 +1,5 @@
 import React, { FC, useCallback, useState } from 'react';
+import { useGetColors } from 'Iaso/hooks/useGetColors';
 import { CardScrollable } from '../../../../components/styledComponents';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { ScenarioRuleFormValues } from '../../hooks/useScenarioRuleFormState';
@@ -22,6 +23,9 @@ export const ScenarioRulesPanel: FC<Props> = ({
     const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
 
     const { isEditing, toggleIsEditing } = usePlanningContext();
+    // Prefetches the palette so the form's lazy colour picker finds it warm
+    // in the React Query cache when the form mounts.
+    useGetColors();
 
     const handleShowForm = useCallback(
         (rule?: ScenarioRule) => {
@@ -31,7 +35,7 @@ export const ScenarioRulesPanel: FC<Props> = ({
                 onPreviewScenarioRule?.(rule);
             }
         },
-        [setEditingRule, toggleIsEditing, onPreviewScenarioRule],
+        [toggleIsEditing, onPreviewScenarioRule],
     );
 
     const handleCloseForm = useCallback(() => {
@@ -56,6 +60,7 @@ export const ScenarioRulesPanel: FC<Props> = ({
                 <ScenarioRuleFormWrapper
                     scenarioId={scenarioId}
                     rule={editingRule}
+                    existingRules={rules}
                     onClose={handleCloseForm}
                     onChange={handleFormChange}
                 />
