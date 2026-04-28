@@ -192,6 +192,9 @@ def create_rules_from_import(
 
         rules.append(rule)
 
+    for rule in rules:
+        rule.org_units_matched = ScenarioRule.resolve_matched_org_units(scenario.account, rule.matching_criteria)
+
     ScenarioRule.objects.bulk_create(rules)
 
     for rule, group in zip(rules, groups):

@@ -14,7 +14,7 @@ from iaso.utils.models.soft_deletable import (
     SoftDeletableModel,
 )
 from iaso.utils.validators import JSONSchemaValidator
-from plugins.snt_malaria.models.account_settings import get_intervention_org_unit_type_id, get_intervention_org_units
+from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 
 
 class Scenario(SoftDeletableModel):
@@ -180,30 +180,30 @@ class ScenarioRule(models.Model):
         """Evaluate matching_criteria and return the raw list of matched org unit IDs.
 
         This is the criteria-only result, before exclusion/inclusion overrides.
-        - match-all: returns all valid org units at the configured intervention level.
-        - criteria: evaluates against MetricValues, also scoped to the intervention level.
+
+        1. start from the account's valid geo-located org units at the configured
+           intervention_org_unit_type level (get_intervention_org_units)
+        2. if matching_criteria is JSONLogic, intersect with org units whose MetricValues satisfy it
+           (match-all skips this step - every org unit qualifies)
         """
         if matching_criteria is None:
             return []
+
+        org_units = get_intervention_org_units(account)
+
         if isinstance(matching_criteria, dict) and matching_criteria.get("all"):
-            return list(get_intervention_org_units(account).values_list("id", flat=True))
+            return list(org_units.values_list("id", flat=True).distinct())
+
         metric_values = MetricValue.objects.filter(metric_type__account=account, org_unit_id__isnull=False)
-        type_id = get_intervention_org_unit_type_id(account)
-        if type_id:
-            metric_values = metric_values.filter(org_unit__org_unit_type_id=type_id)
         q = jsonlogic_to_exists_q_clauses(matching_criteria, metric_values, "metric_type_id", "org_unit_id")
-        return list(metric_values.filter(q).distinct().values_list("org_unit_id", flat=True))
+        matched_ids = metric_values.filter(q).distinct().values_list("org_unit_id", flat=True)
+        return list(org_units.filter(id__in=matched_ids).values_list("id", flat=True).distinct())
 
     def _compute_org_unit_ids(self) -> set[int]:
         """Resolve the set of org unit ids this rule targets based on its matching mode."""
         if self.matching_criteria is None:
             return set(self.org_units_included)
-        is_match_all = isinstance(self.matching_criteria, dict) and self.matching_criteria.get("all")
-        matched = (
-            set(self.resolve_matched_org_units(self.scenario.account, self.matching_criteria))
-            if is_match_all
-            else set(self.org_units_matched)
-        )
+        matched = set(self.org_units_matched)
         if not matched and not self.org_units_included:
             return set()
         return (matched - set(self.org_units_excluded)) | set(self.org_units_included)
