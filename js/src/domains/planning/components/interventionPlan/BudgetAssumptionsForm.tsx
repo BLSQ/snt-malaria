@@ -1,11 +1,8 @@
-import React, { FC, useCallback, useMemo } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import React, { FC, useCallback, useEffect, useState } from 'react';
+import { Box, Button, Collapse, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
 
 import InputComponent from 'Iaso/components/forms/InputComponent';
-import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
@@ -26,356 +23,142 @@ const styles: SxStyles = {
         mb: 2,
         pt: 1,
     },
-    inputWrapper: {
-        minWidth: '99px',
-        width: '99px',
+    yearHeader: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderBottom: '1px solid #eee',
+        py: 1,
+    },
+    yearContent: {
+        py: 1,
     },
 };
 
 type Props = {
     scenarioId: number;
-    budgetAssumptions: BudgetAssumptions;
+    years: number[];
+    interventionAssignmentIds: number[];
+    budgetAssumptions: BudgetAssumptions[];
 };
 
 export const BudgetAssumptionsForm: FC<Props> = ({
     scenarioId,
+    years,
+    interventionAssignmentIds,
     budgetAssumptions,
 }) => {
     const percentageNumberOptions = { suffix: '%', decimalScale: 0 };
-    const { formatMessage } = useSafeIntl();
     const { isScenarioEditable } = usePlanningContext();
+    const { formatMessage } = useSafeIntl();
     const {
         mutateAsync: saveBudgetAssumptions,
         isLoading: isSavingBudgetAssumptions,
     } = useSaveBudgetAssumptions(scenarioId);
 
-    const descriptionMessageKey = `budgetAssumptionsDescription_${budgetAssumptions.intervention_code}`;
-    const getMinMessage = useCallback(
-        (min: number) =>
-            formatMessage(MESSAGES.budgetAssumptionsMinValue, { min }),
-        [formatMessage],
-    );
-    const getMaxMessage = useCallback(
-        (max: number) =>
-            formatMessage(MESSAGES.budgetAssumptionsMaxValue, { max }),
-        [formatMessage],
-    );
-    const validationSchema = useMemo(() => {
-        switch (budgetAssumptions.intervention_code) {
-            case 'itn_campaign':
-                return Yup.object().shape({
-                    coverage: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    buffer_mult: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    divisor: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(9, getMaxMessage(9)),
-                    bale_size: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(999, getMaxMessage(999)),
-                });
-            case 'itn_routine':
-                return Yup.object().shape({
-                    coverage: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    buffer_mult: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                });
-            case 'iptp':
-                return Yup.object().shape({
-                    coverage: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    buffer_mult: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    doses_per_pw: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(999, getMaxMessage(999)),
-                });
-            case 'smc':
-                return Yup.object().shape({
-                    coverage: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    buffer_mult: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    pop_prop_3_11: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    pop_prop_12_59: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    monthly_rounds: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(32, getMaxMessage(32)),
-                });
-            case 'pmc':
-                return Yup.object().shape({
-                    coverage: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    buffer_mult: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    touchpoints: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(999, getMaxMessage(999)),
-                    tablet_factor: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                });
-            case 'vacc':
-                return Yup.object().shape({
-                    coverage: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    buffer_mult: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(100, getMaxMessage(100)),
-                    doses_per_child: Yup.number()
-                        .min(0, getMinMessage(0))
-                        .max(999, getMaxMessage(999)),
-                });
-            default:
-                return null;
-        }
-    }, [budgetAssumptions, getMinMessage, getMaxMessage]);
+    const [budgetAssumptionsByYear, setBudgetAssumptionsByYear] = useState<
+        Record<number, BudgetAssumptions>
+    >({});
 
-    const {
-        values,
-        setFieldValue,
-        isValid,
-        handleSubmit,
-        setFieldTouched,
-        errors,
-        touched,
-    } = useFormik({
-        initialValues: {
-            ...budgetAssumptions,
-        },
-        validationSchema,
-        onSubmit: () => {
-            saveBudgetAssumptions({
-                budgetAssumptions: values,
-            }).then(value => (values.id = value.id));
-        },
-    });
+    useEffect(() => {
+        const assumptionsByYear = (budgetAssumptions || []).reduce(
+            (acc, assumption) => {
+                if (assumption.year) {
+                    acc[assumption.year] = assumption;
+                }
+                return acc;
+            },
+            {} as Record<number, BudgetAssumptions>,
+        );
+        setBudgetAssumptionsByYear(assumptionsByYear);
+    }, [budgetAssumptions]);
 
-    const setFieldValueAndState = useCallback(
-        (field: string, value: any) => {
-            setFieldTouched(field, true);
-            setFieldValue(field, value);
+    const [openByYear, setOpenByYear] = useState<Record<number, boolean>>({});
+
+    const toggleYear = useCallback((year: number) => {
+        setOpenByYear(current => ({ ...current, [year]: !current[year] }));
+    }, []);
+
+    const setCoverage = useCallback(
+        (year: number, value: any) => {
+            setBudgetAssumptionsByYear(current => ({
+                ...current,
+                [year]: {
+                    ...current[year],
+                    year: year,
+                    coverage: Number(value ?? 0),
+                },
+            }));
         },
-        [setFieldTouched, setFieldValue],
+        [setBudgetAssumptionsByYear],
     );
 
-    const getErrors = useTranslatedErrors({
-        errors,
-        formatMessage,
-        touched,
-        messages: MESSAGES,
-    });
     return (
-        validationSchema && (
-            <>
-                <Box sx={styles.formWrapper}>
-                    <Box sx={styles.inputRow}>
-                        {validationSchema.fields.pop_prop_3_11 && (
-                            <InputComponent
-                                type="number"
-                                keyValue="pop_prop_3_11"
-                                withMarginTop={false}
-                                errors={getErrors('pop_prop_3_11')}
-                                value={values.pop_prop_3_11}
-                                onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetAssumptionsPopProp3_11}
-                                numberInputOptions={percentageNumberOptions}
-                                wrapperSx={styles.inputWrapper}
-                                disabled={!isScenarioEditable}
-                            />
-                        )}
-                        {validationSchema.fields.pop_prop_12_59 && (
-                            <InputComponent
-                                type="number"
-                                keyValue="pop_prop_12_59"
-                                withMarginTop={false}
-                                errors={getErrors('pop_prop_12_59')}
-                                value={values.pop_prop_12_59}
-                                onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetAssumptionsPopProp12_59}
-                                numberInputOptions={percentageNumberOptions}
-                                wrapperSx={styles.inputWrapper}
-                                disabled={!isScenarioEditable}
-                            />
-                        )}
-                        <InputComponent
-                            type="number"
-                            keyValue="coverage"
-                            withMarginTop={false}
-                            errors={getErrors('coverage')}
-                            value={values.coverage}
-                            onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetAssumptionsCoverage}
-                            numberInputOptions={percentageNumberOptions}
-                            wrapperSx={styles.inputWrapper}
-                            disabled={!isScenarioEditable}
-                        />
-                        {validationSchema.fields.divisor && (
-                            <InputComponent
-                                type="number"
-                                keyValue="divisor"
-                                withMarginTop={false}
-                                errors={getErrors('divisor')}
-                                value={values.divisor}
-                                onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetAssumptionsPPN}
-                                numberInputOptions={{ decimalScale: 1 }}
-                                wrapperSx={styles.inputWrapper}
-                                disabled={!isScenarioEditable}
-                            />
-                        )}
-                        {validationSchema.fields.touchpoints && (
-                            <InputComponent
-                                type="number"
-                                keyValue="touchpoints"
-                                withMarginTop={false}
-                                errors={getErrors('touchpoints')}
-                                value={values.touchpoints}
-                                onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetAssumptionsTouchpoints}
-                                numberInputOptions={{ decimalScale: 0 }}
-                                wrapperSx={styles.inputWrapper}
-                                disabled={!isScenarioEditable}
-                            />
-                        )}
-                        {validationSchema.fields.monthly_rounds && (
-                            <InputComponent
-                                type="number"
-                                keyValue="monthly_rounds"
-                                withMarginTop={false}
-                                errors={getErrors('monthly_rounds')}
-                                value={values.monthly_rounds}
-                                onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetAssumptionsMonthlyRound}
-                                numberInputOptions={{ decimalScale: 0 }}
-                                wrapperSx={styles.inputWrapper}
-                                disabled={!isScenarioEditable}
-                            />
-                        )}
-                        {validationSchema.fields.bale_size && (
-                            <InputComponent
-                                type="number"
-                                keyValue="bale_size"
-                                withMarginTop={false}
-                                errors={getErrors('bale_size')}
-                                value={values.bale_size}
-                                onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetAssumptionsBaleSize}
-                                numberInputOptions={{ decimalScale: 0 }}
-                                wrapperSx={styles.inputWrapper}
-                                disabled={!isScenarioEditable}
-                            />
-                        )}
-                        {validationSchema.fields.doses_per_pw && (
-                            <InputComponent
-                                type="number"
-                                keyValue="doses_per_pw"
-                                withMarginTop={false}
-                                errors={getErrors('doses_per_pw')}
-                                value={values.doses_per_pw}
-                                onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetAssumptionsDosesPerPW}
-                                numberInputOptions={{ decimalScale: 0 }}
-                                wrapperSx={styles.inputWrapper}
-                                disabled={!isScenarioEditable}
-                            />
-                        )}
-                        {validationSchema.fields.doses_per_child && (
-                            <InputComponent
-                                type="number"
-                                keyValue="doses_per_child"
-                                withMarginTop={false}
-                                errors={getErrors('doses_per_child')}
-                                value={values.doses_per_child}
-                                onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetAssumptionsDosesPerChild}
-                                numberInputOptions={{ decimalScale: 0 }}
-                                wrapperSx={styles.inputWrapper}
-                                disabled={!isScenarioEditable}
-                            />
-                        )}
-                        {validationSchema.fields.tablet_factor && (
-                            <InputComponent
-                                type="number"
-                                keyValue="tablet_factor"
-                                withMarginTop={false}
-                                errors={getErrors('tablet_factor')}
-                                value={values.tablet_factor}
-                                onChange={setFieldValueAndState}
-                                label={MESSAGES.budgetAssumptionsTabletFactor}
-                                numberInputOptions={percentageNumberOptions}
-                                wrapperSx={styles.inputWrapper}
-                                disabled={!isScenarioEditable}
-                            />
-                        )}
-
-                        <InputComponent
-                            type="number"
-                            keyValue="buffer_mult"
-                            withMarginTop={false}
-                            errors={getErrors('buffer_mult')}
-                            value={values.buffer_mult}
-                            onChange={setFieldValueAndState}
-                            label={MESSAGES.budgetAssumptionsBuffer}
-                            numberInputOptions={percentageNumberOptions}
-                            wrapperSx={styles.inputWrapper}
-                            disabled={!isScenarioEditable}
-                        />
+        <Box sx={styles.formWrapper}>
+            {years.map(year => {
+                const coverage = budgetAssumptionsByYear[year]?.coverage ?? 0;
+                return (
+                    <Box key={year}>
+                        <Box sx={styles.yearHeader}>
+                            <Typography variant="subtitle2">{year}</Typography>
+                            <Button
+                                size="small"
+                                variant="text"
+                                onClick={() => toggleYear(year)}
+                            >
+                                {openByYear[year] ? 'Hide' : 'Edit'}
+                            </Button>
+                        </Box>
+                        <Collapse in={!!openByYear[year]}>
+                            <Box sx={styles.yearContent}>
+                                <Box sx={styles.inputRow}>
+                                    <InputComponent
+                                        type="number"
+                                        keyValue="coverage"
+                                        withMarginTop={false}
+                                        value={coverage}
+                                        onChange={(_, value) =>
+                                            setCoverage(year, value)
+                                        }
+                                        label={
+                                            MESSAGES.budgetAssumptionsCoverage
+                                        }
+                                        numberInputOptions={
+                                            percentageNumberOptions
+                                        }
+                                        disabled={!isScenarioEditable}
+                                    />
+                                </Box>
+                            </Box>
+                        </Collapse>
                     </Box>
-                    <Box>
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ mb: 1 }}
-                        >
-                            {formatMessage(MESSAGES[descriptionMessageKey], {
-                                b: chunks => <strong>{chunks}</strong>,
-                                li: chunks => <li>{chunks}</li>,
-                                ul: chunks => <ul>{chunks}</ul>,
-                                br: () => <br />,
-                            })}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            {formatMessage(MESSAGES.budgetAssumptionsPath)}
-                        </Typography>
-                    </Box>
-                </Box>
-                {isScenarioEditable && (
-                    <Button
-                        onClick={() => handleSubmit()}
-                        variant="contained"
-                        color="primary"
-                        disabled={!isValid || isSavingBudgetAssumptions}
-                    >
-                        {formatMessage(MESSAGES.budgetAssumptionsSave)}
-                        {isSavingBudgetAssumptions && (
-                            <LoadingSpinner
-                                size={16}
-                                absolute
-                                fixed={false}
-                                transparent
-                            />
-                        )}
-                    </Button>
-                )}
-            </>
-        )
+                );
+            })}
+            {isScenarioEditable && (
+                <Button
+                    onClick={() =>
+                        saveBudgetAssumptions({
+                            budgetAssumptions: Object.values(
+                                budgetAssumptionsByYear,
+                            ),
+                            interventionAssignmentIds,
+                        })
+                    }
+                    variant="contained"
+                    color="primary"
+                    disabled={isSavingBudgetAssumptions}
+                >
+                    {formatMessage(MESSAGES.budgetAssumptionsSave)}
+                    {isSavingBudgetAssumptions && (
+                        <LoadingSpinner
+                            size={16}
+                            absolute
+                            fixed={false}
+                            transparent
+                        />
+                    )}
+                </Button>
+            )}
+        </Box>
     );
 };

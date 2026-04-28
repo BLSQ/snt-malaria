@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect } from 'react';
+import React, { FC, useCallback, useEffect, useMemo } from 'react';
 import { Box, Drawer, Tab, Tabs } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
@@ -29,9 +29,11 @@ const styles: SxStyles = {
 
 type Props = {
     scenarioId: number;
+    scenarioStartYear?: number;
+    scenarioEndYear?: number;
     disabled?: boolean;
     interventionPlan?: InterventionPlan;
-    budgetAssumptions?: BudgetAssumptions;
+    budgetAssumptions?: BudgetAssumptions[];
     closeInterventionPlanDetails: () => void;
     removeOrgUnitsFromPlan: (
         ordUnitIds: number[],
@@ -42,6 +44,8 @@ type Props = {
 
 export const InterventionPlanDetails: FC<Props> = ({
     scenarioId,
+    scenarioStartYear,
+    scenarioEndYear,
     disabled = false,
     interventionPlan,
     budgetAssumptions,
@@ -65,6 +69,15 @@ export const InterventionPlanDetails: FC<Props> = ({
         if (interventionPlan) setIsOpen(true);
         else if (!interventionPlan && isOpen) onCloseInterventionPlanDetails();
     }, [interventionPlan, onCloseInterventionPlanDetails, isOpen]);
+
+    const years = useMemo(() => {
+        return scenarioStartYear !== undefined && scenarioEndYear !== undefined
+            ? Array.from(
+                  { length: scenarioEndYear - scenarioStartYear + 1 },
+                  (_, index) => scenarioStartYear + index,
+              )
+            : [];
+    }, [scenarioStartYear, scenarioEndYear]);
 
     return (
         <Drawer
@@ -94,11 +107,14 @@ export const InterventionPlanDetails: FC<Props> = ({
             </Tabs>
             <Box sx={styles.bodyWrapper}>
                 {activeTab === 'budget_settings' &&
-                    interventionPlan?.intervention &&
-                    budgetAssumptions && (
+                    interventionPlan?.intervention && (
                         <BudgetAssumptionsForm
                             scenarioId={scenarioId}
-                            budgetAssumptions={budgetAssumptions}
+                            years={years}
+                            interventionAssignmentIds={interventionPlan.org_units.map(
+                                ou => ou.intervention_assignment_id,
+                            )}
+                            budgetAssumptions={budgetAssumptions || []}
                         />
                     )}
                 {activeTab === 'districts' && interventionPlan && (

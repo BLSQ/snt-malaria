@@ -19,7 +19,7 @@ const interventionAssignmentAPIRequest = (scenarioId: number) => {
 export const useGetInterventionAssignments = (
     scenarioId: number | undefined,
     select: (data: InterventionAssignmentResponse[]) => any = data => data,
-): UseQueryResult<InterventionPlan[], Error> => {
+): UseQueryResult<any, Error> => {
     return useSnackQuery({
         queryKey: [
             'interventionAssignments',
@@ -61,5 +61,8 @@ export const useGetInterventionPlans = (scenarioId: number | undefined) => {
 
             return acc;
         }, [] as InterventionPlan[]);
-    return useGetInterventionAssignments(scenarioId, select);
+    return useGetInterventionAssignments(scenarioId, select) as UseQueryResult<
+        InterventionPlan[],
+        Error
+    >;
 };
