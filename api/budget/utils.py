@@ -46,7 +46,6 @@ def build_population_dataframe(account, start_year, end_year, intervention_popul
     )  # Add any additional population metric codes from interventions
 
     # Fetch all relevant MetricTypes for this account
-    metric_types = MetricType.objects.filter(account=account, code__in=metric_code_to_column.keys())
     metric_types = MetricType.objects.filter(
         account=account, code__in=list(metric_code_to_column.keys()) + intervention_population_metric_codes
     )
@@ -71,8 +70,6 @@ def build_population_dataframe(account, start_year, end_year, intervention_popul
 
     # Convert to DataFrame
     df = pd.DataFrame(list(metric_values))
-
-    df.to_csv("population_metrics_raw.csv", index=False)  # Debug: Save raw metric values to CSV
 
     # Pivot the data so each metric type becomes a column
     df_pivoted = df.pivot_table(
