@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("snt_malaria", "0037_sntaccountsetup"),
+        ("snt_malaria", "0038_alter_scenariorule_name"),
     ]
 
     operations = [
