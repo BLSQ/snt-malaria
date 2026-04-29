@@ -37,9 +37,7 @@ class BudgetAssumptionsUpdateSerializer(serializers.ModelSerializer):
 class BudgetAssumptionsUpsertManySerializer(serializers.Serializer):
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
 
-    intervention_assignments = serializers.PrimaryKeyRelatedField(
-        queryset=InterventionAssignment.objects.none(), many=True
-    )
+    intervention_assignments = serializers.ListField(child=serializers.IntegerField(min_value=1), allow_empty=False)
     budget_assumptions = BudgetAssumptionsUpdateSerializer(many=True)
 
     def __init__(self, *args, **kwargs):
@@ -47,9 +45,6 @@ class BudgetAssumptionsUpsertManySerializer(serializers.Serializer):
         user = self.context["request"].user
         account = user.iaso_profile.account
         self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
-        self.fields["intervention_assignments"].child_relation.queryset = InterventionAssignment.objects.filter(
-            scenario__account=account
-        )
 
     def validate_scenario(self, value):
         user = self.context["request"].user
@@ -58,14 +53,35 @@ class BudgetAssumptionsUpsertManySerializer(serializers.Serializer):
         return value
 
     def validate(self, attrs):
+        account = self.context["request"].user.iaso_profile.account
         scenario = attrs.get("scenario")
-        assignments = attrs.get("intervention_assignments")
-        if assignments is not None and len(assignments) == 0:
-            raise serializers.ValidationError({"intervention_assignments": "At least one assignment is required."})
-        if assignments and scenario and any(assignment.scenario_id != scenario.id for assignment in assignments):
+        assignment_ids = attrs.get("intervention_assignments") or []
+
+        # Deduplicate while keeping input order stable.
+        unique_assignment_ids = list(dict.fromkeys(assignment_ids))
+        assignments = list(
+            InterventionAssignment.objects.filter(
+                id__in=unique_assignment_ids,
+                scenario__account=account,
+            )
+        )
+        assignments_by_id = {assignment.id: assignment for assignment in assignments}
+        missing_ids = [
+            assignment_id for assignment_id in unique_assignment_ids if assignment_id not in assignments_by_id
+        ]
+        if missing_ids:
+            raise serializers.ValidationError(
+                {"intervention_assignments": f"Invalid intervention assignment IDs: {missing_ids}"}
+            )
+
+        resolved_assignments = [assignments_by_id[assignment_id] for assignment_id in unique_assignment_ids]
+
+        if scenario and any(assignment.scenario_id != scenario.id for assignment in resolved_assignments):
             raise serializers.ValidationError(
                 {"intervention_assignments": "All assignments must belong to the provided scenario."}
             )
+
+        attrs["intervention_assignments"] = resolved_assignments
 
         return attrs
 
@@ -78,7 +94,6 @@ class BudgetAssumptionsUpsertManySerializer(serializers.Serializer):
             BudgetAssumptions.objects.filter(
                 scenario=scenario,
                 intervention_assignment__in=assignments,
-                year__in=[a.get("year") for a in budget_assumptions_data],
             ).delete()
             bulk_create_data = []
             for assumption_data in budget_assumptions_data:
