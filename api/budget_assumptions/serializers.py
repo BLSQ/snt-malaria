@@ -94,6 +94,7 @@ class BudgetAssumptionsUpsertManySerializer(serializers.Serializer):
             BudgetAssumptions.objects.filter(
                 scenario=scenario,
                 intervention_assignment__in=assignments,
+                year__in=[a.get("year") for a in budget_assumptions_data],
             ).delete()
             bulk_create_data = []
             for assumption_data in budget_assumptions_data:

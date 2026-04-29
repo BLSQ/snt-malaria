@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
@@ -14,12 +16,11 @@ from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
 from .permissions import InterventionAssignmentsPermission
 from .serializers import (
     InterventionAssignmentListSerializer,
-    InterventionAssignmentWriteSerializer,
 )
 
 
 class InterventionAssignmentViewSet(viewsets.ModelViewSet):
-    http_method_names = ["get", "post", "delete"]
+    http_method_names = ["get", "delete"]
     filter_backends = [DjangoFilterBackend]
     filterset_class = InterventionAssignmentListFilter
     permission_classes = [InterventionAssignmentsPermission]
@@ -32,53 +33,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
         )
 
     def get_serializer_class(self):
-        if self.request.method == "GET":
-            return InterventionAssignmentListSerializer
-        return InterventionAssignmentWriteSerializer
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        # Get validated objects
-        scenario = serializer.validated_data["scenario"]
-        valid_orgunit_interventions = serializer.validated_data["valid_orgunit_interventions"]
-
-        created_by = request.user
-        # Create InterventionAssignment objects
-        assignments = []
-        with transaction.atomic():
-            delta = 0
-            for ou_interventions in valid_orgunit_interventions:
-                org_unit, interventions = ou_interventions["org_unit"], ou_interventions["interventions"]
-                # Delete existing assignments of same category for this org unit and scenario
-                existing_interventions = InterventionAssignment.objects.select_related(
-                    "intervention__intervention_category"
-                ).filter(
-                    scenario=scenario,
-                    org_unit=org_unit,
-                    intervention__intervention_category__in=[i.intervention_category for i in interventions],
-                )
-                delta += len(interventions) - existing_interventions.count()
-                existing_interventions.delete()
-
-                for intervention in interventions:
-                    assignment = InterventionAssignment(
-                        scenario=scenario,
-                        org_unit=org_unit,
-                        intervention=intervention,
-                        created_by=created_by,
-                    )
-                    assignments.append(assignment)
-
-            # Bulk create
-            if assignments:
-                InterventionAssignment.objects.bulk_create(assignments)
-
-            return Response(
-                {"message": _("{delta} assignment(s) added to plan").format(delta=delta)},
-                status=status.HTTP_201_CREATED,
-            )
+        return InterventionAssignmentListSerializer
 
     def destroy(self, request, *args, **kwargs):
         assignment = self.get_object()

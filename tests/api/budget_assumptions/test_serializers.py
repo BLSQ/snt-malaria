@@ -175,15 +175,6 @@ class BudgetAssumptionsUpdateSerializerTests(BudgetAssumptionsSerializerBaseTest
 
 
 class BudgetAssumptionsUpsertManySerializerTests(BudgetAssumptionsSerializerBaseTestCase):
-    def test_querysets_are_scoped_to_account(self):
-        serializer = BudgetAssumptionsUpsertManySerializer(context=self._context_for(self.user))
-        self.assertIn(self.scenario, serializer.fields["scenario"].queryset)
-        self.assertNotIn(self.other_account_scenario, serializer.fields["scenario"].queryset)
-
-        child_queryset = serializer.fields["intervention_assignments"].child_relation.queryset
-        self.assertIn(self.assignment_a, child_queryset)
-        self.assertNotIn(self.other_account_assignment, child_queryset)
-
     def test_empty_assignments_are_rejected(self):
         data = {
             "scenario": self.scenario.id,

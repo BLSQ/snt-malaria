@@ -112,7 +112,6 @@ class Scenario(SoftDeletableModel):
                     )
                 )
 
-
         BudgetAssumptions.objects.bulk_create(assumptions_to_create)
 
 
@@ -305,6 +304,7 @@ class ScenarioRule(models.Model):
         InterventionAssignment.objects.bulk_create(intervention_assignments_to_create)
 
 
+# Deprecated replaces by BudgetAssumptions
 class ScenarioRuleInterventionProperties(models.Model):
     scenario_rule = models.ForeignKey(ScenarioRule, on_delete=models.CASCADE, related_name="intervention_properties")
     intervention = models.ForeignKey("Intervention", on_delete=models.CASCADE, related_name="scenario_rule_properties")
