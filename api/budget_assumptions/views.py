@@ -49,6 +49,6 @@ class BudgetAssumptionsViewSet(viewsets.ModelViewSet):
     def many(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response_serializer = BudgetAssumptionsReadSerializer(serializer.instance, many=True)
+        result = serializer.save()
+        response_serializer = BudgetAssumptionsReadSerializer(result, many=True)
         return Response(response_serializer.data, status=status.HTTP_200_OK)

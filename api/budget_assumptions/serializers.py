@@ -73,7 +73,7 @@ class BudgetAssumptionsUpsertManySerializer(serializers.Serializer):
         scenario = self.validated_data["scenario"]
         assignments = self.validated_data["intervention_assignments"]
         budget_assumptions_data = self.validated_data["budget_assumptions"]
-
+        result = []
         with transaction.atomic():
             BudgetAssumptions.objects.filter(
                 scenario=scenario,
@@ -82,7 +82,6 @@ class BudgetAssumptionsUpsertManySerializer(serializers.Serializer):
             ).delete()
             bulk_create_data = []
             for assumption_data in budget_assumptions_data:
-                intervention_code = assignments[0].intervention.code if assignments else "default"
                 for assignment in assignments:
                     bulk_create_data.append(
                         BudgetAssumptions(
@@ -95,4 +94,6 @@ class BudgetAssumptionsUpsertManySerializer(serializers.Serializer):
                         )
                     )
 
-            BudgetAssumptions.objects.bulk_create(bulk_create_data)
+            result = BudgetAssumptions.objects.bulk_create(bulk_create_data)
+
+        return result
