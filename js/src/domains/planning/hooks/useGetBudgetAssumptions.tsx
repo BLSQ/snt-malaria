@@ -11,8 +11,9 @@ const transformResponse = (budgetAssumptions: BudgetAssumptions) => ({
 export const useGetBudgetAssumptions = (
     scenarioId: number,
 ): UseQueryResult<BudgetAssumptions[], Error> => {
+    console.log('Fetching budget assumptions for scenarioId:', scenarioId);
     return useSnackQuery({
-        queryKey: ['budget_assumptions', scenarioId],
+        queryKey: ['budgetAssumptions'],
         queryFn: () => {
             return getRequest(
                 `/api/snt_malaria/budget_assumptions/?scenario=${scenarioId}`,
