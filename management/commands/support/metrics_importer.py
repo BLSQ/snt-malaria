@@ -153,6 +153,7 @@ class MetricsImporter:
                     metric_type.unit_symbol = row["UNIT_SYMBOL"]
                     metric_type.legend_type = row["TYPE"].lower()
                     metric_type.is_utility = row.get("IS_UTILITY", "False").lower() == "true"
+                    metric_type.metric_kind = MetricType.MetricKind.ANY
                     metric_type.origin = MetricType.MetricTypeOrigin.OPENHEXA
                     to_update.append(metric_type)
                     self.stdout_write(
@@ -170,6 +171,7 @@ class MetricsImporter:
                         unit_symbol=row["UNIT_SYMBOL"],
                         legend_type=row["TYPE"].lower(),
                         is_utility=row.get("IS_UTILITY", "False").lower() == "true",
+                        metric_kind=MetricType.MetricKind.ANY,
                         origin=MetricType.MetricTypeOrigin.OPENHEXA,
                     )
                     to_create.append(metric_type)
@@ -205,6 +207,7 @@ class MetricsImporter:
                 "unit_symbol",
                 "legend_type",
                 "is_utility",
+                "metric_kind",
                 "origin",
             ],
         )
@@ -223,17 +226,20 @@ class MetricsImporter:
         columns = (
             col
             for col in csvreader.fieldnames
-            if str.lower(col) not in ["year", "adm1_id", "adm2_id", "adm1_name", "adm2_name", "population"]
-            # POPULATION is excluded as it is already in other metric file
+            if str.lower(col) not in ["year", "adm1_id", "adm2_id", "adm1_name", "adm2_name"]
         )
 
         for col in columns:
             try:
-                metric_type = MetricType.objects.create(
+                metric_type, _created = MetricType.objects.update_or_create(
                     account=self.account,
-                    name=col,
                     code=col,
-                    is_utility=True,
+                    defaults={
+                        "name": col,
+                        "is_utility": True,  # Hide it from map
+                        "metric_kind": MetricType.MetricKind.POPULATION,  # Show it in population dropdown
+                        "origin": MetricType.MetricTypeOrigin.OPENHEXA,
+                    },
                 )
                 self.stdout_write(f"Created Population MetricType: {metric_type.name}")
                 pop_metric_types[col] = metric_type
@@ -276,7 +282,11 @@ class MetricsImporter:
 
                         # Create the MetricValue
                         MetricValue.objects.create(
-                            metric_type=metric_type, org_unit=org_unit, value=value, string_value=string_value
+                            metric_type=metric_type,
+                            org_unit=org_unit,
+                            value=value,
+                            string_value=string_value,
+                            year=int(row.get("YEAR", 0)),
                         )
                         value_count += 1
 
@@ -288,6 +298,6 @@ class MetricsImporter:
             raise
 
     def _configure_legends(self):
-        for metric_type in MetricType.objects.filter(account=self.account):
+        for metric_type in MetricType.objects.filter(account=self.account, origin=MetricType.MetricTypeOrigin.OPENHEXA):
             metric_type.legend_config = get_legend_config(metric_type, self.metric_type_scales[metric_type.code])
             metric_type.save()

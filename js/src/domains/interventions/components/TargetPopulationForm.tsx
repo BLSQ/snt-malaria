@@ -26,10 +26,12 @@ export const TargetPopulationForm: FC<Props> = ({
 }) => {
     const popMetricOptions = useMemo(
         () =>
-            metricTypes.map(metric => ({
-                label: metric.name,
-                value: metric.code,
-            })),
+            metricTypes
+                .filter(metric => metric.metric_kind === 'population')
+                .map(metric => ({
+                    label: metric.name,
+                    value: metric.code,
+                })),
         [metricTypes],
     );
 
@@ -40,11 +42,15 @@ export const TargetPopulationForm: FC<Props> = ({
 
     const handleUpdateField = useCallback(
         (value: string, index: number) => {
-            onUpdateField('target_population', [
-                ...targetPopulation.slice(0, index),
-                value,
-                ...targetPopulation.slice(index + 1),
-            ]);
+            const computedValue = value
+                ? [
+                      ...targetPopulation.slice(0, index),
+                      value,
+                      ...targetPopulation.slice(index + 1),
+                  ]
+                : targetPopulation.filter((_, i) => i !== index);
+
+            onUpdateField('target_population', computedValue);
         },
         [onUpdateField, targetPopulation],
     );

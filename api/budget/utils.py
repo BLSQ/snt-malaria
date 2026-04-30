@@ -16,7 +16,7 @@ from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 # TODO:
 # - think about the str() issue for org_unit_id
 # - think about error handling all the way to the frontend
-def build_population_dataframe(account, start_year, end_year):
+def build_population_dataframe(account, start_year, end_year, intervention_population_metric_codes=[]):
     """
     Build a population dataframe from MetricTypes with population data.
 
@@ -27,6 +27,8 @@ def build_population_dataframe(account, start_year, end_year):
       Populated from their respective MetricTypes
     """
     # Mapping from MetricType codes to DataFrame column names
+    # TODO: This should not be needed anymore, we should get this from metric types when we know how to define which one is a population metric type
+    # TODO: And the custom mapping should not exist anymore, if metric code doesn't match, they'll need to specify it manually from they frontend when creating the intervention
     metric_code_to_column = {
         "POPULATION": "pop_total",
         "POP_UNDER_5": "pop_0_5",
@@ -39,9 +41,14 @@ def build_population_dataframe(account, start_year, end_year):
     }
 
     pop_columns = list(metric_code_to_column.values())
+    pop_columns.extend(
+        intervention_population_metric_codes
+    )  # Add any additional population metric codes from interventions
 
     # Fetch all relevant MetricTypes for this account
-    metric_types = MetricType.objects.filter(account=account, code__in=metric_code_to_column.keys())
+    metric_types = MetricType.objects.filter(
+        account=account, code__in=list(metric_code_to_column.keys()) + intervention_population_metric_codes
+    )
 
     if not metric_types.exists():
         raise ValidationError("No population MetricTypes found for this account")
@@ -72,8 +79,17 @@ def build_population_dataframe(account, start_year, end_year):
         aggfunc="first",
     ).reset_index()
 
+    # Get duplicate columns from pop_columns then get metric values matching and add to the pivoted df
+    for metric_code in intervention_population_metric_codes:
+        if metric_code in df_pivoted.columns and metric_code in metric_code_to_column.keys():
+            df_pivoted[metric_code + "__dup"] = df_pivoted[metric_code]
+
     # Rename columns from metric codes to expected column names
     df_pivoted = df_pivoted.rename(columns=metric_code_to_column)
+
+    df_pivoted = df_pivoted.rename(
+        columns={col: col.replace("__dup", "") for col in df_pivoted.columns if col.endswith("__dup")}
+    )
 
     # Add potential missing columns with 0 as value
     for col in pop_columns:
@@ -209,7 +225,7 @@ def build_interventions_input(scenario):
         intervention_type = assignment.intervention.short_name
         intervention_id = assignment.intervention.id
         org_unit_id = assignment.org_unit.id
-
+        target_population_columns = assignment.intervention.target_population or []
         # Group by intervention name and type
         intervention_key = f"{intervention_code}_{intervention_type}"
         if intervention_key not in interventions_dict:
@@ -218,6 +234,7 @@ def build_interventions_input(scenario):
                 "type": intervention_type,
                 "id": intervention_id,
                 "places": [],
+                "target_population_columns": target_population_columns,
             }
 
         interventions_dict[intervention_key]["places"].append(org_unit_id)

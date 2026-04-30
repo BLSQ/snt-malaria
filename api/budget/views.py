@@ -63,13 +63,21 @@ class BudgetViewSet(viewsets.ModelViewSet):
             start_year,
             end_year,
         )
+
+        interventions = Intervention.objects.filter(intervention_category__account=request.user.iaso_profile.account)
+        intervention_population_metric_codes = interventions.values_list("target_population", flat=True).distinct()
+        intervention_population_metric_codes = list(
+            set([code for code_list in intervention_population_metric_codes for code in code_list if code is not None])
+        )
+
         population_df = build_population_dataframe(
             request.user.iaso_profile.account,
             start_year,
             end_year,
+            intervention_population_metric_codes=intervention_population_metric_codes,
         )
+
         interventions_input = build_interventions_input(scenario)
-        interventions = Intervention.objects.all()
 
         # build a quick lookup map ((code, type) -> id) for fast id retrieval
         interventions_map = {(iv.code, iv.short_name): iv.id for iv in interventions}

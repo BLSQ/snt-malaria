@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { Button, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { CardStyled } from '../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
@@ -37,7 +37,7 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
     const { data: interventionCostUnitTypes = [] } =
         useGetInterventionCostUnitTypes();
 
-    const { data: metricTypes = [] } = useGetMetricTypes();
+    const { data: metricTypes = [] } = useGetMetricTypes(true);
     const { data: budgetSettings } = useGetBudgetSettings();
 
     const {
