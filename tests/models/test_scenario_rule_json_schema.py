@@ -4,11 +4,11 @@ import jsonschema
 
 from jsonschema import ValidationError
 
-from iaso.test import TestCase
 from plugins.snt_malaria.models.scenario import SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
-class ScenarioRuleMatchingCriteriaJsonValidationTests(TestCase):
+class ScenarioRuleMatchingCriteriaJsonValidationTests(SNTMalariaTestCase):
     def _assert_schema_error_contains(self, invalid_data, expected_message):
         """Assert validation fails and expected_message appears in the error or its oneOf sub-errors."""
         with self.assertRaises(ValidationError) as cm:

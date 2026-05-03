@@ -5,43 +5,34 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
 from iaso.models import Account, DataSource, MetricType, MetricValue, OrgUnit, OrgUnitType, SourceVersion
-from iaso.test import TestCase
 from iaso.utils.colors import DEFAULT_COLOR
 from plugins.snt_malaria.models import (
     AccountSettings,
     BudgetAssumptions,
-    Intervention,
-    InterventionCategory,
-    Scenario,
     ScenarioRule,
     ScenarioRuleInterventionProperties,
 )
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
-class ScenarioRuleModelTestCase(TestCase):
+class ScenarioRuleModelTestCase(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="account")
-        self.user = self.create_user_with_profile(username="user", account=self.account)
-        self.intervention_category = InterventionCategory.objects.create(
-            name="Category 1",
-            account=self.account,
-            created_by=self.user,
+        super().setUp()
+        self.account, self.user = self.create_snt_account(name="account")
+        self.intervention_category = self.create_snt_intervention_category(
+            account=self.account, created_by=self.user, name="Category 1"
         )
-        self.intervention = Intervention.objects.create(
-            name="Intervention 1",
-            code="INT1",
-            intervention_category=self.intervention_category,
-            created_by=self.user,
+        self.intervention = self.create_snt_intervention(
+            intervention_category=self.intervention_category, created_by=self.user, name="Intervention 1", code="INT1"
         )
-        self.intervention_2 = Intervention.objects.create(
-            name="Intervention 2",
-            code="INT2",
-            intervention_category=self.intervention_category,
-            created_by=self.user,
+        self.intervention_2 = self.create_snt_intervention(
+            intervention_category=self.intervention_category, created_by=self.user, name="Intervention 2", code="INT2"
         )
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user,
+        self.scenario = self.create_snt_scenario(
+            self.account,
+            self.user,
             name="Scenario 1",
             description="Description of scenario 1",
             start_year=2020,
@@ -674,30 +665,26 @@ class ScenarioRuleModelTestCase(TestCase):
         )
 
 
-class ScenarioRuleMatchAllTestCase(TestCase):
+class ScenarioRuleMatchAllTestCase(SNTMalariaTestCase):
     """Tests for refresh_assignments with matching_criteria={"all": True}."""
 
+    auto_create_account = False
+
     def setUp(self):
+        super().setUp()
         data_source = DataSource.objects.create(name="source")
         source_version = SourceVersion.objects.create(data_source=data_source, number=1)
         self.account = Account.objects.create(name="account", default_version=source_version)
         self.user = self.create_user_with_profile(username="user", account=self.account)
 
-        self.intervention_category = InterventionCategory.objects.create(
-            name="Category 1", account=self.account, created_by=self.user
+        self.intervention_category = self.create_snt_intervention_category(
+            account=self.account, created_by=self.user, name="Category 1"
         )
-        self.intervention = Intervention.objects.create(
-            name="Intervention 1",
-            code="INT1",
-            intervention_category=self.intervention_category,
-            created_by=self.user,
+        self.intervention = self.create_snt_intervention(
+            intervention_category=self.intervention_category, created_by=self.user, name="Intervention 1", code="INT1"
         )
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user,
-            name="Scenario 1",
-            start_year=2020,
-            end_year=2030,
+        self.scenario = self.create_snt_scenario(
+            self.account, self.user, name="Scenario 1", start_year=2020, end_year=2030
         )
 
         self.org_unit_1 = OrgUnit.objects.create(
@@ -798,13 +785,15 @@ class ScenarioRuleMatchAllTestCase(TestCase):
         self.assertEqual(rule.intervention_assignments.count(), 3)
 
 
-class ScenarioRuleInterventionPropertiesModelTestCase(TestCase):
+class ScenarioRuleInterventionPropertiesModelTestCase(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="account")
-        self.user = self.create_user_with_profile(username="user", account=self.account)
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user,
+        super().setUp()
+        self.account, self.user = self.create_snt_account(name="account")
+        self.scenario = self.create_snt_scenario(
+            self.account,
+            self.user,
             name="Scenario 1",
             description="Description of scenario 1",
             start_year=2020,
@@ -822,15 +811,11 @@ class ScenarioRuleInterventionPropertiesModelTestCase(TestCase):
             org_units_included=[],
             org_units_scope=[],
         )
-        self.intervention_category = InterventionCategory.objects.create(
-            name="Category 1",
-            account=self.account,
-            created_by=self.user,
+        self.intervention_category = self.create_snt_intervention_category(
+            account=self.account, created_by=self.user, name="Category 1"
         )
-        self.intervention = Intervention.objects.create(
-            name="Intervention 1",
-            intervention_category=self.intervention_category,
-            created_by=self.user,
+        self.intervention = self.create_snt_intervention(
+            intervention_category=self.intervention_category, created_by=self.user, name="Intervention 1"
         )
         self.intervention_properties = ScenarioRuleInterventionProperties.objects.create(
             scenario_rule=self.scenario_rule,
@@ -867,10 +852,13 @@ class ScenarioRuleInterventionPropertiesModelTestCase(TestCase):
             invalid_properties.full_clean()
 
 
-class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(TestCase):
+class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):
     """Tests that resolve_matched_org_units respects AccountSettings.intervention_org_unit_type."""
 
+    auto_create_account = False
+
     def setUp(self):
+        super().setUp()
         data_source = DataSource.objects.create(name="source")
         source_version = SourceVersion.objects.create(data_source=data_source, number=1)
         self.account = Account.objects.create(name="account", default_version=source_version)

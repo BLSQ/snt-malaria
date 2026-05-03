@@ -1,14 +1,17 @@
 from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 
-from iaso.models import MetricType, MetricValue, OrgUnit, OrgUnitType
-from iaso.test import APITestCase
-from plugins.snt_malaria.models import Intervention, InterventionCategory, Scenario, ScenarioRule
+from iaso.models import MetricType, MetricValue, OrgUnit
+from plugins.snt_malaria.models import Scenario, ScenarioRule
 from plugins.snt_malaria.models.scenario import ScenarioRuleInterventionProperties
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
+from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
-class ScenarioRulesTestBase(APITestCase):
+class ScenarioRulesTestBase(SNTMalariaAPITestCase):
+    auto_create_account = False
+
     def setUp(self):
+        super().setUp()
         self.account, self.source, self.version, self.project = self.create_account_datasource_version_project(
             "source", "Test Account", "project"
         )
@@ -18,49 +21,48 @@ class ScenarioRulesTestBase(APITestCase):
         self.user_with_basic_perm = self.create_user_with_profile(
             username="user_basic", account=self.account, permissions=[SNT_SCENARIO_BASIC_WRITE_PERMISSION]
         )
-        self.scenario = Scenario.objects.create(
+        self.scenario = self.create_snt_scenario(
             account=self.account,
             created_by=self.user_with_full_perm,
             name="Test Scenario",
-            description="A scenario for testing",
             start_year=2020,
             end_year=2030,
         )
 
-        self.int_category_vaccination = InterventionCategory.objects.create(
+        self.int_category_vaccination = self.create_snt_intervention_category(
             name="Vaccination",
             account=self.account,
             created_by=self.user_with_full_perm,
         )
-        self.int_category_chemoprevention = InterventionCategory.objects.create(
+        self.int_category_chemoprevention = self.create_snt_intervention_category(
             name="Preventive Chemotherapy",
             account=self.account,
             created_by=self.user_with_full_perm,
         )
-        self.intervention_vaccination_rts = Intervention.objects.create(
+        self.intervention_vaccination_rts = self.create_snt_intervention(
             name="RTS,S",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_vaccination,
             code="rts_s",
+            intervention_category=self.int_category_vaccination,
+            created_by=self.user_with_full_perm,
         )
-        self.intervention_chemo_smc = Intervention.objects.create(
+        self.intervention_chemo_smc = self.create_snt_intervention(
             name="SMC",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_chemoprevention,
             code="smc",
-        )
-        self.intervention_chemo_iptp = Intervention.objects.create(
-            name="IPTp",
-            created_by=self.user_with_full_perm,
             intervention_category=self.int_category_chemoprevention,
+            created_by=self.user_with_full_perm,
+        )
+        self.intervention_chemo_iptp = self.create_snt_intervention(
+            name="IPTp",
             code="iptp",
+            intervention_category=self.int_category_chemoprevention,
+            created_by=self.user_with_full_perm,
         )
 
         # Create Org Units
         self.point = Point(x=4, y=50, z=100)
         self.mock_multipolygon = MultiPolygon(Polygon([[-1.3, 2.5], [-1.7, 2.8], [-1.1, 4.1], [-1.3, 2.5]]))
-        self.out_district = OrgUnitType.objects.create(name="DISTRICT")
-        self.district_1 = OrgUnit.objects.create(
+        self.out_district = self.create_snt_org_unit_type(name="DISTRICT")
+        self.district_1 = self.create_snt_org_unit(
             org_unit_type=self.out_district,
             name="District 1",
             version=self.version,
@@ -68,7 +70,7 @@ class ScenarioRulesTestBase(APITestCase):
             location=self.point,
             geom=self.mock_multipolygon,
         )
-        self.district_2 = OrgUnit.objects.create(
+        self.district_2 = self.create_snt_org_unit(
             org_unit_type=self.out_district,
             name="District 2",
             version=self.version,
@@ -76,7 +78,7 @@ class ScenarioRulesTestBase(APITestCase):
             location=self.point,
             geom=self.mock_multipolygon,
         )
-        self.district_3 = OrgUnit.objects.create(
+        self.district_3 = self.create_snt_org_unit(
             org_unit_type=self.out_district,
             name="District 3",
             version=self.version,
@@ -168,27 +170,26 @@ class ScenarioRulesTestBase(APITestCase):
         self.other_user = self.create_user_with_profile(
             username="other_user", account=self.other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
         )
-        self.other_scenario = Scenario.objects.create(
+        self.other_scenario = self.create_snt_scenario(
             account=self.other_account,
             created_by=self.other_user,
             name="Other Scenario",
-            description="A scenario for testing tenancy",
             start_year=2020,
             end_year=2030,
         )
-        self.other_int_category = InterventionCategory.objects.create(
+        self.other_int_category = self.create_snt_intervention_category(
             name="Other Category",
             account=self.other_account,
             created_by=self.other_user,
         )
-        self.other_intervention = Intervention.objects.create(
+        self.other_intervention = self.create_snt_intervention(
             name="Other Intervention",
-            created_by=self.other_user,
-            intervention_category=self.other_int_category,
             code="other_intervention",
+            intervention_category=self.other_int_category,
+            created_by=self.other_user,
         )
-        self.other_out_district = OrgUnitType.objects.create(name="DISTRICT")
-        self.other_district_1 = OrgUnit.objects.create(
+        self.other_out_district = self.create_snt_org_unit_type(name="DISTRICT")
+        self.other_district_1 = self.create_snt_org_unit(
             org_unit_type=self.other_out_district,
             name="District 1",
             version=self.other_version,
@@ -196,7 +197,7 @@ class ScenarioRulesTestBase(APITestCase):
             location=self.point,
             geom=self.mock_multipolygon,
         )
-        self.other_district_2 = OrgUnit.objects.create(
+        self.other_district_2 = self.create_snt_org_unit(
             org_unit_type=self.other_out_district,
             name="District 2",
             version=self.other_version,
@@ -204,7 +205,7 @@ class ScenarioRulesTestBase(APITestCase):
             location=self.point,
             geom=self.mock_multipolygon,
         )
-        self.other_district_3 = OrgUnit.objects.create(
+        self.other_district_3 = self.create_snt_org_unit(
             org_unit_type=self.other_out_district,
             name="District 3",
             version=self.other_version,

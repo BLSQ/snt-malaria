@@ -2,10 +2,8 @@ from unittest.mock import MagicMock, patch
 
 from rest_framework import status
 
-from iaso.models.base import Account
-from iaso.test import APITestCase
-from plugins.snt_malaria.models import Scenario
 from plugins.snt_malaria.models.impact_provider_config import ImpactProviderConfig
+from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
 YEAR_RANGE_URL = "/api/snt_malaria/impact_year_range/"
@@ -13,19 +11,19 @@ AGE_GROUPS_URL = "/api/snt_malaria/impact_age_groups/"
 IMPACT_URL = "/api/snt_malaria/impact/"
 
 
-class ImpactViewsBaseTestCase(APITestCase):
+class ImpactViewsBaseTestCase(SNTMalariaAPITestCase):
     """Shared setup for all impact viewset tests."""
 
-    def setUp(self):
-        self.account = Account.objects.create(name="Impact Test Account")
-        self.user = self.create_user_with_profile(username="impact_user", account=self.account)
+    auto_create_account = False
 
-        self.other_account = Account.objects.create(name="Other Account")
-        self.other_user = self.create_user_with_profile(username="other_user", account=self.other_account)
+    def setUp(self):
+        super().setUp()
+        self.account, self.user = self.create_snt_account(name="Impact Test Account")
+        self.other_account, self.other_user = self.create_snt_account(name="Other Account")
 
         ImpactProviderConfig.objects.create(account=self.account, provider_key="swisstph")
 
-        self.scenario = Scenario.objects.create(
+        self.scenario = self.create_snt_scenario(
             account=self.account,
             created_by=self.user,
             name="Test Scenario",
@@ -106,7 +104,7 @@ class ImpactViewTests(ImpactViewsBaseTestCase):
     def test_scenario_from_other_account_rejected(self, mock_get_provider):
         mock_get_provider.return_value = MagicMock()
 
-        other_scenario = Scenario.objects.create(
+        other_scenario = self.create_snt_scenario(
             account=self.other_account,
             created_by=self.other_user,
             name="Other Scenario",

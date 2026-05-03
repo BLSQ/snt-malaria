@@ -2,25 +2,24 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 
-from iaso.models import Account, OrgUnit
-from iaso.test import TestCase
+from iaso.models import OrgUnit
 from plugins.snt_malaria.models import (
-    Intervention,
     InterventionAssignment,
-    InterventionCategory,
-    Scenario,
     ScenarioRule,
 )
 from plugins.snt_malaria.models.scenario import ScenarioRuleInterventionProperties
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
-class InterventionAssignmentModelTestCase(TestCase):
+class InterventionAssignmentModelTestCase(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="account")
-        self.user = self.create_user_with_profile(username="user", account=self.account)
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user,
+        super().setUp()
+        self.account, self.user = self.create_snt_account(name="account")
+        self.scenario = self.create_snt_scenario(
+            self.account,
+            self.user,
             name="Scenario 1",
             description="Description of scenario 1",
             start_year=2020,
@@ -38,15 +37,11 @@ class InterventionAssignmentModelTestCase(TestCase):
             org_units_included=[],
             org_units_scope=[],
         )
-        self.intervention_category = InterventionCategory.objects.create(
-            name="Category 1",
-            account=self.account,
-            created_by=self.user,
+        self.intervention_category = self.create_snt_intervention_category(
+            account=self.account, created_by=self.user, name="Category 1"
         )
-        self.intervention = Intervention.objects.create(
-            name="Intervention 1",
-            intervention_category=self.intervention_category,
-            created_by=self.user,
+        self.intervention = self.create_snt_intervention(
+            intervention_category=self.intervention_category, created_by=self.user, name="Intervention 1"
         )
         self.intervention_properties = ScenarioRuleInterventionProperties.objects.create(
             scenario_rule=self.scenario_rule,

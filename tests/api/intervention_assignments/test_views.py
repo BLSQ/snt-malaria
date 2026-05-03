@@ -1,18 +1,20 @@
 from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 from rest_framework import status
 
-from iaso.models.org_unit import OrgUnit, OrgUnitType
-from iaso.test import APITestCase
+from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.models import BudgetAssumptions
 from plugins.snt_malaria.models.intervention import Intervention, InterventionAssignment, InterventionCategory
 from plugins.snt_malaria.models.scenario import Scenario
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
+from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
-class InterventionAssignmentsAPITests(APITestCase):
+class InterventionAssignmentsAPITests(SNTMalariaAPITestCase):
     BASE_URL = "/api/snt_malaria/intervention_assignments/"
+    auto_create_account = False
 
     def setUp(self):
+        super().setUp()
         self.account, self.source, self.version, self.project = self.create_account_datasource_version_project(
             "source", "Test Account", "project"
         )
@@ -23,54 +25,51 @@ class InterventionAssignmentsAPITests(APITestCase):
             username="testuserbasic", account=self.account, permissions=[SNT_SCENARIO_BASIC_WRITE_PERMISSION]
         )
         # Create a scenario
-        self.scenario = Scenario.objects.create(
+        self.scenario = self.create_snt_scenario(
             account=self.account,
             created_by=self.user_with_full_perm,
             name="Test Scenario",
-            description="A test scenario description.",
-            start_year=2025,
-            end_year=2028,
         )
-        self.int_category_vaccination = InterventionCategory.objects.create(
+        self.int_category_vaccination = self.create_snt_intervention_category(
             name="Vaccination",
             account=self.account,
             created_by=self.user_with_full_perm,
         )
-        self.int_category_chemoprevention = InterventionCategory.objects.create(
+        self.int_category_chemoprevention = self.create_snt_intervention_category(
             name="Preventive Chemotherapy",
             account=self.account,
             created_by=self.user_with_full_perm,
         )
-        self.intervention_vaccination_rts = Intervention.objects.create(
+        self.intervention_vaccination_rts = self.create_snt_intervention(
             name="RTS,S",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_vaccination,
             code="rts_s",
+            intervention_category=self.int_category_vaccination,
+            created_by=self.user_with_full_perm,
         )
-        self.intervention_chemo_smc = Intervention.objects.create(
+        self.intervention_chemo_smc = self.create_snt_intervention(
             name="SMC",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_chemoprevention,
             code="smc",
+            intervention_category=self.int_category_chemoprevention,
+            created_by=self.user_with_full_perm,
         )
-        self.intervention_chemo_iptp = Intervention.objects.create(
+        self.intervention_chemo_iptp = self.create_snt_intervention(
             name="IPTp",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_chemoprevention,
             code="iptp",
-        )
-        self.intervention_chemo_iptp2 = Intervention.objects.create(
-            name="IPTp Variant",
-            created_by=self.user_with_full_perm,
             intervention_category=self.int_category_chemoprevention,
+            created_by=self.user_with_full_perm,
+        )
+        self.intervention_chemo_iptp2 = self.create_snt_intervention(
+            name="IPTp Variant",
             code="iptp2",
+            intervention_category=self.int_category_chemoprevention,
+            created_by=self.user_with_full_perm,
         )
 
         # Create Org Units
         self.mock_multipolygon = MultiPolygon(Polygon([[-1.3, 2.5], [-1.7, 2.8], [-1.1, 4.1], [-1.3, 2.5]]))
-        self.out_district = OrgUnitType.objects.create(name="DISTRICT")
+        self.out_district = self.create_snt_org_unit_type(name="DISTRICT")
         self.out_district.projects.set([self.project])
-        self.district1 = OrgUnit.objects.create(
+        self.district1 = self.create_snt_org_unit(
             org_unit_type=self.out_district,
             name="District 1",
             version=self.version,
@@ -78,7 +77,7 @@ class InterventionAssignmentsAPITests(APITestCase):
             location=Point(x=4, y=50, z=100),
             geom=self.mock_multipolygon,
         )
-        self.district2 = OrgUnit.objects.create(
+        self.district2 = self.create_snt_org_unit(
             org_unit_type=self.out_district,
             name="District 2",
             version=self.version,
@@ -86,17 +85,11 @@ class InterventionAssignmentsAPITests(APITestCase):
             location=Point(x=4, y=50, z=100),
             geom=self.mock_multipolygon,
         )
-        self.assignment_rts_district_1 = InterventionAssignment.objects.create(
-            scenario=self.scenario,
-            org_unit=self.district1,
-            intervention=self.intervention_vaccination_rts,
-            created_by=self.user_with_full_perm,
+        self.assignment_rts_district_1 = self.create_snt_assignment(
+            self.scenario, self.district1, self.intervention_vaccination_rts, created_by=self.user_with_full_perm
         )
-        self.assignment_smc_district_1 = InterventionAssignment.objects.create(
-            scenario=self.scenario,
-            org_unit=self.district1,
-            intervention=self.intervention_chemo_smc,
-            created_by=self.user_with_full_perm,
+        self.assignment_smc_district_1 = self.create_snt_assignment(
+            self.scenario, self.district1, self.intervention_chemo_smc, created_by=self.user_with_full_perm
         )
 
         # Preparing other account, interventions & scenarios to test tenancy
@@ -106,29 +99,26 @@ class InterventionAssignmentsAPITests(APITestCase):
         self.other_admin = self.create_user_with_profile(
             username="otheradmin", account=self.other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
         )
-        self.other_scenario = Scenario.objects.create(
+        self.other_scenario = self.create_snt_scenario(
             account=self.other_account,
             created_by=self.other_admin,
             name="Other Scenario",
-            description="Another test scenario description.",
-            start_year=2025,
-            end_year=2028,
         )
-        self.other_int_category = InterventionCategory.objects.create(
+        self.other_int_category = self.create_snt_intervention_category(
             name="Other Category",
             account=self.other_account,
             created_by=self.other_admin,
         )
-        self.other_intervention = Intervention.objects.create(
+        self.other_intervention = self.create_snt_intervention(
             name="Other Intervention",
-            created_by=self.other_admin,
-            intervention_category=self.other_int_category,
             code="other_int",
+            intervention_category=self.other_int_category,
+            created_by=self.other_admin,
         )
 
-        self.other_district_type = OrgUnitType.objects.create(name="OTHER_DISTRICT")
+        self.other_district_type = self.create_snt_org_unit_type(name="OTHER_DISTRICT")
         self.other_district_type.projects.set([self.other_project])
-        self.other_district_1 = OrgUnit.objects.create(
+        self.other_district_1 = self.create_snt_org_unit(
             org_unit_type=self.other_district_type,
             name="Other District 1",
             version=self.other_version,
@@ -136,7 +126,7 @@ class InterventionAssignmentsAPITests(APITestCase):
             location=Point(x=4, y=50, z=100),
             geom=self.mock_multipolygon,
         )
-        self.other_district_2 = OrgUnit.objects.create(
+        self.other_district_2 = self.create_snt_org_unit(
             org_unit_type=self.other_district_type,
             name="Other District 2",
             version=self.other_version,
@@ -144,11 +134,8 @@ class InterventionAssignmentsAPITests(APITestCase):
             location=Point(x=4, y=50, z=100),
             geom=self.mock_multipolygon,
         )
-        self.other_assignment = InterventionAssignment.objects.create(
-            scenario=self.other_scenario,
-            org_unit=self.other_district_1,
-            intervention=self.other_intervention,
-            created_by=self.other_admin,
+        self.other_assignment = self.create_snt_assignment(
+            self.other_scenario, self.other_district_1, self.other_intervention, created_by=self.other_admin
         )
 
     def test_intervention_assignments_list_for_scenario(self):

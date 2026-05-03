@@ -1,29 +1,25 @@
 from unittest.mock import Mock
 
 from rest_framework.exceptions import PermissionDenied
+from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS
 
-from iaso.models import Account, OrgUnit, OrgUnitType
-from iaso.test import TestCase
 from plugins.snt_malaria.api.budget_assumptions.serializers import (
     BudgetAssumptionsQuerySerializer,
     BudgetAssumptionsReadSerializer,
     BudgetAssumptionsUpdateSerializer,
     BudgetAssumptionsUpsertManySerializer,
+    DefaultCostAssumptionsSerializer,
 )
 from plugins.snt_malaria.models import (
     BudgetAssumptions,
-    Intervention,
-    InterventionAssignment,
-    InterventionCategory,
-    Scenario,
 )
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
-class BudgetAssumptionsSerializerBaseTestCase(TestCase):
+class BudgetAssumptionsSerializerBaseTestCase(SNTMalariaTestCase):
     def setUp(self):
-        self.account = Account.objects.create(name="Test Account")
-        self.user = self.create_user_with_profile(username="testuser", account=self.account)
+        super().setUp()
 
         self.full_perm_user = self.create_user_with_profile(
             username="fullperm", account=self.account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
@@ -31,86 +27,66 @@ class BudgetAssumptionsSerializerBaseTestCase(TestCase):
 
         self.other_user = self.create_user_with_profile(username="otheruser", account=self.account)
 
-        self.scenario = self._create_scenario(account=self.account, created_by=self.user, name="Scenario A")
-        self.other_user_scenario = self._create_scenario(
+        self.scenario = self.create_snt_scenario(account=self.account, created_by=self.user, name="Scenario A")
+        self.other_user_scenario = self.create_snt_scenario(
             account=self.account,
             created_by=self.other_user,
             name="Scenario B",
         )
 
-        self.other_account = Account.objects.create(name="Other Account")
-        self.other_account_user = self.create_user_with_profile(username="external", account=self.other_account)
-        self.other_account_scenario = self._create_scenario(
+        self.other_account, self.other_account_user = self.create_snt_account(
+            name="Other Account",
+            username="external",
+        )
+        self.other_account_scenario = self.create_snt_scenario(
             account=self.other_account,
             created_by=self.other_account_user,
             name="Other Account Scenario",
         )
 
-        self.intervention_category = InterventionCategory.objects.create(
+        self.intervention_category = self.create_snt_intervention_category(
             name="Vaccination",
-            account=self.account,
-            created_by=self.user,
         )
-        self.intervention_a = Intervention.objects.create(
+        self.intervention_a = self.create_snt_intervention(
             name="RTS,S",
-            created_by=self.user,
             intervention_category=self.intervention_category,
             code="rts_s",
         )
-        self.intervention_b = Intervention.objects.create(
+        self.intervention_b = self.create_snt_intervention(
             name="SMC",
-            created_by=self.user,
             intervention_category=self.intervention_category,
             code="smc",
         )
 
-        self.org_unit_type = OrgUnitType.objects.create(name="DISTRICT")
-        self.org_1 = OrgUnit.objects.create(org_unit_type=self.org_unit_type, name="District 1")
-        self.org_2 = OrgUnit.objects.create(org_unit_type=self.org_unit_type, name="District 2")
+        self.org_unit_type = self.create_snt_org_unit_type(name="DISTRICT")
+        self.org_1 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="District 1")
+        self.org_2 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="District 2")
 
-        self.assignment_a = self._create_assignment(self.scenario, self.org_1, self.intervention_a, self.user)
-        self.assignment_b = self._create_assignment(self.scenario, self.org_2, self.intervention_b, self.user)
-        self.assignment_other_scenario = self._create_assignment(
+        self.assignment_a = self.create_snt_assignment(self.scenario, self.org_1, self.intervention_a, self.user)
+        self.assignment_b = self.create_snt_assignment(self.scenario, self.org_2, self.intervention_b, self.user)
+        self.assignment_other_scenario = self.create_snt_assignment(
             self.other_user_scenario,
             self.org_1,
             self.intervention_a,
             self.other_user,
         )
 
-        self.other_account_category = InterventionCategory.objects.create(
+        self.other_account_category = self.create_snt_intervention_category(
             name="Other Category",
             account=self.other_account,
             created_by=self.other_account_user,
         )
-        self.other_account_intervention = Intervention.objects.create(
+        self.other_account_intervention = self.create_snt_intervention(
             name="Other Intervention",
             created_by=self.other_account_user,
             intervention_category=self.other_account_category,
             code="other_int",
         )
-        self.other_account_assignment = self._create_assignment(
+        self.other_account_assignment = self.create_snt_assignment(
             self.other_account_scenario,
             self.org_1,
             self.other_account_intervention,
             self.other_account_user,
-        )
-
-    def _create_scenario(self, account, created_by, name):
-        return Scenario.objects.create(
-            account=account,
-            created_by=created_by,
-            name=name,
-            description=f"{name} description",
-            start_year=2025,
-            end_year=2028,
-        )
-
-    def _create_assignment(self, scenario, org_unit, intervention, created_by):
-        return InterventionAssignment.objects.create(
-            scenario=scenario,
-            org_unit=org_unit,
-            intervention=intervention,
-            created_by=created_by,
         )
 
     def _context_for(self, user):
@@ -172,6 +148,16 @@ class BudgetAssumptionsUpdateSerializerTests(BudgetAssumptionsSerializerBaseTest
     def test_year_can_be_null(self):
         serializer = BudgetAssumptionsUpdateSerializer(data={"coverage": 0.60, "year": None})
         self.assertTrue(serializer.is_valid(), serializer.errors)
+
+
+class DefaultCostAssumptionsSerializerTests(BudgetAssumptionsSerializerBaseTestCase):
+    def test_uses_default_coverage_for_given_intervention_code(self):
+        serializer = DefaultCostAssumptionsSerializer()
+        expected_defaults = DEFAULT_COST_ASSUMPTIONS
+        for key, value in serializer.data:
+            coverage_key = f"{key}_coverage"
+            self.assertIn(coverage_key, expected_defaults)
+            self.assertEqual(value["coverage"], expected_defaults[coverage_key])
 
 
 class BudgetAssumptionsUpsertManySerializerTests(BudgetAssumptionsSerializerBaseTestCase):

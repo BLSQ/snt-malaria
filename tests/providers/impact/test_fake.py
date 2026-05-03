@@ -1,9 +1,8 @@
 from datetime import date
 
 from django.contrib.auth.models import User
-from django.test import TestCase
 
-from iaso.models import Account, MetricType, MetricValue, OrgUnit, OrgUnitType
+from iaso.models import MetricType, MetricValue, OrgUnit, OrgUnitType
 from iaso.models.data_source import DataSource, SourceVersion
 from iaso.models.project import Project
 from plugins.snt_malaria.models import ImpactProviderConfig, Intervention, InterventionCategory
@@ -24,6 +23,7 @@ from plugins.snt_malaria.providers.impact.fake import (
     YEAR_SPAN,
     FakeImpactProvider,
 )
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
 _CURRENT_YEAR = date.today().year
@@ -61,9 +61,12 @@ def _make_provider(account):
     )
 
 
-class FakeProviderConfigTests(TestCase):
+class FakeProviderConfigTests(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="Fake Provider Account")
+        super().setUp()
+        self.account, _ = self.create_snt_account(name="Fake Provider Account")
 
     def test_missing_population_metric_code_raises(self):
         config = ImpactProviderConfig.objects.create(account=self.account, provider_key="fake", config={}, secret="")
@@ -95,9 +98,12 @@ class FakeProviderConfigTests(TestCase):
         self.assertEqual(provider.get_meta(), ImpactProviderMeta(provider_key="fake"))
 
 
-class FakeProviderYearRangeAndAgeGroupsTests(TestCase):
+class FakeProviderYearRangeAndAgeGroupsTests(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="Year Range Account")
+        super().setUp()
+        self.account, _ = self.create_snt_account(name="Year Range Account")
         self.provider = _make_provider(self.account)
 
     def test_year_range_covers_year_span_plus_one_years_around_today(self):
@@ -111,9 +117,12 @@ class FakeProviderYearRangeAndAgeGroupsTests(TestCase):
         self.assertEqual(AGE_GROUPS, [AGE_GROUP_UNDER5, AGE_GROUP_ALL])
 
 
-class FakeProviderInterventionMappingTests(TestCase):
+class FakeProviderInterventionMappingTests(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="Intervention Mapping Account")
+        super().setUp()
+        self.account, _ = self.create_snt_account(name="Intervention Mapping Account")
         self.provider = _make_provider(self.account)
 
     def test_known_refs_pass_through(self):
@@ -137,11 +146,13 @@ class FakeProviderInterventionMappingTests(TestCase):
         )
 
 
-class FakeProviderMatchImpactTests(TestCase):
+class FakeProviderMatchImpactTests(SNTMalariaTestCase):
     """Integration tests for match_impact_bulk using real ORM rows."""
 
     @classmethod
     def setUpTestData(cls):
+        from iaso.models.base import Account
+
         cls.account = Account.objects.create(name="Match Impact Account")
         cls.user = User.objects.create(username="fake-test-user")
 

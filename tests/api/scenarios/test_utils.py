@@ -2,10 +2,9 @@ import pandas as pd
 
 from django.contrib.gis.geos import Point
 
-from iaso.models import Account, MetricType, MetricValue, OrgUnit, OrgUnitType
+from iaso.models import MetricType, MetricValue, OrgUnit, OrgUnitType
 from iaso.models.data_source import DataSource, SourceVersion
 from iaso.models.project import Project
-from iaso.test import TestCase
 from plugins.snt_malaria.api.scenarios.utils import (
     DEFAULT_IMPORT_COVERAGE,
     _build_intervention_groups,
@@ -17,58 +16,30 @@ from plugins.snt_malaria.api.scenarios.utils import (
 from plugins.snt_malaria.models import (
     Intervention,
     InterventionAssignment,
-    InterventionCategory,
     Scenario,
     ScenarioRule,
     ScenarioRuleInterventionProperties,
 )
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
-class ScenarioAPIUtilsTestCase(TestCase):
+class ScenarioAPIUtilsTestCase(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="account")
-        self.user_1 = self.create_user_with_profile(username="user_1", account=self.account)
+        super().setUp()
+        self.account, self.user_1 = self.create_snt_account(name="account")
         self.user_2 = self.create_user_with_profile(username="user_2", account=self.account)
 
-        # Create intervention categories
-        self.int_category_vaccination = InterventionCategory.objects.create(
-            name="Vaccination",
-            account=self.account,
-            created_by=self.user_1,
-        )
+        defaults = self.create_snt_default_interventions(account=self.account, created_by=self.user_1)
+        self.int_category_vaccination = defaults["category_vaccination"]
+        self.int_category_chemoprevention = defaults["category_chemoprevention"]
+        self.intervention_vaccination_rts = defaults["intervention_rts"]
+        self.intervention_chemo_smc = defaults["intervention_smc"]
+        self.intervention_chemo_iptp = defaults["intervention_iptp"]
 
-        self.int_category_chemoprevention = InterventionCategory.objects.create(
-            name="Preventive Chemotherapy",
-            account=self.account,
-            created_by=self.user_1,
-        )
-
-        # Create interventions
-        self.intervention_vaccination_rts = Intervention.objects.create(
-            name="RTS,S",
-            created_by=self.user_1,
-            intervention_category=self.int_category_vaccination,
-            code="rts_s",
-        )
-        self.intervention_chemo_smc = Intervention.objects.create(
-            name="SMC",
-            created_by=self.user_1,
-            intervention_category=self.int_category_chemoprevention,
-            code="smc",
-        )
-        self.intervention_chemo_iptp = Intervention.objects.create(
-            name="IPTp",
-            created_by=self.user_1,
-            intervention_category=self.int_category_chemoprevention,
-            code="iptp",
-        )
-
-        self.scenario_1 = Scenario.objects.create(
-            name="Scenario 1",
-            created_by=self.user_1,
-            account=self.account,
-            start_year=2024,
-            end_year=2026,
+        self.scenario_1 = self.create_snt_scenario(
+            self.account, self.user_1, name="Scenario 1", start_year=2024, end_year=2026
         )
         self.rule_1 = ScenarioRule.objects.create(
             name="Rule 1",
@@ -192,22 +163,18 @@ class ScenarioAPIUtilsTestCase(TestCase):
         self.assertEqual(duplicated_rules.count(), 0)
 
 
-class BuildInterventionGroupsTestCase(TestCase):
+class BuildInterventionGroupsTestCase(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="account")
-        self.user = self.create_user_with_profile(username="user", account=self.account)
-        self.category = InterventionCategory.objects.create(name="Cat", account=self.account, created_by=self.user)
-        self.iv_a = Intervention.objects.create(
-            name="A",
-            code="a",
-            created_by=self.user,
-            intervention_category=self.category,
+        super().setUp()
+        self.account, self.user = self.create_snt_account(name="account")
+        self.category = self.create_snt_intervention_category(account=self.account, created_by=self.user, name="Cat")
+        self.iv_a = self.create_snt_intervention(
+            intervention_category=self.category, created_by=self.user, name="A", code="a"
         )
-        self.iv_b = Intervention.objects.create(
-            name="B",
-            code="b",
-            created_by=self.user,
-            intervention_category=self.category,
+        self.iv_b = self.create_snt_intervention(
+            intervention_category=self.category, created_by=self.user, name="B", code="b"
         )
 
     def _make_df(self, rows):
@@ -259,10 +226,12 @@ class BuildInterventionGroupsTestCase(TestCase):
         self.assertEqual(len(groups), 0)
 
 
-class CreateRulesFromImportTestCase(TestCase):
+class CreateRulesFromImportTestCase(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="account")
-        self.user = self.create_user_with_profile(username="user", account=self.account)
+        super().setUp()
+        self.account, self.user = self.create_snt_account(name="account")
         project = Project.objects.create(name="Project", app_id="APP", account=self.account)
         sw_source = DataSource.objects.create(name="ds")
         sw_source.projects.add(project)
@@ -270,20 +239,12 @@ class CreateRulesFromImportTestCase(TestCase):
         self.account.default_version = self.version
         self.account.save()
 
-        self.category = InterventionCategory.objects.create(name="Cat", account=self.account, created_by=self.user)
-        self.iv_a = Intervention.objects.create(
-            name="Alpha",
-            short_name="A",
-            code="a",
-            created_by=self.user,
-            intervention_category=self.category,
+        self.category = self.create_snt_intervention_category(account=self.account, created_by=self.user, name="Cat")
+        self.iv_a = self.create_snt_intervention(
+            intervention_category=self.category, created_by=self.user, name="Alpha", code="a", short_name="A"
         )
-        self.iv_b = Intervention.objects.create(
-            name="Beta",
-            short_name="B",
-            code="b",
-            created_by=self.user,
-            intervention_category=self.category,
+        self.iv_b = self.create_snt_intervention(
+            intervention_category=self.category, created_by=self.user, name="Beta", code="b", short_name="B"
         )
 
         out = OrgUnitType.objects.create(name="DISTRICT")
@@ -313,12 +274,8 @@ class CreateRulesFromImportTestCase(TestCase):
         for org_unit in [self.ou1, self.ou2, self.ou3]:
             MetricValue.objects.create(metric_type=metric_type, org_unit=org_unit, value=1000, year=2025)
 
-        self.scenario = Scenario.objects.create(
-            name="Import Scenario",
-            created_by=self.user,
-            account=self.account,
-            start_year=2024,
-            end_year=2026,
+        self.scenario = self.create_snt_scenario(
+            self.account, self.user, name="Import Scenario", start_year=2024, end_year=2026
         )
         self.all_ou_ids = {self.ou1.id, self.ou2.id, self.ou3.id}
         self.col_a = get_intervention_column("Alpha", "a")
@@ -469,7 +426,7 @@ class CreateRulesFromImportTestCase(TestCase):
         self.assertEqual(a3.intervention, self.iv_b)
 
 
-class GetDispersedColorTestCase(TestCase):
+class GetDispersedColorTestCase(SNTMalariaTestCase):
     def test_returns_valid_hex(self):
         for i in range(10):
             color = _get_dispersed_color(i)

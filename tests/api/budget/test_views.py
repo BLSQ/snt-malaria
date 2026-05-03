@@ -1,25 +1,27 @@
 from rest_framework import status
 
-from iaso.models import MetricType, MetricValue, OrgUnit, OrgUnitType
-from iaso.test import APITestCase
+from iaso.models import MetricType, MetricValue
 from plugins.snt_malaria.models import (
     Budget,
-    Intervention,
     InterventionAssignment,
-    InterventionCategory,
     Scenario,
 )
 from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 from plugins.snt_malaria.models.budget_settings import BudgetSettings
 from plugins.snt_malaria.models.cost_breakdown import InterventionCostBreakdownLine
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
+from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
 BASE_URL = "/api/snt_malaria/budgets/"
 
 
-class ScenarioAPITestCase(APITestCase):
+class ScenarioAPITestCase(SNTMalariaAPITestCase):
+    auto_create_account = False
+
     def setUp(self):
+        super().setUp()
+
         # Create a user and account for testing
         self.account, self.source, self.version, self.project = self.create_account_datasource_version_project(
             "source", "Test Account", "project"
@@ -41,59 +43,24 @@ class ScenarioAPITestCase(APITestCase):
             end_year=2028,
         )
 
-        # Create intervention categories
-        self.int_category_vaccination = InterventionCategory.objects.create(
-            name="Vaccination",
-            account=self.account,
-            created_by=self.user_with_full_perm,
-        )
-        self.int_category_chemoprevention = InterventionCategory.objects.create(
-            name="Preventive Chemotherapy",
+        defaults = self.create_snt_default_interventions_setup(
+            scenario=self.scenario,
             account=self.account,
             created_by=self.user_with_full_perm,
         )
 
-        # Create interventions
-        self.intervention_vaccination_rts = Intervention.objects.create(
-            name="RTS,S",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_vaccination,
-            code="rts_s",
-            short_name="RTS,S",
-        )
-        self.intervention_chemo_smc = Intervention.objects.create(
-            name="SMC",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_chemoprevention,
-            code="smc",
-            short_name="SMC",
-        )
-        self.intervention_chemo_iptp = Intervention.objects.create(
-            name="IPTp",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_chemoprevention,
-            code="iptp",
-            short_name="IPTp",
-        )
+        self.int_category_vaccination = defaults["category_vaccination"]
+        self.int_category_chemoprevention = defaults["category_chemoprevention"]
+        self.intervention_vaccination_rts = defaults["intervention_rts"]
+        self.intervention_chemo_smc = defaults["intervention_smc"]
+        self.intervention_chemo_iptp = defaults["intervention_iptp"]
+        self.out_district = defaults["org_unit_type"]
+        self.district1 = defaults["district_1"]
+        self.district2 = defaults["district_2"]
+        self.assignment_iptp = defaults["assignment_iptp"]
+        self.assignment_smc = defaults["assignment_b"]
 
-        # Create Org Units
-        self.out_district = OrgUnitType.objects.create(name="DISTRICT")
-        self.district1 = OrgUnit.objects.create(org_unit_type=self.out_district, name="District 1")
-        self.district2 = OrgUnit.objects.create(org_unit_type=self.out_district, name="District 2")
-
-        # Create assignments related to the scenario
-        self.assignment_iptp = InterventionAssignment.objects.create(
-            scenario=self.scenario,
-            org_unit=self.district1,
-            intervention=self.intervention_chemo_iptp,
-            created_by=self.user_with_full_perm,
-        )
-        self.assignment_smc = InterventionAssignment.objects.create(
-            scenario=self.scenario,
-            org_unit=self.district2,
-            intervention=self.intervention_chemo_smc,
-            created_by=self.user_with_full_perm,
-        )
+        # Keep explicit placement expected by budget tests (RTS,S on district2).
         self.assignment_rts = InterventionAssignment.objects.create(
             scenario=self.scenario,
             org_unit=self.district2,
@@ -381,19 +348,8 @@ class ScenarioAPITestCase(APITestCase):
 
         BudgetAssumptions.objects.create(
             scenario=self.scenario,
-            intervention_code="smc",
+            intervention_assignment=self.assignment_smc,
             coverage=0.8,
-            divisor=0,
-            bale_size=0,
-            buffer_mult=1.1,
-            doses_per_pw=0,
-            age_string="",
-            pop_prop_3_11=0.18,
-            pop_prop_12_59=0.77,
-            monthly_rounds=4,
-            touchpoints=0,
-            tablet_factor=0.0,
-            doses_per_child=0,
         )
 
         self.client.force_authenticate(user=self.user_with_full_perm)
@@ -417,11 +373,11 @@ class ScenarioAPITestCase(APITestCase):
         )
 
         self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
-        self.assertAlmostEqual(smc_intervention["total_cost"], 495000.0 * 0.8)
-        self.assertAlmostEqual(smc_intervention["total_pop"], 237500.0 * 0.8)
+        self.assertAlmostEqual(smc_intervention["total_cost"], 495000.0)
+        self.assertAlmostEqual(smc_intervention["total_pop"], 237500.0)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
         self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
-        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["cost"], 495000.0 * 0.8)
+        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["cost"], 495000.0)
         # Find Org unit cost
         smc_org_unit_costs = None
         for org_unit_costs in budget_2025["org_units_costs"]:
@@ -430,11 +386,11 @@ class ScenarioAPITestCase(APITestCase):
                 break
 
         self.assertIsNotNone(smc_org_unit_costs)
-        self.assertAlmostEqual(smc_org_unit_costs["total_cost"], 198000.0 * 0.8)
+        self.assertAlmostEqual(smc_org_unit_costs["total_cost"], 198000.0)
         self.assertEqual(len(smc_org_unit_costs["interventions"]), 1)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["code"], "smc")
         self.assertEqual(smc_org_unit_costs["interventions"][0]["type"], "SMC")
-        self.assertAlmostEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 198000.0 * 0.8)
+        self.assertAlmostEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 198000.0)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id)
 
         db_budget = Budget.objects.get(id=result["id"])

@@ -3,27 +3,27 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
 from iaso.models import Account, MetricType, MetricValue, OrgUnit, OrgUnitType
-from iaso.models.data_source import DataSource, SourceVersion
-from iaso.models.project import Project
-from iaso.test import APITestCase
 from plugins.snt_malaria.models import (
     AccountSettings,
-    Intervention,
     InterventionAssignment,
-    InterventionCategory,
     Scenario,
     ScenarioRule,
     ScenarioRuleInterventionProperties,
 )
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
+from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
-class ScenarioAPITestCase(APITestCase):
+class ScenarioAPITestCase(SNTMalariaAPITestCase):
     BASE_URL = "/api/snt_malaria/scenarios/"
+    auto_create_account = False
 
     def setUp(self):
+        super().setUp()
         # Create a user and account for testing
-        self.account = Account.objects.create(name="Test Account")
+        self.account, self.sw_source, self.sw_version_1, self.project = self.create_account_datasource_version_project(
+            "data_source", "Test Account", "Project"
+        )
         self.user_with_full_perm, self.anon, self.user_no_perms = self.create_base_users(
             self.account, [SNT_SCENARIO_FULL_WRITE_PERMISSION], "testuser"
         )
@@ -41,73 +41,61 @@ class ScenarioAPITestCase(APITestCase):
         )
 
         # Create intervention categories
-        self.int_category_vaccination = InterventionCategory.objects.create(
+        self.int_category_vaccination = self.create_snt_intervention_category(
             name="Vaccination",
             account=self.account,
             created_by=self.user_with_full_perm,
         )
-
-        self.int_category_chemoprevention = InterventionCategory.objects.create(
+        self.int_category_chemoprevention = self.create_snt_intervention_category(
             name="Preventive Chemotherapy",
             account=self.account,
             created_by=self.user_with_full_perm,
         )
 
         # Create interventions
-        self.intervention_vaccination_rts = Intervention.objects.create(
+        self.intervention_vaccination_rts = self.create_snt_intervention(
             name="RTS,S",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_vaccination,
             code="rts_s",
+            intervention_category=self.int_category_vaccination,
+            created_by=self.user_with_full_perm,
         )
-        self.intervention_chemo_smc = Intervention.objects.create(
+        self.intervention_chemo_smc = self.create_snt_intervention(
             name="SMC",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_chemoprevention,
             code="smc",
-        )
-        self.intervention_chemo_iptp = Intervention.objects.create(
-            name="IPTp",
-            created_by=self.user_with_full_perm,
             intervention_category=self.int_category_chemoprevention,
+            created_by=self.user_with_full_perm,
+        )
+        self.intervention_chemo_iptp = self.create_snt_intervention(
+            name="IPTp",
             code="iptp",
+            intervention_category=self.int_category_chemoprevention,
+            created_by=self.user_with_full_perm,
         )
 
         # Create Org Units
-        self.project = project = Project.objects.create(
-            name="Project",
-            app_id="APP_ID",
-            account=self.account,
-        )
-        sw_source = DataSource.objects.create(name="data_source")
-        sw_source.projects.add(project)
-        self.sw_source = sw_source
-        self.sw_version_1 = sw_version_1 = SourceVersion.objects.create(data_source=sw_source, number=1)
-        self.account.default_version = sw_version_1
-        self.account.save()
-        self.out_district = OrgUnitType.objects.create(name="DISTRICT")
+        self.out_district = self.create_snt_org_unit_type(name="DISTRICT")
         self.mock_multipolygon = MultiPolygon(Polygon([[-1.3, 2.5], [-1.7, 2.8], [-1.1, 4.1], [-1.3, 2.5]]))
-        self.district1 = OrgUnit.objects.create(
+        self.district1 = self.create_snt_org_unit(
             org_unit_type=self.out_district,
             name="District 1",
             validation_status=OrgUnit.VALIDATION_VALID,
-            version=sw_version_1,
+            version=self.sw_version_1,
             location=Point(x=4, y=50, z=100),
             geom=self.mock_multipolygon,
         )
-        self.district2 = OrgUnit.objects.create(
+        self.district2 = self.create_snt_org_unit(
             org_unit_type=self.out_district,
             name="District 2",
             validation_status=OrgUnit.VALIDATION_VALID,
-            version=sw_version_1,
+            version=self.sw_version_1,
             location=Point(x=4, y=51, z=100),
             geom=self.mock_multipolygon,
         )
-        self.district3 = OrgUnit.objects.create(
+        self.district3 = self.create_snt_org_unit(
             org_unit_type=self.out_district,
             name="District 3",
             validation_status=OrgUnit.VALIDATION_VALID,
-            version=sw_version_1,
+            version=self.sw_version_1,
             location=Point(x=4, y=52, z=100),
             geom=self.mock_multipolygon,
         )
@@ -160,23 +148,14 @@ class ScenarioAPITestCase(APITestCase):
         )
 
         # Create assignments related to the scenario
-        self.assignment_1 = InterventionAssignment.objects.create(
-            scenario=self.scenario,
-            org_unit=self.district1,
-            intervention=self.intervention_chemo_iptp,
-            created_by=self.user_with_full_perm,
+        self.assignment_1 = self.create_snt_assignment(
+            self.scenario, self.district1, self.intervention_chemo_iptp, created_by=self.user_with_full_perm
         )
-        self.assignment_2 = InterventionAssignment.objects.create(
-            scenario=self.scenario,
-            org_unit=self.district2,
-            intervention=self.intervention_chemo_smc,
-            created_by=self.user_with_full_perm,
+        self.assignment_2 = self.create_snt_assignment(
+            self.scenario, self.district2, self.intervention_chemo_smc, created_by=self.user_with_full_perm
         )
-        self.assignment_3 = InterventionAssignment.objects.create(
-            scenario=self.scenario,
-            org_unit=self.district3,
-            intervention=self.intervention_vaccination_rts,
-            created_by=self.user_with_full_perm,
+        self.assignment_3 = self.create_snt_assignment(
+            self.scenario, self.district3, self.intervention_vaccination_rts, created_by=self.user_with_full_perm
         )
 
     def test_scenario_list(self):
@@ -321,14 +300,6 @@ class ScenarioAPITestCase(APITestCase):
         self.assertEqual(new_scenario.name, "Test Scenario")
         self.assertEqual(new_scenario.account, other_account)
         self.assertEqual(new_scenario.created_by, other_user)
-
-    def test_scenario_create_unauthenticated(self):
-        self.client.force_authenticate(user=None)
-        response = self.client.post(
-            self.BASE_URL, {"name": "New Scenario", "start_year": 2025, "end_year": 2026}, format="json"
-        )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(Scenario.objects.count(), 1)
 
     def test_scenario_create_unauthenticated(self):
         data = {"name": "New Scenario Unauth", "start_year": 2025, "end_year": 2026}
@@ -1286,29 +1257,26 @@ class ScenarioAPITestCase(APITestCase):
         self.assertIsNotNone(assignments_district_3.first().rule)
 
 
-class CsvExportInterventionTypeScopeTestCase(APITestCase):
+class CsvExportInterventionTypeScopeTestCase(SNTMalariaAPITestCase):
     """Tests that CSV export respects AccountSettings.intervention_org_unit_type."""
 
     BASE_URL = "/api/snt_malaria/scenarios/"
+    auto_create_account = False
 
     def setUp(self):
-        self.account = Account.objects.create(name="Test Account")
+        super().setUp()
+        self.account, _, sw_version, _ = self.create_account_datasource_version_project(
+            "data_source", "Test Account", "Project"
+        )
         self.user, self.anon, self.user_no_perms = self.create_base_users(
             self.account, [SNT_SCENARIO_FULL_WRITE_PERMISSION], "testuser"
         )
 
-        project = Project.objects.create(name="Project", app_id="APP_ID", account=self.account)
-        sw_source = DataSource.objects.create(name="data_source")
-        sw_source.projects.add(project)
-        sw_version = SourceVersion.objects.create(data_source=sw_source, number=1)
-        self.account.default_version = sw_version
-        self.account.save()
-
-        self.region_type = OrgUnitType.objects.create(name="Region")
-        self.district_type = OrgUnitType.objects.create(name="District")
+        self.region_type = self.create_snt_org_unit_type(name="Region")
+        self.district_type = self.create_snt_org_unit_type(name="District")
         mock_multipolygon = MultiPolygon(Polygon([[-1.3, 2.5], [-1.7, 2.8], [-1.1, 4.1], [-1.3, 2.5]]))
 
-        self.region = OrgUnit.objects.create(
+        self.region = self.create_snt_org_unit(
             org_unit_type=self.region_type,
             name="Region A",
             validation_status=OrgUnit.VALIDATION_VALID,
@@ -1316,7 +1284,7 @@ class CsvExportInterventionTypeScopeTestCase(APITestCase):
             location=Point(x=4, y=50, z=100),
             geom=mock_multipolygon,
         )
-        self.district1 = OrgUnit.objects.create(
+        self.district1 = self.create_snt_org_unit(
             org_unit_type=self.district_type,
             name="District 1",
             validation_status=OrgUnit.VALIDATION_VALID,
@@ -1324,7 +1292,7 @@ class CsvExportInterventionTypeScopeTestCase(APITestCase):
             location=Point(x=4, y=51, z=100),
             geom=mock_multipolygon,
         )
-        self.district2 = OrgUnit.objects.create(
+        self.district2 = self.create_snt_org_unit(
             org_unit_type=self.district_type,
             name="District 2",
             validation_status=OrgUnit.VALIDATION_VALID,
@@ -1333,11 +1301,11 @@ class CsvExportInterventionTypeScopeTestCase(APITestCase):
             geom=mock_multipolygon,
         )
 
-        self.int_category = InterventionCategory.objects.create(
+        self.int_category = self.create_snt_intervention_category(
             name="Vaccination", account=self.account, created_by=self.user
         )
-        self.intervention = Intervention.objects.create(
-            name="RTS,S", created_by=self.user, intervention_category=self.int_category, code="rts_s"
+        self.intervention = self.create_snt_intervention(
+            name="RTS,S", code="rts_s", intervention_category=self.int_category, created_by=self.user
         )
 
     def test_export_without_settings_includes_all_levels(self):

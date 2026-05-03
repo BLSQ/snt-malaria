@@ -2,8 +2,7 @@ from unittest import mock
 from unittest.mock import Mock
 
 from iaso.models import OrgUnit, OrgUnitType
-from iaso.test import TestCase
-from plugins.snt_malaria.models import Intervention, InterventionAssignment, InterventionCategory, Scenario
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 from plugins.snt_malaria.providers.impact.base import (
     BulkMatchResult,
     ImpactMetricWithConfidenceInterval,
@@ -24,7 +23,7 @@ def _metric(value=None, lower=None, upper=None):
     return ImpactMetricWithConfidenceInterval(value=value, lower=lower, upper=upper)
 
 
-class AggregateMetricsTestCase(TestCase):
+class AggregateMetricsTestCase(SNTMalariaTestCase):
     """Tests for _aggregate_metrics module-level function."""
 
     def test_sums_number_cases_number_severe_cases_and_direct_deaths(self):
@@ -86,39 +85,30 @@ class AggregateMetricsTestCase(TestCase):
         self.assertIsNone(result.prevalence_rate.value)
 
 
-class ImpactServiceGetScenarioImpactTestCase(TestCase):
+class ImpactServiceGetScenarioImpactTestCase(SNTMalariaTestCase):
     """Tests for ImpactService.get_scenario_impact with mocked provider."""
 
+    auto_create_account = False
+
     def setUp(self):
+        super().setUp()
         self.account, self.source, self.version, self.project = self.create_account_datasource_version_project(
             "source", "Impact Service Account", "project"
         )
         self.user = self.create_user_with_profile(username="impact_service_user", account=self.account)
 
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user,
-            name="Test Scenario",
-            start_year=2025,
-            end_year=2027,
+        self.scenario = self.create_snt_scenario(
+            self.account, self.user, name="Test Scenario", start_year=2025, end_year=2027
         )
 
-        self.int_category = InterventionCategory.objects.create(
-            name="Chemoprevention",
-            account=self.account,
-            created_by=self.user,
+        self.int_category = self.create_snt_intervention_category(
+            account=self.account, created_by=self.user, name="Chemoprevention"
         )
-        self.intervention1 = Intervention.objects.create(
-            name="SMC",
-            created_by=self.user,
-            intervention_category=self.int_category,
-            code="smc",
+        self.intervention1 = self.create_snt_intervention(
+            intervention_category=self.int_category, created_by=self.user, name="SMC", code="smc"
         )
-        self.intervention2 = Intervention.objects.create(
-            name="IPTp",
-            created_by=self.user,
-            intervention_category=self.int_category,
-            code="iptp",
+        self.intervention2 = self.create_snt_intervention(
+            intervention_category=self.int_category, created_by=self.user, name="IPTp", code="iptp"
         )
 
         self.org_unit_type = OrgUnitType.objects.create(name="DISTRICT")
@@ -143,31 +133,10 @@ class ImpactServiceGetScenarioImpactTestCase(TestCase):
             validation_status=OrgUnit.VALIDATION_VALID,
         )
 
-        InterventionAssignment.objects.create(
-            scenario=self.scenario,
-            org_unit=self.district1,
-            intervention=self.intervention1,
-            created_by=self.user,
-        )
-        InterventionAssignment.objects.create(
-            scenario=self.scenario,
-            org_unit=self.district2,
-            intervention=self.intervention1,
-            created_by=self.user,
-        )
-        # District 3 has both interventions
-        InterventionAssignment.objects.create(
-            scenario=self.scenario,
-            org_unit=self.district3,
-            intervention=self.intervention1,
-            created_by=self.user,
-        )
-        InterventionAssignment.objects.create(
-            scenario=self.scenario,
-            org_unit=self.district3,
-            intervention=self.intervention2,
-            created_by=self.user,
-        )
+        self.create_snt_assignment(self.scenario, self.district1, self.intervention1, self.user)
+        self.create_snt_assignment(self.scenario, self.district2, self.intervention1, self.user)
+        self.create_snt_assignment(self.scenario, self.district3, self.intervention1, self.user)
+        self.create_snt_assignment(self.scenario, self.district3, self.intervention2, self.user)
 
     def _make_impact_results(self):
         """Return a dict of org_unit_id -> [ImpactResult] with distinct values per district and year."""

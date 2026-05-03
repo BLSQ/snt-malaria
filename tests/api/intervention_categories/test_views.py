@@ -1,38 +1,35 @@
 from rest_framework import status
 
-from iaso.test import APITestCase
-from plugins.snt_malaria.models import InterventionCategory
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
+from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
-class InterventionCategoryAPITestCase(APITestCase):
+class InterventionCategoryAPITestCase(SNTMalariaAPITestCase):
     BASE_URL = "/api/snt_malaria/intervention_categories/"
+    auto_create_account = False
 
     def setUp(self):
-        self.account, _, _, _ = self.create_account_datasource_version_project(
-            account_name="account", project_name="project", source_name="source"
-        )
-        self.user_with_perms, self.anon, self.user_no_perms = self.create_base_users(
-            self.account, [SNT_SCENARIO_FULL_WRITE_PERMISSION], "user"
-        )
+        super().setUp()
 
-        self.intervention_category_1 = InterventionCategory.objects.create(
+        self.account, self.user_with_perms = self.create_snt_account(name="Other Account")
+
+        self.intervention_category_1 = self.create_snt_intervention_category(
             account=self.account,
             created_by=self.user_with_perms,
             name="Intervention Category 1",
             short_name="IC1",
             description="Description for Intervention Category 1",
         )
-        self.intervention_category_2 = InterventionCategory.objects.create(
+        self.intervention_category_2 = self.create_snt_intervention_category(
             account=self.account,
             created_by=self.user_with_perms,
             name="Intervention Category 2",
             short_name="IC2",
             description="Description for Intervention Category 2",
         )
-        self.intervention_category_3 = InterventionCategory.objects.create(
+        self.intervention_category_3 = self.create_snt_intervention_category(
             account=self.account,
-            created_by=self.user_no_perms,
+            created_by=self.user_with_perms,
             name="Intervention Category 3",
             short_name="IC3",
             description="Description for Intervention Category 3",
@@ -45,7 +42,7 @@ class InterventionCategoryAPITestCase(APITestCase):
         self.user_with_perms2, _, _ = self.create_base_users(
             self.account_2, [SNT_SCENARIO_FULL_WRITE_PERMISSION], "user2"
         )
-        self.intervention_category_other_account = InterventionCategory.objects.create(
+        self.intervention_category_other_account = self.create_snt_intervention_category(
             account=self.account_2,
             created_by=self.user_with_perms2,
             name="Intervention Category Other Account",
