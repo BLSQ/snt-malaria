@@ -50,6 +50,12 @@ export type InterventionOrgUnit = {
     intervention_assignment_id: number;
 };
 
+export type DefaultBudgetAssumptions = {
+    [interventionCode: string]: {
+        coverage: number;
+    };
+};
+
 export type BudgetAssumptions = {
     id: number;
     intervention_assignment: number;

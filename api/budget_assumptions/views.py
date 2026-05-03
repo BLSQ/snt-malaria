@@ -9,6 +9,7 @@ from plugins.snt_malaria.api.budget_assumptions.permissions import BudgetAssumpt
 from plugins.snt_malaria.api.budget_assumptions.serializers import (
     BudgetAssumptionsQuerySerializer,
     BudgetAssumptionsReadSerializer,
+    DefaultCostAssumptionsSerializer,
     BudgetAssumptionsUpsertManySerializer,
 )
 from plugins.snt_malaria.models import BudgetAssumptions
@@ -44,6 +45,12 @@ class BudgetAssumptionsViewSet(viewsets.ModelViewSet):
 
         serializer = BudgetAssumptionsReadSerializer(assumptions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["get"])
+    def default(self, request, *args, **kwargs):
+        serializer = DefaultCostAssumptionsSerializer({}, many=False)
+        data = serializer.data
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["post"])
     def many(self, request, *args, **kwargs):

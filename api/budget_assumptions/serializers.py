@@ -1,7 +1,9 @@
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
+from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS
 
+from plugins.snt_malaria.api.budget.utils import get_assumption_key
 from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 from plugins.snt_malaria.models.intervention import InterventionAssignment
 from plugins.snt_malaria.models.scenario import Scenario
@@ -23,6 +25,16 @@ class BudgetAssumptionsReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = BudgetAssumptions
         fields = ("id", "scenario", "intervention_assignment", "year", "coverage")
+
+
+class DefaultCostAssumptionsSerializer(serializers.Serializer):
+    def to_representation(self, instance):
+        print("Serializing default cost assumptions with instance:", instance)
+        return {
+            key.replace("_coverage", ""): {"coverage": value}
+            for key, value in DEFAULT_COST_ASSUMPTIONS.items()
+            if key.endswith("_coverage")
+        }
 
 
 class BudgetAssumptionsUpdateSerializer(serializers.ModelSerializer):

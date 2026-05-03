@@ -25,6 +25,7 @@ const styles: SxStyles = {
 
 type Props = {
     scenarioId: number;
+    interventionCode: string;
     years: number[];
     interventionAssignmentIds: number[];
     budgetAssumptions: BudgetAssumptions[];
@@ -32,11 +33,13 @@ type Props = {
 
 export const BudgetAssumptionsForm: FC<Props> = ({
     scenarioId,
+    interventionCode,
     years,
     interventionAssignmentIds,
     budgetAssumptions,
 }) => {
-    const { isScenarioEditable } = usePlanningContext();
+    const { isScenarioEditable, defaultBudgetAssumptions } =
+        usePlanningContext();
     const { formatMessage } = useSafeIntl();
     const {
         mutateAsync: saveBudgetAssumptions,
@@ -47,18 +50,41 @@ export const BudgetAssumptionsForm: FC<Props> = ({
         Record<number, BudgetAssumptions>
     >({});
 
+    const getDefaultCoverage = useCallback(
+        (interventionCode: string) => {
+            return (
+                defaultBudgetAssumptions?.[interventionCode]?.coverage ??
+                defaultBudgetAssumptions?.['default']?.coverage ??
+                0
+            );
+        },
+        [defaultBudgetAssumptions],
+    );
+
     useEffect(() => {
-        const assumptionsByYear = (budgetAssumptions || []).reduce(
-            (acc, assumption) => {
-                if (assumption.year) {
-                    acc[assumption.year] = assumption;
-                }
-                return acc;
-            },
-            {} as Record<number, BudgetAssumptions>,
-        );
+        const assumptionsByYear: Record<number, BudgetAssumptions> = {};
+        for (const year of years) {
+            const assumptionForYear = budgetAssumptions.find(
+                ba => ba.year === year,
+            );
+            if (assumptionForYear) {
+                assumptionsByYear[year] = assumptionForYear;
+            } else if (defaultBudgetAssumptions) {
+                assumptionsByYear[year] = {
+                    year,
+                    coverage: getDefaultCoverage(interventionCode),
+                } as BudgetAssumptions;
+            }
+        }
+
         setBudgetAssumptionsByYear(assumptionsByYear);
-    }, [budgetAssumptions]);
+    }, [
+        budgetAssumptions,
+        defaultBudgetAssumptions,
+        getDefaultCoverage,
+        interventionCode,
+        years,
+    ]);
 
     const setCoverage = useCallback(
         (year: number, value: any) => {

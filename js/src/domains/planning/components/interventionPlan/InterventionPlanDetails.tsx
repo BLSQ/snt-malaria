@@ -110,6 +110,9 @@ export const InterventionPlanDetails: FC<Props> = ({
                     interventionPlan?.intervention && (
                         <BudgetAssumptionsForm
                             scenarioId={scenarioId}
+                            interventionCode={
+                                interventionPlan.intervention.code
+                            }
                             years={years}
                             interventionAssignmentIds={interventionPlan.org_units.map(
                                 ou => ou.intervention_assignment_id,

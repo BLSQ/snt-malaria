@@ -83,7 +83,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
         interventions_map = {(iv.code, iv.short_name): iv.id for iv in interventions}
 
         budgets = []
-        assumptions_by_year = build_budget_assumptions(scenario, from_year=start_year, to_year=end_year)
+        assumptions_by_year = build_budget_assumptions(scenario)
 
         budget_calculator = BudgetCalculator(
             interventions_input=interventions_input,

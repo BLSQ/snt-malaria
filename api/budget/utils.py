@@ -244,7 +244,7 @@ def build_interventions_input(scenario):
     return [InterventionDetailModel(**i) for i in interventions]
 
 
-def build_budget_assumptions(scenario, from_year, to_year):
+def build_budget_assumptions(scenario):
     """
     Build a map of budget assumptions for quick lookup by intervention code.
     When year is provided, only assumptions for that year are applied.
@@ -252,8 +252,8 @@ def build_budget_assumptions(scenario, from_year, to_year):
     """
     assumptions = BudgetAssumptions.objects.filter(
         scenario=scenario,
-        year__gte=from_year,
-        year__lte=to_year,
+        year__gte=scenario.start_year,
+        year__lte=scenario.end_year,
         intervention_assignment__isnull=False,
     ).select_related("intervention_assignment__intervention")
     cost_assumptions = DEFAULT_COST_ASSUMPTIONS.copy()
