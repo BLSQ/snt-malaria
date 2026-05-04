@@ -1,7 +1,7 @@
 from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 
 from iaso.models import MetricType, MetricValue, OrgUnit
-from plugins.snt_malaria.models import Scenario, ScenarioRule
+from plugins.snt_malaria.models import ScenarioRule
 from plugins.snt_malaria.models.scenario import ScenarioRuleInterventionProperties
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase

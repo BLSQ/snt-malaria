@@ -2,8 +2,7 @@ from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 from rest_framework import status
 
 from iaso.models.org_unit import OrgUnit
-from plugins.snt_malaria.models import BudgetAssumptions
-from plugins.snt_malaria.models.intervention import Intervention, InterventionAssignment, InterventionCategory
+from plugins.snt_malaria.models.intervention import InterventionAssignment
 from plugins.snt_malaria.models.scenario import Scenario
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase

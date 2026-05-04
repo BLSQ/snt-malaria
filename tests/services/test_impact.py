@@ -2,7 +2,6 @@ from unittest import mock
 from unittest.mock import Mock
 
 from iaso.models import OrgUnit, OrgUnitType
-from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 from plugins.snt_malaria.providers.impact.base import (
     BulkMatchResult,
     ImpactMetricWithConfidenceInterval,
@@ -17,6 +16,7 @@ from plugins.snt_malaria.services.impact import (
     OrgUnitImpactMetrics,
     _aggregate_metrics,
 )
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
 def _metric(value=None, lower=None, upper=None):

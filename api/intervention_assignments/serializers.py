@@ -1,4 +1,4 @@
-from rest_framework import exceptions, serializers
+from rest_framework import serializers
 
 from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.api.interventions.serializers import InterventionSerializer

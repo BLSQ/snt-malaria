@@ -3,7 +3,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS
 
-from plugins.snt_malaria.api.budget.utils import get_assumption_key
 from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 from plugins.snt_malaria.models.intervention import InterventionAssignment
 from plugins.snt_malaria.models.scenario import Scenario
@@ -116,9 +115,7 @@ class BudgetAssumptionsUpsertManySerializer(serializers.Serializer):
                             scenario=scenario,
                             intervention_assignment=assignment,
                             year=assumption_data.get("year"),
-                            coverage=assumption_data[
-                                "coverage"
-                            ],  # TODO - handle default values for missing years/coverage, potentially based on intervention code and year using DEFAULT_COST_ASSUMPTIONS
+                            coverage=assumption_data["coverage"],
                         )
                     )
 
