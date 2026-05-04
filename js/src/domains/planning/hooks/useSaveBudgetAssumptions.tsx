@@ -26,5 +26,5 @@ export const useSaveBudgetAssumptions = (
                 intervention_assignments: interventionAssignmentIds,
                 scenario: scenarioId,
             }),
-        invalidateQueryKey: ['budget_assumptions', scenarioId],
+        invalidateQueryKey: ['budgetAssumptions', scenarioId],
     });
