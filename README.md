@@ -146,3 +146,25 @@ Now, you can go to `docker/django/Dockerfile` and uncomment `ENV PYTHONPATH="/op
 
 Once done, you can restart iaso container to activate hot reload.
 From there, if you modify the package source, it should trigger a reload and be reflected in snt-malaria.
+
+## Smoke testing
+
+In order to run smoke test from your machine, you'll need to setup your `.env` and `.env.smoke` configuration.
+
+First of all, add to your `.env`:
+`TARGET_TEST_DIR=./plugins/snt_malaria/js/__tests__/playwright`
+
+
+Then setup the `.env.smoke` Use the account you want to login into (demo most likely).
+
+```
+LOGIN_PASSWORD=XXX
+LOGIN_USERNAME=XXX
+GIT_TAG=v2026.04.21 # Mandatory but we don't care here
+SAVE_SMOKE_TEST_SCREENSHOT=1
+SMOKE_TEST_MONITOR_CONSOLE_ERRORS=1
+TARGET_SERVER_URL=https://demo.snt-toolbox.org # http://localhost:8081
+```
+
+Then you can run from iaso base: 
+`npm run test:smoke`
