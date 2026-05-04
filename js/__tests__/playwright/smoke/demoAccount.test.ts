@@ -1,14 +1,16 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+import { expectNoErrors } from '../../utils';
 
 test.describe('Demo account login smoke tests', () => {
-    test('login page appears', async ({ page }) => {
+    test('login page appears', async ({ page }: { page: Page }) => {
         await page.goto('');
 
         await expect(page).toHaveURL('/login/?next=%2Fdashboard%2Fhome%2F');
         await expect(page).toHaveTitle('SNT Malaria');
+        await expectNoErrors({ page });
     });
 
-    test('login works', async ({ page }) => {
+    test('login works', async ({ page }: { page: Page }) => {
         await page.goto('/login/');
         await page.fill(
             'input[name="username"]',
@@ -23,5 +25,6 @@ test.describe('Demo account login smoke tests', () => {
             new RegExp('dashboard/snt_malaria/scenarios/list/accountId/'),
         );
         await expect(page).toHaveTitle(/SNT Malaria/);
+        await expectNoErrors({ page });
     });
 });
