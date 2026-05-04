@@ -6,6 +6,7 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { BudgetAssumptions } from '../../types/interventions';
+
 type Props = {
     year: number;
     budgetAssumptions: BudgetAssumptions;
@@ -39,7 +40,10 @@ const styles = {
     },
 } satisfies SxStyles;
 
-const percentageNumberOptions = { suffix: '%', decimalScale: 0 };
+const percentageNumberOptions = {
+    suffix: '%',
+    decimalScale: 0,
+};
 
 export const YearCoverage: FC<Props> = ({
     year,
@@ -57,6 +61,16 @@ export const YearCoverage: FC<Props> = ({
 
     const toggleCollapse = () => {
         setIsCollapsed(prev => !prev);
+    };
+
+    const handleCoverageChange = (value: number) => {
+        if (value >= 0 && value <= 100) {
+            setCoverage(year, value);
+        } else if (value < 0) {
+            setCoverage(year, 0);
+        } else if (value > 100) {
+            setCoverage(year, 100);
+        }
     };
 
     return (
@@ -82,7 +96,7 @@ export const YearCoverage: FC<Props> = ({
                             keyValue="coverage"
                             withMarginTop={false}
                             value={budgetAssumptions?.coverage ?? 0}
-                            onChange={(_, value) => setCoverage(year, value)}
+                            onChange={(_, value) => handleCoverageChange(value)}
                             labelString={''}
                             numberInputOptions={percentageNumberOptions}
                             disabled={disabled}
