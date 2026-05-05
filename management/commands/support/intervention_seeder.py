@@ -311,7 +311,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             {
                 "name": "Dual AI",
                 "short_name": "Dual AI (School)",
-                "code": "itn_campaign",
+                "code": "itn_school",
                 "description": "",
                 "allowed_cost_unit_types": [
                     InterventionCostUnitType.PER_ITN.value,
@@ -335,7 +335,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             {
                 "name": "PBO",
                 "short_name": "PBO (School)",
-                "code": "itn_campaign",
+                "code": "itn_school",
                 "description": "",
                 "allowed_cost_unit_types": [
                     InterventionCostUnitType.PER_ITN.value,
@@ -359,7 +359,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             {
                 "name": "Standard Pyrethroid",
                 "short_name": "PYR (School)",
-                "code": "itn_campaign",
+                "code": "itn_school",
                 "description": "",
                 "allowed_cost_unit_types": [
                     InterventionCostUnitType.PER_ITN.value,
