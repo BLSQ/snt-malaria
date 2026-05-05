@@ -71,6 +71,7 @@ class Intervention(SoftDeletableModel):
     objects = DefaultSoftDeletableManager()
     objects_only_deleted = OnlyDeletedSoftDeletableManager()
     objects_include_deleted = IncludeDeletedSoftDeletableManager()
+    allowed_cost_unit_types = ArrayField(models.CharField(max_length=100), blank=True, default=list)
 
     def __str__(self):
         return "%s %s" % (self.name, self.id)
