@@ -19,36 +19,38 @@ CostCategory = InterventionCostBreakdownLine.InterventionCostBreakdownLineCatego
 CATEGORIES_AND_INTERVENTIONS = {
     "Case Management": {
         "short_name": "CM",
-        "allowed_cost_unit_types": [InterventionCostUnitType.OTHER.value],
         "interventions": [
             {
                 "name": "CM",
                 "code": "cm_public",
                 "description": "",
+                "allowed_cost_unit_types": [InterventionCostUnitType.OTHER.value],
                 "cost_settings": [],
             },
             {
                 "name": "CM Subsidy",
                 "code": "cm_subsidy",
                 "description": "",
+                "allowed_cost_unit_types": [InterventionCostUnitType.OTHER.value],
                 "cost_settings": [],
             },
             {
                 "name": "iCCM",
                 "code": "cm",
                 "description": "",
+                "allowed_cost_unit_types": [InterventionCostUnitType.OTHER.value],
                 "cost_settings": [],
             },
         ],
     },
     "IPTp": {
-        "allowed_cost_unit_types": [InterventionCostUnitType.PER_SP.value],
         "interventions": [
             {
                 "name": "IPTp (SP)",
                 "short_name": "IPTp",
                 "code": "iptp",
                 "description": "",
+                "allowed_cost_unit_types": [InterventionCostUnitType.PER_SP.value],
                 "cost_settings": [
                     {
                         "name": "IPTp (SP) Procurement",
@@ -120,9 +122,39 @@ CATEGORIES_AND_INTERVENTIONS = {
                     },
                 ],
             },
-            {"name": "SMC 3", "short_name": "SMC 3", "code": "smc_3", "description": "", "cost_settings": []},
-            {"name": "SMC 4", "short_name": "SMC 4", "code": "smc_4", "description": "", "cost_settings": []},
-            {"name": "SMC 5", "short_name": "SMC 5", "code": "smc_5", "description": "", "cost_settings": []},
+            {
+                "name": "SMC 3",
+                "short_name": "SMC 3",
+                "code": "smc",
+                "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_SPAQ_3_11_MONTHS.value,
+                    InterventionCostUnitType.PER_SPAQ_12_59_MONTHS.value,
+                ],
+                "cost_settings": [],
+            },
+            {
+                "name": "SMC 4",
+                "short_name": "SMC 4",
+                "code": "smc",
+                "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_SPAQ_3_11_MONTHS.value,
+                    InterventionCostUnitType.PER_SPAQ_12_59_MONTHS.value,
+                ],
+                "cost_settings": [],
+            },
+            {
+                "name": "SMC 5",
+                "short_name": "SMC 5",
+                "code": "smc",
+                "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_SPAQ_3_11_MONTHS.value,
+                    InterventionCostUnitType.PER_SPAQ_12_59_MONTHS.value,
+                ],
+                "cost_settings": [],
+            },
         ],
     },
     "ITN Campaign": {
@@ -279,7 +311,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             {
                 "name": "Dual AI",
                 "short_name": "Dual AI (School)",
-                "code": "itn_school",
+                "code": "itn_campaign",
                 "description": "",
                 "allowed_cost_unit_types": [
                     InterventionCostUnitType.PER_ITN.value,
@@ -303,7 +335,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             {
                 "name": "PBO",
                 "short_name": "PBO (School)",
-                "code": "itn_school",
+                "code": "itn_campaign",
                 "description": "",
                 "allowed_cost_unit_types": [
                     InterventionCostUnitType.PER_ITN.value,
@@ -327,7 +359,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             {
                 "name": "Standard Pyrethroid",
                 "short_name": "PYR (School)",
-                "code": "itn_school",
+                "code": "itn_campaign",
                 "description": "",
                 "allowed_cost_unit_types": [
                     InterventionCostUnitType.PER_ITN.value,
