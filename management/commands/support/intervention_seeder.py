@@ -19,6 +19,7 @@ CostCategory = InterventionCostBreakdownLine.InterventionCostBreakdownLineCatego
 CATEGORIES_AND_INTERVENTIONS = {
     "Case Management": {
         "short_name": "CM",
+        "allowed_cost_unit_types": [InterventionCostUnitType.OTHER.value],
         "interventions": [
             {
                 "name": "CM",
@@ -41,6 +42,7 @@ CATEGORIES_AND_INTERVENTIONS = {
         ],
     },
     "IPTp": {
+        "allowed_cost_unit_types": [InterventionCostUnitType.PER_SP.value],
         "interventions": [
             {
                 "name": "IPTp (SP)",
@@ -71,6 +73,7 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "short_name": "PMC",
                 "code": "pmc",
                 "description": "",
+                "allowed_cost_unit_types": [InterventionCostUnitType.PER_SP.value],
                 "cost_settings": [
                     {
                         "name": "PMC (SP) Procurement",
@@ -91,6 +94,10 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "short_name": "SMC",
                 "code": "smc",
                 "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_SPAQ_3_11_MONTHS.value,
+                    InterventionCostUnitType.PER_SPAQ_12_59_MONTHS.value,
+                ],
                 "cost_settings": [
                     {
                         "id": 196,
@@ -125,6 +132,10 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "short_name": "Dual AI (Campaign)",
                 "code": "itn_campaign",
                 "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_ITN.value,
+                    InterventionCostUnitType.PER_BALE.value,
+                ],
                 "cost_settings": [
                     {
                         "name": "Dual AI Procurement",
@@ -145,6 +156,10 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "short_name": "PBO (Campaign)",
                 "code": "itn_campaign",
                 "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_ITN.value,
+                    InterventionCostUnitType.PER_BALE.value,
+                ],
                 "cost_settings": [
                     {
                         "name": "PBO Procurement",
@@ -165,6 +180,10 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "short_name": "PYR (Campaign)",
                 "code": "itn_campaign",
                 "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_ITN.value,
+                    InterventionCostUnitType.PER_BALE.value,
+                ],
                 "cost_settings": [
                     {
                         "name": "Standard Pyrethroid Procurement",
@@ -189,6 +208,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "short_name": "Dual AI (Routine)",
                 "code": "itn_routine",
                 "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_ITN.value,
+                ],
                 "cost_settings": [
                     {
                         "name": "Dual AI Procurement",
@@ -209,6 +231,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "short_name": "PBO (Routine)",
                 "code": "itn_routine",
                 "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_ITN.value,
+                ],
                 "cost_settings": [
                     {
                         "name": "PBO Procurement",
@@ -229,6 +254,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "short_name": "PYR (Routine)",
                 "code": "itn_routine",
                 "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_ITN.value,
+                ],
                 "cost_settings": [
                     {
                         "name": "Standard Pyrethroid Procurement",
@@ -253,6 +281,10 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "short_name": "Dual AI (School)",
                 "code": "itn_school",
                 "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_ITN.value,
+                    InterventionCostUnitType.PER_BALE.value,
+                ],
                 "cost_settings": [
                     {
                         "name": "Dual AI Procurement",
@@ -273,6 +305,10 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "short_name": "PBO (School)",
                 "code": "itn_school",
                 "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_ITN.value,
+                    InterventionCostUnitType.PER_BALE.value,
+                ],
                 "cost_settings": [
                     {
                         "name": "PBO Procurement",
@@ -293,6 +329,10 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "short_name": "PYR (School)",
                 "code": "itn_school",
                 "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_ITN.value,
+                    InterventionCostUnitType.PER_BALE.value,
+                ],
                 "cost_settings": [
                     {
                         "name": "Standard Pyrethroid Procurement",
@@ -317,6 +357,10 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "name": "R21",
                 "code": "vacc",
                 "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_DOSE.value,
+                    InterventionCostUnitType.PER_CHILD.value,
+                ],
                 "cost_settings": [
                     {
                         "name": "R21 Procurement",
@@ -336,6 +380,10 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "name": "RTS,S",
                 "code": "vacc",
                 "description": "",
+                "allowed_cost_unit_types": [
+                    InterventionCostUnitType.PER_DOSE.value,
+                    InterventionCostUnitType.PER_CHILD.value,
+                ],
                 "cost_settings": [],
             },
         ],
@@ -346,6 +394,7 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "name": "LSM",
                 "code": "lsm",
                 "description": "",
+                "allowed_cost_unit_types": [InterventionCostUnitType.OTHER.value],
                 "cost_settings": [],
             }
         ],
@@ -409,6 +458,7 @@ class InterventionSeeder:
                     short_name=intervention_data.get("short_name", intervention_data["name"]),
                     intervention_category=category,
                     code=intervention_data["code"],
+                    allowed_cost_unit_types=intervention_data.get("allowed_cost_unit_types", []),
                     defaults={
                         "description": intervention_data["description"],
                         "created_by": user,
