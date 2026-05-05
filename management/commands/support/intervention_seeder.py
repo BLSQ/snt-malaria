@@ -125,7 +125,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             {
                 "name": "SMC 3",
                 "short_name": "SMC 3",
-                "code": "smc",
+                "code": "smc_3",
                 "description": "",
                 "allowed_cost_unit_types": [
                     InterventionCostUnitType.PER_SPAQ_3_11_MONTHS.value,
@@ -136,7 +136,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             {
                 "name": "SMC 4",
                 "short_name": "SMC 4",
-                "code": "smc",
+                "code": "smc_4",
                 "description": "",
                 "allowed_cost_unit_types": [
                     InterventionCostUnitType.PER_SPAQ_3_11_MONTHS.value,
@@ -147,7 +147,7 @@ CATEGORIES_AND_INTERVENTIONS = {
             {
                 "name": "SMC 5",
                 "short_name": "SMC 5",
-                "code": "smc",
+                "code": "smc_5",
                 "description": "",
                 "allowed_cost_unit_types": [
                     InterventionCostUnitType.PER_SPAQ_3_11_MONTHS.value,
