@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import (
+    BudgetAssumptions,
     InterventionAssignment,
     ScenarioRule,
 )
@@ -49,6 +50,7 @@ class InterventionAssignmentModelTestCase(SNTMalariaTestCase):
             coverage=0.75,
         )
         self.org_unit_1 = OrgUnit.objects.create(name="Org Unit 1")
+        self.org_unit_2 = OrgUnit.objects.create(name="Org Unit 2")
 
     def test_backward_compatibility(self):
         count_before = InterventionAssignment.objects.count()
@@ -102,3 +104,46 @@ class InterventionAssignmentModelTestCase(SNTMalariaTestCase):
 
         with self.assertRaises(InterventionAssignment.DoesNotExist):
             InterventionAssignment.objects.get(id=new_assignment.id)
+
+    def test_delete_assignment_cascades_to_assumptions(self):
+        assignment_a = InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.org_unit_1,
+            intervention=self.intervention,
+            rule=self.scenario_rule,
+            coverage=Decimal("0.5"),
+            created_by=self.user,
+        )
+        assignment_b = InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.org_unit_2,
+            intervention=self.intervention,
+            rule=self.scenario_rule,
+            coverage=Decimal("0.5"),
+            created_by=self.user,
+        )
+        BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=assignment_a,
+            year=2025,
+            coverage=0.10,
+        )
+        BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=assignment_a,
+            year=2026,
+            coverage=0.30,
+        )
+        BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=assignment_b,
+            year=2025,
+            coverage=0.20,
+        )
+
+        assignment_b.delete()  # Simulate removing assignment_b from the scenario
+
+        assumptions = BudgetAssumptions.objects.filter(scenario=self.scenario)
+        self.assertEqual(assumptions.count(), 2)  # Only the assumptions related to assignment_b should be deleted
+        for assumption in assumptions:
+            self.assertEqual(assumption.intervention_assignment, assignment_a)

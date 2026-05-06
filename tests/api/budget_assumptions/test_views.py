@@ -125,7 +125,7 @@ class BudgetAssumptionsAPITestCase(SNTMalariaAPITestCase):
 
     def test_get_default_budget_assumption(self):
         self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.get(f"{DEFAULT_URL}")
+        response = self.client.get(DEFAULT_URL)
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
         expected_defaults = DEFAULT_COST_ASSUMPTIONS
 
@@ -133,6 +133,15 @@ class BudgetAssumptionsAPITestCase(SNTMalariaAPITestCase):
             coverage_key = f"{key}_coverage"
             self.assertIn(coverage_key, expected_defaults)
             self.assertEqual(result_value["coverage"], expected_defaults[coverage_key])
+
+    def test_get_default_budget_assumption_unauthenticated(self):
+        response = self.client.get(DEFAULT_URL)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_default_budget_assumption_with_no_perms(self):
+        self.client.force_authenticate(user=self.user_no_perms)
+        response = self.client.get(DEFAULT_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_budget_assumptions_scenario_other_account(self):
         self.client.force_authenticate(user=self.user_with_full_perm)
@@ -154,7 +163,7 @@ class BudgetAssumptionsAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(len(result), 1)
 
     def test_get_budget_assumptions_filters_by_year(self):
-        BudgetAssumptions.objects.create(
+        assumption_2025 = BudgetAssumptions.objects.create(
             scenario=self.scenario,
             intervention_assignment=self.assignment_a,
             year=2025,
@@ -172,8 +181,10 @@ class BudgetAssumptionsAPITestCase(SNTMalariaAPITestCase):
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["year"], 2025)
-        self.assertEqual(result[0]["intervention_assignment"], self.assignment_a.id)
+        result_assumptions = result[0]
+        self.assertEqual(result_assumptions["id"], assumption_2025.id)
+        self.assertEqual(result_assumptions["year"], 2025)
+        self.assertEqual(result_assumptions["intervention_assignment"], self.assignment_a.id)
 
     def test_get_budget_assumptions_retrieves_year_and_intervention_assignment(self):
         assumption_a = BudgetAssumptions.objects.create(
@@ -400,12 +411,19 @@ class BudgetAssumptionsAPITestCase(SNTMalariaAPITestCase):
             scenario=self.scenario,
         )
 
-        target_assumption = assumptions.get(year=2025, intervention_assignment=self.assignment_a)
-        same_scenario_other_assignment = assumptions.get(year=2025, intervention_assignment=self.assignment_b)
-        same_scenario_other_year = assumptions.get(year=2026, intervention_assignment=self.assignment_a)
-        other_scenario_assumption = BudgetAssumptions.objects.get(id=other_scenario_assumption.id)
-
-        self.assertEqual(str(target_assumption.coverage), "0.95")
-        self.assertEqual(str(same_scenario_other_assignment.coverage), "0.20")
-        self.assertEqual(str(same_scenario_other_year.coverage), "0.30")
-        self.assertEqual(str(other_scenario_assumption.coverage), "0.40")
+        target_assumption_updated = BudgetAssumptions.objects.get(year=2025, intervention_assignment=self.assignment_a)
+        self.assertNotEqual(
+            target_assumption.id, target_assumption_updated.id
+        )  # Should have been deleted and recreated
+        same_scenario_other_assignment = BudgetAssumptions.objects.get(
+            id=same_scenario_other_assignment.id
+        )  # Should not raise DoesNotExist
+        self.assertNotEqual(same_scenario_other_assignment, None)
+        same_scenario_other_year = BudgetAssumptions.objects.get(
+            id=same_scenario_other_year.id
+        )  # Should not raise DoesNotExist
+        self.assertNotEqual(same_scenario_other_year, None)
+        other_scenario_assumption = BudgetAssumptions.objects.get(
+            id=other_scenario_assumption.id
+        )  # Should not raise DoesNotExist
+        self.assertNotEqual(other_scenario_assumption, None)

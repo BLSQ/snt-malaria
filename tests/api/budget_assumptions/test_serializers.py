@@ -171,6 +171,16 @@ class BudgetAssumptionsUpsertManySerializerTests(BudgetAssumptionsSerializerBase
         self.assertFalse(serializer.is_valid())
         self.assertIn("intervention_assignments", serializer.errors)
 
+    def test_invalid_assignment_id_is_rejected(self):
+        data = {
+            "scenario": self.scenario.id,
+            "intervention_assignments": [9999],  # Non-existent ID
+            "budget_assumptions": [{"year": 2025, "coverage": 0.80}],
+        }
+        serializer = BudgetAssumptionsUpsertManySerializer(data=data, context=self._context_for(self.user))
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("intervention_assignments", serializer.errors)
+
     def test_assignments_from_other_scenario_are_rejected(self):
         data = {
             "scenario": self.scenario.id,
@@ -267,39 +277,21 @@ class BudgetAssumptionsUpsertManySerializerTests(BudgetAssumptionsSerializerBase
         assumptions = BudgetAssumptions.objects.filter(scenario=self.scenario)
         self.assertEqual(assumptions.count(), 3)  # Only the target row should be replaced, not the others
 
-        target = assumptions.get(year=2025, intervention_assignment=self.assignment_a)
-        same_scenario_other_year = assumptions.get(year=2026, intervention_assignment=self.assignment_a)
-        same_scenario_other_assignment = assumptions.get(year=2025, intervention_assignment=self.assignment_b)
+        # Verify that previous value has been removed
+        with self.assertRaisesMessage(
+            BudgetAssumptions.DoesNotExist, "BudgetAssumptions matching query does not exist"
+        ):
+            target = assumptions.get(id=target.id)
+
+        target = assumptions.get(intervention_assignment=self.assignment_a, year=2025)
+
+        same_scenario_other_year = assumptions.get(
+            id=same_scenario_other_year.id
+        )  # Should still exist with same values)
+        same_scenario_other_assignment = assumptions.get(id=same_scenario_other_assignment.id)
         other_scenario_row = BudgetAssumptions.objects.get(id=other_scenario_row.id)
 
         self.assertEqual(str(target.coverage), "0.95")
         self.assertEqual(str(same_scenario_other_assignment.coverage), "0.20")
         self.assertEqual(str(same_scenario_other_year.coverage), "0.30")
         self.assertEqual(str(other_scenario_row.coverage), "0.40")
-
-    def test_save_removing_assignment_deletes_related_assumptions(self):
-        BudgetAssumptions.objects.create(
-            scenario=self.scenario,
-            intervention_assignment=self.assignment_a,
-            year=2025,
-            coverage=0.10,
-        )
-        BudgetAssumptions.objects.create(
-            scenario=self.scenario,
-            intervention_assignment=self.assignment_a,
-            year=2026,
-            coverage=0.30,
-        )
-        BudgetAssumptions.objects.create(
-            scenario=self.scenario,
-            intervention_assignment=self.assignment_b,
-            year=2025,
-            coverage=0.20,
-        )
-
-        self.assignment_b.delete()  # Simulate removing assignment_b from the scenario
-
-        assumptions = BudgetAssumptions.objects.filter(scenario=self.scenario)
-        self.assertEqual(assumptions.count(), 2)  # Only the assumptions related to assignment_b should be deleted
-        for assumption in assumptions:
-            self.assertEqual(assumption.intervention_assignment, self.assignment_a)
