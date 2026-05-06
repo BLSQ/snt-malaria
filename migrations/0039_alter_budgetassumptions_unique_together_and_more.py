@@ -5,17 +5,18 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
+def remove_previous_assumptions(apps, schema_editor):
+    BudgetAssumptions = apps.get_model("snt_malaria", "BudgetAssumptions")
+    BudgetAssumptions.objects.all().delete()
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ("snt_malaria", "0038_alter_scenariorule_name"),
     ]
 
-    def remove_previous_assumptions(apps, schema_editor):
-        BudgetAssumptions = apps.get_model("snt_malaria", "BudgetAssumptions")
-        BudgetAssumptions.objects.all().delete()
-
     operations = [
-        migrations.RunPython(remove_previous_assumptions),
+        migrations.RunPython(remove_previous_assumptions, migrations.RunPython.noop, elidable=True),
         migrations.AlterUniqueTogether(
             name="budgetassumptions",
             unique_together=set(),
