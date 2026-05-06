@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.11.0](https://github.com/BLSQ/snt-malaria/compare/2.10.0...2.11.0) (2026-05-06)
+
+
+### Features
+
+* Add basic smoke tests on demo ([#278](https://github.com/BLSQ/snt-malaria/issues/278)) ([d5f1721](https://github.com/BLSQ/snt-malaria/commit/d5f1721c6337e09425c0c8e18688ae057effce47))
+* Apply inflation on costs ([#274](https://github.com/BLSQ/snt-malaria/issues/274)) ([f854104](https://github.com/BLSQ/snt-malaria/commit/f854104273e2c238ae0d0b83098572d1c785990b))
+* Cleanup nav permissions ([#281](https://github.com/BLSQ/snt-malaria/issues/281)) ([76658c5](https://github.com/BLSQ/snt-malaria/commit/76658c524de915bf767d96bab247af48b740c0e4))
+* Correctly handle the years in the budgeting population dataframe ([#277](https://github.com/BLSQ/snt-malaria/issues/277)) ([e70bf20](https://github.com/BLSQ/snt-malaria/commit/e70bf2042493548d2ea7deeba26a75e36f0892da))
+* **rules:** SNT-438 auto rule names and colour ([cbc47b2](https://github.com/BLSQ/snt-malaria/commit/cbc47b27797d44f3798e1010b30215822828b88e))
+* **setup:** SNT-440 expose load_impact_org_unit_mappings in django admin ([916c49a](https://github.com/BLSQ/snt-malaria/commit/916c49a348e639af3c94bc72bbfd22e83a3b59a1))
+* SNT-298 SNT account setup - backend ([#256](https://github.com/BLSQ/snt-malaria/issues/256)) ([7fb9daa](https://github.com/BLSQ/snt-malaria/commit/7fb9daa68952e7cae508d085534b3d6130686766))
+* SNT-437 scenario form year range slider ([#271](https://github.com/BLSQ/snt-malaria/issues/271)) ([4fe7354](https://github.com/BLSQ/snt-malaria/commit/4fe735424649a903b25a85affd2a25fda4e809ec))
+
+
+### Bug Fixes
+
+* **frontend:** SNT-439 flaky input field height ([b0d6540](https://github.com/BLSQ/snt-malaria/commit/b0d6540705f3c99cf94731962ecae60ed2bb4f54))
+* **impact:** SNT-385 IDM age group under5 ([b957626](https://github.com/BLSQ/snt-malaria/commit/b957626eb5278403b9e9edd864deaee73f69ba49))
+* **rules:** SNT-441 consistent matching pipeline for match-all and criteria ([cd8b24f](https://github.com/BLSQ/snt-malaria/commit/cd8b24f4d95c38742e60f53effcaf5aab7e95c8b))
+
 ## [2.10.0](https://github.com/BLSQ/snt-malaria/compare/2.9.0...2.10.0) (2026-04-22)
 
 
