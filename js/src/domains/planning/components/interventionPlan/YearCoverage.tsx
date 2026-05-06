@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { Box, IconButton, Collapse, Typography } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
@@ -51,11 +52,6 @@ export const YearCoverage: FC<Props> = ({
     disabled,
     setCoverage,
 }) => {
-    const useSafeIntl = () => {
-        return {
-            formatMessage: (message: any) => message.defaultMessage,
-        };
-    };
     const { formatMessage } = useSafeIntl();
     const [isCollapsed, setIsCollapsed] = React.useState(true);
 
