@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 from plugins.snt_malaria.models.scenario import Scenario
 
@@ -15,6 +16,9 @@ class BudgetAssumptions(models.Model):
             models.UniqueConstraint(
                 fields=["scenario", "intervention_assignment", "year"],
                 name="unique_budget_assumption_per_assignment_year",
+            ),
+            models.CheckConstraint(
+                check=Q(coverage__gte=0) & Q(coverage__lte=1), name="budget_assumptions_coverage_between_0_and_1"
             ),
         ]
 
