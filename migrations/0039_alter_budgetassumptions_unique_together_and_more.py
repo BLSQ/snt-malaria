@@ -10,7 +10,13 @@ class Migration(migrations.Migration):
         ("snt_malaria", "0038_alter_scenariorule_name"),
     ]
 
+    def remove_previous_assumptions(apps, schema_editor):
+        BudgetAssumptions = apps.get_model("snt_malaria", "BudgetAssumptions")
+        db_alias = schema_editor.connection.alias
+        BudgetAssumptions.objects.using(db_alias).all().delete()
+
     operations = [
+        migrations.RunPython(remove_previous_assumptions),
         migrations.AlterUniqueTogether(
             name="budgetassumptions",
             unique_together=set(),

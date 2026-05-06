@@ -4,14 +4,19 @@ from django.utils.text import slugify
 
 from iaso.models import Account, OrgUnit, OrgUnitType
 from iaso.test import APITestCase, TestCase
-from plugins.snt_malaria.models import Intervention, InterventionAssignment, InterventionCategory, Scenario
+from plugins.snt_malaria.models import (
+    BudgetAssumptions,
+    Intervention,
+    InterventionAssignment,
+    InterventionCategory,
+    Scenario,
+)
 
 
 class SNTMalariaTestMixin:
     auto_create_account = True
 
     def setUp(self):
-        super().setUp()
         self._account_counter = count(1)
         self._user_counter = count(1)
         self._scenario_counter = count(1)
@@ -120,6 +125,15 @@ class SNTMalariaTestMixin:
             **kwargs,
         )
 
+    def create_snt_budget_assumption(self, scenario, intervention_assignment, year, coverage, **kwargs):
+        return BudgetAssumptions.objects.create(
+            scenario=scenario,
+            intervention_assignment=intervention_assignment,
+            year=year,
+            coverage=coverage,
+            **kwargs,
+        )
+
     def create_snt_default_interventions(self, account=None, created_by=None):
         """Create the default Vaccination/Chemotherapy categories and RTS,S/SMC/IPTp interventions.
 
@@ -189,6 +203,9 @@ class SNTMalariaTestMixin:
         created_by=None,
         org_unit_type_name="DISTRICT",
     ):
+        # This does the same as create_snt_default_interventions
+        # but also creates org units and assignments for the RTS,S and SMC interventions,
+
         account = account or getattr(scenario, "account", self.account)
         created_by = created_by or getattr(scenario, "created_by", self.user)
 
@@ -227,8 +244,10 @@ class SNTMalariaTestMixin:
 
 
 class SNTMalariaTestCase(SNTMalariaTestMixin, TestCase):
-    pass
+    def setUp(self):
+        super().setUp()
 
 
 class SNTMalariaAPITestCase(SNTMalariaTestMixin, APITestCase):
-    pass
+    def setUp(self):
+        super().setUp()

@@ -317,6 +317,14 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(self.scenario.start_year, 2026)
         self.assertEqual(self.scenario.end_year, 2028)
 
+    def test_scenario_create_unauthenticated(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.post(
+            self.BASE_URL, {"name": "New Scenario", "start_year": 2025, "end_year": 2026}, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Scenario.objects.count(), 1)
+
     def test_update_own_scenario_basic_perm(self):
         basic_scenario = Scenario.objects.create(
             account=self.account,

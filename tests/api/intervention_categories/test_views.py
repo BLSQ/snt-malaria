@@ -11,25 +11,25 @@ class InterventionCategoryAPITestCase(SNTMalariaAPITestCase):
     def setUp(self):
         super().setUp()
 
-        self.account, self.user_with_perms = self.create_snt_account(name="Other Account")
+        self.account, self.user_no_perms = self.create_snt_account(name="Other Account")
 
         self.intervention_category_1 = self.create_snt_intervention_category(
             account=self.account,
-            created_by=self.user_with_perms,
+            created_by=self.user_no_perms,
             name="Intervention Category 1",
             short_name="IC1",
             description="Description for Intervention Category 1",
         )
         self.intervention_category_2 = self.create_snt_intervention_category(
             account=self.account,
-            created_by=self.user_with_perms,
+            created_by=self.user_no_perms,
             name="Intervention Category 2",
             short_name="IC2",
             description="Description for Intervention Category 2",
         )
         self.intervention_category_3 = self.create_snt_intervention_category(
             account=self.account,
-            created_by=self.user_with_perms,
+            created_by=self.user_no_perms,
             name="Intervention Category 3",
             short_name="IC3",
             description="Description for Intervention Category 3",
@@ -51,7 +51,7 @@ class InterventionCategoryAPITestCase(SNTMalariaAPITestCase):
         )
 
     def test_list_intervention_categories(self):
-        self.client.force_authenticate(user=self.user_with_perms)
+        self.client.force_authenticate(user=self.user_no_perms)
         response = self.client.get(self.BASE_URL)
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
         self.assertEqual(len(result), 3)  # Should only return categories for self.account

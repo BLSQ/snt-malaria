@@ -29,7 +29,7 @@ type PlanningContextType = {
     interventionCategories: InterventionCategory[];
     interventionAssignments: InterventionAssignmentResponse[];
     interventionPlans: InterventionPlan[];
-    defaultBudgetAssumptions: DefaultBudgetAssumptions | undefined;
+    defaultBudgetAssumptions?: DefaultBudgetAssumptions;
     toggleIsEditing: () => void;
 };
 

@@ -32,9 +32,7 @@ class BudgetAssumptionsViewSet(viewsets.ModelViewSet):
         )
 
     def list(self, request, *args, **kwargs):
-        query_serializer = BudgetAssumptionsQuerySerializer(
-            data=request.query_params, context=self.get_serializer_context()
-        )
+        query_serializer = self.get_serializer(data=request.query_params)
         query_serializer.is_valid(raise_exception=True)
         scenario = query_serializer.validated_data["scenario"]
         year = query_serializer.validated_data.get("year")
@@ -48,9 +46,8 @@ class BudgetAssumptionsViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def default(self, request, *args, **kwargs):
-        serializer = DefaultCostAssumptionsSerializer({}, many=False)
-        data = serializer.data
-        return Response(data, status=status.HTTP_200_OK)
+        serializer = DefaultCostAssumptionsSerializer({})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["post"])
     def many(self, request, *args, **kwargs):

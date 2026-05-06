@@ -14,7 +14,6 @@ class BudgetAssumptions(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["scenario", "intervention_assignment", "year"],
-                condition=models.Q(year__isnull=False, intervention_assignment__isnull=False),
                 name="unique_budget_assumption_per_assignment_year",
             ),
         ]
@@ -24,8 +23,8 @@ class BudgetAssumptions(models.Model):
         "snt_malaria.InterventionAssignment",
         on_delete=models.CASCADE,
         related_name="budget_assumptions",
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
     )
-    year = models.IntegerField(null=True, blank=True)
+    year = models.PositiveSmallIntegerField(null=False, blank=False)
     coverage = models.DecimalField(max_digits=3, decimal_places=2)

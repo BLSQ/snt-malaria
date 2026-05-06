@@ -1,7 +1,10 @@
+from decimal import Decimal
+
 from django.db import IntegrityError
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import (
+    BudgetAssumptions,
     InterventionAssignment,
     Scenario,
     ScenarioRule,
@@ -90,6 +93,75 @@ class ScenarioModelTestCase(SNTMalariaTestCase):
 
         assignments = self.scenario.intervention_assignments.all()
         self.assertEqual(assignments.count(), 3)
+
+    def test_get_assumptions_by_intervention_and_year(self):
+        self.scenario.refresh_assignments(self.user)
+        assignment = self.scenario.intervention_assignments.first()
+        self.create_snt_budget_assumption(
+            scenario=self.scenario,
+            intervention_assignment=assignment,
+            year=2025,
+            coverage=0.8,
+        )
+        self.create_snt_budget_assumption(
+            scenario=self.scenario,
+            intervention_assignment=assignment,
+            year=2026,
+            coverage=0.6,
+        )
+
+        assumptions = self.scenario._get_assumptions_by_intervention_and_year_()
+        intervention = assignment.intervention.id
+        self.assertIn(intervention, assumptions)
+        self.assertIn(2025, assumptions[intervention])
+        self.assertIn(2026, assumptions[intervention])
+        self.assertEqual(assumptions[intervention][2025], Decimal("0.80"))
+        self.assertEqual(assumptions[intervention][2026], Decimal("0.60"))
+
+    def test_restore_assumptions_after_refresh_assignments(self):
+        self.scenario.refresh_assignments(self.user)
+        assignment = self.scenario.intervention_assignments.first()
+        self.create_snt_budget_assumption(
+            scenario=self.scenario,
+            intervention_assignment=assignment,
+            year=2025,
+            coverage=0.8,
+        )
+        self.create_snt_budget_assumption(
+            scenario=self.scenario,
+            intervention_assignment=assignment,
+            year=2026,
+            coverage=0.6,
+        )
+
+        # Verify that we have the assumptions in the DB
+        self.assertEqual(assignment.budget_assumptions.count(), 2)
+
+        # Refresh assignments again, which should trigger the restoration of assumptions
+        self.scenario.refresh_assignments(self.user)
+        refreshed_assignment = InterventionAssignment.objects.get(
+            scenario=self.scenario, org_unit=assignment.org_unit, intervention=assignment.intervention
+        )
+        self.assertEqual(refreshed_assignment.budget_assumptions.count(), 2)
+
+        # Check that assumptions have same values but different IDs (i.e. they were deleted and recreated)
+        assumptions = refreshed_assignment.budget_assumptions.all()
+        assumption_2025 = assumptions.get(year=2025)
+        assumption_2026 = assumptions.get(year=2026)
+        self.assertEqual(assumption_2025.coverage, Decimal("0.80"))
+        self.assertEqual(assumption_2026.coverage, Decimal("0.60"))
+
+        # Delete manually assumptions and restore them with the helper method
+        assignment_coverages = self.scenario._get_assumptions_by_intervention_and_year_()
+        BudgetAssumptions.objects.all().delete()
+        self.scenario._restore_assumptions_for_all_assignments_(assignment_coverages)
+        refreshed_assignment_2 = InterventionAssignment.objects.get(
+            scenario=self.scenario, org_unit=assignment.org_unit, intervention=assignment.intervention
+        )
+        self.assertEqual(refreshed_assignment_2.budget_assumptions.count(), 2)
+        assumptions = refreshed_assignment_2.budget_assumptions.all()
+        self.assertEqual(assumptions[0].coverage, Decimal("0.80"))
+        self.assertEqual(assumptions[1].coverage, Decimal("0.60"))
 
     def test_refresh_assignments_priority_ordering(self):
         """

@@ -59,7 +59,7 @@ export type DefaultBudgetAssumptions = {
 export type BudgetAssumptions = {
     id: number;
     intervention_assignment: number;
-    year: number | null;
+    year?: number;
     scenario: number;
     coverage: number;
 };

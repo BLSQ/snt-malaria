@@ -28,7 +28,6 @@ class BudgetAssumptionsReadSerializer(serializers.ModelSerializer):
 
 class DefaultCostAssumptionsSerializer(serializers.Serializer):
     def to_representation(self, instance):
-        print("Serializing default cost assumptions with instance:", instance)
         return {
             key.replace("_coverage", ""): {"coverage": value}
             for key, value in DEFAULT_COST_ASSUMPTIONS.items()
@@ -64,7 +63,6 @@ class BudgetAssumptionsUpsertManySerializer(serializers.Serializer):
         return value
 
     def validate(self, attrs):
-        account = self.context["request"].user.iaso_profile.account
         scenario = attrs.get("scenario")
         assignment_ids = attrs.get("intervention_assignments") or []
 
@@ -73,24 +71,21 @@ class BudgetAssumptionsUpsertManySerializer(serializers.Serializer):
         assignments = list(
             InterventionAssignment.objects.filter(
                 id__in=unique_assignment_ids,
-                scenario__account=account,
+                scenario=scenario,
             )
         )
+
         assignments_by_id = {assignment.id: assignment for assignment in assignments}
-        missing_ids = [
-            assignment_id for assignment_id in unique_assignment_ids if assignment_id not in assignments_by_id
-        ]
+        found_ids = set(assignments_by_id.keys())
+        requested_ids = set(unique_assignment_ids)
+        missing_ids = requested_ids - found_ids
+
         if missing_ids:
             raise serializers.ValidationError(
                 {"intervention_assignments": f"Invalid intervention assignment IDs: {missing_ids}"}
             )
 
         resolved_assignments = [assignments_by_id[assignment_id] for assignment_id in unique_assignment_ids]
-
-        if scenario and any(assignment.scenario_id != scenario.id for assignment in resolved_assignments):
-            raise serializers.ValidationError(
-                {"intervention_assignments": "All assignments must belong to the provided scenario."}
-            )
 
         attrs["intervention_assignments"] = resolved_assignments
 

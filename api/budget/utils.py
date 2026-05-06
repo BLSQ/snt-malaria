@@ -254,7 +254,6 @@ def build_budget_assumptions(scenario):
         scenario=scenario,
         year__gte=scenario.start_year,
         year__lte=scenario.end_year,
-        intervention_assignment__isnull=False,
     ).select_related("intervention_assignment__intervention")
     cost_assumptions = DEFAULT_COST_ASSUMPTIONS.copy()
     assumptions_by_year = {}

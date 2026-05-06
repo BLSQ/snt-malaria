@@ -73,7 +73,7 @@ class Scenario(SoftDeletableModel):
         self.save()
 
     # As for the moment, assumptions are only managed per intervention, let's group them.
-    def _get_assumptions_by_intervention_and_year_(self):
+    def _get_assumptions_by_intervention_and_year_(self) -> dict[int, dict[int, float]]:
         """Helper method to get a dict of dicts of assumptions for this scenario, structured as {intervention_id: {year: assumption}}"""
         from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 
@@ -90,7 +90,9 @@ class Scenario(SoftDeletableModel):
             assumptions_by_intervention[intervention_id][year] = coverage
         return assumptions_by_intervention
 
-    def _restore_assumptions_for_all_assignments_(self, assumptions_by_intervention):
+    def _restore_assumptions_for_all_assignments_(
+        self, assumptions_by_intervention: dict[int, dict[int, float]]
+    ) -> None:
         """Helper method to restore assumptions for a list of intervention assignments, based on the dict of dicts of assumptions for this scenario structured as {intervention_id: {year: assumption}}"""
         from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 
