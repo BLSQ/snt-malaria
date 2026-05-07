@@ -82,12 +82,12 @@ class BudgetViewSet(viewsets.ModelViewSet):
         # build a quick lookup map ((code, type) -> id) for fast id retrieval
         interventions_map = {(iv.code, iv.short_name): iv.id for iv in interventions}
 
-        settings = build_budget_assumptions(scenario)
-
         budgets = []
+        assumptions_by_year = build_budget_assumptions(scenario)
+
         budget_calculator = BudgetCalculator(
             interventions_input=interventions_input,
-            settings=settings,
+            settings=assumptions_by_year,
             cost_df=cost_df,
             population_df=population_df,
             local_currency="NGN",
@@ -127,7 +127,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
             name=f"Budget for {scenario.name}",
             cost_input=cost_df.astype(str).to_dict(orient="records"),
             population_input=population_df.astype(str).to_dict(orient="records"),
-            assumptions=settings,
+            assumptions=assumptions_by_year,
             results=budgets,
             created_by=request.user,
             updated_by=request.user,

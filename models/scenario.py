@@ -62,12 +62,59 @@ class Scenario(SoftDeletableModel):
 
     @transaction.atomic()
     def refresh_assignments(self, user: User) -> None:
+        assumption_by_intervention = self._get_assumptions_by_intervention_and_year_()
         self.intervention_assignments.all().delete()
         new_assignments = {}
         for rule in self.rules.order_by("-priority"):
             rule.refresh_assignments(user, new_assignments)
+
+        self._restore_assumptions_for_all_assignments_(assumption_by_intervention)
         # Bump updated_at so the impact API cache (keyed on this timestamp) self-invalidates.
         self.save()
+
+    # As for the moment, assumptions are only managed per intervention, let's group them.
+    def _get_assumptions_by_intervention_and_year_(self) -> dict[int, dict[int, float]]:
+        """Helper method to get a dict of dicts of assumptions for this scenario, structured as {intervention_id: {year: assumption}}"""
+        from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
+
+        assumptions = (
+            BudgetAssumptions.objects.prefetch_related("intervention_assignment")
+            .filter(scenario=self)
+            .values_list("intervention_assignment__intervention_id", "year", "coverage")
+        )
+
+        assumptions_by_intervention = dict()
+        for intervention_id, year, coverage in assumptions:
+            if intervention_id not in assumptions_by_intervention:
+                assumptions_by_intervention[intervention_id] = {}
+            assumptions_by_intervention[intervention_id][year] = coverage
+        return assumptions_by_intervention
+
+    def _restore_assumptions_for_all_assignments_(
+        self, assumptions_by_intervention: dict[int, dict[int, float]]
+    ) -> None:
+        """Helper method to restore assumptions for a list of intervention assignments, based on the dict of dicts of assumptions for this scenario structured as {intervention_id: {year: assumption}}"""
+        from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
+
+        assignments = self.intervention_assignments.all()
+        assumptions_to_create = []
+        for assignment in assignments:
+            intervention_id = assignment.intervention_id
+            if intervention_id not in assumptions_by_intervention:
+                continue
+
+            assumptions_per_year = assumptions_by_intervention[intervention_id]
+            for year, coverage in assumptions_per_year.items():
+                assumptions_to_create.append(
+                    BudgetAssumptions(
+                        scenario=self,
+                        intervention_assignment=assignment,
+                        year=year,
+                        coverage=coverage,
+                    )
+                )
+
+        BudgetAssumptions.objects.bulk_create(assumptions_to_create)
 
 
 SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA = {
@@ -259,6 +306,7 @@ class ScenarioRule(models.Model):
         InterventionAssignment.objects.bulk_create(intervention_assignments_to_create)
 
 
+# Deprecated replaces by BudgetAssumptions
 class ScenarioRuleInterventionProperties(models.Model):
     scenario_rule = models.ForeignKey(ScenarioRule, on_delete=models.CASCADE, related_name="intervention_properties")
     intervention = models.ForeignKey("Intervention", on_delete=models.CASCADE, related_name="scenario_rule_properties")

@@ -1,510 +1,297 @@
 from unittest.mock import Mock
 
 from rest_framework.exceptions import PermissionDenied
+from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS
 
-from iaso.models.base import Account
-from iaso.test import TestCase
 from plugins.snt_malaria.api.budget_assumptions.serializers import (
-    BudgetAssumptionsCreateSerializer,
     BudgetAssumptionsQuerySerializer,
     BudgetAssumptionsReadSerializer,
     BudgetAssumptionsUpdateSerializer,
+    BudgetAssumptionsUpsertManySerializer,
+    DefaultCostAssumptionsSerializer,
 )
-from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
-from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
-from plugins.snt_malaria.models.scenario import Scenario
+from plugins.snt_malaria.models import (
+    BudgetAssumptions,
+)
+from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
-class BudgetAssumptionsQuerySerializerTests(TestCase):
+class BudgetAssumptionsSerializerBaseTestCase(SNTMalariaTestCase):
     def setUp(self):
-        self.account = Account.objects.create(name="Test Account")
-        self.user = self.create_user_with_profile(username="testuser", account=self.account)
+        super().setUp()
 
-        # Create a scenario
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user,
-            name="Test Scenario",
-            description="A test scenario description.",
-            start_year=2025,
-            end_year=2028,
-        )
-        self.context = {"request": Mock(user=self.user)}
-
-    def test_scenario_required(self):
-        serializer = BudgetAssumptionsQuerySerializer(data={}, context=self.context)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("scenario", serializer.errors)
-        self.assertEqual(serializer.errors["scenario"][0], "This field is required.")
-        # Now test with scenario provided
-        serializer = BudgetAssumptionsQuerySerializer(data={"scenario": self.scenario.id}, context=self.context)
-        self.assertTrue(serializer.is_valid())
-
-    def test_scenario_validation(self):
-        # Test with a scenario that does not exist
-        serializer = BudgetAssumptionsQuerySerializer(data={"scenario": 9999}, context=self.context)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("scenario", serializer.errors)
-        self.assertIn("Invalid pk", serializer.errors["scenario"][0])
-
-        # Test with a valid scenario
-        serializer = BudgetAssumptionsQuerySerializer(data={"scenario": self.scenario.id}, context=self.context)
-        self.assertTrue(serializer.is_valid())
-
-
-class BudgetAssumptionsSerializerTests(TestCase):
-    def setUp(self):
-        self.account = Account.objects.create(name="Test Account")
-        self.user = self.create_user_with_profile(username="testuser", account=self.account)
-
-        # Create a scenario
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user,
-            name="Test Scenario",
-            description="A test scenario description.",
-            start_year=2025,
-            end_year=2028,
+        self.full_perm_user = self.create_user_with_profile(
+            username="fullperm", account=self.account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
         )
 
-        self.int_category_vaccination = InterventionCategory.objects.create(
+        self.other_user = self.create_user_with_profile(username="otheruser", account=self.account)
+
+        self.scenario = self.create_snt_scenario(account=self.account, created_by=self.user, name="Scenario A")
+        self.other_user_scenario = self.create_snt_scenario(
+            account=self.account,
+            created_by=self.other_user,
+            name="Scenario B",
+        )
+
+        self.other_account, self.other_account_user = self.create_snt_account(
+            name="Other Account",
+            username="external",
+        )
+        self.other_account_scenario = self.create_snt_scenario(
+            account=self.other_account,
+            created_by=self.other_account_user,
+            name="Other Account Scenario",
+        )
+
+        self.intervention_category = self.create_snt_intervention_category(
             name="Vaccination",
-            account=self.account,
-            created_by=self.user,
         )
-
-        self.intervention_vaccination_rts = Intervention.objects.create(
+        self.intervention_a = self.create_snt_intervention(
             name="RTS,S",
-            created_by=self.user,
-            intervention_category=self.int_category_vaccination,
+            intervention_category=self.intervention_category,
             code="rts_s",
         )
-
-        self.intervention_vaccination_rts2 = Intervention.objects.create(
-            name="RTS,S2",
-            created_by=self.user,
-            intervention_category=self.int_category_vaccination,
-            code="rts_s2",
+        self.intervention_b = self.create_snt_intervention(
+            name="SMC",
+            intervention_category=self.intervention_category,
+            code="smc",
         )
 
-        self.context = {"request": Mock(user=self.user)}
+        self.org_unit_type = self.create_snt_org_unit_type(name="DISTRICT")
+        self.org_1 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="District 1")
+        self.org_2 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="District 2")
 
+        self.assignment_a = self.create_snt_assignment(self.scenario, self.org_1, self.intervention_a, self.user)
+        self.assignment_b = self.create_snt_assignment(self.scenario, self.org_2, self.intervention_b, self.user)
+        self.assignment_other_scenario = self.create_snt_assignment(
+            self.other_user_scenario,
+            self.org_1,
+            self.intervention_a,
+            self.other_user,
+        )
+
+        self.other_account_category = self.create_snt_intervention_category(
+            name="Other Category",
+            account=self.other_account,
+            created_by=self.other_account_user,
+        )
+        self.other_account_intervention = self.create_snt_intervention(
+            name="Other Intervention",
+            created_by=self.other_account_user,
+            intervention_category=self.other_account_category,
+            code="other_int",
+        )
+        self.other_account_assignment = self.create_snt_assignment(
+            self.other_account_scenario,
+            self.org_1,
+            self.other_account_intervention,
+            self.other_account_user,
+        )
+
+    def _context_for(self, user):
+        return {"request": Mock(user=user)}
+
+
+class BudgetAssumptionsQuerySerializerTests(BudgetAssumptionsSerializerBaseTestCase):
+    def test_scenario_is_required(self):
+        serializer = BudgetAssumptionsQuerySerializer(data={}, context=self._context_for(self.user))
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("scenario", serializer.errors)
+
+    def test_only_scenarios_from_users_account_are_allowed(self):
+        serializer = BudgetAssumptionsQuerySerializer(
+            data={"scenario": self.other_account_scenario.id},
+            context=self._context_for(self.user),
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("scenario", serializer.errors)
+
+    def test_year_is_optional_and_nullable(self):
+        serializer = BudgetAssumptionsQuerySerializer(
+            data={"scenario": self.scenario.id, "year": None},
+            context=self._context_for(self.user),
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+
+class BudgetAssumptionsReadSerializerTests(BudgetAssumptionsSerializerBaseTestCase):
     def test_serializer_fields(self):
         serializer = BudgetAssumptionsReadSerializer()
-        expected_fields = {
-            "id",
-            "scenario",
-            "intervention_code",
-            "coverage",
-            "divisor",
-            "bale_size",
-            "buffer_mult",
-            "doses_per_pw",
-            "age_string",
-            "pop_prop_3_11",
-            "pop_prop_12_59",
-            "monthly_rounds",
-            "touchpoints",
-            "tablet_factor",
-            "doses_per_child",
-        }
-        self.assertEqual(set(serializer.fields.keys()), expected_fields)
+        self.assertEqual(
+            set(serializer.fields.keys()),
+            {"id", "scenario", "intervention_assignment", "year", "coverage"},
+        )
 
-    def test_missing_fields(self):
-        data = {
-            "intervention_code": "smth",
-            "coverage": "0.80",
-            "divisor": "1.00",
-            "bale_size": 10,
-            "buffer_mult": "1.20",
-            "doses_per_pw": 2,
-            "age_string": "3-59",
-            "pop_prop_3_11": "0.1000000000",
-            "pop_prop_12_59": "0.5000000000",
-            "monthly_rounds": 3,
-            "touchpoints": "2.5000000000",
-            "doses_per_child": 6,
-        }
-        serializer = BudgetAssumptionsReadSerializer(data=data, context=self.context)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("scenario", serializer.errors)
-        self.assertEqual(serializer.errors["scenario"][0], "This field is required.")
-        # Now provide scenario and test again
-        data["scenario"] = self.scenario.id
-        serializer = BudgetAssumptionsReadSerializer(data=data, context=self.context)
-        self.assertFalse(serializer.is_valid())
-
-    def test_with_object_instance(self):
-        instance = BudgetAssumptions(
-            id=1,
+    def test_serializes_instance(self):
+        assumption = BudgetAssumptions.objects.create(
             scenario=self.scenario,
-            intervention_code=self.intervention_vaccination_rts.code,
-            coverage="0.80",
-            divisor="1.00",
-            bale_size=10,
-            buffer_mult="1.20",
-            doses_per_pw=2,
-            age_string="3-59",
-            pop_prop_3_11="0.10",
-            pop_prop_12_59="0.50",
-            monthly_rounds=3,
-            touchpoints=2,
-            tablet_factor="0.55",
-            doses_per_child=6,
+            intervention_assignment=self.assignment_a,
+            year=2025,
+            coverage=0.80,
         )
-        serializer = BudgetAssumptionsReadSerializer(instance)
-        data = serializer.data
-        self.assertEqual(data["id"], 1)
-        self.assertEqual(data["scenario"], self.scenario.id)
-        self.assertEqual(data["intervention_code"], self.intervention_vaccination_rts.code)
-        self.assertEqual(data["coverage"], "0.80")
-        self.assertEqual(data["divisor"], "1.00")
-        self.assertEqual(data["bale_size"], 10)
-        self.assertEqual(data["buffer_mult"], "1.20")
-        self.assertEqual(data["doses_per_pw"], 2)
-        self.assertEqual(data["age_string"], "3-59")
-        self.assertEqual(data["pop_prop_3_11"], "0.10")
-        self.assertEqual(data["pop_prop_12_59"], "0.50")
-        self.assertEqual(data["monthly_rounds"], 3)
-        self.assertEqual(data["touchpoints"], 2)
-        self.assertEqual(data["tablet_factor"], "0.55")
-        self.assertEqual(data["doses_per_child"], 6)
 
-    def test_valid_data(self):
-        data = {
-            "scenario": self.scenario.id,
-            "intervention_code": self.intervention_vaccination_rts.code,
-            "coverage": "0.80",
-            "divisor": "1.00",
-            "bale_size": 10,
-            "buffer_mult": "1.20",
-            "doses_per_pw": 2,
-            "age_string": "3-59",
-            "pop_prop_3_11": "0.10",
-            "pop_prop_12_59": "0.50",
-            "monthly_rounds": 3,
-            "touchpoints": 2,
-            "tablet_factor": "0.55",
-            "doses_per_child": 6,
-        }
-        serializer = BudgetAssumptionsReadSerializer(data=data, context=self.context)
+        serializer = BudgetAssumptionsReadSerializer(assumption)
+        self.assertEqual(serializer.data["id"], assumption.id)
+        self.assertEqual(serializer.data["scenario"], self.scenario.id)
+        self.assertEqual(serializer.data["intervention_assignment"], self.assignment_a.id)
+        self.assertEqual(serializer.data["year"], 2025)
+        self.assertEqual(serializer.data["coverage"], "0.80")
+
+
+class BudgetAssumptionsUpdateSerializerTests(BudgetAssumptionsSerializerBaseTestCase):
+    def test_invalid_coverage_range(self):
+        serializer = BudgetAssumptionsUpdateSerializer(data={"coverage": 1.5, "year": 2025})
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("coverage", serializer.errors)
+
+    def test_year_can_be_null(self):
+        serializer = BudgetAssumptionsUpdateSerializer(data={"coverage": 0.60, "year": None})
         self.assertTrue(serializer.is_valid(), serializer.errors)
-        instance = serializer.save()
-        self.assertIsNotNone(instance.id)
-        self.assertEqual(instance.scenario.id, self.scenario.id)
-        self.assertEqual(instance.intervention_code, self.intervention_vaccination_rts.code)
-        self.assertEqual(str(instance.coverage), "0.80")
-        self.assertEqual(str(instance.divisor), "1.00")
-        self.assertEqual(instance.bale_size, 10)
-        self.assertEqual(str(instance.buffer_mult), "1.20")
-        self.assertEqual(instance.doses_per_pw, 2)
-        self.assertEqual(instance.age_string, "3-59")
-        self.assertEqual(str(instance.pop_prop_3_11), "0.10")
-        self.assertEqual(str(instance.pop_prop_12_59), "0.50")
-        self.assertEqual(instance.monthly_rounds, 3)
-        self.assertEqual(instance.touchpoints, 2)
-        self.assertEqual(str(instance.tablet_factor), "0.55")
-        self.assertEqual(instance.doses_per_child, 6)
-
-    def test_valid_data_with_id(self):
-        model = BudgetAssumptions.objects.create(
-            scenario=self.scenario,
-            intervention_code=self.intervention_vaccination_rts2.code,
-            coverage="0.75",
-            divisor="1.00",
-            bale_size=10,
-            buffer_mult="1.10",
-            doses_per_pw=2,
-            age_string="3-59",
-            pop_prop_3_11="0.10",
-            pop_prop_12_59="0.50",
-            monthly_rounds=3,
-            touchpoints=2,
-            tablet_factor="0.50",
-            doses_per_child=6,
-        )
-
-        data = {
-            "id": model.id,
-            "scenario": self.scenario.id,
-            "intervention_code": self.intervention_vaccination_rts.code,
-            "coverage": "0.80",
-            "divisor": "1.00",
-            "bale_size": 10,
-            "buffer_mult": "1.20",
-            "doses_per_pw": 2,
-            "age_string": "3-59",
-            "pop_prop_3_11": "0.10",
-            "pop_prop_12_59": "0.50",
-            "monthly_rounds": 3,
-            "touchpoints": 2,
-            "tablet_factor": "0.55",
-            "doses_per_child": 6,
-        }
-        serializer = BudgetAssumptionsReadSerializer(data=data, context=self.context)
-        self.assertTrue(serializer.is_valid(), serializer.errors)
-        instance = serializer.update(model, serializer.validated_data)
-        self.assertIsNotNone(instance.id)
-        self.assertEqual(instance.id, model.id)
-        self.assertEqual(instance.scenario.id, self.scenario.id)
-        self.assertEqual(instance.intervention_code, self.intervention_vaccination_rts.code)
-        self.assertEqual(str(instance.coverage), "0.80")
-        self.assertEqual(str(instance.divisor), "1.00")
-        self.assertEqual(instance.bale_size, 10)
-        self.assertEqual(str(instance.buffer_mult), "1.20")
-        self.assertEqual(instance.doses_per_pw, 2)
-        self.assertEqual(instance.age_string, "3-59")
-        self.assertEqual(str(instance.pop_prop_3_11), "0.10")
-        self.assertEqual(str(instance.pop_prop_12_59), "0.50")
-        self.assertEqual(instance.monthly_rounds, 3)
-        self.assertEqual(instance.touchpoints, 2)
-        self.assertEqual(str(instance.tablet_factor), "0.55")
-        self.assertEqual(instance.doses_per_child, 6)
 
 
-class BudgetAssumptionsCreateSerializerTests(TestCase):
-    def setUp(self):
-        self.account = Account.objects.create(name="Test Account")
-        self.user = self.create_user_with_profile(username="testuser", account=self.account)
+class DefaultCostAssumptionsSerializerTests(BudgetAssumptionsSerializerBaseTestCase):
+    def test_uses_default_coverage_for_given_intervention_code(self):
+        serializer = DefaultCostAssumptionsSerializer()
+        expected_defaults = DEFAULT_COST_ASSUMPTIONS
+        for key, value in serializer.data:
+            coverage_key = f"{key}_coverage"
+            self.assertIn(coverage_key, expected_defaults)
+            self.assertEqual(value["coverage"], expected_defaults[coverage_key])
 
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user,
-            name="Test Scenario",
-            description="A test scenario description.",
-            start_year=2025,
-            end_year=2028,
-        )
-        self.int_category_vaccination = InterventionCategory.objects.create(
-            name="Vaccination",
-            account=self.account,
-            created_by=self.user,
-        )
-        self.intervention_vaccination_rts = Intervention.objects.create(
-            name="RTS,S",
-            created_by=self.user,
-            intervention_category=self.int_category_vaccination,
-            code="rts_s",
-        )
 
-        self.context = {"request": Mock(user=self.user)}
-
-    def test_missing_scenario(self):
-        data = {
-            "intervention_code": self.intervention_vaccination_rts.code,
-            "coverage": "0.80",
-            "divisor": "1.00",
-            "bale_size": 10,
-            "buffer_mult": "1.20",
-            "doses_per_pw": 2,
-            "age_string": "3-59",
-            "pop_prop_3_11": "0.10",
-            "pop_prop_12_59": "0.50",
-            "monthly_rounds": 3,
-            "touchpoints": 2,
-            "doses_per_child": 6,
-        }
-        serializer = BudgetAssumptionsCreateSerializer(data=data, context=self.context)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("scenario", serializer.errors)
-        self.assertEqual(serializer.errors["scenario"][0], "This field is required.")
-
-    def test_missing_intervention(self):
+class BudgetAssumptionsUpsertManySerializerTests(BudgetAssumptionsSerializerBaseTestCase):
+    def test_empty_assignments_are_rejected(self):
         data = {
             "scenario": self.scenario.id,
-            "coverage": "0.80",
-            "divisor": "1.00",
-            "bale_size": 10,
-            "buffer_mult": "1.20",
-            "doses_per_pw": 2,
-            "age_string": "3-59",
-            "pop_prop_3_11": "0.10",
-            "pop_prop_12_59": "0.50",
-            "monthly_rounds": 3,
-            "touchpoints": 2,
-            "doses_per_child": 6,
+            "intervention_assignments": [],
+            "budget_assumptions": [{"year": 2025, "coverage": 0.80}],
         }
-        serializer = BudgetAssumptionsCreateSerializer(data=data, context=self.context)
+        serializer = BudgetAssumptionsUpsertManySerializer(data=data, context=self._context_for(self.user))
         self.assertFalse(serializer.is_valid())
-        self.assertIn("intervention_code", serializer.errors)
-        self.assertEqual(serializer.errors["intervention_code"][0], "This field is required.")
+        self.assertIn("intervention_assignments", serializer.errors)
 
-    def test_invalid_scenario(self):
+    def test_invalid_assignment_id_is_rejected(self):
         data = {
-            "scenario": 9999,
-            "intervention_code": self.intervention_vaccination_rts.code,
-            "coverage": "0.80",
-            "divisor": "1.00",
-            "bale_size": 10,
-            "buffer_mult": "1.20",
-            "doses_per_pw": 2,
-            "age_string": "3-59",
-            "pop_prop_3_11": "0.10",
-            "pop_prop_12_59": "0.50",
-            "monthly_rounds": 3,
-            "touchpoints": 2,
-            "doses_per_child": 6,
+            "scenario": self.scenario.id,
+            "intervention_assignments": [9999],  # Non-existent ID
+            "budget_assumptions": [{"year": 2025, "coverage": 0.80}],
         }
-        serializer = BudgetAssumptionsCreateSerializer(data=data, context=self.context)
+        serializer = BudgetAssumptionsUpsertManySerializer(data=data, context=self._context_for(self.user))
         self.assertFalse(serializer.is_valid())
-        self.assertIn("scenario", serializer.errors)
-        self.assertEqual(serializer.errors["scenario"][0], 'Invalid pk "9999" - object does not exist.')
+        self.assertIn("intervention_assignments", serializer.errors)
 
-    def test_scenario_belongs_to_another_account(self):
-        # Prepare data for another account
-        new_account = Account.objects.create(name="New Account")
-        new_user = self.create_user_with_profile(username="newuser", account=new_account)
-        new_scenario = Scenario.objects.create(
-            account=new_account,
-            created_by=new_user,
-            name="New Scenario",
-            description="A new scenario description.",
-            start_year=2025,
-            end_year=2028,
-        )
-
+    def test_assignments_from_other_scenario_are_rejected(self):
         data = {
-            "scenario": new_scenario.id,
-            "intervention_code": self.intervention_vaccination_rts.code,
-            "coverage": "0.80",
-            "divisor": "1.00",
-            "bale_size": 10,
-            "buffer_mult": "1.20",
-            "doses_per_pw": 2,
-            "age_string": "3-59",
-            "pop_prop_3_11": "0.10",
-            "pop_prop_12_59": "0.50",
-            "monthly_rounds": 3,
-            "touchpoints": 2,
-            "doses_per_child": 6,
+            "scenario": self.scenario.id,
+            "intervention_assignments": [self.assignment_other_scenario.id],
+            "budget_assumptions": [{"year": 2025, "coverage": 0.80}],
         }
-        serializer = BudgetAssumptionsCreateSerializer(data=data, context=self.context)
+        serializer = BudgetAssumptionsUpsertManySerializer(data=data, context=self._context_for(self.user))
         self.assertFalse(serializer.is_valid())
-        self.assertIn("scenario", serializer.errors)
-        self.assertIn(f'Invalid pk "{new_scenario.id}"', serializer.errors["scenario"][0])
+        self.assertIn("intervention_assignments", serializer.errors)
 
-    def test_validate_scenario_error(self):
-        new_user = self.create_user_with_profile(username="newuser", account=self.account)
-        new_context = {"request": Mock(user=new_user)}
+    def test_scenario_permissions_reject_non_owner_without_full_write(self):
         data = {
-            "scenario": self.scenario.id,  # belongs to another user
-            "intervention_code": self.intervention_vaccination_rts.code,
-            "coverage": "0.80",
-            "divisor": "1.00",
-            "bale_size": 10,
-            "buffer_mult": "1.20",
-            "doses_per_pw": 2,
-            "age_string": "3-59",
-            "pop_prop_3_11": "0.10",
-            "pop_prop_12_59": "0.50",
-            "monthly_rounds": 3,
-            "touchpoints": 2,
-            "doses_per_child": 6,
+            "scenario": self.other_user_scenario.id,
+            "intervention_assignments": [self.assignment_other_scenario.id],
+            "budget_assumptions": [{"year": 2025, "coverage": 0.80}],
         }
-        serializer = BudgetAssumptionsCreateSerializer(data=data, context=new_context)
+        serializer = BudgetAssumptionsUpsertManySerializer(data=data, context=self._context_for(self.user))
         with self.assertRaisesMessage(
             PermissionDenied, "User does not have permission to modify assumptions for this scenario"
         ):
-            serializer.is_valid()
+            serializer.is_valid(raise_exception=True)
 
+    def test_scenario_permissions_allow_full_write_user(self):
+        data = {
+            "scenario": self.other_user_scenario.id,
+            "intervention_assignments": [self.assignment_other_scenario.id],
+            "budget_assumptions": [{"year": 2025, "coverage": 0.80}],
+        }
+        serializer = BudgetAssumptionsUpsertManySerializer(data=data, context=self._context_for(self.full_perm_user))
+        self.assertTrue(serializer.is_valid(), serializer.errors)
 
-class BudgetAssumptionsUpdateSerializerTests(TestCase):
-    def setUp(self):
-        self.account = Account.objects.create(name="Test Account")
-        self.user = self.create_user_with_profile(username="testuser", account=self.account)
+    def test_save_creates_one_row_per_assignment_and_year(self):
+        data = {
+            "scenario": self.scenario.id,
+            "intervention_assignments": [self.assignment_a.id, self.assignment_b.id],
+            "budget_assumptions": [
+                {"year": 2025, "coverage": 0.80},
+                {"year": 2026, "coverage": 0.90},
+            ],
+        }
+        serializer = BudgetAssumptionsUpsertManySerializer(data=data, context=self._context_for(self.user))
+        self.assertTrue(serializer.is_valid(), serializer.errors)
 
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user,
-            name="Test Scenario",
-            description="A test scenario description.",
-            start_year=2025,
-            end_year=2028,
+        serializer.save()
+
+        assumptions = BudgetAssumptions.objects.filter(scenario=self.scenario)
+        self.assertEqual(assumptions.count(), 4)
+        self.assertEqual(
+            set(assumptions.values_list("intervention_assignment_id", "year")),
+            {
+                (self.assignment_a.id, 2025),
+                (self.assignment_a.id, 2026),
+                (self.assignment_b.id, 2025),
+                (self.assignment_b.id, 2026),
+            },
         )
-        self.int_category_vaccination = InterventionCategory.objects.create(
-            name="Vaccination",
-            account=self.account,
-            created_by=self.user,
-        )
-        self.intervention_vaccination_rts = Intervention.objects.create(
-            name="RTS,S",
-            created_by=self.user,
-            intervention_category=self.int_category_vaccination,
-            code="rts_s",
-        )
 
-        self.budget_assumption = BudgetAssumptions.objects.create(
+    def test_save_replaces_only_targeted_scenario_assignment_and_year(self):
+        target = BudgetAssumptions.objects.create(
             scenario=self.scenario,
-            intervention_code=self.intervention_vaccination_rts.code,
-            coverage="0.80",
-            divisor="1.00",
-            bale_size=10,
-            buffer_mult="1.20",
-            doses_per_pw=2,
-            age_string="3-59",
-            pop_prop_3_11="0.10",
-            pop_prop_12_59="0.50",
-            monthly_rounds=3,
-            touchpoints=2,
-            tablet_factor="0.55",
-            doses_per_child=6,
+            intervention_assignment=self.assignment_a,
+            year=2025,
+            coverage=0.10,
+        )
+        same_scenario_other_assignment = BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=self.assignment_b,
+            year=2025,
+            coverage=0.20,
+        )
+        same_scenario_other_year = BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=self.assignment_a,
+            year=2026,
+            coverage=0.30,
+        )
+        other_scenario_row = BudgetAssumptions.objects.create(
+            scenario=self.other_user_scenario,
+            intervention_assignment=self.assignment_other_scenario,
+            year=2025,
+            coverage=0.40,
         )
 
-    def test_invalid_fields(self):
         data = {
-            "coverage": "1.50",  # Invalid: greater than 1
-            "divisor": "-0.10",  # Invalid: less than 0
-            "bale_size": 1000,  # Invalid: greater than max_value
-            "buffer_mult": "-1.00",  # Invalid: less than 0
-            "doses_per_pw": 999999999,  # Invalid: greater than max_value
-            "age_string": "3-59",
-            "pop_prop_3_11": "0.10",
-            "pop_prop_12_59": "0.50",
-            "monthly_rounds": 32,  # Invalid: greater than max_value
-            "touchpoints": -10,  # Invalid: less than min_value
-            "doses_per_child": -6,  # Invalid: less than min_value
+            "scenario": self.scenario.id,
+            "intervention_assignments": [self.assignment_a.id],
+            "budget_assumptions": [{"year": 2025, "coverage": 0.95}],
         }
-        serializer = BudgetAssumptionsUpdateSerializer(data=data)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("coverage", serializer.errors)
-        self.assertIn("divisor", serializer.errors)
-        self.assertIn("bale_size", serializer.errors)
-        self.assertIn("buffer_mult", serializer.errors)
-        self.assertIn("monthly_rounds", serializer.errors)
-        self.assertIn("touchpoints", serializer.errors)
-        self.assertIn("doses_per_child", serializer.errors)
 
-    def test_valid_data(self):
-        data = {
-            "coverage": "0.90",
-            "divisor": "2.00",
-            "bale_size": 20,
-            "buffer_mult": "2.20",
-            "doses_per_pw": 4,
-            "age_string": "42-69",
-            "pop_prop_3_11": "2.10",
-            "pop_prop_12_59": "2.50",
-            "monthly_rounds": 30,
-            "touchpoints": 22,
-            "tablet_factor": "0.99",
-            "doses_per_child": 62,
-        }
-        serializer = BudgetAssumptionsUpdateSerializer(data=data, instance=self.budget_assumption)
+        serializer = BudgetAssumptionsUpsertManySerializer(data=data, context=self._context_for(self.user))
         self.assertTrue(serializer.is_valid(), serializer.errors)
         serializer.save()
 
-        self.budget_assumption.refresh_from_db()
-        self.assertEqual(self.budget_assumption.scenario.id, self.scenario.id)
-        self.assertEqual(self.budget_assumption.intervention_code, self.intervention_vaccination_rts.code)
-        self.assertEqual(str(self.budget_assumption.coverage), "0.90")
-        self.assertEqual(str(self.budget_assumption.divisor), "2.00")
-        self.assertEqual(self.budget_assumption.bale_size, 20)
-        self.assertEqual(str(self.budget_assumption.buffer_mult), "2.20")
-        self.assertEqual(self.budget_assumption.doses_per_pw, 4)
-        self.assertEqual(self.budget_assumption.age_string, "42-69")
-        self.assertEqual(str(self.budget_assumption.pop_prop_3_11), "2.10")
-        self.assertEqual(str(self.budget_assumption.pop_prop_12_59), "2.50")
-        self.assertEqual(self.budget_assumption.monthly_rounds, 30)
-        self.assertEqual(self.budget_assumption.touchpoints, 22)
-        self.assertEqual(str(self.budget_assumption.tablet_factor), "0.99")
-        self.assertEqual(self.budget_assumption.doses_per_child, 62)
+        assumptions = BudgetAssumptions.objects.filter(scenario=self.scenario)
+        self.assertEqual(assumptions.count(), 3)  # Only the target row should be replaced, not the others
+
+        # Verify that previous value has been removed
+        with self.assertRaisesMessage(
+            BudgetAssumptions.DoesNotExist, "BudgetAssumptions matching query does not exist"
+        ):
+            target = assumptions.get(id=target.id)
+
+        target = assumptions.get(intervention_assignment=self.assignment_a, year=2025)
+
+        same_scenario_other_year = assumptions.get(
+            id=same_scenario_other_year.id
+        )  # Should still exist with same values)
+        same_scenario_other_assignment = assumptions.get(id=same_scenario_other_assignment.id)
+        other_scenario_row = BudgetAssumptions.objects.get(id=other_scenario_row.id)
+
+        self.assertEqual(str(target.coverage), "0.95")
+        self.assertEqual(str(same_scenario_other_assignment.coverage), "0.20")
+        self.assertEqual(str(same_scenario_other_year.coverage), "0.30")
+        self.assertEqual(str(other_scenario_row.coverage), "0.40")

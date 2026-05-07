@@ -71,7 +71,7 @@ export const MESSAGES = defineMessages({
     },
     budgetAssumptionsCoverage: {
         id: 'iaso.snt_malaria.budgetAssumptions.coverage',
-        defaultMessage: 'Coverage',
+        defaultMessage: 'Population coverage',
     },
     budgetAssumptionsDescription_itn_campaign: {
         id: 'iaso.snt_malaria.budgetAssumptions.description.itn_campaign',

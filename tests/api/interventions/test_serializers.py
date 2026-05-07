@@ -1,6 +1,7 @@
 from iaso.models.base import Account
+from iaso.test import APITestCase
 from plugins.snt_malaria.api.interventions.serializers import InterventionDetailWriteSerializer
-from plugins.snt_malaria.tests.api.interventions.test_views import APITestCase, Intervention, InterventionCategory
+from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
 
 
 class InterventionDetailWriteSerializerTests(APITestCase):

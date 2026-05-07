@@ -1,18 +1,19 @@
 from rest_framework import status
 
-from iaso.models import Account, OrgUnitType
-from iaso.test import APITestCase
 from plugins.snt_malaria.models.account_settings import AccountSettings
+from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
 BASE_URL = "/api/snt_malaria/account_settings/"
 
 
-class AccountSettingsAPITests(APITestCase):
+class AccountSettingsAPITests(SNTMalariaAPITestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="Test Account 3")
-        self.user = self.create_user_with_profile(username="testuseraccountsettings", account=self.account)
-        self.out_district = OrgUnitType.objects.create(name="DISTRICT")
+        super().setUp()
+        self.account, self.user = self.create_snt_account(name="Test Account 3")
+        self.out_district = self.create_snt_org_unit_type(name="DISTRICT")
 
         self.account_settings = AccountSettings.objects.create(
             account=self.account,

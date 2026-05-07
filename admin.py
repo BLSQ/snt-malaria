@@ -151,8 +151,9 @@ class BudgetSettingsAdmin(admin.ModelAdmin):
 
 @admin.register(BudgetAssumptions)
 class BudgetAssumptionsAdmin(admin.ModelAdmin):
-    list_display = ("id", "scenario", "intervention_code")
-    search_fields = ("id", "scenario", "intervention_code")
+    list_display = ("id", "scenario", "intervention_assignment", "year")
+    search_fields = ("id", "scenario__name", "intervention_assignment__id")
+    list_filter = ("year",)
     ordering = ("id",)
 
 

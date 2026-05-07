@@ -8,12 +8,14 @@ import React, {
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { sortByStringProp } from '../../planning/libs/list-utils';
 import {
+    DefaultBudgetAssumptions,
     InterventionAssignmentResponse,
     InterventionCategory,
     InterventionPlan,
 } from '../../planning/types/interventions';
 import { MetricTypeCategory } from '../../planning/types/metrics';
 import { Scenario } from '../../scenarios/types';
+import { useGetDefaultBudgetAssumptions } from '../hooks/useGetBudgetAssumptions';
 
 type PlanningContextType = {
     scenarioId: number;
@@ -27,6 +29,7 @@ type PlanningContextType = {
     interventionCategories: InterventionCategory[];
     interventionAssignments: InterventionAssignmentResponse[];
     interventionPlans: InterventionPlan[];
+    defaultBudgetAssumptions?: DefaultBudgetAssumptions;
     toggleIsEditing: () => void;
 };
 
@@ -42,6 +45,7 @@ const PlanningContext = createContext<PlanningContextType>({
     interventionCategories: [],
     interventionAssignments: [],
     interventionPlans: [],
+    defaultBudgetAssumptions: undefined,
     toggleIsEditing: () => {},
 });
 
@@ -74,6 +78,8 @@ export const PlanningProvider = ({
     const isScenarioEditable = scenario
         ? !scenario.is_locked && canEditScenario
         : canEditScenario;
+
+    const { data: defaultBudgetAssumptions } = useGetDefaultBudgetAssumptions();
 
     useEffect(() => {
         const plans = new Map<number, InterventionPlan>();
@@ -115,6 +121,7 @@ export const PlanningProvider = ({
                 interventionAssignments,
                 interventionPlans,
                 isEditing,
+                defaultBudgetAssumptions,
                 toggleIsEditing,
             }}
         >

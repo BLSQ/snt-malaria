@@ -31,12 +31,12 @@ import { InterventionsPlanTable } from './components/interventionPlanTable/Inter
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
 import { PlanningProvider } from './contexts/PlanningContext';
 import { useCalculateBudget } from './hooks/useCalculateBudget';
+import { useGetAccountSettings } from './hooks/useGetAccountSettings';
 import { useGetBudgetAssumptions } from './hooks/useGetBudgetAssumptions';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetInterventionCategories } from './hooks/useGetInterventionCategories';
 import { useGetLatestCalculatedBudget } from './hooks/useGetLatestCalculatedBudget';
 import { useGetMetricCategories } from './hooks/useGetMetrics';
-import { useGetAccountSettings } from './hooks/useGetAccountSettings';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { usePreviewScenarioRule } from './hooks/usePreviewScenarioRule';
@@ -77,14 +77,12 @@ export const Planning: FC = () => {
     const { data: metricTypeCategories } = useGetMetricCategories();
     const { data: interventionCategories } = useGetInterventionCategories();
     const { data: accountSettings } = useGetAccountSettings();
-    const interventionTypeId =
-        accountSettings?.intervention_org_unit_type_id;
-    const { data: orgUnits, isLoading: isLoadingOrgUnits } =
-        useGetOrgUnits({
-            orgUnitParentId: displayOrgUnitId,
-            orgUnitTypeId: interventionTypeId,
-            enabled: !!interventionTypeId,
-        });
+    const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
+    const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits({
+        orgUnitParentId: displayOrgUnitId,
+        orgUnitTypeId: interventionTypeId,
+        enabled: !!interventionTypeId,
+    });
 
     const { data: scenarioRules, isFetching: isFetchingRules } =
         useGetScenarioRules(scenarioId);
@@ -132,15 +130,21 @@ export const Planning: FC = () => {
     };
 
     const { data: budgetAssumptions } = useGetBudgetAssumptions(scenarioId);
-    const selectedBudgetAssumptions: BudgetAssumptions | undefined = useMemo(
-        () =>
-            budgetAssumptions?.find(
-                bs =>
-                    bs.intervention_code ===
-                    selectedInterventionPlan?.intervention.code,
+
+    const selectedBudgetAssumptions: BudgetAssumptions[] = useMemo(() => {
+        if (!selectedInterventionPlan) {
+            return [];
+        }
+        const assignmentIds = new Set(
+            selectedInterventionPlan.org_units.map(
+                ou => ou.intervention_assignment_id,
             ),
-        [selectedInterventionPlan, budgetAssumptions],
-    );
+        );
+
+        return (budgetAssumptions || []).filter(bs =>
+            assignmentIds.has(bs.intervention_assignment),
+        );
+    }, [selectedInterventionPlan, budgetAssumptions]);
 
     const handleDisplayOrgUnitChange = useCallback(
         (orgUnitId?: number) => {
@@ -251,6 +255,12 @@ export const Planning: FC = () => {
                                                     selectedInterventionPlan
                                                 }
                                                 scenarioId={scenarioId}
+                                                scenarioStartYear={
+                                                    scenario?.start_year
+                                                }
+                                                scenarioEndYear={
+                                                    scenario?.end_year
+                                                }
                                                 closeInterventionPlanDetails={() =>
                                                     setSelectedInterventionPlan(
                                                         undefined,

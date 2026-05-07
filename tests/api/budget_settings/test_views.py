@@ -1,14 +1,16 @@
 from rest_framework import status
 
-from iaso.test import APITestCase
 from plugins.snt_malaria.models import BudgetSettings
 from plugins.snt_malaria.permissions import SNT_SETTINGS_READ_PERMISSION, SNT_SETTINGS_WRITE_PERMISSION
+from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
-class BudgetSettingsAPITestCase(APITestCase):
+class BudgetSettingsAPITestCase(SNTMalariaAPITestCase):
     BASE_URL = "/api/snt_malaria/budget_settings/"
+    auto_create_account = False
 
     def setUp(self):
+        super().setUp()
         self.account, _, _, _ = self.create_account_datasource_version_project("source", "account", "project")
         self.user_write, self.anon, self.user_no_perms = self.create_base_users(
             self.account, [SNT_SETTINGS_WRITE_PERMISSION], "user write"

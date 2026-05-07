@@ -247,24 +247,26 @@ def build_interventions_input(scenario):
 def build_budget_assumptions(scenario):
     """
     Build a map of budget assumptions for quick lookup by intervention code.
+    When year is provided, only assumptions for that year are applied.
+    Falls back to DEFAULT_COST_ASSUMPTIONS for any intervention code not explicitly overridden.
     """
-    assumptions = BudgetAssumptions.objects.filter(scenario=scenario)
+    assumptions = BudgetAssumptions.objects.filter(
+        scenario=scenario,
+        year__gte=scenario.start_year,
+        year__lte=scenario.end_year,
+    ).select_related("intervention_assignment__intervention")
     cost_assumptions = DEFAULT_COST_ASSUMPTIONS.copy()
+    assumptions_by_year = {}
     for assumption in assumptions:
-        # Handle iptp_anc special case
-        for key, value in (
-            (get_assumption_key(assumption.intervention_code, key), value)
-            for key, value in assumption.__dict__.items()
-            if key != "id" and key != "scenario" and key != "intervention_code"
-        ):
-            if key in cost_assumptions:
-                # Convert Decimal to float if necessary
-                if hasattr(value, "is_finite"):
-                    cost_assumptions[key] = float(value)
-                else:
-                    cost_assumptions[key] = value
+        intervention_code = assumption.intervention_assignment.intervention.code
+        year = assumption.year
+        if year not in assumptions_by_year:
+            assumptions_by_year[year] = cost_assumptions.copy()
 
-    return cost_assumptions
+        coverage_key = get_assumption_key(intervention_code, "coverage")
+        assumptions_by_year[year][coverage_key] = float(assumption.coverage)
+
+    return assumptions_by_year
 
 
 def get_assumption_key(intervention_code, field):
