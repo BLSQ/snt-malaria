@@ -152,6 +152,28 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
 
         self._check_nothing_has_been_created()
 
+    @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=True)
+    def test_post_account_setup_throttling(self):
+        with open(self.JSON_FILE_PATH, "rb") as json_file:
+            payload = {
+                "username": "",
+                "password": "",
+                "password_confirmation": "",
+                "country": "BE",
+                "language": "fr",
+                "geo_json_file": SimpleUploadedFile(
+                    self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
+                ),
+            }
+
+        # default value is 5 calls per hour per IP address
+        for _ in range(5):
+            response = self.client.post(self.BASE_URL, data=payload, format="multipart")
+            self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)  # don't care about validation errors
+
+        response = self.client.post(self.BASE_URL, data=payload, format="multipart")
+        self.assertJSONResponse(response, status.HTTP_429_TOO_MANY_REQUESTS)
+
     def _check_nothing_has_been_created(self):
         # Making sure that all objects are created
         self.assertEqual(Account.objects.count(), 0)

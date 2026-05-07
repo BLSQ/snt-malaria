@@ -8,6 +8,7 @@ from iaso.models import ImportGPKG, Profile, Task
 from iaso.tasks.import_gpkg_task import import_gpkg_task
 from plugins.snt_malaria.api.account_setup.permissions import SNTAccountSetupPermission
 from plugins.snt_malaria.api.account_setup.serializers import SNTAccountSetupSerializer
+from plugins.snt_malaria.api.account_setup.throttle import SNTAccountThrottle
 from plugins.snt_malaria.api.account_setup.utils import create_snt_account, transform_geo_json_to_gpkg
 from plugins.snt_malaria.models import SNTAccountSetup
 
@@ -16,6 +17,7 @@ class SNTAccountSetupViewSet(viewsets.ModelViewSet):
     serializer_class = SNTAccountSetupSerializer
     http_method_names = ["post", "head", "options"]
     permission_classes = [SNTAccountSetupPermission]
+    throttle_classes = [SNTAccountThrottle]
 
     def get_queryset(self):
         return SNTAccountSetup.objects.none()
