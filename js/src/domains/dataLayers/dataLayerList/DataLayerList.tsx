@@ -65,7 +65,6 @@ export const DataLayerList: FC<Props> = ({
                                 }
                                 onEdit={onEditMetricType}
                                 onDelete={() => deleteMetricType(metricType.id)}
-                                readonly={metricType.origin === 'openhexa'}
                                 selected={
                                     metricType.id === selectedMetricTypeId
                                 }

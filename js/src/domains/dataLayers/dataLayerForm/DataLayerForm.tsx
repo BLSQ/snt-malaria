@@ -14,10 +14,12 @@ import { LegendConfigForm } from './LegendConfigForm';
 
 type MetricTypeFormProps = {
     metricType?: MetricTypeFormModel;
+    isRestricted?: boolean;
 };
 
 export const MetricTypeForm: FC<MetricTypeFormProps> = ({
     metricType = undefined,
+    isRestricted = false,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { data: legendTypeOptions, isLoading: loadingLegendTypeOptions } =
@@ -50,7 +52,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 label={MESSAGES.variable}
                 required
                 errors={getErrors('code')}
-                disabled={!!metricType?.id}
+                disabled={!!metricType?.id || isRestricted}
             />
             <InputComponent
                 keyValue="name"
@@ -100,6 +102,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                         label={MESSAGES.legendType}
                         errors={getErrors('legend_type')}
                         loading={loadingLegendTypeOptions}
+                        disabled={isRestricted}
                     />
                 </Grid>
                 <Grid item xs={12} sm={6}>
