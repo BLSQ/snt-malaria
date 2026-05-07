@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from captcha.models import CaptchaStore
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
@@ -17,6 +18,10 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
     JSON_FILE_NAME = "geo_json_be.json"
     JSON_FILE_PATH = f"plugins/snt_malaria/tests/fixtures/{JSON_FILE_NAME}"
 
+    def setUp(self):
+        super().setUp()
+        self.captcha_key = CaptchaStore.pick()
+
     @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=True)
     def test_post_account_setup_public(self):
         with open(self.JSON_FILE_PATH, "rb") as json_file:
@@ -29,6 +34,8 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
                 "geo_json_file": SimpleUploadedFile(
                     self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
                 ),
+                "captcha_hashkey": self.captcha_key,
+                "captcha_code": "passed",
             }
         response = self.client.post(self.BASE_URL, data=payload, format="multipart")
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
@@ -92,6 +99,8 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
                 "geo_json_file": SimpleUploadedFile(
                     self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
                 ),
+                "captcha_hashkey": self.captcha_key,
+                "captcha_code": "passed",
             }
 
         response = self.client.post(self.BASE_URL, data=payload, format="multipart")
@@ -116,6 +125,8 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
                 "geo_json_file": SimpleUploadedFile(
                     self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
                 ),
+                "captcha_hashkey": self.captcha_key,
+                "captcha_code": "passed",
             }
 
         response = self.client.post(self.BASE_URL, data=payload, format="multipart")
@@ -141,6 +152,8 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
                 "geo_json_file": SimpleUploadedFile(
                     self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
                 ),
+                "captcha_hashkey": self.captcha_key,
+                "captcha_code": "passed",
             }
 
         response = self.client.post(self.BASE_URL, data=payload, format="multipart")
