@@ -2,6 +2,7 @@ import json
 
 import django.core.exceptions as django_exceptions
 
+from captcha import serializers as captcha_serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
@@ -10,7 +11,7 @@ from plugins.snt_malaria.api.account_setup.utils import REQUIRED_GEO_JSON_LABELS
 from plugins.snt_malaria.models import SNTAccountSetup
 
 
-class SNTAccountSetupSerializer(serializers.ModelSerializer):
+class SNTAccountSetupSerializer(captcha_serializers.CaptchaModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     password_confirmation = serializers.CharField(write_only=True, required=True)
 
@@ -23,6 +24,8 @@ class SNTAccountSetupSerializer(serializers.ModelSerializer):
             "geo_json_file",
             "password",
             "password_confirmation",
+            "captcha_code",
+            "captcha_hashkey",
         ]
 
     def validate_username(self, value):
