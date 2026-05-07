@@ -16,7 +16,7 @@ from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 BASE_URL = "/api/snt_malaria/budgets/"
 
 
-class ScenarioAPITestCase(SNTMalariaAPITestCase):
+class BudgetAPITestCase(SNTMalariaAPITestCase):
     auto_create_account = False
 
     def setUp(self):
@@ -350,6 +350,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             scenario=self.scenario,
             intervention_assignment=self.assignment_smc,
             coverage=0.8,
+            year=2025,
         )
 
         self.client.force_authenticate(user=self.user_with_full_perm)
@@ -373,11 +374,11 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         )
 
         self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
-        self.assertAlmostEqual(smc_intervention["total_cost"], 495000.0)
-        self.assertAlmostEqual(smc_intervention["total_pop"], 237500.0)
+        self.assertAlmostEqual(smc_intervention["total_cost"], 396000.0)
+        self.assertAlmostEqual(smc_intervention["total_pop"], 190000.0)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
         self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
-        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["cost"], 495000.0)
+        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["cost"], 396000.0)
         # Find Org unit cost
         smc_org_unit_costs = None
         for org_unit_costs in budget_2025["org_units_costs"]:
@@ -386,11 +387,11 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
                 break
 
         self.assertIsNotNone(smc_org_unit_costs)
-        self.assertAlmostEqual(smc_org_unit_costs["total_cost"], 198000.0)
+        self.assertAlmostEqual(smc_org_unit_costs["total_cost"], 158400.0)
         self.assertEqual(len(smc_org_unit_costs["interventions"]), 1)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["code"], "smc")
         self.assertEqual(smc_org_unit_costs["interventions"][0]["type"], "SMC")
-        self.assertAlmostEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 198000.0)
+        self.assertAlmostEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 158400.0)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id)
 
         db_budget = Budget.objects.get(id=result["id"])
