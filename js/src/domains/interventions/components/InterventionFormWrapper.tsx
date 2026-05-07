@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect } from 'react';
+import React, { FC, useCallback, useEffect, useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Stack, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
@@ -57,6 +57,19 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
         interventionId,
     });
 
+    const allowedCostUnitTypes = useMemo(
+        () =>
+            interventionCostUnitTypes.filter(unitType =>
+                interventionDetails?.allowed_cost_unit_types.includes(
+                    unitType.value,
+                ),
+            ),
+        [
+            interventionCostUnitTypes,
+            interventionDetails?.allowed_cost_unit_types,
+        ],
+    );
+
     const formik = useInterventionFormState({
         onSubmit,
     });
@@ -110,7 +123,7 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
             <ExtendedFormikProvider formik={formik}>
                 <InterventionForm
                     interventionCostCategories={interventionCostCategories}
-                    interventionCostUnitTypes={interventionCostUnitTypes}
+                    interventionCostUnitTypes={allowedCostUnitTypes}
                     metricTypes={metricTypes}
                     currency={budgetSettings?.currency}
                 />
