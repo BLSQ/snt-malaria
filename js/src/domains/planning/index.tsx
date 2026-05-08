@@ -74,7 +74,7 @@ export const Planning: FC = () => {
         InterventionPlan | undefined
     >(undefined);
 
-    const { data: metricTypeCategories } = useGetMetricCategories();
+    const { data: metricTypeCategories } = useGetMetricCategories('any');
     const { data: interventionCategories } = useGetInterventionCategories();
     const { data: accountSettings } = useGetAccountSettings();
     const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
