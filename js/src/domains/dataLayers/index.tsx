@@ -20,16 +20,16 @@ import {
 } from '../../components/styledComponents';
 import { baseUrls } from '../../constants/urls';
 import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
-import {
-    useGetMetricCategories,
-    useGetMetricValues,
-} from '../planning/hooks/useGetMetrics';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { DataLayerDialog } from './dataLayerForm/DataLayerDialog';
 import { DataLayerList } from './dataLayerList/DataLayerList';
 import { DataLayerListHeader } from './dataLayerList/DataLayerListHeader';
 import { DataLayerMap } from './dataLayerMap/DataLayerMap';
 import { useDeleteMetricType } from './hooks/useDeleteMetricType';
+import {
+    useGetMetricCategories,
+    useGetMetricValues,
+} from './hooks/useGetMetrics';
 import { MESSAGES } from './messages';
 import { MetricType } from './types/metrics';
 

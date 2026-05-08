@@ -7,7 +7,7 @@ import {
     MetricType,
     MetricTypeCategory,
     MetricValue,
-} from '../../dataLayers/types/metrics';
+} from '../types/metrics';
 
 export type DropdownOptions<T> = {
     label: string;
