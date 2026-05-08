@@ -108,6 +108,8 @@
     "iaso.snt_malaria.settings.dataLayers.errors.scaleItemsUnique": "Les éléments d'échelle doivent être uniques.",
     "iaso.snt_malaria.settings.dataLayers.addScaleItem": "Ajouter un élément d'échelle",
     "iaso.snt_malaria.settings.dataLayers.errors.invalidColor": "Format de couleur invalide. Utilisez un code hexadécimal (ex. #RRGGBB) ou un nom de couleur CSS valide.",
+    "iaso.snt_malaria.settings.dataLayers.isPopulation": "Population",
+    "iaso.snt_malaria.settings.dataLayers.selectYear": "Sélectionner l'année",
     "iaso.snt_malaria.label.runInterventionPlanBudget": "Exécuter Budget",
     "iaso.snt_malaria.cost-breakdown-chart.title": "Répartition des coûts par catégorie et par intervention",
     "iaso.snt_malaria.proportion-chart.title": "Proportion du budget total par intervention",

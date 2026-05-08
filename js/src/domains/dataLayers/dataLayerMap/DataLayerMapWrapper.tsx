@@ -54,7 +54,7 @@ export const DataLayerMapWrapper: FC<Props> = ({
         if (!metricValues) return;
 
         if (metricType?.metric_kind !== 'population') {
-            // For population metrics, we don't want to split by year as they are not time-sensitive
+            // For non population metrics, we don't want to split by year as they are not time-sensitive
             setMetricValuesPerYear({ 0: metricValues });
             setYearOptions([]);
             setYear('0');
