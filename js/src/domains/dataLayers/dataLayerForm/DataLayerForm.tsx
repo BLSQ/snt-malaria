@@ -1,7 +1,9 @@
 import React, { FC } from 'react';
 import { Box, Grid } from '@mui/material';
-import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
+import { useTranslatedErrors } from 'Iaso/libs/validation';
+
 import {
     LEGEND_TYPE_MAX_ITEMS,
     LEGEND_TYPE_MIN_ITEMS,
