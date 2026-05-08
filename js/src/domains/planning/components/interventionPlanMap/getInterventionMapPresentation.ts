@@ -1,4 +1,4 @@
-import { MetricType } from '../../types/metrics';
+import { MetricType } from '../../../dataLayers/types/metrics';
 import { ScenarioRule } from '../../types/scenarioRule';
 import { AssignmentDisplay } from './buildAssignmentDisplay';
 

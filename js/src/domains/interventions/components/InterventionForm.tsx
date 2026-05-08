@@ -1,10 +1,11 @@
-import React, { FC, useMemo } from 'react';
+import React, { FC } from 'react';
 import { Button, Stack, Typography } from '@mui/material';
 import { DropdownOptions, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { useGetChildError } from '../../../hooks/useGetChildError';
 import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
+import { MetricType } from '../../dataLayers/types/metrics';
 import { MESSAGES } from '../../messages';
 import {
     InterventionCostBreakdownLine,

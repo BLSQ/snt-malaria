@@ -6,6 +6,7 @@ import React, {
     useState,
 } from 'react';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { MetricTypeCategory } from '../../dataLayers/types/metrics';
 import { sortByStringProp } from '../../planning/libs/list-utils';
 import {
     DefaultBudgetAssumptions,
@@ -13,7 +14,6 @@ import {
     InterventionCategory,
     InterventionPlan,
 } from '../../planning/types/interventions';
-import { MetricTypeCategory } from '../../planning/types/metrics';
 import { Scenario } from '../../scenarios/types';
 import { useGetDefaultBudgetAssumptions } from '../hooks/useGetBudgetAssumptions';
 

@@ -7,10 +7,10 @@ import {
     useSafeIntl,
 } from 'bluesquare-components';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
-import { MetricType, MetricTypeFormModel } from '../../planning/types/metrics';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
 import { useMetricTypeFormState } from '../hooks/useMetricTypeFormState';
 import { MESSAGES } from '../messages';
+import { MetricType, MetricTypeFormModel } from '../types/metrics';
 import { MetricTypeForm } from './DataLayerForm';
 
 interface MetricTypeDialogProps {

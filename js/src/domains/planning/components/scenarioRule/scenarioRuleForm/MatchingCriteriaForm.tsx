@@ -4,9 +4,9 @@ import { FormikTouched } from 'formik';
 import { FormikErrors } from 'formik';
 import { DropdownButton } from '../../../../../components/DropdownButton';
 import { useGetChildError } from '../../../../../hooks/useGetChildError';
+import { MetricTypeCategory } from '../../../../dataLayers/types/metrics';
 import { MESSAGES } from '../../../../messages';
 import { defaultMatchingCriteria } from '../../../hooks/useScenarioRuleFormState';
-import { MetricTypeCategory } from '../../../types/metrics';
 import { MetricTypeCriterion } from '../../../types/scenarioRule';
 import { MatchingCriterionForm } from './MatchingCriterionForm';
 

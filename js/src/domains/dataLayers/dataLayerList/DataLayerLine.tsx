@@ -15,8 +15,8 @@ import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
 import { SxStyles } from 'Iaso/types/general';
 import * as CorePermission from 'Iaso/utils/permissions';
-import { MetricType } from '../../planning/types/metrics';
 import { MESSAGES } from '../messages';
+import { MetricType } from '../types/metrics';
 
 type Props = {
     metricType: MetricType;

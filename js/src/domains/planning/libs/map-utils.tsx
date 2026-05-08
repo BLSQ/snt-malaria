@@ -3,8 +3,12 @@ import { scaleThreshold } from '@visx/scale';
 import { useSafeIntl } from 'bluesquare-components';
 import * as d3 from 'd3-scale';
 import { mapTheme } from '../../../constants/map-theme';
+import {
+    MetricType,
+    MetricValue,
+    ScaleDomainRange,
+} from '../../dataLayers/types/metrics';
 import { MESSAGES } from '../../messages';
-import { MetricType, MetricValue, ScaleDomainRange } from '../types/metrics';
 import { defaultLegend } from './color-utils';
 import { formatMetricValue } from './metric-utils';
 

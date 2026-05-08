@@ -4,6 +4,7 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { LayerSelect } from '../../../../components/LayerSelect';
 import { Map as SNTMap } from '../../../../components/Map';
+import { MetricType } from '../../../dataLayers/types/metrics';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { useGetMetricValues } from '../../hooks/useGetMetrics';
@@ -11,7 +12,6 @@ import {
     getMapStyleForOrgUnit,
     useGetOrgUnitMetric,
 } from '../../libs/map-utils';
-import { MetricType } from '../../types/metrics';
 import { ScenarioRule } from '../../types/scenarioRule';
 import { buildAssignmentDisplay } from './buildAssignmentDisplay';
 import {

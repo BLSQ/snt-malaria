@@ -25,13 +25,13 @@ import {
     useGetMetricValues,
 } from '../planning/hooks/useGetMetrics';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
-import { MetricType } from '../planning/types/metrics';
 import { DataLayerDialog } from './dataLayerForm/DataLayerDialog';
 import { DataLayerList } from './dataLayerList/DataLayerList';
 import { DataLayerListHeader } from './dataLayerList/DataLayerListHeader';
 import { DataLayerMap } from './dataLayerMap/DataLayerMap';
 import { useDeleteMetricType } from './hooks/useDeleteMetricType';
 import { MESSAGES } from './messages';
+import { MetricType } from './types/metrics';
 
 const styles = {
     card: {

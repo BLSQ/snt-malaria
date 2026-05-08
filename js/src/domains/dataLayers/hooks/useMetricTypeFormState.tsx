@@ -7,8 +7,8 @@ import {
     LEGEND_TYPE_MIN_ITEMS,
     LegendTypes,
 } from '../../../constants/legend';
-import { MetricTypeFormModel } from '../../planning/types/metrics';
 import { MESSAGES } from '../messages';
+import { MetricTypeFormModel } from '../types/metrics';
 
 export const DEFAULT_LEGEND_CONFIG_ITEM = {
     color: '#000000',

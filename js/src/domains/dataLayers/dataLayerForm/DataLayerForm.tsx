@@ -10,8 +10,8 @@ import {
 } from '../../../constants/legend';
 import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
 import { useGetLegendTypes } from '../../planning/hooks/useGetLegendTypes';
-import { MetricTypeFormModel } from '../../planning/types/metrics';
 import { MESSAGES } from '../messages';
+import { MetricTypeFormModel } from '../types/metrics';
 import { LegendConfigForm } from './LegendConfigForm';
 
 type MetricTypeFormProps = {
