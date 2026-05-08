@@ -177,6 +177,8 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
                 "geo_json_file": SimpleUploadedFile(
                     self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
                 ),
+                "captcha_hashkey": self.captcha_key,
+                "captcha_code": "passed",
             }
 
         # default value is 5 calls per hour per IP address
