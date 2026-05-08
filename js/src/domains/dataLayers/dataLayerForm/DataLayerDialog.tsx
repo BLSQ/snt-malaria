@@ -77,6 +77,7 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
                 ).replaceAll('"', ''),
                 legend_type: metricType.legend_type,
                 origin: metricType.origin,
+                is_population: metricType.metric_kind === 'population',
                 legend_config: metricType.legend_config.domain.map(
                     (value, index) => ({
                         value,
@@ -91,6 +92,7 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
     const onSubmit = (values: MetricTypeFormModel) => {
         const payload = {
             ...values,
+            metric_kind: values.is_population ? 'population' : 'any',
             legend_config: {
                 domain: values.legend_config.map(item => item.value),
                 range: values.legend_config.map(item => item.color),

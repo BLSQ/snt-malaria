@@ -3,6 +3,8 @@ export type MetricTypeCategory = {
     items: MetricType[];
 };
 
+export type MetricKind = 'population' | 'any';
+
 export type MetricType = {
     id: number;
     name: string;
@@ -16,7 +18,7 @@ export type MetricType = {
     legend_config: ScaleDomainRange;
     legend_type: string;
     origin: string;
-    metric_kind?: 'population' | 'any';
+    metric_kind?: MetricKind;
 };
 
 export type MetricTypeFormModel = {
@@ -32,6 +34,7 @@ export type MetricTypeFormModel = {
     legend_type: string;
     origin: string;
     legend_config: Scale[];
+    is_population?: boolean;
 };
 
 export type MetricValue = {

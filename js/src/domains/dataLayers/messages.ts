@@ -139,4 +139,8 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.variable',
         defaultMessage: 'Variable',
     },
+    is_population: {
+        id: 'iaso.snt_malaria.settings.dataLayers.isPopulation',
+        defaultMessage: 'Is Population',
+    },
 });

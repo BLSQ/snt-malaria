@@ -59,6 +59,14 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 disabled={!!metricType?.id || isRestricted}
             />
             <InputComponent
+                keyValue="is_population"
+                onChange={setFieldValueAndState}
+                value={values.is_population}
+                type="checkbox"
+                label={MESSAGES.is_population}
+                errors={getErrors('is_population')}
+            />
+            <InputComponent
                 keyValue="name"
                 onChange={setFieldValueAndState}
                 value={values.name}
