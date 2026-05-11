@@ -122,10 +122,15 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
             }
             cancelMessage={MESSAGES.cancel}
             closeOnConfirm={false}
-            allowConfirm={formik.isValid && formik.dirty && !formik.isSubmitting}
+            allowConfirm={
+                formik.isValid && formik.dirty && !formik.isSubmitting
+            }
         >
             <ExtendedFormikProvider formik={formik}>
-                <MetricTypeForm metricType={metricTypeFormModel} />
+                <MetricTypeForm
+                    metricType={metricTypeFormModel}
+                    isRestricted={metricType?.origin === 'openhexa'}
+                />
             </ExtendedFormikProvider>
             {errorMessage && (
                 <Alert severity="error" variant="filled" sx={{ mt: 2 }}>
