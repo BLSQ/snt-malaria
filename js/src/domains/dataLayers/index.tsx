@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Card } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
@@ -6,6 +6,7 @@ import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
+import { useOnboarding } from '../../hooks/useOnboarding';
 import {
     MainColumn,
     PageContainer,
@@ -89,6 +90,40 @@ export const DataLayers: FC = () => {
         [setSelectedMetricType, setIsMetricTypeFormOpen],
     );
 
+    // Two-step spotlight when the account has no layers yet
+    const hasNoLayers = useMemo(
+        () =>
+            !isLoadingMetricLayers &&
+            Array.isArray(metricCategories) &&
+            metricCategories.every(c => c.items.length === 0),
+        [isLoadingMetricLayers, metricCategories],
+    );
+
+    const onboardingSteps = useMemo(
+        () => [
+            {
+                title: formatMessage(MESSAGES.onboardingStep1Title),
+                description: formatMessage(MESSAGES.onboardingStep1Description),
+                shape: 'circle' as const,
+            },
+            {
+                title: formatMessage(MESSAGES.onboardingStep2Title),
+                description: formatMessage(MESSAGES.onboardingStep2Description),
+                shape: 'circle' as const,
+            },
+        ],
+        [formatMessage],
+    );
+
+    const onboarding = useOnboarding({
+        id: 'dataLayers.intro',
+        enabled: hasNoLayers,
+        documentation: {
+            href: formatMessage(MESSAGES.onboardingDocumentationUrl),
+        },
+        steps: onboardingSteps,
+    });
+
     return (
         <>
             {isLoadingMetricLayers && <LoadingSpinner />}
@@ -106,6 +141,12 @@ export const DataLayers: FC = () => {
                                     header={
                                         <DataLayerListHeader
                                             onCreate={onCreateMetricType}
+                                            createActionRef={
+                                                onboarding.anchorRefs[0]
+                                            }
+                                            moreActionsRef={
+                                                onboarding.anchorRefs[1]
+                                            }
                                         />
                                     }
                                 >
@@ -141,6 +182,7 @@ export const DataLayers: FC = () => {
                     />
                 )}
             </PageContainer>
+            {onboarding.element}
         </>
     );
 };
