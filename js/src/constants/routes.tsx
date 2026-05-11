@@ -3,6 +3,7 @@ import React from 'react';
 import { AnonymousRoutePath, RoutePath } from 'Iaso/constants/routes';
 
 import { CompareCustomize } from '../domains/compareCustomize';
+import { ConfigureAccount } from '../domains/configureAccount';
 import { DataLayers } from '../domains/dataLayers';
 import { InterventionSettings } from '../domains/interventions';
 import { Planning } from '../domains/planning';
@@ -56,6 +57,14 @@ export const setupAccountPath: AnonymousRoutePath = {
     useDashboard: false,
 };
 
+// Post-login wizard that finishes the account setup (org-unit types, budget).
+export const configureAccountPath: RoutePath = {
+    baseUrl: baseUrls.configureAccount,
+    routerUrl: `${baseUrls.configureAccount}/*`,
+    element: <ConfigureAccount />,
+    permissions: [],
+};
+
 export const routes: (RoutePath | AnonymousRoutePath)[] = [
     dataLayersPath,
     planningPath,
@@ -63,4 +72,5 @@ export const routes: (RoutePath | AnonymousRoutePath)[] = [
     compareCustomizePath,
     interventionsPath,
     setupAccountPath,
+    configureAccountPath,
 ];
