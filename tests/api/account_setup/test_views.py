@@ -85,6 +85,7 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         self.assertEqual(OrgUnitType.objects.count(), 3)  # country, region, province
         self.assertEqual(OrgUnit.objects.count(), 15)  # 1 country + 3 regions + 11 provinces
 
+    @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=False)
     def test_post_account_setup_disabled(self):
         """
         This public endpoint is not allowed because settings.ENABLE_PUBLIC_ACCOUNT_SETUP is False
@@ -105,6 +106,30 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
 
         response = self.client.post(self.BASE_URL, data=payload, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=False)
+    def test_public_account_setup_spa_not_served_when_disabled(self):
+        response = self.client.get("/snt_malaria/public/setupAccount/")
+        self.assertEqual(response.status_code, 404)
+
+    @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=True)
+    def test_public_account_setup_spa_served_when_enabled(self):
+        response = self.client.get("/snt_malaria/public/setupAccount/")
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=True)
+    def test_public_account_setup_spa_redirects_logged_in_user_to_dashboard(self):
+        account, _, _, _ = self.create_account_datasource_version_project(
+            "spa_redirect_ds",
+            "Spa Redirect Account",
+            "spa_redirect_proj",
+            app_id="app_spa_redirect_test",
+        )
+        user = self.create_user_with_profile(username="spa_redirect_user", account=account)
+        self.client.force_login(user)
+        response = self.client.get("/snt_malaria/public/setupAccount/")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/dashboard/")
 
     @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=True)
     @patch("plugins.snt_malaria.api.account_setup.views.create_snt_account")

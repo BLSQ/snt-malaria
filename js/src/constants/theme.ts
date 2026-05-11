@@ -84,6 +84,21 @@ export const theme = createTheme({
                 },
             },
         },
+        // fix the password input reveal icon position
+        MuiFormControl: {
+            styleOverrides: {
+                root: ({ theme }) => ({
+                    '& .MuiOutlinedInput-root + span': {
+                        top: theme.spacing(0.4),
+                    },
+                    '& .MuiOutlinedInput-root + span .MuiIconButton-root': {
+                        padding: theme.spacing(0.6),
+                        minWidth: theme.spacing(3),
+                        minHeight: theme.spacing(3),
+                    },
+                }),
+            },
+        },
         MuiSelect: {
             styleOverrides: {
                 select: {
