@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import { Button, Stack, Typography } from '@mui/material';
 import { DropdownOptions, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
@@ -11,7 +11,6 @@ import {
     InterventionCostBreakdownLine,
     InterventionDetails,
 } from '../../planning/types/interventions';
-import { MetricType } from '../../planning/types/metrics';
 import { InterventionCostBreakdownLineForm } from './InterventionCostBreakdownLineForm';
 import { TargetPopulationForm } from './TargetPopulationForm';
 
