@@ -6,7 +6,10 @@ import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { useGetChildError } from '../../../hooks/useGetChildError';
 import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../messages';
-import { InterventionDetails } from '../../planning/types/interventions';
+import {
+    InterventionCostBreakdownLine,
+    InterventionDetails,
+} from '../../planning/types/interventions';
 import { MetricType } from '../../planning/types/metrics';
 import { InterventionCostBreakdownLineForm } from './InterventionCostBreakdownLineForm';
 import { TargetPopulationForm } from './TargetPopulationForm';
@@ -47,6 +50,14 @@ export const InterventionForm: FC<Props> = ({
         errors: errors?.cost_breakdown_lines,
         touched: touched?.cost_breakdown_lines,
     });
+
+    const defaultBreakdownLine: Partial<InterventionCostBreakdownLine> =
+        useMemo(
+            () => ({
+                unit_type: interventionCostUnitTypes[0]?.value || '',
+            }),
+            [interventionCostUnitTypes],
+        );
 
     return (
         <Stack spacing={3}>
@@ -116,7 +127,11 @@ export const InterventionForm: FC<Props> = ({
                 <Button
                     variant="text"
                     sx={{ alignSelf: 'flex-start' }}
-                    onClick={() => addChildValue('cost_breakdown_lines', {})}
+                    onClick={() =>
+                        addChildValue('cost_breakdown_lines', {
+                            ...defaultBreakdownLine,
+                        })
+                    }
                 >
                     {formatMessage(MESSAGES.addInterventionCostBreakdownLine)}
                 </Button>

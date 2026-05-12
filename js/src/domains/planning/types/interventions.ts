@@ -71,6 +71,7 @@ export type InterventionDetails = {
     impact_ref: string;
     target_population: string[];
     cost_breakdown_lines: InterventionCostBreakdownLine[];
+    allowed_cost_unit_types: string[];
 };
 
 export type InterventionCostBreakdownLine = {
