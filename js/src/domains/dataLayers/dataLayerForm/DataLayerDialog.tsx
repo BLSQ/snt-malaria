@@ -16,12 +16,14 @@ interface MetricTypeDialogProps {
     open: boolean;
     closeDialog: () => void;
     metricType?: MetricType;
+    categoryOptions: { label: string; value: string }[];
 }
 
 export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
     open,
     closeDialog,
     metricType = undefined,
+    categoryOptions,
 }) => {
     const [errorMessage, setErrorMessage] = useState<IntlMessage | undefined>();
     const [errorHeadline, setErrorHeadline] = useState<
@@ -130,6 +132,7 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
                 <MetricTypeForm
                     metricType={metricTypeFormModel}
                     isRestricted={metricType?.origin === 'openhexa'}
+                    categoryOptions={categoryOptions}
                 />
             </ExtendedFormikProvider>
             {errorMessage && (
