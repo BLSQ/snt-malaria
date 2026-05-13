@@ -113,7 +113,9 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         self.assertEqual(response.status_code, 404)
 
     @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=True)
-    def test_public_account_setup_spa_served_when_enabled(self):
+    @patch("webpack_loader.loader.WebpackLoader.get_bundle")
+    def test_public_account_setup_spa_served_when_enabled(self, mock_webpack):
+        mock_webpack.return_value = []
         response = self.client.get("/snt_malaria/public/setupAccount/")
         self.assertEqual(response.status_code, 200)
 
@@ -182,11 +184,8 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
             }
 
         response = self.client.post(self.BASE_URL, data=payload, format="multipart")
-        self.assertContains(
-            response,
-            "There was an unexpected error, please ask an administrator to check the server logs",
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("Unexpected server error", response.json()["detail"])
 
         self._check_nothing_has_been_created()
 
