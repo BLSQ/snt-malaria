@@ -64,12 +64,12 @@ export const DataLayerMapWrapper: FC<Props> = ({
         const valuesByYear: Record<number, MetricValue[]> = {};
         const years = new Set<number>();
         for (const metricValue of metricValues) {
-            const year = metricValue.year || 0;
-            if (!valuesByYear[year]) {
-                valuesByYear[year] = [];
-                years.add(year);
+            const metricYear = metricValue.year || 0;
+            if (!valuesByYear[metricYear]) {
+                valuesByYear[metricYear] = [];
+                years.add(metricYear);
             }
-            valuesByYear[year].push(metricValue);
+            valuesByYear[metricYear].push(metricValue);
         }
         setMetricValuesPerYear(valuesByYear);
         setYear([...years].sort((a, b) => b - a)[0]?.toString());

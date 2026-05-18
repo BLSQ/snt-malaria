@@ -110,6 +110,7 @@
     "iaso.snt_malaria.settings.dataLayers.errors.invalidColor": "Invalid color format. Use a hexadecimal code (e.g., #RRGGBB) or a valid CSS color name.",
     "iaso.snt_malaria.settings.dataLayers.isPopulation": "Is population",
     "iaso.snt_malaria.settings.dataLayers.selectYear": "Select year",
+    "iaso.snt_malaria.settings.dataLayers.importCSVYearCaption": "The year for which the metric values will be imported. Only applies to layers with population metrics.",
     "iaso.snt_malaria.label.runInterventionPlanBudget": "Run Budget",
     "iaso.snt_malaria.cost-breakdown-chart.title": "Cost per intervention category",
     "iaso.snt_malaria.proportion-chart.title": "Cost per intervention",
