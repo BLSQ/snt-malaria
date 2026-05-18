@@ -18,8 +18,9 @@ export const useGetBudgetSettings = (
         queryFn: () => getRequest('/api/snt_malaria/budget_settings/'),
         options: {
             enabled,
-            // The API returns a list scoped to the user's account; the
-            // singleton row sits at index 0 - or undefined if none was seeded.
+            // BudgetSettings has a OneToOneField to Account, so there's at
+            // most one row per account. The API currently returns a list
+            // (standard ModelViewSet behavior), but we select the singleton.
             select: (data: BudgetSettings[]) =>
                 data?.[0] ?? ({} as BudgetSettings),
         },

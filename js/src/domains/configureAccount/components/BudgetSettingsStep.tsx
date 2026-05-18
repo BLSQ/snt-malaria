@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react';
+import React, { FunctionComponent, useCallback, useState } from 'react';
 
 import { useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
@@ -87,11 +87,14 @@ export const BudgetSettingsStep: FunctionComponent<Props> = ({
         handleSubmit,
     } = formik;
 
-    const onChange = (keyValue: string | null, value: any) => {
-        if (!keyValue) return;
-        setFieldTouched(keyValue, true);
-        setFieldValue(keyValue, value ?? '');
-    };
+    const onChange = useCallback(
+        (keyValue: string | null, value: any) => {
+            if (!keyValue) return;
+            setFieldTouched(keyValue, true);
+            setFieldValue(keyValue, value ?? '');
+        },
+        [setFieldTouched, setFieldValue],
+    );
 
     const getErrors = useTranslatedErrors({
         errors,

@@ -80,7 +80,7 @@ export const ConfigureAccount: FunctionComponent = () => {
         (hasError: boolean) => {
             setErrorStepIndex(hasError ? ACCOUNT_SETTINGS_STEP_INDEX : undefined);
         },
-        [],
+        [setErrorStepIndex],
     );
 
     useEffect(() => {

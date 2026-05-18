@@ -1,5 +1,6 @@
 import React, {
     FunctionComponent,
+    useCallback,
     useEffect,
     useMemo,
     useState,
@@ -295,10 +296,11 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
         }
     }, [captcha.data, captcha.isError, setFieldValue]);
 
-    useEffect(() => {
-        captcha.mutate();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // Load the first captcha challenge on mount. We intentionally omit
+    // `captcha` from the dependency array to avoid re-fetching on every
+    // mutation state change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => captcha.mutate(), []);
 
     useEffect(() => {
         // Keep `cachedFormValues` in sync so a locale-driven remount restores the form.
@@ -311,27 +313,34 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
         if (isRedirecting) cachedFormValues = null;
     }, [isRedirecting]);
 
-    const onChange = (keyValue: string | null, value: any): void => {
-        if (!keyValue) return;
-        if (keyValue === 'language') {
+    const onLanguageChange_ = useCallback(
+        (_keyValue: string | null, value: any) => {
             void setFieldValue('language', value as LangOptions);
             onLanguageChange(value as LangOptions);
-            return;
-        }
-        if (keyValue === 'captcha_code') {
+        },
+        [setFieldValue, onLanguageChange],
+    );
+
+    const onCaptchaCodeChange = useCallback(
+        (_keyValue: string | null, value: any) => {
             setFieldTouched('captcha_code', true);
             setFieldValue(
                 'captcha_code',
-                value === undefined || value === null
-                    ? ''
-                    : String(value),
+                value === undefined || value === null ? '' : String(value),
             );
-            return;
-        }
-        setFieldTouched(keyValue, true);
-        const processed = value === '' ? undefined : value;
-        setFieldValue(keyValue, processed);
-    };
+        },
+        [setFieldTouched, setFieldValue],
+    );
+
+    const onChange = useCallback(
+        (keyValue: string | null, value: any): void => {
+            if (!keyValue) return;
+            setFieldTouched(keyValue, true);
+            const processed = value === '' ? undefined : value;
+            setFieldValue(keyValue, processed);
+        },
+        [setFieldTouched, setFieldValue],
+    );
 
     const getErrors = useTranslatedErrors({
         errors,
@@ -378,7 +387,7 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
                         keyValue="language"
                         labelString={formatMessage(MESSAGES.language)}
                         value={values.language}
-                        onChange={onChange}
+                        onChange={onLanguageChange_}
                         options={languageOptions}
                         clearable={false}
                         withMarginTop={false}
@@ -477,7 +486,7 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
                             keyValue="captcha_code"
                             labelString={formatMessage(MESSAGES.captchaCode)}
                             value={values.captcha_code}
-                            onChange={onChange}
+                            onChange={onCaptchaCodeChange}
                             errors={captchaCodeErrors}
                             disabled={
                                 !captchaReady || Boolean(captchaLoadError)
