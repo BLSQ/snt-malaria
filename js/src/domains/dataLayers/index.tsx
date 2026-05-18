@@ -1,6 +1,10 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Card, Stack, Typography } from '@mui/material';
-import { LoadingSpinner, useRedirectToReplace, useSafeIntl } from 'bluesquare-components';
+import {
+    LoadingSpinner,
+    useRedirectToReplace,
+    useSafeIntl,
+} from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 
@@ -15,11 +19,11 @@ import {
     SidebarLayout,
 } from '../../components/styledComponents';
 import { baseUrls } from '../../constants/urls';
+import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import {
     useGetMetricCategories,
     useGetMetricValues,
 } from '../planning/hooks/useGetMetrics';
-import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { MetricType } from '../planning/types/metrics';
 import { DataLayerDialog } from './dataLayerForm/DataLayerDialog';
@@ -51,8 +55,7 @@ export const DataLayers: FC = () => {
     const [displayedMetricType, setDisplayedMetricType] =
         useState<MetricType>();
     const { data: accountSettings } = useGetAccountSettings();
-    const interventionTypeId =
-        accountSettings?.intervention_org_unit_type_id;
+    const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
     const { data: orgUnits } = useGetOrgUnits({
         orgUnitParentId: displayOrgUnitId,
         orgUnitTypeId: interventionTypeId,
@@ -61,6 +64,14 @@ export const DataLayers: FC = () => {
 
     const { data: metricCategories, isLoading: isLoadingMetricLayers } =
         useGetMetricCategories();
+    const existingCategoryOptions = useMemo(
+        () =>
+            (metricCategories ?? []).map(category => ({
+                label: category.name,
+                value: category.name,
+            })),
+        [metricCategories],
+    );
 
     const { data: displayedMetricValues } = useGetMetricValues({
         metricTypeId: displayedMetricType?.id || null,
@@ -139,13 +150,22 @@ export const DataLayers: FC = () => {
                             <Card sx={styles.card}>
                                 <CardStyled
                                     header={
-                                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                        <Stack
+                                            direction="row"
+                                            justifyContent="space-between"
+                                            alignItems="center"
+                                        >
                                             <Typography variant="h6">
-                                                {displayedMetricType?.name || ''}
+                                                {displayedMetricType?.name ||
+                                                    ''}
                                             </Typography>
                                             <OrgUnitSelect
-                                                onOrgUnitChange={handleDisplayOrgUnitChange}
-                                                selectedOrgUnitId={displayOrgUnitId}
+                                                onOrgUnitChange={
+                                                    handleDisplayOrgUnitChange
+                                                }
+                                                selectedOrgUnitId={
+                                                    displayOrgUnitId
+                                                }
                                             />
                                         </Stack>
                                     }
@@ -165,6 +185,7 @@ export const DataLayers: FC = () => {
                         open={isMetricTypeFormOpen}
                         closeDialog={onDialogClose}
                         metricType={selectedMetricType}
+                        categoryOptions={existingCategoryOptions}
                     />
                 )}
             </PageContainer>

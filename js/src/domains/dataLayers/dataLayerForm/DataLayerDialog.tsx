@@ -2,6 +2,7 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Alert, AlertTitle } from '@mui/material';
 import {
     ConfirmCancelModal,
+    DropdownOptions,
     IntlMessage,
     useSafeIntl,
 } from 'bluesquare-components';
@@ -16,12 +17,14 @@ interface MetricTypeDialogProps {
     open: boolean;
     closeDialog: () => void;
     metricType?: MetricType;
+    categoryOptions: DropdownOptions<string>[];
 }
 
 export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
     open,
     closeDialog,
     metricType = undefined,
+    categoryOptions,
 }) => {
     const [errorMessage, setErrorMessage] = useState<IntlMessage | undefined>();
     const [errorHeadline, setErrorHeadline] = useState<
@@ -130,6 +133,7 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
                 <MetricTypeForm
                     metricType={metricTypeFormModel}
                     isRestricted={metricType?.origin === 'openhexa'}
+                    categoryOptions={categoryOptions}
                 />
             </ExtendedFormikProvider>
             {errorMessage && (

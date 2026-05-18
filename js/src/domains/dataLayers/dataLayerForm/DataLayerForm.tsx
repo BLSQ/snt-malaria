@@ -17,11 +17,13 @@ import { LegendConfigForm } from './LegendConfigForm';
 type MetricTypeFormProps = {
     metricType?: MetricTypeFormModel;
     isRestricted?: boolean;
+    categoryOptions: { label: string; value: string }[];
 };
 
 export const MetricTypeForm: FC<MetricTypeFormProps> = ({
     metricType = undefined,
     isRestricted = false,
+    categoryOptions,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { data: legendTypeOptions, isLoading: loadingLegendTypeOptions } =
@@ -69,7 +71,10 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 keyValue="category"
                 onChange={setFieldValueAndState}
                 value={values.category}
-                type="text"
+                type="select"
+                options={categoryOptions}
+                freeSolo
+                clearable={false}
                 label={MESSAGES.category}
                 required
                 errors={getErrors('category')}
