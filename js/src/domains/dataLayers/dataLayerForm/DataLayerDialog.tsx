@@ -2,6 +2,7 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Alert, AlertTitle } from '@mui/material';
 import {
     ConfirmCancelModal,
+    DropdownOptions,
     IntlMessage,
     useSafeIntl,
 } from 'bluesquare-components';
@@ -16,7 +17,7 @@ interface MetricTypeDialogProps {
     open: boolean;
     closeDialog: () => void;
     metricType?: MetricType;
-    categoryOptions: { label: string; value: string }[];
+    categoryOptions: DropdownOptions<string>[];
 }
 
 export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
