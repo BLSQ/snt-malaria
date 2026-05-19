@@ -14,8 +14,8 @@ import { MESSAGES } from '../messages';
 type Props = {
     taskId: number | undefined;
     onAdvance: () => void;
-    /** Notifies the wizard stepper when this step is in a blocking error state. */
-    onStepErrorChange?: (hasError: boolean) => void;
+    /** Terminal failure — marks this step in the stepper. Recovery is Restart only. */
+    onError?: () => void;
 };
 
 const styles = {
@@ -39,7 +39,7 @@ const goToRestart = (): void => {
 export const ImportBoundariesStep: FunctionComponent<Props> = ({
     taskId,
     onAdvance,
-    onStepErrorChange,
+    onError,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -54,11 +54,10 @@ export const ImportBoundariesStep: FunctionComponent<Props> = ({
         !taskId || (!importDone && importTerminalFailure);
 
     useEffect(() => {
-        onStepErrorChange?.(hasStepperError);
-        return () => {
-            onStepErrorChange?.(false);
-        };
-    }, [hasStepperError, onStepErrorChange]);
+        if (hasStepperError) {
+            onError?.();
+        }
+    }, [hasStepperError, onError]);
 
     const stepErrorWithHelp = (specific: MessageDescriptor): string =>
         `${formatMessage(specific)} ${formatMessage(MESSAGES.errorHelpSuffix)}`;

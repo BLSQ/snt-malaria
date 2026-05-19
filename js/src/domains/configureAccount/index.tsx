@@ -1,7 +1,6 @@
 import React, {
     FunctionComponent,
     useCallback,
-    useEffect,
     useMemo,
     useState,
 } from 'react';
@@ -61,8 +60,6 @@ const styles = {
 
 const HOME_URL = `/dashboard/${baseUrls.dataLayers}`;
 
-const IMPORT_STEP_INDEX = 1;
-
 export const ConfigureAccount: FunctionComponent = () => {
     const { formatMessage } = useSafeIntl();
 
@@ -77,17 +74,8 @@ export const ConfigureAccount: FunctionComponent = () => {
     const [activeStep, setActiveStep] = useState(0);
     const [errorStepIndex, setErrorStepIndex] = useState<number | undefined>();
 
-    const onImportStepErrorChange = useCallback(
-        (hasError: boolean) => {
-            setErrorStepIndex(hasError ? IMPORT_STEP_INDEX : undefined);
-        },
-        [setErrorStepIndex],
-    );
-
-    useEffect(() => {
-        if (activeStep !== IMPORT_STEP_INDEX) {
-            setErrorStepIndex(undefined);
-        }
+    const onError = useCallback(() => {
+        setErrorStepIndex(activeStep);
     }, [activeStep]);
 
     const stepLabels = useMemo(
@@ -138,7 +126,7 @@ export const ConfigureAccount: FunctionComponent = () => {
                         <ImportBoundariesStep
                             taskId={taskId}
                             onAdvance={() => setActiveStep(2)}
-                            onStepErrorChange={onImportStepErrorChange}
+                            onError={onError}
                         />
                     )}
                     {activeStep === 2 && (
