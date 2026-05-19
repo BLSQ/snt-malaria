@@ -10,7 +10,13 @@ from rest_framework.exceptions import ValidationError
 from iaso.models import Account, DataSource, ImportGPKG, OrgUnit, OrgUnitType, Profile, Project, SourceVersion, Task
 from iaso.permissions.core_permissions import CORE_DATA_TASKS_PERMISSION
 from iaso.tests.tasks.task_api_test_case import TaskAPITestCase
-from plugins.snt_malaria.models import BudgetSettings, Intervention, InterventionCategory, InterventionCostBreakdownLine
+from plugins.snt_malaria.models import (
+    AccountSettings,
+    BudgetSettings,
+    Intervention,
+    InterventionCategory,
+    InterventionCostBreakdownLine,
+)
 
 
 class SNTAccountSetupAPITestCase(TaskAPITestCase):
@@ -50,6 +56,12 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
 
         # SNT models
         self.assertEqual(BudgetSettings.objects.count(), 1)
+        self.assertEqual(AccountSettings.objects.count(), 1)
+        new_account = Account.objects.first()
+        account_settings = AccountSettings.objects.first()
+        self.assertEqual(account_settings.account_id, new_account.id)
+        self.assertIsNone(account_settings.focus_org_unit_type_id)
+        self.assertIsNone(account_settings.intervention_org_unit_type_id)
         # see intervention_seeder.py to understand why these values
         self.assertEqual(InterventionCategory.objects.count(), 8)
         self.assertEqual(Intervention.objects.count(), 21)
@@ -222,6 +234,7 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         self.assertEqual(User.objects.count(), 0)
         self.assertEqual(Profile.objects.count(), 0)
         self.assertEqual(BudgetSettings.objects.count(), 0)
+        self.assertEqual(AccountSettings.objects.count(), 0)
         self.assertEqual(InterventionCategory.objects.count(), 0)
         self.assertEqual(Intervention.objects.count(), 0)
         self.assertEqual(InterventionCostBreakdownLine.objects.count(), 0)
