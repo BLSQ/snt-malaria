@@ -5,12 +5,12 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { useGetChildError } from '../../../hooks/useGetChildError';
 import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
+import { MetricType } from '../../dataLayers/types/metrics';
 import { MESSAGES } from '../../messages';
 import {
     InterventionCostBreakdownLine,
     InterventionDetails,
 } from '../../planning/types/interventions';
-import { MetricType } from '../../planning/types/metrics';
 import { InterventionCostBreakdownLineForm } from './InterventionCostBreakdownLineForm';
 import { TargetPopulationForm } from './TargetPopulationForm';
 

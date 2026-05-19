@@ -19,6 +19,7 @@ import {
 } from '../../components/styledComponents';
 
 import { baseUrls } from '../../constants/urls';
+import { useGetMetricCategories } from '../dataLayers/hooks/useGetMetrics';
 import { MESSAGES } from '../messages';
 import { useDeleteScenario } from '../scenarios/hooks/useDeleteScenario';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
@@ -36,7 +37,6 @@ import { useGetBudgetAssumptions } from './hooks/useGetBudgetAssumptions';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetInterventionCategories } from './hooks/useGetInterventionCategories';
 import { useGetLatestCalculatedBudget } from './hooks/useGetLatestCalculatedBudget';
-import { useGetMetricCategories } from './hooks/useGetMetrics';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { usePreviewScenarioRule } from './hooks/usePreviewScenarioRule';
@@ -74,7 +74,7 @@ export const Planning: FC = () => {
         InterventionPlan | undefined
     >(undefined);
 
-    const { data: metricTypeCategories } = useGetMetricCategories();
+    const { data: metricTypeCategories } = useGetMetricCategories('any');
     const { data: interventionCategories } = useGetInterventionCategories();
     const { data: accountSettings } = useGetAccountSettings();
     const interventionTypeId = accountSettings?.intervention_org_unit_type_id;

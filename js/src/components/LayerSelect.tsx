@@ -14,8 +14,8 @@ import { useSafeIntl } from 'bluesquare-components';
 
 import { MessageDescriptor } from 'react-intl';
 import { SxStyles } from 'Iaso/types/general';
-import { MetricType } from '../domains/planning/types/metrics';
-import { MetricTypeCategory } from '../domains/planning/types/metrics';
+import { MetricType } from '../domains/dataLayers/types/metrics';
+import { MetricTypeCategory } from '../domains/dataLayers/types/metrics';
 
 /** Closed control only: match [MapLegend] chip; `sx` is the OutlinedInput root. */
 const styles: SxStyles = {

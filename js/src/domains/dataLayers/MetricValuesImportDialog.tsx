@@ -1,15 +1,21 @@
 import React, { FunctionComponent, useCallback, useState } from 'react';
 import { FC } from 'react';
-import { Box, MenuItem } from '@mui/material';
+import { Box, MenuItem, Typography } from '@mui/material';
 import {
     ConfirmCancelModal,
     FilesUpload,
     makeFullModal,
     useSafeIntl,
 } from 'bluesquare-components';
+import InputComponent from 'Iaso/components/forms/InputComponent';
 import { noOp } from 'Iaso/utils';
 import { useImportMetricValues } from './hooks/useImportMetricValues';
 import { MESSAGES } from './messages';
+
+const yearOptions = Array.from({ length: 20 }, (_, i) => {
+    const year = 2020 + i;
+    return { label: year.toString(), value: year };
+});
 
 type ImportActionProps = {
     onClick: () => void;
@@ -40,13 +46,18 @@ type Props = {
 const ImportMetricValuesModal: FC<Props> = ({ isOpen, closeDialog }) => {
     const { formatMessage } = useSafeIntl();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedYear, setSelectedYear] = useState(yearOptions[0].value);
+
     const { mutate: importMetricValues } = useImportMetricValues();
 
     const handleSubmit = useCallback(() => {
         if (selectedFile) {
-            importMetricValues(selectedFile, { onSuccess: closeDialog });
+            importMetricValues(
+                { file: selectedFile, year: selectedYear },
+                { onSuccess: closeDialog },
+            );
         }
-    }, [selectedFile, importMetricValues, closeDialog]);
+    }, [selectedFile, selectedYear, importMetricValues, closeDialog]);
 
     const handleOnChange = useCallback(
         (file: File[]) => setSelectedFile(file[0]),
@@ -77,6 +88,18 @@ const ImportMetricValuesModal: FC<Props> = ({ isOpen, closeDialog }) => {
                     placeholder={formatMessage(MESSAGES.importCSV)}
                 />
             </Box>
+            <InputComponent
+                type="select"
+                keyValue="id"
+                options={yearOptions}
+                value={selectedYear}
+                label={MESSAGES.selectYear}
+                onChange={(_, value) => setSelectedYear(value)}
+                wrapperSx={{ mt: 2 }}
+            />
+            <Typography variant="caption" color="textSecondary" sx={{ mt: 2 }}>
+                {formatMessage(MESSAGES.importCSVYearCaption)}
+            </Typography>
         </ConfirmCancelModal>
     );
 };

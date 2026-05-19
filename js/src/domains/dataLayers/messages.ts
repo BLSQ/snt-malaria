@@ -139,4 +139,17 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.variable',
         defaultMessage: 'Variable',
     },
+    is_population: {
+        id: 'iaso.snt_malaria.settings.dataLayers.isPopulation',
+        defaultMessage: 'Is Population',
+    },
+    selectYear: {
+        id: 'iaso.snt_malaria.settings.dataLayers.selectYear',
+        defaultMessage: 'Select Year',
+    },
+    importCSVYearCaption: {
+        id: 'iaso.snt_malaria.settings.dataLayers.importCSVYearCaption',
+        defaultMessage:
+            'The year for which the metric values will be imported. Only applies to layers with population metrics.',
+    },
 });

@@ -1,5 +1,5 @@
 import { JsonLogicTree } from '@react-awesome-query-builder/mui';
-import { Condition, MetricsFilters } from '../../planning/types/metrics';
+import { Condition, MetricsFilters } from '../../dataLayers/types/metrics';
 import { MetricTypeCriterion } from '../../planning/types/scenarioRule';
 
 /** Returns `null` when nothing valid to send (cleared value / empty list). */

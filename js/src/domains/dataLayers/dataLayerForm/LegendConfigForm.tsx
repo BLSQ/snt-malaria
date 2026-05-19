@@ -4,9 +4,9 @@ import { useSafeIntl } from 'bluesquare-components';
 import { FormikErrors, FormikTouched } from 'formik';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetChildError } from '../../../hooks/useGetChildError';
-import { Scale } from '../../planning/types/metrics';
 import { DEFAULT_LEGEND_CONFIG_ITEM } from '../hooks/useMetricTypeFormState';
 import { MESSAGES } from '../messages';
+import { Scale } from '../types/metrics';
 import { ScaleForm } from './ScaleForm';
 
 const styles: SxStyles = {

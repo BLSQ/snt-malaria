@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { Box, Theme } from '@mui/material';
 
 import { SxStyles } from 'Iaso/types/general';
-import { ScaleDomainRange } from '../../types/metrics';
+import { ScaleDomainRange } from '../../../dataLayers/types/metrics';
 
 const styles: SxStyles = {
     mainBox: (theme: Theme) => ({

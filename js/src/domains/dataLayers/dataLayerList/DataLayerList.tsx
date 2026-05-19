@@ -2,8 +2,8 @@ import React, { FC, Fragment, useCallback, useEffect } from 'react';
 import { List, ListSubheader, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import { MetricType, MetricTypeCategory } from '../../planning/types/metrics';
 import { MESSAGES } from '../messages';
+import { MetricType, MetricTypeCategory } from '../types/metrics';
 import { DataLayerLine } from './DataLayerLine';
 
 const styles = {

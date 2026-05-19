@@ -1,16 +1,11 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
-import { Card, Stack, Typography } from '@mui/material';
-import {
-    LoadingSpinner,
-    useRedirectToReplace,
-    useSafeIntl,
-} from 'bluesquare-components';
+import React, { FC, useCallback, useState } from 'react';
+import { Card } from '@mui/material';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
-import { OrgUnitSelect } from '../../components/OrgUnitSelect';
 import {
     MainColumn,
     PageContainer,
@@ -20,18 +15,15 @@ import {
 } from '../../components/styledComponents';
 import { baseUrls } from '../../constants/urls';
 import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
-import {
-    useGetMetricCategories,
-    useGetMetricValues,
-} from '../planning/hooks/useGetMetrics';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
-import { MetricType } from '../planning/types/metrics';
 import { DataLayerDialog } from './dataLayerForm/DataLayerDialog';
 import { DataLayerList } from './dataLayerList/DataLayerList';
 import { DataLayerListHeader } from './dataLayerList/DataLayerListHeader';
-import { DataLayerMap } from './dataLayerMap/DataLayerMap';
+import { DataLayerMapWrapper } from './dataLayerMap/DataLayerMapWrapper';
 import { useDeleteMetricType } from './hooks/useDeleteMetricType';
+import { useGetMetricCategories } from './hooks/useGetMetrics';
 import { MESSAGES } from './messages';
+import { MetricType } from './types/metrics';
 
 const styles = {
     card: {
@@ -50,7 +42,6 @@ export const DataLayers: FC = () => {
     const { displayOrgUnitId } = useParamsObject(
         baseUrls.dataLayers,
     ) as unknown as DataLayersParams;
-    const redirectToReplace = useRedirectToReplace();
 
     const [displayedMetricType, setDisplayedMetricType] =
         useState<MetricType>();
@@ -73,25 +64,12 @@ export const DataLayers: FC = () => {
         [metricCategories],
     );
 
-    const { data: displayedMetricValues } = useGetMetricValues({
-        metricTypeId: displayedMetricType?.id || null,
-    });
-
     const { mutate: deleteMetricType } = useDeleteMetricType();
 
     const [isMetricTypeFormOpen, setIsMetricTypeFormOpen] =
         useState<boolean>(false);
 
     const [selectedMetricType, setSelectedMetricType] = useState<MetricType>();
-
-    const handleDisplayOrgUnitChange = useCallback(
-        (orgUnitId?: number) => {
-            redirectToReplace(baseUrls.dataLayers, {
-                displayOrgUnitId: orgUnitId?.toString(),
-            });
-        },
-        [redirectToReplace],
-    );
 
     const onDialogClose = useCallback(() => {
         setIsMetricTypeFormOpen(false);
@@ -147,36 +125,10 @@ export const DataLayers: FC = () => {
                     </SidebarColumn>
                     <MainColumn>
                         <PaperFullHeight>
-                            <Card sx={styles.card}>
-                                <CardStyled
-                                    header={
-                                        <Stack
-                                            direction="row"
-                                            justifyContent="space-between"
-                                            alignItems="center"
-                                        >
-                                            <Typography variant="h6">
-                                                {displayedMetricType?.name ||
-                                                    ''}
-                                            </Typography>
-                                            <OrgUnitSelect
-                                                onOrgUnitChange={
-                                                    handleDisplayOrgUnitChange
-                                                }
-                                                selectedOrgUnitId={
-                                                    displayOrgUnitId
-                                                }
-                                            />
-                                        </Stack>
-                                    }
-                                >
-                                    <DataLayerMap
-                                        metricType={displayedMetricType}
-                                        metricValues={displayedMetricValues}
-                                        orgUnits={orgUnits || []}
-                                    />
-                                </CardStyled>
-                            </Card>
+                            <DataLayerMapWrapper
+                                metricType={displayedMetricType}
+                                orgUnits={orgUnits || []}
+                            />
                         </PaperFullHeight>
                     </MainColumn>
                 </SidebarLayout>
