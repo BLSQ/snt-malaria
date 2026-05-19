@@ -34,7 +34,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "code",
-            "allowed_cost_unit_types",
             "impact_ref",
             "target_population",
             "cost_breakdown_lines",
