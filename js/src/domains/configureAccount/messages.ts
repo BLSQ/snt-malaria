@@ -15,6 +15,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.configureAccount.stepUserInfo',
         defaultMessage: 'Your information',
     },
+    stepImportBoundaries: {
+        id: 'iaso.snt_malaria.configureAccount.stepImportBoundaries',
+        defaultMessage: 'Import',
+    },
     stepAccountSettings: {
         id: 'iaso.snt_malaria.configureAccount.stepAccountSettings',
         defaultMessage: 'Account settings',
@@ -68,6 +72,15 @@ export const MESSAGES = defineMessages({
     importKilled: {
         id: 'iaso.snt_malaria.configureAccount.importKilled',
         defaultMessage: 'The import was cancelled.',
+    },
+    importSuccessTitle: {
+        id: 'iaso.snt_malaria.configureAccount.importSuccessTitle',
+        defaultMessage: 'Import complete',
+    },
+    importSuccessDescription: {
+        id: 'iaso.snt_malaria.configureAccount.importSuccessDescription',
+        defaultMessage:
+            'Your administrative boundaries have been imported successfully. Continue to the next step to configure your account.',
     },
     configureTitle: {
         id: 'iaso.snt_malaria.configureAccount.configureTitle',

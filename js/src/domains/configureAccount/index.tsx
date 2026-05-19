@@ -16,6 +16,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { baseUrls } from '../../constants/urls';
 import { AccountSettingsStep } from './components/AccountSettingsStep';
 import { BudgetSettingsStep } from './components/BudgetSettingsStep';
+import { ImportBoundariesStep } from './components/ImportBoundariesStep';
 import { UserInfoStep } from './components/UserInfoStep';
 import { WizardStepper } from './components/WizardStepper';
 import { MESSAGES } from './messages';
@@ -60,7 +61,7 @@ const styles = {
 
 const HOME_URL = `/dashboard/${baseUrls.dataLayers}`;
 
-const ACCOUNT_SETTINGS_STEP_INDEX = 1;
+const IMPORT_STEP_INDEX = 1;
 
 export const ConfigureAccount: FunctionComponent = () => {
     const { formatMessage } = useSafeIntl();
@@ -76,15 +77,15 @@ export const ConfigureAccount: FunctionComponent = () => {
     const [activeStep, setActiveStep] = useState(0);
     const [errorStepIndex, setErrorStepIndex] = useState<number | undefined>();
 
-    const onAccountSettingsStepErrorChange = useCallback(
+    const onImportStepErrorChange = useCallback(
         (hasError: boolean) => {
-            setErrorStepIndex(hasError ? ACCOUNT_SETTINGS_STEP_INDEX : undefined);
+            setErrorStepIndex(hasError ? IMPORT_STEP_INDEX : undefined);
         },
         [setErrorStepIndex],
     );
 
     useEffect(() => {
-        if (activeStep !== ACCOUNT_SETTINGS_STEP_INDEX) {
+        if (activeStep !== IMPORT_STEP_INDEX) {
             setErrorStepIndex(undefined);
         }
     }, [activeStep]);
@@ -92,6 +93,7 @@ export const ConfigureAccount: FunctionComponent = () => {
     const stepLabels = useMemo(
         () => [
             formatMessage(MESSAGES.stepUserInfo),
+            formatMessage(MESSAGES.stepImportBoundaries),
             formatMessage(MESSAGES.stepAccountSettings),
             formatMessage(MESSAGES.stepBudgetSettings),
         ],
@@ -133,16 +135,19 @@ export const ConfigureAccount: FunctionComponent = () => {
                         />
                     )}
                     {activeStep === 1 && (
-                        <AccountSettingsStep
+                        <ImportBoundariesStep
                             taskId={taskId}
-                            isLastStep={false}
                             onAdvance={() => setActiveStep(2)}
-                            onStepErrorChange={
-                                onAccountSettingsStepErrorChange
-                            }
+                            onStepErrorChange={onImportStepErrorChange}
                         />
                     )}
-                    {activeStep >= 2 && (
+                    {activeStep === 2 && (
+                        <AccountSettingsStep
+                            isLastStep={false}
+                            onAdvance={() => setActiveStep(3)}
+                        />
+                    )}
+                    {activeStep >= 3 && (
                         <BudgetSettingsStep
                             isLastStep
                             onFinish={handleFinish}
