@@ -1,6 +1,7 @@
 from rest_framework import status
 
 from plugins.snt_malaria.models.account_settings import AccountSettings
+from plugins.snt_malaria.permissions import SNT_SETTINGS_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
@@ -111,10 +112,15 @@ class AccountSettingsAPITests(SNTMalariaAPITestCase):
         self.account_settings.refresh_from_db()
         self.assertEqual(self.account_settings.focus_org_unit_type_id, self.region_type.id)
 
-    def test_patch_clear_focus_org_unit_type(self):
+    def test_patch_clear_focus_org_unit_type_with_write_perm(self):
         self.account_settings.focus_org_unit_type = self.region_type
         self.account_settings.save()
-        self.client.force_authenticate(user=self.user)
+        admin_user = self.create_user_with_profile(
+            username="settings_admin",
+            account=self.account,
+            permissions=[SNT_SETTINGS_WRITE_PERMISSION],
+        )
+        self.client.force_authenticate(user=admin_user)
         response = self.client.patch(
             f"{BASE_URL}{self.account_settings.id}/",
             {"focus_org_unit_type_id": None},
@@ -124,6 +130,76 @@ class AccountSettingsAPITests(SNTMalariaAPITestCase):
         self.assertIsNone(result["focus_org_unit_type_id"])
         self.account_settings.refresh_from_db()
         self.assertIsNone(self.account_settings.focus_org_unit_type_id)
+
+    def test_patch_clear_already_set_field_without_perm_forbidden(self):
+        """Clearing an already-set field requires SNT_SETTINGS_WRITE_PERMISSION."""
+        self.account_settings.focus_org_unit_type = self.region_type
+        self.account_settings.save()
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            f"{BASE_URL}{self.account_settings.id}/",
+            {"focus_org_unit_type_id": None},
+            format="json",
+        )
+        self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
+        self.account_settings.refresh_from_db()
+        self.assertEqual(self.account_settings.focus_org_unit_type_id, self.region_type.id)
+
+    def test_patch_modify_already_set_field_without_perm_forbidden(self):
+        """Changing an already-set field requires SNT_SETTINGS_WRITE_PERMISSION."""
+        # `intervention_org_unit_type` is already set to `out_district` in setUp.
+        another_district = self.create_org_unit_type(
+            "DISTRICT_2",
+            [self.project],
+            category="DISTRICT",
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            f"{BASE_URL}{self.account_settings.id}/",
+            {"intervention_org_unit_type_id": another_district.id},
+            format="json",
+        )
+        self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
+        self.account_settings.refresh_from_db()
+        self.assertEqual(self.account_settings.intervention_org_unit_type_id, self.out_district.id)
+
+    def test_patch_initial_fill_without_perm(self):
+        """Filling in a currently-unset field is allowed without SNT_SETTINGS_WRITE_PERMISSION (configureAccount wizard)."""
+        # `focus_org_unit_type` is None in setUp; this is the wizard's initial-fill case.
+        self.assertIsNone(self.account_settings.focus_org_unit_type_id)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            f"{BASE_URL}{self.account_settings.id}/",
+            {"focus_org_unit_type_id": self.region_type.id},
+            format="json",
+        )
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(result["focus_org_unit_type_id"], self.region_type.id)
+        self.account_settings.refresh_from_db()
+        self.assertEqual(self.account_settings.focus_org_unit_type_id, self.region_type.id)
+
+    def test_patch_modify_already_set_field_with_write_perm(self):
+        """With SNT_SETTINGS_WRITE_PERMISSION, changing an already-set field is allowed."""
+        another_district = self.create_org_unit_type(
+            "DISTRICT_2",
+            [self.project],
+            category="DISTRICT",
+        )
+        admin_user = self.create_user_with_profile(
+            username="settings_admin_modify",
+            account=self.account,
+            permissions=[SNT_SETTINGS_WRITE_PERMISSION],
+        )
+        self.client.force_authenticate(user=admin_user)
+        response = self.client.patch(
+            f"{BASE_URL}{self.account_settings.id}/",
+            {"intervention_org_unit_type_id": another_district.id},
+            format="json",
+        )
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(result["intervention_org_unit_type_id"], another_district.id)
+        self.account_settings.refresh_from_db()
+        self.assertEqual(self.account_settings.intervention_org_unit_type_id, another_district.id)
 
     def test_patch_rejects_org_unit_type_not_on_account(self):
         """Org unit types must belong to the user's account (via project)."""
