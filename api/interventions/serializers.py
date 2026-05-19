@@ -65,9 +65,11 @@ class InterventionDetailWriteSerializer(serializers.ModelSerializer):
             intervention = super().update(instance, validated_data)
             instance.cost_breakdown_lines.all().delete()
             for line_data in cost_breakdown_lines_data:
-                line_serializer = InterventionCostBreakdownLineSerializer(
-                    data={**line_data, "intervention": intervention.id}
-                )
+                line_payload = {**line_data, "intervention": intervention.id}
+                # Nested validation can already resolve PK fields to model instances.
+                if getattr(line_payload.get("unit_type"), "pk", None) is not None:
+                    line_payload["unit_type"] = line_payload["unit_type"].pk
+                line_serializer = InterventionCostBreakdownLineSerializer(data=line_payload)
                 line_serializer.is_valid(raise_exception=True)
                 line_serializer.save()
 

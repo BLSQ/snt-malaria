@@ -5,9 +5,9 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from iaso.api.common import DropdownOptionsWithRepresentationSerializer
+from iaso.api.common.serializer import DropdownOptionsWithRepresentationSerializer
 from plugins.snt_malaria.models import InterventionCostBreakdownLine
-from plugins.snt_malaria.models.cost_breakdown import InterventionCostUnitType
+from plugins.snt_malaria.models.cost_breakdown import CostUnitType
 
 from .filters import InterventionCostBreakdownLineListFilter
 from .permissions import InterventionCostBreakdownLinePermission
@@ -31,7 +31,7 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return (
-            InterventionCostBreakdownLine.objects.select_related("intervention")
+            InterventionCostBreakdownLine.objects.select_related("intervention", "unit_type")
             .filter(intervention__intervention_category__account=self.request.user.iaso_profile.account)
             .order_by("id")
         )
@@ -76,9 +76,12 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["get"],
     )
-    def unit_types(self, _):
-        serializer = DropdownOptionsWithRepresentationSerializer(
-            InterventionCostUnitType.choices,
-            many=True,
-        )
+    def unit_types_dropdown(self, _):
+        from iaso.api.common.serializer import DropdownOptionsSerializer
+
+        account = self.request.user.iaso_profile.account
+        queryset = CostUnitType.objects.filter(account=account)
+
+        data = [{"value": str(unit_type.id), "label": unit_type.name} for unit_type in queryset]
+        serializer = DropdownOptionsSerializer(data, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

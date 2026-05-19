@@ -2,7 +2,12 @@ from .account_settings import AccountSettings
 from .budget import Budget
 from .budget_assumptions import BudgetAssumptions
 from .budget_settings import BudgetSettings
-from .cost_breakdown import InterventionCostBreakdownLine, InterventionCostUnitType
+from .cost_breakdown import (
+    CostUnitType,
+    InterventionCostBreakdownLine,
+    InterventionCostUnitType,
+    ScenarioYearlyCostAssignment,
+)
 from .impact_org_unit_mapping import ImpactOrgUnitMapping
 from .impact_provider_config import ImpactProviderConfig
 from .intervention import (
@@ -21,8 +26,10 @@ __all__ = [
     "Scenario",
     "ScenarioRule",
     "ScenarioRuleInterventionProperties",
+    "CostUnitType",
     "InterventionCostBreakdownLine",
     "InterventionCostUnitType",
+    "ScenarioYearlyCostAssignment",
     "ImpactOrgUnitMapping",
     "ImpactProviderConfig",
     "Budget",

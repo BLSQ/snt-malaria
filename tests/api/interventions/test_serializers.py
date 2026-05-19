@@ -1,6 +1,7 @@
 from iaso.models.base import Account
 from iaso.test import APITestCase
 from plugins.snt_malaria.api.interventions.serializers import InterventionDetailWriteSerializer
+from plugins.snt_malaria.models.cost_breakdown import CostUnitType
 from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
 
 
@@ -19,6 +20,8 @@ class InterventionDetailWriteSerializerTests(APITestCase):
             intervention_category=self.int_category_vaccination,
             code="rts_s",
         )
+        self.unit_type_other, _ = CostUnitType.objects.get_or_create(account=self.account, name="Other")
+        self.unit_type_per_itn, _ = CostUnitType.objects.get_or_create(account=self.account, name="per ITN")
 
     def test_update_intervention_with_cost_breakdown_lines(self):
         intervention_data = {
@@ -29,12 +32,14 @@ class InterventionDetailWriteSerializerTests(APITestCase):
                 {
                     "name": "Line 1",
                     "unit_cost": 10,
+                    "unit_type": self.unit_type_other.id,
                     "category": "Procurement",
                     "intervention": self.intervention_vaccination_rts.id,
                 },
                 {
                     "name": "Line 2",
                     "unit_cost": 20,
+                    "unit_type": self.unit_type_per_itn.id,
                     "category": "Distribution",
                     "intervention": self.intervention_vaccination_rts.id,
                 },

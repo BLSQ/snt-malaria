@@ -1,6 +1,5 @@
 from rest_framework import status
 
-from plugins.snt_malaria.models import InterventionCostUnitType
 from plugins.snt_malaria.models.cost_breakdown import InterventionCostBreakdownLine
 from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base import (
     InterventionCostBreakdownLineBase,
@@ -39,7 +38,7 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
             "costs": [
                 {
                     "unit_cost": 15,
-                    "unit_type": "OTHER",
+                    "unit_type": self.unit_type_other.id,
                     "name": "Cost Line X",
                     "category": "Procurement",
                 }
@@ -54,7 +53,7 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
 
         icbl = InterventionCostBreakdownLine.objects.order_by("id").last()
         self.assertEqual(icbl.unit_cost, 15)
-        self.assertEqual(icbl.unit_type, "OTHER")
+        self.assertEqual(icbl.unit_type_id, self.unit_type_other.id)
         self.assertEqual(icbl.name, "Cost Line X")
         self.assertEqual(icbl.category, "Procurement")
         self.assertEqual(icbl.intervention.id, self.intervention_chemo_iptp.id)
@@ -65,7 +64,7 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
             "costs": [
                 {
                     "unit_cost": 15,
-                    "unit_type": "OTHER",
+                    "unit_type": self.unit_type_other.id,
                     "name": "Cost Line X",
                     "category": "Procurement",
                 }
@@ -83,7 +82,7 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
             "costs": [
                 {
                     "unit_cost": 15,
-                    "unit_type": "OTHER",
+                    "unit_type": self.unit_type_other.id,
                     "name": "Cost Line X",
                     "category": "Procurement",
                 }
@@ -101,7 +100,7 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
             "costs": [
                 {
                     "unit_cost": 15,
-                    "unit_type": "OTHER",
+                    "unit_type": self.unit_type_other.id,
                     "name": "Cost Line X",
                     "category": "Procurement",
                 }
@@ -118,7 +117,7 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
             "costs": [
                 {
                     "unit_cost": 20,
-                    "unit_type": "OTHER",
+                    "unit_type": self.unit_type_other.id,
                     "name": "Cost Line Y",
                     "category": "Supportive",
                 }
@@ -146,7 +145,7 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
             "costs": [
                 {
                     "unit_cost": 12,
-                    "unit_type": InterventionCostUnitType.PER_60MG_POWDER,
+                    "unit_type": self.unit_type_other.id,
                     "name": "Cost Line Z",
                     "category": "Operational",
                 }
@@ -162,7 +161,7 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.assertEqual(costs.count(), 1)
         cost = costs.first()
         self.assertEqual(cost.unit_cost, 12)
-        self.assertEqual(cost.unit_type, InterventionCostUnitType.PER_60MG_POWDER)
+        self.assertEqual(cost.unit_type_id, self.unit_type_other.id)
         self.assertEqual(cost.name, "Cost Line Z")
         self.assertEqual(cost.category, "Operational")
 
@@ -208,23 +207,29 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
 
     def test_get_cost_breakdown_line_unit_types_with_write_perm(self):
         self.client.force_authenticate(user=self.user_write)
-        response = self.client.get(f"{self.BASE_URL}unit_types/")
+        response = self.client.get(f"{self.BASE_URL}unit_types_dropdown/")
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        expected_unit_types = [{"value": choice[0], "label": choice[1]} for choice in InterventionCostUnitType.choices]
+        expected_unit_types = [
+            {"value": str(self.unit_type_other.id), "label": self.unit_type_other.name},
+            {"value": str(self.unit_type_per_sp.id), "label": self.unit_type_per_sp.name},
+        ]
         self.assertCountEqual(result, expected_unit_types)
 
     def test_get_cost_breakdown_line_unit_types_with_read_perm(self):
         self.client.force_authenticate(user=self.user_read)
-        response = self.client.get(f"{self.BASE_URL}unit_types/")
+        response = self.client.get(f"{self.BASE_URL}unit_types_dropdown/")
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        expected_unit_types = [{"value": choice[0], "label": choice[1]} for choice in InterventionCostUnitType.choices]
+        expected_unit_types = [
+            {"value": str(self.unit_type_other.id), "label": self.unit_type_other.name},
+            {"value": str(self.unit_type_per_sp.id), "label": self.unit_type_per_sp.name},
+        ]
         self.assertCountEqual(result, expected_unit_types)
 
     def test_get_cost_breakdown_line_unit_types_with_no_perm(self):
         self.client.force_authenticate(user=self.user_no_perm)
-        response = self.client.get(f"{self.BASE_URL}unit_types/")
+        response = self.client.get(f"{self.BASE_URL}unit_types_dropdown/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_cost_breakdown_line_unit_types_unauthenticated(self):
-        response = self.client.get(f"{self.BASE_URL}unit_types/")
+        response = self.client.get(f"{self.BASE_URL}unit_types_dropdown/")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

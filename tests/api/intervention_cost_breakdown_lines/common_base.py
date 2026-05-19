@@ -1,4 +1,5 @@
 from plugins.snt_malaria.models import InterventionCostBreakdownLine
+from plugins.snt_malaria.models.cost_breakdown import CostUnitType
 from plugins.snt_malaria.permissions import SNT_SETTINGS_READ_PERMISSION, SNT_SETTINGS_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
@@ -22,10 +23,13 @@ class InterventionCostBreakdownLineBase(SNTMalariaAPITestCase):
         self.intervention_vaccination_rts = defaults["intervention_rts"]
         self.intervention_chemo_smc = defaults["intervention_smc"]
         self.intervention_chemo_iptp = defaults["intervention_iptp"]
+        self.unit_type_other, _ = CostUnitType.objects.get_or_create(account=self.account, name="Other")
+        self.unit_type_per_sp, _ = CostUnitType.objects.get_or_create(account=self.account, name="per SP")
         self.cost_line1 = InterventionCostBreakdownLine.objects.create(
             name="Cost Line 1",
             intervention=self.intervention_vaccination_rts,
             unit_cost=10,
+            unit_type=self.unit_type_other,
             category="Procurement",
             created_by=self.user_write,
         )
@@ -33,6 +37,7 @@ class InterventionCostBreakdownLineBase(SNTMalariaAPITestCase):
             name="Cost Line 2",
             intervention=self.intervention_chemo_smc,
             unit_cost=5,
+            unit_type=self.unit_type_per_sp,
             category="Procurement",
             created_by=self.user_write,
         )
@@ -45,10 +50,12 @@ class InterventionCostBreakdownLineBase(SNTMalariaAPITestCase):
         other_defaults = self.create_snt_default_interventions(account=self.other_account, created_by=self.other_user)
         self.other_int_category = other_defaults["category_vaccination"]
         self.other_intervention = other_defaults["intervention_rts"]
+        self.other_unit_type, _ = CostUnitType.objects.get_or_create(account=self.other_account, name="per RDT kit")
         self.other_cost_line = InterventionCostBreakdownLine.objects.create(
             name="Other Cost Line",
             intervention=self.other_intervention,
             unit_cost=20,
+            unit_type=self.other_unit_type,
             category="Operational",
             created_by=self.other_user,
         )

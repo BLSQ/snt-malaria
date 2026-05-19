@@ -5,6 +5,7 @@ Create interventions for a given account
 from iaso.models import User
 from plugins.snt_malaria.models.budget_settings import BudgetSettings
 from plugins.snt_malaria.models.cost_breakdown import (
+    CostUnitType,
     InterventionCostBreakdownLine,
     InterventionCostUnitType,
 )
@@ -522,11 +523,23 @@ class InterventionSeeder:
     def _create_cost_breakdown_lines(self, intervention, cost_settings, created_by, print_progress):
         """Create cost breakdown lines for a given intervention."""
         for cost_data in cost_settings:
+            unit_type_key = (
+                cost_data["unit_type"].value
+                if isinstance(cost_data["unit_type"], InterventionCostUnitType)
+                else cost_data["unit_type"]
+            )
+            unit_type_label = unit_type_key
+            try:
+                unit_type_label = str(InterventionCostUnitType(unit_type_key).label)
+            except ValueError:
+                unit_type_label = str(unit_type_key)
+
+            unit_type, _ = CostUnitType.objects.get_or_create(account=self.account, name=unit_type_label)
             InterventionCostBreakdownLine.objects.create(
                 intervention=intervention,
                 name=cost_data["name"],
                 category=cost_data["category"],
-                unit_type=cost_data["unit_type"],
+                unit_type=unit_type,
                 unit_cost=cost_data["unit_cost"],
                 created_by=created_by,
             )

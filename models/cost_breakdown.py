@@ -21,6 +21,22 @@ class InterventionCostUnitType(models.TextChoices):
     OTHER = "OTHER", _("Other")
 
 
+class CostUnitType(models.Model):
+    class Meta:
+        app_label = "snt_malaria"
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(fields=["account", "name"], name="snt_malaria_costunittype_account_name_uniq"),
+        ]
+
+    account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE, related_name="cost_unit_types")
+    name = models.CharField(max_length=100)
+    ratio = models.DecimalField(max_digits=19, decimal_places=6, null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+
 class InterventionCostBreakdownLine(models.Model):
     class InterventionCostBreakdownLineCategory(models.TextChoices):
         PROCUREMENT = "Procurement", _("Procurement")
@@ -28,6 +44,10 @@ class InterventionCostBreakdownLine(models.Model):
         OPERATIONAL = "Operational", _("Operational")
         SUPPORTIVE = "Supportive", _("Supportive")
         OTHER = "Other", _("Other")
+
+    class CostDriver(models.TextChoices):
+        POPULATION = "population", _("Population")
+        FIX_COST = "fix_cost", _("Fixed cost")
 
     class Meta:
         app_label = "snt_malaria"
@@ -39,8 +59,22 @@ class InterventionCostBreakdownLine(models.Model):
         choices=InterventionCostBreakdownLineCategory.choices,
         default=InterventionCostBreakdownLineCategory.OTHER,
     )
-    unit_type = models.CharField(
-        max_length=50, choices=InterventionCostUnitType.choices, default=InterventionCostUnitType.OTHER
+    unit_type = models.ForeignKey(
+        "snt_malaria.CostUnitType",
+        on_delete=models.CASCADE,
+        related_name="cost_breakdown_lines",
+    )
+    population_layer = models.ForeignKey(
+        "iaso.MetricType",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="cost_breakdown_lines",
+    )
+    cost_driver = models.CharField(
+        max_length=20,
+        choices=CostDriver.choices,
+        default=CostDriver.FIX_COST,
     )
     unit_cost = models.DecimalField(max_digits=19, decimal_places=2, null=False, blank=False, default=0)
     created_by = models.ForeignKey(
@@ -51,3 +85,30 @@ class InterventionCostBreakdownLine(models.Model):
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="cost_breakdown_line_updated_set"
     )
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class ScenarioYearlyCostAssignment(models.Model):
+    class Meta:
+        app_label = "snt_malaria"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["scenario", "cost_line", "year"],
+                name="scenario_yearly_cost_assignment_unique_per_line_year",
+            )
+        ]
+
+    scenario = models.ForeignKey(
+        "snt_malaria.Scenario",
+        on_delete=models.CASCADE,
+        related_name="yearly_cost_assignments",
+    )
+    cost_line = models.ForeignKey(
+        "snt_malaria.InterventionCostBreakdownLine",
+        on_delete=models.CASCADE,
+        related_name="scenario_yearly_assignments",
+    )
+    year = models.PositiveSmallIntegerField()
+    value = models.DecimalField(max_digits=19, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.scenario_id}:{self.cost_line_id}:{self.year}"

@@ -1,6 +1,13 @@
 from rest_framework import serializers
 
-from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine, InterventionCostUnitType
+from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
+from plugins.snt_malaria.models.cost_breakdown import CostUnitType
+
+
+class CostUnitTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CostUnitType
+        fields = ["id", "name", "ratio"]
 
 
 class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
@@ -27,7 +34,7 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
         ]
 
     def get_unit_type_label(self, obj):
-        return InterventionCostUnitType(obj.unit_type).label
+        return obj.unit_type.name if obj.unit_type_id else None
 
     def get_category_label(self, obj):
         return InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory(obj.category).label
@@ -40,8 +47,8 @@ class CostsWriteSerializer(serializers.Serializer):
         choices=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.choices,
         required=True,
     )
-    unit_type = serializers.ChoiceField(
-        choices=InterventionCostUnitType.choices,
+    unit_type = serializers.PrimaryKeyRelatedField(
+        queryset=CostUnitType.objects.all(),
         required=True,
     )
 
@@ -59,3 +66,4 @@ class InterventionCostBreakdownLinesWriteSerializer(serializers.ModelSerializer)
         user = self.context["request"].user
         account = user.iaso_profile.account
         self.fields["intervention"].queryset = Intervention.objects.filter(intervention_category__account=account)
+        self.fields["costs"].child.fields["unit_type"].queryset = CostUnitType.objects.filter(account=account)
