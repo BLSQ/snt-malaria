@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { useTheme } from '@mui/material';
 import { LegendOrdinal, LegendItem, LegendLabel } from '@visx/legend';
 import { scaleOrdinal } from '@visx/scale';
-import { ScaleDomainRange } from '../../types/metrics';
+import { ScaleDomainRange } from '../../../dataLayers/types/metrics';
 
 export const useGetLegend = (threshold?: ScaleDomainRange): any => {
     return scaleOrdinal(threshold);

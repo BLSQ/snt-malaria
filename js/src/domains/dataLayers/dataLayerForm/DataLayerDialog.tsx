@@ -2,26 +2,29 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Alert, AlertTitle } from '@mui/material';
 import {
     ConfirmCancelModal,
+    DropdownOptions,
     IntlMessage,
     useSafeIntl,
 } from 'bluesquare-components';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
-import { MetricType, MetricTypeFormModel } from '../../planning/types/metrics';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
 import { useMetricTypeFormState } from '../hooks/useMetricTypeFormState';
 import { MESSAGES } from '../messages';
+import { MetricType, MetricTypeFormModel } from '../types/metrics';
 import { MetricTypeForm } from './DataLayerForm';
 
 interface MetricTypeDialogProps {
     open: boolean;
     closeDialog: () => void;
     metricType?: MetricType;
+    categoryOptions: DropdownOptions<string>[];
 }
 
 export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
     open,
     closeDialog,
     metricType = undefined,
+    categoryOptions,
 }) => {
     const [errorMessage, setErrorMessage] = useState<IntlMessage | undefined>();
     const [errorHeadline, setErrorHeadline] = useState<
@@ -74,6 +77,7 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
                 ).replaceAll('"', ''),
                 legend_type: metricType.legend_type,
                 origin: metricType.origin,
+                is_population: metricType.metric_kind === 'population',
                 legend_config: metricType.legend_config.domain.map(
                     (value, index) => ({
                         value,
@@ -88,6 +92,7 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
     const onSubmit = (values: MetricTypeFormModel) => {
         const payload = {
             ...values,
+            metric_kind: values.is_population ? 'population' : 'any',
             legend_config: {
                 domain: values.legend_config.map(item => item.value),
                 range: values.legend_config.map(item => item.color),
@@ -122,10 +127,16 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
             }
             cancelMessage={MESSAGES.cancel}
             closeOnConfirm={false}
-            allowConfirm={formik.isValid && formik.dirty && !formik.isSubmitting}
+            allowConfirm={
+                formik.isValid && formik.dirty && !formik.isSubmitting
+            }
         >
             <ExtendedFormikProvider formik={formik}>
-                <MetricTypeForm metricType={metricTypeFormModel} />
+                <MetricTypeForm
+                    metricType={metricTypeFormModel}
+                    isRestricted={metricType?.origin === 'openhexa'}
+                    categoryOptions={categoryOptions}
+                />
             </ExtendedFormikProvider>
             {errorMessage && (
                 <Alert severity="error" variant="filled" sx={{ mt: 2 }}>

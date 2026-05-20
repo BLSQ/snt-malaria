@@ -7,7 +7,7 @@ import {
     getMapStyleForOrgUnit,
     useGetOrgUnitMetric,
 } from '../../planning/libs/map-utils';
-import { MetricType, MetricValue } from '../../planning/types/metrics';
+import { MetricType, MetricValue } from '../types/metrics';
 
 type Props = {
     metricType?: MetricType;

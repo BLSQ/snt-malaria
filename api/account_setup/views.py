@@ -1,3 +1,5 @@
+import logging
+
 from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.exceptions import ValidationError
@@ -8,14 +10,19 @@ from iaso.models import ImportGPKG, Profile, Task
 from iaso.tasks.import_gpkg_task import import_gpkg_task
 from plugins.snt_malaria.api.account_setup.permissions import SNTAccountSetupPermission
 from plugins.snt_malaria.api.account_setup.serializers import SNTAccountSetupSerializer
+from plugins.snt_malaria.api.account_setup.throttle import SNTAccountThrottle
 from plugins.snt_malaria.api.account_setup.utils import create_snt_account, transform_geo_json_to_gpkg
 from plugins.snt_malaria.models import SNTAccountSetup
+
+
+logger = logging.getLogger(__name__)
 
 
 class SNTAccountSetupViewSet(viewsets.ModelViewSet):
     serializer_class = SNTAccountSetupSerializer
     http_method_names = ["post", "head", "options"]
     permission_classes = [SNTAccountSetupPermission]
+    throttle_classes = [SNTAccountThrottle]
 
     def get_queryset(self):
         return SNTAccountSetup.objects.none()
@@ -38,9 +45,10 @@ class SNTAccountSetupViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
         except Exception:
+            logger.exception("Unexpected error during SNT account setup")
             return Response(
-                "There was an unexpected error, please ask an administrator to check the server logs",
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": "Unexpected server error. Please ask an administrator to check the logs."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
         # start gpkg import task here

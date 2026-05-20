@@ -1,23 +1,29 @@
 import React, { FC } from 'react';
 import { Box, Grid } from '@mui/material';
-import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
+import { useTranslatedErrors } from 'Iaso/libs/validation';
+
 import {
     LEGEND_TYPE_MAX_ITEMS,
     LEGEND_TYPE_MIN_ITEMS,
 } from '../../../constants/legend';
 import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
 import { useGetLegendTypes } from '../../planning/hooks/useGetLegendTypes';
-import { MetricTypeFormModel } from '../../planning/types/metrics';
 import { MESSAGES } from '../messages';
+import { MetricTypeFormModel } from '../types/metrics';
 import { LegendConfigForm } from './LegendConfigForm';
 
 type MetricTypeFormProps = {
     metricType?: MetricTypeFormModel;
+    isRestricted?: boolean;
+    categoryOptions: { label: string; value: string }[];
 };
 
 export const MetricTypeForm: FC<MetricTypeFormProps> = ({
     metricType = undefined,
+    isRestricted = false,
+    categoryOptions,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { data: legendTypeOptions, isLoading: loadingLegendTypeOptions } =
@@ -50,7 +56,15 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 label={MESSAGES.variable}
                 required
                 errors={getErrors('code')}
-                disabled={!!metricType?.id}
+                disabled={!!metricType?.id || isRestricted}
+            />
+            <InputComponent
+                keyValue="is_population"
+                onChange={setFieldValueAndState}
+                value={values.is_population}
+                type="checkbox"
+                label={MESSAGES.is_population}
+                errors={getErrors('is_population')}
             />
             <InputComponent
                 keyValue="name"
@@ -65,7 +79,10 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 keyValue="category"
                 onChange={setFieldValueAndState}
                 value={values.category}
-                type="text"
+                type="select"
+                options={categoryOptions}
+                freeSolo
+                clearable={false}
                 label={MESSAGES.category}
                 required
                 errors={getErrors('category')}
@@ -100,6 +117,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                         label={MESSAGES.legendType}
                         errors={getErrors('legend_type')}
                         loading={loadingLegendTypeOptions}
+                        disabled={isRestricted}
                     />
                 </Grid>
                 <Grid item xs={12} sm={6}>

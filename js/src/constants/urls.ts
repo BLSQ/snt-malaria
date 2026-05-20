@@ -27,6 +27,14 @@ export const RouteConfigs: Record<string, RouteConfig> = {
         url: 'snt_malaria/interventions',
         params: [],
     },
+    setupAccount: {
+        url: 'snt_malaria/public/setupAccount',
+        params: [],
+    },
+    configureAccount: {
+        url: 'snt_malaria/configureAccount',
+        params: ['taskId'],
+    },
 };
 
 export type BaseUrls = {
@@ -35,6 +43,8 @@ export type BaseUrls = {
     compareCustomize: string;
     scenarios: string;
     interventions: string;
+    setupAccount: string;
+    configureAccount: string;
 };
 export const baseUrls = extractUrls(RouteConfigs) as BaseUrls;
 export const baseParams = extractParams(RouteConfigs);

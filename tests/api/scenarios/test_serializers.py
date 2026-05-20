@@ -1,24 +1,25 @@
 from unittest.mock import Mock
 
-from iaso.models import Account
-from iaso.test import TestCase
 from plugins.snt_malaria.api.scenarios.serializers import (
     ScenarioRulesReorderSerializer,
     ScenarioWriteSerializer,
 )
-from plugins.snt_malaria.models import Scenario, ScenarioRule
+from plugins.snt_malaria.models import ScenarioRule
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
-class BaseSerializerTestCase(TestCase):
+class BaseSerializerTestCase(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="Test Account")
-        self.user_with_basic_perm = self.create_user_with_profile(
-            username="testuserbasic", account=self.account, permissions=[SNT_SCENARIO_BASIC_WRITE_PERMISSION]
+        super().setUp()
+        self.account, self.user_with_basic_perm = self.create_snt_account(
+            name="Test Account", permissions=[SNT_SCENARIO_BASIC_WRITE_PERMISSION]
         )
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user_with_basic_perm,
+        self.scenario = self.create_snt_scenario(
+            self.account,
+            self.user_with_basic_perm,
             name="Test Scenario",
             description="A test scenario description.",
             start_year=2025,
@@ -209,7 +210,7 @@ class ScenarioRulesSerializerTestCase(BaseSerializerTestCase):
         )
 
     def test_extra_rule(self):
-        another_scenario = Scenario.objects.create(
+        another_scenario = self.create_snt_scenario(
             account=self.account,
             created_by=self.user_with_basic_perm,
             name="Another Scenario",

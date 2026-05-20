@@ -1,28 +1,27 @@
 from unittest.mock import Mock
 
-from iaso.models import Account
-from iaso.test import TestCase
 from plugins.snt_malaria.api.impact.serializers import ImpactQuerySerializer, ScenarioImpactSerializer
-from plugins.snt_malaria.models import Scenario
 from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProviderMeta
 from plugins.snt_malaria.services.impact import (
     OrgUnitImpactMetrics,
     ScenarioImpactMetrics,
     YearImpactMetrics,
 )
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
 def _metric(value=None, lower=None, upper=None):
     return ImpactMetricWithConfidenceInterval(value=value, lower=lower, upper=upper)
 
 
-class ImpactQuerySerializerTestCase(TestCase):
+class ImpactQuerySerializerTestCase(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="Impact Serializer Account")
-        self.user = self.create_user_with_profile(username="impact_serializer_user", account=self.account)
-        self.other_account = Account.objects.create(name="Other Account")
-        self.other_user = self.create_user_with_profile(username="other_user", account=self.other_account)
-        self.scenario = Scenario.objects.create(
+        super().setUp()
+        self.account, self.user = self.create_snt_account(name="Impact Serializer Account")
+        self.other_account, self.other_user = self.create_snt_account(name="Other Account")
+        self.scenario = self.create_snt_scenario(
             account=self.account,
             created_by=self.user,
             name="Test Scenario",
@@ -48,7 +47,7 @@ class ImpactQuerySerializerTestCase(TestCase):
         self.assertIn("age_group", serializer.errors)
 
     def test_scenario_from_other_account_rejected(self):
-        other_scenario = Scenario.objects.create(
+        other_scenario = self.create_snt_scenario(
             account=self.other_account,
             created_by=self.other_user,
             name="Other Scenario",
@@ -113,7 +112,7 @@ class ImpactQuerySerializerTestCase(TestCase):
         self.assertTrue(serializer.is_valid())
 
 
-class ScenarioImpactSerializerTestCase(TestCase):
+class ScenarioImpactSerializerTestCase(SNTMalariaTestCase):
     def test_full_response_structure(self):
         """All fields including CI bounds are serialized."""
         metrics = ScenarioImpactMetrics(

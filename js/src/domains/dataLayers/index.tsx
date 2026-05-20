@@ -1,12 +1,12 @@
-import React, { FC, useCallback, useState } from 'react';
-import { Card, Stack, Typography } from '@mui/material';
-import { LoadingSpinner, useRedirectToReplace, useSafeIntl } from 'bluesquare-components';
+import React, { FC, useCallback, useMemo, useState } from 'react';
+import { Card } from '@mui/material';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
-import { OrgUnitSelect } from '../../components/OrgUnitSelect';
+import { useOnboarding } from '../../hooks/useOnboarding';
 import {
     MainColumn,
     PageContainer,
@@ -15,19 +15,16 @@ import {
     SidebarLayout,
 } from '../../components/styledComponents';
 import { baseUrls } from '../../constants/urls';
-import {
-    useGetMetricCategories,
-    useGetMetricValues,
-} from '../planning/hooks/useGetMetrics';
 import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
-import { MetricType } from '../planning/types/metrics';
 import { DataLayerDialog } from './dataLayerForm/DataLayerDialog';
 import { DataLayerList } from './dataLayerList/DataLayerList';
 import { DataLayerListHeader } from './dataLayerList/DataLayerListHeader';
-import { DataLayerMap } from './dataLayerMap/DataLayerMap';
+import { DataLayerMapWrapper } from './dataLayerMap/DataLayerMapWrapper';
 import { useDeleteMetricType } from './hooks/useDeleteMetricType';
+import { useGetMetricCategories } from './hooks/useGetMetrics';
 import { MESSAGES } from './messages';
+import { MetricType } from './types/metrics';
 
 const styles = {
     card: {
@@ -46,13 +43,11 @@ export const DataLayers: FC = () => {
     const { displayOrgUnitId } = useParamsObject(
         baseUrls.dataLayers,
     ) as unknown as DataLayersParams;
-    const redirectToReplace = useRedirectToReplace();
 
     const [displayedMetricType, setDisplayedMetricType] =
         useState<MetricType>();
     const { data: accountSettings } = useGetAccountSettings();
-    const interventionTypeId =
-        accountSettings?.intervention_org_unit_type_id;
+    const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
     const { data: orgUnits } = useGetOrgUnits({
         orgUnitParentId: displayOrgUnitId,
         orgUnitTypeId: interventionTypeId,
@@ -61,10 +56,14 @@ export const DataLayers: FC = () => {
 
     const { data: metricCategories, isLoading: isLoadingMetricLayers } =
         useGetMetricCategories();
-
-    const { data: displayedMetricValues } = useGetMetricValues({
-        metricTypeId: displayedMetricType?.id || null,
-    });
+    const existingCategoryOptions = useMemo(
+        () =>
+            (metricCategories ?? []).map(category => ({
+                label: category.name,
+                value: category.name,
+            })),
+        [metricCategories],
+    );
 
     const { mutate: deleteMetricType } = useDeleteMetricType();
 
@@ -72,15 +71,6 @@ export const DataLayers: FC = () => {
         useState<boolean>(false);
 
     const [selectedMetricType, setSelectedMetricType] = useState<MetricType>();
-
-    const handleDisplayOrgUnitChange = useCallback(
-        (orgUnitId?: number) => {
-            redirectToReplace(baseUrls.dataLayers, {
-                displayOrgUnitId: orgUnitId?.toString(),
-            });
-        },
-        [redirectToReplace],
-    );
 
     const onDialogClose = useCallback(() => {
         setIsMetricTypeFormOpen(false);
@@ -100,6 +90,40 @@ export const DataLayers: FC = () => {
         [setSelectedMetricType, setIsMetricTypeFormOpen],
     );
 
+    // Two-step spotlight when the account has no layers yet
+    const hasNoLayers = useMemo(
+        () =>
+            !isLoadingMetricLayers &&
+            Array.isArray(metricCategories) &&
+            metricCategories.every(c => c.items.length === 0),
+        [isLoadingMetricLayers, metricCategories],
+    );
+
+    const onboardingSteps = useMemo(
+        () => [
+            {
+                title: formatMessage(MESSAGES.onboardingStep1Title),
+                description: formatMessage(MESSAGES.onboardingStep1Description),
+                shape: 'circle' as const,
+            },
+            {
+                title: formatMessage(MESSAGES.onboardingStep2Title),
+                description: formatMessage(MESSAGES.onboardingStep2Description),
+                shape: 'circle' as const,
+            },
+        ],
+        [formatMessage],
+    );
+
+    const onboarding = useOnboarding({
+        id: 'dataLayers.intro',
+        enabled: hasNoLayers,
+        documentation: {
+            href: formatMessage(MESSAGES.onboardingDocumentationUrl),
+        },
+        steps: onboardingSteps,
+    });
+
     return (
         <>
             {isLoadingMetricLayers && <LoadingSpinner />}
@@ -117,6 +141,12 @@ export const DataLayers: FC = () => {
                                     header={
                                         <DataLayerListHeader
                                             onCreate={onCreateMetricType}
+                                            createActionRef={
+                                                onboarding.anchorRefs[0]
+                                            }
+                                            moreActionsRef={
+                                                onboarding.anchorRefs[1]
+                                            }
                                         />
                                     }
                                 >
@@ -136,27 +166,10 @@ export const DataLayers: FC = () => {
                     </SidebarColumn>
                     <MainColumn>
                         <PaperFullHeight>
-                            <Card sx={styles.card}>
-                                <CardStyled
-                                    header={
-                                        <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                            <Typography variant="h6">
-                                                {displayedMetricType?.name || ''}
-                                            </Typography>
-                                            <OrgUnitSelect
-                                                onOrgUnitChange={handleDisplayOrgUnitChange}
-                                                selectedOrgUnitId={displayOrgUnitId}
-                                            />
-                                        </Stack>
-                                    }
-                                >
-                                    <DataLayerMap
-                                        metricType={displayedMetricType}
-                                        metricValues={displayedMetricValues}
-                                        orgUnits={orgUnits || []}
-                                    />
-                                </CardStyled>
-                            </Card>
+                            <DataLayerMapWrapper
+                                metricType={displayedMetricType}
+                                orgUnits={orgUnits || []}
+                            />
                         </PaperFullHeight>
                     </MainColumn>
                 </SidebarLayout>
@@ -165,9 +178,11 @@ export const DataLayers: FC = () => {
                         open={isMetricTypeFormOpen}
                         closeDialog={onDialogClose}
                         metricType={selectedMetricType}
+                        categoryOptions={existingCategoryOptions}
                     />
                 )}
             </PageContainer>
+            {onboarding.element}
         </>
     );
 };

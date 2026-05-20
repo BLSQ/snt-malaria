@@ -1,11 +1,11 @@
-import React, { FC, useCallback, useEffect } from 'react';
+import React, { FC, useCallback, useEffect, useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Stack, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { CardStyled } from '../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
+import { useGetMetricTypes } from '../../dataLayers/hooks/useGetMetrics';
 import { MESSAGES } from '../../messages';
-import { useGetMetricTypes } from '../../planning/hooks/useGetMetrics';
 import { InterventionDetails } from '../../planning/types/interventions';
 import { useGetBudgetSettings } from '../hooks/useGetBudgetSettings';
 import { useGetInterventionCostBreakdownLineCategories } from '../hooks/useGetInterventionCostBreakdownLineCategories';
@@ -56,6 +56,19 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
     } = useGetInterventionDetails({
         interventionId,
     });
+
+    const allowedCostUnitTypes = useMemo(
+        () =>
+            interventionCostUnitTypes.filter(unitType =>
+                interventionDetails?.allowed_cost_unit_types.includes(
+                    unitType.value,
+                ),
+            ),
+        [
+            interventionCostUnitTypes,
+            interventionDetails?.allowed_cost_unit_types,
+        ],
+    );
 
     const formik = useInterventionFormState({
         onSubmit,
@@ -110,7 +123,7 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
             <ExtendedFormikProvider formik={formik}>
                 <InterventionForm
                     interventionCostCategories={interventionCostCategories}
-                    interventionCostUnitTypes={interventionCostUnitTypes}
+                    interventionCostUnitTypes={allowedCostUnitTypes}
                     metricTypes={metricTypes}
                     currency={budgetSettings?.currency}
                 />

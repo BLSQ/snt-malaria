@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, Ref, useCallback, useState } from 'react';
 import { useGetColors } from 'Iaso/hooks/useGetColors';
 import { CardScrollable } from '../../../../components/styledComponents';
 import { usePlanningContext } from '../../contexts/PlanningContext';
@@ -12,6 +12,7 @@ type Props = {
     rules: ScenarioRule[];
     isLoading: boolean;
     onPreviewScenarioRule?: (rule?: Partial<ScenarioRule>) => void;
+    createRuleRef?: Ref<HTMLButtonElement>;
 };
 
 export const ScenarioRulesPanel: FC<Props> = ({
@@ -19,6 +20,7 @@ export const ScenarioRulesPanel: FC<Props> = ({
     rules,
     isLoading,
     onPreviewScenarioRule,
+    createRuleRef,
 }) => {
     const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
 
@@ -70,6 +72,7 @@ export const ScenarioRulesPanel: FC<Props> = ({
                     scenarioId={scenarioId}
                     isLoading={isLoading}
                     rules={rules}
+                    createRuleRef={createRuleRef}
                 />
             )}
         </CardScrollable>

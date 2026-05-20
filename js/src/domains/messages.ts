@@ -71,7 +71,7 @@ export const MESSAGES = defineMessages({
     },
     budgetAssumptionsCoverage: {
         id: 'iaso.snt_malaria.budgetAssumptions.coverage',
-        defaultMessage: 'Coverage',
+        defaultMessage: 'Population coverage',
     },
     budgetAssumptionsDescription_itn_campaign: {
         id: 'iaso.snt_malaria.budgetAssumptions.description.itn_campaign',
@@ -595,6 +595,22 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compareCustomize.noYearRangeOverlapTitle',
         defaultMessage: 'No overlapping year range',
     },
+    onboardingDismiss: {
+        id: 'iaso.snt_malaria.onboarding.dismiss',
+        defaultMessage: 'Got it',
+    },
+    onboardingNext: {
+        id: 'iaso.snt_malaria.onboarding.next',
+        defaultMessage: 'Next',
+    },
+    onboardingSkip: {
+        id: 'iaso.snt_malaria.onboarding.skip',
+        defaultMessage: 'Skip',
+    },
+    onboardingGoToDocs: {
+        id: 'iaso.snt_malaria.onboarding.goToDocs',
+        defaultMessage: 'View documentation',
+    },
     ok: {
         id: 'iaso.snt_malaria.label.ok',
         defaultMessage: 'OK',
@@ -795,6 +811,37 @@ export const MESSAGES = defineMessages({
     title: {
         id: 'iaso.snt_malaria.home.title',
         defaultMessage: 'SNT Malaria',
+    },
+    tourCreateRuleTitle: {
+        id: 'iaso.snt_malaria.planning.tour.createRule.title',
+        defaultMessage: 'Create your first rule',
+    },
+    tourCreateRuleDescription: {
+        id: 'iaso.snt_malaria.planning.tour.createRule.description',
+        defaultMessage:
+            'Rules connect interventions to administrative units—criteria-based, all at once, or with exceptions. Rules run top to bottom; for the same category, the last matching rule takes effect.',
+    },
+    tourLockScenarioTitle: {
+        id: 'iaso.snt_malaria.planning.tour.lockScenario.title',
+        defaultMessage: 'Lock the scenario',
+    },
+    tourLockScenarioDescription: {
+        id: 'iaso.snt_malaria.planning.tour.lockScenario.description',
+        defaultMessage:
+            'A locked scenario cannot be edited—rules, assignments, and settings are all frozen. Unlock at any time to resume editing.',
+    },
+    tourMoreActionsTitle: {
+        id: 'iaso.snt_malaria.planning.tour.moreActions.title',
+        defaultMessage: 'Export and more',
+    },
+    tourMoreActionsDescription: {
+        id: 'iaso.snt_malaria.planning.tour.moreActions.description',
+        defaultMessage:
+            'In this menu you will find global scenario actions—exporting or duplicating the plan, editing scenario details, or removing the scenario entirely.',
+    },
+    planningTourDocumentationUrl: {
+        id: 'iaso.snt_malaria.planning.tour.documentationUrl',
+        defaultMessage: 'https://docs.snt-toolbox.org/en/creer-un-plan.html',
     },
     total: {
         id: 'iaso.snt_malaria.budgeting.total',

@@ -5,13 +5,13 @@ import { MESSAGES } from '../messages';
 
 export const useImportMetricValues = (): UseMutationResult =>
     useSnackMutation({
-        mutationFn: (file: File) =>
+        mutationFn: ({ file, year }: { file: File; year: number }) =>
             postRequest({
                 url: `/api/metricvalues/import_from_csv/`,
                 fileData: {
                     file: file,
                 },
-                data: {},
+                data: { year },
             }),
         invalidateQueryKey: ['metricCategories', 'metricValues'], // We need both as metric categories contain metric values
         snackSuccessMessage: MESSAGES.metricValuesImportSuccess,

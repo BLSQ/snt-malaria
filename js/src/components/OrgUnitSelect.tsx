@@ -3,8 +3,8 @@ import { MenuItem, Select, SelectChangeEvent } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../domains/messages';
-import { useGetOrgUnits } from '../domains/planning/hooks/useGetOrgUnits';
 import { useGetAccountSettings } from '../domains/planning/hooks/useGetAccountSettings';
+import { useGetOrgUnits } from '../domains/planning/hooks/useGetOrgUnits';
 
 const styles = {
     select: {

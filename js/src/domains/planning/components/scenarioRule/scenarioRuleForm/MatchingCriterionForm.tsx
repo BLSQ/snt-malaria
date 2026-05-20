@@ -3,7 +3,7 @@ import { Box, Typography, SxProps, Theme, Tooltip } from '@mui/material';
 import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { LegendTypes } from '../../../../../constants/legend';
-import { MetricType } from '../../../types/metrics';
+import { MetricType } from '../../../../dataLayers/types/metrics';
 import { MetricTypeCriterion } from '../../../types/scenarioRule';
 
 type Props = {

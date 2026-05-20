@@ -7,7 +7,7 @@ from plugins.snt_malaria.models.budget_settings import BudgetSettings
 
 class BudgetSettingsViewSet(viewsets.ModelViewSet):
     ordering_fields = ["id"]
-    http_method_names = ["get", "options"]
+    http_method_names = ["get", "patch", "head", "options"]
     serializer_class = BudgetSettingsSerializer
     queryset = BudgetSettings.objects.all
     permission_classes = [BudgetSettingsPermission]

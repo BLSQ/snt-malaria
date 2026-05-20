@@ -15,8 +15,8 @@ import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
 import { SxStyles } from 'Iaso/types/general';
 import * as CorePermission from 'Iaso/utils/permissions';
-import { MetricType } from '../../planning/types/metrics';
 import { MESSAGES } from '../messages';
+import { MetricType } from '../types/metrics';
 
 type Props = {
     metricType: MetricType;
@@ -24,7 +24,6 @@ type Props = {
     onClick: () => void;
     onEdit: (metricType: MetricType) => void;
     onDelete: (metricType: number) => void;
-    readonly?: boolean;
 };
 
 const styles: SxStyles = {
@@ -41,9 +40,6 @@ const styles: SxStyles = {
                 visibility: 'visible',
             },
         },
-    },
-    metricTypeReadOnly: {
-        pr: '48px',
     },
     metricTypeSelected: {
         bgcolor: 'primary.light',
@@ -66,7 +62,6 @@ export const DataLayerLine: FC<Props> = ({
     onClick,
     onEdit,
     onDelete,
-    readonly = false,
 }) => {
     const anchorRef = React.useRef<HTMLLIElement>(null);
     const [showMoreActions, setShowMoreActions] = React.useState(false);
@@ -81,24 +76,21 @@ export const DataLayerLine: FC<Props> = ({
             sx={
                 {
                     ...styles.metricType,
-                    ...(readonly ? styles.metricTypeReadOnly : {}),
                     ...(selected ? styles.metricTypeSelected : {}),
                 } as SxProps
             }
             ref={anchorRef}
             secondaryAction={
-                readonly ? null : (
-                    <DisplayIfUserHasPerm
-                        permissions={[CorePermission.METRIC_TYPES]}
-                    >
-                        <IconButton
-                            aria-label="more-info"
-                            overrideIcon={MoreHorizIcon}
-                            tooltipMessage={MESSAGES.more}
-                            onClick={toggleMoreActions}
-                        ></IconButton>
-                    </DisplayIfUserHasPerm>
-                )
+                <DisplayIfUserHasPerm
+                    permissions={[CorePermission.METRIC_TYPES]}
+                >
+                    <IconButton
+                        aria-label="more-info"
+                        overrideIcon={MoreHorizIcon}
+                        tooltipMessage={MESSAGES.more}
+                        onClick={toggleMoreActions}
+                    ></IconButton>
+                </DisplayIfUserHasPerm>
             }
             onClick={onClick}
         >

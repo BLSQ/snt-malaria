@@ -4,7 +4,7 @@ import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
-import { Scale } from '../../../planning/types/metrics';
+import { Scale } from '../types/metrics';
 
 const styles: SxStyles = {
     title: { mx: 2 },

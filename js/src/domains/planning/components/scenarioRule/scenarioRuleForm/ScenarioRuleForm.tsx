@@ -7,9 +7,11 @@ import {
     TextField,
     Typography,
 } from '@mui/material';
-import { useSafeIntl, useTranslatedErrors } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
+
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
 import InputComponent from 'Iaso/components/forms/InputComponent';
+import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetExtendedFormikContext } from '../../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../../../messages';
@@ -51,13 +53,11 @@ export const ScenarioRuleForm: FC = () => {
     // Fetch all intervention-level org units including geometry. The map makes
     // the same request (same query key), so when the page was loaded without a
     // region filter this is an instant cache hit instead of a costly extra call.
-    const interventionTypeId =
-        accountSettings?.intervention_org_unit_type_id;
-    const { data: allOrgUnits, isLoading: isLoadingOrgUnits } =
-        useGetOrgUnits({
-            orgUnitTypeId: interventionTypeId,
-            enabled: !!interventionTypeId,
-        });
+    const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
+    const { data: allOrgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits({
+        orgUnitTypeId: interventionTypeId,
+        enabled: !!interventionTypeId,
+    });
 
     const {
         values,

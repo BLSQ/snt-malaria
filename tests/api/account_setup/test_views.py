@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from captcha.models import CaptchaStore
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
@@ -9,13 +10,23 @@ from rest_framework.exceptions import ValidationError
 from iaso.models import Account, DataSource, ImportGPKG, OrgUnit, OrgUnitType, Profile, Project, SourceVersion, Task
 from iaso.permissions.core_permissions import CORE_DATA_TASKS_PERMISSION
 from iaso.tests.tasks.task_api_test_case import TaskAPITestCase
-from plugins.snt_malaria.models import BudgetSettings, Intervention, InterventionCategory, InterventionCostBreakdownLine
+from plugins.snt_malaria.models import (
+    AccountSettings,
+    BudgetSettings,
+    Intervention,
+    InterventionCategory,
+    InterventionCostBreakdownLine,
+)
 
 
 class SNTAccountSetupAPITestCase(TaskAPITestCase):
     BASE_URL = "/api/snt_malaria/account_setup/"
     JSON_FILE_NAME = "geo_json_be.json"
     JSON_FILE_PATH = f"plugins/snt_malaria/tests/fixtures/{JSON_FILE_NAME}"
+
+    def setUp(self):
+        super().setUp()
+        self.captcha_key = CaptchaStore.pick()
 
     @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=True)
     def test_post_account_setup_public(self):
@@ -29,6 +40,8 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
                 "geo_json_file": SimpleUploadedFile(
                     self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
                 ),
+                "captcha_hashkey": self.captcha_key,
+                "captcha_code": "passed",
             }
         response = self.client.post(self.BASE_URL, data=payload, format="multipart")
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
@@ -43,6 +56,12 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
 
         # SNT models
         self.assertEqual(BudgetSettings.objects.count(), 1)
+        self.assertEqual(AccountSettings.objects.count(), 1)
+        new_account = Account.objects.first()
+        account_settings = AccountSettings.objects.first()
+        self.assertEqual(account_settings.account_id, new_account.id)
+        self.assertIsNone(account_settings.focus_org_unit_type_id)
+        self.assertIsNone(account_settings.intervention_org_unit_type_id)
         # see intervention_seeder.py to understand why these values
         self.assertEqual(InterventionCategory.objects.count(), 8)
         self.assertEqual(Intervention.objects.count(), 21)
@@ -78,6 +97,7 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         self.assertEqual(OrgUnitType.objects.count(), 3)  # country, region, province
         self.assertEqual(OrgUnit.objects.count(), 15)  # 1 country + 3 regions + 11 provinces
 
+    @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=False)
     def test_post_account_setup_disabled(self):
         """
         This public endpoint is not allowed because settings.ENABLE_PUBLIC_ACCOUNT_SETUP is False
@@ -92,10 +112,38 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
                 "geo_json_file": SimpleUploadedFile(
                     self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
                 ),
+                "captcha_hashkey": self.captcha_key,
+                "captcha_code": "passed",
             }
 
         response = self.client.post(self.BASE_URL, data=payload, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=False)
+    def test_public_account_setup_spa_not_served_when_disabled(self):
+        response = self.client.get("/snt_malaria/public/setupAccount/")
+        self.assertEqual(response.status_code, 404)
+
+    @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=True)
+    @patch("webpack_loader.loader.WebpackLoader.get_bundle")
+    def test_public_account_setup_spa_served_when_enabled(self, mock_webpack):
+        mock_webpack.return_value = []
+        response = self.client.get("/snt_malaria/public/setupAccount/")
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=True)
+    def test_public_account_setup_spa_redirects_logged_in_user_to_dashboard(self):
+        account, _, _, _ = self.create_account_datasource_version_project(
+            "spa_redirect_ds",
+            "Spa Redirect Account",
+            "spa_redirect_proj",
+            app_id="app_spa_redirect_test",
+        )
+        user = self.create_user_with_profile(username="spa_redirect_user", account=account)
+        self.client.force_login(user)
+        response = self.client.get("/snt_malaria/public/setupAccount/")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/dashboard/")
 
     @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=True)
     @patch("plugins.snt_malaria.api.account_setup.views.create_snt_account")
@@ -116,6 +164,8 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
                 "geo_json_file": SimpleUploadedFile(
                     self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
                 ),
+                "captcha_hashkey": self.captcha_key,
+                "captcha_code": "passed",
             }
 
         response = self.client.post(self.BASE_URL, data=payload, format="multipart")
@@ -141,16 +191,39 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
                 "geo_json_file": SimpleUploadedFile(
                     self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
                 ),
+                "captcha_hashkey": self.captcha_key,
+                "captcha_code": "passed",
             }
 
         response = self.client.post(self.BASE_URL, data=payload, format="multipart")
-        self.assertContains(
-            response,
-            "There was an unexpected error, please ask an administrator to check the server logs",
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("Unexpected server error", response.json()["detail"])
 
         self._check_nothing_has_been_created()
+
+    @override_settings(ENABLE_PUBLIC_ACCOUNT_SETUP=True)
+    def test_post_account_setup_throttling(self):
+        with open(self.JSON_FILE_PATH, "rb") as json_file:
+            payload = {
+                "username": "",
+                "password": "",
+                "password_confirmation": "",
+                "country": "BE",
+                "language": "fr",
+                "geo_json_file": SimpleUploadedFile(
+                    self.JSON_FILE_NAME, json_file.read(), content_type="application/json"
+                ),
+                "captcha_hashkey": self.captcha_key,
+                "captcha_code": "passed",
+            }
+
+        # default value is 5 calls per hour per IP address
+        for _ in range(5):
+            response = self.client.post(self.BASE_URL, data=payload, format="multipart")
+            self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)  # don't care about validation errors
+
+        response = self.client.post(self.BASE_URL, data=payload, format="multipart")
+        self.assertJSONResponse(response, status.HTTP_429_TOO_MANY_REQUESTS)
 
     def _check_nothing_has_been_created(self):
         # Making sure that all objects are created
@@ -161,6 +234,7 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         self.assertEqual(User.objects.count(), 0)
         self.assertEqual(Profile.objects.count(), 0)
         self.assertEqual(BudgetSettings.objects.count(), 0)
+        self.assertEqual(AccountSettings.objects.count(), 0)
         self.assertEqual(InterventionCategory.objects.count(), 0)
         self.assertEqual(Intervention.objects.count(), 0)
         self.assertEqual(InterventionCostBreakdownLine.objects.count(), 0)

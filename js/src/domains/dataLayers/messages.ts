@@ -15,7 +15,7 @@ export const MESSAGES = defineMessages({
     },
     importCSV: {
         id: 'iaso.snt_malaria.scenario.importCSV',
-        defaultMessage: 'Import metric values',
+        defaultMessage: 'Import CSV',
     },
     addScaleItem: {
         id: 'iaso.snt_malaria.settings.dataLayers.addScaleItem',
@@ -127,6 +127,29 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.title',
         defaultMessage: 'Data Layers',
     },
+    onboardingStep1Title: {
+        id: 'iaso.snt_malaria.settings.dataLayers.onboarding.step1.title',
+        defaultMessage: 'Create your first data layer',
+    },
+    onboardingStep1Description: {
+        id: 'iaso.snt_malaria.settings.dataLayers.onboarding.step1.description',
+        defaultMessage:
+            'First, name and describe the layer you plan to import, and most importantly define the scale that will be used for display. For more information, view the documentation below.',
+    },
+    onboardingStep2Title: {
+        id: 'iaso.snt_malaria.settings.dataLayers.onboarding.step2.title',
+        defaultMessage: 'Import your indicator data',
+    },
+    onboardingStep2Description: {
+        id: 'iaso.snt_malaria.settings.dataLayers.onboarding.step2.description',
+        defaultMessage:
+            'From this menu, choose "Download CSV Template" to download a CSV file where you only need to fill in the values for the layer you just defined. Then choose "Import CSV" to upload the file.',
+    },
+    onboardingDocumentationUrl: {
+        id: 'iaso.snt_malaria.settings.dataLayers.onboarding.documentationUrl',
+        defaultMessage:
+            'https://docs.snt-toolbox.org/en/importer-des-donnees.html',
+    },
     unitSymbol: {
         id: 'iaso.snt_malaria.settings.dataLayers.unitSymbol',
         defaultMessage: 'Unit Symbol',
@@ -138,5 +161,18 @@ export const MESSAGES = defineMessages({
     variable: {
         id: 'iaso.snt_malaria.settings.dataLayers.variable',
         defaultMessage: 'Variable',
+    },
+    is_population: {
+        id: 'iaso.snt_malaria.settings.dataLayers.isPopulation',
+        defaultMessage: 'Is Population',
+    },
+    selectYear: {
+        id: 'iaso.snt_malaria.settings.dataLayers.selectYear',
+        defaultMessage: 'Select Year',
+    },
+    importCSVYearCaption: {
+        id: 'iaso.snt_malaria.settings.dataLayers.importCSVYearCaption',
+        defaultMessage:
+            'The year for which the metric values will be imported. Only applies to layers with population metrics.',
     },
 });

@@ -3,6 +3,7 @@ import { Form } from 'Iaso/domains/forms/types/forms';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
 import {
+    MetricKind,
     MetricsFilters,
     MetricType,
     MetricTypeCategory,
@@ -30,13 +31,16 @@ export const useGetMetricTypes: <T = MetricType>(
     });
 };
 
-export const useGetMetricCategories = (): UseQueryResult<
-    MetricTypeCategory[],
-    Error
-> => {
+export const useGetMetricCategories = (
+    metricKind?: MetricKind,
+): UseQueryResult<MetricTypeCategory[], Error> => {
     return useSnackQuery({
-        queryKey: ['metricTypes', 'metricCategories'],
-        queryFn: () => getRequest('/api/metrictypes/grouped_per_category/'),
+        queryKey: ['metricTypes', 'metricCategories', { metricKind }],
+        queryFn: () =>
+            getRequest(
+                '/api/metrictypes/grouped_per_category/' +
+                    (metricKind ? `?metric_kind=${metricKind}` : ''),
+            ),
         options: {
             cacheTime: Infinity, // disable auto fetch on cache expiration
         },

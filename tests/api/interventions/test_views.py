@@ -1,66 +1,47 @@
 from rest_framework import status
 
-from iaso.models.base import Account
-from iaso.test import APITestCase
 from plugins.snt_malaria.api.interventions.permissions import (
     SNT_SETTINGS_READ_PERMISSION,
     SNT_SETTINGS_WRITE_PERMISSION,
 )
-from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
+from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
 BASE_URL = "/api/snt_malaria/interventions/"
 
 
-class InterventionAPITests(APITestCase):
-    def setUp(cls):
-        cls.account = Account.objects.create(name="Test Account 3")
-        cls.user_write, cls.anon, cls.user_no_perm = cls.create_base_users(
-            cls.account, [SNT_SETTINGS_WRITE_PERMISSION], "admin"
+class InterventionAPITests(SNTMalariaAPITestCase):
+    auto_create_account = False
+
+    def setUp(self):
+        super().setUp()
+        self.account, _ = self.create_snt_account(name="Test Account 3")
+        self.user_write, self.anon, self.user_no_perm = self.create_base_users(
+            self.account, [SNT_SETTINGS_WRITE_PERMISSION], "admin"
         )
-        cls.user_read = cls.create_user_with_profile(
-            username="user_read", account=cls.account, permissions=[SNT_SETTINGS_READ_PERMISSION]
-        )
-        cls.int_category_vaccination = InterventionCategory.objects.create(
-            name="Vaccination",
-            account=cls.account,
-            created_by=cls.user_write,
-        )
-        cls.int_category_chemoprevention = InterventionCategory.objects.create(
-            name="Preventive Chemotherapy",
-            account=cls.account,
-            created_by=cls.user_write,
-        )
-        cls.intervention_vaccination_rts = Intervention.objects.create(
-            name="RTS,S",
-            created_by=cls.user_write,
-            intervention_category=cls.int_category_vaccination,
-            code="rts_s",
-        )
-        cls.intervention_chemo_smc = Intervention.objects.create(
-            name="SMC",
-            created_by=cls.user_write,
-            intervention_category=cls.int_category_chemoprevention,
-            code="smc",
-        )
-        cls.intervention_chemo_iptp = Intervention.objects.create(
-            name="IPTp",
-            created_by=cls.user_write,
-            intervention_category=cls.int_category_chemoprevention,
-            code="iptp",
+        self.user_read = self.create_user_with_profile(
+            username="user_read", account=self.account, permissions=[SNT_SETTINGS_READ_PERMISSION]
         )
 
-        cls.cost_line = cls.intervention_vaccination_rts.cost_breakdown_lines.create(
+        defaults = self.create_snt_default_interventions(account=self.account, created_by=self.user_write)
+        self.int_category_vaccination = defaults["category_vaccination"]
+        self.int_category_chemoprevention = defaults["category_chemoprevention"]
+        self.intervention_vaccination_rts = defaults["intervention_rts"]
+        self.intervention_chemo_smc = defaults["intervention_smc"]
+        self.intervention_chemo_iptp = defaults["intervention_iptp"]
+
+        self.cost_line = self.intervention_vaccination_rts.cost_breakdown_lines.create(
             name="Cost Line 1",
             unit_cost=10,
             category="Procurement",
+            created_by=self.user_write,
         )
 
     def test_list_interventions_authenticated(self):
         self.client.force_authenticate(user=self.user_write)
         response = self.client.get(BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(len(response.data), 4)
         rts_intervention = next(
             (item for item in response.data if item["id"] == self.intervention_vaccination_rts.id), None
         )
@@ -75,7 +56,7 @@ class InterventionAPITests(APITestCase):
         self.client.force_authenticate(user=self.user_read)
         response = self.client.get(BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(len(response.data), 4)
         rts_intervention = next(
             (item for item in response.data if item["id"] == self.intervention_vaccination_rts.id), None
         )

@@ -1,14 +1,12 @@
 from unittest.mock import patch
 
-from django.test import TestCase
-
-from iaso.models.base import Account
 from plugins.snt_malaria.models.impact_provider_config import ImpactProviderConfig
 from plugins.snt_malaria.providers.impact.base import ImpactProviderMeta
 from plugins.snt_malaria.providers.impact.fake import FakeImpactProvider
 from plugins.snt_malaria.providers.impact.idm import IDMImpactProvider
 from plugins.snt_malaria.providers.impact.registry import get_provider_for_account
 from plugins.snt_malaria.providers.impact.swisstph import SwissTPHImpactProvider
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
 DUMMY_CONFIG = {"db_name": "test", "db_host": "localhost", "db_port": 5432, "db_username": "user"}
@@ -18,9 +16,12 @@ _SWISSTPH_DB_PATCH = "plugins.snt_malaria.providers.impact.swisstph.ensure_db_co
 _IDM_DB_PATCH = "plugins.snt_malaria.providers.impact.idm.ensure_db_connection"
 
 
-class ProviderRegistryTests(TestCase):
+class ProviderRegistryTests(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="Test Provider Account")
+        super().setUp()
+        self.account, _ = self.create_snt_account(name="Test Provider Account")
 
     def test_no_config_returns_none(self):
         """When no ImpactProviderConfig exists, return None."""

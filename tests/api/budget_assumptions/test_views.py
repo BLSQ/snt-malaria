@@ -1,735 +1,429 @@
-from typing import OrderedDict
-
 from rest_framework import status
+from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS
 
-from iaso.models import Account
-from iaso.test import APITestCase
-from plugins.snt_malaria.models import BudgetAssumptions, Intervention, InterventionCategory, Scenario
+from plugins.snt_malaria.models import (
+    BudgetAssumptions,
+)
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
+from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
 BASE_URL = "/api/snt_malaria/budget_assumptions/"
+MANY_URL = f"{BASE_URL}many/"
+DEFAULT_URL = f"{BASE_URL}default/"
 
 
-class BudgetAssumptionsAPITestCase(APITestCase):
+class BudgetAssumptionsAPITestCase(SNTMalariaAPITestCase):
+    auto_create_account = False
+
     def setUp(self):
-        # Create a user and account for testing
-        self.account, self.source, self.version, self.project = self.create_account_datasource_version_project(
-            "source", "Test Account", "project"
+        super().setUp()
+
+        self.account, self.user_with_full_perm, self.source, self.version, self.project = (
+            self.create_snt_account_with_project(
+                source_name="source",
+                account_name="Test Account",
+                project_name="project",
+                username="testuserfull",
+                permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION],
+            )
         )
-        self.user_with_full_perm, self.anon, self.user_no_perms = self.create_base_users(
-            self.account, [SNT_SCENARIO_FULL_WRITE_PERMISSION], "testuser"
+        self.anon = None
+        self.user_no_perms = self.create_user_with_profile(
+            username="testuser_no_perms",
+            account=self.account,
         )
         self.user_with_basic_perm = self.create_user_with_profile(
             username="testuserbasic", account=self.account, permissions=[SNT_SCENARIO_BASIC_WRITE_PERMISSION]
         )
 
-        # Create a scenario
-        self.scenario = Scenario.objects.create(
+        self.scenario = self._create_scenario(
             account=self.account,
             created_by=self.user_with_full_perm,
-            name="Test Scenario",
-            description="A test scenario description.",
-            start_year=2025,
-            end_year=2028,
+            name="Scenario Full User",
         )
-
-        # Create intervention categories
-        self.int_category_vaccination = InterventionCategory.objects.create(
-            name="Vaccination",
+        self.basic_user_scenario = self._create_scenario(
             account=self.account,
-            created_by=self.user_with_full_perm,
-        )
-        self.int_category_chemoprevention = InterventionCategory.objects.create(
-            name="Preventive Chemotherapy",
-            account=self.account,
-            created_by=self.user_with_full_perm,
+            created_by=self.user_with_basic_perm,
+            name="Scenario Basic User",
         )
 
-        # Create interventions
-        self.intervention_vaccination_rts = Intervention.objects.create(
-            name="RTS,S",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_vaccination,
-            code="rts_s",
-        )
-        self.intervention_chemo_smc = Intervention.objects.create(
-            name="SMC",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_chemoprevention,
-            code="smc",
-        )
-        self.intervention_chemo_iptp = Intervention.objects.create(
-            name="IPTp",
-            created_by=self.user_with_full_perm,
-            intervention_category=self.int_category_chemoprevention,
-            code="iptp",
-        )
-
-        self.assumption = BudgetAssumptions.objects.create(
-            intervention_code=self.intervention_vaccination_rts.code,
+        defaults = self.create_snt_default_interventions_setup(
             scenario=self.scenario,
-            coverage=0.9,
-            divisor=0,
-            bale_size=0,
-            buffer_mult=0,
-            doses_per_pw=0,
-            age_string=0,
-            pop_prop_3_11=0,
-            pop_prop_12_59=0,
-            monthly_rounds=0,
-            touchpoints=0,
-            tablet_factor=0,
-            doses_per_child=5,
+            account=self.account,
+            created_by=self.user_with_full_perm,
+        )
+        self.int_category = defaults["category_vaccination"]
+        self.intervention_rts = defaults["intervention_rts"]
+        self.intervention_smc = defaults["intervention_smc"]
+        self.org_unit_type = defaults["org_unit_type"]
+        self.district_1 = defaults["district_1"]
+        self.district_2 = defaults["district_2"]
+        self.assignment_a = defaults["assignment_a"]
+        self.assignment_b = defaults["assignment_b"]
+        self.basic_assignment = self._create_assignment(
+            self.basic_user_scenario,
+            self.district_1,
+            self.intervention_rts,
+            created_by=self.user_with_basic_perm,
         )
 
-        # Prepare other account and data for tenancy tests
-        self.other_account = Account.objects.create(name="Other Account")
-        self.other_user = self.create_user_with_profile(
-            username="otheruser", account=self.other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
+        self.other_account, self.other_user = self.create_snt_account(
+            name="Other Account",
+            username="otheruser",
+            permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION],
         )
-        self.other_scenario = Scenario.objects.create(
+        self.other_scenario = self._create_scenario(
             account=self.other_account,
             created_by=self.other_user,
-            name="Other Scenario",
-            description="Another test scenario description.",
-            start_year=2025,
-            end_year=2028,
+            name="Other Account Scenario",
         )
-        self.other_intervention_category = InterventionCategory.objects.create(
+        self.other_int_category = self.create_snt_intervention_category(
             name="Other Category",
             account=self.other_account,
             created_by=self.other_user,
         )
-        self.other_intervention = Intervention.objects.create(
+        self.other_intervention = self.create_snt_intervention(
             name="Other Intervention",
             created_by=self.other_user,
-            intervention_category=self.other_intervention_category,
+            intervention_category=self.other_int_category,
             code="other_int",
         )
-
-        self.other_assumption = BudgetAssumptions.objects.create(
-            intervention_code=self.other_intervention.code,
-            scenario=self.other_scenario,
-            coverage=0.9,
-            divisor=0,
-            bale_size=0,
-            buffer_mult=0,
-            doses_per_pw=0,
-            age_string=0,
-            pop_prop_3_11=0,
-            pop_prop_12_59=0,
-            monthly_rounds=0,
-            touchpoints=0,
-            tablet_factor=0,
-            doses_per_child=5,
+        self.other_assignment = self._create_assignment(
+            self.other_scenario,
+            self.district_1,
+            self.other_intervention,
+            created_by=self.other_user,
         )
+
+    def _create_scenario(self, account, created_by, name):
+        return self.create_snt_scenario(
+            account=account,
+            created_by=created_by,
+            name=name,
+            description=f"{name} description",
+        )
+
+    def _create_assignment(self, scenario, org_unit, intervention, created_by=None):
+        return self.create_snt_assignment(
+            scenario,
+            org_unit,
+            intervention,
+            created_by=created_by or scenario.created_by,
+        )
+
+    def _build_many_payload(self, scenario, assignments, budget_assumptions):
+        return {
+            "scenario": scenario.id,
+            "intervention_assignments": [assignment.id for assignment in assignments],
+            "budget_assumptions": budget_assumptions,
+        }
 
     def test_get_budget_assumptions_unauthenticated(self):
         response = self.client.get(f"{BASE_URL}?scenario={self.scenario.id}")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_get_budget_assumptions_invalid_scenario(self):
+    def test_get_default_budget_assumption(self):
         self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.get(f"{BASE_URL}?scenario=9999")  # Non-existent scenario ID
-        result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("scenario", result)
+        response = self.client.get(DEFAULT_URL)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        expected_defaults = DEFAULT_COST_ASSUMPTIONS
+
+        for key, result_value in result.items():
+            coverage_key = f"{key}_coverage"
+            self.assertIn(coverage_key, expected_defaults)
+            self.assertEqual(result_value["coverage"], expected_defaults[coverage_key])
+
+    def test_get_default_budget_assumption_unauthenticated(self):
+        response = self.client.get(DEFAULT_URL)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_default_budget_assumption_with_no_perms(self):
+        self.client.force_authenticate(user=self.user_no_perms)
+        response = self.client.get(DEFAULT_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_budget_assumptions_scenario_other_account(self):
         self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.get(f"{BASE_URL}?scenario={self.other_scenario.id}")  # Scenario from other account
+        response = self.client.get(f"{BASE_URL}?scenario={self.other_scenario.id}")
         result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertIn("scenario", result)
 
-    def test_get_budget_assumptions_default_values(self):
-        """
-        This endpoint is available to all authenticated users, regardless of permissions.
-        """
-        # removing the existing assumption to get default values
-        self.assumption.delete()
+    def test_get_budget_assumptions_authenticated_without_write_permission(self):
+        BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=self.assignment_a,
+            year=2025,
+            coverage=0.55,
+        )
+
+        self.client.force_authenticate(user=self.user_no_perms)
+        response = self.client.get(f"{BASE_URL}?scenario={self.scenario.id}")
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(len(result), 1)
+
+    def test_get_budget_assumptions_filters_by_year(self):
+        assumption_2025 = BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=self.assignment_a,
+            year=2025,
+            coverage=0.55,
+        )
+        BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=self.assignment_a,
+            year=2026,
+            coverage=0.75,
+        )
+
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.get(f"{BASE_URL}?scenario={self.scenario.id}&year=2025")
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.assertEqual(len(result), 1)
+        result_assumptions = result[0]
+        self.assertEqual(result_assumptions["id"], assumption_2025.id)
+        self.assertEqual(result_assumptions["year"], 2025)
+        self.assertEqual(result_assumptions["intervention_assignment"], self.assignment_a.id)
+
+    def test_get_budget_assumptions_retrieves_year_and_intervention_assignment(self):
+        assumption_a = BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=self.assignment_a,
+            year=2025,
+            coverage=0.55,
+        )
+        assumption_b = BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=self.assignment_b,
+            year=2026,
+            coverage=0.70,
+        )
 
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.get(f"{BASE_URL}?scenario={self.scenario.id}")
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertEqual(len(result), 3)
-        self.assertEqual(
-            result,
-            [
-                OrderedDict(
-                    [
-                        ("id", None),
-                        ("scenario", self.scenario.id),
-                        ("intervention_code", self.intervention_chemo_iptp.code),
-                        ("coverage", "0.80"),
-                        ("divisor", "0.00"),
-                        ("bale_size", 0),
-                        ("buffer_mult", "1.10"),
-                        ("doses_per_pw", 3),
-                        ("age_string", "0"),
-                        ("pop_prop_3_11", "0.00"),
-                        ("pop_prop_12_59", "0.00"),
-                        ("monthly_rounds", 0),
-                        ("touchpoints", 0),
-                        ("tablet_factor", "0.00"),
-                        ("doses_per_child", 0),
-                    ]
-                ),
-                OrderedDict(
-                    [
-                        ("id", None),
-                        ("scenario", self.scenario.id),
-                        ("intervention_code", self.intervention_vaccination_rts.code),
-                        ("coverage", "0.00"),
-                        ("divisor", "0.00"),
-                        ("bale_size", 0),
-                        ("buffer_mult", "0.00"),
-                        ("doses_per_pw", 0),
-                        ("age_string", "0"),
-                        ("pop_prop_3_11", "0.00"),
-                        ("pop_prop_12_59", "0.00"),
-                        ("monthly_rounds", 0),
-                        ("touchpoints", 0),
-                        ("tablet_factor", "0.00"),
-                        ("doses_per_child", 0),
-                    ]
-                ),
-                OrderedDict(
-                    [
-                        ("id", None),
-                        ("scenario", self.scenario.id),
-                        ("intervention_code", self.intervention_chemo_smc.code),
-                        ("coverage", "1.00"),
-                        ("divisor", "0.00"),
-                        ("bale_size", 0),
-                        ("buffer_mult", "1.10"),
-                        ("doses_per_pw", 0),
-                        ("age_string", "0.18,0.77"),
-                        ("pop_prop_3_11", "0.18"),
-                        ("pop_prop_12_59", "0.77"),
-                        ("monthly_rounds", 4),
-                        ("touchpoints", 0),
-                        ("tablet_factor", "0.00"),
-                        ("doses_per_child", 0),
-                    ]
-                ),
+
+        self.assertEqual(len(result), 2)
+        by_id = {item["id"]: item for item in result}
+
+        self.assertEqual(by_id[assumption_a.id]["intervention_assignment"], self.assignment_a.id)
+        self.assertEqual(by_id[assumption_a.id]["year"], 2025)
+        self.assertEqual(by_id[assumption_a.id]["scenario"], self.scenario.id)
+
+        self.assertEqual(by_id[assumption_b.id]["intervention_assignment"], self.assignment_b.id)
+        self.assertEqual(by_id[assumption_b.id]["year"], 2026)
+        self.assertEqual(by_id[assumption_b.id]["scenario"], self.scenario.id)
+
+    def test_get_budget_assumptions_returns_one_row_per_assignment_and_year(self):
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        payload = self._build_many_payload(
+            scenario=self.scenario,
+            assignments=[self.assignment_a, self.assignment_b],
+            budget_assumptions=[
+                {"year": 2025, "coverage": 0.80},
+                {"year": 2026, "coverage": 0.90},
             ],
         )
 
-        self.client.force_authenticate(user=self.user_with_basic_perm)
-        response = self.client.get(f"{BASE_URL}?scenario={self.scenario.id}")
-        result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertEqual(len(result), 3)
+        create_response = self.client.post(MANY_URL, payload, format="json")
+        self.assertJSONResponse(create_response, status.HTTP_200_OK)
+
+        list_response = self.client.get(f"{BASE_URL}?scenario={self.scenario.id}")
+        result = self.assertJSONResponse(list_response, status.HTTP_200_OK)
+
+        self.assertEqual(len(result), 4)
+        assignment_year_pairs = {(item["intervention_assignment"], item["year"]) for item in result}
+        self.assertEqual(
+            assignment_year_pairs,
+            {
+                (self.assignment_a.id, 2025),
+                (self.assignment_a.id, 2026),
+                (self.assignment_b.id, 2025),
+                (self.assignment_b.id, 2026),
+            },
+        )
+
+    def test_post_many_budget_assumptions_requires_write_permission(self):
+        payload = self._build_many_payload(
+            scenario=self.scenario,
+            assignments=[self.assignment_a],
+            budget_assumptions=[{"year": 2025, "coverage": 0.80}],
+        )
 
         self.client.force_authenticate(user=self.user_no_perms)
-        response = self.client.get(f"{BASE_URL}?scenario={self.scenario.id}")
-        result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertEqual(len(result), 3)
+        response = self.client.post(MANY_URL, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_get_budget_assumptions_with_existing(self):
-        self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.get(f"{BASE_URL}?scenario={self.scenario.id}")
-        result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertEqual(len(result), 3)
-
-        # Check that the override (from setup) is reflected in the response
-        for item in result:
-            if item["intervention_code"] == self.intervention_vaccination_rts.code:
-                self.assertEqual(item["coverage"], "0.90")
-                self.assertEqual(item["doses_per_child"], 5)
-            else:
-                # Other interventions should have default values
-                if item["intervention_code"] == self.intervention_chemo_smc.code:
-                    self.assertEqual(item["coverage"], "1.00")
-                elif item["intervention_code"] == self.intervention_chemo_iptp.code:
-                    self.assertEqual(item["coverage"], "0.80")
-
-    def test_post_budget_assumptions_unauthenticated(self):
-        override_data = {
-            "intervention_code": self.intervention_vaccination_rts.code,
-            "scenario": self.scenario.id,
-            "coverage": 0.9,
-            "divisor": 0,
-            "bale_size": 0,
-            "buffer_mult": 0,
-            "doses_per_pw": 0,
-            "age_string": 0,
-            "pop_prop_3_11": 0,
-            "pop_prop_12_59": 0,
-            "monthly_rounds": 0,
-            "touchpoints": 0,
-            "tablet_factor": 0,
-            "doses_per_child": 5,
-        }
-        response = self.client.post(BASE_URL, override_data, format="json")
+    def test_post_many_budget_assumptions_unauthenticated(self):
+        payload = self._build_many_payload(
+            scenario=self.scenario,
+            assignments=[self.assignment_a],
+            budget_assumptions=[{"year": 2025, "coverage": 0.80}],
+        )
+        response = self.client.post(MANY_URL, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_post_budget_assumptions_invalid_scenario(self):
-        override_data = {
-            "intervention_code": self.intervention_vaccination_rts.code,
-            "scenario": 9999,  # Non-existent scenario ID
-            "coverage": 0.9,
-            "divisor": 0,
-            "bale_size": 0,
-            "buffer_mult": 0,
-            "doses_per_pw": 0,
-            "age_string": 0,
-            "pop_prop_3_11": 0,
-            "pop_prop_12_59": 0,
-            "monthly_rounds": 0,
-            "touchpoints": 0,
-            "tablet_factor": 0,
-            "doses_per_child": 5,
+    def test_post_many_budget_assumptions_invalid_scenario(self):
+        payload = {
+            "scenario": 999999,
+            "intervention_assignments": [self.assignment_a.id],
+            "budget_assumptions": [{"year": 2025, "coverage": 0.80}],
         }
-
         self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.post(BASE_URL, override_data, format="json")
+        response = self.client.post(MANY_URL, payload, format="json")
         result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertIn("scenario", result)
 
-    def test_post_budget_assumptions_scenario_other_account(self):
-        override_data = {
-            "intervention_code": self.intervention_vaccination_rts.code,
-            "scenario": self.other_scenario.id,  # Scenario from other account
-            "coverage": 0.9,
-            "divisor": 0,
-            "bale_size": 0,
-            "buffer_mult": 0,
-            "doses_per_pw": 0,
-            "age_string": 0,
-            "pop_prop_3_11": 0,
-            "pop_prop_12_59": 0,
-            "monthly_rounds": 0,
-            "touchpoints": 0,
-            "tablet_factor": 0,
-            "doses_per_child": 5,
+    def test_post_many_budget_assumptions_scenario_other_account(self):
+        payload = {
+            "scenario": self.other_scenario.id,
+            "intervention_assignments": [self.assignment_a.id],
+            "budget_assumptions": [{"year": 2025, "coverage": 0.80}],
         }
-
         self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.post(BASE_URL, override_data, format="json")
+        response = self.client.post(MANY_URL, payload, format="json")
         result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertIn("scenario", result)
 
-    def test_post_budget_assumptions_unknown_intervention_code(self):
-        """
-        The intervention code does not need to match an existing intervention, as intervention_code is a simple CharField
-        """
-        override_data = {
-            "intervention_code": "non_existent_code",  # does not represent any intervention
-            "scenario": self.scenario.id,
-            "coverage": 0.9,
-            "divisor": 0,
-            "bale_size": 0,
-            "buffer_mult": 0,
-            "doses_per_pw": 0,
-            "age_string": 0,
-            "pop_prop_3_11": 0,
-            "pop_prop_12_59": 0,
-            "monthly_rounds": 0,
-            "touchpoints": 0,
-            "tablet_factor": 0,
-            "doses_per_child": 5,
-        }
-        count_before = BudgetAssumptions.objects.count()
-
+    def test_post_many_budget_assumptions_requires_non_empty_assignments(self):
+        payload = self._build_many_payload(
+            scenario=self.scenario,
+            assignments=[],
+            budget_assumptions=[{"year": 2025, "coverage": 0.80}],
+        )
         self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.post(BASE_URL, override_data, format="json")
-        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+        response = self.client.post(MANY_URL, payload, format="json")
+        result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("intervention_assignments", result)
 
-        self.assertIsNotNone(result["id"])
-        count_after = BudgetAssumptions.objects.count()
-        self.assertEqual(count_after, count_before + 1)
-        assumption = BudgetAssumptions.objects.get(id=result["id"])
-        self.assertEqual(assumption.intervention_code, "non_existent_code")
-
-    def test_post_budget_assumptions_intervention_other_account(self):
-        """
-        Since there's no check on intervention code (simple CharField),
-        it's possible to use a code that belongs to an intervention from another account
-        """
-        override_data = {
-            "intervention_code": self.other_intervention.code,  # Intervention from other account
-            "scenario": self.scenario.id,
-            "coverage": 0.9,
-            "divisor": 0,
-            "bale_size": 0,
-            "buffer_mult": 0,
-            "doses_per_pw": 0,
-            "age_string": 0,
-            "pop_prop_3_11": 0,
-            "pop_prop_12_59": 0,
-            "monthly_rounds": 0,
-            "touchpoints": 0,
-            "tablet_factor": 0,
-            "doses_per_child": 5,
-        }
-        count_before = BudgetAssumptions.objects.count()
-
-        self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.post(BASE_URL, override_data, format="json")
-        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
-
-        self.assertIsNotNone(result["id"])
-        count_after = BudgetAssumptions.objects.count()
-        self.assertEqual(count_after, count_before + 1)
-        assumption = BudgetAssumptions.objects.get(id=result["id"])
-        self.assertEqual(assumption.intervention_code, self.other_intervention.code)
-
-    def test_post_budget_assumptions_with_full_perm_own_scenario(self):
-        # Create an override for one intervention
-        override_data = {
-            "intervention_code": self.intervention_chemo_iptp.code,
-            "scenario": self.scenario.id,
-            "coverage": 0.9,
-            "divisor": 0,
-            "bale_size": 0,
-            "buffer_mult": 0,
-            "doses_per_pw": 0,
-            "age_string": 0,
-            "pop_prop_3_11": 0,
-            "pop_prop_12_59": 0,
-            "monthly_rounds": 0,
-            "touchpoints": 0,
-            "tablet_factor": 0,
-            "doses_per_child": 5,
-        }
-
-        self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.post(BASE_URL, override_data, format="json")
-        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
-
-        self.assertIsNotNone(result)
-        self.assertIsNotNone(result["id"])
-        self.assertEqual(result["coverage"], "0.90")
-        self.assertEqual(result["doses_per_child"], 5)
-
-    def test_post_budget_assumptions_with_full_perm_other_scenario(self):
-        # Create a different scenario owned by another user
-        other_scenario = Scenario.objects.create(
+    def test_post_many_budget_assumptions_rejects_assignments_from_other_scenario(self):
+        scenario_2 = self._create_scenario(
             account=self.account,
-            created_by=self.user_with_basic_perm,
-            name="Other Scenario",
-            description="Another test scenario description.",
-            start_year=2025,
-            end_year=2028,
+            created_by=self.user_with_full_perm,
+            name="Scenario 2",
+        )
+        scenario_2_assignment = self._create_assignment(scenario_2, self.district_1, self.intervention_rts)
+
+        payload = self._build_many_payload(
+            scenario=self.scenario,
+            assignments=[scenario_2_assignment],
+            budget_assumptions=[{"year": 2025, "coverage": 0.80}],
+        )
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(MANY_URL, payload, format="json")
+        result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("intervention_assignments", result)
+
+    def test_post_many_budget_assumptions_with_basic_permission_only_for_own_scenario(self):
+        own_payload = self._build_many_payload(
+            scenario=self.basic_user_scenario,
+            assignments=[self.basic_assignment],
+            budget_assumptions=[{"year": 2025, "coverage": 0.80}],
         )
 
-        override_data = {
-            "intervention_code": self.intervention_vaccination_rts.code,
-            "scenario": other_scenario.id,
-            "coverage": 0.9,
-            "divisor": 0,
-            "bale_size": 0,
-            "buffer_mult": 0,
-            "doses_per_pw": 0,
-            "age_string": 0,
-            "pop_prop_3_11": 0,
-            "pop_prop_12_59": 0,
-            "monthly_rounds": 0,
-            "touchpoints": 0,
-            "tablet_factor": 0,
-            "doses_per_child": 5,
-        }
+        self.client.force_authenticate(user=self.user_with_basic_perm)
+        own_response = self.client.post(MANY_URL, own_payload, format="json")
+        own_result = self.assertJSONResponse(own_response, status.HTTP_200_OK)
+        self.assertEqual(len(own_result), 1)
 
-        self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.post(BASE_URL, override_data, format="json")
-        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
-
-        self.assertIsNotNone(result)
-        self.assertIsNotNone(result["id"])
-        self.assertEqual(result["coverage"], "0.90")
-        self.assertEqual(result["doses_per_child"], 5)
-
-    def test_post_budget_assumptions_with_basic_perm_own_scenario(self):
-        own_scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user_with_basic_perm,
-            name="Basic Perm Scenario",
-            description="A test scenario for basic perm user.",
-            start_year=2025,
-            end_year=2028,
+        other_payload = self._build_many_payload(
+            scenario=self.scenario,
+            assignments=[self.assignment_a],
+            budget_assumptions=[{"year": 2025, "coverage": 0.80}],
         )
-        override_data = {
-            "intervention_code": self.intervention_vaccination_rts.code,
-            "scenario": own_scenario.id,
-            "coverage": 0.9,
-            "divisor": 0,
-            "bale_size": 0,
-            "buffer_mult": 0,
-            "doses_per_pw": 0,
-            "age_string": 0,
-            "pop_prop_3_11": 0,
-            "pop_prop_12_59": 0,
-            "monthly_rounds": 0,
-            "touchpoints": 0,
-            "tablet_factor": 0,
-            "doses_per_child": 5,
-        }
+        other_response = self.client.post(MANY_URL, other_payload, format="json")
+        other_result = self.assertJSONResponse(other_response, status.HTTP_403_FORBIDDEN)
+        self.assertIn("User does not have permission to modify assumptions for this scenario", other_result["detail"])
 
-        self.client.force_authenticate(user=self.user_with_basic_perm)
-        response = self.client.post(BASE_URL, override_data, format="json")
-        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
-
-        self.assertIsNotNone(result)
-        self.assertIsNotNone(result["id"])
-        self.assertEqual(result["coverage"], "0.90")
-        self.assertEqual(result["doses_per_child"], 5)
-
-    def test_post_budget_assumptions_with_basic_perm_other_scenario(self):
-        override_data = {
-            "intervention_code": self.intervention_vaccination_rts.code,
-            "scenario": self.scenario.id,  # owned by user_with_full_perm
-            "coverage": 0.9,
-            "divisor": 0,
-            "bale_size": 0,
-            "buffer_mult": 0,
-            "doses_per_pw": 0,
-            "age_string": 0,
-            "pop_prop_3_11": 0,
-            "pop_prop_12_59": 0,
-            "monthly_rounds": 0,
-            "touchpoints": 0,
-            "tablet_factor": 0,
-            "doses_per_child": 5,
-        }
-
-        self.client.force_authenticate(user=self.user_with_basic_perm)
-        response = self.client.post(BASE_URL, override_data, format="json")
-        result = self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
-        self.assertIn("User does not have permission to modify assumptions for this scenario", result["detail"])
-
-    def test_put_budget_assumptions_unauthenticated(self):
-        updated_data = {
-            "coverage": 0.95,
-            "divisor": 1,
-            "bale_size": 10,
-            "buffer_mult": 1.2,
-            "doses_per_pw": 2,
-            "age_string": "1-5",
-            "pop_prop_3_11": 0.1,
-            "pop_prop_12_59": 0.5,
-            "monthly_rounds": 3,
-            "touchpoints": 2.5,
-            "tablet_factor": 1,
-            "doses_per_child": 6,
-        }
-        response = self.client.put(f"{BASE_URL}{self.assumption.id}/", updated_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_put_budget_assumptions_with_full_perm_own_scenario(self):
-        updated_data = {
-            "coverage": 0.95,
-            "divisor": 1,
-            "bale_size": 10,
-            "buffer_mult": 1.2,
-            "doses_per_pw": 2,
-            "age_string": "1-5",
-            "pop_prop_3_11": 0.1,
-            "pop_prop_12_59": 0.5,
-            "monthly_rounds": 3,
-            "touchpoints": 2,
-            "tablet_factor": 1,
-            "doses_per_child": 6,
-        }
-
+    def test_post_many_budget_assumptions_with_full_permission_other_users_scenario(self):
+        payload = self._build_many_payload(
+            scenario=self.basic_user_scenario,
+            assignments=[self.basic_assignment],
+            budget_assumptions=[{"year": 2025, "coverage": 0.66}],
+        )
         self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.put(f"{BASE_URL}{self.assumption.id}/", updated_data, format="json")
+        response = self.client.post(MANY_URL, payload, format="json")
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["scenario"], self.basic_user_scenario.id)
 
-        self.assertIsNotNone(result)
-        self.assumption.refresh_from_db()
-        self.assertEqual(str(self.assumption.coverage), "0.95")
-        self.assertEqual(str(self.assumption.divisor), "1.00")
-        self.assertEqual(self.assumption.bale_size, 10)
-        self.assertEqual(str(self.assumption.buffer_mult), "1.20")
-        self.assertEqual(self.assumption.doses_per_pw, 2)
-        self.assertEqual(self.assumption.age_string, "1-5")
-        self.assertEqual(str(self.assumption.pop_prop_3_11), "0.10")
-        self.assertEqual(str(self.assumption.pop_prop_12_59), "0.50")
-        self.assertEqual(self.assumption.monthly_rounds, 3)
-        self.assertEqual(self.assumption.touchpoints, 2)
-        self.assertEqual(str(self.assumption.tablet_factor), "1.00")
-        self.assertEqual(self.assumption.doses_per_child, 6)
+    def test_post_many_budget_assumptions_keeps_single_row_per_assignment_and_year(self):
+        self.client.force_authenticate(user=self.user_with_full_perm)
 
-    def test_put_budget_assumptions_with_full_perm_other_scenario(self):
-        # Create a different scenario owned by another user
-        other_scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user_with_basic_perm,
-            name="Other Scenario",
-            description="Another test scenario description.",
-            start_year=2025,
-            end_year=2028,
+        first_payload = self._build_many_payload(
+            scenario=self.scenario,
+            assignments=[self.assignment_a],
+            budget_assumptions=[{"year": 2025, "coverage": 0.40}],
         )
+        self.assertJSONResponse(self.client.post(MANY_URL, first_payload, format="json"), status.HTTP_200_OK)
 
-        # Create an assumption for that scenario
-        other_assumption = BudgetAssumptions.objects.create(
-            intervention_code=self.intervention_chemo_iptp.code,
-            scenario=other_scenario,
-            coverage=0.9,
-            divisor=0,
-            bale_size=0,
-            buffer_mult=0,
-            doses_per_pw=0,
-            age_string=0,
-            pop_prop_3_11=0,
-            pop_prop_12_59=0,
-            monthly_rounds=0,
-            touchpoints=0,
-            tablet_factor=0,
-            doses_per_child=5,
+        second_payload = self._build_many_payload(
+            scenario=self.scenario,
+            assignments=[self.assignment_a],
+            budget_assumptions=[{"year": 2025, "coverage": 0.70}],
         )
+        self.assertJSONResponse(self.client.post(MANY_URL, second_payload, format="json"), status.HTTP_200_OK)
 
-        updated_data = {
-            "coverage": 0.95,
-            "divisor": 1,
-            "bale_size": 10,
-            "buffer_mult": 1.2,
-            "doses_per_pw": 2,
-            "age_string": "1-5",
-            "pop_prop_3_11": 0.1,
-            "pop_prop_12_59": 0.5,
-            "monthly_rounds": 3,
-            "touchpoints": 5,
-            "tablet_factor": 1,
-            "doses_per_child": 6,
-        }
+        assumptions = BudgetAssumptions.objects.filter(
+            scenario=self.scenario,
+            intervention_assignment=self.assignment_a,
+            year=2025,
+        )
+        self.assertEqual(assumptions.count(), 1)
+        self.assertEqual(str(assumptions.first().coverage), "0.70")
+
+    def test_post_many_budget_assumptions_updates_only_given_scenario_assignments_and_years(self):
+        target_assumption = BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=self.assignment_a,
+            year=2025,
+            coverage=0.10,
+        )
+        same_scenario_other_assignment = BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=self.assignment_b,
+            year=2025,
+            coverage=0.20,
+        )
+        same_scenario_other_year = BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=self.assignment_a,
+            year=2026,
+            coverage=0.30,
+        )
+        other_scenario_assumption = BudgetAssumptions.objects.create(
+            scenario=self.other_scenario,
+            intervention_assignment=self.other_assignment,
+            year=2025,
+            coverage=0.40,
+        )
 
         self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.put(f"{BASE_URL}{other_assumption.id}/", updated_data, format="json")
-        self.assertJSONResponse(response, status.HTTP_200_OK)
-
-        other_assumption.refresh_from_db()
-        self.assertEqual(str(other_assumption.coverage), "0.95")
-        self.assertEqual(str(other_assumption.divisor), "1.00")
-        self.assertEqual(other_assumption.bale_size, 10)
-        self.assertEqual(str(other_assumption.buffer_mult), "1.20")
-        self.assertEqual(other_assumption.doses_per_pw, 2)
-        self.assertEqual(other_assumption.age_string, "1-5")
-        self.assertEqual(str(other_assumption.pop_prop_3_11), "0.10")
-        self.assertEqual(str(other_assumption.pop_prop_12_59), "0.50")
-        self.assertEqual(other_assumption.monthly_rounds, 3)
-        self.assertEqual(other_assumption.touchpoints, 5)
-        self.assertEqual(str(other_assumption.tablet_factor), "1.00")
-        self.assertEqual(other_assumption.doses_per_child, 6)
-
-    def test_put_budget_assumptions_with_basic_perm_own_scenario(self):
-        own_scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user_with_basic_perm,
-            name="Basic Perm Scenario",
-            description="A test scenario for basic perm user.",
-            start_year=2025,
-            end_year=2028,
+        payload = self._build_many_payload(
+            scenario=self.scenario,
+            assignments=[self.assignment_a],
+            budget_assumptions=[{"year": 2025, "coverage": 0.95}],
         )
-        own_assumption = BudgetAssumptions.objects.create(
-            intervention_code=self.intervention_chemo_iptp.code,
-            scenario=own_scenario,
-            coverage=0.9,
-            divisor=0,
-            bale_size=0,
-            buffer_mult=0,
-            doses_per_pw=0,
-            age_string=0,
-            pop_prop_3_11=0,
-            pop_prop_12_59=0,
-            monthly_rounds=0,
-            touchpoints=0,
-            tablet_factor=0,
-            doses_per_child=5,
+        self.assertJSONResponse(self.client.post(MANY_URL, payload, format="json"), status.HTTP_200_OK)
+
+        assumptions = BudgetAssumptions.objects.filter(
+            scenario=self.scenario,
         )
 
-        updated_data = {
-            "coverage": 0.95,
-            "divisor": 1,
-            "bale_size": 10,
-            "buffer_mult": 1.2,
-            "doses_per_pw": 2,
-            "age_string": "1-5",
-            "pop_prop_3_11": 0.1,
-            "pop_prop_12_59": 0.5,
-            "monthly_rounds": 3,
-            "touchpoints": 5,
-            "tablet_factor": 1,
-            "doses_per_child": 6,
-        }
-
-        self.client.force_authenticate(user=self.user_with_basic_perm)
-        response = self.client.put(f"{BASE_URL}{own_assumption.id}/", updated_data, format="json")
-        self.assertJSONResponse(response, status.HTTP_200_OK)
-
-        own_assumption.refresh_from_db()
-        self.assertEqual(str(own_assumption.coverage), "0.95")
-        self.assertEqual(str(own_assumption.divisor), "1.00")
-        self.assertEqual(own_assumption.bale_size, 10)
-        self.assertEqual(str(own_assumption.buffer_mult), "1.20")
-        self.assertEqual(own_assumption.doses_per_pw, 2)
-        self.assertEqual(own_assumption.age_string, "1-5")
-        self.assertEqual(str(own_assumption.pop_prop_3_11), "0.10")
-        self.assertEqual(str(own_assumption.pop_prop_12_59), "0.50")
-        self.assertEqual(own_assumption.monthly_rounds, 3)
-        self.assertEqual(own_assumption.touchpoints, 5)
-        self.assertEqual(str(own_assumption.tablet_factor), "1.00")
-        self.assertEqual(own_assumption.doses_per_child, 6)
-
-    def test_put_budget_assumptions_with_basic_perm_other_scenario(self):
-        updated_data = {
-            "coverage": 0.95,
-            "divisor": 1,
-            "bale_size": 10,
-            "buffer_mult": 1.2,
-            "doses_per_pw": 2,
-            "age_string": "1-5",
-            "pop_prop_3_11": 0.1,
-            "pop_prop_12_59": 0.5,
-            "monthly_rounds": 3,
-            "touchpoints": 2.5,
-            "tablet_factor": 1,
-            "doses_per_child": 6,
-        }
-
-        self.client.force_authenticate(user=self.user_with_basic_perm)
-        response = self.client.put(f"{BASE_URL}{self.assumption.id}/", updated_data, format="json")
-        result = self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
-        self.assertIn("You do not have permission to perform this action.", result["detail"])
-
-    def test_put_budget_assumptions_no_perm(self):
-        updated_data = {
-            "coverage": 0.95,
-            "divisor": 1,
-            "bale_size": 10,
-            "buffer_mult": 1.2,
-            "doses_per_pw": 2,
-            "age_string": "1-5",
-            "pop_prop_3_11": 0.1,
-            "pop_prop_12_59": 0.5,
-            "monthly_rounds": 3,
-            "touchpoints": 2.5,
-            "tablet_factor": 1,
-            "doses_per_child": 6,
-        }
-
-        self.client.force_authenticate(user=self.user_no_perms)
-        response = self.client.put(f"{BASE_URL}{self.assumption.id}/", updated_data, format="json")
-        result = self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
-        self.assertIn("You do not have permission to perform this action.", result["detail"])
-
-    def test_put_budget_assumptions_unknown_assumption_id(self):
-        updated_data = {
-            "coverage": 0.95,
-            "divisor": 1,
-            "bale_size": 10,
-            "buffer_mult": 1.2,
-            "doses_per_pw": 2,
-            "age_string": "1-5",
-            "pop_prop_3_11": 0.1,
-            "pop_prop_12_59": 0.5,
-            "monthly_rounds": 3,
-            "touchpoints": 2.5,
-            "tablet_factor": 1,
-            "doses_per_child": 6,
-        }
-        unknown_assumption_id = 9999  # Assuming this ID does not exist in the test database
-
-        self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.put(f"{BASE_URL}{unknown_assumption_id}/", updated_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        target_assumption_updated = BudgetAssumptions.objects.get(year=2025, intervention_assignment=self.assignment_a)
+        self.assertNotEqual(
+            target_assumption.id, target_assumption_updated.id
+        )  # Should have been deleted and recreated
+        same_scenario_other_assignment = BudgetAssumptions.objects.get(
+            id=same_scenario_other_assignment.id
+        )  # Should not raise DoesNotExist
+        self.assertNotEqual(same_scenario_other_assignment, None)
+        same_scenario_other_year = BudgetAssumptions.objects.get(
+            id=same_scenario_other_year.id
+        )  # Should not raise DoesNotExist
+        self.assertNotEqual(same_scenario_other_year, None)
+        other_scenario_assumption = BudgetAssumptions.objects.get(
+            id=other_scenario_assumption.id
+        )  # Should not raise DoesNotExist
+        self.assertNotEqual(other_scenario_assumption, None)

@@ -1,14 +1,16 @@
 from rest_framework import status
 
-from iaso.test import APITestCase
 from plugins.snt_malaria.models import BudgetSettings
 from plugins.snt_malaria.permissions import SNT_SETTINGS_READ_PERMISSION, SNT_SETTINGS_WRITE_PERMISSION
+from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
-class BudgetSettingsAPITestCase(APITestCase):
+class BudgetSettingsAPITestCase(SNTMalariaAPITestCase):
     BASE_URL = "/api/snt_malaria/budget_settings/"
+    auto_create_account = False
 
     def setUp(self):
+        super().setUp()
         self.account, _, _, _ = self.create_account_datasource_version_project("source", "account", "project")
         self.user_write, self.anon, self.user_no_perms = self.create_base_users(
             self.account, [SNT_SETTINGS_WRITE_PERMISSION], "user write"
@@ -114,7 +116,7 @@ class BudgetSettingsAPITestCase(APITestCase):
         response = self.client.post(self.BASE_URL, data=data)
         self.assertJSONResponse(response, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def test_budget_settings_patch_not_allowed(self):
+    def test_budget_settings_patch_with_write_perm(self):
         self.client.force_authenticate(self.user_write)
         data = {
             "local_currency": "EUR",
@@ -122,7 +124,26 @@ class BudgetSettingsAPITestCase(APITestCase):
             "inflation_rate": 0.01,
         }
         response = self.client.patch(f"{self.BASE_URL}{self.budget_settings_usd.id}/", data=data)
-        self.assertJSONResponse(response, status.HTTP_405_METHOD_NOT_ALLOWED)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(result["local_currency"], "EUR")
+        self.assertAlmostEqual(float(result["exchange_rate"]), 0.9)
+        self.assertAlmostEqual(float(result["inflation_rate"]), 0.01)
+
+        # Verify the change was persisted
+        self.budget_settings_usd.refresh_from_db()
+        self.assertEqual(self.budget_settings_usd.local_currency, "EUR")
+
+    def test_budget_settings_patch_with_read_perm_forbidden(self):
+        self.client.force_authenticate(self.user_read)
+        data = {"local_currency": "EUR"}
+        response = self.client.patch(f"{self.BASE_URL}{self.budget_settings_usd.id}/", data=data)
+        self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
+
+    def test_budget_settings_patch_other_account_not_found(self):
+        self.client.force_authenticate(self.user_write)
+        data = {"local_currency": "EUR"}
+        response = self.client.patch(f"{self.BASE_URL}{self.budget_settings_usd2.id}/", data=data)
+        self.assertJSONResponse(response, status.HTTP_404_NOT_FOUND)
 
     def test_budget_settings_put_not_allowed(self):
         self.client.force_authenticate(self.user_write)

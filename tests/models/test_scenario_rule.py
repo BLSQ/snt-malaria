@@ -5,42 +5,34 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
 from iaso.models import Account, DataSource, MetricType, MetricValue, OrgUnit, OrgUnitType, SourceVersion
-from iaso.test import TestCase
 from iaso.utils.colors import DEFAULT_COLOR
 from plugins.snt_malaria.models import (
     AccountSettings,
-    Intervention,
-    InterventionCategory,
-    Scenario,
+    BudgetAssumptions,
     ScenarioRule,
     ScenarioRuleInterventionProperties,
 )
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
-class ScenarioRuleModelTestCase(TestCase):
+class ScenarioRuleModelTestCase(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="account")
-        self.user = self.create_user_with_profile(username="user", account=self.account)
-        self.intervention_category = InterventionCategory.objects.create(
-            name="Category 1",
-            account=self.account,
-            created_by=self.user,
+        super().setUp()
+        self.account, self.user = self.create_snt_account(name="account")
+        self.intervention_category = self.create_snt_intervention_category(
+            account=self.account, created_by=self.user, name="Category 1"
         )
-        self.intervention = Intervention.objects.create(
-            name="Intervention 1",
-            code="INT1",
-            intervention_category=self.intervention_category,
-            created_by=self.user,
+        self.intervention = self.create_snt_intervention(
+            intervention_category=self.intervention_category, created_by=self.user, name="Intervention 1", code="INT1"
         )
-        self.intervention_2 = Intervention.objects.create(
-            name="Intervention 2",
-            code="INT2",
-            intervention_category=self.intervention_category,
-            created_by=self.user,
+        self.intervention_2 = self.create_snt_intervention(
+            intervention_category=self.intervention_category, created_by=self.user, name="Intervention 2", code="INT2"
         )
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user,
+        self.scenario = self.create_snt_scenario(
+            self.account,
+            self.user,
             name="Scenario 1",
             description="Description of scenario 1",
             start_year=2020,
@@ -496,31 +488,203 @@ class ScenarioRuleModelTestCase(TestCase):
 
         self.assertEqual(rule.intervention_assignments.count(), 0)
 
+    def test_scenario_refresh_assignments_recreates_budget_assumptions_for_matching_org_units(self):
+        rule = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
+        )
 
-class ScenarioRuleMatchAllTestCase(TestCase):
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        self.scenario.refresh_assignments(self.user)
+        first_assignment = self.scenario.intervention_assignments.first()
+        BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=first_assignment,
+            year=2025,
+            coverage=Decimal("0.55"),
+        )
+        BudgetAssumptions.objects.create(
+            scenario=self.scenario,
+            intervention_assignment=first_assignment,
+            year=2026,
+            coverage=Decimal("0.65"),
+        )
+
+        self.scenario.refresh_assignments(self.user)
+
+        assignments = self.scenario.intervention_assignments.filter(intervention=self.intervention)
+        self.assertEqual(assignments.count(), 2)
+
+        assumptions = BudgetAssumptions.objects.filter(
+            scenario=self.scenario,
+            intervention_assignment__in=assignments,
+        )
+        self.assertEqual(assumptions.count(), 4)
+
+        by_assignment = {}
+        for assumption in assumptions.values("intervention_assignment_id", "year", "coverage"):
+            by_assignment.setdefault(assumption["intervention_assignment_id"], {})[assumption["year"]] = str(
+                assumption["coverage"]
+            )
+
+        self.assertEqual(len(by_assignment), 2)
+        for years in by_assignment.values():
+            self.assertEqual(years, {2025: "0.55", 2026: "0.65"})
+
+    def test_scenario_refresh_assignments_removes_budget_assumptions_without_matching_org_units(self):
+        rule = ScenarioRule.objects.create(
+            name="Rule 1",
+            priority=1,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+
+        self.scenario.refresh_assignments(self.user)
+        for assignment in self.scenario.intervention_assignments.all():
+            BudgetAssumptions.objects.create(
+                scenario=self.scenario,
+                intervention_assignment=assignment,
+                year=2025,
+                coverage=Decimal("0.55"),
+            )
+
+        rule.org_units_matched = []
+        rule.save()
+        self.scenario.refresh_assignments(self.user)
+
+        self.assertEqual(self.scenario.intervention_assignments.count(), 0)
+        self.assertEqual(BudgetAssumptions.objects.filter(scenario=self.scenario).count(), 0)
+
+    def test_scenario_refresh_assignments_moves_assumptions_when_org_units_shift_to_other_intervention(self):
+        org_unit_3 = OrgUnit.objects.create(name="Org Unit 3")
+        org_unit_4 = OrgUnit.objects.create(name="Org Unit 4")
+        org_unit_5 = OrgUnit.objects.create(name="Org Unit 5")
+
+        rule_for_intervention_1 = ScenarioRule.objects.create(
+            name="Rule intervention 1",
+            priority=2,
+            color="#FF0000",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
+        )
+        rule_for_intervention_2 = ScenarioRule.objects.create(
+            name="Rule intervention 2",
+            priority=1,
+            color="#00FF00",
+            matching_criteria=self.matching_criteria,
+            created_by=self.user,
+            scenario=self.scenario,
+            org_units_matched=[org_unit_3.id, org_unit_4.id, org_unit_5.id],
+        )
+
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule_for_intervention_1,
+            intervention=self.intervention,
+            coverage=0.75,
+        )
+        ScenarioRuleInterventionProperties.objects.create(
+            scenario_rule=rule_for_intervention_2,
+            intervention=self.intervention_2,
+            coverage=0.75,
+        )
+
+        self.scenario.refresh_assignments(self.user)
+
+        assignments_intervention_1 = list(self.scenario.intervention_assignments.filter(intervention=self.intervention))
+        assignments_intervention_2 = list(
+            self.scenario.intervention_assignments.filter(intervention=self.intervention_2)
+        )
+        self.assertEqual(len(assignments_intervention_1), 2)
+        self.assertEqual(len(assignments_intervention_2), 3)
+
+        for assignment in assignments_intervention_1:
+            BudgetAssumptions.objects.create(
+                scenario=self.scenario,
+                intervention_assignment=assignment,
+                year=2025,
+                coverage=Decimal("0.30"),
+            )
+        for assignment in assignments_intervention_2:
+            BudgetAssumptions.objects.create(
+                scenario=self.scenario,
+                intervention_assignment=assignment,
+                year=2025,
+                coverage=Decimal("0.60"),
+            )
+
+        rule_for_intervention_1.org_units_matched = []
+        rule_for_intervention_1.save()
+        rule_for_intervention_2.org_units_matched = [
+            self.org_unit_1.id,
+            self.org_unit_2.id,
+            org_unit_3.id,
+            org_unit_4.id,
+            org_unit_5.id,
+        ]
+        rule_for_intervention_2.save()
+
+        self.scenario.refresh_assignments(self.user)
+
+        assignments_after_move = self.scenario.intervention_assignments.all()
+        self.assertEqual(assignments_after_move.count(), 5)
+        self.assertFalse(assignments_after_move.filter(intervention=self.intervention).exists())
+        self.assertEqual(assignments_after_move.filter(intervention=self.intervention_2).count(), 5)
+
+        assumptions_after_move = BudgetAssumptions.objects.filter(scenario=self.scenario)
+        self.assertEqual(assumptions_after_move.count(), 5)
+        self.assertEqual(
+            set(
+                assumptions_after_move.values_list(
+                    "intervention_assignment__intervention_id",
+                    "year",
+                    "coverage",
+                )
+            ),
+            {(self.intervention_2.id, 2025, Decimal("0.60"))},
+        )
+
+
+class ScenarioRuleMatchAllTestCase(SNTMalariaTestCase):
     """Tests for refresh_assignments with matching_criteria={"all": True}."""
 
+    auto_create_account = False
+
     def setUp(self):
+        super().setUp()
         data_source = DataSource.objects.create(name="source")
         source_version = SourceVersion.objects.create(data_source=data_source, number=1)
         self.account = Account.objects.create(name="account", default_version=source_version)
         self.user = self.create_user_with_profile(username="user", account=self.account)
 
-        self.intervention_category = InterventionCategory.objects.create(
-            name="Category 1", account=self.account, created_by=self.user
+        self.intervention_category = self.create_snt_intervention_category(
+            account=self.account, created_by=self.user, name="Category 1"
         )
-        self.intervention = Intervention.objects.create(
-            name="Intervention 1",
-            code="INT1",
-            intervention_category=self.intervention_category,
-            created_by=self.user,
+        self.intervention = self.create_snt_intervention(
+            intervention_category=self.intervention_category, created_by=self.user, name="Intervention 1", code="INT1"
         )
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user,
-            name="Scenario 1",
-            start_year=2020,
-            end_year=2030,
+        self.scenario = self.create_snt_scenario(
+            self.account, self.user, name="Scenario 1", start_year=2020, end_year=2030
         )
 
         self.org_unit_1 = OrgUnit.objects.create(
@@ -621,13 +785,15 @@ class ScenarioRuleMatchAllTestCase(TestCase):
         self.assertEqual(rule.intervention_assignments.count(), 3)
 
 
-class ScenarioRuleInterventionPropertiesModelTestCase(TestCase):
+class ScenarioRuleInterventionPropertiesModelTestCase(SNTMalariaTestCase):
+    auto_create_account = False
+
     def setUp(self):
-        self.account = Account.objects.create(name="account")
-        self.user = self.create_user_with_profile(username="user", account=self.account)
-        self.scenario = Scenario.objects.create(
-            account=self.account,
-            created_by=self.user,
+        super().setUp()
+        self.account, self.user = self.create_snt_account(name="account")
+        self.scenario = self.create_snt_scenario(
+            self.account,
+            self.user,
             name="Scenario 1",
             description="Description of scenario 1",
             start_year=2020,
@@ -645,15 +811,11 @@ class ScenarioRuleInterventionPropertiesModelTestCase(TestCase):
             org_units_included=[],
             org_units_scope=[],
         )
-        self.intervention_category = InterventionCategory.objects.create(
-            name="Category 1",
-            account=self.account,
-            created_by=self.user,
+        self.intervention_category = self.create_snt_intervention_category(
+            account=self.account, created_by=self.user, name="Category 1"
         )
-        self.intervention = Intervention.objects.create(
-            name="Intervention 1",
-            intervention_category=self.intervention_category,
-            created_by=self.user,
+        self.intervention = self.create_snt_intervention(
+            intervention_category=self.intervention_category, created_by=self.user, name="Intervention 1"
         )
         self.intervention_properties = ScenarioRuleInterventionProperties.objects.create(
             scenario_rule=self.scenario_rule,
@@ -690,10 +852,13 @@ class ScenarioRuleInterventionPropertiesModelTestCase(TestCase):
             invalid_properties.full_clean()
 
 
-class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(TestCase):
+class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):
     """Tests that resolve_matched_org_units respects AccountSettings.intervention_org_unit_type."""
 
+    auto_create_account = False
+
     def setUp(self):
+        super().setUp()
         data_source = DataSource.objects.create(name="source")
         source_version = SourceVersion.objects.create(data_source=data_source, number=1)
         self.account = Account.objects.create(name="account", default_version=source_version)
