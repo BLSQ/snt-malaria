@@ -1,5 +1,5 @@
 import { sortBy } from 'lodash';
-import { InterventionCategory } from '../types/interventions';
+import { InterventionCategory } from '../../interventions/types';
 import { InterventionProperties } from '../types/scenarioRule';
 
 /**

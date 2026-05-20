@@ -13,6 +13,7 @@ import { useGetInterventionCostUnitTypes } from '../hooks/useGetInterventionCost
 import { useGetInterventionDetails } from '../hooks/useGetInterventionDetails';
 import { useInterventionFormState } from '../hooks/useInterventionFormState';
 import { useSaveInterventionDetails } from '../hooks/useSaveInterventionDetails';
+import { InterventionDetails } from '../types';
 import { InterventionForm } from './InterventionForm';
 
 type Props = {

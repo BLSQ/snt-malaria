@@ -6,7 +6,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
-import { BudgetAssumptions } from '../../types/interventions';
+import { BudgetAssumptions } from '../../types/interventionAssignments';
 
 type Props = {
     year: number;

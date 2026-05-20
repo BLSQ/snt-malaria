@@ -2,9 +2,9 @@ import React, { FunctionComponent, useMemo } from 'react';
 import { MenuItem, Select, Typography } from '@mui/material';
 import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { Intervention } from '../domains/interventions/types';
 import { MESSAGES } from '../domains/messages';
 import { sortByStringProp } from '../domains/planning/libs/list-utils';
-import { Intervention } from '../domains/planning/types/interventions';
 
 const styles: SxStyles = {
     select: {

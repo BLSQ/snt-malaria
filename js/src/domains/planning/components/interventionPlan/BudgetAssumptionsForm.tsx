@@ -6,7 +6,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { useSaveBudgetAssumptions } from '../../hooks/useSaveBudgetAssumptions';
-import { BudgetAssumptions } from '../../types/interventions';
+import { BudgetAssumptions } from '../../types/interventionAssignments';
 import { YearCoverage } from './YearCoverage';
 
 const styles: SxStyles = {

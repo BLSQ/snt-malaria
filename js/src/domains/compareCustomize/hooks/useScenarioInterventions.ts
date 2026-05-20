@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
+import { Intervention } from '../../interventions/types';
+import { MESSAGES } from '../../messages';
 import { useGetInterventionAssignments } from '../../planning/hooks/useGetInterventionAssignments';
 import { sortByStringProp } from '../../planning/libs/list-utils';
-import { Intervention } from '../../planning/types/interventions';
-import { MESSAGES } from '../../messages';
 import { ScenarioId, toNumericId } from '../types';
 import { ALL_INTERVENTIONS_ID } from '../utils/constants';
 
@@ -39,12 +39,12 @@ export const useScenarioInterventions = ({
 
     const interventions = useMemo(() => {
         const allAssignments = [
-            ...(scenarioId ? baselineInterventionAssignments ?? [] : []),
+            ...(scenarioId ? (baselineInterventionAssignments ?? []) : []),
             ...(comparisonScenarioId1
-                ? comparisonInterventionAssignments1 ?? []
+                ? (comparisonInterventionAssignments1 ?? [])
                 : []),
             ...(comparisonScenarioId2
-                ? comparisonInterventionAssignments2 ?? []
+                ? (comparisonInterventionAssignments2 ?? [])
                 : []),
         ];
         const uniqueById = new Map<number, Intervention>();

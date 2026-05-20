@@ -7,6 +7,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { noOp } from 'Iaso/utils';
 import { MESSAGES } from '../../messages';
 import { InterventionCostBreakdownLine } from '../../planning/types/interventions';
+import { InterventionCostBreakdownLine } from '../types';
 
 const styles = {
     inputGrow: {

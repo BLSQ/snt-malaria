@@ -12,9 +12,9 @@ import {
     SidebarColumn,
     SidebarLayout,
 } from '../../components/styledComponents';
+import { Intervention } from '../interventions/types';
 import { MESSAGES } from '../messages';
 import { useGetInterventionCategories } from '../planning/hooks/useGetInterventionCategories';
-import { Intervention } from '../planning/types/interventions';
 import { InterventionFormWrapper } from './components/InterventionFormWrapper';
 import { InterventionList } from './components/InterventionList';
 

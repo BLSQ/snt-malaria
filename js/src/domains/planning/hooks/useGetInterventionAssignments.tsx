@@ -5,7 +5,7 @@ import { makeUrlWithParams } from 'Iaso/libs/utils';
 import {
     InterventionAssignmentResponse,
     InterventionPlan,
-} from '../types/interventions';
+} from '../types/interventionAssignments';
 
 const interventionAssignmentAPIRequest = (scenarioId: number) => {
     const params: Record<string, any> = { scenario_id: scenarioId };
