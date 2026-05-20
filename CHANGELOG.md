@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.12.0](https://github.com/BLSQ/snt-malaria/compare/2.11.0...2.12.0) (2026-05-20)
+
+
+### Features
+
+* Allow to edit openhexa metrics ([#286](https://github.com/BLSQ/snt-malaria/issues/286)) ([68d602f](https://github.com/BLSQ/snt-malaria/commit/68d602fabffe9c02bc5dd97f5c85ff7ed71e0981))
+* Auto-complete data layer category ([#289](https://github.com/BLSQ/snt-malaria/issues/289)) ([ce7f486](https://github.com/BLSQ/snt-malaria/commit/ce7f4863f969c0539abaf929e3633887bf9c84c8))
+* custom population layers ([#287](https://github.com/BLSQ/snt-malaria/issues/287)) ([e713e48](https://github.com/BLSQ/snt-malaria/commit/e713e483a7cbcb9e2038245409be5ade3a677813))
+* Filter cost units based on intervention ([#280](https://github.com/BLSQ/snt-malaria/issues/280)) ([a3f1daa](https://github.com/BLSQ/snt-malaria/commit/a3f1daa546b5d00d59a252ea6305e20fc5c2f7dd))
+* Set coverage per year ([#279](https://github.com/BLSQ/snt-malaria/issues/279)) ([123321c](https://github.com/BLSQ/snt-malaria/commit/123321c299012490e6472ec070787a72a2f2b097))
+* SNT-374 public account creation and onboarding ([#288](https://github.com/BLSQ/snt-malaria/issues/288)) ([f548766](https://github.com/BLSQ/snt-malaria/commit/f5487662ab34815f513f10ed5967253e30ca1160))
+* SNT-451 add captcha to public account creation endpoint ([#283](https://github.com/BLSQ/snt-malaria/issues/283)) ([d3b7d82](https://github.com/BLSQ/snt-malaria/commit/d3b7d82151610ce0740f6d983d981abe27608b01))
+* SNT-452 add throttling on public account creation ([#284](https://github.com/BLSQ/snt-malaria/issues/284)) ([e4f8015](https://github.com/BLSQ/snt-malaria/commit/e4f8015f9140934ee931491b03fca84bba8acf44))
+
+
+### Bug Fixes
+
+* Add missing useMemo import ([#290](https://github.com/BLSQ/snt-malaria/issues/290)) ([91c69c1](https://github.com/BLSQ/snt-malaria/commit/91c69c1210bee425bfa93573040828019da92bcb))
+
 ## [2.11.0](https://github.com/BLSQ/snt-malaria/compare/2.10.0...2.11.0) (2026-05-06)
 
 
