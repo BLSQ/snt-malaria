@@ -1,6 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 
+from iaso.models.metric import MetricType
 from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 
@@ -72,6 +73,7 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
             "category",
             "category_label",
             "intervention",
+            "population_layer",
         ]
 
     def get_unit_type_label(self, obj):
@@ -95,6 +97,9 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
     unit_type = serializers.PrimaryKeyRelatedField(
         queryset=CostUnitType.objects.none(), required=True, allow_null=False
     )
+    population_layer = serializers.PrimaryKeyRelatedField(
+        queryset=MetricType.objects.none(), required=False, allow_null=True
+    )
 
     class Meta:
         model = InterventionCostBreakdownLine
@@ -106,6 +111,7 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             "unit_type",
             "category",
             "intervention",
+            "population_layer",
         ]
 
     def get_fields(self):
@@ -117,4 +123,5 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             fields["intervention"].queryset = Intervention.objects.filter(
                 intervention_category__account=account,
             )
+            fields["population_layer"].queryset = MetricType.objects.filter(account=account)
         return fields
