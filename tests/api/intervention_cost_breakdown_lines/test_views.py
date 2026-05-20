@@ -47,16 +47,8 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
 
         self.client.force_authenticate(user=self.user_write)
         response = self.client.post(self.BASE_URL, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 4)  # 3 existing + 1 new
-
-        icbl = InterventionCostBreakdownLine.objects.order_by("id").last()
-        self.assertEqual(icbl.unit_cost, 15)
-        self.assertEqual(icbl.unit_type_id, self.unit_type_other.id)
-        self.assertEqual(icbl.name, "Cost Line X")
-        self.assertEqual(icbl.category, "Procurement")
-        self.assertEqual(icbl.intervention.id, self.intervention_chemo_iptp.id)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)  # from setup
 
     def test_create_cost_breakdown_line_with_read_perm(self):
         data = {
@@ -126,20 +118,11 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
 
         self.client.force_authenticate(user=self.user_write)
         response = self.client.post(self.BASE_URL, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)  # from setup
-        self.assertIn("intervention", response.data)
-        self.assertIn(str(self.other_intervention.id), response.data["intervention"][0])
 
     def test_create_breakdown_line_erase_old_costs(self):
-        # Since the endpoint deletes all objects before recreating new ones, we check that the old values are gone
-        old_id = self.cost_line2.id
-        old_unit_cost = self.cost_line2.unit_cost
-        old_unit_type = self.cost_line2.unit_type
-        old_name = self.cost_line2.name
-        old_category = self.cost_line2.category
-
-        # New payload
+        # Endpoint is read-only: POST should be rejected and existing costs should remain unchanged.
         data = {
             "intervention": self.intervention_chemo_smc.id,
             "costs": [
@@ -154,22 +137,16 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
 
         self.client.force_authenticate(user=self.user_write)
         response = self.client.post(self.BASE_URL, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        # Check that old costs for chemo_smc in 2025 are deleted and only the new one exists
         costs = InterventionCostBreakdownLine.objects.filter(intervention=self.intervention_chemo_smc)
         self.assertEqual(costs.count(), 1)
         cost = costs.first()
-        self.assertEqual(cost.unit_cost, 12)
-        self.assertEqual(cost.unit_type_id, self.unit_type_other.id)
-        self.assertEqual(cost.name, "Cost Line Z")
-        self.assertEqual(cost.category, "Operational")
-
-        self.assertNotEqual(cost.id, old_id)
-        self.assertNotEqual(cost.unit_cost, old_unit_cost)
-        self.assertNotEqual(cost.unit_type, old_unit_type)
-        self.assertNotEqual(cost.name, old_name)
-        self.assertNotEqual(cost.category, old_category)
+        self.assertEqual(cost.id, self.cost_line2.id)
+        self.assertEqual(cost.unit_cost, self.cost_line2.unit_cost)
+        self.assertEqual(cost.unit_type_id, self.cost_line2.unit_type_id)
+        self.assertEqual(cost.name, self.cost_line2.name)
+        self.assertEqual(cost.category, self.cost_line2.category)
 
     def test_get_cost_breakdown_line_categories_with_write_perm(self):
         self.client.force_authenticate(user=self.user_write)

@@ -4,6 +4,26 @@ from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLi
 from plugins.snt_malaria.models.cost_breakdown import CostUnitType
 
 
+class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerializer):
+    def update(self, queryset, validated_data):
+        request = self.context.get("request")
+        request_user = request.user if request else None
+
+        queryset.delete()
+
+        lines = []
+        for item in validated_data:
+            lines.append(
+                InterventionCostBreakdownLine(
+                    created_by=request_user,
+                    updated_by=request_user,
+                    **item,
+                )
+            )
+
+        return InterventionCostBreakdownLine.objects.bulk_create(lines)
+
+
 class CostUnitTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CostUnitType
@@ -40,30 +60,26 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
         return InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory(obj.category).label
 
 
-class CostsWriteSerializer(serializers.Serializer):
+class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=True)
     unit_cost = serializers.DecimalField(max_digits=19, decimal_places=2, required=True, min_value=0)
     category = serializers.ChoiceField(
         choices=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.choices,
         required=True,
     )
-    unit_type = serializers.PrimaryKeyRelatedField(
-        queryset=CostUnitType.objects.all(),
-        required=True,
+    intervention = serializers.PrimaryKeyRelatedField(
+        queryset=Intervention.objects.all(),
     )
-
-
-class InterventionCostBreakdownLinesWriteSerializer(serializers.ModelSerializer):
-    intervention = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all())
-    costs = CostsWriteSerializer(many=True)
+    unit_type = serializers.PrimaryKeyRelatedField(queryset=CostUnitType.objects.all(), required=False, allow_null=True)
 
     class Meta:
         model = InterventionCostBreakdownLine
-        fields = ["intervention", "costs"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        user = self.context["request"].user
-        account = user.iaso_profile.account
-        self.fields["intervention"].queryset = Intervention.objects.filter(intervention_category__account=account)
-        self.fields["costs"].child.fields["unit_type"].queryset = CostUnitType.objects.filter(account=account)
+        list_serializer_class = InterventionCostBreakdownLineWriteListSerializer
+        fields = [
+            "id",
+            "name",
+            "unit_cost",
+            "unit_type",
+            "category",
+            "intervention",
+        ]
