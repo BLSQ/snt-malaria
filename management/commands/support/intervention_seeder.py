@@ -5,10 +5,10 @@ Create interventions for a given account
 from iaso.models import User
 from plugins.snt_malaria.models.budget_settings import BudgetSettings
 from plugins.snt_malaria.models.cost_breakdown import (
-    CostUnitType,
     InterventionCostBreakdownLine,
     InterventionCostUnitType,
 )
+from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.models.intervention import Intervention, InterventionAssignment, InterventionCategory
 
 

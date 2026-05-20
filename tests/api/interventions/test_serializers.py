@@ -1,7 +1,7 @@
 from iaso.models.base import Account
 from iaso.test import APITestCase
 from plugins.snt_malaria.api.interventions.serializers import InterventionDetailWriteSerializer
-from plugins.snt_malaria.models.cost_breakdown import CostUnitType
+from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
 
 

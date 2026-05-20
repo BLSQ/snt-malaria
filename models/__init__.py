@@ -3,11 +3,10 @@ from .budget import Budget
 from .budget_assumptions import BudgetAssumptions
 from .budget_settings import BudgetSettings
 from .cost_breakdown import (
-    CostUnitType,
     InterventionCostBreakdownLine,
     InterventionCostUnitType,
-    ScenarioYearlyCostAssignment,
 )
+from .cost_unit_type import CostUnitType
 from .impact_org_unit_mapping import ImpactOrgUnitMapping
 from .impact_provider_config import ImpactProviderConfig
 from .intervention import (
@@ -16,6 +15,7 @@ from .intervention import (
     InterventionCategory,
 )
 from .scenario import Scenario, ScenarioRule, ScenarioRuleInterventionProperties
+from .scenario_yearly_cost_assignment import ScenarioYearlyCostAssignment
 from .snt_account_setup import SNTAccountSetup
 
 

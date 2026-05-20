@@ -1,4 +1,3 @@
-from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -7,7 +6,7 @@ from rest_framework.response import Response
 
 from iaso.api.common.serializer import DropdownOptionsWithRepresentationSerializer
 from plugins.snt_malaria.models import InterventionCostBreakdownLine
-from plugins.snt_malaria.models.cost_breakdown import CostUnitType
+from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 
 from .filters import InterventionCostBreakdownLineListFilter
 from .permissions import InterventionCostBreakdownLinePermission

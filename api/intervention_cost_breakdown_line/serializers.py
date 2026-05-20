@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
-from plugins.snt_malaria.models.cost_breakdown import CostUnitType
+from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 
 
 class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerializer):

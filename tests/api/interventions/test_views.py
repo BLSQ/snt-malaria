@@ -4,7 +4,7 @@ from plugins.snt_malaria.api.interventions.permissions import (
     SNT_SETTINGS_READ_PERMISSION,
     SNT_SETTINGS_WRITE_PERMISSION,
 )
-from plugins.snt_malaria.models.cost_breakdown import CostUnitType
+from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
