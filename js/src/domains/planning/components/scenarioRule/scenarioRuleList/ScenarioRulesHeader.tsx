@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, Ref } from 'react';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
 import { Button, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -8,9 +8,15 @@ import { usePlanningContext } from '../../../contexts/PlanningContext';
 
 type Props = {
     onCreateRule: () => void;
+    /** Forwarded to the "Create rule" button so callers can anchor overlays
+     *  (e.g. an onboarding spotlight) to it. */
+    createRuleRef?: Ref<HTMLButtonElement>;
 };
 
-export const ScenarioRulesHeader: FC<Props> = ({ onCreateRule }) => {
+export const ScenarioRulesHeader: FC<Props> = ({
+    onCreateRule,
+    createRuleRef,
+}) => {
     const { formatMessage } = useSafeIntl();
     const { isScenarioEditable } = usePlanningContext();
 
@@ -29,7 +35,7 @@ export const ScenarioRulesHeader: FC<Props> = ({ onCreateRule }) => {
                 </Typography>
             </Stack>
             {isScenarioEditable && (
-                <Button onClick={() => onCreateRule()}>
+                <Button ref={createRuleRef} onClick={() => onCreateRule()}>
                     {formatMessage(MESSAGES.createScenarioRule)}
                 </Button>
             )}

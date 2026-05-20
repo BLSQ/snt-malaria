@@ -1,4 +1,4 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC, Ref, useCallback } from 'react';
 import { AsyncSortableList } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../../../../components/CardStyled';
@@ -37,6 +37,7 @@ type Props = {
     isLoading: boolean;
     onShowForm: (rule?: ScenarioRule) => void;
     rules: ScenarioRule[];
+    createRuleRef?: Ref<HTMLButtonElement>;
 };
 
 type ReorderScenarioRulesParams = {
@@ -50,6 +51,7 @@ export const ScenarioRulesContainer: FC<Props> = ({
     isLoading,
     onShowForm,
     rules,
+    createRuleRef,
 }) => {
     const { mutate: reorderScenarioRules } =
         useReorderScenarioRules(scenarioId);
@@ -68,7 +70,12 @@ export const ScenarioRulesContainer: FC<Props> = ({
 
     return (
         <CardStyled
-            header={<ScenarioRulesHeader onCreateRule={onShowForm} />}
+            header={
+                <ScenarioRulesHeader
+                    onCreateRule={onShowForm}
+                    createRuleRef={createRuleRef}
+                />
+            }
             isLoading={isLoading}
         >
             <AsyncSortableList

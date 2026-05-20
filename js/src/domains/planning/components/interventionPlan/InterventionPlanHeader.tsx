@@ -1,7 +1,8 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC, Ref, useCallback } from 'react';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import {
+    Box,
     Button,
     MenuItem,
     Stack,
@@ -38,6 +39,8 @@ type Props = {
     onRunBudget: () => void;
     onDeleteScenario: () => void;
     onToggleLockScenario: () => void;
+    lockScenarioRef?: Ref<HTMLDivElement>;
+    moreActionsRef?: Ref<HTMLDivElement>;
 };
 
 export const InterventionPlanHeader: FC<Props> = ({
@@ -49,6 +52,8 @@ export const InterventionPlanHeader: FC<Props> = ({
     onOrgUnitChange,
     onDeleteScenario,
     onToggleLockScenario,
+    lockScenarioRef,
+    moreActionsRef,
 }) => {
     const { scenarioId, scenario, canEditScenario, isScenarioEditable } =
         usePlanningContext();
@@ -113,64 +118,72 @@ export const InterventionPlanHeader: FC<Props> = ({
                     selectedOrgUnitId={selectedOrgUnitId}
                 />
                 {canEditScenario && (
-                    <ConfirmDialog
-                        BtnIcon={scenario?.is_locked ? LockIcon : LockOpenIcon}
-                        message={formatMessage(
-                            scenario?.is_locked
-                                ? MESSAGES.modalUnlockScenarioConfirm
-                                : MESSAGES.modalLockScenarioConfirm,
-                        )}
-                        question={formatMessage(
-                            scenario?.is_locked
-                                ? MESSAGES.unlockScenario
-                                : MESSAGES.lockScenario,
-                        )}
-                        confirm={onToggleLockScenario}
-                        btnMessage={''}
-                        tooltipMessage={
-                            scenario?.is_locked
-                                ? formatMessage(MESSAGES.unlockScenario)
-                                : formatMessage(MESSAGES.lockScenario)
-                        }
-                    />
-                )}
-                <MoreActions>
-                    <DisplayIfUserHasPerm
-                        permissions={[
-                            Permission.SCENARIO_BASIC_WRITE,
-                            Permission.SCENARIO_FULL_WRITE,
-                        ]}
-                    >
-                        <MenuItem component={MuiLink} href={csvUrl}>
-                            {formatMessage(MESSAGES.scenarioCSV)}
-                        </MenuItem>
-                        <DuplicateScenarioModal
-                            scenario={scenario}
-                            onClose={redirectToScenario}
-                            iconProps={{}}
-                            titleMessage={formatMessage(MESSAGES.duplicate)}
+                    <Box ref={lockScenarioRef} display="inline-flex">
+                        <ConfirmDialog
+                            BtnIcon={
+                                scenario?.is_locked ? LockIcon : LockOpenIcon
+                            }
+                            message={formatMessage(
+                                scenario?.is_locked
+                                    ? MESSAGES.modalUnlockScenarioConfirm
+                                    : MESSAGES.modalLockScenarioConfirm,
+                            )}
+                            question={formatMessage(
+                                scenario?.is_locked
+                                    ? MESSAGES.unlockScenario
+                                    : MESSAGES.lockScenario,
+                            )}
+                            confirm={onToggleLockScenario}
+                            btnMessage={''}
+                            tooltipMessage={
+                                scenario?.is_locked
+                                    ? formatMessage(MESSAGES.unlockScenario)
+                                    : formatMessage(MESSAGES.lockScenario)
+                            }
                         />
-                    </DisplayIfUserHasPerm>
-
-                    {isScenarioEditable && (
-                        <>
-                            <UpdateScenarioModal
-                                onClose={noOp}
-                                iconProps={{ color: 'primary' }}
+                    </Box>
+                )}
+                <Box ref={moreActionsRef} sx={{ display: 'inline-flex' }}>
+                    <MoreActions>
+                        <DisplayIfUserHasPerm
+                            permissions={[
+                                Permission.SCENARIO_BASIC_WRITE,
+                                Permission.SCENARIO_FULL_WRITE,
+                            ]}
+                        >
+                            <MenuItem component={MuiLink} href={csvUrl}>
+                                {formatMessage(MESSAGES.scenarioCSV)}
+                            </MenuItem>
+                            <DuplicateScenarioModal
                                 scenario={scenario}
+                                onClose={redirectToScenario}
+                                iconProps={{}}
+                                titleMessage={formatMessage(MESSAGES.duplicate)}
                             />
-                            <DeleteModal
-                                onConfirm={onDeleteScenario}
-                                titleMessage={MESSAGES.modalDeleteScenarioTitle}
-                                type="menuItem"
-                            >
-                                {formatMessage(
-                                    MESSAGES.modalDeleteScenarioConfirm,
-                                )}
-                            </DeleteModal>
-                        </>
-                    )}
-                </MoreActions>
+                        </DisplayIfUserHasPerm>
+
+                        {isScenarioEditable && (
+                            <>
+                                <UpdateScenarioModal
+                                    onClose={noOp}
+                                    iconProps={{ color: 'primary' }}
+                                    scenario={scenario}
+                                />
+                                <DeleteModal
+                                    onConfirm={onDeleteScenario}
+                                    titleMessage={
+                                        MESSAGES.modalDeleteScenarioTitle
+                                    }
+                                    type="menuItem"
+                                >
+                                    {formatMessage(
+                                        MESSAGES.modalDeleteScenarioConfirm,
+                                    )}
+                                </DeleteModal>
+                            </>
+                        )}
+                    </MoreActions>
+                </Box>
             </Stack>
         </Stack>
     );

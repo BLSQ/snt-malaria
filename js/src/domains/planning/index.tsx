@@ -17,6 +17,7 @@ import {
     SidebarColumn,
     SidebarLayout,
 } from '../../components/styledComponents';
+import { useOnboarding } from '../../hooks/useOnboarding';
 
 import { baseUrls } from '../../constants/urls';
 import { useGetMetricCategories } from '../dataLayers/hooks/useGetMetrics';
@@ -84,8 +85,11 @@ export const Planning: FC = () => {
         enabled: !!interventionTypeId,
     });
 
-    const { data: scenarioRules, isFetching: isFetchingRules } =
-        useGetScenarioRules(scenarioId);
+    const {
+        data: scenarioRules,
+        isFetching: isFetchingRules,
+        isLoading: isLoadingRules,
+    } = useGetScenarioRules(scenarioId);
     const { data: interventionAssignments } =
         useGetInterventionAssignments(scenarioId);
     const { data: budget } = useGetLatestCalculatedBudget(scenario?.id);
@@ -185,6 +189,46 @@ export const Planning: FC = () => {
         [previewScenarioRule],
     );
 
+    const hasNoRules = useMemo(
+        () =>
+            !isLoadingRules &&
+            Array.isArray(scenarioRules) &&
+            scenarioRules.length === 0,
+        [isLoadingRules, scenarioRules],
+    );
+
+    // Guided tour when the scenario has no rules yet.
+    // Walks creating a rule, the more menu, and lock;
+    const tour = useOnboarding({
+        id: 'planning.firstRun',
+        enabled:
+            Boolean(scenario) &&
+            !scenario?.is_locked &&
+            canEditScenario &&
+            hasNoRules,
+        documentation: {
+            href: formatMessage(MESSAGES.planningTourDocumentationUrl),
+        },
+        steps: [
+            {
+                title: formatMessage(MESSAGES.tourCreateRuleTitle),
+                description: formatMessage(MESSAGES.tourCreateRuleDescription),
+                placement: 'right-start',
+                shape: 'rect',
+            },
+            {
+                title: formatMessage(MESSAGES.tourMoreActionsTitle),
+                description: formatMessage(MESSAGES.tourMoreActionsDescription),
+            },
+            {
+                title: formatMessage(MESSAGES.tourLockScenarioTitle),
+                description: formatMessage(
+                    MESSAGES.tourLockScenarioDescription,
+                ),
+            },
+        ],
+    });
+
     return metricTypeCategories && interventionCategories ? (
         <PlanningProvider
             scenarioId={scenarioId}
@@ -206,6 +250,7 @@ export const Planning: FC = () => {
                             scenarioId={scenarioId}
                             rules={scenarioRules || []}
                             isLoading={isFetchingRules}
+                            createRuleRef={tour.anchorRefs[0]}
                         />
                     </SidebarColumn>
                     <MainColumn>
@@ -232,6 +277,10 @@ export const Planning: FC = () => {
                                                 handleDisplayOrgUnitChange
                                             }
                                             selectedOrgUnitId={displayOrgUnitId}
+                                            lockScenarioRef={
+                                                tour.anchorRefs[2]
+                                            }
+                                            moreActionsRef={tour.anchorRefs[1]}
                                         />
                                     }
                                 >
@@ -296,6 +345,7 @@ export const Planning: FC = () => {
                     </MainColumn>
                 </SidebarLayout>
             </PageContainer>
+            {tour.element}
         </PlanningProvider>
     ) : null;
 };
