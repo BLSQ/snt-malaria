@@ -70,10 +70,18 @@ export const InterventionForm: FC = () => {
                     wrapperSx={{ flexGrow: 1 }}
                 />
             </Stack>
-            <Stack spacing={2} direction="column">
+            <Stack spacing={0} direction="column">
                 <Typography variant="subtitle1" fontWeight="medium">
                     {formatMessage(MESSAGES.costItems)}
                 </Typography>
+                <Typography variant="caption" color="textSecondary">
+                    {formatMessage(
+                        MESSAGES.interventionCostBreakdownLineDescription,
+                        { br: <br /> },
+                    )}
+                </Typography>
+            </Stack>
+            <Stack spacing={2} direction="column">
                 {values.cost_breakdown_lines &&
                     values.cost_breakdown_lines.length > 0 &&
                     values.cost_breakdown_lines.map((line, index) => (

@@ -67,6 +67,7 @@
     "iaso.snt_malaria.settings.intervention.editCost": "Edit cost",
     "iaso.snt_malaria.settings.intervention.unit": "Unit",
     "iaso.snt_malaria.settings.intervention.save": "Save intervention",
+    "iaso.snt_malaria.settings.intervention.costBreakdownLineDescription": "Add cost items to this intervention to include them in the cost breakdown and budget calculations. {br}These costs will be included in the total cumulative costs but will not impact the estimated health impact. {br}If no population layer is selected the cost will be used as a global fixed cost.",
     "iaso.snt_malaria.settings.intervention.removeInterventionCostBreakdownLine": "Remove cost",
     "iaso.snt_malaria.settings.intervention.addInterventionCostBreakdownLine": "Add cost item",
     "iaso.snt_malaria.settings.intervention.detailedCosts": "Detailed costs",

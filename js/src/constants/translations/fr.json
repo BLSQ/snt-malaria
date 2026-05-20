@@ -66,6 +66,7 @@
     "iaso.snt_malaria.settings.intervention.editCost": "Modifier le coût",
     "iaso.snt_malaria.settings.intervention.unit": "Unité",
     "iaso.snt_malaria.settings.intervention.save": "Sauvegarder l'intervention",
+    "iaso.snt_malaria.settings.intervention.costBreakdownLineDescription": "Ajoutez des éléments de coût à cette intervention pour les inclure dans la ventilation des coûts et les calculs budgétaires. {br}Ces coûts seront inclus dans le total des coûts cumulés mais n'affecteront pas l'impact sanitaire estimé. {br}Si aucune couche de population n'est sélectionnée, le coût sera utilisé comme coût fixe global.",
     "iaso.snt_malaria.settings.intervention.removeCostBreakdownLine": "Retirer le coût",
     "iaso.snt_malaria.settings.intervention.addCostBreakdownLine": "Ajouter un coût",
     "iaso.snt_malaria.settings.intervention.detailedCosts": "Coûts détaillés",
