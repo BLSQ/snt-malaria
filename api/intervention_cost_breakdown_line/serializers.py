@@ -125,3 +125,12 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             )
             fields["population_layer"].queryset = MetricType.objects.filter(account=account)
         return fields
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        attrs["cost_driver"] = (
+            InterventionCostBreakdownLine.CostDriver.POPULATION
+            if attrs.get("population_layer")
+            else InterventionCostBreakdownLine.CostDriver.FIXED_COST
+        )
+        return attrs

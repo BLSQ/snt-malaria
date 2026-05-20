@@ -1,6 +1,7 @@
 from django.db import migrations
 
 
+# We don't set the cost_driver here, as legacy data is always for Population cost drivers.
 def set_population_layer_from_target_population(apps, schema_editor):
     InterventionCostBreakdownLine = apps.get_model("snt_malaria", "InterventionCostBreakdownLine")
     MetricType = apps.get_model("iaso", "MetricType")
