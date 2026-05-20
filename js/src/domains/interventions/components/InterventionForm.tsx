@@ -1,32 +1,19 @@
 import React, { FC, useMemo } from 'react';
 import { Button, Stack, Typography } from '@mui/material';
-import { DropdownOptions, useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { useGetChildError } from '../../../hooks/useGetChildError';
 import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
-import { MetricType } from '../../dataLayers/types/metrics';
-import { MESSAGES } from '../../messages';
 import {
     InterventionCostBreakdownLine,
     InterventionDetails,
-} from '../../planning/types/interventions';
+} from '../../interventions/types';
+import { MESSAGES } from '../../messages';
+import { useInterventionContext } from '../contexts/InterventionContext';
 import { InterventionCostBreakdownLineForm } from './InterventionCostBreakdownLineForm';
-import { TargetPopulationForm } from './TargetPopulationForm';
 
-type Props = {
-    interventionCostCategories: DropdownOptions<string>[];
-    interventionCostUnitTypes: DropdownOptions<string>[];
-    metricTypes: MetricType[];
-    currency?: string;
-};
-
-export const InterventionForm: FC<Props> = ({
-    interventionCostCategories,
-    interventionCostUnitTypes,
-    metricTypes,
-    currency = 'USD',
-}) => {
+export const InterventionForm: FC = () => {
     const { formatMessage } = useSafeIntl();
 
     const {
@@ -38,6 +25,8 @@ export const InterventionForm: FC<Props> = ({
         addChildValue,
         removeChildValue,
     } = useGetExtendedFormikContext<InterventionDetails>();
+
+    const { costUnitTypeOptions } = useInterventionContext();
 
     const getErrors = useTranslatedErrors({
         errors,
@@ -54,9 +43,9 @@ export const InterventionForm: FC<Props> = ({
     const defaultBreakdownLine: Partial<InterventionCostBreakdownLine> =
         useMemo(
             () => ({
-                unit_type: interventionCostUnitTypes[0]?.value || '',
+                unit_type: costUnitTypeOptions[0]?.value || '',
             }),
-            [interventionCostUnitTypes],
+            [costUnitTypeOptions],
         );
 
     return (
@@ -81,18 +70,6 @@ export const InterventionForm: FC<Props> = ({
                     wrapperSx={{ flexGrow: 1 }}
                 />
             </Stack>
-            <Stack spacing={2} direction="column" justifyContent="flex-start">
-                <Typography variant="subtitle1" fontWeight="medium">
-                    {formatMessage(MESSAGES.costSettings)}
-                </Typography>
-                <TargetPopulationForm
-                    targetPopulation={values.target_population}
-                    onUpdateField={setFieldValueAndState}
-                    getErrors={getErrors}
-                    metricTypes={metricTypes}
-                    interventionCode={values.code}
-                />
-            </Stack>
             <Stack spacing={2} direction="column">
                 <Typography variant="subtitle1" fontWeight="medium">
                     {formatMessage(MESSAGES.costItems)}
@@ -103,7 +80,6 @@ export const InterventionForm: FC<Props> = ({
                         <InterventionCostBreakdownLineForm
                             key={`cost-details-row-${line.id}`}
                             costBreakdownLine={line}
-                            currency={currency}
                             onUpdateField={(field, value) =>
                                 setChildFieldValueAndState(
                                     'cost_breakdown_lines',
@@ -111,12 +87,6 @@ export const InterventionForm: FC<Props> = ({
                                     field,
                                     value,
                                 )
-                            }
-                            interventionCostCategories={
-                                interventionCostCategories
-                            }
-                            interventionCostUnitTypes={
-                                interventionCostUnitTypes
                             }
                             onRemove={() =>
                                 removeChildValue('cost_breakdown_lines', index)
