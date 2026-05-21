@@ -23,6 +23,7 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
                 lines_to_update.append(line)
                 lines_to_delete.discard(line_id)
             else:
+                item.pop("id", None)  # Ensure ID is not set for new instances
                 lines_to_create.append(
                     InterventionCostBreakdownLine(
                         created_by=request_user,

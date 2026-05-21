@@ -1,5 +1,7 @@
 from unittest.mock import Mock
 
+from rest_framework import status
+
 from iaso.api.common import DropdownOptionsWithRepresentationSerializer
 from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
     InterventionCostBreakdownLineWriteSerializer,
@@ -14,6 +16,17 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
     def setUp(self):
         super().setUp()
         self.context = {"request": Mock(user=self.user_write)}
+
+    def test_write_methods_are_not_allowed(self):
+        self.client.force_authenticate(user=self.user_write)
+        for method in ("post", "put", "patch", "delete"):
+            response = getattr(self.client, method)(self.BASE_URL, {}, format="json")
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_405_METHOD_NOT_ALLOWED,
+                f"{method.upper()} should be rejected, got {response.status_code}",
+            )
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)
 
     def test_create_cost_breakdown_line_cost_below_zero(self):
         data = {
@@ -239,3 +252,27 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
         serializer = DropdownOptionsWithRepresentationSerializer()
         data = serializer.to_representation(("Procurement", "Procurement"))
         self.assertEqual(data, {"value": "Procurement", "label": "Procurement"})
+
+    def test_intervention_from_other_account_is_rejected(self):
+        data = {
+            "intervention": self.other_intervention.id,
+            "name": "x",
+            "unit_cost": "1.00",
+            "category": "Procurement",
+            "unit_type": self.unit_type_other.id,
+        }
+        serializer = InterventionCostBreakdownLineWriteSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("intervention", serializer.errors)
+
+    def test_unit_type_from_other_account_is_rejected(self):
+        data = {
+            "intervention": self.intervention_chemo_iptp.id,
+            "name": "x",
+            "unit_cost": "1.00",
+            "category": "Procurement",
+            "unit_type": self.other_unit_type.id,
+        }
+        serializer = InterventionCostBreakdownLineWriteSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("unit_type", serializer.errors)
