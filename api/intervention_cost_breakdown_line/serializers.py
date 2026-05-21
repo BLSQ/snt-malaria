@@ -81,6 +81,7 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
 
 
 class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
     name = serializers.CharField(required=True)
     unit_cost = serializers.DecimalField(max_digits=19, decimal_places=2, required=True, min_value=0)
     category = serializers.ChoiceField(

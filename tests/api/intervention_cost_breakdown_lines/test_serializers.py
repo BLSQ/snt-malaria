@@ -4,7 +4,7 @@ from iaso.api.common import DropdownOptionsWithRepresentationSerializer
 from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
     InterventionCostBreakdownLineWriteSerializer,
 )
-from plugins.snt_malaria.models import InterventionCostBreakdownLine
+from plugins.snt_malaria.models import InterventionCostBreakdownLine, ScenarioYearlyCostAssignment
 from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base import (
     InterventionCostBreakdownLineBase,
 )
@@ -164,6 +164,76 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
             InterventionCostBreakdownLine.objects.get(id=existing_line_2.id)
 
         self.assertTrue(lines.filter(name="Cost Line 2 new", unit_cost="9.00").exists())
+
+    def test_update_cost_breakdown_line_keeps_scenario_yearly_assignment(self):
+        scenario = self.create_snt_scenario(
+            account=self.account,
+            created_by=self.user_write,
+            name="Scenario for update",
+        )
+        yearly_assignment = ScenarioYearlyCostAssignment.objects.create(
+            scenario=scenario,
+            cost_line=self.cost_line2,
+            year=2026,
+            value="10.00",
+        )
+
+        queryset = InterventionCostBreakdownLine.objects.filter(id=self.cost_line2.id)
+        data = [
+            {
+                "id": self.cost_line2.id,
+                "intervention": self.intervention_chemo_smc.id,
+                "name": "Cost Line 2 updated",
+                "unit_cost": "11.00",
+                "unit_type": self.unit_type_per_sp.id,
+                "category": "Operational",
+            }
+        ]
+
+        serializer = InterventionCostBreakdownLineWriteSerializer(
+            instance=queryset,
+            data=data,
+            many=True,
+            context=self.context,
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+
+        yearly_assignment.refresh_from_db()
+        self.cost_line2.refresh_from_db()
+
+        self.assertEqual(yearly_assignment.cost_line_id, self.cost_line2.id)
+        self.assertEqual(self.cost_line2.name, "Cost Line 2 updated")
+        self.assertEqual(str(self.cost_line2.unit_cost), "11.00")
+
+    def test_remove_cost_breakdown_line_deletes_scenario_yearly_assignment(self):
+        scenario = self.create_snt_scenario(
+            account=self.account,
+            created_by=self.user_write,
+            name="Scenario for delete",
+        )
+        yearly_assignment = ScenarioYearlyCostAssignment.objects.create(
+            scenario=scenario,
+            cost_line=self.cost_line2,
+            year=2026,
+            value="10.00",
+        )
+
+        queryset = InterventionCostBreakdownLine.objects.filter(id=self.cost_line2.id)
+        serializer = InterventionCostBreakdownLineWriteSerializer(
+            instance=queryset,
+            data=[],
+            many=True,
+            context=self.context,
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+
+        with self.assertRaises(InterventionCostBreakdownLine.DoesNotExist):
+            InterventionCostBreakdownLine.objects.get(id=self.cost_line2.id)
+
+        with self.assertRaises(ScenarioYearlyCostAssignment.DoesNotExist):
+            ScenarioYearlyCostAssignment.objects.get(id=yearly_assignment.id)
 
     def test_serializer_categories_to_representation(self):
         serializer = DropdownOptionsWithRepresentationSerializer()
