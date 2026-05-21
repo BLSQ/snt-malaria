@@ -112,7 +112,7 @@ class Migration(migrations.Migration):
             model_name="interventioncostbreakdownline",
             name="cost_driver",
             field=models.CharField(
-                choices=[("population", "Population"), ("fix_cost", "Fixed cost")],
+                choices=[("population", "Population"), ("fixed_cost", "Fixed cost")],
                 default="population",
                 max_length=20,
             ),
@@ -123,7 +123,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 blank=True,
                 null=True,
-                on_delete=django.db.models.deletion.SET_NULL,
+                on_delete=django.db.models.deletion.PROTECT,
                 related_name="cost_breakdown_lines",
                 to="iaso.metrictype",
             ),
@@ -134,7 +134,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 blank=True,
                 null=True,
-                on_delete=django.db.models.deletion.CASCADE,
+                on_delete=django.db.models.deletion.PROTECT,
                 related_name="cost_breakdown_lines",
                 to="snt_malaria.costunittype",
             ),
@@ -144,7 +144,7 @@ class Migration(migrations.Migration):
             model_name="interventioncostbreakdownline",
             name="unit_type_fk",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE,
+                on_delete=django.db.models.deletion.PROTECT,
                 related_name="cost_breakdown_lines",
                 to="snt_malaria.costunittype",
             ),

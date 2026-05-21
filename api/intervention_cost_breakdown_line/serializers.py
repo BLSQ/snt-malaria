@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import serializers
 
 from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
@@ -9,19 +10,38 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
         request = self.context.get("request")
         request_user = request.user if request else None
 
-        queryset.delete()
-
-        lines = []
+        existing_lines = {line.id: line for line in queryset}
+        lines_to_update = []
+        lines_to_create = []
+        lines_to_delete = set(existing_lines.keys())
         for item in validated_data:
-            lines.append(
-                InterventionCostBreakdownLine(
-                    created_by=request_user,
-                    updated_by=request_user,
-                    **item,
+            line_id = item.get("id")
+            if line_id and line_id in existing_lines:
+                line = existing_lines[line_id]
+                for attr, value in item.items():
+                    setattr(line, attr, value)
+                lines_to_update.append(line)
+                lines_to_delete.discard(line_id)
+            else:
+                lines_to_create.append(
+                    InterventionCostBreakdownLine(
+                        created_by=request_user,
+                        updated_by=request_user,
+                        **item,
+                    )
                 )
-            )
+        with transaction.atomic():
+            if lines_to_update:
+                InterventionCostBreakdownLine.objects.bulk_update(
+                    lines_to_update,
+                    fields=["name", "unit_cost", "unit_type", "category", "intervention", "updated_by"],
+                )
+            if lines_to_delete:
+                InterventionCostBreakdownLine.objects.filter(id__in=lines_to_delete).delete()
+            if lines_to_create:
+                InterventionCostBreakdownLine.objects.bulk_create(lines_to_create)
 
-        return InterventionCostBreakdownLine.objects.bulk_create(lines)
+        return queryset.filter(id__in=[line.id for line in lines_to_update] + [line.id for line in lines_to_create])
 
 
 class CostUnitTypeSerializer(serializers.ModelSerializer):
@@ -54,7 +74,7 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
         ]
 
     def get_unit_type_label(self, obj):
-        return obj.unit_type.name if obj.unit_type_id else None
+        return obj.unit_type.name
 
     def get_category_label(self, obj):
         return InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory(obj.category).label
@@ -68,9 +88,11 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
         required=True,
     )
     intervention = serializers.PrimaryKeyRelatedField(
-        queryset=Intervention.objects.all(),
+        queryset=Intervention.objects.none(),
     )
-    unit_type = serializers.PrimaryKeyRelatedField(queryset=CostUnitType.objects.all(), required=False, allow_null=True)
+    unit_type = serializers.PrimaryKeyRelatedField(
+        queryset=CostUnitType.objects.none(), required=True, allow_null=False
+    )
 
     class Meta:
         model = InterventionCostBreakdownLine
@@ -83,3 +105,14 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             "category",
             "intervention",
         ]
+
+    def get_fields(self):
+        fields = super().get_fields()
+        request = self.context.get("request")
+        if request:
+            account = request.user.iaso_profile.account
+            fields["unit_type"].queryset = CostUnitType.objects.filter(account=account)
+            fields["intervention"].queryset = Intervention.objects.filter(
+                intervention_category__account=account,
+            )
+        return fields

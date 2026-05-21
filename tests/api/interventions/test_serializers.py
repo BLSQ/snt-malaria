@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 from iaso.models.base import Account
 from iaso.test import APITestCase
 from plugins.snt_malaria.api.interventions.serializers import InterventionDetailWriteSerializer
@@ -23,6 +25,8 @@ class InterventionDetailWriteSerializerTests(APITestCase):
         self.unit_type_other, _ = CostUnitType.objects.get_or_create(account=self.account, name="Other")
         self.unit_type_per_itn, _ = CostUnitType.objects.get_or_create(account=self.account, name="per ITN")
 
+        self.context = {"request": Mock(user=self.user)}
+
     def test_update_intervention_with_cost_breakdown_lines(self):
         intervention_data = {
             "id": self.intervention_vaccination_rts.id,
@@ -46,7 +50,9 @@ class InterventionDetailWriteSerializerTests(APITestCase):
             ],
         }
         serializer = InterventionDetailWriteSerializer(
-            instance=self.intervention_vaccination_rts, data=intervention_data
+            instance=self.intervention_vaccination_rts,
+            data=intervention_data,
+            context=self.context,
         )
         self.assertTrue(serializer.is_valid(), serializer.errors)
         intervention = serializer.save()
@@ -66,7 +72,9 @@ class InterventionDetailWriteSerializerTests(APITestCase):
             "cost_breakdown_lines": [],
         }
         serializer = InterventionDetailWriteSerializer(
-            instance=self.intervention_vaccination_rts, data=intervention_data
+            instance=self.intervention_vaccination_rts,
+            data=intervention_data,
+            context=self.context,
         )
         self.assertTrue(serializer.is_valid(), serializer.errors)
         intervention = serializer.save()
@@ -82,7 +90,9 @@ class InterventionDetailWriteSerializerTests(APITestCase):
             "impact_ref": "some_ref",
         }
         serializer = InterventionDetailWriteSerializer(
-            instance=self.intervention_vaccination_rts, data=intervention_data
+            instance=self.intervention_vaccination_rts,
+            data=intervention_data,
+            context=self.context,
         )
         self.assertTrue(serializer.is_valid(), serializer.errors)
         intervention = serializer.save()

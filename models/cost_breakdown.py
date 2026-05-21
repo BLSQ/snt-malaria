@@ -31,7 +31,7 @@ class InterventionCostBreakdownLine(models.Model):
 
     class CostDriver(models.TextChoices):
         POPULATION = "population", _("Population")
-        FIX_COST = "fix_cost", _("Fixed cost")
+        FIXED_COST = "fixed_cost", _("Fixed cost")
 
     class Meta:
         app_label = "snt_malaria"
@@ -45,12 +45,12 @@ class InterventionCostBreakdownLine(models.Model):
     )
     unit_type = models.ForeignKey(
         "snt_malaria.CostUnitType",
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="cost_breakdown_lines",
     )
     population_layer = models.ForeignKey(
         "iaso.MetricType",
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         null=True,
         blank=True,
         related_name="cost_breakdown_lines",
