@@ -1,7 +1,10 @@
 from django.db import transaction
 from rest_framework import serializers
 
-from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import InterventionCostBreakdownLineSerializer
+from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
+    InterventionCostBreakdownLineSerializer,
+    InterventionCostBreakdownLineWriteSerializer,
+)
 from plugins.snt_malaria.models import Intervention
 
 
@@ -34,7 +37,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "code",
-            "allowed_cost_unit_types",
             "impact_ref",
             "target_population",
             "cost_breakdown_lines",
@@ -42,7 +44,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
 
 class InterventionDetailWriteSerializer(serializers.ModelSerializer):
-    cost_breakdown_lines = InterventionCostBreakdownLineSerializer(many=True, required=False)
+    cost_breakdown_lines = InterventionCostBreakdownLineWriteSerializer(many=True, required=False)
     target_population = serializers.ListField(
         child=serializers.CharField(max_length=100), allow_empty=True, required=False
     )
@@ -58,17 +60,18 @@ class InterventionDetailWriteSerializer(serializers.ModelSerializer):
         ]
 
     def update(self, instance, validated_data):
-        cost_breakdown_lines_data = validated_data.pop("cost_breakdown_lines", [])
+        cost_breakdown_lines_data = validated_data.pop("cost_breakdown_lines", None)
 
-        # Delete existing cost breakdown lines and create new ones based on the provided data
         with transaction.atomic():
             intervention = super().update(instance, validated_data)
-            instance.cost_breakdown_lines.all().delete()
-            for line_data in cost_breakdown_lines_data:
-                line_serializer = InterventionCostBreakdownLineSerializer(
-                    data={**line_data, "intervention": intervention.id}
+
+            if cost_breakdown_lines_data is not None:
+                for line_data in cost_breakdown_lines_data:
+                    line_data["intervention"] = intervention
+
+                self.fields["cost_breakdown_lines"].update(
+                    intervention.cost_breakdown_lines.all(),
+                    cost_breakdown_lines_data,
                 )
-                line_serializer.is_valid(raise_exception=True)
-                line_serializer.save()
 
         return intervention
