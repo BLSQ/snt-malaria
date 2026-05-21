@@ -129,7 +129,7 @@ def build_cost_dataframe(account, start_year, end_year):
     # Query all cost breakdown lines with related interventions
     cost_lines = InterventionCostBreakdownLine.objects.filter(
         intervention__intervention_category__account=account
-    ).select_related("intervention", "intervention__intervention_category")
+    ).select_related("intervention", "intervention__intervention_category", "unit_type")
 
     if not cost_lines:
         raise ValidationError("No cost breakdown lines found for this account")
@@ -145,7 +145,7 @@ def build_cost_dataframe(account, start_year, end_year):
                     "type_intervention": line.intervention.short_name,
                     "cost_class": line.get_category_display(),
                     "description": line.intervention.description,
-                    "unit": line.get_unit_type_display(),
+                    "unit": line.unit_type.name if line.unit_type_id else "",
                     # TODO: Change budget package to support decimals
                     "usd_cost": float(line.unit_cost),
                     # "cost_year_for_analysis": line.year, # This is set later once we copy per year

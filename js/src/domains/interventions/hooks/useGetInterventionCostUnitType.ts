@@ -11,7 +11,7 @@ export const useGetInterventionCostUnitTypes = (): UseQueryResult<
         queryKey: ['interventionCostUnitType'],
         queryFn: () =>
             getRequest(
-                '/api/snt_malaria/intervention_cost_breakdown_lines/unit_types/',
+                '/api/snt_malaria/intervention_cost_breakdown_lines/unit_types_dropdown/',
             ),
         options: {
             cacheTime: Infinity, // disable auto fetch on cache expiration
