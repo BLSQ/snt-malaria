@@ -4,6 +4,7 @@ from plugins.snt_malaria.api.interventions.permissions import (
     SNT_SETTINGS_READ_PERMISSION,
     SNT_SETTINGS_WRITE_PERMISSION,
 )
+from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
@@ -29,11 +30,14 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         self.intervention_vaccination_rts = defaults["intervention_rts"]
         self.intervention_chemo_smc = defaults["intervention_smc"]
         self.intervention_chemo_iptp = defaults["intervention_iptp"]
+        self.unit_type_other, _ = CostUnitType.objects.get_or_create(account=self.account, name="Other")
+        self.unit_type_per_itn, _ = CostUnitType.objects.get_or_create(account=self.account, name="per ITN")
 
         self.cost_line = self.intervention_vaccination_rts.cost_breakdown_lines.create(
             name="Cost Line 1",
             unit_cost=10,
             category="Procurement",
+            unit_type=self.unit_type_other,
             created_by=self.user_write,
         )
 
@@ -107,11 +111,13 @@ class InterventionAPITests(SNTMalariaAPITestCase):
                 {
                     "name": "Updated Cost Line 1",
                     "unit_cost": 15,
+                    "unit_type": self.unit_type_other.id,
                     "category": "Procurement",
                 },
                 {
                     "name": "New Cost Line 2",
                     "unit_cost": 20,
+                    "unit_type": self.unit_type_per_itn.id,
                     "category": "Distribution",
                 },
             ],
@@ -135,11 +141,13 @@ class InterventionAPITests(SNTMalariaAPITestCase):
                 {
                     "name": "Updated Cost Line 1",
                     "unit_cost": 15,
+                    "unit_type": self.unit_type_other.id,
                     "category": "Procurement",
                 },
                 {
                     "name": "New Cost Line 2",
                     "unit_cost": 20,
+                    "unit_type": self.unit_type_per_itn.id,
                     "category": "Distribution",
                 },
             ],
@@ -157,11 +165,13 @@ class InterventionAPITests(SNTMalariaAPITestCase):
                 {
                     "name": "Updated Cost Line 1",
                     "unit_cost": 15,
+                    "unit_type": self.unit_type_other.id,
                     "category": "Procurement",
                 },
                 {
                     "name": "New Cost Line 2",
                     "unit_cost": 20,
+                    "unit_type": self.unit_type_per_itn.id,
                     "category": "Distribution",
                 },
             ],

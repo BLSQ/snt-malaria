@@ -1,6 +1,5 @@
 from rest_framework import status
 
-from plugins.snt_malaria.models import InterventionCostUnitType
 from plugins.snt_malaria.models.cost_breakdown import InterventionCostBreakdownLine
 from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base import (
     InterventionCostBreakdownLineBase,
@@ -8,6 +7,17 @@ from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base
 
 
 class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
+    def test_write_methods_are_not_allowed(self):
+        self.client.force_authenticate(user=self.user_write)
+        for method in ("post", "put", "patch", "delete"):
+            response = getattr(self.client, method)(self.BASE_URL, {}, format="json")
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_405_METHOD_NOT_ALLOWED,
+                f"{method.upper()} should be rejected, got {response.status_code}",
+            )
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)
+
     def test_list_cost_breakdown_lines_with_write_perm(self):
         self.client.force_authenticate(user=self.user_write)
         response = self.client.get(self.BASE_URL)
@@ -33,144 +43,22 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         response = self.client.get(self.BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_create_cost_breakdown_line_with_write_perm(self):
-        data = {
-            "intervention": self.intervention_chemo_iptp.id,
-            "costs": [
-                {
-                    "unit_cost": 15,
-                    "unit_type": "OTHER",
-                    "name": "Cost Line X",
-                    "category": "Procurement",
-                }
-            ],
-        }
-
-        self.client.force_authenticate(user=self.user_write)
-        response = self.client.post(self.BASE_URL, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 4)  # 3 existing + 1 new
-
-        icbl = InterventionCostBreakdownLine.objects.order_by("id").last()
-        self.assertEqual(icbl.unit_cost, 15)
-        self.assertEqual(icbl.unit_type, "OTHER")
-        self.assertEqual(icbl.name, "Cost Line X")
-        self.assertEqual(icbl.category, "Procurement")
-        self.assertEqual(icbl.intervention.id, self.intervention_chemo_iptp.id)
-
     def test_create_cost_breakdown_line_with_read_perm(self):
-        data = {
-            "intervention": self.intervention_chemo_iptp.id,
-            "costs": [
-                {
-                    "unit_cost": 15,
-                    "unit_type": "OTHER",
-                    "name": "Cost Line X",
-                    "category": "Procurement",
-                }
-            ],
-        }
-
         self.client.force_authenticate(user=self.user_read)
-        response = self.client.post(self.BASE_URL, data, format="json")
+        response = self.client.post(self.BASE_URL, {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)  # from setup
 
     def test_create_cost_breakdown_line_with_no_perm(self):
-        data = {
-            "intervention": self.intervention_chemo_iptp.id,
-            "costs": [
-                {
-                    "unit_cost": 15,
-                    "unit_type": "OTHER",
-                    "name": "Cost Line X",
-                    "category": "Procurement",
-                }
-            ],
-        }
-
         self.client.force_authenticate(user=self.user_no_perm)
-        response = self.client.post(self.BASE_URL, data, format="json")
+        response = self.client.post(self.BASE_URL, {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)  # from setup
 
     def test_create_cost_breakdown_line_unauthenticated(self):
-        data = {
-            "intervention": self.intervention_chemo_iptp.id,
-            "costs": [
-                {
-                    "unit_cost": 15,
-                    "unit_type": "OTHER",
-                    "name": "Cost Line X",
-                    "category": "Procurement",
-                }
-            ],
-        }
-
-        response = self.client.post(self.BASE_URL, data, format="json")
+        response = self.client.post(self.BASE_URL, {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)
-
-    def test_create_breakdown_line_with_intervention_from_other_account(self):
-        data = {
-            "intervention": self.other_intervention.id,
-            "costs": [
-                {
-                    "unit_cost": 20,
-                    "unit_type": "OTHER",
-                    "name": "Cost Line Y",
-                    "category": "Supportive",
-                }
-            ],
-        }
-
-        self.client.force_authenticate(user=self.user_write)
-        response = self.client.post(self.BASE_URL, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)  # from setup
-        self.assertIn("intervention", response.data)
-        self.assertIn(str(self.other_intervention.id), response.data["intervention"][0])
-
-    def test_create_breakdown_line_erase_old_costs(self):
-        # Since the endpoint deletes all objects before recreating new ones, we check that the old values are gone
-        old_id = self.cost_line2.id
-        old_unit_cost = self.cost_line2.unit_cost
-        old_unit_type = self.cost_line2.unit_type
-        old_name = self.cost_line2.name
-        old_category = self.cost_line2.category
-
-        # New payload
-        data = {
-            "intervention": self.intervention_chemo_smc.id,
-            "costs": [
-                {
-                    "unit_cost": 12,
-                    "unit_type": InterventionCostUnitType.PER_60MG_POWDER,
-                    "name": "Cost Line Z",
-                    "category": "Operational",
-                }
-            ],
-        }
-
-        self.client.force_authenticate(user=self.user_write)
-        response = self.client.post(self.BASE_URL, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        # Check that old costs for chemo_smc in 2025 are deleted and only the new one exists
-        costs = InterventionCostBreakdownLine.objects.filter(intervention=self.intervention_chemo_smc)
-        self.assertEqual(costs.count(), 1)
-        cost = costs.first()
-        self.assertEqual(cost.unit_cost, 12)
-        self.assertEqual(cost.unit_type, InterventionCostUnitType.PER_60MG_POWDER)
-        self.assertEqual(cost.name, "Cost Line Z")
-        self.assertEqual(cost.category, "Operational")
-
-        self.assertNotEqual(cost.id, old_id)
-        self.assertNotEqual(cost.unit_cost, old_unit_cost)
-        self.assertNotEqual(cost.unit_type, old_unit_type)
-        self.assertNotEqual(cost.name, old_name)
-        self.assertNotEqual(cost.category, old_category)
 
     def test_get_cost_breakdown_line_categories_with_write_perm(self):
         self.client.force_authenticate(user=self.user_write)
@@ -208,23 +96,29 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
 
     def test_get_cost_breakdown_line_unit_types_with_write_perm(self):
         self.client.force_authenticate(user=self.user_write)
-        response = self.client.get(f"{self.BASE_URL}unit_types/")
+        response = self.client.get(f"{self.BASE_URL}unit_types_dropdown/")
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        expected_unit_types = [{"value": choice[0], "label": choice[1]} for choice in InterventionCostUnitType.choices]
+        expected_unit_types = [
+            {"value": str(self.unit_type_other.id), "label": self.unit_type_other.name},
+            {"value": str(self.unit_type_per_sp.id), "label": self.unit_type_per_sp.name},
+        ]
         self.assertCountEqual(result, expected_unit_types)
 
     def test_get_cost_breakdown_line_unit_types_with_read_perm(self):
         self.client.force_authenticate(user=self.user_read)
-        response = self.client.get(f"{self.BASE_URL}unit_types/")
+        response = self.client.get(f"{self.BASE_URL}unit_types_dropdown/")
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        expected_unit_types = [{"value": choice[0], "label": choice[1]} for choice in InterventionCostUnitType.choices]
+        expected_unit_types = [
+            {"value": str(self.unit_type_other.id), "label": self.unit_type_other.name},
+            {"value": str(self.unit_type_per_sp.id), "label": self.unit_type_per_sp.name},
+        ]
         self.assertCountEqual(result, expected_unit_types)
 
     def test_get_cost_breakdown_line_unit_types_with_no_perm(self):
         self.client.force_authenticate(user=self.user_no_perm)
-        response = self.client.get(f"{self.BASE_URL}unit_types/")
+        response = self.client.get(f"{self.BASE_URL}unit_types_dropdown/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_cost_breakdown_line_unit_types_unauthenticated(self):
-        response = self.client.get(f"{self.BASE_URL}unit_types/")
+        response = self.client.get(f"{self.BASE_URL}unit_types_dropdown/")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
