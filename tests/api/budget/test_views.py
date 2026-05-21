@@ -9,6 +9,7 @@ from plugins.snt_malaria.models import (
 from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 from plugins.snt_malaria.models.budget_settings import BudgetSettings
 from plugins.snt_malaria.models.cost_breakdown import InterventionCostBreakdownLine
+from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
@@ -75,13 +76,18 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
             inflation_rate=0.03,  # 3% inflation rate as default
         )
 
+        self.unit_type_per_spaq_3_11, _ = CostUnitType.objects.get_or_create(
+            account=self.account,
+            name="per SPAQ pack 3-11 month olds",
+        )
+
         self.cost_lines = InterventionCostBreakdownLine.objects.bulk_create(
             [
                 InterventionCostBreakdownLine(
                     intervention=self.intervention_chemo_smc,
                     name="smc cost line",
                     category="Procurement",
-                    unit_type="PER_SPAQ_3_11_MONTHS",
+                    unit_type=self.unit_type_per_spaq_3_11,
                     unit_cost=2.5,
                 )
             ]

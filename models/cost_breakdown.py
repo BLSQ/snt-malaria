@@ -29,6 +29,10 @@ class InterventionCostBreakdownLine(models.Model):
         SUPPORTIVE = "Supportive", _("Supportive")
         OTHER = "Other", _("Other")
 
+    class CostDriver(models.TextChoices):
+        POPULATION = "population", _("Population")
+        FIXED_COST = "fixed_cost", _("Fixed cost")
+
     class Meta:
         app_label = "snt_malaria"
 
@@ -39,8 +43,22 @@ class InterventionCostBreakdownLine(models.Model):
         choices=InterventionCostBreakdownLineCategory.choices,
         default=InterventionCostBreakdownLineCategory.OTHER,
     )
-    unit_type = models.CharField(
-        max_length=50, choices=InterventionCostUnitType.choices, default=InterventionCostUnitType.OTHER
+    unit_type = models.ForeignKey(
+        "snt_malaria.CostUnitType",
+        on_delete=models.PROTECT,
+        related_name="cost_breakdown_lines",
+    )
+    population_layer = models.ForeignKey(
+        "iaso.MetricType",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="cost_breakdown_lines",
+    )
+    cost_driver = models.CharField(
+        max_length=20,
+        choices=CostDriver.choices,
+        default=CostDriver.POPULATION,
     )
     unit_cost = models.DecimalField(max_digits=19, decimal_places=2, null=False, blank=False, default=0)
     created_by = models.ForeignKey(
