@@ -1,16 +1,20 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, SelectChangeEvent } from '@mui/material';
+import { Box, SelectChangeEvent, Switch, Tooltip } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { Map as SNTMap } from '../../../../components/Map';
+import { MESSAGES } from '../../../messages';
 import { useGetOrgUnits } from '../../../planning/hooks/useGetOrgUnits';
-import { formatBigNumber } from '../../../planning/libs/cost-utils';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
+import { MetricKey } from '../../types';
 import { NO_INTERVENTION_COLOR } from '../../utils/colors';
 import {
     buildDivergingScale,
-    computeOrgUnitDeltas,
-    getColorForValue,
+    computeOrgUnitImpactDifferenceDeltas,
+    getDeltaCell,
 } from '../../utils/divergingScale';
+import { useMetricConfig } from '../../utils/metricConfig';
 import { LabelChip } from './LabelChip';
 
 const styles = {
@@ -28,17 +32,50 @@ const styles = {
         gap: 0.5,
         zIndex: 1000,
     },
+    toggleChip: {
+        p: 1,
+        borderRadius: 2,
+        backgroundColor: theme => alpha(theme.palette.common.white, 0.75),
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        gap: 1,
+    },
+    toggleLabel: {
+        fontSize: '1rem',
+        fontWeight: 500,
+        color: 'text.primary',
+        whiteSpace: 'nowrap',
+        m: 0,
+    },
+    toggleSwitch: {
+        my: -1,
+        ml: -1,
+        mr: 0,
+    },
 } satisfies SxStyles;
 
+type Props = {
+    selectedMetric: MetricKey;
+};
+
 /**
- * Displays a diverging color-shaded map of per-org-unit direct-death deltas
- * between the baseline scenario and a selected comparison scenario.
- * Green shades indicate fewer deaths (improvement), red shades more deaths.
+ * Diverging choropleth of per-org-unit deltas between the baseline scenario and a selected comparison.
+ * Color direction follows `MetricConfig.positiveIsGreen`; for "lower is better" metrics
+ * (the default) green = improvement, red = worsening.
  */
-export const ImpactDifferencesMap: FC = () => {
-    const { scenarios, baselineScenarioId, impactsByScenarioId } =
-        useComparisonDataContext();
+export const ImpactDifferencesMap: FC<Props> = ({ selectedMetric }) => {
+    const {
+        scenarios,
+        baselineScenarioId,
+        impactsByScenarioId,
+        budgetsByScenarioId,
+    } = useComparisonDataContext();
     const { data: orgUnits } = useGetOrgUnits();
+    const intl = useSafeIntl();
+    const { formatMessage } = intl;
+    const config = useMetricConfig();
+    const metricConfig = config[selectedMetric];
 
     const comparisonScenarios = useMemo(
         () => scenarios.filter(s => s.id !== baselineScenarioId),
@@ -48,6 +85,16 @@ export const ImpactDifferencesMap: FC = () => {
     const [selectedComparisonId, setSelectedComparisonId] = useState<
         number | undefined
     >(undefined);
+
+    // When more than one comparison scenario exists, the user can choose
+    // whether the color scale spans every comparison (stable when flipping)
+    // or only the currently active pair (tighter range, recomputes on switch).
+    // Default: shared, matching prior behavior.
+    const [useSharedScale, setUseSharedScale] = useState(true);
+    const handleSharedScaleChange = useCallback(
+        (_: unknown, checked: boolean) => setUseSharedScale(checked),
+        [],
+    );
 
     useEffect(() => {
         const isCurrentValid =
@@ -67,69 +114,82 @@ export const ImpactDifferencesMap: FC = () => {
         (event: SelectChangeEvent<number>) => {
             setSelectedComparisonId(Number(event.target.value));
         },
-        [setSelectedComparisonId],
+        [],
     );
 
-    const deltaMap = useMemo(() => {
-        if (!baselineScenarioId || !selectedComparisonId)
-            return new Map<number, number>();
-
+    // Compute the delta map for every comparison scenario once. The currently
+    // selected pair is read out of this same map for rendering. When the
+    // shared-scale toggle is on, the full set feeds buildDivergingScale so
+    // the color scale stays stable while the user flips between comparisons.
+    const deltaMapsByScenarioId = useMemo(() => {
+        const result = new Map<number, Map<number, number>>();
+        if (!baselineScenarioId) return result;
         const baselineImpact = impactsByScenarioId.get(baselineScenarioId);
-        const comparisonImpact =
-            impactsByScenarioId.get(selectedComparisonId);
-        if (!baselineImpact || !comparisonImpact)
-            return new Map<number, number>();
+        const baselineBudget = budgetsByScenarioId.get(baselineScenarioId);
+        for (const scenario of comparisonScenarios) {
+            const comparisonImpact = impactsByScenarioId.get(scenario.id);
+            const comparisonBudget = budgetsByScenarioId.get(scenario.id);
+            result.set(
+                scenario.id,
+                computeOrgUnitImpactDifferenceDeltas(
+                    selectedMetric,
+                    baselineImpact,
+                    comparisonImpact,
+                    baselineBudget,
+                    comparisonBudget,
+                ),
+            );
+        }
+        return result;
+    }, [
+        baselineScenarioId,
+        comparisonScenarios,
+        selectedMetric,
+        impactsByScenarioId,
+        budgetsByScenarioId,
+    ]);
 
-        return computeOrgUnitDeltas(baselineImpact, comparisonImpact);
-    }, [baselineScenarioId, selectedComparisonId, impactsByScenarioId]);
+    const deltaMap = useMemo(
+        () =>
+            selectedComparisonId !== undefined
+                ? (deltaMapsByScenarioId.get(selectedComparisonId) ??
+                  new Map<number, number>())
+                : new Map<number, number>(),
+        [deltaMapsByScenarioId, selectedComparisonId],
+    );
 
     const scale = useMemo(() => {
-        if (deltaMap.size === 0) return buildDivergingScale(0, 0);
-        const values = Array.from(deltaMap.values());
-        return buildDivergingScale(Math.min(...values), Math.max(...values));
-    }, [deltaMap]);
+        const allDeltas: number[] = [];
+        if (useSharedScale) {
+            for (const m of deltaMapsByScenarioId.values()) {
+                for (const v of m.values()) allDeltas.push(v);
+            }
+        } else {
+            for (const v of deltaMap.values()) allDeltas.push(v);
+        }
+        return buildDivergingScale(intl, metricConfig, allDeltas);
+    }, [deltaMapsByScenarioId, deltaMap, useSharedScale, intl, metricConfig]);
 
     const legendConfig = useMemo(
         () =>
-            scale.labels.length === 0
-                ? undefined
-                : {
+            scale.isVisible
+                ? {
                       units: '',
-                      legend_type: 'ordinal',
+                      legend_type: 'linear',
                       legend_config: {
-                          domain: scale.labels,
-                          range: scale.colors,
+                          domain: scale.domainLabels,
+                          range: scale.range,
                       },
                       unit_symbol: '',
-                  },
+                  }
+                : undefined,
         [scale],
     );
 
-    /**
-     * Returns the fill color and tooltip label for a single org unit.
-     * Org units with no delta (or zero delta) are shown in neutral grey.
-     */
     const getOrgUnitMapMisc = useCallback(
-        (orgUnitId: number) => {
-            const delta = deltaMap.get(orgUnitId);
-            if (!delta) {
-                return {
-                    color: NO_INTERVENTION_COLOR,
-                    label: delta === 0 ? '+0' : undefined,
-                };
-            }
-            const color = getColorForValue(
-                delta,
-                scale.thresholds,
-                scale.colors,
-            );
-            const sign = delta >= 0 ? '+' : '';
-            return {
-                color,
-                label: `${sign}${formatBigNumber(Math.round(delta))}`,
-            };
-        },
-        [deltaMap, scale],
+        (orgUnitId: number) =>
+            getDeltaCell(intl, metricConfig, deltaMap.get(orgUnitId), scale),
+        [deltaMap, scale, intl, metricConfig],
     );
 
     const baselineScenario = scenarios.find(s => s.id === baselineScenarioId);
@@ -137,7 +197,13 @@ export const ImpactDifferencesMap: FC = () => {
         s => s.id === selectedComparisonId,
     );
     const hasData = deltaMap.size > 0;
-    const dataKey = `${selectedComparisonId ?? 'none'}_${deltaMap.size}`;
+    const dataKey = [
+        selectedComparisonId ?? 'none',
+        selectedMetric,
+        deltaMap.size,
+        useSharedScale ? 'shared' : 'local',
+        scale.domain.join(','),
+    ].join('_');
 
     const chipOverlay = (
         <Box sx={styles.overlay}>
@@ -155,6 +221,28 @@ export const ImpactDifferencesMap: FC = () => {
                     value={selectedComparisonId}
                     onChange={handleComparisonChange}
                 />
+            )}
+            {comparisonScenarios.length > 1 && (
+                <Tooltip
+                    title={formatMessage(
+                        MESSAGES.impactDifferencesSharedScaleTooltip,
+                    )}
+                    placement="bottom"
+                >
+                    <Box sx={styles.toggleChip}>
+                        <Box sx={styles.toggleLabel}>
+                            {formatMessage(
+                                MESSAGES.impactDifferencesSharedScale,
+                            )}
+                        </Box>
+                        <Switch
+                            size="small"
+                            checked={useSharedScale}
+                            onChange={handleSharedScaleChange}
+                            sx={styles.toggleSwitch}
+                        />
+                    </Box>
+                </Tooltip>
             )}
         </Box>
     );
