@@ -393,6 +393,32 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.impact.cases',
         defaultMessage: 'Cases',
     },
+    impactDifferenceMetricLabel: {
+        id: 'iaso.snt_malaria.compareCustomize.impactDifferenceMetricLabel',
+        defaultMessage: 'Metric',
+    },
+    impactDifferenceMetricOrgUnitCost: {
+        id: 'iaso.snt_malaria.compareCustomize.impactDifferenceMetricOrgUnitCost',
+        defaultMessage: 'Cost',
+    },
+    impactDifferenceMetricPrevalenceRate: {
+        id: 'iaso.snt_malaria.compareCustomize.impactDifferenceMetricPrevalenceRate',
+        defaultMessage: 'Prevalence rate',
+    },
+    impactDifferencesSelectComparison: {
+        id: 'iaso.snt_malaria.compareCustomize.impactDifferencesSelectComparison',
+        defaultMessage:
+            'Select at least two scenarios to compare impact differences',
+    },
+    impactDifferencesSharedScale: {
+        id: 'iaso.snt_malaria.compareCustomize.impactDifferencesSharedScale',
+        defaultMessage: 'Shared scale',
+    },
+    impactDifferencesSharedScaleTooltip: {
+        id: 'iaso.snt_malaria.compareCustomize.impactDifferencesSharedScaleTooltip',
+        defaultMessage:
+            'Use one scale across all scenarios, or only between the two current ones.',
+    },
     impactDifferencesTitle: {
         id: 'iaso.snt_malaria.compareCustomize.impactDifferencesTitle',
         defaultMessage: 'Impact differences',
