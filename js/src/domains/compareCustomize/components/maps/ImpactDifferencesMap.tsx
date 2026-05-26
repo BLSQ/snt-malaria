@@ -159,14 +159,11 @@ export const ImpactDifferencesMap: FC<Props> = ({ selectedMetric }) => {
     );
 
     const scale = useMemo(() => {
-        const allDeltas: number[] = [];
-        if (useSharedScale) {
-            for (const m of deltaMapsByScenarioId.values()) {
-                for (const v of m.values()) allDeltas.push(v);
-            }
-        } else {
-            for (const v of deltaMap.values()) allDeltas.push(v);
-        }
+        const allDeltas = useSharedScale
+            ? Array.from(deltaMapsByScenarioId.values()).flatMap(m =>
+                  Array.from(m.values()),
+              )
+            : Array.from(deltaMap.values());
         return buildDivergingScale(intl, metricConfig, allDeltas);
     }, [deltaMapsByScenarioId, deltaMap, useSharedScale, intl, metricConfig]);
 
@@ -197,13 +194,23 @@ export const ImpactDifferencesMap: FC<Props> = ({ selectedMetric }) => {
         s => s.id === selectedComparisonId,
     );
     const hasData = deltaMap.size > 0;
-    const dataKey = [
-        selectedComparisonId ?? 'none',
-        selectedMetric,
-        deltaMap.size,
-        useSharedScale ? 'shared' : 'local',
-        scale.domain.join(','),
-    ].join('_');
+    const dataKey = useMemo(
+        () =>
+            [
+                selectedComparisonId ?? 'none',
+                selectedMetric,
+                deltaMap.size,
+                useSharedScale ? 'shared' : 'local',
+                scale.domain.join(','),
+            ].join('_'),
+        [
+            selectedComparisonId,
+            selectedMetric,
+            deltaMap.size,
+            useSharedScale,
+            scale.domain,
+        ],
+    );
 
     const chipOverlay = (
         <Box sx={styles.overlay}>
