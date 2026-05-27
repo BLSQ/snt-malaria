@@ -4,7 +4,7 @@ import { useSnackQuery } from 'Iaso/libs/apiHooks';
 import {
     BudgetAssumptions,
     DefaultBudgetAssumptions,
-} from '../types/interventions';
+} from '../types/interventionAssignments';
 
 const transformResponse = (budgetAssumptions: BudgetAssumptions) => ({
     ...budgetAssumptions,

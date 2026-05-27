@@ -42,7 +42,10 @@ import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { usePreviewScenarioRule } from './hooks/usePreviewScenarioRule';
 import { useRemoveManyOrgUnitsFromInterventionPlan } from './hooks/useRemoveOrgUnitFromInterventionPlan';
-import { BudgetAssumptions, InterventionPlan } from './types/interventions';
+import {
+    BudgetAssumptions,
+    InterventionPlan,
+} from './types/interventionAssignments';
 import { ScenarioRule } from './types/scenarioRule';
 import { useUserCanEditScenario } from './utils/permissions';
 
