@@ -5,6 +5,7 @@ from plugins.snt_malaria.api.budget.views import BudgetViewSet
 from plugins.snt_malaria.api.budget_assumptions.views import BudgetAssumptionsViewSet
 from plugins.snt_malaria.api.budget_settings.views import BudgetSettingsViewSet
 from plugins.snt_malaria.api.impact.views import ImpactAgeGroupsViewSet, ImpactViewSet, ImpactYearRangeViewSet
+from plugins.snt_malaria.api.scenario_yearly_cost_assignment.views import ScenarioYearlyCostAssignmentViewSet
 
 from .account_setup.views import SNTAccountSetupViewSet
 from .intervention_assignments.views import InterventionAssignmentViewSet
@@ -25,6 +26,11 @@ router.register(
 )
 router.register(r"snt_malaria/scenarios", ScenarioViewSet, basename="scenarios")
 router.register(r"snt_malaria/scenario_rules", ScenarioRuleViewSet, basename="scenario_rules")
+router.register(
+    r"snt_malaria/scenario_yearly_cost_assignments",
+    ScenarioYearlyCostAssignmentViewSet,
+    basename="scenario_yearly_cost_assignments",
+)
 
 # Cost api
 router.register(

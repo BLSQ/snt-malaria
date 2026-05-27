@@ -18,9 +18,9 @@ class ScenarioPermission(permissions.BasePermission):
             SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()
         )
 
-    def has_object_permission(self, request, view, obj: Scenario):
+    def has_object_permission(self, request, view, obj: Scenario, extra_safe_methods=["POST"]):
         if (
-            request.method in permissions.SAFE_METHODS or request.method == "POST"
+            request.method in permissions.SAFE_METHODS or request.method in extra_safe_methods
         ):  # = GET for retrieve & POST for duplicate
             return True
 
