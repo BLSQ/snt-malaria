@@ -21,6 +21,8 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
                 line = existing_lines[line_id]
                 for attr, value in item.items():
                     setattr(line, attr, value)
+
+                line.updated_by = request_user
                 lines_to_update.append(line)
                 lines_to_delete.discard(line_id)
             else:
@@ -36,7 +38,15 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
             if lines_to_update:
                 InterventionCostBreakdownLine.objects.bulk_update(
                     lines_to_update,
-                    fields=["name", "unit_cost", "unit_type", "category", "intervention", "updated_by"],
+                    fields=[
+                        "name",
+                        "unit_cost",
+                        "unit_type",
+                        "category",
+                        "intervention",
+                        "updated_by",
+                        "population_layer",
+                    ],
                 )
             if lines_to_delete:
                 InterventionCostBreakdownLine.objects.filter(id__in=lines_to_delete).delete()
