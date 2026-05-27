@@ -1,8 +1,6 @@
 import { mapTheme } from '../../../../constants/map-theme';
-import {
-    InterventionAssignmentResponse,
-    InterventionCategory,
-} from '../../types/interventions';
+import { InterventionCategory } from '../../../interventions/types';
+import { InterventionAssignmentResponse } from '../../types/interventionAssignments';
 import { ScenarioRule } from '../../types/scenarioRule';
 
 /** Label + color for one intervention chip in a map tooltip. */

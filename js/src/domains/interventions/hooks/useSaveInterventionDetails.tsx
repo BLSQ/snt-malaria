@@ -1,7 +1,7 @@
 import { putRequest } from 'bluesquare-components';
 import { UseMutationResult } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { InterventionDetails } from '../../planning/types/interventions';
+import { InterventionDetails } from '../types';
 
 export const useSaveInterventionDetails = (
     interventionId?: number,

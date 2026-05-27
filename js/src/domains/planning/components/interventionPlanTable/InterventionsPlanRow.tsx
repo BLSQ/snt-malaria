@@ -5,7 +5,10 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { IconBoxed } from '../../../../components/IconBoxed';
 import { MESSAGES } from '../../../messages';
-import { BudgetAssumptions, InterventionPlan } from '../../types/interventions';
+import {
+    BudgetAssumptions,
+    InterventionPlan,
+} from '../../types/interventionAssignments';
 
 type Props = {
     interventionPlan: InterventionPlan;

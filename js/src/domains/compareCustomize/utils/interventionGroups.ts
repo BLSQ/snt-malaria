@@ -1,8 +1,6 @@
+import { Intervention } from '../../interventions/types';
 import { getColorRange } from '../../planning/libs/color-utils';
-import {
-    Intervention,
-    InterventionPlan,
-} from '../../planning/types/interventions';
+import { InterventionPlan } from '../../planning/types/interventionAssignments';
 import { getInterventionGroupShades } from './colors';
 import { ALL_INTERVENTIONS_ID } from './constants';
 

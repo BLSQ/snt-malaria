@@ -4,7 +4,10 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DrawerHeader } from '../../../../components/DrawerHeader';
 import { MESSAGES } from '../../../messages';
-import { BudgetAssumptions, InterventionPlan } from '../../types/interventions';
+import {
+    BudgetAssumptions,
+    InterventionPlan,
+} from '../../types/interventionAssignments';
 import { BudgetAssumptionsForm } from './BudgetAssumptionsForm';
 import { InterventionOrgUnits } from './InterventionOrgUnits';
 

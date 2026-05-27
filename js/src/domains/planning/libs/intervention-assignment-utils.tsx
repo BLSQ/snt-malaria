@@ -1,5 +1,5 @@
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { Intervention } from '../types/interventions';
+import { Intervention } from '../../interventions/types';
 
 export type InterventionAssignmentConflict = {
     orgUnit: OrgUnit;

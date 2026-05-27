@@ -1,6 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 
+from iaso.models.metric import MetricType
 from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 
@@ -20,6 +21,8 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
                 line = existing_lines[line_id]
                 for attr, value in item.items():
                     setattr(line, attr, value)
+
+                line.updated_by = request_user
                 lines_to_update.append(line)
                 lines_to_delete.discard(line_id)
             else:
@@ -35,7 +38,15 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
             if lines_to_update:
                 InterventionCostBreakdownLine.objects.bulk_update(
                     lines_to_update,
-                    fields=["name", "unit_cost", "unit_type", "category", "intervention", "updated_by"],
+                    fields=[
+                        "name",
+                        "unit_cost",
+                        "unit_type",
+                        "category",
+                        "intervention",
+                        "updated_by",
+                        "population_layer",
+                    ],
                 )
             if lines_to_delete:
                 InterventionCostBreakdownLine.objects.filter(id__in=lines_to_delete).delete()
@@ -72,6 +83,7 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
             "category",
             "category_label",
             "intervention",
+            "population_layer",
         ]
 
     def get_unit_type_label(self, obj):
@@ -95,6 +107,9 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
     unit_type = serializers.PrimaryKeyRelatedField(
         queryset=CostUnitType.objects.none(), required=True, allow_null=False
     )
+    population_layer = serializers.PrimaryKeyRelatedField(
+        queryset=MetricType.objects.none(), required=False, allow_null=True
+    )
 
     class Meta:
         model = InterventionCostBreakdownLine
@@ -106,6 +121,7 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             "unit_type",
             "category",
             "intervention",
+            "population_layer",
         ]
 
     def get_fields(self):
@@ -117,4 +133,14 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             fields["intervention"].queryset = Intervention.objects.filter(
                 intervention_category__account=account,
             )
+            fields["population_layer"].queryset = MetricType.objects.filter(account=account)
         return fields
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        attrs["cost_driver"] = (
+            InterventionCostBreakdownLine.CostDriver.POPULATION
+            if attrs.get("population_layer")
+            else InterventionCostBreakdownLine.CostDriver.FIXED_COST
+        )
+        return attrs
