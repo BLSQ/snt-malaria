@@ -1,7 +1,7 @@
 import { UseQueryResult } from 'react-query';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
-import { InterventionDetails } from '../../planning/types/interventions';
+import { InterventionDetails } from '../types';
 
 export const useGetInterventionDetails = ({
     interventionId,

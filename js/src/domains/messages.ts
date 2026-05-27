@@ -305,6 +305,13 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.description',
         defaultMessage: 'Description',
     },
+    interventionCostBreakdownLineDescription: {
+        id: 'iaso.snt_malaria.settings.intervention.costBreakdownLineDescription',
+        defaultMessage:
+            'Add cost items to this intervention to include them in the cost breakdown and budget calculations. {br} \
+            These costs will be included in the total cumulative costs but will not impact the estimated health impact. {br} \
+            If no population layer is selected the cost will be used as a global fixed cost.',
+    },
     removeInterventionCostBreakdownLine: {
         id: 'iaso.snt_malaria.settings.intervention.removeInterventionCostBreakdownLine',
         defaultMessage: 'Remove cost',

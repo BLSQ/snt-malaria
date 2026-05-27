@@ -5,11 +5,11 @@ import { SxStyles } from 'Iaso/types/general';
 import { InterventionSelect } from '../../../../components/InterventionSelect';
 import { Map } from '../../../../components/Map';
 import { MapActionBox } from '../../../../components/MapActionBox';
+import { Intervention } from '../../../interventions/types';
 import { defaultLegend, severityColorRange } from '../../libs/color-utils';
 import { formatBigNumber } from '../../libs/cost-utils';
 import { getColorForShape } from '../../libs/map-utils';
 import { BudgetOrgUnit } from '../../types/budget';
-import { Intervention } from '../../types/interventions';
 
 const styles: SxStyles = {
     mainBox: {

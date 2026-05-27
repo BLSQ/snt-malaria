@@ -1,7 +1,7 @@
 import { UseQueryResult } from 'react-query';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
-import { InterventionCategory } from '../types/interventions';
+import { InterventionCategory } from '../../interventions/types';
 
 export const useGetInterventionCategories = (): UseQueryResult<
     InterventionCategory[],

@@ -7,15 +7,15 @@ import React, {
 } from 'react';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { MetricTypeCategory } from '../../dataLayers/types/metrics';
+import { InterventionCategory } from '../../interventions/types';
 import { sortByStringProp } from '../../planning/libs/list-utils';
+import { Scenario } from '../../scenarios/types';
+import { useGetDefaultBudgetAssumptions } from '../hooks/useGetBudgetAssumptions';
 import {
     DefaultBudgetAssumptions,
     InterventionAssignmentResponse,
-    InterventionCategory,
     InterventionPlan,
-} from '../../planning/types/interventions';
-import { Scenario } from '../../scenarios/types';
-import { useGetDefaultBudgetAssumptions } from '../hooks/useGetBudgetAssumptions';
+} from '../types/interventionAssignments';
 
 type PlanningContextType = {
     scenarioId: number;

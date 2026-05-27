@@ -11,7 +11,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import DeleteDialog from 'Iaso/components/dialogs/DeleteDialogComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
-import { InterventionPlan } from '../../types/interventions';
+import { InterventionPlan } from '../../types/interventionAssignments';
 
 const styles: SxStyles = {
     list: { overflowY: 'auto', flexGrow: 1 },

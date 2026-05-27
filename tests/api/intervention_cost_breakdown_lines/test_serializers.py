@@ -3,7 +3,9 @@ from unittest.mock import Mock
 from rest_framework import status
 
 from iaso.api.common import DropdownOptionsWithRepresentationSerializer
+from iaso.models.metric import MetricType
 from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
+    InterventionCostBreakdownLineWriteListSerializer,
     InterventionCostBreakdownLineWriteSerializer,
 )
 from plugins.snt_malaria.models import InterventionCostBreakdownLine, ScenarioYearlyCostAssignment
@@ -276,3 +278,102 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
         serializer = InterventionCostBreakdownLineWriteSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("unit_type", serializer.errors)
+
+
+class InterventionCostBreakdownLineWriteSerializerTests(InterventionCostBreakdownLineBase):
+    def setUp(self):
+        super().setUp()
+        self.context = {"request": Mock(user=self.user_write)}
+        self.population_metric = MetricType.objects.create(
+            account=self.account,
+            name="Population total",
+            code="pop_total",
+        )
+        self.other_population_metric = MetricType.objects.create(
+            account=self.other_account,
+            name="Other population",
+            code="other_pop",
+        )
+
+    def test_write_serializer_filters_population_layer_queryset_with_request_account(self):
+        serializer = InterventionCostBreakdownLineWriteSerializer(context=self.context)
+        queryset = serializer.fields["population_layer"].queryset
+
+        self.assertIn(self.population_metric, queryset)
+        self.assertNotIn(self.other_population_metric, queryset)
+
+    def test_write_serializer_sets_population_cost_driver_when_population_layer_is_present(self):
+        serializer = InterventionCostBreakdownLineWriteSerializer(
+            data={
+                "name": "Line 1",
+                "unit_cost": 10,
+                "unit_type": self.unit_type_other.id,
+                "category": "Procurement",
+                "intervention": self.intervention_chemo_iptp.id,
+                "population_layer": self.population_metric.id,
+            },
+            context=self.context,
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertEqual(
+            serializer.validated_data["cost_driver"],
+            InterventionCostBreakdownLine.CostDriver.POPULATION,
+        )
+
+    def test_write_serializer_sets_fixed_cost_driver_when_population_layer_is_absent(self):
+        serializer = InterventionCostBreakdownLineWriteSerializer(
+            data={
+                "name": "Line 1",
+                "unit_cost": 10,
+                "unit_type": self.unit_type_other.id,
+                "category": "Procurement",
+                "intervention": self.intervention_chemo_iptp.id,
+            },
+            context=self.context,
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertEqual(
+            serializer.validated_data["cost_driver"],
+            InterventionCostBreakdownLine.CostDriver.FIXED_COST,
+        )
+
+    def test_list_serializer_update_applies_user_and_cost_driver(self):
+        list_serializer = InterventionCostBreakdownLineWriteListSerializer(
+            child=InterventionCostBreakdownLineWriteSerializer(context=self.context),
+            context=self.context,
+        )
+
+        list_serializer.update(
+            self.intervention_chemo_iptp.cost_breakdown_lines.all(),
+            [
+                {
+                    "name": "Population line",
+                    "unit_cost": 11,
+                    "unit_type": self.unit_type_other,
+                    "category": "Procurement",
+                    "intervention": self.intervention_chemo_iptp,
+                    "population_layer": self.population_metric,
+                    "cost_driver": InterventionCostBreakdownLine.CostDriver.POPULATION,
+                },
+                {
+                    "name": "Fixed line",
+                    "unit_cost": 7,
+                    "unit_type": self.unit_type_per_sp,
+                    "category": "Distribution",
+                    "intervention": self.intervention_chemo_iptp,
+                    "population_layer": None,
+                    "cost_driver": InterventionCostBreakdownLine.CostDriver.FIXED_COST,
+                },
+            ],
+        )
+
+        saved_lines = list(self.intervention_chemo_iptp.cost_breakdown_lines.order_by("name"))
+        self.assertEqual(len(saved_lines), 2)
+        self.assertEqual(saved_lines[0].created_by, self.user_write)
+        self.assertEqual(saved_lines[0].updated_by, self.user_write)
+        self.assertEqual(saved_lines[0].cost_driver, InterventionCostBreakdownLine.CostDriver.FIXED_COST)
+        self.assertEqual(saved_lines[1].created_by, self.user_write)
+        self.assertEqual(saved_lines[1].updated_by, self.user_write)
+        self.assertEqual(saved_lines[1].cost_driver, InterventionCostBreakdownLine.CostDriver.POPULATION)
