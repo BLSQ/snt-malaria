@@ -209,7 +209,6 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
 
     # This shouldn't work on locked scenario
     def test_create_allows_full_access_locked_scenario(self):
-        print("TESTING CREATE WITH LOCKED SCENARIO")
         response = self._post_create_payload(self.user_with_full_perm, self.locked_scenario, self.population_line_1)
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
 
