@@ -58,19 +58,17 @@ export const getCumulativeCosts = (
 };
 
 /**
- * Computes the relative PfPR reduction between the first and last year
- * in the impact response: `(start - end) / start`.
- * Returns `undefined` when fewer than two years of data are available
- * or the starting prevalence is zero.
+ * Relative PfPR evolution between the first and last year in the impact
+ * response: `(end - start) / start`. Negative when prevalence decreases,
+ * positive when it increases. Returns `undefined` when fewer than two years
+ * of data are available or the starting prevalence is zero.
  */
-export const getPfprReduction = (
+export const getPfprEvolution = (
     impact?: ScenarioImpactMetrics,
 ): number | undefined => {
     const byYear = impact?.by_year;
     if (!byYear || byYear.length < 2) return undefined;
-    const years = [...new Set(byYear.map(yr => yr.year))].sort(
-        (a, b) => a - b,
-    );
+    const years = [...new Set(byYear.map(yr => yr.year))].sort((a, b) => a - b);
     const minYear = years[0];
     const maxYear = years[years.length - 1];
     if (minYear === maxYear) return undefined;
@@ -79,5 +77,5 @@ export const getPfprReduction = (
     const start = startData?.prevalence_rate?.value;
     const end = endData?.prevalence_rate?.value;
     if (start == null || end == null || start <= 0) return undefined;
-    return (start - end) / start;
+    return (end - start) / start;
 };

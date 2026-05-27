@@ -165,7 +165,7 @@
     "iaso.snt_malaria.impactSettings.notIncluded": "Non inclus",
     "iaso.snt_malaria.impact.cases": "Cas",
     "iaso.snt_malaria.impact.severeCases": "Cas graves",
-    "iaso.snt_malaria.impact.pfprReduction": "Réduction PfPR",
+    "iaso.snt_malaria.impact.pfprEvolution": "Évolution PfPR",
     "iaso.snt_malaria.impact.totalCosts": "Coûts cumulatifs totaux (USD)",
     "iaso.snt_malaria.impact.targetLabel": "Objectif {year} : {value}",
     "iaso.snt_malaria.impact.budgetLabel": "Budget 2030 : {value}",

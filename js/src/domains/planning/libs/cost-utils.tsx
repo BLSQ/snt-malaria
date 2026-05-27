@@ -39,6 +39,11 @@ export const formatPercentValue = (value: number) => {
     return `${(value * 100).toFixed(0)}%`;
 };
 
+export const formatSignedPercentValue = (value: number) => {
+    const pct = Math.round(value * 100);
+    return `${pct > 0 ? '+' : ''}${pct}%`;
+};
+
 export const formatBigNumber = (value: number) => {
     const abs = Math.abs(value);
     const sign = value < 0 ? '-' : '';
