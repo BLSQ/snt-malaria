@@ -3,9 +3,9 @@ import { Box } from '@mui/material';
 import { FormikErrors, FormikTouched } from 'formik';
 import { DropdownButton } from '../../../../../components/DropdownButton';
 import { useGetChildError } from '../../../../../hooks/useGetChildError';
+import { InterventionCategory } from '../../../../interventions/types';
 import { MESSAGES } from '../../../../messages';
 import { defaultInterventionProperties } from '../../../hooks/useScenarioRuleFormState';
-import { InterventionCategory } from '../../../types/interventions';
 import { InterventionProperties } from '../../../types/scenarioRule';
 import { InterventionPropertyForm } from './InterventionPropertyForm';
 

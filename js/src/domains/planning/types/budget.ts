@@ -1,4 +1,4 @@
-import { InterventionOrgUnit } from './interventions';
+import { InterventionOrgUnit } from './interventionAssignments';
 
 export type Budget = {
     year: number;

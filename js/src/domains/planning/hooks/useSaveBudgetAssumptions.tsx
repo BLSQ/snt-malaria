@@ -1,7 +1,7 @@
 import { UseMutationResult } from 'react-query';
 import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { BudgetAssumptions as BudgetAssumptions } from '../types/interventions';
+import { BudgetAssumptions as BudgetAssumptions } from '../types/interventionAssignments';
 
 const transformPercentageValue = (value: number) => (value ?? 0) / 100;
 

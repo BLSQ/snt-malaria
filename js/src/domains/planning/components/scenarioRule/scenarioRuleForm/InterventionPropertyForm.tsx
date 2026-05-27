@@ -3,10 +3,10 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
-import { Intervention } from '../../../types/interventions';
+import { Intervention } from '../../../../interventions/types';
 import { InterventionProperties } from '../../../types/scenarioRule';
 
-const styles: SxStyles = {
+const styles = {
     interventionPropertiesContainer: {
         display: 'flex',
         mb: 2,
@@ -31,7 +31,7 @@ const styles: SxStyles = {
     interventionWrapper: {
         flexGrow: 1,
     },
-};
+} satisfies SxStyles;
 
 type Props = {
     interventions: Intervention[];

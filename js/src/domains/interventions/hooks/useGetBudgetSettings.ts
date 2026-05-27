@@ -1,7 +1,7 @@
 import { getRequest } from 'bluesquare-components';
 import { UseQueryResult } from 'react-query';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
-import { BudgetSettings } from '../types';
+import { BudgetSettings } from '../types/budgetSettings';
 
 export const useGetBudgetSettings = (): UseQueryResult<
     BudgetSettings | undefined,

@@ -1,22 +1,6 @@
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { Intervention } from '../../interventions/types';
 import { ScenarioRule } from './scenarioRule';
-
-export type InterventionCategory = {
-    id: number;
-    name: string;
-    short_name: string;
-    description: string;
-    interventions: Intervention[];
-};
-
-export type Intervention = {
-    id: number;
-    name: string;
-    short_name: string;
-    code: string;
-    description: string;
-    intervention_category: number;
-};
 
 export type InterventionAssignmentCreate = {
     orgunit_interventions: { [orgUnitId: number]: number[] };
@@ -62,24 +46,4 @@ export type BudgetAssumptions = {
     year?: number;
     scenario: number;
     coverage: number;
-};
-
-export type InterventionDetails = {
-    id: number;
-    name: string;
-    code: string;
-    impact_ref: string;
-    target_population: string[];
-    cost_breakdown_lines: InterventionCostBreakdownLine[];
-};
-
-export type InterventionCostBreakdownLine = {
-    name: string;
-    category: string;
-    category_label: string;
-    unit_type: string;
-    unit_type_label: string;
-    unit_cost: string; // using string to avoid float precision issues
-    id: number;
-    intervention: number;
 };

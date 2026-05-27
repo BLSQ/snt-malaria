@@ -4,7 +4,10 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
-import { BudgetAssumptions, InterventionPlan } from '../../types/interventions';
+import {
+    BudgetAssumptions,
+    InterventionPlan,
+} from '../../types/interventionAssignments';
 import { InterventionsPlanRow } from './InterventionsPlanRow';
 
 const styles: SxStyles = {
