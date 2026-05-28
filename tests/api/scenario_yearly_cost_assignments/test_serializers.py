@@ -71,7 +71,7 @@ class ScenarioYearlyCostAssignmentSerializerBaseTestCase(SNTMalariaTestCase):
             unit_cost=15,
             created_by=self.user,
         )
-        self.fix_cost_line = InterventionCostBreakdownLine.objects.create(
+        self.fixed_cost_line = InterventionCostBreakdownLine.objects.create(
             intervention=self.intervention,
             unit_type=self.unit_type,
             name="Fixed line",
@@ -150,7 +150,7 @@ class ScenarioYearlyCostAssignmentUpsertManySerializerTests(ScenarioYearlyCostAs
         )
         ScenarioYearlyCostAssignment.objects.create(
             scenario=self.scenario,
-            cost_line=self.fix_cost_line,
+            cost_line=self.fixed_cost_line,
             year=2026,
             value="3.00",
         )
@@ -184,7 +184,7 @@ class ScenarioYearlyCostAssignmentUpsertManySerializerTests(ScenarioYearlyCostAs
 
         updated_line_1 = current_scenario_assignments.get(cost_line=self.population_line_1)
         updated_line_2 = current_scenario_assignments.get(cost_line=self.population_line_2)
-        unchanged_fix_line = current_scenario_assignments.get(cost_line=self.fix_cost_line)
+        unchanged_fixed_line = current_scenario_assignments.get(cost_line=self.fixed_cost_line)
 
         other_scenario_assignment = ScenarioYearlyCostAssignment.objects.get(
             scenario=self.other_user_scenario,
@@ -194,7 +194,7 @@ class ScenarioYearlyCostAssignmentUpsertManySerializerTests(ScenarioYearlyCostAs
 
         self.assertEqual(str(updated_line_1.value), "99.00")
         self.assertEqual(str(updated_line_2.value), "99.00")
-        self.assertEqual(str(unchanged_fix_line.value), "3.00")
+        self.assertEqual(str(unchanged_fixed_line.value), "3.00")
         self.assertEqual(str(other_scenario_assignment.value), "4.00")
 
     def test_save_updates_only_the_given_cost_line_when_cost_line_is_provided(self):
@@ -212,7 +212,7 @@ class ScenarioYearlyCostAssignmentUpsertManySerializerTests(ScenarioYearlyCostAs
         )
         ScenarioYearlyCostAssignment.objects.create(
             scenario=self.scenario,
-            cost_line=self.fix_cost_line,
+            cost_line=self.fixed_cost_line,
             year=2026,
             value="3.00",
         )
@@ -241,11 +241,11 @@ class ScenarioYearlyCostAssignmentUpsertManySerializerTests(ScenarioYearlyCostAs
 
         updated_line_1 = current_scenario_assignments.get(cost_line=self.population_line_1)
         unchanged_line_2 = current_scenario_assignments.get(cost_line=self.population_line_2)
-        unchanged_fix_line = current_scenario_assignments.get(cost_line=self.fix_cost_line)
+        unchanged_fixed_line = current_scenario_assignments.get(cost_line=self.fixed_cost_line)
 
         self.assertEqual(str(updated_line_1.value), "99.00")
         self.assertEqual(str(unchanged_line_2.value), "2.00")
-        self.assertEqual(str(unchanged_fix_line.value), "3.00")
+        self.assertEqual(str(unchanged_fixed_line.value), "3.00")
 
     def test_validate_rejects_intervention_without_cost_breakdown_lines(self):
         empty_intervention = self.create_snt_intervention(
@@ -265,7 +265,7 @@ class ScenarioYearlyCostAssignmentUpsertManySerializerTests(ScenarioYearlyCostAs
         )
 
         self.assertFalse(serializer.is_valid())
-        self.assertIn("non_field_errors", serializer.errors)
+        self.assertIn("intervention", serializer.errors)
 
     def test_required_fields_are_enforced(self):
         base_data = {

@@ -75,7 +75,7 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
             unit_cost=12,
             created_by=self.user_with_full_perm,
         )
-        self.fix_cost_line = InterventionCostBreakdownLine.objects.create(
+        self.fixed_cost_line = InterventionCostBreakdownLine.objects.create(
             intervention=self.intervention,
             unit_type=self.unit_type,
             name="Fixed cost line",
@@ -118,7 +118,7 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
             created_by=self.other_account_user,
         )
 
-    def _create_assignment(self, scenario, cost_line, year=2026, value="5.00"):
+    def _create_scenario_yearly_cost(self, scenario, cost_line, year=2026, value="5.00"):
         return ScenarioYearlyCostAssignment.objects.create(
             scenario=scenario,
             cost_line=cost_line,
@@ -155,8 +155,8 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
         return self.client.get(f"{BASE_URL}?scenario={scenario.id}")
 
     def test_get_assignments_is_scoped_per_scenario(self):
-        assignment_in_target = self._create_assignment(self.scenario, self.population_line_1, value="5.00")
-        self._create_assignment(self.other_user_scenario, self.population_line_1, value="7.00")
+        assignment_in_target = self._create_scenario_yearly_cost(self.scenario, self.population_line_1, value="5.00")
+        self._create_scenario_yearly_cost(self.other_user_scenario, self.population_line_1, value="7.00")
 
         response = self._list_assignments(self.user_no_perm, self.scenario)
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
@@ -166,8 +166,10 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(result[0]["scenario"], self.scenario.id)
 
     def test_get_assignments_allows_full_basic_and_no_access_users_for_locked_and_unlocked_scenarios(self):
-        target_assignment = self._create_assignment(self.scenario, self.population_line_1, value="5.00")
-        locked_assignment = self._create_assignment(self.locked_scenario, self.population_line_1, value="6.00")
+        target_assignment = self._create_scenario_yearly_cost(self.scenario, self.population_line_1, value="5.00")
+        locked_assignment = self._create_scenario_yearly_cost(
+            self.locked_scenario, self.population_line_1, value="6.00"
+        )
 
         for user in (self.user_with_full_perm, self.user_with_basic_perm, self.user_no_perm):
             for scenario, expected_id in (
@@ -207,7 +209,7 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    # This shouldn't work on locked scenario
+    # This work for locked scenario too, scenario lock state is validate in serializer.
     def test_create_allows_full_access_locked_scenario(self):
         response = self._post_create_payload(self.user_with_full_perm, self.locked_scenario, self.population_line_1)
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
@@ -216,19 +218,19 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(result["cost_line"], self.population_line_1.id)
 
     def test_forbidden_when_user_has_no_access_to_scenario(self):
-        assignment = self._create_assignment(self.scenario, self.population_line_1, value="5.00")
+        assignment = self._create_scenario_yearly_cost(self.scenario, self.population_line_1, value="5.00")
 
         response = self._patch_assignment_value(self.user_with_basic_perm, assignment, "15.00")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_forbidden_to_update_when_scenario_is_locked(self):
-        assignment = self._create_assignment(self.locked_scenario, self.population_line_1, value="5.00")
+        assignment = self._create_scenario_yearly_cost(self.locked_scenario, self.population_line_1, value="5.00")
 
         response = self._patch_assignment_value(self.user_with_full_perm, assignment, "20.00")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_updating_single_assignment_works(self):
-        assignment = self._create_assignment(self.scenario, self.population_line_1, value="5.00")
+        assignment = self._create_scenario_yearly_cost(self.scenario, self.population_line_1, value="5.00")
 
         response = self._patch_assignment_value(self.user_with_full_perm, assignment, "20.00")
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
@@ -238,7 +240,7 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(str(assignment.value), "20.00")
 
     def test_updating_single_assignment_allows_basic_access_when_user_created_the_scenario(self):
-        assignment = self._create_assignment(self.other_user_scenario, self.population_line_1, value="5.00")
+        assignment = self._create_scenario_yearly_cost(self.other_user_scenario, self.population_line_1, value="5.00")
 
         response = self._patch_assignment_value(self.user_with_basic_perm, assignment, "21.00")
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
@@ -248,7 +250,14 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(str(assignment.value), "21.00")
 
     def test_updating_single_assignment_forbids_no_access_same_account(self):
-        assignment = self._create_assignment(self.scenario, self.population_line_1, value="5.00")
+        assignment = self._create_scenario_yearly_cost(self.scenario, self.population_line_1, value="5.00")
 
         response = self._patch_assignment_value(self.user_no_perm, assignment, "22.00")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_deleting_assignment_is_not_allowed(self):
+        assignment = self._create_scenario_yearly_cost(self.scenario, self.population_line_1, value="5.00")
+
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.delete(f"{BASE_URL}{assignment.id}/")
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)

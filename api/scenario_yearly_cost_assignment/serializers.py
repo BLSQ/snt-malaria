@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import serializers
 
 from plugins.snt_malaria.models import InterventionCostBreakdownLine, Scenario, ScenarioYearlyCostAssignment
@@ -64,11 +65,10 @@ class ScenarioYearlyCostAssignmentUpsertSerializer(serializers.Serializer):
             ).filter(intervention__intervention_category__account=account)
         return fields
 
-    def validate(self, attrs):
-        intervention = attrs["intervention"]
-        if not intervention.cost_breakdown_lines.exists():
-            raise serializers.ValidationError(f"Intervention {intervention.id} does not have any cost breakdown line.")
-        return attrs
+    def validate_intervention(self, value):
+        if not value.cost_breakdown_lines.exists():
+            raise serializers.ValidationError(f"Intervention {value.id} does not have any cost breakdown line.")
+        return value
 
     def validate_scenario(self, value):
         if value.is_locked:
@@ -77,6 +77,7 @@ class ScenarioYearlyCostAssignmentUpsertSerializer(serializers.Serializer):
 
     # Save info, if cost_line is provided, update or create the assignment for this cost line
     # if not provided update or create the assignment for all population cost lines of the intervention
+    @transaction.atomic
     def save(self, **kwargs):
         intervention = self.validated_data["intervention"]
         year = self.validated_data["year"]

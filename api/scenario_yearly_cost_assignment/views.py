@@ -11,7 +11,7 @@ from plugins.snt_malaria.models import ScenarioYearlyCostAssignment
 
 
 class ScenarioYearlyCostAssignmentViewSet(viewsets.ModelViewSet):
-    serializer_class = ScenarioYearlyCostAssignmentSerializer
+    http_method_names = ["get", "options", "post", "patch"]
     permission_classes = [ScenarioYearlyCostAssignmentPermission]
 
     def get_serializer_class(self):
