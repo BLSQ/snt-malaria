@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from plugins.snt_malaria.models.intervention import Intervention
 
 
+# TODO this should be moved to intervention seeder only.
 class InterventionCostUnitType(models.TextChoices):
     PER_ITN = "PER_ITN", _("per ITN")
     PER_SP = "PER_SP", _("per SP")
