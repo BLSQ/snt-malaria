@@ -6,7 +6,6 @@ import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
-import { useOnboarding } from '../../hooks/useOnboarding';
 import {
     MainColumn,
     PageContainer,
@@ -15,6 +14,7 @@ import {
     SidebarLayout,
 } from '../../components/styledComponents';
 import { baseUrls } from '../../constants/urls';
+import { useOnboarding } from '../../hooks/useOnboarding';
 import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { DataLayerDialog } from './dataLayerForm/DataLayerDialog';
