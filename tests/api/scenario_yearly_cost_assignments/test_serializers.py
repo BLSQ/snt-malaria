@@ -221,7 +221,7 @@ class ScenarioYearlyCostAssignmentUpsertManySerializerTests(ScenarioYearlyCostAs
             data={
                 "intervention": self.intervention.id,
                 "scenario": self.scenario.id,
-                "cost_line": self.population_line_1.id,
+                "cost_line": self.fixed_cost_line.id,
                 "year": 2026,
                 "value": "99.00",
             },
@@ -239,13 +239,13 @@ class ScenarioYearlyCostAssignmentUpsertManySerializerTests(ScenarioYearlyCostAs
         )
         self.assertEqual(current_scenario_assignments.count(), 3)
 
-        updated_line_1 = current_scenario_assignments.get(cost_line=self.population_line_1)
+        changed_fixed_line = current_scenario_assignments.get(cost_line=self.fixed_cost_line)
+        unchanged_line_1 = current_scenario_assignments.get(cost_line=self.population_line_1)
         unchanged_line_2 = current_scenario_assignments.get(cost_line=self.population_line_2)
-        unchanged_fixed_line = current_scenario_assignments.get(cost_line=self.fixed_cost_line)
 
-        self.assertEqual(str(updated_line_1.value), "99.00")
+        self.assertEqual(str(changed_fixed_line.value), "99.00")
+        self.assertEqual(str(unchanged_line_1.value), "1.00")
         self.assertEqual(str(unchanged_line_2.value), "2.00")
-        self.assertEqual(str(unchanged_fixed_line.value), "3.00")
 
     def test_validate_rejects_intervention_without_cost_breakdown_lines(self):
         empty_intervention = self.create_snt_intervention(
@@ -329,3 +329,75 @@ class ScenarioYearlyCostAssignmentUpsertManySerializerTests(ScenarioYearlyCostAs
 
         self.assertFalse(serializer.is_valid())
         self.assertIn("scenario", serializer.errors)
+
+    def test_value_must_be_decimal(self):
+        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
+            data={
+                "intervention": self.intervention.id,
+                "scenario": self.scenario.id,
+                "year": 2026,
+                "value": "1a2,00",
+            },
+            context=self._context_for(self.user),
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("value", serializer.errors)
+
+    def test_cost_line_other_account(self):
+        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
+            data={
+                "intervention": self.intervention.id,
+                "scenario": self.scenario.id,
+                "cost_line": self.other_account_cost_line.id,
+                "year": 2026,
+                "value": "99.00",
+            },
+            context=self._context_for(self.user),
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("cost_line", serializer.errors)
+
+    def test_cost_line_not_belonging_to_intervention(self):
+        other_intervention_cost_line = self.create_snt_intervention(
+            name="Other Intervention",
+            intervention_category=self.category,
+            code="other_intervention",
+        ).cost_breakdown_lines.create(
+            name="Other Intervention Cost Line",
+            category="Procurement",
+            cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
+            unit_cost=50,
+            unit_type=self.unit_type,
+            created_by=self.user,
+        )
+
+        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
+            data={
+                "intervention": self.intervention.id,
+                "scenario": self.scenario.id,
+                "cost_line": other_intervention_cost_line.id,
+                "year": 2026,
+                "value": "99.00",
+            },
+            context=self._context_for(self.user),
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("cost_line", serializer.errors)
+
+    def test_cost_line_must_be_fixed_cost_when_provided(self):
+        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
+            data={
+                "intervention": self.intervention.id,
+                "scenario": self.scenario.id,
+                "cost_line": self.population_line_1.id,
+                "year": 2026,
+                "value": "99.00",
+            },
+            context=self._context_for(self.user),
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("cost_line", serializer.errors)

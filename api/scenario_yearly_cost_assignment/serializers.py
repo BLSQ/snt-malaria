@@ -70,6 +70,16 @@ class ScenarioYearlyCostAssignmentUpsertSerializer(serializers.Serializer):
             raise serializers.ValidationError(f"Intervention {value.id} does not have any cost breakdown line.")
         return value
 
+    def validate_cost_line(self, value):
+        if value and value.cost_driver == InterventionCostBreakdownLine.CostDriver.POPULATION:
+            raise serializers.ValidationError(
+                "Cost line should not be a population cost line, population cost lines are automatically assigned when no cost line is provided."
+            )
+
+        if value and value.intervention_id != self.initial_data.get("intervention"):
+            raise serializers.ValidationError("Cost line does not belong to the specified intervention.")
+        return value
+
     def validate_scenario(self, value):
         if value.is_locked:
             raise serializers.ValidationError("Cannot assign yearly cost to a locked scenario.")
