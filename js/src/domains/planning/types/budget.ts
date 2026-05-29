@@ -25,6 +25,7 @@ export type BudgetInterventionCostLine = {
     category: string;
     cost_class: string;
     name: string;
+    id: number;
 };
 
 export enum InterventionCostCoverage {

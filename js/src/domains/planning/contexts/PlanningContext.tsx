@@ -16,6 +16,7 @@ import {
     InterventionAssignmentResponse,
     InterventionPlan,
 } from '../types/interventionAssignments';
+import { Budget } from '../types/budget';
 
 type PlanningContextType = {
     scenarioId: number;
@@ -30,6 +31,7 @@ type PlanningContextType = {
     interventionAssignments: InterventionAssignmentResponse[];
     interventionPlans: InterventionPlan[];
     defaultBudgetAssumptions?: DefaultBudgetAssumptions;
+    budgets: Budget[];
     toggleIsEditing: () => void;
 };
 
@@ -46,6 +48,7 @@ const PlanningContext = createContext<PlanningContextType>({
     interventionAssignments: [],
     interventionPlans: [],
     defaultBudgetAssumptions: undefined,
+    budgets: [],
     toggleIsEditing: () => {},
 });
 
@@ -60,6 +63,7 @@ export const PlanningProvider = ({
     metricTypeCategories,
     interventionCategories,
     interventionAssignments,
+    budgets,
     children,
 }: {
     scenarioId: number;
@@ -70,6 +74,7 @@ export const PlanningProvider = ({
     metricTypeCategories: MetricTypeCategory[];
     interventionCategories: InterventionCategory[];
     interventionAssignments: InterventionAssignmentResponse[];
+    budgets: Budget[];
     children: React.ReactNode;
 }) => {
     const [interventionPlans, setInterventionPlans] = useState<
@@ -122,6 +127,7 @@ export const PlanningProvider = ({
                 interventionPlans,
                 isEditing,
                 defaultBudgetAssumptions,
+                budgets,
                 toggleIsEditing,
             }}
         >
