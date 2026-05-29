@@ -13,12 +13,19 @@ import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { BudgetIntervention } from '../../types/budget';
 import { BudgetRow, BudgetRowData, CostLineRowData } from './BudgetRow';
+import { BudgetTotalRow } from './BudgetTotalRow';
 
 export const BudgetTable: FC = ({}) => {
     const [budgetRows, setBudgetRows] = useState<BudgetRowData[]>([]);
-
     const { interventionPlans, budgets } = usePlanningContext();
     const { data: costLines } = useGetCostBreakdownLines();
+    const [totalCosts, setTotalCosts] = useState<{
+        totalCost: number;
+        yearlyTotal: Record<number, number>;
+    }>({
+        totalCost: 0,
+        yearlyTotal: {},
+    });
 
     const costBreakdownLineRecord = useMemo(() => {
         if (!costLines) return {};
@@ -67,7 +74,10 @@ export const BudgetTable: FC = ({}) => {
 
     useEffect(() => {
         const rows = [] as BudgetRowData[];
-
+        const totalCosts = {
+            totalCost: 0,
+            yearlyTotal: {} as Record<number, number>,
+        };
         interventionPlans.forEach(plan => {
             const orgUnitCount = plan.org_units.length || 0;
             const yearlyInterventions =
@@ -88,6 +98,10 @@ export const BudgetTable: FC = ({}) => {
             yearlyInterventions.forEach(intervention => {
                 row.yearCosts[intervention.year] = intervention.total_cost;
                 row.totalCost += intervention.total_cost;
+                totalCosts.totalCost += intervention.total_cost;
+                totalCosts.yearlyTotal[intervention.year] =
+                    (totalCosts.yearlyTotal[intervention.year] || 0) +
+                    intervention.total_cost;
 
                 intervention.cost_breakdown.forEach(costLine => {
                     const existingCostLine = row.costBreakdowns.find(
@@ -111,6 +125,7 @@ export const BudgetTable: FC = ({}) => {
         });
 
         setBudgetRows(rows);
+        setTotalCosts(totalCosts);
     }, [
         interventionPlans,
         interventionCosts,
@@ -148,6 +163,10 @@ export const BudgetTable: FC = ({}) => {
                             intervention={row}
                         />
                     ))}
+                    <BudgetTotalRow
+                        yearRange={yearRange}
+                        totalCosts={totalCosts}
+                    />
                 </TableBody>
             </Table>
         </TableContainer>
