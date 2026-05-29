@@ -54,9 +54,7 @@ export const BudgetTable: FC = ({}) => {
             budgets.reduce(
                 (acc, budget) => {
                     budget.interventions.forEach(intervention => {
-                        // TODO Replace this once we have intervention id in the budget response.
-                        const key: string =
-                            intervention.code + '_' + intervention.type;
+                        const key: number = intervention.id;
                         if (!acc[key]) {
                             acc[key] = [];
                         }
@@ -67,7 +65,7 @@ export const BudgetTable: FC = ({}) => {
                     });
                     return acc;
                 },
-                {} as Record<string, (BudgetIntervention & { year: number })[]>,
+                {} as Record<number, (BudgetIntervention & { year: number })[]>,
             ),
         [budgets],
     );
@@ -81,10 +79,7 @@ export const BudgetTable: FC = ({}) => {
         interventionPlans.forEach(plan => {
             const orgUnitCount = plan.org_units.length || 0;
             const yearlyInterventions =
-                // TODO Replace this once we have intervention id in the budget response.
-                interventionCosts[
-                    plan.intervention.code + '_' + plan.intervention.short_name
-                ] || [];
+                interventionCosts[plan.intervention.id] || [];
 
             const row = {
                 interventionId: plan.intervention.id,
