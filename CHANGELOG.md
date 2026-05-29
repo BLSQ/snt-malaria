@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.1](https://github.com/BLSQ/snt-malaria/compare/2.12.0...2.12.1) (2026-05-29)
+
+
+### Bug Fixes
+
+* Add metrics permission when creating demo account ([#298](https://github.com/BLSQ/snt-malaria/issues/298)) ([612697e](https://github.com/BLSQ/snt-malaria/commit/612697e30474d3f20e3543a32c9dd06c5f13b500))
+
 ## [2.12.0](https://github.com/BLSQ/snt-malaria/compare/2.11.0...2.12.0) (2026-05-20)
 
 
