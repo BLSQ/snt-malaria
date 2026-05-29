@@ -2,8 +2,8 @@ import React, { FC } from 'react';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { IconButton, TableCell, TableRow, Typography } from '@mui/material';
-import { formatBigNumber } from '../../libs/cost-utils';
 import { SxStyles } from 'Iaso/types/general';
+import { formatBigNumber } from '../../libs/cost-utils';
 
 export type BudgetRowData = {
     interventionId: number;
@@ -28,6 +28,11 @@ type Props = {
     intervention: BudgetRowData;
 };
 
+const styles = {
+    emphasis: { fontWeight: 'bold' },
+    supEmphasis: { fontWeight: 'bold', fontSize: '1.2rem' },
+} satisfies SxStyles;
+
 export const BudgetRow: FC<Props> = ({ yearRange, intervention }) => {
     const [open, setOpen] = React.useState(false);
     return (
@@ -45,22 +50,42 @@ export const BudgetRow: FC<Props> = ({ yearRange, intervention }) => {
                             <KeyboardArrowDownIcon />
                         )}
                     </IconButton>
-                    <Typography variant="body1" component="span">
+                    <Typography
+                        variant="body1"
+                        component="span"
+                        sx={styles.emphasis}
+                    >
                         {intervention.interventionLabel}
                     </Typography>
                 </TableCell>
-                <TableCell align="right">{intervention.orgUnitCount}</TableCell>
+                <TableCell align="right">
+                    <Typography variant="body2">
+                        {intervention.orgUnitCount}
+                    </Typography>
+                </TableCell>
                 {yearRange.map((year: number) => (
                     <TableCell
                         key={`budget_row_${intervention.interventionId}_year_${year}`}
                         align="right"
                     >
-                        {formatBigNumber(intervention.yearCosts[year] || 0)}
+                        <Typography
+                            variant="body1"
+                            component="span"
+                            sx={styles.emphasis}
+                        >
+                            {formatBigNumber(intervention.yearCosts[year] || 0)}
+                        </Typography>
                     </TableCell>
                 ))}
 
                 <TableCell align="right">
-                    {formatBigNumber(intervention.totalCost)}
+                    <Typography
+                        variant="body1"
+                        component="span"
+                        sx={styles.supEmphasis}
+                    >
+                        {formatBigNumber(intervention.totalCost)}
+                    </Typography>
                 </TableCell>
                 <TableCell align="right">Cost chart</TableCell>
             </TableRow>
@@ -84,9 +109,10 @@ type CostLineRowProps = {
     // subLabel: string;
 };
 
-const styles = {
+const costLineStyles = {
     costLineRow: { backgroundColor: '#f9f9f9', p: 1 },
     buffer: { pl: 4 },
+    emphasis: { fontWeight: 'bold' },
 } satisfies SxStyles;
 
 export const CostLineRow: FC<CostLineRowProps> = ({
@@ -96,9 +122,13 @@ export const CostLineRow: FC<CostLineRowProps> = ({
     // subLabel,
 }) => {
     return (
-        <TableRow sx={styles.costLineRow}>
-            <TableCell align="left" colSpan={2} sx={styles.buffer}>
-                <Typography variant="body1" component="span">
+        <TableRow sx={costLineStyles.costLineRow}>
+            <TableCell align="left" colSpan={2} sx={costLineStyles.buffer}>
+                <Typography
+                    variant="body2"
+                    component="span"
+                    sx={costLineStyles.emphasis}
+                >
                     {label}
                 </Typography>
                 {/* <Typography variant="body2" component="span">
@@ -111,7 +141,15 @@ export const CostLineRow: FC<CostLineRowProps> = ({
                     align="right"
                 ></TableCell>
             ))}
-            <TableCell align="right">{formatBigNumber(totalCost)}</TableCell>
+            <TableCell align="right">
+                <Typography
+                    variant="body2"
+                    component="span"
+                    sx={costLineStyles.emphasis}
+                >
+                    {formatBigNumber(totalCost)}
+                </Typography>
+            </TableCell>
             <TableCell align="right"></TableCell>
         </TableRow>
     );
