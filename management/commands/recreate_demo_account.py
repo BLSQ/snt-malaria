@@ -10,7 +10,7 @@ from iaso.models import Account, DataSource, MetricType, MetricValue, Profile, P
 from iaso.models.data_store import JsonDataStore
 from iaso.models.org_unit import OrgUnitType
 from iaso.modules import MODULE_DEFAULT, MODULE_SNT_MALARIA
-from iaso.permissions.core_permissions import CORE_DATASTORE_READ_PERMISSION
+from iaso.permissions.core_permissions import CORE_DATASTORE_READ_PERMISSION, CORE_METRIC_TYPES_PERMISSION
 from plugins.snt_malaria.models import (
     AccountSettings,
     Budget,
@@ -130,6 +130,7 @@ class Command(BaseCommand):
                     SNT_SCENARIO_FULL_WRITE_PERMISSION,
                     SNT_SETTINGS_READ_PERMISSION,
                     SNT_SETTINGS_WRITE_PERMISSION,
+                    CORE_METRIC_TYPES_PERMISSION,
                 ]
             ]
             snt_permissions = Permission.objects.filter(codename__in=snt_permission_codenames)
