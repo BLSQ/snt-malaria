@@ -3,6 +3,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { IconButton, TableCell, TableRow, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
+import { ProgressBar } from '../../../../components/LinearProgress';
 import { formatBigNumber } from '../../libs/cost-utils';
 
 export type BudgetRowData = {
@@ -26,6 +27,8 @@ export type CostLineRowData = {
 type Props = {
     yearRange: number[];
     intervention: BudgetRowData;
+    combinedTotalCost: number;
+    color: string;
 };
 
 const styles = {
@@ -33,7 +36,12 @@ const styles = {
     supEmphasis: { fontWeight: 'bold', fontSize: '1.2rem' },
 } satisfies SxStyles;
 
-export const BudgetRow: FC<Props> = ({ yearRange, intervention }) => {
+export const BudgetRow: FC<Props> = ({
+    yearRange,
+    intervention,
+    combinedTotalCost,
+    color,
+}) => {
     const [open, setOpen] = React.useState(false);
     return (
         <>
@@ -87,7 +95,13 @@ export const BudgetRow: FC<Props> = ({ yearRange, intervention }) => {
                         {formatBigNumber(intervention.totalCost)}
                     </Typography>
                 </TableCell>
-                <TableCell align="right">Cost chart</TableCell>
+                <TableCell align="right">
+                    <ProgressBar
+                        values={[intervention.totalCost]}
+                        colors={[color]}
+                        max={combinedTotalCost || 0} // Replace with the actual max value if available
+                    />
+                </TableCell>
             </TableRow>
             {open &&
                 intervention.costBreakdowns.map(line => (
@@ -106,7 +120,6 @@ type CostLineRowProps = {
     yearRange: number[];
     totalCost: number;
     label: string;
-    // subLabel: string;
 };
 
 const costLineStyles = {
@@ -119,7 +132,6 @@ export const CostLineRow: FC<CostLineRowProps> = ({
     yearRange,
     totalCost,
     label,
-    // subLabel,
 }) => {
     return (
         <TableRow sx={costLineStyles.costLineRow}>
@@ -131,9 +143,6 @@ export const CostLineRow: FC<CostLineRowProps> = ({
                 >
                     {label}
                 </Typography>
-                {/* <Typography variant="body2" component="span">
-                    {subLabel}
-                </Typography> */}
             </TableCell>
             {yearRange.map(year => (
                 <TableCell

@@ -1,6 +1,7 @@
 import React, { FC } from 'react';
 import { TableCell, TableRow, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
+import { ProgressBar } from '../../../../components/LinearProgress';
 import { formatBigNumber } from '../../libs/cost-utils';
 
 const styles = {
@@ -10,11 +11,13 @@ const styles = {
 
 export const BudgetTotalRow: FC<{
     yearRange: number[];
+    colors: string[];
     totalCosts: {
         totalCost: number;
         yearlyTotal: Record<number, number>;
+        interventionTotals: { label: string; totalCost: number }[];
     };
-}> = ({ yearRange, totalCosts }) => (
+}> = ({ yearRange, colors, totalCosts }) => (
     <TableRow sx={styles.row}>
         <TableCell align="left" colSpan={2}>
             <Typography variant="body2" component="span" sx={styles.emphasis}>
@@ -37,6 +40,17 @@ export const BudgetTotalRow: FC<{
                 {formatBigNumber(totalCosts.totalCost)}
             </Typography>
         </TableCell>
-        <TableCell align="right"></TableCell>
+        <TableCell align="right">
+            <ProgressBar
+                values={totalCosts.interventionTotals.map(
+                    intervention => intervention.totalCost,
+                )}
+                colors={colors}
+                max={totalCosts.totalCost}
+                tooltips={totalCosts.interventionTotals.map(
+                    intervention => intervention.label,
+                )}
+            />
+        </TableCell>
     </TableRow>
 );

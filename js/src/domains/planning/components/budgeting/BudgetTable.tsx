@@ -11,6 +11,7 @@ import {
 import { useGetCostBreakdownLines } from '../../../interventions/hooks/useGetCostBreakdownLines';
 import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { usePlanningContext } from '../../contexts/PlanningContext';
+import { getColorRange } from '../../libs/color-utils';
 import { BudgetIntervention } from '../../types/budget';
 import { BudgetRow, BudgetRowData, CostLineRowData } from './BudgetRow';
 import { BudgetTotalRow } from './BudgetTotalRow';
@@ -22,9 +23,11 @@ export const BudgetTable: FC = ({}) => {
     const [totalCosts, setTotalCosts] = useState<{
         totalCost: number;
         yearlyTotal: Record<number, number>;
+        interventionTotals: { label: string; totalCost: number }[];
     }>({
         totalCost: 0,
         yearlyTotal: {},
+        interventionTotals: [],
     });
 
     const costBreakdownLineRecord = useMemo(() => {
@@ -75,6 +78,7 @@ export const BudgetTable: FC = ({}) => {
         const totalCosts = {
             totalCost: 0,
             yearlyTotal: {} as Record<number, number>,
+            interventionTotals: [] as { label: string; totalCost: number }[],
         };
         interventionPlans.forEach(plan => {
             const orgUnitCount = plan.org_units.length || 0;
@@ -116,6 +120,12 @@ export const BudgetTable: FC = ({}) => {
                     }
                 });
             });
+
+            totalCosts.interventionTotals.push({
+                label: row.interventionLabel,
+                totalCost: row.totalCost,
+            });
+
             rows.push(row);
         });
 
@@ -127,6 +137,10 @@ export const BudgetTable: FC = ({}) => {
         setBudgetRows,
         costBreakdownLineRecord,
     ]);
+
+    const colors = useMemo(() => {
+        return getColorRange(budgetRows.length);
+    }, [budgetRows]);
 
     return (
         <TableContainer
@@ -151,16 +165,19 @@ export const BudgetTable: FC = ({}) => {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {budgetRows.map(row => (
+                    {budgetRows.map((row, index) => (
                         <BudgetRow
                             key={row.interventionId}
                             yearRange={yearRange}
                             intervention={row}
+                            combinedTotalCost={totalCosts.totalCost}
+                            color={colors[index]}
                         />
                     ))}
                     <BudgetTotalRow
                         yearRange={yearRange}
                         totalCosts={totalCosts}
+                        colors={colors}
                     />
                 </TableBody>
             </Table>
