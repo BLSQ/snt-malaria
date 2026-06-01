@@ -40,16 +40,60 @@ export const BudgetTable: FC = ({}) => {
         interventionTotals: [],
     });
 
-    const costBreakdownLineRecord = useMemo(() => {
-        if (!costLines) return {};
-        return costLines.reduce(
-            (acc, line) => {
-                acc[line.id] = line;
-                return acc;
-            },
-            {} as Record<number, InterventionCostBreakdownLine>,
-        );
-    }, [costLines]);
+    const yearlyCoverageByCostLine = useMemo(() => {
+        const coverageByCostLine: Record<
+            number,
+            Record<number, CostLineYearlyCoverage>
+        > = {};
+
+        scenarioYearlyCostAssignments.forEach(assignment => {
+            if (!coverageByCostLine[assignment.cost_line]) {
+                coverageByCostLine[assignment.cost_line] = {};
+            }
+
+            if (
+                coverageByCostLine[assignment.cost_line][assignment.year] ===
+                undefined
+            ) {
+                coverageByCostLine[assignment.cost_line][assignment.year] = {
+                    id: assignment.id,
+                    value: assignment.value,
+                };
+            }
+        });
+
+        return coverageByCostLine;
+    }, [scenarioYearlyCostAssignments]);
+
+    const { costBreakdownLineRecord, defaultCostRowDataByIntervention } =
+        useMemo(() => {
+            const lineRecord: Record<number, InterventionCostBreakdownLine> =
+                {};
+            const defaultRowsByIntervention: Record<number, CostLineRowData[]> =
+                {};
+
+            if (costLines) {
+                costLines.forEach(line => {
+                    lineRecord[line.id] = line;
+                    if (!defaultRowsByIntervention[line.intervention]) {
+                        defaultRowsByIntervention[line.intervention] = [];
+                    }
+                    defaultRowsByIntervention[line.intervention].push({
+                        id: line.id,
+                        label: line.name,
+                        subLabel: '',
+                        totalCost: 0,
+                        coverageByYear: (yearlyCoverageByCostLine[line.id] ||
+                            {}) as Record<number, CostLineYearlyCoverage>,
+                    });
+                });
+            }
+
+            return {
+                costBreakdownLineRecord: lineRecord,
+                defaultCostRowDataByIntervention: defaultRowsByIntervention,
+            };
+        }, [costLines, yearlyCoverageByCostLine]);
 
     const yearRange = useMemo(
         () =>
@@ -83,31 +127,6 @@ export const BudgetTable: FC = ({}) => {
         [budgets],
     );
 
-    const yearlyCoverageByCostLine = useMemo(() => {
-        const coverageByCostLine: Record<
-            number,
-            Record<number, CostLineYearlyCoverage>
-        > = {};
-
-        scenarioYearlyCostAssignments.forEach(assignment => {
-            if (!coverageByCostLine[assignment.cost_line]) {
-                coverageByCostLine[assignment.cost_line] = {};
-            }
-
-            if (
-                coverageByCostLine[assignment.cost_line][assignment.year] ===
-                undefined
-            ) {
-                coverageByCostLine[assignment.cost_line][assignment.year] = {
-                    id: assignment.id,
-                    value: assignment.value,
-                };
-            }
-        });
-
-        return coverageByCostLine;
-    }, [scenarioYearlyCostAssignments]);
-
     useEffect(() => {
         const rows = [] as BudgetRowData[];
         const totalCosts = {
@@ -120,13 +139,20 @@ export const BudgetTable: FC = ({}) => {
             const yearlyInterventions =
                 interventionCosts[plan.intervention.id] || [];
 
+            const preListedCostBreakdowns = (
+                defaultCostRowDataByIntervention[plan.intervention.id] || []
+            ).map(costLine => ({
+                ...costLine,
+                totalCost: 0,
+            }));
+
             const row = {
                 interventionId: plan.intervention.id,
                 interventionLabel: plan.intervention.short_name,
                 orgUnitCount,
                 yearCosts: {} as Record<number, number>,
                 totalCost: 0,
-                costBreakdowns: [] as CostLineRowData[],
+                costBreakdowns: preListedCostBreakdowns,
             };
 
             yearlyInterventions.forEach(intervention => {
@@ -173,6 +199,7 @@ export const BudgetTable: FC = ({}) => {
         interventionPlans,
         interventionCosts,
         setBudgetRows,
+        defaultCostRowDataByIntervention,
         costBreakdownLineRecord,
         yearlyCoverageByCostLine,
     ]);
