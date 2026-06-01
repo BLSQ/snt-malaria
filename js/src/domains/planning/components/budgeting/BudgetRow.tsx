@@ -5,6 +5,7 @@ import { IconButton, TableCell, TableRow, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { ProgressBar } from '../../../../components/LinearProgress';
 import { formatBigNumber } from '../../libs/cost-utils';
+import { CostLineRow, CostLineRowData } from './CostLineRow';
 
 export type BudgetRowData = {
     interventionId: number;
@@ -17,18 +18,12 @@ export type BudgetRowData = {
     costBreakdowns: CostLineRowData[];
 };
 
-export type CostLineRowData = {
-    id: number;
-    label: string;
-    subLabel: string;
-    totalCost: number;
-};
-
 type Props = {
     yearRange: number[];
     intervention: BudgetRowData;
     combinedTotalCost: number;
     color: string;
+    isEditable: boolean;
 };
 
 const styles = {
@@ -41,6 +36,7 @@ export const BudgetRow: FC<Props> = ({
     intervention,
     combinedTotalCost,
     color,
+    isEditable,
 }) => {
     const [open, setOpen] = React.useState(false);
     return (
@@ -50,6 +46,7 @@ export const BudgetRow: FC<Props> = ({
                     <IconButton
                         aria-label="expand row"
                         size="small"
+                        sx={{ mr: 1 }}
                         onClick={() => setOpen(!open)}
                     >
                         {open ? (
@@ -108,58 +105,13 @@ export const BudgetRow: FC<Props> = ({
                     <CostLineRow
                         key={`cost_line_${line.id}`}
                         yearRange={yearRange}
+                        isEditable={isEditable}
+                        costLineId={line.id}
+                        coverageByYear={line.coverageByYear}
                         totalCost={line.totalCost}
                         label={line.label}
                     />
                 ))}
         </>
-    );
-};
-
-type CostLineRowProps = {
-    yearRange: number[];
-    totalCost: number;
-    label: string;
-};
-
-const costLineStyles = {
-    costLineRow: { backgroundColor: '#f9f9f9', p: 1 },
-    buffer: { pl: 4 },
-    emphasis: { fontWeight: 'bold' },
-} satisfies SxStyles;
-
-export const CostLineRow: FC<CostLineRowProps> = ({
-    yearRange,
-    totalCost,
-    label,
-}) => {
-    return (
-        <TableRow sx={costLineStyles.costLineRow}>
-            <TableCell align="left" colSpan={2} sx={costLineStyles.buffer}>
-                <Typography
-                    variant="body2"
-                    component="span"
-                    sx={costLineStyles.emphasis}
-                >
-                    {label}
-                </Typography>
-            </TableCell>
-            {yearRange.map(year => (
-                <TableCell
-                    key={`cost_line_${label}_${year}`}
-                    align="right"
-                ></TableCell>
-            ))}
-            <TableCell align="right">
-                <Typography
-                    variant="body2"
-                    component="span"
-                    sx={costLineStyles.emphasis}
-                >
-                    {formatBigNumber(totalCost)}
-                </Typography>
-            </TableCell>
-            <TableCell align="right"></TableCell>
-        </TableRow>
     );
 };

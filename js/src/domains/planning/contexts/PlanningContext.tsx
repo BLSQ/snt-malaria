@@ -3,20 +3,25 @@ import React, {
     useCallback,
     useContext,
     useEffect,
+    useRef,
     useState,
 } from 'react';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { createTimeoutService } from '../../../services/timeoutService';
 import { MetricTypeCategory } from '../../dataLayers/types/metrics';
 import { InterventionCategory } from '../../interventions/types';
 import { sortByStringProp } from '../../planning/libs/list-utils';
 import { Scenario } from '../../scenarios/types';
 import { useGetDefaultBudgetAssumptions } from '../hooks/useGetBudgetAssumptions';
+import { useGetScenarioYearlyCostAssignments } from '../hooks/useGetScenarioYearlyCostAssignments';
+import { useSaveScenarioYearlyCostAssignment } from '../hooks/useSaveScenarioYearlyCostAssignment';
+import { Budget } from '../types/budget';
 import {
     DefaultBudgetAssumptions,
     InterventionAssignmentResponse,
     InterventionPlan,
+    ScenarioYearlyCostAssignment,
 } from '../types/interventionAssignments';
-import { Budget } from '../types/budget';
 
 type PlanningContextType = {
     scenarioId: number;
@@ -31,9 +36,21 @@ type PlanningContextType = {
     interventionAssignments: InterventionAssignmentResponse[];
     interventionPlans: InterventionPlan[];
     defaultBudgetAssumptions?: DefaultBudgetAssumptions;
+    scenarioYearlyCostAssignments: ScenarioYearlyCostAssignment[];
     budgets: Budget[];
+    saveYearlyCoverage: (params: SaveYearlyCoverageParams) => void;
     toggleIsEditing: () => void;
 };
+
+type SaveYearlyCoverageParams = {
+    assignmentId?: number;
+    costLineId: number;
+    year: number;
+    value: number;
+};
+
+const toCoverageKey = (costLineId: number, year: number) =>
+    `${costLineId}-${year}`;
 
 const PlanningContext = createContext<PlanningContextType>({
     scenarioId: 0,
@@ -48,7 +65,9 @@ const PlanningContext = createContext<PlanningContextType>({
     interventionAssignments: [],
     interventionPlans: [],
     defaultBudgetAssumptions: undefined,
+    scenarioYearlyCostAssignments: [],
     budgets: [],
+    saveYearlyCoverage: () => {},
     toggleIsEditing: () => {},
 });
 
@@ -77,6 +96,7 @@ export const PlanningProvider = ({
     budgets: Budget[];
     children: React.ReactNode;
 }) => {
+    const DEBOUNCE_MS = 500;
     const [interventionPlans, setInterventionPlans] = useState<
         InterventionPlan[]
     >([]);
@@ -85,6 +105,11 @@ export const PlanningProvider = ({
         : canEditScenario;
 
     const { data: defaultBudgetAssumptions } = useGetDefaultBudgetAssumptions();
+    const { data: scenarioYearlyCostAssignments = [] } =
+        useGetScenarioYearlyCostAssignments(scenarioId);
+    const { mutate: saveScenarioYearlyCostAssignment } =
+        useSaveScenarioYearlyCostAssignment(scenarioId);
+    const timeoutServiceRef = useRef(createTimeoutService());
 
     useEffect(() => {
         const plans = new Map<number, InterventionPlan>();
@@ -112,6 +137,45 @@ export const PlanningProvider = ({
         [setIsEditing],
     );
 
+    const saveYearlyCoverage = useCallback(
+        ({
+            assignmentId,
+            costLineId,
+            year,
+            value,
+        }: SaveYearlyCoverageParams) => {
+            const debounceKey = toCoverageKey(costLineId, year);
+            const parsedValue = Number(value);
+            if (!Number.isFinite(parsedValue)) {
+                return;
+            }
+
+            const clampedValue = Math.min(100, Math.max(0, parsedValue));
+
+            timeoutServiceRef.current.debounce(
+                debounceKey,
+                () => {
+                    saveScenarioYearlyCostAssignment({
+                        id: assignmentId,
+                        scenario: scenarioId,
+                        costLine: costLineId,
+                        year,
+                        value: clampedValue,
+                    });
+                },
+                DEBOUNCE_MS,
+            );
+        },
+        [saveScenarioYearlyCostAssignment, scenarioId],
+    );
+
+    useEffect(
+        () => () => {
+            timeoutServiceRef.current.clearAll();
+        },
+        [],
+    );
+
     return (
         <PlanningContext.Provider
             value={{
@@ -127,7 +191,9 @@ export const PlanningProvider = ({
                 interventionPlans,
                 isEditing,
                 defaultBudgetAssumptions,
+                scenarioYearlyCostAssignments,
                 budgets,
+                saveYearlyCoverage,
                 toggleIsEditing,
             }}
         >

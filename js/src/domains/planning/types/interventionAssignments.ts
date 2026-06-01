@@ -47,3 +47,11 @@ export type BudgetAssumptions = {
     scenario: number;
     coverage: number;
 };
+
+export type ScenarioYearlyCostAssignment = {
+    id: number;
+    scenario: number;
+    year: number;
+    cost_line: number;
+    value: number;
+};

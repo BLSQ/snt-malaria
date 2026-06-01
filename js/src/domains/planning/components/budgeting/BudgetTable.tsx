@@ -13,12 +13,18 @@ import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { getColorRange } from '../../libs/color-utils';
 import { BudgetIntervention } from '../../types/budget';
-import { BudgetRow, BudgetRowData, CostLineRowData } from './BudgetRow';
+import { BudgetRow, BudgetRowData } from './BudgetRow';
 import { BudgetTotalRow } from './BudgetTotalRow';
+import { CostLineRowData, CostLineYearlyCoverage } from './CostLineRow';
 
 export const BudgetTable: FC = ({}) => {
     const [budgetRows, setBudgetRows] = useState<BudgetRowData[]>([]);
-    const { interventionPlans, budgets } = usePlanningContext();
+    const {
+        interventionPlans,
+        budgets,
+        scenarioYearlyCostAssignments,
+        isScenarioEditable,
+    } = usePlanningContext();
     const { data: costLines } = useGetCostBreakdownLines();
     const [totalCosts, setTotalCosts] = useState<{
         totalCost: number;
@@ -73,6 +79,31 @@ export const BudgetTable: FC = ({}) => {
         [budgets],
     );
 
+    const yearlyCoverageByCostLine = useMemo(() => {
+        const coverageByCostLine: Record<
+            number,
+            Record<number, CostLineYearlyCoverage>
+        > = {};
+
+        scenarioYearlyCostAssignments.forEach(assignment => {
+            if (!coverageByCostLine[assignment.cost_line]) {
+                coverageByCostLine[assignment.cost_line] = {};
+            }
+
+            if (
+                coverageByCostLine[assignment.cost_line][assignment.year] ===
+                undefined
+            ) {
+                coverageByCostLine[assignment.cost_line][assignment.year] = {
+                    id: assignment.id,
+                    value: assignment.value,
+                };
+            }
+        });
+
+        return coverageByCostLine;
+    }, [scenarioYearlyCostAssignments]);
+
     useEffect(() => {
         const rows = [] as BudgetRowData[];
         const totalCosts = {
@@ -116,6 +147,9 @@ export const BudgetTable: FC = ({}) => {
                             label: breakdownLine ? breakdownLine.name : '',
                             subLabel: '',
                             totalCost: costLine.cost,
+                            coverageByYear: (yearlyCoverageByCostLine[
+                                costLine.id
+                            ] || {}) as Record<number, CostLineYearlyCoverage>,
                         });
                     }
                 });
@@ -136,6 +170,7 @@ export const BudgetTable: FC = ({}) => {
         interventionCosts,
         setBudgetRows,
         costBreakdownLineRecord,
+        yearlyCoverageByCostLine,
     ]);
 
     const colors = useMemo(() => {
@@ -155,13 +190,13 @@ export const BudgetTable: FC = ({}) => {
                         {yearRange.map(year => (
                             <TableCell
                                 key={`budget_header_${year}`}
-                                align="center"
+                                align="right"
                             >
                                 {year}
                             </TableCell>
                         ))}
                         <TableCell align="right">Total cost ($)</TableCell>
-                        <TableCell align="right">Cost chart</TableCell>
+                        <TableCell align="center">Cost chart</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -172,6 +207,7 @@ export const BudgetTable: FC = ({}) => {
                             intervention={row}
                             combinedTotalCost={totalCosts.totalCost}
                             color={colors[index]}
+                            isEditable={isScenarioEditable}
                         />
                     ))}
                     <BudgetTotalRow

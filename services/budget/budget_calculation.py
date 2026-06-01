@@ -102,7 +102,6 @@ class BudgetCalculationService:
         return a BudgetYearResult object containing the total cost and quantity for the year, as well as the detailed breakdown by intervention, org unit and category.
         """
         rows = self._compute_breakdown_line_rows(year)
-        print(f"Computed {len(rows)} breakdown lines for year {year}")
 
         intervention_totals = defaultdict(
             lambda: {"total_cost": Decimal("0"), "total_pop": Decimal("0"), "quantity": Decimal("0")}
@@ -183,7 +182,6 @@ class BudgetCalculationService:
         rows = []
         years_offset = year - self.start_year
         inflation_multiplier = (Decimal("1") + self.inflation_rate) ** years_offset
-
         for assignment in self.assignments:
             intervention = assignment.intervention
             org_unit_id = assignment.org_unit_id
