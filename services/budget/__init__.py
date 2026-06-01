@@ -1,4 +1,4 @@
-from .budget import BudgetCalculationService
+from .budget_calculation import BudgetCalculationService
 from .dataclasses import (
     BudgetBreakdownItem,
     BudgetInterventionItem,
