@@ -85,6 +85,8 @@ class BudgetViewSet(viewsets.ModelViewSet):
         budgets = []
         assumptions_by_year = build_budget_assumptions(scenario)
 
+        # Integration point for the internal calculator service.
+        # Keep external calculator as the active engine until explicit cutover.
         budget_calculator = BudgetCalculator(
             interventions_input=interventions_input,
             settings=assumptions_by_year,
