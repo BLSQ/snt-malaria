@@ -4,6 +4,7 @@ from decimal import Decimal
 
 @dataclass
 class BudgetBreakdownItem:
+    id: int
     category: str
     cost_class: str
     total_cost: Decimal = Decimal("0.0")
@@ -51,6 +52,7 @@ class BudgetYearResult:
 
 @dataclass
 class BudgetLineRow:
+    cost_line_id: int
     org_unit_id: int
     intervention_id: int
     category: str
