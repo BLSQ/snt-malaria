@@ -1,7 +1,7 @@
-import importlib
-
 from decimal import Decimal
 from typing import Any
+
+from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS, BudgetCalculator
 
 from iaso.models import MetricType, MetricValue
 from plugins.snt_malaria.api.budget.utils import (
@@ -15,17 +15,13 @@ from plugins.snt_malaria.models import (
     ScenarioYearlyCostAssignment,
 )
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
-from plugins.snt_malaria.services.budget import BudgetCalculationService
+from plugins.snt_malaria.services import BudgetCalculationService
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
 class BudgetCalculationComparisonTestCase(SNTMalariaTestCase):
     def setUp(self):
         super().setUp()
-
-        budgeting_module = importlib.import_module("snt_malaria_budgeting")
-        self.BudgetCalculator = budgeting_module.BudgetCalculator
-        self.default_cost_assumptions = budgeting_module.DEFAULT_COST_ASSUMPTIONS
 
         self.scenario = self.create_snt_scenario(
             self.account,
@@ -127,9 +123,9 @@ class BudgetCalculationComparisonTestCase(SNTMalariaTestCase):
         )
         cost_df = build_cost_dataframe(self.account, 2025, 2025)
         interventions_input = build_interventions_input(self.scenario)
-        legacy_calculator = self.BudgetCalculator(
+        legacy_calculator = BudgetCalculator(
             interventions_input=interventions_input,
-            settings={2025: self.default_cost_assumptions.copy()},
+            settings={2025: DEFAULT_COST_ASSUMPTIONS.copy()},
             cost_df=cost_df,
             population_df=population_df,
             local_currency="XOF",

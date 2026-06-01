@@ -1,4 +1,4 @@
-from .budget import BudgetCalculationService
+from .budget.budget import BudgetCalculationService
 
 
 __all__ = ["BudgetCalculationService"]

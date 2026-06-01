@@ -8,7 +8,7 @@ from plugins.snt_malaria.models import (
     ScenarioYearlyCostAssignment,
 )
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
-from plugins.snt_malaria.services.budget import BudgetCalculationService
+from plugins.snt_malaria.services import BudgetCalculationService
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
@@ -153,8 +153,8 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(intervention.cost_breakdown[0].total_cost, 3960.0)
 
         self.assertEqual(len(result.org_units_costs), 2)
-        district_1_result = next(o for o in result.org_units_costs if o.org_unit_id == self.district_1.id)
-        district_2_result = next(o for o in result.org_units_costs if o.org_unit_id == self.district_2.id)
+        district_1_result = result.org_units_costs[0]
+        district_2_result = result.org_units_costs[1]
 
         self.assertEqual(district_1_result.quantity, 600.0)
         self.assertEqual(district_1_result.total_cost, 1320.0)

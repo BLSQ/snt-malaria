@@ -1,67 +1,17 @@
 from collections import defaultdict
-from dataclasses import dataclass, field
 from decimal import Decimal
 
 from iaso.models import MetricValue
 from plugins.snt_malaria.models import BudgetSettings, InterventionCostBreakdownLine, ScenarioYearlyCostAssignment
 
-
-@dataclass
-class BudgetBreakdownItem:
-    category: str
-    cost_class: str
-    total_cost: Decimal = Decimal("0.0")
-    quantity: Decimal = Decimal("0.0")
-
-
-@dataclass
-class BudgetInterventionItem:
-    id: int
-    code: str
-    type: str
-    total_cost: Decimal = Decimal("0.0")
-    total_pop: Decimal = Decimal("0.0")
-    quantity: Decimal = Decimal("0.0")
-    cost_breakdown: list[BudgetBreakdownItem] = field(default_factory=list)
-
-
-@dataclass
-class BudgetOrgUnitInterventionItem:
-    id: int
-    code: str
-    type: str
-    total_cost: Decimal = Decimal("0.0")
-    quantity: Decimal = Decimal("0.0")
-    cost_breakdown: list[BudgetBreakdownItem] = field(default_factory=list)
-
-
-@dataclass
-class BudgetOrgUnitItem:
-    org_unit_id: int
-    total_cost: Decimal = Decimal("0.0")
-    quantity: Decimal = Decimal("0.0")
-    interventions: list[BudgetOrgUnitInterventionItem] = field(default_factory=list)
-
-
-@dataclass
-class BudgetYearResult:
-    year: int
-    total_cost: Decimal
-    quantity: Decimal
-    interventions: list[BudgetInterventionItem]
-    org_units_costs: list[BudgetOrgUnitItem]
-    category_costs: list[BudgetBreakdownItem]
-
-
-@dataclass
-class BudgetLineRow:
-    org_unit_id: int
-    intervention_id: int
-    category: str
-    cost_class: str
-    population: Decimal
-    quantity: Decimal
-    total_cost: Decimal
+from .dataclasses import (
+    BudgetBreakdownItem,
+    BudgetInterventionItem,
+    BudgetLineRow,
+    BudgetOrgUnitInterventionItem,
+    BudgetOrgUnitItem,
+    BudgetYearResult,
+)
 
 
 class BudgetCalculationService:
@@ -86,14 +36,17 @@ class BudgetCalculationService:
             .order_by("org_unit_id", "intervention_id")
         )
         self.intervention_meta_by_id = {}
+        intervention_ids = set()
+        org_unit_ids = set()
         for assignment in self.assignments:
             self.intervention_meta_by_id[assignment.intervention_id] = {
                 "code": assignment.intervention.code,
                 "type": assignment.intervention.short_name,
             }
+            intervention_ids.add(assignment.intervention_id)
+            org_unit_ids.add(assignment.org_unit_id)
 
-        intervention_ids = {a.intervention_id for a in self.assignments}
-        self.population_cost_lines = list(
+        population_cost_lines = list(
             InterventionCostBreakdownLine.objects.filter(
                 intervention_id__in=intervention_ids,
                 cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
@@ -103,13 +56,13 @@ class BudgetCalculationService:
         )
 
         self.cost_lines_by_intervention_id = defaultdict(list)
-        for line in self.population_cost_lines:
+        cost_line_ids = []
+        metric_type_ids = set()
+        for line in population_cost_lines:
             self.cost_lines_by_intervention_id[line.intervention_id].append(line)
-
-        org_unit_ids = {a.org_unit_id for a in self.assignments}
-        metric_type_ids = {
-            line.population_layer_id for line in self.population_cost_lines if line.population_layer_id is not None
-        }
+            cost_line_ids.append(line.id)
+            if line.population_layer_id is not None:
+                metric_type_ids.add(line.population_layer_id)
 
         metric_values = MetricValue.objects.filter(
             org_unit_id__in=org_unit_ids,
@@ -126,7 +79,7 @@ class BudgetCalculationService:
             scenario=scenario,
             year__gte=self.start_year,
             year__lte=self.end_year,
-            cost_line_id__in=[line.id for line in self.population_cost_lines],
+            cost_line_id__in=cost_line_ids,
         ).values("cost_line_id", "year", "value")
 
         self.yearly_value_by_key = {
@@ -216,8 +169,8 @@ class BudgetCalculationService:
         """
         Compute the raw cost breakdown lines for a given year, without any aggregation, to be used as input for the budget calculation.
         Calculation is based on the population-driven formula, only processing cost lines with population as cost driver
-        And skipping lines with missing population or yearly assignment values.
-        Formula quantity: population * yearly_assignment_value * cost_unit_ratio
+        And skipping lines with missing population or yearly per scenario cost values.
+        Formula quantity: population * yearly_cost_value * cost_unit_ratio
         Formula total cost: quantity * cost_line_unit_cost * (1 + inflation_rate)^(year - start_year)
         """
 
