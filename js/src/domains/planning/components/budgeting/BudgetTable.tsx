@@ -7,9 +7,12 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    Typography,
 } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import { useGetCostBreakdownLines } from '../../../interventions/hooks/useGetCostBreakdownLines';
 import { InterventionCostBreakdownLine } from '../../../interventions/types';
+import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { getColorRange } from '../../libs/color-utils';
 import { BudgetIntervention } from '../../types/budget';
@@ -19,6 +22,7 @@ import { CostLineRowData, CostLineYearlyCoverage } from './CostLineRow';
 
 export const BudgetTable: FC = ({}) => {
     const [budgetRows, setBudgetRows] = useState<BudgetRowData[]>([]);
+    const { formatMessage } = useSafeIntl();
     const {
         interventionPlans,
         budgets,
@@ -182,21 +186,31 @@ export const BudgetTable: FC = ({}) => {
             sx={{ mx: -2, width: 'calc(100% + 32px)' }}
             component={Paper}
         >
-            <Table aria-label="collapsible table">
+            <Table aria-label={formatMessage(MESSAGES.budgetingTableAriaLabel)}>
                 <TableHead>
                     <TableRow>
-                        <TableCell>Line item</TableCell>
-                        <TableCell align="right">Districts</TableCell>
+                        <TableCell>
+                            {formatMessage(MESSAGES.budgetingLineItem)}
+                        </TableCell>
+                        <TableCell align="center">
+                            {formatMessage(MESSAGES.budgetingDistricts)}
+                        </TableCell>
                         {yearRange.map(year => (
                             <TableCell
                                 key={`budget_header_${year}`}
-                                align="right"
+                                align="center"
                             >
-                                {year}
+                                <Typography variant="body2" component="span">
+                                    {year}
+                                </Typography>
                             </TableCell>
                         ))}
-                        <TableCell align="right">Total cost ($)</TableCell>
-                        <TableCell align="center">Cost chart</TableCell>
+                        <TableCell align="center">
+                            {formatMessage(MESSAGES.budgetingTotalCost)}
+                        </TableCell>
+                        <TableCell align="center">
+                            {formatMessage(MESSAGES.budgetingCostChart)}
+                        </TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>

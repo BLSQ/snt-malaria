@@ -2,8 +2,10 @@ import React, { FC } from 'react';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { IconButton, TableCell, TableRow, Typography } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ProgressBar } from '../../../../components/LinearProgress';
+import { MESSAGES } from '../../../messages';
 import { formatBigNumber } from '../../libs/cost-utils';
 import { CostLineRow, CostLineRowData } from './CostLineRow';
 
@@ -39,12 +41,13 @@ export const BudgetRow: FC<Props> = ({
     isEditable,
 }) => {
     const [open, setOpen] = React.useState(false);
+    const { formatMessage } = useSafeIntl();
     return (
         <>
             <TableRow>
                 <TableCell>
                     <IconButton
-                        aria-label="expand row"
+                        aria-label={formatMessage(MESSAGES.budgetingExpandRow)}
                         size="small"
                         sx={{ mr: 1 }}
                         onClick={() => setOpen(!open)}
@@ -71,19 +74,19 @@ export const BudgetRow: FC<Props> = ({
                 {yearRange.map((year: number) => (
                     <TableCell
                         key={`budget_row_${intervention.interventionId}_year_${year}`}
-                        align="right"
+                        align="center"
                     >
                         <Typography
                             variant="body1"
                             component="span"
-                            sx={styles.emphasis}
+                            sx={{ ...styles.emphasis }}
                         >
                             {formatBigNumber(intervention.yearCosts[year] || 0)}
                         </Typography>
                     </TableCell>
                 ))}
 
-                <TableCell align="right">
+                <TableCell align="center">
                     <Typography
                         variant="body1"
                         component="span"
@@ -92,7 +95,7 @@ export const BudgetRow: FC<Props> = ({
                         {formatBigNumber(intervention.totalCost)}
                     </Typography>
                 </TableCell>
-                <TableCell align="right">
+                <TableCell align="center">
                     <ProgressBar
                         values={[intervention.totalCost]}
                         colors={[color]}

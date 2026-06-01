@@ -13,9 +13,7 @@ type ScenarioYearlyCostAssignmentPayload = {
 
 const transformPercentageValue = (value: number) => (value ?? 0) / 100;
 
-export const useSaveScenarioYearlyCostAssignment = (
-    scenarioId: number,
-): UseMutationResult =>
+export const useSaveScenarioYearlyCostAssignment = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: ({
             id,

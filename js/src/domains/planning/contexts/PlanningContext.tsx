@@ -108,7 +108,7 @@ export const PlanningProvider = ({
     const { data: scenarioYearlyCostAssignments = [] } =
         useGetScenarioYearlyCostAssignments(scenarioId);
     const { mutate: saveScenarioYearlyCostAssignment } =
-        useSaveScenarioYearlyCostAssignment(scenarioId);
+        useSaveScenarioYearlyCostAssignment();
     const timeoutServiceRef = useRef(createTimeoutService());
 
     useEffect(() => {

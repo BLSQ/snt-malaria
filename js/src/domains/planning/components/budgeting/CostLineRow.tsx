@@ -29,8 +29,7 @@ type Props = {
 
 const styles = {
     costLineRow: { backgroundColor: '#f9f9f9', p: 1 },
-    buffer: { pl: 4 },
-    emphasis: { fontWeight: 'bold' },
+    buffer: { pl: 7.275 },
 } satisfies SxStyles;
 
 const clampPercentage = (value: number) => {
@@ -120,16 +119,12 @@ export const CostLineRow: FC<Props> = ({
     return (
         <TableRow sx={styles.costLineRow}>
             <TableCell align="left" colSpan={2} sx={styles.buffer}>
-                <Typography
-                    variant="body2"
-                    component="span"
-                    sx={styles.emphasis}
-                >
+                <Typography variant="body2" component="span">
                     {label}
                 </Typography>
             </TableCell>
             {yearRange.map(year => (
-                <TableCell key={`cost_line_${label}_${year}`} align="right">
+                <TableCell key={`cost_line_${label}_${year}`} align="center">
                     <YearlyCoverageInput
                         value={coverageInputsByYear[year] ?? '100'}
                         onChange={nextValue =>
@@ -140,16 +135,12 @@ export const CostLineRow: FC<Props> = ({
                     />
                 </TableCell>
             ))}
-            <TableCell align="right">
-                <Typography
-                    variant="body2"
-                    component="span"
-                    sx={styles.emphasis}
-                >
+            <TableCell align="center">
+                <Typography variant="body2" component="span">
                     {formatBigNumber(totalCost)}
                 </Typography>
             </TableCell>
-            <TableCell align="right"></TableCell>
+            <TableCell></TableCell>
         </TableRow>
     );
 };
