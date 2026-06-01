@@ -423,9 +423,9 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compareCustomize.impactDifferencesTitle',
         defaultMessage: 'Impact differences',
     },
-    impactPfprReduction: {
-        id: 'iaso.snt_malaria.impact.pfprReduction',
-        defaultMessage: 'PfPR reduction',
+    impactPfprEvolution: {
+        id: 'iaso.snt_malaria.impact.pfprEvolution',
+        defaultMessage: 'PfPR evolution',
     },
     impactRefLabel: {
         id: 'iaso.snt_malaria.label.impactRef',

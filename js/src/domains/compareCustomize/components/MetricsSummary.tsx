@@ -1,8 +1,8 @@
 import React, { FC, useMemo } from 'react';
-import TrendingDownOutlinedIcon from '@mui/icons-material/TrendingDownOutlined';
 import MonetizationOnOutlinedIcon from '@mui/icons-material/MonetizationOnOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
 import SentimentVeryDissatisfiedOutlinedIcon from '@mui/icons-material/SentimentVeryDissatisfiedOutlined';
+import TimelineOutlinedIcon from '@mui/icons-material/TimelineOutlined';
 import { Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
@@ -10,11 +10,12 @@ import { MESSAGES } from '../../messages';
 import {
     formatBigNumber,
     formatPercentValue,
+    formatSignedPercentValue,
 } from '../../planning/libs/cost-utils';
 import { useComparisonDataContext } from '../ComparisonDataContext';
 import {
     getCumulativeCosts,
-    getPfprReduction,
+    getPfprEvolution,
 } from '../utils/impactCalculations';
 import { MetricCard, buildMetricEntries } from './MetricCard';
 
@@ -46,34 +47,58 @@ export const MetricsSummary: FC = () => {
 
     const casesEntries = useMemo(
         () =>
-            buildMetricEntries(scenarios, impactsByScenarioId, d => d?.number_cases?.value ?? undefined, formatBigNumber, {
-                relative: true,
-                positiveIsGreen: false,
-            }),
+            buildMetricEntries(
+                scenarios,
+                impactsByScenarioId,
+                d => d?.number_cases?.value ?? undefined,
+                formatBigNumber,
+                {
+                    relative: true,
+                    positiveIsGreen: false,
+                },
+            ),
         [scenarios, impactsByScenarioId],
     );
     const severeCasesEntries = useMemo(
         () =>
-            buildMetricEntries(scenarios, impactsByScenarioId, d => d?.number_severe_cases?.value ?? undefined, formatBigNumber, {
-                relative: true,
-                positiveIsGreen: false,
-            }),
+            buildMetricEntries(
+                scenarios,
+                impactsByScenarioId,
+                d => d?.number_severe_cases?.value ?? undefined,
+                formatBigNumber,
+                {
+                    relative: true,
+                    positiveIsGreen: false,
+                },
+            ),
         [scenarios, impactsByScenarioId],
     );
     const pfprEntries = useMemo(
         () =>
-            buildMetricEntries(scenarios, impactsByScenarioId, getPfprReduction, formatPercentValue, {
-                relative: false,
-                positiveIsGreen: true,
-            }),
+            buildMetricEntries(
+                scenarios,
+                impactsByScenarioId,
+                getPfprEvolution,
+                formatSignedPercentValue,
+                {
+                    relative: false,
+                    positiveIsGreen: false,
+                },
+            ),
         [scenarios, impactsByScenarioId],
     );
     const costsEntries = useMemo(
         () =>
-            buildMetricEntries(scenarios, budgetsByScenarioId, getCumulativeCosts, formatBigNumber, {
-                relative: true,
-                positiveIsGreen: false,
-            }),
+            buildMetricEntries(
+                scenarios,
+                budgetsByScenarioId,
+                getCumulativeCosts,
+                formatBigNumber,
+                {
+                    relative: true,
+                    positiveIsGreen: false,
+                },
+            ),
         [scenarios, budgetsByScenarioId],
     );
 
@@ -87,8 +112,7 @@ export const MetricsSummary: FC = () => {
             <Typography variant="caption" sx={styles.subtext}>
                 {formatMessage(MESSAGES.impactTargetLabel, {
                     year: targetYear,
-                    value:
-                        metricValue != null ? formatter(metricValue) : '-',
+                    value: metricValue != null ? formatter(metricValue) : '-',
                 })}
             </Typography>
         );
@@ -116,12 +140,15 @@ export const MetricsSummary: FC = () => {
                 )}
             />
             <MetricCard
-                title={formatMessage(MESSAGES.impactPfprReduction)}
-                icon={TrendingDownOutlinedIcon}
+                title={formatMessage(MESSAGES.impactPfprEvolution)}
+                icon={TimelineOutlinedIcon}
                 isLoading={isImpactLoading}
                 entries={pfprEntries}
                 keyPrefix="pfpr"
-                subtext={targetYearSubtext('prevalence_rate', formatPercentValue)}
+                subtext={targetYearSubtext(
+                    'prevalence_rate',
+                    formatPercentValue,
+                )}
             />
             <MetricCard
                 title={formatMessage(MESSAGES.impactTotalCosts)}
