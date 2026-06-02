@@ -8,6 +8,7 @@ from plugins.snt_malaria.api.scenario_yearly_cost_assignment.serializers import 
     ScenarioYearlyCostAssignmentUpsertSerializer,
 )
 from plugins.snt_malaria.models import ScenarioYearlyCostAssignment
+from plugins.snt_malaria.services import BudgetCalculationService
 
 
 class ScenarioYearlyCostAssignmentViewSet(viewsets.ModelViewSet):
@@ -35,6 +36,24 @@ class ScenarioYearlyCostAssignmentViewSet(viewsets.ModelViewSet):
         list_serializer = ScenarioYearlyCostAssignmentSerializer(scenario_yearly_costs, many=True)
 
         return Response(list_serializer.data, status=status.HTTP_200_OK)
+
+    def perform_create(self, serializer):
+        response = super().perform_create(serializer)
+        # After creating/updating the ScenarioYearlyCostAssignment, we need to recalculate the budget for the related scenario to reflect the changes in the assigned costs
+        scenario = serializer.validated_data["scenario"]
+        budget_service = BudgetCalculationService(scenario)
+        budget_service.calculate_and_save_all_years(self.request.user)
+
+        return response
+
+    def perform_update(self, serializer):
+        response = super().perform_update(serializer)
+        # After creating/updating the ScenarioYearlyCostAssignment, we need to recalculate the budget for the related scenario to reflect the changes in the assigned costs
+        scenario = serializer.validated_data["scenario"]
+        budget_service = BudgetCalculationService(scenario)
+        budget_service.calculate_and_save_all_years(self.request.user)
+
+        return response
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
