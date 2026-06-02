@@ -168,7 +168,7 @@ export const BudgetTable: FC = ({}) => {
                         (line: CostLineRowData) => line.id === costLine.id,
                     );
                     if (existingCostLine) {
-                        existingCostLine.totalCost += costLine.cost;
+                        existingCostLine.totalCost += costLine.total_cost;
                     } else {
                         const breakdownLine =
                             costBreakdownLineRecord[costLine.id];
@@ -176,7 +176,7 @@ export const BudgetTable: FC = ({}) => {
                             id: costLine.id,
                             label: breakdownLine ? breakdownLine.name : '',
                             subLabel: '',
-                            totalCost: costLine.cost,
+                            totalCost: costLine.total_cost,
                             coverageByYear: (yearlyCoverageByCostLine[
                                 costLine.id
                             ] || {}) as Record<number, CostLineYearlyCoverage>,

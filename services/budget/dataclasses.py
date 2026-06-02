@@ -1,9 +1,16 @@
-from dataclasses import dataclass, field
 from decimal import Decimal
 
+from pydantic import BaseModel, Field, field_serializer
 
-@dataclass
-class BudgetBreakdownItem:
+
+class BudgetBaseModel(BaseModel):
+    # This base model is used to ensure that all Decimal fields are serialized as floats in JSON responses
+    @field_serializer("*", when_used="json", check_fields=False)
+    def serialize_decimal(self, value):
+        return float(value) if isinstance(value, Decimal) else value
+
+
+class BudgetBreakdownItem(BudgetBaseModel):
     id: int
     category: str
     cost_class: str
@@ -11,37 +18,33 @@ class BudgetBreakdownItem:
     quantity: Decimal = Decimal("0.0")
 
 
-@dataclass
-class BudgetInterventionItem:
+class BudgetInterventionItem(BudgetBaseModel):
     id: int
     code: str
     type: str
     total_cost: Decimal = Decimal("0.0")
     total_pop: Decimal = Decimal("0.0")
     quantity: Decimal = Decimal("0.0")
-    cost_breakdown: list[BudgetBreakdownItem] = field(default_factory=list)
+    cost_breakdown: list[BudgetBreakdownItem] = Field(default_factory=list)
 
 
-@dataclass
-class BudgetOrgUnitInterventionItem:
+class BudgetOrgUnitInterventionItem(BudgetBaseModel):
     id: int
     code: str
     type: str
     total_cost: Decimal = Decimal("0.0")
     quantity: Decimal = Decimal("0.0")
-    cost_breakdown: list[BudgetBreakdownItem] = field(default_factory=list)
+    cost_breakdown: list[BudgetBreakdownItem] = Field(default_factory=list)
 
 
-@dataclass
-class BudgetOrgUnitItem:
+class BudgetOrgUnitItem(BudgetBaseModel):
     org_unit_id: int
     total_cost: Decimal = Decimal("0.0")
     quantity: Decimal = Decimal("0.0")
-    interventions: list[BudgetOrgUnitInterventionItem] = field(default_factory=list)
+    interventions: list[BudgetOrgUnitInterventionItem] = Field(default_factory=list)
 
 
-@dataclass
-class BudgetYearResult:
+class BudgetYearResult(BudgetBaseModel):
     year: int
     total_cost: Decimal
     quantity: Decimal
@@ -50,8 +53,7 @@ class BudgetYearResult:
     category_costs: list[BudgetBreakdownItem]
 
 
-@dataclass
-class BudgetLineRow:
+class BudgetLineRow(BudgetBaseModel):
     cost_line_id: int
     org_unit_id: int
     intervention_id: int

@@ -332,7 +332,7 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(smc_intervention["total_pop"], 250000.0)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
         self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
-        self.assertEqual(smc_intervention["cost_breakdown"][0]["cost"], 687500.0)
+        self.assertEqual(smc_intervention["cost_breakdown"][0]["total_cost"], 687500.0)
 
         # Find Org unit cost
         smc_org_unit_costs = None
@@ -395,7 +395,7 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         self.assertAlmostEqual(smc_intervention["total_pop"], 250000.0)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
         self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
-        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["cost"], 687500.0)
+        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["total_cost"], 687500.0)
         # Find Org unit cost
         smc_org_unit_costs = None
         for org_unit_costs in budget_2025["org_units_costs"]:

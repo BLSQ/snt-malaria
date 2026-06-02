@@ -83,80 +83,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
 
         for year in range(start_year, end_year + 1):
             year_result = budget_service.calculate_year(year)
-
-            interventions_costs = [
-                {
-                    "id": intervention.id,
-                    "code": intervention.code,
-                    "type": intervention.type,
-                    "total_cost": float(intervention.total_cost),
-                    "total_pop": float(intervention.total_pop),
-                    "quantity": float(intervention.quantity),
-                    "cost_breakdown": [
-                        {
-                            "id": breakdown.id,
-                            "category": breakdown.category,
-                            "cost_class": breakdown.cost_class,
-                            "cost": float(breakdown.total_cost),
-                            "total_cost": float(breakdown.total_cost),
-                            "quantity": float(breakdown.quantity),
-                        }
-                        for breakdown in intervention.cost_breakdown
-                    ],
-                }
-                for intervention in year_result.interventions
-            ]
-
-            places_costs = [
-                {
-                    "org_unit_id": org_unit.org_unit_id,
-                    "total_cost": float(org_unit.total_cost),
-                    "quantity": float(org_unit.quantity),
-                    "interventions": [
-                        {
-                            "id": intervention.id,
-                            "code": intervention.code,
-                            "type": intervention.type,
-                            "total_cost": float(intervention.total_cost),
-                            "quantity": float(intervention.quantity),
-                            "cost_breakdown": [
-                                {
-                                    "id": breakdown.id,
-                                    "category": breakdown.category,
-                                    "cost_class": breakdown.cost_class,
-                                    "cost": float(breakdown.total_cost),
-                                    "total_cost": float(breakdown.total_cost),
-                                    "quantity": float(breakdown.quantity),
-                                }
-                                for breakdown in intervention.cost_breakdown
-                            ],
-                        }
-                        for intervention in org_unit.interventions
-                    ],
-                }
-                for org_unit in year_result.org_units_costs
-            ]
-
-            budgets.append(
-                {
-                    "year": year,
-                    "total_cost": float(year_result.total_cost),
-                    "quantity": float(year_result.quantity),
-                    "interventions": interventions_costs,
-                    "org_units_costs": places_costs,
-                    "category_costs": [
-                        {
-                            "id": category.id,
-                            "category": category.category,
-                            "cost_class": category.cost_class,
-                            "cost": float(category.total_cost),
-                            "total_cost": float(category.total_cost),
-                            "quantity": float(category.quantity),
-                        }
-                        for category in year_result.category_costs
-                    ],
-                }
-            )
+            budgets.append(year_result)
 
         budget = Budget.objects.create(
             scenario=scenario,
@@ -164,7 +91,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
             cost_input=cost_df.astype(str).to_dict(orient="records"),  # TODO Remove this
             population_input=population_df.astype(str).to_dict(orient="records"),  # TODO Remove this
             assumptions=assumptions_by_year,
-            results=budgets,
+            results=[budget_result.model_dump(mode="json") for budget_result in budgets],
             created_by=request.user,
             updated_by=request.user,
         )
