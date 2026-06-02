@@ -3,14 +3,13 @@ import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import {
     Box,
-    Button,
     MenuItem,
     Stack,
     ToggleButton,
     ToggleButtonGroup,
 } from '@mui/material';
 import { Link as MuiLink } from '@mui/material';
-import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import { useNavigate } from 'react-router';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import ConfirmDialog from 'Iaso/components/dialogs/ConfirmDialogComponent';
@@ -32,11 +31,9 @@ import { usePlanningContext } from '../../contexts/PlanningContext';
 
 type Props = {
     activeTab: string;
-    isCalculatingBudget: boolean;
     selectedOrgUnitId?: number;
     onTabChange: (value: string) => void;
     onOrgUnitChange: (orgUnitId?: number) => void;
-    onRunBudget: () => void;
     onDeleteScenario: () => void;
     onToggleLockScenario: () => void;
     lockScenarioRef?: Ref<HTMLDivElement>;
@@ -45,10 +42,8 @@ type Props = {
 
 export const InterventionPlanHeader: FC<Props> = ({
     activeTab,
-    isCalculatingBudget,
     selectedOrgUnitId,
     onTabChange,
-    onRunBudget,
     onOrgUnitChange,
     onDeleteScenario,
     onToggleLockScenario,
@@ -95,24 +90,6 @@ export const InterventionPlanHeader: FC<Props> = ({
                 </ToggleButton>
             </ToggleButtonGroup>
             <Stack direction="row" spacing={2} alignItems="center">
-                {activeTab === 'budget' && (
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={onRunBudget}
-                        disabled={isCalculatingBudget}
-                    >
-                        {formatMessage(MESSAGES.runInterventionPlanBudget)}
-                        {isCalculatingBudget && (
-                            <LoadingSpinner
-                                size={16}
-                                absolute
-                                fixed={false}
-                                transparent
-                            />
-                        )}
-                    </Button>
-                )}
                 <OrgUnitSelect
                     onOrgUnitChange={onOrgUnitChange}
                     selectedOrgUnitId={selectedOrgUnitId}

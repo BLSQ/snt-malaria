@@ -15,6 +15,7 @@ export const useSaveInterventionDetails = (
         invalidateQueryKey: [
             ['interventionDetails', interventionId],
             'interventionCategories',
+            'calculated_budget',
         ],
         showSuccessSnackBar: false,
     });
