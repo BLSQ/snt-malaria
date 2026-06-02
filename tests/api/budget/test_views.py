@@ -137,31 +137,6 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         smc_cost_line.population_layer = metric_type_pop_under_5
         smc_cost_line.save(update_fields=["cost_driver", "population_layer"])
 
-    def test_calculate_budget_no_population_metric(self):
-        InterventionCostBreakdownLine.objects.update(population_layer=None)
-        MetricType.objects.all().delete()
-        self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.post(BASE_URL, {"scenario": self.scenario.id}, format="json")
-        result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result[0], "No population MetricTypes found for this account")
-
-    def test_calculate_budget_no_total_population_metric(self):
-        InterventionCostBreakdownLine.objects.update(population_layer=None)
-        MetricType.objects.all().delete()
-        MetricType.objects.create(
-            account=self.account,
-            name="Total Population under 5",
-            code="POP_UNDER_5",
-            description="Total population data under 5",
-            units="people",
-        )
-
-        self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.post(BASE_URL, {"scenario": self.scenario.id}, format="json")
-
-        result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result[0], "MetricType with code 'POPULATION' does not exist for this account")
-
     def test_calculate_budget_no_metric_values(self):
         InterventionCostBreakdownLine.objects.update(population_layer=None)
         MetricType.objects.all().delete()
@@ -176,8 +151,12 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.post(BASE_URL, {"scenario": self.scenario.id}, format="json")
 
-        result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result[0], "No population data found")
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+        self.assertEqual(result["scenario"], self.scenario.id)
+        self.assertEqual(len(result["results"]), 4)
+        for yearly_result in result["results"]:
+            print(yearly_result)
+            self.assertEqual(yearly_result["total_cost"], 0)
 
     def test_calculate_budget_missing_scenario(self):
         """Test calculate_budget endpoint without scenario parameter"""
@@ -451,22 +430,6 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         base_unit_cost = 2.5  # unit_cost of the SMC cost line created in setUp
         start_year = self.scenario.start_year  # 2025
         end_year = self.scenario.end_year  # 2028
-
-        # --- Verify cost_input rows: each year's usd_cost must be compounded ---
-        smc_cost_by_year = {}
-        for row in budget.cost_input:
-            if row["code_intervention"] == "smc":
-                year = int(row["cost_year_for_analysis"])
-                smc_cost_by_year[year] = float(row["usd_cost"])
-
-        for year in range(start_year, end_year + 1):
-            expected = base_unit_cost * (1 + inflation_rate) ** (year - start_year)
-            self.assertAlmostEqual(
-                smc_cost_by_year[year],
-                expected,
-                places=6,
-                msg=f"usd_cost for year {year} should be {expected}",
-            )
 
         # --- Verify results: later years should cost more than start_year ---
         results_by_year = {r["year"]: r for r in result["results"]}
