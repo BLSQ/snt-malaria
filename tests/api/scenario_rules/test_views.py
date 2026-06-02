@@ -3,7 +3,7 @@ from decimal import Decimal
 from rest_framework import status
 
 from iaso.utils.colors import DEFAULT_COLOR
-from plugins.snt_malaria.models import AccountSettings, InterventionAssignment, Scenario, ScenarioRule
+from plugins.snt_malaria.models import AccountSettings, Budget, InterventionAssignment, Scenario, ScenarioRule
 from plugins.snt_malaria.tests.api.scenario_rules.common_base import ScenarioRulesTestBase
 
 
@@ -130,6 +130,9 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(new_rule.created_by, self.user_with_full_perm)
         self.assertIsNone(new_rule.updated_by)
 
+        # Verify that the budget was recalculated after creating the rule
+        self.assertEqual(new_rule.scenario.budget_set.count(), 1)
+
     def test_post_scenario_rule_for_locked_scenario(self):
         self.lock_scenario(self.scenario)
 
@@ -196,6 +199,8 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(new_rule.created_by, self.user_with_full_perm)
         self.assertIsNone(new_rule.updated_by)
 
+        self.assertEqual(new_rule.scenario.budget_set.count(), 1)
+
     def test_post_scenario_rule_with_basic_perm_own_scenario(self):
         new_scenario = Scenario.objects.create(
             account=self.account,
@@ -239,6 +244,8 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(new_rule.org_units_scope, [])
         self.assertEqual(new_rule.created_by, self.user_with_basic_perm)
         self.assertIsNone(new_rule.updated_by)
+
+        self.assertEqual(new_rule.scenario.budget_set.count(), 1)
 
     def test_post_scenario_rule_with_basic_perm_other_scenario(self):
         payload = {
@@ -327,12 +334,25 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertCountEqual(new_rule.org_units_included, [self.district_1.id])
         self.assertCountEqual(new_rule.org_units_scope, [self.district_1.id, self.district_2.id, self.district_3.id])
 
+        self.assertEqual(new_rule.scenario.budget_set.count(), 1)
+
     def test_put_scenario_rule_not_allowed(self):
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.put(f"{self.BASE_URL}{self.scenario_rule_1.id}/", {"name": "Updated Rule"})
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_patch_scenario_rule_with_full_perm_own_scenario(self):
+        Budget.objects.create(
+            scenario=self.scenario,
+            name="Seed budget",
+            cost_input=[],
+            population_input=[],
+            assumptions=[],
+            results=[],
+            created_by=self.user_with_full_perm,
+            updated_by=self.user_with_full_perm,
+        )
+
         payload = {
             "name": "Updated Rule",
             "color": "#000000",
@@ -349,7 +369,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         }
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.patch(f"{self.BASE_URL}{self.scenario_rule_1.id}/", payload)
-        self.assertJSONResponse(response, status.HTTP_200_OK)
+        new_rule = self.assertJSONResponse(response, status.HTTP_200_OK)
 
         self.scenario_rule_1.refresh_from_db()
         # checking simple attributes
@@ -373,6 +393,8 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         # other values never change
         self.assertEqual(self.scenario_rule_1.scenario, self.scenario)
         self.assertEqual(self.scenario_rule_1.priority, 1)
+
+        self.assertEqual(self.scenario_rule_1.scenario.budget_set.count(), 2)
 
     def test_patch_scenario_rule_for_locked_scenario(self):
         self.lock_scenario(self.scenario)
@@ -415,6 +437,10 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(new_rule.name, payload["name"])
         self.assertEqual(new_rule.updated_by, self.user_with_full_perm)
         # TODO: once assignments are implemented, make sure that this does not delete any existing assignments
+
+        # Check that we have a budget which means that the budget recalculation was triggered
+        budget = new_rule.scenario.budget_set.order_by("-created_at").first()
+        self.assertIsNotNone(budget)
 
     def test_patch_scenario_rule_with_basic_perm_own_scenario(self):
         new_scenario = Scenario.objects.create(
@@ -462,6 +488,10 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(len(intervention_properties), 1)
         self.assertEqual(intervention_properties[0].intervention_id, self.intervention_chemo_iptp.id)
         self.assertEqual(intervention_properties[0].coverage, Decimal("0.5"))
+
+        # Check that we have a budget which means that the budget recalculation was triggered
+        budget = new_rule.scenario.budget_set.order_by("-created_at").first()
+        self.assertIsNotNone(budget)
 
     def test_patch_scenario_rule_with_basic_perm_other_scenario(self):
         payload = {
