@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.13.0](https://github.com/BLSQ/snt-malaria/compare/2.12.1...2.13.0) (2026-06-03)
+
+
+### Features
+
+* **impact:** change PfPR widget from reduction -&gt; evolution ([03bcd23](https://github.com/BLSQ/snt-malaria/commit/03bcd23ddf1b77fc74addda2a013695dc66b9921))
+
+
+### Bug Fixes
+
+* Add metrics permission when creating demo account ([#298](https://github.com/BLSQ/snt-malaria/issues/298)) ([f8edf18](https://github.com/BLSQ/snt-malaria/commit/f8edf184f4476f9f2f0616b14e14befcb3d56f7c))
+
 ## [2.12.1](https://github.com/BLSQ/snt-malaria/compare/2.12.0...2.12.1) (2026-05-29)
 
 
