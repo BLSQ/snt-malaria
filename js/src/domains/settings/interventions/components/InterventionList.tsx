@@ -7,8 +7,10 @@ import {
     Theme,
     Typography,
 } from '@mui/material';
-import { InterventionCategory } from '../../interventions/types';
-import { Intervention } from '../types';
+import {
+    Intervention,
+    InterventionCategory,
+} from '../../../interventions/types';
 
 const styles = {
     listContainer: {

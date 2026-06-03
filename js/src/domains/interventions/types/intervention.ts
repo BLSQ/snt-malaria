@@ -8,7 +8,6 @@ export type Intervention = {
     description: string;
     intervention_category: number;
 };
-
 export type InterventionDetails = {
     id: number;
     name: string;

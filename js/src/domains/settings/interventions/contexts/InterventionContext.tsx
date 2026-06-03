@@ -1,6 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { DropdownOptions } from 'Iaso/types/utils';
-import { MetricType } from '../../dataLayers/types/metrics';
+import { MetricType } from '../../../dataLayers/types/metrics';
 import { BudgetSettings } from '../types/budgetSettings';
 
 type InterventionContextType = {

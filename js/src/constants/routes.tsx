@@ -5,9 +5,9 @@ import { AnonymousRoutePath, RoutePath } from 'Iaso/constants/routes';
 import { CompareCustomize } from '../domains/compareCustomize';
 import { ConfigureAccount } from '../domains/configureAccount';
 import { DataLayers } from '../domains/dataLayers';
-import { InterventionSettings } from '../domains/interventions';
 import { Planning } from '../domains/planning';
 import { Scenarios } from '../domains/scenarios';
+import { Settings } from '../domains/settings';
 import { SetupAccount } from '../domains/setupAccount';
 import { SETTINGS_READ } from './permissions';
 import { baseUrls } from './urls';
@@ -40,10 +40,10 @@ export const compareCustomizePath: RoutePath = {
     permissions: [],
 };
 
-export const interventionsPath: RoutePath = {
-    baseUrl: baseUrls.interventions,
-    routerUrl: `${baseUrls.interventions}/*`,
-    element: <InterventionSettings />,
+export const settingsPath: RoutePath = {
+    baseUrl: baseUrls.settings,
+    routerUrl: `${baseUrls.settings}/*`,
+    element: <Settings />,
     permissions: [SETTINGS_READ],
 };
 
@@ -70,7 +70,7 @@ export const routes: (RoutePath | AnonymousRoutePath)[] = [
     planningPath,
     scenariosPath,
     compareCustomizePath,
-    interventionsPath,
+    settingsPath,
     setupAccountPath,
     configureAccountPath,
 ];

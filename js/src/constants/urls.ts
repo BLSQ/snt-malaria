@@ -23,8 +23,8 @@ export const RouteConfigs: Record<string, RouteConfig> = {
         url: 'snt_malaria/scenarios/list',
         params: [...paginationPathParams],
     },
-    interventions: {
-        url: 'snt_malaria/interventions',
+    settings: {
+        url: 'snt_malaria/settings',
         params: [],
     },
     setupAccount: {
@@ -42,7 +42,7 @@ export type BaseUrls = {
     planning: string;
     compareCustomize: string;
     scenarios: string;
-    interventions: string;
+    settings: string;
     setupAccount: string;
     configureAccount: string;
 };

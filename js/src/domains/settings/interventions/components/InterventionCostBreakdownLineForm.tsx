@@ -5,9 +5,9 @@ import { IconButton } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { noOp } from 'Iaso/utils';
-import { MESSAGES } from '../../messages';
+import { MESSAGES } from '../../../messages';
 import { useInterventionContext } from '../contexts/InterventionContext';
-import { InterventionCostBreakdownLine } from '../types';
+import { InterventionCostBreakdownLine } from '../../../interventions/types';
 
 const styles = {
     inputGrow: {
