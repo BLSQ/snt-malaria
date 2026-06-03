@@ -2,9 +2,9 @@ import React, { FunctionComponent, useEffect, useState } from 'react';
 import { MenuItem, Select, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { useGetInterventionCategories } from '../domains/interventions/hooks/useGetInterventionCategories';
 import { InterventionCategory } from '../domains/interventions/types';
 import { MESSAGES } from '../domains/messages';
-import { useGetInterventionCategories } from '../domains/planning/hooks/useGetInterventionCategories';
 
 type Props = {
     onInterventionCategoryChange: (

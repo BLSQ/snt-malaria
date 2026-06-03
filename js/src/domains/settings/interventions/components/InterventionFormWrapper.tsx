@@ -2,18 +2,18 @@ import React, { FC, useCallback, useEffect } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Stack, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
-import { CardStyled } from '../../../components/CardStyled';
-import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
-import { useGetMetricTypes } from '../../dataLayers/hooks/useGetMetrics';
-import { MESSAGES } from '../../messages';
+import { CardStyled } from '../../../../components/CardStyled';
+import { ExtendedFormikProvider } from '../../../../hooks/useGetExtendedFormikContext';
+import { useGetMetricTypes } from '../../../dataLayers/hooks/useGetMetrics';
+import { useGetInterventionCostBreakdownLineCategories } from '../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
+import { useGetInterventionCostUnitTypes } from '../../../interventions/hooks/useGetInterventionCostUnitType';
+import { useGetInterventionDetails } from '../../../interventions/hooks/useGetInterventionDetails';
+import { useSaveInterventionDetails } from '../../../interventions/hooks/useSaveInterventionDetails';
+import { InterventionDetails } from '../../../interventions/types';
+import { MESSAGES } from '../../../messages';
 import { InterventionProvider } from '../contexts/InterventionContext';
 import { useGetBudgetSettings } from '../hooks/useGetBudgetSettings';
-import { useGetInterventionCostBreakdownLineCategories } from '../hooks/useGetInterventionCostBreakdownLineCategories';
-import { useGetInterventionCostUnitTypes } from '../hooks/useGetInterventionCostUnitType';
-import { useGetInterventionDetails } from '../hooks/useGetInterventionDetails';
 import { useInterventionFormState } from '../hooks/useInterventionFormState';
-import { useSaveInterventionDetails } from '../hooks/useSaveInterventionDetails';
-import { InterventionDetails } from '../types';
 import { InterventionForm } from './InterventionForm';
 
 type Props = {

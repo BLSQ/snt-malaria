@@ -3,7 +3,7 @@ import {
     CompareOutlined,
     FormatListBulletedOutlined,
     Layers,
-    SettingsInputComponent,
+    TuneOutlined,
 } from '@mui/icons-material';
 import { SvgIconProps } from '@mui/material';
 import { MESSAGES as dataLayersMessages } from '../domains/dataLayers/messages';
@@ -32,9 +32,9 @@ export const menu = [
         icon: (props: SvgIconProps) => <CompareOutlined {...props} />,
     },
     {
-        label: MESSAGES.interventionsTitle,
-        key: 'snt_malaria/interventions',
+        label: MESSAGES.settingsTitle,
+        key: 'snt_malaria/settings',
         permissions: [SETTINGS_READ],
-        icon: (props: SvgIconProps) => <SettingsInputComponent {...props} />,
+        icon: (props: SvgIconProps) => <TuneOutlined {...props} />,
     },
 ];

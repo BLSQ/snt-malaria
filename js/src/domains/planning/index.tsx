@@ -21,6 +21,7 @@ import { useOnboarding } from '../../hooks/useOnboarding';
 
 import { baseUrls } from '../../constants/urls';
 import { useGetMetricCategories } from '../dataLayers/hooks/useGetMetrics';
+import { useGetInterventionCategories } from '../interventions/hooks/useGetInterventionCategories';
 import { MESSAGES } from '../messages';
 import { useDeleteScenario } from '../scenarios/hooks/useDeleteScenario';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
@@ -36,7 +37,6 @@ import { useCalculateBudget } from './hooks/useCalculateBudget';
 import { useGetAccountSettings } from './hooks/useGetAccountSettings';
 import { useGetBudgetAssumptions } from './hooks/useGetBudgetAssumptions';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
-import { useGetInterventionCategories } from './hooks/useGetInterventionCategories';
 import { useGetLatestCalculatedBudget } from './hooks/useGetLatestCalculatedBudget';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
