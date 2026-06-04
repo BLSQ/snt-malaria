@@ -17,16 +17,16 @@ import {
     SidebarColumn,
     SidebarLayout,
 } from '../../components/styledComponents';
+import { baseUrls } from '../../constants/urls';
 import { useOnboarding } from '../../hooks/useOnboarding';
 
-import { baseUrls } from '../../constants/urls';
 import { useGetMetricCategories } from '../dataLayers/hooks/useGetMetrics';
 import { useGetInterventionCategories } from '../interventions/hooks/useGetInterventionCategories';
 import { MESSAGES } from '../messages';
 import { useDeleteScenario } from '../scenarios/hooks/useDeleteScenario';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
-import { Budgeting } from './components/budgeting/Budgeting';
+import { BudgetTable } from './components/budgeting/BudgetTable';
 import { InterventionPlanDetails } from './components/interventionPlan/InterventionPlanDetails';
 import { InterventionPlanHeader } from './components/interventionPlan/InterventionPlanHeader';
 import { InterventionPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
@@ -242,6 +242,7 @@ export const Planning: FC = () => {
             interventionCategories={interventionCategories}
             interventionAssignments={interventionAssignments || []}
             canEditScenario={canEditScenario}
+            budgets={budget?.results || []}
         >
             {isLoadingOrgUnits && <LoadingSpinner />}
             <TopBar title={title} disableShadow sx={{ zIndex: 401 }} />
@@ -280,9 +281,7 @@ export const Planning: FC = () => {
                                                 handleDisplayOrgUnitChange
                                             }
                                             selectedOrgUnitId={displayOrgUnitId}
-                                            lockScenarioRef={
-                                                tour.anchorRefs[2]
-                                            }
+                                            lockScenarioRef={tour.anchorRefs[2]}
                                             moreActionsRef={tour.anchorRefs[1]}
                                         />
                                     }
@@ -336,12 +335,7 @@ export const Planning: FC = () => {
                                     )}
                                     {activeTab === 'budget' &&
                                         orgUnits &&
-                                        budget && (
-                                            <Budgeting
-                                                budgets={budget?.results}
-                                                orgUnits={orgUnits}
-                                            />
-                                        )}
+                                        budget && <BudgetTable />}
                                 </CardStyled>
                             </Card>
                         </PaperFullHeight>
