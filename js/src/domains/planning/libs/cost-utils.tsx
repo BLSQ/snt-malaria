@@ -1,5 +1,3 @@
-import { BudgetIntervention } from '../types/budget';
-
 export const INTERVENTION_COLORS = {
     ACTs: '#A2CAEA',
     RDTs: '#ACDF9B',
@@ -11,28 +9,6 @@ export const INTERVENTION_COLORS = {
     'LLIN Routine': '#80B3DC',
     'LLIN Campaign': '#6BD39D',
     IPTp: '#80B3DC',
-};
-
-export const getCostBreakdownChartData = (
-    interventionBudgets: BudgetIntervention[],
-) => {
-    return interventionBudgets
-        ?.map((interventionBudget: BudgetIntervention) => {
-            return interventionBudget.cost_breakdown?.reduce(
-                (acc, costLine) => {
-                    return {
-                        ...acc,
-                        [costLine.category]:
-                            (acc[costLine.category] ?? 0) + costLine.cost,
-                    };
-                },
-                {
-                    interventionType: interventionBudget.type,
-                    interventionCode: interventionBudget.code,
-                },
-            );
-        })
-        .filter(Boolean);
 };
 
 export const formatPercentValue = (value: number) => {
