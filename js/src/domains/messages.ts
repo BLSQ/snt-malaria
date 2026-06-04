@@ -193,6 +193,30 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.budgetView',
         defaultMessage: 'Budget',
     },
+    budgetingCostChart: {
+        id: 'iaso.snt_malaria.budgeting.costChart',
+        defaultMessage: 'Cost chart',
+    },
+    budgetingDistricts: {
+        id: 'iaso.snt_malaria.budgeting.districts',
+        defaultMessage: 'Districts',
+    },
+    budgetingExpandRow: {
+        id: 'iaso.snt_malaria.budgeting.expandRow',
+        defaultMessage: 'Expand row',
+    },
+    budgetingLineItem: {
+        id: 'iaso.snt_malaria.budgeting.lineItem',
+        defaultMessage: 'Line item',
+    },
+    budgetingTableAriaLabel: {
+        id: 'iaso.snt_malaria.budgeting.tableAriaLabel',
+        defaultMessage: 'Budget table',
+    },
+    budgetingTotalCost: {
+        id: 'iaso.snt_malaria.budgeting.totalCost',
+        defaultMessage: 'Total cost ($)',
+    },
     cancel: {
         defaultMessage: 'Cancel',
         id: 'iaso.label.cancel',

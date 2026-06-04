@@ -107,7 +107,9 @@ class BudgetCalculationService:
             lambda: {"total_cost": Decimal("0"), "total_pop": Decimal("0"), "quantity": Decimal("0")}
         )
         intervention_breakdowns = defaultdict(
-            lambda: defaultdict(lambda: {"total_cost": Decimal("0"), "quantity": Decimal("0")})
+            lambda: defaultdict(
+                lambda: {"id": None, "category": None, "total_cost": Decimal("0"), "quantity": Decimal("0")}
+            )
         )
 
         org_unit_totals = defaultdict(lambda: {"total_cost": Decimal("0"), "quantity": Decimal("0")})
@@ -115,10 +117,14 @@ class BudgetCalculationService:
             lambda: defaultdict(lambda: {"total_cost": Decimal("0"), "quantity": Decimal("0")})
         )
         org_unit_intervention_breakdowns = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(lambda: {"total_cost": Decimal("0"), "quantity": Decimal("0")}))
+            lambda: defaultdict(
+                lambda: defaultdict(
+                    lambda: {"id": None, "category": None, "total_cost": Decimal("0"), "quantity": Decimal("0")}
+                )
+            )
         )
 
-        category_totals = defaultdict(lambda: {"total_cost": Decimal("0"), "quantity": Decimal("0")})
+        category_totals = defaultdict(lambda: {"id": None, "total_cost": Decimal("0"), "quantity": Decimal("0")})
 
         total_cost = Decimal("0")
         total_quantity = Decimal("0")
@@ -129,19 +135,30 @@ class BudgetCalculationService:
             intervention_totals[intervention_id]["total_cost"] += row.total_cost
             intervention_totals[intervention_id]["total_pop"] += row.population
             intervention_totals[intervention_id]["quantity"] += row.quantity
-            intervention_breakdowns[intervention_id][row.category]["total_cost"] += row.total_cost
-            intervention_breakdowns[intervention_id][row.category]["quantity"] += row.quantity
+            intervention_breakdowns[intervention_id][row.cost_line_id]["id"] = row.cost_line_id
+            intervention_breakdowns[intervention_id][row.cost_line_id]["category"] = row.category
+            intervention_breakdowns[intervention_id][row.cost_line_id]["total_cost"] += row.total_cost
+            intervention_breakdowns[intervention_id][row.cost_line_id]["quantity"] += row.quantity
 
             org_unit_totals[row.org_unit_id]["total_cost"] += row.total_cost
             org_unit_totals[row.org_unit_id]["quantity"] += row.quantity
 
             org_unit_intervention_totals[row.org_unit_id][intervention_id]["total_cost"] += row.total_cost
             org_unit_intervention_totals[row.org_unit_id][intervention_id]["quantity"] += row.quantity
-            org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.category]["total_cost"] += (
+            org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["id"] = (
+                row.cost_line_id
+            )
+            org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["category"] = (
+                row.category
+            )
+            org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["total_cost"] += (
                 row.total_cost
             )
-            org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.category]["quantity"] += row.quantity
+            org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["quantity"] += (
+                row.quantity
+            )
 
+            category_totals[row.category]["id"] = row.cost_line_id
             category_totals[row.category]["total_cost"] += row.total_cost
             category_totals[row.category]["quantity"] += row.quantity
 
@@ -177,7 +194,6 @@ class BudgetCalculationService:
         rows = []
         years_offset = year - self.start_year
         inflation_multiplier = (Decimal("1") + self.inflation_rate) ** years_offset
-
         for assignment in self.assignments:
             intervention = assignment.intervention
             org_unit_id = assignment.org_unit_id
@@ -198,17 +214,16 @@ class BudgetCalculationService:
                 # Doing the same as before here, quantity is modified by the unit ratio and the yearly coverage.
                 quantity = population * yearly_value * Decimal(str(unit_ratio))
                 line_cost = quantity * Decimal(str(line.unit_cost)) * inflation_multiplier * self.buffer
-
                 if line_cost <= 0:
                     continue
 
                 category = line.get_category_display()
                 rows.append(
                     BudgetLineRow(
+                        cost_line_id=line.id,
                         org_unit_id=org_unit_id,
                         intervention_id=intervention.id,
                         category=category,
-                        cost_class=category,
                         population=population,
                         quantity=quantity,
                         total_cost=line_cost,
@@ -226,12 +241,12 @@ class BudgetCalculationService:
         for intervention_id, totals in sorted(intervention_totals.items(), key=lambda x: x[0]):
             breakdown_items = [
                 BudgetBreakdownItem(
-                    category=category,
-                    cost_class=category,
+                    id=bd["id"],
+                    category=bd["category"],
                     total_cost=bd["total_cost"],
                     quantity=bd["quantity"],
                 )
-                for category, bd in sorted(intervention_breakdowns[intervention_id].items(), key=lambda x: x[0])
+                for _, bd in sorted(intervention_breakdowns[intervention_id].items(), key=lambda x: x[0])
                 if bd["total_cost"] > 0
             ]
             if totals["total_cost"] <= 0:
@@ -271,12 +286,12 @@ class BudgetCalculationService:
             ):
                 breakdown_items = [
                     BudgetBreakdownItem(
-                        category=category,
-                        cost_class=category,
+                        id=bd["id"],
+                        category=bd["category"],
                         total_cost=bd["total_cost"],
                         quantity=bd["quantity"],
                     )
-                    for category, bd in sorted(
+                    for _, bd in sorted(
                         org_unit_intervention_breakdowns[org_unit_id][intervention_id].items(), key=lambda x: x[0]
                     )
                     if bd["total_cost"] > 0
@@ -314,8 +329,8 @@ class BudgetCalculationService:
         """
         return [
             BudgetBreakdownItem(
+                id=totals["id"],
                 category=category,
-                cost_class=category,
                 total_cost=totals["total_cost"],
                 quantity=totals["quantity"],
             )

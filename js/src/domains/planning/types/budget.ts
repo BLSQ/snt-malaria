@@ -21,10 +21,10 @@ export type BudgetIntervention = {
 };
 
 export type BudgetInterventionCostLine = {
-    cost: number;
+    total_cost: number;
     category: string;
-    cost_class: string;
     name: string;
+    id: number;
 };
 
 export enum InterventionCostCoverage {

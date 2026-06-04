@@ -21,6 +21,7 @@ from .models import (
     Budget,
     BudgetAssumptions,
     BudgetSettings,
+    CostUnitType,
     ImpactOrgUnitMapping,
     ImpactProviderConfig,
     Intervention,
@@ -306,3 +307,10 @@ class AccountSettingsAdmin(admin.ModelAdmin):
     list_display = ("id", "account", "focus_org_unit_type_id", "intervention_org_unit_type_id")
     search_fields = ("account__name",)
     ordering = ("account__name",)
+
+
+@admin.register(CostUnitType)
+class CostUnitTypeAdmin(admin.ModelAdmin):
+    list_display = ("id", "account", "name")
+    search_fields = ("account__name", "name")
+    ordering = ("account__name", "name")
