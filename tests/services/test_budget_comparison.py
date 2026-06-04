@@ -1,3 +1,4 @@
+from collections import defaultdict
 from decimal import Decimal
 from typing import Any
 
@@ -162,25 +163,27 @@ class BudgetCalculationComparisonTestCase(SNTMalariaTestCase):
                     msg=msg,
                 )
 
-            internal_breakdown_by_category = {item.category: item for item in internal_by_code[code].cost_breakdown}
+            internal_cost_by_category = defaultdict(Decimal)
+            for item in internal_by_code[code].cost_breakdown:
+                internal_cost_by_category[item.category] += item.total_cost
             legacy_breakdown_by_category = {item["cost_class"]: item for item in legacy_by_code[code]["cost_breakdown"]}
-            self.assertSetEqual(set(internal_breakdown_by_category.keys()), set(legacy_breakdown_by_category.keys()))
+            self.assertSetEqual(set(internal_cost_by_category.keys()), set(legacy_breakdown_by_category.keys()))
             for category in legacy_breakdown_by_category.keys():
                 category_msg = (
                     f"Mismatch for intervention {code} category {category}: "
-                    f"internal={internal_breakdown_by_category[category].total_cost}, "
+                    f"internal={internal_cost_by_category[category]}, "
                     f"legacy={legacy_breakdown_by_category[category]['cost']}"
                 )
                 if "assert_delta" in config:
                     self.assertAlmostEqual(
-                        float(internal_breakdown_by_category[category].total_cost),
+                        float(internal_cost_by_category[category]),
                         float(legacy_breakdown_by_category[category]["cost"]),
                         delta=float(config["assert_delta"]),
                         msg=category_msg,
                     )
                 else:
                     self.assertAlmostEqual(
-                        float(internal_breakdown_by_category[category].total_cost),
+                        float(internal_cost_by_category[category]),
                         float(legacy_breakdown_by_category[category]["cost"]),
                         places=3,
                         msg=category_msg,

@@ -44,6 +44,11 @@ export const ProgressBar: FC<Props> = ({ values, max, colors, tooltips }) => {
         [tooltips, values, max],
     );
 
+    const calculateWidth = useCallback(
+        (value: number) => (max <= 0 ? 0 : (value / max) * 100),
+        [max],
+    );
+
     return (
         <Box style={style.linearProgress}>
             {values.map((value, index) => (
@@ -55,7 +60,7 @@ export const ProgressBar: FC<Props> = ({ values, max, colors, tooltips }) => {
                     <Box
                         sx={{
                             ...style.segment,
-                            width: `${(value / max) * 100}%`,
+                            width: `${calculateWidth(value)}%`,
                             backgroundColor: colors[index],
                         }}
                     />

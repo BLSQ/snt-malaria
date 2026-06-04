@@ -5,7 +5,7 @@ import { useSnackMutation } from 'Iaso/libs/apiHooks';
 type ScenarioYearlyCostAssignmentPayload = {
     id?: number;
     scenario: number;
-    intervention: number;
+    intervention?: number;
     year: number;
     value: number;
     costLine?: number;

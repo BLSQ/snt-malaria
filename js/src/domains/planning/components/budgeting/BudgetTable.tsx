@@ -129,7 +129,7 @@ export const BudgetTable: FC = ({}) => {
 
     useEffect(() => {
         const rows = [] as BudgetRowData[];
-        const totalCosts = {
+        const costs = {
             totalCost: 0,
             yearlyTotal: {} as Record<number, number>,
             interventionTotals: [] as { label: string; totalCost: number }[],
@@ -158,9 +158,9 @@ export const BudgetTable: FC = ({}) => {
             yearlyInterventions.forEach(intervention => {
                 row.yearCosts[intervention.year] = intervention.total_cost;
                 row.totalCost += intervention.total_cost;
-                totalCosts.totalCost += intervention.total_cost;
-                totalCosts.yearlyTotal[intervention.year] =
-                    (totalCosts.yearlyTotal[intervention.year] || 0) +
+                costs.totalCost += intervention.total_cost;
+                costs.yearlyTotal[intervention.year] =
+                    (costs.yearlyTotal[intervention.year] || 0) +
                     intervention.total_cost;
 
                 intervention.cost_breakdown.forEach(costLine => {
@@ -185,7 +185,7 @@ export const BudgetTable: FC = ({}) => {
                 });
             });
 
-            totalCosts.interventionTotals.push({
+            costs.interventionTotals.push({
                 label: row.interventionLabel,
                 totalCost: row.totalCost,
             });
@@ -194,7 +194,7 @@ export const BudgetTable: FC = ({}) => {
         });
 
         setBudgetRows(rows);
-        setTotalCosts(totalCosts);
+        setTotalCosts(costs);
     }, [
         interventionPlans,
         interventionCosts,

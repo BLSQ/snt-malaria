@@ -23,7 +23,6 @@ export type BudgetIntervention = {
 export type BudgetInterventionCostLine = {
     total_cost: number;
     category: string;
-    cost_class: string;
     name: string;
     id: number;
 };

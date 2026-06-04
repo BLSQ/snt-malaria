@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Optional
 
 from pydantic import BaseModel, Field, field_serializer
 
@@ -11,9 +12,8 @@ class BudgetBaseModel(BaseModel):
 
 
 class BudgetBreakdownItem(BudgetBaseModel):
-    id: int
+    id: Optional[int] = None
     category: str
-    cost_class: str
     total_cost: Decimal = Decimal("0.0")
     quantity: Decimal = Decimal("0.0")
 
@@ -58,7 +58,6 @@ class BudgetLineRow(BudgetBaseModel):
     org_unit_id: int
     intervention_id: int
     category: str
-    cost_class: str
     population: Decimal
     quantity: Decimal
     total_cost: Decimal
