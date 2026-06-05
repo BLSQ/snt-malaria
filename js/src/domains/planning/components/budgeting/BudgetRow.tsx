@@ -109,10 +109,7 @@ export const BudgetRow: FC<Props> = ({
                         key={`cost_line_${line.id}`}
                         yearRange={yearRange}
                         isEditable={isEditable}
-                        costLineId={line.id}
-                        coverageByYear={line.coverageByYear}
-                        totalCost={line.totalCost}
-                        label={line.label}
+                        costLine={line}
                     />
                 ))}
         </>

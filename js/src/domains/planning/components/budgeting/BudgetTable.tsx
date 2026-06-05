@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Paper,
     Table,
@@ -15,7 +15,11 @@ import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { getColorRange } from '../../libs/color-utils';
-import { BudgetIntervention } from '../../types/budget';
+import {
+    BudgetIntervention,
+    BudgetInterventionCostLine,
+} from '../../types/budget';
+import { InterventionPlan } from '../../types/interventionAssignments';
 import { BudgetRow, BudgetRowData } from './BudgetRow';
 import { BudgetTotalRow } from './BudgetTotalRow';
 import { CostLineRowData, CostLineYearlyCoverage } from './CostLineRow';
@@ -71,7 +75,6 @@ export const BudgetTable: FC = ({}) => {
                 {};
             const defaultRowsByIntervention: Record<number, CostLineRowData[]> =
                 {};
-
             if (costLines) {
                 costLines.forEach(line => {
                     lineRecord[line.id] = line;
@@ -82,6 +85,7 @@ export const BudgetTable: FC = ({}) => {
                         id: line.id,
                         label: line.name,
                         subLabel: '',
+                        costDriver: line.cost_driver,
                         totalCost: 0,
                         coverageByYear: (yearlyCoverageByCostLine[line.id] ||
                             {}) as Record<number, CostLineYearlyCoverage>,
@@ -127,6 +131,44 @@ export const BudgetTable: FC = ({}) => {
         [budgets],
     );
 
+    const populateInterventionCost = useCallback(
+        (plan: InterventionPlan) => {
+            const orgUnitCount = plan.org_units.length || 0;
+            const preListedCostBreakdowns = (
+                defaultCostRowDataByIntervention[plan.intervention.id] || []
+            ).map(costLine => ({
+                ...costLine,
+                totalCost: 0,
+            }));
+
+            return {
+                interventionId: plan.intervention.id,
+                interventionLabel: plan.intervention.short_name,
+                orgUnitCount,
+                yearCosts: {} as Record<number, number>,
+                totalCost: 0,
+                costBreakdowns: preListedCostBreakdowns,
+            };
+        },
+        [defaultCostRowDataByIntervention],
+    );
+
+    const populateCostLine = useCallback(
+        (costLine: BudgetInterventionCostLine) => {
+            const breakdownLine = costBreakdownLineRecord[costLine.id];
+            return {
+                id: costLine.id,
+                label: breakdownLine ? breakdownLine.name : '',
+                subLabel: '',
+                costDriver: breakdownLine?.cost_driver ?? 'population',
+                totalCost: costLine.total_cost,
+                coverageByYear: (yearlyCoverageByCostLine[costLine.id] ||
+                    {}) as Record<number, CostLineYearlyCoverage>,
+            };
+        },
+        [costBreakdownLineRecord, yearlyCoverageByCostLine],
+    );
+
     useEffect(() => {
         const rows = [] as BudgetRowData[];
         const costs = {
@@ -135,25 +177,9 @@ export const BudgetTable: FC = ({}) => {
             interventionTotals: [] as { label: string; totalCost: number }[],
         };
         interventionPlans.forEach(plan => {
-            const orgUnitCount = plan.org_units.length || 0;
             const yearlyInterventions =
                 interventionCosts[plan.intervention.id] || [];
-
-            const preListedCostBreakdowns = (
-                defaultCostRowDataByIntervention[plan.intervention.id] || []
-            ).map(costLine => ({
-                ...costLine,
-                totalCost: 0,
-            }));
-
-            const row = {
-                interventionId: plan.intervention.id,
-                interventionLabel: plan.intervention.short_name,
-                orgUnitCount,
-                yearCosts: {} as Record<number, number>,
-                totalCost: 0,
-                costBreakdowns: preListedCostBreakdowns,
-            };
+            const row = populateInterventionCost(plan);
 
             yearlyInterventions.forEach(intervention => {
                 row.yearCosts[intervention.year] = intervention.total_cost;
@@ -170,17 +196,8 @@ export const BudgetTable: FC = ({}) => {
                     if (existingCostLine) {
                         existingCostLine.totalCost += costLine.total_cost;
                     } else {
-                        const breakdownLine =
-                            costBreakdownLineRecord[costLine.id];
-                        row.costBreakdowns.push({
-                            id: costLine.id,
-                            label: breakdownLine ? breakdownLine.name : '',
-                            subLabel: '',
-                            totalCost: costLine.total_cost,
-                            coverageByYear: (yearlyCoverageByCostLine[
-                                costLine.id
-                            ] || {}) as Record<number, CostLineYearlyCoverage>,
-                        });
+                        const costBreakdown = populateCostLine(costLine);
+                        row.costBreakdowns.push(costBreakdown);
                     }
                 });
             });
@@ -200,8 +217,8 @@ export const BudgetTable: FC = ({}) => {
         interventionCosts,
         setBudgetRows,
         defaultCostRowDataByIntervention,
-        costBreakdownLineRecord,
-        yearlyCoverageByCostLine,
+        populateCostLine,
+        populateInterventionCost,
     ]);
 
     const colors = useMemo(() => {
