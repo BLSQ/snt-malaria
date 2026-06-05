@@ -86,10 +86,11 @@ class BudgetCalculationComparisonTestCase(SNTMalariaTestCase):
             unit_type, _ = CostUnitType.objects.get_or_create(
                 account=self.account,
                 name=line_config["unit_name"],
-                defaults={"ratio": Decimal(line_config["ratio"])},
+                defaults={"value": Decimal(line_config["ratio"])},
             )
-            unit_type.ratio = Decimal(line_config["ratio"])
-            unit_type.save(update_fields=["ratio"])
+            unit_type.value = Decimal(line_config["ratio"])
+            unit_type.invert_value = False
+            unit_type.save(update_fields=["value", "invert_value"])
 
             cost_line = InterventionCostBreakdownLine.objects.create(
                 unit_type=unit_type,
