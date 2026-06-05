@@ -228,6 +228,10 @@ class BudgetCalculationService:
                     rows.append(lineToAdd)
         return rows
 
+    def _get_yearly_value(self, line, year):
+        default = Decimal("0") if line.cost_driver == "fixed_cost" else Decimal("1")
+        return self.yearly_value_by_key.get((line.id, year), default)
+
     def _compute_population_cost_row(self, line, org_unit_id, year, inflation_multiplier, intervention_id):
         """
         Calculate using population as quantity and yearly value is a ratio applied on this quantity.
@@ -239,7 +243,7 @@ class BudgetCalculationService:
         if population <= 0:
             return None
 
-        yearly_value = self.yearly_value_by_key.get((line.id, year), Decimal("1"))
+        yearly_value = self._get_yearly_value(line, year)
         unit_ratio = line.unit_type.ratio if line.unit_type and line.unit_type.ratio is not None else Decimal("1")
 
         # Doing the same as before here, quantity is modified by the unit ratio and the yearly coverage.
@@ -264,7 +268,7 @@ class BudgetCalculationService:
         """
         Calculate using yearly value as quantity. Added once per intervention regardless of org units.
         """
-        yearly_value = self.yearly_value_by_key.get((line.id, year), Decimal("1"))
+        yearly_value = self._get_yearly_value(line, year)
         unit_ratio = line.unit_type.ratio if line.unit_type and line.unit_type.ratio is not None else Decimal("1")
         quantity = yearly_value * Decimal(str(unit_ratio))
         line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)

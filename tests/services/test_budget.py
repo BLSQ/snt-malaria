@@ -394,3 +394,31 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         d2 = next(o for o in result.org_units_costs if o.org_unit_id == self.district_2.id)
         self.assertEqual(d1.total_cost, 2750.0)
         self.assertEqual(d2.total_cost, 2200.0)
+
+    def test_fixed_cost_defaults_to_zero_when_no_yearly_assignment(self):
+        """Fixed cost line with no ScenarioYearlyCostAssignment defaults yearly_value to 0 and contributes nothing."""
+        scenario = self.create_snt_scenario(self.account, self.user, start_year=2025, end_year=2025)
+        category = self.create_snt_intervention_category()
+        intervention = self.create_snt_intervention(intervention_category=category, code="fixed_no_assignment")
+        self.create_snt_assignment(scenario, self.district_1, intervention)
+
+        InterventionCostBreakdownLine.objects.create(
+            intervention=intervention,
+            name="Fixed cost without yearly assignment",
+            category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.OPERATIONAL,
+            unit_type=self.unit_type,
+            population_layer=None,
+            cost_driver=InterventionCostBreakdownLine.CostDriver.FIXED_COST,
+            unit_cost=Decimal("500.00"),
+            created_by=self.user,
+        )
+        # No ScenarioYearlyCostAssignment created — yearly_value defaults to 0 for fixed costs.
+
+        service = BudgetCalculationService(scenario)
+        result = service.calculate_year(2025)
+
+        self.assertEqual(result.total_cost, 0.0)
+        self.assertEqual(result.quantity, 0.0)
+        self.assertEqual(len(result.interventions), 0)
+        self.assertEqual(len(result.org_units_costs), 0)
+        self.assertEqual(len(result.category_costs), 0)
