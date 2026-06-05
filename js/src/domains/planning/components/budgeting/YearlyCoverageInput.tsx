@@ -23,6 +23,7 @@ export const YearlyCoverageInput: FC<Props> = ({
         disabled={disabled}
         type="number"
         size="small"
+        onFocus={e => e.target.select()}
         inputProps={{
             min: 0,
             ...(percentage ? { max: 100 } : {}),
