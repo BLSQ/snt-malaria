@@ -139,12 +139,10 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
         return fields
 
     def validate(self, attrs):
-        print(f"COUCOU MTF {attrs.get('population_layer')}")
         attrs = super().validate(attrs)
         attrs["cost_driver"] = (
             InterventionCostBreakdownLine.CostDriver.POPULATION
             if attrs.get("population_layer")
             else InterventionCostBreakdownLine.CostDriver.FIXED_COST
         )
-        print(attrs["cost_driver"])
         return attrs
