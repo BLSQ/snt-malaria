@@ -46,6 +46,7 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
                         "intervention",
                         "updated_by",
                         "population_layer",
+                        "cost_driver",
                     ],
                 )
             if lines_to_delete:
@@ -84,6 +85,7 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
             "category_label",
             "intervention",
             "population_layer",
+            "cost_driver",
         ]
 
     def get_unit_type_label(self, obj):
@@ -137,10 +139,12 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
         return fields
 
     def validate(self, attrs):
+        print(f"COUCOU MTF {attrs.get('population_layer')}")
         attrs = super().validate(attrs)
         attrs["cost_driver"] = (
             InterventionCostBreakdownLine.CostDriver.POPULATION
             if attrs.get("population_layer")
             else InterventionCostBreakdownLine.CostDriver.FIXED_COST
         )
+        print(attrs["cost_driver"])
         return attrs
