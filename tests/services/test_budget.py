@@ -343,10 +343,16 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             created_by=self.user,
         )
         ScenarioYearlyCostAssignment.objects.create(
-            scenario=scenario, cost_line=pop_line_a, year=2025, value=Decimal("1.0"),
+            scenario=scenario,
+            cost_line=pop_line_a,
+            year=2025,
+            value=Decimal("1.0"),
         )
         ScenarioYearlyCostAssignment.objects.create(
-            scenario=scenario, cost_line=fixed_line_a, year=2025, value=Decimal("4"),
+            scenario=scenario,
+            cost_line=fixed_line_a,
+            year=2025,
+            value=Decimal("4"),
         )
 
         # Intervention B: population cost only, assigned to district_1.
@@ -363,7 +369,10 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             created_by=self.user,
         )
         ScenarioYearlyCostAssignment.objects.create(
-            scenario=scenario, cost_line=pop_line_b, year=2025, value=Decimal("1.0"),
+            scenario=scenario,
+            cost_line=pop_line_b,
+            year=2025,
+            value=Decimal("1.0"),
         )
 
         service = BudgetCalculationService(scenario)
