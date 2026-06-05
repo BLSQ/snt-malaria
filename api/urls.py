@@ -8,6 +8,7 @@ from plugins.snt_malaria.api.impact.views import ImpactAgeGroupsViewSet, ImpactV
 from plugins.snt_malaria.api.scenario_yearly_cost_assignment.views import ScenarioYearlyCostAssignmentViewSet
 
 from .account_setup.views import SNTAccountSetupViewSet
+from .cost_unit_types.views import CostUnitTypeViewSet
 from .intervention_assignments.views import InterventionAssignmentViewSet
 from .intervention_categories.views import InterventionCategoryViewSet
 from .intervention_cost_breakdown_line.views import InterventionCostBreakdownLineViewSet
@@ -33,6 +34,7 @@ router.register(
 )
 
 # Cost api
+router.register(r"snt_malaria/cost_unit_types", CostUnitTypeViewSet, basename="cost_unit_types")
 router.register(
     r"snt_malaria/intervention_cost_breakdown_lines",
     InterventionCostBreakdownLineViewSet,
