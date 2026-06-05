@@ -1,4 +1,5 @@
 import React, { FC, useCallback, useEffect } from 'react';
+import CheckIcon from '@mui/icons-material/Check';
 import { LoadingButton } from '@mui/lab';
 import { Stack, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
@@ -81,6 +82,7 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
                         <LoadingButton
                             onClick={() => formik.handleSubmit()}
                             variant="outlined"
+                            startIcon={<CheckIcon />}
                             loading={isSavingInterventionDetails}
                         >
                             {formatMessage(MESSAGES.save)}

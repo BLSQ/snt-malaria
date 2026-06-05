@@ -1,14 +1,15 @@
 import React, { FC, useCallback, useEffect } from 'react';
-import { VaccinesOutlined } from '@mui/icons-material';
+import { StraightenOutlined, VaccinesOutlined } from '@mui/icons-material';
 import { Box, Tab, Tabs } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useSearchParams } from 'react-router-dom';
 import { PageContainer } from '../../components/styledComponents';
 import { MESSAGES } from '../messages';
+import { CostUnitSettings } from './costUnits';
 import { InterventionSettings } from './interventions';
 
-type SettingsTab = 'interventions';
+type SettingsTab = 'interventions' | 'costUnits';
 
 const DEFAULT_TAB: SettingsTab = 'interventions';
 
@@ -63,10 +64,18 @@ export const Settings: FC = () => {
                             label={formatMessage(MESSAGES.interventionsTitle)}
                             sx={{ textTransform: 'none', minHeight: 48 }}
                         />
+                        <Tab
+                            value="costUnits"
+                            icon={<StraightenOutlined fontSize="small" />}
+                            iconPosition="start"
+                            label={formatMessage(MESSAGES.costUnitsTitle)}
+                            sx={{ textTransform: 'none', minHeight: 48 }}
+                        />
                     </Tabs>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0 }}>
                     {tab === 'interventions' && <InterventionSettings />}
+                    {tab === 'costUnits' && <CostUnitSettings />}
                 </Box>
             </PageContainer>
         </>

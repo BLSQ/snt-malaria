@@ -932,4 +932,85 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compareCustomize.yearsLabel',
         defaultMessage: 'Years',
     },
+    costUnitsTitle: {
+        id: 'iaso.snt_malaria.settings.costUnits.title',
+        defaultMessage: 'Units',
+    },
+    addCostUnit: {
+        id: 'iaso.snt_malaria.settings.costUnits.add',
+        defaultMessage: 'Add',
+    },
+    newCostUnit: {
+        id: 'iaso.snt_malaria.settings.costUnits.new',
+        defaultMessage: 'New unit',
+    },
+    deleteCostUnit: {
+        id: 'iaso.snt_malaria.settings.costUnits.delete',
+        defaultMessage: 'Delete',
+    },
+    deleteCostUnitConfirmTitle: {
+        id: 'iaso.snt_malaria.settings.costUnits.deleteConfirmTitle',
+        defaultMessage: 'Delete this unit?',
+    },
+    deleteCostUnitConfirmMessage: {
+        id: 'iaso.snt_malaria.settings.costUnits.deleteConfirmMessage',
+        defaultMessage:
+            'This unit will be permanently removed. Units that are used by a cost line cannot be deleted.',
+    },
+    costUnitLongName: {
+        id: 'iaso.snt_malaria.settings.costUnits.longName',
+        defaultMessage: 'Name',
+    },
+    costUnitConversionFactor: {
+        id: 'iaso.snt_malaria.settings.costUnits.conversionFactor',
+        defaultMessage: 'Conversion factor',
+    },
+    costUnitConversionFactorHelp: {
+        id: 'iaso.snt_malaria.settings.costUnits.conversionFactorHelp',
+        defaultMessage:
+            'Conversion factor between a unit quantity and its corresponding cost-driver quantity (typically a population). \
+            Depending on the item, this may express how many people one unit covers, or how many units one person requires.',
+    },
+    costUnitRatioDirection: {
+        id: 'iaso.snt_malaria.settings.costUnits.ratioDirection',
+        defaultMessage: 'Conversion factor direction',
+    },
+    costUnitRatioDirect: {
+        id: 'iaso.snt_malaria.settings.costUnits.ratioDirect',
+        defaultMessage: 'Direct ({value} per)',
+    },
+    costUnitRatioDirectHelp: {
+        id: 'iaso.snt_malaria.settings.costUnits.ratioDirectHelp',
+        defaultMessage:
+            'Used as-is. E.g. 4 doses per person (SMC); 1 per SP/AQ course.',
+    },
+    costUnitRatioInverse: {
+        id: 'iaso.snt_malaria.settings.costUnits.ratioInverse',
+        defaultMessage: 'Inverse (covers {value})',
+    },
+    costUnitRatioInverseHelp: {
+        id: 'iaso.snt_malaria.settings.costUnits.ratioInverseHelp',
+        defaultMessage:
+            '1 / value. E.g. a net covers 1.8 people; one bale covers 90 people.',
+    },
+    costUnitRatioSummaryDirect: {
+        id: 'iaso.snt_malaria.settings.costUnits.ratioSummaryDirect',
+        defaultMessage: '{value} per person',
+    },
+    costUnitRatioSummaryInverse: {
+        id: 'iaso.snt_malaria.settings.costUnits.ratioSummaryInverse',
+        defaultMessage: 'Covers {value} people',
+    },
+    costUnitRatioSummaryInverseOne: {
+        id: 'iaso.snt_malaria.settings.costUnits.ratioSummaryInverseOne',
+        defaultMessage: 'Covers {value} person',
+    },
+    costUnitRatioInvalid: {
+        id: 'iaso.snt_malaria.settings.costUnits.ratioInvalid',
+        defaultMessage: 'Please enter a valid number.',
+    },
+    costUnitDescription: {
+        id: 'iaso.snt_malaria.settings.costUnits.description',
+        defaultMessage: 'Description',
+    },
 });
