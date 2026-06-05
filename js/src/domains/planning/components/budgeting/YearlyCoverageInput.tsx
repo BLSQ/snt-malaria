@@ -27,7 +27,7 @@ export const YearlyCoverageInput: FC<Props> = ({
             min: 0,
             ...(percentage ? { max: 100 } : {}),
             step: 1,
-            inputMode: percentage ? 'decimal' : 'numeric',
+            inputMode: 'numeric',
             style: { paddingRight: percentage ? '0' : '1rem' },
         }}
         InputProps={

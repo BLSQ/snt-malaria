@@ -186,7 +186,7 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
 
     def test_create_is_scoped_per_scenario(self):
         valid_response = self._post_create_payload(self.user_with_full_perm, self.scenario, self.population_line_1)
-        valid_result = self.assertJSONResponse(valid_response, status.HTTP_201_CREATED)
+        valid_result = self.assertJSONResponse(valid_response, status.HTTP_200_OK)
         self.assertEqual(valid_result["scenario"], self.scenario.id)
 
         cross_account_response = self._post_create_payload(
@@ -199,7 +199,7 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
 
     def test_create_allows_basic_access_same_account(self):
         response = self._post_create_payload(self.user_with_basic_perm, self.scenario, self.population_line_1)
-        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
 
         self.assertEqual(result["scenario"], self.scenario.id)
         self.assertEqual(result["cost_line"], self.population_line_1.id)
@@ -209,13 +209,11 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    # This work for locked scenario too, scenario lock state is validate in serializer.
-    def test_create_allows_full_access_locked_scenario(self):
+    def test_create_rejects_locked_scenario(self):
         response = self._post_create_payload(self.user_with_full_perm, self.locked_scenario, self.population_line_1)
-        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+        result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
 
-        self.assertEqual(result["scenario"], self.locked_scenario.id)
-        self.assertEqual(result["cost_line"], self.population_line_1.id)
+        self.assertIn("scenario", result)
 
     def test_forbidden_when_user_has_no_access_to_scenario(self):
         assignment = self._create_scenario_yearly_cost(self.scenario, self.population_line_1, value="5.00")
@@ -237,7 +235,8 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
 
         assignment.refresh_from_db()
         self.assertEqual(result["id"], assignment.id)
-        self.assertEqual(str(assignment.value), "20.00")
+        # population driver: API receives percentage (20.00), stored as fraction (0.20)
+        self.assertEqual(str(assignment.value), "0.20")
 
     def test_updating_single_assignment_allows_basic_access_when_user_created_the_scenario(self):
         assignment = self._create_scenario_yearly_cost(self.other_user_scenario, self.population_line_1, value="5.00")
@@ -247,7 +246,8 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
 
         assignment.refresh_from_db()
         self.assertEqual(result["id"], assignment.id)
-        self.assertEqual(str(assignment.value), "21.00")
+        # population driver: API receives percentage (21.00), stored as fraction (0.21)
+        self.assertEqual(str(assignment.value), "0.21")
 
     def test_updating_single_assignment_forbids_no_access_same_account(self):
         assignment = self._create_scenario_yearly_cost(self.scenario, self.population_line_1, value="5.00")

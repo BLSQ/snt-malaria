@@ -55,9 +55,9 @@ class BudgetYearResult(BudgetBaseModel):
 
 class BudgetLineRow(BudgetBaseModel):
     cost_line_id: int
-    org_unit_id: int
+    org_unit_id: Optional[int]
     intervention_id: int
     category: str
-    population: Decimal
+    population: Decimal = Decimal("0")
     quantity: Decimal
     total_cost: Decimal

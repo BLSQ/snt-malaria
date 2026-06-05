@@ -145,12 +145,6 @@ export const PlanningProvider = ({
             value,
         }: SaveYearlyCoverageParams) => {
             const debounceKey = toCoverageKey(costLineId, year);
-            const parsedValue = Number(value);
-            if (!Number.isFinite(parsedValue)) {
-                return;
-            }
-
-            const clampedValue = Math.min(100, Math.max(0, parsedValue));
 
             timeoutServiceRef.current.debounce(
                 debounceKey,
@@ -160,7 +154,7 @@ export const PlanningProvider = ({
                         scenario: scenarioId,
                         costLine: costLineId,
                         year,
-                        value: clampedValue,
+                        value,
                     });
                 },
                 DEBOUNCE_MS,

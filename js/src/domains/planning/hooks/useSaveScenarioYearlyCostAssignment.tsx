@@ -5,20 +5,16 @@ import { useSnackMutation } from 'Iaso/libs/apiHooks';
 type ScenarioYearlyCostAssignmentPayload = {
     id?: number;
     scenario: number;
-    intervention?: number;
     year: number;
     value: number;
-    costLine?: number;
+    costLine: number;
 };
-
-const transformPercentageValue = (value: number) => (value ?? 0) / 100;
 
 export const useSaveScenarioYearlyCostAssignment = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: ({
             id,
             scenario,
-            intervention,
             year,
             value,
             costLine,
@@ -28,17 +24,16 @@ export const useSaveScenarioYearlyCostAssignment = (): UseMutationResult =>
                       `/api/snt_malaria/scenario_yearly_cost_assignments/${id}/`,
                       {
                           scenario,
-                          value: transformPercentageValue(value),
+                          value,
                       },
                   )
                 : postRequest(
                       '/api/snt_malaria/scenario_yearly_cost_assignments/',
                       {
                           scenario,
-                          intervention,
-                          ...(costLine ? { cost_line: costLine } : {}),
+                          cost_line: costLine,
                           year,
-                          value: transformPercentageValue(value),
+                          value,
                       },
                   ),
         invalidateQueryKey: [

@@ -108,13 +108,33 @@ class ScenarioYearlyCostAssignmentSerializerBaseTestCase(SNTMalariaTestCase):
 
 
 class ScenarioYearlyCostAssignmentSerializerTests(ScenarioYearlyCostAssignmentSerializerBaseTestCase):
+    def test_to_representation_multiplies_value_by_100_for_population_lines(self):
+        assignment = ScenarioYearlyCostAssignment.objects.create(
+            scenario=self.scenario,
+            cost_line=self.population_line_1,
+            year=2026,
+            value="1.50",
+        )
+        serializer = ScenarioYearlyCostAssignmentSerializer(assignment, context=self._context_for(self.user))
+        self.assertEqual(serializer.data["value"], "150")
+
+    def test_to_representation_does_not_modify_value_for_fixed_cost_lines(self):
+        assignment = ScenarioYearlyCostAssignment.objects.create(
+            scenario=self.scenario,
+            cost_line=self.fixed_cost_line,
+            year=2026,
+            value="150",
+        )
+        serializer = ScenarioYearlyCostAssignmentSerializer(assignment, context=self._context_for(self.user))
+        self.assertEqual(serializer.data["value"], "150")
+
     def test_create_is_scoped_to_scenario_and_cost_line_account(self):
         serializer = ScenarioYearlyCostAssignmentSerializer(
             data={
                 "scenario": self.other_account_scenario.id,
                 "year": 2026,
                 "cost_line": self.population_line_1.id,
-                "value": "12.00",
+                "value": "12",
             },
             context=self._context_for(self.user),
         )
@@ -126,7 +146,7 @@ class ScenarioYearlyCostAssignmentSerializerTests(ScenarioYearlyCostAssignmentSe
                 "scenario": self.scenario.id,
                 "year": 2026,
                 "cost_line": self.other_account_cost_line.id,
-                "value": "12.00",
+                "value": "12",
             },
             context=self._context_for(self.user),
         )
@@ -134,270 +154,128 @@ class ScenarioYearlyCostAssignmentSerializerTests(ScenarioYearlyCostAssignmentSe
         self.assertIn("cost_line", serializer.errors)
 
 
-class ScenarioYearlyCostAssignmentUpsertManySerializerTests(ScenarioYearlyCostAssignmentSerializerBaseTestCase):
-    def test_save_updates_population_lines_for_current_scenario_only(self):
-        ScenarioYearlyCostAssignment.objects.create(
-            scenario=self.scenario,
-            cost_line=self.population_line_1,
-            year=2026,
-            value="1.00",
-        )
-        ScenarioYearlyCostAssignment.objects.create(
-            scenario=self.scenario,
-            cost_line=self.population_line_2,
-            year=2026,
-            value="2.00",
-        )
-        ScenarioYearlyCostAssignment.objects.create(
-            scenario=self.scenario,
-            cost_line=self.fixed_cost_line,
-            year=2026,
-            value="3.00",
-        )
-        ScenarioYearlyCostAssignment.objects.create(
-            scenario=self.other_user_scenario,
-            cost_line=self.population_line_1,
-            year=2026,
-            value="4.00",
-        )
-
-        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
-            data={
-                "intervention": self.intervention.id,
-                "scenario": self.scenario.id,
-                "year": 2026,
-                "value": "99.00",
-            },
-            context=self._context_for(self.user),
-        )
-        self.assertTrue(serializer.is_valid(), serializer.errors)
-
-        result = serializer.save()
-
-        self.assertEqual(len(result), 2)
-
-        current_scenario_assignments = ScenarioYearlyCostAssignment.objects.filter(
-            scenario=self.scenario,
-            year=2026,
-        )
-        self.assertEqual(current_scenario_assignments.count(), 3)
-
-        updated_line_1 = current_scenario_assignments.get(cost_line=self.population_line_1)
-        updated_line_2 = current_scenario_assignments.get(cost_line=self.population_line_2)
-        unchanged_fixed_line = current_scenario_assignments.get(cost_line=self.fixed_cost_line)
-
-        other_scenario_assignment = ScenarioYearlyCostAssignment.objects.get(
-            scenario=self.other_user_scenario,
-            cost_line=self.population_line_1,
-            year=2026,
-        )
-
-        self.assertEqual(str(updated_line_1.value), "99.00")
-        self.assertEqual(str(updated_line_2.value), "99.00")
-        self.assertEqual(str(unchanged_fixed_line.value), "3.00")
-        self.assertEqual(str(other_scenario_assignment.value), "4.00")
-
-    def test_save_updates_only_the_given_cost_line_when_cost_line_is_provided(self):
-        ScenarioYearlyCostAssignment.objects.create(
-            scenario=self.scenario,
-            cost_line=self.population_line_1,
-            year=2026,
-            value="1.00",
-        )
-        ScenarioYearlyCostAssignment.objects.create(
-            scenario=self.scenario,
-            cost_line=self.population_line_2,
-            year=2026,
-            value="2.00",
-        )
-        ScenarioYearlyCostAssignment.objects.create(
-            scenario=self.scenario,
-            cost_line=self.fixed_cost_line,
-            year=2026,
-            value="3.00",
-        )
-
-        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
-            data={
-                "intervention": self.intervention.id,
-                "scenario": self.scenario.id,
-                "cost_line": self.fixed_cost_line.id,
-                "year": 2026,
-                "value": "99.00",
-            },
-            context=self._context_for(self.user),
-        )
-        self.assertTrue(serializer.is_valid(), serializer.errors)
-
-        result = serializer.save()
-
-        self.assertEqual(len(result), 1)
-
-        current_scenario_assignments = ScenarioYearlyCostAssignment.objects.filter(
-            scenario=self.scenario,
-            year=2026,
-        )
-        self.assertEqual(current_scenario_assignments.count(), 3)
-
-        changed_fixed_line = current_scenario_assignments.get(cost_line=self.fixed_cost_line)
-        unchanged_line_1 = current_scenario_assignments.get(cost_line=self.population_line_1)
-        unchanged_line_2 = current_scenario_assignments.get(cost_line=self.population_line_2)
-
-        self.assertEqual(str(changed_fixed_line.value), "99.00")
-        self.assertEqual(str(unchanged_line_1.value), "1.00")
-        self.assertEqual(str(unchanged_line_2.value), "2.00")
-
-    def test_validate_rejects_intervention_without_cost_breakdown_lines(self):
-        empty_intervention = self.create_snt_intervention(
-            name="Empty Intervention",
-            intervention_category=self.category,
-            code="empty_intervention",
-        )
-
-        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
-            data={
-                "intervention": empty_intervention.id,
-                "scenario": self.scenario.id,
-                "year": 2026,
-                "value": "99.00",
-            },
-            context=self._context_for(self.user),
-        )
-
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("intervention", serializer.errors)
-
-    def test_required_fields_are_enforced(self):
-        base_data = {
-            "intervention": self.intervention.id,
+class ScenarioYearlyCostAssignmentUpsertSerializerTests(ScenarioYearlyCostAssignmentSerializerBaseTestCase):
+    def _base_data(self, cost_line=None, value="99"):
+        return {
             "scenario": self.scenario.id,
+            "cost_line": (cost_line or self.fixed_cost_line).id,
             "year": 2026,
-            "value": "99.00",
+            "value": value,
         }
 
-        for field_name in ("intervention", "scenario", "year", "value"):
+    def test_save_creates_new_assignment(self):
+        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
+            data=self._base_data(self.fixed_cost_line, "50"),
+            context=self._context_for(self.user),
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        result = serializer.save()
+        self.assertEqual(result.scenario, self.scenario)
+        self.assertEqual(result.cost_line, self.fixed_cost_line)
+        self.assertEqual(result.year, 2026)
+        self.assertEqual(str(result.value), "50.00")
+
+    def test_save_updates_existing_assignment(self):
+        existing = ScenarioYearlyCostAssignment.objects.create(
+            scenario=self.scenario, cost_line=self.fixed_cost_line, year=2026, value="10.00"
+        )
+        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
+            data=self._base_data(self.fixed_cost_line, "20.00"),
+            context=self._context_for(self.user),
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        result = serializer.save()
+        self.assertEqual(result.id, existing.id)
+        self.assertEqual(str(result.value), "20.00")
+
+    def test_save_divides_value_by_100_for_population_driver(self):
+        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
+            data=self._base_data(self.population_line_1, "75.00"),
+            context=self._context_for(self.user),
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        result = serializer.save()
+        self.assertEqual(str(result.value), "0.75")
+
+    def test_save_does_not_divide_value_for_fixed_cost_driver(self):
+        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
+            data=self._base_data(self.fixed_cost_line, "500.00"),
+            context=self._context_for(self.user),
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        result = serializer.save()
+        self.assertEqual(str(result.value), "500.00")
+
+    def test_patch_uses_instance_year_and_cost_line(self):
+        assignment = ScenarioYearlyCostAssignment.objects.create(
+            scenario=self.scenario, cost_line=self.fixed_cost_line, year=2026, value="10.00"
+        )
+        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
+            instance=assignment,
+            data={"scenario": self.scenario.id, "value": "50.00"},
+            partial=True,
+            context=self._context_for(self.user),
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        result = serializer.save()
+        self.assertEqual(result.id, assignment.id)
+        self.assertEqual(result.year, 2026)
+        self.assertEqual(result.cost_line, self.fixed_cost_line)
+        self.assertEqual(str(result.value), "50.00")
+
+    def test_patch_without_value_leaves_value_unchanged(self):
+        assignment = ScenarioYearlyCostAssignment.objects.create(
+            scenario=self.scenario, cost_line=self.fixed_cost_line, year=2026, value="10.00"
+        )
+        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
+            instance=assignment,
+            data={"scenario": self.scenario.id},
+            partial=True,
+            context=self._context_for(self.user),
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        result = serializer.save()
+        self.assertEqual(str(result.value), "10.00")
+
+    def test_required_fields_are_enforced(self):
+        for field_name in ("scenario", "cost_line", "year", "value"):
             with self.subTest(field_name=field_name):
-                data = dict(base_data)
+                data = dict(self._base_data())
                 data.pop(field_name)
-
                 serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
-                    data=data,
-                    context=self._context_for(self.user),
+                    data=data, context=self._context_for(self.user)
                 )
-
                 self.assertFalse(serializer.is_valid())
                 self.assertIn(field_name, serializer.errors)
 
-    def test_rejects_intervention_from_other_account(self):
-        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
-            data={
-                "intervention": self.other_account_intervention.id,
-                "scenario": self.scenario.id,
-                "year": 2026,
-                "value": "99.00",
-            },
-            context=self._context_for(self.user),
-        )
-
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("intervention", serializer.errors)
-
     def test_reject_locked_scenario(self):
         serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
-            data={
-                "intervention": self.intervention.id,
-                "scenario": self.locked_scenario.id,
-                "year": 2026,
-                "value": "99.00",
-            },
+            data={**self._base_data(), "scenario": self.locked_scenario.id},
             context=self._context_for(self.user),
         )
-
         self.assertFalse(serializer.is_valid())
         self.assertIn("scenario", serializer.errors)
 
     def test_rejects_scenario_from_other_account(self):
         serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
-            data={
-                "intervention": self.intervention.id,
-                "scenario": self.other_account_scenario.id,
-                "year": 2026,
-                "value": "99.00",
-            },
+            data={**self._base_data(), "scenario": self.other_account_scenario.id},
             context=self._context_for(self.user),
         )
-
         self.assertFalse(serializer.is_valid())
         self.assertIn("scenario", serializer.errors)
 
+    def test_rejects_cost_line_from_other_account(self):
+        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
+            data={**self._base_data(), "cost_line": self.other_account_cost_line.id},
+            context=self._context_for(self.user),
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("cost_line", serializer.errors)
+
     def test_value_must_be_decimal(self):
         serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
-            data={
-                "intervention": self.intervention.id,
-                "scenario": self.scenario.id,
-                "year": 2026,
-                "value": "1a2,00",
-            },
+            data={**self._base_data(), "value": "1a2,00"},
             context=self._context_for(self.user),
         )
-
         self.assertFalse(serializer.is_valid())
         self.assertIn("value", serializer.errors)
-
-    def test_cost_line_other_account(self):
-        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
-            data={
-                "intervention": self.intervention.id,
-                "scenario": self.scenario.id,
-                "cost_line": self.other_account_cost_line.id,
-                "year": 2026,
-                "value": "99.00",
-            },
-            context=self._context_for(self.user),
-        )
-
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("cost_line", serializer.errors)
-
-    def test_cost_line_not_belonging_to_intervention(self):
-        other_intervention_cost_line = self.create_snt_intervention(
-            name="Other Intervention",
-            intervention_category=self.category,
-            code="other_intervention",
-        ).cost_breakdown_lines.create(
-            name="Other Intervention Cost Line",
-            category="Procurement",
-            cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
-            unit_cost=50,
-            unit_type=self.unit_type,
-            created_by=self.user,
-        )
-
-        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
-            data={
-                "intervention": self.intervention.id,
-                "scenario": self.scenario.id,
-                "cost_line": other_intervention_cost_line.id,
-                "year": 2026,
-                "value": "99.00",
-            },
-            context=self._context_for(self.user),
-        )
-
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("cost_line", serializer.errors)
-
-    def test_cost_line_must_be_fixed_cost_when_provided(self):
-        serializer = ScenarioYearlyCostAssignmentUpsertSerializer(
-            data={
-                "intervention": self.intervention.id,
-                "scenario": self.scenario.id,
-                "cost_line": self.population_line_1.id,
-                "year": 2026,
-                "value": "99.00",
-            },
-            context=self._context_for(self.user),
-        )
-
-        self.assertFalse(serializer.is_valid())
-        self.assertIn("cost_line", serializer.errors)

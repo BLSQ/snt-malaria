@@ -3,13 +3,6 @@ import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
 import { ScenarioYearlyCostAssignment } from '../types/interventionAssignments';
 
-const transformScenarioYearlyCostAssignment = (
-    assignment: ScenarioYearlyCostAssignment,
-) => ({
-    ...assignment,
-    value: Number(assignment.value) * 100,
-});
-
 export const useGetScenarioYearlyCostAssignments = (
     scenarioId: number,
 ): UseQueryResult<ScenarioYearlyCostAssignment[], Error> => {
@@ -25,8 +18,6 @@ export const useGetScenarioYearlyCostAssignments = (
         options: {
             cacheTime: Infinity,
             enabled: Boolean(scenarioId),
-            select: (data: ScenarioYearlyCostAssignment[]) =>
-                data.map(transformScenarioYearlyCostAssignment),
         },
     });
 };

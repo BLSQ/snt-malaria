@@ -18,7 +18,7 @@ class ScenarioYearlyCostAssignmentViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "list":
             return ScenarioYearlyCostAssignmentQuerySerializer
-        if self.action == "patch":
+        if self.action in ["create", "partial_update"]:
             return ScenarioYearlyCostAssignmentUpsertSerializer
         return ScenarioYearlyCostAssignmentSerializer
 
@@ -37,12 +37,8 @@ class ScenarioYearlyCostAssignmentViewSet(viewsets.ModelViewSet):
 
         return Response(list_serializer.data, status=status.HTTP_200_OK)
 
-    def perform_create(self, serializer):
-        response = super().perform_create(serializer)
-        # After creating/updating the ScenarioYearlyCostAssignment, we need to recalculate the budget for the related scenario to reflect the changes in the assigned costs
-        scenario = serializer.validated_data["scenario"]
-        budget_service = BudgetCalculationService(scenario)
-        budget_service.calculate_and_save_all_years(self.request.user)
+    def _recalculate_budget(self, scenario):
+        BudgetCalculationService(scenario).calculate_and_save_all_years(self.request.user)
 
         return response
 
@@ -59,5 +55,15 @@ class ScenarioYearlyCostAssignmentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         result = serializer.save()
-        response_serializer = ScenarioYearlyCostAssignmentSerializer(result, many=True)
+        self._recalculate_budget(serializer.validated_data["scenario"])
+        response_serializer = ScenarioYearlyCostAssignmentSerializer(result, context=self.get_serializer_context())
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        result = serializer.save()
+        self._recalculate_budget(serializer.validated_data.get("scenario", instance.scenario))
+        response_serializer = ScenarioYearlyCostAssignmentSerializer(result, context=self.get_serializer_context())
         return Response(response_serializer.data, status=status.HTTP_200_OK)
