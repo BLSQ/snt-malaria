@@ -230,13 +230,13 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
     def test_updating_single_assignment_works(self):
         assignment = self._create_scenario_yearly_cost(self.scenario, self.population_line_1, value="5.00")
 
-        response = self._patch_assignment_value(self.user_with_full_perm, assignment, "20.00")
+        response = self._patch_assignment_value(self.user_with_full_perm, assignment, "29.00")
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
 
         assignment.refresh_from_db()
         self.assertEqual(result["id"], assignment.id)
         # population driver: API receives percentage (20.00), stored as fraction (0.20)
-        self.assertEqual(str(assignment.value), "0.20")
+        self.assertEqual(str(assignment.value), "0.29")
 
     def test_updating_single_assignment_allows_basic_access_when_user_created_the_scenario(self):
         assignment = self._create_scenario_yearly_cost(self.other_user_scenario, self.population_line_1, value="5.00")
@@ -254,6 +254,20 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
 
         response = self._patch_assignment_value(self.user_no_perm, assignment, "22.00")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_assignment_value_rounding_for_population_driver(self):
+        # float(Decimal("0.29")) * 100 == 28.999... which math.floor would truncate to 28.
+        # The serializer must round correctly so the API returns "29", not "28".
+        for stored_value, expected_display in [("0.29", "29"), ("0.57", "57"), ("0.03", "3")]:
+            with self.subTest(stored_value=stored_value):
+                ScenarioYearlyCostAssignment.objects.filter(scenario=self.scenario).delete()
+                self._create_scenario_yearly_cost(self.scenario, self.population_line_1, value=stored_value)
+
+                response = self._list_assignments(self.user_no_perm, self.scenario)
+                result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+                self.assertEqual(len(result), 1)
+                self.assertEqual(result[0]["value"], expected_display)
 
     def test_deleting_assignment_is_not_allowed(self):
         assignment = self._create_scenario_yearly_cost(self.scenario, self.population_line_1, value="5.00")

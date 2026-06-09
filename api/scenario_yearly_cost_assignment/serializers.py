@@ -1,5 +1,3 @@
-import math
-
 from rest_framework import serializers
 
 from plugins.snt_malaria.models import InterventionCostBreakdownLine, Scenario, ScenarioYearlyCostAssignment
@@ -31,7 +29,7 @@ class ScenarioYearlyCostAssignmentSerializer(serializers.ModelSerializer):
         if instance.cost_line.cost_driver == InterventionCostBreakdownLine.CostDriver.POPULATION:
             value *= 100
 
-        data["value"] = f"{math.floor(value)}"
+        data["value"] = f"{round(value)}"
 
         return data
 
@@ -84,11 +82,11 @@ class ScenarioYearlyCostAssignmentUpsertSerializer(serializers.Serializer):
                 value / 100 if cost_line.cost_driver == InterventionCostBreakdownLine.CostDriver.POPULATION else value
             )
 
-        assignment, _ = ScenarioYearlyCostAssignment.objects.update_or_create(
+        self.instance, _ = ScenarioYearlyCostAssignment.objects.update_or_create(
             scenario=scenario,
             cost_line=cost_line,
             year=year,
             defaults=defaults,
         )
 
-        return assignment
+        return self.instance
