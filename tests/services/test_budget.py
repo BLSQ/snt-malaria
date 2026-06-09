@@ -49,7 +49,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.unit_type = CostUnitType.objects.create(
             account=self.account,
             name="per child",
-            ratio=Decimal("0.5"),
+            value=Decimal("0.5"),
         )
 
         BudgetSettings.objects.create(
