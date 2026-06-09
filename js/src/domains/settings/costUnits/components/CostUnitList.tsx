@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useCallback } from 'react';
 import { List, ListItem, ListItemText, Theme } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../messages';
@@ -30,26 +30,30 @@ export const CostUnitList: FC<Props> = ({
 }) => {
     const { formatMessage, formatNumber } = useSafeIntl();
 
-    const getRatioSummary = (costUnit: CostUnitType): string | null => {
-        const value = costUnit.value != null ? parseFloat(costUnit.value) : NaN;
-        if (Number.isNaN(value)) {
-            return null;
-        }
-        const formattedValue = formatNumber(value, {
-            maximumFractionDigits: 2,
-        });
-        if (costUnit.invert_value) {
-            return formatMessage(
-                value === 1
-                    ? MESSAGES.costUnitRatioSummaryInverseOne
-                    : MESSAGES.costUnitRatioSummaryInverse,
-                { value: formattedValue },
-            );
-        }
-        return formatMessage(MESSAGES.costUnitRatioSummaryDirect, {
-            value: formattedValue,
-        });
-    };
+    const getRatioSummary = useCallback(
+        (costUnit: CostUnitType): string | null => {
+            const value =
+                costUnit.value != null ? parseFloat(costUnit.value) : NaN;
+            if (Number.isNaN(value)) {
+                return null;
+            }
+            const formattedValue = formatNumber(value, {
+                maximumFractionDigits: 2,
+            });
+            if (costUnit.invert_value) {
+                return formatMessage(
+                    value === 1
+                        ? MESSAGES.costUnitRatioSummaryInverseOne
+                        : MESSAGES.costUnitRatioSummaryInverse,
+                    { value: formattedValue },
+                );
+            }
+            return formatMessage(MESSAGES.costUnitRatioSummaryDirect, {
+                value: formattedValue,
+            });
+        },
+        [formatMessage, formatNumber],
+    );
 
     return (
         <List>

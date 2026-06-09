@@ -23,9 +23,7 @@ class CostUnitTypeAPITestCase(SNTMalariaAPITestCase):
         self.unit_net = CostUnitType.objects.create(
             account=self.account, name="Net", value="1.8", description="One net protects 1.8 people."
         )
-        self.unit_bale = CostUnitType.objects.create(
-            account=self.account, name="Bale", value="90", invert_value=True
-        )
+        self.unit_bale = CostUnitType.objects.create(account=self.account, name="Bale", value="90", invert_value=True)
 
         # Other account to verify tenancy isolation
         self.other_account, self.other_user = self.create_snt_account(name="Other Account")

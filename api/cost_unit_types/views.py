@@ -43,6 +43,6 @@ class CostUnitTypeViewSet(viewsets.ModelViewSet):
 
     @staticmethod
     def _raise_for_integrity_error(error):
-        if "account_name_uniq" in str(error).lower():
+        if "name_uniq" in str(error):
             raise serializers.ValidationError({"name": _("A cost unit with this name already exists.")})
         raise serializers.ValidationError(str(error))

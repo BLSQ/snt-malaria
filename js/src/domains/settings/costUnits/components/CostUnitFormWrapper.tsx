@@ -1,18 +1,9 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
 import CheckIcon from '@mui/icons-material/Check';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import { LoadingButton } from '@mui/lab';
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-    Stack,
-    Typography,
-} from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { Button, Stack, Typography } from '@mui/material';
+import { makeFullModal, useSafeIntl } from 'bluesquare-components';
+import { DeleteRestoreModal } from 'Iaso/components/DeleteRestoreModals/DeleteRestoreModal';
 import { CardStyled } from '../../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../../messages';
@@ -28,6 +19,27 @@ type Props = {
     onDeleted: () => void;
 };
 
+const DeleteTriggerButton: FC<{
+    onClick: () => void;
+    label: string;
+    disabled?: boolean;
+}> = ({ onClick, label, disabled }) => (
+    <Button
+        onClick={onClick}
+        variant="outlined"
+        color="error"
+        startIcon={<DeleteOutlineIcon />}
+        disabled={disabled}
+    >
+        {label}
+    </Button>
+);
+
+const DeleteCostUnitModal = makeFullModal(
+    DeleteRestoreModal,
+    DeleteTriggerButton,
+);
+
 export const CostUnitFormWrapper: FC<Props> = ({
     costUnit,
     onSaved,
@@ -36,7 +48,6 @@ export const CostUnitFormWrapper: FC<Props> = ({
     const { formatMessage } = useSafeIntl();
 
     const isNew = !costUnit;
-    const [confirmOpen, setConfirmOpen] = useState(false);
 
     const { mutate: saveCostUnitType, isLoading: isSaving } =
         useSaveCostUnitType();
@@ -80,13 +91,7 @@ export const CostUnitFormWrapper: FC<Props> = ({
         if (!costUnit) {
             return;
         }
-        deleteCostUnitType(costUnit.id, {
-            onSuccess: () => {
-                setConfirmOpen(false);
-                onDeleted();
-            },
-            onError: () => setConfirmOpen(false),
-        });
+        deleteCostUnitType(costUnit.id, { onSuccess: onDeleted });
     }, [costUnit, deleteCostUnitType, onDeleted]);
 
     return (
@@ -100,24 +105,32 @@ export const CostUnitFormWrapper: FC<Props> = ({
                     </Typography>
                     <Stack direction="row" spacing={1}>
                         {!isNew && (
-                            <LoadingButton
-                                onClick={() => setConfirmOpen(true)}
-                                variant="outlined"
-                                color="error"
-                                startIcon={<DeleteOutlineIcon />}
-                                loading={isDeleting}
+                            <DeleteCostUnitModal
+                                titleMessage={formatMessage(
+                                    MESSAGES.deleteCostUnitConfirmTitle,
+                                )}
+                                onConfirm={handleDelete}
+                                iconProps={{
+                                    label: formatMessage(
+                                        MESSAGES.deleteCostUnit,
+                                    ),
+                                    disabled: isDeleting,
+                                }}
                             >
-                                {formatMessage(MESSAGES.deleteCostUnit)}
-                            </LoadingButton>
+                                {formatMessage(
+                                    MESSAGES.deleteCostUnitConfirmMessage,
+                                )}
+                            </DeleteCostUnitModal>
                         )}
-                        <LoadingButton
+                        <Button
                             onClick={() => formik.handleSubmit()}
-                            variant="outlined"
+                            variant="contained"
+                            color="primary"
                             startIcon={<CheckIcon />}
-                            loading={isSaving}
+                            disabled={isSaving}
                         >
                             {formatMessage(MESSAGES.save)}
-                        </LoadingButton>
+                        </Button>
                     </Stack>
                 </Stack>
             }
@@ -125,33 +138,6 @@ export const CostUnitFormWrapper: FC<Props> = ({
             <ExtendedFormikProvider formik={formik}>
                 <CostUnitForm />
             </ExtendedFormikProvider>
-
-            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-                <DialogTitle>
-                    {formatMessage(MESSAGES.deleteCostUnitConfirmTitle)}
-                </DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        {formatMessage(MESSAGES.deleteCostUnitConfirmMessage)}
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button
-                        onClick={() => setConfirmOpen(false)}
-                        color="primary"
-                    >
-                        {formatMessage(MESSAGES.cancel)}
-                    </Button>
-                    <LoadingButton
-                        onClick={handleDelete}
-                        color="error"
-                        startIcon={<DeleteOutlineIcon />}
-                        loading={isDeleting}
-                    >
-                        {formatMessage(MESSAGES.deleteCostUnit)}
-                    </LoadingButton>
-                </DialogActions>
-            </Dialog>
         </CardStyled>
     );
 };
