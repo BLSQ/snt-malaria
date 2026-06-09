@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -29,6 +30,7 @@ class InterventionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["put"], serializer_class=InterventionDetailWriteSerializer)
+    @transaction.atomic
     def update_details(self, request, pk):
         intervention = self.get_object()
         serializer = self.get_serializer(intervention, data=request.data, partial=True)
@@ -37,14 +39,13 @@ class InterventionViewSet(viewsets.ModelViewSet):
 
         # Refresh budget for all scenarios with at least 1 assignment of that intervention
         # As it might impact cost lines.
-        scenarioIds = (
-            InterventionAssignment.objects.prefetch_related("scenario")
-            .filter(intervention=intervention)
-            .values_list("scenario", flat=False)
+        scenario_ids = (
+            InterventionAssignment.objects.filter(intervention=intervention)
+            .values_list("scenario_id", flat=True)
             .distinct()
         )
 
-        scenarios = intervention.intervention_category.account.scenario_set.filter(id__in=scenarioIds)
+        scenarios = intervention.intervention_category.account.scenario_set.filter(id__in=scenario_ids)
         for scenario in scenarios:
             budget_service = BudgetCalculationService(scenario)
             budget_service.calculate_and_save_all_years(self.request.user)

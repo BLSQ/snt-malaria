@@ -49,7 +49,7 @@ class ScenarioYearlyCostAssignmentViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         response = super().perform_update(serializer)
         # After creating/updating the ScenarioYearlyCostAssignment, we need to recalculate the budget for the related scenario to reflect the changes in the assigned costs
-        scenario = serializer.validated_data["scenario"]
+        scenario = serializer.instance.scenario
         budget_service = BudgetCalculationService(scenario)
         budget_service.calculate_and_save_all_years(self.request.user)
 

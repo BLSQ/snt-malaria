@@ -120,6 +120,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         result_headers = self.get_success_headers(result_serializer.data)
         return Response(result_serializer.data, status=status.HTTP_200_OK, headers=result_headers)
 
+    @transaction.atomic
     def perform_destroy(self, instance):
         scenario = instance.scenario
         super().perform_destroy(instance)
