@@ -33,7 +33,6 @@ import { InterventionPlanMap } from './components/interventionPlanMap/Interventi
 import { InterventionsPlanTable } from './components/interventionPlanTable/InterventionsPlanTable';
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
 import { PlanningProvider } from './contexts/PlanningContext';
-import { useCalculateBudget } from './hooks/useCalculateBudget';
 import { useGetAccountSettings } from './hooks/useGetAccountSettings';
 import { useGetBudgetAssumptions } from './hooks/useGetBudgetAssumptions';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
@@ -96,9 +95,6 @@ export const Planning: FC = () => {
     const { data: interventionAssignments } =
         useGetInterventionAssignments(scenarioId);
     const { data: budget } = useGetLatestCalculatedBudget(scenario?.id);
-
-    const { mutate: runBudget, isLoading: isCalculatingBudget } =
-        useCalculateBudget();
 
     const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
         navigate('/');
@@ -265,17 +261,11 @@ export const Planning: FC = () => {
                                         <InterventionPlanHeader
                                             onTabChange={setActiveTab}
                                             activeTab={activeTab}
-                                            onRunBudget={() =>
-                                                runBudget(scenarioId)
-                                            }
                                             onDeleteScenario={
                                                 handleDeleteScenario
                                             }
                                             onToggleLockScenario={
                                                 handleToggleLockScenario
-                                            }
-                                            isCalculatingBudget={
-                                                isCalculatingBudget
                                             }
                                             onOrgUnitChange={
                                                 handleDisplayOrgUnitChange

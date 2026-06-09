@@ -100,6 +100,7 @@ export const useCreateUpdateScenarioRule = (scenarioId: number) => {
             'interventionAssignments',
             'impact',
             'budgetAssumptions',
+            'calculated_budget',
         ],
         options: {
             onSuccess: replaceQueryData,

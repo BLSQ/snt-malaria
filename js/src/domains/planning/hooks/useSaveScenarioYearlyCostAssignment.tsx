@@ -41,6 +41,9 @@ export const useSaveScenarioYearlyCostAssignment = (): UseMutationResult =>
                           value: transformPercentageValue(value),
                       },
                   ),
-        invalidateQueryKey: ['scenarioYearlyCostAssignments'],
+        invalidateQueryKey: [
+            'scenarioYearlyCostAssignments',
+            'calculated_budget',
+        ],
         showSuccessSnackBar: false,
     });

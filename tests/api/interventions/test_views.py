@@ -4,6 +4,7 @@ from plugins.snt_malaria.api.interventions.permissions import (
     SNT_SETTINGS_READ_PERMISSION,
     SNT_SETTINGS_WRITE_PERMISSION,
 )
+from plugins.snt_malaria.models import Budget
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
@@ -131,6 +132,43 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         line_names = [line.name for line in self.intervention_vaccination_rts.cost_breakdown_lines.all()]
         self.assertIn("Updated Cost Line 1", line_names)
         self.assertIn("New Cost Line 2", line_names)
+
+    def test_update_intervention_details_recalculates_budget_per_assigned_scenario(self):
+        scenario_with_assignment = self.create_snt_scenario(
+            account=self.account,
+            created_by=self.user_write,
+            name="Scenario with assignment",
+        )
+        scenario_without_assignment = self.create_snt_scenario(
+            account=self.account,
+            created_by=self.user_write,
+            name="Scenario without assignment",
+        )
+        org_unit = self.create_snt_org_unit(name="District for budget update")
+
+        self.create_snt_assignment(
+            scenario=scenario_with_assignment,
+            org_unit=org_unit,
+            intervention=self.intervention_vaccination_rts,
+            created_by=self.user_write,
+        )
+        self.create_snt_assignment(
+            scenario=scenario_without_assignment,
+            org_unit=org_unit,
+            intervention=self.intervention_chemo_smc,
+            created_by=self.user_write,
+        )
+
+        self.assertEqual(Budget.objects.filter(scenario=scenario_with_assignment).count(), 0)
+        self.assertEqual(Budget.objects.filter(scenario=scenario_without_assignment).count(), 0)
+
+        self.client.force_authenticate(user=self.user_write)
+        url = f"{BASE_URL}{self.intervention_vaccination_rts.id}/update_details/"
+        response = self.client.put(url, {"name": "Updated RTS,S"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Budget.objects.filter(scenario=scenario_with_assignment).count(), 1)
+        self.assertEqual(Budget.objects.filter(scenario=scenario_without_assignment).count(), 0)
 
     def test_update_intervention_details_unauthenticated(self):
         url = f"{BASE_URL}{self.intervention_vaccination_rts.id}/update_details/"

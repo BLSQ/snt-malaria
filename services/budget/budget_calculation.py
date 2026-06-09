@@ -2,7 +2,12 @@ from collections import defaultdict
 from decimal import Decimal
 
 from iaso.models import MetricValue
-from plugins.snt_malaria.models import BudgetSettings, InterventionCostBreakdownLine, ScenarioYearlyCostAssignment
+from plugins.snt_malaria.models import (
+    Budget,
+    BudgetSettings,
+    InterventionCostBreakdownLine,
+    ScenarioYearlyCostAssignment,
+)
 
 from .dataclasses import (
     BudgetBreakdownItem,
@@ -88,6 +93,19 @@ class BudgetCalculationService:
 
         budget_settings = BudgetSettings.objects.filter(account=scenario.account).first()
         self.inflation_rate = Decimal(str(budget_settings.inflation_rate)) if budget_settings else Decimal("0")
+
+    def calculate_and_save_all_years(self, user):
+        all_years_results = self.calculate_all_years()
+        return Budget.objects.create(
+            scenario=self.scenario,
+            name=f"Budget for {self.scenario.name}",
+            cost_input={},
+            population_input={},
+            assumptions={},
+            results=[budget_result.model_dump(mode="json") for budget_result in all_years_results],
+            created_by=user,
+            updated_by=user,
+        )
 
     def calculate_all_years(self):
         return [self.calculate_year(year) for year in range(self.start_year, self.end_year + 1)]

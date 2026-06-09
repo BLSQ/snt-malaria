@@ -21,9 +21,7 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = InterventionCostBreakdownLineListFilter
     permission_classes = [InterventionCostBreakdownLinePermission]
-
-    def get_serializer_class(self):
-        return InterventionCostBreakdownLineSerializer
+    serializer_class = InterventionCostBreakdownLineSerializer
 
     def get_queryset(self):
         return (
