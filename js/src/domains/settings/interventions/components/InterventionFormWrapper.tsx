@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect } from 'react';
-import { LoadingButton } from '@mui/lab';
-import { Stack, Typography } from '@mui/material';
+import CheckIcon from '@mui/icons-material/Check';
+import { Button, Stack, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { CardStyled } from '../../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../../hooks/useGetExtendedFormikContext';
@@ -78,13 +78,15 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
                         <Typography variant="h6">
                             {interventionDetails?.name}
                         </Typography>
-                        <LoadingButton
+                        <Button
                             onClick={() => formik.handleSubmit()}
-                            variant="outlined"
-                            loading={isSavingInterventionDetails}
+                            variant="contained"
+                            color="primary"
+                            startIcon={<CheckIcon />}
+                            disabled={isSavingInterventionDetails}
                         >
                             {formatMessage(MESSAGES.save)}
-                        </LoadingButton>
+                        </Button>
                     </Stack>
                 }
             >
