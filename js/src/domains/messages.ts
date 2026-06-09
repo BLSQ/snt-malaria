@@ -193,6 +193,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.budgetView',
         defaultMessage: 'Budget',
     },
+    budgetingNoData: {
+        id: 'iaso.snt_malaria.budgeting.noData',
+        defaultMessage: 'No budget data to display',
+    },
     budgetingCostChart: {
         id: 'iaso.snt_malaria.budgeting.costChart',
         defaultMessage: 'Cost chart',
@@ -759,10 +763,6 @@ export const MESSAGES = defineMessages({
     ruleName: {
         id: 'iaso.snt_malaria.scenarioRule.ruleName',
         defaultMessage: 'Rule name',
-    },
-    runInterventionPlanBudget: {
-        id: 'iaso.snt_malaria.label.runInterventionPlanBudget',
-        defaultMessage: 'Run Budget',
     },
     scenarioCSV: {
         id: 'iaso.snt_malaria.scenario.scenarioCSV',

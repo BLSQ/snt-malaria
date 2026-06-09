@@ -208,7 +208,7 @@ export const BudgetTable: FC = ({}) => {
         return getColorRange(budgetRows.length);
     }, [budgetRows]);
 
-    return (
+    return budgetRows.length > 0 ? (
         <TableContainer
             sx={{ mx: -2, width: 'calc(100% + 32px)' }}
             component={Paper}
@@ -259,5 +259,9 @@ export const BudgetTable: FC = ({}) => {
                 </TableBody>
             </Table>
         </TableContainer>
+    ) : (
+        <Typography variant="body1" align="center">
+            {formatMessage(MESSAGES.budgetingNoData)}
+        </Typography>
     );
 };
