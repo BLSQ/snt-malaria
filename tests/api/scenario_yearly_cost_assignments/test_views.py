@@ -186,7 +186,7 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
 
     def test_create_is_scoped_per_scenario(self):
         valid_response = self._post_create_payload(self.user_with_full_perm, self.scenario, self.population_line_1)
-        valid_result = self.assertJSONResponse(valid_response, status.HTTP_200_OK)
+        valid_result = self.assertJSONResponse(valid_response, status.HTTP_201_CREATED)
         self.assertEqual(valid_result["scenario"], self.scenario.id)
 
         cross_account_response = self._post_create_payload(
@@ -199,7 +199,7 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
 
     def test_create_allows_basic_access_same_account(self):
         response = self._post_create_payload(self.user_with_basic_perm, self.scenario, self.population_line_1)
-        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
 
         self.assertEqual(result["scenario"], self.scenario.id)
         self.assertEqual(result["cost_line"], self.population_line_1.id)

@@ -40,8 +40,6 @@ class ScenarioYearlyCostAssignmentViewSet(viewsets.ModelViewSet):
     def _recalculate_budget(self, scenario):
         BudgetCalculationService(scenario).calculate_and_save_all_years(self.request.user)
 
-        return response
-
     def perform_update(self, serializer):
         response = super().perform_update(serializer)
         # After creating/updating the ScenarioYearlyCostAssignment, we need to recalculate the budget for the related scenario to reflect the changes in the assigned costs
