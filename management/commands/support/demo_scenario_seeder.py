@@ -4,16 +4,9 @@ Create a demo scenario with intervention assignments for Burkina Faso
 
 from datetime import date
 
-from snt_malaria_budgeting import DEFAULT_COST_ASSUMPTIONS, BudgetCalculator
-
 from iaso.models import OrgUnitType, User
 from iaso.models.data_store import JsonDataStore
 from iaso.models.metric import MetricType
-from plugins.snt_malaria.api.budget.utils import (
-    build_cost_dataframe,
-    build_interventions_input,
-    build_population_dataframe,
-)
 from plugins.snt_malaria.models.budget import Budget
 from plugins.snt_malaria.models.intervention import Intervention
 from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule, ScenarioRuleInterventionProperties
@@ -91,63 +84,63 @@ class DemoScenarioSeeder:
         end_year = scenario.end_year
 
         # Build cost and population dataframes and format the intervention plan
-        cost_df = build_cost_dataframe(self.account, start_year, end_year)
-        population_df = build_population_dataframe(self.account, start_year, end_year)
-        interventions_input = build_interventions_input(scenario)
+        # cost_df = build_cost_dataframe(self.account, start_year, end_year)
+        # population_df = build_population_dataframe(self.account, start_year, end_year)
+        # interventions_input = build_interventions_input(scenario)
 
         # Build a quick lookup map ((code, type) -> id) for fast id retrieval
         interventions = Intervention.objects.filter(intervention_category__account=self.account)
         interventions_map = {(iv.code, iv.name): iv.id for iv in interventions}
 
         # Use default cost assumptions
-        settings = DEFAULT_COST_ASSUMPTIONS
+        # settings = DEFAULT_COST_ASSUMPTIONS
 
-        budgets = []
-        budget_calculator = BudgetCalculator(
-            interventions_input=interventions_input,
-            settings=settings,
-            cost_df=cost_df,
-            population_df=population_df,
-            local_currency="USD",
-            budget_currency="USD",
-            spatial_planning_unit="org_unit_id",
-        )
+        # budgets = []
+        # budget_calculator = BudgetCalculator(
+        #     interventions_input=interventions_input,
+        #     settings=settings,
+        #     cost_df=cost_df,
+        #     population_df=population_df,
+        #     local_currency="USD",
+        #     budget_currency="USD",
+        #     spatial_planning_unit="org_unit_id",
+        # )
 
         # Calculate budget for each year
-        for year in range(start_year, end_year + 1):
-            interventions_costs = budget_calculator.get_interventions_costs(year)
-            places_costs = budget_calculator.get_places_costs(year)
+        # for year in range(start_year, end_year + 1):
+        #     interventions_costs = budget_calculator.get_interventions_costs(year)
+        #     places_costs = budget_calculator.get_places_costs(year)
 
-            # Adjust cost breakdown category field name
-            for intervention in interventions_costs:
-                for cost_breakdown in intervention["cost_breakdown"]:
-                    cost_breakdown["category"] = cost_breakdown.pop("cost_class", None)
+        #     # Adjust cost breakdown category field name
+        #     for intervention in interventions_costs:
+        #         for cost_breakdown in intervention["cost_breakdown"]:
+        #             cost_breakdown["category"] = cost_breakdown.pop("cost_class", None)
 
-            # Adjust place costs field names and attach intervention IDs
-            for place_cost in places_costs:
-                place_cost["org_unit_id"] = place_cost.pop("place")
+        #     # Adjust place costs field names and attach intervention IDs
+        #     for place_cost in places_costs:
+        #         place_cost["org_unit_id"] = place_cost.pop("place")
 
-                for place_cost_intervention in place_cost.get("interventions", []):
-                    code = place_cost_intervention["code"]
-                    type_ = place_cost_intervention["type"]
-                    intervention_id = interventions_map.get((code, type_))
-                    place_cost_intervention["id"] = intervention_id
+        #         for place_cost_intervention in place_cost.get("interventions", []):
+        #             code = place_cost_intervention["code"]
+        #             type_ = place_cost_intervention["type"]
+        #             intervention_id = interventions_map.get((code, type_))
+        #             place_cost_intervention["id"] = intervention_id
 
-            budgets.append({"year": year, "interventions": interventions_costs, "org_units_costs": places_costs})
+        #     budgets.append({"year": year, "interventions": interventions_costs, "org_units_costs": places_costs})
 
         # Create the budget object
-        budget = Budget.objects.create(
-            scenario=scenario,
-            name=f"Budget for {scenario.name}",
-            cost_input={},
-            assumptions=settings,
-            results=budgets,
-            population_input={},
-            created_by=created_by,
-            updated_by=created_by,
-        )
+        # budget = Budget.objects.create(
+        #     scenario=scenario,
+        #     name=f"Budget for {scenario.name}",
+        #     cost_input={},
+        #     assumptions=settings,
+        #     results=budgets,
+        #     population_input={},
+        #     created_by=created_by,
+        #     updated_by=created_by,
+        # )
 
-        return budget
+        # return budget
 
     def _create_scenario_(
         self, scenario_name, user, interventions, seasonality_precipitation_metric_type, pf_rate_metric_type, rate
