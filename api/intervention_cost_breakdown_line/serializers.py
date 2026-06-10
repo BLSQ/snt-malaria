@@ -46,6 +46,7 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
                         "intervention",
                         "updated_by",
                         "population_layer",
+                        "cost_driver",
                     ],
                 )
             if lines_to_delete:
@@ -84,6 +85,7 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
             "category_label",
             "intervention",
             "population_layer",
+            "cost_driver",
         ]
 
     def get_unit_type_label(self, obj):

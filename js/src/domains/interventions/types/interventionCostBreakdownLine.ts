@@ -8,4 +8,5 @@ export type InterventionCostBreakdownLine = {
     id: number;
     intervention: number;
     population_layer: number | null;
+    cost_driver: 'population' | 'fixed_cost';
 };

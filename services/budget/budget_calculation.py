@@ -52,10 +52,7 @@ class BudgetCalculationService:
             org_unit_ids.add(assignment.org_unit_id)
 
         population_cost_lines = list(
-            InterventionCostBreakdownLine.objects.filter(
-                intervention_id__in=intervention_ids,
-                cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
-            )
+            InterventionCostBreakdownLine.objects.filter(intervention_id__in=intervention_ids)
             .select_related("population_layer", "unit_type", "intervention")
             .order_by("intervention_id", "id")
         )
@@ -158,23 +155,24 @@ class BudgetCalculationService:
             intervention_breakdowns[intervention_id][row.cost_line_id]["total_cost"] += row.total_cost
             intervention_breakdowns[intervention_id][row.cost_line_id]["quantity"] += row.quantity
 
-            org_unit_totals[row.org_unit_id]["total_cost"] += row.total_cost
-            org_unit_totals[row.org_unit_id]["quantity"] += row.quantity
+            if row.org_unit_id is not None:
+                org_unit_totals[row.org_unit_id]["total_cost"] += row.total_cost
+                org_unit_totals[row.org_unit_id]["quantity"] += row.quantity
 
-            org_unit_intervention_totals[row.org_unit_id][intervention_id]["total_cost"] += row.total_cost
-            org_unit_intervention_totals[row.org_unit_id][intervention_id]["quantity"] += row.quantity
-            org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["id"] = (
-                row.cost_line_id
-            )
-            org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["category"] = (
-                row.category
-            )
-            org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["total_cost"] += (
-                row.total_cost
-            )
-            org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["quantity"] += (
-                row.quantity
-            )
+                org_unit_intervention_totals[row.org_unit_id][intervention_id]["total_cost"] += row.total_cost
+                org_unit_intervention_totals[row.org_unit_id][intervention_id]["quantity"] += row.quantity
+                org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["id"] = (
+                    row.cost_line_id
+                )
+                org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["category"] = (
+                    row.category
+                )
+                org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["total_cost"] += (
+                    row.total_cost
+                )
+                org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["quantity"] += (
+                    row.quantity
+                )
 
             category_totals[row.category]["id"] = row.cost_line_id
             category_totals[row.category]["total_cost"] += row.total_cost
@@ -210,6 +208,7 @@ class BudgetCalculationService:
         """
 
         rows = []
+        seen_fixed_cost_line_ids = set()
         years_offset = year - self.start_year
         inflation_multiplier = (Decimal("1") + self.inflation_rate) ** years_offset
         for assignment in self.assignments:
@@ -217,38 +216,77 @@ class BudgetCalculationService:
             org_unit_id = assignment.org_unit_id
 
             for line in self.cost_lines_by_intervention_id.get(intervention.id, []):
-                if line.population_layer_id is None:
-                    continue
-
-                population = self.population_by_key.get((org_unit_id, year, line.population_layer_id), Decimal("0"))
-                if population <= 0:
-                    continue
-
-                yearly_value = self.yearly_value_by_key.get((line.id, year), Decimal("1"))
-                unit_ratio = (
-                    line.unit_type.ratio if line.unit_type and line.unit_type.ratio is not None else Decimal("1")
-                )
-
-                # Doing the same as before here, quantity is modified by the unit ratio and the yearly coverage.
-                quantity = population * yearly_value * Decimal(str(unit_ratio))
-                line_cost = quantity * Decimal(str(line.unit_cost)) * inflation_multiplier * self.buffer
-                if line_cost <= 0:
-                    continue
-
-                category = line.get_category_display()
-                rows.append(
-                    BudgetLineRow(
-                        cost_line_id=line.id,
-                        org_unit_id=org_unit_id,
-                        intervention_id=intervention.id,
-                        category=category,
-                        population=population,
-                        quantity=quantity,
-                        total_cost=line_cost,
+                lineToAdd = None
+                if line.cost_driver == "population":
+                    lineToAdd = self._compute_population_cost_row(
+                        line, org_unit_id, year, inflation_multiplier, intervention.id
                     )
-                )
-
+                elif line.cost_driver == "fixed_cost" and line.id not in seen_fixed_cost_line_ids:
+                    seen_fixed_cost_line_ids.add(line.id)
+                    lineToAdd = self._compute_fixed_cost_row(line, year, inflation_multiplier, intervention.id)
+                if lineToAdd:
+                    rows.append(lineToAdd)
         return rows
+
+    def _get_yearly_value(self, line, year):
+        default = Decimal("0") if line.cost_driver == "fixed_cost" else Decimal("1")
+        return self.yearly_value_by_key.get((line.id, year), default)
+
+    def _compute_population_cost_row(self, line, org_unit_id, year, inflation_multiplier, intervention_id):
+        """
+        Calculate using population as quantity and yearly value is a ratio applied on this quantity.
+        """
+        if line.population_layer_id is None:
+            return None
+
+        population = self.population_by_key.get((org_unit_id, year, line.population_layer_id), Decimal("0"))
+        if population <= 0:
+            return None
+
+        yearly_value = self._get_yearly_value(line, year)
+        unit_ratio = line.unit_type.ratio if line.unit_type and line.unit_type.ratio is not None else Decimal("1")
+
+        # Doing the same as before here, quantity is modified by the unit ratio and the yearly coverage.
+        quantity = population * yearly_value * Decimal(str(unit_ratio))
+        line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
+
+        if line_cost <= 0:
+            return None
+
+        category = line.get_category_display()
+        return BudgetLineRow(
+            cost_line_id=line.id,
+            org_unit_id=org_unit_id,
+            intervention_id=intervention_id,
+            category=category,
+            population=population,
+            quantity=quantity,
+            total_cost=line_cost,
+        )
+
+    def _compute_fixed_cost_row(self, line, year, inflation_multiplier, intervention_id):
+        """
+        Calculate using yearly value as quantity. Added once per intervention regardless of org units.
+        """
+        yearly_value = self._get_yearly_value(line, year)
+        unit_ratio = line.unit_type.ratio if line.unit_type and line.unit_type.ratio is not None else Decimal("1")
+        quantity = yearly_value * Decimal(str(unit_ratio))
+        line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
+        if line_cost <= 0:
+            return None
+
+        category = line.get_category_display()
+        return BudgetLineRow(
+            cost_line_id=line.id,
+            org_unit_id=None,
+            intervention_id=intervention_id,
+            category=category,
+            quantity=quantity,
+            total_cost=line_cost,
+        )
+
+    def _compute_cost_(self, quantity, unit_cost, inflation_multiplier):
+        return quantity * Decimal(str(unit_cost)) * inflation_multiplier * self.buffer
 
     def _build_interventions(self, intervention_totals, intervention_breakdowns):
         """
