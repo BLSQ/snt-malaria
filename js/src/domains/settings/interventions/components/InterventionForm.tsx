@@ -84,24 +84,28 @@ export const InterventionForm: FC = () => {
             <Stack spacing={2} direction="column">
                 {values.cost_breakdown_lines &&
                     values.cost_breakdown_lines.length > 0 &&
-                    values.cost_breakdown_lines.map((line, index) => (
-                        <InterventionCostBreakdownLineForm
-                            key={`cost-details-row-${line.id}`}
-                            costBreakdownLine={line}
-                            onUpdateField={(field, value) =>
-                                setChildFieldValueAndState(
-                                    'cost_breakdown_lines',
-                                    index,
-                                    field,
-                                    value,
-                                )
-                            }
-                            onRemove={() =>
-                                removeChildValue('cost_breakdown_lines', index)
-                            }
-                            getErrors={field => getChildError(field, index)}
-                        />
-                    ))}
+                    React.Children.toArray(
+                        values.cost_breakdown_lines.map((line, index) => (
+                            <InterventionCostBreakdownLineForm
+                                costBreakdownLine={line}
+                                onUpdateField={(field, value) =>
+                                    setChildFieldValueAndState(
+                                        'cost_breakdown_lines',
+                                        index,
+                                        field,
+                                        value,
+                                    )
+                                }
+                                onRemove={() =>
+                                    removeChildValue(
+                                        'cost_breakdown_lines',
+                                        index,
+                                    )
+                                }
+                                getErrors={field => getChildError(field, index)}
+                            />
+                        )),
+                    )}
                 <Button
                     variant="text"
                     sx={{ alignSelf: 'flex-start' }}
