@@ -99,7 +99,6 @@ export const useCreateUpdateScenarioRule = (scenarioId: number) => {
         invalidateQueryKey: [
             'interventionAssignments',
             'impact',
-            'budgetAssumptions',
             'calculated_budget',
         ],
         options: {

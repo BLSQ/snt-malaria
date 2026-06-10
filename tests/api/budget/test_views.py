@@ -6,7 +6,6 @@ from plugins.snt_malaria.models import (
     InterventionAssignment,
     Scenario,
 )
-from plugins.snt_malaria.models.budget_assumptions import BudgetAssumptions
 from plugins.snt_malaria.models.budget_settings import BudgetSettings
 from plugins.snt_malaria.models.cost_breakdown import InterventionCostBreakdownLine
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
@@ -326,81 +325,6 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(smc_org_unit_costs["interventions"][0]["type"], "SMC")
         self.assertEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 275000.0)
         self.assertEqual(smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id)
-
-    # Not going to far into detailed testing of the budget calculator here,
-    # just a basic test to ensure assumptions are applied correctly
-    def test_calculate_budget_with_assumptions(self):
-        """Test calculate_budget endpoint with mocked CSV data and budget calculation"""
-        # Create SMC intervention assignment for district1
-        InterventionAssignment.objects.create(
-            scenario=self.scenario,
-            org_unit=self.district1,
-            intervention=self.intervention_chemo_smc,
-            created_by=self.user_with_full_perm,
-        )
-
-        BudgetAssumptions.objects.create(
-            scenario=self.scenario,
-            intervention_assignment=self.assignment_smc,
-            coverage=0.8,
-            year=2025,
-        )
-
-        self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.post(BASE_URL, {"scenario": self.scenario.id}, format="json")
-
-        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
-
-        # Response should be a list of budgets by year 2025 to 2028
-        self.assertEqual(len(result["results"]), 4)
-
-        # Check first year (2025)
-        budget_2025 = result["results"][0]
-        self.assertEqual(budget_2025["year"], 2025)
-        self.assertEqual(result["scenario"], self.scenario.id)
-        self.assertIn("interventions", budget_2025)
-        self.assertIn("org_units_costs", budget_2025)
-
-        # Find SMC intervention in the budget
-        smc_intervention = next(
-            intervention for intervention in budget_2025["interventions"] if intervention["code"] == "smc"
-        )
-
-        self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
-        # Internal calculator currently uses ScenarioYearlyCostAssignment for yearly multipliers,
-        # and does not yet apply BudgetAssumptions coverage in the computation pipeline.
-        self.assertAlmostEqual(smc_intervention["total_cost"], 687500.0)
-        self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
-        self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
-        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["total_cost"], 687500.0)
-        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["population"], 250000.0)
-        # Find Org unit cost
-        smc_org_unit_costs = None
-        for org_unit_costs in budget_2025["org_units_costs"]:
-            if org_unit_costs["org_unit_id"] == self.district1.id:
-                smc_org_unit_costs = org_unit_costs
-                break
-
-        self.assertIsNotNone(smc_org_unit_costs)
-        self.assertAlmostEqual(smc_org_unit_costs["total_cost"], 275000.0)
-        self.assertEqual(len(smc_org_unit_costs["interventions"]), 1)
-        self.assertEqual(smc_org_unit_costs["interventions"][0]["code"], "smc")
-        self.assertEqual(smc_org_unit_costs["interventions"][0]["type"], "SMC")
-        self.assertAlmostEqual(smc_org_unit_costs["interventions"][0]["total_cost"], 275000.0)
-        self.assertEqual(smc_org_unit_costs["interventions"][0]["id"], self.intervention_chemo_smc.id)
-
-        db_budget = Budget.objects.get(id=result["id"])
-
-        population_df = db_budget.population_input
-
-        for item in population_df:
-            if item.get("org_unit_id") == self.district1.id and item.get("year") == 2025:
-                self.assertEqual(item.get("pop_total"), "10000000")
-                self.assertEqual(item.get("pop_0_5"), "100000")
-
-            if item.get("org_unit_id") == self.district2.id and item.get("year") == 2025:
-                self.assertEqual(item.get("pop_total"), "15000000")
-                self.assertEqual(item.get("pop_0_5"), "150000")
 
     def test_calculate_budget_inflation_applied_per_year(self):
         """

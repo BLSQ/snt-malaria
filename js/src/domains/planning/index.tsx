@@ -27,24 +27,16 @@ import { useDeleteScenario } from '../scenarios/hooks/useDeleteScenario';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
 import { BudgetTable } from './components/budgeting/BudgetTable';
-import { InterventionPlanDetails } from './components/interventionPlan/InterventionPlanDetails';
 import { InterventionPlanHeader } from './components/interventionPlan/InterventionPlanHeader';
 import { InterventionPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
-import { InterventionsPlanTable } from './components/interventionPlanTable/InterventionsPlanTable';
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
 import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetAccountSettings } from './hooks/useGetAccountSettings';
-import { useGetBudgetAssumptions } from './hooks/useGetBudgetAssumptions';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetLatestCalculatedBudget } from './hooks/useGetLatestCalculatedBudget';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { usePreviewScenarioRule } from './hooks/usePreviewScenarioRule';
-import { useRemoveManyOrgUnitsFromInterventionPlan } from './hooks/useRemoveOrgUnitFromInterventionPlan';
-import {
-    BudgetAssumptions,
-    InterventionPlan,
-} from './types/interventionAssignments';
 import { ScenarioRule } from './types/scenarioRule';
 import { useUserCanEditScenario } from './utils/permissions';
 
@@ -72,10 +64,6 @@ export const Planning: FC = () => {
     const { data: scenario } = useGetScenario(scenarioId);
     const { formatMessage } = useSafeIntl();
     const [activeTab, setActiveTab] = useState('map');
-
-    const [selectedInterventionPlan, setSelectedInterventionPlan] = useState<
-        InterventionPlan | undefined
-    >(undefined);
 
     const { data: metricTypeCategories } = useGetMetricCategories('any');
     const { data: interventionCategories } = useGetInterventionCategories();
@@ -113,41 +101,6 @@ export const Planning: FC = () => {
     };
 
     const canEditScenario = useUserCanEditScenario(scenario);
-
-    const {
-        mutate: removeManyOrgUnitsFromPlan,
-        isLoading: isRemovingOrgUnits,
-    } = useRemoveManyOrgUnitsFromInterventionPlan();
-
-    const onRemoveOrgUnitsFromPlan = async (
-        interventionAssignmentIds: number[],
-        shouldCloseDrawer: boolean,
-    ) => {
-        removeManyOrgUnitsFromPlan(interventionAssignmentIds, {
-            onSuccess: () => {
-                if (shouldCloseDrawer) {
-                    setSelectedInterventionPlan(undefined);
-                }
-            },
-        });
-    };
-
-    const { data: budgetAssumptions } = useGetBudgetAssumptions(scenarioId);
-
-    const selectedBudgetAssumptions: BudgetAssumptions[] = useMemo(() => {
-        if (!selectedInterventionPlan) {
-            return [];
-        }
-        const assignmentIds = new Set(
-            selectedInterventionPlan.org_units.map(
-                ou => ou.intervention_assignment_id,
-            ),
-        );
-
-        return (budgetAssumptions || []).filter(bs =>
-            assignmentIds.has(bs.intervention_assignment),
-        );
-    }, [selectedInterventionPlan, budgetAssumptions]);
 
     const handleDisplayOrgUnitChange = useCallback(
         (orgUnitId?: number) => {
@@ -283,45 +236,6 @@ export const Planning: FC = () => {
                                             }
                                             previewRule={previewRule}
                                         />
-                                    )}
-                                    {activeTab === 'list' && (
-                                        <>
-                                            <InterventionsPlanTable
-                                                showInterventionPlanDetails={
-                                                    setSelectedInterventionPlan
-                                                }
-                                            />
-                                            <InterventionPlanDetails
-                                                interventionPlan={
-                                                    selectedInterventionPlan
-                                                }
-                                                scenarioId={scenarioId}
-                                                scenarioStartYear={
-                                                    scenario?.start_year
-                                                }
-                                                scenarioEndYear={
-                                                    scenario?.end_year
-                                                }
-                                                closeInterventionPlanDetails={() =>
-                                                    setSelectedInterventionPlan(
-                                                        undefined,
-                                                    )
-                                                }
-                                                budgetAssumptions={
-                                                    selectedBudgetAssumptions
-                                                }
-                                                removeOrgUnitsFromPlan={
-                                                    onRemoveOrgUnitsFromPlan
-                                                }
-                                                isRemovingOrgUnits={
-                                                    isRemovingOrgUnits
-                                                }
-                                                disabled={
-                                                    scenario?.is_locked ||
-                                                    !canEditScenario
-                                                }
-                                            />
-                                        </>
                                     )}
                                     {activeTab === 'budget' &&
                                         orgUnits &&

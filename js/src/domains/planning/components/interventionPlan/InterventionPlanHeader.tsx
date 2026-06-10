@@ -82,9 +82,6 @@ export const InterventionPlanHeader: FC<Props> = ({
                 <ToggleButton value="map" key="map">
                     {formatMessage(MESSAGES.mapView)}
                 </ToggleButton>
-                <ToggleButton value="list" key="list">
-                    {formatMessage(MESSAGES.listView)}
-                </ToggleButton>
                 <ToggleButton value="budget" key="budget">
                     {formatMessage(MESSAGES.budgetView)}
                 </ToggleButton>

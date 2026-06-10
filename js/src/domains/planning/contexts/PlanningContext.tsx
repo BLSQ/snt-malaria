@@ -12,12 +12,10 @@ import { MetricTypeCategory } from '../../dataLayers/types/metrics';
 import { InterventionCategory } from '../../interventions/types';
 import { sortByStringProp } from '../../planning/libs/list-utils';
 import { Scenario } from '../../scenarios/types';
-import { useGetDefaultBudgetAssumptions } from '../hooks/useGetBudgetAssumptions';
 import { useGetScenarioYearlyCostAssignments } from '../hooks/useGetScenarioYearlyCostAssignments';
 import { useSaveScenarioYearlyCostAssignment } from '../hooks/useSaveScenarioYearlyCostAssignment';
 import { Budget } from '../types/budget';
 import {
-    DefaultBudgetAssumptions,
     InterventionAssignmentResponse,
     InterventionPlan,
     ScenarioYearlyCostAssignment,
@@ -35,7 +33,6 @@ type PlanningContextType = {
     interventionCategories: InterventionCategory[];
     interventionAssignments: InterventionAssignmentResponse[];
     interventionPlans: InterventionPlan[];
-    defaultBudgetAssumptions?: DefaultBudgetAssumptions;
     scenarioYearlyCostAssignments: ScenarioYearlyCostAssignment[];
     budgets: Budget[];
     saveYearlyCoverage: (params: SaveYearlyCoverageParams) => void;
@@ -64,7 +61,6 @@ const PlanningContext = createContext<PlanningContextType>({
     interventionCategories: [],
     interventionAssignments: [],
     interventionPlans: [],
-    defaultBudgetAssumptions: undefined,
     scenarioYearlyCostAssignments: [],
     budgets: [],
     saveYearlyCoverage: () => {},
@@ -104,7 +100,6 @@ export const PlanningProvider = ({
         ? !scenario.is_locked && canEditScenario
         : canEditScenario;
 
-    const { data: defaultBudgetAssumptions } = useGetDefaultBudgetAssumptions();
     const { data: scenarioYearlyCostAssignments = [] } =
         useGetScenarioYearlyCostAssignments(scenarioId);
     const { mutate: saveScenarioYearlyCostAssignment } =
@@ -184,7 +179,6 @@ export const PlanningProvider = ({
                 interventionAssignments,
                 interventionPlans,
                 isEditing,
-                defaultBudgetAssumptions,
                 scenarioYearlyCostAssignments,
                 budgets,
                 saveYearlyCoverage,
