@@ -120,12 +120,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         result = service.calculate_year(2025)
 
-        # quantity = pop * yearly_value * ratio
-        # district_1: 1000 * 1.2 * 0.5 = 600
-        # district_2: 2000 * 1.2 * 0.5 = 1200
-        # total quantity = 1800
-        self.assertEqual(result.quantity, 1800.0)
-
         # cost = quantity * unit_cost(2.0) * buffer(1.1)
         # district_1 = 1200 * 1.1 = 1320, district_2 = 2400 * 1.1 = 2640, total = 3960
         self.assertEqual(result.total_cost, 3960.0)
@@ -133,20 +127,21 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(len(result.interventions), 1)
         intervention = result.interventions[0]
         self.assertEqual(intervention.code, "smc")
-        self.assertEqual(intervention.quantity, 1800.0)
-        self.assertEqual(intervention.total_pop, 3000.0)
         self.assertEqual(intervention.total_cost, 3960.0)
         self.assertEqual(len(intervention.cost_breakdown), 1)
-        self.assertEqual(intervention.cost_breakdown[0].category, "Procurement")
-        self.assertEqual(intervention.cost_breakdown[0].total_cost, 3960.0)
+        breakdown = intervention.cost_breakdown[0]
+        self.assertEqual(breakdown.category, "Procurement")
+        self.assertEqual(breakdown.total_cost, 3960.0)
+        # quantity = district_1(600) + district_2(1200) = 1800
+        self.assertEqual(breakdown.quantity, 1800.0)
+        # population = district_1(1000) + district_2(2000) = 3000
+        self.assertEqual(breakdown.population, 3000.0)
 
         self.assertEqual(len(result.org_units_costs), 2)
         district_1_result = result.org_units_costs[0]
         district_2_result = result.org_units_costs[1]
 
-        self.assertEqual(district_1_result.quantity, 600.0)
         self.assertEqual(district_1_result.total_cost, 1320.0)
-        self.assertEqual(district_2_result.quantity, 1200.0)
         self.assertEqual(district_2_result.total_cost, 2640.0)
 
         self.assertEqual(len(result.category_costs), 1)
@@ -162,7 +157,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         # default yearly value = 1
         # quantity = (1500 + 2500) * 1 * 0.5 = 2000
         # total_cost = 2000 * 2 * 1.1 * (1 + 0.03)^1 = 4532
-        self.assertEqual(result.quantity, 2000.0)
         self.assertEqual(result.total_cost, 4532.0)
 
     def test_missing_population_layer_line_does_not_contribute(self):
@@ -180,13 +174,12 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         result = service.calculate_year(2025)
 
-        self.assertEqual(result.quantity, 600.0)
         self.assertEqual(result.total_cost, 1320.0)
         self.assertEqual(len(result.org_units_costs), 1)
         self.assertEqual(result.org_units_costs[0].org_unit_id, self.district_1.id)
         self.assertEqual(len(result.interventions), 1)
         self.assertEqual(result.interventions[0].code, "smc")
-        self.assertEqual(result.interventions[0].quantity, 600.0)
+        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 600.0)
         self.assertEqual(result.interventions[0].total_cost, 1320.0)
 
     def test_no_assignments_results_in_zero_quantity_and_cost(self):
@@ -197,7 +190,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         result = service.calculate_year(2025)
 
-        self.assertEqual(result.quantity, 0.0)
         self.assertEqual(result.total_cost, 0.0)
         self.assertEqual(len(result.interventions), 0)
         self.assertEqual(len(result.org_units_costs), 0)
@@ -211,7 +203,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         result = service.calculate_year(2025)
 
-        self.assertEqual(result.quantity, 0.0)
         self.assertEqual(result.total_cost, 0.0)
         self.assertEqual(len(result.interventions), 0)
         self.assertEqual(len(result.org_units_costs), 0)
@@ -226,7 +217,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         # quantity = (1500 + 2500) * 1 * 0.5 = 2000
         # total_cost = 2000 * 2 * 1.1 * (1 + 0)^1 = 4400
-        self.assertEqual(result.quantity, 2000.0)
         self.assertEqual(result.total_cost, 4400.0)
 
     def test_missing_yearly_multiplier_and_inflation_rate_results_in_cost_without_multipliers(self):
@@ -239,7 +229,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         # quantity = (1500 + 2500) * 1 * 0.5 = 2000
         # total_cost = 2000 * 2 * 1.1 = 4400
-        self.assertEqual(result.quantity, 2000.0)
         self.assertEqual(result.total_cost, 4400.0)
 
     def test_fixed_cost_not_included_when_intervention_has_no_org_unit_assignment(self):
@@ -269,7 +258,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         result = service.calculate_year(2025)
 
         self.assertEqual(result.total_cost, 0.0)
-        self.assertEqual(result.quantity, 0.0)
         self.assertEqual(len(result.interventions), 0)
         self.assertEqual(len(result.org_units_costs), 0)
         self.assertEqual(len(result.category_costs), 0)
@@ -304,10 +292,10 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         # quantity = 4 * ratio(0.5) = 2.0
         # total_cost = 2 * unit_cost(100) * buffer(1.1) * inflation_multiplier(1.0) = 220.0
-        self.assertEqual(result.quantity, 2.0)
         self.assertEqual(result.total_cost, 220.0)
         self.assertEqual(len(result.interventions), 1)
         self.assertEqual(result.interventions[0].total_cost, 220.0)
+        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 2.0)
         # Fixed costs are not attributed to specific org units.
         self.assertEqual(len(result.org_units_costs), 0)
 
@@ -427,7 +415,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         result = service.calculate_year(2025)
 
         self.assertEqual(result.total_cost, 0.0)
-        self.assertEqual(result.quantity, 0.0)
         self.assertEqual(len(result.interventions), 0)
         self.assertEqual(len(result.org_units_costs), 0)
         self.assertEqual(len(result.category_costs), 0)

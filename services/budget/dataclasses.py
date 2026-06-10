@@ -16,6 +16,7 @@ class BudgetBreakdownItem(BudgetBaseModel):
     category: str
     total_cost: Decimal = Decimal("0.0")
     quantity: Decimal = Decimal("0.0")
+    population: Decimal = Decimal("0.0")
 
 
 class BudgetInterventionItem(BudgetBaseModel):
@@ -23,8 +24,6 @@ class BudgetInterventionItem(BudgetBaseModel):
     code: str
     type: str
     total_cost: Decimal = Decimal("0.0")
-    total_pop: Decimal = Decimal("0.0")
-    quantity: Decimal = Decimal("0.0")
     cost_breakdown: list[BudgetBreakdownItem] = Field(default_factory=list)
 
 
@@ -33,21 +32,18 @@ class BudgetOrgUnitInterventionItem(BudgetBaseModel):
     code: str
     type: str
     total_cost: Decimal = Decimal("0.0")
-    quantity: Decimal = Decimal("0.0")
     cost_breakdown: list[BudgetBreakdownItem] = Field(default_factory=list)
 
 
 class BudgetOrgUnitItem(BudgetBaseModel):
     org_unit_id: int
     total_cost: Decimal = Decimal("0.0")
-    quantity: Decimal = Decimal("0.0")
     interventions: list[BudgetOrgUnitInterventionItem] = Field(default_factory=list)
 
 
 class BudgetYearResult(BudgetBaseModel):
     year: int
     total_cost: Decimal
-    quantity: Decimal
     interventions: list[BudgetInterventionItem]
     org_units_costs: list[BudgetOrgUnitItem]
     category_costs: list[BudgetBreakdownItem]

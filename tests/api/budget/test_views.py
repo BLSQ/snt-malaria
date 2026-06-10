@@ -307,10 +307,10 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
 
         self.assertIsNotNone(smc_intervention, "SMC intervention should be in the budget")
         self.assertEqual(smc_intervention["total_cost"], 687500.0)
-        self.assertEqual(smc_intervention["total_pop"], 250000.0)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
         self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
         self.assertEqual(smc_intervention["cost_breakdown"][0]["total_cost"], 687500.0)
+        self.assertEqual(smc_intervention["cost_breakdown"][0]["population"], 250000.0)
 
         # Find Org unit cost
         smc_org_unit_costs = None
@@ -370,10 +370,10 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         # Internal calculator currently uses ScenarioYearlyCostAssignment for yearly multipliers,
         # and does not yet apply BudgetAssumptions coverage in the computation pipeline.
         self.assertAlmostEqual(smc_intervention["total_cost"], 687500.0)
-        self.assertAlmostEqual(smc_intervention["total_pop"], 250000.0)
         self.assertEqual(len(smc_intervention["cost_breakdown"]), 1)
         self.assertEqual(smc_intervention["cost_breakdown"][0]["category"], "Procurement")
         self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["total_cost"], 687500.0)
+        self.assertAlmostEqual(smc_intervention["cost_breakdown"][0]["population"], 250000.0)
         # Find Org unit cost
         smc_org_unit_costs = None
         for org_unit_costs in budget_2025["org_units_costs"]:
