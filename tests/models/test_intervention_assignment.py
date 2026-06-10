@@ -1,7 +1,3 @@
-from decimal import Decimal
-
-from django.core.exceptions import ValidationError
-
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import (
     InterventionAssignment,

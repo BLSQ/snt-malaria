@@ -7,7 +7,8 @@ from datetime import date
 from iaso.models import OrgUnitType, User
 from iaso.models.data_store import JsonDataStore
 from iaso.models.metric import MetricType
-from plugins.snt_malaria.models.budget import Budget
+
+# from plugins.snt_malaria.models.budget import Budget
 from plugins.snt_malaria.models.intervention import Intervention
 from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule, ScenarioRuleInterventionProperties
 
