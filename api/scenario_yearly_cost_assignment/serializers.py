@@ -1,8 +1,6 @@
-from django.db import transaction
 from rest_framework import serializers
 
 from plugins.snt_malaria.models import InterventionCostBreakdownLine, Scenario, ScenarioYearlyCostAssignment
-from plugins.snt_malaria.models.intervention import Intervention
 
 
 class ScenarioYearlyCostAssignmentSerializer(serializers.ModelSerializer):
@@ -25,6 +23,16 @@ class ScenarioYearlyCostAssignmentSerializer(serializers.ModelSerializer):
             ).filter(intervention__intervention_category__account=account)
         return fields
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        value = float(instance.value)
+        if instance.cost_line.cost_driver == InterventionCostBreakdownLine.CostDriver.POPULATION:
+            value *= 100
+
+        data["value"] = f"{round(value)}"
+
+        return data
+
 
 class ScenarioYearlyCostAssignmentQuerySerializer(serializers.Serializer):
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
@@ -40,13 +48,8 @@ class ScenarioYearlyCostAssignmentQuerySerializer(serializers.Serializer):
 
 
 class ScenarioYearlyCostAssignmentUpsertSerializer(serializers.Serializer):
-    intervention = serializers.PrimaryKeyRelatedField(
-        queryset=InterventionCostBreakdownLine.objects.none(), required=True
-    )
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none(), required=True)
-    cost_line = serializers.PrimaryKeyRelatedField(
-        queryset=InterventionCostBreakdownLine.objects.none(), required=False
-    )
+    cost_line = serializers.PrimaryKeyRelatedField(queryset=InterventionCostBreakdownLine.objects.none(), required=True)
     year = serializers.IntegerField(max_value=2100, min_value=2000, required=True)
     value = serializers.DecimalField(max_digits=19, decimal_places=2, required=True)
 
@@ -56,59 +59,34 @@ class ScenarioYearlyCostAssignmentUpsertSerializer(serializers.Serializer):
         if request:
             account = request.user.iaso_profile.account
 
-            fields["intervention"].queryset = Intervention.objects.select_related("intervention_category").filter(
-                intervention_category__account=account
-            )
             fields["scenario"].queryset = Scenario.objects.select_related("account").filter(account=account)
             fields["cost_line"].queryset = InterventionCostBreakdownLine.objects.select_related(
                 "intervention__intervention_category"
             ).filter(intervention__intervention_category__account=account)
         return fields
 
-    def validate_intervention(self, value):
-        if not value.cost_breakdown_lines.exists():
-            raise serializers.ValidationError(f"Intervention {value.id} does not have any cost breakdown line.")
-        return value
-
-    def validate_cost_line(self, value):
-        if value and value.cost_driver == InterventionCostBreakdownLine.CostDriver.POPULATION:
-            raise serializers.ValidationError(
-                "Cost line should not be a population cost line, population cost lines are automatically assigned when no cost line is provided."
-            )
-
-        if value and value.intervention_id != self.initial_data.get("intervention"):
-            raise serializers.ValidationError("Cost line does not belong to the specified intervention.")
-        return value
-
     def validate_scenario(self, value):
         if value.is_locked:
             raise serializers.ValidationError("Cannot assign yearly cost to a locked scenario.")
         return value
 
-    # Save info, if cost_line is provided, update or create the assignment for this cost line
-    # if not provided update or create the assignment for all population cost lines of the intervention
-    @transaction.atomic
     def save(self, **kwargs):
-        intervention = self.validated_data["intervention"]
-        year = self.validated_data["year"]
-        value = self.validated_data["value"]
+        year = self.validated_data.get("year", self.instance.year if self.instance else None)
+        cost_line = self.validated_data.get("cost_line", self.instance.cost_line if self.instance else None)
+        scenario = self.validated_data.get("scenario", self.instance.scenario if self.instance else None)
 
-        if not self.validated_data.get("cost_line"):
-            cost_lines = intervention.cost_breakdown_lines.filter(
-                cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION
+        defaults = {}
+        if "value" in self.validated_data:
+            value = self.validated_data["value"]
+            defaults["value"] = (
+                value / 100 if cost_line.cost_driver == InterventionCostBreakdownLine.CostDriver.POPULATION else value
             )
-        else:
-            cost_lines = [self.validated_data["cost_line"]]
 
-        scenario = self.validated_data["scenario"]
-        assignments = []
-        for cost_line in cost_lines:
-            assignment, _ = ScenarioYearlyCostAssignment.objects.update_or_create(
-                scenario=scenario,
-                cost_line=cost_line,
-                year=year,
-                defaults={"value": value},
-            )
-            assignments.append(assignment)
+        self.instance, _ = ScenarioYearlyCostAssignment.objects.update_or_create(
+            scenario=scenario,
+            cost_line=cost_line,
+            year=year,
+            defaults=defaults,
+        )
 
-        return assignments
+        return self.instance

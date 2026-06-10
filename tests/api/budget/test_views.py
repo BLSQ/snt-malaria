@@ -155,7 +155,6 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(result["scenario"], self.scenario.id)
         self.assertEqual(len(result["results"]), 4)
         for yearly_result in result["results"]:
-            print(yearly_result)
             self.assertEqual(yearly_result["total_cost"], 0)
 
     def test_calculate_budget_missing_scenario(self):

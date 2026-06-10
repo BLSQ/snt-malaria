@@ -14,17 +14,15 @@ export type CostLineRowData = {
     id: number;
     label: string;
     subLabel: string;
+    costDriver: 'population' | 'fixed_cost';
     totalCost: number;
     coverageByYear: Record<number, CostLineYearlyCoverage>;
 };
 
 type Props = {
+    costLine: CostLineRowData;
     yearRange: number[];
-    costLineId: number;
     isEditable: boolean;
-    coverageByYear: Record<number, CostLineYearlyCoverage>;
-    totalCost: number;
-    label: string;
 };
 
 const styles = {
@@ -39,28 +37,23 @@ const clampPercentage = (value: number) => {
     return Math.min(100, Math.max(0, value));
 };
 
-export const CostLineRow: FC<Props> = ({
-    yearRange,
-    costLineId,
-    isEditable,
-    coverageByYear,
-    totalCost,
-    label,
-}) => {
+export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
     const { saveYearlyCoverage } = usePlanningContext();
     const [coverageInputsByYear, setCoverageInputsByYear] = React.useState<
         Record<number, string>
     >({});
 
+    const defaultCoverage = costLine.costDriver === 'fixed_cost' ? 0 : 100;
+
     React.useEffect(() => {
         const nextCoverageInputsByYear: Record<number, string> = {};
         yearRange.forEach(year => {
             nextCoverageInputsByYear[year] = String(
-                coverageByYear[year]?.value ?? 100,
+                costLine.coverageByYear[year]?.value ?? defaultCoverage,
             );
         });
         setCoverageInputsByYear(nextCoverageInputsByYear);
-    }, [coverageByYear, yearRange]);
+    }, [costLine.coverageByYear, yearRange, defaultCoverage]);
 
     const handleCoverageChange = React.useCallback(
         (year: number, nextValue: string) => {
@@ -79,23 +72,28 @@ export const CostLineRow: FC<Props> = ({
             }
 
             saveYearlyCoverage({
-                assignmentId: coverageByYear[year]?.id,
-                costLineId,
+                assignmentId: costLine.coverageByYear[year]?.id,
+                costLineId: costLine.id,
                 year,
                 value: parsedValue,
             });
         },
-        [costLineId, coverageByYear, saveYearlyCoverage],
+        [costLine, saveYearlyCoverage],
     );
 
     const normalizeCoverageValue = React.useCallback(
         (year: number) => {
+            if (costLine.costDriver === 'fixed_cost') return;
+
             setCoverageInputsByYear(current => {
                 const rawValue = current[year] ?? '';
                 if (rawValue.trim() === '') {
                     return {
                         ...current,
-                        [year]: String(coverageByYear[year]?.value ?? 100),
+                        [year]: String(
+                            costLine.coverageByYear[year]?.value ??
+                                defaultCoverage,
+                        ),
                     };
                 }
 
@@ -103,7 +101,10 @@ export const CostLineRow: FC<Props> = ({
                 if (!Number.isFinite(parsedValue)) {
                     return {
                         ...current,
-                        [year]: String(coverageByYear[year]?.value ?? 100),
+                        [year]: String(
+                            costLine.coverageByYear[year]?.value ??
+                                defaultCoverage,
+                        ),
                     };
                 }
 
@@ -113,31 +114,35 @@ export const CostLineRow: FC<Props> = ({
                 };
             });
         },
-        [coverageByYear],
+        [costLine, defaultCoverage],
     );
 
     return (
         <TableRow sx={styles.costLineRow}>
             <TableCell align="left" colSpan={2} sx={styles.buffer}>
                 <Typography variant="body2" component="span">
-                    {label}
+                    {costLine.label}
                 </Typography>
             </TableCell>
             {yearRange.map(year => (
-                <TableCell key={`cost_line_${label}_${year}`} align="center">
+                <TableCell
+                    key={`cost_line_${costLine.label}_${year}`}
+                    align="center"
+                >
                     <YearlyCoverageInput
-                        value={coverageInputsByYear[year] ?? '100'}
+                        value={coverageInputsByYear[year]}
                         onChange={nextValue =>
                             handleCoverageChange(year, nextValue)
                         }
                         onBlur={() => normalizeCoverageValue(year)}
                         disabled={!isEditable}
+                        percentage={costLine.costDriver !== 'fixed_cost'}
                     />
                 </TableCell>
             ))}
             <TableCell align="center">
                 <Typography variant="body2" component="span">
-                    {formatBigNumber(totalCost)}
+                    {formatBigNumber(costLine.totalCost)}
                 </Typography>
             </TableCell>
             <TableCell></TableCell>
