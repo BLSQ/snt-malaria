@@ -19,7 +19,6 @@ from plugins.snt_malaria.management.commands.load_impact_org_unit_mappings impor
 
 from .models import (
     Budget,
-    BudgetAssumptions,
     BudgetSettings,
     CostUnitType,
     ImpactOrgUnitMapping,
@@ -148,14 +147,6 @@ class BudgetSettingsAdmin(admin.ModelAdmin):
     )
     search_fields = ("id", "local_currency")
     ordering = ("id", "local_currency")
-
-
-@admin.register(BudgetAssumptions)
-class BudgetAssumptionsAdmin(admin.ModelAdmin):
-    list_display = ("id", "scenario", "intervention_assignment", "year")
-    search_fields = ("id", "scenario__name", "intervention_assignment__id")
-    list_filter = ("year",)
-    ordering = ("id",)
 
 
 class ImpactProviderConfigForm(forms.ModelForm):

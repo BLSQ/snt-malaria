@@ -18,6 +18,5 @@ export const useReorderScenarioRules = (
             `scenarioRules_${scenarioId}`,
             'interventionAssignments',
             'impact',
-            'budgetAssumptions',
         ],
     });

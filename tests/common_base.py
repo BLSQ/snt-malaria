@@ -5,7 +5,6 @@ from django.utils.text import slugify
 from iaso.models import Account, OrgUnit, OrgUnitType
 from iaso.test import APITestCase, TestCase
 from plugins.snt_malaria.models import (
-    BudgetAssumptions,
     Intervention,
     InterventionAssignment,
     InterventionCategory,
@@ -122,15 +121,6 @@ class SNTMalariaTestMixin:
             org_unit=org_unit,
             intervention=intervention,
             created_by=created_by or getattr(scenario, "created_by", self.user),
-            **kwargs,
-        )
-
-    def create_snt_budget_assumption(self, scenario, intervention_assignment, year, coverage, **kwargs):
-        return BudgetAssumptions.objects.create(
-            scenario=scenario,
-            intervention_assignment=intervention_assignment,
-            year=year,
-            coverage=coverage,
             **kwargs,
         )
 

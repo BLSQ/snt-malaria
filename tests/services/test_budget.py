@@ -219,6 +219,35 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         # total_cost = 2000 * 2 * 1.1 * (1 + 0)^1 = 4400
         self.assertEqual(result.total_cost, 4400.0)
 
+    def test_total_pop_is_not_double_counted_across_cost_lines(self):
+        """When multiple cost lines share the same population_layer, total_pop should count
+        each (intervention, org_unit, metric_type) combination only once."""
+        # Add a second cost line for SMC using the same metric_under_5 layer.
+        second_line = InterventionCostBreakdownLine.objects.create(
+            intervention=self.intervention_smc,
+            name="SMC training",
+            category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.OPERATIONAL,
+            unit_type=self.unit_type,
+            population_layer=self.metric_under_5,
+            cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
+            unit_cost=Decimal("1.00"),
+            created_by=self.user,
+        )
+        ScenarioYearlyCostAssignment.objects.create(
+            scenario=self.scenario,
+            cost_line=second_line,
+            year=2025,
+            value=Decimal("1.20"),
+        )
+
+        service = BudgetCalculationService(self.scenario)
+        result = service.calculate_year(2025)
+
+        intervention = result.interventions[0]
+        self.assertEqual(intervention.code, "smc")
+        # total_pop must be 1000 + 2000 = 3000, NOT 6000 (double-counted per cost line)
+        self.assertEqual(intervention.total_pop, 3000.0)
+
     def test_missing_yearly_multiplier_and_inflation_rate_results_in_cost_without_multipliers(self):
         BudgetSettings.objects.all().delete()
         ScenarioYearlyCostAssignment.objects.all().delete()

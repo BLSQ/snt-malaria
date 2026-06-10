@@ -34,20 +34,6 @@ export type InterventionOrgUnit = {
     intervention_assignment_id: number;
 };
 
-export type DefaultBudgetAssumptions = {
-    [interventionCode: string]: {
-        coverage: number;
-    };
-};
-
-export type BudgetAssumptions = {
-    id: number;
-    intervention_assignment: number;
-    year?: number;
-    scenario: number;
-    coverage: number;
-};
-
 export type ScenarioYearlyCostAssignment = {
     id: number;
     scenario: number;

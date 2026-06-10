@@ -1,6 +1,5 @@
 from .account_settings import AccountSettings
 from .budget import Budget
-from .budget_assumptions import BudgetAssumptions
 from .budget_settings import BudgetSettings
 from .cost_breakdown import (
     InterventionCostBreakdownLine,
@@ -34,7 +33,6 @@ __all__ = [
     "ImpactProviderConfig",
     "Budget",
     "BudgetSettings",
-    "BudgetAssumptions",
     "AccountSettings",
     "SNTAccountSetup",
 ]
