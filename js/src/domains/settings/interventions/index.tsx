@@ -75,6 +75,7 @@ export const InterventionSettings: FC = () => {
                 <CardScrollable>
                     {selectedIntervention && (
                         <InterventionFormWrapper
+                            key={selectedIntervention.id}
                             interventionId={selectedIntervention.id}
                         />
                     )}
