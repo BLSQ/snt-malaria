@@ -41,12 +41,16 @@ export const InterventionForm: FC = () => {
     });
 
     const defaultBreakdownLine: Partial<InterventionCostBreakdownLine> =
-        useMemo(
-            () => ({
-                unit_type: costUnitTypeOptions[0]?.value || '',
-            }),
-            [costUnitTypeOptions],
-        );
+        useMemo(() => {
+            // "Each" is the seeded default unit (ratio 1); fall back to the
+            // first option for accounts that renamed or removed it.
+            const defaultUnit =
+                costUnitTypeOptions.find(option => option.label === 'Each') ??
+                costUnitTypeOptions[0];
+            return {
+                unit_type: defaultUnit?.value || '',
+            };
+        }, [costUnitTypeOptions]);
 
     return (
         <Stack spacing={3}>

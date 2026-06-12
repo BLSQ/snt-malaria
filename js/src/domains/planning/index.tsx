@@ -5,10 +5,10 @@ import {
     useRedirectToReplace,
     useSafeIntl,
 } from 'bluesquare-components';
-import { useNavigate } from 'react-router';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { SxStyles } from 'Iaso/types/general';
+import { useNavigate } from 'react-router';
 import { CardStyled } from '../../components/CardStyled';
 import {
     MainColumn,
