@@ -125,7 +125,8 @@ export const Planning: FC = () => {
     const [previewRule, setPreviewRule] = useState<
         Partial<ScenarioRule> | undefined
     >();
-    const { mutate: previewScenarioRule } = usePreviewScenarioRule();
+    const { mutate: previewScenarioRule, isLoading: isLoadingPreview } =
+        usePreviewScenarioRule();
 
     const onPreviewScenarioRule = useCallback(
         (rule?: Partial<ScenarioRule>) => {
@@ -204,6 +205,8 @@ export const Planning: FC = () => {
                             rules={scenarioRules || []}
                             isLoading={isFetchingRules}
                             createRuleRef={tour.anchorRefs[0]}
+                            matchedOrgUnitIds={matchedOrgUnitIds}
+                            isLoadingPreview={isLoadingPreview}
                         />
                     </SidebarColumn>
                     <MainColumn>

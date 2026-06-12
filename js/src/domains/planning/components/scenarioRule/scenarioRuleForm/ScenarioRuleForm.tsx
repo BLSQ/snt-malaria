@@ -22,6 +22,7 @@ import { ScenarioRuleFormValues } from '../../../hooks/useScenarioRuleFormState'
 import { generateRuleName } from '../../../libs/rule-utils';
 import { InterventionPropertiesForm } from './InterventionPropertiesForm';
 import { MatchingCriteriaForm } from './MatchingCriteriaForm';
+import { RuleCoverageSummary } from './RuleCoverageSummary';
 
 const styles = {
     formWrapper: {
@@ -34,6 +35,18 @@ const styles = {
             backgroundColor: 'grey.100',
         },
     },
+    ruleNameInput: {
+        flexGrow: 1,
+        // The placeholder is the auto-generated rule name that is actually
+        // used when the field is left empty, so style it as a real value.
+        '& .MuiInputBase-input::placeholder': {
+            color: 'text.primary',
+            opacity: 1,
+        },
+        '& .MuiInputBase-input:focus::placeholder': {
+            opacity: 0,
+        },
+    },
 } satisfies SxStyles;
 
 const ScenarioRuleHeading: FC<{ label: string }> = ({ label }) => {
@@ -44,7 +57,15 @@ const ScenarioRuleHeading: FC<{ label: string }> = ({ label }) => {
     );
 };
 
-export const ScenarioRuleForm: FC = () => {
+type Props = {
+    matchedOrgUnitIds?: number[];
+    isLoadingPreview?: boolean;
+};
+
+export const ScenarioRuleForm: FC<Props> = ({
+    matchedOrgUnitIds,
+    isLoadingPreview,
+}) => {
     const { formatMessage } = useSafeIntl();
     const { metricTypeCategories, interventionCategories } =
         usePlanningContext();
@@ -198,19 +219,10 @@ export const ScenarioRuleForm: FC = () => {
                 </Box>
             </Box>
             <Box mt={3}>
-                <Typography variant="body2" fontWeight="medium" gutterBottom>
-                    {formatMessage(MESSAGES.ruleName)}
+                <Typography variant="body2" fontWeight="medium" mb={1}>
+                    {formatMessage(MESSAGES.ruleNameAndColor)}
                 </Typography>
                 <Stack direction="row" spacing={2}>
-                    <Box pt={1}>
-                        <ColorPicker
-                            displayLabel={false}
-                            currentColor={values.color}
-                            onChangeColor={color =>
-                                setFieldValueAndState('color', color)
-                            }
-                        />
-                    </Box>
                     <TextField
                         fullWidth
                         size="small"
@@ -222,10 +234,23 @@ export const ScenarioRuleForm: FC = () => {
                             values.intervention_properties,
                             interventionCategories,
                         )}
-                        sx={{ flexGrow: 1 }}
+                        sx={styles.ruleNameInput}
                     />
+                    <Box pt={1}>
+                        <ColorPicker
+                            displayLabel={false}
+                            currentColor={values.color}
+                            onChangeColor={color =>
+                                setFieldValueAndState('color', color)
+                            }
+                        />
+                    </Box>
                 </Stack>
             </Box>
+            <RuleCoverageSummary
+                matchedOrgUnitIds={matchedOrgUnitIds}
+                isLoadingPreview={isLoadingPreview}
+            />
         </>
     );
 };

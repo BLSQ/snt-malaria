@@ -13,6 +13,8 @@ type Props = {
     isLoading: boolean;
     onPreviewScenarioRule?: (rule?: Partial<ScenarioRule>) => void;
     createRuleRef?: Ref<HTMLButtonElement>;
+    matchedOrgUnitIds?: number[];
+    isLoadingPreview?: boolean;
 };
 
 export const ScenarioRulesPanel: FC<Props> = ({
@@ -21,6 +23,8 @@ export const ScenarioRulesPanel: FC<Props> = ({
     isLoading,
     onPreviewScenarioRule,
     createRuleRef,
+    matchedOrgUnitIds,
+    isLoadingPreview,
 }) => {
     const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
 
@@ -65,6 +69,8 @@ export const ScenarioRulesPanel: FC<Props> = ({
                     existingRules={rules}
                     onClose={handleCloseForm}
                     onChange={handleFormChange}
+                    matchedOrgUnitIds={matchedOrgUnitIds}
+                    isLoadingPreview={isLoadingPreview}
                 />
             ) : (
                 <ScenarioRulesContainer
