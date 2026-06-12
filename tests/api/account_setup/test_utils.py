@@ -101,7 +101,7 @@ class SNTAccountSetupAPIUtilsTestCase(TestCase):
         # see intervention_seeder.py to understand why these values
         self.assertEqual(InterventionCategory.objects.filter(account=account).count(), 8)
         self.assertEqual(Intervention.objects.count(), 21)
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 27)
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 28)
 
     @patch("plugins.snt_malaria.api.account_setup.utils.uuid")
     def test_create_snt_account_error_data_source_already_taken(self, mock_uuid):
