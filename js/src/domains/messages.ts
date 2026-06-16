@@ -85,10 +85,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.budgeting.expandRow',
         defaultMessage: 'Expand row',
     },
-    budgetingLineItem: {
-        id: 'iaso.snt_malaria.budgeting.lineItem',
-        defaultMessage: 'Line item',
-    },
     budgetingTableAriaLabel: {
         id: 'iaso.snt_malaria.budgeting.tableAriaLabel',
         defaultMessage: 'Budget table',
@@ -778,7 +774,7 @@ export const MESSAGES = defineMessages({
     },
     total: {
         id: 'iaso.snt_malaria.budgeting.total',
-        defaultMessage: 'Total',
+        defaultMessage: 'Total costs',
     },
     unit: {
         id: 'iaso.snt_malaria.settings.intervention.unit',
