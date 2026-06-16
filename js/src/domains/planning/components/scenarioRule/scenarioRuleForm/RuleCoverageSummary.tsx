@@ -140,7 +140,6 @@ export const RuleCoverageSummary: FC<Props> = ({
                     icon={PlaceOutlinedIcon}
                     label={formatMessage(MESSAGES.ruleCoverageDistricts)}
                     value={matchedOrgUnitIds?.length ?? 0}
-                    total={allOrgUnits?.length}
                     isLoading={isLoadingPreview}
                 />
             </Stack>

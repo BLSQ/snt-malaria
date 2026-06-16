@@ -25,6 +25,16 @@ import { MatchingCriteriaForm } from './MatchingCriteriaForm';
 import { RuleCoverageSummary } from './RuleCoverageSummary';
 
 const styles = {
+    formRoot: {
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100%',
+    },
+    // Pins the coverage widgets to the bottom of the panel, but collapses when
+    // the rule content is tall enough to push them down (and the panel scrolls).
+    coverage: {
+        mt: 'auto',
+    },
     formWrapper: {
         p: 2,
         backgroundColor: 'grey.100',
@@ -127,7 +137,7 @@ export const ScenarioRuleForm: FC<Props> = ({
     );
 
     return (
-        <>
+        <Box sx={styles.formRoot}>
             <Box sx={styles.formWrapper}>
                 <Box mb={3}>
                     <ScenarioRuleHeading
@@ -247,10 +257,12 @@ export const ScenarioRuleForm: FC<Props> = ({
                     </Box>
                 </Stack>
             </Box>
-            <RuleCoverageSummary
-                matchedOrgUnitIds={matchedOrgUnitIds}
-                isLoadingPreview={isLoadingPreview}
-            />
-        </>
+            <Box sx={styles.coverage}>
+                <RuleCoverageSummary
+                    matchedOrgUnitIds={matchedOrgUnitIds}
+                    isLoadingPreview={isLoadingPreview}
+                />
+            </Box>
+        </Box>
     );
 };
