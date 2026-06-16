@@ -13,7 +13,6 @@ class BudgetSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "scenario",
-            "assumptions",
             "results",
             "updated_at",
         ]

@@ -132,7 +132,7 @@ class InterventionCostBreakdownLineAdmin(admin.ModelAdmin):
 
 @admin.register(Budget)
 class BudgetAdmin(admin.ModelAdmin):
-    list_display = ("id", "scenario", "name", "cost_input", "assumptions", "updated_at")
+    list_display = ("id", "scenario", "name", "updated_at")
     search_fields = ("id", "name")
     list_filter = ("scenario",)
     ordering = ("id", "name", "updated_at")

@@ -100,9 +100,6 @@ class BudgetCalculationService:
         return Budget.objects.create(
             scenario=self.scenario,
             name=f"Budget for {self.scenario.name}",
-            cost_input={},
-            population_input={},
-            assumptions={},
             results=[budget_result.model_dump(mode="json") for budget_result in all_years_results],
             created_by=user,
             updated_by=user,

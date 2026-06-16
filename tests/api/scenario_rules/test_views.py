@@ -345,9 +345,6 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         Budget.objects.create(
             scenario=self.scenario,
             name="Seed budget",
-            cost_input=[],
-            population_input=[],
-            assumptions=[],
             results=[],
             created_by=self.user_with_full_perm,
             updated_by=self.user_with_full_perm,

@@ -133,10 +133,7 @@ class DemoScenarioSeeder:
         # budget = Budget.objects.create(
         #     scenario=scenario,
         #     name=f"Budget for {scenario.name}",
-        #     cost_input={},
-        #     assumptions=settings,
         #     results=budgets,
-        #     population_input={},
         #     created_by=created_by,
         #     updated_by=created_by,
         # )

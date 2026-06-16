@@ -98,9 +98,6 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
             scenario=self.scenario,
             name="Test Budget 1",
             created_by=self.user_with_full_perm,
-            cost_input={},
-            population_input={},
-            assumptions={},
             results={},
         )
 
@@ -382,9 +379,6 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
             scenario=self.scenario,
             name="Test Budget 2",
             created_by=self.user_with_full_perm,
-            cost_input={},
-            population_input={},
-            assumptions={},
             results={},
         )
 
@@ -468,9 +462,6 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
             scenario=other_scenario,
             name="Other Budget",
             created_by=other_user,
-            cost_input={},
-            population_input={},
-            assumptions={},
             results={},
         )
 
@@ -486,9 +477,6 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
             scenario=self.scenario,
             name="Test Budget 2",
             created_by=self.user_with_full_perm,
-            cost_input={},
-            population_input={},
-            assumptions={},
             results={},
         )
 
