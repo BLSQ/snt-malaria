@@ -6,6 +6,7 @@ from .cost_breakdown import (
     InterventionCostUnitType,
 )
 from .cost_unit_type import CostUnitType
+from .grant import Donor, Grant
 from .impact_org_unit_mapping import ImpactOrgUnitMapping
 from .impact_provider_config import ImpactProviderConfig
 from .intervention import (
@@ -26,6 +27,8 @@ __all__ = [
     "ScenarioRule",
     "ScenarioRuleInterventionProperties",
     "CostUnitType",
+    "Donor",
+    "Grant",
     "InterventionCostBreakdownLine",
     "InterventionCostUnitType",
     "ScenarioYearlyCostAssignment",
