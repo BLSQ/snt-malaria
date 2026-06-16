@@ -45,10 +45,7 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.allParentOrgUnits',
         defaultMessage: 'All',
     },
-    above: {
-        id: 'iaso.snt_malaria.label.layers.above',
-        defaultMessage: 'Above',
-    },
+
     apply: {
         id: 'iaso.snt_malaria.label.apply',
         defaultMessage: 'Apply',
@@ -448,13 +445,14 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenario.errors.maxYear',
         defaultMessage: 'Year must be at most {year}',
     },
-    metricType: {
-        id: 'iaso.snt_malaria.scenarioRule.metricType',
-        defaultMessage: 'Metric type',
-    },
+
     minYear: {
         id: 'iaso.snt_malaria.scenario.errors.minYear',
         defaultMessage: 'Year must be at least {year}',
+    },
+    endYearMin: {
+        id: 'iaso.snt_malaria.scenario.errors.endYearMin',
+        defaultMessage: 'End year must be greater than or equal to start year ({year})',
     },
     modalDeleteScenarioConfirm: {
         id: 'iaso.snt_malaria.label.delete.confirm',
@@ -591,22 +589,7 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.proportion-chart.title',
         defaultMessage: 'Cost per intervention',
     },
-    pop_pwLabel: {
-        id: 'iaso.snt_malaria.label.pop_pw',
-        defaultMessage: 'Population Pregnant woman',
-    },
-    pop_0_5Label: {
-        id: 'iaso.snt_malaria.label.pop_0_5',
-        defaultMessage: 'Population 0-5 years',
-    },
-    pop_0_1Label: {
-        id: 'iaso.snt_malaria.label.pop_0_1',
-        defaultMessage: 'Population 0-1 years',
-    },
-    pop_1_2Label: {
-        id: 'iaso.snt_malaria.label.pop_1_2',
-        defaultMessage: 'Population 1-2 years',
-    },
+
     remove: {
         id: 'iaso.snt_malaria.label.interventionList.remove',
         defaultMessage: 'Remove',

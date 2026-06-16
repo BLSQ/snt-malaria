@@ -41,7 +41,5 @@ export type BudgetCalculationRequest = {
 export type BudgetCalculationResponse = {
     id: number;
     scenario: number;
-    cost_input: any; // TODO Define this
-    assumptions: { [key: string]: string | number };
     results: Budget[];
 };
