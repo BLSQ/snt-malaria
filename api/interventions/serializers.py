@@ -1,11 +1,12 @@
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
     InterventionCostBreakdownLineSerializer,
     InterventionCostBreakdownLineWriteSerializer,
 )
-from plugins.snt_malaria.models import Intervention
+from plugins.snt_malaria.models import Grant, Intervention
 
 
 class InterventionSerializer(serializers.ModelSerializer):
@@ -39,6 +40,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "code",
             "impact_ref",
             "target_population",
+            "grant",
             "cost_breakdown_lines",
         ]
 
@@ -48,6 +50,7 @@ class InterventionDetailWriteSerializer(serializers.ModelSerializer):
     target_population = serializers.ListField(
         child=serializers.CharField(max_length=100), allow_empty=True, required=False
     )
+    grant = serializers.PrimaryKeyRelatedField(queryset=Grant.objects.all(), allow_null=True, required=False)
 
     class Meta:
         model = Intervention
@@ -56,8 +59,17 @@ class InterventionDetailWriteSerializer(serializers.ModelSerializer):
             "name",
             "impact_ref",
             "target_population",
+            "grant",
             "cost_breakdown_lines",
         ]
+
+    def validate_grant(self, grant):
+        if grant is None:
+            return grant
+        account = self.context["request"].user.iaso_profile.account
+        if grant.account_id != account.id:
+            raise serializers.ValidationError(_("Grant not found."))
+        return grant
 
     def update(self, instance, validated_data):
         cost_breakdown_lines_data = validated_data.pop("cost_breakdown_lines", None)

@@ -8,6 +8,8 @@ from plugins.snt_malaria.api.scenario_yearly_cost_assignment.views import Scenar
 
 from .account_setup.views import SNTAccountSetupViewSet
 from .cost_unit_types.views import CostUnitTypeViewSet
+from .donors.views import DonorViewSet
+from .grants.views import GrantViewSet
 from .intervention_assignments.views import InterventionAssignmentViewSet
 from .intervention_categories.views import InterventionCategoryViewSet
 from .intervention_cost_breakdown_line.views import InterventionCostBreakdownLineViewSet
@@ -25,6 +27,8 @@ router.register(
     basename="intervention_assignments",
 )
 router.register(r"snt_malaria/scenarios", ScenarioViewSet, basename="scenarios")
+router.register(r"snt_malaria/grants", GrantViewSet, basename="grants")
+router.register(r"snt_malaria/donors", DonorViewSet, basename="donors")
 router.register(r"snt_malaria/scenario_rules", ScenarioRuleViewSet, basename="scenario_rules")
 router.register(
     r"snt_malaria/scenario_yearly_cost_assignments",
