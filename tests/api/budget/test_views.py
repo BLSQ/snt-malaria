@@ -3,6 +3,8 @@ from rest_framework import status
 from iaso.models import MetricType, MetricValue
 from plugins.snt_malaria.models import (
     Budget,
+    Donor,
+    Grant,
     InterventionAssignment,
     Scenario,
 )
@@ -520,3 +522,57 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
     def test_get_latest_unauthenticated(self):
         response = self.client.get(f"{BASE_URL}get_latest/")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_by_grant(self):
+        """Costs are attributed to the assignment grant, falling back to the intervention grant."""
+        donor = Donor.objects.create(account=self.account, name="Global Fund")
+        grant_a = Grant.objects.create(account=self.account, donor=donor, name="Grant A")
+        grant_b = Grant.objects.create(account=self.account, donor=donor, name="Grant B")
+
+        # Intervention-level grant: applies to the existing SMC assignment on
+        # district2 (population 150,000), which has no override.
+        self.intervention_chemo_smc.grant = grant_a
+        self.intervention_chemo_smc.save(update_fields=["grant"])
+
+        # Assignment-level override: SMC on district1 (population 100,000).
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_chemo_smc,
+            grant=grant_b,
+            created_by=self.user_with_full_perm,
+        )
+
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.get(f"{BASE_URL}by_grant/", {"scenario_id": self.scenario.id})
+
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(result["scenario_id"], self.scenario.id)
+
+        by_grant_id = {item["grant_id"]: item for item in result["grant_costs"]}
+        self.assertIn(grant_a.id, by_grant_id)
+        self.assertIn(grant_b.id, by_grant_id)
+
+        self.assertEqual(by_grant_id[grant_a.id]["name"], "Grant A")
+        self.assertGreater(by_grant_id[grant_a.id]["total_cost"], 0)
+        self.assertGreater(by_grant_id[grant_b.id]["total_cost"], 0)
+        # district2 has a larger population than district1, so the fallback
+        # grant should carry more cost than the override grant.
+        self.assertGreater(
+            by_grant_id[grant_a.id]["total_cost"],
+            by_grant_id[grant_b.id]["total_cost"],
+        )
+        # One yearly entry per scenario year.
+        self.assertEqual(
+            len(by_grant_id[grant_a.id]["yearly_costs"]),
+            self.scenario.end_year - self.scenario.start_year + 1,
+        )
+
+    def test_by_grant_missing_scenario(self):
+        self.client.force_authenticate(user=self.user_with_full_perm)
+
+        response = self.client.get(f"{BASE_URL}by_grant/")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.get(f"{BASE_URL}by_grant/", {"scenario_id": 99999})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

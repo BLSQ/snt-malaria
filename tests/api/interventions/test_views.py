@@ -4,7 +4,7 @@ from plugins.snt_malaria.api.interventions.permissions import (
     SNT_SETTINGS_READ_PERMISSION,
     SNT_SETTINGS_WRITE_PERMISSION,
 )
-from plugins.snt_malaria.models import Budget
+from plugins.snt_malaria.models import Budget, Donor, Grant
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
@@ -132,6 +132,56 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         line_names = [line.name for line in self.intervention_vaccination_rts.cost_breakdown_lines.all()]
         self.assertIn("Updated Cost Line 1", line_names)
         self.assertIn("New Cost Line 2", line_names)
+
+    def test_retrieve_intervention_details_includes_grant(self):
+        donor = Donor.objects.create(account=self.account, name="Global Fund")
+        grant = Grant.objects.create(account=self.account, donor=donor, name="NFM4")
+        self.intervention_vaccination_rts.grant = grant
+        self.intervention_vaccination_rts.save()
+
+        self.client.force_authenticate(user=self.user_write)
+        url = f"{BASE_URL}{self.intervention_vaccination_rts.id}/details/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["grant"], grant.id)
+
+    def test_update_intervention_details_set_grant(self):
+        donor = Donor.objects.create(account=self.account, name="Global Fund")
+        grant = Grant.objects.create(account=self.account, donor=donor, name="NFM4")
+
+        self.client.force_authenticate(user=self.user_write)
+        url = f"{BASE_URL}{self.intervention_vaccination_rts.id}/update_details/"
+        response = self.client.put(url, {"grant": grant.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["grant"], grant.id)
+        self.intervention_vaccination_rts.refresh_from_db()
+        self.assertEqual(self.intervention_vaccination_rts.grant, grant)
+
+    def test_update_intervention_details_clear_grant(self):
+        donor = Donor.objects.create(account=self.account, name="Global Fund")
+        grant = Grant.objects.create(account=self.account, donor=donor, name="NFM4")
+        self.intervention_vaccination_rts.grant = grant
+        self.intervention_vaccination_rts.save()
+
+        self.client.force_authenticate(user=self.user_write)
+        url = f"{BASE_URL}{self.intervention_vaccination_rts.id}/update_details/"
+        response = self.client.put(url, {"grant": None}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data["grant"])
+        self.intervention_vaccination_rts.refresh_from_db()
+        self.assertIsNone(self.intervention_vaccination_rts.grant)
+
+    def test_update_intervention_details_with_other_account_grant_returns_400(self):
+        other_account, _ = self.create_snt_account(name="Other Account For Grants")
+        other_donor = Donor.objects.create(account=other_account, name="Other Donor")
+        other_grant = Grant.objects.create(account=other_account, donor=other_donor, name="Other Grant")
+
+        self.client.force_authenticate(user=self.user_write)
+        url = f"{BASE_URL}{self.intervention_vaccination_rts.id}/update_details/"
+        response = self.client.put(url, {"grant": other_grant.id}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.intervention_vaccination_rts.refresh_from_db()
+        self.assertIsNone(self.intervention_vaccination_rts.grant)
 
     def test_update_intervention_details_recalculates_budget_per_assigned_scenario(self):
         scenario_with_assignment = self.create_snt_scenario(

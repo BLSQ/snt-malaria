@@ -1,16 +1,20 @@
 from collections import defaultdict
 from decimal import Decimal
+from typing import Any, Optional
 
 from iaso.models import MetricValue
 from plugins.snt_malaria.models import (
     Budget,
     BudgetSettings,
+    Grant,
     InterventionCostBreakdownLine,
     ScenarioYearlyCostAssignment,
 )
 
 from .dataclasses import (
     BudgetBreakdownItem,
+    BudgetGrantCostItem,
+    BudgetGrantYearCost,
     BudgetInterventionItem,
     BudgetLineRow,
     BudgetOrgUnitInterventionItem,
@@ -106,6 +110,43 @@ class BudgetCalculationService:
 
     def calculate_all_years(self):
         return [self.calculate_year(year) for year in range(self.start_year, self.end_year + 1)]
+
+    def calculate_grant_costs(self):
+        """Aggregate the budget by grant across all scenario years.
+
+        Each cost row is attributed to the assignment's grant, falling back to
+        the intervention's grant. Rows without either are grouped under a
+        single "unspecified" item (grant_id None).
+        """
+        totals: dict[Optional[int], dict[str, Any]] = defaultdict(
+            lambda: {"total": Decimal("0"), "by_year": defaultdict(lambda: Decimal("0"))}
+        )
+        for year in range(self.start_year, self.end_year + 1):
+            for row in self._compute_breakdown_line_rows(year):
+                totals[row.grant_id]["total"] += row.total_cost
+                totals[row.grant_id]["by_year"][year] += row.total_cost
+
+        grant_ids = [grant_id for grant_id in totals if grant_id is not None]
+        grants_by_id = {grant.id: grant for grant in Grant.objects.filter(id__in=grant_ids)}
+
+        items = []
+        for grant_id, data in totals.items():
+            grant = grants_by_id.get(grant_id)
+            items.append(
+                BudgetGrantCostItem(
+                    grant_id=grant_id,
+                    name=grant.name if grant else None,
+                    short_name=grant.short_name if grant else None,
+                    amount=grant.amount if grant else None,
+                    total_cost=data["total"],
+                    yearly_costs=[
+                        BudgetGrantYearCost(year=year, total_cost=cost)
+                        for year, cost in sorted(data["by_year"].items())
+                    ],
+                )
+            )
+        items.sort(key=lambda item: item.total_cost, reverse=True)
+        return items
 
     def calculate_year(self, year):
         """Calculate the budget for a given year, based on the population-driven formula and the scenario data.
@@ -219,16 +260,21 @@ class BudgetCalculationService:
         for assignment in self.assignments:
             intervention = assignment.intervention
             org_unit_id = assignment.org_unit_id
+            # Grant attribution: the assignment override wins, otherwise fall
+            # back to the grant configured on the intervention.
+            grant_id = assignment.grant_id or intervention.grant_id
 
             for line in self.cost_lines_by_intervention_id.get(intervention.id, []):
                 lineToAdd = None
                 if line.cost_driver == "population":
                     lineToAdd = self._compute_population_cost_row(
-                        line, org_unit_id, year, inflation_multiplier, intervention.id
+                        line, org_unit_id, year, inflation_multiplier, intervention.id, grant_id
                     )
                 elif line.cost_driver == "fixed_cost" and line.id not in seen_fixed_cost_line_ids:
                     seen_fixed_cost_line_ids.add(line.id)
-                    lineToAdd = self._compute_fixed_cost_row(line, year, inflation_multiplier, intervention.id)
+                    lineToAdd = self._compute_fixed_cost_row(
+                        line, year, inflation_multiplier, intervention.id, grant_id
+                    )
                 if lineToAdd:
                     rows.append(lineToAdd)
         return rows
@@ -237,7 +283,7 @@ class BudgetCalculationService:
         default = Decimal("0") if line.cost_driver == "fixed_cost" else Decimal("1")
         return self.yearly_value_by_key.get((line.id, year), default)
 
-    def _compute_population_cost_row(self, line, org_unit_id, year, inflation_multiplier, intervention_id):
+    def _compute_population_cost_row(self, line, org_unit_id, year, inflation_multiplier, intervention_id, grant_id):
         """
         Calculate using population as quantity and yearly value is a ratio applied on this quantity.
         """
@@ -267,9 +313,10 @@ class BudgetCalculationService:
             population=population,
             quantity=quantity,
             total_cost=line_cost,
+            grant_id=grant_id,
         )
 
-    def _compute_fixed_cost_row(self, line, year, inflation_multiplier, intervention_id):
+    def _compute_fixed_cost_row(self, line, year, inflation_multiplier, intervention_id, grant_id):
         """
         Calculate using yearly value as quantity. Added once per intervention regardless of org units.
         """
@@ -288,6 +335,7 @@ class BudgetCalculationService:
             category=category,
             quantity=quantity,
             total_cost=line_cost,
+            grant_id=grant_id,
         )
 
     def _compute_cost_(self, quantity, unit_cost, inflation_multiplier):

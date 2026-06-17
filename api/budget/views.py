@@ -9,6 +9,7 @@ from plugins.snt_malaria.api.budget.serializers import (
     BudgetSerializer,
 )
 from plugins.snt_malaria.models.budget import Budget
+from plugins.snt_malaria.models.scenario import Scenario
 from plugins.snt_malaria.services import BudgetCalculationService
 
 
@@ -22,6 +23,32 @@ class BudgetViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Budget.objects.select_related("scenario").filter(
             scenario__account=self.request.user.iaso_profile.account
+        )
+
+    @action(detail=False, methods=["get"])
+    def by_grant(self, request):
+        """Return the scenario budget aggregated by grant.
+
+        Costs are attributed to the assignment's grant, falling back to the
+        intervention's grant; unattributed costs come back with grant_id None.
+        Computed on the fly from the current scenario data.
+        """
+        scenario_id = request.query_params.get("scenario_id")
+        if not scenario_id:
+            return Response({"detail": "scenario_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        scenario = Scenario.objects.filter(id=scenario_id, account=request.user.iaso_profile.account).first()
+        if not scenario:
+            return Response({"detail": "Scenario not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        budget_service = BudgetCalculationService(scenario)
+        grant_costs = budget_service.calculate_grant_costs()
+        return Response(
+            {
+                "scenario_id": scenario.id,
+                "grant_costs": [item.model_dump(mode="json") for item in grant_costs],
+            },
+            status=status.HTTP_200_OK,
         )
 
     @action(detail=False, methods=["get"])

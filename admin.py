@@ -21,6 +21,8 @@ from .models import (
     Budget,
     BudgetSettings,
     CostUnitType,
+    Donor,
+    Grant,
     ImpactOrgUnitMapping,
     ImpactProviderConfig,
     Intervention,
@@ -147,6 +149,22 @@ class BudgetSettingsAdmin(admin.ModelAdmin):
     )
     search_fields = ("id", "local_currency")
     ordering = ("id", "local_currency")
+
+
+@admin.register(Donor)
+class DonorAdmin(admin.ModelAdmin):
+    list_display = ("id", "account", "name", "created_at", "updated_at")
+    search_fields = ("account__name", "name")
+    list_filter = ("account",)
+    ordering = ("account__name", "name")
+
+
+@admin.register(Grant)
+class GrantAdmin(admin.ModelAdmin):
+    list_display = ("id", "account", "name", "short_name", "donor", "amount", "created_at", "updated_at")
+    search_fields = ("account__name", "name", "short_name", "donor__name")
+    list_filter = ("account", "donor")
+    ordering = ("account__name", "name")
 
 
 class ImpactProviderConfigForm(forms.ModelForm):

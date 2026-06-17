@@ -57,3 +57,18 @@ class BudgetLineRow(BudgetBaseModel):
     population: Decimal = Decimal("0")
     quantity: Decimal
     total_cost: Decimal
+    grant_id: Optional[int]
+
+
+class BudgetGrantYearCost(BudgetBaseModel):
+    year: int
+    total_cost: Decimal = Decimal("0.0")
+
+
+class BudgetGrantCostItem(BudgetBaseModel):
+    grant_id: Optional[int] = None
+    name: Optional[str] = None
+    short_name: Optional[str] = None
+    amount: Optional[Decimal] = None
+    total_cost: Decimal = Decimal("0.0")
+    yearly_costs: list[BudgetGrantYearCost] = Field(default_factory=list)
