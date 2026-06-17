@@ -207,3 +207,11 @@ def duplicate_rules(scenario_from: Scenario, scenario_to: Scenario, user: User):
             ip.pk = None
             ip.scenario_rule = rule
             ip.save()
+
+
+def duplicate_scenario_yearly_cost_assignment(scenario_from: Scenario, scenario_to: Scenario, user: User):
+    for cost_assignment in scenario_from.yearly_cost_assignments.all():
+        initial_cost_assignment = deepcopy(cost_assignment)
+        initial_cost_assignment.pk = None
+        initial_cost_assignment.scenario = scenario_to
+        initial_cost_assignment.save()

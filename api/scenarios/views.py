@@ -17,6 +17,7 @@ from iaso.api.common import CONTENT_TYPE_CSV
 from plugins.snt_malaria.api.scenarios.utils import (
     create_rules_from_import,
     duplicate_rules,
+    duplicate_scenario_yearly_cost_assignment,
     get_csv_headers,
     get_csv_row,
     get_scenario,
@@ -24,6 +25,7 @@ from plugins.snt_malaria.api.scenarios.utils import (
 from plugins.snt_malaria.models import InterventionAssignment, Scenario, ScenarioRule
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 from plugins.snt_malaria.models.intervention import Intervention
+from plugins.snt_malaria.services import BudgetCalculationService
 
 from .permissions import ScenarioPermission
 from .serializers import (
@@ -99,8 +101,12 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             raise ValidationError(f"Error saving scenario: {e}")
 
         duplicate_rules(initial_scenario, new_scenario, request.user)
+        duplicate_scenario_yearly_cost_assignment(initial_scenario, new_scenario, request.user)
 
         new_scenario.refresh_assignments(request.user)
+
+        budget_service = BudgetCalculationService(new_scenario)
+        budget_service.calculate_and_save_all_years(request.user)
 
         serializer = ScenarioSerializer(new_scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
