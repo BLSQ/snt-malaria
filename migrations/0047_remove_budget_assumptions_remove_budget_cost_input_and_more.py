@@ -4,22 +4,21 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('snt_malaria', '0046_remove_budgetassumptions_intervention_assignment_and_more'),
+        ("snt_malaria", "0046_remove_budgetassumptions_intervention_assignment_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='budget',
-            name='assumptions',
+            model_name="budget",
+            name="assumptions",
         ),
         migrations.RemoveField(
-            model_name='budget',
-            name='cost_input',
+            model_name="budget",
+            name="cost_input",
         ),
         migrations.RemoveField(
-            model_name='budget',
-            name='population_input',
+            model_name="budget",
+            name="population_input",
         ),
     ]
