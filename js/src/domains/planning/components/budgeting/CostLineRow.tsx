@@ -140,7 +140,7 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
                     />
                 </TableCell>
             ))}
-            <TableCell align="center">
+            <TableCell align="right">
                 <Typography variant="body2" component="span">
                     {formatBigNumber(costLine.totalCost)}
                 </Typography>

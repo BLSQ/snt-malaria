@@ -9,6 +9,7 @@ import { formatBigNumber } from '../../libs/cost-utils';
 const styles = {
     row: { backgroundColor: '#f0f0f0' },
     emphasis: { fontWeight: 'bold' },
+    supEmphasis: { fontWeight: 'bold', fontSize: '1.2rem' },
 } satisfies SxStyles;
 
 export const BudgetTotalRow: FC<{
@@ -26,7 +27,7 @@ export const BudgetTotalRow: FC<{
         <TableRow sx={styles.row}>
             <TableCell align="left" colSpan={2}>
                 <Typography
-                    variant="body2"
+                    variant="body1"
                     component="span"
                     sx={styles.emphasis}
                 >
@@ -36,7 +37,7 @@ export const BudgetTotalRow: FC<{
             {yearRange.map(year => (
                 <TableCell key={`total_cost_year_${year}`} align="center">
                     <Typography
-                        variant="body2"
+                        variant="body1"
                         component="span"
                         sx={styles.emphasis}
                     >
@@ -44,9 +45,9 @@ export const BudgetTotalRow: FC<{
                     </Typography>
                 </TableCell>
             ))}
-            <TableCell align="center">
+            <TableCell align="right">
                 <Typography
-                    variant="body2"
+                    variant="body1"
                     component="span"
                     sx={styles.emphasis}
                 >

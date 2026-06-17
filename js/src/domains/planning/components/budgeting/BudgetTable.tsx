@@ -5,11 +5,13 @@ import {
     TableBody,
     TableCell,
     TableContainer,
+    TableFooter,
     TableHead,
     TableRow,
     Typography,
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { SxStyles } from 'Iaso/types/general';
 import { useGetCostBreakdownLines } from '../../../interventions/hooks/useGetCostBreakdownLines';
 import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { MESSAGES } from '../../../messages';
@@ -23,6 +25,16 @@ import { InterventionPlan } from '../../types/interventionAssignments';
 import { BudgetRow, BudgetRowData } from './BudgetRow';
 import { BudgetTotalRow } from './BudgetTotalRow';
 import { CostLineRowData, CostLineYearlyCoverage } from './CostLineRow';
+
+const styles = {
+    container: {
+        maxHeight: '100%',
+        ' .MuiTableFooter-root': {
+            position: 'sticky',
+            insetBlockEnd: 0,
+        },
+    },
+} satisfies SxStyles;
 
 export const BudgetTable: FC = ({}) => {
     const [budgetRows, setBudgetRows] = useState<BudgetRowData[]>([]);
@@ -226,16 +238,14 @@ export const BudgetTable: FC = ({}) => {
     }, [budgetRows]);
 
     return budgetRows.length > 0 ? (
-        <TableContainer
-            sx={{ mx: -2, width: 'calc(100% + 32px)' }}
-            component={Paper}
-        >
-            <Table aria-label={formatMessage(MESSAGES.budgetingTableAriaLabel)}>
+        <TableContainer sx={styles.container} component={Paper}>
+            <Table
+                stickyHeader
+                aria-label={formatMessage(MESSAGES.budgetingTableAriaLabel)}
+            >
                 <TableHead>
                     <TableRow>
-                        <TableCell>
-                            {formatMessage(MESSAGES.budgetingLineItem)}
-                        </TableCell>
+                        <TableCell></TableCell>
                         <TableCell align="center">
                             {formatMessage(MESSAGES.budgetingDistricts)}
                         </TableCell>
@@ -249,7 +259,7 @@ export const BudgetTable: FC = ({}) => {
                                 </Typography>
                             </TableCell>
                         ))}
-                        <TableCell align="center">
+                        <TableCell align="right">
                             {formatMessage(MESSAGES.budgetingTotalCost)}
                         </TableCell>
                         <TableCell align="center">
@@ -268,12 +278,14 @@ export const BudgetTable: FC = ({}) => {
                             isEditable={isScenarioEditable}
                         />
                     ))}
+                </TableBody>
+                <TableFooter>
                     <BudgetTotalRow
                         yearRange={yearRange}
                         totalCosts={totalCosts}
                         colors={colors}
                     />
-                </TableBody>
+                </TableFooter>
             </Table>
         </TableContainer>
     ) : (

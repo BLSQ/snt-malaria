@@ -66,7 +66,7 @@ export const BudgetRow: FC<Props> = ({
                         {intervention.interventionLabel}
                     </Typography>
                 </TableCell>
-                <TableCell align="right">
+                <TableCell align="center">
                     <Typography variant="body2">
                         {intervention.orgUnitCount}
                     </Typography>
@@ -86,7 +86,7 @@ export const BudgetRow: FC<Props> = ({
                     </TableCell>
                 ))}
 
-                <TableCell align="center">
+                <TableCell align="right">
                     <Typography
                         variant="body1"
                         component="span"
