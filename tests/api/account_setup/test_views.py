@@ -65,7 +65,7 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         # see intervention_seeder.py to understand why these values
         self.assertEqual(InterventionCategory.objects.count(), 8)
         self.assertEqual(Intervention.objects.count(), 21)
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 27)
+        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 28)
 
         # Checking if the import task was launched with the right parameters
         self.assertEqual(Task.objects.count(), 1)

@@ -4,39 +4,39 @@ import django.contrib.postgres.fields
 
 from django.db import migrations, models
 
-from plugins.snt_malaria.models.cost_breakdown import InterventionCostUnitType
-
 
 class Migration(migrations.Migration):
     dependencies = [
         ("snt_malaria", "0039_alter_budgetassumptions_unique_together_and_more"),
     ]
 
+    # Values inlined from the (since removed) InterventionCostUnitType enum:
+    # data migrations must not import from models.
     def add_allowed_cost_unit_types(apps, schema_editor):
         Intervention = apps.get_model("snt_malaria", "Intervention")
         db_alias = schema_editor.connection.alias
         for intervention in Intervention.objects.using(db_alias).all():
             if intervention.code in ["iptp", "pmc"]:
-                intervention.allowed_cost_unit_types = [InterventionCostUnitType.PER_SP.value]
+                intervention.allowed_cost_unit_types = ["PER_SP"]
             elif intervention.code in ["itn_campaign", "itn_school"]:
                 intervention.allowed_cost_unit_types = [
-                    InterventionCostUnitType.PER_ITN.value,
-                    InterventionCostUnitType.PER_BALE.value,
+                    "PER_ITN",
+                    "PER_BALE",
                 ]
             elif intervention.code in ["itn_routine"]:
-                intervention.allowed_cost_unit_types = [InterventionCostUnitType.PER_ITN.value]
+                intervention.allowed_cost_unit_types = ["PER_ITN"]
             elif intervention.code in ["smc", "smc_3", "smc_4", "smc_5"]:
                 intervention.allowed_cost_unit_types = [
-                    InterventionCostUnitType.PER_SPAQ_3_11_MONTHS.value,
-                    InterventionCostUnitType.PER_SPAQ_12_59_MONTHS.value,
+                    "PER_SPAQ_3_11_MONTHS",
+                    "PER_SPAQ_12_59_MONTHS",
                 ]
             elif intervention.code in ["vacc"]:
                 intervention.allowed_cost_unit_types = [
-                    InterventionCostUnitType.PER_CHILD.value,
-                    InterventionCostUnitType.PER_DOSE.value,
+                    "PER_CHILD",
+                    "PER_DOSE",
                 ]
             else:
-                intervention.allowed_cost_unit_types = [InterventionCostUnitType.OTHER.value]
+                intervention.allowed_cost_unit_types = ["OTHER"]
             intervention.save(using=db_alias)
 
     operations = [
