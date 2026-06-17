@@ -33,6 +33,7 @@ from .models import (
     ScenarioRule,
 )
 
+
 @admin.register(InterventionCategory)
 class InterventionCategoryAdmin(admin.ModelAdmin):
     list_display = (
