@@ -6,16 +6,25 @@ import { usePlanningContext } from '../contexts/PlanningContext';
 // MetricType code (see fixtures and demo account seeding).
 const POPULATION_METRIC_CODE = 'POPULATION';
 
+type PopulationByOrgUnit = {
+    // org unit id -> total population for the picked year. `undefined` while
+    // loading or when the account has no POPULATION layer, so callers can
+    // distinguish "no data" from "population of 0".
+    populationByOrgUnit?: Map<number, number>;
+    // The year the populations were taken from, or `null` for a time-invariant
+    // (`year: null`) snapshot.
+    year: number | null;
+};
+
 /**
- * Returns a map of org unit id -> total population, based on the account's
- * POPULATION data layer. When an org unit has values for several years, the
- * latest year wins; rows with `year: null` act as a time-invariant fallback
- * (mirroring the backend logic in providers/impact/fake.py).
- *
- * Returns `undefined` while loading or when the account has no POPULATION
- * layer, so callers can distinguish "no data" from "population of 0".
+ * Returns the per-org-unit total population from the account's POPULATION data
+ * layer, plus the year it was taken from. A single target year is used for
+ * every org unit: the year closest to the current year that *every* org unit
+ * has data for, so the populations are always comparable and no org unit is
+ * silently dropped. Rows with `year: null` (a time-invariant snapshot) are
+ * only used when there is no such common dated year.
  */
-export const usePopulationByOrgUnit = (): Map<number, number> | undefined => {
+export const usePopulationByOrgUnit = (): PopulationByOrgUnit => {
     const { metricTypeCategories } = usePlanningContext();
 
     const populationMetricType = useMemo(
@@ -32,24 +41,55 @@ export const usePopulationByOrgUnit = (): Map<number, number> | undefined => {
 
     return useMemo(() => {
         if (!populationMetricType || !metricValues) {
-            return undefined;
+            return { populationByOrgUnit: undefined, year: null };
         }
-        const bestYearByOrgUnit = new Map<number, number>();
-        const populationByOrgUnit = new Map<number, number>();
-        metricValues.forEach(metricValue => {
-            if (metricValue.value == null) {
+        const currentYear = new Date().getFullYear();
+
+        // Count how many org units have data for each year. (org_unit, year)
+        // is unique per metric type, so each row counts at most once.
+        const orgUnitsWithData = new Set<number>();
+        const orgUnitCountByYear = new Map<number, number>();
+        metricValues.forEach(({ org_unit, year, value }) => {
+            if (value == null || year == null) {
                 return;
             }
-            const yearKey = metricValue.year ?? Number.NEGATIVE_INFINITY;
-            const bestYear = bestYearByOrgUnit.get(metricValue.org_unit);
-            if (bestYear === undefined || yearKey > bestYear) {
-                bestYearByOrgUnit.set(metricValue.org_unit, yearKey);
-                populationByOrgUnit.set(
-                    metricValue.org_unit,
-                    metricValue.value,
-                );
+            orgUnitsWithData.add(org_unit);
+            orgUnitCountByYear.set(
+                year,
+                (orgUnitCountByYear.get(year) ?? 0) + 1,
+            );
+        });
+
+        // Target year = the year closest to now that every org unit shares.
+        // A tie (a past and a future year equally far from now) prefers the
+        // past year, since future years are projections. Stays null when there
+        // is no common dated year (then we fall back to the time-invariant
+        // `year: null` snapshot below).
+        let targetYear: number | null = null;
+        orgUnitCountByYear.forEach((count, year) => {
+            if (count !== orgUnitsWithData.size) {
+                return;
+            }
+            if (targetYear === null) {
+                targetYear = year;
+                return;
+            }
+            const distance = Math.abs(year - currentYear);
+            const targetDistance = Math.abs(targetYear - currentYear);
+            if (
+                distance < targetDistance ||
+                (distance === targetDistance && year < targetYear)
+            ) {
+                targetYear = year;
             }
         });
-        return populationByOrgUnit;
+
+        const populationByOrgUnit = new Map<number, number>();
+        metricValues.forEach(({ org_unit, year, value }) => {
+            if (value != null && year === targetYear) {
+                populationByOrgUnit.set(org_unit, value);
+            }
+        });
+        return { populationByOrgUnit, year: targetYear };
     }, [populationMetricType, metricValues]);
 };

@@ -91,7 +91,8 @@ export const RuleCoverageSummary: FC<Props> = ({
     isLoadingPreview,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const populationByOrgUnit = usePopulationByOrgUnit();
+    const { populationByOrgUnit, year: populationYear } =
+        usePopulationByOrgUnit();
 
     // Same request as the form/map (same query key), so this is a cache hit.
     const { data: accountSettings } = useGetAccountSettings();
@@ -131,7 +132,11 @@ export const RuleCoverageSummary: FC<Props> = ({
             <Stack direction="row" spacing={2}>
                 <RuleCoverageWidget
                     icon={GroupsOutlinedIcon}
-                    label={formatMessage(MESSAGES.ruleCoveragePopulation)}
+                    label={
+                        populationYear != null
+                            ? `${formatMessage(MESSAGES.ruleCoveragePopulation)} (${populationYear})`
+                            : formatMessage(MESSAGES.ruleCoveragePopulation)
+                    }
                     value={totalPopulation}
                     total={overallPopulation}
                     isLoading={isLoadingPreview}
