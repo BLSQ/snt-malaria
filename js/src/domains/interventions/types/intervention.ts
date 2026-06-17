@@ -13,5 +13,6 @@ export type InterventionDetails = {
     name: string;
     code: string;
     impact_ref: string;
+    grant: number | null;
     cost_breakdown_lines: InterventionCostBreakdownLine[];
 };

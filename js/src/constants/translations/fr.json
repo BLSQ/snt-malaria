@@ -306,5 +306,18 @@
     "iaso.snt_malaria.settings.costUnits.ratioSummaryInverse": "Couvre {value} personnes",
     "iaso.snt_malaria.settings.costUnits.ratioSummaryInverseOne": "Couvre {value} personne",
     "iaso.snt_malaria.settings.costUnits.ratioInvalid": "Veuillez saisir un nombre valide.",
-    "iaso.snt_malaria.settings.costUnits.description": "Description"
+    "iaso.snt_malaria.settings.costUnits.description": "Description",
+    "iaso.snt_malaria.settings.grants.title": "Subventions",
+    "iaso.snt_malaria.settings.grants.add": "Ajouter",
+    "iaso.snt_malaria.settings.grants.new": "Nouvelle subvention",
+    "iaso.snt_malaria.settings.grants.delete": "Supprimer",
+    "iaso.snt_malaria.settings.grants.deleteConfirmTitle": "Supprimer cette subvention ?",
+    "iaso.snt_malaria.settings.grants.deleteConfirmMessage": "Cette subvention sera définitivement supprimée. Les subventions assignées à une intervention ne peuvent pas être supprimées.",
+    "iaso.snt_malaria.settings.grants.name": "Nom",
+    "iaso.snt_malaria.settings.grants.shortName": "Nom court",
+    "iaso.snt_malaria.settings.grants.description": "Description",
+    "iaso.snt_malaria.settings.grants.amount": "Montant",
+    "iaso.snt_malaria.settings.grants.donor": "Bailleur",
+    "iaso.snt_malaria.settings.grants.donorHelp": "Choisissez un bailleur existant ou saisissez un nouveau nom ; les nouveaux bailleurs sont créés lors de l'enregistrement de la subvention.",
+    "iaso.snt_malaria.settings.intervention.grant": "Subvention"
 }

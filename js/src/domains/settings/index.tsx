@@ -1,5 +1,9 @@
 import React, { FC, useCallback, useEffect } from 'react';
-import { StraightenOutlined, VaccinesOutlined } from '@mui/icons-material';
+import {
+    AccountBalanceOutlined,
+    StraightenOutlined,
+    VaccinesOutlined,
+} from '@mui/icons-material';
 import { Box, Tab, Tabs } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
@@ -7,16 +11,22 @@ import { useSearchParams } from 'react-router-dom';
 import { PageContainer } from '../../components/styledComponents';
 import { MESSAGES } from '../messages';
 import { CostUnitSettings } from './costUnits';
+import { GrantSettings } from './grants';
 import { InterventionSettings } from './interventions';
 
-type SettingsTab = 'interventions' | 'costUnits';
+type SettingsTab = 'interventions' | 'costUnits' | 'grants';
+
+const SETTINGS_TABS: SettingsTab[] = ['interventions', 'costUnits', 'grants'];
 
 const DEFAULT_TAB: SettingsTab = 'interventions';
 
 export const Settings: FC = () => {
     const { formatMessage } = useSafeIntl();
     const [searchParams, setSearchParams] = useSearchParams();
-    const tab = (searchParams.get('tab') as SettingsTab) ?? DEFAULT_TAB;
+    const tabParam = searchParams.get('tab') as SettingsTab | null;
+    // Fall back to the default for missing/unknown tabs.
+    const tab =
+        tabParam && SETTINGS_TABS.includes(tabParam) ? tabParam : DEFAULT_TAB;
 
     const handleChangeTab = useCallback(
         (_event: React.SyntheticEvent, newTab: SettingsTab) => {
@@ -27,10 +37,11 @@ export const Settings: FC = () => {
         [searchParams, setSearchParams],
     );
 
-    // Reflect the active tab in the URL as a query param when it is missing
-    // (e.g. on first load), so the tab is always shareable/bookmarkable.
+    // Reflect the active tab in the URL as a query param when it is missing or
+    // unknown (e.g. on first load), so the tab is always valid and
+    // shareable/bookmarkable.
     useEffect(() => {
-        if (!searchParams.get('tab')) {
+        if (searchParams.get('tab') !== tab) {
             const next = new URLSearchParams(searchParams);
             next.set('tab', tab);
             setSearchParams(next, { replace: true });
@@ -78,11 +89,19 @@ export const Settings: FC = () => {
                             label={formatMessage(MESSAGES.costUnitsTitle)}
                             sx={{ textTransform: 'none', minHeight: 48 }}
                         />
+                        <Tab
+                            value="grants"
+                            icon={<AccountBalanceOutlined fontSize="small" />}
+                            iconPosition="start"
+                            label={formatMessage(MESSAGES.grantsTitle)}
+                            sx={{ textTransform: 'none', minHeight: 48 }}
+                        />
                     </Tabs>
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0 }}>
                     {tab === 'interventions' && <InterventionSettings />}
                     {tab === 'costUnits' && <CostUnitSettings />}
+                    {tab === 'grants' && <GrantSettings />}
                 </Box>
             </PageContainer>
         </>

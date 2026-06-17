@@ -7,6 +7,7 @@ type InterventionContextType = {
     costCategoryOptions: DropdownOptions<string>[];
     costUnitTypeOptions: DropdownOptions<string>[];
     populationOptions: DropdownOptions<number | null>[];
+    grantOptions: DropdownOptions<number>[];
     currency?: string;
     currencySymbol?: string;
 };
@@ -27,6 +28,7 @@ const InterventionContext = createContext<InterventionContextType>({
     costCategoryOptions: [],
     costUnitTypeOptions: [],
     populationOptions: emptyPopulationOptions,
+    grantOptions: [],
     currency: defaultCurrency,
     currencySymbol: currencySymbols[defaultCurrency],
 });
@@ -36,12 +38,14 @@ export const useInterventionContext = () => useContext(InterventionContext);
 export const InterventionProvider = ({
     costCategoryOptions,
     costUnitTypeOptions,
+    grantOptions,
     metricTypes,
     budgetSettings,
     children,
 }: {
     costCategoryOptions: DropdownOptions<string>[];
     costUnitTypeOptions: DropdownOptions<string>[];
+    grantOptions: DropdownOptions<number>[];
     metricTypes: MetricType[];
     budgetSettings?: BudgetSettings;
     children: React.ReactNode;
@@ -63,6 +67,7 @@ export const InterventionProvider = ({
                 costCategoryOptions,
                 costUnitTypeOptions,
                 populationOptions,
+                grantOptions,
                 currency,
                 currencySymbol: currencySymbols[currency] || `${currency} `,
             }}
