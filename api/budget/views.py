@@ -37,9 +37,7 @@ class BudgetViewSet(viewsets.ModelViewSet):
         if not scenario_id:
             return Response({"detail": "scenario_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        scenario = Scenario.objects.filter(
-            id=scenario_id, account=request.user.iaso_profile.account
-        ).first()
+        scenario = Scenario.objects.filter(id=scenario_id, account=request.user.iaso_profile.account).first()
         if not scenario:
             return Response({"detail": "Scenario not found"}, status=status.HTTP_404_NOT_FOUND)
 
