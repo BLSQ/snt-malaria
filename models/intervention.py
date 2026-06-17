@@ -61,6 +61,9 @@ class Intervention(SoftDeletableModel):
     )
     target_population = ArrayField(models.CharField(max_length=100), blank=True, default=list)
     description = models.TextField(blank=True)
+    grant = models.ForeignKey(
+        "snt_malaria.Grant", on_delete=models.SET_NULL, null=True, blank=True, related_name="interventions"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
@@ -82,6 +85,10 @@ class InterventionAssignment(models.Model):
     # rule and coverage are nullable for backward compatibility, but should be set for any new assignment
     rule = models.ForeignKey(
         ScenarioRule, on_delete=models.CASCADE, related_name="intervention_assignments", null=True, blank=True
+    )
+    # Optional grant override; when null, the intervention's grant (if any) applies.
+    grant = models.ForeignKey(
+        "snt_malaria.Grant", on_delete=models.SET_NULL, null=True, blank=True, related_name="intervention_assignments"
     )
 
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)

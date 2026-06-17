@@ -3,6 +3,7 @@ from .budget import Budget
 from .budget_settings import BudgetSettings
 from .cost_breakdown import InterventionCostBreakdownLine
 from .cost_unit_type import CostUnitType
+from .grant import Donor, Grant
 from .impact_org_unit_mapping import ImpactOrgUnitMapping
 from .impact_provider_config import ImpactProviderConfig
 from .intervention import (
@@ -23,6 +24,8 @@ __all__ = [
     "ScenarioRule",
     "ScenarioRuleInterventionProperties",
     "CostUnitType",
+    "Donor",
+    "Grant",
     "InterventionCostBreakdownLine",
     "ScenarioYearlyCostAssignment",
     "ImpactOrgUnitMapping",
