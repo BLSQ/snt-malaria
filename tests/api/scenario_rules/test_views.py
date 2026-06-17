@@ -478,9 +478,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         org_units_excluded_before = self.scenario_rule_1.org_units_excluded
         org_units_included_before = self.scenario_rule_1.org_units_included
         org_units_scope_before = self.scenario_rule_1.org_units_scope
-        interventions_ids_before = list(
-            self.scenario_rule_1.interventions.values_list("id", flat=True)
-        )
+        interventions_ids_before = list(self.scenario_rule_1.interventions.values_list("id", flat=True))
 
         payload = {
             "name": "Updated Rule",  # not changing any other field

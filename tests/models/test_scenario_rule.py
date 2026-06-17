@@ -538,7 +538,6 @@ class ScenarioRuleMatchAllTestCase(SNTMalariaTestCase):
         self.assertEqual(rule.intervention_assignments.count(), 3)
 
 
-
 class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):
     """Tests that resolve_matched_org_units respects AccountSettings.intervention_org_unit_type."""
 
