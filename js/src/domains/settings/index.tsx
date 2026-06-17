@@ -47,7 +47,14 @@ export const Settings: FC = () => {
                 sx={{
                     display: 'flex',
                     flexDirection: 'column',
+                    alignItems: 'center',
                     gap: theme => theme.spacing(2),
+                    // Cap and center the whole settings content (tab bar and
+                    // panels) instead of constraining each form individually.
+                    '& > *': {
+                        width: '100%',
+                        maxWidth: 1440,
+                    },
                 }}
             >
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>

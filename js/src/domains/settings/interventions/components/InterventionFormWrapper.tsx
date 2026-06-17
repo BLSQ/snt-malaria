@@ -3,6 +3,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import { Button, Stack, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { CardStyled } from '../../../../components/CardStyled';
+import { SettingsFormContainer } from '../../../../components/styledComponents';
 import { ExtendedFormikProvider } from '../../../../hooks/useGetExtendedFormikContext';
 import { useGetMetricTypes } from '../../../dataLayers/hooks/useGetMetrics';
 import { useGetInterventionCostBreakdownLineCategories } from '../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
@@ -95,7 +96,9 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
                 )}
 
                 <ExtendedFormikProvider formik={formik}>
-                    <InterventionForm />
+                    <SettingsFormContainer>
+                        <InterventionForm />
+                    </SettingsFormContainer>
                 </ExtendedFormikProvider>
             </CardStyled>
         </InterventionProvider>

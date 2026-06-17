@@ -59,3 +59,11 @@ export const CardScrollable = styled(Card)(({}) => ({
     flexDirection: 'column',
     overflow: 'hidden',
 }));
+
+// Wraps a settings form inside its card, adding top spacing so it doesn't sit
+// flush against the card header. Page-level width capping/centering is done in
+// the settings index, so the form just fills the available width here.
+export const SettingsFormContainer = styled(Box)(({ theme }) => ({
+    width: '100%',
+    paddingTop: theme.spacing(3),
+}));
