@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
@@ -9,7 +7,6 @@ from iaso.utils.colors import DEFAULT_COLOR
 from plugins.snt_malaria.models import (
     AccountSettings,
     ScenarioRule,
-    ScenarioRuleInterventionProperties,
 )
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
@@ -172,11 +169,7 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
         )
 
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
+        rule.interventions.add(self.intervention)
 
         rule.refresh_assignments(self.user, previous_assignments={})
 
@@ -209,11 +202,7 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             scenario=self.scenario,
         )
 
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
+        rule.interventions.add(self.intervention)
 
         rule.refresh_assignments(self.user, previous_assignments={})
 
@@ -231,11 +220,7 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
         )
 
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule_1,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
+        rule_1.interventions.add(self.intervention)
 
         previous_assignments = {self.intervention.intervention_category_id: {self.org_unit_1.id}}
 
@@ -256,11 +241,7 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
         )
 
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule_1,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
+        rule_1.interventions.add(self.intervention)
 
         previous_assignments = {}
 
@@ -283,17 +264,7 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
         )
 
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule_1,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
-
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule_1,
-            intervention=self.intervention_2,
-            coverage=0.50,
-        )
+        rule_1.interventions.add(self.intervention, self.intervention_2)
 
         previous_assignments = {}
 
@@ -329,17 +300,8 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
         )
 
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule_1,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
-
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule_2,
-            intervention=self.intervention_2,
-            coverage=0.50,
-        )
+        rule_1.interventions.add(self.intervention)
+        rule_2.interventions.add(self.intervention_2)
 
         previous_assignments = {}
 
@@ -373,11 +335,7 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             org_units_included=[self.org_unit_2.id],
         )
 
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
+        rule.interventions.add(self.intervention)
 
         rule.refresh_assignments(self.user, previous_assignments={})
 
@@ -399,11 +357,7 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             org_units_excluded=[self.org_unit_2.id],
         )
 
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
+        rule.interventions.add(self.intervention)
 
         rule.refresh_assignments(self.user, previous_assignments={})
 
@@ -426,11 +380,7 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             org_units_included=[self.org_unit_2.id],
         )
 
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
+        rule.interventions.add(self.intervention)
 
         rule.refresh_assignments(self.user, previous_assignments={})
 
@@ -451,11 +401,7 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             org_units_included=[self.org_unit_1.id, self.org_unit_2.id],
         )
 
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
+        rule.interventions.add(self.intervention)
 
         rule.refresh_assignments(self.user, previous_assignments={})
 
@@ -477,11 +423,7 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             scenario=self.scenario,
         )
 
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
+        rule.interventions.add(self.intervention)
 
         rule.refresh_assignments(self.user, previous_assignments={})
 
@@ -543,11 +485,7 @@ class ScenarioRuleMatchAllTestCase(SNTMalariaTestCase):
             scenario=self.scenario,
             org_units_matched=[self.org_unit_1.id, self.org_unit_2.id, self.org_unit_3.id],
         )
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule,
-            intervention=self.intervention,
-            coverage=Decimal("1.00"),
-        )
+        rule.interventions.add(self.intervention)
 
         rule.refresh_assignments(self.user, previous_assignments={})
 
@@ -568,11 +506,7 @@ class ScenarioRuleMatchAllTestCase(SNTMalariaTestCase):
             org_units_matched=[self.org_unit_1.id, self.org_unit_2.id, self.org_unit_3.id],
             org_units_excluded=[self.org_unit_3.id],
         )
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule,
-            intervention=self.intervention,
-            coverage=Decimal("1.00"),
-        )
+        rule.interventions.add(self.intervention)
 
         rule.refresh_assignments(self.user, previous_assignments={})
 
@@ -596,83 +530,13 @@ class ScenarioRuleMatchAllTestCase(SNTMalariaTestCase):
             org_units_excluded=[self.org_unit_2.id],
             org_units_included=[self.org_unit_2.id],
         )
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=rule,
-            intervention=self.intervention,
-            coverage=Decimal("1.00"),
-        )
+        rule.interventions.add(self.intervention)
 
         rule.refresh_assignments(self.user, previous_assignments={})
 
         # Inclusion overrides exclusion
         self.assertEqual(rule.intervention_assignments.count(), 3)
 
-
-class ScenarioRuleInterventionPropertiesModelTestCase(SNTMalariaTestCase):
-    auto_create_account = False
-
-    def setUp(self):
-        super().setUp()
-        self.account, self.user = self.create_snt_account(name="account")
-        self.scenario = self.create_snt_scenario(
-            self.account,
-            self.user,
-            name="Scenario 1",
-            description="Description of scenario 1",
-            start_year=2020,
-            end_year=2030,
-        )
-        self.scenario_rule = ScenarioRule.objects.create(
-            name="Rule 1",
-            priority=1,
-            color="#FF0000",
-            matching_criteria={"and": [{"==": [{"var": 1}, "F"]}, {"<": [{"var": 2}, 25]}]},
-            created_by=self.user,
-            scenario=self.scenario,
-            org_units_matched=[],
-            org_units_excluded=[],
-            org_units_included=[],
-            org_units_scope=[],
-        )
-        self.intervention_category = self.create_snt_intervention_category(
-            account=self.account, created_by=self.user, name="Category 1"
-        )
-        self.intervention = self.create_snt_intervention(
-            intervention_category=self.intervention_category, created_by=self.user, name="Intervention 1"
-        )
-        self.intervention_properties = ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.scenario_rule,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
-
-    def test_unique_intervention_and_rule(self):
-        with self.assertRaisesMessage(IntegrityError, "scenario_rule_intervention_unique"):
-            ScenarioRuleInterventionProperties.objects.create(
-                scenario_rule=self.scenario_rule,
-                intervention=self.intervention,
-                coverage=0.80,
-            )
-
-    def test_negative_coverage(self):
-        self.intervention_properties.delete()
-        with self.assertRaisesMessage(ValidationError, "intervention_properties_coverage_between_0_and_1"):
-            invalid_properties = ScenarioRuleInterventionProperties(
-                scenario_rule=self.scenario_rule,
-                intervention=self.intervention,
-                coverage=Decimal("-0.1"),
-            )
-            invalid_properties.full_clean()
-
-    def test_coverage_exceeds_1(self):
-        self.intervention_properties.delete()
-        with self.assertRaisesMessage(ValidationError, "intervention_properties_coverage_between_0_and_1"):
-            invalid_properties = ScenarioRuleInterventionProperties(
-                scenario_rule=self.scenario_rule,
-                intervention=self.intervention,
-                coverage=Decimal("1.1"),
-            )
-            invalid_properties.full_clean()
 
 
 class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):

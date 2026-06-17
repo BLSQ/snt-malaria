@@ -28,7 +28,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
             return ScenarioRule.objects.none()
         return (
             ScenarioRule.objects.select_related("scenario")
-            .prefetch_related("intervention_properties", "intervention_properties__intervention")
+            .prefetch_related("interventions")
             .filter(scenario__account=user.iaso_profile.account)
         )
 

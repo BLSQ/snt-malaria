@@ -8,7 +8,6 @@ from plugins.snt_malaria.models import (
     InterventionAssignment,
     Scenario,
     ScenarioRule,
-    ScenarioRuleInterventionProperties,
 )
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
@@ -113,11 +112,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             scenario=self.scenario,
             org_units_matched=[self.district1.id],
         )
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.rule_1,
-            intervention=self.intervention_chemo_iptp,
-            coverage=0.8,
-        )
+        self.rule_1.interventions.add(self.intervention_chemo_iptp)
         self.rule_2 = ScenarioRule.objects.create(
             name="Rule 2",
             priority=2,
@@ -127,11 +122,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             scenario=self.scenario,
             org_units_matched=[self.district2.id],
         )
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.rule_2,
-            intervention=self.intervention_chemo_smc,
-            coverage=0.9,
-        )
+        self.rule_2.interventions.add(self.intervention_chemo_smc)
         self.rule_3 = ScenarioRule.objects.create(
             name="Rule 3",
             priority=3,
@@ -141,11 +132,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             scenario=self.scenario,
             org_units_matched=[self.district3.id],
         )
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.rule_3,
-            intervention=self.intervention_vaccination_rts,
-            coverage=0.7,
-        )
+        self.rule_3.interventions.add(self.intervention_vaccination_rts)
 
         # Create assignments related to the scenario
         self.assignment_1 = self.create_snt_assignment(
@@ -966,11 +953,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             created_by=self.user_with_full_perm,
             org_units_matched=[self.district2.id],  # same as rule 2
         )
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=new_rule,
-            intervention=self.intervention_chemo_iptp,  # different intervention but same category as rule 2
-            coverage=0.5,
-        )
+        new_rule.interventions.add(self.intervention_chemo_iptp)  # different intervention but same category as rule 2
         payload = {
             "new_order": [self.rule_2.id, new_rule.id, self.rule_1.id, self.rule_3.id],
         }
@@ -1183,8 +1166,8 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         rules = new_scenario.rules.order_by("priority")
         self.assertEqual(rules.count(), 2)
 
-        iptp_rule = rules.filter(intervention_properties__intervention=self.intervention_chemo_iptp).first()
-        smc_rule = rules.filter(intervention_properties__intervention=self.intervention_chemo_smc).first()
+        iptp_rule = rules.filter(interventions=self.intervention_chemo_iptp).first()
+        smc_rule = rules.filter(interventions=self.intervention_chemo_smc).first()
 
         self.assertIsNotNone(iptp_rule)
         self.assertEqual(iptp_rule.matching_criteria, {"all": True})
@@ -1248,7 +1231,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(rules.count(), 3)
         for rule in rules:
             self.assertIsNotNone(rule.color)
-            self.assertTrue(rule.intervention_properties.exists())
+            self.assertTrue(rule.interventions.exists())
 
         assignments_district_1 = InterventionAssignment.objects.filter(scenario=scenario, org_unit=self.district1)
         assignments_district_2 = InterventionAssignment.objects.filter(scenario=scenario, org_unit=self.district2)

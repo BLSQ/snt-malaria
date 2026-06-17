@@ -2,10 +2,7 @@ import { patchRequest, postRequest } from 'bluesquare-components';
 import { useQueryClient } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { ScenarioRuleResponse } from '../hooks/useGetScenarioRules';
-import {
-    InterventionProperties,
-    MetricTypeCriterion,
-} from '../types/scenarioRule';
+import { MetricTypeCriterion } from '../types/scenarioRule';
 import { matchingCriteriaToJsonLogic } from '../utils/jsonLogic';
 
 type ScenarioRulePayload = {
@@ -14,7 +11,7 @@ type ScenarioRulePayload = {
     scenario: number;
     is_match_all?: boolean;
     matching_criteria: MetricTypeCriterion[];
-    intervention_properties: InterventionProperties[];
+    interventions: number[];
     org_units_excluded?: string; // comma separated list of org unit ids
     org_units_included?: string; // comma separated list of org unit ids
 };

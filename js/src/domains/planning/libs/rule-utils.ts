@@ -1,26 +1,27 @@
 import { sortBy } from 'lodash';
 import { InterventionCategory } from '../../interventions/types';
-import { InterventionProperties } from '../types/scenarioRule';
 
 /**
- * Builds a deterministic rule name from the selected intervention properties.
+ * Builds a deterministic rule name from the selected intervention IDs.
  * Interventions are sorted alphabetically by category name first, then by
  * intervention name. Each intervention is rendered using its `short_name`,
  * falling back to `name`. Returns an empty string when no intervention can
  * be resolved.
  */
 export const generateRuleName = (
-    interventionProperties: InterventionProperties[],
+    interventionIds: number[],
     interventionCategories: InterventionCategory[],
 ): string => {
-    const pairs = interventionProperties.flatMap(property => {
-        const category = interventionCategories.find(
-            candidate => candidate.id === property.category,
+    const allInterventions = interventionCategories.flatMap(
+        c => c.interventions,
+    );
+    const pairs = interventionIds.flatMap(id => {
+        const intervention = allInterventions.find(i => i.id === id);
+        if (!intervention) return [];
+        const category = interventionCategories.find(c =>
+            c.interventions.some(i => i.id === id),
         );
-        const intervention = category?.interventions.find(
-            candidate => candidate.id === property.intervention,
-        );
-        return category && intervention ? [{ category, intervention }] : [];
+        return category ? [{ category, intervention }] : [];
     });
     return sortBy(pairs, ['category.name', 'intervention.name'])
         .map(({ intervention }) => intervention.short_name || intervention.name)

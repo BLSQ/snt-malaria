@@ -5,7 +5,6 @@ from plugins.snt_malaria.models import (
     InterventionAssignment,
     Scenario,
     ScenarioRule,
-    ScenarioRuleInterventionProperties,
 )
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
@@ -60,14 +59,8 @@ class ScenarioModelTestCase(SNTMalariaTestCase):
             intervention_category=self.intervention_category, created_by=self.user, name="Intervention 2"
         )
 
-        self.intervention_property_1 = ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.scenario_rule_1,
-            intervention=self.intervention_1,
-            coverage=0.75,
-        )
-        self.intervention_property_2 = ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.scenario_rule_2, intervention=self.intervention_2, coverage=0.5
-        )
+        self.scenario_rule_1.interventions.add(self.intervention_1)
+        self.scenario_rule_2.interventions.add(self.intervention_2)
 
     def test_get_next_available_priority(self):
         next_priority = self.scenario.get_next_available_priority()

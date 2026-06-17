@@ -1,7 +1,5 @@
 from collections import defaultdict
-from copy import deepcopy
 from datetime import datetime
-from decimal import Decimal
 
 import pandas as pd
 
@@ -9,7 +7,7 @@ from django.contrib.auth.models import User
 
 from iaso.utils.colors import COLOR_CHOICES, DISPERSED_COLOR_ORDER
 from plugins.snt_malaria.models.intervention import Intervention, InterventionAssignment
-from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule, ScenarioRuleInterventionProperties
+from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule
 
 
 def get_intervention_column(name, code):
@@ -72,9 +70,6 @@ def get_assignments_from_row(user, scenario, row, interventions):
             )
             assignments.append(assignment)
     return assignments
-
-
-DEFAULT_IMPORT_COVERAGE = Decimal("1.00")
 
 
 def _get_dispersed_color(index: int) -> str:
@@ -140,7 +135,7 @@ def create_rules_from_import(
     total_count = len(all_org_unit_ids)
 
     rules = []
-    intervention_properties = []
+    groups_for_rules = []
 
     for idx, group in enumerate(groups):
         color = _get_dispersed_color(idx)
@@ -173,40 +168,35 @@ def create_rules_from_import(
             )
 
         rules.append(rule)
+        groups_for_rules.append(group)
 
     for rule in rules:
         rule.org_units_matched = ScenarioRule.resolve_matched_org_units(scenario.account, rule.matching_criteria)
 
     ScenarioRule.objects.bulk_create(rules)
 
-    for rule, group in zip(rules, groups):
-        for intervention_id in group["intervention_ids"]:
-            intervention_properties.append(
-                ScenarioRuleInterventionProperties(
-                    scenario_rule=rule,
-                    intervention_id=intervention_id,
-                    coverage=DEFAULT_IMPORT_COVERAGE,
-                )
-            )
-
-    ScenarioRuleInterventionProperties.objects.bulk_create(intervention_properties)
+    for rule, group in zip(rules, groups_for_rules):
+        rule.interventions.set(group["intervention_ids"])
 
     return rules
 
 
 def duplicate_rules(scenario_from: Scenario, scenario_to: Scenario, user: User):
-    for rule in scenario_from.rules.all():
-        initial_rule = deepcopy(rule)
-        rule.pk = None
-        rule.scenario = scenario_to
-        rule.created_by = user
-        rule.updated_by = None
-        rule.save()
-
-        for ip in initial_rule.intervention_properties.all():
-            ip.pk = None
-            ip.scenario_rule = rule
-            ip.save()
+    for rule in scenario_from.rules.prefetch_related("interventions").all():
+        intervention_ids = list(rule.interventions.values_list("id", flat=True))
+        new_rule = ScenarioRule.objects.create(
+            scenario=scenario_to,
+            name=rule.name,
+            priority=rule.priority,
+            color=rule.color,
+            matching_criteria=rule.matching_criteria,
+            org_units_matched=rule.org_units_matched,
+            org_units_excluded=rule.org_units_excluded,
+            org_units_included=rule.org_units_included,
+            org_units_scope=rule.org_units_scope,
+            created_by=user,
+        )
+        new_rule.interventions.set(intervention_ids)
 
 
 def duplicate_scenario_yearly_cost_assignment(scenario_from: Scenario, scenario_to: Scenario, user: User):

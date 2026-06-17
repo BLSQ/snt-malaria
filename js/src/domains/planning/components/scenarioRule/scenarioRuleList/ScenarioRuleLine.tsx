@@ -90,7 +90,7 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
                 >
                     {rule.name ||
                         generateRuleName(
-                            rule.intervention_properties,
+                            rule.interventions,
                             interventionCategories,
                         )}
                 </Typography>

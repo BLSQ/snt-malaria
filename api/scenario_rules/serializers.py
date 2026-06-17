@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -7,26 +5,9 @@ from iaso.api.common.serializer_fields import JSONSchemaField
 from iaso.models import MetricType, OrgUnit
 from plugins.snt_malaria.models import Scenario, ScenarioRule
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
-from plugins.snt_malaria.models.scenario import (
-    SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA,
-    ScenarioRuleInterventionProperties,
-)
+from plugins.snt_malaria.models.intervention import Intervention
+from plugins.snt_malaria.models.scenario import SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
-
-
-class ScenarioRuleInterventionPropertiesSerializer(serializers.ModelSerializer):
-    category = serializers.IntegerField(read_only=True, source="intervention.intervention_category_id")
-    coverage = serializers.DecimalField(
-        max_digits=3, decimal_places=2, min_value=Decimal("0.00"), max_value=Decimal("1.00")
-    )
-
-    class Meta:
-        model = ScenarioRuleInterventionProperties
-        fields = [
-            "intervention",
-            "category",
-            "coverage",
-        ]
 
 
 class ScenarioRuleQuerySerializer(serializers.Serializer):
@@ -40,7 +21,7 @@ class ScenarioRuleQuerySerializer(serializers.Serializer):
 
 
 class ScenarioRuleListSerializer(serializers.ModelSerializer):
-    intervention_properties = ScenarioRuleInterventionPropertiesSerializer(many=True, read_only=True)
+    interventions = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = ScenarioRule
@@ -50,7 +31,7 @@ class ScenarioRuleListSerializer(serializers.ModelSerializer):
             "name",
             "priority",
             "color",
-            "intervention_properties",
+            "interventions",
             "matching_criteria",
             "org_units_matched",
             "org_units_excluded",
@@ -71,7 +52,7 @@ class ScenarioRuleSmallSerializer(serializers.ModelSerializer):
 
 
 class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
-    intervention_properties = ScenarioRuleInterventionPropertiesSerializer(many=True, read_only=True)
+    interventions = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = ScenarioRule
@@ -81,7 +62,7 @@ class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
             "name",
             "priority",
             "color",
-            "intervention_properties",
+            "interventions",
             "matching_criteria",
             "org_units_matched",
             "org_units_excluded",
@@ -111,7 +92,7 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
     Common base for both create and update serializers
     """
 
-    intervention_properties = ScenarioRuleInterventionPropertiesSerializer(many=True, required=True)
+    interventions = serializers.PrimaryKeyRelatedField(many=True, queryset=Intervention.objects.none(), required=True)
     matching_criteria = JSONSchemaField(SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA, required=True, allow_null=True)
     org_units_excluded = serializers.ListField(
         child=serializers.PrimaryKeyRelatedField(queryset=OrgUnit.objects.none()), required=False
@@ -128,7 +109,7 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
         fields = [
             "name",
             "color",
-            "intervention_properties",
+            "interventions",
             "matching_criteria",
             "org_units_excluded",
             "org_units_included",
@@ -138,25 +119,14 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         user = self.context["request"].user
+        account = user.iaso_profile.account
         org_units = get_intervention_org_units(user.iaso_profile.account)
         self.fields["org_units_excluded"].child.queryset = org_units
         self.fields["org_units_included"].child.queryset = org_units
         self.fields["org_units_scope"].child.queryset = org_units
-
-    def validate_intervention_properties(self, intervention_properties):
-        covered_interventions = []
-        duplicated_interventions = []
-        for prop in intervention_properties:
-            intervention_id = prop["intervention"].id
-            if intervention_id in covered_interventions:
-                duplicated_interventions.append(intervention_id)
-                continue
-            covered_interventions.append(intervention_id)
-
-        if duplicated_interventions:
-            raise serializers.ValidationError(f"Duplicated interventions: {duplicated_interventions}")
-
-        return intervention_properties
+        self.fields["interventions"].child_relation.queryset = Intervention.objects.filter(
+            intervention_category__account=account
+        )
 
     def validate_matching_criteria(self, matching_criteria):
         if matching_criteria is None:
@@ -211,7 +181,7 @@ class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
         return scenario
 
     def create(self, validated_data, **kwargs):
-        intervention_properties_data = validated_data.pop("intervention_properties", [])
+        interventions_data = validated_data.pop("interventions", [])
         other_values = {
             "priority": validated_data["scenario"].get_next_available_priority(),
             "org_units_excluded": [org_unit.id for org_unit in validated_data.pop("org_units_excluded", [])],
@@ -219,20 +189,13 @@ class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
             "org_units_scope": [org_unit.id for org_unit in validated_data.pop("org_units_scope", [])],
         }
         scenario_rule = ScenarioRule.objects.create(**validated_data, **other_values, **kwargs)
-
-        for data in intervention_properties_data:
-            ScenarioRuleInterventionProperties.objects.create(
-                scenario_rule=scenario_rule,
-                intervention=data["intervention"],
-                coverage=data["coverage"],
-            )
-
+        scenario_rule.interventions.set(interventions_data)
         return scenario_rule
 
 
 class ScenarioRuleUpdateSerializer(ScenarioRuleWriteSerializerBase):
     # overriding parent fields in order to make them optional
-    intervention_properties = ScenarioRuleInterventionPropertiesSerializer(many=True, required=False)
+    interventions = serializers.PrimaryKeyRelatedField(many=True, queryset=Intervention.objects.none(), required=False)
     matching_criteria = JSONSchemaField(SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA, required=False, allow_null=True)
     name = serializers.CharField(required=False, allow_blank=True, allow_null=False)
 
@@ -243,7 +206,7 @@ class ScenarioRuleUpdateSerializer(ScenarioRuleWriteSerializerBase):
         ]
 
     def update(self, instance, validated_data, **kwargs):
-        intervention_properties_data = validated_data.pop("intervention_properties", [])
+        interventions_data = validated_data.pop("interventions", None)
 
         other_optional_values = {}
         for field in ["org_units_excluded", "org_units_included", "org_units_scope"]:
@@ -259,15 +222,7 @@ class ScenarioRuleUpdateSerializer(ScenarioRuleWriteSerializerBase):
 
         instance.save()
 
-        if intervention_properties_data:
-            # we don't really care about the ScenarioRuleInterventionProperties objects, we can always delete and recreate them
-            instance.intervention_properties.all().delete()
-
-            for data in intervention_properties_data:
-                ScenarioRuleInterventionProperties.objects.create(
-                    scenario_rule=instance,
-                    intervention=data["intervention"],
-                    coverage=data["coverage"],
-                )
+        if interventions_data is not None:
+            instance.interventions.set(interventions_data)
 
         return instance

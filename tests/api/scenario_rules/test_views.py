@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from rest_framework import status
 
 from iaso.utils.colors import DEFAULT_COLOR
@@ -100,16 +98,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             "matching_criteria": {
                 "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
             },  # all districts with population >= 1
-            "intervention_properties": [
-                {
-                    "intervention": self.intervention_chemo_iptp.id,
-                    "coverage": 0.5,
-                },
-                {
-                    "intervention": self.intervention_vaccination_rts.id,
-                    "coverage": 0.8,
-                },
-            ],
+            "interventions": [self.intervention_chemo_iptp.id, self.intervention_vaccination_rts.id],
             "org_units_excluded": [self.district_2.id],
         }
         self.client.force_authenticate(user=self.user_with_full_perm)
@@ -142,12 +131,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             "matching_criteria": {
                 "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
             },  # all districts with population >= 1
-            "intervention_properties": [
-                {
-                    "intervention": self.intervention_chemo_iptp.id,
-                    "coverage": 0.5,
-                }
-            ],
+            "interventions": [self.intervention_chemo_iptp.id],
         }
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.post(self.BASE_URL, payload)
@@ -170,16 +154,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             "matching_criteria": {
                 "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
             },  # all districts with population >= 1
-            "intervention_properties": [
-                {
-                    "intervention": self.intervention_chemo_iptp.id,
-                    "coverage": 0.5,
-                },
-                {
-                    "intervention": self.intervention_vaccination_rts.id,
-                    "coverage": 0.8,
-                },
-            ],
+            "interventions": [self.intervention_chemo_iptp.id, self.intervention_vaccination_rts.id],
         }
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.post(self.BASE_URL, payload)
@@ -216,16 +191,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             "matching_criteria": {
                 "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
             },  # all districts with population >= 1
-            "intervention_properties": [
-                {
-                    "intervention": self.intervention_chemo_iptp.id,
-                    "coverage": 0.5,
-                },
-                {
-                    "intervention": self.intervention_vaccination_rts.id,
-                    "coverage": 0.8,
-                },
-            ],
+            "interventions": [self.intervention_chemo_iptp.id, self.intervention_vaccination_rts.id],
         }
         self.client.force_authenticate(user=self.user_with_basic_perm)
         response = self.client.post(self.BASE_URL, payload)
@@ -254,12 +220,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             "matching_criteria": {
                 "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
             },  # all districts with population >= 1
-            "intervention_properties": [
-                {
-                    "intervention": self.intervention_chemo_iptp.id,
-                    "coverage": 0.5,
-                }
-            ],
+            "interventions": [self.intervention_chemo_iptp.id],
         }
         self.client.force_authenticate(user=self.user_with_basic_perm)
         response = self.client.post(self.BASE_URL, payload)
@@ -272,12 +233,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             "matching_criteria": {
                 "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
             },  # all districts with population >= 1
-            "intervention_properties": [
-                {
-                    "intervention": self.intervention_chemo_iptp.id,
-                    "coverage": 0.5,
-                }
-            ],
+            "interventions": [self.intervention_chemo_iptp.id],
         }
         self.client.force_authenticate(user=self.user_no_perm)
         response = self.client.post(self.BASE_URL, payload)
@@ -290,12 +246,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             "matching_criteria": {
                 "and": [{">=": [{"var": self.metric_type_population.id}, 1]}]
             },  # all districts with population >= 1
-            "intervention_properties": [
-                {
-                    "intervention": self.intervention_chemo_iptp.id,
-                    "coverage": 0.5,
-                }
-            ],
+            "interventions": [self.intervention_chemo_iptp.id],
         }
         response = self.client.post(self.BASE_URL, payload)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -309,12 +260,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
                     {">=": [{"var": self.metric_type_population.id}, self.metric_value_district_2_pop.value]}
                 ]  # district_1 has a lower population, so it should not be matched
             },
-            "intervention_properties": [
-                {
-                    "intervention": self.intervention_chemo_iptp.id,
-                    "coverage": 0.5,
-                }
-            ],
+            "interventions": [self.intervention_chemo_iptp.id],
             "org_units_excluded": [self.district_3.id],
             "org_units_included": [self.district_1.id],
             "org_units_scope": [self.district_1.id, self.district_2.id, self.district_3.id],
@@ -356,12 +302,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             "matching_criteria": {
                 "and": [{">=": [{"var": self.metric_type_pop_under_5.id}, 1]}]
             },  # all districts with population <5 years old >= 1
-            "intervention_properties": [
-                {
-                    "intervention": self.intervention_chemo_iptp.id,
-                    "coverage": 0.5,
-                }  # dropping one intervention from setup
-            ],
+            "interventions": [self.intervention_chemo_iptp.id],  # dropping one intervention from setup
             "org_units_included": [],  # removing all org units from setup
         }
         self.client.force_authenticate(user=self.user_with_full_perm)
@@ -375,11 +316,10 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(self.scenario_rule_1.matching_criteria, payload["matching_criteria"])
         self.assertEqual(self.scenario_rule_1.org_units_included, payload["org_units_included"])
 
-        # checking intervention properties
-        intervention_properties = self.scenario_rule_1.intervention_properties.all()
-        self.assertEqual(len(intervention_properties), 1)  # one was removed
-        self.assertEqual(intervention_properties[0].intervention_id, self.intervention_chemo_iptp.id)
-        self.assertEqual(intervention_properties[0].coverage, Decimal("0.5"))
+        # checking interventions
+        interventions = list(self.scenario_rule_1.interventions.all())
+        self.assertEqual(len(interventions), 1)  # one was removed
+        self.assertEqual(interventions[0].id, self.intervention_chemo_iptp.id)
 
         # checking values set by the view
         self.assertCountEqual(
@@ -462,12 +402,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             "matching_criteria": {
                 "and": [{">=": [{"var": self.metric_type_pop_under_5.id}, 1]}]
             },  # all districts with population <5 years old >= 1
-            "intervention_properties": [
-                {
-                    "intervention": self.intervention_chemo_iptp.id,
-                    "coverage": 0.5,
-                },
-            ],
+            "interventions": [self.intervention_chemo_iptp.id],
         }
 
         self.client.force_authenticate(user=self.user_with_basic_perm)
@@ -481,10 +416,9 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(new_rule.updated_by, self.user_with_basic_perm)
         self.assertCountEqual(new_rule.org_units_matched, [self.district_1.id, self.district_2.id, self.district_3.id])
 
-        intervention_properties = new_rule.intervention_properties.all()
-        self.assertEqual(len(intervention_properties), 1)
-        self.assertEqual(intervention_properties[0].intervention_id, self.intervention_chemo_iptp.id)
-        self.assertEqual(intervention_properties[0].coverage, Decimal("0.5"))
+        interventions = list(new_rule.interventions.all())
+        self.assertEqual(len(interventions), 1)
+        self.assertEqual(interventions[0].id, self.intervention_chemo_iptp.id)
 
         # Check that we have a budget which means that the budget recalculation was triggered
         budget = new_rule.scenario.budget_set.order_by("-created_at").first()
@@ -544,8 +478,8 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         org_units_excluded_before = self.scenario_rule_1.org_units_excluded
         org_units_included_before = self.scenario_rule_1.org_units_included
         org_units_scope_before = self.scenario_rule_1.org_units_scope
-        intervention_properties_ids_before = list(
-            self.scenario_rule_1.intervention_properties.values_list("id", flat=True)
+        interventions_ids_before = list(
+            self.scenario_rule_1.interventions.values_list("id", flat=True)
         )
 
         payload = {
@@ -569,8 +503,8 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertEqual(self.scenario_rule_1.org_units_included, org_units_included_before)
         self.assertEqual(self.scenario_rule_1.org_units_scope, org_units_scope_before)
         self.assertCountEqual(
-            self.scenario_rule_1.intervention_properties.values_list("id", flat=True),
-            intervention_properties_ids_before,
+            self.scenario_rule_1.interventions.values_list("id", flat=True),
+            interventions_ids_before,
         )
 
     def test_delete_scenario_rule_with_full_perm_own_scenario(self):
@@ -792,9 +726,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             "name": "Match all rule",
             "scenario": self.scenario.id,
             "matching_criteria": {"all": True},
-            "intervention_properties": [
-                {"intervention": self.intervention_vaccination_rts.id, "coverage": 0.80},
-            ],
+            "interventions": [self.intervention_vaccination_rts.id],
         }
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.post(self.BASE_URL, payload)
@@ -812,9 +744,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
             "name": "Inclusion-only rule",
             "scenario": self.scenario.id,
             "matching_criteria": None,
-            "intervention_properties": [
-                {"intervention": self.intervention_vaccination_rts.id, "coverage": 0.80},
-            ],
+            "interventions": [self.intervention_vaccination_rts.id],
             "org_units_included": [self.district_1.id],
         }
         self.client.force_authenticate(user=self.user_with_full_perm)

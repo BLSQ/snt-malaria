@@ -1,125 +1,102 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import { Box } from '@mui/material';
-import { FormikErrors, FormikTouched } from 'formik';
 import { DropdownButton } from '../../../../../components/DropdownButton';
-import { useGetChildError } from '../../../../../hooks/useGetChildError';
 import { InterventionCategory } from '../../../../interventions/types';
 import { MESSAGES } from '../../../../messages';
-import { defaultInterventionProperties } from '../../../hooks/useScenarioRuleFormState';
-import { InterventionProperties } from '../../../types/scenarioRule';
 import { InterventionPropertyForm } from './InterventionPropertyForm';
 
 type Props = {
-    interventionProperties: InterventionProperties[];
-    onAdd: (
-        key: string,
-        defaultValues: InterventionProperties,
-        extendedValue: { category: number; intervention: number },
-    ) => void;
-    onRemove: (key: string, index: number) => void;
-    touched: FormikTouched<InterventionProperties>[] | undefined;
-    errors:
-        | string
-        | string[]
-        | FormikErrors<InterventionProperties>[]
-        | undefined;
-    onUpdateField: (
-        key: string,
-        index: number,
-        field: string,
-        value: any,
-    ) => void;
+    interventions: number[];
+    onAdd: (interventionId: number) => void;
+    onRemove: (index: number) => void;
+    onUpdateField: (index: number, interventionId: number) => void;
+    touched: any;
+    errors: any;
     interventionCategories: InterventionCategory[];
 };
 
-const array_field_key = 'intervention_properties';
-
 export const InterventionPropertiesForm: FC<Props> = ({
-    interventionProperties,
+    interventions,
     onAdd,
     onRemove,
-    errors,
-    touched,
     onUpdateField,
     interventionCategories,
 }) => {
-    // Filter out categories already selected
-    // We want to assure we don't have two interventions of the same category on the rule.
-    const filteredInterventionCategories = useMemo(
-        () =>
-            interventionCategories.filter(
-                ic => !interventionProperties.some(ir => ir.category === ic.id),
-            ),
-        [interventionCategories, interventionProperties],
+    const allInterventions = useMemo(
+        () => interventionCategories.flatMap(c => c.interventions),
+        [interventionCategories],
     );
 
-    const interventionsPerCategory = useMemo(
-        () =>
-            interventionCategories.reduce(
-                (acc, category) => {
-                    acc[category.id] = category.interventions;
-                    return acc;
-                },
-                {} as Record<number, InterventionCategory['interventions']>,
+    const getCategoryForIntervention = useCallback(
+        (interventionId: number) =>
+            interventionCategories.find(c =>
+                c.interventions.some(i => i.id === interventionId),
             ),
         [interventionCategories],
+    );
+
+    const selectedCategoryIds = useMemo(
+        () =>
+            new Set(
+                interventions
+                    .map(id => getCategoryForIntervention(id)?.id)
+                    .filter((id): id is number => id !== undefined),
+            ),
+        [interventions, getCategoryForIntervention],
+    );
+
+    const availableCategories = useMemo(
+        () =>
+            interventionCategories.filter(c => !selectedCategoryIds.has(c.id)),
+        [interventionCategories, selectedCategoryIds],
     );
 
     const interventionCategoryOptions = useMemo(
         () =>
-            filteredInterventionCategories?.map(category => ({
+            availableCategories.map(category => ({
                 value: category.id,
                 label: category.name,
-            })) || [],
-        [filteredInterventionCategories],
+            })),
+        [availableCategories],
     );
 
-    const getCategoryName = useCallback(
-        (categoryId?: number) =>
-            (categoryId &&
-                interventionCategories?.find(c => c.id === categoryId)?.name) ||
-            '',
+    const getInterventionsForCategory = useCallback(
+        (categoryId: number) =>
+            interventionCategories.find(c => c.id === categoryId)
+                ?.interventions ?? [],
         [interventionCategories],
     );
 
-    const getChildError = useGetChildError<InterventionProperties>({
-        errors,
-        touched,
-    });
-
-    const getInterventions = useCallback(
-        (categoryId?: number) =>
-            (categoryId && interventionsPerCategory[categoryId]) || [],
-        [interventionsPerCategory],
-    );
-
-    return interventionProperties ? (
+    return (
         <Box>
-            {interventionProperties.map((i, index) => (
-                <InterventionPropertyForm
-                    key={`intervention_property_${i.category}`}
-                    interventionProperty={i}
-                    interventions={getInterventions(i.category)}
-                    categoryName={getCategoryName(i.category)}
-                    onUpdateField={(field, value) =>
-                        onUpdateField(array_field_key, index, field, value)
-                    }
-                    getErrors={key => getChildError(key, index)}
-                    onRemove={() => onRemove(array_field_key, index)}
-                />
-            ))}
+            {interventions.map((interventionId, index) => {
+                const category = getCategoryForIntervention(interventionId);
+                const interventionOptions = category?.interventions ?? [];
+                return (
+                    <InterventionPropertyForm
+                        key={`intervention_${interventionId}_${index}`}
+                        interventionId={interventionId}
+                        interventions={interventionOptions}
+                        categoryName={category?.name ?? ''}
+                        onUpdateField={newId =>
+                            onUpdateField(index, newId)
+                        }
+                        onRemove={() => onRemove(index)}
+                    />
+                );
+            })}
             <DropdownButton
                 label={MESSAGES.addInterventionProperty}
                 options={interventionCategoryOptions}
-                onClick={interventionCategory =>
-                    onAdd(array_field_key, defaultInterventionProperties, {
-                        category: interventionCategory,
-                        intervention:
-                            getInterventions(interventionCategory)[0]?.id,
-                    })
-                }
+                onClick={categoryId => {
+                    const firstIntervention =
+                        getInterventionsForCategory(categoryId)[0];
+                    if (firstIntervention) {
+                        onAdd(firstIntervention.id);
+                    }
+                }}
                 size="small"
             />
         </Box>
-    ) : null;
+    );
 };
