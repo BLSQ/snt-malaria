@@ -636,9 +636,21 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenarioRule.ruleExceptions',
         defaultMessage: 'Exceptions',
     },
-    ruleName: {
-        id: 'iaso.snt_malaria.scenarioRule.ruleName',
-        defaultMessage: 'Rule name',
+    ruleCoverage: {
+        id: 'iaso.snt_malaria.scenarioRule.ruleCoverage',
+        defaultMessage: 'Rule coverage',
+    },
+    ruleCoverageDistricts: {
+        id: 'iaso.snt_malaria.scenarioRule.ruleCoverageDistricts',
+        defaultMessage: 'Districts',
+    },
+    ruleCoveragePopulation: {
+        id: 'iaso.snt_malaria.scenarioRule.ruleCoveragePopulation',
+        defaultMessage: 'Population',
+    },
+    ruleNameAndColor: {
+        id: 'iaso.snt_malaria.scenarioRule.ruleNameAndColor',
+        defaultMessage: 'Rule name and color',
     },
     scenarioCSV: {
         id: 'iaso.snt_malaria.scenario.scenarioCSV',

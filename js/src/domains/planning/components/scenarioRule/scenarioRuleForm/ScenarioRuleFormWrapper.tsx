@@ -30,6 +30,8 @@ type Props = {
     existingRules: ScenarioRule[];
     onClose: () => void;
     onChange?: (values: Partial<ScenarioRuleFormValues>) => void;
+    matchedOrgUnitIds?: number[];
+    isLoadingPreview?: boolean;
 };
 
 export const ScenarioRuleFormWrapper: FC<Props> = ({
@@ -38,6 +40,8 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
     existingRules,
     onClose,
     onChange,
+    matchedOrgUnitIds,
+    isLoadingPreview,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { data: palette } = useGetColors();
@@ -130,7 +134,10 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
             isLoading={isSubmittingRule}
         >
             <ExtendedFormikProvider formik={formik}>
-                <ScenarioRuleForm />
+                <ScenarioRuleForm
+                    matchedOrgUnitIds={matchedOrgUnitIds}
+                    isLoadingPreview={isLoadingPreview}
+                />
             </ExtendedFormikProvider>
         </CardStyled>
     );
