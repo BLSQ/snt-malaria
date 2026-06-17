@@ -214,6 +214,4 @@ def duplicate_scenario_yearly_cost_assignment(scenario_from: Scenario, scenario_
         initial_cost_assignment = deepcopy(cost_assignment)
         initial_cost_assignment.pk = None
         initial_cost_assignment.scenario = scenario_to
-        initial_cost_assignment.created_by = user
-        initial_cost_assignment.update_by = None
         initial_cost_assignment.save()
