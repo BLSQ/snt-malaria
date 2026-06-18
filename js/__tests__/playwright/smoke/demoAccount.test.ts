@@ -2,7 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 import { expectNoErrors } from '../../utils';
 
 test.describe('Demo account login smoke tests', () => {
-    test('login page appears', async ({ page }: { page: Page }) => {
+    test('login page appears', async ({ page }) => {
         await page.goto('');
 
         await expect(page).toHaveURL('/login/?next=%2Fdashboard%2Fhome%2F');
@@ -10,7 +10,7 @@ test.describe('Demo account login smoke tests', () => {
         await expectNoErrors({ page });
     });
 
-    test('login works', async ({ page }: { page: Page }) => {
+    test('login works', async ({ page }) => {
         await page.goto('/login/');
         await page.fill(
             'input[name="username"]',
