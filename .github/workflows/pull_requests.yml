@@ -34,3 +34,4 @@ jobs:
     uses: BLSQ/iaso-ci/.github/workflows/tests.yml@IA-5227-decouple-ci-actions-into-dedicated-repo
     with:
       branch: ${{ github.head_ref || github.ref_name }}
+      plugin_name: snt_malaria
