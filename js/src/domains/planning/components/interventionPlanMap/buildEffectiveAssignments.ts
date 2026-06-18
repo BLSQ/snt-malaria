@@ -34,8 +34,8 @@ export function buildPreviewAssignments({
     const color = previewRule?.color || mapTheme.shapeColor;
 
     return (matchedOrgUnitIds ?? []).flatMap(orgUnitId =>
-        (previewRule?.intervention_properties ?? [])
-            .map(ip => allInterventions.find(i => i.id === ip.intervention))
+        (previewRule?.interventions ?? [])
+            .map(id => allInterventions.find(i => i.id === id))
             .filter(Boolean)
             .map(i => ({
                 orgUnitId,

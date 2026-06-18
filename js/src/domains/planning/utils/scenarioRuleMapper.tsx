@@ -21,7 +21,7 @@ export const mapResponseToScenarioRule = (
         isMatchAll(response.matching_criteria)
             ? []
             : jsonLogicToMatchingCriteria(response.matching_criteria),
-    intervention_properties: response.intervention_properties,
+    interventions: response.interventions,
     org_units_excluded: response.org_units_excluded?.join(','),
     org_units_included: response.org_units_included?.join(','),
 });

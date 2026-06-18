@@ -32,7 +32,6 @@ from .models import (
     Scenario,
     ScenarioRule,
 )
-from .models.scenario import ScenarioRuleInterventionProperties
 
 
 @admin.register(InterventionCategory)
@@ -101,11 +100,6 @@ class ScenarioAdmin(admin.ModelAdmin):
     ordering = ("name",)
 
 
-class ScenarioRuleInterventionPropertiesInline(admin.TabularInline):
-    model = ScenarioRuleInterventionProperties
-    extra = 3
-
-
 @admin.register(ScenarioRule)
 class ScenarioRuleAdmin(admin.ModelAdmin):
     list_display = (
@@ -119,7 +113,7 @@ class ScenarioRuleAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     list_filter = ("scenario", "created_by")
     ordering = ("scenario", "priority")
-    inlines = [ScenarioRuleInterventionPropertiesInline]
+    filter_horizontal = ["interventions"]
 
 
 @admin.register(InterventionCostBreakdownLine)
@@ -132,7 +126,7 @@ class InterventionCostBreakdownLineAdmin(admin.ModelAdmin):
 
 @admin.register(Budget)
 class BudgetAdmin(admin.ModelAdmin):
-    list_display = ("id", "scenario", "name", "cost_input", "assumptions", "updated_at")
+    list_display = ("id", "scenario", "name", "updated_at")
     search_fields = ("id", "name")
     list_filter = ("scenario",)
     ordering = ("id", "name", "updated_at")

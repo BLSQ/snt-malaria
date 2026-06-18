@@ -95,9 +95,9 @@ export const ScenarioRuleForm: FC<Props> = ({
         errors,
         touched,
         setFieldValueAndState,
-        setChildFieldValueAndState,
         addChildValue,
         removeChildValue,
+        setChildFieldValueAndState,
     } = useGetExtendedFormikContext<ScenarioRuleFormValues>();
 
     const getErrors = useTranslatedErrors({
@@ -136,6 +136,34 @@ export const ScenarioRuleForm: FC<Props> = ({
         [excludeOrgUnitsFromList, values.org_units_included],
     );
 
+    const onAddIntervention = useCallback(
+        (interventionId: number) => {
+            setFieldValueAndState('interventions', [
+                ...values.interventions,
+                interventionId,
+            ]);
+        },
+        [setFieldValueAndState, values.interventions],
+    );
+
+    const onRemoveIntervention = useCallback(
+        (index: number) => {
+            const updated = [...values.interventions];
+            updated.splice(index, 1);
+            setFieldValueAndState('interventions', updated);
+        },
+        [setFieldValueAndState, values.interventions],
+    );
+
+    const onUpdateIntervention = useCallback(
+        (index: number, interventionId: number) => {
+            const updated = [...values.interventions];
+            updated[index] = interventionId;
+            setFieldValueAndState('interventions', updated);
+        },
+        [setFieldValueAndState, values.interventions],
+    );
+
     return (
         <Box sx={styles.formRoot}>
             <Box sx={styles.formWrapper}>
@@ -144,15 +172,13 @@ export const ScenarioRuleForm: FC<Props> = ({
                         label={formatMessage(MESSAGES.interventionProperties)}
                     />
                     <InterventionPropertiesForm
-                        interventionProperties={values.intervention_properties}
+                        interventions={values.interventions}
                         interventionCategories={interventionCategories}
-                        onAdd={addChildValue}
-                        onRemove={(list_field_key: string, index: number) =>
-                            removeChildValue(list_field_key, index)
-                        }
-                        errors={errors.intervention_properties}
-                        touched={touched.intervention_properties}
-                        onUpdateField={setChildFieldValueAndState}
+                        onAdd={onAddIntervention}
+                        onRemove={onRemoveIntervention}
+                        onUpdateField={onUpdateIntervention}
+                        errors={errors.interventions}
+                        touched={touched.interventions}
                     />
                 </Box>
                 <Box mb={2}>
@@ -241,7 +267,7 @@ export const ScenarioRuleForm: FC<Props> = ({
                             setFieldValueAndState('name', e.target.value)
                         }
                         placeholder={generateRuleName(
-                            values.intervention_properties,
+                            values.interventions,
                             interventionCategories,
                         )}
                         sx={styles.ruleNameInput}

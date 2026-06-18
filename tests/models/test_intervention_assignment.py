@@ -3,7 +3,6 @@ from plugins.snt_malaria.models import (
     InterventionAssignment,
     ScenarioRule,
 )
-from plugins.snt_malaria.models.scenario import ScenarioRuleInterventionProperties
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
@@ -39,11 +38,7 @@ class InterventionAssignmentModelTestCase(SNTMalariaTestCase):
         self.intervention = self.create_snt_intervention(
             intervention_category=self.intervention_category, created_by=self.user, name="Intervention 1"
         )
-        self.intervention_properties = ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.scenario_rule,
-            intervention=self.intervention,
-            coverage=0.75,
-        )
+        self.scenario_rule.interventions.add(self.intervention)
         self.org_unit_1 = OrgUnit.objects.create(name="Org Unit 1")
         self.org_unit_2 = OrgUnit.objects.create(name="Org Unit 2")
 
@@ -54,7 +49,6 @@ class InterventionAssignmentModelTestCase(SNTMalariaTestCase):
             org_unit=self.org_unit_1,
             intervention=self.intervention,
             created_by=self.user,
-            # no coverage or other BudgetAssumptions field
         )
         count_after = InterventionAssignment.objects.count()
         self.assertEqual(count_after, count_before + 1)

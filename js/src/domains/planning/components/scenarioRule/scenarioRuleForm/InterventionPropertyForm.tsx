@@ -4,7 +4,6 @@ import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { Intervention } from '../../../../interventions/types';
-import { InterventionProperties } from '../../../types/scenarioRule';
 
 const styles = {
     interventionPropertiesContainer: {
@@ -17,10 +16,6 @@ const styles = {
         '&:hover button': {
             visibility: 'visible',
         },
-    },
-    scaleLabel: { flexGrow: 1, textAlign: 'right' },
-    coverageWrapper: {
-        width: 75,
     },
     categoryName: { minWidth: 160, maxWidth: 300 },
     labelWrapper: {
@@ -35,19 +30,17 @@ const styles = {
 
 type Props = {
     interventions: Intervention[];
-    interventionProperty: InterventionProperties;
+    interventionId: number;
     categoryName: string;
-    onUpdateField: (field: string, value: any) => void;
+    onUpdateField: (interventionId: number) => void;
     onRemove: () => void;
-    getErrors: (keyValue: string) => string[];
 };
 
 export const InterventionPropertyForm: FC<Props> = ({
-    interventionProperty,
+    interventionId,
     interventions,
     categoryName,
     onUpdateField,
-    getErrors,
     onRemove,
 }) => {
     const interventionOptions = useMemo(
@@ -78,12 +71,8 @@ export const InterventionPropertyForm: FC<Props> = ({
                 wrapperSx={styles.interventionWrapper}
                 clearable={false}
                 options={interventionOptions}
-                value={
-                    interventionProperty.intervention ||
-                    interventionOptions[0]?.value
-                }
-                onChange={onUpdateField}
-                errors={getErrors('intervention')}
+                value={interventionId || interventionOptions[0]?.value}
+                onChange={(_key: string, value: number) => onUpdateField(value)}
             />
             <DeleteIconButton onClick={() => onRemove()} />
         </Box>

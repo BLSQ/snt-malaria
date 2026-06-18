@@ -1,10 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
-import {
-    InterventionProperties,
-    MetricTypeCriterion,
-} from '../types/scenarioRule';
+import { MetricTypeCriterion } from '../types/scenarioRule';
 
 export type ScenarioRuleFormValues = {
     id?: number;
@@ -12,7 +9,7 @@ export type ScenarioRuleFormValues = {
     scenario: number;
     color: string;
     is_match_all: boolean;
-    intervention_properties: InterventionProperties[];
+    interventions: number[];
     matching_criteria: MetricTypeCriterion[];
     org_units_excluded?: string; // comma separated list of org unit ids
     org_units_included?: string; // comma separated list of org unit ids
@@ -25,18 +22,12 @@ export const defaultMatchingCriteria: MetricTypeCriterion = {
     string_value: '',
 };
 
-export const defaultInterventionProperties: InterventionProperties = {
-    intervention: undefined,
-    category: undefined,
-    coverage: 0,
-};
-
 export const defaultScenarioRuleValues: ScenarioRuleFormValues = {
     scenario: 0,
     name: '',
     color: '#000000',
     is_match_all: false,
-    intervention_properties: [],
+    interventions: [],
     matching_criteria: [],
 };
 
@@ -46,14 +37,7 @@ const useValidation = () => {
             Yup.object().shape({
                 name: Yup.string(),
                 is_match_all: Yup.boolean(),
-                intervention_properties: Yup.array()
-                    .of(
-                        Yup.object().shape({
-                            category: Yup.number().required(),
-                            intervention: Yup.number().required(),
-                        }),
-                    )
-                    .min(1),
+                interventions: Yup.array().of(Yup.number().required()).min(1),
                 matching_criteria: Yup.array()
                     .of(
                         Yup.object().shape({

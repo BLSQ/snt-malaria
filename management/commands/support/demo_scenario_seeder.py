@@ -10,7 +10,7 @@ from iaso.models.metric import MetricType
 
 # from plugins.snt_malaria.models.budget import Budget
 from plugins.snt_malaria.models.intervention import Intervention
-from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule, ScenarioRuleInterventionProperties
+from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule
 
 
 class DemoScenarioSeeder:
@@ -133,10 +133,7 @@ class DemoScenarioSeeder:
         # budget = Budget.objects.create(
         #     scenario=scenario,
         #     name=f"Budget for {scenario.name}",
-        #     cost_input={},
-        #     assumptions=settings,
         #     results=budgets,
-        #     population_input={},
         #     created_by=created_by,
         #     updated_by=created_by,
         # )
@@ -223,34 +220,15 @@ class DemoScenarioSeeder:
             matching_criteria=matching_criteria_low,
         )
 
-        self.stdout_write("Create intervention_properties for three scenario rules...")
+        self.stdout_write("Linking interventions to scenario rules...")
 
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=all_orgunits_rules,
-            intervention=interventions.get(code="cm_public"),
-            coverage=1,
+        all_orgunits_rules.interventions.add(
+            interventions.get(code="cm_public"),
+            interventions.filter(code="iptp").first(),
         )
-
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=all_orgunits_rules,
-            intervention=interventions.filter(code="iptp").first(),
-            coverage=1,
-        )
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=smc_rule,
-            intervention=interventions.get(code="smc", name="SMC (SP+AQ)"),
-            coverage=1,
-        )
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=itn_dual_ai_rule,
-            intervention=interventions.get(code="itn_routine", name="Dual AI"),
-            coverage=1,
-        )
-        ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=itn_pbo_rule,
-            intervention=interventions.get(code="itn_routine", name="PBO"),
-            coverage=1,
-        )
+        smc_rule.interventions.add(interventions.get(code="smc", name="SMC (SP+AQ)"))
+        itn_dual_ai_rule.interventions.add(interventions.get(code="itn_routine", name="Dual AI"))
+        itn_pbo_rule.interventions.add(interventions.get(code="itn_routine", name="PBO"))
 
         self.stdout_write("Assign interventions to scenario...")
         scenario.refresh_assignments(user=user)

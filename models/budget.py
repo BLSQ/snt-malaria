@@ -17,9 +17,6 @@ class Budget(SoftDeletableModel):
 
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE)
     name = models.TextField()
-    cost_input = models.JSONField()
-    population_input = models.JSONField()
-    assumptions = models.JSONField()
     results = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="budget_created_set")

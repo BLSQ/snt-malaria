@@ -10,13 +10,7 @@ export type ScenarioRule = {
     org_units_matched?: number[];
     org_units_excluded?: string; // comma separated list of org unit ids
     org_units_included?: string; // comma separated list of org unit ids
-    intervention_properties: InterventionProperties[];
-};
-
-export type InterventionProperties = {
-    intervention?: number;
-    category?: number;
-    coverage: number;
+    interventions: number[];
 };
 
 export type MetricTypeCriterion = {

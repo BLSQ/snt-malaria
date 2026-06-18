@@ -2,7 +2,7 @@ import { JsonLogicTree } from '@react-awesome-query-builder/mui';
 import { getRequest } from 'bluesquare-components';
 import { UseQueryResult } from 'react-query';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
-import { InterventionProperties, ScenarioRule } from '../types/scenarioRule';
+import { ScenarioRule } from '../types/scenarioRule';
 import { mapResponseToScenarioRules } from '../utils/scenarioRuleMapper';
 
 export type ScenarioRuleResponse = {
@@ -12,7 +12,7 @@ export type ScenarioRuleResponse = {
     priority: number;
     color: string;
     matching_criteria: JsonLogicTree;
-    intervention_properties: InterventionProperties[];
+    interventions: number[];
     org_units_excluded?: number[];
     org_units_included?: number[];
 };

@@ -152,6 +152,8 @@ class ScenarioRule(models.Model):
     org_units_included = ArrayField(models.IntegerField(), blank=True, default=list)
     org_units_scope = ArrayField(models.IntegerField(), blank=True, default=list)
 
+    interventions = models.ManyToManyField("Intervention", blank=True, related_name="scenario_rules")
+
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="created_scenario_rules")
     updated_at = models.DateTimeField(auto_now=True)
@@ -222,7 +224,7 @@ class ScenarioRule(models.Model):
         # """
         from plugins.snt_malaria.models.intervention import InterventionAssignment
 
-        if not self.intervention_properties.exists():
+        if not self.interventions.exists():
             return
 
         org_unit_ids = self._compute_org_unit_ids()
@@ -231,8 +233,8 @@ class ScenarioRule(models.Model):
             return
 
         intervention_assignments_to_create = []
-        for intervention_property in self.intervention_properties.select_related("intervention").all():
-            category_id = intervention_property.intervention.intervention_category_id
+        for intervention in self.interventions.select_related("intervention_category").all():
+            category_id = intervention.intervention_category_id
             if category_id not in previous_assignments:
                 previous_assignments[category_id] = set()
 
@@ -246,7 +248,7 @@ class ScenarioRule(models.Model):
                 intervention_assignments_to_create.append(
                     InterventionAssignment(
                         rule=self,
-                        intervention_id=intervention_property.intervention_id,
+                        intervention_id=intervention.id,
                         org_unit_id=org_unit_id,
                         created_by=user,
                         scenario_id=self.scenario_id,
@@ -257,24 +259,3 @@ class ScenarioRule(models.Model):
                 previous_assignments_for_category.add(org_unit_id)
 
         InterventionAssignment.objects.bulk_create(intervention_assignments_to_create)
-
-
-# Deprecated replaced by BudgetAssumptions
-class ScenarioRuleInterventionProperties(models.Model):
-    scenario_rule = models.ForeignKey(ScenarioRule, on_delete=models.CASCADE, related_name="intervention_properties")
-    intervention = models.ForeignKey("Intervention", on_delete=models.CASCADE, related_name="scenario_rule_properties")
-    coverage = models.DecimalField(max_digits=3, decimal_places=2)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        app_label = "snt_malaria"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["scenario_rule", "intervention"],
-                name="scenario_rule_intervention_unique",
-            ),
-            models.CheckConstraint(
-                check=Q(coverage__gte=0) & Q(coverage__lte=1), name="intervention_properties_coverage_between_0_and_1"
-            ),
-        ]

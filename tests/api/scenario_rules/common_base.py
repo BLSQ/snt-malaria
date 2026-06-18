@@ -2,7 +2,6 @@ from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 
 from iaso.models import MetricType, MetricValue, OrgUnit
 from plugins.snt_malaria.models import ScenarioRule
-from plugins.snt_malaria.models.scenario import ScenarioRuleInterventionProperties
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
@@ -135,16 +134,7 @@ class ScenarioRulesTestBase(SNTMalariaAPITestCase):
             org_units_included=[],
             org_units_scope=[],
         )
-        self.rule_intervention_1 = ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.scenario_rule_1,
-            intervention=self.intervention_vaccination_rts,
-            coverage=0.80,
-        )
-        self.rule_intervention_2 = ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.scenario_rule_1,
-            intervention=self.intervention_chemo_smc,
-            coverage=0.50,
-        )
+        self.scenario_rule_1.interventions.add(self.intervention_vaccination_rts, self.intervention_chemo_smc)
         self.scenario_rule_2 = ScenarioRule.objects.create(
             name="Rule 2",
             priority=2,
@@ -157,11 +147,7 @@ class ScenarioRulesTestBase(SNTMalariaAPITestCase):
             org_units_included=[self.district_3.id],
             org_units_scope=[],
         )
-        self.rule_intervention_3 = ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.scenario_rule_2,
-            intervention=self.intervention_chemo_iptp,
-            coverage=0.70,
-        )
+        self.scenario_rule_2.interventions.add(self.intervention_chemo_iptp)
 
         # Other setup for tenancy tests
         self.other_account, self.other_source, self.other_version, self.other_project = (
@@ -268,11 +254,7 @@ class ScenarioRulesTestBase(SNTMalariaAPITestCase):
             org_units_included=[],
             org_units_scope=[],
         )
-        self.other_rule_intervention = ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.other_scenario_rule,
-            intervention=self.other_intervention,
-            coverage=0.90,
-        )
+        self.other_scenario_rule.interventions.add(self.other_intervention)
 
     def lock_scenario(self, scenario):
         scenario.is_locked = True

@@ -6,7 +6,6 @@ from iaso.models import MetricType, MetricValue, OrgUnit, OrgUnitType
 from iaso.models.data_source import DataSource, SourceVersion
 from iaso.models.project import Project
 from plugins.snt_malaria.api.scenarios.utils import (
-    DEFAULT_IMPORT_COVERAGE,
     _build_intervention_groups,
     _get_dispersed_color,
     create_rules_from_import,
@@ -18,7 +17,6 @@ from plugins.snt_malaria.models import (
     InterventionAssignment,
     Scenario,
     ScenarioRule,
-    ScenarioRuleInterventionProperties,
 )
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
@@ -54,16 +52,7 @@ class ScenarioAPIUtilsTestCase(SNTMalariaTestCase):
             org_units_scope=[1, 2, 3, 7],
             updated_by=self.user_1,
         )
-        self.intervention_properties_1 = ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.rule_1,
-            intervention=self.intervention_chemo_iptp,
-            coverage=0.8,
-        )
-        self.intervention_properties_2 = ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.rule_1,
-            intervention=self.intervention_vaccination_rts,
-            coverage=0.8,
-        )
+        self.rule_1.interventions.add(self.intervention_chemo_iptp, self.intervention_vaccination_rts)
         self.rule_2 = ScenarioRule.objects.create(
             name="Rule 2",
             priority=2,
@@ -76,11 +65,7 @@ class ScenarioAPIUtilsTestCase(SNTMalariaTestCase):
             org_units_included=[9],
             org_units_scope=[],
         )
-        self.intervention_properties_3 = ScenarioRuleInterventionProperties.objects.create(
-            scenario_rule=self.rule_2,
-            intervention=self.intervention_chemo_smc,
-            coverage=0.9,
-        )
+        self.rule_2.interventions.add(self.intervention_chemo_smc)
 
     def test_duplicate_rules(self):
         scenario_2 = Scenario.objects.create(
@@ -123,23 +108,9 @@ class ScenarioAPIUtilsTestCase(SNTMalariaTestCase):
             self.assertEqual(duplicated_rule.created_by, self.user_2)
             self.assertIsNone(duplicated_rule.updated_by)
 
-            original_intervention_properties = ScenarioRuleInterventionProperties.objects.filter(
-                scenario_rule=original_rule
-            ).order_by("id")
-            duplicated_intervention_properties = ScenarioRuleInterventionProperties.objects.filter(
-                scenario_rule=duplicated_rule
-            ).order_by("id")
-
-            self.assertEqual(original_intervention_properties.count(), duplicated_intervention_properties.count())
-
-            for original_prop, duplicated_prop in zip(
-                original_intervention_properties, duplicated_intervention_properties
-            ):
-                self.assertEqual(original_prop.intervention_id, duplicated_prop.intervention_id)
-                self.assertEqual(original_prop.coverage, duplicated_prop.coverage)
-                self.assertNotEqual(original_prop.id, duplicated_prop.id)
-                self.assertNotEqual(original_prop.created_at, duplicated_prop.created_at)
-                self.assertNotEqual(original_prop.updated_at, duplicated_prop.updated_at)
+            original_intervention_ids = set(original_rule.interventions.values_list("id", flat=True))
+            duplicated_intervention_ids = set(duplicated_rule.interventions.values_list("id", flat=True))
+            self.assertEqual(original_intervention_ids, duplicated_intervention_ids)
 
     def test_duplicate_scenario_no_rules(self):
         scenario_3 = Scenario.objects.create(
@@ -305,9 +276,7 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
             self.assertIsNone(rule.matching_criteria)
             self.assertEqual(rule.org_units_excluded, [])
             self.assertNotEqual(rule.org_units_included, [])
-            self.assertTrue(rule.intervention_properties.exists())
-            for ip in rule.intervention_properties.all():
-                self.assertEqual(ip.coverage, DEFAULT_IMPORT_COVERAGE)
+            self.assertTrue(rule.interventions.exists())
 
     def test_majority_group_gets_match_all(self):
         """Group covering >50% of org units gets a 'Match all' rule with exclusions."""
@@ -332,12 +301,12 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
 
         self.assertEqual(sorted(majority_rule.org_units_excluded), [self.ou3.id])
         self.assertEqual(majority_rule.org_units_included, [])
-        iv_ids = set(majority_rule.intervention_properties.values_list("intervention_id", flat=True))
+        iv_ids = set(majority_rule.interventions.values_list("id", flat=True))
         self.assertEqual(iv_ids, {self.iv_a.id})
 
         self.assertEqual(minority_rule.org_units_included, [self.ou3.id])
         self.assertEqual(minority_rule.org_units_excluded, [])
-        iv_ids = set(minority_rule.intervention_properties.values_list("intervention_id", flat=True))
+        iv_ids = set(minority_rule.interventions.values_list("id", flat=True))
         self.assertEqual(iv_ids, {self.iv_b.id})
 
     def test_distinct_colors(self):
@@ -373,10 +342,10 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
             self.all_ou_ids,
             self.user,
         )
-        combo_rule = next(r for r in rules if r.intervention_properties.count() == 2)
+        combo_rule = next(r for r in rules if r.interventions.count() == 2)
         self.assertEqual(combo_rule.name, "")
 
-        single_rule = next(r for r in rules if r.intervention_properties.count() == 1)
+        single_rule = next(r for r in rules if r.interventions.count() == 1)
         self.assertEqual(single_rule.name, "")
 
     def test_empty_df_returns_no_rules(self):
