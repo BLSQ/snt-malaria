@@ -146,6 +146,8 @@ class MetricsImporter:
         for row in metareader:
             try:
                 metric_type = existing_metric_types.get(row["VARIABLE"])
+                is_population = (row.get("IS_POPULATION") or "False").lower() == "true"
+                metric_kind = MetricType.MetricKind.POPULATION if is_population else MetricType.MetricKind.ANY
                 if metric_type:
                     metric_type.name = row["LABEL"]
                     metric_type.description = row["DESCRIPTION"]
@@ -154,8 +156,8 @@ class MetricsImporter:
                     metric_type.category = row["CATEGORY"]
                     metric_type.unit_symbol = row["UNIT_SYMBOL"]
                     metric_type.legend_type = row["TYPE"].lower()
-                    metric_type.is_utility = row.get("IS_UTILITY", "False").lower() == "true"
-                    metric_type.metric_kind = MetricType.MetricKind.ANY
+                    metric_type.is_utility = (row.get("IS_UTILITY") or "False").lower() == "true"
+                    metric_type.metric_kind = metric_kind
                     metric_type.origin = MetricType.MetricTypeOrigin.OPENHEXA
                     to_update.append(metric_type)
                     self.stdout_write(
@@ -172,8 +174,8 @@ class MetricsImporter:
                         category=row["CATEGORY"],
                         unit_symbol=row["UNIT_SYMBOL"],
                         legend_type=row["TYPE"].lower(),
-                        is_utility=row.get("IS_UTILITY", "False").lower() == "true",
-                        metric_kind=MetricType.MetricKind.ANY,
+                        is_utility=(row.get("IS_UTILITY") or "False").lower() == "true",
+                        metric_kind=metric_kind,
                         origin=MetricType.MetricTypeOrigin.OPENHEXA,
                     )
                     to_create.append(metric_type)

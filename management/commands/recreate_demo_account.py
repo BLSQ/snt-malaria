@@ -34,6 +34,29 @@ from .support.metrics_importer import MetricsImporter
 
 
 DEMO_ACCOUNT_NAME = "Burkina Faso (demo)"
+
+# Maps (intervention.code, unit_type.name) to the population MetricType code that
+# drives that cost line. Only needed for population-driven lines; NULL lines are left unchanged.
+COST_LINE_POPULATION_CODES = {
+    ("iptp", "IPTp Blister Pack"): "POP_PREGNANT_WOMAN",
+    ("pmc", "SP Tablet 0-1"): "POP_0_1_Y",
+    ("pmc", "SP Tablet 1-2"): "POP_1_2_Y",
+    ("pmc", "Each"): "POP_UNDER_5",
+    ("smc", "SP Tablet 0-1"): "POP_UNDER_5",
+    ("smc", "SP Tablet 1-2"): "POP_UNDER_5",
+    ("smc", "Each"): "POP_UNDER_5",
+    ("smc_3", "SMC 3 cycles"): "POP_UNDER_5",
+    ("smc_4", "SMC 4 cycles"): "POP_UNDER_5",
+    ("smc_5", "SMC 5 cycles"): "POP_UNDER_5",
+    ("itn_campaign", "Net"): "POPULATION",
+    ("itn_campaign", "Bale"): "POPULATION",
+    ("itn_routine", "Net"): "POPULATION",
+    ("itn_school", "Net"): "POP_5_10_Y",
+    ("itn_school", "Bale"): "POP_5_10_Y",
+    ("vacc", "Vaccine dose"): "POP_5_36_M",
+    ("vacc", "Each"): "POP_5_36_M",
+    ("lsm", "Days"): "POPULATION",
+}
 DEMO_USER_USERNAME = "demo"
 DEMO_USER_PASSWORD = "demo"
 
@@ -205,6 +228,9 @@ class Command(BaseCommand):
             # Seed interventions and intervention costs
             InterventionSeeder(account, self.stdout.write).create_interventions()
 
+            # Link population metric types to cost breakdown lines (demo-specific mapping)
+            self._link_cost_line_population_layers(account)
+
             # Randomly assign impact ref to interventions
             interventions = Intervention.objects_include_deleted.filter(intervention_category__account=account)
             for intervention in interventions:
@@ -235,3 +261,34 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("\nDemo user created with credentials:"))
             self.stdout.write(self.style.SUCCESS(f"\tUsername: {DEMO_USER_USERNAME}"))
             self.stdout.write(self.style.SUCCESS(f"\tPassword: {DEMO_USER_PASSWORD}"))
+
+    def _link_cost_line_population_layers(self, account):
+        """Set population_layer on InterventionCostBreakdownLines using COST_LINE_POPULATION_CODES.
+
+        This is a demo-account-specific step: intervention_seeder leaves population_layer=None
+        so it stays reusable across accounts, and we fill in the links here.
+        """
+        metric_types = {
+            mt.code: mt
+            for mt in MetricType.objects.filter(
+                account=account,
+                metric_kind=MetricType.MetricKind.POPULATION,
+            )
+        }
+
+        lines = InterventionCostBreakdownLine.objects.filter(
+            intervention__intervention_category__account=account
+        ).select_related("intervention", "unit_type")
+
+        updated = 0
+        for line in lines:
+            key = (line.intervention.code, line.unit_type.name)
+            pop_code = COST_LINE_POPULATION_CODES.get(key)
+            if pop_code:
+                metric_type = metric_types.get(pop_code)
+                if metric_type and line.population_layer_id != metric_type.id:
+                    line.population_layer = metric_type
+                    line.save(update_fields=["population_layer"])
+                    updated += 1
+
+        self.stdout.write(f"Linked population layers on {updated} cost breakdown lines")
