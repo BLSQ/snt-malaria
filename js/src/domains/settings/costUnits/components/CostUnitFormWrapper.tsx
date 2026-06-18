@@ -5,6 +5,7 @@ import { Button, Stack, Typography } from '@mui/material';
 import { makeFullModal, useSafeIntl } from 'bluesquare-components';
 import { DeleteRestoreModal } from 'Iaso/components/DeleteRestoreModals/DeleteRestoreModal';
 import { CardStyled } from '../../../../components/CardStyled';
+import { SettingsFormContainer } from '../../../../components/styledComponents';
 import { ExtendedFormikProvider } from '../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../../messages';
 import { useCostUnitFormState } from '../hooks/useCostUnitFormState';
@@ -17,6 +18,7 @@ type Props = {
     costUnit?: CostUnitType | null;
     onSaved: (savedId?: number) => void;
     onDeleted: () => void;
+    onCancel: () => void;
 };
 
 const DeleteTriggerButton: FC<{
@@ -44,6 +46,7 @@ export const CostUnitFormWrapper: FC<Props> = ({
     costUnit,
     onSaved,
     onDeleted,
+    onCancel,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -122,6 +125,11 @@ export const CostUnitFormWrapper: FC<Props> = ({
                                 )}
                             </DeleteCostUnitModal>
                         )}
+                        {isNew && (
+                            <Button onClick={onCancel} color="primary">
+                                {formatMessage(MESSAGES.cancel)}
+                            </Button>
+                        )}
                         <Button
                             onClick={() => formik.handleSubmit()}
                             variant="contained"
@@ -136,7 +144,9 @@ export const CostUnitFormWrapper: FC<Props> = ({
             }
         >
             <ExtendedFormikProvider formik={formik}>
-                <CostUnitForm />
+                <SettingsFormContainer>
+                    <CostUnitForm />
+                </SettingsFormContainer>
             </ExtendedFormikProvider>
         </CardStyled>
     );

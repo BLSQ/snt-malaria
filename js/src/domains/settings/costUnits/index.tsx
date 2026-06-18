@@ -47,6 +47,16 @@ export const CostUnitSettings: FC = () => {
         });
     }, [costUnitTypes]);
 
+    // Cancelling creation falls back to the first unit in the list, if any.
+    const handleCancelCreate = useCallback(() => {
+        setIsCreating(false);
+        setSelectedId(
+            costUnitTypes && costUnitTypes.length > 0
+                ? costUnitTypes[0].id
+                : null,
+        );
+    }, [costUnitTypes]);
+
     useEffect(() => {
         if (
             costUnitTypes &&
@@ -116,6 +126,7 @@ export const CostUnitSettings: FC = () => {
                                 }
                             }}
                             onDeleted={handleDeleted}
+                            onCancel={handleCancelCreate}
                         />
                     )}
                 </CardScrollable>
