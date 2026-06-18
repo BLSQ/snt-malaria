@@ -35,4 +35,3 @@ jobs:
     with:
       branch: ${{ github.head_ref || github.ref_name }}
       plugin_name: snt_malaria
-      iaso_ci_ref: IA-5227-decouple-ci-actions-into-dedicated-repo
