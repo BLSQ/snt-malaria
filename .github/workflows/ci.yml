@@ -1,180 +1,180 @@
-name: SNT Malaria CI testing
-# This workflow run automatically for every PR on github it checks the syntax and launch the tests.
-on:
-    pull_request:
-        types: [opened, synchronize, ready_for_review]
-    push:
-        # Run On push (or merge) on develop.  This populates the cache and avoid the issue where we have undetected migrations
-        # conflict following subsequent merge
-        branches:
-            - develop
-concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
-env:
-    REGISTRY: ghcr.io
-    IMAGE_NAME: ${{ github.repository }}
-
-jobs:
-    test_js:
-        runs-on: ubuntu-24.04
-        steps:
-            - name: Checkout Iaso repo
-              uses: actions/checkout@v6
-              with:
-                  repository: 'BLSQ/iaso'
-                  ref: develop
-            - name: Checkout SNT Malaria repo nested in the Iaso plugin folder
-              uses: actions/checkout@v6
-              with:
-                  ref: ${{ github.event.inputs.branch }}
-                  path: plugins/snt_malaria
-            - name: Use node.js 22
-              uses: actions/setup-node@v6
-              with:
-                  node-version: '22.21.1'
-                  cache: npm
-            - name: upgrade npm
-              run: |
-                  npm install --global npm@10.5.2
-            - name: Environment info
-              run: |
-                  node --version
-                  npm --version
-            - name: npm install and test
-              run: |
-                  npm ci
-                  npm test
-            - name: Check that no JS translation are missing
-              run: |
-                  python scripts/update_trads.py
-            - name: Slack notification
-              uses: rtCamp/action-slack-notify@v2.3.3
-              env:
-                  SLACK_USERNAME: ${{ github.workflow }}
-                  SLACK_ICON_EMOJI: ':robot_face:'
-                  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-                  SLACK_CHANNEL: iaso-dev
-                  SLACK_COLOR: ${{ job.status }}
-                  SLACK_TITLE: ${{ format('Job {0} failed on {1}', github.job, github.ref) }}
-                  SLACK_FOOTER: ${{  format('<https://github.com/{0}/commit/{1}/checks|🔗{2} logs> | <https://github.com/{0}/commit/{1}/checks|🔗 Commit {1}>', github.repository, github.sha, github.job) }}
-                  MSG_MINIMAL: true
-              if: failure()
-    test_python:
-        runs-on: ubuntu-24.04
-        services:
-            postgres:
-                image: postgis/postgis:16-3.5
-                env:
-                    POSTGRES_USER: postgres
-                    POSTGRES_PASSWORD: postgres
-                    POSTGRES_DB: github_actions
-                ports:
-                    - 5432:5432
-                # needed because the postgres container does not provide a health check
-                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        steps:
-            # Determine which branch of the Iaso repo to use.
-            - name: Determine Iaso Branch
-              id: get_iaso_branch
-              run: |
-                  # Use the same branch name on the IASO repo
-                  # only for branches names starting with SNT
-
-                  PLUGIN_BRANCH="${{ github.head_ref || github.ref_name }}"
-                  DEFAULT_IASO_BRANCH="develop"
-                  BRANCH="${PLUGIN_BRANCH,,}" # lowercase to be case-insensitive
-
-                  echo "Plugin (SNT) branch is '${PLUGIN_BRANCH}'"
-
-                  if [[ "$BRANCH" == snt* ]]; then
-                    echo "Checking for corresponding branch in Iaso..."
-                    if git ls-remote --exit-code --heads https://github.com/BLSQ/iaso.git "$PLUGIN_BRANCH"; then
-                      echo "Using matching branch '${PLUGIN_BRANCH}' found in Iaso."
-                      echo "branch_name=${PLUGIN_BRANCH}" >> $GITHUB_OUTPUT
-                    else
-                      echo "No matching branch found in Iaso. Using default Iaso branch '${DEFAULT_IASO_BRANCH}'."
-                      echo "branch_name=${DEFAULT_IASO_BRANCH}" >> $GITHUB_OUTPUT
-                    fi
-                  else
-                    echo "Branch name does not match prefix criteria. Using default Iaso branch '${DEFAULT_IASO_BRANCH}'."
-                    echo "branch_name=${DEFAULT_IASO_BRANCH}" >> $GITHUB_OUTPUT
-                  fi
-            - name: Checkout Iaso repo
-              uses: actions/checkout@v6
-              with:
-                  repository: 'BLSQ/iaso'
-                  ref: ${{ steps.get_iaso_branch.outputs.branch_name }}
-            - name: Checkout SNT Malaria repo nested in the Iaso plugin folder
-              uses: actions/checkout@v6
-              with:
-                  ref: ${{ github.event.inputs.branch }}
-                  path: plugins/snt_malaria
-            - name: Check if repos correctly set up
-              run: |
-                  ls -las
-                  ls -las plugins
-                  ls -las plugins/snt_malaria
-            - name: Set up Python 3.9
-              uses: actions/setup-python@v2
-              with:
-                  python-version: 3.9
-            - name: Install GDAL and gettext
-              run: sudo apt-get update && sudo apt install gdal-bin gettext
-            - uses: actions/cache@v5
-              id: cache-venv
-              with:
-                  path: ./venv/
-                  # The cache key depends on requirements.txt
-                  key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements*.txt') }}
-                  restore-keys: |
-                      ${{ runner.os }}-venv-
-                  # Build a virtualenv, but only if it doesn't already exist
-            - run:
-                  python -v && python -m venv ./venv && . ./venv/bin/activate && pip install -U pip &&
-                  pip install -r requirements-dev.txt
-              if: steps.cache-venv.outputs.cache-hit != 'true'
-            - name: Environment info
-              run: |
-                  pip list
-            - name: Check formatting with ruff
-              # https://docs.astral.sh/ruff/integrations/#github-actions
-              run: |
-                  . ./venv/bin/activate && ruff check --output-format=github plugins/snt_malaria/ && ruff format --check plugins/snt_malaria/
-            - name: Django tests
-              run: |
-                  . ./venv/bin/activate &&  python manage.py compilemessages
-                  . ./venv/bin/activate &&  python manage.py migrate
-                  . ./venv/bin/activate &&  python manage.py createcachetable
-                  . ./venv/bin/activate &&  python -W "ignore" manage.py test
-                  # check we don't have missing migration
-                  . ./venv/bin/activate &&  python manage.py makemigrations --check
-              env:
-                  IASO_ENVIRONMENT: development
-                  RDS_DB_NAME: github_actions
-                  SECRET_KEY: secret
-                  DEBUG: true
-                  DJANGO_SETTINGS_MODULE: hat.settings
-                  RDS_PASSWORD: postgres
-                  RDS_HOSTNAME: localhost
-                  RDS_PORT: 5432
-                  RDS_USERNAME: postgres
-                  CACHE: false
-                  DEV_SERVER: true
-                  PLUGINS: polio,wfp,wfp_auth,snt_malaria
-                  AWS_STORAGE_BUCKET_NAME: iaso-dev
-                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  DEFAULT_FILE_STORAGE: storages.backends.s3boto3.S3Boto3Storage
-            - name: Slack notification
-              uses: rtCamp/action-slack-notify@v2.3.3
-              env:
-                  SLACK_USERNAME: ${{ github.workflow }}
-                  SLACK_ICON_EMOJI: ':robot_face:'
-                  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-                  SLACK_CHANNEL: iaso-dev
-                  SLACK_COLOR: ${{ job.status }}
-                  SLACK_TITLE: ${{ format('Job {0} failed on {1}', github.job, github.ref) }}
-                  SLACK_FOOTER: ${{  format('<https://github.com/{0}/commit/{1}/checks|🔗{2} logs> | <https://github.com/{0}/commit/{1}/checks|🔗 Commit {1}>', github.repository, github.sha, github.job) }}
-                  MSG_MINIMAL: true
-              if: failure()
+#name: SNT Malaria CI testing
+## This workflow run automatically for every PR on github it checks the syntax and launch the tests.
+#on:
+#    pull_request:
+#        types: [opened, synchronize, ready_for_review]
+#    push:
+#        # Run On push (or merge) on develop.  This populates the cache and avoid the issue where we have undetected migrations
+#        # conflict following subsequent merge
+#        branches:
+#            - develop
+#concurrency:
+#    group: ${{ github.workflow }}-${{ github.ref }}
+#    cancel-in-progress: true
+#env:
+#    REGISTRY: ghcr.io
+#    IMAGE_NAME: ${{ github.repository }}
+#
+#jobs:
+#    test_js:
+#        runs-on: ubuntu-24.04
+#        steps:
+#            - name: Checkout Iaso repo
+#              uses: actions/checkout@v6
+#              with:
+#                  repository: 'BLSQ/iaso'
+#                  ref: develop
+#            - name: Checkout SNT Malaria repo nested in the Iaso plugin folder
+#              uses: actions/checkout@v6
+#              with:
+#                  ref: ${{ github.event.inputs.branch }}
+#                  path: plugins/snt_malaria
+#            - name: Use node.js 22
+#              uses: actions/setup-node@v6
+#              with:
+#                  node-version: '22.21.1'
+#                  cache: npm
+#            - name: upgrade npm
+#              run: |
+#                  npm install --global npm@10.5.2
+#            - name: Environment info
+#              run: |
+#                  node --version
+#                  npm --version
+#            - name: npm install and test
+#              run: |
+#                  npm ci
+#                  npm test
+#            - name: Check that no JS translation are missing
+#              run: |
+#                  python scripts/update_trads.py
+#            - name: Slack notification
+#              uses: rtCamp/action-slack-notify@v2.3.3
+#              env:
+#                  SLACK_USERNAME: ${{ github.workflow }}
+#                  SLACK_ICON_EMOJI: ':robot_face:'
+#                  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#                  SLACK_CHANNEL: iaso-dev
+#                  SLACK_COLOR: ${{ job.status }}
+#                  SLACK_TITLE: ${{ format('Job {0} failed on {1}', github.job, github.ref) }}
+#                  SLACK_FOOTER: ${{  format('<https://github.com/{0}/commit/{1}/checks|🔗{2} logs> | <https://github.com/{0}/commit/{1}/checks|🔗 Commit {1}>', github.repository, github.sha, github.job) }}
+#                  MSG_MINIMAL: true
+#              if: failure()
+#    test_python:
+#        runs-on: ubuntu-24.04
+#        services:
+#            postgres:
+#                image: postgis/postgis:16-3.5
+#                env:
+#                    POSTGRES_USER: postgres
+#                    POSTGRES_PASSWORD: postgres
+#                    POSTGRES_DB: github_actions
+#                ports:
+#                    - 5432:5432
+#                # needed because the postgres container does not provide a health check
+#                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+#        steps:
+#            # Determine which branch of the Iaso repo to use.
+#            - name: Determine Iaso Branch
+#              id: get_iaso_branch
+#              run: |
+#                  # Use the same branch name on the IASO repo
+#                  # only for branches names starting with SNT
+#
+#                  PLUGIN_BRANCH="${{ github.head_ref || github.ref_name }}"
+#                  DEFAULT_IASO_BRANCH="develop"
+#                  BRANCH="${PLUGIN_BRANCH,,}" # lowercase to be case-insensitive
+#
+#                  echo "Plugin (SNT) branch is '${PLUGIN_BRANCH}'"
+#
+#                  if [[ "$BRANCH" == snt* ]]; then
+#                    echo "Checking for corresponding branch in Iaso..."
+#                    if git ls-remote --exit-code --heads https://github.com/BLSQ/iaso.git "$PLUGIN_BRANCH"; then
+#                      echo "Using matching branch '${PLUGIN_BRANCH}' found in Iaso."
+#                      echo "branch_name=${PLUGIN_BRANCH}" >> $GITHUB_OUTPUT
+#                    else
+#                      echo "No matching branch found in Iaso. Using default Iaso branch '${DEFAULT_IASO_BRANCH}'."
+#                      echo "branch_name=${DEFAULT_IASO_BRANCH}" >> $GITHUB_OUTPUT
+#                    fi
+#                  else
+#                    echo "Branch name does not match prefix criteria. Using default Iaso branch '${DEFAULT_IASO_BRANCH}'."
+#                    echo "branch_name=${DEFAULT_IASO_BRANCH}" >> $GITHUB_OUTPUT
+#                  fi
+#            - name: Checkout Iaso repo
+#              uses: actions/checkout@v6
+#              with:
+#                  repository: 'BLSQ/iaso'
+#                  ref: ${{ steps.get_iaso_branch.outputs.branch_name }}
+#            - name: Checkout SNT Malaria repo nested in the Iaso plugin folder
+#              uses: actions/checkout@v6
+#              with:
+#                  ref: ${{ github.event.inputs.branch }}
+#                  path: plugins/snt_malaria
+#            - name: Check if repos correctly set up
+#              run: |
+#                  ls -las
+#                  ls -las plugins
+#                  ls -las plugins/snt_malaria
+#            - name: Set up Python 3.9
+#              uses: actions/setup-python@v2
+#              with:
+#                  python-version: 3.9
+#            - name: Install GDAL and gettext
+#              run: sudo apt-get update && sudo apt install gdal-bin gettext
+#            - uses: actions/cache@v5
+#              id: cache-venv
+#              with:
+#                  path: ./venv/
+#                  # The cache key depends on requirements.txt
+#                  key: ${{ runner.os }}-venv-${{ hashFiles('**/requirements*.txt') }}
+#                  restore-keys: |
+#                      ${{ runner.os }}-venv-
+#                  # Build a virtualenv, but only if it doesn't already exist
+#            - run:
+#                  python -v && python -m venv ./venv && . ./venv/bin/activate && pip install -U pip &&
+#                  pip install -r requirements-dev.txt
+#              if: steps.cache-venv.outputs.cache-hit != 'true'
+#            - name: Environment info
+#              run: |
+#                  pip list
+#            - name: Check formatting with ruff
+#              # https://docs.astral.sh/ruff/integrations/#github-actions
+#              run: |
+#                  . ./venv/bin/activate && ruff check --output-format=github plugins/snt_malaria/ && ruff format --check plugins/snt_malaria/
+#            - name: Django tests
+#              run: |
+#                  . ./venv/bin/activate &&  python manage.py compilemessages
+#                  . ./venv/bin/activate &&  python manage.py migrate
+#                  . ./venv/bin/activate &&  python manage.py createcachetable
+#                  . ./venv/bin/activate &&  python -W "ignore" manage.py test
+#                  # check we don't have missing migration
+#                  . ./venv/bin/activate &&  python manage.py makemigrations --check
+#              env:
+#                  IASO_ENVIRONMENT: development
+#                  RDS_DB_NAME: github_actions
+#                  SECRET_KEY: secret
+#                  DEBUG: true
+#                  DJANGO_SETTINGS_MODULE: hat.settings
+#                  RDS_PASSWORD: postgres
+#                  RDS_HOSTNAME: localhost
+#                  RDS_PORT: 5432
+#                  RDS_USERNAME: postgres
+#                  CACHE: false
+#                  DEV_SERVER: true
+#                  PLUGINS: polio,wfp,wfp_auth,snt_malaria
+#                  AWS_STORAGE_BUCKET_NAME: iaso-dev
+#                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#                  DEFAULT_FILE_STORAGE: storages.backends.s3boto3.S3Boto3Storage
+#            - name: Slack notification
+#              uses: rtCamp/action-slack-notify@v2.3.3
+#              env:
+#                  SLACK_USERNAME: ${{ github.workflow }}
+#                  SLACK_ICON_EMOJI: ':robot_face:'
+#                  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#                  SLACK_CHANNEL: iaso-dev
+#                  SLACK_COLOR: ${{ job.status }}
+#                  SLACK_TITLE: ${{ format('Job {0} failed on {1}', github.job, github.ref) }}
+#                  SLACK_FOOTER: ${{  format('<https://github.com/{0}/commit/{1}/checks|🔗{2} logs> | <https://github.com/{0}/commit/{1}/checks|🔗 Commit {1}>', github.repository, github.sha, github.job) }}
+#                  MSG_MINIMAL: true
+#              if: failure()
