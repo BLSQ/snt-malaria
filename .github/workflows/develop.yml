@@ -1,8 +1,9 @@
-name: SNT malaria - pull requests
+name: SNT malaria - develop
 
 on:
-  pull_request:
-    types: [ opened, synchronize, ready_for_review, edited ]
+  push:
+    branches:
+      - develop
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -41,3 +42,14 @@ jobs:
       iaso_branch: ${{ needs.config.outputs.iaso_branch }}
       plugin_branch: ${{ needs.config.outputs.plugin_branch }}
       plugin_name: snt_malaria
+
+  deploy_on_staging:
+    needs: [ build_and_push_image, tests ]
+    uses: BLSQ/iaso-ci/.github/workflows/docker_deploy.yml@IA-5227-decouple-ci-actions-into-dedicated-repo
+    with:
+      iaso_branch: develop
+      plugin_branch: develop
+      environment: snt-malaria-staging
+      image_tag: develop
+      plugin_name: snt_malaria
+    secrets: inherit
