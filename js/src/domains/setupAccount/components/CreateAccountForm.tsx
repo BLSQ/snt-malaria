@@ -234,11 +234,7 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
         },
     });
 
-    const schema = useSetupAccountValidation(
-        apiErrors,
-        payload,
-        captchaReady,
-    );
+    const schema = useSetupAccountValidation(apiErrors, payload, captchaReady);
 
     // Read once on mount: use the cache when present, otherwise seed the
     // form's language from the current locale so the dropdown and the
@@ -352,7 +348,10 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
     const captchaCodeErrors = getErrors('captcha_code');
 
     const signupValuesSnapshot = omit(values, signupDirtyCompareOmit);
-    const signupDefaultsSnapshot = omit(defaultInitialValues, signupDirtyCompareOmit);
+    const signupDefaultsSnapshot = omit(
+        defaultInitialValues,
+        signupDirtyCompareOmit,
+    );
 
     const showCreating = isSubmitting || isRedirecting;
     const allowConfirm =

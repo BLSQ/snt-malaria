@@ -221,7 +221,7 @@ export const OnboardingSpotlight: FC<OnboardingSpotlightProps> = ({
                 <Paper
                     sx={styles.card}
                     elevation={6}
-                    // Don't let card clicks bubble out as "page" clicks to 
+                    // Don't let card clicks bubble out as "page" clicks to
                     // prevent the page click advance handler from being triggered.
                     onClick={e => e.stopPropagation()}
                 >

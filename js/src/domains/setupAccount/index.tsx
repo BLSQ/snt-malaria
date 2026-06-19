@@ -7,7 +7,10 @@ import { useAppLocales } from 'Iaso/domains/app/constants';
 import { useLocale } from 'Iaso/domains/app/contexts/LocaleContext';
 import { SxStyles } from 'Iaso/types/general';
 
-import { CreateAccountForm, setCachedLanguage } from './components/CreateAccountForm';
+import {
+    CreateAccountForm,
+    setCachedLanguage,
+} from './components/CreateAccountForm';
 import { MESSAGES } from './messages';
 
 const styles = {
@@ -77,7 +80,8 @@ const SUPPORTED_LANGS: readonly LangOptions[] = ['en', 'fr'];
 // Reads `?lang=` from the URL when used as a deep-link entry point.
 const readUrlLang = (): LangOptions | undefined => {
     const candidate = new URLSearchParams(window.location.search).get('lang');
-    return candidate && (SUPPORTED_LANGS as readonly string[]).includes(candidate)
+    return candidate &&
+        (SUPPORTED_LANGS as readonly string[]).includes(candidate)
         ? (candidate as LangOptions)
         : undefined;
 };
@@ -140,12 +144,7 @@ export const SetupAccount: FunctionComponent = () => {
                                 {formatMessage(MESSAGES.appName)}
                             </Typography>
                         </Grid>
-                        <Grid
-                            container
-                            item
-                            xs={5}
-                            justifyContent="flex-end"
-                        >
+                        <Grid container item xs={5} justifyContent="flex-end">
                             <Box sx={styles.appBarRight}>
                                 {appLocales.map((loc, i) => (
                                     <Box key={loc.code} component="span">
@@ -154,7 +153,7 @@ export const SetupAccount: FunctionComponent = () => {
                                             sx={[
                                                 styles.langItem,
                                                 loc.code === locale &&
-                                                styles.langItemActive,
+                                                    styles.langItemActive,
                                             ]}
                                             onClick={() =>
                                                 changeLanguage(

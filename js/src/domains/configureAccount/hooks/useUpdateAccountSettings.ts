@@ -22,11 +22,7 @@ export const useUpdateAccountSettings = (): UseMutationResult<
     unknown,
     UpdateAccountSettingsPayload
 > =>
-    useSnackMutation<
-        AccountSettings,
-        unknown,
-        UpdateAccountSettingsPayload
-    >({
+    useSnackMutation<AccountSettings, unknown, UpdateAccountSettingsPayload>({
         mutationFn: updateAccountSettings,
         invalidateQueryKey: ['snt_malaria_configureAccount_account_settings'],
         ignoreErrorCodes: [400],

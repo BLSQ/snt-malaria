@@ -1,6 +1,6 @@
+import { UseMutationResult } from 'react-query';
 import { patchRequest, postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { UseMutationResult } from 'react-query';
 import { CostUnitTypePayload } from '../types';
 
 export const useSaveCostUnitType = (): UseMutationResult =>

@@ -15,8 +15,8 @@ import { MESSAGES } from '../messages';
 import { useGetScenarios } from '../scenarios/hooks/useGetScenarios';
 import { ComparisonDataProvider } from './ComparisonDataContext';
 import { ComparisonCharts } from './components/ComparisonCharts';
-import { InterventionMaps } from './components/InterventionMaps';
 import { ConfigurationPanel } from './components/ConfigurationPanel';
+import { InterventionMaps } from './components/InterventionMaps';
 import { MetricsSummary } from './components/MetricsSummary';
 import { useComparisonData } from './hooks/useComparisonData';
 import { useGetImpactAgeGroups } from './hooks/useGetImpactAgeGroups';
@@ -199,10 +199,11 @@ export const CompareCustomize: FC = () => {
         isImpactLoading,
     );
 
-    const { orgUnitsNotFound, orgUnitsWithUnmatchedInterventions } = useMatchWarnings({
-        impactsByScenarioId,
-        displayScenarios,
-    });
+    const { orgUnitsNotFound, orgUnitsWithUnmatchedInterventions } =
+        useMatchWarnings({
+            impactsByScenarioId,
+            displayScenarios,
+        });
 
     const providerMeta: ImpactProviderMeta | undefined = useMemo(() => {
         for (const impact of impactsByScenarioId.values()) {
@@ -244,7 +245,9 @@ export const CompareCustomize: FC = () => {
                                                 interventionOptions={
                                                     interventionOptions
                                                 }
-                                                hasInterventions={hasInterventions}
+                                                hasInterventions={
+                                                    hasInterventions
+                                                }
                                                 onInterventionSelect={
                                                     handleInterventionSelect
                                                 }
@@ -262,7 +265,9 @@ export const CompareCustomize: FC = () => {
                             <PaperFullHeight sx={styles.rightColumn}>
                                 <ConfigurationPanel
                                     baselineScenarioId={baselineScenarioId}
-                                    comparisonScenarioIds={comparisonScenarioIds}
+                                    comparisonScenarioIds={
+                                        comparisonScenarioIds
+                                    }
                                     scenarioOptions={scenarioOptions}
                                     comparisonOptions={comparisonOptions}
                                     onBaselineSelect={handleBaselineSelect}
@@ -270,7 +275,6 @@ export const CompareCustomize: FC = () => {
                                     onAddComparison={handleAddComparison}
                                     onRemoveComparison={handleRemoveComparison}
                                     yearRange={effectiveYearRange}
-
                                     selectedYearRange={selectedYearRange}
                                     onYearRangeChange={setSelectedYearRange}
                                     showYearRangeError={
@@ -287,7 +291,9 @@ export const CompareCustomize: FC = () => {
                                     selectedAgeGroup={selectedAgeGroup}
                                     onAgeGroupChange={handleAgeGroupChange}
                                     orgUnitsNotFound={orgUnitsNotFound}
-                                    orgUnitsWithUnmatchedInterventions={orgUnitsWithUnmatchedInterventions}
+                                    orgUnitsWithUnmatchedInterventions={
+                                        orgUnitsWithUnmatchedInterventions
+                                    }
                                     providerMeta={providerMeta}
                                 />
                             </PaperFullHeight>

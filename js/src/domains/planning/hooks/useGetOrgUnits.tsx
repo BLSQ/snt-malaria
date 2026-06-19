@@ -45,8 +45,7 @@ export const useGetOrgUnits = ({
             // asLocation returns OrgUnit[] directly; smallSearch returns
             // { orgunits: OrgUnit[], ... } so we need to unwrap it.
             ...(!withGeometry && {
-                select: (data: { orgunits: OrgUnit[] }) =>
-                    data.orgunits ?? [],
+                select: (data: { orgunits: OrgUnit[] }) => data.orgunits ?? [],
             }),
         },
     });

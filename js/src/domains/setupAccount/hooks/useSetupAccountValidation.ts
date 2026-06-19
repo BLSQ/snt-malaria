@@ -18,8 +18,10 @@ export const useSetupAccountValidation = (
     payload: Partial<CreateAccountPayload>,
     captchaReady: boolean,
 ): ObjectSchema<any> => {
-    const apiValidator =
-        useAPIErrorValidator<Partial<CreateAccountPayload>>(errors, payload);
+    const apiValidator = useAPIErrorValidator<Partial<CreateAccountPayload>>(
+        errors,
+        payload,
+    );
 
     return useMemo(() => {
         return object().shape({
@@ -67,7 +69,9 @@ export const useSetupAccountValidation = (
                     message: 'requiredField',
                     test(value) {
                         if (!captchaReady) return true;
-                        return Boolean(value && String(value).trim().length > 0);
+                        return Boolean(
+                            value && String(value).trim().length > 0,
+                        );
                     },
                 })
                 .test(apiValidator('captcha_code')),

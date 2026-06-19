@@ -78,9 +78,7 @@ export const InterventionPropertiesForm: FC<Props> = ({
                         interventionId={interventionId}
                         interventions={interventionOptions}
                         categoryName={category?.name ?? ''}
-                        onUpdateField={newId =>
-                            onUpdateField(index, newId)
-                        }
+                        onUpdateField={newId => onUpdateField(index, newId)}
                         onRemove={() => onRemove(index)}
                     />
                 );

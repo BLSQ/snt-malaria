@@ -62,7 +62,9 @@ export const InterventionSettings: FC = () => {
                         }
                     >
                         <InterventionList
-                            interventionCategories={interventionCategories || []}
+                            interventionCategories={
+                                interventionCategories || []
+                            }
                             onSelectIntervention={handleSelectIntervention}
                             activeInterventionId={
                                 selectedIntervention?.id || null

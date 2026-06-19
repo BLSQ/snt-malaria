@@ -283,9 +283,8 @@ export const getAvailableMetrics = (
 
     for (const budget of budgetsByScenarioId.values()) {
         const hasOrgUnitCosts =
-            budget?.results?.some(
-                r => (r.org_units_costs?.length ?? 0) > 0,
-            ) ?? false;
+            budget?.results?.some(r => (r.org_units_costs?.length ?? 0) > 0) ??
+            false;
         if (hasOrgUnitCosts) {
             available.add(MetricKey.OrgUnitTotalCost);
         }

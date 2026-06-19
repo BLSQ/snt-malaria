@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useGetLatestCalculatedBudget } from '../../planning/hooks/useGetLatestCalculatedBudget';
 import { BudgetCalculationResponse } from '../../planning/types/budget';
-import { useGetScenarioImpact } from './useGetScenarioImpact';
 import { ScenarioImpactMetrics, ScenarioId, toNumericId } from '../types';
+import { useGetScenarioImpact } from './useGetScenarioImpact';
 
 type Params = {
     baselineScenarioId: ScenarioId;
@@ -59,7 +59,7 @@ export const useComparisonData = ({
         impactEnabled,
     );
 
-    const resolveData = <T,>(query: {
+    const resolveData = <T>(query: {
         isError: boolean;
         data: T | undefined;
     }): T | undefined => (query.isError ? undefined : query.data);

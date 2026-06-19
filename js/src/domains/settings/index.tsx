@@ -7,8 +7,8 @@ import {
 } from '@mui/icons-material';
 import { Box, Tab, Tabs } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useSearchParams } from 'react-router-dom';
+import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { PageContainer } from '../../components/styledComponents';
 import { MESSAGES } from '../messages';
 import { CostUnitSettings } from './costUnits';

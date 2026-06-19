@@ -102,7 +102,7 @@ export const theme = createTheme({
         MuiSelect: {
             styleOverrides: {
                 select: {
-                    padding: '5px 32px 5px 5px'
+                    padding: '5px 32px 5px 5px',
                 },
             },
         },

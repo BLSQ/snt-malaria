@@ -4,9 +4,9 @@ import { useSafeIntl } from 'bluesquare-components';
 
 import InputComponent from 'Iaso/components/forms/InputComponent';
 
-import { WizardStep } from './WizardStep';
 import { useBudgetSettingsForm } from '../hooks/useBudgetSettingsForm';
 import { MESSAGES } from '../messages';
+import { WizardStep } from './WizardStep';
 
 type Props = {
     isLastStep: boolean;
