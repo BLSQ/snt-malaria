@@ -142,7 +142,7 @@ jobs:
           fi
 
       - name: Deploy to beanstalk
-        run: python scripts/eb_deploy.py ${{ steps.config.outputs.ENVIRONMENT }}
+        run: python scripts/eb_deploy.py ${{ steps.config.outputs.ENVIRONMENT }} python
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
