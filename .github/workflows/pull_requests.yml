@@ -34,10 +34,21 @@ jobs:
       plugin_name: snt_malaria
     secrets: inherit
 
-  tests:
-    needs: config
-    uses: BLSQ/iaso-ci/.github/workflows/tests.yml@IA-5227-decouple-ci-actions-into-dedicated-repo
-    with:
-      iaso_branch: ${{ needs.config.outputs.iaso_branch }}
-      plugin_branch: ${{ needs.config.outputs.plugin_branch }}
-      plugin_name: snt_malaria
+#  tests:
+#    needs: config
+#    uses: BLSQ/iaso-ci/.github/workflows/tests.yml@IA-5227-decouple-ci-actions-into-dedicated-repo
+#    with:
+#      iaso_branch: ${{ needs.config.outputs.iaso_branch }}
+#      plugin_branch: ${{ needs.config.outputs.plugin_branch }}
+#      plugin_name: snt_malaria
+#
+#  deploy_on_upgrade:
+#    needs: [ build_and_push_image ]
+#    uses: BLSQ/iaso-ci/.github/workflows/docker_deploy.yml@IA-5227-decouple-ci-actions-into-dedicated-repo
+#    with:
+#      iaso_branch: ${{ needs.config.outputs.iaso_branch }}
+#      plugin_branch: ${{ needs.config.outputs.plugin_branch }}
+#      plugin_name: snt_malaria
+#      environment: upgrade
+#      image_tag: IA-5227
+#    secrets: inherit
