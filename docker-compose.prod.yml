@@ -1,0 +1,5 @@
+services:
+    iaso:
+      environment:
+        - ENABLE_PUBLIC_ACCOUNT_SETUP
+        - PUBLIC_ACCOUNT_THROTTLE_RATE
