@@ -1,0 +1,52 @@
+name: Deploy SNT Malaria docker
+run-name: Deploy SNT docker ${{ inputs.branch }} (IASO ${{ inputs.iaso_ref }}) to ${{ inputs.environment }} by @${{ github.actor }}
+
+
+on:
+  workflow_dispatch:
+    inputs:
+      # Branch is chosen by default in github manual actions
+      environment:
+        description: Env (snt-malaria, snt-malaria-staging, snt-malaria-demo) or exact server name (iaso-snt-malaria-staging-worker, iaso-snt-malaria, iaso-snt-malaria-demo-worker)
+        required: true
+        default: snt-malaria
+        type: string
+      iaso_branch:
+        description: Core IASO branch to deploy (docker-compose, cron files; main by default)
+        required: false
+        default: main
+        type: string
+      snt_branch:
+        description: SNT branch to deploy (docker-compose extensions)
+        required: true
+        default: main
+        type: string
+      image_tag:
+        description: Tag to deploy (without the "blsq/snt_malaria:" prefix, e.g. "develop", "IA-4856", or "v2026.06.01")
+        required: true
+        default: main
+        type: string
+      slack_channel:
+        description: Slack Channel for notification (snt-ops by default)
+        required: false
+        default: snt-ops
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  deploy_on_staging:
+    uses: BLSQ/iaso-ci/.github/workflows/docker_deploy.yml@IA-5227-decouple-ci-actions-into-dedicated-repo
+    with:
+      iaso_branch: ${{ github.event.inputs.iaso_branch }}
+      plugin_branch: ${{ github.event.inputs.snt_branch }}
+      environment: ${{ github.event.inputs.environment }}
+      image_tag: ${{ github.event.inputs.image_tag }}
+      plugin_name: snt_malaria
+      slack_channel: snt-ops
+    secrets: inherit
