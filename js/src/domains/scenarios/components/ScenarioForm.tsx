@@ -80,9 +80,9 @@ const ScenarioForm: React.FC = () => {
                     value={yearRangeValue}
                     onChange={onYearRangeChange}
                 />
-                {yearErrors.map((error, index) => (
+                {yearErrors.map(error => (
                     <Typography
-                        key={`${error}-${index}`}
+                        key={`${error}`}
                         variant="caption"
                         color="error"
                         display="block"

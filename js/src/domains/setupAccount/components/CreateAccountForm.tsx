@@ -227,7 +227,7 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
                     password: values.password,
                     taskId: data.task.id,
                 });
-            } catch (e) {
+            } catch {
                 setIsRedirecting(false);
                 setAutoLoginError(formatMessage(MESSAGES.autoLoginFailed));
             }
@@ -251,6 +251,7 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
                       ...defaultInitialValues,
                       language: locale,
                   },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [],
     );
 
@@ -451,7 +452,7 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
 
             <Box sx={styles.captchaSection}>
                 <Box sx={styles.captchaFrame}>
-                    {captchaLoadError ? (
+                    {(captchaLoadError && (
                         <Typography
                             variant="caption"
                             role="alert"
@@ -466,16 +467,15 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
                         >
                             {captchaLoadError}
                         </Typography>
-                    ) : captchaImageUrl ? (
-                        <Box
-                            component="img"
-                            src={captchaImageUrl}
-                            alt=""
-                            sx={styles.captchaImage}
-                        />
-                    ) : (
-                        <CircularProgress size={28} />
-                    )}
+                    )) ||
+                        (captchaImageUrl && (
+                            <Box
+                                component="img"
+                                src={captchaImageUrl}
+                                alt=""
+                                sx={styles.captchaImage}
+                            />
+                        )) || <CircularProgress size={28} />}
                 </Box>
                 <Box sx={styles.captchaControls}>
                     <Box sx={styles.captchaInputRow}>

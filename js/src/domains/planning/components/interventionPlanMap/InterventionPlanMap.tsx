@@ -117,13 +117,13 @@ export const InterventionPlanMap: FC<Props> = ({
     );
 
     const renderTooltip = useCallback(
-        ({ orgUnit }: { orgUnit: OrgUnit }) => (
+        (props: { orgUnit: OrgUnit }) => (
             <OrgUnitTooltip
-                orgUnit={orgUnit}
-                chips={assignmentDisplay.getChips(orgUnit.id)}
+                orgUnit={props.orgUnit}
+                chips={assignmentDisplay.getChips(props.orgUnit.id)}
                 metricLabel={
                     activeMetricLayer
-                        ? getOrgUnitStyle(orgUnit.id)?.label
+                        ? getOrgUnitStyle(props.orgUnit.id)?.label
                         : undefined
                 }
             />

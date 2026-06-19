@@ -17,8 +17,11 @@ export const hexToRgb = (hex: string) => {
             : normalized;
     const num = parseInt(expanded, 16);
     return {
+        // eslint-disable-next-line no-bitwise
         r: (num >> 16) & 255,
+        // eslint-disable-next-line no-bitwise
         g: (num >> 8) & 255,
+        // eslint-disable-next-line no-bitwise
         b: num & 255,
     };
 };

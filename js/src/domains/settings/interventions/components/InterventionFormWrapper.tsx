@@ -75,6 +75,7 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
                 ...interventionDetails,
             },
         });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [interventionDetails, metricTypes]); // Only run when interventionDetails or metricTypes changes
 
     return (

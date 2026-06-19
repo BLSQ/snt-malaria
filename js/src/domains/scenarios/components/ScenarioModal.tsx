@@ -21,6 +21,9 @@ import ScenarioForm from './ScenarioForm';
 
 type ScenarioDialogActionProps = {
     onClick: () => void;
+};
+
+type ScenarioDialogActionPropsColored = ScenarioDialogActionProps & {
     color?:
         | 'primary'
         | 'inherit'
@@ -31,7 +34,7 @@ type ScenarioDialogActionProps = {
         | 'warning';
 };
 
-const CreateScenarioDialogAction: FC<ScenarioDialogActionProps> = ({
+const CreateScenarioDialogAction: FC<ScenarioDialogActionPropsColored> = ({
     onClick,
     color = 'primary',
 }) => {

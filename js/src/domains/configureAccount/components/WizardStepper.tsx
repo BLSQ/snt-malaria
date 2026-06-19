@@ -104,13 +104,13 @@ export const WizardStepper: FunctionComponent<Props> = ({
                                 { bgcolor: stepStateColor[state] },
                             ]}
                         >
-                            {state === 'completed' ? (
+                            {(state === 'completed' && (
                                 <CheckIcon sx={[{ fontSize: 18 }]} />
-                            ) : state === 'error' ? (
-                                <CloseIcon sx={[{ fontSize: 18 }]} />
-                            ) : (
-                                idx + 1
-                            )}
+                            )) ||
+                                (state === 'error' && (
+                                    <CloseIcon sx={[{ fontSize: 18 }]} />
+                                )) ||
+                                idx + 1}
                         </Box>
                         <Typography
                             variant="body2"

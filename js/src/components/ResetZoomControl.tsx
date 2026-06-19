@@ -24,6 +24,7 @@ export const ResetZoomControl: FC<Props> = ({ bounds, boundsOptions = {} }) => {
                 btn.title = 'Reset zoom';
                 btn.setAttribute('aria-label', 'Reset zoom');
                 btn.innerHTML =
+                    // eslint-disable-next-line max-len
                     '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 4V1h3M10 1h3v3M13 10v3h-3M4 13H1v-3"/></svg>';
 
                 L.DomEvent.disableClickPropagation(btn);
