@@ -52,4 +52,5 @@ jobs:
       environment: snt-malaria-staging
       image_tag: develop
       plugin_name: snt_malaria
+      slack_channel: snt-ops
     secrets: inherit
