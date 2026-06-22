@@ -90,6 +90,30 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.budgeting.totalCost',
         defaultMessage: 'Total cost ($)',
     },
+    budgetingCostLineUnitCost: {
+        id: 'iaso.snt_malaria.budgeting.costLine.unitCost',
+        defaultMessage: 'Unit cost',
+    },
+    budgetingCostLineTargetPop: {
+        id: 'iaso.snt_malaria.budgeting.costLine.targetPop',
+        defaultMessage: 'Target pop.',
+    },
+    budgetingCostLineConversionFactor: {
+        id: 'iaso.snt_malaria.budgeting.costLine.conversionFactor',
+        defaultMessage: 'Conversion factor',
+    },
+    budgetingCostLinePeoplePerUnit: {
+        id: 'iaso.snt_malaria.budgeting.costLine.peoplePerUnit',
+        defaultMessage: 'People per {unit}',
+    },
+    budgetingCostLineUnitPerPeople: {
+        id: '',
+        defaultMessage: '{unit} per person',
+    },
+    budgetingCostLineBuffer: {
+        id: 'iaso.snt_malaria.budgeting.costLine.buffer',
+        defaultMessage: 'Buffer',
+    },
     cancel: {
         defaultMessage: 'Cancel',
         id: 'iaso.label.cancel',
@@ -460,7 +484,8 @@ export const MESSAGES = defineMessages({
     },
     endYearMin: {
         id: 'iaso.snt_malaria.scenario.errors.endYearMin',
-        defaultMessage: 'End year must be greater than or equal to start year ({year})',
+        defaultMessage:
+            'End year must be greater than or equal to start year ({year})',
     },
     modalDeleteScenarioConfirm: {
         id: 'iaso.snt_malaria.label.delete.confirm',

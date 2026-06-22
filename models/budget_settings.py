@@ -16,6 +16,7 @@ class BudgetSettings(SoftDeletableModel):
     local_currency = models.CharField(max_length=3)
     exchange_rate = models.DecimalField(max_digits=20, decimal_places=10)
     inflation_rate = models.DecimalField(max_digits=20, decimal_places=10)
+    buffer = models.DecimalField(max_digits=5, decimal_places=4, default="1.1")
 
     objects = DefaultSoftDeletableManager()
     objects_only_deleted = OnlyDeletedSoftDeletableManager()

@@ -32,8 +32,6 @@ class BudgetCalculationService:
     Only population-driven cost lines are processed in this first version.
     """
 
-    buffer = Decimal("1.1")
-
     def __init__(self, scenario):
         self.scenario = scenario
         self.start_year = scenario.start_year
@@ -62,10 +60,12 @@ class BudgetCalculationService:
         )
 
         self.cost_lines_by_intervention_id = defaultdict(list)
+        self.cost_line_by_id = {}
         cost_line_ids = []
         metric_type_ids = set()
         for line in population_cost_lines:
             self.cost_lines_by_intervention_id[line.intervention_id].append(line)
+            self.cost_line_by_id[line.id] = line
             cost_line_ids.append(line.id)
             if line.population_layer_id is not None:
                 metric_type_ids.add(line.population_layer_id)
@@ -94,6 +94,7 @@ class BudgetCalculationService:
 
         budget_settings = BudgetSettings.objects.filter(account=scenario.account).first()
         self.inflation_rate = Decimal(str(budget_settings.inflation_rate)) if budget_settings else Decimal("0")
+        self.buffer = Decimal(str(budget_settings.buffer)) if budget_settings else Decimal("1.1")
 
     def calculate_and_save_all_years(self, user):
         all_years_results = self.calculate_all_years()
@@ -165,6 +166,11 @@ class BudgetCalculationService:
                     "total_cost": Decimal("0"),
                     "quantity": Decimal("0"),
                     "population": Decimal("0"),
+                    "unit_cost": None,
+                    "cost_unit_name": None,
+                    "cost_unit_ratio": None,
+                    "cost_unit_inverted": False,
+                    "target_population": None,
                 }
             )
         )
@@ -180,6 +186,11 @@ class BudgetCalculationService:
                         "total_cost": Decimal("0"),
                         "quantity": Decimal("0"),
                         "population": Decimal("0"),
+                        "unit_cost": None,
+                        "cost_unit_name": None,
+                        "cost_unit_ratio": None,
+                        "cost_unit_inverted": False,
+                        "target_population": None,
                     }
                 )
             )
@@ -193,31 +204,40 @@ class BudgetCalculationService:
             intervention_id = row.intervention_id
 
             intervention_totals[intervention_id]["total_cost"] += row.total_cost
-            intervention_breakdowns[intervention_id][row.cost_line_id]["id"] = row.cost_line_id
-            intervention_breakdowns[intervention_id][row.cost_line_id]["category"] = row.category
-            intervention_breakdowns[intervention_id][row.cost_line_id]["total_cost"] += row.total_cost
-            intervention_breakdowns[intervention_id][row.cost_line_id]["quantity"] += row.quantity
-            intervention_breakdowns[intervention_id][row.cost_line_id]["population"] += row.population
+            bd = intervention_breakdowns[intervention_id][row.cost_line_id]
+            bd["id"] = row.cost_line_id
+            bd["category"] = row.category
+            bd["total_cost"] += row.total_cost
+            bd["quantity"] += row.quantity
+            bd["population"] += row.population
+            if bd["unit_cost"] is None:
+                cost_line = self.cost_line_by_id.get(row.cost_line_id)
+                if cost_line:
+                    bd["unit_cost"] = cost_line.unit_cost
+                    bd["cost_unit_name"] = cost_line.unit_type.name if cost_line.unit_type else None
+                    bd["cost_unit_ratio"] = self._get_ratio(cost_line.unit_type)
+                    bd["cost_unit_inverted"] = cost_line.unit_type.invert_value
+                    bd["target_population"] = cost_line.population_layer.name if cost_line.population_layer else None
 
             if row.org_unit_id is not None:
                 org_unit_totals[row.org_unit_id]["total_cost"] += row.total_cost
-
                 org_unit_intervention_totals[row.org_unit_id][intervention_id]["total_cost"] += row.total_cost
-                org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["id"] = (
-                    row.cost_line_id
-                )
-                org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["category"] = (
-                    row.category
-                )
-                org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["total_cost"] += (
-                    row.total_cost
-                )
-                org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["quantity"] += (
-                    row.quantity
-                )
-                org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]["population"] += (
-                    row.population
-                )
+                ou_bd = org_unit_intervention_breakdowns[row.org_unit_id][intervention_id][row.cost_line_id]
+                ou_bd["id"] = row.cost_line_id
+                ou_bd["category"] = row.category
+                ou_bd["total_cost"] += row.total_cost
+                ou_bd["quantity"] += row.quantity
+                ou_bd["population"] += row.population
+                if ou_bd["unit_cost"] is None:
+                    cost_line = self.cost_line_by_id.get(row.cost_line_id)
+                    if cost_line:
+                        ou_bd["unit_cost"] = cost_line.unit_cost
+                        ou_bd["cost_unit_name"] = cost_line.unit_type.name if cost_line.unit_type else None
+                        ou_bd["cost_unit_ratio"] = self._get_ratio(cost_line.unit_type)
+                        ou_bd["cost_unit_inverted"] = cost_line.unit_type.invert_value
+                        ou_bd["target_population"] = (
+                            cost_line.population_layer.name if cost_line.population_layer else None
+                        )
 
             category_totals[row.category]["id"] = row.cost_line_id
             category_totals[row.category]["total_cost"] += row.total_cost
@@ -352,6 +372,12 @@ class BudgetCalculationService:
                     total_cost=bd["total_cost"],
                     quantity=bd["quantity"],
                     population=bd["population"],
+                    unit_cost=bd["unit_cost"],
+                    cost_unit_name=bd["cost_unit_name"],
+                    cost_unit_ratio=bd["cost_unit_ratio"],
+                    cost_unit_inverted=bd["cost_unit_inverted"],
+                    target_population=bd["target_population"],
+                    buffer=float(self.buffer),
                 )
                 for _, bd in sorted(intervention_breakdowns[intervention_id].items(), key=lambda x: x[0])
                 if bd["total_cost"] > 0
@@ -396,6 +422,12 @@ class BudgetCalculationService:
                         total_cost=bd["total_cost"],
                         quantity=bd["quantity"],
                         population=bd["population"],
+                        unit_cost=bd["unit_cost"],
+                        cost_unit_name=bd["cost_unit_name"],
+                        cost_unit_ratio=bd["cost_unit_ratio"],
+                        cost_unit_inverted=bd["cost_unit_inverted"],
+                        target_population=bd["target_population"],
+                        buffer=float(self.buffer),
                     )
                     for _, bd in sorted(
                         org_unit_intervention_breakdowns[org_unit_id][intervention_id].items(), key=lambda x: x[0]
@@ -424,6 +456,13 @@ class BudgetCalculationService:
                 )
             )
         return org_units_costs
+
+    def _get_ratio(self, unit_type):
+        ratio = unit_type.ratio if unit_type else None
+        if ratio:
+            ratio = 1 / ratio if unit_type.invert_value else ratio
+
+        return round(float(ratio), 2) if ratio is not None else None
 
     @staticmethod
     def _build_category_costs(category_totals):

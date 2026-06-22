@@ -8,6 +8,7 @@ export type BudgetSettings = {
     local_currency: string;
     exchange_rate: string;
     inflation_rate: string;
+    buffer: string;
 };
 
 export const useGetBudgetSettings = (

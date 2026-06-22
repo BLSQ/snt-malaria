@@ -101,6 +101,12 @@ export const BudgetTable: FC = ({}) => {
                         totalCost: 0,
                         coverageByYear: (yearlyCoverageByCostLine[line.id] ||
                             {}) as Record<number, CostLineYearlyCoverage>,
+                        unitCost: Number(line.unit_cost),
+                        unitName: line.unit_type_label,
+                        conversionFactor: null,
+                        invertedConversionFactor: false,
+                        targetPopulation: null,
+                        buffer: 1.1,
                     });
                 });
             }
@@ -165,17 +171,36 @@ export const BudgetTable: FC = ({}) => {
         [defaultCostRowDataByIntervention],
     );
 
+    const applyBudgetSnapshot = (
+        row: CostLineRowData,
+        costLine: BudgetInterventionCostLine,
+    ) => {
+        row.totalCost += costLine.total_cost;
+        row.unitCost = costLine.unit_cost ?? row.unitCost;
+        row.unitName = costLine.cost_unit_name ?? row.unitName;
+        row.conversionFactor = costLine.cost_unit_ratio;
+        row.targetPopulation = costLine.target_population;
+        row.invertedConversionFactor = costLine.cost_unit_inverted;
+        row.buffer = costLine.buffer ?? row.buffer;
+    };
+
     const populateCostLine = useCallback(
-        (costLine: BudgetInterventionCostLine) => {
+        (costLine: BudgetInterventionCostLine): CostLineRowData => {
             const breakdownLine = costBreakdownLineRecord[costLine.id];
             return {
                 id: costLine.id,
-                label: breakdownLine ? breakdownLine.name : '',
+                label: breakdownLine?.name ?? '',
                 subLabel: '',
                 costDriver: breakdownLine?.cost_driver ?? 'population',
                 totalCost: costLine.total_cost,
                 coverageByYear: (yearlyCoverageByCostLine[costLine.id] ||
                     {}) as Record<number, CostLineYearlyCoverage>,
+                unitCost: costLine.unit_cost ?? 0,
+                unitName: costLine.cost_unit_name ?? '',
+                conversionFactor: costLine.cost_unit_ratio,
+                invertedConversionFactor: costLine.cost_unit_inverted,
+                targetPopulation: costLine.target_population,
+                buffer: costLine.buffer ?? 1.1,
             };
         },
         [costBreakdownLineRecord, yearlyCoverageByCostLine],
@@ -192,6 +217,9 @@ export const BudgetTable: FC = ({}) => {
             const yearlyInterventions =
                 interventionCosts[plan.intervention.id] || [];
             const row = populateInterventionCost(plan);
+            const costLineById = new Map(
+                row.costBreakdowns.map(cl => [cl.id, cl]),
+            );
 
             yearlyInterventions.forEach(intervention => {
                 row.yearCosts[intervention.year] = intervention.total_cost;
@@ -202,14 +230,13 @@ export const BudgetTable: FC = ({}) => {
                     intervention.total_cost;
 
                 intervention.cost_breakdown.forEach(costLine => {
-                    const existingCostLine = row.costBreakdowns.find(
-                        (line: CostLineRowData) => line.id === costLine.id,
-                    );
-                    if (existingCostLine) {
-                        existingCostLine.totalCost += costLine.total_cost;
+                    const existing = costLineById.get(costLine.id);
+                    if (existing) {
+                        applyBudgetSnapshot(existing, costLine);
                     } else {
-                        const costBreakdown = populateCostLine(costLine);
-                        row.costBreakdowns.push(costBreakdown);
+                        const newRow = populateCostLine(costLine);
+                        row.costBreakdowns.push(newRow);
+                        costLineById.set(newRow.id, newRow);
                     }
                 });
             });

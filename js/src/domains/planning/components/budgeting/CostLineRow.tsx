@@ -1,6 +1,16 @@
-import React, { FC } from 'react';
-import { TableCell, TableRow, Typography } from '@mui/material';
+import React, { FC, useMemo } from 'react';
+import InfoIcon from '@mui/icons-material/InfoOutlined';
+import {
+    Box,
+    Stack,
+    TableCell,
+    TableRow,
+    Tooltip,
+    Typography,
+} from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { formatBigNumber } from '../../libs/cost-utils';
 import { YearlyCoverageInput } from './YearlyCoverageInput';
@@ -17,6 +27,12 @@ export type CostLineRowData = {
     costDriver: 'population' | 'fixed_cost';
     totalCost: number;
     coverageByYear: Record<number, CostLineYearlyCoverage>;
+    unitCost: number;
+    unitName: string;
+    conversionFactor: number | null;
+    invertedConversionFactor: boolean | null;
+    targetPopulation: string | null;
+    buffer: number;
 };
 
 type Props = {
@@ -28,6 +44,8 @@ type Props = {
 const styles = {
     costLineRow: { backgroundColor: '#f9f9f9', p: 1 },
     buffer: { pl: 7.275 },
+    tooltipLabel: { whiteSpace: 'nowrap' },
+    tooltipLongText: { wordBreak: 'break-word', flex: 1, minWidth: 0 },
 } satisfies SxStyles;
 
 const clampPercentage = (value: number) => {
@@ -145,7 +163,97 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
                     {formatBigNumber(costLine.totalCost)}
                 </Typography>
             </TableCell>
-            <TableCell></TableCell>
+            <TableCell align="center">
+                <CostLineTooltip costLine={costLine} />
+            </TableCell>
         </TableRow>
+    );
+};
+
+type TooltipProps = {
+    costLine: CostLineRowData;
+};
+
+export const CostLineTooltip: FC<TooltipProps> = ({ costLine }) => {
+    const { formatMessage } = useSafeIntl();
+    const bufferPercent = Math.round((costLine.buffer - 1) * 100);
+    console.log(costLine.invertedConversionFactor);
+    const unitLabel = useMemo(
+        () =>
+            (!costLine.unitName &&
+                formatMessage(MESSAGES.budgetingCostLineConversionFactor)) ||
+            (costLine.invertedConversionFactor
+                ? formatMessage(MESSAGES.budgetingCostLinePeoplePerUnit, {
+                      unit: costLine.unitName,
+                  })
+                : formatMessage(MESSAGES.budgetingCostLineUnitPerPeople, {
+                      unit: costLine.unitName,
+                  })),
+        [costLine.unitName, costLine.invertedConversionFactor, formatMessage],
+    );
+    return (
+        <Tooltip
+            arrow={true}
+            placement="top-end"
+            componentsProps={{
+                tooltip: { sx: { maxWidth: 750, width: 300, p: 1.5 } },
+            }}
+            title={
+                <Box>
+                    <Typography mb={2}>{costLine.label}</Typography>
+                    <Stack direction="row" justifyContent="space-between">
+                        <Typography variant="body2">
+                            {formatMessage(MESSAGES.budgetingCostLineUnitCost)}
+                            {costLine.unitName && (
+                                <>
+                                    {' '}
+                                    (<b>{costLine.unitName}</b>)
+                                </>
+                            )}
+                        </Typography>
+                        <Typography variant="body2" textAlign={'right'}>
+                            ${costLine.unitCost.toFixed(2)}
+                        </Typography>
+                    </Stack>
+                    {costLine.targetPopulation && (
+                        <Stack direction="row" alignItems="flex-start" gap={2}>
+                            <Typography
+                                variant="body2"
+                                sx={styles.tooltipLabel}
+                            >
+                                {formatMessage(
+                                    MESSAGES.budgetingCostLineTargetPop,
+                                )}
+                            </Typography>
+                            <Typography
+                                variant="body2"
+                                textAlign="right"
+                                sx={styles.tooltipLongText}
+                            >
+                                {costLine.targetPopulation}
+                            </Typography>
+                        </Stack>
+                    )}
+                    {costLine.conversionFactor !== null && (
+                        <Stack direction="row" justifyContent="space-between">
+                            <Typography variant="body2">{unitLabel}</Typography>
+                            <Typography variant="body2" textAlign="right">
+                                {costLine.conversionFactor?.toFixed(2)}
+                            </Typography>
+                        </Stack>
+                    )}
+                    <Stack direction="row" justifyContent="space-between">
+                        <Typography variant="body2">
+                            {formatMessage(MESSAGES.budgetingCostLineBuffer)}
+                        </Typography>
+                        <Typography variant="body2" textAlign={'right'}>
+                            {bufferPercent}%
+                        </Typography>
+                    </Stack>
+                </Box>
+            }
+        >
+            <InfoIcon fontSize="medium" />
+        </Tooltip>
     );
 };
