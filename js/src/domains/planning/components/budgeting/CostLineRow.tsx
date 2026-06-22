@@ -44,8 +44,16 @@ type Props = {
 const styles = {
     costLineRow: { backgroundColor: '#f9f9f9', p: 1 },
     buffer: { pl: 7.275 },
-    tooltipLabel: { whiteSpace: 'nowrap' },
-    tooltipLongText: { wordBreak: 'break-word', flex: 1, minWidth: 0 },
+    tooltip: { maxWidth: 750, width: 300, p: 1.5 },
+    tooltipLabel: { whiteSpace: 'nowrap', width: 100 },
+    tooltipLongText: {
+        flex: 1,
+        minWidth: 0,
+        maxWidth: 200,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+    },
 } satisfies SxStyles;
 
 const clampPercentage = (value: number) => {
@@ -177,7 +185,6 @@ type TooltipProps = {
 export const CostLineTooltip: FC<TooltipProps> = ({ costLine }) => {
     const { formatMessage } = useSafeIntl();
     const bufferPercent = Math.round((costLine.buffer - 1) * 100);
-    console.log(costLine.invertedConversionFactor);
     const unitLabel = useMemo(
         () =>
             (!costLine.unitName &&
@@ -196,7 +203,7 @@ export const CostLineTooltip: FC<TooltipProps> = ({ costLine }) => {
             arrow={true}
             placement="top-end"
             componentsProps={{
-                tooltip: { sx: { maxWidth: 750, width: 300, p: 1.5 } },
+                tooltip: { sx: styles.tooltip },
             }}
             title={
                 <Box>
@@ -225,13 +232,19 @@ export const CostLineTooltip: FC<TooltipProps> = ({ costLine }) => {
                                     MESSAGES.budgetingCostLineTargetPop,
                                 )}
                             </Typography>
-                            <Typography
-                                variant="body2"
-                                textAlign="right"
-                                sx={styles.tooltipLongText}
+                            <Tooltip
+                                title={costLine.targetPopulation}
+                                placement="top"
+                                disableInteractive
                             >
-                                {costLine.targetPopulation}
-                            </Typography>
+                                <Typography
+                                    variant="body2"
+                                    textAlign="right"
+                                    sx={styles.tooltipLongText}
+                                >
+                                    {costLine.targetPopulation}
+                                </Typography>
+                            </Tooltip>
                         </Stack>
                     )}
                     {costLine.conversionFactor !== null && (
