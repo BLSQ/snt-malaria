@@ -138,6 +138,8 @@
     "iaso.snt_malaria.scenario.scenarioImportError": "Error importing scenario.",
     "iaso.snt_malaria.scenario.unlockScenario": "Unlock Scenario",
     "iaso.snt_malaria.scenario.lockScenario": "Lock Scenario",
+    "iaso.snt_malaria.planning.hideRulesPanel": "Hide rules panel",
+    "iaso.snt_malaria.planning.showRulesPanel": "Show rules panel",
     "iaso.snt_malaria.scenario.modalUnlockScenarioConfirm": "Do you really want to unlock this scenario? Unlocking a scenario allows further edits to be made.",
     "iaso.snt_malaria.scenario.modalLockScenarioConfirm": "Do you really want to lock this scenario? Locking a scenario will prevent any further edits to be made.",
     "iaso.snt_malaria.scenario.errors.maxYear": "Year must be at most {year}",

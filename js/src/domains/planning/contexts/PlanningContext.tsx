@@ -35,6 +35,8 @@ type PlanningContextType = {
     interventionPlans: InterventionPlan[];
     scenarioYearlyCostAssignments: ScenarioYearlyCostAssignment[];
     budgets: Budget[];
+    showRulesPanel: boolean;
+    toggleShowRulesPanel: () => void;
     saveYearlyCoverage: (params: SaveYearlyCoverageParams) => void;
     toggleIsEditing: () => void;
 };
@@ -63,6 +65,8 @@ const PlanningContext = createContext<PlanningContextType>({
     interventionPlans: [],
     scenarioYearlyCostAssignments: [],
     budgets: [],
+    showRulesPanel: true,
+    toggleShowRulesPanel: () => {},
     saveYearlyCoverage: () => {},
     toggleIsEditing: () => {},
 });
@@ -132,6 +136,12 @@ export const PlanningProvider = ({
         [setIsEditing],
     );
 
+    const [showRulesPanel, setShowRulesPanel] = useState(true);
+    const toggleShowRulesPanel = useCallback(
+        () => setShowRulesPanel(v => !v),
+        [],
+    );
+
     const saveYearlyCoverage = useCallback(
         ({
             assignmentId,
@@ -181,6 +191,8 @@ export const PlanningProvider = ({
                 isEditing,
                 scenarioYearlyCostAssignments,
                 budgets,
+                showRulesPanel,
+                toggleShowRulesPanel,
                 saveYearlyCoverage,
                 toggleIsEditing,
             }}

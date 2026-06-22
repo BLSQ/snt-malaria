@@ -425,6 +425,14 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenario.lockScenario',
         defaultMessage: 'Lock Scenario',
     },
+    hideRulesPanel: {
+        id: 'iaso.snt_malaria.planning.hideRulesPanel',
+        defaultMessage: 'Hide rules panel',
+    },
+    showRulesPanel: {
+        id: 'iaso.snt_malaria.planning.showRulesPanel',
+        defaultMessage: 'Show rules panel',
+    },
     manualSelection: {
         id: 'iaso.snt_malaria.scenarioRule.manualSelection',
         defaultMessage: 'Manual selection',
