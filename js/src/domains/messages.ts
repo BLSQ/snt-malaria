@@ -880,4 +880,58 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.costUnits.description',
         defaultMessage: 'Description',
     },
+    grantsTitle: {
+        id: 'iaso.snt_malaria.settings.grants.title',
+        defaultMessage: 'Grants',
+    },
+    addGrant: {
+        id: 'iaso.snt_malaria.settings.grants.add',
+        defaultMessage: 'Add',
+    },
+    newGrant: {
+        id: 'iaso.snt_malaria.settings.grants.new',
+        defaultMessage: 'New grant',
+    },
+    deleteGrant: {
+        id: 'iaso.snt_malaria.settings.grants.delete',
+        defaultMessage: 'Delete',
+    },
+    deleteGrantConfirmTitle: {
+        id: 'iaso.snt_malaria.settings.grants.deleteConfirmTitle',
+        defaultMessage: 'Delete this grant?',
+    },
+    deleteGrantConfirmMessage: {
+        id: 'iaso.snt_malaria.settings.grants.deleteConfirmMessage',
+        defaultMessage:
+            'This grant will be permanently removed. Grants that are assigned to an intervention cannot be deleted.',
+    },
+    grantName: {
+        id: 'iaso.snt_malaria.settings.grants.name',
+        defaultMessage: 'Name',
+    },
+    grantShortName: {
+        id: 'iaso.snt_malaria.settings.grants.shortName',
+        defaultMessage: 'Short name',
+    },
+    grantDescription: {
+        id: 'iaso.snt_malaria.settings.grants.description',
+        defaultMessage: 'Description',
+    },
+    grantAmount: {
+        id: 'iaso.snt_malaria.settings.grants.amount',
+        defaultMessage: 'Amount',
+    },
+    grantDonor: {
+        id: 'iaso.snt_malaria.settings.grants.donor',
+        defaultMessage: 'Donor',
+    },
+    grantDonorHelp: {
+        id: 'iaso.snt_malaria.settings.grants.donorHelp',
+        defaultMessage:
+            'Pick an existing donor or type a new name; new donors are created when the grant is saved.',
+    },
+    interventionGrant: {
+        id: 'iaso.snt_malaria.settings.intervention.grant',
+        defaultMessage: 'Grant',
+    },
 });

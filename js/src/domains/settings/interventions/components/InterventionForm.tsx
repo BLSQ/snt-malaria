@@ -26,7 +26,7 @@ export const InterventionForm: FC = () => {
         removeChildValue,
     } = useGetExtendedFormikContext<InterventionDetails>();
 
-    const { costUnitTypeOptions } = useInterventionContext();
+    const { costUnitTypeOptions, grantOptions } = useInterventionContext();
 
     const getErrors = useTranslatedErrors({
         errors,
@@ -62,7 +62,7 @@ export const InterventionForm: FC = () => {
                     onChange={setFieldValueAndState}
                     errors={getErrors('name')}
                     labelString={formatMessage(MESSAGES.label)}
-                    wrapperSx={{ flexGrow: 1 }}
+                    wrapperSx={{ flex: '1 1 0', minWidth: 0 }}
                 />
                 <InputComponent
                     keyValue="impact_ref"
@@ -71,7 +71,21 @@ export const InterventionForm: FC = () => {
                     onChange={setFieldValueAndState}
                     errors={getErrors('impact_ref')}
                     labelString={formatMessage(MESSAGES.impactRefLabel)}
-                    wrapperSx={{ flexGrow: 1 }}
+                    wrapperSx={{ flex: '1 1 0', minWidth: 0 }}
+                />
+                <InputComponent
+                    keyValue="grant"
+                    type="select"
+                    multi={false}
+                    clearable
+                    options={grantOptions}
+                    value={values.grant}
+                    onChange={(field, value) =>
+                        setFieldValueAndState(field, value ?? null)
+                    }
+                    errors={getErrors('grant')}
+                    labelString={formatMessage(MESSAGES.interventionGrant)}
+                    wrapperSx={{ flex: '1 1 0', minWidth: 0 }}
                 />
             </Stack>
             <Stack spacing={0} direction="column">

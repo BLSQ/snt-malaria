@@ -307,5 +307,18 @@
     "iaso.snt_malaria.settings.costUnits.ratioSummaryInverse": "Covers {value} people",
     "iaso.snt_malaria.settings.costUnits.ratioSummaryInverseOne": "Covers {value} person",
     "iaso.snt_malaria.settings.costUnits.ratioInvalid": "Please enter a valid number.",
-    "iaso.snt_malaria.settings.costUnits.description": "Description"
+    "iaso.snt_malaria.settings.costUnits.description": "Description",
+    "iaso.snt_malaria.settings.grants.title": "Grants",
+    "iaso.snt_malaria.settings.grants.add": "Add",
+    "iaso.snt_malaria.settings.grants.new": "New grant",
+    "iaso.snt_malaria.settings.grants.delete": "Delete",
+    "iaso.snt_malaria.settings.grants.deleteConfirmTitle": "Delete this grant?",
+    "iaso.snt_malaria.settings.grants.deleteConfirmMessage": "This grant will be permanently removed. Grants that are assigned to an intervention cannot be deleted.",
+    "iaso.snt_malaria.settings.grants.name": "Name",
+    "iaso.snt_malaria.settings.grants.shortName": "Short name",
+    "iaso.snt_malaria.settings.grants.description": "Description",
+    "iaso.snt_malaria.settings.grants.amount": "Amount",
+    "iaso.snt_malaria.settings.grants.donor": "Donor",
+    "iaso.snt_malaria.settings.grants.donorHelp": "Pick an existing donor or type a new name; new donors are created when the grant is saved.",
+    "iaso.snt_malaria.settings.intervention.grant": "Grant"
 }

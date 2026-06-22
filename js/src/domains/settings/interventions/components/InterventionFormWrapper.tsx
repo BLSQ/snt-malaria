@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect } from 'react';
+import React, { FC, useCallback, useEffect, useMemo } from 'react';
 import CheckIcon from '@mui/icons-material/Check';
 import { Button, Stack, Typography } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
@@ -12,6 +12,7 @@ import { useGetInterventionDetails } from '../../../interventions/hooks/useGetIn
 import { useSaveInterventionDetails } from '../../../interventions/hooks/useSaveInterventionDetails';
 import { InterventionDetails } from '../../../interventions/types';
 import { MESSAGES } from '../../../messages';
+import { useGetGrants } from '../../grants/hooks/useGetGrants';
 import { InterventionProvider } from '../contexts/InterventionContext';
 import { useGetBudgetSettings } from '../hooks/useGetBudgetSettings';
 import { useInterventionFormState } from '../hooks/useInterventionFormState';
@@ -32,6 +33,16 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
 
     const { data: metricTypes = [] } = useGetMetricTypes(true);
     const { data: budgetSettings } = useGetBudgetSettings();
+    const { data: grants = [] } = useGetGrants();
+
+    const grantOptions = useMemo(
+        () =>
+            grants.map(grant => ({
+                label: grant.name,
+                value: grant.id,
+            })),
+        [grants],
+    );
 
     const {
         mutate: saveInterventionDetails,
@@ -70,6 +81,7 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
         <InterventionProvider
             costCategoryOptions={interventionCostCategories}
             costUnitTypeOptions={interventionCostUnitTypes}
+            grantOptions={grantOptions}
             metricTypes={metricTypes}
             budgetSettings={budgetSettings}
         >
