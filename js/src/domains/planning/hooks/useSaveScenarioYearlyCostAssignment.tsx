@@ -39,6 +39,7 @@ export const useSaveScenarioYearlyCostAssignment = (): UseMutationResult =>
         invalidateQueryKey: [
             'scenarioYearlyCostAssignments',
             'calculated_budget',
+            'budget_by_grant',
         ],
         showSuccessSnackBar: false,
     });

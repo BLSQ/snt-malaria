@@ -18,5 +18,6 @@ export const useReorderScenarioRules = (
             `scenarioRules_${scenarioId}`,
             'interventionAssignments',
             'impact',
+            'budget_by_grant',
         ],
     });

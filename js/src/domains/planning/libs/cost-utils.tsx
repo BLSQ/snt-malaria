@@ -1,3 +1,5 @@
+import { BudgetIntervention } from '../types/budget';
+
 export const INTERVENTION_COLORS = {
     ACTs: '#A2CAEA',
     RDTs: '#ACDF9B',
@@ -9,6 +11,32 @@ export const INTERVENTION_COLORS = {
     'LLIN Routine': '#80B3DC',
     'LLIN Campaign': '#6BD39D',
     IPTp: '#80B3DC',
+};
+
+/**
+ * Shapes intervention budgets into the row-per-intervention format the
+ * (horizontal) cost-breakdown bar chart expects: one object per intervention
+ * with a numeric value per cost category, keyed by category.
+ */
+export const getCostBreakdownChartData = (
+    interventionBudgets: BudgetIntervention[],
+) => {
+    return interventionBudgets
+        ?.map((interventionBudget: BudgetIntervention) =>
+            interventionBudget.cost_breakdown?.reduce(
+                (acc, costLine) => ({
+                    ...acc,
+                    [costLine.category]:
+                        ((acc[costLine.category] as number) ?? 0) +
+                        costLine.total_cost,
+                }),
+                {
+                    interventionType: interventionBudget.type,
+                    interventionCode: interventionBudget.code,
+                } as Record<string, string | number>,
+            ),
+        )
+        .filter(Boolean);
 };
 
 export const formatPercentValue = (value: number) => {

@@ -1,5 +1,13 @@
-import React, { ComponentProps, FC, useCallback, useMemo, useState } from 'react';
-import { Card } from '@mui/material';
+import React, {
+    ComponentProps,
+    FC,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
+import { Box, Card, CardHeader } from '@mui/material';
 import {
     LoadingSpinner,
     useRedirectToReplace,
@@ -26,7 +34,11 @@ import { MESSAGES } from '../messages';
 import { useDeleteScenario } from '../scenarios/hooks/useDeleteScenario';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
+import { BudgetSummary } from './components/budgeting/BudgetSummary';
 import { BudgetTable } from './components/budgeting/BudgetTable';
+import { CostPerDistrictSummary } from './components/budgeting/CostPerDistrictSummary';
+import { CostPerInterventionSummary } from './components/budgeting/CostPerInterventionSummary';
+import { PrevalenceSummary } from './components/budgeting/PrevalenceSummary';
 import { InterventionPlanHeader } from './components/interventionPlan/InterventionPlanHeader';
 import { InterventionPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
@@ -48,6 +60,65 @@ const styles = {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+    },
+    summaryColumn: {
+        flex: 1,
+        width: '100%',
+        // Override PaperFullHeight's viewport height; flex fills MainColumn.
+        height: 0,
+        minHeight: 0,
+        maxHeight: '100%',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+    },
+    summaryHeaderCard: {
+        mb: 1,
+        flexShrink: 0,
+    },
+    // Equal py keeps the controls symmetric; minHeight 81px matches the other
+    // tabs' content box so they don't jump when switching.
+    summaryHeader: {
+        py: 2,
+        minHeight: '81px',
+    },
+    summaryGrid: {
+        flex: 1,
+        width: '100%',
+        minHeight: 0,
+        display: 'flex',
+        gap: 1,
+    },
+    summaryLeftColumn: {
+        flex: 4,
+        minWidth: 0,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+    },
+    summaryRightColumn: {
+        flex: 8,
+        minWidth: 0,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+    },
+    summaryWidget: {
+        flex: 1,
+        minHeight: 0,
+        overflow: 'hidden',
+    },
+    summaryWidgetThird: {
+        flex: 1,
+        minHeight: 0,
+        overflow: 'hidden',
+    },
+    summaryWidgetTwoThirds: {
+        flex: 2,
+        minHeight: 0,
+        overflow: 'hidden',
     },
 } satisfies SxStyles;
 
@@ -79,6 +150,17 @@ export const Planning: FC = () => {
     const { data: scenario } = useGetScenario(scenarioId);
     const { formatMessage } = useSafeIntl();
     const [activeTab, setActiveTab] = useState('map');
+
+    // Locked scenarios default to the summary tab, once, on first load.
+    const didInitActiveTab = useRef(false);
+    useEffect(() => {
+        if (scenario && !didInitActiveTab.current) {
+            didInitActiveTab.current = true;
+            if (scenario.is_locked) {
+                setActiveTab('summary');
+            }
+        }
+    }, [scenario]);
 
     const { data: metricTypeCategories } = useGetMetricCategories('any');
     const { data: interventionCategories } = useGetInterventionCategories();
@@ -202,6 +284,19 @@ export const Planning: FC = () => {
         ],
     });
 
+    const planHeader = (
+        <InterventionPlanHeader
+            onTabChange={onSetTab}
+            activeTab={activeTab}
+            onDeleteScenario={handleDeleteScenario}
+            onToggleLockScenario={handleToggleLockScenario}
+            onOrgUnitChange={handleDisplayOrgUnitChange}
+            selectedOrgUnitId={displayOrgUnitId}
+            lockScenarioRef={tour.anchorRefs[2]}
+            moreActionsRef={tour.anchorRefs[1]}
+        />
+    );
+
     return metricTypeCategories && interventionCategories ? (
         <PlanningProvider
             scenarioId={scenarioId}
@@ -228,42 +323,52 @@ export const Planning: FC = () => {
                         isLoadingPreview={isLoadingPreview}
                     />
                     <MainColumn>
-                        <PaperFullHeight>
-                            <Card sx={styles.card}>
-                                <CardStyled
-                                    header={
-                                        <InterventionPlanHeader
-                                            onTabChange={onSetTab}
-                                            activeTab={activeTab}
-                                            onDeleteScenario={
-                                                handleDeleteScenario
-                                            }
-                                            onToggleLockScenario={
-                                                handleToggleLockScenario
-                                            }
-                                            onOrgUnitChange={
-                                                handleDisplayOrgUnitChange
-                                            }
-                                            selectedOrgUnitId={displayOrgUnitId}
-                                            lockScenarioRef={tour.anchorRefs[2]}
-                                            moreActionsRef={tour.anchorRefs[1]}
-                                        />
-                                    }
-                                >
-                                    {activeTab === 'map' && (
-                                        <InterventionPlanMap
-                                            matchedOrgUnitIds={
-                                                matchedOrgUnitIds
-                                            }
-                                            previewRule={previewRule}
-                                        />
-                                    )}
-                                    {activeTab === 'budget' &&
-                                        orgUnits &&
-                                        budget && <BudgetTable />}
-                                </CardStyled>
-                            </Card>
-                        </PaperFullHeight>
+                        {activeTab === 'summary' ? (
+                            <PaperFullHeight sx={styles.summaryColumn}>
+                                <Card sx={styles.summaryHeaderCard}>
+                                    <CardHeader
+                                        sx={styles.summaryHeader}
+                                        title={planHeader}
+                                    />
+                                </Card>
+                                <Box sx={styles.summaryGrid}>
+                                    <Box sx={styles.summaryLeftColumn}>
+                                        <Box sx={styles.summaryWidget}>
+                                            <BudgetSummary />
+                                        </Box>
+                                        <Box sx={styles.summaryWidget}>
+                                            <CostPerInterventionSummary />
+                                        </Box>
+                                    </Box>
+                                    <Box sx={styles.summaryRightColumn}>
+                                        <Box sx={styles.summaryWidgetThird}>
+                                            <PrevalenceSummary />
+                                        </Box>
+                                        <Box sx={styles.summaryWidgetTwoThirds}>
+                                            <CostPerDistrictSummary />
+                                        </Box>
+                                    </Box>
+                                </Box>
+                            </PaperFullHeight>
+                        ) : (
+                            <PaperFullHeight>
+                                <Card sx={styles.card}>
+                                    <CardStyled header={planHeader}>
+                                        {activeTab === 'map' && (
+                                            <InterventionPlanMap
+                                                matchedOrgUnitIds={
+                                                    matchedOrgUnitIds
+                                                }
+                                                previewRule={previewRule}
+                                            />
+                                        )}
+                                        {activeTab === 'budget' &&
+                                            orgUnits &&
+                                            budget && <BudgetTable />}
+                                    </CardStyled>
+                                </Card>
+                            </PaperFullHeight>
+                        )}
                     </MainColumn>
                 </SidebarLayout>
             </PageContainer>
