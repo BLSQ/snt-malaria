@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from 'react';
-import { PaymentsOutlined } from '@mui/icons-material';
+import { VaccinesOutlined } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { lighten } from '@mui/material/styles';
 import { useSafeIntl } from 'bluesquare-components';
@@ -322,7 +322,7 @@ export const CostPerInterventionSummary: FC = () => {
     return (
         <WidgetCard
             title={formatMessage(MESSAGES.costPerInterventionTitle)}
-            icon={PaymentsOutlined}
+            icon={VaccinesOutlined}
             isLoading={isLoading}
             bodySx={{ display: 'flex', flexDirection: 'column' }}
         >
