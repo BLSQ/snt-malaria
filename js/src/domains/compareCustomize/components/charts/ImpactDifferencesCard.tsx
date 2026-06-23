@@ -1,17 +1,14 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
-import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useSafeIntl } from 'bluesquare-components';
+import { ChartEmptyState } from '../../../../components/charts/ChartEmptyState';
+import { WidgetCard } from '../../../../components/WidgetCard';
 import { MESSAGES } from '../../../messages';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { MetricKey } from '../../types';
-import { useMetricConfig } from '../../utils/metricConfig';
 import { getAvailableMetrics } from '../../utils/divergingScale';
-import { Card } from '../Card';
+import { useMetricConfig } from '../../utils/metricConfig';
 import { ImpactDifferencesMap } from '../maps/ImpactDifferencesMap';
-import { ChartEmptyState } from './ChartEmptyState';
-
-const IMPACT_DIFFERENCE_METRIC_KEY = 'impact_difference_metric';
 
 export const ImpactDifferencesCard: FC = () => {
     const {
@@ -54,13 +51,6 @@ export const ImpactDifferencesCard: FC = () => {
         }
     }, [availableMetrics, selectedMetric, metricOptions]);
 
-    const handleMetricChange = useCallback(
-        (_key: string, value: unknown) => {
-            setSelectedMetric(value as MetricKey);
-        },
-        [],
-    );
-
     const isLoading = useMemo(
         () =>
             isImpactLoading ||
@@ -70,28 +60,8 @@ export const ImpactDifferencesCard: FC = () => {
 
     const hasComparison = scenarios.length >= 2;
 
-    const metricDropdown = (
-        <InputComponent
-            keyValue={IMPACT_DIFFERENCE_METRIC_KEY}
-            type="select"
-            labelString={formatMessage(MESSAGES.impactDifferenceMetricLabel)}
-            value={selectedMetric}
-            options={metricOptions}
-            clearable={false}
-            onChange={handleMetricChange}
-            disabled={!hasComparison}
-            withMarginTop={false}
-            wrapperSx={{
-                flexShrink: 0,
-                width: 'auto',
-                minWidth: '20ch',
-                maxWidth: '100%',
-            }}
-        />
-    );
-
     return (
-        <Card
+        <WidgetCard
             title={formatMessage(MESSAGES.impactDifferencesTitle)}
             icon={MapOutlinedIcon}
             bodySx={{
@@ -99,7 +69,12 @@ export const ImpactDifferencesCard: FC = () => {
                 display: 'flex',
                 flexDirection: 'column',
             }}
-            actions={metricDropdown}
+            dropdown={{
+                value: selectedMetric,
+                options: metricOptions,
+                onChange: setSelectedMetric,
+                disabled: !hasComparison,
+            }}
             isLoading={isLoading}
         >
             {hasComparison ? (
@@ -111,6 +86,6 @@ export const ImpactDifferencesCard: FC = () => {
                     )}
                 />
             )}
-        </Card>
+        </WidgetCard>
     );
 };

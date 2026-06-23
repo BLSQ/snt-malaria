@@ -2,6 +2,7 @@ import React, { FC, useMemo } from 'react';
 import ShowChartOutlinedIcon from '@mui/icons-material/ShowChartOutlined';
 import { Box, useTheme } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { SxStyles } from 'Iaso/types/general';
 import {
     CartesianGrid,
     ErrorBar,
@@ -12,14 +13,14 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
-import { SxStyles } from 'Iaso/types/general';
+import { ChartEmptyState } from '../../../../components/charts/ChartEmptyState';
+import { useChartTheme } from '../../../../components/charts/chartTheme';
+import { ChartTooltip } from '../../../../components/charts/ChartTooltip';
+import { WidgetCard } from '../../../../components/WidgetCard';
 import { MESSAGES } from '../../../messages';
 import { formatPercentValue } from '../../../planning/libs/cost-utils';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { buildPrevalenceChartData } from '../../utils/chartData';
-import { Card } from '../Card';
-import { ChartEmptyState } from './ChartEmptyState';
-import { ChartTooltip } from './ChartTooltip';
 
 const styles = {
     chartBody: {
@@ -60,7 +61,7 @@ export const YearlyPrevalenceCard: FC = () => {
     } = useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
     const theme = useTheme();
-    const axisColor = theme.palette.text.secondary;
+    const { gridProps, axisProps } = useChartTheme();
 
     const chartData = useMemo(
         () => buildPrevalenceChartData(scenarios, impactsByScenarioId),
@@ -70,7 +71,7 @@ export const YearlyPrevalenceCard: FC = () => {
     const hasData = chartData.length > 0;
 
     return (
-        <Card
+        <WidgetCard
             title={formatMessage(MESSAGES.yearlyPrevalenceTitle)}
             icon={ShowChartOutlinedIcon}
             bodySx={{ minHeight: 220 }}
@@ -92,21 +93,15 @@ export const YearlyPrevalenceCard: FC = () => {
                                 bottom: -5,
                             }}
                         >
-                            <CartesianGrid
-                                vertical={false}
-                                strokeDasharray=""
-                                stroke={theme.palette.divider}
-                            />
+                            <CartesianGrid vertical={false} {...gridProps} />
                             <XAxis
                                 dataKey="year"
-                                tick={{ fill: axisColor, fontSize: '0.75rem' }}
-                                stroke={axisColor}
+                                {...axisProps}
                                 tickMargin={4}
                             />
                             <YAxis
                                 tickFormatter={formatPercentValue}
-                                tick={{ fill: axisColor, fontSize: '0.75rem' }}
-                                stroke={axisColor}
+                                {...axisProps}
                                 width={50}
                                 tickMargin={2}
                             />
@@ -133,6 +128,6 @@ export const YearlyPrevalenceCard: FC = () => {
                     </ResponsiveContainer>
                 </Box>
             )}
-        </Card>
+        </WidgetCard>
     );
 };

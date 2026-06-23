@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, { FC, useState } from 'react';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import RemoveOutlinedIcon from '@mui/icons-material/RemoveOutlined';
 import {
@@ -15,8 +15,8 @@ import { blueGrey } from '@mui/material/colors';
 import { alpha } from '@mui/material/styles';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
-import { YearRangeSlider } from '../../../components/YearRangeSlider';
 import { SxStyles } from 'Iaso/types/general';
+import { YearRangeSlider } from '../../../components/YearRangeSlider';
 import { MESSAGES } from '../../messages';
 import {
     ImpactProviderMeta,
@@ -25,7 +25,6 @@ import {
     ScenarioOption,
 } from '../types';
 import { getScenarioColor } from '../utils/colors';
-import { Card } from './Card';
 
 type Props = {
     baselineScenarioId: ScenarioId;
@@ -109,9 +108,27 @@ const styles = {
         gap: 0.5,
         mt: 1,
     },
-    cardBackground: {
+    card: {
         backgroundColor: (theme: Theme) =>
             alpha(theme.palette.common.white, 0.5),
+        borderRadius: 4,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        p: 2,
+        gap: 2,
+    },
+    cardHeader: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 2,
+    },
+    cardTitle: {
+        fontSize: '1rem',
+        fontWeight: 500,
+        color: 'text.primary',
     },
     loadingCenter: {
         display: 'flex',
@@ -123,6 +140,9 @@ const styles = {
         alignItems: 'center',
     },
     cardBody: {
+        position: 'relative',
+        flex: 1,
+        minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
     },
@@ -204,9 +224,11 @@ export const ConfigurationPanel: FC<Props> = ({
     const [showUnmatchedDetails, setShowUnmatchedDetails] = useState(false);
 
     return (
-        <Card
-            title={formatMessage(MESSAGES.scenariosTitle)}
-            actions={
+        <Box sx={styles.card}>
+            <Box sx={styles.cardHeader}>
+                <Typography sx={styles.cardTitle}>
+                    {formatMessage(MESSAGES.scenariosTitle)}
+                </Typography>
                 <IconButton
                     size="small"
                     onClick={onAddComparison}
@@ -214,216 +236,259 @@ export const ConfigurationPanel: FC<Props> = ({
                 >
                     <AddOutlinedIcon fontSize="medium" />
                 </IconButton>
-            }
-            cardSx={styles.cardBackground}
-            bodySx={styles.cardBody}
-        >
-            <Box sx={styles.scenarioRow}>
-                <Box
-                    sx={[
-                        styles.scenarioDot,
-                        { backgroundColor: getScenarioColor(0) },
-                    ]}
-                />
-                <Box sx={styles.scenarioSelectWrap}>
-                    <InputComponent
-                        keyValue="scenario"
-                        type="select"
-                        labelString={formatMessage(MESSAGES.baselineLabel)}
-                        value={baselineScenarioId}
-                        options={scenarioOptions}
-                        clearable={false}
-                        onChange={onBaselineSelect}
-                        withMarginTop={false}
-                        wrapperSx={{ width: '100%' }}
+            </Box>
+            <Box sx={styles.cardBody}>
+                <Box sx={styles.scenarioRow}>
+                    <Box
+                        sx={[
+                            styles.scenarioDot,
+                            { backgroundColor: getScenarioColor(0) },
+                        ]}
                     />
-                </Box>
-                <IconButton
-                    size="small"
-                    sx={[styles.iconButton, styles.spacerButton]}
-                >
-                    <RemoveOutlinedIcon fontSize="small" />
-                </IconButton>
-            </Box>
-            {comparisonScenarioIds.map((id, index) => {
-                const filteredOptions = comparisonOptions.filter(
-                    option =>
-                        option.value === id ||
-                        !comparisonScenarioIds.includes(option.value as number),
-                );
-                return (
-                    <Box key={`comparison-${id || index}`} sx={styles.scenarioRow}>
-                        <Box
-                            sx={[
-                                styles.scenarioDot,
-                                {
-                                    backgroundColor: getScenarioColor(index + 1),
-                                },
-                            ]}
+                    <Box sx={styles.scenarioSelectWrap}>
+                        <InputComponent
+                            keyValue="scenario"
+                            type="select"
+                            labelString={formatMessage(MESSAGES.baselineLabel)}
+                            value={baselineScenarioId}
+                            options={scenarioOptions}
+                            clearable={false}
+                            onChange={onBaselineSelect}
+                            withMarginTop={false}
+                            wrapperSx={{ width: '100%' }}
                         />
-                        <Box sx={styles.scenarioSelectWrap}>
-                            <InputComponent
-                                keyValue={`compare_${index}`}
-                                type="select"
-                                labelString={formatMessage(
-                                    MESSAGES.scenarioLabelWithIndex,
-                                    { index: index + 1 },
-                                )}
-                                value={id}
-                                options={filteredOptions}
-                                clearable={false}
-                                onChange={onComparisonSelect(index)}
-                                withMarginTop={false}
-                                wrapperSx={{ width: '100%' }}
-                            />
-                        </Box>
-                        <IconButton
-                            size="small"
-                            onClick={() => onRemoveComparison(index)}
-                            sx={[styles.iconButton, styles.removeButton]}
-                        >
-                            <RemoveOutlinedIcon fontSize="medium" />
-                        </IconButton>
                     </Box>
-                );
-            })}
-            {hasDisplayOptions && (
-                <Box sx={styles.section}>
-                    <Typography sx={styles.sectionTitle}>
-                        {formatMessage(MESSAGES.displayOptionsTitle)}
-                    </Typography>
-                    {isYearRangeLoading && (
-                        <Box sx={styles.loadingCenter}>
-                            <LoadingSpinner />
-                        </Box>
-                    )}
-                    {!isYearRangeLoading && yearRange && onYearRangeChange && (
-                        <YearRangeSlider
-                            yearRange={yearRange}
-                            value={selectedYearRange ?? yearRange}
-                            onChange={onYearRangeChange}
-                        />
-                    )}
-                    {ageGroups && ageGroups.length > 0 && selectedAgeGroup && onAgeGroupChange && (
-                        <Box>
-                            <Typography variant="caption" sx={styles.subLabel}>
-                                {formatMessage(MESSAGES.ageGroupLabel)}
-                            </Typography>
-                            <InputComponent
-                                keyValue="age_group"
-                                type="select"
-                                value={selectedAgeGroup}
-                                options={ageGroups.map(ag => ({
-                                    label: ag,
-                                    value: ag,
-                                }))}
-                                clearable={false}
-                                onChange={onAgeGroupChange}
-                                withMarginTop={false}
+                    <IconButton
+                        size="small"
+                        sx={[styles.iconButton, styles.spacerButton]}
+                    >
+                        <RemoveOutlinedIcon fontSize="small" />
+                    </IconButton>
+                </Box>
+                {comparisonScenarioIds.map((id, index) => {
+                    const filteredOptions = comparisonOptions.filter(
+                        option =>
+                            option.value === id ||
+                            !comparisonScenarioIds.includes(
+                                option.value as number,
+                            ),
+                    );
+                    return (
+                        <Box
+                            key={`comparison-${id || index}`}
+                            sx={styles.scenarioRow}
+                        >
+                            <Box
+                                sx={[
+                                    styles.scenarioDot,
+                                    {
+                                        backgroundColor: getScenarioColor(
+                                            index + 1,
+                                        ),
+                                    },
+                                ]}
                             />
+                            <Box sx={styles.scenarioSelectWrap}>
+                                <InputComponent
+                                    keyValue={`compare_${index}`}
+                                    type="select"
+                                    labelString={formatMessage(
+                                        MESSAGES.scenarioLabelWithIndex,
+                                        { index: index + 1 },
+                                    )}
+                                    value={id}
+                                    options={filteredOptions}
+                                    clearable={false}
+                                    onChange={onComparisonSelect(index)}
+                                    withMarginTop={false}
+                                    wrapperSx={{ width: '100%' }}
+                                />
+                            </Box>
+                            <IconButton
+                                size="small"
+                                onClick={() => onRemoveComparison(index)}
+                                sx={[styles.iconButton, styles.removeButton]}
+                            >
+                                <RemoveOutlinedIcon fontSize="medium" />
+                            </IconButton>
                         </Box>
+                    );
+                })}
+                {hasDisplayOptions && (
+                    <Box sx={styles.section}>
+                        <Typography sx={styles.sectionTitle}>
+                            {formatMessage(MESSAGES.displayOptionsTitle)}
+                        </Typography>
+                        {isYearRangeLoading && (
+                            <Box sx={styles.loadingCenter}>
+                                <LoadingSpinner />
+                            </Box>
+                        )}
+                        {!isYearRangeLoading &&
+                            yearRange &&
+                            onYearRangeChange && (
+                                <YearRangeSlider
+                                    yearRange={yearRange}
+                                    value={selectedYearRange ?? yearRange}
+                                    onChange={onYearRangeChange}
+                                />
+                            )}
+                        {ageGroups &&
+                            ageGroups.length > 0 &&
+                            selectedAgeGroup &&
+                            onAgeGroupChange && (
+                                <Box>
+                                    <Typography
+                                        variant="caption"
+                                        sx={styles.subLabel}
+                                    >
+                                        {formatMessage(MESSAGES.ageGroupLabel)}
+                                    </Typography>
+                                    <InputComponent
+                                        keyValue="age_group"
+                                        type="select"
+                                        value={selectedAgeGroup}
+                                        options={ageGroups.map(ag => ({
+                                            label: ag,
+                                            value: ag,
+                                        }))}
+                                        clearable={false}
+                                        onChange={onAgeGroupChange}
+                                        withMarginTop={false}
+                                    />
+                                </Box>
+                            )}
+                    </Box>
+                )}
+                {hasWarnings && (
+                    <Typography sx={styles.sectionTitle}>
+                        {formatMessage(MESSAGES.warningsTitle)}
+                    </Typography>
+                )}
+                <Box sx={styles.alertsSection}>
+                    {showYearRangeError && (
+                        <Alert
+                            severity="warning"
+                            sx={[styles.alertBox, styles.alertBoxWarning]}
+                        >
+                            <AlertTitle>
+                                {formatMessage(
+                                    MESSAGES.noYearRangeOverlapTitle,
+                                )}
+                            </AlertTitle>
+                            {formatMessage(MESSAGES.noYearRangeOverlap)}
+                        </Alert>
+                    )}
+                    {orgUnitsNotFound && orgUnitsNotFound.length > 0 && (
+                        <Alert
+                            severity="warning"
+                            sx={[styles.alertBox, styles.alertBoxWarning]}
+                        >
+                            <AlertTitle sx={styles.warningTitleRow}>
+                                {formatMessage(MESSAGES.orgUnitsNotFoundTitle)}
+                                <Button
+                                    size="small"
+                                    onClick={() =>
+                                        setShowNotFoundDetails(prev => !prev)
+                                    }
+                                    sx={styles.detailsButton}
+                                >
+                                    {formatMessage(
+                                        showNotFoundDetails
+                                            ? MESSAGES.hideDetails
+                                            : MESSAGES.showDetails,
+                                    )}
+                                </Button>
+                            </AlertTitle>
+                            {formatMessage(MESSAGES.orgUnitsNotFound)}
+                            {showNotFoundDetails && (
+                                <Box sx={styles.chipContainer}>
+                                    {orgUnitsNotFound.flatMap(
+                                        ({ scenario, orgUnits }) =>
+                                            orgUnits.map(ou => (
+                                                <Chip
+                                                    key={`${scenario.id}-${ou.org_unit_id}`}
+                                                    label={ou.org_unit_name}
+                                                    size="small"
+                                                    sx={[
+                                                        styles.scenarioChip,
+                                                        {
+                                                            backgroundColor:
+                                                                scenario.color,
+                                                        },
+                                                    ]}
+                                                />
+                                            )),
+                                    )}
+                                </Box>
+                            )}
+                        </Alert>
+                    )}
+                    {orgUnitsWithUnmatchedInterventions &&
+                        orgUnitsWithUnmatchedInterventions.length > 0 && (
+                            <Alert
+                                severity="warning"
+                                sx={[styles.alertBox, styles.alertBoxWarning]}
+                            >
+                                <AlertTitle sx={styles.warningTitleRow}>
+                                    {formatMessage(
+                                        MESSAGES.orgUnitsWithUnmatchedInterventionsTitle,
+                                    )}
+                                    <Button
+                                        size="small"
+                                        onClick={() =>
+                                            setShowUnmatchedDetails(
+                                                prev => !prev,
+                                            )
+                                        }
+                                        sx={styles.detailsButton}
+                                    >
+                                        {formatMessage(
+                                            showUnmatchedDetails
+                                                ? MESSAGES.hideDetails
+                                                : MESSAGES.showDetails,
+                                        )}
+                                    </Button>
+                                </AlertTitle>
+                                {formatMessage(
+                                    MESSAGES.orgUnitsWithUnmatchedInterventions,
+                                )}
+                                {showUnmatchedDetails && (
+                                    <Box sx={styles.chipContainer}>
+                                        {orgUnitsWithUnmatchedInterventions.flatMap(
+                                            ({ scenario, orgUnits }) =>
+                                                orgUnits.map(ou => (
+                                                    <Chip
+                                                        key={`${scenario.id}-${ou.org_unit_id}`}
+                                                        label={ou.org_unit_name}
+                                                        size="small"
+                                                        sx={[
+                                                            styles.scenarioChip,
+                                                            {
+                                                                backgroundColor:
+                                                                    scenario.color,
+                                                            },
+                                                        ]}
+                                                    />
+                                                )),
+                                        )}
+                                    </Box>
+                                )}
+                            </Alert>
+                        )}
+                    {isFakeProvider && (
+                        <Alert
+                            severity="info"
+                            sx={[styles.alertBox, styles.alertBoxInfo]}
+                        >
+                            <AlertTitle>
+                                {formatMessage(MESSAGES.fakeProviderInfoTitle)}
+                            </AlertTitle>
+                            {formatMessage(MESSAGES.fakeProviderInfoBody)}
+                        </Alert>
                     )}
                 </Box>
-            )}
-            {hasWarnings && (
-                <Typography sx={styles.sectionTitle}>
-                    {formatMessage(MESSAGES.warningsTitle)}
-                </Typography>
-            )}
-            <Box sx={styles.alertsSection}>
-                {showYearRangeError && (
-                    <Alert
-                        severity="warning"
-                        sx={[styles.alertBox, styles.alertBoxWarning]}
-                    >
-                        <AlertTitle>
-                            {formatMessage(MESSAGES.noYearRangeOverlapTitle)}
-                        </AlertTitle>
-                        {formatMessage(MESSAGES.noYearRangeOverlap)}
-                    </Alert>
-                )}
-                {orgUnitsNotFound && orgUnitsNotFound.length > 0 && (
-                    <Alert
-                        severity="warning"
-                        sx={[styles.alertBox, styles.alertBoxWarning]}
-                    >
-                        <AlertTitle sx={styles.warningTitleRow}>
-                            {formatMessage(MESSAGES.orgUnitsNotFoundTitle)}
-                            <Button
-                                size="small"
-                                onClick={() => setShowNotFoundDetails(prev => !prev)}
-                                sx={styles.detailsButton}
-                            >
-                                {formatMessage(showNotFoundDetails ? MESSAGES.hideDetails : MESSAGES.showDetails)}
-                            </Button>
-                        </AlertTitle>
-                        {formatMessage(MESSAGES.orgUnitsNotFound)}
-                        {showNotFoundDetails && (
-                            <Box sx={styles.chipContainer}>
-                                {orgUnitsNotFound.flatMap(({ scenario, orgUnits }) =>
-                                    orgUnits.map(ou => (
-                                        <Chip
-                                            key={`${scenario.id}-${ou.org_unit_id}`}
-                                            label={ou.org_unit_name}
-                                            size="small"
-                                            sx={[
-                                                styles.scenarioChip,
-                                                { backgroundColor: scenario.color },
-                                            ]}
-                                        />
-                                    )),
-                                )}
-                            </Box>
-                        )}
-                    </Alert>
-                )}
-                {orgUnitsWithUnmatchedInterventions && orgUnitsWithUnmatchedInterventions.length > 0 && (
-                    <Alert
-                        severity="warning"
-                        sx={[styles.alertBox, styles.alertBoxWarning]}
-                    >
-                        <AlertTitle sx={styles.warningTitleRow}>
-                            {formatMessage(MESSAGES.orgUnitsWithUnmatchedInterventionsTitle)}
-                            <Button
-                                size="small"
-                                onClick={() => setShowUnmatchedDetails(prev => !prev)}
-                                sx={styles.detailsButton}
-                            >
-                                {formatMessage(showUnmatchedDetails ? MESSAGES.hideDetails : MESSAGES.showDetails)}
-                            </Button>
-                        </AlertTitle>
-                        {formatMessage(MESSAGES.orgUnitsWithUnmatchedInterventions)}
-                        {showUnmatchedDetails && (
-                            <Box sx={styles.chipContainer}>
-                                {orgUnitsWithUnmatchedInterventions.flatMap(({ scenario, orgUnits }) =>
-                                    orgUnits.map(ou => (
-                                        <Chip
-                                            key={`${scenario.id}-${ou.org_unit_id}`}
-                                            label={ou.org_unit_name}
-                                            size="small"
-                                            sx={[
-                                                styles.scenarioChip,
-                                                { backgroundColor: scenario.color },
-                                            ]}
-                                        />
-                                    )),
-                                )}
-                            </Box>
-                        )}
-                    </Alert>
-                )}
-                {isFakeProvider && (
-                    <Alert
-                        severity="info"
-                        sx={[styles.alertBox, styles.alertBoxInfo]}
-                    >
-                        <AlertTitle>
-                            {formatMessage(MESSAGES.fakeProviderInfoTitle)}
-                        </AlertTitle>
-                        {formatMessage(MESSAGES.fakeProviderInfoBody)}
-                    </Alert>
-                )}
             </Box>
-        </Card>
+        </Box>
     );
 };

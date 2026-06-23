@@ -47,7 +47,7 @@ const styles = {
 export const ChartTooltip: FC<Props> = ({ title, rows }) => (
     <Box sx={styles.root}>
         <Typography sx={styles.title}>{title}</Typography>
-        {rows.map((row) => (
+        {rows.map(row => (
             <Box key={row.label} sx={styles.row}>
                 {row.color && (
                     <Box sx={{ ...styles.dot, backgroundColor: row.color }} />
