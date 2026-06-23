@@ -2,7 +2,7 @@ name: SNT malaria - pull requests
 
 on:
   pull_request:
-    types: [ opened, synchronize, ready_for_review, edited ]
+    types: [ opened, synchronize, ready_for_review ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
