@@ -136,7 +136,9 @@ export const PlanningProvider = ({
         [setIsEditing],
     );
 
-    const [showRulesPanel, setShowRulesPanel] = useState(true);
+    const [showRulesPanel, setShowRulesPanel] = useState(
+        scenario?.is_locked ? false : true,
+    );
     const toggleShowRulesPanel = useCallback(
         () => setShowRulesPanel(v => !v),
         [],
