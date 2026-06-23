@@ -934,4 +934,45 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.intervention.grant',
         defaultMessage: 'Grant',
     },
+    generalTitle: {
+        id: 'iaso.snt_malaria.settings.general.title',
+        defaultMessage: 'General',
+    },
+    budgetSettingsTitle: {
+        id: 'iaso.snt_malaria.settings.budget.title',
+        defaultMessage: 'Budget',
+    },
+    budgetSettingsSubtitle: {
+        id: 'iaso.snt_malaria.settings.budget.subtitle',
+        defaultMessage:
+            'Set the currency and rates used to compute intervention costs and projections.',
+    },
+    budgetLocalCurrency: {
+        id: 'iaso.snt_malaria.settings.budget.localCurrency',
+        defaultMessage: 'Local currency (ISO code)',
+    },
+    budgetLocalCurrencyHelp: {
+        id: 'iaso.snt_malaria.settings.budget.localCurrencyHelp',
+        defaultMessage: 'Three-letter code, e.g. USD, EUR, XOF.',
+    },
+    budgetExchangeRate: {
+        id: 'iaso.snt_malaria.settings.budget.exchangeRate',
+        defaultMessage: 'Exchange rate (local per USD)',
+    },
+    budgetInflationRate: {
+        id: 'iaso.snt_malaria.settings.budget.inflationRate',
+        defaultMessage: 'Annual inflation rate',
+    },
+    budgetInflationRateHelp: {
+        id: 'iaso.snt_malaria.settings.budget.inflationRateHelp',
+        defaultMessage: 'Decimal value, e.g. 0.03 for 3%.',
+    },
+    budgetInvalidNumber: {
+        id: 'iaso.snt_malaria.settings.budget.invalidNumber',
+        defaultMessage: 'Please enter a valid number.',
+    },
+    budgetInvalidCurrencyCode: {
+        id: 'iaso.snt_malaria.settings.budget.invalidCurrencyCode',
+        defaultMessage: 'Enter a 3-letter currency code.',
+    },
 });
