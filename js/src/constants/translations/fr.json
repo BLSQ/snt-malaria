@@ -137,6 +137,8 @@
     "iaso.snt_malaria.scenario.scenarioImportError": "Erreur lors de l'import du scénario.",
     "iaso.snt_malaria.scenario.unlockScenario": "Déverrouiller le scénario",
     "iaso.snt_malaria.scenario.lockScenario": "Verrouiller le scénario",
+    "iaso.snt_malaria.planning.hideRulesPanel": "Masquer le panneau des règles",
+    "iaso.snt_malaria.planning.showRulesPanel": "Afficher le panneau des règles",
     "iaso.snt_malaria.scenario.modalUnlockScenarioConfirm": "Voulez-vous vraiment déverrouiller ce scénario ? Le déverrouillage d'un scénario permet de le modifier à nouveau.",
     "iaso.snt_malaria.scenario.modalLockScenarioConfirm": "Voulez-vous vraiment verrouiller ce scénario ? Le verrouillage d'un scénario empêchera toute modification ultérieure.",
     "iaso.snt_malaria.scenario.errors.maxYear": "L'année doit être au plus {year}",

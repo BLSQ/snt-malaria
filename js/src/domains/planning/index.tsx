@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, { ComponentProps, FC, useCallback, useMemo, useState } from 'react';
 import { Card } from '@mui/material';
 import {
     LoadingSpinner,
@@ -30,7 +30,10 @@ import { BudgetTable } from './components/budgeting/BudgetTable';
 import { InterventionPlanHeader } from './components/interventionPlan/InterventionPlanHeader';
 import { InterventionPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
-import { PlanningProvider } from './contexts/PlanningContext';
+import {
+    PlanningProvider,
+    usePlanningContext,
+} from './contexts/PlanningContext';
 import { useGetAccountSettings } from './hooks/useGetAccountSettings';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetLatestCalculatedBudget } from './hooks/useGetLatestCalculatedBudget';
@@ -51,6 +54,18 @@ const styles = {
 type PlanningParams = {
     scenarioId: number;
     displayOrgUnitId?: number;
+};
+
+const ScenarioRulesSidebar: FC<
+    ComponentProps<typeof ScenarioRulesPanel>
+> = props => {
+    const { showRulesPanel } = usePlanningContext();
+    if (!showRulesPanel) return null;
+    return (
+        <SidebarColumn>
+            <ScenarioRulesPanel {...props} />
+        </SidebarColumn>
+    );
 };
 
 export const Planning: FC = () => {
@@ -203,17 +218,15 @@ export const Planning: FC = () => {
             <TopBar title={title} disableShadow sx={{ zIndex: 401 }} />
             <PageContainer>
                 <SidebarLayout>
-                    <SidebarColumn>
-                        <ScenarioRulesPanel
-                            onPreviewScenarioRule={onPreviewScenarioRule}
-                            scenarioId={scenarioId}
-                            rules={scenarioRules || []}
-                            isLoading={isFetchingRules}
-                            createRuleRef={tour.anchorRefs[0]}
-                            matchedOrgUnitIds={matchedOrgUnitIds}
-                            isLoadingPreview={isLoadingPreview}
-                        />
-                    </SidebarColumn>
+                    <ScenarioRulesSidebar
+                        onPreviewScenarioRule={onPreviewScenarioRule}
+                        scenarioId={scenarioId}
+                        rules={scenarioRules || []}
+                        isLoading={isFetchingRules}
+                        createRuleRef={tour.anchorRefs[0]}
+                        matchedOrgUnitIds={matchedOrgUnitIds}
+                        isLoadingPreview={isLoadingPreview}
+                    />
                     <MainColumn>
                         <PaperFullHeight>
                             <Card sx={styles.card}>

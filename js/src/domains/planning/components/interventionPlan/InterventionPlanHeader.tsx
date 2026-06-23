@@ -1,12 +1,15 @@
 import React, { FC, Ref, useCallback } from 'react';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
+import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import {
     Box,
+    IconButton,
     MenuItem,
     Stack,
     ToggleButton,
     ToggleButtonGroup,
+    Tooltip,
 } from '@mui/material';
 import { Link as MuiLink } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -50,8 +53,14 @@ export const InterventionPlanHeader: FC<Props> = ({
     lockScenarioRef,
     moreActionsRef,
 }) => {
-    const { scenarioId, scenario, canEditScenario, isScenarioEditable } =
-        usePlanningContext();
+    const {
+        scenarioId,
+        scenario,
+        canEditScenario,
+        isScenarioEditable,
+        showRulesPanel,
+        toggleShowRulesPanel,
+    } = usePlanningContext();
     const csvUrl = `${exportScenarioAPIPath}?id=${scenarioId}`;
 
     const { formatMessage } = useSafeIntl();
@@ -73,19 +82,34 @@ export const InterventionPlanHeader: FC<Props> = ({
             justifyContent="space-between"
             alignItems="center"
         >
-            <ToggleButtonGroup
-                value={activeTab}
-                size="small"
-                onChange={(_, value) => onTabChange(value)}
-                exclusive
-            >
-                <ToggleButton value="map" key="map">
-                    {formatMessage(MESSAGES.mapView)}
-                </ToggleButton>
-                <ToggleButton value="budget" key="budget">
-                    {formatMessage(MESSAGES.budgetView)}
-                </ToggleButton>
-            </ToggleButtonGroup>
+            <Stack direction="row" spacing={2}>
+                <Tooltip
+                    title={formatMessage(
+                        showRulesPanel
+                            ? MESSAGES.hideRulesPanel
+                            : MESSAGES.showRulesPanel,
+                    )}
+                >
+                    <IconButton size="small" onClick={toggleShowRulesPanel}>
+                        <ViewSidebarIcon
+                            color={showRulesPanel ? 'primary' : 'action'}
+                        />
+                    </IconButton>
+                </Tooltip>
+                <ToggleButtonGroup
+                    value={activeTab}
+                    size="small"
+                    onChange={(_, value) => onTabChange(value)}
+                    exclusive
+                >
+                    <ToggleButton value="map" key="map">
+                        {formatMessage(MESSAGES.mapView)}
+                    </ToggleButton>
+                    <ToggleButton value="budget" key="budget">
+                        {formatMessage(MESSAGES.budgetView)}
+                    </ToggleButton>
+                </ToggleButtonGroup>
+            </Stack>
             <Stack direction="row" spacing={2} alignItems="center">
                 <OrgUnitSelect
                     onOrgUnitChange={onOrgUnitChange}
