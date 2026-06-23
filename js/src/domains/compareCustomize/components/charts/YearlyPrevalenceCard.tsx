@@ -16,11 +16,15 @@ import {
 import { ChartEmptyState } from '../../../../components/charts/ChartEmptyState';
 import { useChartTheme } from '../../../../components/charts/chartTheme';
 import { ChartTooltip } from '../../../../components/charts/ChartTooltip';
+import { useAutoYAxisWidth } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { MESSAGES } from '../../../messages';
 import { formatPercentValue } from '../../../planning/libs/cost-utils';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
-import { buildPrevalenceChartData } from '../../utils/chartData';
+import {
+    buildPrevalenceChartData,
+    getPrevalenceMaxValue,
+} from '../../utils/chartData';
 
 const styles = {
     chartBody: {
@@ -70,6 +74,21 @@ export const YearlyPrevalenceCard: FC = () => {
 
     const hasData = chartData.length > 0;
 
+    // Size the (numeric) value axis to its widest formatted tick so the percent
+    // labels aren't clipped and the axis only takes the space it needs.
+    const yAxisLabels = useMemo(
+        () => [
+            formatPercentValue(
+                getPrevalenceMaxValue(
+                    chartData,
+                    scenarios.map(scenario => scenario.label),
+                ),
+            ),
+        ],
+        [chartData, scenarios],
+    );
+    const { width: yAxisWidth } = useAutoYAxisWidth({ labels: yAxisLabels });
+
     return (
         <WidgetCard
             title={formatMessage(MESSAGES.yearlyPrevalenceTitle)}
@@ -102,7 +121,7 @@ export const YearlyPrevalenceCard: FC = () => {
                             <YAxis
                                 tickFormatter={formatPercentValue}
                                 {...axisProps}
-                                width={50}
+                                width={yAxisWidth}
                                 tickMargin={2}
                             />
                             <Tooltip content={<PrevalenceTooltip />} />

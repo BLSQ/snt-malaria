@@ -18,6 +18,7 @@ import {
     ChartTooltip,
     ChartTooltipRow,
 } from '../../../../components/charts/ChartTooltip';
+import { useAutoYAxisWidth } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
@@ -219,6 +220,14 @@ export const BudgetSummary: FC = () => {
         return max > 0 ? max * 1.1 : 0;
     }, [chartData]);
 
+    // Size the (numeric) value axis to its widest formatted tick (e.g. the top
+    // "100.00M"), which the domain max produces, so labels aren't clipped.
+    const yAxisLabels = useMemo(
+        () => (chartData.length > 0 ? [formatBigNumber(yMax)] : []),
+        [chartData, yMax],
+    );
+    const { width: yAxisWidth } = useAutoYAxisWidth({ labels: yAxisLabels });
+
     const renderTooltip = ({ active, payload }: any) => {
         if (!active || !payload?.length) {
             return null;
@@ -282,7 +291,7 @@ export const BudgetSummary: FC = () => {
                                         formatBigNumber(value as number)
                                     }
                                     {...axisProps}
-                                    width={50}
+                                    width={yAxisWidth}
                                     tickMargin={2}
                                 />
                                 <Tooltip

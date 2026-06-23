@@ -18,6 +18,7 @@ import {
 import { ChartEmptyState } from '../../../../components/charts/ChartEmptyState';
 import { useChartTheme } from '../../../../components/charts/chartTheme';
 import { ChartTooltip } from '../../../../components/charts/ChartTooltip';
+import { useAutoYAxisWidth } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { MESSAGES } from '../../../messages';
 import { formatBigNumber } from '../../../planning/libs/cost-utils';
@@ -111,6 +112,11 @@ export const CostPerAvertedCaseCard: FC = () => {
         [chartData],
     );
 
+    // Size the (category) scenario-name axis to its widest label so it only
+    // takes the space it needs.
+    const yAxisLabels = useMemo(() => chartData.map(d => d.name), [chartData]);
+    const { width: yAxisWidth } = useAutoYAxisWidth({ labels: yAxisLabels });
+
     const emptyMessage = useMemo(() => {
         if (!hasComparison) {
             return formatMessage(MESSAGES.costPerAvertedCaseSelectComparison);
@@ -149,7 +155,7 @@ export const CostPerAvertedCaseCard: FC = () => {
                                 type="category"
                                 dataKey="name"
                                 {...axisProps}
-                                width={80}
+                                width={yAxisWidth}
                             />
                             <XAxis
                                 type="number"

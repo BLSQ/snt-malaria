@@ -19,12 +19,16 @@ import {
     ChartTooltip,
     ChartTooltipRow,
 } from '../../../../components/charts/ChartTooltip';
+import { useAutoYAxisWidth } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { useGetImpactAgeGroups } from '../../../compareCustomize/hooks/useGetImpactAgeGroups';
 import { useGetImpactYearRange } from '../../../compareCustomize/hooks/useGetImpactYearRange';
 import { useGetScenarioImpact } from '../../../compareCustomize/hooks/useGetScenarioImpact';
 import { ScenarioImpactMetrics } from '../../../compareCustomize/types';
-import { buildPrevalenceChartData } from '../../../compareCustomize/utils/chartData';
+import {
+    buildPrevalenceChartData,
+    getPrevalenceMaxValue,
+} from '../../../compareCustomize/utils/chartData';
 import { intersectYearRanges } from '../../../compareCustomize/utils/yearRange';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
@@ -87,6 +91,21 @@ export const PrevalenceSummary: FC = () => {
         isFetching || yearRangeQuery.isFetching || ageGroupsQuery.isFetching;
     const hasData = chartData.length > 0;
 
+    // Size the (numeric) value axis to its widest formatted tick so the percent
+    // labels aren't clipped and the axis only takes the space it needs.
+    const yAxisLabels = useMemo(
+        () => [
+            formatPercentValue(
+                getPrevalenceMaxValue(
+                    chartData,
+                    scenarios.map(line => line.label),
+                ),
+            ),
+        ],
+        [chartData, scenarios],
+    );
+    const { width: yAxisWidth } = useAutoYAxisWidth({ labels: yAxisLabels });
+
     const renderTooltip = ({ active, label, payload }: any) => {
         if (!active || !payload?.length) {
             return null;
@@ -126,7 +145,7 @@ export const PrevalenceSummary: FC = () => {
                             <YAxis
                                 tickFormatter={formatPercentValue}
                                 {...axisProps}
-                                width={50}
+                                width={yAxisWidth}
                                 tickMargin={2}
                             />
                             <Tooltip content={renderTooltip} />
