@@ -5,10 +5,10 @@ import {
     useRedirectToReplace,
     useSafeIntl,
 } from 'bluesquare-components';
+import { useNavigate } from 'react-router';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { SxStyles } from 'Iaso/types/general';
-import { useNavigate } from 'react-router';
 import { CardStyled } from '../../components/CardStyled';
 import {
     MainColumn,
@@ -128,6 +128,11 @@ export const Planning: FC = () => {
     const { mutate: previewScenarioRule, isLoading: isLoadingPreview } =
         usePreviewScenarioRule();
 
+    const onSetTab = useCallback(
+        (tab: string) => tab && setActiveTab(tab),
+        [setActiveTab],
+    );
+
     const onPreviewScenarioRule = useCallback(
         (rule?: Partial<ScenarioRule>) => {
             setPreviewRule(rule);
@@ -215,7 +220,7 @@ export const Planning: FC = () => {
                                 <CardStyled
                                     header={
                                         <InterventionPlanHeader
-                                            onTabChange={setActiveTab}
+                                            onTabChange={onSetTab}
                                             activeTab={activeTab}
                                             onDeleteScenario={
                                                 handleDeleteScenario
