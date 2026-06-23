@@ -25,13 +25,13 @@ const styles = {
     listItem: {
         cursor: 'pointer',
         borderRadius: 2,
-        paddingX: (theme: Theme) => theme.spacing(1),
+        padding: (theme: Theme) => theme.spacing(0, 1),
     },
     activeListItem: {
         cursor: 'pointer',
         backgroundColor: (theme: Theme) => theme.palette.primary.light,
         borderRadius: 2,
-        paddingX: (theme: Theme) => theme.spacing(1),
+        padding: (theme: Theme) => theme.spacing(0, 1),
     },
     listItemIcon: {
         minWidth: 36,
@@ -93,8 +93,6 @@ export const GeneralSettings: FC = () => {
                                 return (
                                     <ListItem
                                         key={section.key}
-                                        disableGutters
-                                        disablePadding
                                         onClick={() =>
                                             setActiveKey(section.key)
                                         }

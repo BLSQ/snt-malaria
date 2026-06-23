@@ -3,9 +3,12 @@ import { useSafeIntl } from 'bluesquare-components';
 import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
 import { MESSAGES } from '../../../messages';
+import { BudgetSettingsFormValues } from '../types';
 
-const emptyToNull = (value: unknown, originalValue: unknown) =>
-    originalValue === '' ? null : value;
+const emptyToNull = (
+    value: string | null,
+    originalValue: string,
+): string | null => (originalValue === '' ? null : value);
 
 const useValidation = () => {
     const { formatMessage } = useSafeIntl();
@@ -37,8 +40,11 @@ export const useBudgetSettingsFormState = ({
     onSubmit,
     initialValues,
 }: {
-    onSubmit: (values: any, formikHelpers?: FormikHelpers<any>) => void;
-    initialValues: any;
+    onSubmit: (
+        values: BudgetSettingsFormValues,
+        formikHelpers?: FormikHelpers<BudgetSettingsFormValues>,
+    ) => void;
+    initialValues: BudgetSettingsFormValues;
 }) => {
     const validationSchema = useValidation();
     const formik = useFormik({

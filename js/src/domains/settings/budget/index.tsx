@@ -16,7 +16,7 @@ import { MESSAGES } from '../../messages';
 import { useBudgetSettingsFormState } from './hooks/useBudgetSettingsFormState';
 import { useGetBudgetSettings } from './hooks/useGetBudgetSettings';
 import { useSaveBudgetSettings } from './hooks/useSaveBudgetSettings';
-import { BudgetSettingsPayload } from './types';
+import { BudgetSettingsFormValues } from './types';
 
 export const BudgetSettingsTab: FC = () => {
     const { formatMessage } = useSafeIntl();
@@ -36,7 +36,7 @@ export const BudgetSettingsTab: FC = () => {
     );
 
     const onSubmit = useCallback(
-        (values: BudgetSettingsPayload) => {
+        (values: BudgetSettingsFormValues) => {
             if (!values.id) {
                 return;
             }
