@@ -1,8 +1,6 @@
-import React, { FC, useMemo } from 'react';
-import EditIcon from '@mui/icons-material/Edit';
+import React, { FC, useMemo, useState } from 'react';
 import { Box, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { EditIconButton } from 'Iaso/components/Buttons/EditIconButton';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';
 import { noOp } from 'Iaso/utils';
@@ -15,9 +13,18 @@ import { ScenarioRule } from '../../../types/scenarioRule';
 const styles: SxStyles = {
     colorBox: {
         width: 16,
+        minWidth: 16,
         height: 16,
         mr: 2,
         borderRadius: '5px',
+    },
+    contentBox: {
+        width: '100%',
+    },
+    deleteAction: {
+        display: 'flex',
+        alignItems: 'center',
+        ml: 'auto',
     },
     rulesText: {
         ml: 4,
@@ -37,6 +44,7 @@ type Props = {
 
 export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
     const { formatMessage } = useSafeIntl();
+    const [hovered, setHovered] = useState(false);
     const { mutateAsync: deleteScenarioRule } =
         useDeleteScenarioRule(scenarioId);
 
@@ -75,53 +83,73 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
     }, [rule, metricTypeNames, formatMessage]);
 
     return (
-        <React.Fragment key={rule.id}>
-            <Grid container direction="row" alignItems="center" mb={1}>
-                <Box
-                    sx={{
-                        ...styles.colorBox,
-                        bgcolor: rule.color,
-                    }}
-                />
-                <Typography
-                    variant="body1"
-                    fontWeight="medium"
-                    sx={{ flexGrow: 1 }}
+        <Grid
+            container
+            direction="row"
+            justifyContent="space-between"
+            key={rule.id}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onClick={isScenarioEditable ? () => onEdit(rule) : undefined}
+            sx={{
+                cursor: isScenarioEditable ? 'pointer' : 'default',
+            }}
+        >
+            <Box sx={styles.contentBox}>
+                <Grid
+                    container
+                    direction="row"
+                    alignItems="center"
+                    mb={1}
+                    flexWrap="nowrap"
                 >
-                    {rule.name ||
-                        generateRuleName(
-                            rule.interventions,
-                            interventionCategories,
-                        )}
-                </Typography>
-                {isScenarioEditable && (
-                    <>
-                        <EditIconButton
-                            onClick={() => onEdit(rule)}
-                            overrideIcon={EditIcon}
-                        />
-                        <DeleteModal
-                            type="icon"
-                            onConfirm={() => deleteScenarioRule(rule.id)}
-                            onCancel={noOp}
-                            titleMessage={MESSAGES.deleteScenarioRule}
-                            iconProps={{}}
-                            backdropClick={true}
-                        >
-                            {formatMessage(
-                                MESSAGES.deleteScenarioRuleConfirmMessage,
+                    <Box
+                        sx={{
+                            ...styles.colorBox,
+                            bgcolor: rule.color,
+                        }}
+                    />
+                    <Typography
+                        variant="body1"
+                        fontWeight="medium"
+                        flexGrow={1}
+                        my={1}
+                        noWrap
+                    >
+                        {rule.name ||
+                            generateRuleName(
+                                rule.interventions,
+                                interventionCategories,
                             )}
-                        </DeleteModal>
-                    </>
-                )}
-            </Grid>
-            <Typography
-                variant="body2"
-                color="textSecondary"
-                sx={styles.rulesText}
-            >
-                {metricTypeCriterionLabel}
-            </Typography>
-        </React.Fragment>
+                    </Typography>
+                    {isScenarioEditable && hovered && (
+                        <Box
+                            onClick={e => e.stopPropagation()}
+                            sx={styles.deleteAction}
+                        >
+                            <DeleteModal
+                                type="icon"
+                                onConfirm={() => deleteScenarioRule(rule.id)}
+                                onCancel={noOp}
+                                titleMessage={MESSAGES.deleteScenarioRule}
+                                iconProps={{}}
+                                backdropClick={true}
+                            >
+                                {formatMessage(
+                                    MESSAGES.deleteScenarioRuleConfirmMessage,
+                                )}
+                            </DeleteModal>
+                        </Box>
+                    )}
+                </Grid>
+                <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    sx={styles.rulesText}
+                >
+                    {metricTypeCriterionLabel}
+                </Typography>
+            </Box>
+        </Grid>
     );
 };
