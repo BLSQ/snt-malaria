@@ -215,7 +215,7 @@ class BudgetCalculationService:
                 if cost_line:
                     bd["unit_cost"] = cost_line.unit_cost
                     bd["cost_unit_name"] = cost_line.unit_type.name if cost_line.unit_type else None
-                    bd["cost_unit_ratio"] = self._get_ratio(cost_line.unit_type)
+                    bd["cost_unit_ratio"] = cost_line.unit_type.value if cost_line.unit_type else None
                     bd["cost_unit_inverted"] = cost_line.unit_type.invert_value
                     bd["target_population"] = cost_line.population_layer.name if cost_line.population_layer else None
 
@@ -233,7 +233,7 @@ class BudgetCalculationService:
                     if cost_line:
                         ou_bd["unit_cost"] = cost_line.unit_cost
                         ou_bd["cost_unit_name"] = cost_line.unit_type.name if cost_line.unit_type else None
-                        ou_bd["cost_unit_ratio"] = self._get_ratio(cost_line.unit_type)
+                        ou_bd["cost_unit_ratio"] = cost_line.unit_type.value if cost_line.unit_type else None
                         ou_bd["cost_unit_inverted"] = cost_line.unit_type.invert_value
                         ou_bd["target_population"] = (
                             cost_line.population_layer.name if cost_line.population_layer else None
@@ -456,13 +456,6 @@ class BudgetCalculationService:
                 )
             )
         return org_units_costs
-
-    def _get_ratio(self, unit_type):
-        ratio = unit_type.ratio if unit_type else None
-        if ratio:
-            ratio = 1 / ratio if unit_type.invert_value else ratio
-
-        return round(float(ratio), 2) if ratio is not None else None
 
     @staticmethod
     def _build_category_costs(category_totals):
