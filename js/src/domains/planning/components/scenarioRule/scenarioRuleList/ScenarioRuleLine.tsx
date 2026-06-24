@@ -93,6 +93,7 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
             onClick={isScenarioEditable ? () => onEdit(rule) : undefined}
             sx={{
                 cursor: isScenarioEditable ? 'pointer' : 'default',
+                p: 2,
             }}
         >
             <Box sx={styles.contentBox}>
@@ -130,7 +131,7 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
                             <DeleteModal
                                 type="icon"
                                 onConfirm={() => deleteScenarioRule(rule.id)}
-                                onCancel={noOp}
+                                onCancel={() => setHovered(false)}
                                 titleMessage={MESSAGES.deleteScenarioRule}
                                 iconProps={{}}
                                 backdropClick={true}
