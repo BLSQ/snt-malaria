@@ -107,7 +107,7 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'People per {unit}',
     },
     budgetingCostLineUnitPerPeople: {
-        id: '',
+        id: 'iaso.snt_malaria.budgeting.costLine.unitPerPerson',
         defaultMessage: '{unit} per person',
     },
     budgetingCostLineBuffer: {

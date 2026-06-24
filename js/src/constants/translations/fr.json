@@ -127,6 +127,7 @@
     "iaso.snt_malaria.budgeting.costLine.targetPop": "Pop. cible",
     "iaso.snt_malaria.budgeting.costLine.conversionFactor": "Facteur de conversion",
     "iaso.snt_malaria.budgeting.costLine.peoplePerUnit": "Personnes par {unit}",
+    "iaso.snt_malaria.budgeting.costLine.unitPerPerson": "{unit} par personne",
     "iaso.snt_malaria.budgeting.costLine.buffer": "Marge",
     "iaso.snt_malaria.budgeting.costChart": "Graphique des coûts",
     "iaso.snt_malaria.budgeting.expandRow": "Développer la ligne",
