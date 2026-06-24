@@ -108,6 +108,8 @@ class MetricsImporter:
         self._validate_csv_files(metadata_file_path, dataset_file_path)
 
         self.stdout_write("Clearing existing metric values...")
+
+        # Remove all metric values
         MetricValue.objects.select_related("metric_type").filter(
             metric_type__account=self.account, metric_type__origin=MetricType.MetricTypeOrigin.OPENHEXA
         ).delete()
@@ -120,7 +122,7 @@ class MetricsImporter:
         with open(dataset_file_path, newline="", encoding="utf-8") as csvfile:
             value_count = self._create_metric_values(csvfile, metric_types, org_units_mapping)
         self.stdout_write("Adding threshold scales...")
-        self._configure_legends()
+        self._configure_legends(metric_types)
 
         self.stdout_write(self.style.SUCCESS("Metrics import completed successfully!"))
         return value_count
@@ -179,8 +181,6 @@ class MetricsImporter:
                         f"Create metric type: {metric_type.name} with legend type: {metric_type.legend_type}"
                     )
 
-                existing_metric_types.pop(row["VARIABLE"], None)
-
                 if metric_type.legend_type not in ["ordinal", "threshold", "linear"]:
                     self.stdout_write(
                         self.style.WARNING(
@@ -212,10 +212,6 @@ class MetricsImporter:
             ],
         )
         self.stdout_write(f"Updated {amount_of_updates} existing MetricTypes.")
-        deleted_count, _ = MetricType.objects.filter(
-            account=self.account, code__in=existing_metric_types.keys()
-        ).delete()
-        self.stdout_write(f"Deleted {deleted_count} MetricTypes.")
 
         return metric_types
 
@@ -297,7 +293,7 @@ class MetricsImporter:
             self.stdout_write(f"ERROR: Error during import, rolling back transaction: {str(e)}")
             raise
 
-    def _configure_legends(self):
-        for metric_type in MetricType.objects.filter(account=self.account, origin=MetricType.MetricTypeOrigin.OPENHEXA):
-            metric_type.legend_config = get_legend_config(metric_type, self.metric_type_scales[metric_type.code])
+    def _configure_legends(self, metric_types):
+        for code, metric_type in metric_types.items():
+            metric_type.legend_config = get_legend_config(metric_type, self.metric_type_scales[code])
             metric_type.save()
