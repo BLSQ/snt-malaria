@@ -43,3 +43,22 @@ export type BudgetCalculationResponse = {
     scenario: number;
     results: Budget[];
 };
+
+export type BudgetGrantYearCost = {
+    year: number;
+    total_cost: number;
+};
+
+export type BudgetGrantCost = {
+    grant_id: number | null;
+    name: string | null;
+    short_name: string | null;
+    amount: number | null;
+    total_cost: number;
+    yearly_costs: BudgetGrantYearCost[];
+};
+
+export type BudgetByGrantResponse = {
+    scenario_id: number;
+    grant_costs: BudgetGrantCost[];
+};

@@ -66,6 +66,26 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.budgetView',
         defaultMessage: 'Budget',
     },
+    summaryView: {
+        id: 'iaso.snt_malaria.label.summaryView',
+        defaultMessage: 'Summary',
+    },
+    budgetByGrantTitle: {
+        id: 'iaso.snt_malaria.budgeting.budgetByGrantTitle',
+        defaultMessage: 'Total cost by grant',
+    },
+    summaryTotalCostTitle: {
+        id: 'iaso.snt_malaria.budgeting.summaryTotalCostTitle',
+        defaultMessage: 'Total cost',
+    },
+    unspecifiedGrant: {
+        id: 'iaso.snt_malaria.budgeting.unspecifiedGrant',
+        defaultMessage: 'Other',
+    },
+    grantEnvelope: {
+        id: 'iaso.snt_malaria.budgeting.grantEnvelope',
+        defaultMessage: 'Grant envelope',
+    },
     budgetingNoData: {
         id: 'iaso.snt_malaria.budgeting.noData',
         defaultMessage: 'No budget data to display',
@@ -129,6 +149,14 @@ export const MESSAGES = defineMessages({
     costPerAvertedCaseTitle: {
         id: 'iaso.snt_malaria.compareCustomize.costPerAvertedCaseTitle',
         defaultMessage: 'Cost per averted case',
+    },
+    costPerDistrictTitle: {
+        id: 'iaso.snt_malaria.summary.costPerDistrictTitle',
+        defaultMessage: 'Cost per district',
+    },
+    costPerInterventionTitle: {
+        id: 'iaso.snt_malaria.summary.costPerInterventionTitle',
+        defaultMessage: 'Cost per intervention',
     },
     costSettings: {
         id: 'iaso.snt_malaria.label.costSettings',

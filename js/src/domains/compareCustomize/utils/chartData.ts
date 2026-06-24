@@ -50,6 +50,27 @@ export const buildPrevalenceChartData = (
     });
 };
 
+/**
+ * Largest prevalence value (including the upper confidence bound) across the
+ * given series. Used to size the value axis to its widest formatted tick.
+ */
+export const getPrevalenceMaxValue = (
+    data: PrevalenceDataPoint[],
+    seriesKeys: string[],
+): number => {
+    let max = 0;
+    data.forEach(point => {
+        seriesKeys.forEach(key => {
+            const value = point[key];
+            if (typeof value !== 'number') return;
+            const ci = point[`${key}_ci`];
+            const upper = Array.isArray(ci) ? value + (ci[1] ?? 0) : value;
+            max = Math.max(max, value, upper);
+        });
+    });
+    return max;
+};
+
 // --- Cost per averted case chart ---
 
 export type CostPerAvertedCaseDatum = {
@@ -106,23 +127,34 @@ export const buildCostPerAvertedCaseChartData = (
     };
     if (baselineScenarioId === undefined) return empty;
 
-    const baselineCases = impactMetricsByScenarioId.get(baselineScenarioId)?.number_cases;
-    const baselineCost = getCumulativeCosts(budgetsByScenarioId.get(baselineScenarioId));
+    const baselineCases =
+        impactMetricsByScenarioId.get(baselineScenarioId)?.number_cases;
+    const baselineCost = getCumulativeCosts(
+        budgetsByScenarioId.get(baselineScenarioId),
+    );
     if (baselineCases?.value == null || baselineCost == null) return empty;
 
     let hasInsufficientAverted = false;
 
     const data = scenarios
-        .filter((scenario) => scenario.id !== baselineScenarioId)
+        .filter(scenario => scenario.id !== baselineScenarioId)
         .map((scenario): CostPerAvertedCaseDatum | null => {
-
-            const scenarioCases = impactMetricsByScenarioId.get(scenario.id)?.number_cases;
-            const scenarioCost = getCumulativeCosts(budgetsByScenarioId.get(scenario.id));
-            if (scenarioCost == null || scenarioCases?.value == null) return null;
+            const scenarioCases = impactMetricsByScenarioId.get(
+                scenario.id,
+            )?.number_cases;
+            const scenarioCost = getCumulativeCosts(
+                budgetsByScenarioId.get(scenario.id),
+            );
+            if (scenarioCost == null || scenarioCases?.value == null)
+                return null;
 
             const costDiff = scenarioCost - baselineCost;
 
-            const central = costPerAverted(costDiff, baselineCases.value!, scenarioCases.value);
+            const central = costPerAverted(
+                costDiff,
+                baselineCases.value!,
+                scenarioCases.value,
+            );
             if (central === undefined) {
                 hasInsufficientAverted = true;
                 return null;
@@ -130,15 +162,32 @@ export const buildCostPerAvertedCaseChartData = (
 
             // CI bounds: cross baseline.lower with scenario.upper (and vice-versa)
             // to get the pessimistic/optimistic averted-cases denominators.
-            const lower = costPerAverted(costDiff, baselineCases.lower ?? 0, scenarioCases.upper ?? 0);
-            const upper = costPerAverted(costDiff, baselineCases.upper ?? 0, scenarioCases.lower ?? 0);
+            const lower = costPerAverted(
+                costDiff,
+                baselineCases.lower ?? 0,
+                scenarioCases.upper ?? 0,
+            );
+            const upper = costPerAverted(
+                costDiff,
+                baselineCases.upper ?? 0,
+                scenarioCases.lower ?? 0,
+            );
 
             // Stored as offsets from the central value (Recharts ErrorBar expects deltas).
             let errorLower = 0;
             let errorUpper = 0;
             if (lower !== undefined && upper !== undefined) {
-                errorLower = central.costPerAvertedCase - Math.min(lower.costPerAvertedCase, upper.costPerAvertedCase);
-                errorUpper = Math.max(lower.costPerAvertedCase, upper.costPerAvertedCase) - central.costPerAvertedCase;
+                errorLower =
+                    central.costPerAvertedCase -
+                    Math.min(
+                        lower.costPerAvertedCase,
+                        upper.costPerAvertedCase,
+                    );
+                errorUpper =
+                    Math.max(
+                        lower.costPerAvertedCase,
+                        upper.costPerAvertedCase,
+                    ) - central.costPerAvertedCase;
             }
 
             return {

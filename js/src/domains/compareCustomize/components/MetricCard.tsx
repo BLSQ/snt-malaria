@@ -1,8 +1,8 @@
 import React, { FC, ReactNode } from 'react';
 import { Box, Grid, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
+import { WidgetCard } from '../../../components/WidgetCard';
 import { ScenarioDisplay } from '../types';
-import { Card } from './Card';
 import {
     DeltaChip,
     getDeltaChip,
@@ -86,7 +86,7 @@ export const MetricCard: FC<Props> = ({
     subtext,
 }) => (
     <Grid item xs={12} md={3}>
-        <Card title={title} icon={icon} isLoading={isLoading}>
+        <WidgetCard title={title} icon={icon} isLoading={isLoading}>
             <Box sx={styles.valuesList}>
                 {entries.map(entry => (
                     <Typography
@@ -101,10 +101,7 @@ export const MetricCard: FC<Props> = ({
                     >
                         <Box
                             component="span"
-                            sx={[
-                                styles.dot,
-                                { backgroundColor: entry.color },
-                            ]}
+                            sx={[styles.dot, { backgroundColor: entry.color }]}
                         />
                         {entry.value}
                         {entry.chip && <DeltaChip {...entry.chip} />}
@@ -112,6 +109,6 @@ export const MetricCard: FC<Props> = ({
                 ))}
             </Box>
             {subtext}
-        </Card>
+        </WidgetCard>
     </Grid>
 );

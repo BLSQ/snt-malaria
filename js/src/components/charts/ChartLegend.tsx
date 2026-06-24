@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { Box, List, ListItem, SxProps, Theme, Typography } from '@mui/material';
-import { Payload } from 'recharts/types/component/DefaultLegendContent';
 import { SxStyles } from 'Iaso/types/general';
+import { Payload } from 'recharts/types/component/DefaultLegendContent';
 
 type Props = {
     payload: Payload[] | undefined;

@@ -1,7 +1,8 @@
 import React, { FC, useMemo } from 'react';
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
-import { Box, useTheme } from '@mui/material';
+import { Box } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { SxStyles } from 'Iaso/types/general';
 import {
     Bar,
     BarChart,
@@ -14,7 +15,11 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
-import { SxStyles } from 'Iaso/types/general';
+import { ChartEmptyState } from '../../../../components/charts/ChartEmptyState';
+import { useChartTheme } from '../../../../components/charts/chartTheme';
+import { ChartTooltip } from '../../../../components/charts/ChartTooltip';
+import { useAutoYAxisWidth } from '../../../../components/useAutoYAxisWidth';
+import { WidgetCard } from '../../../../components/WidgetCard';
 import { MESSAGES } from '../../../messages';
 import { formatBigNumber } from '../../../planning/libs/cost-utils';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
@@ -24,9 +29,6 @@ import {
 } from '../../utils/chartData';
 import { computeNiceTicks } from '../../utils/chartUtils';
 import { SCENARIO_BASE_COLORS } from '../../utils/colors';
-import { Card } from '../Card';
-import { ChartEmptyState } from './ChartEmptyState';
-import { ChartTooltip } from './ChartTooltip';
 
 const formatCostValue = (value: number): string =>
     new Intl.NumberFormat(undefined, {
@@ -85,8 +87,7 @@ export const CostPerAvertedCaseCard: FC = () => {
         isBudgetLoading,
     } = useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
-    const theme = useTheme();
-    const axisColor = theme.palette.text.secondary;
+    const { axisColor, gridProps, axisProps } = useChartTheme();
     const isLoading = isImpactLoading || isBudgetLoading;
     const hasComparison = scenarios.length >= 2;
 
@@ -111,22 +112,23 @@ export const CostPerAvertedCaseCard: FC = () => {
         [chartData],
     );
 
+    // Size the (category) scenario-name axis to its widest label so it only
+    // takes the space it needs.
+    const yAxisLabels = useMemo(() => chartData.map(d => d.name), [chartData]);
+    const { width: yAxisWidth } = useAutoYAxisWidth({ labels: yAxisLabels });
+
     const emptyMessage = useMemo(() => {
         if (!hasComparison) {
-            return formatMessage(
-                MESSAGES.costPerAvertedCaseSelectComparison,
-            );
+            return formatMessage(MESSAGES.costPerAvertedCaseSelectComparison);
         }
         if (hasInsufficientAverted) {
-            return formatMessage(
-                MESSAGES.costPerAvertedCaseNoCasesAverted,
-            );
+            return formatMessage(MESSAGES.costPerAvertedCaseNoCasesAverted);
         }
         return formatMessage(MESSAGES.noBudgetData);
     }, [hasComparison, hasInsufficientAverted, formatMessage]);
 
     return (
-        <Card
+        <WidgetCard
             title={formatMessage(MESSAGES.costPerAvertedCaseTitle)}
             tooltip={formatMessage(MESSAGES.costPerAvertedCaseTooltip)}
             icon={BarChartOutlinedIcon}
@@ -148,17 +150,12 @@ export const CostPerAvertedCaseCard: FC = () => {
                                 bottom: 5,
                             }}
                         >
-                            <CartesianGrid
-                                horizontal={false}
-                                strokeDasharray=""
-                                stroke={theme.palette.divider}
-                            />
+                            <CartesianGrid horizontal={false} {...gridProps} />
                             <YAxis
                                 type="category"
                                 dataKey="name"
-                                tick={{ fill: axisColor, fontSize: '0.75rem' }}
-                                stroke={axisColor}
-                                width={80}
+                                {...axisProps}
+                                width={yAxisWidth}
                             />
                             <XAxis
                                 type="number"
@@ -167,8 +164,7 @@ export const CostPerAvertedCaseCard: FC = () => {
                                         ? formatMessage(MESSAGES.baselineLabel)
                                         : formatCostValue(v)
                                 }
-                                tick={{ fill: axisColor, fontSize: '0.75rem' }}
-                                stroke={axisColor}
+                                {...axisProps}
                                 tickMargin={2}
                                 domain={domain}
                                 ticks={ticks}
@@ -215,6 +211,6 @@ export const CostPerAvertedCaseCard: FC = () => {
                     </ResponsiveContainer>
                 </Box>
             )}
-        </Card>
+        </WidgetCard>
     );
 };

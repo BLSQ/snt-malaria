@@ -36,6 +36,7 @@ export const SidebarLayout = styled(Box)(({ theme }) => ({
     flexDirection: 'column',
     gap: theme.spacing(1),
     height: '100%',
+    minHeight: 0,
     [theme.breakpoints.up('md')]: {
         flexDirection: 'row',
     },
@@ -51,6 +52,9 @@ export const SidebarColumn = styled(Box)(({ theme }) => ({
 export const MainColumn = styled(Box)({
     flex: 7,
     minWidth: 0,
+    minHeight: 0,
+    display: 'flex',
+    flexDirection: 'column',
 });
 
 export const CardScrollable = styled(Card)(({}) => ({

@@ -2,6 +2,7 @@ import React, { FC, useMemo } from 'react';
 import PieChartOutlinedIcon from '@mui/icons-material/PieChartOutlined';
 import { Box, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { SxStyles } from 'Iaso/types/general';
 import {
     Cell,
     Legend,
@@ -10,16 +11,15 @@ import {
     ResponsiveContainer,
     Tooltip,
 } from 'recharts';
-import { SxStyles } from 'Iaso/types/general';
+import { ChartEmptyState } from '../../../../components/charts/ChartEmptyState';
+import { ChartLegend } from '../../../../components/charts/ChartLegend';
+import { ChartTooltip } from '../../../../components/charts/ChartTooltip';
+import { WidgetCard } from '../../../../components/WidgetCard';
 import { MESSAGES } from '../../../messages';
-import { ChartLegend } from '../../../planning/components/budgeting/ChartLegend';
 import { formatBigNumber } from '../../../planning/libs/cost-utils';
 import { BudgetCalculationResponse } from '../../../planning/types/budget';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { getInterventionGroupShades } from '../../utils/colors';
-import { Card } from '../Card';
-import { ChartEmptyState } from './ChartEmptyState';
-import { ChartTooltip } from './ChartTooltip';
 
 type BudgetCategoryDatum = {
     name: string;
@@ -124,7 +124,7 @@ export const BudgetByCategoryCard: FC = () => {
     );
 
     return (
-        <Card
+        <WidgetCard
             title={formatMessage(MESSAGES.budgetByCategoryTitle)}
             icon={PieChartOutlinedIcon}
             bodySx={{ minHeight: 360 }}
@@ -192,6 +192,6 @@ export const BudgetByCategoryCard: FC = () => {
                     </Box>
                 ))}
             </Box>
-        </Card>
+        </WidgetCard>
     );
 };

@@ -15,63 +15,80 @@ import {
 } from 'recharts';
 import { ChartEmptyState } from '../../../../components/charts/ChartEmptyState';
 import { useChartTheme } from '../../../../components/charts/chartTheme';
-import { ChartTooltip } from '../../../../components/charts/ChartTooltip';
+import {
+    ChartTooltip,
+    ChartTooltipRow,
+} from '../../../../components/charts/ChartTooltip';
 import { useAutoYAxisWidth } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
-import { MESSAGES } from '../../../messages';
-import { formatPercentValue } from '../../../planning/libs/cost-utils';
-import { useComparisonDataContext } from '../../ComparisonDataContext';
+import { useGetImpactAgeGroups } from '../../../compareCustomize/hooks/useGetImpactAgeGroups';
+import { useGetImpactYearRange } from '../../../compareCustomize/hooks/useGetImpactYearRange';
+import { useGetScenarioImpact } from '../../../compareCustomize/hooks/useGetScenarioImpact';
+import { ScenarioImpactMetrics } from '../../../compareCustomize/types';
 import {
     buildPrevalenceChartData,
     getPrevalenceMaxValue,
-} from '../../utils/chartData';
+} from '../../../compareCustomize/utils/chartData';
+import { intersectYearRanges } from '../../../compareCustomize/utils/yearRange';
+import { MESSAGES } from '../../../messages';
+import { usePlanningContext } from '../../contexts/PlanningContext';
+import { formatPercentValue } from '../../libs/cost-utils';
+
+// Main purple, matching the comparison page's first comparison scenario line.
+const LINE_COLOR = '#673AB7';
 
 const styles = {
     chartBody: {
         width: '100%',
-        height: 220,
+        flex: 1,
+        minHeight: 0,
     },
 } satisfies SxStyles;
 
-type PrevalenceTooltipProps = {
-    active?: boolean;
-    label?: number;
-    payload?: { name: string; value: number; color: string }[];
-};
-
-const PrevalenceTooltip: FC<PrevalenceTooltipProps> = ({
-    active,
-    label,
-    payload,
-}) => {
-    if (!active || !payload?.length) return null;
-    return (
-        <ChartTooltip
-            title={label}
-            rows={payload.map(entry => ({
-                label: entry.name,
-                value: formatPercentValue(entry.value),
-                color: entry.color,
-            }))}
-        />
-    );
-};
-
-export const YearlyPrevalenceCard: FC = () => {
-    const {
-        scenarios,
-        impactsByScenarioId,
-        isImpactLoading: isLoading,
-    } = useComparisonDataContext();
+export const PrevalenceSummary: FC = () => {
     const { formatMessage } = useSafeIntl();
     const theme = useTheme();
     const { gridProps, axisProps } = useChartTheme();
+    const { scenarioId, scenario } = usePlanningContext();
 
-    const chartData = useMemo(
-        () => buildPrevalenceChartData(scenarios, impactsByScenarioId),
-        [scenarios, impactsByScenarioId],
+    const yearRangeQuery = useGetImpactYearRange();
+    const ageGroupsQuery = useGetImpactAgeGroups();
+    const ageGroup = ageGroupsQuery.data?.age_groups?.[0];
+
+    const yearRange = useMemo((): [number, number] | undefined => {
+        if (!scenario || !yearRangeQuery.data) return undefined;
+        return intersectYearRanges(
+            [scenario.start_year, scenario.end_year],
+            [yearRangeQuery.data.min_year, yearRangeQuery.data.max_year],
+        );
+    }, [scenario, yearRangeQuery.data]);
+
+    const { data: impact, isFetching } = useGetScenarioImpact(
+        scenarioId,
+        yearRange?.[0],
+        yearRange?.[1],
+        ageGroup,
+        Boolean(yearRange) && Boolean(ageGroup),
     );
 
+    const lineLabel = formatMessage(
+        MESSAGES.impactDifferenceMetricPrevalenceRate,
+    );
+
+    const scenarios = useMemo(
+        () => [{ id: scenarioId, label: lineLabel, color: LINE_COLOR }],
+        [scenarioId, lineLabel],
+    );
+
+    const chartData = useMemo(() => {
+        const impactMap = new Map<number, ScenarioImpactMetrics | undefined>([
+            [scenarioId, impact],
+        ]);
+        return buildPrevalenceChartData(scenarios, impactMap);
+    }, [scenarios, scenarioId, impact]);
+
+    const isLoading =
+        isFetching || yearRangeQuery.isFetching || ageGroupsQuery.isFetching;
     const hasData = chartData.length > 0;
 
     // Size the (numeric) value axis to its widest formatted tick so the percent
@@ -81,7 +98,7 @@ export const YearlyPrevalenceCard: FC = () => {
             formatPercentValue(
                 getPrevalenceMaxValue(
                     chartData,
-                    scenarios.map(scenario => scenario.label),
+                    scenarios.map(line => line.label),
                 ),
             ),
         ],
@@ -89,14 +106,26 @@ export const YearlyPrevalenceCard: FC = () => {
     );
     const { width: yAxisWidth } = useAutoYAxisWidth({ labels: yAxisLabels });
 
+    const renderTooltip = ({ active, label, payload }: any) => {
+        if (!active || !payload?.length) {
+            return null;
+        }
+        const rows: ChartTooltipRow[] = payload.map((entry: any) => ({
+            label: entry.name,
+            value: formatPercentValue(entry.value),
+            color: entry.color,
+        }));
+        return <ChartTooltip title={label} rows={rows} />;
+    };
+
     return (
         <WidgetCard
             title={formatMessage(MESSAGES.yearlyPrevalenceTitle)}
             icon={ShowChartOutlinedIcon}
-            bodySx={{ minHeight: 220 }}
             isLoading={isLoading}
+            bodySx={{ display: 'flex', flexDirection: 'column' }}
         >
-            {!hasData ? (
+            {!isLoading && !hasData ? (
                 <ChartEmptyState
                     message={formatMessage(MESSAGES.noImpactData)}
                 />
@@ -105,12 +134,7 @@ export const YearlyPrevalenceCard: FC = () => {
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart
                             data={chartData}
-                            margin={{
-                                top: 5,
-                                right: 5,
-                                left: 0,
-                                bottom: -5,
-                            }}
+                            margin={{ top: 5, right: 5, left: 0, bottom: -5 }}
                         >
                             <CartesianGrid vertical={false} {...gridProps} />
                             <XAxis
@@ -124,19 +148,19 @@ export const YearlyPrevalenceCard: FC = () => {
                                 width={yAxisWidth}
                                 tickMargin={2}
                             />
-                            <Tooltip content={<PrevalenceTooltip />} />
-                            {scenarios.map(scenario => (
+                            <Tooltip content={renderTooltip} />
+                            {scenarios.map(line => (
                                 <Line
-                                    key={scenario.id}
+                                    key={line.id}
                                     type="monotone"
-                                    dataKey={scenario.label}
-                                    stroke={scenario.color}
+                                    dataKey={line.label}
+                                    stroke={line.color}
                                     strokeWidth={2}
                                     dot={{ r: 4 }}
                                     connectNulls
                                 >
                                     <ErrorBar
-                                        dataKey={`${scenario.label}_ci`}
+                                        dataKey={`${line.label}_ci`}
                                         width={4}
                                         strokeWidth={1.5}
                                         stroke={theme.palette.text.disabled}

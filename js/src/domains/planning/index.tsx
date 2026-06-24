@@ -1,4 +1,12 @@
-import React, { ComponentProps, FC, useCallback, useMemo, useState } from 'react';
+import React, {
+    ComponentProps,
+    FC,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { Card } from '@mui/material';
 import {
     LoadingSpinner,
@@ -30,6 +38,7 @@ import { BudgetTable } from './components/budgeting/BudgetTable';
 import { InterventionPlanHeader } from './components/interventionPlan/InterventionPlanHeader';
 import { InterventionPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
+import { ScenarioSummaryTab } from './components/ScenarioSummaryTab';
 import {
     PlanningProvider,
     usePlanningContext,
@@ -79,6 +88,19 @@ export const Planning: FC = () => {
     const { data: scenario } = useGetScenario(scenarioId);
     const { formatMessage } = useSafeIntl();
     const [activeTab, setActiveTab] = useState('map');
+
+    // Locked scenarios default to the summary tab, but only on first load:
+    // the ref guard stops later scenario updates (e.g. toggling the lock, or a
+    // refetch) from yanking the user back to summary after they changed tabs.
+    const didInitActiveTab = useRef(false);
+    useEffect(() => {
+        if (scenario && !didInitActiveTab.current) {
+            didInitActiveTab.current = true;
+            if (scenario.is_locked) {
+                setActiveTab('summary');
+            }
+        }
+    }, [scenario]);
 
     const { data: metricTypeCategories } = useGetMetricCategories('any');
     const { data: interventionCategories } = useGetInterventionCategories();
@@ -202,6 +224,19 @@ export const Planning: FC = () => {
         ],
     });
 
+    const planHeader = (
+        <InterventionPlanHeader
+            onTabChange={onSetTab}
+            activeTab={activeTab}
+            onDeleteScenario={handleDeleteScenario}
+            onToggleLockScenario={handleToggleLockScenario}
+            onOrgUnitChange={handleDisplayOrgUnitChange}
+            selectedOrgUnitId={displayOrgUnitId}
+            lockScenarioRef={tour.anchorRefs[2]}
+            moreActionsRef={tour.anchorRefs[1]}
+        />
+    );
+
     return metricTypeCategories && interventionCategories ? (
         <PlanningProvider
             scenarioId={scenarioId}
@@ -228,42 +263,27 @@ export const Planning: FC = () => {
                         isLoadingPreview={isLoadingPreview}
                     />
                     <MainColumn>
-                        <PaperFullHeight>
-                            <Card sx={styles.card}>
-                                <CardStyled
-                                    header={
-                                        <InterventionPlanHeader
-                                            onTabChange={onSetTab}
-                                            activeTab={activeTab}
-                                            onDeleteScenario={
-                                                handleDeleteScenario
-                                            }
-                                            onToggleLockScenario={
-                                                handleToggleLockScenario
-                                            }
-                                            onOrgUnitChange={
-                                                handleDisplayOrgUnitChange
-                                            }
-                                            selectedOrgUnitId={displayOrgUnitId}
-                                            lockScenarioRef={tour.anchorRefs[2]}
-                                            moreActionsRef={tour.anchorRefs[1]}
-                                        />
-                                    }
-                                >
-                                    {activeTab === 'map' && (
-                                        <InterventionPlanMap
-                                            matchedOrgUnitIds={
-                                                matchedOrgUnitIds
-                                            }
-                                            previewRule={previewRule}
-                                        />
-                                    )}
-                                    {activeTab === 'budget' &&
-                                        orgUnits &&
-                                        budget && <BudgetTable />}
-                                </CardStyled>
-                            </Card>
-                        </PaperFullHeight>
+                        {activeTab === 'summary' ? (
+                            <ScenarioSummaryTab header={planHeader} />
+                        ) : (
+                            <PaperFullHeight>
+                                <Card sx={styles.card}>
+                                    <CardStyled header={planHeader}>
+                                        {activeTab === 'map' && (
+                                            <InterventionPlanMap
+                                                matchedOrgUnitIds={
+                                                    matchedOrgUnitIds
+                                                }
+                                                previewRule={previewRule}
+                                            />
+                                        )}
+                                        {activeTab === 'budget' &&
+                                            orgUnits &&
+                                            budget && <BudgetTable />}
+                                    </CardStyled>
+                                </Card>
+                            </PaperFullHeight>
+                        )}
                     </MainColumn>
                 </SidebarLayout>
             </PageContainer>

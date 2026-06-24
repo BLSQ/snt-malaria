@@ -1,4 +1,5 @@
 import { hslToRgb } from '@mui/material';
+import { amber, blue, blueGrey, deepPurple, pink } from '@mui/material/colors';
 
 import Color from 'color';
 import { sample } from 'lodash';
@@ -13,6 +14,17 @@ export const purples = [
     '#CE93D8',
     '#E1BEE7',
     '#F3E5F5',
+];
+
+// Multi-hue categorical palette for cost-category bars, built from standard
+// MUI color tokens (deepPurple[500] is our main purple #673AB7, amber[500] is
+// the scenario amber #FFC107). Categories are mapped to colours by index.
+export const CATEGORY_COLORS = [
+    deepPurple[500],
+    pink[400],
+    amber[500],
+    blue[400],
+    blueGrey[300],
 ];
 
 export const INTERVENTION_COLORS = {

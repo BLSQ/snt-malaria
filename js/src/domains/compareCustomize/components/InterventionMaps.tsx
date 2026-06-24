@@ -1,12 +1,11 @@
 import React, { FC } from 'react';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import { Box } from '@mui/material';
-import InputComponent from 'Iaso/components/forms/InputComponent';
-import { SxStyles } from 'Iaso/types/general';
 import { useSafeIntl } from 'bluesquare-components';
+import { SxStyles } from 'Iaso/types/general';
+import { WidgetCard } from '../../../components/WidgetCard';
 import { MESSAGES } from '../../messages';
 import { useComparisonDataContext } from '../ComparisonDataContext';
-import { Card } from './Card';
 import { InterventionPlanMap } from './maps/InterventionPlanMap';
 
 type Props = {
@@ -40,35 +39,16 @@ export const InterventionMaps: FC<Props> = ({
 
     return (
         <Box sx={styles.mapCardWrapper}>
-            <Card
+            <WidgetCard
                 title={formatMessage(MESSAGES.interventionPlanTitle)}
                 icon={AccountTreeOutlinedIcon}
-                actions={
-                    <Box
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="flex-end"
-                    >
-                        <InputComponent
-                            keyValue="intervention"
-                            type="select"
-                            labelString={formatMessage(
-                                MESSAGES.interventionLabel,
-                            )}
-                            value={
-                                hasInterventions
-                                    ? selectedInterventionId
-                                    : undefined
-                            }
-                            options={interventionOptions}
-                            clearable={false}
-                            onChange={onInterventionSelect}
-                            disabled={!hasInterventions}
-                            withMarginTop={false}
-                            wrapperSx={{ width: 260 }}
-                        />
-                    </Box>
-                }
+                dropdown={{
+                    value: hasInterventions ? selectedInterventionId : '',
+                    options: interventionOptions,
+                    onChange: value =>
+                        onInterventionSelect('intervention', value),
+                    disabled: !hasInterventions,
+                }}
                 bodySx={{ flex: 1, minHeight: 0 }}
             >
                 <Box sx={styles.mapBody}>
@@ -98,7 +78,7 @@ export const InterventionMaps: FC<Props> = ({
                         ))}
                     </Box>
                 </Box>
-            </Card>
+            </WidgetCard>
         </Box>
     );
 };
