@@ -13,6 +13,7 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
+import { roundedRightRectPath } from '../../../../components/charts/barPaths';
 import { useChartTheme } from '../../../../components/charts/chartTheme';
 import {
     ChartTooltip,
@@ -70,27 +71,6 @@ const shadeForSegment = (
 ): string => {
     if (count <= 1) return base;
     return lighten(base, (index / (count - 1)) * MAX_LIGHTEN);
-};
-
-// Rectangle with only its right corners rounded, so the outer end of the bar
-// is rounded like the design while it stays flush with the value axis.
-const roundedRightRectPath = (
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    radius: number,
-): string => {
-    const r = Math.max(0, Math.min(radius, width, height / 2));
-    return [
-        `M${x},${y}`,
-        `L${x + width - r},${y}`,
-        `Q${x + width},${y} ${x + width},${y + r}`,
-        `L${x + width},${y + height - r}`,
-        `Q${x + width},${y + height} ${x + width - r},${y + height}`,
-        `L${x},${y + height}`,
-        'Z',
-    ].join(' ');
 };
 
 type CostBarShapeProps = {

@@ -24,28 +24,7 @@ import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { useGetBudgetByGrant } from '../../hooks/useGetBudgetByGrant';
 import { formatBigNumber } from '../../libs/cost-utils';
-
-const BAR_RADIUS = 4;
-// The grant-envelope outline sits slightly wider than the cost bar so there's
-// a small gap on each side, as in the design.
-const TARGET_SIDE_GAP = 4;
-
-type ChartDatum = {
-    name: string;
-    cost: number;
-    amount: number | null;
-};
-
-type BudgetBarShapeProps = {
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-    payload?: ChartDatum;
-    withinColor: string;
-    excessColor: string;
-    targetColor: string;
-};
+import { BudgetBarShape, BudgetChartDatum } from './BudgetBarShape';
 
 const styles = {
     chartBody: {
@@ -54,134 +33,6 @@ const styles = {
         minHeight: 0,
     },
 } satisfies SxStyles;
-
-// A rectangle whose top corners are rounded and bottom corners square, so bars
-// sit flush on the axis baseline (matches the averted-cases / prevalence cards).
-const roundedTopRectPath = (
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    radius: number,
-): string => {
-    const r = Math.max(0, Math.min(radius, width / 2, height));
-    return [
-        `M${x},${y + height}`,
-        `L${x},${y + r}`,
-        `Q${x},${y} ${x + r},${y}`,
-        `L${x + width - r},${y}`,
-        `Q${x + width},${y} ${x + width},${y + r}`,
-        `L${x + width},${y + height}`,
-        'Z',
-    ].join(' ');
-};
-
-// Same shape but left open at the bottom, so the envelope outline has no line
-// along the baseline.
-const roundedTopOutlinePath = (
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    radius: number,
-): string => {
-    const r = Math.max(0, Math.min(radius, width / 2, height));
-    return [
-        `M${x},${y + height}`,
-        `L${x},${y + r}`,
-        `Q${x},${y} ${x + r},${y}`,
-        `L${x + width - r},${y}`,
-        `Q${x + width},${y} ${x + width},${y + r}`,
-        `L${x + width},${y + height}`,
-    ].join(' ');
-};
-
-// Custom bar shape: a single `<Bar dataKey="cost">` is rendered so recharts
-// sizes (x, y, width, height) the bar against the cost value. We derive a
-// pixels-per-value factor from that sizing and redraw the bar as:
-//  - a grey rect up to min(cost, amount),
-//  - a red rect for the part of cost that exceeds the grant amount,
-//  - a dashed, unfilled rect outlining the grant amount target.
-// Only the topmost segment gets rounded top corners.
-const BudgetBarShape: FC<BudgetBarShapeProps> = ({
-    x = 0,
-    y = 0,
-    width = 0,
-    height = 0,
-    payload,
-    withinColor,
-    excessColor,
-    targetColor,
-}) => {
-    const cost = payload?.cost ?? 0;
-    const amount = payload?.amount ?? null;
-
-    if (cost <= 0 || height <= 0) {
-        return null;
-    }
-
-    const pxPerValue = height / cost;
-    const baseline = y + height;
-
-    const withinValue = amount != null ? Math.min(cost, amount) : cost;
-    const withinHeight = withinValue * pxPerValue;
-    const hasExcess = amount != null && cost > amount;
-    const excessHeight = hasExcess ? (cost - amount) * pxPerValue : 0;
-    const targetHeight = amount != null ? amount * pxPerValue : 0;
-
-    return (
-        <g>
-            {hasExcess ? (
-                <rect
-                    x={x}
-                    y={baseline - withinHeight}
-                    width={width}
-                    height={withinHeight}
-                    fill={withinColor}
-                />
-            ) : (
-                <path
-                    d={roundedTopRectPath(
-                        x,
-                        baseline - withinHeight,
-                        width,
-                        withinHeight,
-                        BAR_RADIUS,
-                    )}
-                    fill={withinColor}
-                />
-            )}
-            {hasExcess && (
-                <path
-                    d={roundedTopRectPath(
-                        x,
-                        baseline - withinHeight - excessHeight,
-                        width,
-                        excessHeight,
-                        BAR_RADIUS,
-                    )}
-                    fill={excessColor}
-                />
-            )}
-            {amount != null && (
-                <path
-                    d={roundedTopOutlinePath(
-                        x - TARGET_SIDE_GAP,
-                        baseline - targetHeight,
-                        width + TARGET_SIDE_GAP * 2,
-                        targetHeight,
-                        0,
-                    )}
-                    fill="none"
-                    stroke={targetColor}
-                    strokeDasharray="1 4"
-                    strokeLinecap="round"
-                    strokeWidth={1.75}
-                />
-            )}
-        </g>
-    );
-};
 
 export const BudgetSummary: FC = () => {
     const { formatMessage } = useSafeIntl();
@@ -194,7 +45,7 @@ export const BudgetSummary: FC = () => {
     const excessColor = red[500]; // #F44336
     const targetColor = theme.palette.primary.main;
 
-    const chartData: ChartDatum[] = useMemo(
+    const chartData: BudgetChartDatum[] = useMemo(
         () =>
             (data?.grant_costs ?? []).map(item => ({
                 name:
@@ -232,7 +83,7 @@ export const BudgetSummary: FC = () => {
         if (!active || !payload?.length) {
             return null;
         }
-        const datum: ChartDatum = payload[0].payload;
+        const datum: BudgetChartDatum = payload[0].payload;
         const rows: ChartTooltipRow[] = [
             {
                 label: formatMessage(MESSAGES.summaryTotalCostTitle),

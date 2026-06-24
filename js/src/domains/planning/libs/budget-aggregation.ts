@@ -35,7 +35,7 @@ function mergeInterventions(
 ): BudgetIntervention[] {
     return mergeByKey(
         interventions,
-        intervention => `${intervention.type} - ${intervention.code}`,
+        intervention => String(intervention.id),
         (a, b) => ({
             ...a,
             total_cost: a.total_cost + b.total_cost,
