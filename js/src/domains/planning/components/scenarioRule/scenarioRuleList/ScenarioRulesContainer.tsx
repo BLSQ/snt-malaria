@@ -2,11 +2,11 @@ import React, { FC, Ref, useCallback } from 'react';
 import { AsyncSortableList } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../../../../components/CardStyled';
+import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { useReorderScenarioRules } from '../../../hooks/useReorderScenarioRules';
 import { ScenarioRule } from '../../../types/scenarioRule';
 import { ScenarioRuleLine } from './ScenarioRuleLine';
 import { ScenarioRulesHeader } from './ScenarioRulesHeader';
-import { usePlanningContext } from '../../../contexts/PlanningContext';
 
 const styles: SxStyles = {
     rulesContainer: {
@@ -14,7 +14,7 @@ const styles: SxStyles = {
     },
     ruleBox: {
         mb: 2,
-        p: 2,
+        p: 0,
         border: 1,
         borderColor: 'grey.300',
         borderRadius: 2,
