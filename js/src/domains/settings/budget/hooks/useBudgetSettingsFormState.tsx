@@ -31,6 +31,10 @@ const useValidation = () => {
                     .typeError(formatMessage(MESSAGES.budgetInvalidNumber))
                     .min(0, formatMessage(MESSAGES.negativeValueNotAllowed))
                     .required(formatMessage(MESSAGES.required)),
+                buffer: Yup.number()
+                    .typeError(formatMessage(MESSAGES.budgetInvalidNumber))
+                    .min(0, formatMessage(MESSAGES.negativeValueNotAllowed))
+                    .required(formatMessage(MESSAGES.required)),
             }),
         [formatMessage],
     );

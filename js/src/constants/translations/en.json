@@ -345,5 +345,7 @@
     "iaso.snt_malaria.settings.budget.inflationRate": "Annual inflation rate",
     "iaso.snt_malaria.settings.budget.inflationRateHelp": "Decimal value, e.g. 0.03 for 3%.",
     "iaso.snt_malaria.settings.budget.invalidNumber": "Please enter a valid number.",
-    "iaso.snt_malaria.settings.budget.invalidCurrencyCode": "Enter a 3-letter currency code."
+    "iaso.snt_malaria.settings.budget.invalidCurrencyCode": "Enter a 3-letter currency code.",
+    "iaso.snt_malaria.settings.budget.buffer": "Buffer multiplier",
+    "iaso.snt_malaria.settings.budget.bufferHelp": "Multiplier applied to all costs, e.g. 1.1 for a 10% buffer."
 }

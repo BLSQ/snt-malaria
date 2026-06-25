@@ -31,6 +31,7 @@ export const BudgetSettingsTab: FC = () => {
             local_currency: budgetSettings?.local_currency ?? '',
             exchange_rate: budgetSettings?.exchange_rate ?? '1',
             inflation_rate: budgetSettings?.inflation_rate ?? '0',
+            buffer: budgetSettings?.buffer ?? '1.1',
         }),
         [budgetSettings],
     );
@@ -45,6 +46,7 @@ export const BudgetSettingsTab: FC = () => {
                 local_currency: values.local_currency.toUpperCase(),
                 exchange_rate: values.exchange_rate,
                 inflation_rate: values.inflation_rate,
+                buffer: values.buffer,
             });
         },
         [saveBudgetSettings],
@@ -142,6 +144,19 @@ export const BudgetSettingsTab: FC = () => {
                             )}
                             helperText={formatMessage(
                                 MESSAGES.budgetInflationRateHelp,
+                            )}
+                            withMarginTop={false}
+                        />
+                        <InputComponent
+                            keyValue="buffer"
+                            type="number"
+                            required
+                            value={values.buffer}
+                            onChange={onChange}
+                            errors={getErrors('buffer')}
+                            labelString={formatMessage(MESSAGES.budgetBuffer)}
+                            helperText={formatMessage(
+                                MESSAGES.budgetBufferHelp,
                             )}
                             withMarginTop={false}
                         />

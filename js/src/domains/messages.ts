@@ -1036,4 +1036,13 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.budget.invalidCurrencyCode',
         defaultMessage: 'Enter a 3-letter currency code.',
     },
+    budgetBuffer: {
+        id: 'iaso.snt_malaria.settings.budget.buffer',
+        defaultMessage: 'Buffer multiplier',
+    },
+    budgetBufferHelp: {
+        id: 'iaso.snt_malaria.settings.budget.bufferHelp',
+        defaultMessage:
+            'Multiplier applied to all costs, e.g. 1.1 for a 10% buffer.',
+    },
 });

@@ -344,5 +344,7 @@
     "iaso.snt_malaria.settings.budget.inflationRate": "Taux d'inflation annuel",
     "iaso.snt_malaria.settings.budget.inflationRateHelp": "Valeur décimale, ex. 0,03 pour 3 %.",
     "iaso.snt_malaria.settings.budget.invalidNumber": "Veuillez saisir un nombre valide.",
-    "iaso.snt_malaria.settings.budget.invalidCurrencyCode": "Saisissez un code de devise à 3 lettres."
+    "iaso.snt_malaria.settings.budget.invalidCurrencyCode": "Saisissez un code de devise à 3 lettres.",
+    "iaso.snt_malaria.settings.budget.buffer": "Multiplicateur de marge",
+    "iaso.snt_malaria.settings.budget.bufferHelp": "Multiplicateur appliqué à tous les coûts, ex. 1,1 pour une marge de 10 %."
 }

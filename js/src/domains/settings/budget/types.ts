@@ -3,6 +3,7 @@ export type BudgetSettings = {
     local_currency: string;
     exchange_rate: string;
     inflation_rate: string;
+    buffer: string;
 };
 
 export type BudgetSettingsPayload = {
@@ -10,6 +11,7 @@ export type BudgetSettingsPayload = {
     local_currency: string;
     exchange_rate: string | number;
     inflation_rate: string | number;
+    buffer: string | number;
 };
 
 export type BudgetSettingsFormValues = {
@@ -17,4 +19,5 @@ export type BudgetSettingsFormValues = {
     local_currency: string;
     exchange_rate: string | number;
     inflation_rate: string | number;
+    buffer: string | number;
 };
