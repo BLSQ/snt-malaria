@@ -25,6 +25,12 @@ export type BudgetInterventionCostLine = {
     category: string;
     name: string;
     id: number;
+    unit_cost: number | null;
+    cost_unit_name: string | null;
+    cost_unit_ratio: number | null;
+    cost_unit_inverted: boolean;
+    target_population: string | null;
+    buffer: number | null;
 };
 
 export enum InterventionCostCoverage {
