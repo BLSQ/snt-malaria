@@ -1008,6 +1008,11 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Set the currency and rates used to compute intervention costs and projections.',
     },
+    budgetSettingsWarning: {
+        id: 'iaso.snt_malaria.settings.budget.warning',
+        defaultMessage:
+            'Changing these settings will not automatically recalculate existing budgets. Re-run the budget calculation on each scenario to apply the new values.',
+    },
     budgetLocalCurrency: {
         id: 'iaso.snt_malaria.settings.budget.localCurrency',
         defaultMessage: 'Local currency (ISO code)',

@@ -337,6 +337,7 @@
     "iaso.snt_malaria.settings.intervention.grant": "Subvention",
     "iaso.snt_malaria.settings.general.title": "Général",
     "iaso.snt_malaria.settings.budget.title": "Budget",
+    "iaso.snt_malaria.settings.budget.warning": "Modifier ces paramètres ne recalculera pas automatiquement les budgets existants. Relancez le calcul du budget sur chaque scénario pour appliquer les nouvelles valeurs.",
     "iaso.snt_malaria.settings.budget.subtitle": "Définissez la devise et les taux utilisés pour calculer les coûts des interventions et les projections.",
     "iaso.snt_malaria.settings.budget.localCurrency": "Devise locale (code ISO)",
     "iaso.snt_malaria.settings.budget.localCurrencyHelp": "Code à trois lettres, ex. USD, EUR, XOF.",
