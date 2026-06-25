@@ -1,6 +1,7 @@
 from django.db import models
 
 from iaso.models.base import Account
+from iaso.models.metric import MetricType
 from iaso.models.org_unit import OrgUnitType
 from iaso.utils.org_units import get_valid_org_units_with_geography
 
@@ -48,4 +49,12 @@ class AccountSettings(models.Model):
             "Org unit type where interventions are deployed (e.g. districts). "
             "Scopes rule matching, CSV export/import, and form dropdowns."
         ),
+    )
+    default_population = models.ForeignKey(
+        MetricType,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Default population metric type used across the account.",
     )

@@ -91,12 +91,14 @@ export const RuleCoverageSummary: FC<Props> = ({
     isLoadingPreview,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const { populationByOrgUnit, year: populationYear } =
-        usePopulationByOrgUnit();
 
     // Same request as the form/map (same query key), so this is a cache hit.
     const { data: accountSettings } = useGetAccountSettings();
     const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
+
+    const { populationByOrgUnit, year: populationYear } = usePopulationByOrgUnit(
+        { metricTypeId: accountSettings?.default_population_id },
+    );
     const { data: allOrgUnits } = useGetOrgUnits({
         orgUnitTypeId: interventionTypeId,
         enabled: !!interventionTypeId,

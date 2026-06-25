@@ -1,5 +1,6 @@
 from rest_framework import status
 
+from iaso.models.metric import MetricType
 from plugins.snt_malaria.models.account_settings import AccountSettings
 from plugins.snt_malaria.permissions import SNT_SETTINGS_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
@@ -219,6 +220,59 @@ class AccountSettingsAPITests(SNTMalariaAPITestCase):
             format="json",
         )
         self.assertJSONResponse(response, status.HTTP_404_NOT_FOUND)
+
+    def test_list_includes_default_population_id(self):
+        metric = MetricType.objects.create(account=self.account, code="POP", name="Population")
+        self.account_settings.default_population = metric
+        self.account_settings.save()
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(BASE_URL)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        settings_data = next(item for item in result if item["id"] == self.account_settings.id)
+        self.assertEqual(settings_data["default_population_id"], metric.id)
+
+    def test_patch_set_default_population(self):
+        metric = MetricType.objects.create(account=self.account, code="POP", name="Population")
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            f"{BASE_URL}{self.account_settings.id}/",
+            {"default_population_id": metric.id},
+            format="json",
+        )
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(result["default_population_id"], metric.id)
+        self.account_settings.refresh_from_db()
+        self.assertEqual(self.account_settings.default_population_id, metric.id)
+
+    def test_patch_clear_default_population_with_write_perm(self):
+        metric = MetricType.objects.create(account=self.account, code="POP", name="Population")
+        self.account_settings.default_population = metric
+        self.account_settings.save()
+        admin_user = self.create_user_with_profile(
+            username="settings_admin_pop",
+            account=self.account,
+            permissions=[SNT_SETTINGS_WRITE_PERMISSION],
+        )
+        self.client.force_authenticate(user=admin_user)
+        response = self.client.patch(
+            f"{BASE_URL}{self.account_settings.id}/",
+            {"default_population_id": None},
+            format="json",
+        )
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertIsNone(result["default_population_id"])
+        self.account_settings.refresh_from_db()
+        self.assertIsNone(self.account_settings.default_population_id)
+
+    def test_patch_rejects_default_population_from_other_account(self):
+        other_metric = MetricType.objects.create(account=self.other_account, code="POP2", name="Other Pop")
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            f"{BASE_URL}{self.account_settings.id}/",
+            {"default_population_id": other_metric.id},
+            format="json",
+        )
+        self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
 
     def test_patch_does_not_reassign_account(self):
         self.client.force_authenticate(user=self.user)
