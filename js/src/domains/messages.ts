@@ -1050,4 +1050,30 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Multiplier applied to all costs, e.g. 1.1 for a 10% buffer.',
     },
+    accountSettingsTitle: {
+        id: 'iaso.snt_malaria.settings.account.title',
+        defaultMessage: 'Account settings',
+    },
+    accountSettingsSubtitle: {
+        id: 'iaso.snt_malaria.settings.account.subtitle',
+        defaultMessage:
+            'Configure the org unit types and default population metric used across the account.',
+    },
+    settingsInterventionOrgUnitType: {
+        id: 'iaso.snt_malaria.settings.account.interventionOrgUnitType',
+        defaultMessage: 'Intervention org unit type',
+    },
+    settingsFocusOrgUnitType: {
+        id: 'iaso.snt_malaria.settings.account.focusOrgUnitType',
+        defaultMessage: 'Focus org unit type',
+    },
+    settingsDefaultPopulation: {
+        id: 'iaso.snt_malaria.settings.account.defaultPopulation',
+        defaultMessage: 'Default population',
+    },
+    settingsDefaultPopulationHelp: {
+        id: 'iaso.snt_malaria.settings.account.defaultPopulationHelp',
+        defaultMessage:
+            'Metric type used to display population totals on the rule panel.',
+    },
 });

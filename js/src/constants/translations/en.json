@@ -348,5 +348,11 @@
     "iaso.snt_malaria.settings.budget.invalidNumber": "Please enter a valid number.",
     "iaso.snt_malaria.settings.budget.invalidCurrencyCode": "Enter a 3-letter currency code.",
     "iaso.snt_malaria.settings.budget.buffer": "Buffer multiplier",
-    "iaso.snt_malaria.settings.budget.bufferHelp": "Multiplier applied to all costs, e.g. 1.1 for a 10% buffer."
+    "iaso.snt_malaria.settings.budget.bufferHelp": "Multiplier applied to all costs, e.g. 1.1 for a 10% buffer.",
+    "iaso.snt_malaria.settings.account.title": "Account settings",
+    "iaso.snt_malaria.settings.account.subtitle": "Configure the org unit types and default population metric used across the account.",
+    "iaso.snt_malaria.settings.account.interventionOrgUnitType": "Intervention org unit type",
+    "iaso.snt_malaria.settings.account.focusOrgUnitType": "Focus org unit type",
+    "iaso.snt_malaria.settings.account.defaultPopulation": "Default population",
+    "iaso.snt_malaria.settings.account.defaultPopulationHelp": "Metric type used to display population totals on the rule panel."
 }

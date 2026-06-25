@@ -347,5 +347,11 @@
     "iaso.snt_malaria.settings.budget.invalidNumber": "Veuillez saisir un nombre valide.",
     "iaso.snt_malaria.settings.budget.invalidCurrencyCode": "Saisissez un code de devise à 3 lettres.",
     "iaso.snt_malaria.settings.budget.buffer": "Multiplicateur de marge",
-    "iaso.snt_malaria.settings.budget.bufferHelp": "Multiplicateur appliqué à tous les coûts, ex. 1,1 pour une marge de 10 %."
+    "iaso.snt_malaria.settings.budget.bufferHelp": "Multiplicateur appliqué à tous les coûts, ex. 1,1 pour une marge de 10 %.",
+    "iaso.snt_malaria.settings.account.title": "Paramètres du compte",
+    "iaso.snt_malaria.settings.account.subtitle": "Configurez les types d'unités d'organisation et la métrique de population par défaut utilisés sur le compte.",
+    "iaso.snt_malaria.settings.account.interventionOrgUnitType": "Type d'unité d'organisation d'intervention",
+    "iaso.snt_malaria.settings.account.focusOrgUnitType": "Type d'unité d'organisation de focus",
+    "iaso.snt_malaria.settings.account.defaultPopulation": "Population par défaut",
+    "iaso.snt_malaria.settings.account.defaultPopulationHelp": "Type de métrique utilisé pour afficher les totaux de population sur le panneau de règles."
 }

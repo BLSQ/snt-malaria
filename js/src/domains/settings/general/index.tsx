@@ -1,5 +1,9 @@
 import React, { FC, ReactNode, useMemo, useState } from 'react';
-import { SettingsOutlined, TollOutlined } from '@mui/icons-material';
+import {
+    SettingsInputCompositeOutlined,
+    SettingsOutlined,
+    TollOutlined,
+} from '@mui/icons-material';
 import {
     List,
     ListItem,
@@ -19,6 +23,7 @@ import {
     SidebarLayout,
 } from '../../../components/styledComponents';
 import { MESSAGES } from '../../messages';
+import { AccountSettingsTab } from '../accountSettings';
 import { BudgetSettingsTab } from '../budget';
 
 const styles = {
@@ -52,6 +57,12 @@ export const GeneralSettings: FC = () => {
     // settings move under General; the sidebar acts as their navigation menu.
     const sections: GeneralSection[] = useMemo(
         () => [
+            {
+                key: 'account',
+                label: formatMessage(MESSAGES.accountSettingsTitle),
+                icon: SettingsInputCompositeOutlined,
+                content: <AccountSettingsTab />,
+            },
             {
                 key: 'budget',
                 label: formatMessage(MESSAGES.budgetSettingsTitle),
