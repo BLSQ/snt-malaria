@@ -4,19 +4,19 @@ import SettingsInputCompositeOutlinedIcon from '@mui/icons-material/SettingsInpu
 import { Stack, Typography } from '@mui/material';
 import { Button } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
-import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useFormik } from 'formik';
+import InputComponent from 'Iaso/components/forms/InputComponent';
 import { CardStyled } from '../../../components/CardStyled';
 import { IconBoxed } from '../../../components/IconBoxed';
 import {
     CardScrollable,
     SettingsFormContainer,
 } from '../../../components/styledComponents';
+import { useGetOrgUnitTypes } from '../../configureAccount/hooks/useGetOrgUnitTypes';
 import { useGetMetricTypes } from '../../dataLayers/hooks/useGetMetrics';
 import { MetricType } from '../../dataLayers/types/metrics';
 import { MESSAGES } from '../../messages';
 import { useGetAccountSettings } from '../../planning/hooks/useGetAccountSettings';
-import { useGetOrgUnitTypes } from '../../configureAccount/hooks/useGetOrgUnitTypes';
 import { useSaveAccountSettingsTab } from './hooks/useSaveAccountSettingsTab';
 
 type FormValues = {
