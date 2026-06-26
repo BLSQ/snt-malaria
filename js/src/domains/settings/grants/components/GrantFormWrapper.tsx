@@ -73,9 +73,7 @@ export const GrantFormWrapper: FC<Props> = ({
             // matched: create it implicitly before saving the grant.
             let donorId: number | null;
             if (typeof values.donor === 'string') {
-                const createdDonor = (await createDonor(
-                    values.donor,
-                )) as Donor;
+                const createdDonor = (await createDonor(values.donor)) as Donor;
                 donorId = createdDonor.id;
             } else {
                 donorId = values.donor;

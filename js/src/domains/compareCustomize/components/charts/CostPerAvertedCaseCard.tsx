@@ -2,7 +2,6 @@ import React, { FC, useMemo } from 'react';
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
 import { Box } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { SxStyles } from 'Iaso/types/general';
 import {
     Bar,
     BarChart,
@@ -15,6 +14,7 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
+import { SxStyles } from 'Iaso/types/general';
 import { ChartEmptyState } from '../../../../components/charts/ChartEmptyState';
 import { useChartTheme } from '../../../../components/charts/chartTheme';
 import { ChartTooltip } from '../../../../components/charts/ChartTooltip';

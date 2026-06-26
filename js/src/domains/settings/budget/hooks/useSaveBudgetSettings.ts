@@ -1,6 +1,6 @@
+import { UseMutationResult } from 'react-query';
 import { patchRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { UseMutationResult } from 'react-query';
 import { BudgetSettingsPayload } from '../types';
 
 export const useSaveBudgetSettings = (): UseMutationResult =>

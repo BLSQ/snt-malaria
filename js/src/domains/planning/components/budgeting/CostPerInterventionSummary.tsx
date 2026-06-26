@@ -3,7 +3,6 @@ import { VaccinesOutlined } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { lighten } from '@mui/material/styles';
 import { useSafeIntl } from 'bluesquare-components';
-import { SxStyles } from 'Iaso/types/general';
 import {
     Bar,
     BarChart,
@@ -13,6 +12,7 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
+import { SxStyles } from 'Iaso/types/general';
 import { roundedRightRectPath } from '../../../../components/charts/barPaths';
 import { useChartTheme } from '../../../../components/charts/chartTheme';
 import {

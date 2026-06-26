@@ -1,6 +1,6 @@
+import { UseQueryResult } from 'react-query';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
-import { UseQueryResult } from 'react-query';
 import { BudgetSettings } from '../types';
 
 export const useGetBudgetSettings = (): UseQueryResult<

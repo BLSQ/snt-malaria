@@ -2,7 +2,6 @@ import React, { FC, useMemo } from 'react';
 import PieChartOutlinedIcon from '@mui/icons-material/PieChartOutlined';
 import { Box, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { SxStyles } from 'Iaso/types/general';
 import {
     Cell,
     Legend,
@@ -11,6 +10,7 @@ import {
     ResponsiveContainer,
     Tooltip,
 } from 'recharts';
+import { SxStyles } from 'Iaso/types/general';
 import { ChartEmptyState } from '../../../../components/charts/ChartEmptyState';
 import { ChartLegend } from '../../../../components/charts/ChartLegend';
 import { ChartTooltip } from '../../../../components/charts/ChartTooltip';
