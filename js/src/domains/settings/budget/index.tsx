@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import { TollOutlined } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
-import { Stack, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
 import { Button } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
@@ -31,6 +31,7 @@ export const BudgetSettingsTab: FC = () => {
             local_currency: budgetSettings?.local_currency ?? '',
             exchange_rate: budgetSettings?.exchange_rate ?? '1',
             inflation_rate: budgetSettings?.inflation_rate ?? '0',
+            buffer: budgetSettings?.buffer ?? '1.1',
         }),
         [budgetSettings],
     );
@@ -45,6 +46,7 @@ export const BudgetSettingsTab: FC = () => {
                 local_currency: values.local_currency.toUpperCase(),
                 exchange_rate: values.exchange_rate,
                 inflation_rate: values.inflation_rate,
+                buffer: values.buffer,
             });
         },
         [saveBudgetSettings],
@@ -99,6 +101,9 @@ export const BudgetSettingsTab: FC = () => {
                 }
             >
                 {isLoading && <LoadingSpinner absolute />}
+                <Alert severity="warning">
+                    {formatMessage(MESSAGES.budgetSettingsWarning)}
+                </Alert>
                 <SettingsFormContainer>
                     <Stack spacing={2}>
                         <Typography variant="caption" color="textSecondary">
@@ -142,6 +147,19 @@ export const BudgetSettingsTab: FC = () => {
                             )}
                             helperText={formatMessage(
                                 MESSAGES.budgetInflationRateHelp,
+                            )}
+                            withMarginTop={false}
+                        />
+                        <InputComponent
+                            keyValue="buffer"
+                            type="number"
+                            required
+                            value={values.buffer}
+                            onChange={onChange}
+                            errors={getErrors('buffer')}
+                            labelString={formatMessage(MESSAGES.budgetBuffer)}
+                            helperText={formatMessage(
+                                MESSAGES.budgetBufferHelp,
                             )}
                             withMarginTop={false}
                         />

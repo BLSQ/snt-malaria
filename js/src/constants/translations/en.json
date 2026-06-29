@@ -338,6 +338,7 @@
     "iaso.snt_malaria.settings.intervention.grant": "Grant",
     "iaso.snt_malaria.settings.general.title": "General",
     "iaso.snt_malaria.settings.budget.title": "Budget",
+    "iaso.snt_malaria.settings.budget.warning": "Changing these settings will not automatically recalculate existing budgets. Re-run the budget calculation on each scenario to apply the new values.",
     "iaso.snt_malaria.settings.budget.subtitle": "Set the currency and rates used to compute intervention costs and projections.",
     "iaso.snt_malaria.settings.budget.localCurrency": "Local currency (ISO code)",
     "iaso.snt_malaria.settings.budget.localCurrencyHelp": "Three-letter code, e.g. USD, EUR, XOF.",
@@ -345,5 +346,7 @@
     "iaso.snt_malaria.settings.budget.inflationRate": "Annual inflation rate",
     "iaso.snt_malaria.settings.budget.inflationRateHelp": "Decimal value, e.g. 0.03 for 3%.",
     "iaso.snt_malaria.settings.budget.invalidNumber": "Please enter a valid number.",
-    "iaso.snt_malaria.settings.budget.invalidCurrencyCode": "Enter a 3-letter currency code."
+    "iaso.snt_malaria.settings.budget.invalidCurrencyCode": "Enter a 3-letter currency code.",
+    "iaso.snt_malaria.settings.budget.buffer": "Buffer multiplier",
+    "iaso.snt_malaria.settings.budget.bufferHelp": "Multiplier applied to all costs, e.g. 1.1 for a 10% buffer."
 }

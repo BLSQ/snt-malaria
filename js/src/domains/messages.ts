@@ -1008,6 +1008,11 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Set the currency and rates used to compute intervention costs and projections.',
     },
+    budgetSettingsWarning: {
+        id: 'iaso.snt_malaria.settings.budget.warning',
+        defaultMessage:
+            'Changing these settings will not automatically recalculate existing budgets. Re-run the budget calculation on each scenario to apply the new values.',
+    },
     budgetLocalCurrency: {
         id: 'iaso.snt_malaria.settings.budget.localCurrency',
         defaultMessage: 'Local currency (ISO code)',
@@ -1035,5 +1040,14 @@ export const MESSAGES = defineMessages({
     budgetInvalidCurrencyCode: {
         id: 'iaso.snt_malaria.settings.budget.invalidCurrencyCode',
         defaultMessage: 'Enter a 3-letter currency code.',
+    },
+    budgetBuffer: {
+        id: 'iaso.snt_malaria.settings.budget.buffer',
+        defaultMessage: 'Buffer multiplier',
+    },
+    budgetBufferHelp: {
+        id: 'iaso.snt_malaria.settings.budget.bufferHelp',
+        defaultMessage:
+            'Multiplier applied to all costs, e.g. 1.1 for a 10% buffer.',
     },
 });

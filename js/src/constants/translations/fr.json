@@ -337,6 +337,7 @@
     "iaso.snt_malaria.settings.intervention.grant": "Subvention",
     "iaso.snt_malaria.settings.general.title": "Général",
     "iaso.snt_malaria.settings.budget.title": "Budget",
+    "iaso.snt_malaria.settings.budget.warning": "Modifier ces paramètres ne recalculera pas automatiquement les budgets existants. Relancez le calcul du budget sur chaque scénario pour appliquer les nouvelles valeurs.",
     "iaso.snt_malaria.settings.budget.subtitle": "Définissez la devise et les taux utilisés pour calculer les coûts des interventions et les projections.",
     "iaso.snt_malaria.settings.budget.localCurrency": "Devise locale (code ISO)",
     "iaso.snt_malaria.settings.budget.localCurrencyHelp": "Code à trois lettres, ex. USD, EUR, XOF.",
@@ -344,5 +345,7 @@
     "iaso.snt_malaria.settings.budget.inflationRate": "Taux d'inflation annuel",
     "iaso.snt_malaria.settings.budget.inflationRateHelp": "Valeur décimale, ex. 0,03 pour 3 %.",
     "iaso.snt_malaria.settings.budget.invalidNumber": "Veuillez saisir un nombre valide.",
-    "iaso.snt_malaria.settings.budget.invalidCurrencyCode": "Saisissez un code de devise à 3 lettres."
+    "iaso.snt_malaria.settings.budget.invalidCurrencyCode": "Saisissez un code de devise à 3 lettres.",
+    "iaso.snt_malaria.settings.budget.buffer": "Multiplicateur de marge",
+    "iaso.snt_malaria.settings.budget.bufferHelp": "Multiplicateur appliqué à tous les coûts, ex. 1,1 pour une marge de 10 %."
 }
