@@ -53,9 +53,13 @@ class CostUnitTypeAPITestCase(SNTMalariaAPITestCase):
         response = self.client.get(self.BASE_URL)
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
         net = next(item for item in result if item["name"] == "Net")
-        self.assertEqual(set(net.keys()), {"id", "name", "value", "invert_value", "description"})
+        self.assertEqual(
+            set(net.keys()),
+            {"id", "name", "value", "invert_value", "is_proportional", "description"},
+        )
         self.assertAlmostEqual(float(net["value"]), 1.8)
         self.assertFalse(net["invert_value"])
+        self.assertTrue(net["is_proportional"])
         self.assertEqual(net["description"], "One net protects 1.8 people.")
 
     def test_list_with_no_perms(self):
@@ -114,6 +118,23 @@ class CostUnitTypeAPITestCase(SNTMalariaAPITestCase):
         response = self.client.post(self.BASE_URL, data=data)
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
         self.assertIsNone(result["value"])
+
+    def test_create_non_proportional_unit(self):
+        self.client.force_authenticate(self.user_write)
+        data = {"name": "Flat fee", "is_proportional": False}
+        response = self.client.post(self.BASE_URL, data=data)
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+        self.assertFalse(result["is_proportional"])
+        created = CostUnitType.objects.get(id=result["id"])
+        self.assertFalse(created.is_proportional)
+        # Ratio is transparent to the outside: always 1 for non-proportional units.
+        self.assertEqual(created.ratio, 1)
+
+    def test_patch_is_proportional_flag(self):
+        self.client.force_authenticate(self.user_write)
+        response = self.client.patch(f"{self.BASE_URL}{self.unit_net.id}/", data={"is_proportional": False})
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertFalse(result["is_proportional"])
 
     def test_create_duplicate_name_returns_400(self):
         self.client.force_authenticate(self.user_write)

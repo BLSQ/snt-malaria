@@ -7,7 +7,10 @@ import { SettingsFormContainer } from '../../../../components/styledComponents';
 import { ExtendedFormikProvider } from '../../../../hooks/useGetExtendedFormikContext';
 import { useGetMetricTypes } from '../../../dataLayers/hooks/useGetMetrics';
 import { useGetInterventionCostBreakdownLineCategories } from '../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
-import { useGetInterventionCostUnitTypes } from '../../../interventions/hooks/useGetInterventionCostUnitType';
+import {
+    indexCostUnitTypeOptions,
+    useGetInterventionCostUnitTypes,
+} from '../../../interventions/hooks/useGetInterventionCostUnitType';
 import { useGetInterventionDetails } from '../../../interventions/hooks/useGetInterventionDetails';
 import { useSaveInterventionDetails } from '../../../interventions/hooks/useSaveInterventionDetails';
 import { InterventionDetails } from '../../../interventions/types';
@@ -30,6 +33,11 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
 
     const { data: interventionCostUnitTypes = [] } =
         useGetInterventionCostUnitTypes();
+
+    const costUnitTypesById = useMemo(
+        () => indexCostUnitTypeOptions(interventionCostUnitTypes),
+        [interventionCostUnitTypes],
+    );
 
     const { data: metricTypes = [] } = useGetMetricTypes(true);
     const { data: budgetSettings } = useGetBudgetSettings();
@@ -63,6 +71,7 @@ export const InterventionFormWrapper: FC<Props> = ({ interventionId }) => {
 
     const formik = useInterventionFormState({
         onSubmit,
+        costUnitTypesById,
     });
 
     useEffect(() => {

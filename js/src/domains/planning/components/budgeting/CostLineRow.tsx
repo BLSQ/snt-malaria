@@ -1,5 +1,7 @@
 import React, { FC, useMemo } from 'react';
+import GroupsIcon from '@mui/icons-material/Groups';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
+import NumbersIcon from '@mui/icons-material/Numbers';
 import {
     Box,
     Stack,
@@ -44,7 +46,13 @@ type Props = {
 const styles = {
     costLineRow: { backgroundColor: '#f9f9f9', p: 1 },
     buffer: { pl: 7.275 },
+    costDriverIcon: {
+        fontSize: 18,
+        color: 'text.secondary',
+        verticalAlign: 'text-bottom',
+    },
     tooltip: { maxWidth: 750, width: 300, p: 1.5 },
+    tooltipShort: { p: 1.5 },
     tooltipLabel: { whiteSpace: 'nowrap', width: 100 },
     tooltipLongText: {
         flex: 1,
@@ -146,24 +154,38 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
     return (
         <TableRow sx={styles.costLineRow}>
             <TableCell align="left" colSpan={2} sx={styles.buffer}>
-                <Typography variant="body2" component="span">
-                    {costLine.label}
-                </Typography>
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={1}
+                    component="span"
+                >
+                    <CostDriverIcon costDriver={costLine.costDriver} />
+                    <Typography variant="body2" component="span">
+                        {costLine.label}
+                    </Typography>
+                </Stack>
             </TableCell>
             {yearRange.map(year => (
                 <TableCell
                     key={`cost_line_${costLine.label}_${year}`}
                     align="center"
                 >
-                    <YearlyCoverageInput
-                        value={coverageInputsByYear[year]}
-                        onChange={nextValue =>
-                            handleCoverageChange(year, nextValue)
-                        }
-                        onBlur={() => normalizeCoverageValue(year)}
-                        disabled={!isEditable}
-                        percentage={costLine.costDriver !== 'fixed_cost'}
-                    />
+                    <CostDriverTooltip costDriver={costLine.costDriver}>
+                        <Box component="span" display="inline-flex">
+                            <YearlyCoverageInput
+                                value={coverageInputsByYear[year]}
+                                onChange={nextValue =>
+                                    handleCoverageChange(year, nextValue)
+                                }
+                                onBlur={() => normalizeCoverageValue(year)}
+                                disabled={!isEditable}
+                                percentage={
+                                    costLine.costDriver !== 'fixed_cost'
+                                }
+                            />
+                        </Box>
+                    </CostDriverTooltip>
                 </TableCell>
             ))}
             <TableCell align="right">
@@ -175,6 +197,78 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
                 <CostLineTooltip costLine={costLine} />
             </TableCell>
         </TableRow>
+    );
+};
+
+type CostDriverTooltipProps = {
+    costDriver: CostLineRowData['costDriver'];
+    children: React.ReactElement;
+    /** When true, show the short definition only (no description). */
+    short?: boolean;
+};
+
+const useCostDriverTooltipContent = (
+    costDriver: CostLineRowData['costDriver'],
+    short: boolean,
+): React.ReactNode => {
+    const { formatMessage } = useSafeIntl();
+    const isFixed = costDriver === 'fixed_cost';
+    const name = formatMessage(
+        isFixed
+            ? MESSAGES.budgetingCostLineFixedLabel
+            : MESSAGES.budgetingCostLineProportionalLabel,
+    );
+    if (short) {
+        return name;
+    }
+    const description = formatMessage(
+        isFixed
+            ? MESSAGES.budgetingCostLineFixedTooltip
+            : MESSAGES.budgetingCostLineProportionalTooltip,
+    );
+    return (
+        <>
+            <b>{name}</b>: {description}
+        </>
+    );
+};
+
+const CostDriverTooltip: FC<CostDriverTooltipProps> = ({
+    costDriver,
+    children,
+    short = false,
+}) => {
+    const tooltipContent = useCostDriverTooltipContent(costDriver, short);
+    return (
+        <Tooltip
+            arrow={true}
+            placement="top-end"
+            componentsProps={{
+                tooltip: { sx: short ? styles.tooltipShort : styles.tooltip },
+            }}
+            title={<Typography variant="body2">{tooltipContent}</Typography>}
+        >
+            {children}
+        </Tooltip>
+    );
+};
+
+type CostDriverIconProps = {
+    costDriver: CostLineRowData['costDriver'];
+};
+
+const CostDriverIcon: FC<CostDriverIconProps> = ({ costDriver }) => {
+    const isFixed = costDriver === 'fixed_cost';
+    return (
+        <CostDriverTooltip costDriver={costDriver} short>
+            <Box component="span" display="inline-flex" alignItems="center">
+                {isFixed ? (
+                    <NumbersIcon sx={styles.costDriverIcon} />
+                ) : (
+                    <GroupsIcon sx={styles.costDriverIcon} />
+                )}
+            </Box>
+        </CostDriverTooltip>
     );
 };
 

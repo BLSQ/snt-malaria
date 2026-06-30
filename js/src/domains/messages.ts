@@ -134,6 +134,23 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.budgeting.costLine.buffer',
         defaultMessage: 'Buffer',
     },
+    budgetingCostLineProportionalLabel: {
+        id: 'iaso.snt_malaria.budgeting.costLine.proportionalLabel',
+        defaultMessage: 'Proportional cost line',
+    },
+    budgetingCostLineFixedLabel: {
+        id: 'iaso.snt_malaria.budgeting.costLine.fixedLabel',
+        defaultMessage: 'Fixed cost line',
+    },
+    budgetingCostLineProportionalTooltip: {
+        id: 'iaso.snt_malaria.budgeting.costLine.proportionalTooltip',
+        defaultMessage:
+            'inputs are percentages relative to the cost driver (population).',
+    },
+    budgetingCostLineFixedTooltip: {
+        id: 'iaso.snt_malaria.budgeting.costLine.fixedTooltip',
+        defaultMessage: 'inputs are absolute amounts.',
+    },
     cancel: {
         defaultMessage: 'Cancel',
         id: 'iaso.label.cancel',
@@ -897,7 +914,7 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.costUnits.conversionFactorHelp',
         defaultMessage:
             'Conversion factor between a unit quantity and its corresponding cost-driver quantity (typically a population). \
-            Depending on the item, this may express how many people one unit covers, or how many units one person requires.',
+            Depending on the direction (direct / inverse), this may express how many people one unit covers, or how many units one person requires.',
     },
     costUnitRatioDirection: {
         id: 'iaso.snt_malaria.settings.costUnits.ratioDirection',
@@ -940,6 +957,19 @@ export const MESSAGES = defineMessages({
     costUnitDescription: {
         id: 'iaso.snt_malaria.settings.costUnits.description',
         defaultMessage: 'Description',
+    },
+    costUnitIsProportionalLabel: {
+        id: 'iaso.snt_malaria.settings.costUnits.isProportionalLabel',
+        defaultMessage: 'Proportional Unit',
+    },
+    costUnitIsProportionalHelp: {
+        id: 'iaso.snt_malaria.settings.costUnits.isProportionalHelp',
+        defaultMessage:
+            'When checked, this unit carries a conversion factor and cost lines using it are driven by a population metric (the cost driver). When unchecked, the unit represents an absolute / fixed cost and cost lines using it do not reference a population metric.',
+    },
+    costUnitRatioSummaryAbsolute: {
+        id: 'iaso.snt_malaria.settings.costUnits.ratioSummaryAbsolute',
+        defaultMessage: 'Absolute / fixed cost',
     },
     grantsTitle: {
         id: 'iaso.snt_malaria.settings.grants.title',

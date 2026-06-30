@@ -12,6 +12,7 @@ from .filters import InterventionCostBreakdownLineListFilter
 from .permissions import InterventionCostBreakdownLinePermission
 from .serializers import (
     InterventionCostBreakdownLineSerializer,
+    UnitTypeDropdownSerializer,
 )
 
 
@@ -43,11 +44,16 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
         methods=["get"],
     )
     def unit_types_dropdown(self, _):
-        from iaso.api.common.serializer import DropdownOptionsSerializer
-
         account = self.request.user.iaso_profile.account
         queryset = CostUnitType.objects.filter(account=account)
 
-        data = [{"value": str(unit_type.id), "label": unit_type.name} for unit_type in queryset]
-        serializer = DropdownOptionsSerializer(data, many=True)
+        data = [
+            {
+                "value": str(unit_type.id),
+                "label": unit_type.name,
+                "is_proportional": unit_type.is_proportional,
+            }
+            for unit_type in queryset
+        ]
+        serializer = UnitTypeDropdownSerializer(data, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

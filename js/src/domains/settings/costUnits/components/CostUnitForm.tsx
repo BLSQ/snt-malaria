@@ -1,6 +1,7 @@
 import React, { FC, useMemo } from 'react';
 import {
     Box,
+    Checkbox,
     FormControlLabel,
     Radio,
     RadioGroup,
@@ -49,94 +50,133 @@ export const CostUnitForm: FC = () => {
     }, [values.value]);
 
     return (
-        <Stack spacing={2}>
-            <InputComponent
-                keyValue="name"
-                type="text"
-                value={values.name}
-                onChange={setFieldValueAndState}
-                errors={getErrors('name')}
-                required
-                labelString={formatMessage(MESSAGES.costUnitLongName)}
-                withMarginTop={false}
-            />
-            <Stack spacing={0.5}>
+        <Stack spacing={3}>
+            <Stack spacing={2}>
                 <InputComponent
-                    keyValue="value"
-                    type="number"
-                    value={values.value ?? ''}
+                    keyValue="name"
+                    type="text"
+                    value={values.name}
                     onChange={setFieldValueAndState}
-                    errors={getErrors('value')}
-                    labelString={formatMessage(
-                        MESSAGES.costUnitConversionFactor,
-                    )}
+                    errors={getErrors('name')}
+                    required
+                    labelString={formatMessage(MESSAGES.costUnitLongName)}
                     withMarginTop={false}
-                    numberInputOptions={{ decimalScale: 2 }}
                 />
-                <Typography variant="caption" color="textSecondary">
-                    {formatMessage(MESSAGES.costUnitConversionFactorHelp)}
-                </Typography>
-            </Stack>
-            <Box sx={{ pb: 1 }}>
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                    {formatMessage(MESSAGES.costUnitRatioDirection)}
-                </Typography>
-                <RadioGroup
-                    value={values.invert_value ? 'inverse' : 'direct'}
-                    onChange={(_, value) =>
-                        setFieldValueAndState(
-                            'invert_value',
-                            value === 'inverse',
-                        )
+                <TextField
+                    label={formatMessage(MESSAGES.costUnitDescription)}
+                    value={values.description ?? ''}
+                    onChange={event =>
+                        setFieldValueAndState('description', event.target.value)
                     }
-                    sx={{ gap: 1 }}
-                >
+                    multiline
+                    minRows={2}
+                    fullWidth
+                    error={Boolean(getErrors('description')?.length)}
+                    helperText={getErrors('description')?.[0]}
+                />
+            </Stack>
+            <Stack spacing={3}>
+                <Box>
                     <FormControlLabel
-                        value="direct"
-                        control={<Radio size="small" />}
-                        label={
-                            <RadioOption
-                                label={formatMessage(
-                                    MESSAGES.costUnitRatioDirect,
-                                    { value: valueLabel },
-                                )}
-                                help={formatMessage(
-                                    MESSAGES.costUnitRatioDirectHelp,
-                                )}
+                        control={
+                            <Checkbox
+                                checked={Boolean(values.is_proportional)}
+                                onChange={(_, checked) =>
+                                    setFieldValueAndState(
+                                        'is_proportional',
+                                        checked,
+                                    )
+                                }
+                                size="small"
                             />
                         }
-                        sx={{ alignItems: 'flex-start', m: 0 }}
+                        label={formatMessage(
+                            MESSAGES.costUnitIsProportionalLabel,
+                        )}
                     />
-                    <FormControlLabel
-                        value="inverse"
-                        control={<Radio size="small" />}
-                        label={
-                            <RadioOption
-                                label={formatMessage(
-                                    MESSAGES.costUnitRatioInverse,
-                                    { value: valueLabel },
+                    <Typography
+                        variant="caption"
+                        color="textSecondary"
+                        display="block"
+                    >
+                        {formatMessage(MESSAGES.costUnitIsProportionalHelp)}
+                    </Typography>
+                </Box>
+                {values.is_proportional && (
+                    <Stack
+                        direction={{ xs: 'column', md: 'row' }}
+                        spacing={2}
+                        alignItems="flex-start"
+                    >
+                        <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+                            <InputComponent
+                                keyValue="value"
+                                type="number"
+                                value={values.value ?? ''}
+                                onChange={setFieldValueAndState}
+                                errors={getErrors('value')}
+                                labelString={formatMessage(
+                                    MESSAGES.costUnitConversionFactor,
                                 )}
-                                help={formatMessage(
-                                    MESSAGES.costUnitRatioInverseHelp,
-                                )}
+                                withMarginTop={false}
+                                numberInputOptions={{ decimalScale: 2 }}
                             />
-                        }
-                        sx={{ alignItems: 'flex-start', m: 0 }}
-                    />
-                </RadioGroup>
-            </Box>
-            <TextField
-                label={formatMessage(MESSAGES.costUnitDescription)}
-                value={values.description ?? ''}
-                onChange={event =>
-                    setFieldValueAndState('description', event.target.value)
-                }
-                multiline
-                minRows={2}
-                fullWidth
-                error={Boolean(getErrors('description')?.length)}
-                helperText={getErrors('description')?.[0]}
-            />
+                            <Typography variant="caption" color="textSecondary">
+                                {formatMessage(
+                                    MESSAGES.costUnitConversionFactorHelp,
+                                )}
+                            </Typography>
+                        </Stack>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <RadioGroup
+                                value={
+                                    values.invert_value ? 'inverse' : 'direct'
+                                }
+                                onChange={(_, value) =>
+                                    setFieldValueAndState(
+                                        'invert_value',
+                                        value === 'inverse',
+                                    )
+                                }
+                                sx={{ gap: 1 }}
+                            >
+                                <FormControlLabel
+                                    value="direct"
+                                    control={<Radio size="small" />}
+                                    label={
+                                        <RadioOption
+                                            label={formatMessage(
+                                                MESSAGES.costUnitRatioDirect,
+                                                { value: valueLabel },
+                                            )}
+                                            help={formatMessage(
+                                                MESSAGES.costUnitRatioDirectHelp,
+                                            )}
+                                        />
+                                    }
+                                    sx={{ alignItems: 'flex-start', m: 0 }}
+                                />
+                                <FormControlLabel
+                                    value="inverse"
+                                    control={<Radio size="small" />}
+                                    label={
+                                        <RadioOption
+                                            label={formatMessage(
+                                                MESSAGES.costUnitRatioInverse,
+                                                { value: valueLabel },
+                                            )}
+                                            help={formatMessage(
+                                                MESSAGES.costUnitRatioInverseHelp,
+                                            )}
+                                        />
+                                    }
+                                    sx={{ alignItems: 'flex-start', m: 0 }}
+                                />
+                            </RadioGroup>
+                        </Box>
+                    </Stack>
+                )}
+            </Stack>
         </Stack>
     );
 };

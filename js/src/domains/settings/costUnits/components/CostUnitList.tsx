@@ -32,6 +32,9 @@ export const CostUnitList: FC<Props> = ({
 
     const getRatioSummary = useCallback(
         (costUnit: CostUnitType): string | null => {
+            if (!costUnit.is_proportional) {
+                return formatMessage(MESSAGES.costUnitRatioSummaryAbsolute);
+            }
             const value =
                 costUnit.value != null ? parseFloat(costUnit.value) : NaN;
             if (Number.isNaN(value)) {

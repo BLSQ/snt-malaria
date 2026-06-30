@@ -60,7 +60,13 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
 class CostUnitTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CostUnitType
-        fields = ["id", "name", "ratio"]
+        fields = ["id", "name", "ratio", "is_proportional"]
+
+
+class UnitTypeDropdownSerializer(serializers.Serializer):
+    value = serializers.CharField()
+    label = serializers.CharField()
+    is_proportional = serializers.BooleanField()
 
 
 class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
@@ -140,6 +146,14 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
+        unit_type = attrs.get("unit_type")
+        if unit_type is not None and not unit_type.is_proportional:
+            # Absolute / fixed cost: a population layer is meaningless, so drop it silently.
+            attrs["population_layer"] = None
+        elif unit_type is not None and unit_type.is_proportional and not attrs.get("population_layer"):
+            raise serializers.ValidationError(
+                {"population_layer": "A target population is required for proportional units."}
+            )
         attrs["cost_driver"] = (
             InterventionCostBreakdownLine.CostDriver.POPULATION
             if attrs.get("population_layer")

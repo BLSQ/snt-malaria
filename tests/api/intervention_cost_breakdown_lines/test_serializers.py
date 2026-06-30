@@ -9,6 +9,7 @@ from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import
     InterventionCostBreakdownLineWriteSerializer,
 )
 from plugins.snt_malaria.models import InterventionCostBreakdownLine, ScenarioYearlyCostAssignment
+from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base import (
     InterventionCostBreakdownLineBase,
 )
@@ -303,6 +304,47 @@ class InterventionCostBreakdownLineWriteSerializerTests(InterventionCostBreakdow
         self.assertNotIn(self.other_population_metric, queryset)
 
     def test_write_serializer_sets_population_cost_driver_when_population_layer_is_present(self):
+        proportional_unit = CostUnitType.objects.create(
+            account=self.account, name="Proportional unit", value=1, is_proportional=True
+        )
+        serializer = InterventionCostBreakdownLineWriteSerializer(
+            data={
+                "name": "Line 1",
+                "unit_cost": 10,
+                "unit_type": proportional_unit.id,
+                "category": "Procurement",
+                "intervention": self.intervention_chemo_iptp.id,
+                "population_layer": self.population_metric.id,
+            },
+            context=self.context,
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertEqual(
+            serializer.validated_data["cost_driver"],
+            InterventionCostBreakdownLine.CostDriver.POPULATION,
+        )
+
+    def test_write_serializer_rejects_missing_population_layer_for_proportional_unit(self):
+        proportional_unit = CostUnitType.objects.create(
+            account=self.account, name="Per dose", value=1, is_proportional=True
+        )
+        serializer = InterventionCostBreakdownLineWriteSerializer(
+            data={
+                "name": "Line 1",
+                "unit_cost": 10,
+                "unit_type": proportional_unit.id,
+                "category": "Procurement",
+                "intervention": self.intervention_chemo_iptp.id,
+            },
+            context=self.context,
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("population_layer", serializer.errors)
+
+    def test_write_serializer_drops_population_layer_for_non_proportional_unit(self):
+        # ``unit_type_other`` is non-proportional in the shared fixtures.
         serializer = InterventionCostBreakdownLineWriteSerializer(
             data={
                 "name": "Line 1",
@@ -316,9 +358,10 @@ class InterventionCostBreakdownLineWriteSerializerTests(InterventionCostBreakdow
         )
 
         self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertIsNone(serializer.validated_data.get("population_layer"))
         self.assertEqual(
             serializer.validated_data["cost_driver"],
-            InterventionCostBreakdownLine.CostDriver.POPULATION,
+            InterventionCostBreakdownLine.CostDriver.FIXED_COST,
         )
 
     def test_write_serializer_sets_fixed_cost_driver_when_population_layer_is_absent(self):

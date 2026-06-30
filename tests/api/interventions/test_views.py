@@ -31,8 +31,13 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         self.intervention_vaccination_rts = defaults["intervention_rts"]
         self.intervention_chemo_smc = defaults["intervention_smc"]
         self.intervention_chemo_iptp = defaults["intervention_iptp"]
-        self.unit_type_other, _ = CostUnitType.objects.get_or_create(account=self.account, name="Other")
-        self.unit_type_per_itn, _ = CostUnitType.objects.get_or_create(account=self.account, name="per ITN")
+        # Non-proportional so cost lines may be created without a population_layer.
+        self.unit_type_other, _ = CostUnitType.objects.get_or_create(
+            account=self.account, name="Other", defaults={"is_proportional": False}
+        )
+        self.unit_type_per_itn, _ = CostUnitType.objects.get_or_create(
+            account=self.account, name="per ITN", defaults={"is_proportional": False}
+        )
 
         self.cost_line = self.intervention_vaccination_rts.cost_breakdown_lines.create(
             name="Cost Line 1",

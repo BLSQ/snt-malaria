@@ -34,3 +34,17 @@ class CostUnitTypeModelTestCase(SNTMalariaTestCase):
     def test_ratio_direct_zero_value_returns_zero(self):
         unit = self._create(value=Decimal("0"), invert_value=False)
         self.assertEqual(unit.ratio, Decimal("0"))
+
+    def test_non_proportional_unit_returns_ratio_of_one(self):
+        # When the unit is not proportional the conversion factor is transparent to the outside:
+        # ``ratio`` is always Decimal(1), regardless of the stored ``value`` / ``invert_value``.
+        unit = self._create(value=Decimal("5"), invert_value=True, is_proportional=False)
+        self.assertEqual(unit.ratio, Decimal(1))
+
+    def test_non_proportional_unit_without_value_returns_one(self):
+        unit = self._create(value=None, is_proportional=False)
+        self.assertEqual(unit.ratio, Decimal(1))
+
+    def test_default_is_proportional_true(self):
+        unit = self._create(value=Decimal("1"))
+        self.assertTrue(unit.is_proportional)
