@@ -1074,6 +1074,6 @@ export const MESSAGES = defineMessages({
     settingsDefaultPopulationHelp: {
         id: 'iaso.snt_malaria.settings.account.defaultPopulationHelp',
         defaultMessage:
-            'Metric type used to display population totals on the rule panel.',
+            'Metric type automatically shown as the population layer whenever one is needed for display (e.g. totals on the rule panel).',
     },
 });

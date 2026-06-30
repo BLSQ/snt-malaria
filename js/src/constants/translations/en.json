@@ -354,5 +354,5 @@
     "iaso.snt_malaria.settings.account.interventionOrgUnitType": "Intervention org unit type",
     "iaso.snt_malaria.settings.account.focusOrgUnitType": "Focus org unit type",
     "iaso.snt_malaria.settings.account.defaultPopulation": "Default population",
-    "iaso.snt_malaria.settings.account.defaultPopulationHelp": "Metric type used to display population totals on the rule panel."
+    "iaso.snt_malaria.settings.account.defaultPopulationHelp": "Metric type automatically shown as the population layer whenever one is needed for display (e.g. totals on the rule panel)."
 }
