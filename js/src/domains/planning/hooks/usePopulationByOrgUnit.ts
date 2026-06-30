@@ -2,8 +2,7 @@ import { useMemo } from 'react';
 import { useGetMetricValues } from '../../dataLayers/hooks/useGetMetrics';
 import { usePlanningContext } from '../contexts/PlanningContext';
 
-// SNT convention: the data layer holding total population values has this
-// MetricType code (see fixtures and demo account seeding).
+// Fallback: SNT convention code used when no default_population_id is configured.
 const POPULATION_METRIC_CODE = 'POPULATION';
 
 type PopulationByOrgUnit = {
@@ -16,31 +15,46 @@ type PopulationByOrgUnit = {
     year: number | null;
 };
 
+type Props = {
+    // When provided, this metric type is used directly instead of looking up
+    // by the POPULATION code convention. Comes from account_settings.default_population_id.
+    metricTypeId?: number | null;
+};
+
 /**
- * Returns the per-org-unit total population from the account's POPULATION data
- * layer, plus the year it was taken from. A single target year is used for
- * every org unit: the year closest to the current year that *every* org unit
- * has data for, so the populations are always comparable and no org unit is
- * silently dropped. Rows with `year: null` (a time-invariant snapshot) are
- * only used when there is no such common dated year.
+ * Returns the per-org-unit total population from the configured population data
+ * layer, plus the year it was taken from. When `metricTypeId` is provided it is
+ * used directly; otherwise the hook falls back to the account's metric type with
+ * code POPULATION. A single target year is used for every org unit: the year
+ * closest to the current year that *every* org unit has data for, so the
+ * populations are always comparable and no org unit is silently dropped. Rows
+ * with `year: null` (a time-invariant snapshot) are only used when there is no
+ * such common dated year.
  */
-export const usePopulationByOrgUnit = (): PopulationByOrgUnit => {
+export const usePopulationByOrgUnit = ({
+    metricTypeId,
+}: Props = {}): PopulationByOrgUnit => {
     const { metricTypeCategories } = usePlanningContext();
 
-    const populationMetricType = useMemo(
+    const resolvedMetricTypeId = useMemo(
         () =>
-            metricTypeCategories
-                .flatMap(category => category.items)
-                .find(metricType => metricType.code === POPULATION_METRIC_CODE),
-        [metricTypeCategories],
+            metricTypeId != null
+                ? metricTypeId
+                : metricTypeCategories
+                      .flatMap(category => category.items)
+                      .find(
+                          metricType =>
+                              metricType.code === POPULATION_METRIC_CODE,
+                      )?.id,
+        [metricTypeId, metricTypeCategories],
     );
 
     const { data: metricValues } = useGetMetricValues({
-        metricTypeId: populationMetricType?.id,
+        metricTypeId: resolvedMetricTypeId,
     });
 
     return useMemo(() => {
-        if (!populationMetricType || !metricValues) {
+        if (!resolvedMetricTypeId || !metricValues) {
             return { populationByOrgUnit: undefined, year: null };
         }
         const currentYear = new Date().getFullYear();
@@ -91,5 +105,5 @@ export const usePopulationByOrgUnit = (): PopulationByOrgUnit => {
             }
         });
         return { populationByOrgUnit, year: targetYear };
-    }, [populationMetricType, metricValues]);
+    }, [resolvedMetricTypeId, metricValues]);
 };
