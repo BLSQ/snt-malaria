@@ -3,14 +3,36 @@ Create a demo scenario with intervention assignments for Burkina Faso
 """
 
 from datetime import date
+from decimal import Decimal
 
 from iaso.models import OrgUnitType, User
 from iaso.models.data_store import JsonDataStore
-from iaso.models.metric import MetricType
+from iaso.models.metric import MetricType, MetricValue
 
 # from plugins.snt_malaria.models.budget import Budget
+from plugins.snt_malaria.models.cost_breakdown import InterventionCostBreakdownLine
 from plugins.snt_malaria.models.intervention import Intervention
 from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule
+from plugins.snt_malaria.models.scenario_yearly_cost_assignment import ScenarioYearlyCostAssignment
+from plugins.snt_malaria.services.budget.budget_calculation import BudgetCalculationService
+
+
+# Coverage ratios stored in ScenarioYearlyCostAssignment.value for population-driven lines.
+# Keyed by intervention.code; unrecognised codes fall back to DEFAULT_YEARLY_COVERAGE.
+YEARLY_COVERAGE_BY_CODE = {
+    "iptp": Decimal("0.85"),
+    "pmc": Decimal("0.80"),
+    "smc": Decimal("0.90"),
+    "smc_3": Decimal("0.90"),
+    "smc_4": Decimal("0.90"),
+    "smc_5": Decimal("0.90"),
+    "itn_campaign": Decimal("0.75"),
+    "itn_routine": Decimal("0.80"),
+    "itn_school": Decimal("0.75"),
+    "vacc": Decimal("0.70"),
+    "lsm": Decimal("0.80"),
+}
+DEFAULT_YEARLY_COVERAGE = Decimal("1.00")
 
 
 class DemoScenarioSeeder:
@@ -51,17 +73,12 @@ class DemoScenarioSeeder:
         pf_rate_metric_type = metric_types.filter(code="PF_PR_RATE").first()
         seasonality_precipitation_metric_type = metric_types.filter(code="SEASONALITY_PRECIPITATION").first()
 
-        scenario_1 = self._create_scenario_(
+        self._create_scenario_(
             "NSP 1", created_by, interventions, seasonality_precipitation_metric_type, pf_rate_metric_type, rate=60
         )
-        scenario_2 = self._create_scenario_(
+        self._create_scenario_(
             "NSP 2", created_by, interventions, seasonality_precipitation_metric_type, pf_rate_metric_type, rate=80
         )
-
-        # Create a budget for the scenario
-        # self.stdout_write("\nCreating budget for scenario...")
-        # budget = self._create_budget_for_scenario(scenario, created_by)
-        # self.stdout_write(f"Created budget: {budget.name}")
 
         # Create an SNT config
         country_out_id = OrgUnitType.objects.get(projects=self.project, short_name="Country").id
@@ -76,69 +93,6 @@ class DemoScenarioSeeder:
         )
 
         self.stdout_write("Done creating demo scenario.")
-
-    def _create_budget_for_scenario(self, scenario, created_by):
-        """
-        Create a budget for the given scenario using the budget calculator.
-        """
-        start_year = scenario.start_year
-        end_year = scenario.end_year
-
-        # Build cost and population dataframes and format the intervention plan
-        # cost_df = build_cost_dataframe(self.account, start_year, end_year)
-        # population_df = build_population_dataframe(self.account, start_year, end_year)
-        # interventions_input = build_interventions_input(scenario)
-
-        # Build a quick lookup map ((code, type) -> id) for fast id retrieval
-        interventions = Intervention.objects.filter(intervention_category__account=self.account)
-        interventions_map = {(iv.code, iv.name): iv.id for iv in interventions}
-
-        # Use default cost assumptions
-        # settings = DEFAULT_COST_ASSUMPTIONS
-
-        # budgets = []
-        # budget_calculator = BudgetCalculator(
-        #     interventions_input=interventions_input,
-        #     settings=settings,
-        #     cost_df=cost_df,
-        #     population_df=population_df,
-        #     local_currency="USD",
-        #     budget_currency="USD",
-        #     spatial_planning_unit="org_unit_id",
-        # )
-
-        # Calculate budget for each year
-        # for year in range(start_year, end_year + 1):
-        #     interventions_costs = budget_calculator.get_interventions_costs(year)
-        #     places_costs = budget_calculator.get_places_costs(year)
-
-        #     # Adjust cost breakdown category field name
-        #     for intervention in interventions_costs:
-        #         for cost_breakdown in intervention["cost_breakdown"]:
-        #             cost_breakdown["category"] = cost_breakdown.pop("cost_class", None)
-
-        #     # Adjust place costs field names and attach intervention IDs
-        #     for place_cost in places_costs:
-        #         place_cost["org_unit_id"] = place_cost.pop("place")
-
-        #         for place_cost_intervention in place_cost.get("interventions", []):
-        #             code = place_cost_intervention["code"]
-        #             type_ = place_cost_intervention["type"]
-        #             intervention_id = interventions_map.get((code, type_))
-        #             place_cost_intervention["id"] = intervention_id
-
-        #     budgets.append({"year": year, "interventions": interventions_costs, "org_units_costs": places_costs})
-
-        # Create the budget object
-        # budget = Budget.objects.create(
-        #     scenario=scenario,
-        #     name=f"Budget for {scenario.name}",
-        #     results=budgets,
-        #     created_by=created_by,
-        #     updated_by=created_by,
-        # )
-
-        # return budget
 
     def _create_scenario_(
         self, scenario_name, user, interventions, seasonality_precipitation_metric_type, pf_rate_metric_type, rate
@@ -234,3 +188,74 @@ class DemoScenarioSeeder:
         scenario.refresh_assignments(user=user)
         assignment_count = scenario.intervention_assignments.count()
         self.stdout_write(f"Assigned {assignment_count} interventions to scenario")
+
+        self._create_yearly_cost_assignments(scenario)
+
+        self._ensure_population_for_scenario_years(scenario)
+
+        self.stdout_write(f"Calculating budget for '{scenario.name}'...")
+        budget = BudgetCalculationService(scenario).calculate_and_save_all_years(user)
+        self.stdout_write(f"Created budget '{budget.name}' (ID: {budget.id})")
+
+        return scenario
+
+    def _create_yearly_cost_assignments(self, scenario):
+        """Create ScenarioYearlyCostAssignment rows for all cost breakdown lines of
+        the interventions assigned to the scenario, one row per (line, year)."""
+        intervention_ids = list(scenario.intervention_assignments.values_list("intervention_id", flat=True).distinct())
+
+        cost_lines = InterventionCostBreakdownLine.objects.filter(intervention_id__in=intervention_ids).select_related(
+            "intervention"
+        )
+
+        to_create = []
+        for year in range(scenario.start_year, scenario.end_year + 1):
+            for line in cost_lines:
+                if line.cost_driver == InterventionCostBreakdownLine.CostDriver.POPULATION:
+                    value = YEARLY_COVERAGE_BY_CODE.get(line.intervention.code, DEFAULT_YEARLY_COVERAGE)
+                else:
+                    # Fixed-cost lines default to 0 in the budget calculator; seed an explicit 0
+                    value = Decimal("0.00")
+                to_create.append(
+                    ScenarioYearlyCostAssignment(
+                        scenario=scenario,
+                        cost_line=line,
+                        year=year,
+                        value=value,
+                    )
+                )
+
+        ScenarioYearlyCostAssignment.objects.bulk_create(to_create, ignore_conflicts=True)
+        self.stdout_write(f"Created {len(to_create)} yearly cost assignments for '{scenario.name}'")
+
+    def _ensure_population_for_scenario_years(self, scenario):
+        """The metrics dataset has no YEAR column so MetricValues are imported with year=0.
+        The budget calculator queries by exact year, so copy the year=0 baseline values to
+        every year in the scenario range so the calculation produces non-zero results."""
+        pop_metric_types = MetricType.objects.filter(
+            account=scenario.account,
+            metric_kind=MetricType.MetricKind.POPULATION,
+        )
+
+        base_values = list(MetricValue.objects.filter(metric_type__in=pop_metric_types, year=0))
+        if not base_values:
+            self.stdout_write("WARNING: no year=0 population values found; budget may be empty")
+            return
+
+        to_create = []
+        for year in range(scenario.start_year, scenario.end_year + 1):
+            for v in base_values:
+                to_create.append(
+                    MetricValue(
+                        metric_type_id=v.metric_type_id,
+                        org_unit_id=v.org_unit_id,
+                        value=v.value,
+                        string_value=v.string_value,
+                        year=year,
+                    )
+                )
+
+        MetricValue.objects.bulk_create(to_create, ignore_conflicts=True)
+        self.stdout_write(
+            f"Extended {len(base_values)} population baseline values to {scenario.end_year - scenario.start_year + 1} scenario years"
+        )
