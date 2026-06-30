@@ -1,4 +1,5 @@
 import React, { FC, useCallback } from 'react';
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import {
     Box,
@@ -15,6 +16,7 @@ import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
 import { SxStyles } from 'Iaso/types/general';
 import * as CorePermission from 'Iaso/utils/permissions';
+import { useDataLayerComparisonContext } from '../contexts/DataLayerComparisonContext';
 import { MESSAGES } from '../messages';
 import { MetricType } from '../types/metrics';
 
@@ -29,14 +31,15 @@ type Props = {
 const styles: SxStyles = {
     metricType: {
         borderRadius: 2,
+        py: 0,
         border: '1px solid transparent',
         cursor: 'pointer',
-        ' .MuiListItemSecondaryAction-root': {
+        ' .action-box, .MuiListItemSecondaryAction-root': {
             visibility: 'hidden',
         },
         '&:hover': {
             bgcolor: 'action.hover',
-            ' .MuiListItemSecondaryAction-root': {
+            ' .action-box, .MuiListItemSecondaryAction-root': {
                 visibility: 'visible',
             },
         },
@@ -53,6 +56,7 @@ const styles: SxStyles = {
         display: 'flex',
         justifyContent: 'space-between',
         marginRight: 4,
+        py: 2,
     },
 };
 
@@ -69,6 +73,15 @@ export const DataLayerLine: FC<Props> = ({
     const toggleMoreActions = useCallback(() => {
         setShowMoreActions(!showMoreActions);
     }, [showMoreActions]);
+    const { addMetricToComparison, maxMetricsCountReached } =
+        useDataLayerComparisonContext();
+    const onAddMetricToComparison = useCallback(
+        (e: Event) => {
+            e.stopPropagation();
+            addMetricToComparison(metricType);
+        },
+        [addMetricToComparison, metricType],
+    );
 
     return (
         <ListItem
@@ -97,40 +110,53 @@ export const DataLayerLine: FC<Props> = ({
             <Box sx={styles.metricTypeDetails}>
                 <Typography variant="body2">{metricType.name}</Typography>
             </Box>
-            <Popover
-                id="metric_type_line_actions"
-                open={showMoreActions}
-                anchorEl={anchorRef.current}
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
-                }}
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}
-            >
-                <ClickAwayListener
-                    onClickAway={() => setShowMoreActions(false)}
+            <Box className="action-box">
+                {maxMetricsCountReached ? undefined : (
+                    <IconButton
+                        aria-label="add-to-comparison"
+                        tooltipMessage={MESSAGES.addToComparison}
+                        overrideIcon={AddCircleOutlineOutlinedIcon}
+                        disabled={maxMetricsCountReached}
+                        onClick={onAddMetricToComparison}
+                    ></IconButton>
+                )}
+                <Popover
+                    id="metric_type_line_actions"
+                    open={showMoreActions}
+                    anchorEl={anchorRef.current}
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'right',
+                    }}
+                    transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                    }}
                 >
-                    <MenuList>
-                        <MenuItem onClick={() => onEdit(metricType)}>
-                            {formatMessage(MESSAGES.editLayer)}
-                        </MenuItem>
-                        <DeleteModal
-                            type="menuItem"
-                            onConfirm={() => onDelete(metricType.id)}
-                            onCancel={() => setShowMoreActions(false)}
-                            titleMessage={MESSAGES.deleteLayer}
-                            iconProps={{}}
-                            key={`delete-layer-${metricType.id}`}
-                            backdropClick={true}
-                        >
-                            {formatMessage(MESSAGES.deleteLayerConfirmMessage)}
-                        </DeleteModal>
-                    </MenuList>
-                </ClickAwayListener>
-            </Popover>
+                    <ClickAwayListener
+                        onClickAway={() => setShowMoreActions(false)}
+                    >
+                        <MenuList>
+                            <MenuItem onClick={() => onEdit(metricType)}>
+                                {formatMessage(MESSAGES.editLayer)}
+                            </MenuItem>
+                            <DeleteModal
+                                type="menuItem"
+                                onConfirm={() => onDelete(metricType.id)}
+                                onCancel={() => setShowMoreActions(false)}
+                                titleMessage={MESSAGES.deleteLayer}
+                                iconProps={{}}
+                                key={`delete-layer-${metricType.id}`}
+                                backdropClick={true}
+                            >
+                                {formatMessage(
+                                    MESSAGES.deleteLayerConfirmMessage,
+                                )}
+                            </DeleteModal>
+                        </MenuList>
+                    </ClickAwayListener>
+                </Popover>
+            </Box>
         </ListItem>
     );
 };

@@ -8,7 +8,7 @@ import { useGetOrgUnits } from '../domains/planning/hooks/useGetOrgUnits';
 
 const styles = {
     select: {
-        minWidth: '225px',
+        minWidth: '175px',
     },
 } satisfies SxStyles;
 

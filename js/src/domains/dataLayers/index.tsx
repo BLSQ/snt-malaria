@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
-import { Card } from '@mui/material';
+import { Card, Stack } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
@@ -17,6 +17,8 @@ import { baseUrls } from '../../constants/urls';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
+import { DataLayerComparisonProvider } from './contexts/DataLayerComparisonContext';
+import { DataLayerComparisonContainer } from './dataLayerComparison/dataLayerComparisonContainer';
 import { DataLayerDialog } from './dataLayerForm/DataLayerDialog';
 import { DataLayerList } from './dataLayerList/DataLayerList';
 import { DataLayerListHeader } from './dataLayerList/DataLayerListHeader';
@@ -125,7 +127,7 @@ export const DataLayers: FC = () => {
     });
 
     return (
-        <>
+        <DataLayerComparisonProvider orgUnits={orgUnits ?? []}>
             {isLoadingMetricLayers && <LoadingSpinner />}
             <TopBar
                 title={formatMessage(MESSAGES.dataLayersTitle)}
@@ -166,10 +168,17 @@ export const DataLayers: FC = () => {
                     </SidebarColumn>
                     <MainColumn>
                         <PaperFullHeight>
-                            <DataLayerMapWrapper
-                                metricType={displayedMetricType}
-                                orgUnits={orgUnits || []}
-                            />
+                            <Stack
+                                direction="row"
+                                gap={2}
+                                sx={{ height: '100%' }}
+                            >
+                                <DataLayerMapWrapper
+                                    metricType={displayedMetricType}
+                                    orgUnits={orgUnits || []}
+                                />
+                                <DataLayerComparisonContainer />
+                            </Stack>
                         </PaperFullHeight>
                     </MainColumn>
                 </SidebarLayout>
@@ -183,6 +192,6 @@ export const DataLayers: FC = () => {
                 )}
             </PageContainer>
             {onboarding.element}
-        </>
+        </DataLayerComparisonProvider>
     );
 };

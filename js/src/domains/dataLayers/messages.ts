@@ -45,6 +45,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.editLayer',
         defaultMessage: 'Edit Layer',
     },
+    addToComparison: {
+        id: 'ias.snt_malaria.settings.dataLayers.addToComparison',
+        defaultMessage: 'Add to comparison maps',
+    },
     codeImmutableErrorHeadline: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.codeImmutableHeadline',
         defaultMessage: 'Layer code is immutable.',

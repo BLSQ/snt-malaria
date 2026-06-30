@@ -105,6 +105,7 @@
     "iaso.snt_malaria.settings.dataLayers.scale": "Echelle",
     "iaso.snt_malaria.settings.dataLayers.legendType": "Type de légende",
     "iaso.snt_malaria.settings.dataLayers.editLayer": "Modifier la couche",
+    "ias.snt_malaria.settings.dataLayers.addToComparison": "Ajouter aux cartes de comparaison",
     "iaso.snt_malaria.settings.dataLayers.deleteLayer": "Supprimer la couche",
     "iaso.snt_malaria.settings.dataLayers.deleteLayerConfirmMessage": "Êtes-vous sûr de vouloir supprimer ce type de métrique ?",
     "iaso.snt_malaria.settings.dataLayers.downloadCSVTemplate": "Télécharger le Template CSV",
