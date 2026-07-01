@@ -1,5 +1,44 @@
 # Changelog
 
+## [2.14.0](https://github.com/BLSQ/snt-malaria/compare/2.13.0...2.14.0) (2026-07-01)
+
+
+### Features
+
+* **accountSettings:** Introduce default population setting ([#328](https://github.com/BLSQ/snt-malaria/issues/328)) ([b821870](https://github.com/BLSQ/snt-malaria/commit/b82187071ee37265d04c31ff7548922b3385deca))
+* Add internal budget calculation ([#297](https://github.com/BLSQ/snt-malaria/issues/297)) ([8366e82](https://github.com/BLSQ/snt-malaria/commit/8366e82433cbdad09b63e83594201bcefbf30206))
+* auto refresh budget ([#303](https://github.com/BLSQ/snt-malaria/issues/303)) ([afe2335](https://github.com/BLSQ/snt-malaria/commit/afe23354c6c9eade9e280d26b62a50304f55697e))
+* budget create and migrate models ([#291](https://github.com/BLSQ/snt-malaria/issues/291)) ([3089b0a](https://github.com/BLSQ/snt-malaria/commit/3089b0ae16d12323242e04d3ec35e80ad298189c))
+* **budget:** add grant and donor data models and FK to interventions ([1d21641](https://github.com/BLSQ/snt-malaria/commit/1d21641ae3c2af72d7c4a7d0b07b15884ecf030a))
+* **budget:** Add line item calculation hint ([#322](https://github.com/BLSQ/snt-malaria/issues/322)) ([8921a02](https://github.com/BLSQ/snt-malaria/commit/8921a022289c2ddd4561d1f36dad0cb66060802a))
+* **budget:** Grant and Donor APIs, budget grant aggregation endpoint ([6f37bf4](https://github.com/BLSQ/snt-malaria/commit/6f37bf4b96da7cfddb08a1125e7c058377d1e0c7))
+* Clean up budget assumptions models and old budget utils ([#308](https://github.com/BLSQ/snt-malaria/issues/308)) ([d1b80e6](https://github.com/BLSQ/snt-malaria/commit/d1b80e6adb8c685bfbd8924e0d2f2d5ad518d052))
+* cleanup models ([#315](https://github.com/BLSQ/snt-malaria/issues/315)) ([0eb6148](https://github.com/BLSQ/snt-malaria/commit/0eb6148a61fbf759c3a9fc4bd15a095130ed2e6a))
+* **demoAccount:** Update demo account configuration with new budget entities ([#319](https://github.com/BLSQ/snt-malaria/issues/319)) ([d5989da](https://github.com/BLSQ/snt-malaria/commit/d5989da309b2a01e669feaf3a888bfb308bc21bd))
+* Duplicate yearly costs and calculate budget on scenario duplicate ([#311](https://github.com/BLSQ/snt-malaria/issues/311)) ([5dacd5e](https://github.com/BLSQ/snt-malaria/commit/5dacd5e79248167805b93c01b445aa57108061a0))
+* Fine tune new budget view ([#312](https://github.com/BLSQ/snt-malaria/issues/312)) ([4ccc24e](https://github.com/BLSQ/snt-malaria/commit/4ccc24edd821db9a46906ac05e8413e3068cc0fe))
+* **generalSettings:** Add buffer to general settings ([#327](https://github.com/BLSQ/snt-malaria/issues/327)) ([baa302a](https://github.com/BLSQ/snt-malaria/commit/baa302a6263239490ba736c8a82e2543ad589fb8))
+* handle fix costs ([#304](https://github.com/BLSQ/snt-malaria/issues/304)) ([e79d20f](https://github.com/BLSQ/snt-malaria/commit/e79d20f5cebef2192303775e2c376351e765edda))
+* **planning:** add Scenario Summary ([ef30f91](https://github.com/BLSQ/snt-malaria/commit/ef30f915604318a9c48c6173b33a03b024393625))
+* **planning:** Add support to toggle rules ([092e6a0](https://github.com/BLSQ/snt-malaria/commit/092e6a0e848579c89b0d37d499987a736d538fd2))
+* **ruleList:** Only show trash icon on hover and remove edit button ([#325](https://github.com/BLSQ/snt-malaria/issues/325)) ([d9a47df](https://github.com/BLSQ/snt-malaria/commit/d9a47df7c7e99b4f1dee1ff905d78885ec2ddb71))
+* **rules:** Add rule coverage summary and other tweaks ([bce797b](https://github.com/BLSQ/snt-malaria/commit/bce797bad4b6dedb4bca92ff8a9d43241e661b34))
+* Scenario Yearly Cost Assignment API ([af2e023](https://github.com/BLSQ/snt-malaria/commit/af2e02372318da10b875f12aa57d56df68cfa9e1))
+* **scripts:** cost unit type seeding ([0b9620a](https://github.com/BLSQ/snt-malaria/commit/0b9620a90a4f0f4e0451a62efe325c12885551da))
+* **settings:** add budget settings through "General" tab ([d72ed09](https://github.com/BLSQ/snt-malaria/commit/d72ed09530153bc71e2290e373a002c80e0a892a))
+* **settings:** add grant settings, add grant field to intervention settings ([5597464](https://github.com/BLSQ/snt-malaria/commit/559746402f683d573b24d1b8bd372aab0f02d446))
+* **settings:** manage cost unit types ([85eb182](https://github.com/BLSQ/snt-malaria/commit/85eb18251d48afac088387f95b0880fc36705180))
+* **settings:** mv intervention settings under new settings module ([1a41f6d](https://github.com/BLSQ/snt-malaria/commit/1a41f6d1e2d13ee67d245cc5fd60526bcb24f95c))
+* **settings:** new layout with max width, cancel adding, cost line fix ([#316](https://github.com/BLSQ/snt-malaria/issues/316)) ([be03337](https://github.com/BLSQ/snt-malaria/commit/be033370d6985ffd51dd2e4c8b84da4ab5155e5d))
+* SNT-478 modify budget view ([#300](https://github.com/BLSQ/snt-malaria/issues/300)) ([6cb9c86](https://github.com/BLSQ/snt-malaria/commit/6cb9c8680243fcf576a1f82dd1ac87d799c6b672))
+
+
+### Bug Fixes
+
+* Move quantity and population to costbreakdown ([#306](https://github.com/BLSQ/snt-malaria/issues/306)) ([a50a63e](https://github.com/BLSQ/snt-malaria/commit/a50a63eac606857a9fa3a7bc65f1537ce69f49a3))
+* **oh_import:** Do not delete existing metrics types on OH import ([#323](https://github.com/BLSQ/snt-malaria/issues/323)) ([8ec3a0f](https://github.com/BLSQ/snt-malaria/commit/8ec3a0f38fa1cf007f262755b796158a04d0e54b))
+* **planning:** Don't allow tab deselection ([#326](https://github.com/BLSQ/snt-malaria/issues/326)) ([06cbed4](https://github.com/BLSQ/snt-malaria/commit/06cbed44b4fd9c58b4770b6512ab402d2d2835f0))
+
 ## [2.13.0](https://github.com/BLSQ/snt-malaria/compare/2.12.1...2.13.0) (2026-06-03)
 
 
