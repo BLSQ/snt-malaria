@@ -725,7 +725,6 @@ class InterventionSeeder:
                 category=cost_data["category"],
                 unit_type=unit_type,
                 population_layer=population_layer,
-                cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
                 unit_cost=cost_data["unit_cost"],
                 created_by=created_by,
             )

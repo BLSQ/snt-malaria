@@ -46,7 +46,6 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
                         "intervention",
                         "updated_by",
                         "population_layer",
-                        "cost_driver",
                     ],
                 )
             if lines_to_delete:
@@ -91,7 +90,7 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
             "category_label",
             "intervention",
             "population_layer",
-            "cost_driver",
+            "is_fixed_cost",
         ]
 
     def get_unit_type_label(self, obj):
@@ -154,9 +153,4 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"population_layer": "A target population is required for proportional units."}
             )
-        attrs["cost_driver"] = (
-            InterventionCostBreakdownLine.CostDriver.POPULATION
-            if attrs.get("population_layer")
-            else InterventionCostBreakdownLine.CostDriver.FIXED_COST
-        )
         return attrs

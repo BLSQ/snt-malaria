@@ -965,7 +965,8 @@ export const MESSAGES = defineMessages({
     costUnitIsProportionalHelp: {
         id: 'iaso.snt_malaria.settings.costUnits.isProportionalHelp',
         defaultMessage:
-            'When checked, this unit carries a conversion factor and cost lines using it are driven by a population metric (the cost driver). When unchecked, the unit represents an absolute / fixed cost and cost lines using it do not reference a population metric.',
+            'When checked, this unit carries a conversion factor and cost lines using it are driven by a population metric (the cost driver). \
+            When unchecked, the unit represents an absolute / fixed cost and cost lines using it do not reference a population metric.',
     },
     costUnitRatioSummaryAbsolute: {
         id: 'iaso.snt_malaria.settings.costUnits.ratioSummaryAbsolute',

@@ -1,7 +1,7 @@
+import { UseQueryResult } from 'react-query';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
 import { DropdownOptions } from 'Iaso/types/utils';
-import { UseQueryResult } from 'react-query';
 
 export type InterventionCostUnitTypeOption = DropdownOptions<string> & {
     is_proportional: boolean;

@@ -26,7 +26,7 @@ class ScenarioYearlyCostAssignmentSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         value = float(instance.value)
-        if instance.cost_line.cost_driver == InterventionCostBreakdownLine.CostDriver.POPULATION:
+        if not instance.cost_line.is_fixed_cost:
             value *= 100
 
         data["value"] = f"{round(value)}"
@@ -78,9 +78,7 @@ class ScenarioYearlyCostAssignmentUpsertSerializer(serializers.Serializer):
         defaults = {}
         if "value" in self.validated_data:
             value = self.validated_data["value"]
-            defaults["value"] = (
-                value / 100 if cost_line.cost_driver == InterventionCostBreakdownLine.CostDriver.POPULATION else value
-            )
+            defaults["value"] = value if cost_line.is_fixed_cost else value / 100
 
         self.instance, _ = ScenarioYearlyCostAssignment.objects.update_or_create(
             scenario=scenario,

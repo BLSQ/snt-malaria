@@ -13,10 +13,6 @@ class InterventionCostBreakdownLine(models.Model):
         SUPPORTIVE = "Supportive", _("Supportive")
         OTHER = "Other", _("Other")
 
-    class CostDriver(models.TextChoices):
-        POPULATION = "population", _("Population")
-        FIXED_COST = "fixed_cost", _("Fixed cost")
-
     class Meta:
         app_label = "snt_malaria"
 
@@ -39,11 +35,6 @@ class InterventionCostBreakdownLine(models.Model):
         blank=True,
         related_name="cost_breakdown_lines",
     )
-    cost_driver = models.CharField(
-        max_length=20,
-        choices=CostDriver.choices,
-        default=CostDriver.POPULATION,
-    )
     unit_cost = models.DecimalField(max_digits=19, decimal_places=2, null=False, blank=False, default=0)
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="cost_breakdown_line_created_set"
@@ -53,3 +44,8 @@ class InterventionCostBreakdownLine(models.Model):
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="cost_breakdown_line_updated_set"
     )
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def is_fixed_cost(self):
+        """A line is a fixed cost when it has no population layer; otherwise it is population-driven."""
+        return self.population_layer_id is None

@@ -283,11 +283,11 @@ class BudgetCalculationService:
 
             for line in self.cost_lines_by_intervention_id.get(intervention.id, []):
                 lineToAdd = None
-                if line.cost_driver == "population":
+                if not line.is_fixed_cost:
                     lineToAdd = self._compute_population_cost_row(
                         line, org_unit_id, year, inflation_multiplier, intervention.id, grant_id
                     )
-                elif line.cost_driver == "fixed_cost" and line.id not in seen_fixed_cost_line_ids:
+                elif line.id not in seen_fixed_cost_line_ids:
                     seen_fixed_cost_line_ids.add(line.id)
                     lineToAdd = self._compute_fixed_cost_row(
                         line, year, inflation_multiplier, intervention.id, grant_id
@@ -297,7 +297,7 @@ class BudgetCalculationService:
         return rows
 
     def _get_yearly_value(self, line, year):
-        default = Decimal("0") if line.cost_driver == "fixed_cost" else Decimal("1")
+        default = Decimal("0") if line.is_fixed_cost else Decimal("1")
         return self.yearly_value_by_key.get((line.id, year), default)
 
     def _compute_population_cost_row(self, line, org_unit_id, year, inflation_multiplier, intervention_id, grant_id):
