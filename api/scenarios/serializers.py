@@ -23,6 +23,7 @@ class ScenarioSerializer(serializers.ModelSerializer):
             "updated_at",
             "start_year",
             "end_year",
+            "reference_year",
             "is_locked",
         ]
         read_only_fields = [
@@ -37,13 +38,14 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False, allow_blank=True)
     start_year = serializers.IntegerField(required=True)
     end_year = serializers.IntegerField(required=True)
+    reference_year = serializers.IntegerField(required=False, allow_null=True)
 
     SCENARIO_MIN_YEAR = 2024
     SCENARIO_MAX_YEAR = 2035
 
     class Meta:
         model = Scenario
-        fields = ["id", "name", "description", "start_year", "end_year", "is_locked"]
+        fields = ["id", "name", "description", "start_year", "end_year", "reference_year", "is_locked"]
         read_only_fields = ["id"]
 
     def validate(self, data):

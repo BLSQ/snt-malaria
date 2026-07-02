@@ -157,6 +157,8 @@
     "iaso.snt_malaria.scenario.errors.maxYear": "L'année doit être au plus {year}",
     "iaso.snt_malaria.scenario.errors.minYear": "L'année doit être au moins {year}",
     "iaso.snt_malaria.scenario.errors.endYearMin": "L'année de fin doit être supérieure ou égale à l'année de début ({year})",
+    "iaso.snt_malaria.scenario.referenceYear": "Année de référence",
+    "iaso.snt_malaria.scenario.referenceYearHelp": "L'année utilisée pour évaluer les critères de correspondance des règles. Si des données métriques existent pour cette année, elles sont prioritaires ; sinon, les valeurs intemporelles (sans année) sont utilisées en repli.",
     "iaso.snt_malaria.impactSettings.label": "Paramètres d'impact",
     "iaso.snt_malaria.impactSettings.notIncluded": "Non inclus",
     "iaso.snt_malaria.impact.cases": "Cas",

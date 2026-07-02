@@ -11,6 +11,7 @@ export type ScenarioFormValues = {
     description: string;
     start_year: number;
     end_year: number;
+    reference_year: number;
 };
 
 export const SCENARIO_YEAR_RANGE = {
@@ -18,12 +19,17 @@ export const SCENARIO_YEAR_RANGE = {
     max: 2035,
 } as const;
 
+export const defaultReferenceYear = Math.round(
+    (SCENARIO_YEAR_RANGE.min + SCENARIO_YEAR_RANGE.max) / 2,
+);
+
 const initialValues: ScenarioFormValues = {
     id: undefined,
     name: '',
     description: '',
     start_year: SCENARIO_YEAR_RANGE.min,
     end_year: SCENARIO_YEAR_RANGE.max,
+    reference_year: defaultReferenceYear,
 };
 
 const useValidation = () => {
@@ -75,6 +81,29 @@ const useValidation = () => {
                               )
                             : schema;
                     }),
+                reference_year: Yup.number()
+                    .required()
+                    .test('reference-year-range', '', function (value) {
+                        const { start_year, end_year } = this.parent;
+                        const min = start_year ?? SCENARIO_YEAR_RANGE.min;
+                        const max = end_year ?? SCENARIO_YEAR_RANGE.max;
+                        if (value === undefined || value === null) return true;
+                        if (value < min) {
+                            return this.createError({
+                                message: formatMessage(MESSAGES.minYear, {
+                                    year: min,
+                                }),
+                            });
+                        }
+                        if (value > max) {
+                            return this.createError({
+                                message: formatMessage(MESSAGES.maxYear, {
+                                    year: max,
+                                }),
+                            });
+                        }
+                        return true;
+                    }),
             }),
         [formatMessage],
     );
@@ -93,6 +122,9 @@ export const useScenarioFormState = (
                   description: scenario.description,
                   start_year: scenario.start_year,
                   end_year: scenario.end_year,
+                  reference_year:
+                      scenario.reference_year ??
+                      Math.round((scenario.start_year + scenario.end_year) / 2),
               }
             : initialValues;
     }, [scenario]);
