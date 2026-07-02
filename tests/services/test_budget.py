@@ -65,7 +65,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.PROCUREMENT,
             unit_type=self.unit_type,
             population_layer=self.metric_under_5,
-            cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
             unit_cost=Decimal("2.00"),
             created_by=self.user,
         )
@@ -77,7 +76,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.PROCUREMENT,
             unit_type=self.unit_type,
             population_layer=None,
-            cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
             unit_cost=Decimal("10.00"),
             created_by=self.user,
         )
@@ -242,7 +240,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.OPERATIONAL,
             unit_type=self.unit_type,
             population_layer=None,
-            cost_driver=InterventionCostBreakdownLine.CostDriver.FIXED_COST,
             unit_cost=Decimal("500.00"),
             created_by=self.user,
         )
@@ -276,7 +273,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.OPERATIONAL,
             unit_type=self.unit_type,
             population_layer=None,
-            cost_driver=InterventionCostBreakdownLine.CostDriver.FIXED_COST,
             unit_cost=Decimal("100.00"),
             created_by=self.user,
         )
@@ -316,7 +312,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.PROCUREMENT,
             unit_type=self.unit_type,
             population_layer=self.metric_under_5,
-            cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
             unit_cost=Decimal("2.00"),
             created_by=self.user,
         )
@@ -326,7 +321,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.OPERATIONAL,
             unit_type=self.unit_type,
             population_layer=None,
-            cost_driver=InterventionCostBreakdownLine.CostDriver.FIXED_COST,
             unit_cost=Decimal("100.00"),
             created_by=self.user,
         )
@@ -352,7 +346,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.PROCUREMENT,
             unit_type=self.unit_type,
             population_layer=self.metric_under_5,
-            cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
             unit_cost=Decimal("3.00"),
             created_by=self.user,
         )
@@ -405,7 +398,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.OPERATIONAL,
             unit_type=self.unit_type,
             population_layer=None,
-            cost_driver=InterventionCostBreakdownLine.CostDriver.FIXED_COST,
             unit_cost=Decimal("500.00"),
             created_by=self.user,
         )

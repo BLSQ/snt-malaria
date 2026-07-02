@@ -97,7 +97,7 @@ export const BudgetTable: FC = ({}) => {
                         id: line.id,
                         label: line.name,
                         subLabel: '',
-                        costDriver: line.cost_driver,
+                        isFixedCost: line.is_fixed_cost,
                         totalCost: 0,
                         coverageByYear: (yearlyCoverageByCostLine[line.id] ||
                             {}) as Record<number, CostLineYearlyCoverage>,
@@ -191,7 +191,7 @@ export const BudgetTable: FC = ({}) => {
                 id: costLine.id,
                 label: breakdownLine?.name ?? '',
                 subLabel: '',
-                costDriver: breakdownLine?.cost_driver ?? 'population',
+                isFixedCost: breakdownLine?.is_fixed_cost ?? false,
                 totalCost: costLine.total_cost,
                 coverageByYear: (yearlyCoverageByCostLine[costLine.id] ||
                     {}) as Record<number, CostLineYearlyCoverage>,

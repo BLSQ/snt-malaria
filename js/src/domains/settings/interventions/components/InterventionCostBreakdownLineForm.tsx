@@ -24,9 +24,29 @@ export const InterventionCostBreakdownLineForm: FC<Props> = ({
     const {
         costCategoryOptions,
         costUnitTypeOptions,
+        costUnitTypesById,
         populationOptions,
         currencySymbol,
     } = useInterventionContext();
+
+    const selectedUnitType = costBreakdownLine.unit_type
+        ? costUnitTypesById[String(costBreakdownLine.unit_type)]
+        : undefined;
+    // If the unit isn't known yet (e.g. dropdown still loading), default to true so we don't
+    // hide the target population dropdown for existing proportional lines.
+    const selectedUnitIsProportional = selectedUnitType
+        ? selectedUnitType.is_proportional
+        : true;
+
+    const handleUnitTypeChange = (field: string | null, value: any) => {
+        onUpdateField(field, value);
+        const nextUnit = value ? costUnitTypesById[String(value)] : undefined;
+        if (nextUnit && !nextUnit.is_proportional) {
+            // Non-proportional units are absolute cost drivers: drop any previously selected
+            // population layer so the form state matches what the backend will persist.
+            onUpdateField('population_layer', null);
+        }
+    };
 
     return (
         <Stack direction="row" spacing={1} alignItems="flex-start">
@@ -67,7 +87,7 @@ export const InterventionCostBreakdownLineForm: FC<Props> = ({
                     decimalScale: 2,
                     prefix: currencySymbol,
                 }}
-                wrapperSx={{ flex: 1.5, minWidth: 0 }}
+                wrapperSx={{ flex: 2.2, minWidth: 0 }}
             />
             <InputComponent
                 type="select"
@@ -77,24 +97,29 @@ export const InterventionCostBreakdownLineForm: FC<Props> = ({
                 clearable={false}
                 options={costUnitTypeOptions}
                 value={costBreakdownLine.unit_type}
-                onChange={onUpdateField}
+                onChange={handleUnitTypeChange}
                 label={MESSAGES.unit}
                 errors={getErrors('unit')}
                 wrapperSx={{ flex: 2, minWidth: 0 }}
             />
-            <InputComponent
-                type="select"
-                keyValue="population_layer"
-                multi={false}
-                withMarginTop={false}
-                clearable
-                options={populationOptions}
-                value={costBreakdownLine.population_layer || ''}
-                onChange={onUpdateField}
-                label={MESSAGES.targetPopulationLabel}
-                errors={getErrors('population_layer')}
-                wrapperSx={{ flex: 3, minWidth: 0 }}
-            />
+            {selectedUnitIsProportional ? (
+                <InputComponent
+                    type="select"
+                    keyValue="population_layer"
+                    multi={false}
+                    withMarginTop={false}
+                    clearable
+                    required
+                    options={populationOptions}
+                    value={costBreakdownLine.population_layer || ''}
+                    onChange={onUpdateField}
+                    label={MESSAGES.targetPopulationLabel}
+                    errors={getErrors('population_layer')}
+                    wrapperSx={{ flex: 3, minWidth: 0 }}
+                />
+            ) : (
+                <Box sx={{ flex: 3, minWidth: 0 }} />
+            )}
             <Box
                 sx={{
                     flexShrink: 0,

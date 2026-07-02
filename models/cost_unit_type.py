@@ -17,6 +17,9 @@ class CostUnitType(models.Model):
     value = models.DecimalField(max_digits=19, decimal_places=6, null=True, blank=True)
     # When True, ``value`` is inverted (1 / value) to get the canonical ratio.
     invert_value = models.BooleanField(default=False)
+    # When False, the unit is an absolute / fixed cost: ``ratio`` is always 1 and cost lines using
+    # it have no population layer.
+    is_proportional = models.BooleanField(default=True)
     description = models.TextField(blank=True, default="")
 
     def __str__(self):
@@ -24,7 +27,12 @@ class CostUnitType(models.Model):
 
     @property
     def ratio(self):
-        """Canonical conversion factor used by the budget calculation (1 / value when inverted)."""
+        """Canonical conversion factor used by the budget calculation (1 / value when inverted).
+
+        Non-proportional units always return 1, regardless of the stored value.
+        """
+        if not self.is_proportional:
+            return Decimal(1)
         if self.value is None:
             return None
         if self.invert_value:

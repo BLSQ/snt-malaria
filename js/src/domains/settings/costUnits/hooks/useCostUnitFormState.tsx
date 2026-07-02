@@ -9,6 +9,7 @@ export const defaultCostUnitValues = {
     name: '',
     value: '',
     invert_value: false,
+    is_proportional: true,
     description: '',
 };
 
@@ -26,9 +27,25 @@ const useValidation = () => {
                     .transform((value, originalValue) =>
                         originalValue === '' ? null : value,
                     )
-                    .typeError(formatMessage(MESSAGES.costUnitRatioInvalid))
-                    .min(0, formatMessage(MESSAGES.negativeValueNotAllowed)),
+                    .when('is_proportional', {
+                        is: true,
+                        then: schema =>
+                            schema
+                                .typeError(
+                                    formatMessage(
+                                        MESSAGES.costUnitRatioInvalid,
+                                    ),
+                                )
+                                .min(
+                                    0,
+                                    formatMessage(
+                                        MESSAGES.negativeValueNotAllowed,
+                                    ),
+                                ),
+                        otherwise: schema => schema.notRequired(),
+                    }),
                 invert_value: Yup.boolean(),
+                is_proportional: Yup.boolean(),
                 description: Yup.string(),
             }),
         [formatMessage],

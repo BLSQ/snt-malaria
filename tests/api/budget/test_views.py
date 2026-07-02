@@ -131,9 +131,8 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
             )
 
         smc_cost_line = self.cost_lines[0]
-        smc_cost_line.cost_driver = InterventionCostBreakdownLine.CostDriver.POPULATION
         smc_cost_line.population_layer = metric_type_pop_under_5
-        smc_cost_line.save(update_fields=["cost_driver", "population_layer"])
+        smc_cost_line.save(update_fields=["population_layer"])
 
     def test_calculate_budget_no_metric_values(self):
         InterventionCostBreakdownLine.objects.update(population_layer=None)

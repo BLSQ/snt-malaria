@@ -1,5 +1,6 @@
 from rest_framework import status
 
+from iaso.models.metric import MetricType
 from plugins.snt_malaria.models import InterventionCostBreakdownLine, ScenarioYearlyCostAssignment
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.permissions import SNT_SCENARIO_BASIC_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION
@@ -57,12 +58,14 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
         )
 
         self.unit_type = CostUnitType.objects.create(account=self.account, name="Other")
+        self.metric_population = MetricType.objects.create(account=self.account, name="Population", code="pop")
+        # Population-driven lines have a population layer; fixed-cost lines do not.
         self.population_line_1 = InterventionCostBreakdownLine.objects.create(
             intervention=self.intervention,
             unit_type=self.unit_type,
             name="Population line 1",
             category="Procurement",
-            cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
+            population_layer=self.metric_population,
             unit_cost=10,
             created_by=self.user_with_full_perm,
         )
@@ -71,7 +74,7 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
             unit_type=self.unit_type,
             name="Population line 2",
             category="Operational",
-            cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
+            population_layer=self.metric_population,
             unit_cost=12,
             created_by=self.user_with_full_perm,
         )
@@ -80,7 +83,7 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
             unit_type=self.unit_type,
             name="Fixed cost line",
             category="Supportive",
-            cost_driver=InterventionCostBreakdownLine.CostDriver.FIXED_COST,
+            population_layer=None,
             unit_cost=5,
             created_by=self.user_with_full_perm,
         )
@@ -108,12 +111,13 @@ class ScenarioYearlyCostAssignmentAPITestCase(SNTMalariaAPITestCase):
             code="other_int",
         )
         self.other_account_unit_type = CostUnitType.objects.create(account=self.other_account, name="Other")
+        self.other_account_metric = MetricType.objects.create(account=self.other_account, name="Population", code="pop")
         self.other_account_cost_line = InterventionCostBreakdownLine.objects.create(
             intervention=self.other_account_intervention,
             unit_type=self.other_account_unit_type,
             name="Other line",
             category="Procurement",
-            cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
+            population_layer=self.other_account_metric,
             unit_cost=15,
             created_by=self.other_account_user,
         )

@@ -44,17 +44,22 @@ SP_TABLET_1_2_DESCRIPTION = (
 # Default cost unit types seeded for every account.
 # `value` is interpreted via `invert_value` to produce the canonical ratio
 # (invert_value=True means ratio = 1 / value).
+# `is_proportional=False` marks an absolute / fixed cost driver: its conversion factor is
+# transparent to the outside (ratio is always 1) and cost lines using it don't reference a
+# population layer.
 COST_UNIT_TYPES = [
     {
         "name": "Net",
         "value": Decimal("1.8"),
         "invert_value": True,
+        "is_proportional": True,
         "description": "One net is assumed to protect 1.8 people by default.",
     },
     {
         "name": "Bale",
         "value": Decimal("90"),
         "invert_value": True,
+        "is_proportional": True,
         "description": "One bale contains enough nets to cover 90 people people. "
         "(1.8 person per net * 50 nets per bale)",
     },
@@ -62,54 +67,63 @@ COST_UNIT_TYPES = [
         "name": "IPTp Blister Pack",
         "value": Decimal("3"),
         "invert_value": False,
+        "is_proportional": True,
         "description": "Number of ANC touchpoints per woman",
     },
     {
         "name": "SMC 3 cycles",
         "value": Decimal("3"),
         "invert_value": False,
+        "is_proportional": True,
         "description": "Number of monthly cycles",
     },
     {
         "name": "SMC 4 cycles",
         "value": Decimal("4"),
         "invert_value": False,
+        "is_proportional": True,
         "description": "Number of monthly cycles",
     },
     {
         "name": "SMC 5 cycles",
         "value": Decimal("5"),
         "invert_value": False,
+        "is_proportional": True,
         "description": "Number of monthly cycles",
     },
     {
         "name": "SP Tablet 0-1",
         "value": Decimal("0.75"),
         "invert_value": False,
+        "is_proportional": True,
         "description": SP_TABLET_0_1_DESCRIPTION,
     },
     {
         "name": "SP Tablet 1-2",
         "value": Decimal("1.5"),
         "invert_value": False,
+        "is_proportional": True,
         "description": SP_TABLET_1_2_DESCRIPTION,
     },
     {
         "name": "Vaccine dose",
         "value": Decimal("4"),
         "invert_value": False,
+        "is_proportional": True,
         "description": "Four vaccine doses are assumed per person reached.",
     },
     {
         "name": "Days",
         "value": Decimal("1"),
         "invert_value": False,
+        "is_proportional": False,
         "description": "Number of days",
     },
     {
         "name": "Each",
         "value": Decimal("1"),
         "invert_value": False,
+        "is_proportional": False,
         "description": "Default unit",
     },
 ]
@@ -553,6 +567,7 @@ class InterventionSeeder:
                 defaults={
                     "value": unit_data["value"],
                     "invert_value": unit_data["invert_value"],
+                    "is_proportional": unit_data["is_proportional"],
                     "description": unit_data["description"],
                 },
             )
@@ -710,7 +725,6 @@ class InterventionSeeder:
                 category=cost_data["category"],
                 unit_type=unit_type,
                 population_layer=population_layer,
-                cost_driver=InterventionCostBreakdownLine.CostDriver.POPULATION,
                 unit_cost=cost_data["unit_cost"],
                 created_by=created_by,
             )

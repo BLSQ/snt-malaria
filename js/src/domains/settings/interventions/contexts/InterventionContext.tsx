@@ -1,11 +1,16 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { DropdownOptions } from 'Iaso/types/utils';
 import { MetricType } from '../../../dataLayers/types/metrics';
+import {
+    indexCostUnitTypeOptions,
+    InterventionCostUnitTypeOption,
+} from '../../../interventions/hooks/useGetInterventionCostUnitType';
 import { BudgetSettings } from '../types/budgetSettings';
 
 type InterventionContextType = {
     costCategoryOptions: DropdownOptions<string>[];
-    costUnitTypeOptions: DropdownOptions<string>[];
+    costUnitTypeOptions: InterventionCostUnitTypeOption[];
+    costUnitTypesById: Record<string, InterventionCostUnitTypeOption>;
     populationOptions: DropdownOptions<number | null>[];
     grantOptions: DropdownOptions<number>[];
     currency?: string;
@@ -27,6 +32,7 @@ const emptyPopulationOptions: DropdownOptions<number | null>[] = [
 const InterventionContext = createContext<InterventionContextType>({
     costCategoryOptions: [],
     costUnitTypeOptions: [],
+    costUnitTypesById: {},
     populationOptions: emptyPopulationOptions,
     grantOptions: [],
     currency: defaultCurrency,
@@ -44,7 +50,7 @@ export const InterventionProvider = ({
     children,
 }: {
     costCategoryOptions: DropdownOptions<string>[];
-    costUnitTypeOptions: DropdownOptions<string>[];
+    costUnitTypeOptions: InterventionCostUnitTypeOption[];
     grantOptions: DropdownOptions<number>[];
     metricTypes: MetricType[];
     budgetSettings?: BudgetSettings;
@@ -59,6 +65,11 @@ export const InterventionProvider = ({
 
     populationOptions.unshift({ label: '-', value: null });
 
+    const costUnitTypesById = useMemo(
+        () => indexCostUnitTypeOptions(costUnitTypeOptions),
+        [costUnitTypeOptions],
+    );
+
     const currency = budgetSettings?.currency || defaultCurrency;
 
     return (
@@ -66,6 +77,7 @@ export const InterventionProvider = ({
             value={{
                 costCategoryOptions,
                 costUnitTypeOptions,
+                costUnitTypesById,
                 populationOptions,
                 grantOptions,
                 currency,

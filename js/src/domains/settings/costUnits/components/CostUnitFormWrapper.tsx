@@ -63,6 +63,7 @@ export const CostUnitFormWrapper: FC<Props> = ({
             name: costUnit?.name ?? '',
             value: costUnit?.value ?? '',
             invert_value: costUnit?.invert_value ?? false,
+            is_proportional: costUnit?.is_proportional ?? true,
             description: costUnit?.description ?? '',
         }),
         [costUnit],
@@ -70,14 +71,15 @@ export const CostUnitFormWrapper: FC<Props> = ({
 
     const onSubmit = useCallback(
         (values: CostUnitTypePayload) => {
+            const isProportional = values.is_proportional;
+            const hasValue = values.value !== '' && values.value !== null;
+            // Non-proportional units have no conversion factor: reset value/invert_value.
             const payload: CostUnitTypePayload = {
                 id: values.id,
                 name: values.name,
-                value:
-                    values.value === '' || values.value === null
-                        ? null
-                        : values.value,
-                invert_value: values.invert_value,
+                value: isProportional && hasValue ? values.value : null,
+                invert_value: isProportional ? values.invert_value : false,
+                is_proportional: isProportional,
                 description: values.description ?? '',
             };
             saveCostUnitType(payload, {
