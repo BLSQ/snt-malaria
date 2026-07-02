@@ -41,7 +41,7 @@ permissions:
 
 jobs:
   deploy_on_staging:
-    uses: BLSQ/iaso-ci/.github/workflows/docker_deploy.yml@IA-5227-decouple-ci-actions-into-dedicated-repo
+    uses: BLSQ/iaso-ci/.github/workflows/docker_deploy.yml@main
     with:
       iaso_branch: ${{ github.event.inputs.iaso_branch }}
       plugin_branch: ${{ github.event.inputs.snt_branch }}

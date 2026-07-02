@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   config:
-    uses: BLSQ/iaso-ci/.github/workflows/config.yml@IA-5227-decouple-ci-actions-into-dedicated-repo
+    uses: BLSQ/iaso-ci/.github/workflows/config.yml@main
     permissions:
       pull-requests: write
       contents: read
@@ -26,7 +26,7 @@ jobs:
 
   build_and_push_image:
     needs: config
-    uses: BLSQ/iaso-ci/.github/workflows/docker_build.yml@IA-5227-decouple-ci-actions-into-dedicated-repo
+    uses: BLSQ/iaso-ci/.github/workflows/docker_build.yml@main
     with:
       iaso_branch: ${{ needs.config.outputs.iaso_branch }}
       image_tags: ${{ needs.config.outputs.image_tags }}
@@ -36,7 +36,7 @@ jobs:
 
   tests:
     needs: config
-    uses: BLSQ/iaso-ci/.github/workflows/tests.yml@IA-5227-decouple-ci-actions-into-dedicated-repo
+    uses: BLSQ/iaso-ci/.github/workflows/tests.yml@main
     with:
       iaso_branch: ${{ needs.config.outputs.iaso_branch }}
       plugin_branch: ${{ needs.config.outputs.plugin_branch }}
