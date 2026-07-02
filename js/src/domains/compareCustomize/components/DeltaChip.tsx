@@ -41,9 +41,7 @@ export const getDeltaChip = (
 ): DeltaChipProps | undefined => {
     if (!value || !baseline) return undefined;
 
-    const delta = relative
-        ? (value - baseline) / baseline
-        : value - baseline;
+    const delta = relative ? (value - baseline) / baseline : value - baseline;
     if (delta === 0) return undefined;
 
     const isPositive = delta > 0;
@@ -72,13 +70,7 @@ const styles = {
 } satisfies SxStyles;
 
 export const DeltaChip: FC<DeltaChipProps> = ({ label, variant }) => (
-    <Box
-        component="span"
-        sx={[
-            styles.root,
-            styles[variant],
-        ]}
-    >
+    <Box component="span" sx={[styles.root, styles[variant]]}>
         {label}
     </Box>
 );

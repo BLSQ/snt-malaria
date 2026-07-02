@@ -32,7 +32,9 @@ type Props = {
     scenarioOptions: ScenarioOption[];
     comparisonOptions: ScenarioOption[];
     onBaselineSelect: (_key: string, value: unknown) => void;
-    onComparisonSelect: (index: number) => (_key: string, value: unknown) => void;
+    onComparisonSelect: (
+        index: number,
+    ) => (_key: string, value: unknown) => void;
     onAddComparison: () => void;
     onRemoveComparison: (index: number) => void;
     yearRange?: [number, number];
@@ -52,8 +54,7 @@ const styles = {
     scenarioRow: {
         display: 'grid',
         alignItems: 'center',
-        gridTemplateColumns: theme =>
-            `max-content 1fr ${theme.spacing(4)}`,
+        gridTemplateColumns: theme => `max-content 1fr ${theme.spacing(4)}`,
         columnGap: 2,
         mt: 2,
     },
@@ -212,7 +213,10 @@ export const ConfigurationPanel: FC<Props> = ({
     const hasDisplayOptions =
         (yearRange && selectedYearRange && onYearRangeChange) ||
         isYearRangeLoading ||
-        (ageGroups && ageGroups.length > 0 && selectedAgeGroup && onAgeGroupChange);
+        (ageGroups &&
+            ageGroups.length > 0 &&
+            selectedAgeGroup &&
+            onAgeGroupChange);
 
     const hasWarnings =
         showYearRangeError ||

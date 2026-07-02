@@ -3,7 +3,6 @@ import { AccountBalanceOutlined } from '@mui/icons-material';
 import { Box, Typography, useTheme } from '@mui/material';
 import { blueGrey, red } from '@mui/material/colors';
 import { useSafeIntl } from 'bluesquare-components';
-import { SxStyles } from 'Iaso/types/general';
 import {
     Bar,
     BarChart,
@@ -13,6 +12,7 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
+import { SxStyles } from 'Iaso/types/general';
 import { useChartTheme } from '../../../../components/charts/chartTheme';
 import {
     ChartTooltip,

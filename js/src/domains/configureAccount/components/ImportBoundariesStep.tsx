@@ -7,9 +7,9 @@ import { MessageDescriptor } from 'react-intl';
 import { SxStyles } from 'Iaso/types/general';
 
 import { baseUrls } from '../../../constants/urls';
-import { WizardStep } from './WizardStep';
 import { usePollTask } from '../hooks/usePollTask';
 import { MESSAGES } from '../messages';
+import { WizardStep } from './WizardStep';
 
 type Props = {
     taskId: number | undefined;
@@ -50,8 +50,7 @@ export const ImportBoundariesStep: FunctionComponent<Props> = ({
         task?.status === 'KILLED' ||
         taskFetchError;
 
-    const hasStepperError =
-        !taskId || (!importDone && importTerminalFailure);
+    const hasStepperError = !taskId || (!importDone && importTerminalFailure);
 
     useEffect(() => {
         if (hasStepperError) {

@@ -2,29 +2,31 @@ import { test, expect, Page } from '@playwright/test';
 import { expectNoErrors } from '../../utils';
 
 test.describe('Demo account login smoke tests', () => {
-    test('login page appears', async ({ page }: { page: Page }) => {
-        await page.goto('');
+    test('login page appears', async (props: { page: Page }) => {
+        await props.page.goto('');
 
-        await expect(page).toHaveURL('/login/?next=%2Fdashboard%2Fhome%2F');
-        await expect(page).toHaveTitle('SNT Malaria');
-        await expectNoErrors({ page });
+        await expect(props.page).toHaveURL(
+            '/login/?next=%2Fdashboard%2Fhome%2F',
+        );
+        await expect(props.page).toHaveTitle('SNT Malaria');
+        await expectNoErrors(props);
     });
 
-    test('login works', async ({ page }: { page: Page }) => {
-        await page.goto('/login/');
-        await page.fill(
+    test('login works', async (props: { page: Page }) => {
+        await props.page.goto('/login/');
+        await props.page.fill(
             'input[name="username"]',
             process.env?.LOGIN_USERNAME ?? '',
         );
-        await page.fill(
+        await props.page.fill(
             'input[name="password"]',
             process.env?.LOGIN_PASSWORD ?? '',
         );
-        await page.click('button[type="submit"]');
-        await expect(page).toHaveURL(
+        await props.page.click('button[type="submit"]');
+        await expect(props.page).toHaveURL(
             new RegExp('dashboard/snt_malaria/scenarios/list/accountId/'),
         );
-        await expect(page).toHaveTitle(/SNT Malaria/);
-        await expectNoErrors({ page });
+        await expect(props.page).toHaveTitle(/SNT Malaria/);
+        await expectNoErrors(props);
     });
 });

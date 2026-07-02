@@ -44,7 +44,6 @@ export const usePrefetchYearsImpact = (
 
         const [min, max] = yearBounds;
 
-
         const yearFromCandidates = surroundingYears(yearFrom, min, yearTo);
         const yearToCandidates = surroundingYears(yearTo, yearFrom, max);
 

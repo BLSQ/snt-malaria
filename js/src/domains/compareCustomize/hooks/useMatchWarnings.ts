@@ -16,9 +16,7 @@ export const useMatchWarnings = ({
     displayScenarios,
 }: UseMatchWarningsArgs) => {
     return useMemo(() => {
-        const scenarioMap = new Map(
-            displayScenarios.map(s => [s.id, s]),
-        );
+        const scenarioMap = new Map(displayScenarios.map(s => [s.id, s]));
         const notFound: ScenarioMatchWarning[] = [];
         const unmatched: ScenarioMatchWarning[] = [];
         const sortByName = (a: OrgUnitRef, b: OrgUnitRef) =>
@@ -37,7 +35,9 @@ export const useMatchWarnings = ({
             if (impact.org_units_with_unmatched_interventions?.length) {
                 unmatched.push({
                     scenario,
-                    orgUnits: [...impact.org_units_with_unmatched_interventions].sort(sortByName),
+                    orgUnits: [
+                        ...impact.org_units_with_unmatched_interventions,
+                    ].sort(sortByName),
                 });
             }
         });

@@ -3,7 +3,6 @@ import { blueGrey } from '@mui/material/colors';
 export const SCENARIO_BASE_COLORS = ['#FFC107', '#673AB7', '#3D74FF'] as const;
 export const NO_INTERVENTION_COLOR = blueGrey[200];
 
-
 const clamp = (value: number, min = 0, max = 1) =>
     Math.min(Math.max(value, min), max);
 
@@ -18,8 +17,11 @@ export const hexToRgb = (hex: string) => {
             : normalized;
     const num = parseInt(expanded, 16);
     return {
+        // eslint-disable-next-line no-bitwise
         r: (num >> 16) & 255,
+        // eslint-disable-next-line no-bitwise
         g: (num >> 8) & 255,
+        // eslint-disable-next-line no-bitwise
         b: num & 255,
     };
 };
@@ -32,7 +34,6 @@ const mixWithWhite = (hex: string, amount: number) => {
     const bb = Math.round(b + (255 - b) * ratio);
     return `rgb(${rr}, ${gg}, ${bb})`;
 };
-
 
 export const getScenarioColor = (index: number) =>
     SCENARIO_BASE_COLORS[index] ?? SCENARIO_BASE_COLORS[0];

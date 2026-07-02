@@ -7,7 +7,6 @@ import { number, object } from 'yup';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 
-import { WizardStep } from './WizardStep';
 import { useGetAccountSettings } from '../hooks/useGetAccountSettings';
 import {
     OrgUnitTypeOption,
@@ -15,6 +14,7 @@ import {
 } from '../hooks/useGetOrgUnitTypes';
 import { useUpdateAccountSettings } from '../hooks/useUpdateAccountSettings';
 import { MESSAGES } from '../messages';
+import { WizardStep } from './WizardStep';
 
 type Props = {
     isLastStep: boolean;
@@ -152,9 +152,7 @@ export const AccountSettingsStep: FunctionComponent<Props> = ({
                 options={orgUnitTypes ?? []}
                 loading={isFetchingTypes}
                 clearable={false}
-                helperText={formatMessage(
-                    MESSAGES.interventionOrgUnitTypeHelp,
-                )}
+                helperText={formatMessage(MESSAGES.interventionOrgUnitTypeHelp)}
             />
             <InputComponent
                 type="select"

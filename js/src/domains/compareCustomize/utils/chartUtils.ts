@@ -22,14 +22,8 @@ export const computeNiceTicks = (
 ): { domain: [number, number]; ticks: number[] } => {
     if (data.length === 0) return { domain: [0, 1], ticks: [0] };
 
-    const dataMin = Math.min(
-        0,
-        ...data.map((d) => d.value - d.errorLower),
-    );
-    const dataMax = Math.max(
-        0,
-        ...data.map((d) => d.value + d.errorUpper),
-    );
+    const dataMin = Math.min(0, ...data.map(d => d.value - d.errorLower));
+    const dataMax = Math.max(0, ...data.map(d => d.value + d.errorUpper));
     const step = niceStep(dataMax - dataMin || 1, 6);
 
     let lo = Math.floor(dataMin / step) * step;

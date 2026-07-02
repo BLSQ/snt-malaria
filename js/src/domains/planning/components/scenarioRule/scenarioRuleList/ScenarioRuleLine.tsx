@@ -3,7 +3,6 @@ import { Box, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';
-import { noOp } from 'Iaso/utils';
 import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { useDeleteScenarioRule } from '../../../hooks/useDeleteScenarioRule';

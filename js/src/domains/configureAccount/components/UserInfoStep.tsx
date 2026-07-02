@@ -9,8 +9,8 @@ import { useGetCurrentUser } from 'Iaso/domains/users/hooks/useGetCurrentUser';
 import { useSaveCurrentUser } from 'Iaso/domains/users/hooks/useSaveCurrentUser';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 
-import { WizardStep } from './WizardStep';
 import { MESSAGES } from '../messages';
+import { WizardStep } from './WizardStep';
 
 type Props = {
     isLastStep: boolean;

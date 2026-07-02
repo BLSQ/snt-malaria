@@ -10,8 +10,6 @@ type Props = {
     onAdd: (interventionId: number) => void;
     onRemove: (index: number) => void;
     onUpdateField: (index: number, interventionId: number) => void;
-    touched: any;
-    errors: any;
     interventionCategories: InterventionCategory[];
 };
 
@@ -22,11 +20,6 @@ export const InterventionPropertiesForm: FC<Props> = ({
     onUpdateField,
     interventionCategories,
 }) => {
-    const allInterventions = useMemo(
-        () => interventionCategories.flatMap(c => c.interventions),
-        [interventionCategories],
-    );
-
     const getCategoryForIntervention = useCallback(
         (interventionId: number) =>
             interventionCategories.find(c =>
@@ -74,13 +67,11 @@ export const InterventionPropertiesForm: FC<Props> = ({
                 const interventionOptions = category?.interventions ?? [];
                 return (
                     <InterventionPropertyForm
-                        key={`intervention_${interventionId}_${index}`}
+                        key={`intervention_${interventionId}`}
                         interventionId={interventionId}
                         interventions={interventionOptions}
                         categoryName={category?.name ?? ''}
-                        onUpdateField={newId =>
-                            onUpdateField(index, newId)
-                        }
+                        onUpdateField={newId => onUpdateField(index, newId)}
                         onRemove={() => onRemove(index)}
                     />
                 );

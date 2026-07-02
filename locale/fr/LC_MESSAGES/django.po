@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-28 09:32+0000\n"
+"POT-Creation-Date: 2026-06-18 13:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,14 +18,34 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: plugins/snt_malaria/api/intervention_assignments/views.py
-#, python-brace-format
-msgid "{delta} assignment(s) added to plan"
-msgstr "{delta} assignation(s) ajoutée(s) au plan"
+#: plugins/snt_malaria/api/cost_unit_types/views.py
+msgid ""
+"Cannot delete this cost unit because it is used by one or more cost lines."
+msgstr "Il est impossible de supprimer cette unité de coût car elle est utilisée par une ou plusieurs lignes de coût."
+
+#: plugins/snt_malaria/api/cost_unit_types/views.py
+msgid "A cost unit with this name already exists."
+msgstr "Une unité de coût avec ce nom existe déjà."
+
+#: plugins/snt_malaria/api/donors/views.py
+msgid "A donor with this name already exists."
+msgstr "Un donateur avec ce nom existe déjà."
+
+#: plugins/snt_malaria/api/grants/serializers.py
+msgid "Donor not found."
+msgstr "Donateur inconnu."
+
+#: plugins/snt_malaria/api/grants/views.py
+msgid "A grant with this name already exists."
+msgstr "Un financement avec ce nom existe déjà."
 
 #: plugins/snt_malaria/api/intervention_assignments/views.py
 msgid "The scenario is locked and cannot be modified."
 msgstr "Le scenario est verouillé et ne peut être modifié."
+
+#: plugins/snt_malaria/api/interventions/serializers.py
+msgid "Grant not found."
+msgstr "Financement inconnu."
 
 #: plugins/snt_malaria/api/scenarios/serializers.py
 msgid "Cannot modify a locked scenario."
@@ -57,58 +77,6 @@ msgid "Scenario with this name already exists."
 msgstr "Un scénario avec ce nom existe déjà"
 
 #: plugins/snt_malaria/models/cost_breakdown.py
-msgid "per ITN"
-msgstr "par ITN"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "per SP"
-msgstr "par SP"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "per child"
-msgstr "par enfant"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "per dose"
-msgstr "par dose"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "per SPAQ pack 3-11 month olds"
-msgstr "par pack SPAQ de 3-11 mois"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "per SPAQ pack 12-59 month olds"
-msgstr "par pack SPAQ de 12-59 mois"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "per SPAQ pack 5-10 years olds"
-msgstr "pas pack SPAQ de 5-10 mois"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "per RDT kit"
-msgstr "par kit RDT"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "per AL"
-msgstr "par AL"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "per 60mg powder"
-msgstr "par 60mg de poudre"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "per RAS"
-msgstr "par RAS"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "per bale"
-msgstr "par balle"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "Other"
-msgstr "Autre"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
 msgid "Procurement"
 msgstr "Approvisionnement"
 
@@ -123,6 +91,18 @@ msgstr "Opérationnel"
 #: plugins/snt_malaria/models/cost_breakdown.py
 msgid "Supportive"
 msgstr "Support"
+
+#: plugins/snt_malaria/models/cost_breakdown.py
+msgid "Other"
+msgstr "Autre"
+
+#: plugins/snt_malaria/models/cost_breakdown.py
+msgid "Population"
+msgstr "Population"
+
+#: plugins/snt_malaria/models/cost_breakdown.py
+msgid "Fixed cost"
+msgstr "Coût fixe"
 
 #: plugins/snt_malaria/permissions.py
 msgid "Scenario - Basic Write"
@@ -139,6 +119,46 @@ msgstr "Configuration - Lecture"
 #: plugins/snt_malaria/permissions.py
 msgid "Settings - Write"
 msgstr "Configuration - Écriture"
+
+#, python-brace-format
+#~ msgid "{delta} assignment(s) added to plan"
+#~ msgstr "{delta} assignation(s) ajoutée(s) au plan"
+
+#~ msgid "per ITN"
+#~ msgstr "par ITN"
+
+#~ msgid "per SP"
+#~ msgstr "par SP"
+
+#~ msgid "per child"
+#~ msgstr "par enfant"
+
+#~ msgid "per dose"
+#~ msgstr "par dose"
+
+#~ msgid "per SPAQ pack 3-11 month olds"
+#~ msgstr "par pack SPAQ de 3-11 mois"
+
+#~ msgid "per SPAQ pack 12-59 month olds"
+#~ msgstr "par pack SPAQ de 12-59 mois"
+
+#~ msgid "per SPAQ pack 5-10 years olds"
+#~ msgstr "pas pack SPAQ de 5-10 mois"
+
+#~ msgid "per RDT kit"
+#~ msgstr "par kit RDT"
+
+#~ msgid "per AL"
+#~ msgstr "par AL"
+
+#~ msgid "per 60mg powder"
+#~ msgstr "par 60mg de poudre"
+
+#~ msgid "per RAS"
+#~ msgstr "par RAS"
+
+#~ msgid "per bale"
+#~ msgstr "par balle"
 
 #~ msgid "Name cannot be empty."
 #~ msgstr "Le nom doit être défini"

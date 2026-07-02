@@ -1,4 +1,10 @@
-import React, { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+    ReactNode,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
 
 import { PopperProps } from '@mui/material/Popper';
 import { useSafeIntl } from 'bluesquare-components';
@@ -181,7 +187,7 @@ export const useOnboarding = (args: UseOnboardingArgs): UseOnboardingResult => {
 
     const isFinished = currentStep >= total;
     const activeStep = isFinished ? null : steps[currentStep];
-    const activeAnchor = isFinished ? null : anchors[currentStep] ?? null;
+    const activeAnchor = isFinished ? null : (anchors[currentStep] ?? null);
     const isLastStep = currentStep === total - 1;
     // Single source of truth for "should the spotlight be on screen?".
     const isOpen =
@@ -200,7 +206,9 @@ export const useOnboarding = (args: UseOnboardingArgs): UseOnboardingResult => {
     const primaryAction = useMemo(
         () => ({
             label: formatMessage(
-                isLastStep ? MESSAGES.onboardingDismiss : MESSAGES.onboardingNext,
+                isLastStep
+                    ? MESSAGES.onboardingDismiss
+                    : MESSAGES.onboardingNext,
             ),
             onClick: advance,
         }),
@@ -213,9 +221,9 @@ export const useOnboarding = (args: UseOnboardingArgs): UseOnboardingResult => {
             isLastStep
                 ? undefined
                 : {
-                    label: formatMessage(MESSAGES.onboardingSkip),
-                    onClick: dismiss,
-                },
+                      label: formatMessage(MESSAGES.onboardingSkip),
+                      onClick: dismiss,
+                  },
         [isLastStep, dismiss, formatMessage],
     );
 

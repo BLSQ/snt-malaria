@@ -275,17 +275,17 @@ export const getAvailableMetrics = (
     const available = new Set<MetricKey>();
 
     for (const impact of impactsByScenarioId.values()) {
-        if (!impact) continue;
-        for (const key of IMPACT_METRIC_KEYS) {
-            if (impact[key]?.value != null) available.add(key);
+        if (impact) {
+            for (const key of IMPACT_METRIC_KEYS) {
+                if (impact[key]?.value != null) available.add(key);
+            }
         }
     }
 
     for (const budget of budgetsByScenarioId.values()) {
         const hasOrgUnitCosts =
-            budget?.results?.some(
-                r => (r.org_units_costs?.length ?? 0) > 0,
-            ) ?? false;
+            budget?.results?.some(r => (r.org_units_costs?.length ?? 0) > 0) ??
+            false;
         if (hasOrgUnitCosts) {
             available.add(MetricKey.OrgUnitTotalCost);
         }

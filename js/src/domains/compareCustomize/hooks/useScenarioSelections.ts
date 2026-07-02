@@ -11,7 +11,8 @@ import { MAX_COMPARISONS } from '../utils/constants';
  * the baseline changes so that no slot duplicates the baseline or another slot.
  */
 export const useScenarioSelections = (scenarios?: Scenario[]) => {
-    const [baselineScenarioId, setBaselineScenarioId] = useState<ScenarioId>('');
+    const [baselineScenarioId, setBaselineScenarioId] =
+        useState<ScenarioId>('');
     const [comparisonScenarioIds, setComparisonScenarioIds] = useState<
         ScenarioId[]
     >([]);
@@ -81,12 +82,9 @@ export const useScenarioSelections = (scenarios?: Scenario[]) => {
         setComparisonScenarioIds(prev => normalizeComparisonIds(prev));
     }, [baselineScenarioId, comparisonOptions, normalizeComparisonIds]);
 
-    const handleBaselineSelect = useCallback(
-        (_key: string, value: unknown) => {
-            setBaselineScenarioId(value as number);
-        },
-        [],
-    );
+    const handleBaselineSelect = useCallback((_key: string, value: unknown) => {
+        setBaselineScenarioId(value as number);
+    }, []);
 
     const handleComparisonSelect = useCallback(
         (index: number) => (_key: string, value: unknown) => {

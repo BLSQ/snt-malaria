@@ -4,9 +4,9 @@ import { Box, Stack } from '@mui/material';
 import { IconButton } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { noOp } from 'Iaso/utils';
+import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { MESSAGES } from '../../../messages';
 import { useInterventionContext } from '../contexts/InterventionContext';
-import { InterventionCostBreakdownLine } from '../../../interventions/types';
 
 type Props = {
     costBreakdownLine: InterventionCostBreakdownLine;

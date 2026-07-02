@@ -2,7 +2,6 @@ import React, { FC, useMemo } from 'react';
 import ShowChartOutlinedIcon from '@mui/icons-material/ShowChartOutlined';
 import { Box, useTheme } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { SxStyles } from 'Iaso/types/general';
 import {
     CartesianGrid,
     ErrorBar,
@@ -13,6 +12,7 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
+import { SxStyles } from 'Iaso/types/general';
 import { ChartEmptyState } from '../../../../components/charts/ChartEmptyState';
 import { useChartTheme } from '../../../../components/charts/chartTheme';
 import { ChartTooltip } from '../../../../components/charts/ChartTooltip';

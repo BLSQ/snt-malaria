@@ -1,6 +1,6 @@
 import { deleteRequest } from 'bluesquare-components';
-import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { UseMutationResult } from 'react-query';
+import { useSnackMutation } from 'Iaso/libs/apiHooks';
 
 export const useDeleteGrant = (): UseMutationResult =>
     useSnackMutation({

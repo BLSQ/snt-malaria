@@ -143,7 +143,8 @@ export const MESSAGES = defineMessages({
     onboardingStep2Description: {
         id: 'iaso.snt_malaria.settings.dataLayers.onboarding.step2.description',
         defaultMessage:
-            'From this menu, choose "Download CSV Template" to download a CSV file where you only need to fill in the values for the layer you just defined. Then choose "Import CSV" to upload the file.',
+            'From this menu, choose "Download CSV Template" to download a CSV file where you only need to fill in the values for the layer you just defined. ' +
+            'Then choose "Import CSV" to upload the file.',
     },
     onboardingDocumentationUrl: {
         id: 'iaso.snt_malaria.settings.dataLayers.onboarding.documentationUrl',

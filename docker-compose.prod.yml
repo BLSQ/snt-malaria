@@ -1,0 +1,6 @@
+services:
+    iaso:
+      image: blsq/snt_malaria:${PROD_IMAGE_TAG:-develop}
+      environment:
+        - ENABLE_PUBLIC_ACCOUNT_SETUP
+        - PUBLIC_ACCOUNT_THROTTLE_RATE

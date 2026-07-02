@@ -1,6 +1,6 @@
+import { UseMutationResult } from 'react-query';
 import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { UseMutationResult } from 'react-query';
 
 export const useCreateDonor = (): UseMutationResult =>
     useSnackMutation({

@@ -227,18 +227,14 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
                     password: values.password,
                     taskId: data.task.id,
                 });
-            } catch (e) {
+            } catch {
                 setIsRedirecting(false);
                 setAutoLoginError(formatMessage(MESSAGES.autoLoginFailed));
             }
         },
     });
 
-    const schema = useSetupAccountValidation(
-        apiErrors,
-        payload,
-        captchaReady,
-    );
+    const schema = useSetupAccountValidation(apiErrors, payload, captchaReady);
 
     // Read once on mount: use the cache when present, otherwise seed the
     // form's language from the current locale so the dropdown and the
@@ -255,6 +251,7 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
                       ...defaultInitialValues,
                       language: locale,
                   },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [],
     );
 
@@ -352,7 +349,10 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
     const captchaCodeErrors = getErrors('captcha_code');
 
     const signupValuesSnapshot = omit(values, signupDirtyCompareOmit);
-    const signupDefaultsSnapshot = omit(defaultInitialValues, signupDirtyCompareOmit);
+    const signupDefaultsSnapshot = omit(
+        defaultInitialValues,
+        signupDirtyCompareOmit,
+    );
 
     const showCreating = isSubmitting || isRedirecting;
     const allowConfirm =
@@ -452,7 +452,7 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
 
             <Box sx={styles.captchaSection}>
                 <Box sx={styles.captchaFrame}>
-                    {captchaLoadError ? (
+                    {(captchaLoadError && (
                         <Typography
                             variant="caption"
                             role="alert"
@@ -467,16 +467,15 @@ export const CreateAccountForm: FunctionComponent<Props> = ({
                         >
                             {captchaLoadError}
                         </Typography>
-                    ) : captchaImageUrl ? (
-                        <Box
-                            component="img"
-                            src={captchaImageUrl}
-                            alt=""
-                            sx={styles.captchaImage}
-                        />
-                    ) : (
-                        <CircularProgress size={28} />
-                    )}
+                    )) ||
+                        (captchaImageUrl && (
+                            <Box
+                                component="img"
+                                src={captchaImageUrl}
+                                alt=""
+                                sx={styles.captchaImage}
+                            />
+                        )) || <CircularProgress size={28} />}
                 </Box>
                 <Box sx={styles.captchaControls}>
                     <Box sx={styles.captchaInputRow}>

@@ -1,0 +1,43 @@
+name: SNT malaria - pull requests
+
+on:
+  pull_request:
+    types: [ opened, synchronize, ready_for_review ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  config:
+    uses: BLSQ/iaso-ci/.github/workflows/config.yml@main
+    permissions:
+      pull-requests: write
+      contents: read
+    with:
+      branch: ${{ github.head_ref || github.ref_name }}
+      pr_title: ${{ github.event.pull_request.title }}
+      plugin_name: snt_malaria
+
+
+  build_and_push_image:
+    needs: config
+    uses: BLSQ/iaso-ci/.github/workflows/docker_build.yml@main
+    with:
+      iaso_branch: ${{ needs.config.outputs.iaso_branch }}
+      image_tags: ${{ needs.config.outputs.image_tags }}
+      plugin_branch: ${{ needs.config.outputs.plugin_branch }}
+      plugin_name: snt_malaria
+    secrets: inherit
+
+  tests:
+    needs: config
+    uses: BLSQ/iaso-ci/.github/workflows/tests.yml@main
+    with:
+      iaso_branch: ${{ needs.config.outputs.iaso_branch }}
+      plugin_branch: ${{ needs.config.outputs.plugin_branch }}
+      plugin_name: snt_malaria
