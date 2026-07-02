@@ -8,11 +8,11 @@ on:
       environment:
         description: Env (snt-malaria, snt-malaria-staging, snt-malaria-demo) or exact server name (iaso-snt-malaria-staging-worker, iaso-snt-malaria, iaso-snt-malaria-demo-worker)
         required: true
-        default: snt-malaria
+        default: snt-malaria-staging
       iaso_ref:
         description: The branch, tag or SHA from Iaso to use (main by default)
         required: false
-        default: main
+        default: develop
       slack_channel:
         description: Slack Channel for notification (snt-ops by default)
         required: false
@@ -30,7 +30,7 @@ jobs:
       - name: Set configs
         id: config
         env:
-          DEFAULT_GIT_REFERENCE: main
+          DEFAULT_GIT_REFERENCE: develop
           DEFAULT_IASO_REFERENCE: develop
           DEFAULT_ENVIRONMENT: snt-malaria-staging
           DEFAULT_SLACK_CHANNEL: snt-ops

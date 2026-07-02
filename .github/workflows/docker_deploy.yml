@@ -9,22 +9,22 @@ on:
       environment:
         description: Env (snt-malaria, snt-malaria-staging, snt-malaria-demo) or exact server name (iaso-snt-malaria-staging-worker, iaso-snt-malaria, iaso-snt-malaria-demo-worker)
         required: true
-        default: snt-malaria
+        default: snt-malaria-staging
         type: string
       iaso_branch:
-        description: Core IASO branch to deploy (docker-compose, cron files; main by default)
+        description: Core IASO branch to deploy (docker-compose, cron files; develop by default)
         required: false
-        default: main
+        default: develop
         type: string
       snt_branch:
         description: SNT branch to deploy (docker-compose extensions)
         required: true
-        default: main
+        default: develop
         type: string
       image_tag:
         description: Tag to deploy (without the "blsq/snt_malaria:" prefix, e.g. "develop", "IA-4856", or "v2026.06.01")
         required: true
-        default: main
+        default: develop
         type: string
       slack_channel:
         description: Slack Channel for notification (snt-ops by default)
