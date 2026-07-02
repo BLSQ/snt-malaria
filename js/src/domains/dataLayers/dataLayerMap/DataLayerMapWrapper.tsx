@@ -1,19 +1,36 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { Card, MenuItem, Select, Stack, Typography } from '@mui/material';
-import { LoadingSpinner, useRedirectToReplace } from 'bluesquare-components';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import {
+    Card,
+    MenuItem,
+    Select,
+    Stack,
+    Tooltip,
+    Typography,
+} from '@mui/material';
+import {
+    IconButton,
+    LoadingSpinner,
+    useRedirectToReplace,
+} from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { CardStyled } from '../../../components/CardStyled';
 import { OrgUnitSelect } from '../../../components/OrgUnitSelect';
 import { baseUrls } from '../../../constants/urls';
+import { MESSAGES } from '../../messages';
 import { useGetMetricValues } from '../hooks/useGetMetrics';
 import { MetricType, MetricValue } from '../types/metrics';
 import { DataLayerMap } from './DataLayerMap';
 
 const styles = {
     card: {
+        flexGrow: 1,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+    },
+    smallHeader: {
+        minHeight: '36px',
     },
 };
 
@@ -21,12 +38,16 @@ type Props = {
     metricType?: MetricType;
     orgUnits?: OrgUnit[];
     displayOrgUnitId?: number;
+    small?: boolean;
+    onRemove?: () => void;
 };
 
 export const DataLayerMapWrapper: FC<Props> = ({
     metricType,
     orgUnits,
     displayOrgUnitId,
+    small = false,
+    onRemove,
 }) => {
     const { data: metricValues, isLoading: loadingMetricValues } =
         useGetMetricValues({
@@ -83,16 +104,29 @@ export const DataLayerMapWrapper: FC<Props> = ({
     return (
         <Card sx={styles.card}>
             <CardStyled
+                headerSx={small ? styles.smallHeader : undefined}
                 header={
                     <Stack
                         direction="row"
                         justifyContent="space-between"
                         alignItems="center"
+                        overflow="hidden"
                     >
-                        <Typography variant="h6">
-                            {metricType?.name || ''}
-                        </Typography>
-                        <Stack direction="row" spacing={2} alignItems="end">
+                        <Tooltip title={metricType?.name || ''}>
+                            <Typography
+                                variant={small ? 'body2' : 'h6'}
+                                noWrap
+                                sx={{ flex: 1, minWidth: 0, paddingRight: 1 }}
+                            >
+                                {metricType?.name || ''}
+                            </Typography>
+                        </Tooltip>
+                        <Stack
+                            direction="row"
+                            spacing={2}
+                            alignItems="end"
+                            sx={{ flexShrink: 0 }}
+                        >
                             {metricType?.metric_kind === 'population' && (
                                 <Select
                                     value={year}
@@ -110,11 +144,20 @@ export const DataLayerMapWrapper: FC<Props> = ({
                                     ))}
                                 </Select>
                             )}
-
-                            <OrgUnitSelect
-                                onOrgUnitChange={handleDisplayOrgUnitChange}
-                                selectedOrgUnitId={displayOrgUnitId}
-                            />
+                            {small ? null : (
+                                <OrgUnitSelect
+                                    onOrgUnitChange={handleDisplayOrgUnitChange}
+                                    selectedOrgUnitId={displayOrgUnitId}
+                                />
+                            )}
+                            {(onRemove && (
+                                <IconButton
+                                    overrideIcon={CancelOutlinedIcon}
+                                    tooltipMessage={MESSAGES.remove}
+                                    onClick={onRemove}
+                                ></IconButton>
+                            )) ||
+                                null}
                         </Stack>
                     </Stack>
                 }
