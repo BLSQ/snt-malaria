@@ -50,6 +50,7 @@ export const useGetMetricCategories = (
 interface MetricValuesParams {
     metricTypeId?: number | null;
     orgUnitId?: number | null;
+    year?: number;
 }
 
 export const useGetMetricOrgUnits = (
@@ -73,17 +74,16 @@ export const useGetMetricOrgUnits = (
 export const useGetMetricValues = ({
     metricTypeId,
     orgUnitId,
+    year,
 }: MetricValuesParams): UseQueryResult<MetricValue[], Error> => {
-    let url = '/api/metricvalues/?';
-    if (metricTypeId) {
-        url += `metric_type_id=${metricTypeId}`;
-    }
-    if (orgUnitId) {
-        url += `org_unit_id=${orgUnitId}`;
-    }
+    const params = new URLSearchParams();
+    if (metricTypeId) params.set('metric_type_id', metricTypeId.toString());
+    if (orgUnitId) params.set('org_unit_id', orgUnitId.toString());
+    if (year != null) params.set('reference_year', year.toString());
+    const url = `/api/metricvalues/?${params.toString()}`;
 
     return useSnackQuery({
-        queryKey: ['metricValues', metricTypeId, orgUnitId],
+        queryKey: ['metricValues', metricTypeId, orgUnitId, year],
         queryFn: () => getRequest(url),
         options: {
             cacheTime: Infinity, // disable auto fetch on cache expiration
