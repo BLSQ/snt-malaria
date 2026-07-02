@@ -50,6 +50,7 @@ export const InterventionPlanMap: FC<Props> = ({
         interventionCategories,
         metricTypeCategories,
         isEditing: isPreviewingRule,
+        scenario,
     } = usePlanningContext();
 
     const [selectedMetricLayer, setSelectedMetricLayer] = React.useState<
@@ -84,6 +85,7 @@ export const InterventionPlanMap: FC<Props> = ({
 
     const { data: metricValues } = useGetMetricValues({
         metricTypeId: activeMetricLayer?.id || null,
+        year: scenario?.reference_year ?? undefined,
     });
     const getSelectedMetric = useGetOrgUnitMetric(metricValues);
 

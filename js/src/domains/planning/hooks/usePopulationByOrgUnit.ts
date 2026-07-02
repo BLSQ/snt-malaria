@@ -49,8 +49,11 @@ export const usePopulationByOrgUnit = ({
         [metricTypeId, metricTypeCategories],
     );
 
+    const { scenario } = usePlanningContext();
+
     const { data: metricValues } = useGetMetricValues({
         metricTypeId: resolvedMetricTypeId,
+        year: scenario?.reference_year ?? undefined,
     });
 
     return useMemo(() => {
