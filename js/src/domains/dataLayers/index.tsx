@@ -170,7 +170,7 @@ export const DataLayers: FC = () => {
                         <PaperFullHeight>
                             <Stack
                                 direction="row"
-                                gap={2}
+                                gap={1}
                                 sx={{ height: '100%' }}
                             >
                                 <DataLayerMapWrapper

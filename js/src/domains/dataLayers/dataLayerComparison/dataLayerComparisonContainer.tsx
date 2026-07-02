@@ -13,8 +13,8 @@ const styles = {
         width: '33%',
     },
     items: {
-        minHeight: '50%',
-        height: '50%',
+        minHeight: 'calc(50% - .25rem)',
+        height: 'calc(50% - .25rem)',
     },
 } satisfies SxStyles;
 
@@ -22,7 +22,7 @@ export const DataLayerComparisonContainer: FC = ({}) => {
     const { orgUnits, comparisonMetricTypes, removeMetricFromComparison } =
         useDataLayerComparisonContext();
     return comparisonMetricTypes?.length <= 0 ? null : (
-        <Stack direction="column" sx={styles.stack} gap={2}>
+        <Stack direction="column" sx={styles.stack} gap={1}>
             {React.Children.toArray(
                 comparisonMetricTypes.map((metricType, index) => (
                     <Box sx={styles.items}>
