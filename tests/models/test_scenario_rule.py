@@ -649,7 +649,9 @@ class ResolveMatchedOrgUnitsReferenceYearTestCase(SNTMalariaTestCase):
             location=Point(3.0, 4.0, 0.0),
         )
 
-        self.metric_type = MetricType.objects.create(account=self.account, name="Population", code="POP", units="people")
+        self.metric_type = MetricType.objects.create(
+            account=self.account, name="Population", code="POP", units="people"
+        )
 
         # org_unit_1 only has a dated value (for 2025), org_unit_2 only has a timeless value.
         MetricValue.objects.create(metric_type=self.metric_type, org_unit=self.org_unit_1, value=100, year=2025)
