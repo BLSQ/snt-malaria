@@ -3,6 +3,7 @@ from rest_framework import routers
 from plugins.snt_malaria.api.account_settings.views import AccountSettingsViewSet
 from plugins.snt_malaria.api.budget.views import BudgetViewSet
 from plugins.snt_malaria.api.budget_settings.views import BudgetSettingsViewSet
+from plugins.snt_malaria.api.composite_layer_ai.views import CompositeLayerAIViewSet
 from plugins.snt_malaria.api.impact.views import ImpactAgeGroupsViewSet, ImpactViewSet, ImpactYearRangeViewSet
 from plugins.snt_malaria.api.scenario_yearly_cost_assignment.views import ScenarioYearlyCostAssignmentViewSet
 
@@ -52,3 +53,4 @@ router.register(r"snt_malaria/impact_age_groups", ImpactAgeGroupsViewSet, basena
 router.register(r"snt_malaria/account_settings", AccountSettingsViewSet, basename="account_settings")
 router.register(r"snt_malaria/account_setup", SNTAccountSetupViewSet, basename="account_setup")
 router.register(r"snt_malaria/composite_layers", CompositeLayerViewSet, basename="composite_layers")
+router.register(r"snt_malaria/composite_layer_ai", CompositeLayerAIViewSet, basename="composite_layer_ai")

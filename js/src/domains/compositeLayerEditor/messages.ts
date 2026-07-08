@@ -261,4 +261,16 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.firstConnectedLayerPlaceholder',
         defaultMessage: '[First connected layer]',
     },
+    compositeLayerAITitle: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.ai.title',
+        defaultMessage: 'Generate with AI',
+    },
+    compositeLayerAIPlaceholder: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.ai.placeholder',
+        defaultMessage: 'Describe the composite layer you want to create...',
+    },
+    compositeLayerAIError: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.ai.error',
+        defaultMessage: 'Error generating composite layer. Please try again.',
+    },
 });

@@ -1,7 +1,8 @@
 import React, {
-    FC,
+    forwardRef,
     useCallback,
     useEffect,
+    useImperativeHandle,
     useMemo,
     useRef,
     useState,
@@ -25,6 +26,7 @@ import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { CanvasControls } from './components/CanvasControls';
 import { EditorHeader } from './components/EditorHeader';
 import { NodeHeaderContent } from './components/NodeHeaderContent';
+import { GeneratedGraph } from './compositeLayerChatBot/types';
 import {
     CompositeEditorContext,
     createCompositeFlumeConfig,
@@ -83,6 +85,13 @@ type Props = {
     onToggleSidebar?: () => void;
 };
 
+// Imperative handle so a sibling AI chat panel (rendered by the parent, outside this component's
+// tree) can push a generated graph in - see `applyGeneratedGraph` below for why this can't just be
+// a prop passed down.
+export type CompositeLayerEditorHandle = {
+    applyGeneratedGraph: (graph: GeneratedGraph) => void;
+};
+
 export const CompositeLayerEditor: FC<Props> = ({
     onClose,
     onSaved,
@@ -118,6 +127,10 @@ export const CompositeLayerEditor: FC<Props> = ({
     // Data layers wired into the output (even behind transformations), ordered; drives the
     // "based on a data layer" legend picker ordering.
     const [connectedLayerIds, setConnectedLayerIds] = useState<number[]>([]);
+    // An AI-generated graph, applied to the canvas by remounting NodeEditor (it only reads
+    // `nodes`/`comments` at mount time, so there's no other way to push a new graph in).
+    const [aiGraph, setAiGraph] = useState<FlumeNodes | undefined>();
+    const [editorGeneration, setEditorGeneration] = useState(0);
 
     const metricOptions: MetricOption[] = useMemo(() => {
         if (!metricCategories) return [];
@@ -184,13 +197,14 @@ export const CompositeLayerEditor: FC<Props> = ({
     };
 
     // Initial paint: existing graphs don't emit an onChange, so tag their ports once mounted.
+    // Also re-runs after an AI-generated graph forces a remount (`editorGeneration`).
     useEffect(() => {
         if (!isReady) return undefined;
         const frame = requestAnimationFrame(() =>
             syncPortConnections(nodesRef.current),
         );
         return () => cancelAnimationFrame(frame);
-    }, [isReady, existingLayer, syncPortConnections]);
+    }, [isReady, existingLayer, editorGeneration, syncPortConnections]);
 
     // Kick off a first preview once loaded (existing graphs don't emit an initial onChange).
     useEffect(() => {
@@ -225,6 +239,36 @@ export const CompositeLayerEditor: FC<Props> = ({
             </Wrapper>
         ),
         [],
+    );
+
+    // Applies an AI-generated graph to the canvas. NodeEditor only reads `nodes`/`comments` at
+    // mount time, so `editorGeneration` forces a remount (see the `key` below) with the new graph.
+    const handleGenerateGraph = useCallback(
+        (graph: GeneratedGraph) => {
+            const nodes = buildFlumeGraphFromSpec(graph);
+            nodesRef.current = nodes;
+            commentsRef.current = {};
+            setAiGraph(nodes);
+            setEditorGeneration(generation => generation + 1);
+            setConnectedLayerIds(getConnectedDataLayerIds(nodes));
+            if (previewTimer.current) clearTimeout(previewTimer.current);
+            if (isOutputConnected(nodes)) {
+                runPreview(nodes);
+            } else {
+                setPreview({
+                    status: 'error',
+                    data: null,
+                    error: DISCONNECTED_MESSAGE,
+                });
+            }
+        },
+        [runPreview],
+    );
+
+    useImperativeHandle(
+        ref,
+        () => ({ applyGeneratedGraph: handleGenerateGraph }),
+        [handleGenerateGraph],
     );
 
     const handleSave = () => {
@@ -312,4 +356,5 @@ export const CompositeLayerEditor: FC<Props> = ({
             </CardStyled>
         </Card>
     );
-};
+});
+CompositeLayerEditor.displayName = 'CompositeLayerEditor';

@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { Card, Stack } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
@@ -19,7 +19,12 @@ import {
 import { SETTINGS_WRITE } from '../../constants/permissions';
 import { baseUrls } from '../../constants/urls';
 import { useOnboarding } from '../../hooks/useOnboarding';
-import { CompositeLayerEditor } from '../compositeLayerEditor';
+import {
+    CompositeLayerEditor,
+    CompositeLayerEditorHandle,
+} from '../compositeLayerEditor';
+import { CompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChatBot/CompositeLayerAIChat';
+import { GeneratedGraph } from '../compositeLayerEditor/compositeLayerChatBot/types';
 import { useGetCompositeLayers } from '../compositeLayerEditor/hooks/useGetCompositeLayers';
 import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
@@ -89,6 +94,13 @@ export const DataLayers: FC = () => {
     const [editingCompositeLayerId, setEditingCompositeLayerId] = useState<
         number | undefined
     >(undefined);
+    const compositeLayerEditorRef = useRef<CompositeLayerEditorHandle>(null);
+    const onGenerateCompositeLayerGraph = useCallback(
+        (graph: GeneratedGraph) => {
+            compositeLayerEditorRef.current?.applyGeneratedGraph(graph);
+        },
+        [],
+    );
 
     const { data: compositeLayers } =
         useGetCompositeLayers(showCompositeLayers);
@@ -208,17 +220,20 @@ export const DataLayers: FC = () => {
             <PageContainer>
                 <SidebarLayout>
                     {!sidebarCollapsed && (
-                        <SidebarColumn>
-                            <PaperFullHeight>
+                    <SidebarColumn>
+                        <PaperFullHeight>
+                            {isCompositeEditorOpen ? (
+                                <CompositeLayerAIChat
+                                    onGenerate={onGenerateCompositeLayerGraph}
+                                />
+                            ) : (
                                 <Card sx={styles.card}>
                                     <CardStyled
                                         header={
                                             <DataLayerListHeader
                                                 onCreate={onCreateMetricType}
                                                 onCreateComposite={
-                                                    showCompositeLayers
-                                                        ? onCreateCompositeLayer
-                                                        : undefined
+                                                    onCreateCompositeLayer
                                                 }
                                                 createActionRef={
                                                     onboarding.anchorRefs[0]
@@ -260,6 +275,7 @@ export const DataLayers: FC = () => {
                         <PaperFullHeight>
                             {isCompositeEditorOpen ? (
                                 <CompositeLayerEditor
+                                    ref={compositeLayerEditorRef}
                                     compositeLayerId={editingCompositeLayerId}
                                     onClose={onCloseCompositeEditor}
                                     onSaved={onCompositeSaved}
