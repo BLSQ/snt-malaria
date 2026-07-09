@@ -190,6 +190,6 @@ export const MESSAGES = defineMessages({
     importCSVYearCaption: {
         id: 'iaso.snt_malaria.settings.dataLayers.importCSVYearCaption',
         defaultMessage:
-            'The year for which the metric values will be imported. Only applies to layers with population metrics.',
+            'The year for which the metric values will be imported.',
     },
 });

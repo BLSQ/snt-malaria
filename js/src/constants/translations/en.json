@@ -121,7 +121,7 @@
     "iaso.snt_malaria.settings.dataLayers.errors.invalidColor": "Invalid color format. Use a hexadecimal code (e.g., #RRGGBB) or a valid CSS color name.",
     "iaso.snt_malaria.settings.dataLayers.isPopulation": "Is population",
     "iaso.snt_malaria.settings.dataLayers.selectYear": "Select year",
-    "iaso.snt_malaria.settings.dataLayers.importCSVYearCaption": "The year for which the metric values will be imported. Only applies to layers with population metrics.",
+    "iaso.snt_malaria.settings.dataLayers.importCSVYearCaption": "The year for which the metric values will be imported.",
     "iaso.snt_malaria.compositeLayerEditor.title": "Composite layer editor",
     "iaso.snt_malaria.compositeLayerEditor.newCompositeLayer": "New composite layer",
     "iaso.snt_malaria.compositeLayerEditor.showDataLayers": "Show data layers",
