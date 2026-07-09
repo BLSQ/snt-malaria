@@ -1,0 +1,683 @@
+from iaso.models.metric import MetricType, MetricValue
+from iaso.test import TestCase
+from plugins.snt_malaria.models import CompositeLayer
+from plugins.snt_malaria.services.composite.evaluator import CompositeGraphError, CompositeGraphEvaluator
+from plugins.snt_malaria.services.composite.persistence import (
+    preview_composite_layer,
+    run_and_persist_composite_layer,
+    update_composite_metric_type,
+)
+from plugins.snt_malaria.tests.common_base import SNTMalariaTestMixin
+
+
+def _data_layer_node(node_id, metric_type_id, output_targets):
+    return {
+        "id": node_id,
+        "type": "dataLayer",
+        "x": 0,
+        "y": 0,
+        "inputData": {"metricType": {"metricTypeId": metric_type_id}},
+        "connections": {"inputs": {}, "outputs": {"values": output_targets}},
+    }
+
+
+def _formula_node(node_id, formula, input_sources, output_targets):
+    return {
+        "id": node_id,
+        "type": "formula",
+        "x": 0,
+        "y": 0,
+        "inputData": {"formula": {"formula": formula}},
+        "connections": {"inputs": input_sources, "outputs": {"result": output_targets}},
+    }
+
+
+def _classify_node(node_id, rules, default, input_sources, output_targets):
+    return {
+        "id": node_id,
+        "type": "classify",
+        "x": 0,
+        "y": 0,
+        "inputData": {"config": {"rules": {"rules": rules, "default": default}}},
+        "connections": {"inputs": input_sources, "outputs": {"result": output_targets}},
+    }
+
+
+def _output_node(node_id, name, layer_source, legend_type=None, reference_metric_type_id=None):
+    input_data = {"name": {"name": name}}
+    if legend_type is not None:
+        input_data["legend"] = {"legendType": legend_type}
+    if reference_metric_type_id is not None:
+        input_data["referenceLayer"] = {"referenceMetricTypeId": reference_metric_type_id}
+    return {
+        "id": node_id,
+        "type": "output",
+        "x": 0,
+        "y": 0,
+        "inputData": input_data,
+        "connections": {"inputs": {"layer": layer_source}, "outputs": {}},
+    }
+
+
+class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.org_unit_type = self.create_snt_org_unit_type(name="DISTRICT")
+        self.ou1 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="OU1")
+        self.ou2 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="OU2")
+
+        self.metric_a = MetricType.objects.create(account=self.account, name="Layer A", code="layer_a")
+        self.metric_b = MetricType.objects.create(account=self.account, name="Layer B", code="layer_b")
+
+        MetricValue.objects.create(metric_type=self.metric_a, org_unit=self.ou1, year=None, value=2.0)
+        MetricValue.objects.create(metric_type=self.metric_a, org_unit=self.ou2, year=None, value=4.0)
+        MetricValue.objects.create(metric_type=self.metric_b, org_unit=self.ou1, year=None, value=3.0)
+        MetricValue.objects.create(metric_type=self.metric_b, org_unit=self.ou2, year=None, value=5.0)
+
+        self.org_unit_ids = [self.ou1.id, self.ou2.id]
+
+    def _multiply_graph(self, name="Risk score", formula="a * b", legend_type=None, reference_metric_type_id=None):
+        return {
+            "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "formula1", "portName": "a"}]),
+            "layer2": _data_layer_node("layer2", self.metric_b.id, [{"nodeId": "formula1", "portName": "b"}]),
+            "formula1": _formula_node(
+                "formula1",
+                formula,
+                {
+                    "a": [{"nodeId": "layer1", "portName": "values"}],
+                    "b": [{"nodeId": "layer2", "portName": "values"}],
+                },
+                [{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node(
+                "out",
+                name,
+                [{"nodeId": "formula1", "portName": "result"}],
+                legend_type=legend_type,
+                reference_metric_type_id=reference_metric_type_id,
+            ),
+        }
+
+    def test_evaluator_multiplies_layers_per_org_unit(self):
+        name, values = CompositeGraphEvaluator(self.account, self._multiply_graph(), self.org_unit_ids).run()
+
+        self.assertEqual(name, "Risk score")
+        # All fixtures are year-less, so results live under the timeless (None) bucket.
+        self.assertEqual(values, {None: {self.ou1.id: 6.0, self.ou2.id: 20.0}})
+
+    def test_weighted_formula(self):
+        _, values = CompositeGraphEvaluator(
+            self.account, self._multiply_graph(formula="a * 0.5 + b"), self.org_unit_ids
+        ).run()
+
+        self.assertEqual(values, {None: {self.ou1.id: 4.0, self.ou2.id: 7.0}})
+
+    def test_formula_outputs_string_label(self):
+        # Numeric inputs, but the formula branches to text labels (a*b -> 6 and 20).
+        graph = self._multiply_graph(name="Bands", formula='"HIGH" if a * b > 10 else "LOW"')
+        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: "LOW", self.ou2.id: "HIGH"}})
+
+    def test_formula_string_output_persists_as_ordinal(self):
+        graph = self._multiply_graph(name="Bands", formula='"HIGH" if a * b > 10 else "LOW"')
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=graph,
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.ORDINAL)
+        rows = {mv.org_unit_id: mv for mv in MetricValue.objects.filter(metric_type=metric_type)}
+        self.assertEqual(rows[self.ou1.id].string_value, "LOW")
+        self.assertIsNone(rows[self.ou1.id].value)
+        self.assertEqual(rows[self.ou2.id].string_value, "HIGH")
+
+    def test_formula_accepts_string_input(self):
+        # A categorical layer can feed a formula that compares/branches on its string values.
+        seasonality = self._seasonality_layer()
+        graph = {
+            "layer1": _data_layer_node("layer1", seasonality.id, [{"nodeId": "formula1", "portName": "a"}]),
+            "formula1": _formula_node(
+                "formula1",
+                '"WET" if a == "Peak" else "DRY"',
+                {"a": [{"nodeId": "layer1", "portName": "values"}]},
+                [{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", "Season class", [{"nodeId": "formula1", "portName": "result"}]),
+        }
+        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: "WET", self.ou2.id: "DRY"}})
+
+    def test_formula_mixed_result_is_stringified(self):
+        # One branch yields a number, the other a string -> the whole layer becomes text so rows
+        # aren't a mix of numeric/string (metric_a: ou1=2 -> "2.0", ou2=4 -> "HIGH").
+        graph = self._multiply_graph(name="Mixed", formula='"HIGH" if a > 3 else a')
+        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: "2.0", self.ou2.id: "HIGH"}})
+
+    def test_single_char_string_literal_not_mistaken_for_input(self):
+        # Single-char string literals ("a"/"b") must not be read as input-port references, even
+        # though they collide with the port names (metric_a: ou1=2 -> "b", ou2=4 -> "a").
+        graph = self._multiply_graph(name="Labels", formula='"a" if a > 3 else "b"')
+        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: "b", self.ou2.id: "a"}})
+
+    def test_run_and_persist_creates_metric_type_and_values(self):
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=self._multiply_graph(),
+            org_unit_ids=self.org_unit_ids,
+        )
+
+        self.assertEqual(metric_type.name, "Risk score")
+        self.assertEqual(metric_type.category, "Composite")
+        self.assertEqual(metric_type.origin, MetricType.MetricTypeOrigin.CUSTOM)
+        self.assertEqual(metric_type.account, self.account)
+
+        values = {mv.org_unit_id: mv.value for mv in MetricValue.objects.filter(metric_type=metric_type)}
+        self.assertEqual(values, {self.ou1.id: 6.0, self.ou2.id: 20.0})
+
+    def test_numeric_defaults_to_threshold_legend(self):
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=self._multiply_graph(),
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.THRESHOLD)
+
+    def test_selected_linear_legend_is_honored(self):
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=self._multiply_graph(legend_type="linear"),
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.LINEAR)
+        # A linear legend is a 2-stop scale: [low, high] with a matching pair of colours.
+        # (values are {6.0, 20.0} -> domain is exactly the min and max)
+        self.assertEqual(metric_type.legend_config["domain"], [6.0, 20.0])
+        self.assertEqual(len(metric_type.legend_config["range"]), 2)
+
+    def test_threshold_uses_interior_breakpoints_and_extra_colour(self):
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=self._multiply_graph(),  # defaults to a threshold legend for numeric data
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.THRESHOLD)
+        domain = metric_type.legend_config["domain"]
+        colours = metric_type.legend_config["range"]
+        # scaleThreshold needs one more colour than breakpoints.
+        self.assertEqual(len(colours), len(domain) + 1)
+        # Breakpoints are strictly interior to the data range (values are 6..20).
+        self.assertTrue(all(6.0 < step < 20.0 for step in domain))
+        self.assertEqual(domain, sorted(domain))
+
+    def test_categorical_ignores_numeric_legend_choice(self):
+        # Even if a numeric legend is requested, a categorical result must stay ordinal.
+        graph = self._classify_graph(name="Bands")
+        graph["out"]["inputData"]["legend"] = {"legendType": "linear"}
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=graph,
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.ORDINAL)
+
+    def test_preview_returns_values_without_persisting(self):
+        before = MetricType.objects.count()
+
+        result = preview_composite_layer(
+            account=self.account,
+            graph=self._multiply_graph(),
+            org_unit_ids=self.org_unit_ids,
+        )
+
+        # Nothing was persisted.
+        self.assertEqual(MetricType.objects.count(), before)
+        self.assertFalse(CompositeLayer.objects.exists())
+
+        self.assertEqual(result["name"], "Risk score")
+        self.assertEqual(result["legend_type"], MetricType.LegendType.THRESHOLD)
+        self.assertIn("domain", result["legend_config"])
+        values = {mv["org_unit"]: mv["value"] for mv in result["metric_values"]}
+        self.assertEqual(values, {self.ou1.id: 6.0, self.ou2.id: 20.0})
+
+    def test_preview_tolerates_missing_name(self):
+        # The preview runs while the user is still building, before naming the layer.
+        graph = self._multiply_graph(name="")
+        result = preview_composite_layer(
+            account=self.account,
+            graph=graph,
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(result["name"], "")
+        self.assertEqual(len(result["metric_values"]), 2)
+
+    def test_preview_categorical_returns_string_values(self):
+        result = preview_composite_layer(
+            account=self.account,
+            graph=self._classify_graph(),
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(result["legend_type"], MetricType.LegendType.ORDINAL)
+        values = {mv["org_unit"]: mv["string_value"] for mv in result["metric_values"]}
+        self.assertEqual(values, {self.ou1.id: "LOW", self.ou2.id: "HIGH"})
+
+    def test_reference_legend_copies_from_selected_layer(self):
+        self.metric_a.legend_type = MetricType.LegendType.LINEAR
+        self.metric_a.legend_config = {"domain": [0, 10], "range": ["#111111", "#222222"]}
+        self.metric_a.save()
+
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=self._multiply_graph(legend_type="reference", reference_metric_type_id=self.metric_a.id),
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.LINEAR)
+        self.assertEqual(metric_type.legend_config, {"domain": [0, 10], "range": ["#111111", "#222222"]})
+
+    def test_connected_data_layers_discovered_in_traversal_order(self):
+        evaluator = CompositeGraphEvaluator(self.account, self._multiply_graph(), self.org_unit_ids)
+        self.assertEqual(
+            evaluator.connected_data_layer_metric_type_ids(),
+            [self.metric_a.id, self.metric_b.id],
+        )
+
+    def test_reference_legend_defaults_to_first_connected_layer(self):
+        # "reference" chosen but no explicit layer picked -> use the first connected layer (metric_a).
+        self.metric_a.legend_type = MetricType.LegendType.LINEAR
+        self.metric_a.legend_config = {"domain": [0, 10], "range": ["#111111", "#222222"]}
+        self.metric_a.save()
+
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=self._multiply_graph(legend_type="reference"),
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.LINEAR)
+        self.assertEqual(metric_type.legend_config, {"domain": [0, 10], "range": ["#111111", "#222222"]})
+
+    def test_reference_legend_falls_back_when_reference_missing(self):
+        # An invalid/blank reference shouldn't break saving; fall back to the numeric default.
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=self._multiply_graph(legend_type="reference", reference_metric_type_id=999999),
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.THRESHOLD)
+
+    def test_categorical_ignores_reference_legend(self):
+        # A numeric reference legend can't render category strings, so stay ordinal.
+        self.metric_a.legend_type = MetricType.LegendType.LINEAR
+        self.metric_a.legend_config = {"domain": [0, 10], "range": ["#111111", "#222222"]}
+        self.metric_a.save()
+
+        graph = self._classify_graph(name="Bands")
+        graph["out"]["inputData"]["legend"] = {"legendType": "reference"}
+        graph["out"]["inputData"]["referenceLayer"] = {"referenceMetricTypeId": self.metric_a.id}
+
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=graph,
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.ORDINAL)
+
+    def test_update_reruns_in_place_keeping_metric_type_id(self):
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=self._multiply_graph(name="Score", formula="a * b"),
+            org_unit_ids=self.org_unit_ids,
+        )
+        original_id = metric_type.id
+
+        name, updated = update_composite_metric_type(
+            account=self.account,
+            metric_type=metric_type,
+            graph=self._multiply_graph(name="Score v2", formula="a + b"),
+            org_unit_ids=self.org_unit_ids,
+        )
+
+        self.assertEqual(updated.id, original_id)
+        self.assertEqual(name, "Score v2")
+        self.assertEqual(updated.name, "Score v2")
+        values = {mv.org_unit_id: mv.value for mv in MetricValue.objects.filter(metric_type=updated)}
+        self.assertEqual(values, {self.ou1.id: 5.0, self.ou2.id: 9.0})
+        # No duplicate values left behind after the re-run.
+        self.assertEqual(MetricValue.objects.filter(metric_type=updated).count(), 2)
+
+    def test_composite_can_be_used_as_input(self):
+        composite = run_and_persist_composite_layer(
+            account=self.account,
+            graph=self._multiply_graph(name="Base composite"),
+            org_unit_ids=self.org_unit_ids,
+        )
+
+        # Feed the freshly created composite back in as a data layer input.
+        graph = {
+            "layer1": _data_layer_node("layer1", composite.id, [{"nodeId": "formula1", "portName": "a"}]),
+            "formula1": _formula_node(
+                "formula1",
+                "a + 1",
+                {"a": [{"nodeId": "layer1", "portName": "values"}]},
+                [{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", "Derived", [{"nodeId": "formula1", "portName": "result"}]),
+        }
+        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 7.0, self.ou2.id: 21.0}})
+
+    def test_data_layer_passes_through_all_years(self):
+        # A multi-year source layer keeps every year (no collapse to a single "latest" value).
+        # metric_a already has year-less values (ou1=2, ou2=4); add two real years for ou1.
+        MetricValue.objects.create(metric_type=self.metric_a, org_unit=self.ou1, year=2024, value=50.0)
+        MetricValue.objects.create(metric_type=self.metric_a, org_unit=self.ou1, year=2025, value=100.0)
+        graph = {
+            "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "out", "portName": "layer"}]),
+            "out": _output_node("out", "Direct", [{"nodeId": "layer1", "portName": "values"}]),
+        }
+        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(
+            values,
+            {
+                None: {self.ou1.id: 2.0, self.ou2.id: 4.0},
+                2024: {self.ou1.id: 50.0},
+                2025: {self.ou1.id: 100.0},
+            },
+        )
+
+    def _yearly_metric(self, code, values_by_year):
+        metric = MetricType.objects.create(account=self.account, name=code, code=code)
+        for year, by_ou in values_by_year.items():
+            for org_unit, value in by_ou.items():
+                MetricValue.objects.create(metric_type=metric, org_unit=org_unit, year=year, value=value)
+        return metric
+
+    def _combine_graph(self, metric_id_a, metric_id_b, formula="a + b", name="Combined", legend_type=None):
+        return {
+            "layer1": _data_layer_node("layer1", metric_id_a, [{"nodeId": "formula1", "portName": "a"}]),
+            "layer2": _data_layer_node("layer2", metric_id_b, [{"nodeId": "formula1", "portName": "b"}]),
+            "formula1": _formula_node(
+                "formula1",
+                formula,
+                {
+                    "a": [{"nodeId": "layer1", "portName": "values"}],
+                    "b": [{"nodeId": "layer2", "portName": "values"}],
+                },
+                [{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", name, [{"nodeId": "formula1", "portName": "result"}], legend_type=legend_type),
+        }
+
+    def test_multi_year_formula_uses_year_overlap(self):
+        # Two yearly layers with partial overlap -> only the shared year(s) survive.
+        metric_c = self._yearly_metric(
+            "layer_c", {2023: {self.ou1: 10.0, self.ou2: 1.0}, 2024: {self.ou1: 20.0, self.ou2: 2.0}}
+        )
+        metric_d = self._yearly_metric(
+            "layer_d", {2024: {self.ou1: 3.0, self.ou2: 5.0}, 2025: {self.ou1: 4.0, self.ou2: 6.0}}
+        )
+
+        _, values = CompositeGraphEvaluator(
+            self.account, self._combine_graph(metric_c.id, metric_d.id, formula="a + b"), self.org_unit_ids
+        ).run()
+
+        # Overlap of {2023, 2024} and {2024, 2025} is {2024}.
+        self.assertEqual(values, {2024: {self.ou1.id: 23.0, self.ou2.id: 7.0}})
+
+    def test_timeless_input_broadcasts_across_years(self):
+        # A year-less layer combined with a yearly layer broadcasts to each of the yearly layer's years.
+        metric_c = self._yearly_metric(
+            "layer_c", {2023: {self.ou1: 10.0, self.ou2: 1.0}, 2024: {self.ou1: 20.0, self.ou2: 2.0}}
+        )
+        # metric_a is timeless (ou1=2, ou2=4 under year=None).
+
+        _, values = CompositeGraphEvaluator(
+            self.account, self._combine_graph(metric_c.id, self.metric_a.id, formula="a + b"), self.org_unit_ids
+        ).run()
+
+        self.assertEqual(
+            values,
+            {
+                2023: {self.ou1.id: 12.0, self.ou2.id: 5.0},
+                2024: {self.ou1.id: 22.0, self.ou2.id: 6.0},
+            },
+        )
+
+    def test_multi_year_persists_one_metric_value_per_year(self):
+        metric_c = self._yearly_metric(
+            "layer_c", {2023: {self.ou1: 10.0, self.ou2: 1.0}, 2024: {self.ou1: 20.0, self.ou2: 2.0}}
+        )
+
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=self._combine_graph(metric_c.id, self.metric_a.id, formula="a + b", name="Broadcast"),
+            org_unit_ids=self.org_unit_ids,
+        )
+
+        rows = {(mv.org_unit_id, mv.year): mv.value for mv in MetricValue.objects.filter(metric_type=metric_type)}
+        self.assertEqual(
+            rows,
+            {
+                (self.ou1.id, 2023): 12.0,
+                (self.ou2.id, 2023): 5.0,
+                (self.ou1.id, 2024): 22.0,
+                (self.ou2.id, 2024): 6.0,
+            },
+        )
+
+    def test_multi_year_shares_one_legend_across_years(self):
+        # The legend spans every year's values (min 5 across 2023, max 22 across 2024).
+        metric_c = self._yearly_metric(
+            "layer_c", {2023: {self.ou1: 10.0, self.ou2: 1.0}, 2024: {self.ou1: 20.0, self.ou2: 2.0}}
+        )
+
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=self._combine_graph(metric_c.id, self.metric_a.id, formula="a + b", legend_type="linear"),
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.LINEAR)
+        # Domain is the global [min, max] across all years: 5.0 (ou2, 2023) .. 22.0 (ou1, 2024).
+        self.assertEqual(metric_type.legend_config["domain"], [5.0, 22.0])
+
+    def test_preview_returns_year_per_value_and_years_list(self):
+        metric_c = self._yearly_metric(
+            "layer_c", {2023: {self.ou1: 10.0, self.ou2: 1.0}, 2024: {self.ou1: 20.0, self.ou2: 2.0}}
+        )
+
+        result = preview_composite_layer(
+            account=self.account,
+            graph=self._combine_graph(metric_c.id, self.metric_a.id, formula="a + b"),
+            org_unit_ids=self.org_unit_ids,
+        )
+
+        # Years are listed newest-first.
+        self.assertEqual(result["years"], [2024, 2023])
+        by_year_ou = {(mv["year"], mv["org_unit"]): mv["value"] for mv in result["metric_values"]}
+        self.assertEqual(by_year_ou[(2023, self.ou1.id)], 12.0)
+        self.assertEqual(by_year_ou[(2024, self.ou1.id)], 22.0)
+
+    def test_preview_timeless_graph_has_empty_years_list(self):
+        # An all-timeless graph produces a single year=None layer and no year entries.
+        result = preview_composite_layer(
+            account=self.account,
+            graph=self._multiply_graph(),
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(result["years"], [])
+        self.assertTrue(all(mv["year"] is None for mv in result["metric_values"]))
+
+    def _classify_graph(self, name="Risk band"):
+        # metric_a: ou1=2, ou2=4  ->  < 3 = LOW, else HIGH
+        return {
+            "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "cls", "portName": "a"}]),
+            "cls": _classify_node(
+                "cls",
+                rules=[{"op": "<", "value": 3, "label": "LOW"}],
+                default="HIGH",
+                input_sources={"a": [{"nodeId": "layer1", "portName": "values"}]},
+                output_targets=[{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", name, [{"nodeId": "cls", "portName": "result"}]),
+        }
+
+    def test_classify_maps_input_to_categories(self):
+        _, values = CompositeGraphEvaluator(self.account, self._classify_graph(), self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: "LOW", self.ou2.id: "HIGH"}})
+
+    def test_classify_persists_as_ordinal_string_values(self):
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=self._classify_graph(name="Bands"),
+            org_unit_ids=self.org_unit_ids,
+        )
+
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.ORDINAL)
+        # Legend domain keeps the declared rule order (rules first, then the default).
+        self.assertEqual(metric_type.legend_config["domain"], ["LOW", "HIGH"])
+        self.assertEqual(len(metric_type.legend_config["range"]), 2)
+
+        rows = {mv.org_unit_id: mv for mv in MetricValue.objects.filter(metric_type=metric_type)}
+        self.assertEqual(rows[self.ou1.id].string_value, "LOW")
+        self.assertIsNone(rows[self.ou1.id].value)
+        self.assertEqual(rows[self.ou2.id].string_value, "HIGH")
+
+    def _seasonality_layer(self):
+        seasonality = MetricType.objects.create(
+            account=self.account,
+            name="Seasonality",
+            code="seasonality",
+            legend_type=MetricType.LegendType.ORDINAL,
+            legend_config={"domain": ["Peak", "Low"], "range": ["#111111", "#222222"]},
+        )
+        MetricValue.objects.create(
+            metric_type=seasonality, org_unit=self.ou1, year=None, value=None, string_value="Peak"
+        )
+        MetricValue.objects.create(
+            metric_type=seasonality, org_unit=self.ou2, year=None, value=None, string_value="Low"
+        )
+        return seasonality
+
+    def test_categorical_data_layer_resolves_to_string_values(self):
+        # Categorical layers store their category in string_value with a null value.
+        seasonality = self._seasonality_layer()
+        graph = {
+            "layer1": _data_layer_node("layer1", seasonality.id, [{"nodeId": "out", "portName": "layer"}]),
+            "out": _output_node("out", "Seasons", [{"nodeId": "layer1", "portName": "values"}]),
+        }
+        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: "Peak", self.ou2.id: "Low"}})
+
+    def test_categorical_data_layer_persists_ordinal_keeping_source_order(self):
+        seasonality = self._seasonality_layer()
+        graph = {
+            "layer1": _data_layer_node("layer1", seasonality.id, [{"nodeId": "out", "portName": "layer"}]),
+            "out": _output_node("out", "Seasons", [{"nodeId": "layer1", "portName": "values"}]),
+        }
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=graph,
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.ORDINAL)
+        # The source layer's own category order is preserved (not sorted alphabetically).
+        self.assertEqual(metric_type.legend_config["domain"], ["Peak", "Low"])
+
+    def test_reference_legend_copies_ordinal_base_layer_colours(self):
+        seasonality = self._seasonality_layer()
+        graph = {
+            "layer1": _data_layer_node("layer1", seasonality.id, [{"nodeId": "out", "portName": "layer"}]),
+            "out": _output_node(
+                "out",
+                "Seasons",
+                [{"nodeId": "layer1", "portName": "values"}],
+                legend_type="reference",
+                reference_metric_type_id=seasonality.id,
+            ),
+        }
+        metric_type = run_and_persist_composite_layer(
+            account=self.account,
+            graph=graph,
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.ORDINAL)
+        # Exact colours are copied from the referenced ordinal layer, not rebuilt with defaults.
+        self.assertEqual(metric_type.legend_config, seasonality.legend_config)
+
+    def test_arithmetic_on_string_input_raises(self):
+        # A categorical layer may now feed a formula, but doing arithmetic on it (e.g. `a + 1` on
+        # "LOW"/"HIGH") is a type error, surfaced as a CompositeGraphError rather than silent junk.
+        graph = {
+            "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "cls", "portName": "a"}]),
+            "cls": _classify_node(
+                "cls",
+                rules=[{"op": "<", "value": 3, "label": "LOW"}],
+                default="HIGH",
+                input_sources={"a": [{"nodeId": "layer1", "portName": "values"}]},
+                output_targets=[{"nodeId": "formula1", "portName": "a"}],
+            ),
+            "formula1": _formula_node(
+                "formula1",
+                "a + 1",
+                {"a": [{"nodeId": "cls", "portName": "result"}]},
+                [{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", "Bad", [{"nodeId": "formula1", "portName": "result"}]),
+        }
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+
+    def test_classify_without_mappings_raises(self):
+        graph = {
+            "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "cls", "portName": "a"}]),
+            "cls": _classify_node(
+                "cls",
+                rules=[],
+                default="",
+                input_sources={"a": [{"nodeId": "layer1", "portName": "values"}]},
+                output_targets=[{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", "Empty", [{"nodeId": "cls", "portName": "result"}]),
+        }
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+
+    def test_missing_output_node_raises(self):
+        graph = {
+            "layer1": _data_layer_node("layer1", self.metric_a.id, []),
+        }
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+
+    def test_cycle_is_detected(self):
+        graph = {
+            "formula1": _formula_node(
+                "formula1",
+                "a",
+                {"a": [{"nodeId": "formula2", "portName": "result"}]},
+                [{"nodeId": "formula2", "portName": "a"}],
+            ),
+            "formula2": _formula_node(
+                "formula2",
+                "a",
+                {"a": [{"nodeId": "formula1", "portName": "result"}]},
+                [{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", "Cyclic", [{"nodeId": "formula2", "portName": "result"}]),
+        }
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+
+    def test_formula_referencing_unconnected_input_raises(self):
+        graph = {
+            "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "formula1", "portName": "a"}]),
+            "formula1": _formula_node(
+                "formula1",
+                "a * b",  # b is not connected
+                {"a": [{"nodeId": "layer1", "portName": "values"}]},
+                [{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", "Bad", [{"nodeId": "formula1", "portName": "result"}]),
+        }
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()

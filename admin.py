@@ -20,6 +20,7 @@ from plugins.snt_malaria.management.commands.load_impact_org_unit_mappings impor
 from .models import (
     Budget,
     BudgetSettings,
+    CompositeLayer,
     CostUnitType,
     Donor,
     Grant,
@@ -317,3 +318,13 @@ class CostUnitTypeAdmin(admin.ModelAdmin):
     list_display = ("id", "account", "name")
     search_fields = ("account__name", "name")
     ordering = ("account__name", "name")
+
+
+@admin.register(CompositeLayer)
+class CompositeLayerAdmin(admin.ModelAdmin):
+    formfield_overrides = {models.JSONField: {"widget": IasoJSONEditorWidget}}
+    list_display = ("id", "account", "name", "metric_type", "created_by", "created_at", "updated_at")
+    search_fields = ("account__name", "name")
+    list_filter = ("account",)
+    ordering = ("-updated_at",)
+    raw_id_fields = ("metric_type",)
