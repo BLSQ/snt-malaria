@@ -29,6 +29,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.createLayer',
         defaultMessage: 'Create layer',
     },
+    createCompositeLayer: {
+        id: 'iaso.snt_malaria.settings.dataLayers.createCompositeLayer',
+        defaultMessage: 'New composite layer',
+    },
     deleteLayer: {
         id: 'iaso.snt_malaria.settings.dataLayers.deleteLayer',
         defaultMessage: 'Delete Layer',
@@ -44,6 +48,14 @@ export const MESSAGES = defineMessages({
     editLayer: {
         id: 'iaso.snt_malaria.settings.dataLayers.editLayer',
         defaultMessage: 'Edit Layer',
+    },
+    editCompositeLayer: {
+        id: 'iaso.snt_malaria.settings.dataLayers.editCompositeLayer',
+        defaultMessage: 'Edit composite layer',
+    },
+    compositeLayer: {
+        id: 'iaso.snt_malaria.settings.dataLayers.compositeLayer',
+        defaultMessage: 'Composite layer',
     },
     addToComparison: {
         id: 'ias.snt_malaria.settings.dataLayers.addToComparison',
@@ -178,6 +190,6 @@ export const MESSAGES = defineMessages({
     importCSVYearCaption: {
         id: 'iaso.snt_malaria.settings.dataLayers.importCSVYearCaption',
         defaultMessage:
-            'The year for which the metric values will be imported.',
+            'The year for which the metric values will be imported. Only applies to layers with population metrics.',
     },
 });

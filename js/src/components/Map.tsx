@@ -108,6 +108,10 @@ type Props = {
     border?: boolean;
     /** When set, overrides the border color of selected org units (e.g. rule color perimeter). */
     selectedBorderColor?: string;
+    /** When true, hides the zoom / reset-zoom controls (e.g. for a static thumbnail preview). */
+    hideControls?: boolean;
+    /** When true, disables all user interaction (drag, zoom, keyboard) for a static thumbnail. */
+    disableInteractions?: boolean;
 };
 export const Map: FC<Props> = ({
     id,
@@ -122,6 +126,8 @@ export const Map: FC<Props> = ({
     border = false,
     selectedBorderColor,
     RenderTooltip,
+    hideControls = false,
+    disableInteractions = false,
 }) => {
     const [currentTile] = useState<Tile>(tiles.osm);
 
@@ -190,8 +196,11 @@ export const Map: FC<Props> = ({
                     height: '100%',
                     width: '100%',
                 }}
-                doubleClickZoom
+                doubleClickZoom={!disableInteractions}
                 scrollWheelZoom={false}
+                dragging={!disableInteractions}
+                touchZoom={!disableInteractions}
+                boxZoom={!disableInteractions}
                 maxZoom={currentTile.maxZoom}
                 center={[0, 0]}
                 keyboard={false}
@@ -207,11 +216,15 @@ export const Map: FC<Props> = ({
                     boundsOptions={boundsOptions}
                 />
                 <FitBounds bounds={bounds} boundsOptions={boundsOptions} />
-                <ZoomControl position="bottomright" />
-                <ResetZoomControl
-                    bounds={bounds}
-                    boundsOptions={boundsOptions}
-                />
+                {!hideControls && (
+                    <>
+                        <ZoomControl position="bottomright" />
+                        <ResetZoomControl
+                            bounds={bounds}
+                            boundsOptions={boundsOptions}
+                        />
+                    </>
+                )}
                 <Pane name="root">
                     {pristineOrgUnits?.map(orgUnit => {
                         const orgUnitMapMisc = getOrgUnitMapMisc(orgUnit.id);
