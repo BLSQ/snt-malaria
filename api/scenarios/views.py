@@ -75,15 +75,36 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         serializer.validated_data["account"] = self.request.user.iaso_profile.account
         serializer.save()
 
+    @transaction.atomic
     def perform_update(self, serializer):
+        previous_reference_year = serializer.instance.reference_year
+
         try:
-            serializer.save()
+            scenario = serializer.save()
         except IntegrityError as e:
             if "duplicate" in str(e).lower() and "(account_id, name)" in str(e).lower():
                 raise serializers.ValidationError(_("Scenario with this name already exists."))
             if "snt_malaria_scenario_start_year_lte_end_year" in str(e).lower():
                 raise serializers.ValidationError(_("Start year should be lower or equal end year."))
             raise serializers.ValidationError(str(e))
+
+        if scenario.reference_year != previous_reference_year:
+            self._refresh_rules_for_reference_year_change(scenario)
+
+    def _refresh_rules_for_reference_year_change(self, scenario):
+        """Recompute org_units_matched for every rule of the scenario using the new reference_year,
+        then refresh assignments and budget once for the whole scenario rather than per rule."""
+        rules = list(scenario.rules.all())
+        for rule in rules:
+            rule.org_units_matched = ScenarioRule.resolve_matched_org_units(
+                scenario.account, rule.matching_criteria, reference_year=scenario.reference_year
+            )
+        ScenarioRule.objects.bulk_update(rules, ["org_units_matched"])
+
+        scenario.refresh_assignments(self.request.user)
+
+        budget_service = BudgetCalculationService(scenario)
+        budget_service.calculate_and_save_all_years(self.request.user)
 
     # Custom action to duplicate a scenario
     @transaction.atomic

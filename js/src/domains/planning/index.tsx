@@ -177,11 +177,15 @@ export const Planning: FC = () => {
                 setMatchedOrgUnitIds([]);
                 return;
             }
-            return previewScenarioRule(rule, {
-                onSuccess: data => setMatchedOrgUnitIds(data as number[]),
-            });
+
+            return previewScenarioRule(
+                { ...rule, reference_year: scenario?.reference_year },
+                {
+                    onSuccess: data => setMatchedOrgUnitIds(data as number[]),
+                },
+            );
         },
-        [previewScenarioRule],
+        [previewScenarioRule, scenario],
     );
 
     const hasNoRules = useMemo(

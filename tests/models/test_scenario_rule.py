@@ -621,3 +621,83 @@ class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):
         self.assertCountEqual(criteria_result, expected)
         self.assertNotIn(self.region.id, match_all_result)
         self.assertNotIn(self.region.id, criteria_result)
+
+
+class ResolveMatchedOrgUnitsReferenceYearTestCase(SNTMalariaTestCase):
+    """Tests that resolve_matched_org_units filters MetricValues by reference_year, including
+    the per-metric-type fallback to timeless (year=None) values when no data exists for that year."""
+
+    auto_create_account = False
+
+    def setUp(self):
+        super().setUp()
+        data_source = DataSource.objects.create(name="source")
+        source_version = SourceVersion.objects.create(data_source=data_source, number=1)
+        self.account = Account.objects.create(name="account", default_version=source_version)
+        self.user = self.create_user_with_profile(username="user", account=self.account)
+
+        self.org_unit_1 = OrgUnit.objects.create(
+            name="OU 1",
+            version=source_version,
+            validation_status=OrgUnit.VALIDATION_VALID,
+            location=Point(1.0, 2.0, 0.0),
+        )
+        self.org_unit_2 = OrgUnit.objects.create(
+            name="OU 2",
+            version=source_version,
+            validation_status=OrgUnit.VALIDATION_VALID,
+            location=Point(3.0, 4.0, 0.0),
+        )
+
+        self.metric_type = MetricType.objects.create(
+            account=self.account, name="Population", code="POP", units="people"
+        )
+
+        # org_unit_1 only has a dated value (for 2025), org_unit_2 only has a timeless value.
+        MetricValue.objects.create(metric_type=self.metric_type, org_unit=self.org_unit_1, value=100, year=2025)
+        MetricValue.objects.create(metric_type=self.metric_type, org_unit=self.org_unit_2, value=80, year=None)
+
+        self.criteria = {"and": [{">=": [{"var": self.metric_type.id}, 50]}]}
+
+    def test_reference_year_uses_dated_value_when_available(self):
+        result = ScenarioRule.resolve_matched_org_units(self.account, self.criteria, reference_year=2025)
+        self.assertCountEqual(result, [self.org_unit_1.id])
+
+    def test_reference_year_falls_back_to_timeless_value_when_no_data(self):
+        # No MetricValue exists for year=2030, so it should fall back to year=None.
+        result = ScenarioRule.resolve_matched_org_units(self.account, self.criteria, reference_year=2030)
+        self.assertCountEqual(result, [self.org_unit_2.id])
+
+    def test_no_reference_year_does_not_filter_by_year(self):
+        result = ScenarioRule.resolve_matched_org_units(self.account, self.criteria, reference_year=None)
+        self.assertCountEqual(result, [self.org_unit_1.id, self.org_unit_2.id])
+
+    def test_reference_year_fallback_is_resolved_independently_per_metric_type(self):
+        """When matching_criteria references multiple metric types, each one is checked for
+        reference_year data independently, and only falls back to timeless values on its own."""
+        other_metric_type = MetricType.objects.create(account=self.account, name="ITN", code="ITN", units="ratio")
+        # No dated value exists at all for this metric type, only a timeless one.
+        MetricValue.objects.create(metric_type=other_metric_type, org_unit=self.org_unit_2, value=5, year=None)
+
+        criteria = {
+            "and": [
+                {">=": [{"var": self.metric_type.id}, 50]},
+                {">=": [{"var": other_metric_type.id}, 3]},
+            ]
+        }
+
+        result = ScenarioRule.resolve_matched_org_units(self.account, criteria, reference_year=2025)
+
+        # POP has data for 2025, so it's filtered to year=2025 (only org_unit_1 qualifies).
+        # ITN has no data for 2025 at all, so it falls back to year=None (only org_unit_2 qualifies).
+        # No org unit satisfies both conditions, so the intersection is empty.
+        self.assertEqual(result, [])
+
+    def test_match_all_ignores_reference_year(self):
+        """matching_criteria={"all": True} returns before any reference_year filtering is applied."""
+        result = ScenarioRule.resolve_matched_org_units(self.account, {"all": True}, reference_year=2030)
+        self.assertCountEqual(result, [self.org_unit_1.id, self.org_unit_2.id])
+
+    def test_none_criteria_with_reference_year_returns_empty(self):
+        result = ScenarioRule.resolve_matched_org_units(self.account, None, reference_year=2025)
+        self.assertEqual(result, [])

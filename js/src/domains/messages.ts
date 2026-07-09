@@ -532,6 +532,15 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'End year must be greater than or equal to start year ({year})',
     },
+    referenceYear: {
+        id: 'iaso.snt_malaria.scenario.referenceYear',
+        defaultMessage: 'Reference year',
+    },
+    referenceYearHelp: {
+        id: 'iaso.snt_malaria.scenario.referenceYearHelp',
+        defaultMessage:
+            'The year used to evaluate rule matching criteria. When metric data exists for this year it takes priority; otherwise timeless (year-less) values are used as a fallback.',
+    },
     modalDeleteScenarioConfirm: {
         id: 'iaso.snt_malaria.label.delete.confirm',
         defaultMessage: 'Do you really want to delete this scenario?',

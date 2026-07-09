@@ -74,14 +74,6 @@ export const DataLayerMapWrapper: FC<Props> = ({
     useEffect(() => {
         if (!metricValues) return;
 
-        if (metricType?.metric_kind !== 'population') {
-            // For non population metrics, we don't want to split by year as they are not time-sensitive
-            setMetricValuesPerYear({ 0: metricValues });
-            setYearOptions([]);
-            setYear('0');
-            return;
-        }
-
         const valuesByYear: Record<number, MetricValue[]> = {};
         const years = new Set<number>();
         for (const metricValue of metricValues) {
@@ -93,9 +85,10 @@ export const DataLayerMapWrapper: FC<Props> = ({
             valuesByYear[metricYear].push(metricValue);
         }
         setMetricValuesPerYear(valuesByYear);
-        setYear([...years].sort((a, b) => b - a)[0]?.toString());
-        setYearOptions([...years].sort((a, b) => b - a));
-    }, [metricValues, metricType]);
+        const sortedYears = [...years].filter(y => y > 0).sort((a, b) => b - a);
+        setYearOptions(sortedYears);
+        setYear(sortedYears.length > 0 ? sortedYears[0].toString() : '0');
+    }, [metricValues]);
 
     if (loadingMetricValues) {
         return <LoadingSpinner />;
@@ -127,7 +120,7 @@ export const DataLayerMapWrapper: FC<Props> = ({
                             alignItems="end"
                             sx={{ flexShrink: 0 }}
                         >
-                            {metricType?.metric_kind === 'population' && (
+                            {yearOptions.length > 0 && (
                                 <Select
                                     value={year}
                                     onChange={e => setYear(e.target.value)}

@@ -5,6 +5,7 @@ import { MetricTypeCriterion } from '../types/scenarioRule';
 import { matchingCriteriaToJsonLogic } from '../utils/jsonLogic';
 
 type Payload = {
+    reference_year?: number;
     is_match_all?: boolean;
     matching_criteria: MetricTypeCriterion[];
     org_units_excluded?: string; // comma separated list of org unit ids
@@ -38,6 +39,7 @@ export const usePreviewScenarioRule = (): UseMutationResult =>
                 matching_criteria: matchingCriteria,
                 org_units_excluded,
                 org_units_included,
+                reference_year: body.reference_year,
             });
         },
         showSuccessSnackBar: false,

@@ -449,6 +449,89 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result["start_year"], ["Start year should be lower or equal end year."])
 
+    def test_scenario_update_reference_year_change_refreshes_matched_org_units_and_assignments(self):
+        """Changing reference_year on a scenario should recompute org_units_matched for all of its
+        rules (using the new reference_year) and refresh the resulting assignments accordingly."""
+        metric_type = MetricType.objects.create(account=self.account, name="ITN", code="ITN", units="ratio")
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.district1, value=100, year=2020)
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.district2, value=100, year=2021)
+
+        rule = ScenarioRule.objects.create(
+            name="Reference year rule",
+            priority=10,
+            matching_criteria={"and": [{">=": [{"var": metric_type.id}, 50]}]},
+            created_by=self.user_with_full_perm,
+            scenario=self.scenario,
+            org_units_matched=[],  # stale, would be recomputed once reference_year is set
+        )
+        rule.interventions.add(self.intervention_chemo_iptp)
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        payload = {
+            "id": self.scenario.id,
+            "name": self.scenario.name,
+            "start_year": self.scenario.start_year,
+            "end_year": self.scenario.end_year,
+            "reference_year": 2020,
+        }
+        response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        rule.refresh_from_db()
+        self.assertEqual(rule.org_units_matched, [self.district1.id])
+        self.assertTrue(
+            rule.intervention_assignments.filter(
+                org_unit=self.district1, intervention=self.intervention_chemo_iptp
+            ).exists()
+        )
+
+        # Changing reference_year again should recompute matched org units once more.
+        payload["reference_year"] = 2021
+        response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        rule.refresh_from_db()
+        self.assertEqual(rule.org_units_matched, [self.district2.id])
+        self.assertFalse(
+            rule.intervention_assignments.filter(
+                org_unit=self.district1, intervention=self.intervention_chemo_iptp
+            ).exists()
+        )
+        self.assertTrue(
+            rule.intervention_assignments.filter(
+                org_unit=self.district2, intervention=self.intervention_chemo_iptp
+            ).exists()
+        )
+
+    def test_scenario_update_without_reference_year_change_does_not_recompute_matched_org_units(self):
+        """Updating fields other than reference_year should not touch org_units_matched, even for
+        rules whose matching_criteria would now resolve differently."""
+        metric_type = MetricType.objects.create(account=self.account, name="ITN", code="ITN", units="ratio")
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.district1, value=100, year=2020)
+
+        rule = ScenarioRule.objects.create(
+            name="Untouched rule",
+            priority=10,
+            matching_criteria={"and": [{">=": [{"var": metric_type.id}, 50]}]},
+            created_by=self.user_with_full_perm,
+            scenario=self.scenario,
+            org_units_matched=[],  # would resolve to [self.district1.id] if recomputed
+        )
+        rule.interventions.add(self.intervention_chemo_iptp)
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        payload = {
+            "id": self.scenario.id,
+            "name": "Renamed scenario",
+            "start_year": self.scenario.start_year,
+            "end_year": self.scenario.end_year,
+        }
+        response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        rule.refresh_from_db()
+        self.assertEqual(rule.org_units_matched, [])
+
     def test_scenario_duplicate_with_full_perm(self):
         # Making sure that the right assignments are in place before duplication
         self.scenario.refresh_assignments(self.user_with_full_perm)

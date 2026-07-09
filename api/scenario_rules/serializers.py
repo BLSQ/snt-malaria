@@ -77,6 +77,7 @@ class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
 
 class ScenarioRulePreviewSerializer(serializers.ModelSerializer):
     matching_criteria = serializers.JSONField(required=False, allow_null=True, default=None)
+    reference_year = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = ScenarioRule
@@ -84,6 +85,7 @@ class ScenarioRulePreviewSerializer(serializers.ModelSerializer):
             "matching_criteria",
             "org_units_excluded",
             "org_units_included",
+            "reference_year",
         ]
 
 

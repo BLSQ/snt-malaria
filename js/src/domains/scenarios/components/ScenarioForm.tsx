@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { useFormikContext } from 'formik';
@@ -38,9 +38,25 @@ const ScenarioForm: React.FC = () => {
             setFieldTouched('end_year', true);
             setFieldValue('start_year', yearRange[0]);
             setFieldValue('end_year', yearRange[1]);
+            // Keep reference_year within the new range
+            const clamped = Math.min(
+                Math.max(values.reference_year, yearRange[0]),
+                yearRange[1],
+            );
+            if (clamped !== values.reference_year) {
+                setFieldValue('reference_year', clamped);
+            }
         },
-        [setFieldTouched, setFieldValue],
+        [setFieldTouched, setFieldValue, values.reference_year],
     );
+
+    const referenceYearOptions = useMemo(() => {
+        const options = [];
+        for (let y = values.start_year; y <= values.end_year; y++) {
+            options.push({ label: String(y), value: y });
+        }
+        return options;
+    }, [values.start_year, values.end_year]);
 
     const yearRangeValue: [number, number] = [
         values.start_year ?? SCENARIO_YEAR_RANGE.min,
@@ -91,6 +107,17 @@ const ScenarioForm: React.FC = () => {
                     </Typography>
                 ))}
             </Box>
+            <InputComponent
+                type="select"
+                keyValue="reference_year"
+                onChange={setFieldValueAndState}
+                value={values.reference_year}
+                label={MESSAGES.referenceYear}
+                options={referenceYearOptions}
+                helperText={formatMessage(MESSAGES.referenceYearHelp)}
+                errors={getErrors('reference_year')}
+                withMarginTop={false}
+            />
         </Box>
     );
 };
