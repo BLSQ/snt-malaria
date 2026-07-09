@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("snt_malaria", "0052_scenario_reference_year"),
+        ("snt_malaria", "0051_costunittype_is_proportional"),
     ]
 
     operations = [

@@ -3,7 +3,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("snt_malaria", "0051_costunittype_is_proportional"),
+        ("snt_malaria", "0052_remove_interventioncostbreakdownline_cost_driver"),
     ]
 
     operations = [
