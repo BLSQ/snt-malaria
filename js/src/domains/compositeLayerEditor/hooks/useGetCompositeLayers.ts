@@ -1,7 +1,10 @@
 import { UseQueryResult } from 'react-query';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
-import { CompositeLayer, CompositeLayerListItem } from '../types/compositeLayer';
+import {
+    CompositeLayer,
+    CompositeLayerListItem,
+} from '../types/compositeLayer';
 
 export const useGetCompositeLayers = (
     enabled = true,

@@ -18,7 +18,10 @@ export const useSaveCompositeLayer = (): UseMutationResult<
         // Invalidate the data layers list so the composite appears/updates immediately.
         invalidateQueryKey: ['metricTypes'],
         options: {
-            onSuccess: (_data: CompositeLayer, { id }: SaveCompositeLayerPayload) => {
+            onSuccess: (
+                _data: CompositeLayer,
+                { id }: SaveCompositeLayerPayload,
+            ) => {
                 // Refresh values shown on the map and the composite lookup map.
                 queryClient.invalidateQueries(['metricValues']);
                 queryClient.invalidateQueries(['compositeLayers']);

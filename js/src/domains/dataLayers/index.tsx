@@ -85,9 +85,8 @@ export const DataLayers: FC = () => {
         number | undefined
     >(undefined);
 
-    const { data: compositeLayers } = useGetCompositeLayers(
-        showCompositeLayers,
-    );
+    const { data: compositeLayers } =
+        useGetCompositeLayers(showCompositeLayers);
     const compositeLayerIdByMetricType = useMemo(() => {
         const map = new Map<number, number>();
         (compositeLayers ?? []).forEach(layer => {
@@ -150,17 +149,14 @@ export const DataLayers: FC = () => {
     }, []);
 
     // After saving, close the editor and show the resulting composite layer on the map.
-    const onCompositeSaved = useCallback(
-        (metricType?: MetricType) => {
-            setIsCompositeEditorOpen(false);
-            setEditingCompositeLayerId(undefined);
-            setSidebarCollapsed(false);
-            if (metricType) {
-                setDisplayedMetricType(metricType);
-            }
-        },
-        [],
-    );
+    const onCompositeSaved = useCallback((metricType?: MetricType) => {
+        setIsCompositeEditorOpen(false);
+        setEditingCompositeLayerId(undefined);
+        setSidebarCollapsed(false);
+        if (metricType) {
+            setDisplayedMetricType(metricType);
+        }
+    }, []);
 
     // Two-step spotlight when the account has no layers yet
     const hasNoLayers = useMemo(

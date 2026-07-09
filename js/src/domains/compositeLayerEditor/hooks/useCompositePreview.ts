@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../messages';
-import { CompositePreview, CompositePreviewState } from '../types/compositeLayer';
+import {
+    CompositePreview,
+    CompositePreviewState,
+} from '../types/compositeLayer';
 import { FlumeGraph } from '../types/flumeGraph';
 import { isOutputConnected } from '../utils/graph';
 import { usePreviewCompositeLayer } from './usePreviewCompositeLayer';

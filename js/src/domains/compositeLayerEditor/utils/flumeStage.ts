@@ -19,7 +19,9 @@ export const clamp = (value: number, min: number, max: number): number =>
     Math.min(Math.max(value, min), max);
 
 /** The Flume stage element inside the given canvas wrapper, if mounted. */
-export const getStageElement = (canvas: HTMLElement | null): HTMLElement | null =>
+export const getStageElement = (
+    canvas: HTMLElement | null,
+): HTMLElement | null =>
     canvas?.querySelector<HTMLElement>('[data-flume-component="stage"]') ??
     null;
 
@@ -29,7 +31,9 @@ export const readStageTransform = (stage: HTMLElement): StageTransform => {
     const translateEl = stage.querySelector<HTMLElement>(
         'div[style*="translate("]',
     );
-    const scaleMatch = /scale\(([-0-9.]+)\)/.exec(scaleEl?.style.transform ?? '');
+    const scaleMatch = /scale\(([-0-9.]+)\)/.exec(
+        scaleEl?.style.transform ?? '',
+    );
     const translateMatch = /translate\(([-0-9.]+)px,\s*([-0-9.]+)px\)/.exec(
         translateEl?.style.transform ?? '',
     );

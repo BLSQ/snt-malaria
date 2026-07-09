@@ -36,8 +36,17 @@ const defaultOrgUnitStyle = {
     color: mapTheme.shapeColor,
 };
 
+// Chevron caret for the native <select>, drawn as an inline SVG data URI.
+const SELECT_CARET_SVG =
+    'url("data:image/svg+xml;charset=utf-8,' +
+    "%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E" +
+    "%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E\")";
+
 /** Minimal legend shape needed to colour the choropleth (a real MetricType satisfies it too). */
-export type LegendConfigLike = Pick<MetricType, 'legend_type' | 'legend_config'> &
+export type LegendConfigLike = Pick<
+    MetricType,
+    'legend_type' | 'legend_config'
+> &
     Partial<Pick<MetricType, 'units' | 'unit_symbol'>>;
 
 const styles = {
@@ -83,8 +92,7 @@ const styles = {
             height: 24,
             boxSizing: 'border-box',
             backgroundColor: theme => theme.palette.background.paper,
-            backgroundImage:
-                "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E\")",
+            backgroundImage: SELECT_CARET_SVG,
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'right 6px center',
             color: theme => theme.palette.text.primary,
@@ -260,7 +268,7 @@ export const CollapsibleMapPreview: FC<Props> = ({
                 onMouseDown={e => e.stopPropagation()}
             >
                 <MapOutlinedIcon sx={styles.toggleIcon} />
-                {disabled ? disabledLabel ?? label : label}
+                {disabled ? (disabledLabel ?? label) : label}
                 <ExpandMoreIcon
                     sx={[styles.chevron, expanded && styles.chevronOpen]}
                 />

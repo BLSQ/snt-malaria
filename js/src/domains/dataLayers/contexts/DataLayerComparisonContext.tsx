@@ -1,9 +1,4 @@
-import React, {
-    createContext,
-    useCallback,
-    useContext,
-    useState,
-} from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { MetricType } from '../types/metrics';
 

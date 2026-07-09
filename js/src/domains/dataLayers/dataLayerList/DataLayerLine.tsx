@@ -19,8 +19,8 @@ import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
 import { SxStyles } from 'Iaso/types/general';
 import * as CorePermission from 'Iaso/utils/permissions';
-import { DATA_LAYER_DND_MIME } from '../dragAndDrop';
 import { useDataLayerComparisonContext } from '../contexts/DataLayerComparisonContext';
+import { DATA_LAYER_DND_MIME } from '../dragAndDrop';
 import { MESSAGES } from '../messages';
 import { MetricType } from '../types/metrics';
 
@@ -170,25 +170,19 @@ export const DataLayerLine: FC<Props> = ({
             onClick={editing ? undefined : onClick}
         >
             <Box sx={styles.metricTypeDetails}>
-                <Box
-                    sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}
-                >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                     {isComposite && (
-                        <Tooltip
-                            title={formatMessage(MESSAGES.compositeLayer)}
-                        >
-                            <AccountTreeIcon
-                                fontSize="small"
-                                color="action"
-                            />
+                        <Tooltip title={formatMessage(MESSAGES.compositeLayer)}>
+                            <AccountTreeIcon fontSize="small" color="action" />
                         </Tooltip>
                     )}
-                    <Typography variant="body2">
-                        {metricType.name}
-                    </Typography>
+                    <Typography variant="body2">{metricType.name}</Typography>
                 </Box>
             </Box>
-            <Box className="action-box" sx={editing ? { display: 'none' } : undefined}>
+            <Box
+                className="action-box"
+                sx={editing ? { display: 'none' } : undefined}
+            >
                 {maxMetricsCountReached ? undefined : (
                     <IconButton
                         aria-label="add-to-comparison"
@@ -224,9 +218,7 @@ export const DataLayerLine: FC<Props> = ({
                                         onEditComposite(compositeLayerId)
                                     }
                                 >
-                                    {formatMessage(
-                                        MESSAGES.editCompositeLayer,
-                                    )}
+                                    {formatMessage(MESSAGES.editCompositeLayer)}
                                 </MenuItem>
                             )}
                             <DeleteModal

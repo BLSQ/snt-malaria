@@ -32,7 +32,11 @@ export const getConnectedDataLayerIds = (graph: FlumeGraph): number[] => {
         if (node.type === 'dataLayer') {
             const raw = node.inputData?.metricType?.metricTypeId;
             const id = raw === '' || raw == null ? undefined : Number(raw);
-            if (id !== undefined && !Number.isNaN(id) && !ordered.includes(id)) {
+            if (
+                id !== undefined &&
+                !Number.isNaN(id) &&
+                !ordered.includes(id)
+            ) {
                 ordered.push(id);
             }
         }

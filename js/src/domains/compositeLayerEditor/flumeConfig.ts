@@ -40,7 +40,9 @@ const orderOptionsByConnected = (
     connectedIds: number[] = [],
 ): MetricOption[] => {
     if (!connectedIds.length) return options;
-    const optionByValue = new Map(options.map(option => [option.value, option]));
+    const optionByValue = new Map(
+        options.map(option => [option.value, option]),
+    );
     const connectedSet = new Set(connectedIds);
     const connected = connectedIds
         .map(id => optionByValue.get(id))

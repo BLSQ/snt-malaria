@@ -1,7 +1,21 @@
-import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Card, GlobalStyles, Theme, Typography, useTheme } from '@mui/material';
-import { NodeEditor, FlumeCommentMap } from 'flume';
+import React, {
+    FC,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
+import {
+    Box,
+    Card,
+    GlobalStyles,
+    Theme,
+    Typography,
+    useTheme,
+} from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { NodeEditor, FlumeCommentMap } from 'flume';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
 import { useGetMetricCategories } from '../dataLayers/hooks/useGetMetrics';
@@ -11,12 +25,12 @@ import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { CanvasControls } from './components/CanvasControls';
 import { EditorHeader } from './components/EditorHeader';
 import { NodeHeaderContent } from './components/NodeHeaderContent';
-import { flumeContextMenuStyles, flumeThemeSx } from './flumeTheme';
 import {
     CompositeEditorContext,
     createCompositeFlumeConfig,
     MetricOption,
 } from './flumeConfig';
+import { flumeContextMenuStyles, flumeThemeSx } from './flumeTheme';
 import { useCanvasDrop } from './hooks/useCanvasDrop';
 import { useCompositePreview } from './hooks/useCompositePreview';
 import { useGetCompositeLayer } from './hooks/useGetCompositeLayers';
@@ -260,7 +274,6 @@ export const CompositeLayerEditor: FC<Props> = ({
                     sx={[styles.canvas, flumeThemeSx]}
                     onDragOver={event => {
                         event.preventDefault();
-                        // eslint-disable-next-line no-param-reassign
                         event.dataTransfer.dropEffect = 'copy';
                     }}
                     onDrop={handleCanvasDrop}
