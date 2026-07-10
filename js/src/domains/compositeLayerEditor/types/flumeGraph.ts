@@ -15,7 +15,12 @@ export type FlumeNodeConnections = {
     outputs: Record<string, FlumeConnection[]>;
 };
 
-export type CompositeNodeType = 'dataLayer' | 'formula' | 'classify' | 'output';
+export type CompositeNodeType =
+    | 'dataLayer'
+    | 'formula'
+    | 'combine'
+    | 'classify'
+    | 'output';
 
 /**
  * Per-port control values. The keys are port names; the nested keys are control names. The two

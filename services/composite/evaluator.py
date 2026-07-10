@@ -8,6 +8,7 @@ The evaluator resolves it in dependency order (with cycle detection) and evaluat
 - ``formula``:   evaluates an infix expression per org unit over its connected inputs (``a``, ``b``, …)
                  using ``simpleeval``. A string result makes the output categorical (ordinal).
 - ``classify``:  maps a numeric input to category labels using ordered threshold rules.
+- ``combine``:   reduces any number of numeric inputs per org unit (mean/sum/min/max).
 - ``output``:    the single terminal node; its connected input is the resulting composite layer.
 
 Values are keyed by year internally as ``{year: {org_unit_id: value}}`` (``None`` = timeless).
@@ -49,6 +50,15 @@ FORMULA_FUNCTIONS = {
     "min": min,
     "max": max,
     "round": round,
+}
+
+# Reducers available to a ``combine`` node. All are symmetric (order-independent), which is what
+# makes a single dropdown safe: the unlabeled inputs a, b, c, … are interchangeable.
+COMBINE_OPERATIONS: Dict[str, Callable[[List[float]], float]] = {
+    "mean": lambda values: sum(values) / len(values),
+    "sum": sum,
+    "min": min,
+    "max": max,
 }
 
 
@@ -193,6 +203,8 @@ class CompositeGraphEvaluator:
             result = self._resolve_formula(node)
         elif node_type == "classify":
             result = self._resolve_classify(node)
+        elif node_type == "combine":
+            result = self._resolve_combine(node)
         else:
             raise CompositeGraphError(f"Node '{node_id}' has an unsupported type '{node_type}'.")
         self._visiting.discard(node_id)
@@ -352,6 +364,40 @@ class CompositeGraphEvaluator:
                         break
                 if label:
                     result.setdefault(year, {})[org_unit_id] = label
+        return result
+
+    def _resolve_combine(self, node: dict) -> ValuesByYear:
+        """Reduce any number of numeric inputs per org unit with a symmetric operation.
+
+        Inputs are year-aligned like a formula (intersection of yearly inputs, timeless inputs
+        broadcast), and only org units present in every connected input for a year are combined.
+        """
+        inputs: Dict[str, ValuesByYear] = {}
+        connected_ports = (node.get("connections") or {}).get("inputs") or {}
+        for port in connected_ports:
+            source = self._get_single_input_source(node, port)
+            if source is not None:
+                inputs[port] = self._resolve(source["nodeId"])
+
+        if not inputs:
+            raise CompositeGraphError("A combine node has no connected inputs.")
+
+        raw_operation = self._get_control_value(node, "operation", "operation") or "mean"
+        reducer = COMBINE_OPERATIONS.get(raw_operation)
+        if reducer is None:
+            raise CompositeGraphError(f"A combine node has an unknown operation '{raw_operation}'.")
+
+        _target_years, aligned = self._align_input_years(inputs)
+
+        result: ValuesByYear = {}
+        for year, per_port in aligned.items():
+            common_org_units = set.intersection(*[set(values.keys()) for values in per_port.values()])
+            for org_unit_id in common_org_units:
+                try:
+                    numbers = [float(per_port[port][org_unit_id]) for port in per_port]
+                except (TypeError, ValueError):
+                    raise CompositeGraphError("Combine can only be applied to numeric inputs.")
+                result.setdefault(year, {})[org_unit_id] = float(reducer(numbers))
         return result
 
     def _parse_classify_config(self, node: dict) -> Tuple[List[Tuple[Callable, float, str]], str]:

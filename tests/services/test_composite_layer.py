@@ -32,6 +32,20 @@ def _formula_node(node_id, formula, input_sources, output_targets):
     }
 
 
+def _combine_node(node_id, input_sources, output_targets, operation=None):
+    input_data = {}
+    if operation is not None:
+        input_data["operation"] = {"operation": operation}
+    return {
+        "id": node_id,
+        "type": "combine",
+        "x": 0,
+        "y": 0,
+        "inputData": input_data,
+        "connections": {"inputs": input_sources, "outputs": {"result": output_targets}},
+    }
+
+
 def _classify_node(node_id, rules, default, input_sources, output_targets):
     return {
         "id": node_id,
@@ -443,7 +457,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
                 MetricValue.objects.create(metric_type=metric, org_unit=org_unit, year=year, value=value)
         return metric
 
-    def _combine_graph(self, metric_id_a, metric_id_b, formula="a + b", name="Combined", legend_type=None):
+    def _two_layer_formula_graph(self, metric_id_a, metric_id_b, formula="a + b", name="Combined", legend_type=None):
         return {
             "layer1": _data_layer_node("layer1", metric_id_a, [{"nodeId": "formula1", "portName": "a"}]),
             "layer2": _data_layer_node("layer2", metric_id_b, [{"nodeId": "formula1", "portName": "b"}]),
@@ -469,7 +483,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         )
 
         _, values = CompositeGraphEvaluator(
-            self.account, self._combine_graph(metric_c.id, metric_d.id, formula="a + b"), self.org_unit_ids
+            self.account, self._two_layer_formula_graph(metric_c.id, metric_d.id, formula="a + b"), self.org_unit_ids
         ).run()
 
         # Overlap of {2023, 2024} and {2024, 2025} is {2024}.
@@ -483,7 +497,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         # metric_a is timeless (ou1=2, ou2=4 under year=None).
 
         _, values = CompositeGraphEvaluator(
-            self.account, self._combine_graph(metric_c.id, self.metric_a.id, formula="a + b"), self.org_unit_ids
+            self.account, self._two_layer_formula_graph(metric_c.id, self.metric_a.id, formula="a + b"), self.org_unit_ids
         ).run()
 
         self.assertEqual(
@@ -501,7 +515,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
         metric_type = run_and_persist_composite_layer(
             account=self.account,
-            graph=self._combine_graph(metric_c.id, self.metric_a.id, formula="a + b", name="Broadcast"),
+            graph=self._two_layer_formula_graph(metric_c.id, self.metric_a.id, formula="a + b", name="Broadcast"),
             org_unit_ids=self.org_unit_ids,
         )
 
@@ -524,7 +538,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
         metric_type = run_and_persist_composite_layer(
             account=self.account,
-            graph=self._combine_graph(metric_c.id, self.metric_a.id, formula="a + b", legend_type="linear"),
+            graph=self._two_layer_formula_graph(metric_c.id, self.metric_a.id, formula="a + b", legend_type="linear"),
             org_unit_ids=self.org_unit_ids,
         )
         self.assertEqual(metric_type.legend_type, MetricType.LegendType.LINEAR)
@@ -538,7 +552,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
         result = preview_composite_layer(
             account=self.account,
-            graph=self._combine_graph(metric_c.id, self.metric_a.id, formula="a + b"),
+            graph=self._two_layer_formula_graph(metric_c.id, self.metric_a.id, formula="a + b"),
             org_unit_ids=self.org_unit_ids,
         )
 
@@ -557,6 +571,111 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         )
         self.assertEqual(result["years"], [])
         self.assertTrue(all(mv["year"] is None for mv in result["metric_values"]))
+
+    def _combine_graph(self, operation=None, metric_ids=None, name="Combined score"):
+        metric_ids = metric_ids or [self.metric_a.id, self.metric_b.id]
+        graph = {}
+        input_sources = {}
+        for index, metric_id in enumerate(metric_ids):
+            port = chr(ord("a") + index)
+            node_id = f"layer{index + 1}"
+            graph[node_id] = _data_layer_node(node_id, metric_id, [{"nodeId": "comb", "portName": port}])
+            input_sources[port] = [{"nodeId": node_id, "portName": "values"}]
+        graph["comb"] = _combine_node(
+            "comb",
+            input_sources=input_sources,
+            output_targets=[{"nodeId": "out", "portName": "layer"}],
+            operation=operation,
+        )
+        graph["out"] = _output_node("out", name, [{"nodeId": "comb", "portName": "result"}])
+        return graph
+
+    # metric_a: ou1=2, ou2=4; metric_b: ou1=3, ou2=5.
+    def test_combine_mean(self):
+        _, values = CompositeGraphEvaluator(
+            self.account, self._combine_graph(operation="mean"), self.org_unit_ids
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.5, self.ou2.id: 4.5}})
+
+    def test_combine_defaults_to_mean(self):
+        _, values = CompositeGraphEvaluator(self.account, self._combine_graph(), self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.5, self.ou2.id: 4.5}})
+
+    def test_combine_sum(self):
+        _, values = CompositeGraphEvaluator(
+            self.account, self._combine_graph(operation="sum"), self.org_unit_ids
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: 5.0, self.ou2.id: 9.0}})
+
+    def test_combine_min(self):
+        _, values = CompositeGraphEvaluator(
+            self.account, self._combine_graph(operation="min"), self.org_unit_ids
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 4.0}})
+
+    def test_combine_max(self):
+        _, values = CompositeGraphEvaluator(
+            self.account, self._combine_graph(operation="max"), self.org_unit_ids
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: 3.0, self.ou2.id: 5.0}})
+
+    def test_combine_three_inputs(self):
+        metric_c = MetricType.objects.create(account=self.account, name="Layer C", code="layer_c")
+        MetricValue.objects.create(metric_type=metric_c, org_unit=self.ou1, year=None, value=10.0)
+        MetricValue.objects.create(metric_type=metric_c, org_unit=self.ou2, year=None, value=0.0)
+
+        _, values = CompositeGraphEvaluator(
+            self.account,
+            self._combine_graph(operation="mean", metric_ids=[self.metric_a.id, self.metric_b.id, metric_c.id]),
+            self.org_unit_ids,
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: 5.0, self.ou2.id: 3.0}})
+
+    def test_combine_single_input_is_identity(self):
+        _, values = CompositeGraphEvaluator(
+            self.account, self._combine_graph(operation="mean", metric_ids=[self.metric_a.id]), self.org_unit_ids
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 4.0}})
+
+    def test_combine_aligns_years_with_timeless_broadcast(self):
+        # A yearly layer combined with timeless metric_a: each year uses metric_a's single value.
+        metric_c = self._yearly_metric(
+            "layer_c",
+            {2023: {self.ou1: 10.0, self.ou2: 20.0}, 2024: {self.ou1: 30.0, self.ou2: 40.0}},
+        )
+        _, values = CompositeGraphEvaluator(
+            self.account,
+            self._combine_graph(operation="sum", metric_ids=[metric_c.id, self.metric_a.id]),
+            self.org_unit_ids,
+        ).run()
+        self.assertEqual(
+            values,
+            {
+                2023: {self.ou1.id: 12.0, self.ou2.id: 24.0},
+                2024: {self.ou1.id: 32.0, self.ou2.id: 44.0},
+            },
+        )
+
+    def test_combine_categorical_input_raises(self):
+        seasonality = self._seasonality_layer()
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(
+                self.account,
+                self._combine_graph(operation="mean", metric_ids=[self.metric_a.id, seasonality.id]),
+                self.org_unit_ids,
+            ).run()
+
+    def test_combine_without_inputs_raises(self):
+        graph = self._combine_graph(operation="mean")
+        graph["comb"]["connections"]["inputs"] = {}
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+
+    def test_combine_unknown_operation_raises(self):
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(
+                self.account, self._combine_graph(operation="median"), self.org_unit_ids
+            ).run()
 
     def _classify_graph(self, name="Risk band"):
         # metric_a: ou1=2, ou2=4  ->  < 3 = LOW, else HIGH

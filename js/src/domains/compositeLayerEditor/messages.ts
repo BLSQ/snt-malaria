@@ -145,6 +145,35 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.resultPortLabel',
         defaultMessage: 'Result',
     },
+    combineNodeLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.combineNodeLabel',
+        defaultMessage: 'Combine',
+    },
+    combineNodeDescription: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.combineNodeDescription',
+        defaultMessage:
+            'Combine any number of inputs per district with one operation: mean, sum, minimum or maximum. Adds an input slot each time you connect one.',
+    },
+    combineOperationLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.combineOperationLabel',
+        defaultMessage: 'Operation',
+    },
+    combineOpMean: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.combineOpMean',
+        defaultMessage: 'Mean (average)',
+    },
+    combineOpSum: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.combineOpSum',
+        defaultMessage: 'Sum',
+    },
+    combineOpMin: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.combineOpMin',
+        defaultMessage: 'Minimum',
+    },
+    combineOpMax: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.combineOpMax',
+        defaultMessage: 'Maximum',
+    },
     classifyNodeLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.classifyNodeLabel',
         defaultMessage: 'Reclassify',
