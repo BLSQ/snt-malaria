@@ -406,9 +406,7 @@ class CompositeGraphEvaluator:
                 # map everything to the midpoint rather than arbitrarily to the min or max.
                 result[year] = {org_unit_id: scale / 2 for org_unit_id in numeric}
             else:
-                result[year] = {
-                    org_unit_id: (value - low) / span * scale for org_unit_id, value in numeric.items()
-                }
+                result[year] = {org_unit_id: (value - low) / span * scale for org_unit_id, value in numeric.items()}
         return result
 
     def _resolve_combine(self, node: dict) -> ValuesByYear:

@@ -511,7 +511,9 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         # metric_a is timeless (ou1=2, ou2=4 under year=None).
 
         _, values = CompositeGraphEvaluator(
-            self.account, self._two_layer_formula_graph(metric_c.id, self.metric_a.id, formula="a + b"), self.org_unit_ids
+            self.account,
+            self._two_layer_formula_graph(metric_c.id, self.metric_a.id, formula="a + b"),
+            self.org_unit_ids,
         ).run()
 
         self.assertEqual(
@@ -616,21 +618,15 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         self.assertEqual(values, {None: {self.ou1.id: 2.5, self.ou2.id: 4.5}})
 
     def test_combine_sum(self):
-        _, values = CompositeGraphEvaluator(
-            self.account, self._combine_graph(operation="sum"), self.org_unit_ids
-        ).run()
+        _, values = CompositeGraphEvaluator(self.account, self._combine_graph(operation="sum"), self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: 5.0, self.ou2.id: 9.0}})
 
     def test_combine_min(self):
-        _, values = CompositeGraphEvaluator(
-            self.account, self._combine_graph(operation="min"), self.org_unit_ids
-        ).run()
+        _, values = CompositeGraphEvaluator(self.account, self._combine_graph(operation="min"), self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 4.0}})
 
     def test_combine_max(self):
-        _, values = CompositeGraphEvaluator(
-            self.account, self._combine_graph(operation="max"), self.org_unit_ids
-        ).run()
+        _, values = CompositeGraphEvaluator(self.account, self._combine_graph(operation="max"), self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: 3.0, self.ou2.id: 5.0}})
 
     def test_combine_three_inputs(self):
@@ -687,9 +683,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
     def test_combine_unknown_operation_raises(self):
         with self.assertRaises(CompositeGraphError):
-            CompositeGraphEvaluator(
-                self.account, self._combine_graph(operation="median"), self.org_unit_ids
-            ).run()
+            CompositeGraphEvaluator(self.account, self._combine_graph(operation="median"), self.org_unit_ids).run()
 
     def _normalize_graph(self, metric_type_id=None, scale=None, name="Normalized"):
         return {
@@ -762,9 +756,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
     def test_normalize_invalid_scale_raises(self):
         with self.assertRaises(CompositeGraphError):
-            CompositeGraphEvaluator(
-                self.account, self._normalize_graph(scale="huge"), self.org_unit_ids
-            ).run()
+            CompositeGraphEvaluator(self.account, self._normalize_graph(scale="huge"), self.org_unit_ids).run()
 
     def _classify_graph(self, name="Risk band"):
         # metric_a: ou1=2, ou2=4  ->  < 3 = LOW, else HIGH
