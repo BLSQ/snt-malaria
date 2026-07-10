@@ -86,14 +86,9 @@ export const MESSAGES = defineMessages({
     },
     previewNoResults: {
         id: 'iaso.snt_malaria.compositeLayerEditor.previewNoResults',
-        defaultMessage: 'No results for the current org units.',
+        defaultMessage: 'No results for the current districts.',
     },
     // Reclassify mappings editor.
-    mappingsHelper: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.mappingsHelper',
-        defaultMessage:
-            'Rules are evaluated from top to bottom, and the first match is applied. Order them accordingly.',
-    },
     mappingsElse: {
         id: 'iaso.snt_malaria.compositeLayerEditor.mappingsElse',
         defaultMessage: 'else',
@@ -135,14 +130,16 @@ export const MESSAGES = defineMessages({
     formulaNodeDescription: {
         id: 'iaso.snt_malaria.compositeLayerEditor.formulaNodeDescription',
         defaultMessage:
-            'Combine inputs with an infix formula. Inputs are referenced as a, b, c… ' +
-            'Starts with one input and adds another each time you connect one. Inputs and the ' +
-            'result can be numbers or text, so you can branch to labels, e.g. "HIGH" if a > 100 else "LOW".',
+            'Combine inputs with an infix formula. Inputs are referenced as a, b, c…, ' +
+            'e.g. a * 0.6 + b * 0.4. Starts with one input and adds another each time you connect one.',
     },
     formulaControlLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.formulaControlLabel',
-        defaultMessage:
-            'Formula (e.g. a * 0.6 + b, or "HIGH" if a > 100 else "LOW")',
+        defaultMessage: 'Formula',
+    },
+    formulaSyntaxLink: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.formulaSyntaxLink',
+        defaultMessage: 'Formula syntax reference',
     },
     resultPortLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.resultPortLabel',
@@ -155,7 +152,7 @@ export const MESSAGES = defineMessages({
     classifyNodeDescription: {
         id: 'iaso.snt_malaria.compositeLayerEditor.classifyNodeDescription',
         defaultMessage:
-            'Map a single input to categories using threshold rules (e.g. < 100 → LOW).',
+            'Map a single input to classes using threshold rules (e.g. < 100 → LOW). Rules are evaluated from top to bottom; the first match is applied.',
     },
     classesLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.classesLabel',

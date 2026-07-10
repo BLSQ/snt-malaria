@@ -126,7 +126,7 @@ class CompositeGraphEvaluator:
 
         values_by_year = self._resolve(source["nodeId"])
         if not any(by_ou for by_ou in values_by_year.values()):
-            raise CompositeGraphError("The graph produced no values for the current org units.")
+            raise CompositeGraphError("The graph produced no values for the current districts.")
 
         if any(isinstance(value, str) for value in iter_all_values(values_by_year)):
             source_node = self.graph.get(source["nodeId"])

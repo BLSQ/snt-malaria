@@ -6,6 +6,7 @@ import { MetricType } from '../dataLayers/types/metrics';
 import { CompositeOutputPreview } from './components/CompositeOutputPreview';
 import { MappingsControl } from './components/MappingsControl';
 import { NameControl } from './components/NameControl';
+import { NodeHelperText } from './components/NodeHelperText';
 import { NodeMapPreview } from './components/NodeMapPreview';
 import { MESSAGES } from './messages';
 import { CompositePreviewState } from './types/compositeLayer';
@@ -71,6 +72,37 @@ const formulaInputCount = (connections: any): number => {
     }
     return Math.min(highestConnected + 2, MAX_FORMULA_INPUTS);
 };
+
+// The formula node is evaluated with simpleeval on the backend, so its infix syntax (operators,
+// conditionals, …) is documented there. Linked from the formula node's helper text.
+const FORMULA_SYNTAX_DOCS_URL =
+    'https://github.com/danthedeckie/simpleeval#operators';
+
+/**
+ * Builds a `helperText` port instance carrying a node's explainer text (the same text as the
+ * add-node context menu) plus an optional documentation link. The content travels in a
+ * per-instance custom control because that's the only per-port-instance override Flume supports
+ * that can hold arbitrary props.
+ */
+const helperTextPort = (
+    ports: any,
+    text: string,
+    link?: { href: string; label: string },
+) =>
+    ports.helperText({
+        controls: [
+            Controls.custom({
+                name: 'helperText',
+                label: '',
+                render: () =>
+                    React.createElement(NodeHelperText, {
+                        text,
+                        linkHref: link?.href,
+                        linkLabel: link?.label,
+                    }),
+            }),
+        ],
+    });
 
 /**
  * Builds the Flume graph configuration for the composite layer editor.
@@ -183,6 +215,17 @@ export const createCompositeFlumeConfig = (
                     placeholder: 'a * 0.6 + b',
                 }),
             ],
+        })
+        // Explainer text rendered as the last entry of a transformation node's body, just above
+        // the output port (control only, not connectable). The content is injected per node via
+        // `helperTextPort` below, since Flume port instances can only override a fixed set of
+        // fields (controls being one of them).
+        .addPortType({
+            type: 'helperText',
+            name: 'helperText',
+            label: '',
+            hidePort: true,
+            controls: [],
         })
         // Reclassify rules editor (control only, not connectable).
         .addPortType({
@@ -330,7 +373,18 @@ export const createCompositeFlumeConfig = (
                     const name = formulaInputName(i);
                     return ports.layerValues({ name, label: name });
                 });
-                return [...valuePorts, ports.formulaText()];
+                return [
+                    ...valuePorts,
+                    ports.formulaText(),
+                    helperTextPort(
+                        ports,
+                        formatMessage(MESSAGES.formulaNodeDescription),
+                        {
+                            href: FORMULA_SYNTAX_DOCS_URL,
+                            label: formatMessage(MESSAGES.formulaSyntaxLink),
+                        },
+                    ),
+                ];
             },
             outputs: (ports: any) => [
                 ports.layerValues({
@@ -351,6 +405,10 @@ export const createCompositeFlumeConfig = (
                     label: formatMessage(MESSAGES.valuePortLabel),
                 }),
                 ports.classifyRules(),
+                helperTextPort(
+                    ports,
+                    formatMessage(MESSAGES.classifyNodeDescription),
+                ),
             ],
             outputs: (ports: any) => [
                 ports.layerValues({

@@ -66,13 +66,6 @@ const styles = {
     iconButton: {
         justifySelf: 'center',
     },
-    helper: {
-        color: 'text.secondary',
-        fontSize: 11,
-        lineHeight: 1.3,
-        mt: 0,
-        mb: 0.5,
-    },
 } satisfies SxStyles;
 
 type Props = {
@@ -116,9 +109,6 @@ export const MappingsControl: FC<Props> = ({ value, onChange }) => {
             // Stop Flume from turning clicks/typing into a node drag (mirrors its built-in inputs).
             onMouseDown={e => e.stopPropagation()}
         >
-            <Box component="p" sx={styles.helper}>
-                {formatMessage(MESSAGES.mappingsHelper)}
-            </Box>
             {config.rules.map((rule, index) => (
                 // eslint-disable-next-line react/no-array-index-key
                 <Box sx={styles.row} key={index}>
