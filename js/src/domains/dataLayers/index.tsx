@@ -220,54 +220,63 @@ export const DataLayers: FC = () => {
             <PageContainer>
                 <SidebarLayout>
                     {!sidebarCollapsed && (
-                    <SidebarColumn>
-                        <PaperFullHeight>
-                            {isCompositeEditorOpen ? (
-                                <CompositeLayerAIChat
-                                    onGenerate={onGenerateCompositeLayerGraph}
-                                />
-                            ) : (
-                                <Card sx={styles.card}>
-                                    <CardStyled
-                                        header={
-                                            <DataLayerListHeader
-                                                onCreate={onCreateMetricType}
-                                                onCreateComposite={
-                                                    onCreateCompositeLayer
-                                                }
-                                                createActionRef={
-                                                    onboarding.anchorRefs[0]
-                                                }
-                                                moreActionsRef={
-                                                    onboarding.anchorRefs[1]
-                                                }
-                                            />
+                        <SidebarColumn>
+                            <PaperFullHeight>
+                                {isCompositeEditorOpen ? (
+                                    <CompositeLayerAIChat
+                                        onGenerate={
+                                            onGenerateCompositeLayerGraph
                                         }
-                                    >
-                                        <DataLayerList
-                                            metricCategories={
-                                                metricCategories || []
+                                    />
+                                ) : (
+                                    <Card sx={styles.card}>
+                                        <CardStyled
+                                            header={
+                                                <DataLayerListHeader
+                                                    onCreate={
+                                                        onCreateMetricType
+                                                    }
+                                                    onCreateComposite={
+                                                        onCreateCompositeLayer
+                                                    }
+                                                    createActionRef={
+                                                        onboarding.anchorRefs[0]
+                                                    }
+                                                    moreActionsRef={
+                                                        onboarding.anchorRefs[1]
+                                                    }
+                                                />
                                             }
-                                            onSelectMetricType={
-                                                setDisplayedMetricType
-                                            }
-                                            selectedMetricTypeId={
-                                                isCompositeEditorOpen
-                                                    ? editedCompositeMetricTypeId
-                                                    : displayedMetricType?.id
-                                            }
-                                            onEditMetricType={onEditMetricType}
-                                            onEditCompositeLayer={
-                                                onEditCompositeLayer
-                                            }
-                                            compositeLayerIdByMetricType={
-                                                compositeLayerIdByMetricType
-                                            }
-                                            deleteMetricType={deleteMetricType}
-                                            editing={isCompositeEditorOpen}
-                                        />
-                                    </CardStyled>
-                                </Card>
+                                        >
+                                            <DataLayerList
+                                                metricCategories={
+                                                    metricCategories || []
+                                                }
+                                                onSelectMetricType={
+                                                    setDisplayedMetricType
+                                                }
+                                                selectedMetricTypeId={
+                                                    isCompositeEditorOpen
+                                                        ? editedCompositeMetricTypeId
+                                                        : displayedMetricType?.id
+                                                }
+                                                onEditMetricType={
+                                                    onEditMetricType
+                                                }
+                                                onEditCompositeLayer={
+                                                    onEditCompositeLayer
+                                                }
+                                                compositeLayerIdByMetricType={
+                                                    compositeLayerIdByMetricType
+                                                }
+                                                deleteMetricType={
+                                                    deleteMetricType
+                                                }
+                                                editing={isCompositeEditorOpen}
+                                            />
+                                        </CardStyled>
+                                    </Card>
+                                )}
                             </PaperFullHeight>
                         </SidebarColumn>
                     )}
