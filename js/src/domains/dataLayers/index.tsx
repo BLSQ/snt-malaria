@@ -222,7 +222,8 @@ export const DataLayers: FC = () => {
                     {!sidebarCollapsed && (
                         <SidebarColumn>
                             <PaperFullHeight>
-                                {isCompositeEditorOpen ? (
+                                {isCompositeEditorOpen &&
+                                accountSettings?.has_ai_api_key ? (
                                     <CompositeLayerAIChat
                                         onGenerate={
                                             onGenerateCompositeLayerGraph

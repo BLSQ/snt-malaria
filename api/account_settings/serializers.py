@@ -26,6 +26,9 @@ class AccountSettingsSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True,
     )
+    # Lets the frontend decide whether to show AI-powered features (e.g. the composite layer chat
+    # panel) without ever exposing the key itself.
+    has_ai_api_key = serializers.SerializerMethodField()
 
     class Meta:
         model = AccountSettings
@@ -35,11 +38,16 @@ class AccountSettingsSerializer(serializers.ModelSerializer):
             "focus_org_unit_type_id",
             "intervention_org_unit_type_id",
             "default_population_id",
+            "has_ai_api_key",
         ]
         read_only_fields = [
             "id",
             "account",
+            "has_ai_api_key",
         ]
+
+    def get_has_ai_api_key(self, obj: AccountSettings) -> bool:
+        return bool(obj.account.anthropic_api_key)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
