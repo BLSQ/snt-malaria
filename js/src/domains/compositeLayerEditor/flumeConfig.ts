@@ -126,6 +126,7 @@ const dynamicValueInputs =
  *                a single input and grows one slot per connection. Evaluated on the backend
  *                (simpleeval).
  * - `combine`:   reduce a dynamic number of inputs per org unit (mean/sum/min/max).
+ * - `normalize`: min-max rescale a single numeric input to 0-1 or 0-100, per year.
  * - `classify`:  map a single numeric input to categories via threshold rules.
  * - `output`:    the single terminal node producing the composite layer. It is always present,
  *                cannot be added again and cannot be deleted.
@@ -273,6 +274,25 @@ export const createCompositeFlumeConfig = (
                         },
                     ],
                     defaultValue: 'mean',
+                }),
+            ],
+        })
+        // Normalize target scale picker (control only, not connectable).
+        .addPortType({
+            type: 'normalizeScale',
+            name: 'scale',
+            label: formatMessage(MESSAGES.normalizeScaleLabel),
+            hidePort: true,
+            controls: [
+                Controls.select({
+                    name: 'scale',
+                    label: formatMessage(MESSAGES.normalizeScaleLabel),
+                    // Values are the numeric upper bound, consumed by the backend evaluator.
+                    options: [
+                        { value: '1', label: '0 – 1' },
+                        { value: '100', label: '0 – 100' },
+                    ],
+                    defaultValue: '1',
                 }),
             ],
         })
@@ -451,6 +471,30 @@ export const createCompositeFlumeConfig = (
                         formatMessage(MESSAGES.combineNodeDescription),
                     ),
                 ),
+            outputs: (ports: any) => [
+                ports.layerValues({
+                    name: 'result',
+                    label: formatMessage(MESSAGES.resultPortLabel),
+                }),
+            ],
+        })
+        .addNodeType({
+            type: 'normalize',
+            label: formatMessage(MESSAGES.normalizeNodeLabel),
+            description: formatMessage(MESSAGES.normalizeNodeDescription),
+            sortIndex: 3,
+            initialWidth: 260,
+            inputs: (ports: any) => [
+                ports.layerValues({
+                    name: 'a',
+                    label: formatMessage(MESSAGES.valuePortLabel),
+                }),
+                ports.normalizeScale(),
+                helperTextPort(
+                    ports,
+                    formatMessage(MESSAGES.normalizeNodeDescription),
+                ),
+            ],
             outputs: (ports: any) => [
                 ports.layerValues({
                     name: 'result',

@@ -46,6 +46,20 @@ def _combine_node(node_id, input_sources, output_targets, operation=None):
     }
 
 
+def _normalize_node(node_id, input_sources, output_targets, scale=None):
+    input_data = {}
+    if scale is not None:
+        input_data["scale"] = {"scale": scale}
+    return {
+        "id": node_id,
+        "type": "normalize",
+        "x": 0,
+        "y": 0,
+        "inputData": input_data,
+        "connections": {"inputs": input_sources, "outputs": {"result": output_targets}},
+    }
+
+
 def _classify_node(node_id, rules, default, input_sources, output_targets):
     return {
         "id": node_id,
@@ -675,6 +689,81 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         with self.assertRaises(CompositeGraphError):
             CompositeGraphEvaluator(
                 self.account, self._combine_graph(operation="median"), self.org_unit_ids
+            ).run()
+
+    def _normalize_graph(self, metric_type_id=None, scale=None, name="Normalized"):
+        return {
+            "layer1": _data_layer_node(
+                "layer1", metric_type_id or self.metric_a.id, [{"nodeId": "norm", "portName": "a"}]
+            ),
+            "norm": _normalize_node(
+                "norm",
+                input_sources={"a": [{"nodeId": "layer1", "portName": "values"}]},
+                output_targets=[{"nodeId": "out", "portName": "layer"}],
+                scale=scale,
+            ),
+            "out": _output_node("out", name, [{"nodeId": "norm", "portName": "result"}]),
+        }
+
+    def test_normalize_rescales_to_unit_range(self):
+        # metric_a: ou1=2 (min -> 0), ou2=4 (max -> 1). Scale defaults to 0-1 when absent.
+        _, values = CompositeGraphEvaluator(self.account, self._normalize_graph(), self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 0.0, self.ou2.id: 1.0}})
+
+    def test_normalize_scale_100(self):
+        ou3 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="OU3")
+        MetricValue.objects.create(metric_type=self.metric_a, org_unit=ou3, year=None, value=3.0)
+
+        _, values = CompositeGraphEvaluator(
+            self.account, self._normalize_graph(scale="100"), [*self.org_unit_ids, ou3.id]
+        ).run()
+        # min=2 -> 0, mid=3 -> 50, max=4 -> 100.
+        self.assertEqual(values, {None: {self.ou1.id: 0.0, ou3.id: 50.0, self.ou2.id: 100.0}})
+
+    def test_normalize_rescales_each_year_independently(self):
+        # Each year uses its own min/max, so values express the position within that year.
+        metric_c = self._yearly_metric(
+            "layer_c",
+            {2023: {self.ou1: 10.0, self.ou2: 20.0}, 2024: {self.ou1: 100.0, self.ou2: 300.0}},
+        )
+        _, values = CompositeGraphEvaluator(
+            self.account, self._normalize_graph(metric_type_id=metric_c.id), self.org_unit_ids
+        ).run()
+        self.assertEqual(
+            values,
+            {
+                2023: {self.ou1.id: 0.0, self.ou2.id: 1.0},
+                2024: {self.ou1.id: 0.0, self.ou2.id: 1.0},
+            },
+        )
+
+    def test_normalize_constant_input_maps_to_midpoint(self):
+        constant = MetricType.objects.create(account=self.account, name="Constant", code="constant")
+        MetricValue.objects.create(metric_type=constant, org_unit=self.ou1, year=None, value=7.0)
+        MetricValue.objects.create(metric_type=constant, org_unit=self.ou2, year=None, value=7.0)
+
+        _, values = CompositeGraphEvaluator(
+            self.account, self._normalize_graph(metric_type_id=constant.id, scale="100"), self.org_unit_ids
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: 50.0, self.ou2.id: 50.0}})
+
+    def test_normalize_categorical_input_raises(self):
+        seasonality = self._seasonality_layer()
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(
+                self.account, self._normalize_graph(metric_type_id=seasonality.id), self.org_unit_ids
+            ).run()
+
+    def test_normalize_without_input_raises(self):
+        graph = self._normalize_graph()
+        graph["norm"]["connections"]["inputs"] = {}
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+
+    def test_normalize_invalid_scale_raises(self):
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(
+                self.account, self._normalize_graph(scale="huge"), self.org_unit_ids
             ).run()
 
     def _classify_graph(self, name="Risk band"):

@@ -8,6 +8,7 @@ The evaluator resolves it in dependency order (with cycle detection) and evaluat
 - ``formula``:   evaluates an infix expression per org unit over its connected inputs (``a``, ``b``, …)
                  using ``simpleeval``. A string result makes the output categorical (ordinal).
 - ``classify``:  maps a numeric input to category labels using ordered threshold rules.
+- ``normalize``: min-max rescales a numeric input to 0-1 or 0-100, per year.
 - ``combine``:   reduces any number of numeric inputs per org unit (mean/sum/min/max).
 - ``output``:    the single terminal node; its connected input is the resulting composite layer.
 
@@ -203,6 +204,8 @@ class CompositeGraphEvaluator:
             result = self._resolve_formula(node)
         elif node_type == "classify":
             result = self._resolve_classify(node)
+        elif node_type == "normalize":
+            result = self._resolve_normalize(node)
         elif node_type == "combine":
             result = self._resolve_combine(node)
         else:
@@ -364,6 +367,48 @@ class CompositeGraphEvaluator:
                         break
                 if label:
                     result.setdefault(year, {})[org_unit_id] = label
+        return result
+
+    def _resolve_normalize(self, node: dict) -> ValuesByYear:
+        """Min-max rescale a numeric input to ``[0, scale]``, independently per year.
+
+        Each year is rescaled against its own min/max so a value expresses the org unit's relative
+        position within that year's distribution (years stay comparable to each other on the same
+        0-1 / 0-100 axis even when absolute magnitudes drift over time).
+        """
+        source = self._get_single_input_source(node, "a")
+        if source is None:
+            raise CompositeGraphError("A normalize node has no connected input.")
+        input_by_year = self._resolve(source["nodeId"])
+
+        raw_scale = self._get_control_value(node, "scale", "scale")
+        try:
+            scale = float(raw_scale if raw_scale not in (None, "") else 1)
+        except (TypeError, ValueError):
+            raise CompositeGraphError(f"A normalize node has an invalid scale '{raw_scale}'.")
+
+        result: ValuesByYear = {}
+        for year, by_ou in input_by_year.items():
+            if not by_ou:
+                continue
+            numeric: Dict[int, float] = {}
+            for org_unit_id, value in by_ou.items():
+                try:
+                    numeric[org_unit_id] = float(value)
+                except (TypeError, ValueError):
+                    raise CompositeGraphError("Normalize can only be applied to a numeric input.")
+
+            low = min(numeric.values())
+            high = max(numeric.values())
+            span = high - low
+            if span == 0:
+                # Degenerate distribution (all values equal): there is no relative position, so
+                # map everything to the midpoint rather than arbitrarily to the min or max.
+                result[year] = {org_unit_id: scale / 2 for org_unit_id in numeric}
+            else:
+                result[year] = {
+                    org_unit_id: (value - low) / span * scale for org_unit_id, value in numeric.items()
+                }
         return result
 
     def _resolve_combine(self, node: dict) -> ValuesByYear:

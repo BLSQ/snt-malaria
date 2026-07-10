@@ -19,6 +19,7 @@ export type CompositeNodeType =
     | 'dataLayer'
     | 'formula'
     | 'combine'
+    | 'normalize'
     | 'classify'
     | 'output';
 

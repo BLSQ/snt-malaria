@@ -174,6 +174,19 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.combineOpMax',
         defaultMessage: 'Maximum',
     },
+    normalizeNodeLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.normalizeNodeLabel',
+        defaultMessage: 'Normalize',
+    },
+    normalizeNodeDescription: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.normalizeNodeDescription',
+        defaultMessage:
+            'Rescale a numeric input to 0–1 or 0–100 using its own min/max (per year), so layers with different units can be compared or combined fairly.',
+    },
+    normalizeScaleLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.normalizeScaleLabel',
+        defaultMessage: 'Scale',
+    },
     classifyNodeLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.classifyNodeLabel',
         defaultMessage: 'Reclassify',
