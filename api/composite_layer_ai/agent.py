@@ -21,6 +21,15 @@ A composite layer is a small directed graph of nodes, evaluated per org unit:
   is usually numeric, but it can also be the categorical text label produced by a `classify` node -
   in that case only compare it against a string literal (e.g. `a == "High"`), don't use it in
   arithmetic. Supported: + - * / ^, comparisons, and the functions abs/min/max/round.
+- `combine`: reduces one or more numeric inputs (`inputs`, same convention as `formula`) into one
+  value per org unit with a single symmetric operation, given as `operation`: "mean", "sum", "min",
+  or "max". Prefer `combine` over a `formula` that just adds/averages/min/maxes its inputs (e.g.
+  `(a+b+c)/3`, `a+b`, `min(a,b)`) - it says what it does and needs no formula syntax. Only fall back
+  to `formula` for arithmetic `combine` can't express (weights, non-symmetric operations, conditionals).
+- `normalize`: min-max rescales a single numeric input (`input`) to a 0-`scale` range (`scale` is 1
+  or 100), independently per year - i.e. it re-expresses each org unit's value as its relative
+  position between the layer's min and max. This CANNOT be reproduced with a `formula`, since a
+  formula only ever sees one org unit's inputs at a time and has no access to the layer's min/max.
 - `classify`: maps a single numeric input to a category label using an ordered list of threshold
   rules (e.g. "< 100" -> "Low"), with a `default` label used when no rule matches. A `classify`
   node's own output is categorical (text). It CAN feed a `formula` node (e.g. to compare it against
@@ -40,6 +49,8 @@ matching this schema, and no text outside the JSON block:
     "nodes": [
       {{"id": "<unique id you choose, e.g. \\"rainfall\\">", "type": "dataLayer", "metric_type_id": "<id from the catalog above, as a string>"}},
       {{"id": "<unique id>", "type": "formula", "inputs": ["<id of another node>", ...], "formula": "<infix expression using a, b, c, ...>"}},
+      {{"id": "<unique id>", "type": "combine", "inputs": ["<id of another node>", ...], "operation": "<mean|sum|min|max>"}},
+      {{"id": "<unique id>", "type": "normalize", "input": "<id of a numeric-producing node>", "scale": 1}},
       {{"id": "<unique id>", "type": "classify", "input": "<id of a numeric-producing node>", "rules": [{{"op": "<", "value": 100, "label": "Low"}}], "default": "<label for anything matching no rule>"}}
     ],
     "output": {{"source": "<id of the node producing the final result>", "name": "<human readable name>", "legend_type": "auto"}}
@@ -50,9 +61,10 @@ matching this schema, and no text outside the JSON block:
 ## Rules
 - Only reference data layer ids that appear in the catalog above.
 - Every node needs a unique `id`; reference nodes by that id from `inputs`/`input`/`source`.
-- A graph can mix any number of `dataLayer`, `formula` and `classify` nodes - chain them as needed
-  (e.g. combine two layers with a formula, then reclassify the result into categories).
-- `formula` nodes need at least one input.
+- A graph can mix any number of `dataLayer`, `formula`, `combine`, `normalize` and `classify` nodes -
+  chain them as needed (e.g. combine three layers with `combine`, then reclassify the result into
+  categories).
+- `formula` and `combine` nodes need at least one input; `normalize` and `classify` need exactly one.
 - `classify` nodes need at least one rule, a default, or both.
 - When the user asks to modify a previously generated composite layer, return the COMPLETE updated
   graph, not just the change and ask if it should be applied on the data layer editor directly.
@@ -64,8 +76,9 @@ matching this schema, and no text outside the JSON block:
   downstream `formula` (comparing its label, e.g. `a == "High"`) rather than reimplementing the same
   thresholds as comparisons inside one big formula. A categorical (text) result is a normal, valid
   output on its own and does not need to be summable to be useful, so do not avoid `classify` just
-  because its output is text or because more nodes follow it. 
-  
+  because its output is text or because more nodes follow it.
+- Prefer `combine` over `formula` whenever the goal is a plain mean/sum/min/max across two or more
+  layers, for the same reason: it says what it does and needs no formula syntax to read or write.
 """
 
 
@@ -74,13 +87,18 @@ class GraphNodeSpec(BaseModel, extra="allow"):
     type: str
     # dataLayer
     metric_type_id: Optional[str] = None
-    # formula
+    # formula, combine
     inputs: Optional[list[str]] = None
     formula: Optional[str] = None
-    # classify
+    # combine
+    operation: Optional[str] = None
+    # classify, normalize
     input: Optional[str] = None
+    # classify
     rules: Optional[list[dict]] = None
     default: Optional[str] = None
+    # normalize
+    scale: Optional[float] = None
 
 
 class GraphOutputSpec(BaseModel):

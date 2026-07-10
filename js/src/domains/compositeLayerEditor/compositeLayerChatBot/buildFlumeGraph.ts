@@ -10,6 +10,8 @@ const ROW_HEIGHT = 180;
 const NODE_WIDTH: Record<GraphNodeType | 'output', number> = {
     dataLayer: 330,
     formula: 260,
+    combine: 260,
+    normalize: 260,
     classify: 320,
     output: 330,
 };
@@ -18,16 +20,20 @@ const NODE_WIDTH: Record<GraphNodeType | 'output', number> = {
 const OUTPUT_PORT_NAME: Record<GraphNodeType, string> = {
     dataLayer: 'values',
     formula: 'result',
+    combine: 'result',
+    normalize: 'result',
     classify: 'result',
 };
 
-// Names given to a formula node's value inputs, in order: a, b, c, … (see flumeConfig.ts).
+// Names given to a formula/combine node's value inputs, in order: a, b, c, … (see flumeConfig.ts).
 const formulaInputName = (index: number): string =>
     String.fromCharCode('a'.charCodeAt(0) + index);
 
 const upstreamIds = (node: GeneratedGraphNode): string[] => {
-    if (node.type === 'formula') return node.inputs ?? [];
-    if (node.type === 'classify') return node.input ? [node.input] : [];
+    if (node.type === 'formula' || node.type === 'combine')
+        return node.inputs ?? [];
+    if (node.type === 'classify' || node.type === 'normalize')
+        return node.input ? [node.input] : [];
     return [];
 };
 
@@ -77,8 +83,8 @@ const addConnection = (
 
 /**
  * Converts the AI's abstract graph spec into a Flume-compatible node map matching the composite
- * layer editor's real node types (`dataLayer` / `formula` / `classify` / `output`, see
- * flumeConfig.ts). Node ids from the spec are reused verbatim as Flume node ids.
+ * layer editor's real node types (`dataLayer` / `formula` / `combine` / `normalize` / `classify` /
+ * `output`, see flumeConfig.ts). Node ids from the spec are reused verbatim as Flume node ids.
  */
 export const buildFlumeGraphFromSpec = (graph: GeneratedGraph): FlumeNodes => {
     const nodes: FlumeNodes = {};
@@ -122,6 +128,29 @@ export const buildFlumeGraphFromSpec = (graph: GeneratedGraph): FlumeNodes => {
                 inputData: { formula: { formula: node.formula ?? '' } },
                 connections: { inputs: {}, outputs: {} },
             };
+        } else if (node.type === 'combine') {
+            nodes[node.id] = {
+                id: node.id,
+                type: 'combine',
+                width: NODE_WIDTH.combine,
+                x,
+                y,
+                inputData: {
+                    operation: { operation: node.operation ?? 'mean' },
+                },
+                connections: { inputs: {}, outputs: {} },
+            };
+        } else if (node.type === 'normalize') {
+            nodes[node.id] = {
+                id: node.id,
+                type: 'normalize',
+                width: NODE_WIDTH.normalize,
+                x,
+                y,
+                // The scale control's options carry string values ('1'/'100'), see flumeConfig.ts.
+                inputData: { scale: { scale: String(node.scale ?? 1) } },
+                connections: { inputs: {}, outputs: {} },
+            };
         } else if (node.type === 'classify') {
             nodes[node.id] = {
                 id: node.id,
@@ -148,7 +177,7 @@ export const buildFlumeGraphFromSpec = (graph: GeneratedGraph): FlumeNodes => {
 
     // Wire connections now that every node exists (so both endpoints can be updated together).
     graph.nodes.forEach(node => {
-        if (node.type === 'formula') {
+        if (node.type === 'formula' || node.type === 'combine') {
             (node.inputs ?? []).forEach((sourceId, index) => {
                 const sourceType = nodes[sourceId]?.type as
                     | GraphNodeType
@@ -163,7 +192,10 @@ export const buildFlumeGraphFromSpec = (graph: GeneratedGraph): FlumeNodes => {
                     { nodeId: node.id, portName: formulaInputName(index) },
                 );
             });
-        } else if (node.type === 'classify' && node.input) {
+        } else if (
+            (node.type === 'classify' || node.type === 'normalize') &&
+            node.input
+        ) {
             const sourceType = nodes[node.input]?.type as
                 | GraphNodeType
                 | undefined;
