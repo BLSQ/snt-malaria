@@ -161,6 +161,57 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: "b", self.ou2.id: "a"}})
 
+    def test_formula_adds_numeric_strings_as_numbers(self):
+        # Values stored as strings (string_value) must not be concatenated: "1" + "2" is 3, not "12".
+        string_numbers = MetricType.objects.create(account=self.account, name="Scores", code="scores")
+        MetricValue.objects.create(
+            metric_type=string_numbers, org_unit=self.ou1, year=None, value=None, string_value="1"
+        )
+        MetricValue.objects.create(
+            metric_type=string_numbers, org_unit=self.ou2, year=None, value=None, string_value="2"
+        )
+
+        graph = {
+            "layer1": _data_layer_node("layer1", string_numbers.id, [{"nodeId": "formula1", "portName": "a"}]),
+            "layer2": _data_layer_node("layer2", string_numbers.id, [{"nodeId": "formula1", "portName": "b"}]),
+            "formula1": _formula_node(
+                "formula1",
+                "a + b",
+                {
+                    "a": [{"nodeId": "layer1", "portName": "values"}],
+                    "b": [{"nodeId": "layer2", "portName": "values"}],
+                },
+                [{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", "Doubled", [{"nodeId": "formula1", "portName": "result"}]),
+        }
+        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 4.0}})
+
+    def test_formula_treats_numeric_classify_labels_as_numbers(self):
+        # A reclassify node may emit numeric-looking score labels ("1"/"2"); arithmetic on them must
+        # be numeric ("1" * 2 would otherwise be the string "11").
+        graph = {
+            "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "cls", "portName": "a"}]),
+            "cls": _classify_node(
+                "cls",
+                rules=[{"op": "<", "value": 3, "label": "1"}],
+                default="2",
+                input_sources={"a": [{"nodeId": "layer1", "portName": "values"}]},
+                output_targets=[{"nodeId": "formula1", "portName": "a"}],
+            ),
+            "formula1": _formula_node(
+                "formula1",
+                "a * 2",
+                {"a": [{"nodeId": "cls", "portName": "result"}]},
+                [{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", "Weighted score", [{"nodeId": "formula1", "portName": "result"}]),
+        }
+        # metric_a: ou1=2 -> label "1" -> 2.0; ou2=4 -> label "2" -> 4.0.
+        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 4.0}})
+
     def test_run_and_persist_creates_metric_type_and_values(self):
         metric_type = run_and_persist_composite_layer(
             account=self.account,

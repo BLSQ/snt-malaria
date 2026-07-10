@@ -62,6 +62,22 @@ def iter_all_values(values_by_year: ValuesByYear) -> Iterator[Value]:
         yield from by_ou.values()
 
 
+def _coerce_numeric(value: Value) -> Value:
+    """Convert numeric-looking strings to floats; leave genuine category labels alone.
+
+    Values can arrive as strings (categorical data layers, reclassify labels). Without coercion,
+    Python's string operators would silently produce nonsense in formulas: ``"1" + "2"`` is
+    ``"12"`` and ``"1" * 2`` is ``"11"``. Non-numeric strings (e.g. ``"Peak"``) stay strings so
+    formulas can still compare against category labels.
+    """
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return value
+    return value
+
+
 class CompositeGraphEvaluator:
     """Resolves a serialized Flume graph into per-org-unit values for the output node."""
 
@@ -242,7 +258,7 @@ class CompositeGraphEvaluator:
             # Evaluate only for org units present in every connected input for this year.
             common_org_units = set.intersection(*[set(values.keys()) for values in per_port.values()])
             for org_unit_id in common_org_units:
-                evaluator.names = {port: per_port[port][org_unit_id] for port in per_port}
+                evaluator.names = {port: _coerce_numeric(per_port[port][org_unit_id]) for port in per_port}
                 try:
                     value = evaluator.eval(expression)
                 except InvalidExpression as error:
