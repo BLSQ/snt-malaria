@@ -4,6 +4,7 @@ import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 
+import { userHasPermission } from 'Iaso/domains/users/utils';
 import { SxStyles } from 'Iaso/types/general';
 import { hasFeatureFlag, SHOW_DEV_FEATURES } from 'Iaso/utils/featureFlags';
 import { useCurrentUser } from 'Iaso/utils/usersUtils';
@@ -15,6 +16,7 @@ import {
     SidebarColumn,
     SidebarLayout,
 } from '../../components/styledComponents';
+import { SETTINGS_WRITE } from '../../constants/permissions';
 import { baseUrls } from '../../constants/urls';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { CompositeLayerEditor } from '../compositeLayerEditor';
@@ -49,9 +51,12 @@ export const DataLayers: FC = () => {
     const { displayOrgUnitId } = useParamsObject(
         baseUrls.dataLayers,
     ) as unknown as DataLayersParams;
-    // Composite layers are still in development and only exposed on dev-features accounts.
+    // Composite layers are still in development and only exposed on dev-features accounts,
+    // to users with the settings write permission (mirrors the API permission).
     const currentUser = useCurrentUser();
-    const showCompositeLayers = hasFeatureFlag(currentUser, SHOW_DEV_FEATURES);
+    const showCompositeLayers =
+        hasFeatureFlag(currentUser, SHOW_DEV_FEATURES) &&
+        userHasPermission(SETTINGS_WRITE, currentUser);
 
     const [displayedMetricType, setDisplayedMetricType] =
         useState<MetricType>();

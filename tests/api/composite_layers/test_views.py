@@ -4,6 +4,7 @@ from rest_framework import status
 from iaso.models import AccountFeatureFlag, MetricType, MetricValue, OrgUnit
 from plugins.snt_malaria.api.composite_layers.permissions import SHOW_DEV_FEATURES
 from plugins.snt_malaria.models import CompositeLayer
+from plugins.snt_malaria.permissions import SNT_SETTINGS_READ_PERMISSION, SNT_SETTINGS_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
@@ -50,7 +51,15 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
         self.account, self.source, self.version, self.project = self.create_account_datasource_version_project(
             "source", "Test Account", "project"
         )
-        self.user = self.create_user_with_profile(username="user", account=self.account, permissions=[])
+        self.user = self.create_user_with_profile(
+            username="user", account=self.account, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
+        )
+        self.user_read = self.create_user_with_profile(
+            username="user_read", account=self.account, permissions=[SNT_SETTINGS_READ_PERMISSION]
+        )
+        self.user_no_perms = self.create_user_with_profile(
+            username="user_no_perms", account=self.account, permissions=[]
+        )
 
         self.dev_features_flag, _ = AccountFeatureFlag.objects.get_or_create(
             code=SHOW_DEV_FEATURES, defaults={"name": "Display dev features in web."}
@@ -101,7 +110,9 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
         self.no_flag_account, _, _, _ = self.create_account_datasource_version_project(
             "no flag source", "No Flag Account", "no flag project"
         )
-        self.no_flag_user = self.create_user_with_profile(username="no_flag_user", account=self.no_flag_account)
+        self.no_flag_user = self.create_user_with_profile(
+            username="no_flag_user", account=self.no_flag_account, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
+        )
 
     def _multiply_graph(self, name="Risk score", formula="a * b"):
         return {
@@ -281,6 +292,35 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
 
         response = self.client.post(f"{self.BASE_URL}preview/", {"graph": self._multiply_graph()}, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_without_settings_perm_returns_403(self):
+        self.client.force_authenticate(user=self.user_no_perms)
+
+        response = self.client.get(self.BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.client.post(self.BASE_URL, {"graph": self._multiply_graph()}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_settings_read_perm_allows_read_but_not_write(self):
+        composite_layer = self._create_composite_layer()
+        self.client.force_authenticate(user=self.user_read)
+
+        response = self.client.get(self.BASE_URL)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual([item["id"] for item in result], [composite_layer.id])
+
+        response = self.client.post(self.BASE_URL, {"graph": self._multiply_graph()}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.client.post(f"{self.BASE_URL}preview/", {"graph": self._multiply_graph()}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.client.patch(f"{self.BASE_URL}{composite_layer.id}/", {"comments": {}}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.client.delete(f"{self.BASE_URL}{composite_layer.id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_without_dev_features_flag_returns_403(self):
         self.client.force_authenticate(user=self.no_flag_user)
