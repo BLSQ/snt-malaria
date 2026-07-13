@@ -2,9 +2,9 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import { Card, Stack } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
+import { userHasPermission } from 'Iaso/domains/users/utils';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 
-import { userHasPermission } from 'Iaso/domains/users/utils';
 import { SxStyles } from 'Iaso/types/general';
 import { hasFeatureFlag, SHOW_DEV_FEATURES } from 'Iaso/utils/featureFlags';
 import { useCurrentUser } from 'Iaso/utils/usersUtils';
