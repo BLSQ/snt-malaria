@@ -45,15 +45,13 @@ export const DataLayerListHeader: FC<Props> = ({
                 {formatMessage(MESSAGES.dataLayersTitle)}
             </Typography>
             <DisplayIfUserHasPerm permissions={[CorePermission.METRIC_TYPES]}>
-                {onCreateComposite ? (
+                {onCreateComposite && (
                     <IconButton
                         onClick={onCreateComposite}
                         color="primary"
                         overrideIcon={AccountTreeIcon}
                         tooltipMessage={MESSAGES.createCompositeLayer}
                     />
-                ) : (
-                    <></>
                 )}
                 <Box ref={createActionRef}>
                     <IconButton
