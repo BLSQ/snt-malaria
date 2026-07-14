@@ -27,7 +27,8 @@ import { CanvasControls } from './components/CanvasControls';
 import { EditorHeader } from './components/EditorHeader';
 import { NodeHeaderContent } from './components/NodeHeaderContent';
 import { buildFlumeGraphFromSpec } from './compositeLayerChatBot/buildFlumeGraph';
-import { GeneratedGraph } from './compositeLayerChatBot/types';
+import { extractGraphSpecFromFlume } from './compositeLayerChatBot/extractGraphSpec';
+import { CurrentGraph, GeneratedGraph } from './compositeLayerChatBot/types';
 import {
     CompositeEditorContext,
     createCompositeFlumeConfig,
@@ -91,6 +92,8 @@ type Props = {
 // a prop passed down.
 export type CompositeLayerEditorHandle = {
     applyGeneratedGraph: (graph: GeneratedGraph) => void;
+    /** Spec of the graph currently on the canvas, sent to the AI as context (null when empty). */
+    getCurrentGraph: () => CurrentGraph | null;
 };
 
 export const CompositeLayerEditor = forwardRef<
@@ -280,7 +283,13 @@ export const CompositeLayerEditor = forwardRef<
 
         useImperativeHandle(
             ref,
-            () => ({ applyGeneratedGraph: handleGenerateGraph }),
+            () => ({
+                applyGeneratedGraph: handleGenerateGraph,
+                // nodesRef is kept current by handleChange on every edit, so this always reflects
+                // the canvas - including hand-built graphs that never came from the AI.
+                getCurrentGraph: () =>
+                    extractGraphSpecFromFlume(nodesRef.current),
+            }),
             [handleGenerateGraph],
         );
 

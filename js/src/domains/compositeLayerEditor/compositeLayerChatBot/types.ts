@@ -49,9 +49,24 @@ export type GeneratedGraph = {
     output: GeneratedGraphOutput;
 };
 
+// The graph currently open in the editor, sent as context so the AI can make iterative changes.
+// Same shape as GeneratedGraph, except the output may not be wired up yet (`source: null`) and the
+// legend may use editor-only values (e.g. 'reference') outside the AI's LegendType enum.
+export type CurrentGraphOutput = {
+    source: string | null;
+    name: string;
+    legend_type: string;
+};
+
+export type CurrentGraph = {
+    nodes: GeneratedGraphNode[];
+    output: CurrentGraphOutput;
+};
+
 export type CompositeLayerAIRequest = {
     message: string;
     conversation_history: ConversationEntry[];
+    current_graph?: CurrentGraph | null;
 };
 
 export type CompositeLayerAIResponse = {

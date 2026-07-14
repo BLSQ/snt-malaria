@@ -5,11 +5,14 @@ import { useSafeIntl } from 'bluesquare-components';
 import { ChatMessage, ChatPanel } from 'Iaso/components/ChatPanel/ChatPanel';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
-import { ConversationEntry, GeneratedGraph } from './types';
+import { ConversationEntry, CurrentGraph, GeneratedGraph } from './types';
 import { useSendCompositeLayerAIMessage } from './useSendCompositeLayerAIMessage';
 
 type Props = {
     onGenerate: (graph: GeneratedGraph) => void;
+    /** Spec of the graph currently on the canvas, sent with each message so the AI can make
+     * iterative changes (null when the editor is empty). */
+    getCurrentGraph: () => CurrentGraph | null;
 };
 
 const chatStyles = {
@@ -23,7 +26,10 @@ const chatStyles = {
     },
 } satisfies SxStyles;
 
-export const CompositeLayerAIChat: FC<Props> = ({ onGenerate }) => {
+export const CompositeLayerAIChat: FC<Props> = ({
+    onGenerate,
+    getCurrentGraph,
+}) => {
     const { formatMessage } = useSafeIntl();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [conversationHistory, setConversationHistory] = useState<
@@ -39,7 +45,11 @@ export const CompositeLayerAIChat: FC<Props> = ({ onGenerate }) => {
             ]);
 
             sendMessage(
-                { message, conversation_history: conversationHistory },
+                {
+                    message,
+                    conversation_history: conversationHistory,
+                    current_graph: getCurrentGraph(),
+                },
                 {
                     onSuccess: data => {
                         setMessages(prev => [
@@ -70,7 +80,13 @@ export const CompositeLayerAIChat: FC<Props> = ({ onGenerate }) => {
                 },
             );
         },
-        [conversationHistory, sendMessage, onGenerate, formatMessage],
+        [
+            conversationHistory,
+            sendMessage,
+            onGenerate,
+            getCurrentGraph,
+            formatMessage,
+        ],
     );
 
     return (

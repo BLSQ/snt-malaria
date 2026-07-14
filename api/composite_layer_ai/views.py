@@ -40,6 +40,7 @@ class CompositeLayerAIViewSet(viewsets.ViewSet):
 
         message = serializer.validated_data["message"]
         conversation_history = serializer.validated_data.get("conversation_history", [])
+        current_graph = serializer.validated_data.get("current_graph")
 
         account = request.user.iaso_profile.account
         api_key = account.anthropic_api_key or None
@@ -56,7 +57,13 @@ class CompositeLayerAIViewSet(viewsets.ViewSet):
         )
 
         try:
-            result = generate_composite_layer_graph(message, conversation_history, metric_types, api_key=api_key)
+            result = generate_composite_layer_graph(
+                message,
+                conversation_history,
+                metric_types,
+                api_key=api_key,
+                current_graph=current_graph,
+            )
             return Response(result, status=status.HTTP_200_OK)
         except anthropic.APIStatusError as e:
             if e.status_code == 503:

@@ -142,6 +142,32 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(call_args[0][1], history)
 
     @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
+    def test_current_graph_is_forwarded(self, mock_gen):
+        mock_gen.return_value = self._mock_generate_composite_layer_graph(with_graph=False)
+        self.client.force_authenticate(self.user)
+
+        current_graph = {
+            "nodes": [{"id": "rainfall", "type": "dataLayer", "metric_type_id": str(self.metric_type.id)}],
+            "output": {"source": "rainfall", "name": "Rainfall", "legend_type": "auto"},
+        }
+        self.client.post(
+            BASE_URL,
+            {"message": "double it", "current_graph": current_graph},
+            format="json",
+        )
+
+        self.assertEqual(mock_gen.call_args.kwargs["current_graph"], current_graph)
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
+    def test_absent_current_graph_is_forwarded_as_none(self, mock_gen):
+        mock_gen.return_value = self._mock_generate_composite_layer_graph(with_graph=False)
+        self.client.force_authenticate(self.user)
+
+        self.client.post(BASE_URL, {"message": "hi"}, format="json")
+
+        self.assertIsNone(mock_gen.call_args.kwargs["current_graph"])
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
     def test_only_non_utility_metric_types_are_sent(self, mock_gen):
         MetricType.objects.create(
             account=self.account,

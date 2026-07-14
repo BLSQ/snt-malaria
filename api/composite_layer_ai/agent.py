@@ -12,6 +12,11 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 
 
+# Substituted into the prompt template per request with the account's data layer catalog. The
+# template is applied with str.replace (not str.format), so literal braces in the prompt (e.g. the
+# JSON schema example) need no escaping.
+METRIC_TYPES_CATALOG_PLACEHOLDER = "{metric_types_catalog}"
+
 COMPOSITE_LAYER_SYSTEM_PROMPT_TEMPLATE = """You are an expert at building composite malaria data layers with a visual node graph editor.
 
 A composite layer is a small directed graph of nodes, evaluated per org unit:
@@ -44,19 +49,19 @@ A composite layer is a small directed graph of nodes, evaluated per org unit:
 
 When the user asks you to create or modify a composite layer, you MUST respond with valid JSON
 matching this schema, and no text outside the JSON block:
-{{
-  "graph": {{
+{
+  "graph": {
     "nodes": [
-      {{"id": "<unique id you choose, e.g. \\"rainfall\\">", "type": "dataLayer", "metric_type_id": "<id from the catalog above, as a string>"}},
-      {{"id": "<unique id>", "type": "formula", "inputs": ["<id of another node>", ...], "formula": "<infix expression using a, b, c, ...>"}},
-      {{"id": "<unique id>", "type": "combine", "inputs": ["<id of another node>", ...], "operation": "<mean|sum|min|max>"}},
-      {{"id": "<unique id>", "type": "normalize", "input": "<id of a numeric-producing node>", "scale": 1}},
-      {{"id": "<unique id>", "type": "classify", "input": "<id of a numeric-producing node>", "rules": [{{"op": "<", "value": 100, "label": "Low"}}], "default": "<label for anything matching no rule>"}}
+      {"id": "<unique id you choose, e.g. \\"rainfall\\">", "type": "dataLayer", "metric_type_id": "<id from the catalog above, as a string>"},
+      {"id": "<unique id>", "type": "formula", "inputs": ["<id of another node>", ...], "formula": "<infix expression using a, b, c, ...>"},
+      {"id": "<unique id>", "type": "combine", "inputs": ["<id of another node>", ...], "operation": "<mean|sum|min|max>"},
+      {"id": "<unique id>", "type": "normalize", "input": "<id of a numeric-producing node>", "scale": 1},
+      {"id": "<unique id>", "type": "classify", "input": "<id of a numeric-producing node>", "rules": [{"op": "<", "value": 100, "label": "Low"}], "default": "<label for anything matching no rule>"}
     ],
-    "output": {{"source": "<id of the node producing the final result>", "name": "<human readable name>", "legend_type": "auto"}}
-  }},
+    "output": {"source": "<id of the node producing the final result>", "name": "<human readable name>", "legend_type": "auto"}
+  },
   "message": "<your explanation to the user of what you created or changed>"
-}}
+}
 
 ## Rules
 - Only reference data layer ids that appear in the catalog above.
@@ -79,6 +84,14 @@ matching this schema, and no text outside the JSON block:
   because its output is text or because more nodes follow it.
 - Prefer `combine` over `formula` whenever the goal is a plain mean/sum/min/max across two or more
   layers, for the same reason: it says what it does and needs no formula syntax to read or write.
+"""
+
+CURRENT_GRAPH_SECTION = """
+
+## Current graph in the editor
+The user currently has this composite layer graph open in the editor (same JSON schema as your
+"graph" responses). Treat requests to change or extend the layer as iterative modifications of
+this graph, and always return the COMPLETE updated graph:
 """
 
 
@@ -130,18 +143,32 @@ def _build_metric_types_catalog(metric_types: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def build_system_prompt(
+    metric_types: list[dict],
+    current_graph: Optional[dict] = None,
+) -> str:
+    """Build the final system prompt: the template with the account's data layer catalog
+    substituted, plus - when the editor holds a graph - a section appended so the model can make
+    iterative changes relative to it."""
+    prompt = COMPOSITE_LAYER_SYSTEM_PROMPT_TEMPLATE.replace(
+        METRIC_TYPES_CATALOG_PLACEHOLDER, _build_metric_types_catalog(metric_types)
+    )
+    if current_graph:
+        prompt += CURRENT_GRAPH_SECTION + json.dumps(current_graph, indent=2)
+    return prompt
+
+
 def call_claude(
     message: str,
     conversation_history: list[dict],
     metric_types: list[dict],
     api_key: Optional[str] = None,
+    current_graph: Optional[dict] = None,
 ) -> str:
     """Call Claude API with the conversation and return the raw response text."""
     client = anthropic.Anthropic(api_key=api_key)
 
-    system_prompt = COMPOSITE_LAYER_SYSTEM_PROMPT_TEMPLATE.format(
-        metric_types_catalog=_build_metric_types_catalog(metric_types),
-    )
+    system_prompt = build_system_prompt(metric_types, current_graph=current_graph)
 
     messages = [{"role": entry["role"], "content": entry["content"]} for entry in conversation_history]
     messages.append({"role": "user", "content": message})
@@ -174,6 +201,7 @@ def generate_composite_layer_graph(
     conversation_history: list[dict],
     metric_types: list[dict],
     api_key: Optional[str] = None,
+    current_graph: Optional[dict] = None,
 ) -> dict:
     """Call the AI and return the parsed graph spec plus updated conversation history.
 
@@ -182,7 +210,13 @@ def generate_composite_layer_graph(
     - graph: the generated graph spec (None if the response was conversational)
     - conversation_history: Updated conversation history
     """
-    response_text = call_claude(message, conversation_history, metric_types, api_key=api_key)
+    response_text = call_claude(
+        message,
+        conversation_history,
+        metric_types,
+        api_key=api_key,
+        current_graph=current_graph,
+    )
 
     new_history = list(conversation_history) + [
         {"role": "user", "content": message},

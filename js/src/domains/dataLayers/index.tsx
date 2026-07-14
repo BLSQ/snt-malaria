@@ -101,6 +101,10 @@ export const DataLayers: FC = () => {
         },
         [],
     );
+    const getCurrentCompositeLayerGraph = useCallback(
+        () => compositeLayerEditorRef.current?.getCurrentGraph() ?? null,
+        [],
+    );
 
     const { data: compositeLayers } =
         useGetCompositeLayers(showCompositeLayers);
@@ -227,6 +231,9 @@ export const DataLayers: FC = () => {
                                     <CompositeLayerAIChat
                                         onGenerate={
                                             onGenerateCompositeLayerGraph
+                                        }
+                                        getCurrentGraph={
+                                            getCurrentCompositeLayerGraph
                                         }
                                     />
                                 ) : (
