@@ -6,6 +6,7 @@ import { MetricType } from '../dataLayers/types/metrics';
 import { CompositeOutputPreview } from './components/CompositeOutputPreview';
 import { MappingsControl } from './components/MappingsControl';
 import { NameControl } from './components/NameControl';
+import { NodeHelperText } from './components/NodeHelperText';
 import { NodeMapPreview } from './components/NodeMapPreview';
 import { MESSAGES } from './messages';
 import { CompositePreviewState } from './types/compositeLayer';
@@ -51,26 +52,70 @@ const orderOptionsByConnected = (
     return [...connected, ...rest];
 };
 
-// Names given to the formula node's value inputs, in order: a, b, c, … Kept to single lowercase
-// letters so they can be referenced directly in the infix expression and validated server-side.
-const MAX_FORMULA_INPUTS = 26;
-const formulaInputName = (index: number): string =>
+// Names given to the value inputs of nodes with a dynamic input count (formula, combine), in
+// order: a, b, c, … Kept to single lowercase letters so they can be referenced directly in a
+// formula's infix expression and validated server-side.
+const MAX_DYNAMIC_INPUTS = 26;
+const dynamicInputName = (index: number): string =>
     String.fromCharCode('a'.charCodeAt(0) + index);
 
 /**
- * Number of value input ports to render on a formula node: every connected input plus one trailing
- * empty slot, so connecting an input always reveals a fresh one to grow the formula.
+ * Number of value input ports to render on a dynamic-input node: every connected input plus one
+ * trailing empty slot, so connecting an input always reveals a fresh one.
  */
-const formulaInputCount = (connections: any): number => {
+const dynamicInputCount = (connections: any): number => {
     const inputs = connections?.inputs ?? {};
     let highestConnected = -1;
-    for (let i = 0; i < MAX_FORMULA_INPUTS; i += 1) {
-        if (inputs[formulaInputName(i)]?.length) {
+    for (let i = 0; i < MAX_DYNAMIC_INPUTS; i += 1) {
+        if (inputs[dynamicInputName(i)]?.length) {
             highestConnected = i;
         }
     }
-    return Math.min(highestConnected + 2, MAX_FORMULA_INPUTS);
+    return Math.min(highestConnected + 2, MAX_DYNAMIC_INPUTS);
 };
+
+// The formula node is evaluated with simpleeval on the backend, so its infix syntax (operators,
+// conditionals, …) is documented there. Linked from the formula node's helper text.
+const FORMULA_SYNTAX_DOCS_URL =
+    'https://github.com/danthedeckie/simpleeval#operators';
+
+/**
+ * Builds a `helperText` port instance carrying a node's explainer text (the same text as the
+ * add-node context menu) plus an optional documentation link. The content travels in a
+ * per-instance custom control because that's the only per-port-instance override Flume supports
+ * that can hold arbitrary props.
+ */
+const helperTextPort = (
+    ports: any,
+    text: string,
+    link?: { href: string; label: string },
+) =>
+    ports.helperText({
+        controls: [
+            Controls.custom({
+                name: 'helperText',
+                label: '',
+                render: () =>
+                    React.createElement(NodeHelperText, {
+                        text,
+                        linkHref: link?.href,
+                        linkLabel: link?.label,
+                    }),
+            }),
+        ],
+    });
+
+/** Flume `inputs` factory for nodes with a growing list of value ports plus fixed trailing ports. */
+const dynamicValueInputs =
+    (ports: any, ...trailingPorts: any[]) =>
+    (_inputData: any, connections: any) => {
+        const count = dynamicInputCount(connections);
+        const valuePorts = Array.from({ length: count }, (_, i) => {
+            const name = dynamicInputName(i);
+            return ports.layerValues({ name, label: name });
+        });
+        return [...valuePorts, ...trailingPorts];
+    };
 
 /**
  * Builds the Flume graph configuration for the composite layer editor.
@@ -80,6 +125,8 @@ const formulaInputCount = (connections: any): number => {
  * - `formula`:   infix expression over a dynamic number of inputs (`a`, `b`, `c`, …). Starts with
  *                a single input and grows one slot per connection. Evaluated on the backend
  *                (simpleeval).
+ * - `combine`:   reduce a dynamic number of inputs per org unit (mean/sum/min/max).
+ * - `normalize`: min-max rescale a single numeric input to 0-1 or 0-100, per year.
  * - `classify`:  map a single numeric input to categories via threshold rules.
  * - `output`:    the single terminal node producing the composite layer. It is always present,
  *                cannot be added again and cannot be deleted.
@@ -181,6 +228,71 @@ export const createCompositeFlumeConfig = (
                     name: 'formula',
                     label: formatMessage(MESSAGES.formulaControlLabel),
                     placeholder: 'a * 0.6 + b',
+                }),
+            ],
+        })
+        // Explainer text rendered as the last entry of a transformation node's body, just above
+        // the output port (control only, not connectable). The content is injected per node via
+        // `helperTextPort` below, since Flume port instances can only override a fixed set of
+        // fields (controls being one of them).
+        .addPortType({
+            type: 'helperText',
+            name: 'helperText',
+            label: '',
+            hidePort: true,
+            controls: [],
+        })
+        // Combine operation picker (control only, not connectable). Only symmetric
+        // (order-independent) reducers are offered, since the inputs a, b, c, … are unlabeled
+        // and interchangeable.
+        .addPortType({
+            type: 'combineOperation',
+            name: 'operation',
+            label: formatMessage(MESSAGES.combineOperationLabel),
+            hidePort: true,
+            controls: [
+                Controls.select({
+                    name: 'operation',
+                    label: formatMessage(MESSAGES.combineOperationLabel),
+                    // Values are the reducer names consumed by the backend evaluator.
+                    options: [
+                        {
+                            value: 'mean',
+                            label: formatMessage(MESSAGES.combineOpMean),
+                        },
+                        {
+                            value: 'sum',
+                            label: formatMessage(MESSAGES.combineOpSum),
+                        },
+                        {
+                            value: 'min',
+                            label: formatMessage(MESSAGES.combineOpMin),
+                        },
+                        {
+                            value: 'max',
+                            label: formatMessage(MESSAGES.combineOpMax),
+                        },
+                    ],
+                    defaultValue: 'mean',
+                }),
+            ],
+        })
+        // Normalize target scale picker (control only, not connectable).
+        .addPortType({
+            type: 'normalizeScale',
+            name: 'scale',
+            label: formatMessage(MESSAGES.normalizeScaleLabel),
+            hidePort: true,
+            controls: [
+                Controls.select({
+                    name: 'scale',
+                    label: formatMessage(MESSAGES.normalizeScaleLabel),
+                    // Values are the numeric upper bound, consumed by the backend evaluator.
+                    options: [
+                        { value: '1', label: '0 – 1' },
+                        { value: '100', label: '0 – 100' },
+                    ],
+                    defaultValue: '1',
                 }),
             ],
         })
@@ -324,14 +436,65 @@ export const createCompositeFlumeConfig = (
             initialWidth: 260,
             // Dynamic inputs: Flume calls this with the node's live connections, so returning a
             // function lets the port list grow as inputs get connected.
-            inputs: (ports: any) => (_inputData: any, connections: any) => {
-                const count = formulaInputCount(connections);
-                const valuePorts = Array.from({ length: count }, (_, i) => {
-                    const name = formulaInputName(i);
-                    return ports.layerValues({ name, label: name });
-                });
-                return [...valuePorts, ports.formulaText()];
-            },
+            inputs: (ports: any) =>
+                dynamicValueInputs(
+                    ports,
+                    ports.formulaText(),
+                    helperTextPort(
+                        ports,
+                        formatMessage(MESSAGES.formulaNodeDescription),
+                        {
+                            href: FORMULA_SYNTAX_DOCS_URL,
+                            label: formatMessage(MESSAGES.formulaSyntaxLink),
+                        },
+                    ),
+                ),
+            outputs: (ports: any) => [
+                ports.layerValues({
+                    name: 'result',
+                    label: formatMessage(MESSAGES.resultPortLabel),
+                }),
+            ],
+        })
+        .addNodeType({
+            type: 'combine',
+            label: formatMessage(MESSAGES.combineNodeLabel),
+            description: formatMessage(MESSAGES.combineNodeDescription),
+            sortIndex: 2,
+            initialWidth: 260,
+            inputs: (ports: any) =>
+                dynamicValueInputs(
+                    ports,
+                    ports.combineOperation(),
+                    helperTextPort(
+                        ports,
+                        formatMessage(MESSAGES.combineNodeDescription),
+                    ),
+                ),
+            outputs: (ports: any) => [
+                ports.layerValues({
+                    name: 'result',
+                    label: formatMessage(MESSAGES.resultPortLabel),
+                }),
+            ],
+        })
+        .addNodeType({
+            type: 'normalize',
+            label: formatMessage(MESSAGES.normalizeNodeLabel),
+            description: formatMessage(MESSAGES.normalizeNodeDescription),
+            sortIndex: 3,
+            initialWidth: 260,
+            inputs: (ports: any) => [
+                ports.layerValues({
+                    name: 'a',
+                    label: formatMessage(MESSAGES.valuePortLabel),
+                }),
+                ports.normalizeScale(),
+                helperTextPort(
+                    ports,
+                    formatMessage(MESSAGES.normalizeNodeDescription),
+                ),
+            ],
             outputs: (ports: any) => [
                 ports.layerValues({
                     name: 'result',
@@ -351,6 +514,10 @@ export const createCompositeFlumeConfig = (
                     label: formatMessage(MESSAGES.valuePortLabel),
                 }),
                 ports.classifyRules(),
+                helperTextPort(
+                    ports,
+                    formatMessage(MESSAGES.classifyNodeDescription),
+                ),
             ],
             outputs: (ports: any) => [
                 ports.layerValues({

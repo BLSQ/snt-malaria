@@ -1,9 +1,11 @@
 import React, { FC } from 'react';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import CategoryIcon from '@mui/icons-material/Category';
+import CompressIcon from '@mui/icons-material/Compress';
 import FunctionsIcon from '@mui/icons-material/Functions';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import LayersIcon from '@mui/icons-material/Layers';
+import MediationIcon from '@mui/icons-material/Mediation';
 import { Box } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
@@ -16,6 +18,8 @@ const NODE_ICONS: Record<
 > = {
     dataLayer: LayersIcon,
     formula: FunctionsIcon,
+    combine: MediationIcon,
+    normalize: CompressIcon,
     classify: CategoryIcon,
     output: AccountTreeIcon,
 };

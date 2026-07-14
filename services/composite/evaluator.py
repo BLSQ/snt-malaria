@@ -8,6 +8,8 @@ The evaluator resolves it in dependency order (with cycle detection) and evaluat
 - ``formula``:   evaluates an infix expression per org unit over its connected inputs (``a``, ``b``, …)
                  using ``simpleeval``. A string result makes the output categorical (ordinal).
 - ``classify``:  maps a numeric input to category labels using ordered threshold rules.
+- ``normalize``: min-max rescales a numeric input to 0-1 or 0-100, per year.
+- ``combine``:   reduces any number of numeric inputs per org unit (mean/sum/min/max).
 - ``output``:    the single terminal node; its connected input is the resulting composite layer.
 
 Values are keyed by year internally as ``{year: {org_unit_id: value}}`` (``None`` = timeless).
@@ -49,6 +51,15 @@ FORMULA_FUNCTIONS = {
     "min": min,
     "max": max,
     "round": round,
+}
+
+# Reducers available to a ``combine`` node. All are symmetric (order-independent), which is what
+# makes a single dropdown safe: the unlabeled inputs a, b, c, … are interchangeable.
+COMBINE_OPERATIONS: Dict[str, Callable[[List[float]], float]] = {
+    "mean": lambda values: sum(values) / len(values),
+    "sum": sum,
+    "min": min,
+    "max": max,
 }
 
 
@@ -126,7 +137,7 @@ class CompositeGraphEvaluator:
 
         values_by_year = self._resolve(source["nodeId"])
         if not any(by_ou for by_ou in values_by_year.values()):
-            raise CompositeGraphError("The graph produced no values for the current org units.")
+            raise CompositeGraphError("The graph produced no values for the current districts.")
 
         if any(isinstance(value, str) for value in iter_all_values(values_by_year)):
             source_node = self.graph.get(source["nodeId"])
@@ -193,6 +204,10 @@ class CompositeGraphEvaluator:
             result = self._resolve_formula(node)
         elif node_type == "classify":
             result = self._resolve_classify(node)
+        elif node_type == "normalize":
+            result = self._resolve_normalize(node)
+        elif node_type == "combine":
+            result = self._resolve_combine(node)
         else:
             raise CompositeGraphError(f"Node '{node_id}' has an unsupported type '{node_type}'.")
         self._visiting.discard(node_id)
@@ -352,6 +367,80 @@ class CompositeGraphEvaluator:
                         break
                 if label:
                     result.setdefault(year, {})[org_unit_id] = label
+        return result
+
+    def _resolve_normalize(self, node: dict) -> ValuesByYear:
+        """Min-max rescale a numeric input to ``[0, scale]``, independently per year.
+
+        Each year is rescaled against its own min/max so a value expresses the org unit's relative
+        position within that year's distribution (years stay comparable to each other on the same
+        0-1 / 0-100 axis even when absolute magnitudes drift over time).
+        """
+        source = self._get_single_input_source(node, "a")
+        if source is None:
+            raise CompositeGraphError("A normalize node has no connected input.")
+        input_by_year = self._resolve(source["nodeId"])
+
+        raw_scale = self._get_control_value(node, "scale", "scale")
+        try:
+            scale = float(raw_scale if raw_scale not in (None, "") else 1)
+        except (TypeError, ValueError):
+            raise CompositeGraphError(f"A normalize node has an invalid scale '{raw_scale}'.")
+
+        result: ValuesByYear = {}
+        for year, by_ou in input_by_year.items():
+            if not by_ou:
+                continue
+            numeric: Dict[int, float] = {}
+            for org_unit_id, value in by_ou.items():
+                try:
+                    numeric[org_unit_id] = float(value)
+                except (TypeError, ValueError):
+                    raise CompositeGraphError("Normalize can only be applied to a numeric input.")
+
+            low = min(numeric.values())
+            high = max(numeric.values())
+            span = high - low
+            if span == 0:
+                # Degenerate distribution (all values equal): there is no relative position, so
+                # map everything to the midpoint rather than arbitrarily to the min or max.
+                result[year] = {org_unit_id: scale / 2 for org_unit_id in numeric}
+            else:
+                result[year] = {org_unit_id: (value - low) / span * scale for org_unit_id, value in numeric.items()}
+        return result
+
+    def _resolve_combine(self, node: dict) -> ValuesByYear:
+        """Reduce any number of numeric inputs per org unit with a symmetric operation.
+
+        Inputs are year-aligned like a formula (intersection of yearly inputs, timeless inputs
+        broadcast), and only org units present in every connected input for a year are combined.
+        """
+        inputs: Dict[str, ValuesByYear] = {}
+        connected_ports = (node.get("connections") or {}).get("inputs") or {}
+        for port in connected_ports:
+            source = self._get_single_input_source(node, port)
+            if source is not None:
+                inputs[port] = self._resolve(source["nodeId"])
+
+        if not inputs:
+            raise CompositeGraphError("A combine node has no connected inputs.")
+
+        raw_operation = self._get_control_value(node, "operation", "operation") or "mean"
+        reducer = COMBINE_OPERATIONS.get(raw_operation)
+        if reducer is None:
+            raise CompositeGraphError(f"A combine node has an unknown operation '{raw_operation}'.")
+
+        _target_years, aligned = self._align_input_years(inputs)
+
+        result: ValuesByYear = {}
+        for year, per_port in aligned.items():
+            common_org_units = set.intersection(*[set(values.keys()) for values in per_port.values()])
+            for org_unit_id in common_org_units:
+                try:
+                    numbers = [float(per_port[port][org_unit_id]) for port in per_port]
+                except (TypeError, ValueError):
+                    raise CompositeGraphError("Combine can only be applied to numeric inputs.")
+                result.setdefault(year, {})[org_unit_id] = float(reducer(numbers))
         return result
 
     def _parse_classify_config(self, node: dict) -> Tuple[List[Tuple[Callable, float, str]], str]:
