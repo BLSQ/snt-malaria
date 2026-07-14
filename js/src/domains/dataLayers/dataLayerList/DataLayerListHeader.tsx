@@ -1,4 +1,5 @@
 import React, { FC, Ref } from 'react';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AddIcon from '@mui/icons-material/Add';
 import LayersIcon from '@mui/icons-material/Layers';
 import { Box, Link, MenuItem, Stack, SxProps, Typography } from '@mui/material';
@@ -17,6 +18,8 @@ const styles = {
 
 type Props = {
     onCreate: () => void;
+    /** When set, shows the "new composite layer" action (gated behind the dev-features flag). */
+    onCreateComposite?: () => void;
     /** Wrapper ref around the "+" create button for onboarding overlays. */
     createActionRef?: Ref<HTMLDivElement>;
     /** Wrapper ref around the more-actions control (outer Box) for spotlight anchoring. */
@@ -25,6 +28,7 @@ type Props = {
 
 export const DataLayerListHeader: FC<Props> = ({
     onCreate,
+    onCreateComposite,
     createActionRef,
     moreActionsRef,
 }) => {
@@ -41,6 +45,14 @@ export const DataLayerListHeader: FC<Props> = ({
                 {formatMessage(MESSAGES.dataLayersTitle)}
             </Typography>
             <DisplayIfUserHasPerm permissions={[CorePermission.METRIC_TYPES]}>
+                {onCreateComposite && (
+                    <IconButton
+                        onClick={onCreateComposite}
+                        color="primary"
+                        overrideIcon={AccountTreeIcon}
+                        tooltipMessage={MESSAGES.createCompositeLayer}
+                    />
+                )}
                 <Box ref={createActionRef}>
                     <IconButton
                         onClick={onCreate}

@@ -7,6 +7,7 @@ from plugins.snt_malaria.api.impact.views import ImpactAgeGroupsViewSet, ImpactV
 from plugins.snt_malaria.api.scenario_yearly_cost_assignment.views import ScenarioYearlyCostAssignmentViewSet
 
 from .account_setup.views import SNTAccountSetupViewSet
+from .composite_layers.views import CompositeLayerViewSet
 from .cost_unit_types.views import CostUnitTypeViewSet
 from .donors.views import DonorViewSet
 from .grants.views import GrantViewSet
@@ -50,3 +51,4 @@ router.register(r"snt_malaria/impact_year_range", ImpactYearRangeViewSet, basena
 router.register(r"snt_malaria/impact_age_groups", ImpactAgeGroupsViewSet, basename="impact_age_groups")
 router.register(r"snt_malaria/account_settings", AccountSettingsViewSet, basename="account_settings")
 router.register(r"snt_malaria/account_setup", SNTAccountSetupViewSet, basename="account_setup")
+router.register(r"snt_malaria/composite_layers", CompositeLayerViewSet, basename="composite_layers")

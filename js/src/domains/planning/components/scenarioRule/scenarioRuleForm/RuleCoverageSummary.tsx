@@ -96,9 +96,10 @@ export const RuleCoverageSummary: FC<Props> = ({
     const { data: accountSettings } = useGetAccountSettings();
     const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
 
-    const { populationByOrgUnit, year: populationYear } = usePopulationByOrgUnit(
-        { metricTypeId: accountSettings?.default_population_id },
-    );
+    const { populationByOrgUnit, year: populationYear } =
+        usePopulationByOrgUnit({
+            metricTypeId: accountSettings?.default_population_id,
+        });
     const { data: allOrgUnits } = useGetOrgUnits({
         orgUnitTypeId: interventionTypeId,
         enabled: !!interventionTypeId,

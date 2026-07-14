@@ -1,6 +1,7 @@
 from .account_settings import AccountSettings
 from .budget import Budget
 from .budget_settings import BudgetSettings
+from .composite_layer import CompositeLayer
 from .cost_breakdown import InterventionCostBreakdownLine
 from .cost_unit_type import CostUnitType
 from .grant import Donor, Grant
@@ -33,4 +34,5 @@ __all__ = [
     "BudgetSettings",
     "AccountSettings",
     "SNTAccountSetup",
+    "CompositeLayer",
 ]
