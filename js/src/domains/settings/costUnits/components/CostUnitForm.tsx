@@ -1,5 +1,12 @@
 import React, { FC } from 'react';
-import { Stack, TextField } from '@mui/material';
+import {
+    Box,
+    Checkbox,
+    FormControlLabel,
+    Stack,
+    TextField,
+    Typography,
+} from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
@@ -44,6 +51,27 @@ export const CostUnitForm: FC = () => {
                 error={Boolean(getErrors('description')?.length)}
                 helperText={getErrors('description')?.[0]}
             />
+            <Box>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={Boolean(values.is_commodity)}
+                            onChange={(_, checked) =>
+                                setFieldValueAndState('is_commodity', checked)
+                            }
+                            size="small"
+                        />
+                    }
+                    label={formatMessage(MESSAGES.costUnitIsCommodityLabel)}
+                />
+                <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    display="block"
+                >
+                    {formatMessage(MESSAGES.costUnitIsCommodityHelp)}
+                </Typography>
+            </Box>
         </Stack>
     );
 };

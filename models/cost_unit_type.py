@@ -12,6 +12,8 @@ class CostUnitType(models.Model):
     account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE, related_name="cost_unit_types")
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, default="")
+    # Commodity units are listed on the scenario summary with their total procurement quantity.
+    is_commodity = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

@@ -919,6 +919,15 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.costUnits.description',
         defaultMessage: 'Description',
     },
+    costUnitIsCommodityLabel: {
+        id: 'iaso.snt_malaria.settings.costUnits.isCommodityLabel',
+        defaultMessage: 'Commodity',
+    },
+    costUnitIsCommodityHelp: {
+        id: 'iaso.snt_malaria.settings.costUnits.isCommodityHelp',
+        defaultMessage:
+            'Commodity units are listed on the scenario summary with the total quantity to procure.',
+    },
     costLineFactorLabel: {
         id: 'iaso.snt_malaria.settings.interventions.costLineFactorLabel',
         defaultMessage: 'Factor',

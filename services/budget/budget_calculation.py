@@ -27,9 +27,8 @@ class BudgetCalculationService:
     """Compute scenario budget using internal population-driven formula.
 
     Implemented formula:
-    population * yearly_assignment_value * conversion_ratio * cost_line_unit_cost
-
-    Only population-driven cost lines are processed in this first version.
+    quantity = population * yearly_assignment_value * conversion_ratio * buffer
+    total_cost = quantity * cost_line_unit_cost * (1 + inflation_rate)^(year - start_year)
     """
 
     def __init__(self, scenario):
@@ -266,7 +265,7 @@ class BudgetCalculationService:
         Compute the raw cost breakdown lines for a given year, without any aggregation, to be used as input for the budget calculation.
         Calculation is based on the population-driven formula, only processing cost lines with population as cost driver
         And skipping lines with missing population or yearly per scenario cost values.
-        Formula quantity: population * yearly_cost_value * conversion_ratio
+        Formula quantity: population * yearly_cost_value * conversion_ratio * buffer
         Formula total cost: quantity * cost_line_unit_cost * (1 + inflation_rate)^(year - start_year)
         """
 
@@ -313,7 +312,9 @@ class BudgetCalculationService:
 
         yearly_value = self._get_yearly_value(line, year)
 
-        quantity = population * yearly_value * line.conversion_ratio
+        # The buffer is baked into the quantity (procurement over-ordering), so the
+        # exposed quantity reflects what actually needs to be procured.
+        quantity = population * yearly_value * line.conversion_ratio * self.buffer
         line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
 
         if line_cost <= 0:
@@ -335,7 +336,7 @@ class BudgetCalculationService:
         """
         Calculate using yearly value as quantity. Added once per intervention regardless of org units.
         """
-        quantity = self._get_yearly_value(line, year)
+        quantity = self._get_yearly_value(line, year) * self.buffer
         line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
         if line_cost <= 0:
             return None
@@ -352,7 +353,8 @@ class BudgetCalculationService:
         )
 
     def _compute_cost_(self, quantity, unit_cost, inflation_multiplier):
-        return quantity * Decimal(str(unit_cost)) * inflation_multiplier * self.buffer
+        # Buffer is already included in ``quantity``; only unit cost and inflation apply here.
+        return quantity * Decimal(str(unit_cost)) * inflation_multiplier
 
     def _build_interventions(self, intervention_totals, intervention_breakdowns):
         """
