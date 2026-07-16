@@ -21,16 +21,16 @@ class CostUnitTypeAPITestCase(SNTMalariaAPITestCase):
         )
 
         self.unit_net = CostUnitType.objects.create(
-            account=self.account, name="Net", value="1.8", description="One net protects 1.8 people."
+            account=self.account, name="Net", description="One net protects 1.8 people."
         )
-        self.unit_bale = CostUnitType.objects.create(account=self.account, name="Bale", value="90", invert_value=True)
+        self.unit_bale = CostUnitType.objects.create(account=self.account, name="Bale")
 
         # Other account to verify tenancy isolation
         self.other_account, self.other_user = self.create_snt_account(name="Other Account")
         self.other_user = self.create_user_with_profile(
             username="other user", account=self.other_account, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
         )
-        self.other_unit = CostUnitType.objects.create(account=self.other_account, name="Vaccine dose", value="4")
+        self.other_unit = CostUnitType.objects.create(account=self.other_account, name="Vaccine dose")
 
     # List
 
@@ -53,13 +53,7 @@ class CostUnitTypeAPITestCase(SNTMalariaAPITestCase):
         response = self.client.get(self.BASE_URL)
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
         net = next(item for item in result if item["name"] == "Net")
-        self.assertEqual(
-            set(net.keys()),
-            {"id", "name", "value", "invert_value", "is_proportional", "description"},
-        )
-        self.assertAlmostEqual(float(net["value"]), 1.8)
-        self.assertFalse(net["invert_value"])
-        self.assertTrue(net["is_proportional"])
+        self.assertEqual(set(net.keys()), {"id", "name", "description"})
         self.assertEqual(net["description"], "One net protects 1.8 people.")
 
     def test_list_with_no_perms(self):
@@ -95,50 +89,17 @@ class CostUnitTypeAPITestCase(SNTMalariaAPITestCase):
 
     def test_create_with_write_perm(self):
         self.client.force_authenticate(self.user_write)
-        data = {"name": "SMC 3 cycles", "value": "3", "description": "3 per course"}
+        data = {"name": "SMC 3 cycles", "description": "3 per course"}
         response = self.client.post(self.BASE_URL, data=data)
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
         self.assertEqual(result["name"], "SMC 3 cycles")
         created = CostUnitType.objects.get(id=result["id"])
         self.assertEqual(created.account, self.account)
-        self.assertAlmostEqual(float(created.value), 3)
-        self.assertFalse(created.invert_value)
-
-    def test_create_with_invert_value(self):
-        self.client.force_authenticate(self.user_write)
-        data = {"name": "Bale of nets", "value": "90", "invert_value": True}
-        response = self.client.post(self.BASE_URL, data=data)
-        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
-        self.assertAlmostEqual(float(result["value"]), 90)
-        self.assertTrue(result["invert_value"])
-
-    def test_create_without_value_allowed(self):
-        self.client.force_authenticate(self.user_write)
-        data = {"name": "Fixed cost"}
-        response = self.client.post(self.BASE_URL, data=data)
-        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
-        self.assertIsNone(result["value"])
-
-    def test_create_non_proportional_unit(self):
-        self.client.force_authenticate(self.user_write)
-        data = {"name": "Flat fee", "is_proportional": False}
-        response = self.client.post(self.BASE_URL, data=data)
-        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
-        self.assertFalse(result["is_proportional"])
-        created = CostUnitType.objects.get(id=result["id"])
-        self.assertFalse(created.is_proportional)
-        # Ratio is transparent to the outside: always 1 for non-proportional units.
-        self.assertEqual(created.ratio, 1)
-
-    def test_patch_is_proportional_flag(self):
-        self.client.force_authenticate(self.user_write)
-        response = self.client.patch(f"{self.BASE_URL}{self.unit_net.id}/", data={"is_proportional": False})
-        result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertFalse(result["is_proportional"])
+        self.assertEqual(created.description, "3 per course")
 
     def test_create_duplicate_name_returns_400(self):
         self.client.force_authenticate(self.user_write)
-        data = {"name": "Net", "value": "2"}
+        data = {"name": "Net"}
         response = self.client.post(self.BASE_URL, data=data)
         self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
 
@@ -156,33 +117,27 @@ class CostUnitTypeAPITestCase(SNTMalariaAPITestCase):
 
     def test_put_with_write_perm(self):
         self.client.force_authenticate(self.user_write)
-        data = {"name": "Net", "value": "2.5", "description": "Updated"}
+        data = {"name": "Net", "description": "Updated"}
         response = self.client.put(f"{self.BASE_URL}{self.unit_net.id}/", data=data)
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertAlmostEqual(float(result["value"]), 2.5)
+        self.assertEqual(result["description"], "Updated")
         self.unit_net.refresh_from_db()
         self.assertEqual(self.unit_net.description, "Updated")
 
     def test_patch_with_write_perm(self):
         self.client.force_authenticate(self.user_write)
-        response = self.client.patch(f"{self.BASE_URL}{self.unit_net.id}/", data={"value": "3.3"})
+        response = self.client.patch(f"{self.BASE_URL}{self.unit_net.id}/", data={"name": "Dual AI Net"})
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertAlmostEqual(float(result["value"]), 3.3)
-
-    def test_patch_invert_value(self):
-        self.client.force_authenticate(self.user_write)
-        response = self.client.patch(f"{self.BASE_URL}{self.unit_net.id}/", data={"invert_value": True})
-        result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertTrue(result["invert_value"])
+        self.assertEqual(result["name"], "Dual AI Net")
 
     def test_update_with_read_perm_forbidden(self):
         self.client.force_authenticate(self.user_read)
-        response = self.client.patch(f"{self.BASE_URL}{self.unit_net.id}/", data={"value": "3.3"})
+        response = self.client.patch(f"{self.BASE_URL}{self.unit_net.id}/", data={"name": "Dual AI Net"})
         self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
 
     def test_update_other_account_not_found(self):
         self.client.force_authenticate(self.user_write)
-        response = self.client.patch(f"{self.BASE_URL}{self.other_unit.id}/", data={"value": "9"})
+        response = self.client.patch(f"{self.BASE_URL}{self.other_unit.id}/", data={"name": "Dose"})
         self.assertJSONResponse(response, status.HTTP_404_NOT_FOUND)
 
     # Delete

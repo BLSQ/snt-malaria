@@ -27,8 +27,8 @@ export type BudgetInterventionCostLine = {
     id: number;
     unit_cost: number | null;
     cost_unit_name: string | null;
-    cost_unit_ratio: number | null;
-    cost_unit_inverted: boolean;
+    conversion_factor: number | null;
+    invert_conversion_factor: boolean;
     target_population: string | null;
     buffer: number | null;
 };

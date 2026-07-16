@@ -102,12 +102,10 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
             {
                 "value": str(self.unit_type_other.id),
                 "label": self.unit_type_other.name,
-                "is_proportional": self.unit_type_other.is_proportional,
             },
             {
                 "value": str(self.unit_type_per_sp.id),
                 "label": self.unit_type_per_sp.name,
-                "is_proportional": self.unit_type_per_sp.is_proportional,
             },
         ]
         self.assertCountEqual(result, expected_unit_types)
@@ -120,12 +118,10 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
             {
                 "value": str(self.unit_type_other.id),
                 "label": self.unit_type_other.name,
-                "is_proportional": self.unit_type_other.is_proportional,
             },
             {
                 "value": str(self.unit_type_per_sp.id),
                 "label": self.unit_type_per_sp.name,
-                "is_proportional": self.unit_type_per_sp.is_proportional,
             },
         ]
         self.assertCountEqual(result, expected_unit_types)

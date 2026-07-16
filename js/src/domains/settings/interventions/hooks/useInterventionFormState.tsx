@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
-import { InterventionCostUnitTypeOption } from '../../../interventions/hooks/useGetInterventionCostUnitType';
 import { MESSAGES } from '../../../messages';
 
 const defaultInterventionValues = {
@@ -13,9 +12,7 @@ const defaultInterventionValues = {
     cost_breakdown_lines: [],
 };
 
-const useValidation = (
-    costUnitTypesById: Record<string, InterventionCostUnitTypeOption>,
-) => {
+const useValidation = () => {
     const { formatMessage } = useSafeIntl();
 
     return useMemo(
@@ -43,21 +40,26 @@ const useValidation = (
                         unit_type: Yup.string().required(
                             formatMessage(MESSAGES.required),
                         ),
+                        is_proportional: Yup.boolean(),
+                        invert_conversion_factor: Yup.boolean(),
                         population_layer: Yup.number()
                             .nullable()
-                            .when('unit_type', {
-                                is: (unitType: string | undefined) => {
-                                    if (!unitType) {
-                                        return false;
-                                    }
-                                    const option =
-                                        costUnitTypesById[String(unitType)];
-                                    // Default to proportional when the option metadata is not
-                                    // yet known to avoid false negatives on first render.
-                                    return option
-                                        ? option.is_proportional
-                                        : true;
-                                },
+                            .when('is_proportional', {
+                                is: true,
+                                then: schema =>
+                                    schema.required(
+                                        formatMessage(MESSAGES.required),
+                                    ),
+                                otherwise: schema => schema.notRequired(),
+                            }),
+                        conversion_factor: Yup.number()
+                            .nullable()
+                            .min(
+                                0,
+                                formatMessage(MESSAGES.negativeValueNotAllowed),
+                            )
+                            .when('is_proportional', {
+                                is: true,
                                 then: schema =>
                                     schema.required(
                                         formatMessage(MESSAGES.required),
@@ -67,14 +69,13 @@ const useValidation = (
                     }),
                 ),
             }),
-        [formatMessage, costUnitTypesById],
+        [formatMessage],
     );
 };
 
 export const useInterventionFormState = ({
     onSubmit,
     initialValues,
-    costUnitTypesById = {},
 }: {
     onSubmit: (
         values: Partial<any>,
@@ -82,9 +83,8 @@ export const useInterventionFormState = ({
     ) => void;
     initialValues?: any;
     editMode?: boolean;
-    costUnitTypesById?: Record<string, InterventionCostUnitTypeOption>;
 }) => {
-    const validationSchema = useValidation(costUnitTypesById);
+    const validationSchema = useValidation();
     const formik = useFormik({
         initialValues: initialValues ?? defaultInterventionValues,
         validationSchema,

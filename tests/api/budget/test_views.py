@@ -132,10 +132,11 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
 
         smc_cost_line = self.cost_lines[0]
         smc_cost_line.population_layer = metric_type_pop_under_5
-        smc_cost_line.save(update_fields=["population_layer"])
+        smc_cost_line.is_proportional = True
+        smc_cost_line.save(update_fields=["population_layer", "is_proportional"])
 
     def test_calculate_budget_no_metric_values(self):
-        InterventionCostBreakdownLine.objects.update(population_layer=None)
+        InterventionCostBreakdownLine.objects.update(population_layer=None, is_proportional=False)
         MetricType.objects.all().delete()
         MetricType.objects.create(
             account=self.account,

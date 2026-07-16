@@ -49,7 +49,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.unit_type = CostUnitType.objects.create(
             account=self.account,
             name="per child",
-            value=Decimal("0.5"),
         )
 
         BudgetSettings.objects.create(
@@ -65,6 +64,8 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.PROCUREMENT,
             unit_type=self.unit_type,
             population_layer=self.metric_under_5,
+            is_proportional=True,
+            conversion_factor=Decimal("0.5"),
             unit_cost=Decimal("2.00"),
             created_by=self.user,
         )
@@ -76,6 +77,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.PROCUREMENT,
             unit_type=self.unit_type,
             population_layer=None,
+            is_proportional=True,
             unit_cost=Decimal("10.00"),
             created_by=self.user,
         )
@@ -156,6 +158,19 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         # quantity = (1500 + 2500) * 1 * 0.5 = 2000
         # total_cost = 2000 * 2 * 1.1 * (1 + 0.03)^1 = 4532
         self.assertEqual(result.total_cost, 4532.0)
+
+    def test_inverted_conversion_factor_divides_quantity(self):
+        self.population_line.conversion_factor = Decimal("2")
+        self.population_line.invert_conversion_factor = True
+        self.population_line.save(update_fields=["conversion_factor", "invert_conversion_factor"])
+
+        service = BudgetCalculationService(self.scenario)
+
+        result = service.calculate_year(2025)
+
+        # ratio = 1 / 2 = 0.5, same numbers as the direct 0.5 factor
+        self.assertEqual(result.total_cost, 3960.0)
+        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 1800.0)
 
     def test_missing_population_layer_line_does_not_contribute(self):
         service = BudgetCalculationService(self.scenario)
@@ -286,12 +301,12 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         service = BudgetCalculationService(scenario)
         result = service.calculate_year(2025)
 
-        # quantity = 4 * ratio(0.5) = 2.0
-        # total_cost = 2 * unit_cost(100) * buffer(1.1) * inflation_multiplier(1.0) = 220.0
-        self.assertEqual(result.total_cost, 220.0)
+        # quantity = yearly value = 4.0
+        # total_cost = 4 * unit_cost(100) * buffer(1.1) * inflation_multiplier(1.0) = 440.0
+        self.assertEqual(result.total_cost, 440.0)
         self.assertEqual(len(result.interventions), 1)
-        self.assertEqual(result.interventions[0].total_cost, 220.0)
-        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 2.0)
+        self.assertEqual(result.interventions[0].total_cost, 440.0)
+        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 4.0)
         # Fixed costs are not attributed to specific org units.
         self.assertEqual(len(result.org_units_costs), 0)
 
@@ -312,6 +327,8 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.PROCUREMENT,
             unit_type=self.unit_type,
             population_layer=self.metric_under_5,
+            is_proportional=True,
+            conversion_factor=Decimal("0.5"),
             unit_cost=Decimal("2.00"),
             created_by=self.user,
         )
@@ -346,6 +363,8 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.PROCUREMENT,
             unit_type=self.unit_type,
             population_layer=self.metric_under_5,
+            is_proportional=True,
+            conversion_factor=Decimal("0.5"),
             unit_cost=Decimal("3.00"),
             created_by=self.user,
         )
@@ -361,19 +380,19 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         # IV-A population (district_1): 1000 * 1.0 * 0.5 = 500 qty → 500 * 2 * 1.1 = 1100
         # IV-A population (district_2): 2000 * 1.0 * 0.5 = 1000 qty → 1000 * 2 * 1.1 = 2200
-        # IV-A fixed cost (once):          4 * 0.5 = 2 qty          →    2 * 100 * 1.1 = 220
-        # IV-A total = 1100 + 2200 + 220 = 3520
+        # IV-A fixed cost (once):          4 qty                    →    4 * 100 * 1.1 = 440
+        # IV-A total = 1100 + 2200 + 440 = 3740
 
         # IV-B population (district_1): 1000 * 1.0 * 0.5 = 500 qty → 500 * 3 * 1.1 = 1650
         # IV-B total = 1650
 
-        # Grand total = 3520 + 1650 = 5170
-        self.assertEqual(result.total_cost, 5170.0)
+        # Grand total = 3740 + 1650 = 5390
+        self.assertEqual(result.total_cost, 5390.0)
         self.assertEqual(len(result.interventions), 2)
 
         iv_a = next(i for i in result.interventions if i.code == "iv_a")
         iv_b = next(i for i in result.interventions if i.code == "iv_b")
-        self.assertEqual(iv_a.total_cost, 3520.0)
+        self.assertEqual(iv_a.total_cost, 3740.0)
         self.assertEqual(iv_b.total_cost, 1650.0)
 
         # Fixed cost rows have no org_unit_id and are excluded from the per-org-unit breakdown.

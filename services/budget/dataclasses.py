@@ -19,8 +19,8 @@ class BudgetBreakdownItem(BudgetBaseModel):
     population: Decimal = Decimal("0.0")
     unit_cost: Optional[Decimal] = None
     cost_unit_name: Optional[str] = None
-    cost_unit_ratio: Optional[float] = None
-    cost_unit_inverted: Optional[bool] = False
+    conversion_factor: Optional[float] = None
+    invert_conversion_factor: Optional[bool] = False
     target_population: Optional[str] = None
     buffer: Optional[float] = None
 

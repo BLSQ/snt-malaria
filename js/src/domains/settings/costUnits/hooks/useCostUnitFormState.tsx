@@ -7,9 +7,6 @@ import { MESSAGES } from '../../../messages';
 export const defaultCostUnitValues = {
     id: undefined,
     name: '',
-    value: '',
-    invert_value: false,
-    is_proportional: true,
     description: '',
 };
 
@@ -22,30 +19,6 @@ const useValidation = () => {
                 name: Yup.string()
                     .required(formatMessage(MESSAGES.required))
                     .max(100, formatMessage(MESSAGES.maxLength, { max: 100 })),
-                value: Yup.number()
-                    .nullable()
-                    .transform((value, originalValue) =>
-                        originalValue === '' ? null : value,
-                    )
-                    .when('is_proportional', {
-                        is: true,
-                        then: schema =>
-                            schema
-                                .typeError(
-                                    formatMessage(
-                                        MESSAGES.costUnitRatioInvalid,
-                                    ),
-                                )
-                                .min(
-                                    0,
-                                    formatMessage(
-                                        MESSAGES.negativeValueNotAllowed,
-                                    ),
-                                ),
-                        otherwise: schema => schema.notRequired(),
-                    }),
-                invert_value: Yup.boolean(),
-                is_proportional: Yup.boolean(),
                 description: Yup.string(),
             }),
         [formatMessage],

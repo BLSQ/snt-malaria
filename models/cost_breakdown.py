@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -36,6 +38,14 @@ class InterventionCostBreakdownLine(models.Model):
         related_name="cost_breakdown_lines",
     )
     unit_cost = models.DecimalField(max_digits=19, decimal_places=2, null=False, blank=False, default=0)
+    # When False, the line is an absolute / fixed cost: the conversion factor is ignored and no
+    # population layer applies.
+    is_proportional = models.BooleanField(default=False)
+    # Raw number entered by the user; interpreted via ``invert_conversion_factor`` to produce
+    # ``conversion_ratio``.
+    conversion_factor = models.DecimalField(max_digits=19, decimal_places=6, default=Decimal("1"))
+    # When True, ``conversion_factor`` is inverted (1 / value) to get the canonical ratio.
+    invert_conversion_factor = models.BooleanField(default=False)
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="cost_breakdown_line_created_set"
     )
@@ -46,6 +56,15 @@ class InterventionCostBreakdownLine(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
-    def is_fixed_cost(self):
-        """A line is a fixed cost when it has no population layer; otherwise it is population-driven."""
-        return self.population_layer_id is None
+    def conversion_ratio(self):
+        """Canonical conversion factor used by the budget calculation (1 / value when inverted).
+
+        Fixed cost lines always return 1, regardless of the stored value.
+        """
+        if not self.is_proportional or self.conversion_factor is None:
+            return Decimal(1)
+        if self.invert_conversion_factor:
+            if self.conversion_factor == 0:
+                return Decimal(1)
+            return Decimal(1) / self.conversion_factor
+        return self.conversion_factor

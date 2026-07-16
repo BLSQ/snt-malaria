@@ -23,14 +23,8 @@ class InterventionCostBreakdownLineBase(SNTMalariaAPITestCase):
         self.intervention_vaccination_rts = defaults["intervention_rts"]
         self.intervention_chemo_smc = defaults["intervention_smc"]
         self.intervention_chemo_iptp = defaults["intervention_iptp"]
-        # Use non-proportional units in the shared test fixtures so cost lines may be created
-        # without a population_layer. Tests that need a proportional unit override locally.
-        self.unit_type_other, _ = CostUnitType.objects.get_or_create(
-            account=self.account, name="Other", defaults={"is_proportional": False}
-        )
-        self.unit_type_per_sp, _ = CostUnitType.objects.get_or_create(
-            account=self.account, name="per SP", defaults={"is_proportional": False}
-        )
+        self.unit_type_other, _ = CostUnitType.objects.get_or_create(account=self.account, name="Other")
+        self.unit_type_per_sp, _ = CostUnitType.objects.get_or_create(account=self.account, name="per SP")
         self.cost_line1 = InterventionCostBreakdownLine.objects.create(
             name="Cost Line 1",
             intervention=self.intervention_vaccination_rts,
@@ -56,9 +50,7 @@ class InterventionCostBreakdownLineBase(SNTMalariaAPITestCase):
         other_defaults = self.create_snt_default_interventions(account=self.other_account, created_by=self.other_user)
         self.other_int_category = other_defaults["category_vaccination"]
         self.other_intervention = other_defaults["intervention_rts"]
-        self.other_unit_type, _ = CostUnitType.objects.get_or_create(
-            account=self.other_account, name="per RDT kit", defaults={"is_proportional": False}
-        )
+        self.other_unit_type, _ = CostUnitType.objects.get_or_create(account=self.other_account, name="per RDT kit")
         self.other_cost_line = InterventionCostBreakdownLine.objects.create(
             name="Other Cost Line",
             intervention=self.other_intervention,
