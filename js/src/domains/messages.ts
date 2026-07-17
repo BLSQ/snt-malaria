@@ -296,7 +296,7 @@ export const MESSAGES = defineMessages({
     },
     detailedCostUnitLabel: {
         id: 'iaso.snt_malaria.settings.intervention.detailedCostUnitLabel',
-        defaultMessage: 'Cost Unit',
+        defaultMessage: 'Cost per',
     },
     detailedCostCategoryLabel: {
         id: 'iaso.snt_malaria.settings.intervention.detailedCostCategoryLabel',
@@ -915,71 +915,25 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.costUnits.longName',
         defaultMessage: 'Name',
     },
-    costUnitConversionFactor: {
-        id: 'iaso.snt_malaria.settings.costUnits.conversionFactor',
-        defaultMessage: 'Conversion factor',
-    },
-    costUnitConversionFactorHelp: {
-        id: 'iaso.snt_malaria.settings.costUnits.conversionFactorHelp',
-        defaultMessage:
-            'Conversion factor between a unit quantity and its corresponding cost-driver quantity (typically a population). \
-            Depending on the direction (direct / inverse), this may express how many people one unit covers, or how many units one person requires.',
-    },
-    costUnitRatioDirection: {
-        id: 'iaso.snt_malaria.settings.costUnits.ratioDirection',
-        defaultMessage: 'Conversion factor direction',
-    },
-    costUnitRatioDirect: {
-        id: 'iaso.snt_malaria.settings.costUnits.ratioDirect',
-        defaultMessage: 'Direct ({value} per)',
-    },
-    costUnitRatioDirectHelp: {
-        id: 'iaso.snt_malaria.settings.costUnits.ratioDirectHelp',
-        defaultMessage:
-            'Used as-is. E.g. 4 doses per person (SMC); 1 per SP/AQ course.',
-    },
-    costUnitRatioInverse: {
-        id: 'iaso.snt_malaria.settings.costUnits.ratioInverse',
-        defaultMessage: 'Inverse (covers {value})',
-    },
-    costUnitRatioInverseHelp: {
-        id: 'iaso.snt_malaria.settings.costUnits.ratioInverseHelp',
-        defaultMessage:
-            '1 / value. E.g. a net covers 1.8 people; one bale covers 90 people.',
-    },
-    costUnitRatioSummaryDirect: {
-        id: 'iaso.snt_malaria.settings.costUnits.ratioSummaryDirect',
-        defaultMessage: '{value} per person',
-    },
-    costUnitRatioSummaryInverse: {
-        id: 'iaso.snt_malaria.settings.costUnits.ratioSummaryInverse',
-        defaultMessage: 'Covers {value} people',
-    },
-    costUnitRatioSummaryInverseOne: {
-        id: 'iaso.snt_malaria.settings.costUnits.ratioSummaryInverseOne',
-        defaultMessage: 'Covers {value} person',
-    },
-    costUnitRatioInvalid: {
-        id: 'iaso.snt_malaria.settings.costUnits.ratioInvalid',
-        defaultMessage: 'Please enter a valid number.',
-    },
     costUnitDescription: {
         id: 'iaso.snt_malaria.settings.costUnits.description',
         defaultMessage: 'Description',
     },
-    costUnitIsProportionalLabel: {
-        id: 'iaso.snt_malaria.settings.costUnits.isProportionalLabel',
-        defaultMessage: 'Proportional Unit',
+    costLineFactorLabel: {
+        id: 'iaso.snt_malaria.settings.interventions.costLineFactorLabel',
+        defaultMessage: 'Factor',
     },
-    costUnitIsProportionalHelp: {
-        id: 'iaso.snt_malaria.settings.costUnits.isProportionalHelp',
-        defaultMessage:
-            'When checked, this unit carries a conversion factor and cost lines using it are driven by a population metric (the cost driver). \
-            When unchecked, the unit represents an absolute / fixed cost and cost lines using it do not reference a population metric.',
+    costLineDirectionLabel: {
+        id: 'iaso.snt_malaria.settings.interventions.costLineDirectionLabel',
+        defaultMessage: 'Conversion direction',
     },
-    costUnitRatioSummaryAbsolute: {
-        id: 'iaso.snt_malaria.settings.costUnits.ratioSummaryAbsolute',
-        defaultMessage: 'Absolute / fixed cost',
+    costItemFixedLabel: {
+        id: 'iaso.snt_malaria.settings.interventions.costItemFixedLabel',
+        defaultMessage: 'Fixed cost item',
+    },
+    costItemProportionalLabel: {
+        id: 'iaso.snt_malaria.settings.interventions.costItemProportionalLabel',
+        defaultMessage: 'Proportional cost item',
     },
     grantsTitle: {
         id: 'iaso.snt_malaria.settings.grants.title',

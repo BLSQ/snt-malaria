@@ -35,27 +35,37 @@ from .support.metrics_importer import MetricsImporter
 
 DEMO_ACCOUNT_NAME = "Burkina Faso (demo)"
 
-# Maps (intervention.code, unit_type.name) to the population MetricType code that
+# Maps (intervention.code, cost line name) to the population MetricType code that
 # drives that cost line. Only needed for population-driven lines; NULL lines are left unchanged.
 COST_LINE_POPULATION_CODES = {
-    ("iptp", "IPTp Blister Pack"): "POP_PREGNANT_WOMAN",
-    ("pmc", "SP Tablet 0-1"): "POP_0_1_Y",
-    ("pmc", "SP Tablet 1-2"): "POP_1_2_Y",
-    ("pmc", "Each"): "POP_UNDER_5",
-    ("smc", "SP Tablet 0-1"): "POP_UNDER_5",
-    ("smc", "SP Tablet 1-2"): "POP_UNDER_5",
-    ("smc", "Each"): "POP_UNDER_5",
-    ("smc_3", "SMC 3 cycles"): "POP_UNDER_5",
-    ("smc_4", "SMC 4 cycles"): "POP_UNDER_5",
-    ("smc_5", "SMC 5 cycles"): "POP_UNDER_5",
-    ("itn_campaign", "Net"): "POPULATION",
-    ("itn_campaign", "Bale"): "POPULATION",
-    ("itn_routine", "Net"): "POPULATION",
-    ("itn_school", "Net"): "POP_5_10_Y",
-    ("itn_school", "Bale"): "POP_5_10_Y",
-    ("vacc", "Vaccine dose"): "POP_5_36_M",
-    ("vacc", "Each"): "POP_5_36_M",
-    ("lsm", "Days"): "POPULATION",
+    ("iptp", "IPTp (SP) Procurement"): "POP_PREGNANT_WOMAN",
+    ("iptp", "IPTp (SP) Distribution"): "POP_PREGNANT_WOMAN",
+    ("pmc", "PMC (SP) Procurement 0-1y"): "POP_0_1_Y",
+    ("pmc", "PMC (SP) Procurement 1-2y"): "POP_1_2_Y",
+    ("pmc", "PMC (SP) Operational"): "POP_UNDER_5",
+    ("smc", "SMC (SP+AQ) Procurement 0-1y"): "POP_UNDER_5",
+    ("smc", "SMC (SP+AQ) Procurement 1-2y"): "POP_UNDER_5",
+    ("smc", "SMC (SP+AQ) Operational"): "POP_UNDER_5",
+    ("itn_campaign", "Dual AI Procurement"): "POPULATION",
+    ("itn_campaign", "Dual AI Distribution"): "POPULATION",
+    ("itn_campaign", "PBO Procurement"): "POPULATION",
+    ("itn_campaign", "PBO Distribution"): "POPULATION",
+    ("itn_campaign", "Standard Pyrethroid Procurement"): "POPULATION",
+    ("itn_campaign", "Standard Pyrethroid Distribution"): "POPULATION",
+    ("itn_routine", "Dual AI Procurement"): "POPULATION",
+    ("itn_routine", "Dual AI Operational"): "POPULATION",
+    ("itn_routine", "PBO Procurement"): "POPULATION",
+    ("itn_routine", "PBO Operational"): "POPULATION",
+    ("itn_routine", "Standard Pyrethroid Procurement"): "POPULATION",
+    ("itn_routine", "Standard Pyrethroid Operational"): "POPULATION",
+    ("itn_school", "Dual AI Procurement"): "POP_5_10_Y",
+    ("itn_school", "Dual AI Distribution"): "POP_5_10_Y",
+    ("itn_school", "PBO Procurement"): "POP_5_10_Y",
+    ("itn_school", "PBO Distribution"): "POP_5_10_Y",
+    ("itn_school", "Standard Pyrethroid Procurement"): "POP_5_10_Y",
+    ("itn_school", "Standard Pyrethroid Distribution"): "POP_5_10_Y",
+    ("vacc", "R21 Procurement"): "POP_5_36_M",
+    ("vacc", "R21 Operational"): "POP_5_36_M",
 }
 DEMO_USER_USERNAME = "demo"
 DEMO_USER_PASSWORD = "demo"
@@ -278,17 +288,18 @@ class Command(BaseCommand):
 
         lines = InterventionCostBreakdownLine.objects.filter(
             intervention__intervention_category__account=account
-        ).select_related("intervention", "unit_type")
+        ).select_related("intervention")
 
         updated = 0
         for line in lines:
-            key = (line.intervention.code, line.unit_type.name)
+            key = (line.intervention.code, line.name)
             pop_code = COST_LINE_POPULATION_CODES.get(key)
             if pop_code:
                 metric_type = metric_types.get(pop_code)
                 if metric_type and line.population_layer_id != metric_type.id:
                     line.population_layer = metric_type
-                    line.save(update_fields=["population_layer"])
+                    line.is_proportional = True
+                    line.save(update_fields=["population_layer", "is_proportional"])
                     updated += 1
 
         self.stdout.write(f"Linked population layers on {updated} cost breakdown lines")

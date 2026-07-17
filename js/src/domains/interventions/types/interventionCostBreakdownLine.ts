@@ -8,5 +8,7 @@ export type InterventionCostBreakdownLine = {
     id: number;
     intervention: number;
     population_layer: number | null;
-    is_fixed_cost: boolean;
+    is_proportional: boolean;
+    conversion_factor: number | string;
+    invert_conversion_factor: boolean;
 };

@@ -211,11 +211,11 @@ class DemoScenarioSeeder:
         to_create = []
         for year in range(scenario.start_year, scenario.end_year + 1):
             for line in cost_lines:
-                if line.is_fixed_cost:
+                if line.is_proportional:
+                    value = YEARLY_COVERAGE_BY_CODE.get(line.intervention.code, DEFAULT_YEARLY_COVERAGE)
+                else:
                     # Fixed-cost lines default to 0 in the budget calculator; seed an explicit 0
                     value = Decimal("0.00")
-                else:
-                    value = YEARLY_COVERAGE_BY_CODE.get(line.intervention.code, DEFAULT_YEARLY_COVERAGE)
                 to_create.append(
                     ScenarioYearlyCostAssignment(
                         scenario=scenario,

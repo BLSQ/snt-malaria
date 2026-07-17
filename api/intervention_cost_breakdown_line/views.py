@@ -51,7 +51,6 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
             {
                 "value": str(unit_type.id),
                 "label": unit_type.name,
-                "is_proportional": unit_type.is_proportional,
             }
             for unit_type in queryset
         ]

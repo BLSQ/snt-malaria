@@ -14,133 +14,66 @@ from plugins.snt_malaria.models.intervention import Intervention, InterventionAs
 # Alias for brevity
 CostCategory = InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory
 
-# Explicit \n-joined strings (not triple-quoted) so the stored text keeps its
-# blank lines and the intentionally indented middle line, without picking up
-# Python source indentation.
-SP_TABLET_0_1_DESCRIPTION = (
-    "Each eligible child receives SP at four routine immunization touchpoints per year, "
-    "with age-specific dosing:"
-    "\n\n"
-    "    Children aged 0\u20131 years receive 1 tablet of SP per contact."
-    "\n\n"
-    "To account for underdosing due to low weight, which affects approximately 25% of children "
-    "in each age group, a scaling factor of 0.75 is applied to both age groups. This factor "
-    "reflects the average reduction in tablets required due to dose adjustment "
-    "(e.g., half tablets for underweight infants)."
-)
-
-SP_TABLET_1_2_DESCRIPTION = (
-    "Each eligible child receives SP at four routine immunization touchpoints per year, "
-    "with age-specific dosing:"
-    "\n\n"
-    "    Children aged 1\u20132 years receive 2 tablets of SP per contact."
-    "\n\n"
-    "To account for underdosing due to low weight, which affects approximately 25% of children "
-    "in each age group, a scaling factor of 0.75 is applied to both age groups. This factor "
-    "reflects the average reduction in tablets required due to dose adjustment "
-    "(e.g., half tablets for underweight infants)."
-)
-
-# Default cost unit types seeded for every account.
-# `value` is interpreted via `invert_value` to produce the canonical ratio
-# (invert_value=True means ratio = 1 / value).
-# `is_proportional=False` marks an absolute / fixed cost driver: its conversion factor is
-# transparent to the outside (ratio is always 1) and cost lines using it don't reference a
-# population layer.
+# Default cost unit types seeded for every account. Units are pure labels; the
+# conversion configuration lives on the cost breakdown lines, so descriptions
+# only say what the unit is.
 COST_UNIT_TYPES = [
     {
         "name": "Net",
-        "value": Decimal("1.8"),
-        "invert_value": True,
-        "is_proportional": True,
-        "description": "One net is assumed to protect 1.8 people by default.",
+        "description": "A single insecticide-treated bed net",
     },
     {
         "name": "Bale",
-        "value": Decimal("90"),
-        "invert_value": True,
-        "is_proportional": True,
-        "description": "One bale contains enough nets to cover 90 people people. "
-        "(1.8 person per net * 50 nets per bale)",
+        "description": "A bale contains 50 nets",
     },
     {
         "name": "IPTp Blister Pack",
-        "value": Decimal("3"),
-        "invert_value": False,
-        "is_proportional": True,
-        "description": "Number of ANC touchpoints per woman",
+        "description": "A single standard dose consists of a blister pack of 3 SP pills",
     },
     {
-        "name": "SMC 3 cycles",
-        "value": Decimal("3"),
-        "invert_value": False,
-        "is_proportional": True,
-        "description": "Number of monthly cycles",
+        "name": "SMC Blister Pack",
+        "description": "A single monthly cycle course contains 1 SP and 3 AQ tablets",
     },
     {
-        "name": "SMC 4 cycles",
-        "value": Decimal("4"),
-        "invert_value": False,
-        "is_proportional": True,
-        "description": "Number of monthly cycles",
-    },
-    {
-        "name": "SMC 5 cycles",
-        "value": Decimal("5"),
-        "invert_value": False,
-        "is_proportional": True,
-        "description": "Number of monthly cycles",
-    },
-    {
-        "name": "SP Tablet 0-1",
-        "value": Decimal("0.75"),
-        "invert_value": False,
-        "is_proportional": True,
-        "description": SP_TABLET_0_1_DESCRIPTION,
-    },
-    {
-        "name": "SP Tablet 1-2",
-        "value": Decimal("1.5"),
-        "invert_value": False,
-        "is_proportional": True,
-        "description": SP_TABLET_1_2_DESCRIPTION,
+        "name": "SP Tablet",
+        "description": "A single tablet of sulfadoxine-pyrimethamine (SP)",
     },
     {
         "name": "Vaccine dose",
-        "value": Decimal("4"),
-        "invert_value": False,
-        "is_proportional": True,
-        "description": "Four vaccine doses are assumed per person reached.",
+        "description": "A single dose of malaria vaccine",
     },
     {
-        "name": "Days",
-        "value": Decimal("1"),
-        "invert_value": False,
-        "is_proportional": False,
-        "description": "Number of days",
+        "name": "Day",
+        "description": "A single day",
     },
     {
-        "name": "Each",
-        "value": Decimal("1"),
-        "invert_value": False,
-        "is_proportional": False,
-        "description": "Default unit",
+        "name": "Item",
+        "description": "Default unit for items counted individually",
     },
 ]
 
-# Legacy enum-label unit names -> new default unit names. These rows were
+# Legacy unit names -> new default unit names. Covers the enum-label rows
 # created by the enum->model conversion in migration
 # 0041_costunittype_and_costbreakdown_updates (one CostUnitType per account per
-# legacy InterventionCostUnitType key, named with the enum label) and by
-# earlier runs of this seeder.
+# legacy InterventionCostUnitType key, named with the enum label), plus the
+# per-variant units that became obsolete once the conversion factor moved onto
+# the cost lines (also consolidated by migration 0055_move_conversion_to_cost_lines).
 LEGACY_UNIT_MAPPING = {
     "per ITN": "Net",
     "per bale": "Bale",
     "per SP": "IPTp Blister Pack",
-    "per SPAQ pack 3-11 month olds": "SP Tablet 0-1",
-    "per SPAQ pack 12-59 month olds": "SP Tablet 1-2",
-    "per child": "Each",
+    "per SPAQ pack 3-11 month olds": "SP Tablet",
+    "per SPAQ pack 12-59 month olds": "SP Tablet",
+    "per child": "Item",
     "per dose": "Vaccine dose",
+    "SMC 3 cycles": "SMC Blister Pack",
+    "SMC 4 cycles": "SMC Blister Pack",
+    "SMC 5 cycles": "SMC Blister Pack",
+    "SP+AQ pack": "SMC Blister Pack",
+    "SP Tablet 0-1": "SP Tablet",
+    "SP Tablet 1-2": "SP Tablet",
+    "Days": "Day",
+    "Each": "Item",
 }
 
 # Legacy labels without a sensible counterpart in the new units. "Other" in
@@ -196,6 +129,8 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "IPTp Blister Pack",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("3"),
                     },
                     {
                         "name": "IPTp (SP) Distribution",
@@ -203,6 +138,8 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "IPTp Blister Pack",
                         "category": CostCategory.DELIVERY,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("3"),
                     },
                 ],
             },
@@ -217,23 +154,27 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "description": "",
                 "cost_settings": [
                     {
-                        "name": "PMC (SP) Procurement",
+                        "name": "PMC (SP) Procurement 0-1y",
                         "unit_cost": "0.20",
-                        "unit_type": "SP Tablet 0-1",
+                        "unit_type": "SP Tablet",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("0.75"),
                     },
                     {
-                        "name": "PMC (SP) Procurement",
+                        "name": "PMC (SP) Procurement 1-2y",
                         "unit_cost": "0.20",
-                        "unit_type": "SP Tablet 1-2",
+                        "unit_type": "SP Tablet",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.5"),
                     },
                     {
                         "name": "PMC (SP) Operational",
                         "unit_cost": "0.08",
-                        "unit_type": "Each",
+                        "unit_type": "Item",
                         "category": CostCategory.OPERATIONAL,
                         "population_layer_code": None,
                     },
@@ -246,23 +187,27 @@ CATEGORIES_AND_INTERVENTIONS = {
                 "description": "",
                 "cost_settings": [
                     {
-                        "name": "SMC (SP+AQ) Procurement",
+                        "name": "SMC (SP+AQ) Procurement 0-1y",
                         "unit_cost": "0.24",
-                        "unit_type": "SP Tablet 0-1",
+                        "unit_type": "SP Tablet",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("0.75"),
                     },
                     {
-                        "name": "SMC (SP+AQ) Procurement",
+                        "name": "SMC (SP+AQ) Procurement 1-2y",
                         "unit_cost": "0.27",
-                        "unit_type": "SP Tablet 1-2",
+                        "unit_type": "SP Tablet",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.5"),
                     },
                     {
                         "name": "SMC (SP+AQ) Operational",
                         "unit_cost": "1.33",
-                        "unit_type": "Each",
+                        "unit_type": "Item",
                         "category": CostCategory.OPERATIONAL,
                         "population_layer_code": None,
                     },
@@ -305,6 +250,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Net",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.8"),
+                        "invert_conversion_factor": True,
                     },
                     {
                         "name": "Dual AI Distribution",
@@ -312,6 +260,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Bale",
                         "category": CostCategory.DELIVERY,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("90"),
+                        "invert_conversion_factor": True,
                     },
                 ],
             },
@@ -327,6 +278,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Net",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.8"),
+                        "invert_conversion_factor": True,
                     },
                     {
                         "name": "PBO Distribution",
@@ -334,6 +288,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Bale",
                         "category": CostCategory.DELIVERY,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("90"),
+                        "invert_conversion_factor": True,
                     },
                 ],
             },
@@ -349,6 +306,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Net",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.8"),
+                        "invert_conversion_factor": True,
                     },
                     {
                         "name": "Standard Pyrethroid Distribution",
@@ -356,6 +316,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Bale",
                         "category": CostCategory.DELIVERY,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("90"),
+                        "invert_conversion_factor": True,
                     },
                 ],
             },
@@ -375,6 +338,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Net",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.8"),
+                        "invert_conversion_factor": True,
                     },
                     {
                         "name": "Dual AI Operational",
@@ -382,6 +348,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Net",
                         "category": CostCategory.OPERATIONAL,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.8"),
+                        "invert_conversion_factor": True,
                     },
                 ],
             },
@@ -397,6 +366,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Net",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.8"),
+                        "invert_conversion_factor": True,
                     },
                     {
                         "name": "PBO Operational",
@@ -404,6 +376,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Net",
                         "category": CostCategory.OPERATIONAL,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.8"),
+                        "invert_conversion_factor": True,
                     },
                 ],
             },
@@ -419,6 +394,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Net",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.8"),
+                        "invert_conversion_factor": True,
                     },
                     {
                         "name": "Standard Pyrethroid Operational",
@@ -426,6 +404,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Net",
                         "category": CostCategory.OPERATIONAL,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.8"),
+                        "invert_conversion_factor": True,
                     },
                 ],
             },
@@ -445,6 +426,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Net",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.8"),
+                        "invert_conversion_factor": True,
                     },
                     {
                         "name": "Dual AI Distribution",
@@ -452,6 +436,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Bale",
                         "category": CostCategory.DELIVERY,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("90"),
+                        "invert_conversion_factor": True,
                     },
                 ],
             },
@@ -467,6 +454,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Net",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.8"),
+                        "invert_conversion_factor": True,
                     },
                     {
                         "name": "PBO Distribution",
@@ -474,6 +464,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Bale",
                         "category": CostCategory.DELIVERY,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("90"),
+                        "invert_conversion_factor": True,
                     },
                 ],
             },
@@ -489,6 +482,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Net",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("1.8"),
+                        "invert_conversion_factor": True,
                     },
                     {
                         "name": "Standard Pyrethroid Distribution",
@@ -496,6 +492,9 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Bale",
                         "category": CostCategory.DELIVERY,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("90"),
+                        "invert_conversion_factor": True,
                     },
                 ],
             },
@@ -515,11 +514,13 @@ CATEGORIES_AND_INTERVENTIONS = {
                         "unit_type": "Vaccine dose",
                         "category": CostCategory.PROCUREMENT,
                         "population_layer_code": None,
+                        "is_proportional": True,
+                        "conversion_factor": Decimal("4"),
                     },
                     {
                         "name": "R21 Operational",
                         "unit_cost": "1.00",
-                        "unit_type": "Each",
+                        "unit_type": "Item",
                         "category": CostCategory.OPERATIONAL,
                         "population_layer_code": None,
                     },
@@ -565,9 +566,6 @@ class InterventionSeeder:
                 account=self.account,
                 name=unit_data["name"],
                 defaults={
-                    "value": unit_data["value"],
-                    "invert_value": unit_data["invert_value"],
-                    "is_proportional": unit_data["is_proportional"],
                     "description": unit_data["description"],
                 },
             )
@@ -726,6 +724,9 @@ class InterventionSeeder:
                 unit_type=unit_type,
                 population_layer=population_layer,
                 unit_cost=cost_data["unit_cost"],
+                is_proportional=cost_data.get("is_proportional", population_layer is not None),
+                conversion_factor=cost_data.get("conversion_factor", Decimal("1")),
+                invert_conversion_factor=cost_data.get("invert_conversion_factor", False),
                 created_by=created_by,
             )
         if print_progress:

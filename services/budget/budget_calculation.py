@@ -27,7 +27,7 @@ class BudgetCalculationService:
     """Compute scenario budget using internal population-driven formula.
 
     Implemented formula:
-    population * yearly_assignment_value * cost_unit_ratio * cost_line_unit_cost
+    population * yearly_assignment_value * conversion_ratio * cost_line_unit_cost
 
     Only population-driven cost lines are processed in this first version.
     """
@@ -168,8 +168,8 @@ class BudgetCalculationService:
                     "population": Decimal("0"),
                     "unit_cost": None,
                     "cost_unit_name": None,
-                    "cost_unit_ratio": None,
-                    "cost_unit_inverted": False,
+                    "conversion_factor": None,
+                    "invert_conversion_factor": False,
                     "target_population": None,
                 }
             )
@@ -188,8 +188,8 @@ class BudgetCalculationService:
                         "population": Decimal("0"),
                         "unit_cost": None,
                         "cost_unit_name": None,
-                        "cost_unit_ratio": None,
-                        "cost_unit_inverted": False,
+                        "conversion_factor": None,
+                        "invert_conversion_factor": False,
                         "target_population": None,
                     }
                 )
@@ -215,8 +215,8 @@ class BudgetCalculationService:
                 if cost_line:
                     bd["unit_cost"] = cost_line.unit_cost
                     bd["cost_unit_name"] = cost_line.unit_type.name if cost_line.unit_type else None
-                    bd["cost_unit_ratio"] = cost_line.unit_type.value if cost_line.unit_type else None
-                    bd["cost_unit_inverted"] = cost_line.unit_type.invert_value
+                    bd["conversion_factor"] = cost_line.conversion_factor
+                    bd["invert_conversion_factor"] = cost_line.invert_conversion_factor
                     bd["target_population"] = cost_line.population_layer.name if cost_line.population_layer else None
 
             if row.org_unit_id is not None:
@@ -233,8 +233,8 @@ class BudgetCalculationService:
                     if cost_line:
                         ou_bd["unit_cost"] = cost_line.unit_cost
                         ou_bd["cost_unit_name"] = cost_line.unit_type.name if cost_line.unit_type else None
-                        ou_bd["cost_unit_ratio"] = cost_line.unit_type.value if cost_line.unit_type else None
-                        ou_bd["cost_unit_inverted"] = cost_line.unit_type.invert_value
+                        ou_bd["conversion_factor"] = cost_line.conversion_factor
+                        ou_bd["invert_conversion_factor"] = cost_line.invert_conversion_factor
                         ou_bd["target_population"] = (
                             cost_line.population_layer.name if cost_line.population_layer else None
                         )
@@ -266,7 +266,7 @@ class BudgetCalculationService:
         Compute the raw cost breakdown lines for a given year, without any aggregation, to be used as input for the budget calculation.
         Calculation is based on the population-driven formula, only processing cost lines with population as cost driver
         And skipping lines with missing population or yearly per scenario cost values.
-        Formula quantity: population * yearly_cost_value * cost_unit_ratio
+        Formula quantity: population * yearly_cost_value * conversion_ratio
         Formula total cost: quantity * cost_line_unit_cost * (1 + inflation_rate)^(year - start_year)
         """
 
@@ -283,7 +283,7 @@ class BudgetCalculationService:
 
             for line in self.cost_lines_by_intervention_id.get(intervention.id, []):
                 lineToAdd = None
-                if not line.is_fixed_cost:
+                if line.is_proportional:
                     lineToAdd = self._compute_population_cost_row(
                         line, org_unit_id, year, inflation_multiplier, intervention.id, grant_id
                     )
@@ -297,7 +297,7 @@ class BudgetCalculationService:
         return rows
 
     def _get_yearly_value(self, line, year):
-        default = Decimal("0") if line.is_fixed_cost else Decimal("1")
+        default = Decimal("1") if line.is_proportional else Decimal("0")
         return self.yearly_value_by_key.get((line.id, year), default)
 
     def _compute_population_cost_row(self, line, org_unit_id, year, inflation_multiplier, intervention_id, grant_id):
@@ -312,10 +312,8 @@ class BudgetCalculationService:
             return None
 
         yearly_value = self._get_yearly_value(line, year)
-        unit_ratio = line.unit_type.ratio if line.unit_type and line.unit_type.ratio is not None else Decimal("1")
 
-        # Doing the same as before here, quantity is modified by the unit ratio and the yearly coverage.
-        quantity = population * yearly_value * Decimal(str(unit_ratio))
+        quantity = population * yearly_value * line.conversion_ratio
         line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
 
         if line_cost <= 0:
@@ -337,9 +335,7 @@ class BudgetCalculationService:
         """
         Calculate using yearly value as quantity. Added once per intervention regardless of org units.
         """
-        yearly_value = self._get_yearly_value(line, year)
-        unit_ratio = line.unit_type.ratio if line.unit_type and line.unit_type.ratio is not None else Decimal("1")
-        quantity = yearly_value * Decimal(str(unit_ratio))
+        quantity = self._get_yearly_value(line, year)
         line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
         if line_cost <= 0:
             return None
@@ -374,8 +370,8 @@ class BudgetCalculationService:
                     population=bd["population"],
                     unit_cost=bd["unit_cost"],
                     cost_unit_name=bd["cost_unit_name"],
-                    cost_unit_ratio=bd["cost_unit_ratio"],
-                    cost_unit_inverted=bd["cost_unit_inverted"],
+                    conversion_factor=bd["conversion_factor"],
+                    invert_conversion_factor=bd["invert_conversion_factor"],
                     target_population=bd["target_population"],
                     buffer=float(self.buffer),
                 )
@@ -424,8 +420,8 @@ class BudgetCalculationService:
                         population=bd["population"],
                         unit_cost=bd["unit_cost"],
                         cost_unit_name=bd["cost_unit_name"],
-                        cost_unit_ratio=bd["cost_unit_ratio"],
-                        cost_unit_inverted=bd["cost_unit_inverted"],
+                        conversion_factor=bd["conversion_factor"],
+                        invert_conversion_factor=bd["invert_conversion_factor"],
                         target_population=bd["target_population"],
                         buffer=float(self.buffer),
                     )

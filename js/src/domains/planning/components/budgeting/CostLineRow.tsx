@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { pluralize } from '../../../../utils/pluralize';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { formatBigNumber } from '../../libs/cost-utils';
@@ -27,7 +28,7 @@ export type CostLineRowData = {
     id: number;
     label: string;
     subLabel: string;
-    isFixedCost: boolean;
+    isProportional: boolean;
     totalCost: number;
     coverageByYear: Record<number, CostLineYearlyCoverage>;
     unitCost: number;
@@ -85,7 +86,7 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
         Record<number, string>
     >({});
 
-    const defaultCoverage = costLine.isFixedCost ? 0 : 100;
+    const defaultCoverage = costLine.isProportional ? 100 : 0;
 
     React.useEffect(() => {
         const nextCoverageInputsByYear: Record<number, string> = {};
@@ -125,7 +126,7 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
 
     const normalizeCoverageValue = React.useCallback(
         (year: number) => {
-            if (costLine.isFixedCost) return;
+            if (!costLine.isProportional) return;
 
             setCoverageInputsByYear(current => {
                 const rawValue = current[year] ?? '';
@@ -162,7 +163,7 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
     return (
         <TableRow sx={styles.costLineRow}>
             <TableCell align="left" colSpan={2} sx={styles.labelCell}>
-                <CostDriverIcon isFixedCost={costLine.isFixedCost} />
+                <CostDriverIcon isProportional={costLine.isProportional} />
                 <Typography variant="body2" component="span">
                     {costLine.label}
                 </Typography>
@@ -172,7 +173,7 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
                     key={`cost_line_${costLine.label}_${year}`}
                     align="center"
                 >
-                    <CostDriverTooltip isFixedCost={costLine.isFixedCost}>
+                    <CostDriverTooltip isProportional={costLine.isProportional}>
                         <Box component="span" display="inline-flex">
                             <YearlyCoverageInput
                                 value={coverageInputsByYear[year]}
@@ -181,7 +182,7 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
                                 }
                                 onBlur={() => normalizeCoverageValue(year)}
                                 disabled={!isEditable}
-                                percentage={!costLine.isFixedCost}
+                                percentage={costLine.isProportional}
                             />
                         </Box>
                     </CostDriverTooltip>
@@ -200,29 +201,29 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
 };
 
 type CostDriverTooltipProps = {
-    isFixedCost: boolean;
+    isProportional: boolean;
     children: React.ReactElement;
     /** When true, show the short definition only (no description). */
     short?: boolean;
 };
 
 const useCostDriverTooltipContent = (
-    isFixedCost: boolean,
+    isProportional: boolean,
     short: boolean,
 ): React.ReactNode => {
     const { formatMessage } = useSafeIntl();
     const name = formatMessage(
-        isFixedCost
-            ? MESSAGES.budgetingCostLineFixedLabel
-            : MESSAGES.budgetingCostLineProportionalLabel,
+        isProportional
+            ? MESSAGES.budgetingCostLineProportionalLabel
+            : MESSAGES.budgetingCostLineFixedLabel,
     );
     if (short) {
         return name;
     }
     const description = formatMessage(
-        isFixedCost
-            ? MESSAGES.budgetingCostLineFixedTooltip
-            : MESSAGES.budgetingCostLineProportionalTooltip,
+        isProportional
+            ? MESSAGES.budgetingCostLineProportionalTooltip
+            : MESSAGES.budgetingCostLineFixedTooltip,
     );
     return (
         <>
@@ -232,11 +233,11 @@ const useCostDriverTooltipContent = (
 };
 
 const CostDriverTooltip: FC<CostDriverTooltipProps> = ({
-    isFixedCost,
+    isProportional,
     children,
     short = false,
 }) => {
-    const tooltipContent = useCostDriverTooltipContent(isFixedCost, short);
+    const tooltipContent = useCostDriverTooltipContent(isProportional, short);
     return (
         <Tooltip
             arrow={true}
@@ -252,16 +253,16 @@ const CostDriverTooltip: FC<CostDriverTooltipProps> = ({
 };
 
 type CostDriverIconProps = {
-    isFixedCost: boolean;
+    isProportional: boolean;
 };
 
-const CostDriverIcon: FC<CostDriverIconProps> = ({ isFixedCost }) => (
-    <CostDriverTooltip isFixedCost={isFixedCost} short>
+const CostDriverIcon: FC<CostDriverIconProps> = ({ isProportional }) => (
+    <CostDriverTooltip isProportional={isProportional} short>
         <IconButton size="small" disableRipple sx={styles.costDriverIconButton}>
-            {isFixedCost ? (
-                <NumbersIcon sx={styles.costDriverIcon} />
-            ) : (
+            {isProportional ? (
                 <GroupsIcon sx={styles.costDriverIcon} />
+            ) : (
+                <NumbersIcon sx={styles.costDriverIcon} />
             )}
         </IconButton>
     </CostDriverTooltip>
@@ -283,9 +284,17 @@ export const CostLineTooltip: FC<TooltipProps> = ({ costLine }) => {
                       unit: costLine.unitName,
                   })
                 : formatMessage(MESSAGES.budgetingCostLineUnitPerPeople, {
-                      unit: costLine.unitName,
+                      unit: pluralize(
+                          costLine.unitName,
+                          costLine.conversionFactor ?? 1,
+                      ),
                   })),
-        [costLine.unitName, costLine.invertedConversionFactor, formatMessage],
+        [
+            costLine.unitName,
+            costLine.invertedConversionFactor,
+            costLine.conversionFactor,
+            formatMessage,
+        ],
     );
     return (
         <Tooltip
@@ -336,14 +345,20 @@ export const CostLineTooltip: FC<TooltipProps> = ({ costLine }) => {
                             </Tooltip>
                         </Stack>
                     )}
-                    {costLine.conversionFactor !== null && (
-                        <Stack direction="row" justifyContent="space-between">
-                            <Typography variant="body2">{unitLabel}</Typography>
-                            <Typography variant="body2" textAlign="right">
-                                {costLine.conversionFactor?.toFixed(2)}
-                            </Typography>
-                        </Stack>
-                    )}
+                    {costLine.isProportional &&
+                        costLine.conversionFactor !== null && (
+                            <Stack
+                                direction="row"
+                                justifyContent="space-between"
+                            >
+                                <Typography variant="body2">
+                                    {unitLabel}
+                                </Typography>
+                                <Typography variant="body2" textAlign="right">
+                                    {costLine.conversionFactor?.toFixed(2)}
+                                </Typography>
+                            </Stack>
+                        )}
                     <Stack direction="row" justifyContent="space-between">
                         <Typography variant="body2">
                             {formatMessage(MESSAGES.budgetingCostLineBuffer)}

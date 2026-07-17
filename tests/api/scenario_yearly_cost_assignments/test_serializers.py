@@ -62,6 +62,7 @@ class ScenarioYearlyCostAssignmentSerializerBaseTestCase(SNTMalariaTestCase):
             name="Population line 1",
             category="Procurement",
             population_layer=self.metric_population,
+            is_proportional=True,
             unit_cost=10,
             created_by=self.user,
         )
@@ -71,6 +72,7 @@ class ScenarioYearlyCostAssignmentSerializerBaseTestCase(SNTMalariaTestCase):
             name="Population line 2",
             category="Operational",
             population_layer=self.metric_population,
+            is_proportional=True,
             unit_cost=15,
             created_by=self.user,
         )
@@ -103,6 +105,7 @@ class ScenarioYearlyCostAssignmentSerializerBaseTestCase(SNTMalariaTestCase):
             name="Other cost line",
             category="Procurement",
             population_layer=self.other_account_metric,
+            is_proportional=True,
             unit_cost=30,
             created_by=self.other_account_user,
         )

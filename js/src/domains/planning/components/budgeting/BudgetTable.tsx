@@ -97,14 +97,17 @@ export const BudgetTable: FC = ({}) => {
                         id: line.id,
                         label: line.name,
                         subLabel: '',
-                        isFixedCost: line.is_fixed_cost,
+                        isProportional: line.is_proportional,
                         totalCost: 0,
                         coverageByYear: (yearlyCoverageByCostLine[line.id] ||
                             {}) as Record<number, CostLineYearlyCoverage>,
                         unitCost: Number(line.unit_cost),
                         unitName: line.unit_type_label,
-                        conversionFactor: null,
-                        invertedConversionFactor: false,
+                        conversionFactor:
+                            line.conversion_factor != null
+                                ? Number(line.conversion_factor)
+                                : null,
+                        invertedConversionFactor: line.invert_conversion_factor,
                         targetPopulation: null,
                         buffer: 1.1,
                     });
@@ -178,9 +181,9 @@ export const BudgetTable: FC = ({}) => {
         row.totalCost += costLine.total_cost;
         row.unitCost = costLine.unit_cost ?? row.unitCost;
         row.unitName = costLine.cost_unit_name ?? row.unitName;
-        row.conversionFactor = costLine.cost_unit_ratio;
+        row.conversionFactor = costLine.conversion_factor;
         row.targetPopulation = costLine.target_population;
-        row.invertedConversionFactor = costLine.cost_unit_inverted;
+        row.invertedConversionFactor = costLine.invert_conversion_factor;
         row.buffer = costLine.buffer ?? row.buffer;
     };
 
@@ -191,14 +194,14 @@ export const BudgetTable: FC = ({}) => {
                 id: costLine.id,
                 label: breakdownLine?.name ?? '',
                 subLabel: '',
-                isFixedCost: breakdownLine?.is_fixed_cost ?? false,
+                isProportional: breakdownLine?.is_proportional ?? true,
                 totalCost: costLine.total_cost,
                 coverageByYear: (yearlyCoverageByCostLine[costLine.id] ||
                     {}) as Record<number, CostLineYearlyCoverage>,
                 unitCost: costLine.unit_cost ?? 0,
                 unitName: costLine.cost_unit_name ?? '',
-                conversionFactor: costLine.cost_unit_ratio,
-                invertedConversionFactor: costLine.cost_unit_inverted,
+                conversionFactor: costLine.conversion_factor,
+                invertedConversionFactor: costLine.invert_conversion_factor,
                 targetPopulation: costLine.target_population,
                 buffer: costLine.buffer ?? 1.1,
             };

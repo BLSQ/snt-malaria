@@ -22,12 +22,8 @@ class InterventionDetailWriteSerializerTests(APITestCase):
             intervention_category=self.int_category_vaccination,
             code="rts_s",
         )
-        self.unit_type_other, _ = CostUnitType.objects.get_or_create(
-            account=self.account, name="Other", defaults={"is_proportional": False}
-        )
-        self.unit_type_per_itn, _ = CostUnitType.objects.get_or_create(
-            account=self.account, name="per ITN", defaults={"is_proportional": False}
-        )
+        self.unit_type_other, _ = CostUnitType.objects.get_or_create(account=self.account, name="Other")
+        self.unit_type_per_itn, _ = CostUnitType.objects.get_or_create(account=self.account, name="per ITN")
 
         self.context = {"request": Mock(user=self.user)}
 

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import transaction
 from rest_framework import serializers
 
@@ -46,6 +48,9 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
                         "intervention",
                         "updated_by",
                         "population_layer",
+                        "is_proportional",
+                        "conversion_factor",
+                        "invert_conversion_factor",
                     ],
                 )
             if lines_to_delete:
@@ -56,16 +61,9 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
         return queryset.filter(id__in=[line.id for line in lines_to_update] + [line.id for line in lines_to_create])
 
 
-class CostUnitTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CostUnitType
-        fields = ["id", "name", "ratio", "is_proportional"]
-
-
 class UnitTypeDropdownSerializer(serializers.Serializer):
     value = serializers.CharField()
     label = serializers.CharField()
-    is_proportional = serializers.BooleanField()
 
 
 class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
@@ -90,7 +88,9 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
             "category_label",
             "intervention",
             "population_layer",
-            "is_fixed_cost",
+            "is_proportional",
+            "conversion_factor",
+            "invert_conversion_factor",
         ]
 
     def get_unit_type_label(self, obj):
@@ -117,6 +117,11 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
     population_layer = serializers.PrimaryKeyRelatedField(
         queryset=MetricType.objects.none(), required=False, allow_null=True
     )
+    is_proportional = serializers.BooleanField(required=False, default=False)
+    conversion_factor = serializers.DecimalField(
+        max_digits=19, decimal_places=6, required=False, default=Decimal("1"), min_value=0
+    )
+    invert_conversion_factor = serializers.BooleanField(required=False, default=False)
 
     class Meta:
         model = InterventionCostBreakdownLine
@@ -129,6 +134,9 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             "category",
             "intervention",
             "population_layer",
+            "is_proportional",
+            "conversion_factor",
+            "invert_conversion_factor",
         ]
 
     def get_fields(self):
@@ -145,12 +153,14 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
-        unit_type = attrs.get("unit_type")
-        if unit_type is not None and not unit_type.is_proportional:
+        if attrs.get("invert_conversion_factor") and attrs.get("conversion_factor") == 0:
+            raise serializers.ValidationError({"conversion_factor": "The conversion factor cannot be 0 when inverted."})
+        if attrs.get("is_proportional"):
+            if not attrs.get("population_layer"):
+                raise serializers.ValidationError(
+                    {"population_layer": "A target population is required for proportional cost items."}
+                )
+        else:
             # Absolute / fixed cost: a population layer is meaningless, so drop it silently.
             attrs["population_layer"] = None
-        elif unit_type is not None and unit_type.is_proportional and not attrs.get("population_layer"):
-            raise serializers.ValidationError(
-                {"population_layer": "A target population is required for proportional units."}
-            )
         return attrs
