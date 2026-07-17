@@ -59,12 +59,10 @@ class InterventionCostBreakdownLine(models.Model):
     def conversion_ratio(self):
         """Canonical conversion factor used by the budget calculation (1 / value when inverted).
 
-        Fixed cost lines always return 1, regardless of the stored value.
+        Fixed cost lines and degenerate factors (missing or 0) always return 1.
         """
-        if not self.is_proportional or self.conversion_factor is None:
+        if not self.is_proportional or not self.conversion_factor:
             return Decimal(1)
         if self.invert_conversion_factor:
-            if self.conversion_factor == 0:
-                return Decimal(1)
             return Decimal(1) / self.conversion_factor
         return self.conversion_factor

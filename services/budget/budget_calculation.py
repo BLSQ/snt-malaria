@@ -335,8 +335,7 @@ class BudgetCalculationService:
         """
         Calculate using yearly value as quantity. Added once per intervention regardless of org units.
         """
-        yearly_value = self._get_yearly_value(line, year)
-        quantity = yearly_value
+        quantity = self._get_yearly_value(line, year)
         line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
         if line_cost <= 0:
             return None

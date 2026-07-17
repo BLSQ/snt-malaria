@@ -153,14 +153,12 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
+        if attrs.get("invert_conversion_factor") and attrs.get("conversion_factor") == 0:
+            raise serializers.ValidationError({"conversion_factor": "The conversion factor cannot be 0 when inverted."})
         if attrs.get("is_proportional"):
             if not attrs.get("population_layer"):
                 raise serializers.ValidationError(
                     {"population_layer": "A target population is required for proportional cost items."}
-                )
-            if attrs.get("invert_conversion_factor") and attrs.get("conversion_factor") == 0:
-                raise serializers.ValidationError(
-                    {"conversion_factor": "The conversion factor cannot be 0 when inverted."}
                 )
         else:
             # Absolute / fixed cost: a population layer is meaningless, so drop it silently.
