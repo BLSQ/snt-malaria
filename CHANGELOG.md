@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.15.0](https://github.com/BLSQ/snt-malaria/compare/2.14.0...2.15.0) (2026-07-17)
+
+
+### Features
+
+* **budget:** Move conversion to cost items ([9d64f65](https://github.com/BLSQ/snt-malaria/commit/9d64f65d0fb2251fa1bb1eafadd0fa836c0f91b0))
+* **budget:** Unit-based commodity tracking ([3e3493b](https://github.com/BLSQ/snt-malaria/commit/3e3493bd6cef540468d64f65c01f383ae9ff5263))
+* **CompositeLayers:** node based composite editor ([ced3e4f](https://github.com/BLSQ/snt-malaria/commit/ced3e4f96f932bb5df29242fd256d32a00405a15))
+* **CompositeLayers:** node editor improvements ([fc383f7](https://github.com/BLSQ/snt-malaria/commit/fc383f7f454c472aa33180eb6b8cd736139d85bc))
+* **dataLayer:** Multi map support ([#329](https://github.com/BLSQ/snt-malaria/issues/329)) ([14e41c6](https://github.com/BLSQ/snt-malaria/commit/14e41c64f64199563939b9b87eb12c445c62508f))
+* **DataLayers:** Support years for all data layers ([#334](https://github.com/BLSQ/snt-malaria/issues/334)) ([e04409d](https://github.com/BLSQ/snt-malaria/commit/e04409d595c3d01350c21ce5609c8204bacdbe45))
+* **settings:** make cost unit driver explicit ([5d9dec0](https://github.com/BLSQ/snt-malaria/commit/5d9dec09eeb77930ee385f53da55bd8c2cfdff68))
+
+
+### Bug Fixes
+
+* **scenario:** Add missing deepcopy import on scenario utils ([#335](https://github.com/BLSQ/snt-malaria/issues/335)) ([5ca2c9d](https://github.com/BLSQ/snt-malaria/commit/5ca2c9dfcee05213c841a3a5264dfcb4f595305e))
+
 ## [2.14.0](https://github.com/BLSQ/snt-malaria/compare/2.13.0...2.14.0) (2026-07-01)
 
 
