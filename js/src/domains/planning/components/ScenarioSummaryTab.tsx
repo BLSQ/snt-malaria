@@ -3,13 +3,19 @@ import { Box, Card, CardHeader } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { PaperFullHeight } from '../../../components/styledComponents';
 import { BudgetSummary } from './budgeting/BudgetSummary';
+import { CommoditiesSummary } from './budgeting/CommoditiesSummary';
 import { CostPerDistrictSummary } from './budgeting/CostPerDistrictSummary';
 import { CostPerInterventionSummary } from './budgeting/CostPerInterventionSummary';
 import { PrevalenceSummary } from './budgeting/PrevalenceSummary';
 
+// Minimum widget heights so charts (ResponsiveContainer height="100%") get a
+// concrete height now that the page scrolls instead of fitting the viewport.
+const CHART_HEIGHT = 360;
+const MAP_HEIGHT = 560;
+
 const styles = {
-    // Fill the main column exactly; widgets flex inside with no page-level
-    // scroll (overflow is handled inside chart bodies if needed).
+    // Fill the main column; the header stays put while only the widgets below
+    // scroll (see scrollArea).
     column: {
         flex: 1,
         width: '100%',
@@ -25,50 +31,65 @@ const styles = {
         mb: 1,
         flexShrink: 0,
     },
+    // Scrolls the widgets while the header card above stays fixed.
+    scrollArea: {
+        flex: 1,
+        minHeight: 0,
+        overflowY: 'auto',
+    },
     // Equal py keeps the controls symmetric; minHeight 81px matches the other
     // tabs' content box so they don't jump when switching.
     header: {
         py: 2,
         minHeight: '81px',
     },
-    // Two columns (1/3 + 2/3 wide); left split 50/50, right split 1/3 + 2/3.
+    // Two columns (1/3 + 2/3 wide). Default align-items (stretch) keeps both
+    // columns the same height; minHeight fills at least the visible area.
     grid: {
-        flex: 1,
         width: '100%',
-        minHeight: 0,
+        minHeight: '100%',
         display: 'flex',
         gap: 1,
     },
     leftColumn: {
         flex: 4,
         minWidth: 0,
-        minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
     },
+    // The right column never contributes intrinsic height (its content lives
+    // in an absolutely positioned layer), so the grid height is driven only by
+    // the viewport, the left column, and this explicit minimum.
     rightColumn: {
         flex: 8,
         minWidth: 0,
-        minHeight: 0,
+        position: 'relative',
+        minHeight: CHART_HEIGHT + MAP_HEIGHT + 8,
+    },
+    rightColumnContent: {
+        position: 'absolute',
+        inset: 0,
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
     },
-    widget: {
+    // Growing widgets absorb the slack in their column so both columns always
+    // end at the same height, whichever one is naturally taller.
+    growChartWidget: {
+        position: 'relative',
         flex: 1,
-        minHeight: 0,
-        overflow: 'hidden',
+        minHeight: CHART_HEIGHT,
     },
-    widgetThird: {
-        flex: 1,
-        minHeight: 0,
-        overflow: 'hidden',
-    },
-    widgetTwoThirds: {
+    growMapWidget: {
         flex: 2,
-        minHeight: 0,
-        overflow: 'hidden',
+        minHeight: MAP_HEIGHT,
+    },
+    // Pins the widget content to the box resolved by flex, so the chart's own
+    // rendered height can never feed back into the column height.
+    growWidgetContent: {
+        position: 'absolute',
+        inset: 0,
     },
 } satisfies SxStyles;
 
@@ -81,21 +102,30 @@ export const ScenarioSummaryTab: FC<Props> = ({ header }) => (
         <Card sx={styles.headerCard}>
             <CardHeader sx={styles.header} title={header} />
         </Card>
-        <Box sx={styles.grid}>
-            <Box sx={styles.leftColumn}>
-                <Box sx={styles.widget}>
-                    <BudgetSummary />
+        <Box sx={styles.scrollArea}>
+            <Box sx={styles.grid}>
+                <Box sx={styles.leftColumn}>
+                    <Box sx={styles.growChartWidget}>
+                        <Box sx={styles.growWidgetContent}>
+                            <BudgetSummary />
+                        </Box>
+                    </Box>
+                    <CommoditiesSummary />
+                    <Box sx={styles.growChartWidget}>
+                        <Box sx={styles.growWidgetContent}>
+                            <CostPerInterventionSummary />
+                        </Box>
+                    </Box>
                 </Box>
-                <Box sx={styles.widget}>
-                    <CostPerInterventionSummary />
-                </Box>
-            </Box>
-            <Box sx={styles.rightColumn}>
-                <Box sx={styles.widgetThird}>
-                    <PrevalenceSummary />
-                </Box>
-                <Box sx={styles.widgetTwoThirds}>
-                    <CostPerDistrictSummary />
+                <Box sx={styles.rightColumn}>
+                    <Box sx={styles.rightColumnContent}>
+                        <Box sx={styles.growChartWidget}>
+                            <PrevalenceSummary />
+                        </Box>
+                        <Box sx={styles.growMapWidget}>
+                            <CostPerDistrictSummary />
+                        </Box>
+                    </Box>
                 </Box>
             </Box>
         </Box>

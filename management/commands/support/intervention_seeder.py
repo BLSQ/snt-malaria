@@ -21,34 +21,42 @@ COST_UNIT_TYPES = [
     {
         "name": "Net",
         "description": "A single insecticide-treated bed net",
+        "is_commodity": True,
     },
     {
         "name": "Bale",
         "description": "A bale contains 50 nets",
+        "is_commodity": True,
     },
     {
         "name": "IPTp Blister Pack",
         "description": "A single standard dose consists of a blister pack of 3 SP pills",
+        "is_commodity": True,
     },
     {
         "name": "SMC Blister Pack",
         "description": "A single monthly cycle course contains 1 SP and 3 AQ tablets",
+        "is_commodity": True,
     },
     {
         "name": "SP Tablet",
         "description": "A single tablet of sulfadoxine-pyrimethamine (SP)",
+        "is_commodity": True,
     },
     {
         "name": "Vaccine dose",
         "description": "A single dose of malaria vaccine",
+        "is_commodity": True,
     },
     {
         "name": "Day",
         "description": "A single day",
+        "is_commodity": False,
     },
     {
         "name": "Item",
         "description": "Default unit for items counted individually",
+        "is_commodity": False,
     },
 ]
 
@@ -567,6 +575,7 @@ class InterventionSeeder:
                 name=unit_data["name"],
                 defaults={
                     "description": unit_data["description"],
+                    "is_commodity": unit_data["is_commodity"],
                 },
             )
             if created:

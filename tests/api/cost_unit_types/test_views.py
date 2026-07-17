@@ -53,7 +53,7 @@ class CostUnitTypeAPITestCase(SNTMalariaAPITestCase):
         response = self.client.get(self.BASE_URL)
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
         net = next(item for item in result if item["name"] == "Net")
-        self.assertEqual(set(net.keys()), {"id", "name", "description"})
+        self.assertEqual(set(net.keys()), {"id", "name", "description", "is_commodity"})
         self.assertEqual(net["description"], "One net protects 1.8 people.")
 
     def test_list_with_no_perms(self):
@@ -129,6 +129,14 @@ class CostUnitTypeAPITestCase(SNTMalariaAPITestCase):
         response = self.client.patch(f"{self.BASE_URL}{self.unit_net.id}/", data={"name": "Dual AI Net"})
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
         self.assertEqual(result["name"], "Dual AI Net")
+
+    def test_patch_is_commodity_flag(self):
+        self.client.force_authenticate(self.user_write)
+        response = self.client.patch(f"{self.BASE_URL}{self.unit_net.id}/", data={"is_commodity": True})
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertTrue(result["is_commodity"])
+        self.unit_net.refresh_from_db()
+        self.assertTrue(self.unit_net.is_commodity)
 
     def test_update_with_read_perm_forbidden(self):
         self.client.force_authenticate(self.user_read)

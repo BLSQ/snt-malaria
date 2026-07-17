@@ -87,3 +87,48 @@ export const aggregateInterventionCosts = (
     mergeInterventions(
         orgUnitCosts.flatMap(ouc => ouc.interventions ?? []),
     ).sort((a, b) => b.total_cost - a.total_cost);
+
+// Backend cost category value (InterventionCostBreakdownLineCategory.PROCUREMENT).
+const PROCUREMENT_CATEGORY = 'Procurement';
+
+export type CommodityQuantity = {
+    unitName: string;
+    quantity: number;
+};
+
+/**
+ * Sums the procurement quantities of every cost line across all years and
+ * interventions, grouped by cost unit. Only lines whose unit is in
+ * `commodityUnitNames` are counted; lines without a unit are ignored since
+ * they can't be expressed as a commodity.
+ */
+export const aggregateProcurementQuantitiesByUnit = (
+    budgets: Budget[],
+    commodityUnitNames: Set<string>,
+): CommodityQuantity[] => {
+    const quantityByUnit = new Map<string, number>();
+    budgets.forEach(budget => {
+        (budget.interventions ?? []).forEach(intervention => {
+            (intervention.cost_breakdown ?? []).forEach(line => {
+                if (line.category !== PROCUREMENT_CATEGORY) {
+                    return;
+                }
+                if (!line.cost_unit_name || !line.quantity) {
+                    return;
+                }
+                if (!commodityUnitNames.has(line.cost_unit_name)) {
+                    return;
+                }
+                quantityByUnit.set(
+                    line.cost_unit_name,
+                    (quantityByUnit.get(line.cost_unit_name) ?? 0) +
+                        line.quantity,
+                );
+            });
+        });
+    });
+    return Array.from(quantityByUnit, ([unitName, quantity]) => ({
+        unitName,
+        quantity,
+    })).sort((a, b) => b.quantity - a.quantity);
+};

@@ -62,6 +62,7 @@ export const CostUnitFormWrapper: FC<Props> = ({
             id: costUnit?.id,
             name: costUnit?.name ?? '',
             description: costUnit?.description ?? '',
+            is_commodity: costUnit?.is_commodity ?? false,
         }),
         [costUnit],
     );
@@ -72,6 +73,7 @@ export const CostUnitFormWrapper: FC<Props> = ({
                 id: values.id,
                 name: values.name,
                 description: values.description ?? '',
+                is_commodity: values.is_commodity,
             };
             saveCostUnitType(payload, {
                 onSuccess: (saved: unknown) =>

@@ -381,6 +381,8 @@
     "iaso.snt_malaria.settings.costUnits.deleteConfirmMessage": "Cette unité sera définitivement supprimée. Les unités utilisées par une ligne de coût ne peuvent pas être supprimées.",
     "iaso.snt_malaria.settings.costUnits.longName": "Nom",
     "iaso.snt_malaria.settings.costUnits.description": "Description",
+    "iaso.snt_malaria.settings.costUnits.isCommodityLabel": "Commodité",
+    "iaso.snt_malaria.settings.costUnits.isCommodityHelp": "Les unités de type commodité apparaissent dans le résumé du scénario avec la quantité totale à approvisionner.",
     "iaso.snt_malaria.settings.interventions.costLineFactorLabel": "Facteur",
     "iaso.snt_malaria.settings.interventions.costLineDirectionLabel": "Sens de conversion",
     "iaso.snt_malaria.settings.interventions.costItemFixedLabel": "Élément de coût fixe",

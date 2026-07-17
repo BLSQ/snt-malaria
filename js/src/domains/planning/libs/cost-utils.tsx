@@ -62,3 +62,9 @@ export const formatBigNumber = (value: number) => {
     }
     return value.toFixed(2);
 };
+
+/** Compact quantity formatting: whole units below 1000, else K/M/B, e.g. 534233 -> "534.23K". */
+export const formatQuantity = (value: number) =>
+    Math.abs(value) >= 1_000
+        ? formatBigNumber(value)
+        : String(Math.round(value));

@@ -16,7 +16,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { pluralize } from '../../../../utils/pluralize';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
-import { formatBigNumber } from '../../libs/cost-utils';
+import { formatBigNumber, formatQuantity } from '../../libs/cost-utils';
 import { YearlyCoverageInput } from './YearlyCoverageInput';
 
 export type CostLineYearlyCoverage = {
@@ -30,6 +30,7 @@ export type CostLineRowData = {
     subLabel: string;
     isProportional: boolean;
     totalCost: number;
+    quantity: number;
     coverageByYear: Record<number, CostLineYearlyCoverage>;
     unitCost: number;
     unitName: string;
@@ -189,9 +190,19 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
                 </TableCell>
             ))}
             <TableCell align="right">
-                <Typography variant="body2" component="span">
+                <Typography variant="body2" component="div">
                     {formatBigNumber(costLine.totalCost)}
                 </Typography>
+                {costLine.unitName && costLine.quantity > 0 && (
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        component="div"
+                    >
+                        {formatQuantity(costLine.quantity)}{' '}
+                        {pluralize(costLine.unitName, costLine.quantity)}
+                    </Typography>
+                )}
             </TableCell>
             <TableCell align="center">
                 <CostLineTooltip costLine={costLine} />

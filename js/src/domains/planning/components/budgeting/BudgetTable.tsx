@@ -99,6 +99,7 @@ export const BudgetTable: FC = ({}) => {
                         subLabel: '',
                         isProportional: line.is_proportional,
                         totalCost: 0,
+                        quantity: 0,
                         coverageByYear: (yearlyCoverageByCostLine[line.id] ||
                             {}) as Record<number, CostLineYearlyCoverage>,
                         unitCost: Number(line.unit_cost),
@@ -160,6 +161,7 @@ export const BudgetTable: FC = ({}) => {
             ).map(costLine => ({
                 ...costLine,
                 totalCost: 0,
+                quantity: 0,
             }));
 
             return {
@@ -179,6 +181,7 @@ export const BudgetTable: FC = ({}) => {
         costLine: BudgetInterventionCostLine,
     ) => {
         row.totalCost += costLine.total_cost;
+        row.quantity += costLine.quantity;
         row.unitCost = costLine.unit_cost ?? row.unitCost;
         row.unitName = costLine.cost_unit_name ?? row.unitName;
         row.conversionFactor = costLine.conversion_factor;
@@ -196,6 +199,7 @@ export const BudgetTable: FC = ({}) => {
                 subLabel: '',
                 isProportional: breakdownLine?.is_proportional ?? true,
                 totalCost: costLine.total_cost,
+                quantity: costLine.quantity,
                 coverageByYear: (yearlyCoverageByCostLine[costLine.id] ||
                     {}) as Record<number, CostLineYearlyCoverage>,
                 unitCost: costLine.unit_cost ?? 0,

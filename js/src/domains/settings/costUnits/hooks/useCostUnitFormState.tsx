@@ -8,6 +8,7 @@ export const defaultCostUnitValues = {
     id: undefined,
     name: '',
     description: '',
+    is_commodity: false,
 };
 
 const useValidation = () => {
@@ -20,6 +21,7 @@ const useValidation = () => {
                     .required(formatMessage(MESSAGES.required))
                     .max(100, formatMessage(MESSAGES.maxLength, { max: 100 })),
                 description: Yup.string(),
+                is_commodity: Yup.boolean(),
             }),
         [formatMessage],
     );

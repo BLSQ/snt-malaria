@@ -120,8 +120,8 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         result = service.calculate_year(2025)
 
-        # cost = quantity * unit_cost(2.0) * buffer(1.1)
-        # district_1 = 1200 * 1.1 = 1320, district_2 = 2400 * 1.1 = 2640, total = 3960
+        # quantity includes the buffer(1.1); cost = quantity * unit_cost(2.0)
+        # district_1 = 660 * 2 = 1320, district_2 = 1320 * 2 = 2640, total = 3960
         self.assertEqual(result.total_cost, 3960.0)
 
         self.assertEqual(len(result.interventions), 1)
@@ -132,8 +132,8 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         breakdown = intervention.cost_breakdown[0]
         self.assertEqual(breakdown.category, "Procurement")
         self.assertEqual(breakdown.total_cost, 3960.0)
-        # quantity = district_1(600) + district_2(1200) = 1800
-        self.assertEqual(breakdown.quantity, 1800.0)
+        # quantity includes the buffer: district_1(600 * 1.1) + district_2(1200 * 1.1) = 1980
+        self.assertEqual(breakdown.quantity, 1980.0)
         # population = district_1(1000) + district_2(2000) = 3000
         self.assertEqual(breakdown.population, 3000.0)
 
@@ -146,8 +146,20 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         self.assertEqual(len(result.category_costs), 1)
         self.assertEqual(result.category_costs[0].category, "Procurement")
-        self.assertEqual(result.category_costs[0].quantity, 1800.0)
+        self.assertEqual(result.category_costs[0].quantity, 1980.0)
         self.assertEqual(result.category_costs[0].total_cost, 3960.0)
+
+    def test_quantity_includes_configured_buffer(self):
+        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"), buffer=Decimal("1.25"))
+        service = BudgetCalculationService(self.scenario)
+
+        result = service.calculate_year(2025)
+
+        breakdown = result.interventions[0].cost_breakdown[0]
+        # quantity = (district_1(1000) + district_2(2000)) * yearly(1.2) * factor(0.5) * buffer(1.25) = 2250
+        self.assertEqual(breakdown.quantity, 2250.0)
+        # total_cost = 2250 * unit_cost(2.0) = 4500 (buffer already in quantity, no inflation)
+        self.assertEqual(breakdown.total_cost, 4500.0)
 
     def test_calculate_year_uses_default_yearly_multiplier_when_missing(self):
         service = BudgetCalculationService(self.scenario)
@@ -155,8 +167,8 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         result = service.calculate_year(2026)
 
         # default yearly value = 1
-        # quantity = (1500 + 2500) * 1 * 0.5 = 2000
-        # total_cost = 2000 * 2 * 1.1 * (1 + 0.03)^1 = 4532
+        # quantity = (1500 + 2500) * 1 * 0.5 * buffer(1.1) = 2200
+        # total_cost = 2200 * 2 * (1 + 0.03)^1 = 4532
         self.assertEqual(result.total_cost, 4532.0)
 
     def test_inverted_conversion_factor_divides_quantity(self):
@@ -170,7 +182,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         # ratio = 1 / 2 = 0.5, same numbers as the direct 0.5 factor
         self.assertEqual(result.total_cost, 3960.0)
-        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 1800.0)
+        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 1980.0)
 
     def test_missing_population_layer_line_does_not_contribute(self):
         service = BudgetCalculationService(self.scenario)
@@ -192,7 +204,8 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(result.org_units_costs[0].org_unit_id, self.district_1.id)
         self.assertEqual(len(result.interventions), 1)
         self.assertEqual(result.interventions[0].code, "smc")
-        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 600.0)
+        # quantity includes the buffer: 600 * 1.1 = 660
+        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 660.0)
         self.assertEqual(result.interventions[0].total_cost, 1320.0)
 
     def test_no_assignments_results_in_zero_quantity_and_cost(self):
@@ -228,8 +241,8 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         result = service.calculate_year(2026)
 
-        # quantity = (1500 + 2500) * 1 * 0.5 = 2000
-        # total_cost = 2000 * 2 * 1.1 * (1 + 0)^1 = 4400
+        # quantity = (1500 + 2500) * 1 * 0.5 * buffer(1.1) = 2200
+        # total_cost = 2200 * 2 * (1 + 0)^1 = 4400
         self.assertEqual(result.total_cost, 4400.0)
 
     def test_missing_yearly_multiplier_and_inflation_rate_results_in_cost_without_multipliers(self):
@@ -240,8 +253,8 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         result = service.calculate_year(2026)
 
-        # quantity = (1500 + 2500) * 1 * 0.5 = 2000
-        # total_cost = 2000 * 2 * 1.1 = 4400
+        # quantity = (1500 + 2500) * 1 * 0.5 * buffer(1.1) = 2200
+        # total_cost = 2200 * 2 = 4400
         self.assertEqual(result.total_cost, 4400.0)
 
     def test_fixed_cost_not_included_when_intervention_has_no_org_unit_assignment(self):
@@ -301,12 +314,12 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         service = BudgetCalculationService(scenario)
         result = service.calculate_year(2025)
 
-        # quantity = yearly value = 4.0
-        # total_cost = 4 * unit_cost(100) * buffer(1.1) * inflation_multiplier(1.0) = 440.0
+        # quantity = yearly value(4) * buffer(1.1) = 4.4
+        # total_cost = 4.4 * unit_cost(100) * inflation_multiplier(1.0) = 440.0
         self.assertEqual(result.total_cost, 440.0)
         self.assertEqual(len(result.interventions), 1)
         self.assertEqual(result.interventions[0].total_cost, 440.0)
-        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 4.0)
+        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, Decimal("4.4"))
         # Fixed costs are not attributed to specific org units.
         self.assertEqual(len(result.org_units_costs), 0)
 
@@ -378,12 +391,13 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         service = BudgetCalculationService(scenario)
         result = service.calculate_year(2025)
 
-        # IV-A population (district_1): 1000 * 1.0 * 0.5 = 500 qty → 500 * 2 * 1.1 = 1100
-        # IV-A population (district_2): 2000 * 1.0 * 0.5 = 1000 qty → 1000 * 2 * 1.1 = 2200
-        # IV-A fixed cost (once):          4 qty                    →    4 * 100 * 1.1 = 440
+        # quantity includes the buffer(1.1):
+        # IV-A population (district_1): 1000 * 1.0 * 0.5 * 1.1 = 550 qty → 550 * 2 = 1100
+        # IV-A population (district_2): 2000 * 1.0 * 0.5 * 1.1 = 1100 qty → 1100 * 2 = 2200
+        # IV-A fixed cost (once):          4 * 1.1 = 4.4 qty              →  4.4 * 100 = 440
         # IV-A total = 1100 + 2200 + 440 = 3740
 
-        # IV-B population (district_1): 1000 * 1.0 * 0.5 = 500 qty → 500 * 3 * 1.1 = 1650
+        # IV-B population (district_1): 1000 * 1.0 * 0.5 * 1.1 = 550 qty → 550 * 3 = 1650
         # IV-B total = 1650
 
         # Grand total = 3740 + 1650 = 5390
