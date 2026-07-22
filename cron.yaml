@@ -1,0 +1,6 @@
+version: 1
+cron:
+    - name: "recreate_demo_account"
+      url: "/tasks/launch_task/plugins.snt_malaria.tasks.recreate_demo_account.recreate_demo_account/demo/"
+      schedule: "0 2 * * *"
+
