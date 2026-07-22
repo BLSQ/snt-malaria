@@ -10,6 +10,7 @@ CONSTANTS = {
     # Paths that IasoLogoutView accepts as ?next=... after logging the user out.
     # Used by the configureAccount wizard's "Restart" link.
     "LOGOUT_NEXT_ALLOWED_PATHS": ["/snt_malaria/public/setupAccount"],
+    "COMPOSITE_LAYER_AI_MODEL": os.environ.get("COMPOSITE_LAYER_AI_MODEL", "claude-opus-4-7"),
 }
 DEFAULT_THROTTLE_RATES = {
     "snt_public_account": os.environ.get("PUBLIC_ACCOUNT_THROTTLE_RATE", "5/hour"),
