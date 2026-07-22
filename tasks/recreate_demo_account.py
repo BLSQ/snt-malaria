@@ -1,6 +1,8 @@
 import logging
 import subprocess
 
+from django.conf import settings
+
 from beanstalk_worker import task_decorator
 from iaso.models import Task
 
@@ -25,6 +27,10 @@ def log_and_report_failure(task: Task, message: str, error: Exception):
 
 @task_decorator(task_name="recreate_demo_account")
 def recreate_demo_account(task=None):
+    if settings.ENVIRONMENT != "demo":
+        log_and_report_success(task, "This task is meant to be run in the demo environment only. Skipping execution.")
+        return
+
     command_for_logging = [
         "python",
         "manage.py",
