@@ -24,7 +24,7 @@ def log_and_report_failure(task: Task, message: str, error: Exception):
 
 
 @task_decorator(task_name="recreate_demo_account")
-def setuper_sandbox(task=None):
+def recreate_demo_account(task=None):
     command_for_logging = [
         "python",
         "manage.py",
