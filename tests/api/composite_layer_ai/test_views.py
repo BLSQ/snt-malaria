@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import anthropic
 
 from iaso.models import Account, MetricType
+from plugins.snt_malaria.permissions import SNT_SETTINGS_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
@@ -21,8 +22,12 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
         )
         self.account_no_key = Account.objects.create(name="Account Without Key")
 
-        self.user = self.create_user_with_profile(username="user_with_key", account=self.account)
-        self.user_no_key = self.create_user_with_profile(username="user_no_key", account=self.account_no_key)
+        self.user = self.create_user_with_profile(
+            username="user_with_key", account=self.account, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
+        )
+        self.user_no_key = self.create_user_with_profile(
+            username="user_no_key", account=self.account_no_key, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
+        )
 
         self.metric_type = MetricType.objects.create(
             account=self.account,

@@ -901,7 +901,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         # metric_a: ou1=2.0 -> classify "<3" matches -> "1" -> formula "1" + 1 == 2.0
         #           ou2=4.0 -> no rule matches -> default "2" -> formula "2" + 1 == 3.0
         _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
-        self.assertEqual(values, {self.ou1.id: 2.0, self.ou2.id: 3.0})
+        self.assertEqual(values[None], {self.ou1.id: 2.0, self.ou2.id: 3.0})
 
     def test_classify_without_mappings_raises(self):
         graph = {
