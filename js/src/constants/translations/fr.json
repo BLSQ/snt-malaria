@@ -418,5 +418,10 @@
     "iaso.snt_malaria.settings.account.interventionOrgUnitType": "Type d'unité d'organisation d'intervention",
     "iaso.snt_malaria.settings.account.focusOrgUnitType": "Type d'unité d'organisation de focus",
     "iaso.snt_malaria.settings.account.defaultPopulation": "Population par défaut",
-    "iaso.snt_malaria.settings.account.defaultPopulationHelp": "Type de métrique affiché automatiquement comme couche de population chaque fois qu'une est nécessaire (ex. : totaux sur le panneau de règles)."
+    "iaso.snt_malaria.settings.account.defaultPopulationHelp": "Type de métrique affiché automatiquement comme couche de population chaque fois qu'une est nécessaire (ex. : totaux sur le panneau de règles).",
+    "iaso.snt_malaria.compositeLayerEditor.ai.title": "Générer avec l'IA",
+    "iaso.snt_malaria.compositeLayerEditor.ai.placeholder": "Décrivez la couche composite que vous souhaitez créer...",
+    "iaso.snt_malaria.compositeLayerEditor.ai.error": "Erreur lors de la génération de la couche composite. Veuillez réessayer.",
+    "iaso.snt_malaria.compositeLayerEditor.ai.emptyStateTitle": "Décrivez la couche composite que vous souhaitez créer",
+    "iaso.snt_malaria.compositeLayerEditor.ai.emptyStateDescription": "Décrivez les métriques, formules et seuils que vous souhaitez combiner — l'IA construit le graphe pour vous."
 }

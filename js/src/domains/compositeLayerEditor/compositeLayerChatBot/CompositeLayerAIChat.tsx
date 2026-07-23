@@ -1,8 +1,9 @@
 import React, { FC, useCallback, useState } from 'react';
-import { Card } from '@mui/material';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { Box, Card, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { ChatMessage, ChatPanel } from 'Iaso/components/chat/ChatPanel';
-import { CardStyled } from '../../../components/CardStyled';
+import { ChatMessage, ChatPanel } from 'Iaso/components/ChatPanel/ChatPanel';
+import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
 import { ConversationEntry, GeneratedGraph } from './types';
 import { useSendCompositeLayerAIMessage } from './useSendCompositeLayerAIMessage';
@@ -10,6 +11,17 @@ import { useSendCompositeLayerAIMessage } from './useSendCompositeLayerAIMessage
 type Props = {
     onGenerate: (graph: GeneratedGraph) => void;
 };
+
+const chatStyles = {
+    header: {
+        pb: 0,
+        minHeight: '65px',
+        display: 'flex',
+        alignContent: 'center',
+        border: 'none',
+        ' p': { fontSize: '1.25rem', ml: 0.5 },
+    },
+} satisfies SxStyles;
 
 export const CompositeLayerAIChat: FC<Props> = ({ onGenerate }) => {
     const { formatMessage } = useSafeIntl();
@@ -70,16 +82,32 @@ export const CompositeLayerAIChat: FC<Props> = ({ onGenerate }) => {
                 flexDirection: 'column',
             }}
         >
-            <CardStyled header={formatMessage(MESSAGES.compositeLayerAITitle)}>
-                <ChatPanel
-                    messages={messages}
-                    isLoading={isLoading}
-                    placeholder={formatMessage(
-                        MESSAGES.compositeLayerAIPlaceholder,
-                    )}
-                    onSendMessage={handleSendMessage}
-                />
-            </CardStyled>
+            <ChatPanel
+                messages={messages}
+                isLoading={isLoading}
+                title={formatMessage(MESSAGES.compositeLayerAITitle)}
+                titleIcon={<AutoAwesomeIcon color="primary" fontSize="small" />}
+                placeholder={formatMessage(
+                    MESSAGES.compositeLayerAIPlaceholder,
+                )}
+                sx={chatStyles}
+                emptyState={
+                    <Box>
+                        <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                            {formatMessage(
+                                MESSAGES.compositeLayerAIEmptyStateTitle,
+                            )}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {formatMessage(
+                                MESSAGES.compositeLayerAIEmptyStateDescription,
+                            )}
+                        </Typography>
+                    </Box>
+                }
+                onSendMessage={handleSendMessage}
+                interpretMarkdown={true}
+            />
         </Card>
     );
 };

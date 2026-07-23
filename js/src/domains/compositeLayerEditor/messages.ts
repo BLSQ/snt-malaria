@@ -273,4 +273,13 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.ai.error',
         defaultMessage: 'Error generating composite layer. Please try again.',
     },
+    compositeLayerAIEmptyStateTitle: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.ai.emptyStateTitle',
+        defaultMessage: 'Describe the composite layer you want to create',
+    },
+    compositeLayerAIEmptyStateDescription: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.ai.emptyStateDescription',
+        defaultMessage:
+            'Describe the metrics, formulas and thresholds you want to combine — the AI builds the graph for you.',
+    },
 });
