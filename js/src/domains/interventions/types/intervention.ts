@@ -8,6 +8,15 @@ export type Intervention = {
     description: string;
     intervention_category: number;
 };
+
+export type InterventionPayload = {
+    id?: number;
+    name: string;
+    short_name: string;
+    code: string;
+    description: string;
+    intervention_category: number | null;
+};
 export type InterventionDetails = {
     id: number;
     name: string;

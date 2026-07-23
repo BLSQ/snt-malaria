@@ -28,6 +28,12 @@ class InterventionSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def validate_intervention_category(self, intervention_category):
+        account = self.context["request"].user.iaso_profile.account
+        if intervention_category.account_id != account.id:
+            raise serializers.ValidationError(_("Intervention category not found."))
+        return intervention_category
+
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
     cost_breakdown_lines = InterventionCostBreakdownLineSerializer(many=True, read_only=True)

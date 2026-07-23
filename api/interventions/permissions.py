@@ -14,5 +14,5 @@ class InterventionPermission(permissions.BasePermission):
                 SNT_SETTINGS_WRITE_PERMISSION.full_name()
             )
 
-        # POST, PUT
+        # POST, PUT, PATCH, DELETE
         return user.has_perm(SNT_SETTINGS_WRITE_PERMISSION.full_name())
