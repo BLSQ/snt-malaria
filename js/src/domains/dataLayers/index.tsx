@@ -66,6 +66,7 @@ export const DataLayers: FC = () => {
     const [displayedMetricType, setDisplayedMetricType] =
         useState<MetricType>();
     const { data: accountSettings } = useGetAccountSettings();
+    const hasAiApiKey = Boolean(accountSettings?.has_ai_api_key);
     const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
     const { data: orgUnits } = useGetOrgUnits({
         orgUnitParentId: displayOrgUnitId,
@@ -134,6 +135,14 @@ export const DataLayers: FC = () => {
         setSidebarCollapsed(collapsed => !collapsed);
     }, []);
 
+    // Whether the sidebar shows the AI chat instead of the draggable data layer list, while the
+    // composite editor is open - starts false (data layer list) even when AI is configured, so it
+    // has to be switched into deliberately via the editor header's toggle (see hasAiApiKey below).
+    const [isAiChatMode, setIsAiChatMode] = useState<boolean>(false);
+    const toggleAiChatMode = useCallback(() => {
+        setIsAiChatMode(aiChatMode => !aiChatMode);
+    }, []);
+
     const [selectedMetricType, setSelectedMetricType] = useState<MetricType>();
 
     const onDialogClose = useCallback(() => {
@@ -167,6 +176,7 @@ export const DataLayers: FC = () => {
         setIsCompositeEditorOpen(false);
         setEditingCompositeLayerId(undefined);
         setSidebarCollapsed(false);
+        setIsAiChatMode(false);
     }, []);
 
     // After saving, close the editor and show the resulting composite layer on the map.
@@ -174,6 +184,7 @@ export const DataLayers: FC = () => {
         setIsCompositeEditorOpen(false);
         setEditingCompositeLayerId(undefined);
         setSidebarCollapsed(false);
+        setIsAiChatMode(false);
         if (metricType) {
             setDisplayedMetricType(metricType);
         }
@@ -227,7 +238,8 @@ export const DataLayers: FC = () => {
                         <SidebarColumn>
                             <PaperFullHeight>
                                 {isCompositeEditorOpen &&
-                                accountSettings?.has_ai_api_key ? (
+                                isAiChatMode &&
+                                hasAiApiKey ? (
                                     <CompositeLayerAIChat
                                         onGenerate={
                                             onGenerateCompositeLayerGraph
@@ -298,6 +310,9 @@ export const DataLayers: FC = () => {
                                     onSaved={onCompositeSaved}
                                     sidebarCollapsed={sidebarCollapsed}
                                     onToggleSidebar={toggleSidebar}
+                                    isAiChatMode={isAiChatMode}
+                                    onToggleAiChatMode={toggleAiChatMode}
+                                    showAiChatToggle={hasAiApiKey}
                                 />
                             ) : (
                                 <Stack

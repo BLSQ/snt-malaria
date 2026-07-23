@@ -2,7 +2,11 @@ import React, { MutableRefObject, RefObject, useRef, useState } from 'react';
 import { FlumeCommentMap } from 'flume';
 import { DATA_LAYER_DND_MIME } from '../../dataLayers/dragAndDrop';
 import { FlumeGraph, FlumeGraphNode } from '../types/flumeGraph';
-import { getStageElement, readStageTransform } from '../utils/flumeStage';
+import {
+    getStageElement,
+    readStageTransform,
+    shiftGraphForRemount,
+} from '../utils/flumeStage';
 
 type UseCanvasDropArgs = {
     /** Ref to the element wrapping the `<NodeEditor>`. */
@@ -10,6 +14,12 @@ type UseCanvasDropArgs = {
     /** Live working copies of the graph + comments (kept up to date by the editor's onChange). */
     nodesRef: MutableRefObject<FlumeGraph>;
     commentsRef: MutableRefObject<FlumeCommentMap>;
+    /** Called right before a valid drop bumps `mountNonce`. index.tsx uses this to clear its own
+     * AI-pushed graph state (`aiGraph`/`aiComments`), which otherwise permanently takes rendering
+     * priority over `mountGraphRef` once ever set (by an AI generation or a rearrange) - without
+     * this, a drop after either of those still updates `mountGraphRef` but the render never looks
+     * at it again. */
+    onBeforeRemount?: () => void;
 };
 
 type UseCanvasDrop = {
@@ -38,6 +48,7 @@ export const useCanvasDrop = ({
     canvasRef,
     nodesRef,
     commentsRef,
+    onBeforeRemount,
 }: UseCanvasDropArgs): UseCanvasDrop => {
     const [mountNonce, setMountNonce] = useState(0);
     const mountGraphRef = useRef<FlumeGraph>();
@@ -55,23 +66,22 @@ export const useCanvasDrop = ({
         const stage = getStageElement(canvasRef.current);
         if (!stage) return;
         const rect = stage.getBoundingClientRect();
-        const { scale, translateX, translateY } = readStageTransform(stage);
+        const { scale } = readStageTransform(stage);
 
         // Drop point in the post-remount stage space (translate becomes 0 after remount).
         const dropX = (event.clientX - rect.left - rect.width / 2) / scale;
         const dropY = (event.clientY - rect.top - rect.height / 2) / scale;
-        // Amount every existing node/comment must move so it stays put once translate resets to 0.
-        const shiftX = translateX / scale;
-        const shiftY = translateY / scale;
 
-        const shiftedNodes: FlumeGraph = {};
-        Object.entries(nodesRef.current || {}).forEach(([id, node]) => {
-            shiftedNodes[id] = {
-                ...node,
-                x: (node.x ?? 0) - shiftX,
-                y: (node.y ?? 0) - shiftY,
-            };
-        });
+        const {
+            nodes: shiftedNodes,
+            comments: shiftedComments,
+            scale: capturedScale,
+        } = shiftGraphForRemount(
+            nodesRef.current || {},
+            commentsRef.current || {},
+            canvasRef.current,
+        );
+
         const newNodeId = `dl-${Date.now().toString(36)}-${Math.random()
             .toString(36)
             .slice(2, 8)}`;
@@ -86,20 +96,12 @@ export const useCanvasDrop = ({
         };
         shiftedNodes[newNodeId] = newNode;
 
-        const shiftedComments: FlumeCommentMap = {};
-        Object.entries(commentsRef.current || {}).forEach(([id, comment]) => {
-            shiftedComments[id] = {
-                ...comment,
-                x: (comment.x ?? 0) - shiftX,
-                y: (comment.y ?? 0) - shiftY,
-            };
-        });
-
         nodesRef.current = shiftedNodes;
         commentsRef.current = shiftedComments;
         mountGraphRef.current = shiftedNodes;
         mountCommentsRef.current = shiftedComments;
-        mountScaleRef.current = scale;
+        mountScaleRef.current = capturedScale;
+        onBeforeRemount?.();
         setMountNonce(nonce => nonce + 1);
     };
 

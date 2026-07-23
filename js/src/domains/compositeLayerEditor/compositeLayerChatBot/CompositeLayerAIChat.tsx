@@ -91,11 +91,19 @@ export const CompositeLayerAIChat: FC<Props> = ({
 
     return (
         <Card
+            elevation={0}
             sx={{
                 height: '100%',
                 flexGrow: 1,
                 display: 'flex',
                 flexDirection: 'column',
+                // ChatPanel hardcodes `primary.contrastText` for the user bubble against a
+                // `primary.light` background, which reads washed out - pin both bubble roles to
+                // one legible color until ChatPanel exposes bubble styling of its own. The only
+                // MuiPaper-root under this Card is the message bubble.
+                '& .MuiPaper-root': {
+                    color: 'text.primary',
+                },
             }}
         >
             <ChatPanel

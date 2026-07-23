@@ -6,12 +6,15 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
 import {
     clamp,
+    computeFitScale,
     dispatchPan,
     dispatchWheel,
+    FIT_PADDING,
     getStageElement,
     MAX_SCALE,
     MAX_SCALE_STEP,
     MIN_SCALE,
+    NODE_SELECTOR,
     readStageTransform,
 } from '../utils/flumeStage';
 
@@ -25,8 +28,6 @@ import {
  * view; both `Stage` handlers use functional reducer updates, so chaining a drag then wheels
  * within one click stays consistent.
  */
-
-const FIT_PADDING = 40; // px of breathing room around the nodes when fitting.
 
 const styles = {
     container: {
@@ -66,18 +67,9 @@ const styles = {
 type Props = {
     /** Ref to the element wrapping the `<NodeEditor>`. */
     canvasRef: RefObject<HTMLElement>;
-    /**
-     * How to place the graph on the initial auto-fit. Use `right` for brand-new composites so the
-     * output node sits on the right with room to build inputs to its left. The frame button always
-     * centres.
-     */
-    initialFitAlign?: 'center' | 'right';
 };
 
-export const CanvasControls: FC<Props> = ({
-    canvasRef,
-    initialFitAlign = 'center',
-}) => {
+export const CanvasControls: FC<Props> = ({ canvasRef }) => {
     const { formatMessage } = useSafeIntl();
     const getStage = useCallback(
         () => getStageElement(canvasRef.current),
@@ -113,107 +105,103 @@ export const CanvasControls: FC<Props> = ({
         [getStage],
     );
 
-    const fitToNodes = useCallback(
-        (align: 'center' | 'right' = 'center') => {
-            const stage = getStage();
-            if (!stage) return;
+    const fitToNodes = useCallback((align: 'center' | 'right' = 'center') => {
+        const stage = getStage();
+        if (!stage) return;
 
-            const nodeEls = Array.from(
-                stage.querySelectorAll<HTMLElement>(
-                    '[data-flume-component="node"]',
-                ),
-            );
-            if (nodeEls.length === 0) return;
+        const nodeEls = Array.from(
+            stage.querySelectorAll<HTMLElement>(NODE_SELECTOR),
+        );
+        if (nodeEls.length === 0) return;
 
-            const rect = stage.getBoundingClientRect();
-            const { scale, translateX, translateY } = readStageTransform(stage);
+        const rect = stage.getBoundingClientRect();
+        const { scale, translateX, translateY } = readStageTransform(stage);
 
-            // Convert a screen coordinate into Flume's stage space (origin at stage centre).
-            const toStageX = (screenX: number) =>
-                (screenX - rect.left - rect.width / 2 + translateX) / scale;
-            const toStageY = (screenY: number) =>
-                (screenY - rect.top - rect.height / 2 + translateY) / scale;
+        // Convert a screen coordinate into Flume's stage space (origin at stage centre).
+        const toStageX = (screenX: number) =>
+            (screenX - rect.left - rect.width / 2 + translateX) / scale;
+        const toStageY = (screenY: number) =>
+            (screenY - rect.top - rect.height / 2 + translateY) / scale;
 
-            let minX = Infinity;
-            let minY = Infinity;
-            let maxX = -Infinity;
-            let maxY = -Infinity;
-            nodeEls.forEach(el => {
-                const r = el.getBoundingClientRect();
-                minX = Math.min(minX, toStageX(r.left));
-                minY = Math.min(minY, toStageY(r.top));
-                maxX = Math.max(maxX, toStageX(r.right));
-                maxY = Math.max(maxY, toStageY(r.bottom));
-            });
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        nodeEls.forEach(el => {
+            const r = el.getBoundingClientRect();
+            minX = Math.min(minX, toStageX(r.left));
+            minY = Math.min(minY, toStageY(r.top));
+            maxX = Math.max(maxX, toStageX(r.right));
+            maxY = Math.max(maxY, toStageY(r.bottom));
+        });
 
-            const boxWidth = Math.max(maxX - minX, 1);
-            const boxHeight = Math.max(maxY - minY, 1);
-            const centerX = (minX + maxX) / 2;
-            const centerY = (minY + maxY) / 2;
+        const boxWidth = Math.max(maxX - minX, 1);
+        const boxHeight = Math.max(maxY - minY, 1);
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
 
-            // Zoom to fit the bounding box, but never enlarge past 100%.
-            const targetScale = clamp(
-                Math.min(
-                    (rect.width - 2 * FIT_PADDING) / boxWidth,
-                    (rect.height - 2 * FIT_PADDING) / boxHeight,
-                ),
-                MIN_SCALE,
-                1,
-            );
+        // Zoom to fit the bounding box, but never enlarge past 100%.
+        const targetScale = computeFitScale(
+            boxWidth,
+            boxHeight,
+            rect.width,
+            rect.height,
+        );
 
-            // Which stage point should land at the viewport centre. For "right" we place the box's
-            // right edge near the right side (leaving room to build nodes to its left); otherwise
-            // we centre the box.
-            const focusX =
-                align === 'right'
-                    ? maxX - (rect.width / 2 - FIT_PADDING) / targetScale
-                    : centerX;
+        // Which stage point should land at the viewport centre. For "right" we place the box's
+        // right edge near the right side (leaving room to build nodes to its left, used only for
+        // the still-empty canvas's default output node); otherwise we centre the box.
+        const focusX =
+            align === 'right'
+                ? maxX - (rect.width / 2 - FIT_PADDING) / targetScale
+                : centerX;
 
-            const originX = rect.left + rect.width / 2;
-            const originY = rect.top + rect.height / 2;
+        const originX = rect.left + rect.width / 2;
+        const originY = rect.top + rect.height / 2;
 
-            // 1. Pan (at the current scale) so `focusX`/`centerY` sit at the viewport centre.
-            dispatchPan(
+        // 1. Pan (at the current scale) so `focusX`/the box's centre sits at the viewport centre.
+        dispatchPan(
+            stage,
+            originX,
+            originY,
+            focusX * scale - translateX,
+            centerY * scale - translateY,
+        );
+
+        // 2. Centred zoom to the fit scale. A centred zoom keeps the viewport-centre point
+        //    fixed, so the positioning from step 1 is preserved while it scales.
+        const steps = clamp(
+            Math.round(Math.abs(targetScale - scale) / MAX_SCALE_STEP),
+            0,
+            120,
+        );
+        if (steps > 0) {
+            dispatchWheel(
                 stage,
+                targetScale > scale ? -10 : 10,
                 originX,
                 originY,
-                focusX * scale - translateX,
-                centerY * scale - translateY,
+                steps,
             );
+        }
+    }, [getStage]);
 
-            // 2. Centred zoom to the fit scale. A centred zoom keeps the viewport-centre point
-            //    fixed, so the positioning from step 1 is preserved while it scales.
-            const steps = clamp(
-                Math.round(Math.abs(targetScale - scale) / MAX_SCALE_STEP),
-                0,
-                120,
-            );
-            if (steps > 0) {
-                dispatchWheel(
-                    stage,
-                    targetScale > scale ? -10 : 10,
-                    originX,
-                    originY,
-                    steps,
-                );
-            }
-        },
-        [getStage],
-    );
-
-    // Auto-fit once the editor has mounted and the nodes have laid out, so the graph opens framed.
+    // Auto-fit once the editor has mounted and the nodes have laid out, so a brand-new graph
+    // (Flume's own default output node) opens framed. Every other graph index.tsx pushes in
+    // (AI-generated, re-arranged) already arrives pre-framed - see `centerGraph`/`computeFitScale`
+    // in buildFlumeGraph.ts and their callers - so this only ever runs once, here.
     useEffect(() => {
         let frame = 0;
         let attempts = 0;
         const tick = () => {
             const stage = getStage();
-            const hasNodes = !!stage?.querySelector(
-                '[data-flume-component="node"]',
-            );
-            if (hasNodes) {
-                // One extra frame so node sizes are settled before we measure them.
+            const nodeCount = stage?.querySelectorAll(NODE_SELECTOR).length ?? 0;
+            if (nodeCount > 0) {
+                // One extra frame so node sizes are settled before we measure them. A lone node is
+                // the still-empty canvas's default output node - keep it to the right, with room
+                // to build inputs to its left; an existing/generated graph is centred instead.
                 frame = requestAnimationFrame(() =>
-                    fitToNodes(initialFitAlign),
+                    fitToNodes(nodeCount === 1 ? 'right' : 'center'),
                 );
             } else if (attempts < 30) {
                 attempts += 1;
@@ -222,7 +210,7 @@ export const CanvasControls: FC<Props> = ({
         };
         frame = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(frame);
-    }, [getStage, fitToNodes, initialFitAlign]);
+    }, [getStage, fitToNodes]);
 
     return (
         <Box
@@ -260,7 +248,7 @@ export const CanvasControls: FC<Props> = ({
                 title={formatMessage(MESSAGES.fitToContent)}
                 aria-label={formatMessage(MESSAGES.fitToContent)}
                 sx={styles.button}
-                onClick={() => fitToNodes('center')}
+                onClick={() => fitToNodes()}
             >
                 <svg
                     width="14"

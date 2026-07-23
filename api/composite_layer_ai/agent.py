@@ -6,7 +6,7 @@ from typing import Optional
 import anthropic
 
 from django.conf import settings
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 
 logger = logging.getLogger(__name__)
@@ -47,8 +47,9 @@ A composite layer is a small directed graph of nodes, evaluated per org unit:
 ## Available data layers for this account
 {metric_types_catalog}
 
-When the user asks you to create or modify a composite layer, you MUST respond with valid JSON
-matching this schema, and no text outside the JSON block:
+When the user asks you to create or modify a composite layer, you MUST respond with ONLY the JSON
+below - no text before or after it, not even a short acknowledgment or lead-in sentence. Put any
+explanation of what you did in the `message` field instead:
 {
   "graph": {
     "nodes": [
@@ -71,6 +72,11 @@ matching this schema, and no text outside the JSON block:
   categories).
 - `formula` and `combine` nodes need at least one input; `normalize` and `classify` need exactly one.
 - `classify` nodes need at least one rule, a default, or both.
+- A `classify` node's `rules[].label` and `default` are always text strings - never emit a bare
+  number for either, and never invent extra rule fields (e.g. a numeric `value_label`), even if the
+  user asks to avoid a string-to-number conversion step elsewhere in the graph. If a request can't
+  be satisfied without `classify` emitting a number, say so in `message` and use `formula` for that
+  step instead, rather than producing a graph with an invalid `classify` schema.
 - When the user asks to modify a previously generated composite layer, return the COMPLETE updated
   graph, not just the change and ask if it should be applied on the data layer editor directly.
 - If the request is ambiguous or no matching data layer exists, respond with plain text asking a
@@ -183,17 +189,40 @@ def call_claude(
     return response.content[0].text
 
 
-def parse_composite_layer_graph_response(response_text: str) -> GeneratedCompositeLayerGraphResponse:
-    """Parse Claude's response into a GeneratedCompositeLayerGraphResponse."""
+def _extract_json_text(response_text: str) -> str:
+    """Extract the JSON object substring from Claude's response: strips a markdown code fence if
+    present, otherwise falls back to the outermost {...} span if the model added a conversational
+    lead-in with no fence (e.g. "You're right - ..." before the graph, despite being told not to
+    add text outside the JSON)."""
     text = response_text.strip()
 
     if "```json" in text:
         text = text.split("```json")[1].split("```")[0].strip()
     elif "```" in text:
         text = text.split("```")[1].split("```")[0].strip()
+    elif not text.startswith("{") and "{" in text and "}" in text:
+        text = text[text.index("{") : text.rindex("}") + 1]
 
-    data = json.loads(text)
-    return GeneratedCompositeLayerGraphResponse(**data)
+    return text
+
+
+def parse_composite_layer_graph_response(response_text: str) -> GeneratedCompositeLayerGraphResponse:
+    """Parse Claude's response into a GeneratedCompositeLayerGraphResponse.
+
+    Raises `json.JSONDecodeError` if no JSON object could be found/parsed at all (a genuinely
+    conversational reply, e.g. a clarifying question), or `pydantic.ValidationError` if JSON was
+    found but doesn't match the expected graph schema (the model attempted a graph but got its
+    shape wrong, e.g. a wrong field type) - callers should treat these two cases differently, see
+    `generate_composite_layer_graph`. The parsed (but schema-invalid) dict is attached to the
+    latter as `raw_data`, so a caller can still recover e.g. the model's own `message` field
+    without re-parsing `response_text` itself.
+    """
+    data = json.loads(_extract_json_text(response_text))
+    try:
+        return GeneratedCompositeLayerGraphResponse(**data)
+    except ValidationError as e:
+        e.raw_data = data
+        raise
 
 
 def generate_composite_layer_graph(
@@ -230,10 +259,22 @@ def generate_composite_layer_graph(
             "graph": parsed.graph.model_dump(),
             "conversation_history": new_history,
         }
-    except (json.JSONDecodeError, Exception) as e:
-        logger.info("Response was not a composite layer graph (might be conversational): %s", e)
+    except json.JSONDecodeError as e:
+        # Conversational reply, no JSON found - see parse_composite_layer_graph_response.
+        logger.info("Response was not a composite layer graph (likely conversational): %s", e)
         return {
             "assistant_message": response_text,
+            "graph": None,
+            "conversation_history": new_history,
+        }
+    except ValidationError as e:
+        # JSON found but schema-invalid - fall back to the model's own "message" (still on
+        # e.raw_data, see parse_composite_layer_graph_response) rather than showing raw JSON.
+        logger.warning("Response had JSON that didn't match the graph schema: %s", e)
+        fallback_message = getattr(e, "raw_data", {}).get("message")
+        return {
+            "assistant_message": fallback_message
+            or "I couldn't put together a valid graph for that - could you try rephrasing your request?",
             "graph": None,
             "conversation_history": new_history,
         }
