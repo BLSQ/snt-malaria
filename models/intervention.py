@@ -17,7 +17,11 @@ class InterventionCategory(SoftDeletableModel):
         app_label = "snt_malaria"
         verbose_name_plural = "Intervention categories"
         ordering = ["name"]
-        unique_together = [["account", "name"]]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["account", "name"], name="snt_malaria_interventioncategory_account_name_uniq"
+            ),
+        ]
 
     account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)

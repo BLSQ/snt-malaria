@@ -1,6 +1,7 @@
 import React, { FC, useCallback, useEffect } from 'react';
 import {
     AccountBalanceOutlined,
+    CategoryOutlined,
     SettingsOutlined,
     StraightenOutlined,
     VaccinesOutlined,
@@ -14,12 +15,19 @@ import { MESSAGES } from '../messages';
 import { CostUnitSettings } from './costUnits';
 import { GeneralSettings } from './general';
 import { GrantSettings } from './grants';
+import { InterventionCategorySettings } from './interventionCategories';
 import { InterventionSettings } from './interventions';
 
-type SettingsTab = 'interventions' | 'costUnits' | 'grants' | 'general';
+type SettingsTab =
+    | 'interventions'
+    | 'interventionCategories'
+    | 'costUnits'
+    | 'grants'
+    | 'general';
 
 const SETTINGS_TABS: SettingsTab[] = [
     'interventions',
+    'interventionCategories',
     'costUnits',
     'grants',
     'general',
@@ -91,6 +99,15 @@ export const Settings: FC = () => {
                             sx={{ textTransform: 'none', minHeight: 48 }}
                         />
                         <Tab
+                            value="interventionCategories"
+                            icon={<CategoryOutlined fontSize="small" />}
+                            iconPosition="start"
+                            label={formatMessage(
+                                MESSAGES.interventionCategoriesTitle,
+                            )}
+                            sx={{ textTransform: 'none', minHeight: 48 }}
+                        />
+                        <Tab
                             value="costUnits"
                             icon={<StraightenOutlined fontSize="small" />}
                             iconPosition="start"
@@ -115,6 +132,9 @@ export const Settings: FC = () => {
                 </Box>
                 <Box sx={{ flex: 1, minHeight: 0 }}>
                     {tab === 'interventions' && <InterventionSettings />}
+                    {tab === 'interventionCategories' && (
+                        <InterventionCategorySettings />
+                    )}
                     {tab === 'costUnits' && <CostUnitSettings />}
                     {tab === 'grants' && <GrantSettings />}
                     {tab === 'general' && <GeneralSettings />}

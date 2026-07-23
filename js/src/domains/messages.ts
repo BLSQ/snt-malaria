@@ -1039,6 +1039,43 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.interventions.category',
         defaultMessage: 'Intervention category',
     },
+    interventionCategoriesTitle: {
+        id: 'iaso.snt_malaria.settings.interventionCategories.title',
+        defaultMessage: 'Intervention categories',
+    },
+    addInterventionCategory: {
+        id: 'iaso.snt_malaria.settings.interventionCategories.add',
+        defaultMessage: 'Add',
+    },
+    newInterventionCategory: {
+        id: 'iaso.snt_malaria.settings.interventionCategories.new',
+        defaultMessage: 'New intervention category',
+    },
+    deleteInterventionCategory: {
+        id: 'iaso.snt_malaria.settings.interventionCategories.delete',
+        defaultMessage: 'Delete',
+    },
+    deleteInterventionCategoryConfirmTitle: {
+        id: 'iaso.snt_malaria.settings.interventionCategories.deleteConfirmTitle',
+        defaultMessage: 'Delete this intervention category?',
+    },
+    deleteInterventionCategoryConfirmMessage: {
+        id: 'iaso.snt_malaria.settings.interventionCategories.deleteConfirmMessage',
+        defaultMessage:
+            'This intervention category will be permanently removed. It can only be deleted while no intervention uses it.',
+    },
+    interventionCategoryName: {
+        id: 'iaso.snt_malaria.settings.interventionCategories.name',
+        defaultMessage: 'Name',
+    },
+    interventionCategoryShortName: {
+        id: 'iaso.snt_malaria.settings.interventionCategories.shortName',
+        defaultMessage: 'Short name',
+    },
+    interventionCategoryDescription: {
+        id: 'iaso.snt_malaria.settings.interventionCategories.description',
+        defaultMessage: 'Description',
+    },
     generalTitle: {
         id: 'iaso.snt_malaria.settings.general.title',
         defaultMessage: 'General',
