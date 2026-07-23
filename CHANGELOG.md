@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.15.1](https://github.com/BLSQ/snt-malaria/compare/2.15.0...2.15.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* SNT cron ([#343](https://github.com/BLSQ/snt-malaria/issues/343)) ([74f3219](https://github.com/BLSQ/snt-malaria/commit/74f3219d0a40ce388d68dd5c475f658ee77e5e87))
+
 ## [2.15.0](https://github.com/BLSQ/snt-malaria/compare/2.14.0...2.15.0) (2026-07-17)
 
 
