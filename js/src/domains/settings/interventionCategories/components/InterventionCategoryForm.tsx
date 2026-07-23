@@ -5,13 +5,13 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../../messages';
-import { InterventionCategoryFormValues } from '../types';
+import { InterventionCategoryPayload } from '../types';
 
 export const InterventionCategoryForm: FC = () => {
     const { formatMessage } = useSafeIntl();
 
     const { values, errors, touched, setFieldValueAndState } =
-        useGetExtendedFormikContext<InterventionCategoryFormValues>();
+        useGetExtendedFormikContext<InterventionCategoryPayload>();
 
     const getErrors = useTranslatedErrors({
         errors,

@@ -11,11 +11,7 @@ import { useDeleteInterventionCategory } from '../../../interventions/hooks/useD
 import { useSaveInterventionCategory } from '../../../interventions/hooks/useSaveInterventionCategory';
 import { MESSAGES } from '../../../messages';
 import { useInterventionCategoryFormState } from '../hooks/useInterventionCategoryFormState';
-import {
-    InterventionCategory,
-    InterventionCategoryFormValues,
-    InterventionCategoryPayload,
-} from '../types';
+import { InterventionCategory, InterventionCategoryPayload } from '../types';
 import { InterventionCategoryForm } from './InterventionCategoryForm';
 
 type Props = {
@@ -72,7 +68,7 @@ export const InterventionCategoryFormWrapper: FC<Props> = ({
     );
 
     const onSubmit = useCallback(
-        (values: InterventionCategoryFormValues) => {
+        (values: InterventionCategoryPayload) => {
             const payload: InterventionCategoryPayload = {
                 id: values.id,
                 name: values.name,

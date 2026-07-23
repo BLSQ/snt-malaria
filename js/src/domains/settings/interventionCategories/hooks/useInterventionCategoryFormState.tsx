@@ -3,8 +3,9 @@ import { useSafeIntl } from 'bluesquare-components';
 import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
 import { MESSAGES } from '../../../messages';
+import { InterventionCategoryPayload } from '../types';
 
-export const defaultInterventionCategoryValues = {
+export const defaultInterventionCategoryValues: InterventionCategoryPayload = {
     id: undefined,
     name: '',
     short_name: '',
@@ -34,8 +35,11 @@ export const useInterventionCategoryFormState = ({
     onSubmit,
     initialValues,
 }: {
-    onSubmit: (values: any, formikHelpers?: FormikHelpers<any>) => void;
-    initialValues?: any;
+    onSubmit: (
+        values: InterventionCategoryPayload,
+        formikHelpers?: FormikHelpers<InterventionCategoryPayload>,
+    ) => void;
+    initialValues?: InterventionCategoryPayload;
 }) => {
     const validationSchema = useValidation();
     const formik = useFormik({
