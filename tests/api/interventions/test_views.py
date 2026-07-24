@@ -4,7 +4,7 @@ from plugins.snt_malaria.api.interventions.permissions import (
     SNT_SETTINGS_READ_PERMISSION,
     SNT_SETTINGS_WRITE_PERMISSION,
 )
-from plugins.snt_malaria.models import Budget, Donor, Grant, Intervention
+from plugins.snt_malaria.models import Budget, Donor, Grant, Intervention, ScenarioRule
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
@@ -345,13 +345,30 @@ class InterventionAPITests(SNTMalariaAPITestCase):
 
     # Delete
 
-    def test_delete_intervention_with_write_perm_soft_deletes(self):
+    def test_delete_intervention_with_write_perm_deletes(self):
         self.client.force_authenticate(user=self.user_write)
         response = self.client.delete(f"{BASE_URL}{self.intervention_vaccination_rts.id}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Intervention.objects.filter(id=self.intervention_vaccination_rts.id).exists())
-        self.intervention_vaccination_rts.refresh_from_db()
-        self.assertIsNotNone(self.intervention_vaccination_rts.deleted_at)
+
+    def test_delete_intervention_used_by_a_rule_returns_405(self):
+        scenario = self.create_snt_scenario(
+            account=self.account,
+            created_by=self.user_write,
+            name="Scenario with rule",
+        )
+        rule = ScenarioRule.objects.create(
+            scenario=scenario,
+            priority=1,
+            created_by=self.user_write,
+        )
+        rule.interventions.add(self.intervention_vaccination_rts)
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{BASE_URL}{self.intervention_vaccination_rts.id}/")
+
+        self.assertJSONResponse(response, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertTrue(Intervention.objects.filter(id=self.intervention_vaccination_rts.id).exists())
 
     def test_delete_intervention_with_read_perm_forbidden(self):
         self.client.force_authenticate(user=self.user_read)

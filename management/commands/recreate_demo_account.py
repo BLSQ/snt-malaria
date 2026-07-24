@@ -108,8 +108,8 @@ class Command(BaseCommand):
         data_sources = DataSource.objects.filter(projects__in=projects)
         JsonDataStore.objects.filter(account=demo_account).delete()
         scenarios = Scenario.objects_include_deleted.filter(account=demo_account)
-        categories = InterventionCategory.objects_include_deleted.filter(account=demo_account)
-        interventions = Intervention.objects_include_deleted.filter(intervention_category__in=categories)
+        categories = InterventionCategory.objects.filter(account=demo_account)
+        interventions = Intervention.objects.filter(intervention_category__in=categories)
         metric_types = MetricType.objects.filter(account=demo_account)
         account_settings = AccountSettings.objects.filter(account=demo_account)
         impact_provider_configs = ImpactProviderConfig.objects.filter(account=demo_account)
@@ -122,10 +122,8 @@ class Command(BaseCommand):
         for s in scenarios:
             s.delete_hard()
         InterventionCostBreakdownLine.objects.filter(intervention__in=interventions).delete()
-        for i in interventions:
-            i.delete_hard()
-        for c in categories:
-            c.delete_hard()
+        interventions.delete()
+        categories.delete()
         MetricValue.objects.filter(metric_type__in=metric_types).delete()
         metric_types.delete()
         Team.objects.filter(project__in=projects).delete()
@@ -242,7 +240,7 @@ class Command(BaseCommand):
             self._link_cost_line_population_layers(account)
 
             # Randomly assign impact ref to interventions
-            interventions = Intervention.objects_include_deleted.filter(intervention_category__account=account)
+            interventions = Intervention.objects.filter(intervention_category__account=account)
             for intervention in interventions:
                 intervention.impact_ref = intervention_impact_refs.get(
                     intervention.short_name, random.choice(list(intervention_impact_refs.values()))

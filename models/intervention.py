@@ -3,23 +3,18 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from iaso.models import OrgUnit
-from iaso.utils.models.soft_deletable import (
-    DefaultSoftDeletableManager,
-    IncludeDeletedSoftDeletableManager,
-    OnlyDeletedSoftDeletableManager,
-    SoftDeletableModel,
-)
 from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule
 
 
-class InterventionCategory(SoftDeletableModel):
+class InterventionCategory(models.Model):
     class Meta:
         app_label = "snt_malaria"
         verbose_name_plural = "Intervention categories"
         ordering = ["name"]
         constraints = [
             models.UniqueConstraint(
-                fields=["account", "name"], name="snt_malaria_interventioncategory_account_name_uniq"
+                fields=["account", "name"],
+                name="snt_malaria_interventioncategory_account_name_uniq",
             ),
         ]
 
@@ -31,19 +26,20 @@ class InterventionCategory(SoftDeletableModel):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    objects = DefaultSoftDeletableManager()
-    objects_only_deleted = OnlyDeletedSoftDeletableManager()
-    objects_include_deleted = IncludeDeletedSoftDeletableManager()
-
     def __str__(self):
         return "%s %s" % (self.name, self.id)
 
 
-class Intervention(SoftDeletableModel):
+class Intervention(models.Model):
     class Meta:
         app_label = "snt_malaria"
         ordering = ["name"]
-        unique_together = [["intervention_category", "name"]]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["intervention_category", "name"],
+                name="snt_malaria_intervention_category_name_uniq",
+            ),
+        ]
 
     intervention_category = models.ForeignKey(InterventionCategory, on_delete=models.PROTECT)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
@@ -73,10 +69,6 @@ class Intervention(SoftDeletableModel):
     updated_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="intervention_updated_set"
     )
-
-    objects = DefaultSoftDeletableManager()
-    objects_only_deleted = OnlyDeletedSoftDeletableManager()
-    objects_include_deleted = IncludeDeletedSoftDeletableManager()
 
     def __str__(self):
         return "%s %s" % (self.name, self.id)

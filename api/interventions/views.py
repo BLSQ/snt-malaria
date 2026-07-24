@@ -1,6 +1,8 @@
 from django.db import IntegrityError, transaction
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.response import Response
 
 from plugins.snt_malaria.api.interventions.permissions import InterventionPermission
@@ -9,7 +11,7 @@ from plugins.snt_malaria.api.interventions.serializers import (
     InterventionDetailWriteSerializer,
     InterventionSerializer,
 )
-from plugins.snt_malaria.models import Intervention
+from plugins.snt_malaria.models import Intervention, ScenarioRule
 from plugins.snt_malaria.models.intervention import InterventionAssignment
 from plugins.snt_malaria.services import BudgetCalculationService
 
@@ -35,9 +37,16 @@ class InterventionViewSet(viewsets.ModelViewSet):
         except IntegrityError as e:
             self._raise_for_integrity_error(e)
 
-    # Deleting an intervention soft-deletes it (SoftDeletableModel.delete()), so it
-    # disappears from the default queryset while existing scenario assignments that
-    # reference it are preserved.
+    def perform_destroy(self, instance):
+        # Intervention has no DB-level protection against deletion while a scenario
+        # rule references it (the FK lives on the rule's M2M through table), so block
+        # the delete ourselves while any scenario rule still uses this intervention.
+        if ScenarioRule.objects.filter(interventions=instance).exists():
+            raise MethodNotAllowed(
+                self.request.method,
+                _("Cannot delete this intervention because it is used by one or more scenario rules."),
+            )
+        instance.delete()
 
     @staticmethod
     def _raise_for_integrity_error(error):

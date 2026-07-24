@@ -1,4 +1,5 @@
 from django.db import IntegrityError
+from django.db.models import ProtectedError
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, viewsets
 from rest_framework.exceptions import MethodNotAllowed
@@ -37,15 +38,15 @@ class InterventionCategoryViewSet(viewsets.ModelViewSet):
             self._raise_for_integrity_error(e)
 
     def perform_destroy(self, instance):
-        # The category is soft-deleted, so the intervention_category FK's
-        # on_delete=PROTECT never fires here; check for active interventions
-        # ourselves to avoid silently orphaning them from category listings.
-        if instance.intervention_set.exists():
+        # Categories referenced by an intervention are protected (on_delete=PROTECT),
+        # so surface a clean 405 instead of an unhandled error.
+        try:
+            instance.delete()
+        except ProtectedError:
             raise MethodNotAllowed(
                 self.request.method,
                 _("Cannot delete this intervention category because it is used by one or more interventions."),
             )
-        instance.delete()
 
     @staticmethod
     def _raise_for_integrity_error(error):
