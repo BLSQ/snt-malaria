@@ -2,6 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import anthropic
 
+from rest_framework import status
+
 from iaso.models import Account, MetricType
 from plugins.snt_malaria.permissions import SNT_SETTINGS_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
@@ -28,6 +30,8 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
         self.user_no_key = self.create_user_with_profile(
             username="user_no_key", account=self.account_no_key, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
         )
+
+        self.user_no_perm = self.create_user_with_profile(username="user_no_perm", account=self.account, permissions=[])
 
         self.metric_type = MetricType.objects.create(
             account=self.account,
@@ -70,18 +74,23 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
 
     def test_unauthenticated_returns_401(self):
         response = self.client.post(BASE_URL, {"message": "hi"}, format="json")
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_missing_api_key_returns_400(self):
         self.client.force_authenticate(self.user_no_key)
         response = self.client.post(BASE_URL, {"message": "Create a composite layer"}, format="json")
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Composite Layer AI API key is not configured", response.data["error"])
 
     def test_missing_message_returns_400(self):
         self.client.force_authenticate(self.user)
         response = self.client.post(BASE_URL, {}, format="json")
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_user_no_perm(self):
+        self.client.force_authenticate(self.user_no_perm)
+        response = self.client.post(BASE_URL, {"message": "Create a composite layer"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
     def test_claude_503_returns_503(self, mock_gen):
@@ -92,7 +101,7 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
 
         response = self.client.post(BASE_URL, {"message": "Create a composite layer"}, format="json")
 
-        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
 
     @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
     def test_successful_generation(self, mock_gen):
@@ -101,7 +110,7 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
 
         response = self.client.post(BASE_URL, {"message": "Double the rainfall layer"}, format="json")
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["assistant_message"], "Here is your composite layer.")
         self.assertEqual(response.data["graph"]["output"]["name"], "Weighted rainfall")
         self.assertEqual(len(response.data["graph"]["nodes"]), 2)
@@ -114,7 +123,7 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
 
         response = self.client.post(BASE_URL, {"message": "How are you?"}, format="json")
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(response.data["graph"])
 
     @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
