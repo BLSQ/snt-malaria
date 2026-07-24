@@ -405,7 +405,7 @@
     "iaso.snt_malaria.settings.interventions.new": "New intervention",
     "iaso.snt_malaria.settings.interventions.delete": "Delete",
     "iaso.snt_malaria.settings.interventions.deleteConfirmTitle": "Delete this intervention?",
-    "iaso.snt_malaria.settings.interventions.deleteConfirmMessage": "This intervention will no longer be available for new assignments. Existing scenario assignments that reference it will be preserved.",
+    "iaso.snt_malaria.settings.interventions.deleteConfirmMessage": "This intervention will be permanently removed. Intervention used in scenario rules cannot be deleted.",
     "iaso.snt_malaria.settings.interventions.name": "Name",
     "iaso.snt_malaria.settings.interventions.shortName": "Short name",
     "iaso.snt_malaria.settings.interventions.code": "Code",

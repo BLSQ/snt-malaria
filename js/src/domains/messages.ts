@@ -1017,7 +1017,7 @@ export const MESSAGES = defineMessages({
     deleteInterventionConfirmMessage: {
         id: 'iaso.snt_malaria.settings.interventions.deleteConfirmMessage',
         defaultMessage:
-            'This intervention will no longer be available for new assignments. Existing scenario assignments that reference it will be preserved.',
+            'This intervention will be permanently removed. Intervention used in scenario rules cannot be deleted.',
     },
     interventionName: {
         id: 'iaso.snt_malaria.settings.interventions.name',
