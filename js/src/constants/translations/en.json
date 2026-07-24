@@ -419,5 +419,10 @@
     "iaso.snt_malaria.settings.account.interventionOrgUnitType": "Intervention org unit type",
     "iaso.snt_malaria.settings.account.focusOrgUnitType": "Focus org unit type",
     "iaso.snt_malaria.settings.account.defaultPopulation": "Default population",
-    "iaso.snt_malaria.settings.account.defaultPopulationHelp": "Metric type automatically shown as the population layer whenever one is needed for display (e.g. totals on the rule panel)."
+    "iaso.snt_malaria.settings.account.defaultPopulationHelp": "Metric type automatically shown as the population layer whenever one is needed for display (e.g. totals on the rule panel).",
+    "iaso.snt_malaria.compositeLayerEditor.ai.title": "Generate with AI",
+    "iaso.snt_malaria.compositeLayerEditor.ai.placeholder": "Describe the composite layer you want to create...",
+    "iaso.snt_malaria.compositeLayerEditor.ai.error": "Error generating composite layer. Please try again.",
+    "iaso.snt_malaria.compositeLayerEditor.ai.emptyStateTitle": "Describe the composite layer you want to create",
+    "iaso.snt_malaria.compositeLayerEditor.ai.emptyStateDescription": "Describe the metrics, formulas and thresholds you want to combine — the AI builds the graph for you."
 }

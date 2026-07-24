@@ -878,6 +878,31 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         with self.assertRaises(CompositeGraphError):
             CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
 
+    def test_formula_sums_numeric_classify_labels(self):
+        # Classify labels can be numeric-looking strings (e.g. "1"/"2"); a downstream formula must
+        # add them as numbers (3.0), not concatenate them as text ("12").
+        graph = {
+            "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "cls", "portName": "a"}]),
+            "cls": _classify_node(
+                "cls",
+                rules=[{"op": "<", "value": 3, "label": "1"}],
+                default="2",
+                input_sources={"a": [{"nodeId": "layer1", "portName": "values"}]},
+                output_targets=[{"nodeId": "formula1", "portName": "a"}],
+            ),
+            "formula1": _formula_node(
+                "formula1",
+                "a + 1",
+                {"a": [{"nodeId": "cls", "portName": "result"}]},
+                [{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", "Score", [{"nodeId": "formula1", "portName": "result"}]),
+        }
+        # metric_a: ou1=2.0 -> classify "<3" matches -> "1" -> formula "1" + 1 == 2.0
+        #           ou2=4.0 -> no rule matches -> default "2" -> formula "2" + 1 == 3.0
+        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values[None], {self.ou1.id: 2.0, self.ou2.id: 3.0})
+
     def test_classify_without_mappings_raises(self):
         graph = {
             "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "cls", "portName": "a"}]),

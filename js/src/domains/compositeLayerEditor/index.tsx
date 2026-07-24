@@ -1,10 +1,11 @@
 import React, {
-    FC,
     useCallback,
     useEffect,
+    useImperativeHandle,
     useMemo,
     useRef,
     useState,
+    forwardRef,
 } from 'react';
 import {
     Box,
@@ -15,7 +16,7 @@ import {
     useTheme,
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { NodeEditor, FlumeCommentMap } from 'flume';
+import { NodeEditor, FlumeCommentMap, FlumeNodes } from 'flume';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
 import { useGetMetricCategories } from '../dataLayers/hooks/useGetMetrics';
@@ -25,6 +26,8 @@ import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { CanvasControls } from './components/CanvasControls';
 import { EditorHeader } from './components/EditorHeader';
 import { NodeHeaderContent } from './components/NodeHeaderContent';
+import { buildFlumeGraphFromSpec } from './compositeLayerChatBot/buildFlumeGraph';
+import { GeneratedGraph } from './compositeLayerChatBot/types';
 import {
     CompositeEditorContext,
     createCompositeFlumeConfig,
@@ -83,233 +86,303 @@ type Props = {
     onToggleSidebar?: () => void;
 };
 
-export const CompositeLayerEditor: FC<Props> = ({
-    onClose,
-    onSaved,
-    compositeLayerId,
-    sidebarCollapsed = false,
-    onToggleSidebar,
-}) => {
-    const { formatMessage } = useSafeIntl();
-    const theme = useTheme();
-
-    const { data: metricCategories, isLoading: isLoadingMetrics } =
-        useGetMetricCategories();
-    const { data: existingLayer, isLoading: isLoadingLayer } =
-        useGetCompositeLayer(compositeLayerId);
-    const { mutate: saveCompositeLayer, isLoading: isSaving } =
-        useSaveCompositeLayer();
-
-    const nodesRef = useRef<FlumeGraph>({});
-    const commentsRef = useRef<FlumeCommentMap>({});
-    const canvasRef = useRef<HTMLDivElement>(null);
-    const { preview, runPreview, schedulePreview, markDisconnected } =
-        useCompositePreview();
-    // Flume reads `nodes`/`comments`/`initialScale` only at mount, so dropping a data layer onto
-    // the canvas remounts the editor (bumping `mountNonce`) with the mutated graph. The mount refs
-    // carry the graph + scale to restore on that remount so the view stays put.
-    const {
-        mountNonce,
-        mountGraphRef,
-        mountCommentsRef,
-        mountScaleRef,
-        handleCanvasDrop,
-    } = useCanvasDrop({ canvasRef, nodesRef, commentsRef });
-    // Data layers wired into the output (even behind transformations), ordered; drives the
-    // "based on a data layer" legend picker ordering.
-    const [connectedLayerIds, setConnectedLayerIds] = useState<number[]>([]);
-
-    const metricOptions: MetricOption[] = useMemo(() => {
-        if (!metricCategories) return [];
-        return metricCategories.flatMap(category =>
-            category.items.map(item => ({
-                value: item.id,
-                label: item.name,
-            })),
-        );
-    }, [metricCategories]);
-
-    const config = useMemo(
-        () => createCompositeFlumeConfig(metricOptions, formatMessage),
-        [metricOptions, formatMessage],
-    );
-
-    // Org units + metric metadata needed by the in-node map preview, handed to Flume controls
-    // through the NodeEditor `context` prop.
-    const { data: accountSettings } = useGetAccountSettings();
-    const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
-    const { data: orgUnits } = useGetOrgUnits({
-        orgUnitTypeId: interventionTypeId,
-        enabled: !!interventionTypeId,
-    });
-
-    const editorContext: CompositeEditorContext = useMemo(() => {
-        const metricTypeById = new Map<number, MetricType>();
-        (metricCategories ?? []).forEach(category => {
-            category.items.forEach(item => metricTypeById.set(item.id, item));
-        });
-        return {
-            orgUnits: orgUnits ?? [],
-            metricTypeById,
-            preview,
-            connectedLayerIds,
-        };
-    }, [metricCategories, orgUnits, preview, connectedLayerIds]);
-
-    // Seed the working graph + comments from the loaded layer (NodeEditor only reads these at mount).
-    useEffect(() => {
-        if (existingLayer?.graph) {
-            nodesRef.current = existingLayer.graph;
-        }
-        if (existingLayer?.comments) {
-            commentsRef.current = existingLayer.comments;
-        }
-    }, [existingLayer]);
-
-    const isReady = !isLoadingMetrics && (!compositeLayerId || !isLoadingLayer);
-
-    const syncPortConnections = usePortConnectionSync(canvasRef);
-
-    const handleChange = (nodes: FlumeGraph) => {
-        nodesRef.current = nodes;
-        // Wait a frame so ports added/removed by this change are in the DOM before we tag them.
-        requestAnimationFrame(() => syncPortConnections(nodes));
-        setConnectedLayerIds(getConnectedDataLayerIds(nodes));
-        // Clear the preview immediately on disconnect (don't wait out the debounce on a stale map).
-        if (!isOutputConnected(nodes)) {
-            markDisconnected();
-            return;
-        }
-        schedulePreview(nodes);
-    };
-
-    // Initial paint: existing graphs don't emit an onChange, so tag their ports once mounted.
-    useEffect(() => {
-        if (!isReady) return undefined;
-        const frame = requestAnimationFrame(() =>
-            syncPortConnections(nodesRef.current),
-        );
-        return () => cancelAnimationFrame(frame);
-    }, [isReady, existingLayer, syncPortConnections]);
-
-    // Kick off a first preview once loaded (existing graphs don't emit an initial onChange).
-    useEffect(() => {
-        if (!isReady) return;
-        setConnectedLayerIds(getConnectedDataLayerIds(nodesRef.current));
-        runPreview(nodesRef.current);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isReady, existingLayer]);
-
-    const handleCommentsChange = (comments: FlumeCommentMap) => {
-        commentsRef.current = comments;
-    };
-
-    // After a drop-triggered remount, refresh the derived state the way an `onChange` normally would
-    // (the fresh NodeEditor doesn't emit one at mount).
-    useEffect(() => {
-        if (mountNonce === 0 || !isReady) return undefined;
-        const frame = requestAnimationFrame(() =>
-            syncPortConnections(nodesRef.current),
-        );
-        setConnectedLayerIds(getConnectedDataLayerIds(nodesRef.current));
-        runPreview(nodesRef.current);
-        return () => cancelAnimationFrame(frame);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [mountNonce]);
-
-    // Prefix every node's header with an icon and, for deletable nodes, a delete button.
-    const renderNodeHeader = useCallback(
-        (Wrapper: any, nodeType: any, actions: any) => (
-            <Wrapper>
-                <NodeHeaderContent nodeType={nodeType} actions={actions} />
-            </Wrapper>
-        ),
-        [],
-    );
-
-    const handleSave = () => {
-        saveCompositeLayer(
-            {
-                graph: nodesRef.current,
-                comments: commentsRef.current,
-                id: compositeLayerId,
-            },
-            {
-                onSuccess: saved => {
-                    // Hand the resulting layer to the parent so it can be displayed on the map;
-                    // fall back to just closing if no handler is provided.
-                    if (onSaved) {
-                        onSaved(saved?.metric_type_detail ?? undefined);
-                    } else {
-                        onClose();
-                    }
-                },
-            },
-        );
-    };
-
-    // Main-panel title: the edited layer's name, or "New composite layer" for a fresh one.
-    const headerTitle = compositeLayerId
-        ? existingLayer?.name || formatMessage(MESSAGES.title)
-        : formatMessage(MESSAGES.newCompositeLayer);
-
-    return (
-        <Card sx={styles.card}>
-            <GlobalStyles styles={flumeContextMenuStyles(theme)} />
-            <CardStyled
-                isLoading={!isReady}
-                header={
-                    <EditorHeader
-                        title={headerTitle}
-                        sidebarCollapsed={sidebarCollapsed}
-                        onToggleSidebar={onToggleSidebar}
-                        onCancel={onClose}
-                        onSave={handleSave}
-                        isSaving={isSaving}
-                    />
-                }
-            >
-                <Box
-                    ref={canvasRef}
-                    sx={[styles.canvas, flumeThemeSx]}
-                    onDragOver={event => {
-                        event.preventDefault();
-                        event.dataTransfer.dropEffect = 'copy';
-                    }}
-                    onDrop={handleCanvasDrop}
-                >
-                    <NodeEditor
-                        key={`${compositeLayerId ?? 'new'}-${mountNonce}`}
-                        portTypes={config.portTypes}
-                        nodeTypes={config.nodeTypes}
-                        nodes={
-                            mountNonce === 0
-                                ? existingLayer?.graph
-                                : mountGraphRef.current
-                        }
-                        comments={
-                            mountNonce === 0
-                                ? existingLayer?.comments
-                                : mountCommentsRef.current
-                        }
-                        initialScale={
-                            mountNonce === 0 ? undefined : mountScaleRef.current
-                        }
-                        defaultNodes={DEFAULT_NODES}
-                        context={editorContext}
-                        onChange={handleChange}
-                        onCommentsChange={handleCommentsChange}
-                        renderNodeHeader={renderNodeHeader}
-                    />
-                    <CanvasControls
-                        canvasRef={canvasRef}
-                        initialFitAlign={compositeLayerId ? 'center' : 'right'}
-                    />
-                    <Typography variant="caption" sx={styles.helper}>
-                        {formatMessage(MESSAGES.helper)}
-                    </Typography>
-                </Box>
-            </CardStyled>
-        </Card>
-    );
+// Imperative handle so a sibling AI chat panel (rendered by the parent, outside this component's
+// tree) can push a generated graph in - see `applyGeneratedGraph` below for why this can't just be
+// a prop passed down.
+export type CompositeLayerEditorHandle = {
+    applyGeneratedGraph: (graph: GeneratedGraph) => void;
 };
+
+export const CompositeLayerEditor = forwardRef<
+    CompositeLayerEditorHandle,
+    Props
+>(
+    (
+        {
+            onClose,
+            onSaved,
+            compositeLayerId,
+            sidebarCollapsed = false,
+            onToggleSidebar,
+        },
+        ref,
+    ) => {
+        const { formatMessage } = useSafeIntl();
+        const theme = useTheme();
+
+        const { data: metricCategories, isLoading: isLoadingMetrics } =
+            useGetMetricCategories();
+        const { data: existingLayer, isLoading: isLoadingLayer } =
+            useGetCompositeLayer(compositeLayerId);
+        const { mutate: saveCompositeLayer, isLoading: isSaving } =
+            useSaveCompositeLayer();
+
+        const nodesRef = useRef<FlumeGraph>({});
+        const commentsRef = useRef<FlumeCommentMap>({});
+        const canvasRef = useRef<HTMLDivElement>(null);
+        const previewTimer = useRef<ReturnType<typeof setTimeout>>();
+        const { preview, runPreview, schedulePreview, markDisconnected } =
+            useCompositePreview();
+
+        // Flume reads `nodes`/`comments`/`initialScale` only at mount, so dropping a data layer onto
+        // the canvas remounts the editor (bumping `mountNonce`) with the mutated graph. The mount refs
+        // carry the graph + scale to restore on that remount so the view stays put.
+        const {
+            mountNonce,
+            mountGraphRef,
+            mountCommentsRef,
+            mountScaleRef,
+            handleCanvasDrop,
+        } = useCanvasDrop({ canvasRef, nodesRef, commentsRef });
+
+        // Data layers wired into the output (even behind transformations), ordered; drives the
+        // "based on a data layer" legend picker ordering.
+        const [connectedLayerIds, setConnectedLayerIds] = useState<number[]>(
+            [],
+        );
+        // An AI-generated graph, applied to the canvas by remounting NodeEditor (it only reads
+        // `nodes`/`comments` at mount time, so there's no other way to push a new graph in).
+        const [aiGraph, setAiGraph] = useState<FlumeNodes | undefined>();
+        const [editorGeneration, setEditorGeneration] = useState(0);
+
+        const metricOptions: MetricOption[] = useMemo(() => {
+            if (!metricCategories) return [];
+            return metricCategories.flatMap(category =>
+                category.items.map(item => ({
+                    value: item.id,
+                    label: item.name,
+                })),
+            );
+        }, [metricCategories]);
+
+        const config = useMemo(
+            () => createCompositeFlumeConfig(metricOptions, formatMessage),
+            [metricOptions, formatMessage],
+        );
+
+        // Org units + metric metadata needed by the in-node map preview, handed to Flume controls
+        // through the NodeEditor `context` prop.
+        const { data: accountSettings } = useGetAccountSettings();
+        const interventionTypeId =
+            accountSettings?.intervention_org_unit_type_id;
+        const { data: orgUnits } = useGetOrgUnits({
+            orgUnitTypeId: interventionTypeId,
+            enabled: !!interventionTypeId,
+        });
+
+        const editorContext: CompositeEditorContext = useMemo(() => {
+            const metricTypeById = new Map<number, MetricType>();
+            (metricCategories ?? []).forEach(category => {
+                category.items.forEach(item =>
+                    metricTypeById.set(item.id, item),
+                );
+            });
+            return {
+                orgUnits: orgUnits ?? [],
+                metricTypeById,
+                preview,
+                connectedLayerIds,
+            };
+        }, [metricCategories, orgUnits, preview, connectedLayerIds]);
+
+        // Seed the working graph + comments from the loaded layer (NodeEditor only reads these at mount).
+        useEffect(() => {
+            if (existingLayer?.graph) {
+                nodesRef.current = existingLayer.graph;
+            }
+            if (existingLayer?.comments) {
+                commentsRef.current = existingLayer.comments;
+            }
+        }, [existingLayer]);
+
+        const isReady =
+            !isLoadingMetrics && (!compositeLayerId || !isLoadingLayer);
+
+        const syncPortConnections = usePortConnectionSync(canvasRef);
+
+        const handleChange = (nodes: FlumeGraph) => {
+            nodesRef.current = nodes;
+            // Wait a frame so ports added/removed by this change are in the DOM before we tag them.
+            requestAnimationFrame(() => syncPortConnections(nodes));
+            setConnectedLayerIds(getConnectedDataLayerIds(nodes));
+            // Clear the preview immediately on disconnect (don't wait out the debounce on a stale map).
+            if (!isOutputConnected(nodes)) {
+                markDisconnected();
+                return;
+            }
+            schedulePreview(nodes);
+        };
+
+        // Initial paint: existing graphs don't emit an onChange, so tag their ports once mounted.
+        // Also re-runs after an AI-generated graph forces a remount (`editorGeneration`).
+        useEffect(() => {
+            if (!isReady) return undefined;
+            const frame = requestAnimationFrame(() =>
+                syncPortConnections(nodesRef.current),
+            );
+            return () => cancelAnimationFrame(frame);
+        }, [isReady, existingLayer, editorGeneration, syncPortConnections]);
+
+        // Kick off a first preview once loaded (existing graphs don't emit an initial onChange).
+        useEffect(() => {
+            if (!isReady) return;
+            setConnectedLayerIds(getConnectedDataLayerIds(nodesRef.current));
+            runPreview(nodesRef.current);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [isReady, existingLayer]);
+
+        const handleCommentsChange = (comments: FlumeCommentMap) => {
+            commentsRef.current = comments;
+        };
+
+        // After a drop-triggered remount, refresh the derived state the way an `onChange` normally would
+        // (the fresh NodeEditor doesn't emit one at mount).
+        useEffect(() => {
+            if (mountNonce === 0 || !isReady) return undefined;
+            const frame = requestAnimationFrame(() =>
+                syncPortConnections(nodesRef.current),
+            );
+            setConnectedLayerIds(getConnectedDataLayerIds(nodesRef.current));
+            runPreview(nodesRef.current);
+            return () => cancelAnimationFrame(frame);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [mountNonce]);
+
+        // Prefix every node's header with an icon and, for deletable nodes, a delete button.
+        const renderNodeHeader = useCallback(
+            (Wrapper: any, nodeType: any, actions: any) => (
+                <Wrapper>
+                    <NodeHeaderContent nodeType={nodeType} actions={actions} />
+                </Wrapper>
+            ),
+            [],
+        );
+
+        // Applies an AI-generated graph to the canvas. NodeEditor only reads `nodes`/`comments` at
+        // mount time, so `editorGeneration` forces a remount (see the `key` below) with the new graph.
+        const handleGenerateGraph = useCallback(
+            (graph: GeneratedGraph) => {
+                const nodes = buildFlumeGraphFromSpec(graph);
+                nodesRef.current = nodes;
+                commentsRef.current = {};
+                setAiGraph(nodes);
+                setEditorGeneration(generation => generation + 1);
+                setConnectedLayerIds(getConnectedDataLayerIds(nodes));
+                if (previewTimer.current) clearTimeout(previewTimer.current);
+                if (isOutputConnected(nodes)) {
+                    runPreview(nodes);
+                } else {
+                    markDisconnected();
+                }
+            },
+            [runPreview, markDisconnected],
+        );
+
+        useImperativeHandle(
+            ref,
+            () => ({ applyGeneratedGraph: handleGenerateGraph }),
+            [handleGenerateGraph],
+        );
+
+        const handleSave = () => {
+            saveCompositeLayer(
+                {
+                    graph: nodesRef.current,
+                    comments: commentsRef.current,
+                    id: compositeLayerId,
+                },
+                {
+                    onSuccess: saved => {
+                        // Hand the resulting layer to the parent so it can be displayed on the map;
+                        // fall back to just closing if no handler is provided.
+                        if (onSaved) {
+                            onSaved(saved?.metric_type_detail ?? undefined);
+                        } else {
+                            onClose();
+                        }
+                    },
+                },
+            );
+        };
+
+        // Main-panel title: the edited layer's name, or "New composite layer" for a fresh one.
+        const headerTitle = compositeLayerId
+            ? existingLayer?.name || formatMessage(MESSAGES.title)
+            : formatMessage(MESSAGES.newCompositeLayer);
+
+        const nodes = useMemo(
+            () =>
+                aiGraph ??
+                (mountNonce === 0
+                    ? existingLayer?.graph
+                    : mountGraphRef.current),
+            [aiGraph, mountNonce, existingLayer, mountGraphRef],
+        );
+
+        const comments = useMemo(
+            () =>
+                (aiGraph && {}) ||
+                (mountNonce === 0
+                    ? existingLayer?.comments
+                    : mountCommentsRef.current),
+            [aiGraph, mountNonce, existingLayer, mountCommentsRef],
+        );
+
+        return (
+            <Card sx={styles.card}>
+                <GlobalStyles styles={flumeContextMenuStyles(theme)} />
+                <CardStyled
+                    isLoading={!isReady}
+                    header={
+                        <EditorHeader
+                            title={headerTitle}
+                            sidebarCollapsed={sidebarCollapsed}
+                            onToggleSidebar={onToggleSidebar}
+                            onCancel={onClose}
+                            onSave={handleSave}
+                            isSaving={isSaving}
+                        />
+                    }
+                >
+                    <Box
+                        ref={canvasRef}
+                        sx={[styles.canvas, flumeThemeSx]}
+                        onDragOver={event => {
+                            event.preventDefault();
+                            event.dataTransfer.dropEffect = 'copy';
+                        }}
+                        onDrop={handleCanvasDrop}
+                    >
+                        <NodeEditor
+                            key={`${compositeLayerId ?? 'new'}-${mountNonce}-${editorGeneration}`}
+                            portTypes={config.portTypes}
+                            nodeTypes={config.nodeTypes}
+                            nodes={nodes}
+                            comments={comments}
+                            initialScale={
+                                mountNonce === 0
+                                    ? undefined
+                                    : mountScaleRef.current
+                            }
+                            defaultNodes={DEFAULT_NODES}
+                            context={editorContext}
+                            onChange={handleChange}
+                            onCommentsChange={handleCommentsChange}
+                            renderNodeHeader={renderNodeHeader}
+                        />
+                        <CanvasControls
+                            canvasRef={canvasRef}
+                            initialFitAlign={
+                                compositeLayerId ? 'center' : 'right'
+                            }
+                        />
+                        <Typography variant="caption" sx={styles.helper}>
+                            {formatMessage(MESSAGES.helper)}
+                        </Typography>
+                    </Box>
+                </CardStyled>
+            </Card>
+        );
+    },
+);
+CompositeLayerEditor.displayName = 'CompositeLayerEditor';
