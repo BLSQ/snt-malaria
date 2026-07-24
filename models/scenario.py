@@ -153,7 +153,9 @@ class ScenarioRule(models.Model):
     org_units_included = ArrayField(models.IntegerField(), blank=True, default=list)
     org_units_scope = ArrayField(models.IntegerField(), blank=True, default=list)
 
-    interventions = models.ManyToManyField("Intervention", blank=True, related_name="scenario_rules")
+    interventions = models.ManyToManyField(
+        "Intervention", blank=True, related_name="scenario_rules", through="ScenarioRuleIntervention"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="created_scenario_rules")
@@ -278,3 +280,18 @@ class ScenarioRule(models.Model):
                 previous_assignments_for_category.add(org_unit_id)
 
         InterventionAssignment.objects.bulk_create(intervention_assignments_to_create)
+
+
+class ScenarioRuleIntervention(models.Model):
+    """Explicit through table for ScenarioRule.interventions.
+
+    Uses on_delete=PROTECT on `intervention` so that deleting an Intervention that is
+    still referenced by a rule is blocked at the DB level, instead of silently cascading.
+    """
+
+    scenario_rule = models.ForeignKey(ScenarioRule, on_delete=models.CASCADE)
+    intervention = models.ForeignKey("Intervention", on_delete=models.PROTECT)
+
+    class Meta:
+        app_label = "snt_malaria"
+        unique_together = [["scenario_rule", "intervention"]]

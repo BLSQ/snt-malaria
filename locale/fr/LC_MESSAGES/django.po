@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-18 13:51+0000\n"
+"POT-Creation-Date: 2026-07-24 07:46+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,7 +21,9 @@ msgstr ""
 #: plugins/snt_malaria/api/cost_unit_types/views.py
 msgid ""
 "Cannot delete this cost unit because it is used by one or more cost lines."
-msgstr "Il est impossible de supprimer cette unité de coût car elle est utilisée par une ou plusieurs lignes de coût."
+msgstr ""
+"Il est impossible de supprimer cette unité de coût car elle est utilisée par "
+"une ou plusieurs lignes de coût."
 
 #: plugins/snt_malaria/api/cost_unit_types/views.py
 msgid "A cost unit with this name already exists."
@@ -43,9 +45,33 @@ msgstr "Un financement avec ce nom existe déjà."
 msgid "The scenario is locked and cannot be modified."
 msgstr "Le scenario est verouillé et ne peut être modifié."
 
+#: plugins/snt_malaria/api/intervention_categories/views.py
+msgid ""
+"Cannot delete this intervention category because it is used by one or more "
+"interventions."
+msgstr ""
+"Il est impossible de supprimer cette catégorie d'intervention car elle est "
+"utilisée par une ou plusieurs interventions."
+
+#: plugins/snt_malaria/api/intervention_categories/views.py
+msgid "An intervention category with this name already exists."
+msgstr "Une catégorie d'intervention avec ce nom existe déjà."
+
+#: plugins/snt_malaria/api/interventions/serializers.py
+msgid "Intervention category not found."
+msgstr "Catégorie d'intervention inconnue."
+
 #: plugins/snt_malaria/api/interventions/serializers.py
 msgid "Grant not found."
 msgstr "Financement inconnu."
+
+#: plugins/snt_malaria/api/interventions/views.py
+msgid ""
+"Cannot delete this intervention because it is used by one or more scenario "
+"rules."
+msgstr ""
+"Il est impossible de supprimer cette intervention car elle est utilisée "
+"par une ou plusieurs règles de scénario."
 
 #: plugins/snt_malaria/api/scenarios/serializers.py
 msgid "Cannot modify a locked scenario."
@@ -96,14 +122,6 @@ msgstr "Support"
 msgid "Other"
 msgstr "Autre"
 
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "Population"
-msgstr "Population"
-
-#: plugins/snt_malaria/models/cost_breakdown.py
-msgid "Fixed cost"
-msgstr "Coût fixe"
-
 #: plugins/snt_malaria/permissions.py
 msgid "Scenario - Basic Write"
 msgstr "Scénario - Écriture simple"
@@ -119,6 +137,12 @@ msgstr "Configuration - Lecture"
 #: plugins/snt_malaria/permissions.py
 msgid "Settings - Write"
 msgstr "Configuration - Écriture"
+
+#~ msgid "Population"
+#~ msgstr "Population"
+
+#~ msgid "Fixed cost"
+#~ msgstr "Coût fixe"
 
 #, python-brace-format
 #~ msgid "{delta} assignment(s) added to plan"

@@ -4,7 +4,7 @@ from plugins.snt_malaria.api.interventions.permissions import (
     SNT_SETTINGS_READ_PERMISSION,
     SNT_SETTINGS_WRITE_PERMISSION,
 )
-from plugins.snt_malaria.models import Budget, Donor, Grant
+from plugins.snt_malaria.models import Budget, Donor, Grant, Intervention, ScenarioRule
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
@@ -266,3 +266,126 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         }
         response = self.client.put(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    # Create
+
+    def test_create_intervention_with_write_perm(self):
+        self.client.force_authenticate(user=self.user_write)
+        data = {
+            "name": "New intervention",
+            "short_name": "NI",
+            "code": "new_intervention",
+            "description": "A new intervention",
+            "intervention_category": self.int_category_vaccination.id,
+        }
+        response = self.client.post(BASE_URL, data=data)
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+        self.assertEqual(result["name"], "New intervention")
+        created = Intervention.objects.get(id=result["id"])
+        self.assertEqual(created.intervention_category, self.int_category_vaccination)
+        self.assertEqual(created.created_by, self.user_write)
+
+    def test_create_intervention_duplicate_name_in_category_returns_400(self):
+        self.client.force_authenticate(user=self.user_write)
+        data = {
+            "name": self.intervention_vaccination_rts.name,
+            "code": "duplicate",
+            "intervention_category": self.int_category_vaccination.id,
+        }
+        response = self.client.post(BASE_URL, data=data)
+        self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_intervention_with_other_account_category_returns_400(self):
+        other_account, _ = self.create_snt_account(name="Other Account For Interventions")
+        other_category = self.create_snt_intervention_category(account=other_account, created_by=self.user_write)
+
+        self.client.force_authenticate(user=self.user_write)
+        data = {"name": "Sneaky intervention", "code": "sneaky", "intervention_category": other_category.id}
+        response = self.client.post(BASE_URL, data=data)
+        self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_intervention_with_read_perm_forbidden(self):
+        self.client.force_authenticate(user=self.user_read)
+        data = {
+            "name": "New intervention",
+            "code": "new_intervention",
+            "intervention_category": self.int_category_vaccination.id,
+        }
+        response = self.client.post(BASE_URL, data=data)
+        self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
+
+    def test_create_intervention_no_auth(self):
+        data = {
+            "name": "New intervention",
+            "code": "new_intervention",
+            "intervention_category": self.int_category_vaccination.id,
+        }
+        response = self.client.post(BASE_URL, data=data)
+        self.assertJSONResponse(response, status.HTTP_401_UNAUTHORIZED)
+
+    # Update (basic fields)
+
+    def test_patch_intervention_basic_fields_with_write_perm(self):
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.patch(
+            f"{BASE_URL}{self.intervention_vaccination_rts.id}/",
+            data={"short_name": "Updated short name", "code": "updated_code"},
+        )
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(result["short_name"], "Updated short name")
+        self.intervention_vaccination_rts.refresh_from_db()
+        self.assertEqual(self.intervention_vaccination_rts.code, "updated_code")
+
+    def test_patch_intervention_with_read_perm_forbidden(self):
+        self.client.force_authenticate(user=self.user_read)
+        response = self.client.patch(
+            f"{BASE_URL}{self.intervention_vaccination_rts.id}/", data={"short_name": "Nope"}
+        )
+        self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
+
+    # Delete
+
+    def test_delete_intervention_with_write_perm_deletes(self):
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{BASE_URL}{self.intervention_vaccination_rts.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Intervention.objects.filter(id=self.intervention_vaccination_rts.id).exists())
+
+    def test_delete_intervention_used_by_a_rule_returns_405(self):
+        scenario = self.create_snt_scenario(
+            account=self.account,
+            created_by=self.user_write,
+            name="Scenario with rule",
+        )
+        rule = ScenarioRule.objects.create(
+            scenario=scenario,
+            priority=1,
+            created_by=self.user_write,
+        )
+        rule.interventions.add(self.intervention_vaccination_rts)
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{BASE_URL}{self.intervention_vaccination_rts.id}/")
+
+        self.assertJSONResponse(response, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertTrue(Intervention.objects.filter(id=self.intervention_vaccination_rts.id).exists())
+
+    def test_delete_intervention_with_read_perm_forbidden(self):
+        self.client.force_authenticate(user=self.user_read)
+        response = self.client.delete(f"{BASE_URL}{self.intervention_vaccination_rts.id}/")
+        self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_intervention_no_auth(self):
+        response = self.client.delete(f"{BASE_URL}{self.intervention_vaccination_rts.id}/")
+        self.assertJSONResponse(response, status.HTTP_401_UNAUTHORIZED)
+
+    def test_delete_other_account_intervention_not_found(self):
+        other_account, _ = self.create_snt_account(name="Other Account For Delete")
+        other_category = self.create_snt_intervention_category(account=other_account, created_by=self.user_write)
+        other_intervention = self.create_snt_intervention(
+            intervention_category=other_category, created_by=self.user_write
+        )
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{BASE_URL}{other_intervention.id}/")
+        self.assertJSONResponse(response, status.HTTP_404_NOT_FOUND)

@@ -59,15 +59,6 @@ export const InterventionForm: FC = () => {
         <Stack spacing={3}>
             <Stack spacing={2} direction="row">
                 <InputComponent
-                    keyValue="name"
-                    type="text"
-                    value={values.name}
-                    onChange={setFieldValueAndState}
-                    errors={getErrors('name')}
-                    labelString={formatMessage(MESSAGES.label)}
-                    wrapperSx={{ flex: '1 1 0', minWidth: 0 }}
-                />
-                <InputComponent
                     keyValue="impact_ref"
                     type="text"
                     value={values.impact_ref}

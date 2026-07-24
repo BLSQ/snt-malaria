@@ -44,7 +44,6 @@ class InterventionCategoryAdmin(admin.ModelAdmin):
         "created_by",
         "created_at",
         "updated_at",
-        "deleted_at",
     )
     search_fields = ("name", "description")
     list_filter = ("account", "created_by")
@@ -63,7 +62,6 @@ class InterventionAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
         "updated_by",
-        "deleted_at",
     )
     list_editable = ("impact_ref",)
     search_fields = ("name", "description", "code", "impact_ref")

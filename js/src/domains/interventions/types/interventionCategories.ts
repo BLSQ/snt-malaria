@@ -7,3 +7,10 @@ export type InterventionCategory = {
     description: string;
     interventions: Intervention[];
 };
+
+export type InterventionCategoryPayload = {
+    id?: number;
+    name: string;
+    short_name: string;
+    description: string;
+};
