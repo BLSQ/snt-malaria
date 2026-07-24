@@ -9,6 +9,12 @@ class CompositeLayerAIRequestSerializer(serializers.Serializer):
         default=list,
         help_text="Previous conversation messages",
     )
+    current_graph = serializers.DictField(
+        required=False,
+        allow_null=True,
+        default=None,
+        help_text="Spec of the graph currently open in the editor (nodes + output), if any",
+    )
 
 
 class CompositeLayerAIResponseSerializer(serializers.Serializer):

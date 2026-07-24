@@ -26,8 +26,13 @@ import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { CanvasControls } from './components/CanvasControls';
 import { EditorHeader } from './components/EditorHeader';
 import { NodeHeaderContent } from './components/NodeHeaderContent';
-import { buildFlumeGraphFromSpec } from './compositeLayerChatBot/buildFlumeGraph';
-import { GeneratedGraph } from './compositeLayerChatBot/types';
+import {
+    buildFlumeGraphFromSpec,
+    centerGraph,
+    relayoutWithMeasuredSizes,
+} from './compositeLayerChatBot/buildFlumeGraph';
+import { extractGraphSpecFromFlume } from './compositeLayerChatBot/extractGraphSpec';
+import { CurrentGraph, GeneratedGraph } from './compositeLayerChatBot/types';
 import {
     CompositeEditorContext,
     createCompositeFlumeConfig,
@@ -41,10 +46,25 @@ import { usePortConnectionSync } from './hooks/usePortConnectionSync';
 import { useSaveCompositeLayer } from './hooks/useSaveCompositeLayer';
 import { MESSAGES } from './messages';
 import { FlumeGraph } from './types/flumeGraph';
+import {
+    computeFitScale,
+    getStageElement,
+    measureNodeSizes,
+    shiftGraphForRemount,
+} from './utils/flumeStage';
 import { getConnectedDataLayerIds, isOutputConnected } from './utils/graph';
 
 // Flume adds a default output node for a fresh graph; existing graphs already contain their own.
 const DEFAULT_NODES = [{ type: 'output' }];
+
+// "content-only" = same node ids as before (incl. the always-present `output`): parameter tweaks,
+// positions kept. Anything else is "structural" and gets re-laid-out (see handleGenerateGraph).
+const hasSameNodeIds = (previousNodes: FlumeGraph, graph: GeneratedGraph): boolean => {
+    const previousIds = new Set(Object.keys(previousNodes));
+    const nextIds = new Set([...graph.nodes.map(node => node.id), 'output']);
+    if (previousIds.size !== nextIds.size) return false;
+    return [...nextIds].every(id => previousIds.has(id));
+};
 
 const styles = {
     card: {
@@ -84,13 +104,19 @@ type Props = {
     sidebarCollapsed?: boolean;
     /** Toggles the data layers sidebar (mirrors the scenario editor's rules-panel toggle). */
     onToggleSidebar?: () => void;
+    /** Whether the sidebar shows the AI chat rather than the data layer list. Passed to the header. */
+    isAiChatMode?: boolean;
+    onToggleAiChatMode?: () => void;
+    /** Shows the AI chat toggle in the header - only when the account has an AI API key. */
+    showAiChatToggle?: boolean;
 };
 
-// Imperative handle so a sibling AI chat panel (rendered by the parent, outside this component's
-// tree) can push a generated graph in - see `applyGeneratedGraph` below for why this can't just be
-// a prop passed down.
+// Imperative handle for the sibling AI chat panel (rendered by the parent) to push a generated
+// graph in and read the current one - the graph lives in a ref here, not state, so it can't be a prop.
 export type CompositeLayerEditorHandle = {
     applyGeneratedGraph: (graph: GeneratedGraph) => void;
+    /** Spec of the graph currently on the canvas, sent to the AI as context (null when empty). */
+    getCurrentGraph: () => CurrentGraph | null;
 };
 
 export const CompositeLayerEditor = forwardRef<
@@ -104,6 +130,9 @@ export const CompositeLayerEditor = forwardRef<
             compositeLayerId,
             sidebarCollapsed = false,
             onToggleSidebar,
+            isAiChatMode = false,
+            onToggleAiChatMode,
+            showAiChatToggle = false,
         },
         ref,
     ) => {
@@ -124,26 +153,43 @@ export const CompositeLayerEditor = forwardRef<
         const { preview, runPreview, schedulePreview, markDisconnected } =
             useCompositePreview();
 
-        // Flume reads `nodes`/`comments`/`initialScale` only at mount, so dropping a data layer onto
-        // the canvas remounts the editor (bumping `mountNonce`) with the mutated graph. The mount refs
-        // carry the graph + scale to restore on that remount so the view stays put.
+        // An AI-generated graph. NodeEditor only reads `nodes`/`comments` at mount, so applying it
+        // means remounting (see `editorGeneration`/`mountNonce`).
+        const [aiGraph, setAiGraph] = useState<FlumeNodes | undefined>();
+        const [aiComments, setAiComments] = useState<
+            FlumeCommentMap | undefined
+        >();
+
+        // Dropping a data layer remounts the editor (bumping `mountNonce`) with the mutated graph;
+        // the mount refs carry the graph + scale to restore so the view stays put.
         const {
             mountNonce,
             mountGraphRef,
             mountCommentsRef,
             mountScaleRef,
             handleCanvasDrop,
-        } = useCanvasDrop({ canvasRef, nodesRef, commentsRef });
+        } = useCanvasDrop({
+            canvasRef,
+            nodesRef,
+            commentsRef,
+            onBeforeRemount: () => {
+                setAiGraph(undefined);
+                setAiComments(undefined);
+            },
+        });
 
         // Data layers wired into the output (even behind transformations), ordered; drives the
         // "based on a data layer" legend picker ordering.
         const [connectedLayerIds, setConnectedLayerIds] = useState<number[]>(
             [],
         );
-        // An AI-generated graph, applied to the canvas by remounting NodeEditor (it only reads
-        // `nodes`/`comments` at mount time, so there's no other way to push a new graph in).
-        const [aiGraph, setAiGraph] = useState<FlumeNodes | undefined>();
         const [editorGeneration, setEditorGeneration] = useState(0);
+        // Two-phase framing for a structural update (nodes added/removed): with no real DOM sizes
+        // yet, it mounts once hidden with size *estimates*, then the measure-and-correct effect
+        // below measures real sizes, centers/scales, and remounts framed. Content-only changes and
+        // rearranges already have real sizes and skip straight to that second step.
+        const viewResetPendingRef = useRef(false); // skip restoring mountScaleRef on this mount
+        const [isFraming, setIsFraming] = useState(false); // hide the canvas while true
 
         const metricOptions: MetricOption[] = useMemo(() => {
             if (!metricCategories) return [];
@@ -258,14 +304,38 @@ export const CompositeLayerEditor = forwardRef<
             [],
         );
 
-        // Applies an AI-generated graph to the canvas. NodeEditor only reads `nodes`/`comments` at
-        // mount time, so `editorGeneration` forces a remount (see the `key` below) with the new graph.
+        // Applies an AI-generated graph by forcing a remount (`editorGeneration`). Two cases per
+        // `hasSameNodeIds`:
+        // - Content-only: keep every position; pre-shift by the current pan so the remount doesn't
+        //   jump when Flume resets pan/zoom, restore the scale, and cancel any in-flight framing.
+        // - Structural (incl. first generation): hide the canvas, hand off to the effect below.
         const handleGenerateGraph = useCallback(
             (graph: GeneratedGraph) => {
-                const nodes = buildFlumeGraphFromSpec(graph);
+                let nodes: FlumeNodes;
+                let comments: FlumeCommentMap;
+
+                if (hasSameNodeIds(nodesRef.current, graph)) {
+                    const shifted = shiftGraphForRemount(
+                        nodesRef.current,
+                        commentsRef.current,
+                        canvasRef.current,
+                    );
+                    nodes = buildFlumeGraphFromSpec(graph, shifted.nodes);
+                    comments = shifted.comments;
+                    mountScaleRef.current = shifted.scale;
+                    viewResetPendingRef.current = false;
+                    setIsFraming(false);
+                } else {
+                    nodes = buildFlumeGraphFromSpec(graph);
+                    comments = {};
+                    viewResetPendingRef.current = true;
+                    setIsFraming(true);
+                }
+
                 nodesRef.current = nodes;
-                commentsRef.current = {};
+                commentsRef.current = comments;
                 setAiGraph(nodes);
+                setAiComments(comments);
                 setEditorGeneration(generation => generation + 1);
                 setConnectedLayerIds(getConnectedDataLayerIds(nodes));
                 if (previewTimer.current) clearTimeout(previewTimer.current);
@@ -275,12 +345,96 @@ export const CompositeLayerEditor = forwardRef<
                     markDisconnected();
                 }
             },
-            [runPreview, markDisconnected],
+            [runPreview, markDisconnected, mountScaleRef],
         );
+
+        // Follow-up to a structural update's hidden estimate mount: measure real node sizes,
+        // re-lay-out, center/scale, and remount framed. Guarded by `isFraming` so a newer
+        // content-only update or rearrange (which turns it off) cancels this before it overwrites.
+        useEffect(() => {
+            if (!isFraming || !isReady) return undefined;
+            let frame = 0;
+            let attempts = 0;
+            const expectedCount = Object.keys(nodesRef.current).length;
+            const tick = () => {
+                const stage = getStageElement(canvasRef.current);
+                const measuredSizes = stage
+                    ? measureNodeSizes(stage)
+                    : new Map();
+                if (stage && measuredSizes.size >= expectedCount) {
+                    const { nodes: relaid, boundingBox } =
+                        relayoutWithMeasuredSizes(
+                            nodesRef.current,
+                            measuredSizes,
+                        );
+                    const centered = centerGraph(relaid, boundingBox);
+                    const canvasRect =
+                        canvasRef.current?.getBoundingClientRect();
+                    mountScaleRef.current = canvasRect
+                        ? computeFitScale(
+                              boundingBox.maxX - boundingBox.minX,
+                              boundingBox.maxY - boundingBox.minY,
+                              canvasRect.width,
+                              canvasRect.height,
+                          )
+                        : 1;
+                    viewResetPendingRef.current = false;
+
+                    nodesRef.current = centered;
+                    setAiGraph(centered);
+                    setIsFraming(false);
+                    setEditorGeneration(generation => generation + 1);
+                } else if (attempts < 30) {
+                    attempts += 1;
+                    frame = requestAnimationFrame(tick);
+                } else {
+                    // Gave up waiting for nodes to render - reveal the estimate-based layout as-is
+                    // rather than leaving the canvas hidden forever.
+                    setIsFraming(false);
+                }
+            };
+            frame = requestAnimationFrame(tick);
+            return () => cancelAnimationFrame(frame);
+        }, [editorGeneration, isReady, isFraming, mountScaleRef]);
+
+        // User-triggered re-arrange (top bar button): the measure-and-correct flow above in one
+        // step, since the nodes are already mounted with real sizes (no estimate pass to correct).
+        const handleRearrange = useCallback(() => {
+            const stage = getStageElement(canvasRef.current);
+            const canvasRect = canvasRef.current?.getBoundingClientRect();
+            if (!stage || !canvasRect) return;
+            const measuredSizes = measureNodeSizes(stage);
+
+            const { nodes: relaid, boundingBox } = relayoutWithMeasuredSizes(
+                nodesRef.current,
+                measuredSizes,
+            );
+            const centered = centerGraph(relaid, boundingBox);
+
+            nodesRef.current = centered;
+            setAiGraph(centered);
+            // Comments aren't tied to nodes - carried over as-is (still positioned to the old layout).
+            setAiComments(commentsRef.current);
+            mountScaleRef.current = computeFitScale(
+                boundingBox.maxX - boundingBox.minX,
+                boundingBox.maxY - boundingBox.minY,
+                canvasRect.width,
+                canvasRect.height,
+            );
+            viewResetPendingRef.current = false;
+            setIsFraming(false); // cancel any in-flight structural framing, like handleGenerateGraph
+            setEditorGeneration(generation => generation + 1);
+        }, [mountScaleRef]);
 
         useImperativeHandle(
             ref,
-            () => ({ applyGeneratedGraph: handleGenerateGraph }),
+            () => ({
+                applyGeneratedGraph: handleGenerateGraph,
+                // nodesRef is kept current by handleChange, so this reflects the live canvas
+                // (including hand-built graphs that never came from the AI).
+                getCurrentGraph: () =>
+                    extractGraphSpecFromFlume(nodesRef.current),
+            }),
             [handleGenerateGraph],
         );
 
@@ -293,8 +447,7 @@ export const CompositeLayerEditor = forwardRef<
                 },
                 {
                     onSuccess: saved => {
-                        // Hand the resulting layer to the parent so it can be displayed on the map;
-                        // fall back to just closing if no handler is provided.
+                        // Hand the layer to the parent to show on the map, or just close.
                         if (onSaved) {
                             onSaved(saved?.metric_type_detail ?? undefined);
                         } else {
@@ -321,11 +474,12 @@ export const CompositeLayerEditor = forwardRef<
 
         const comments = useMemo(
             () =>
-                (aiGraph && {}) ||
-                (mountNonce === 0
-                    ? existingLayer?.comments
-                    : mountCommentsRef.current),
-            [aiGraph, mountNonce, existingLayer, mountCommentsRef],
+                aiGraph
+                    ? aiComments
+                    : mountNonce === 0
+                      ? existingLayer?.comments
+                      : mountCommentsRef.current,
+            [aiGraph, aiComments, mountNonce, existingLayer, mountCommentsRef],
         );
 
         return (
@@ -338,6 +492,10 @@ export const CompositeLayerEditor = forwardRef<
                             title={headerTitle}
                             sidebarCollapsed={sidebarCollapsed}
                             onToggleSidebar={onToggleSidebar}
+                            isAiChatMode={isAiChatMode}
+                            onToggleAiChatMode={onToggleAiChatMode}
+                            showAiChatToggle={showAiChatToggle}
+                            onRearrange={handleRearrange}
                             onCancel={onClose}
                             onSave={handleSave}
                             isSaving={isSaving}
@@ -353,29 +511,38 @@ export const CompositeLayerEditor = forwardRef<
                         }}
                         onDrop={handleCanvasDrop}
                     >
-                        <NodeEditor
-                            key={`${compositeLayerId ?? 'new'}-${mountNonce}-${editorGeneration}`}
-                            portTypes={config.portTypes}
-                            nodeTypes={config.nodeTypes}
-                            nodes={nodes}
-                            comments={comments}
-                            initialScale={
-                                mountNonce === 0
-                                    ? undefined
-                                    : mountScaleRef.current
-                            }
-                            defaultNodes={DEFAULT_NODES}
-                            context={editorContext}
-                            onChange={handleChange}
-                            onCommentsChange={handleCommentsChange}
-                            renderNodeHeader={renderNodeHeader}
-                        />
-                        <CanvasControls
-                            canvasRef={canvasRef}
-                            initialFitAlign={
-                                compositeLayerId ? 'center' : 'right'
-                            }
-                        />
+                        {/* Faded, not unmounted, while `isFraming` so its DOM sizes stay measurable.
+                            `height: 100%` is required: Flume's root fills its parent that way, so
+                            without it the canvas collapses to its content's natural height. */}
+                        <Box
+                            sx={{
+                                height: '100%',
+                                opacity: isFraming ? 0 : 1,
+                                pointerEvents: isFraming ? 'none' : 'auto',
+                                transition: isFraming
+                                    ? 'none'
+                                    : 'opacity 200ms ease-out',
+                            }}
+                        >
+                            <NodeEditor
+                                key={`${compositeLayerId ?? 'new'}-${mountNonce}-${editorGeneration}`}
+                                portTypes={config.portTypes}
+                                nodeTypes={config.nodeTypes}
+                                nodes={nodes}
+                                comments={comments}
+                                initialScale={
+                                    viewResetPendingRef.current
+                                        ? undefined
+                                        : mountScaleRef.current
+                                }
+                                defaultNodes={DEFAULT_NODES}
+                                context={editorContext}
+                                onChange={handleChange}
+                                onCommentsChange={handleCommentsChange}
+                                renderNodeHeader={renderNodeHeader}
+                            />
+                        </Box>
+                        <CanvasControls canvasRef={canvasRef} />
                         <Typography variant="caption" sx={styles.helper}>
                             {formatMessage(MESSAGES.helper)}
                         </Typography>

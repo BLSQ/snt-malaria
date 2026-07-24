@@ -17,6 +17,14 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.hideDataLayers',
         defaultMessage: 'Hide data layers',
     },
+    switchToAiGeneration: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.switchToAiGeneration',
+        defaultMessage: 'Generate with AI',
+    },
+    switchToDataLayerList: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.switchToDataLayerList',
+        defaultMessage: 'Back to data layer list',
+    },
     save: {
         id: 'iaso.snt_malaria.compositeLayerEditor.save',
         defaultMessage: 'Save',
@@ -58,6 +66,10 @@ export const MESSAGES = defineMessages({
     fitToContent: {
         id: 'iaso.snt_malaria.compositeLayerEditor.fitToContent',
         defaultMessage: 'Fit to content',
+    },
+    rearrangeNodes: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.rearrangeNodes',
+        defaultMessage: 'Auto arrange nodes',
     },
     // Map previews.
     mapPreview: {

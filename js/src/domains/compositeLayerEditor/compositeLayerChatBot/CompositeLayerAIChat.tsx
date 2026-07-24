@@ -1,15 +1,15 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC } from 'react';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { Box, Card, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { ChatMessage, ChatPanel } from 'Iaso/components/ChatPanel/ChatPanel';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
-import { ConversationEntry, GeneratedGraph } from './types';
-import { useSendCompositeLayerAIMessage } from './useSendCompositeLayerAIMessage';
 
 type Props = {
-    onGenerate: (graph: GeneratedGraph) => void;
+    messages: ChatMessage[];
+    isLoading: boolean;
+    onSendMessage: (message: string) => void;
 };
 
 const chatStyles = {
@@ -23,63 +23,26 @@ const chatStyles = {
     },
 } satisfies SxStyles;
 
-export const CompositeLayerAIChat: FC<Props> = ({ onGenerate }) => {
+export const CompositeLayerAIChat: FC<Props> = ({
+    messages,
+    isLoading,
+    onSendMessage,
+}) => {
     const { formatMessage } = useSafeIntl();
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [conversationHistory, setConversationHistory] = useState<
-        ConversationEntry[]
-    >([]);
-    const { mutate: sendMessage, isLoading } = useSendCompositeLayerAIMessage();
-
-    const handleSendMessage = useCallback(
-        (message: string) => {
-            setMessages(prev => [
-                ...prev,
-                { role: 'user', content: message, id: crypto.randomUUID() },
-            ]);
-
-            sendMessage(
-                { message, conversation_history: conversationHistory },
-                {
-                    onSuccess: data => {
-                        setMessages(prev => [
-                            ...prev,
-                            {
-                                role: 'assistant',
-                                content: data.assistant_message,
-                                id: crypto.randomUUID(),
-                            },
-                        ]);
-                        setConversationHistory(data.conversation_history);
-                        if (data.graph) {
-                            onGenerate(data.graph);
-                        }
-                    },
-                    onError: () => {
-                        setMessages(prev => [
-                            ...prev,
-                            {
-                                role: 'assistant',
-                                content: formatMessage(
-                                    MESSAGES.compositeLayerAIError,
-                                ),
-                                id: crypto.randomUUID(),
-                            },
-                        ]);
-                    },
-                },
-            );
-        },
-        [conversationHistory, sendMessage, onGenerate, formatMessage],
-    );
 
     return (
         <Card
+            elevation={0}
             sx={{
                 height: '100%',
                 flexGrow: 1,
                 display: 'flex',
                 flexDirection: 'column',
+                // ChatPanel's user bubble hardcodes a washed-out `primary.contrastText`; pin both
+                // bubbles (the only Papers under this Card) to a legible color until it exposes a prop.
+                '& .MuiPaper-root': {
+                    color: 'text.primary',
+                },
             }}
         >
             <ChatPanel
@@ -105,7 +68,7 @@ export const CompositeLayerAIChat: FC<Props> = ({ onGenerate }) => {
                         </Typography>
                     </Box>
                 }
-                onSendMessage={handleSendMessage}
+                onSendMessage={onSendMessage}
                 interpretMarkdown={true}
             />
         </Card>
