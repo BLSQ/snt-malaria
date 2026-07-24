@@ -2,5 +2,6 @@ services:
     iaso:
       image: blsq/snt_malaria:${PROD_IMAGE_TAG:-develop}
       environment:
+        - COMPOSITE_LAYER_AI_MODEL
         - ENABLE_PUBLIC_ACCOUNT_SETUP
         - PUBLIC_ACCOUNT_THROTTLE_RATE
