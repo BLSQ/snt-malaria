@@ -4,34 +4,37 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('snt_malaria', '0056_costunittype_is_commodity'),
+        ("snt_malaria", "0056_costunittype_is_commodity"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='intervention',
+            name="intervention",
             unique_together=set(),
         ),
         migrations.AlterUniqueTogether(
-            name='interventioncategory',
+            name="interventioncategory",
             unique_together=set(),
         ),
         migrations.AddConstraint(
-            model_name='intervention',
-            constraint=models.UniqueConstraint(fields=('intervention_category', 'name'), name='snt_malaria_intervention_category_name_uniq'),
+            model_name="intervention",
+            constraint=models.UniqueConstraint(
+                fields=("intervention_category", "name"), name="snt_malaria_intervention_category_name_uniq"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='interventioncategory',
-            constraint=models.UniqueConstraint(fields=('account', 'name'), name='snt_malaria_interventioncategory_account_name_uniq'),
+            model_name="interventioncategory",
+            constraint=models.UniqueConstraint(
+                fields=("account", "name"), name="snt_malaria_interventioncategory_account_name_uniq"
+            ),
         ),
         migrations.RemoveField(
-            model_name='intervention',
-            name='deleted_at',
+            model_name="intervention",
+            name="deleted_at",
         ),
         migrations.RemoveField(
-            model_name='interventioncategory',
-            name='deleted_at',
+            model_name="interventioncategory",
+            name="deleted_at",
         ),
     ]
