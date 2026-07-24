@@ -9,4 +9,5 @@ export const useDeleteInterventionCategory = (): UseMutationResult =>
                 `/api/snt_malaria/intervention_categories/${categoryId}/`,
             ),
         invalidateQueryKey: ['interventionCategories'],
+        useApiErrorMessage: true,
     });

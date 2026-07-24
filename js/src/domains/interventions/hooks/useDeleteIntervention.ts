@@ -7,4 +7,5 @@ export const useDeleteIntervention = (): UseMutationResult =>
         mutationFn: (interventionId: number) =>
             deleteRequest(`/api/snt_malaria/interventions/${interventionId}/`),
         invalidateQueryKey: ['interventionCategories'],
+        useApiErrorMessage: true,
     });
