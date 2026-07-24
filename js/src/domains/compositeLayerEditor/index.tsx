@@ -57,11 +57,8 @@ import { getConnectedDataLayerIds, isOutputConnected } from './utils/graph';
 // Flume adds a default output node for a fresh graph; existing graphs already contain their own.
 const DEFAULT_NODES = [{ type: 'output' }];
 
-// A response is "content-only" (parameter changes on nodes already on the canvas, e.g. a formula
-// tweak) when it produces exactly the same node ids as before - including the always-present
-// `output` node. Anything else (a node added or removed, including the very first generation) is
-// "structural". This drives whether positions are kept as-is or fully re-laid-out - see
-// `handleGenerateGraph`.
+// "content-only" = same node ids as before (incl. the always-present `output`): parameter tweaks,
+// positions kept. Anything else is "structural" and gets re-laid-out (see handleGenerateGraph).
 const hasSameNodeIds = (previousNodes: FlumeGraph, graph: GeneratedGraph): boolean => {
     const previousIds = new Set(Object.keys(previousNodes));
     const nextIds = new Set([...graph.nodes.map(node => node.id), 'output']);
@@ -107,18 +104,15 @@ type Props = {
     sidebarCollapsed?: boolean;
     /** Toggles the data layers sidebar (mirrors the scenario editor's rules-panel toggle). */
     onToggleSidebar?: () => void;
-    /** Whether the sidebar is currently showing the AI chat rather than the draggable data layer
-     * list (owned by the parent page, which renders both). Passed straight through to the header. */
+    /** Whether the sidebar shows the AI chat rather than the data layer list. Passed to the header. */
     isAiChatMode?: boolean;
     onToggleAiChatMode?: () => void;
-    /** Shows the AI chat toggle in the header - only when the account has an AI API key
-     * configured. */
+    /** Shows the AI chat toggle in the header - only when the account has an AI API key. */
     showAiChatToggle?: boolean;
 };
 
-// Imperative handle so a sibling AI chat panel (rendered by the parent, outside this component's
-// tree) can push a generated graph in - see `applyGeneratedGraph` below for why this can't just be
-// a prop passed down.
+// Imperative handle for the sibling AI chat panel (rendered by the parent) to push a generated
+// graph in and read the current one - the graph lives in a ref here, not state, so it can't be a prop.
 export type CompositeLayerEditorHandle = {
     applyGeneratedGraph: (graph: GeneratedGraph) => void;
     /** Spec of the graph currently on the canvas, sent to the AI as context (null when empty). */
@@ -159,16 +153,15 @@ export const CompositeLayerEditor = forwardRef<
         const { preview, runPreview, schedulePreview, markDisconnected } =
             useCompositePreview();
 
-        // An AI-generated graph, applied to the canvas by remounting NodeEditor (it only reads
-        // `nodes`/`comments` at mount time, so there's no other way to push a new graph in).
+        // An AI-generated graph. NodeEditor only reads `nodes`/`comments` at mount, so applying it
+        // means remounting (see `editorGeneration`/`mountNonce`).
         const [aiGraph, setAiGraph] = useState<FlumeNodes | undefined>();
         const [aiComments, setAiComments] = useState<
             FlumeCommentMap | undefined
         >();
 
-        // Flume reads `nodes`/`comments`/`initialScale` only at mount, so dropping a data layer onto
-        // the canvas remounts the editor (bumping `mountNonce`) with the mutated graph. The mount refs
-        // carry the graph + scale to restore on that remount so the view stays put.
+        // Dropping a data layer remounts the editor (bumping `mountNonce`) with the mutated graph;
+        // the mount refs carry the graph + scale to restore so the view stays put.
         const {
             mountNonce,
             mountGraphRef,
@@ -191,13 +184,10 @@ export const CompositeLayerEditor = forwardRef<
             [],
         );
         const [editorGeneration, setEditorGeneration] = useState(0);
-        // Framing for a graph update (see handleGenerateGraph/handleRearrange and the
-        // measure-and-correct effect below): a "structural" change (nodes added/removed) has no
-        // real DOM sizes yet, so it mounts once, hidden, with size *estimates* - both of these
-        // true - then a follow-up effect measures the real sizes, centers/scales the result
-        // (`centerGraph`/`computeFitScale`), and remounts again already framed and visible. A
-        // content-only change or a rearrange has real sizes already and goes straight to that
-        // second step, so it never sets these true in the first place.
+        // Two-phase framing for a structural update (nodes added/removed): with no real DOM sizes
+        // yet, it mounts once hidden with size *estimates*, then the measure-and-correct effect
+        // below measures real sizes, centers/scales, and remounts framed. Content-only changes and
+        // rearranges already have real sizes and skip straight to that second step.
         const viewResetPendingRef = useRef(false); // skip restoring mountScaleRef on this mount
         const [isFraming, setIsFraming] = useState(false); // hide the canvas while true
 
@@ -314,16 +304,11 @@ export const CompositeLayerEditor = forwardRef<
             [],
         );
 
-        // Applies an AI-generated graph to the canvas. NodeEditor only reads `nodes`/`comments` at
-        // mount time, so `editorGeneration` forces a remount (see the `key` below) with the new
-        // graph. Two cases, matching `hasSameNodeIds`:
-        // - Content-only (same node ids as before): every node keeps its exact position - shift it
-        //   by the current pan first (`shiftGraphForRemount`) so the forced remount doesn't visibly
-        //   jump once Flume resets its own pan/zoom, and restore the same scale afterwards. Also
-        //   cancels any structural update still mid-flight (see `isFraming` above), so its
-        //   correction effect can't clobber these positions once it eventually fires.
-        // - Structural (nodes added/removed, including the very first generation): hides the
-        //   canvas and hands off to the measure-and-correct effect below.
+        // Applies an AI-generated graph by forcing a remount (`editorGeneration`). Two cases per
+        // `hasSameNodeIds`:
+        // - Content-only: keep every position; pre-shift by the current pan so the remount doesn't
+        //   jump when Flume resets pan/zoom, restore the scale, and cancel any in-flight framing.
+        // - Structural (incl. first generation): hide the canvas, hand off to the effect below.
         const handleGenerateGraph = useCallback(
             (graph: GeneratedGraph) => {
                 let nodes: FlumeNodes;
@@ -363,11 +348,9 @@ export const CompositeLayerEditor = forwardRef<
             [runPreview, markDisconnected, mountScaleRef],
         );
 
-        // Follow-up to a structural update's hidden estimate mount (see `isFraming` above):
-        // measure every node's real rendered size, re-lay-out with `relayoutWithMeasuredSizes`,
-        // center/scale the result, then remount once more already framed. Guarded by `isFraming`
-        // itself, so a newer update that turns it back off (content-only, or a rearrange) cancels
-        // this before it can overwrite that update's positions.
+        // Follow-up to a structural update's hidden estimate mount: measure real node sizes,
+        // re-lay-out, center/scale, and remount framed. Guarded by `isFraming` so a newer
+        // content-only update or rearrange (which turns it off) cancels this before it overwrites.
         useEffect(() => {
             if (!isFraming || !isReady) return undefined;
             let frame = 0;
@@ -414,9 +397,8 @@ export const CompositeLayerEditor = forwardRef<
             return () => cancelAnimationFrame(frame);
         }, [editorGeneration, isReady, isFraming, mountScaleRef]);
 
-        // User-triggered re-arrange (top bar button): same measure-and-correct flow as above, but
-        // in one step - the nodes are already mounted with real sizes, so there's no estimate pass
-        // to correct afterwards.
+        // User-triggered re-arrange (top bar button): the measure-and-correct flow above in one
+        // step, since the nodes are already mounted with real sizes (no estimate pass to correct).
         const handleRearrange = useCallback(() => {
             const stage = getStageElement(canvasRef.current);
             const canvasRect = canvasRef.current?.getBoundingClientRect();
@@ -431,8 +413,7 @@ export const CompositeLayerEditor = forwardRef<
 
             nodesRef.current = centered;
             setAiGraph(centered);
-            // Comments are independent annotations, not tied to any node - carried over as-is
-            // rather than cleared, though their position is relative to the old layout.
+            // Comments aren't tied to nodes - carried over as-is (still positioned to the old layout).
             setAiComments(commentsRef.current);
             mountScaleRef.current = computeFitScale(
                 boundingBox.maxX - boundingBox.minX,
@@ -441,9 +422,7 @@ export const CompositeLayerEditor = forwardRef<
                 canvasRect.height,
             );
             viewResetPendingRef.current = false;
-            // Also cancels any AI structural update still mid-flight, same as the content-only
-            // branch of handleGenerateGraph above.
-            setIsFraming(false);
+            setIsFraming(false); // cancel any in-flight structural framing, like handleGenerateGraph
             setEditorGeneration(generation => generation + 1);
         }, [mountScaleRef]);
 
@@ -451,8 +430,8 @@ export const CompositeLayerEditor = forwardRef<
             ref,
             () => ({
                 applyGeneratedGraph: handleGenerateGraph,
-                // nodesRef is kept current by handleChange on every edit, so this always reflects
-                // the canvas - including hand-built graphs that never came from the AI.
+                // nodesRef is kept current by handleChange, so this reflects the live canvas
+                // (including hand-built graphs that never came from the AI).
                 getCurrentGraph: () =>
                     extractGraphSpecFromFlume(nodesRef.current),
             }),
@@ -468,8 +447,7 @@ export const CompositeLayerEditor = forwardRef<
                 },
                 {
                     onSuccess: saved => {
-                        // Hand the resulting layer to the parent so it can be displayed on the map;
-                        // fall back to just closing if no handler is provided.
+                        // Hand the layer to the parent to show on the map, or just close.
                         if (onSaved) {
                             onSaved(saved?.metric_type_detail ?? undefined);
                         } else {
@@ -533,10 +511,9 @@ export const CompositeLayerEditor = forwardRef<
                         }}
                         onDrop={handleCanvasDrop}
                     >
-                        {/* Faded rather than unmounted while `isFraming` (see above), so its real
-                            DOM sizes stay measurable. `height: 100%` matters: Flume's own root
-                            fills its immediate parent via `height: 100%`, so this wrapper needs one
-                            too or the whole canvas collapses to its content's natural height. */}
+                        {/* Faded, not unmounted, while `isFraming` so its DOM sizes stay measurable.
+                            `height: 100%` is required: Flume's root fills its parent that way, so
+                            without it the canvas collapses to its content's natural height. */}
                         <Box
                             sx={{
                                 height: '100%',

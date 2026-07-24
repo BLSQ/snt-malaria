@@ -25,6 +25,7 @@ import {
 } from '../compositeLayerEditor';
 import { CompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChatBot/CompositeLayerAIChat';
 import { GeneratedGraph } from '../compositeLayerEditor/compositeLayerChatBot/types';
+import { useCompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChatBot/useCompositeLayerAIChat';
 import { useGetCompositeLayers } from '../compositeLayerEditor/hooks/useGetCompositeLayers';
 import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
@@ -106,6 +107,16 @@ export const DataLayers: FC = () => {
         () => compositeLayerEditorRef.current?.getCurrentGraph() ?? null,
         [],
     );
+    // Wrapper owns the chat state + graph reads; the chat panel below is presentational.
+    const {
+        messages: aiChatMessages,
+        isLoading: isAiChatLoading,
+        sendMessage: sendAiChatMessage,
+        reset: resetAiChat,
+    } = useCompositeLayerAIChat({
+        getCurrentGraph: getCurrentCompositeLayerGraph,
+        onGenerate: onGenerateCompositeLayerGraph,
+    });
 
     const { data: compositeLayers } =
         useGetCompositeLayers(showCompositeLayers);
@@ -177,18 +188,23 @@ export const DataLayers: FC = () => {
         setEditingCompositeLayerId(undefined);
         setSidebarCollapsed(false);
         setIsAiChatMode(false);
-    }, []);
+        resetAiChat();
+    }, [resetAiChat]);
 
     // After saving, close the editor and show the resulting composite layer on the map.
-    const onCompositeSaved = useCallback((metricType?: MetricType) => {
-        setIsCompositeEditorOpen(false);
-        setEditingCompositeLayerId(undefined);
-        setSidebarCollapsed(false);
-        setIsAiChatMode(false);
-        if (metricType) {
-            setDisplayedMetricType(metricType);
-        }
-    }, []);
+    const onCompositeSaved = useCallback(
+        (metricType?: MetricType) => {
+            setIsCompositeEditorOpen(false);
+            setEditingCompositeLayerId(undefined);
+            setSidebarCollapsed(false);
+            setIsAiChatMode(false);
+            resetAiChat();
+            if (metricType) {
+                setDisplayedMetricType(metricType);
+            }
+        },
+        [resetAiChat],
+    );
 
     // Two-step spotlight when the account has no layers yet
     const hasNoLayers = useMemo(
@@ -241,12 +257,9 @@ export const DataLayers: FC = () => {
                                 isAiChatMode &&
                                 hasAiApiKey ? (
                                     <CompositeLayerAIChat
-                                        onGenerate={
-                                            onGenerateCompositeLayerGraph
-                                        }
-                                        getCurrentGraph={
-                                            getCurrentCompositeLayerGraph
-                                        }
+                                        messages={aiChatMessages}
+                                        isLoading={isAiChatLoading}
+                                        onSendMessage={sendAiChatMessage}
                                     />
                                 ) : (
                                     <Card sx={styles.card}>

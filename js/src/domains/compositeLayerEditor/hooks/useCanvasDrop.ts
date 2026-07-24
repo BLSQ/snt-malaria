@@ -14,11 +14,9 @@ type UseCanvasDropArgs = {
     /** Live working copies of the graph + comments (kept up to date by the editor's onChange). */
     nodesRef: MutableRefObject<FlumeGraph>;
     commentsRef: MutableRefObject<FlumeCommentMap>;
-    /** Called right before a valid drop bumps `mountNonce`. index.tsx uses this to clear its own
-     * AI-pushed graph state (`aiGraph`/`aiComments`), which otherwise permanently takes rendering
-     * priority over `mountGraphRef` once ever set (by an AI generation or a rearrange) - without
-     * this, a drop after either of those still updates `mountGraphRef` but the render never looks
-     * at it again. */
+    /** Called right before a valid drop bumps `mountNonce`. index.tsx uses it to clear its
+     * AI-pushed graph state, which otherwise keeps rendering priority over `mountGraphRef` and
+     * would make drops after an AI generation or rearrange silently no-op. */
     onBeforeRemount?: () => void;
 };
 
@@ -36,13 +34,10 @@ type UseCanvasDrop = {
 };
 
 /**
- * Drop a data layer from the sidebar onto the canvas → create a `dataLayer` node with it
- * preselected. Flume has no imperative "add node" API and its context menu lives in a portal
- * outside our React root (so synthetic clicks won't reach it), so instead we build the node
- * ourselves and remount the editor with the new graph. To keep the view from jumping, we read
- * the live stage transform and: (a) drop the node under the cursor, (b) shift every existing
- * node/comment by the current translation, and (c) restore the current scale — with translate
- * reset to 0, everything then renders exactly where it was.
+ * Drop a data layer from the sidebar onto the canvas → build a preselected `dataLayer` node and
+ * remount with the new graph (Flume has no imperative "add node" API). To keep the view from
+ * jumping, `shiftGraphForRemount` pre-shifts everything by the current pan and the scale is
+ * restored, so the only visible change is the new node appearing under the cursor.
  */
 export const useCanvasDrop = ({
     canvasRef,

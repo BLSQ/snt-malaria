@@ -20,10 +20,7 @@ export type StageTransform = {
 export const clamp = (value: number, min: number, max: number): number =>
     Math.min(Math.max(value, min), max);
 
-// px of breathing room left around a graph's bounding box when scaling it to fit a viewport -
-// shared by the live "fit to content" (CanvasControls) and the pre-computed framing used when a
-// graph's final layout is already known before it's ever mounted (see `centerGraph` in
-// buildFlumeGraph.ts and its callers in index.tsx).
+// px of breathing room around a graph's bounding box when scaling it to fit the viewport.
 export const FIT_PADDING = 40;
 
 /** Scale that fits a `boxWidth`x`boxHeight` box into a `viewportWidth`x`viewportHeight` viewport
@@ -97,11 +94,10 @@ export type ShiftedGraph = {
 };
 
 /**
- * Flume always resets its stage to `scale: 1, translate: {x:0, y:0}` on remount (it has no prop to
- * preserve them - see `NodeEditor.js`). Call this right before remounting to counteract that: it
- * shifts every node/comment by the current pan so they land exactly where they were once translate
- * resets to 0, and returns the current scale to restore via `initialScale` - together making the
- * remount visually a no-op. Returns the graph unchanged (at scale 1) if the stage isn't mounted.
+ * Flume resets its stage to `scale: 1, translate: 0` on every remount. Call this right before
+ * remounting: it shifts every node/comment by the current pan so they stay put once translate
+ * resets, and returns the scale to restore via `initialScale`, making the remount a visual no-op.
+ * Returns the graph unchanged (scale 1) if the stage isn't mounted.
  */
 export const shiftGraphForRemount = (
     nodes: FlumeGraph,

@@ -18,13 +18,10 @@ const NODE_WIDTH: Record<GraphNodeType | 'output', number> = {
     output: 330,
 };
 
-// Rough rendered height per node type, used to size dagre's layout so rows don't overlap - not
-// meant to be pixel-exact. `dataLayer` and `output` both default to an EXPANDED map preview (see
-// the `mapPreview`/`outputPreview` controls in flumeConfig.ts - `expanded: data?.expanded ?? true`),
-// so their estimate has to account for the map, not just the header/controls. Their long data
-// layer name can also wrap to 2 lines, which isn't modeled here (we have no DOM to measure and the
-// resolved layer name isn't available in this pure spec-to-layout function) - the extra margin
-// below is a heuristic buffer for that, not a guarantee.
+// Rough rendered height per node type, to size dagre's layout so rows don't overlap - not
+// pixel-exact. `dataLayer`/`output` default to an EXPANDED map preview (flumeConfig.ts:
+// `expanded: data?.expanded ?? true`), so their estimate includes the map. dagre's estimate pass
+// is corrected against real DOM sizes afterwards (see `relayoutWithMeasuredSizes`).
 const NODE_HEIGHT: Record<GraphNodeType | 'output', number> = {
     dataLayer: 360,
     formula: 150,
@@ -38,9 +35,8 @@ const NODE_HEIGHT: Record<GraphNodeType | 'output', number> = {
 // (see MappingsControl.tsx: one grid row per rule, control height + row gap).
 const CLASSIFY_RULE_HEIGHT = 34;
 
-// formula/combine render one port row per *connected* input, plus one trailing empty slot to drop
-// the next connection onto (see `dynamicInputCount` in flumeConfig.ts) - the trailing slot is
-// already folded into NODE_HEIGHT.formula/combine below, so only connected inputs add height here.
+// formula/combine render one port row per connected input (the trailing empty drop slot is already
+// folded into NODE_HEIGHT), so only connected inputs add height here.
 const DYNAMIC_PORT_ROW_HEIGHT = 32;
 
 const DYNAMIC_ROW_HEIGHT: Partial<Record<GraphNodeType, number>> = {
@@ -125,12 +121,9 @@ type DagreEdge = { from: string; to: string };
 type DagreLayoutResult = { x: number; y: number; width: number; height: number };
 
 /**
- * Lays out a set of nodes with dagre - a standard layered ("Sugiyama-style") graph drawing
- * algorithm: it assigns each node to a rank based on the longest path back to a source, orders
- * nodes within a rank to minimize edge crossings, then assigns concrete coordinates given each
- * node's width/height and the requested spacing. Shared by `layoutWithDagre` (size estimates, a
- * structural update's first pass) and `relayoutWithMeasuredSizes` (real DOM sizes) below - they
- * differ only in where node sizes and edges come from.
+ * Lays out a set of nodes with dagre (layered "Sugiyama-style" left-to-right layout). Shared by
+ * `layoutWithDagre` (size estimates) and `relayoutWithMeasuredSizes` (real DOM sizes); they differ
+ * only in where node sizes and edges come from.
  */
 const runDagreLayout = (
     nodeSpecs: DagreNodeSpec[],
@@ -158,11 +151,8 @@ const runDagreLayout = (
     return positions;
 };
 
-/**
- * Lays out the whole graph (including the synthetic output node) using size *estimates* (real
- * sizes don't exist yet - nothing has rendered). Used only for a "structural" update's first pass
- * (nodes added or removed) - see `buildFlumeGraphFromSpec`.
- */
+// Lays out the whole graph (incl. the synthetic output) from size *estimates* - a structural
+// update's first pass, before anything has rendered. See `buildFlumeGraphFromSpec`.
 const layoutWithDagre = (
     graph: GeneratedGraph,
 ): Map<string, DagreLayoutResult> => {
@@ -192,10 +182,8 @@ export type RelayoutResult = {
     boundingBox: GraphBoundingBox;
 };
 
-// Edges from an already-wired FlumeGraph (post `buildFlumeGraphFromSpec`) - every node's
-// `connections.inputs` already lists its upstream neighbors, regardless of type or port names, so
-// this covers every node type uniformly (unlike `collectEdges` above, which has to know each
-// type's specific input/inputs/source field on the AI's abstract spec).
+// Edges from an already-wired FlumeGraph, read uniformly from each node's `connections.inputs`
+// (unlike `collectEdges`, which reads the AI spec's per-type input/inputs/source fields).
 const collectFlumeGraphEdges = (
     nodes: FlumeGraph,
 ): Array<{ from: string; to: string }> => {
@@ -211,13 +199,10 @@ const collectFlumeGraphEdges = (
 };
 
 /**
- * Re-lays-out an already-built graph using REAL measured node sizes instead of the `NODE_HEIGHT`/
- * `NODE_WIDTH` estimates - those get dagre's first pass close, but can't account for content that
- * only determines its own size once actually rendered (a data layer name wrapping to 2 lines, a
- * classify node's exact rules-table height, ...). Meant to be called once, with sizes measured off
- * the real DOM (see `handleGenerateGraph`/`handleRearrange` in index.tsx) - only positions change
- * here; every node's own data/connections pass through untouched. Also returns the resulting
- * bounding box, so the caller can frame it (see `centerGraph`) without re-measuring.
+ * Re-lays-out an already-built graph from REAL measured node sizes rather than estimates, correcting
+ * for content that only sizes itself once rendered (a wrapped layer name, a classify rules table).
+ * Only positions change; data/connections pass through untouched. Also returns the bounding box so
+ * the caller can frame it (see `centerGraph`) without re-measuring.
  */
 export const relayoutWithMeasuredSizes = (
     nodes: FlumeGraph,
@@ -252,11 +237,9 @@ export const relayoutWithMeasuredSizes = (
 };
 
 /**
- * Shifts every node so the graph's bounding box is centered on the stage origin (0,0) - combined
- * with Flume's own default `translate: {x:0,y:0}` on a fresh mount, this makes the box's center
- * land exactly at the viewport's center with no pan needed. Paired with `computeFitScale` (from
- * `utils/flumeStage.ts`) as `initialScale`, a graph can arrive pre-framed on its very first paint
- * instead of needing a live measure-and-fit pass after the fact.
+ * Shifts every node so the bounding box is centered on the stage origin (0,0). With Flume's default
+ * `translate: 0` on a fresh mount, the box's center lands at the viewport center with no pan; paired
+ * with `computeFitScale` as `initialScale`, the graph arrives pre-framed on its first paint.
  */
 export const centerGraph = (
     nodes: FlumeGraph,
@@ -277,13 +260,10 @@ export const centerGraph = (
  * `output`, see flumeConfig.ts). Node ids from the spec are reused verbatim as Flume node ids.
  *
  * `previousNodes` controls positioning:
- * - Passed as the current canvas graph when the update is content-only (same node ids as before,
- *   just parameter changes) - every node then keeps its exact previous `x`/`y`, so nothing moves.
- * - Passed as `{}` (the default) for a structural update (nodes added or removed, including the
- *   very first generation) - every node's position is (re)computed from scratch with dagre. This
- *   deliberately re-lays-out the whole graph rather than only the new nodes; it's simpler than
- *   pinning existing nodes and only placing new ones, at the cost of also moving nodes the user
- *   may have manually dragged, but only when the graph's shape actually changed.
+ * - The current canvas graph (content-only update): every node keeps its previous `x`/`y`.
+ * - `{}` (default, structural update): every position is recomputed with dagre. This re-lays-out
+ *   the whole graph, not just new nodes - simpler than pinning existing ones, at the cost of also
+ *   moving any the user manually dragged, but only when the graph's shape actually changed.
  */
 export const buildFlumeGraphFromSpec = (
     graph: GeneratedGraph,
@@ -310,10 +290,8 @@ export const buildFlumeGraphFromSpec = (
                 x,
                 y,
                 inputData: {
-                    // The select's options carry a numeric `value` (see MetricOption in
-                    // flumeConfig.ts) and Flume's Select matches the current value against them
-                    // with `===`, so this must be a number - a string id would render as neither
-                    // the picked label nor the placeholder.
+                    // Must be a number: Flume's Select matches against numeric option values with
+                    // `===` (see MetricOption in flumeConfig.ts).
                     metricType: {
                         metricTypeId: Number(node.metric_type_id),
                     },
