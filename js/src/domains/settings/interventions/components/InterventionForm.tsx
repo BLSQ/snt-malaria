@@ -5,12 +5,10 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { useGetChildError } from '../../../../hooks/useGetChildError';
 import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
-import {
-    InterventionCostBreakdownLine,
-    InterventionDetails,
-} from '../../../interventions/types';
+import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { MESSAGES } from '../../../messages';
 import { useInterventionContext } from '../contexts/InterventionContext';
+import { InterventionFormValues } from '../types/interventionForm';
 import { InterventionCostBreakdownLineForm } from './InterventionCostBreakdownLineForm';
 
 export const InterventionForm: FC = () => {
@@ -24,7 +22,7 @@ export const InterventionForm: FC = () => {
         setChildFieldValueAndState,
         addChildValue,
         removeChildValue,
-    } = useGetExtendedFormikContext<InterventionDetails>();
+    } = useGetExtendedFormikContext<InterventionFormValues>();
 
     const { costUnitTypeOptions, grantOptions } = useInterventionContext();
 
@@ -35,7 +33,7 @@ export const InterventionForm: FC = () => {
         messages: MESSAGES,
     });
 
-    const getChildError = useGetChildError<InterventionDetails>({
+    const getChildError = useGetChildError<InterventionFormValues>({
         errors: errors?.cost_breakdown_lines,
         touched: touched?.cost_breakdown_lines,
     });

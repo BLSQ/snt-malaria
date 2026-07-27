@@ -25,7 +25,10 @@ export const InterventionSettings: FC = () => {
     const { data: interventionCategories } = useGetInterventionCategories();
 
     const flatInterventions = useMemo(
-        () => (interventionCategories || []).flatMap(category => category.interventions),
+        () =>
+            (interventionCategories || []).flatMap(
+                category => category.interventions,
+            ),
         [interventionCategories],
     );
 

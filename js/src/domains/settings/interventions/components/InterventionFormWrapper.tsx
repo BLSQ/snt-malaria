@@ -1,8 +1,13 @@
-import React, { FC, useCallback, useEffect, useMemo } from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
 import CheckIcon from '@mui/icons-material/Check';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Button, Stack, Typography } from '@mui/material';
-import { LoadingSpinner, makeFullModal, useSafeIntl } from 'bluesquare-components';
+import {
+    LoadingSpinner,
+    makeFullModal,
+    useSafeIntl,
+} from 'bluesquare-components';
+import { setNestedObjectValues } from 'formik';
 import { DeleteRestoreModal } from 'Iaso/components/DeleteRestoreModals/DeleteRestoreModal';
 import { CardStyled } from '../../../../components/CardStyled';
 import { SettingsFormContainer } from '../../../../components/styledComponents';
@@ -16,15 +21,14 @@ import { useSaveIntervention } from '../../../interventions/hooks/useSaveInterve
 import { useSaveInterventionDetails } from '../../../interventions/hooks/useSaveInterventionDetails';
 import {
     Intervention,
-    InterventionDetails,
     InterventionPayload,
 } from '../../../interventions/types';
 import { MESSAGES } from '../../../messages';
 import { useGetGrants } from '../../grants/hooks/useGetGrants';
 import { InterventionProvider } from '../contexts/InterventionContext';
 import { useGetBudgetSettings } from '../hooks/useGetBudgetSettings';
-import { useInterventionBasicFormState } from '../hooks/useInterventionBasicFormState';
 import { useInterventionFormState } from '../hooks/useInterventionFormState';
+import { InterventionFormValues } from '../types/interventionForm';
 import { InterventionBasicForm } from './InterventionBasicForm';
 import { InterventionForm } from './InterventionForm';
 
@@ -86,50 +90,14 @@ export const InterventionFormWrapper: FC<Props> = ({
         [grants],
     );
 
-    const { mutate: saveIntervention, isLoading: isSavingIntervention } =
+    const { mutateAsync: saveIntervention, isLoading: isSavingIntervention } =
         useSaveIntervention();
     const { mutate: deleteIntervention, isLoading: isDeleting } =
         useDeleteIntervention();
-
-    const basicInitialValues = useMemo(
-        () => ({
-            id: intervention?.id,
-            intervention_category: intervention?.intervention_category ?? null,
-            name: intervention?.name ?? '',
-            short_name: intervention?.short_name ?? '',
-            code: intervention?.code ?? '',
-            description: intervention?.description ?? '',
-        }),
-        [intervention],
-    );
-
-    const onSubmitBasic = useCallback(
-        (values: InterventionPayload) => {
-            saveIntervention(values, {
-                onSuccess: (saved: unknown) => {
-                    if (isNew) {
-                        onSaved((saved as Intervention)?.id);
-                    }
-                },
-            });
-        },
-        [saveIntervention, isNew, onSaved],
-    );
-
-    const basicFormik = useInterventionBasicFormState({
-        onSubmit: onSubmitBasic,
-        initialValues: basicInitialValues,
-    });
-
     const {
-        mutate: saveInterventionDetails,
+        mutateAsync: saveInterventionDetails,
         isLoading: isSavingInterventionDetails,
-    } = useSaveInterventionDetails(interventionId);
-    const onSubmitDetails = useCallback(
-        (values: Partial<InterventionDetails>) =>
-            saveInterventionDetails(values),
-        [saveInterventionDetails],
-    );
+    } = useSaveInterventionDetails();
 
     const {
         data: interventionDetails,
@@ -138,29 +106,63 @@ export const InterventionFormWrapper: FC<Props> = ({
         interventionId,
     });
 
-    const detailsFormik = useInterventionFormState({
-        onSubmit: onSubmitDetails,
+    const initialValues: InterventionFormValues = useMemo(
+        () => ({
+            id: intervention?.id,
+            intervention_category: intervention?.intervention_category ?? null,
+            name: intervention?.name ?? '',
+            short_name: intervention?.short_name ?? '',
+            code: intervention?.code ?? '',
+            description: intervention?.description ?? '',
+            impact_ref: interventionDetails?.impact_ref ?? '',
+            grant: interventionDetails?.grant ?? null,
+            cost_breakdown_lines:
+                interventionDetails?.cost_breakdown_lines ?? [],
+        }),
+        [intervention, interventionDetails],
+    );
+
+    // Save the basic fields and the cost-line details together, in one submit,
+    // so a new intervention is created with its cost lines already attached
+    // and an edit can never save one half without the other.
+    const onSubmit = useCallback(
+        async (values: InterventionFormValues) => {
+            const { impact_ref, grant, cost_breakdown_lines, ...basicValues } =
+                values;
+
+            const savedIntervention = (await saveIntervention(
+                basicValues as InterventionPayload,
+            )) as Intervention;
+
+            const savedId = savedIntervention?.id ?? (values.id as number);
+
+            await saveInterventionDetails({
+                interventionId: savedId,
+                impact_ref,
+                grant,
+                cost_breakdown_lines,
+            });
+
+            if (isNew) {
+                onSaved(savedId);
+            }
+        },
+        [saveIntervention, saveInterventionDetails, isNew, onSaved],
+    );
+
+    const formik = useInterventionFormState({
+        onSubmit,
+        initialValues,
     });
 
-    useEffect(() => {
-        if (!interventionDetails) {
+    const handleSave = useCallback(async () => {
+        const errors = await formik.validateForm();
+        if (Object.keys(errors).length > 0) {
+            formik.setTouched(setNestedObjectValues(errors, true));
             return;
         }
-
-        detailsFormik.resetForm({
-            values: {
-                ...interventionDetails,
-            },
-        });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [interventionDetails, metricTypes]); // Only run when interventionDetails or metricTypes changes
-
-    const handleSave = useCallback(async () => {
-        await basicFormik.submitForm();
-        if (!isNew) {
-            await detailsFormik.submitForm();
-        }
-    }, [basicFormik, detailsFormik, isNew]);
+        await formik.submitForm();
+    }, [formik]);
 
     const handleDelete = useCallback(() => {
         if (!intervention) {
@@ -228,19 +230,14 @@ export const InterventionFormWrapper: FC<Props> = ({
                     <LoadingSpinner absolute={true} />
                 )}
 
-                <ExtendedFormikProvider formik={basicFormik}>
+                <ExtendedFormikProvider formik={formik}>
                     <SettingsFormContainer>
                         <InterventionBasicForm />
                     </SettingsFormContainer>
+                    <SettingsFormContainer>
+                        <InterventionForm />
+                    </SettingsFormContainer>
                 </ExtendedFormikProvider>
-
-                {!isNew && (
-                    <ExtendedFormikProvider formik={detailsFormik}>
-                        <SettingsFormContainer>
-                            <InterventionForm />
-                        </SettingsFormContainer>
-                    </ExtendedFormikProvider>
-                )}
             </CardStyled>
         </InterventionProvider>
     );

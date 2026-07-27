@@ -3,10 +3,15 @@ import { useSafeIntl } from 'bluesquare-components';
 import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
 import { MESSAGES } from '../../../messages';
+import { InterventionFormValues } from '../types/interventionForm';
 
-const defaultInterventionValues = {
+export const defaultInterventionFormValues: InterventionFormValues = {
     id: undefined,
+    intervention_category: null,
     name: '',
+    short_name: '',
+    code: '',
+    description: '',
     impact_ref: '',
     grant: null,
     cost_breakdown_lines: [],
@@ -18,9 +23,20 @@ const useValidation = () => {
     return useMemo(
         () =>
             Yup.object().shape({
+                intervention_category: Yup.number()
+                    .nullable()
+                    .required(formatMessage(MESSAGES.required)),
                 name: Yup.string()
                     .required(formatMessage(MESSAGES.required))
                     .max(255, formatMessage(MESSAGES.maxLength, { max: 255 })),
+                short_name: Yup.string().max(
+                    100,
+                    formatMessage(MESSAGES.maxLength, { max: 100 }),
+                ),
+                code: Yup.string()
+                    .required(formatMessage(MESSAGES.required))
+                    .max(50, formatMessage(MESSAGES.maxLength, { max: 50 })),
+                description: Yup.string(),
                 impact_ref: Yup.string(),
                 grant: Yup.number().nullable(),
                 cost_breakdown_lines: Yup.array().of(
@@ -78,18 +94,18 @@ export const useInterventionFormState = ({
     initialValues,
 }: {
     onSubmit: (
-        values: Partial<any>,
-        formikHelpers?: FormikHelpers<any>,
+        values: InterventionFormValues,
+        formikHelpers?: FormikHelpers<InterventionFormValues>,
     ) => void;
-    initialValues?: any;
-    editMode?: boolean;
+    initialValues?: InterventionFormValues;
 }) => {
     const validationSchema = useValidation();
     const formik = useFormik({
-        initialValues: initialValues ?? defaultInterventionValues,
+        initialValues: initialValues ?? defaultInterventionFormValues,
         validationSchema,
+        enableReinitialize: true,
         onSubmit,
     });
 
-    return { ...formik };
+    return formik;
 };

@@ -7,7 +7,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
 import { useGetInterventionCategories } from '../../../interventions/hooks/useGetInterventionCategories';
 import { MESSAGES } from '../../../messages';
-import { InterventionBasicFormValues } from '../types/interventionBasicForm';
+import { InterventionFormValues } from '../types/interventionForm';
 
 const styles: SxStyles = {
     row: { flexGrow: 1 },
@@ -17,7 +17,8 @@ const styles: SxStyles = {
 export const InterventionBasicForm: FC = () => {
     const { formatMessage } = useSafeIntl();
 
-    const { data: interventionCategories = [] } = useGetInterventionCategories();
+    const { data: interventionCategories = [] } =
+        useGetInterventionCategories();
 
     const categoryOptions = useMemo(
         () =>
@@ -29,7 +30,7 @@ export const InterventionBasicForm: FC = () => {
     );
 
     const { values, errors, touched, setFieldValueAndState } =
-        useGetExtendedFormikContext<InterventionBasicFormValues>();
+        useGetExtendedFormikContext<InterventionFormValues>();
 
     const getErrors = useTranslatedErrors({
         errors,
@@ -72,9 +73,7 @@ export const InterventionBasicForm: FC = () => {
                     value={values.short_name}
                     onChange={setFieldValueAndState}
                     errors={getErrors('short_name')}
-                    labelString={formatMessage(
-                        MESSAGES.interventionShortName,
-                    )}
+                    labelString={formatMessage(MESSAGES.interventionShortName)}
                     wrapperSx={styles.field}
                 />
                 <InputComponent

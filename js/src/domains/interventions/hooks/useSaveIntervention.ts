@@ -7,7 +7,10 @@ export const useSaveIntervention = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: InterventionPayload) =>
             body.id
-                ? patchRequest(`/api/snt_malaria/interventions/${body.id}/`, body)
+                ? patchRequest(
+                      `/api/snt_malaria/interventions/${body.id}/`,
+                      body,
+                  )
                 : postRequest('/api/snt_malaria/interventions/', body),
         invalidateQueryKey: ['interventionCategories'],
     });
