@@ -5,7 +5,7 @@ from plugins.snt_malaria.models import InterventionCategory
 
 
 class InterventionCategorySerializer(serializers.ModelSerializer):
-    interventions = InterventionSerializer(many=True, source="intervention_set")
+    interventions = InterventionSerializer(many=True, source="intervention_set", read_only=True)
 
     class Meta:
         model = InterventionCategory
@@ -13,6 +13,7 @@ class InterventionCategorySerializer(serializers.ModelSerializer):
             "id",
             "account",
             "name",
+            "short_name",
             "description",
             "interventions",
             "created_by",

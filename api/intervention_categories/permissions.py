@@ -3,7 +3,7 @@ from rest_framework import permissions
 from plugins.snt_malaria.permissions import SNT_SETTINGS_READ_PERMISSION, SNT_SETTINGS_WRITE_PERMISSION
 
 
-class InterventionPermission(permissions.BasePermission):
+class InterventionCategoryPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
         if not user or not user.is_authenticated:

@@ -1,6 +1,9 @@
-from django.db import transaction
-from rest_framework import status, viewsets
+from django.db import IntegrityError, transaction
+from django.db.models import ProtectedError
+from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.response import Response
 
 from plugins.snt_malaria.api.interventions.permissions import InterventionPermission
@@ -17,11 +20,38 @@ from plugins.snt_malaria.services import BudgetCalculationService
 class InterventionViewSet(viewsets.ModelViewSet):
     serializer_class = InterventionSerializer
     ordering_fields = ["id", "name"]
-    http_method_names = ["get", "options", "put"]
+    http_method_names = ["get", "post", "put", "patch", "delete", "head", "options"]
     permission_classes = [InterventionPermission]
 
     def get_queryset(self):
         return Intervention.objects.filter(intervention_category__account=self.request.user.iaso_profile.account)
+
+    def perform_create(self, serializer):
+        try:
+            serializer.save(created_by=self.request.user)
+        except IntegrityError as e:
+            self._raise_for_integrity_error(e)
+
+    def perform_update(self, serializer):
+        try:
+            serializer.save()
+        except IntegrityError as e:
+            self._raise_for_integrity_error(e)
+
+    def perform_destroy(self, instance):
+        # Deletion is blocked at the DB level (on_delete=PROTECT) while a scenario
+        # rule still references this intervention; turn that into a friendly error.
+        try:
+            instance.delete()
+        except ProtectedError:
+            raise MethodNotAllowed(
+                self.request.method,
+                _("Cannot delete this intervention because it is used by one or more scenario rules."),
+            )
+
+    @staticmethod
+    def _raise_for_integrity_error(error):
+        raise serializers.ValidationError(str(error))
 
     @action(detail=True, methods=["get"], serializer_class=InterventionDetailSerializer)
     def details(self, request, pk):

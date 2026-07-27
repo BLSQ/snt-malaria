@@ -1,34 +1,28 @@
 import React, { FC } from 'react';
-import {
-    Box,
-    List,
-    ListItem,
-    ListItemText,
-    Theme,
-    Typography,
-} from '@mui/material';
+import { Box, List, ListItem, ListItemText, Typography } from '@mui/material';
+import { SxStyles } from 'Iaso/types/general';
 import {
     Intervention,
     InterventionCategory,
 } from '../../../interventions/types';
 
-const styles = {
+const styles: SxStyles = {
     listContainer: {
-        marginBottom: (theme: Theme) => theme.spacing(2),
+        marginBottom: theme => theme.spacing(2),
     },
     listTitle: {
-        paddingBottom: (theme: Theme) => theme.spacing(0.5),
-        paddingLeft: (theme: Theme) => theme.spacing(1),
+        paddingBottom: theme => theme.spacing(0.5),
+        paddingLeft: theme => theme.spacing(1),
     },
     listItem: {
         cursor: 'pointer',
         borderRadius: 2,
-        paddingX: (theme: Theme) => theme.spacing(1),
+        paddingX: theme => theme.spacing(1),
     },
     activeListItem: {
-        backgroundColor: (theme: Theme) => theme.palette.primary.light,
+        backgroundColor: theme => theme.palette.primary.light,
         borderRadius: 2,
-        paddingX: (theme: Theme) => theme.spacing(1),
+        paddingX: theme => theme.spacing(1),
     },
 };
 

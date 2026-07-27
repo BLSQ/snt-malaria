@@ -3,17 +3,23 @@ import { UseMutationResult } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { InterventionDetails } from '../types';
 
-export const useSaveInterventionDetails = (
-    interventionId?: number,
-): UseMutationResult =>
+type SaveInterventionDetailsBody = Partial<InterventionDetails> & {
+    interventionId: number;
+};
+
+export const useSaveInterventionDetails = (): UseMutationResult =>
     useSnackMutation({
-        mutationFn: (body: Partial<InterventionDetails>) =>
+        mutationFn: ({
+            interventionId,
+            ...body
+        }: SaveInterventionDetailsBody) =>
             putRequest(
                 `/api/snt_malaria/interventions/${interventionId}/update_details/`,
                 body,
             ),
+        // Partial match invalidates every ['interventionDetails', id] query key.
         invalidateQueryKey: [
-            ['interventionDetails', interventionId],
+            'interventionDetails',
             'interventionCategories',
             'calculated_budget',
         ],
