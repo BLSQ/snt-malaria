@@ -338,9 +338,7 @@ class InterventionAPITests(SNTMalariaAPITestCase):
 
     def test_patch_intervention_with_read_perm_forbidden(self):
         self.client.force_authenticate(user=self.user_read)
-        response = self.client.patch(
-            f"{BASE_URL}{self.intervention_vaccination_rts.id}/", data={"short_name": "Nope"}
-        )
+        response = self.client.patch(f"{BASE_URL}{self.intervention_vaccination_rts.id}/", data={"short_name": "Nope"})
         self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
 
     # Delete

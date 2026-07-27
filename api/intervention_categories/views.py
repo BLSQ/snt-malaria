@@ -51,7 +51,5 @@ class InterventionCategoryViewSet(viewsets.ModelViewSet):
     @staticmethod
     def _raise_for_integrity_error(error):
         if "name_uniq" in str(error):
-            raise serializers.ValidationError(
-                {"name": _("An intervention category with this name already exists.")}
-            )
+            raise serializers.ValidationError({"name": _("An intervention category with this name already exists.")})
         raise serializers.ValidationError(str(error))
