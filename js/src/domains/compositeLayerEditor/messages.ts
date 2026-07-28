@@ -189,11 +189,33 @@ export const MESSAGES = defineMessages({
     normalizeNodeDescription: {
         id: 'iaso.snt_malaria.compositeLayerEditor.normalizeNodeDescription',
         defaultMessage:
-            'Rescale a numeric input to 0–1 or 0–100 using its own min/max (per year), so layers with different units can be compared or combined fairly.',
+            'Rescale a numeric input to 0–1 or 0–100, per year, using either min-max or percentile, so layers with different units can be compared or combined fairly.',
     },
     normalizeScaleLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.normalizeScaleLabel',
         defaultMessage: 'Scale',
+    },
+    normalizeTypeLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.normalizeTypeLabel',
+        defaultMessage: 'Normalization type',
+    },
+    normalizeTypeMinMaxLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.normalizeTypeMinMaxLabel',
+        defaultMessage: 'Min-max',
+    },
+    normalizeTypeMinMaxDescription: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.normalizeTypeMinMaxDescription',
+        defaultMessage:
+            'Position between the lowest and highest value. Sensitive to outliers: one extreme value stretches the scale and crushes the rest together.',
+    },
+    normalizeTypePercentileLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.normalizeTypePercentileLabel',
+        defaultMessage: 'Percentile',
+    },
+    normalizeTypePercentileDescription: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.normalizeTypePercentileDescription',
+        defaultMessage:
+            'Share of values this one outranks. Based on order, not magnitude, so outliers don’t distort the rest.',
     },
     classifyNodeLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.classifyNodeLabel',
