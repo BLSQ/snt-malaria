@@ -329,8 +329,13 @@ export const buildFlumeGraphFromSpec = (
                 width: NODE_WIDTH.normalize,
                 x,
                 y,
-                // The scale control's options carry string values ('1'/'100'), see flumeConfig.ts.
-                inputData: { scale: { scale: String(node.scale ?? 1) } },
+                // The scale/normalizeType controls carry string values, see flumeConfig.ts.
+                inputData: {
+                    scale: {
+                        scale: String(node.scale ?? 1),
+                        normalizeType: node.normalize_type ?? 'min-max',
+                    },
+                },
                 connections: { inputs: {}, outputs: {} },
             };
         } else if (node.type === 'classify') {

@@ -4,6 +4,7 @@ import {
     CombineOperation,
     CurrentGraph,
     GeneratedGraphNode,
+    NormalizeType,
 } from './types';
 
 // Upper bound on a formula/combine node's dynamic value inputs (a..z), matching flumeConfig.ts.
@@ -73,8 +74,11 @@ export const extractGraphSpecFromFlume = (
                 id: node.id,
                 type: 'normalize',
                 input: singleInputId(node, 'a'),
-                // The scale control stores string values ('1'/'100'), see flumeConfig.ts.
+                // The scale/normalizeType controls store string values, see flumeConfig.ts.
                 scale: Number(inputData.scale?.scale ?? '1') as 1 | 100,
+                normalize_type:
+                    (inputData.scale?.normalizeType as NormalizeType) ??
+                    'min-max',
             });
         } else if (node.type === 'classify') {
             const config = inputData.config?.rules as
