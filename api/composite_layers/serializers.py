@@ -34,10 +34,27 @@ class CompositeLayerRetrieveSerializer(serializers.ModelSerializer):
 class CompositeLayerWriteSerializer(serializers.ModelSerializer):
     graph = serializers.JSONField()
     comments = serializers.JSONField(required=False, default=dict)
+    # Layer metadata is owned by the creation/edit dialogue, not the graph. `name` is a model field;
+    # the rest are serializer-only and applied to the generated MetricType by the view/persistence.
+    name = serializers.CharField(required=False, allow_blank=False)
+    category = serializers.CharField(required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True)
+    units = serializers.CharField(required=False, allow_blank=True)
+    unit_symbol = serializers.CharField(required=False, allow_blank=True, max_length=2)
+    is_population = serializers.BooleanField(required=False)
 
     class Meta:
         model = CompositeLayer
-        fields = ["graph", "comments"]
+        fields = [
+            "graph",
+            "comments",
+            "name",
+            "category",
+            "description",
+            "units",
+            "unit_symbol",
+            "is_population",
+        ]
 
     def validate_graph(self, graph):
         if not isinstance(graph, dict) or not graph:

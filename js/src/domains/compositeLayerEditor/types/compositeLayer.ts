@@ -22,9 +22,41 @@ export type CompositeLayerListItem = Pick<
 
 export type SaveCompositeLayerPayload = {
     graph: FlumeGraph;
-    comments: FlumeCommentMap;
+    /**
+     * Canvas annotations. Sent by the node editor; omitted by the dialogue (which edits only
+     * metadata + legend) so a partial update preserves the existing comments.
+     */
+    comments?: FlumeCommentMap;
     /** When provided, updates (re-runs) the existing composite layer instead of creating one. */
     id?: number;
+    /**
+     * Layer metadata owned by the creation/edit dialogue (not the graph). Sent on create and when
+     * the dialogue edits an existing composite; omitted on a graph-only save from the node editor
+     * so the backend preserves the current values.
+     */
+    name?: string;
+    category?: string;
+    description?: string;
+    units?: string;
+    unit_symbol?: string;
+    is_population?: boolean;
+};
+
+/**
+ * Metadata collected in the create dialogue for a brand-new composite, carried into the editor
+ * (which has no persisted layer yet) and included in the first save.
+ */
+export type CompositeDraft = {
+    name: string;
+    category: string;
+    description: string;
+    units: string;
+    unit_symbol: string;
+    is_population: boolean;
+    /** The legend choice (auto/reference/linear/threshold/ordinal) used to seed the output node. */
+    legendType: string;
+    /** Manually-configured buckets when a concrete legend type is chosen (else undefined). */
+    legendConfig?: { domain: (number | string)[]; range: string[] };
 };
 
 /** Result of evaluating a graph without persisting it, shaped for the map component. */

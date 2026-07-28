@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 
-from typing import Iterable, Tuple
+from typing import Iterable
 
 from django.db import transaction
 from django.utils.text import slugify
@@ -49,7 +49,6 @@ def preview_composite_layer(account, graph: dict, org_unit_ids: Iterable[int]) -
     Used by the live in-editor preview. Returns a dict shaped for the map component::
 
         {
-            "name": str,
             "units": "",
             "unit_symbol": "",
             "legend_type": str,
@@ -59,7 +58,7 @@ def preview_composite_layer(account, graph: dict, org_unit_ids: Iterable[int]) -
         }
     """
     evaluator = CompositeGraphEvaluator(account, graph, org_unit_ids)
-    name, values_by_year = evaluator.run(require_name=False)
+    values_by_year = evaluator.run()
     legend_type, legend_config = resolve_output_legend(account, evaluator, values_by_year)
 
     metric_values = []
@@ -76,7 +75,6 @@ def preview_composite_layer(account, graph: dict, org_unit_ids: Iterable[int]) -
                 )
 
     return {
-        "name": name,
         "units": "",
         "unit_symbol": "",
         "legend_type": legend_type,
@@ -87,10 +85,24 @@ def preview_composite_layer(account, graph: dict, org_unit_ids: Iterable[int]) -
 
 
 @transaction.atomic
-def run_and_persist_composite_layer(account, graph: dict, org_unit_ids: Iterable[int]) -> MetricType:
-    """Execute ``graph`` and persist the result as a new ``MetricType`` + ``MetricValue`` rows."""
+def run_and_persist_composite_layer(
+    account,
+    graph: dict,
+    org_unit_ids: Iterable[int],
+    name: str,
+    category: str = "Composite",
+    description: str = "",
+    units: str = "",
+    unit_symbol: str = "",
+    is_population: bool = False,
+) -> MetricType:
+    """Execute ``graph`` and persist the result as a new ``MetricType`` + ``MetricValue`` rows.
+
+    Metadata (``name``, ``category``, ``is_population``, …) is owned by the creation dialogue, not
+    the graph. A composite can be flagged as a population layer just like a standard layer.
+    """
     evaluator = CompositeGraphEvaluator(account, graph, org_unit_ids)
-    name, values_by_year = evaluator.run()
+    values_by_year = evaluator.run()
     legend_type, legend_config = resolve_output_legend(account, evaluator, values_by_year)
 
     code = f"composite_{slugify(name)[:80]}_{uuid.uuid4().hex[:8]}"
@@ -98,9 +110,12 @@ def run_and_persist_composite_layer(account, graph: dict, org_unit_ids: Iterable
         account=account,
         name=name,
         code=code,
-        category="Composite",
+        category=category or "Composite",
+        description=description or "",
+        units=units or "",
+        unit_symbol=unit_symbol or "",
         origin=MetricType.MetricTypeOrigin.CUSTOM,
-        metric_kind=MetricType.MetricKind.ANY,
+        metric_kind=(MetricType.MetricKind.POPULATION if is_population else MetricType.MetricKind.ANY),
         legend_type=legend_type,
         legend_config=legend_config,
         source="composite-layer-editor",
@@ -111,23 +126,52 @@ def run_and_persist_composite_layer(account, graph: dict, org_unit_ids: Iterable
 
 @transaction.atomic
 def update_composite_metric_type(
-    account, metric_type: MetricType, graph: dict, org_unit_ids: Iterable[int]
-) -> Tuple[str, MetricType]:
+    account,
+    metric_type: MetricType,
+    graph: dict,
+    org_unit_ids: Iterable[int],
+    name: str = None,
+    category: str = None,
+    description: str = None,
+    units: str = None,
+    unit_symbol: str = None,
+    is_population: bool = None,
+) -> MetricType:
     """Re-run ``graph`` and update an existing composite ``MetricType`` in place.
 
-    Keeps the same ``MetricType`` id (so existing references stay valid) while refreshing its name,
-    legend and ``MetricValue`` rows. Returns ``(name, metric_type)``.
+    Keeps the same ``MetricType`` id (so existing references stay valid) while refreshing its legend
+    and ``MetricValue`` rows. Metadata fields are updated only when provided (dialogue-owned).
+    Returns the updated ``metric_type``.
     """
     evaluator = CompositeGraphEvaluator(account, graph, org_unit_ids)
-    name, values_by_year = evaluator.run()
+    values_by_year = evaluator.run()
 
     legend_type, legend_config = resolve_output_legend(account, evaluator, values_by_year)
-    metric_type.name = name
     metric_type.legend_type = legend_type
     metric_type.legend_config = legend_config
-    metric_type.save(update_fields=["name", "legend_type", "legend_config", "updated_at"])
+    update_fields = ["legend_type", "legend_config", "updated_at"]
+
+    # Apply the dialogue-owned metadata when provided; leave untouched otherwise (partial update).
+    for field, value in (
+        ("name", name),
+        ("category", category),
+        ("description", description),
+        ("units", units),
+        ("unit_symbol", unit_symbol),
+    ):
+        if value is not None:
+            setattr(metric_type, field, value)
+            update_fields.append(field)
+
+    if is_population is not None:
+        metric_type.metric_kind = (
+            MetricType.MetricKind.POPULATION if is_population else MetricType.MetricKind.ANY
+        )
+        update_fields.append("metric_kind")
+
+    metric_type.save(update_fields=update_fields)
 
     MetricValue.objects.filter(metric_type=metric_type).delete()
     _write_metric_values(metric_type, values_by_year)
 
-    return name, metric_type
+    return metric_type

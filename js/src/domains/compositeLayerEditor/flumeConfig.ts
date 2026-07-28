@@ -5,7 +5,6 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { MetricType } from '../dataLayers/types/metrics';
 import { CompositeOutputPreview } from './components/CompositeOutputPreview';
 import { MappingsControl } from './components/MappingsControl';
-import { NameControl } from './components/NameControl';
 import { NodeHelperText } from './components/NodeHelperText';
 import { NodeMapPreview } from './components/NodeMapPreview';
 import { MESSAGES } from './messages';
@@ -315,29 +314,6 @@ export const createCompositeFlumeConfig = (
                 }),
             ],
         })
-        // Composite layer name (control only, not connectable). Single-line input.
-        .addPortType({
-            type: 'nameText',
-            name: 'name',
-            label: formatMessage(MESSAGES.nameControlLabel),
-            hidePort: true,
-            controls: [
-                Controls.custom({
-                    name: 'name',
-                    label: formatMessage(MESSAGES.nameControlLabel),
-                    defaultValue: '',
-                    render: (data: any, onChange: any) =>
-                        React.createElement(NameControl, {
-                            value: data,
-                            label: formatMessage(MESSAGES.nameControlLabel),
-                            placeholder: formatMessage(
-                                MESSAGES.namePlaceholder,
-                            ),
-                            onChange,
-                        }),
-                }),
-            ],
-        })
         // Legend type picker for the output layer (control only, not connectable).
         .addPortType({
             type: 'legendType',
@@ -545,7 +521,6 @@ export const createCompositeFlumeConfig = (
                         name: 'layer',
                         label: formatMessage(MESSAGES.outputLayerPortLabel),
                     }),
-                    ports.nameText(),
                     ports.legendType(),
                     ...(isReference ? [ports.referenceLayer()] : []),
                     ports.outputPreview(),

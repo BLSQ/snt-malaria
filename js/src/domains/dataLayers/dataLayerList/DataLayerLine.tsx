@@ -29,9 +29,10 @@ type Props = {
     selected?: boolean;
     onClick: () => void;
     onEdit: (metricType: MetricType) => void;
-    /** Present only for composite layers: opens the node editor for that composite. */
-    onEditComposite?: (compositeLayerId: number) => void;
-    /** Set when this layer is a composite, identifying its composite layer record. */
+    /**
+     * Set when this layer is a composite, identifying its composite layer record. Used only to show
+     * the composite icon; editing the graph is done from the map view's "Edit composite" button.
+     */
     compositeLayerId?: number;
     onDelete: (metricType: number) => void;
     /**
@@ -83,7 +84,6 @@ export const DataLayerLine: FC<Props> = ({
     selected = false,
     onClick,
     onEdit,
-    onEditComposite,
     compositeLayerId,
     onDelete,
     editing = false,
@@ -212,15 +212,6 @@ export const DataLayerLine: FC<Props> = ({
                             <MenuItem onClick={() => onEdit(metricType)}>
                                 {formatMessage(MESSAGES.editLayer)}
                             </MenuItem>
-                            {isComposite && onEditComposite && (
-                                <MenuItem
-                                    onClick={() =>
-                                        onEditComposite(compositeLayerId)
-                                    }
-                                >
-                                    {formatMessage(MESSAGES.editCompositeLayer)}
-                                </MenuItem>
-                            )}
                             <DeleteModal
                                 type="menuItem"
                                 onConfirm={() => onDelete(metricType.id)}

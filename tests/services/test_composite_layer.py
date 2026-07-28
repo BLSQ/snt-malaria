@@ -71,10 +71,12 @@ def _classify_node(node_id, rules, default, input_sources, output_targets):
     }
 
 
-def _output_node(node_id, name, layer_source, legend_type=None, reference_metric_type_id=None):
+def _output_node(node_id, name, layer_source, legend_type=None, reference_metric_type_id=None, legend_config=None):
     input_data = {"name": {"name": name}}
     if legend_type is not None:
         input_data["legend"] = {"legendType": legend_type}
+    if legend_config is not None:
+        input_data.setdefault("legend", {})["legendConfig"] = legend_config
     if reference_metric_type_id is not None:
         input_data["referenceLayer"] = {"referenceMetricTypeId": reference_metric_type_id}
     return {
@@ -104,7 +106,14 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
         self.org_unit_ids = [self.ou1.id, self.ou2.id]
 
-    def _multiply_graph(self, name="Risk score", formula="a * b", legend_type=None, reference_metric_type_id=None):
+    def _multiply_graph(
+        self,
+        name="Risk score",
+        formula="a * b",
+        legend_type=None,
+        reference_metric_type_id=None,
+        legend_config=None,
+    ):
         return {
             "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "formula1", "portName": "a"}]),
             "layer2": _data_layer_node("layer2", self.metric_b.id, [{"nodeId": "formula1", "portName": "b"}]),
@@ -123,18 +132,18 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
                 [{"nodeId": "formula1", "portName": "result"}],
                 legend_type=legend_type,
                 reference_metric_type_id=reference_metric_type_id,
+                legend_config=legend_config,
             ),
         }
 
     def test_evaluator_multiplies_layers_per_org_unit(self):
-        name, values = CompositeGraphEvaluator(self.account, self._multiply_graph(), self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, self._multiply_graph(), self.org_unit_ids).run()
 
-        self.assertEqual(name, "Risk score")
         # All fixtures are year-less, so results live under the timeless (None) bucket.
         self.assertEqual(values, {None: {self.ou1.id: 6.0, self.ou2.id: 20.0}})
 
     def test_weighted_formula(self):
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account, self._multiply_graph(formula="a * 0.5 + b"), self.org_unit_ids
         ).run()
 
@@ -143,12 +152,13 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
     def test_formula_outputs_string_label(self):
         # Numeric inputs, but the formula branches to text labels (a*b -> 6 and 20).
         graph = self._multiply_graph(name="Bands", formula='"HIGH" if a * b > 10 else "LOW"')
-        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: "LOW", self.ou2.id: "HIGH"}})
 
     def test_formula_string_output_persists_as_ordinal(self):
         graph = self._multiply_graph(name="Bands", formula='"HIGH" if a * b > 10 else "LOW"')
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=graph,
             org_unit_ids=self.org_unit_ids,
@@ -172,21 +182,21 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
             ),
             "out": _output_node("out", "Season class", [{"nodeId": "formula1", "portName": "result"}]),
         }
-        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: "WET", self.ou2.id: "DRY"}})
 
     def test_formula_mixed_result_is_stringified(self):
         # One branch yields a number, the other a string -> the whole layer becomes text so rows
         # aren't a mix of numeric/string (metric_a: ou1=2 -> "2.0", ou2=4 -> "HIGH").
         graph = self._multiply_graph(name="Mixed", formula='"HIGH" if a > 3 else a')
-        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: "2.0", self.ou2.id: "HIGH"}})
 
     def test_single_char_string_literal_not_mistaken_for_input(self):
         # Single-char string literals ("a"/"b") must not be read as input-port references, even
         # though they collide with the port names (metric_a: ou1=2 -> "b", ou2=4 -> "a").
         graph = self._multiply_graph(name="Labels", formula='"a" if a > 3 else "b"')
-        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: "b", self.ou2.id: "a"}})
 
     def test_formula_adds_numeric_strings_as_numbers(self):
@@ -213,7 +223,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
             ),
             "out": _output_node("out", "Doubled", [{"nodeId": "formula1", "portName": "result"}]),
         }
-        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 4.0}})
 
     def test_formula_treats_numeric_classify_labels_as_numbers(self):
@@ -237,11 +247,12 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
             "out": _output_node("out", "Weighted score", [{"nodeId": "formula1", "portName": "result"}]),
         }
         # metric_a: ou1=2 -> label "1" -> 2.0; ou2=4 -> label "2" -> 4.0.
-        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 4.0}})
 
     def test_run_and_persist_creates_metric_type_and_values(self):
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=self._multiply_graph(),
             org_unit_ids=self.org_unit_ids,
@@ -257,6 +268,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
     def test_numeric_defaults_to_threshold_legend(self):
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=self._multiply_graph(),
             org_unit_ids=self.org_unit_ids,
@@ -265,6 +277,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
     def test_selected_linear_legend_is_honored(self):
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=self._multiply_graph(legend_type="linear"),
             org_unit_ids=self.org_unit_ids,
@@ -275,8 +288,36 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         self.assertEqual(metric_type.legend_config["domain"], [6.0, 20.0])
         self.assertEqual(len(metric_type.legend_config["range"]), 2)
 
+    def test_manual_legend_config_is_used_verbatim(self):
+        # A concrete legend type with a manually-configured scale (from the dialogue) is honoured
+        # instead of auto-computing the buckets, so composites style like an imported layer.
+        manual = {"domain": [10, 20], "range": ["#aaaaaa", "#bbbbbb", "#cccccc"]}
+        metric_type = run_and_persist_composite_layer(
+            name="Risk score",
+            account=self.account,
+            graph=self._multiply_graph(legend_type="threshold", legend_config=manual),
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.THRESHOLD)
+        self.assertEqual(metric_type.legend_config, manual)
+
+    def test_manual_legend_config_ignored_when_incompatible_with_categorical(self):
+        # A numeric manual legend can't render categorical output; fall back to the ordinal legend.
+        manual = {"domain": [1, 2], "range": ["#aaaaaa", "#bbbbbb", "#cccccc"]}
+        graph = self._classify_graph(name="Bands")
+        graph["out"]["inputData"]["legend"] = {"legendType": "threshold", "legendConfig": manual}
+        metric_type = run_and_persist_composite_layer(
+            name="Bands",
+            account=self.account,
+            graph=graph,
+            org_unit_ids=self.org_unit_ids,
+        )
+        self.assertEqual(metric_type.legend_type, MetricType.LegendType.ORDINAL)
+        self.assertNotEqual(metric_type.legend_config, manual)
+
     def test_threshold_uses_interior_breakpoints_and_extra_colour(self):
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=self._multiply_graph(),  # defaults to a threshold legend for numeric data
             org_unit_ids=self.org_unit_ids,
@@ -295,6 +336,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         graph = self._classify_graph(name="Bands")
         graph["out"]["inputData"]["legend"] = {"legendType": "linear"}
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=graph,
             org_unit_ids=self.org_unit_ids,
@@ -314,21 +356,20 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         self.assertEqual(MetricType.objects.count(), before)
         self.assertFalse(CompositeLayer.objects.exists())
 
-        self.assertEqual(result["name"], "Risk score")
         self.assertEqual(result["legend_type"], MetricType.LegendType.THRESHOLD)
         self.assertIn("domain", result["legend_config"])
         values = {mv["org_unit"]: mv["value"] for mv in result["metric_values"]}
         self.assertEqual(values, {self.ou1.id: 6.0, self.ou2.id: 20.0})
 
-    def test_preview_tolerates_missing_name(self):
-        # The preview runs while the user is still building, before naming the layer.
-        graph = self._multiply_graph(name="")
+    def test_preview_does_not_require_a_name(self):
+        # The preview runs while the user is still building; the name is owned by the dialogue and
+        # is not part of the graph or the preview result.
         result = preview_composite_layer(
             account=self.account,
-            graph=graph,
+            graph=self._multiply_graph(),
             org_unit_ids=self.org_unit_ids,
         )
-        self.assertEqual(result["name"], "")
+        self.assertNotIn("name", result)
         self.assertEqual(len(result["metric_values"]), 2)
 
     def test_preview_categorical_returns_string_values(self):
@@ -347,6 +388,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         self.metric_a.save()
 
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=self._multiply_graph(legend_type="reference", reference_metric_type_id=self.metric_a.id),
             org_unit_ids=self.org_unit_ids,
@@ -368,6 +410,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         self.metric_a.save()
 
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=self._multiply_graph(legend_type="reference"),
             org_unit_ids=self.org_unit_ids,
@@ -378,6 +421,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
     def test_reference_legend_falls_back_when_reference_missing(self):
         # An invalid/blank reference shouldn't break saving; fall back to the numeric default.
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=self._multiply_graph(legend_type="reference", reference_metric_type_id=999999),
             org_unit_ids=self.org_unit_ids,
@@ -395,6 +439,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         graph["out"]["inputData"]["referenceLayer"] = {"referenceMetricTypeId": self.metric_a.id}
 
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=graph,
             org_unit_ids=self.org_unit_ids,
@@ -403,13 +448,15 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
     def test_update_reruns_in_place_keeping_metric_type_id(self):
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=self._multiply_graph(name="Score", formula="a * b"),
             org_unit_ids=self.org_unit_ids,
         )
         original_id = metric_type.id
 
-        name, updated = update_composite_metric_type(
+        updated = update_composite_metric_type(
+            name="Score v2",
             account=self.account,
             metric_type=metric_type,
             graph=self._multiply_graph(name="Score v2", formula="a + b"),
@@ -417,7 +464,6 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         )
 
         self.assertEqual(updated.id, original_id)
-        self.assertEqual(name, "Score v2")
         self.assertEqual(updated.name, "Score v2")
         values = {mv.org_unit_id: mv.value for mv in MetricValue.objects.filter(metric_type=updated)}
         self.assertEqual(values, {self.ou1.id: 5.0, self.ou2.id: 9.0})
@@ -426,6 +472,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
     def test_composite_can_be_used_as_input(self):
         composite = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=self._multiply_graph(name="Base composite"),
             org_unit_ids=self.org_unit_ids,
@@ -442,7 +489,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
             ),
             "out": _output_node("out", "Derived", [{"nodeId": "formula1", "portName": "result"}]),
         }
-        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: 7.0, self.ou2.id: 21.0}})
 
     def test_data_layer_passes_through_all_years(self):
@@ -454,7 +501,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
             "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "out", "portName": "layer"}]),
             "out": _output_node("out", "Direct", [{"nodeId": "layer1", "portName": "values"}]),
         }
-        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
         self.assertEqual(
             values,
             {
@@ -496,7 +543,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
             "layer_d", {2024: {self.ou1: 3.0, self.ou2: 5.0}, 2025: {self.ou1: 4.0, self.ou2: 6.0}}
         )
 
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account, self._two_layer_formula_graph(metric_c.id, metric_d.id, formula="a + b"), self.org_unit_ids
         ).run()
 
@@ -510,7 +557,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         )
         # metric_a is timeless (ou1=2, ou2=4 under year=None).
 
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account,
             self._two_layer_formula_graph(metric_c.id, self.metric_a.id, formula="a + b"),
             self.org_unit_ids,
@@ -530,6 +577,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         )
 
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=self._two_layer_formula_graph(metric_c.id, self.metric_a.id, formula="a + b", name="Broadcast"),
             org_unit_ids=self.org_unit_ids,
@@ -553,6 +601,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         )
 
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=self._two_layer_formula_graph(metric_c.id, self.metric_a.id, formula="a + b", legend_type="linear"),
             org_unit_ids=self.org_unit_ids,
@@ -608,25 +657,23 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
     # metric_a: ou1=2, ou2=4; metric_b: ou1=3, ou2=5.
     def test_combine_mean(self):
-        _, values = CompositeGraphEvaluator(
-            self.account, self._combine_graph(operation="mean"), self.org_unit_ids
-        ).run()
+        values = CompositeGraphEvaluator(self.account, self._combine_graph(operation="mean"), self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: 2.5, self.ou2.id: 4.5}})
 
     def test_combine_defaults_to_mean(self):
-        _, values = CompositeGraphEvaluator(self.account, self._combine_graph(), self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, self._combine_graph(), self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: 2.5, self.ou2.id: 4.5}})
 
     def test_combine_sum(self):
-        _, values = CompositeGraphEvaluator(self.account, self._combine_graph(operation="sum"), self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, self._combine_graph(operation="sum"), self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: 5.0, self.ou2.id: 9.0}})
 
     def test_combine_min(self):
-        _, values = CompositeGraphEvaluator(self.account, self._combine_graph(operation="min"), self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, self._combine_graph(operation="min"), self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 4.0}})
 
     def test_combine_max(self):
-        _, values = CompositeGraphEvaluator(self.account, self._combine_graph(operation="max"), self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, self._combine_graph(operation="max"), self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: 3.0, self.ou2.id: 5.0}})
 
     def test_combine_three_inputs(self):
@@ -634,7 +681,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         MetricValue.objects.create(metric_type=metric_c, org_unit=self.ou1, year=None, value=10.0)
         MetricValue.objects.create(metric_type=metric_c, org_unit=self.ou2, year=None, value=0.0)
 
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account,
             self._combine_graph(operation="mean", metric_ids=[self.metric_a.id, self.metric_b.id, metric_c.id]),
             self.org_unit_ids,
@@ -642,7 +689,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         self.assertEqual(values, {None: {self.ou1.id: 5.0, self.ou2.id: 3.0}})
 
     def test_combine_single_input_is_identity(self):
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account, self._combine_graph(operation="mean", metric_ids=[self.metric_a.id]), self.org_unit_ids
         ).run()
         self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 4.0}})
@@ -653,7 +700,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
             "layer_c",
             {2023: {self.ou1: 10.0, self.ou2: 20.0}, 2024: {self.ou1: 30.0, self.ou2: 40.0}},
         )
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account,
             self._combine_graph(operation="sum", metric_ids=[metric_c.id, self.metric_a.id]),
             self.org_unit_ids,
@@ -701,14 +748,14 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
 
     def test_normalize_rescales_to_unit_range(self):
         # metric_a: ou1=2 (min -> 0), ou2=4 (max -> 1). Scale defaults to 0-1 when absent.
-        _, values = CompositeGraphEvaluator(self.account, self._normalize_graph(), self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, self._normalize_graph(), self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: 0.0, self.ou2.id: 1.0}})
 
     def test_normalize_scale_100(self):
         ou3 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="OU3")
         MetricValue.objects.create(metric_type=self.metric_a, org_unit=ou3, year=None, value=3.0)
 
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account, self._normalize_graph(scale="100"), [*self.org_unit_ids, ou3.id]
         ).run()
         # min=2 -> 0, mid=3 -> 50, max=4 -> 100.
@@ -720,7 +767,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
             "layer_c",
             {2023: {self.ou1: 10.0, self.ou2: 20.0}, 2024: {self.ou1: 100.0, self.ou2: 300.0}},
         )
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account, self._normalize_graph(metric_type_id=metric_c.id), self.org_unit_ids
         ).run()
         self.assertEqual(
@@ -736,7 +783,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         MetricValue.objects.create(metric_type=constant, org_unit=self.ou1, year=None, value=7.0)
         MetricValue.objects.create(metric_type=constant, org_unit=self.ou2, year=None, value=7.0)
 
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account, self._normalize_graph(metric_type_id=constant.id, scale="100"), self.org_unit_ids
         ).run()
         self.assertEqual(values, {None: {self.ou1.id: 50.0, self.ou2.id: 50.0}})
@@ -773,11 +820,12 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         }
 
     def test_classify_maps_input_to_categories(self):
-        _, values = CompositeGraphEvaluator(self.account, self._classify_graph(), self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, self._classify_graph(), self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: "LOW", self.ou2.id: "HIGH"}})
 
     def test_classify_persists_as_ordinal_string_values(self):
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=self._classify_graph(name="Bands"),
             org_unit_ids=self.org_unit_ids,
@@ -816,7 +864,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
             "layer1": _data_layer_node("layer1", seasonality.id, [{"nodeId": "out", "portName": "layer"}]),
             "out": _output_node("out", "Seasons", [{"nodeId": "layer1", "portName": "values"}]),
         }
-        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
         self.assertEqual(values, {None: {self.ou1.id: "Peak", self.ou2.id: "Low"}})
 
     def test_categorical_data_layer_persists_ordinal_keeping_source_order(self):
@@ -826,6 +874,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
             "out": _output_node("out", "Seasons", [{"nodeId": "layer1", "portName": "values"}]),
         }
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=graph,
             org_unit_ids=self.org_unit_ids,
@@ -847,6 +896,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
             ),
         }
         metric_type = run_and_persist_composite_layer(
+            name="Risk score",
             account=self.account,
             graph=graph,
             org_unit_ids=self.org_unit_ids,
@@ -900,7 +950,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         }
         # metric_a: ou1=2.0 -> classify "<3" matches -> "1" -> formula "1" + 1 == 2.0
         #           ou2=4.0 -> no rule matches -> default "2" -> formula "2" + 1 == 3.0
-        _, values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
         self.assertEqual(values[None], {self.ou1.id: 2.0, self.ou2.id: 3.0})
 
     def test_classify_without_mappings_raises(self):

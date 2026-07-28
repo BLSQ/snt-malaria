@@ -30,13 +30,14 @@ def _formula_node(node_id, formula, input_sources, output_targets):
     }
 
 
-def _output_node(node_id, name, layer_source):
+def _output_node(node_id, layer_source):
+    # The layer name is owned by the creation dialogue (sent in the request body), not the graph.
     return {
         "id": node_id,
         "type": "output",
         "x": 0,
         "y": 0,
-        "inputData": {"name": {"name": name}},
+        "inputData": {},
         "connections": {"inputs": {"layer": layer_source}, "outputs": {}},
     }
 
@@ -114,7 +115,7 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
             username="no_flag_user", account=self.no_flag_account, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
         )
 
-    def _multiply_graph(self, name="Risk score", formula="a * b"):
+    def _multiply_graph(self, formula="a * b"):
         return {
             "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "formula1", "portName": "a"}]),
             "layer2": _data_layer_node("layer2", self.metric_b.id, [{"nodeId": "formula1", "portName": "b"}]),
@@ -127,19 +128,27 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
                 },
                 [{"nodeId": "out", "portName": "layer"}],
             ),
-            "out": _output_node("out", name, [{"nodeId": "formula1", "portName": "result"}]),
+            "out": _output_node("out", [{"nodeId": "formula1", "portName": "result"}]),
         }
 
     def _create_composite_layer(self, name="Risk score"):
         """Create a composite layer through the API and return the model instance."""
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(self.BASE_URL, {"graph": self._multiply_graph(name=name)}, format="json")
+        response = self.client.post(self.BASE_URL, {"graph": self._multiply_graph(), "name": name}, format="json")
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
         return CompositeLayer.objects.get(id=result["id"])
 
     def test_create_composite_layer(self):
         self.client.force_authenticate(user=self.user)
-        payload = {"graph": self._multiply_graph(), "comments": {"c1": {"id": "c1", "text": "note"}}}
+        payload = {
+            "graph": self._multiply_graph(),
+            "comments": {"c1": {"id": "c1", "text": "note"}},
+            "name": "Risk score",
+            "category": "Epidemiology",
+            "description": "A risk score",
+            "units": "per 1000",
+            "unit_symbol": "/k",
+        }
         response = self.client.post(self.BASE_URL, payload, format="json")
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
 
@@ -151,8 +160,12 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
 
         metric_type = composite_layer.metric_type
         self.assertIsNotNone(metric_type)
+        # Metadata is owned by the dialogue (request body), not the graph.
         self.assertEqual(metric_type.name, "Risk score")
-        self.assertEqual(metric_type.category, "Composite")
+        self.assertEqual(metric_type.category, "Epidemiology")
+        self.assertEqual(metric_type.description, "A risk score")
+        self.assertEqual(metric_type.units, "per 1000")
+        self.assertEqual(metric_type.unit_symbol, "/k")
         values = {mv.org_unit_id: mv.value for mv in MetricValue.objects.filter(metric_type=metric_type)}
         self.assertEqual(values, {self.district_1.id: 6.0, self.district_2.id: 20.0})
 
@@ -161,26 +174,41 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(result["metric_type_detail"]["id"], metric_type.id)
         self.assertEqual(result["created_by"]["id"], self.user.id)
 
+    def test_create_defaults_category_to_composite(self):
+        composite_layer = self._create_composite_layer()
+        self.assertEqual(composite_layer.metric_type.category, "Composite")
+        # Composites default to a non-population kind.
+        self.assertEqual(composite_layer.metric_type.metric_kind, MetricType.MetricKind.ANY)
+
+    def test_create_population_composite(self):
+        self.client.force_authenticate(user=self.user)
+        payload = {"graph": self._multiply_graph(), "name": "Pop composite", "is_population": True}
+        response = self.client.post(self.BASE_URL, payload, format="json")
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+        composite_layer = CompositeLayer.objects.get(id=result["id"])
+        self.assertEqual(composite_layer.metric_type.metric_kind, MetricType.MetricKind.POPULATION)
+
     def test_create_with_invalid_graph_returns_400(self):
         self.client.force_authenticate(user=self.user)
 
-        response = self.client.post(self.BASE_URL, {"graph": {}}, format="json")
+        response = self.client.post(self.BASE_URL, {"graph": {}, "name": "X"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # Structurally valid JSON but no output node.
         graph = {"layer1": _data_layer_node("layer1", self.metric_a.id, [])}
-        response = self.client.post(self.BASE_URL, {"graph": graph}, format="json")
+        response = self.client.post(self.BASE_URL, {"graph": graph, "name": "X"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("graph", response.data)
 
-    def test_create_does_not_persist_on_error(self):
+    def test_create_missing_name_returns_400(self):
         self.client.force_authenticate(user=self.user)
         before_layers = CompositeLayer.objects.count()
         before_types = MetricType.objects.count()
 
-        graph = self._multiply_graph(name="")  # missing output name
-        response = self.client.post(self.BASE_URL, {"graph": graph}, format="json")
+        # A valid graph, but no name in the request body (the dialogue owns the name).
+        response = self.client.post(self.BASE_URL, {"graph": self._multiply_graph()}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("name", response.data)
 
         self.assertEqual(CompositeLayer.objects.count(), before_layers)
         self.assertEqual(MetricType.objects.count(), before_types)
@@ -210,12 +238,17 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
         composite_layer = self._create_composite_layer()
         metric_type_id = composite_layer.metric_type_id
 
-        new_graph = self._multiply_graph(name="Updated score", formula="a + b")
-        response = self.client.patch(f"{self.BASE_URL}{composite_layer.id}/", {"graph": new_graph}, format="json")
+        new_graph = self._multiply_graph(formula="a + b")
+        response = self.client.patch(
+            f"{self.BASE_URL}{composite_layer.id}/",
+            {"graph": new_graph, "name": "Updated score"},
+            format="json",
+        )
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
 
         composite_layer.refresh_from_db()
         self.assertEqual(composite_layer.name, "Updated score")
+        self.assertEqual(composite_layer.metric_type.name, "Updated score")
         self.assertEqual(composite_layer.metric_type_id, metric_type_id)
         self.assertEqual(result["metric_type"], metric_type_id)
 
@@ -267,7 +300,6 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
         response = self.client.post(f"{self.BASE_URL}preview/", {"graph": self._multiply_graph()}, format="json")
         result = self.assertJSONResponse(response, status.HTTP_200_OK)
 
-        self.assertEqual(result["name"], "Risk score")
         self.assertIn("legend_type", result)
         self.assertIn("legend_config", result)
         self.assertEqual(result["years"], [])

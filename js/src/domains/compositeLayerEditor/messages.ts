@@ -232,14 +232,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.outputLayerPortLabel',
         defaultMessage: 'Composite layer',
     },
-    nameControlLabel: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.nameControlLabel',
-        defaultMessage: 'Composite layer name',
-    },
-    namePlaceholder: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.namePlaceholder',
-        defaultMessage: 'My composite layer',
-    },
     // Legend controls on the output node.
     legendTypeLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.legendTypeLabel',

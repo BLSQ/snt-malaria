@@ -24,8 +24,26 @@ NUM_THRESHOLD_COLORS = len(SEVEN_SHADES)
 REFERENCE_LEGEND = "reference"
 
 
+CONCRETE_LEGEND_TYPES = (
+    MetricType.LegendType.LINEAR,
+    MetricType.LegendType.THRESHOLD,
+    MetricType.LegendType.ORDINAL,
+)
+
+
 def _is_categorical(values: Iterable[Value]) -> bool:
     return any(isinstance(value, str) for value in values)
+
+
+def _is_valid_manual_legend(config) -> bool:
+    """A manual legend must carry non-empty ``domain`` and ``range`` lists to be usable."""
+    return (
+        isinstance(config, dict)
+        and isinstance(config.get("domain"), list)
+        and isinstance(config.get("range"), list)
+        and len(config["domain"]) > 0
+        and len(config["range"]) > 0
+    )
 
 
 def _ordinal_legend_config(domain: List) -> dict:
@@ -139,6 +157,17 @@ def resolve_output_legend(
         # legend falls through to the ordinal builder below.
         if reference is not None and (not categorical or reference.legend_type == MetricType.LegendType.ORDINAL):
             return reference.legend_type, copy.deepcopy(reference.legend_config)
+
+    # A manually-configured legend (set in the dialogue for a concrete type) is used verbatim, so a
+    # composite can be styled exactly like an imported layer. Categorical results only accept an
+    # ordinal manual legend; numeric results accept any concrete type. Otherwise fall through to the
+    # auto-computed legend below.
+    manual = evaluator.output_legend_config
+    if selected in CONCRETE_LEGEND_TYPES and _is_valid_manual_legend(manual):
+        if not categorical:
+            return selected, {"domain": list(manual["domain"]), "range": list(manual["range"])}
+        if selected == MetricType.LegendType.ORDINAL:
+            return MetricType.LegendType.ORDINAL, {"domain": list(manual["domain"]), "range": list(manual["range"])}
 
     if categorical:
         legend_type = MetricType.LegendType.ORDINAL

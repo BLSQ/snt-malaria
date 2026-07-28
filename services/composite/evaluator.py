@@ -107,12 +107,15 @@ class CompositeGraphEvaluator:
         self.output_legend_type: str | None = None
         # When the legend type is "reference", the MetricType whose legend should be reused.
         self.output_reference_metric_type_id = None
+        # Manually-configured legend {domain, range} set in the dialogue for a concrete legend type;
+        # honoured verbatim instead of auto-computing the buckets (None => auto-compute).
+        self.output_legend_config = None
 
-    def run(self, require_name: bool = True) -> Tuple[str, ValuesByYear]:
-        """Evaluate the graph and return ``(name, {year: {org_unit_id: value}})`` for the output node.
+    def run(self) -> ValuesByYear:
+        """Evaluate the graph and return ``{year: {org_unit_id: value}}`` for the output node.
 
-        ``require_name`` is relaxed for the live preview, where the graph is often evaluated before
-        the user has typed a name.
+        The layer name is owned by the dialogue (``CompositeLayer.name``), not the graph, so it is
+        not read here.
         """
         if not isinstance(self.graph, dict) or not self.graph:
             raise CompositeGraphError("Graph is empty.")
@@ -122,11 +125,9 @@ class CompositeGraphEvaluator:
             raise CompositeGraphError("Graph must contain exactly one output node.")
 
         output_node = output_nodes[0]
-        name = (self._get_control_value(output_node, "name", "name") or "").strip()
-        if require_name and not name:
-            raise CompositeGraphError("The output node must have a name.")
 
         self.output_legend_type = self._get_control_value(output_node, "legend", "legendType")
+        self.output_legend_config = self._get_control_value(output_node, "legend", "legendConfig")
         self.output_reference_metric_type_id = self._get_control_value(
             output_node, "referenceLayer", "referenceMetricTypeId"
         )
@@ -147,7 +148,7 @@ class CompositeGraphEvaluator:
                 # Reuse the source layer's own category order so its ordinal legend is preserved.
                 self.output_category_order = self._data_layer_category_order(source_node)
 
-        return name, values_by_year
+        return values_by_year
 
     def connected_data_layer_metric_type_ids(self) -> List[int]:
         """MetricType ids of the data layers wired into the output, in traversal order (deduped).

@@ -16,7 +16,6 @@ type Props = {
     /** Currently displayed layer, owned by the parent so selection survives refetches/saves. */
     selectedMetricTypeId?: number;
     onEditMetricType: (metricType: MetricType) => void;
-    onEditCompositeLayer: (compositeLayerId: number) => void;
     /** Maps a MetricType id to the composite layer that produced it, when it is a composite. */
     compositeLayerIdByMetricType: Map<number, number>;
     deleteMetricType: (metricTypeId: number) => void;
@@ -32,7 +31,6 @@ export const DataLayerList: FC<Props> = ({
     onSelectMetricType,
     selectedMetricTypeId,
     onEditMetricType,
-    onEditCompositeLayer,
     compositeLayerIdByMetricType,
     deleteMetricType,
     editing = false,
@@ -70,7 +68,6 @@ export const DataLayerList: FC<Props> = ({
                                 key={metricType.id}
                                 onClick={() => onSelectMetricType(metricType)}
                                 onEdit={onEditMetricType}
-                                onEditComposite={onEditCompositeLayer}
                                 compositeLayerId={compositeLayerIdByMetricType.get(
                                     metricType.id,
                                 )}

@@ -53,8 +53,23 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
         account = self.request.user.iaso_profile.account
         return list(get_intervention_org_units(account).values_list("id", flat=True))
 
+    @staticmethod
+    def _pop_metric_metadata(serializer):
+        """Pop the MetricType-only metadata fields off validated_data (they are not CompositeLayer
+        columns, so they must not reach ``serializer.save()``). Returns only the provided keys."""
+        data = serializer.validated_data
+        metadata = {}
+        for field in ("category", "description", "units", "unit_symbol", "is_population"):
+            if field in data:
+                metadata[field] = data.pop(field)
+        return metadata
+
     def perform_create(self, serializer):
         account = self.request.user.iaso_profile.account
+        name = (serializer.validated_data.get("name") or "").strip()
+        if not name:
+            raise serializers.ValidationError({"name": "This field is required."})
+        metadata = self._pop_metric_metadata(serializer)
         graph = serializer.validated_data["graph"]
 
         try:
@@ -62,13 +77,15 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
                 account=account,
                 graph=graph,
                 org_unit_ids=self._intervention_org_unit_ids(),
+                name=name,
+                **metadata,
             )
         except CompositeGraphError as error:
             raise serializers.ValidationError({"graph": str(error)})
 
         serializer.save(
             account=account,
-            name=metric_type.name,
+            name=name,
             metric_type=metric_type,
             created_by=self.request.user,
         )
@@ -88,6 +105,9 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         instance = serializer.instance
         graph = serializer.validated_data.get("graph")
+        # Dialogue-owned metadata (may be absent on a graph-only save from the node editor).
+        name = serializer.validated_data.get("name")
+        metadata = self._pop_metric_metadata(serializer)
         extra = {}
 
         if graph is not None:
@@ -96,21 +116,29 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
             try:
                 if instance.metric_type_id:
                     # Re-run and refresh the existing MetricType in place, keeping its id.
-                    name, metric_type = update_composite_metric_type(
+                    metric_type = update_composite_metric_type(
                         account=account,
                         metric_type=instance.metric_type,
                         graph=graph,
                         org_unit_ids=org_unit_ids,
+                        name=name,
+                        **metadata,
                     )
                 else:
                     # The generated MetricType is SET_NULL and may have been deleted independently.
                     metric_type = run_and_persist_composite_layer(
-                        account=account, graph=graph, org_unit_ids=org_unit_ids
+                        account=account,
+                        graph=graph,
+                        org_unit_ids=org_unit_ids,
+                        name=(name or instance.name),
+                        **metadata,
                     )
-                    name = metric_type.name
             except CompositeGraphError as error:
                 raise serializers.ValidationError({"graph": str(error)})
-            extra = {"name": name, "metric_type": metric_type}
+            extra = {"metric_type": metric_type}
+            # Keep CompositeLayer.name in sync with the layer name when the dialogue provided one.
+            if name:
+                extra["name"] = name
 
         serializer.save(**extra)
 

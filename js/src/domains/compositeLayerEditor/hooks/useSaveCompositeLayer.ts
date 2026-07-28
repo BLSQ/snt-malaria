@@ -31,15 +31,18 @@ export const useSaveCompositeLayer = (): UseMutationResult<
                 }
             },
         },
-        mutationFn: ({ graph, comments, id }: SaveCompositeLayerPayload) =>
-            id
-                ? patchRequest(`/api/snt_malaria/composite_layers/${id}/`, {
-                      graph,
-                      comments,
-                  })
-                : postRequest('/api/snt_malaria/composite_layers/', {
-                      graph,
-                      comments,
-                  }),
+        mutationFn: ({ graph, id, ...rest }: SaveCompositeLayerPayload) => {
+            // Only send fields that were actually provided: the node editor sends graph + comments,
+            // the dialogue sends graph + name/metadata. On a partial update, omitting a field keeps
+            // the backend's current value (so a dialogue save preserves comments, and an editor save
+            // preserves the metadata).
+            const body: Record<string, unknown> = { graph };
+            Object.entries(rest).forEach(([key, value]) => {
+                if (value !== undefined) body[key] = value;
+            });
+            return id
+                ? patchRequest(`/api/snt_malaria/composite_layers/${id}/`, body)
+                : postRequest('/api/snt_malaria/composite_layers/', body);
+        },
     });
 };

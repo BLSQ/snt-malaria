@@ -401,8 +401,8 @@ export const buildFlumeGraphFromSpec = (
         width: NODE_WIDTH.output,
         x: outputX,
         y: outputY,
+        // The layer name is owned by the creation dialogue, not the graph.
         inputData: {
-            name: { name: graph.output.name },
             legend: { legendType: graph.output.legend_type ?? 'auto' },
         },
         connections: { inputs: {}, outputs: {} },

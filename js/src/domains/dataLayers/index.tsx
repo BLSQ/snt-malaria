@@ -1,4 +1,11 @@
-import React, { FC, useCallback, useMemo, useRef, useState } from 'react';
+import React, {
+    FC,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { Card, Stack } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
@@ -27,6 +34,7 @@ import { CompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChat
 import { GeneratedGraph } from '../compositeLayerEditor/compositeLayerChatBot/types';
 import { useCompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChatBot/useCompositeLayerAIChat';
 import { useGetCompositeLayers } from '../compositeLayerEditor/hooks/useGetCompositeLayers';
+import { CompositeDraft } from '../compositeLayerEditor/types/compositeLayer';
 import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { DataLayerComparisonProvider } from './contexts/DataLayerComparisonContext';
@@ -77,6 +85,18 @@ export const DataLayers: FC = () => {
 
     const { data: metricCategories, isLoading: isLoadingMetricLayers } =
         useGetMetricCategories();
+
+    // Keep the displayed layer pointing at the freshest data, so the map's legend + values refresh
+    // right after an edit (e.g. changing a composite's legend) instead of only on re-selection.
+    useEffect(() => {
+        if (!displayedMetricType) return;
+        const fresh = (metricCategories ?? [])
+            .flatMap(category => category.items)
+            .find(item => item.id === displayedMetricType.id);
+        if (fresh && fresh !== displayedMetricType) {
+            setDisplayedMetricType(fresh);
+        }
+    }, [metricCategories, displayedMetricType]);
     const existingCategoryOptions = useMemo(
         () =>
             (metricCategories ?? []).map(category => ({
@@ -95,6 +115,11 @@ export const DataLayers: FC = () => {
         useState<boolean>(false);
     const [editingCompositeLayerId, setEditingCompositeLayerId] = useState<
         number | undefined
+    >(undefined);
+    // Metadata for a brand-new composite, collected in the create dialogue then carried into the
+    // editor (which persists it on the first save). Undefined when editing an existing composite.
+    const [compositeDraft, setCompositeDraft] = useState<
+        CompositeDraft | undefined
     >(undefined);
     const compositeLayerEditorRef = useRef<CompositeLayerEditorHandle>(null);
     const onGenerateCompositeLayerGraph = useCallback(
@@ -172,13 +197,17 @@ export const DataLayers: FC = () => {
         setIsMetricTypeFormOpen(true);
     }, []);
 
-    const onCreateCompositeLayer = useCallback(() => {
+    // A brand-new composite is created from the unified dialogue: it collects the metadata + legend
+    // choice, then we enter the node editor straight away (the layer is persisted on first save).
+    const onCreateCompositeDraft = useCallback((draft: CompositeDraft) => {
+        setCompositeDraft(draft);
         setEditingCompositeLayerId(undefined);
         setIsCompositeEditorOpen(true);
     }, []);
 
-    // Editing a composite's graph is a dedicated action, distinct from editing its legend.
+    // Editing a composite's graph is entered via the "Edit" button on the map view.
     const onEditCompositeLayer = useCallback((compositeLayerId: number) => {
+        setCompositeDraft(undefined);
         setEditingCompositeLayerId(compositeLayerId);
         setIsCompositeEditorOpen(true);
     }, []);
@@ -186,6 +215,7 @@ export const DataLayers: FC = () => {
     const onCloseCompositeEditor = useCallback(() => {
         setIsCompositeEditorOpen(false);
         setEditingCompositeLayerId(undefined);
+        setCompositeDraft(undefined);
         setSidebarCollapsed(false);
         setIsAiChatMode(false);
         resetAiChat();
@@ -196,6 +226,7 @@ export const DataLayers: FC = () => {
         (metricType?: MetricType) => {
             setIsCompositeEditorOpen(false);
             setEditingCompositeLayerId(undefined);
+            setCompositeDraft(undefined);
             setSidebarCollapsed(false);
             setIsAiChatMode(false);
             resetAiChat();
@@ -269,9 +300,6 @@ export const DataLayers: FC = () => {
                                                     onCreate={
                                                         onCreateMetricType
                                                     }
-                                                    onCreateComposite={
-                                                        onCreateCompositeLayer
-                                                    }
                                                     createActionRef={
                                                         onboarding.anchorRefs[0]
                                                     }
@@ -296,9 +324,6 @@ export const DataLayers: FC = () => {
                                                 onEditMetricType={
                                                     onEditMetricType
                                                 }
-                                                onEditCompositeLayer={
-                                                    onEditCompositeLayer
-                                                }
                                                 compositeLayerIdByMetricType={
                                                     compositeLayerIdByMetricType
                                                 }
@@ -319,6 +344,7 @@ export const DataLayers: FC = () => {
                                 <CompositeLayerEditor
                                     ref={compositeLayerEditorRef}
                                     compositeLayerId={editingCompositeLayerId}
+                                    draftMetadata={compositeDraft}
                                     onClose={onCloseCompositeEditor}
                                     onSaved={onCompositeSaved}
                                     sidebarCollapsed={sidebarCollapsed}
@@ -336,6 +362,17 @@ export const DataLayers: FC = () => {
                                     <DataLayerMapWrapper
                                         metricType={displayedMetricType}
                                         orgUnits={orgUnits || []}
+                                        showCompositeLayers={
+                                            showCompositeLayers
+                                        }
+                                        compositeLayerId={
+                                            displayedMetricType
+                                                ? compositeLayerIdByMetricType.get(
+                                                      displayedMetricType.id,
+                                                  )
+                                                : undefined
+                                        }
+                                        onEditComposite={onEditCompositeLayer}
                                     />
                                     <DataLayerComparisonContainer />
                                 </Stack>
@@ -349,6 +386,15 @@ export const DataLayers: FC = () => {
                         closeDialog={onDialogClose}
                         metricType={selectedMetricType}
                         categoryOptions={existingCategoryOptions}
+                        showCompositeLayers={showCompositeLayers}
+                        compositeLayerId={
+                            selectedMetricType
+                                ? compositeLayerIdByMetricType.get(
+                                      selectedMetricType.id,
+                                  )
+                                : undefined
+                        }
+                        onCreateCompositeDraft={onCreateCompositeDraft}
                     />
                 )}
             </PageContainer>
