@@ -164,9 +164,7 @@ def update_composite_metric_type(
             update_fields.append(field)
 
     if is_population is not None:
-        metric_type.metric_kind = (
-            MetricType.MetricKind.POPULATION if is_population else MetricType.MetricKind.ANY
-        )
+        metric_type.metric_kind = MetricType.MetricKind.POPULATION if is_population else MetricType.MetricKind.ANY
         update_fields.append("metric_kind")
 
     metric_type.save(update_fields=update_fields)
