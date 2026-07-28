@@ -12,6 +12,44 @@ export const isOutputConnected = (graph: FlumeGraph): boolean => {
 };
 
 /**
+ * Return a copy of the graph with the connection into a given input port removed on both sides
+ * (the target's `inputs[port]` and each source's matching `outputs[port]` entry). Backs the
+ * drag-an-input-into-empty-space removal gesture (Flume's own port handling is unreliable here).
+ */
+export const removeInputConnection = (
+    graph: FlumeGraph,
+    inputNodeId: string,
+    inputPortName: string,
+): FlumeGraph => {
+    const next: FlumeGraph = JSON.parse(JSON.stringify(graph ?? {}));
+    const inputNode = next[inputNodeId];
+    const sources = inputNode?.connections?.inputs?.[inputPortName];
+    if (!inputNode || !sources?.length) return next;
+
+    delete inputNode.connections.inputs[inputPortName];
+
+    sources.forEach(source => {
+        const sourceNode = next[source.nodeId];
+        const outputs = sourceNode?.connections?.outputs?.[source.portName];
+        if (!outputs) return;
+        const remaining = outputs.filter(
+            target =>
+                !(
+                    target.nodeId === inputNodeId &&
+                    target.portName === inputPortName
+                ),
+        );
+        if (remaining.length) {
+            sourceNode.connections.outputs[source.portName] = remaining;
+        } else {
+            delete sourceNode.connections.outputs[source.portName];
+        }
+    });
+
+    return next;
+};
+
+/**
  * MetricType ids of the data layers wired into the output node, in traversal order (deduped).
  *
  * Walks the graph depth-first from the output node following input connections, so it finds data

@@ -31,6 +31,12 @@ type UseCanvasDrop = {
     mountCommentsRef: MutableRefObject<FlumeCommentMap | undefined>;
     mountScaleRef: MutableRefObject<number | undefined>;
     handleCanvasDrop: (event: React.DragEvent<HTMLDivElement>) => void;
+    /**
+     * Remount the editor with an arbitrary new graph while keeping the view put (same pan/zoom).
+     * Flume has no imperative graph API, so structural edits (e.g. removing a connection) go through
+     * a remount, like drops.
+     */
+    remountWithGraph: (nextNodes: FlumeGraph) => void;
 };
 
 /**
@@ -100,11 +106,31 @@ export const useCanvasDrop = ({
         setMountNonce(nonce => nonce + 1);
     };
 
+    const remountWithGraph = (nextNodes: FlumeGraph) => {
+        const {
+            nodes: shiftedNodes,
+            comments: shiftedComments,
+            scale: capturedScale,
+        } = shiftGraphForRemount(
+            nextNodes || {},
+            commentsRef.current || {},
+            canvasRef.current,
+        );
+        nodesRef.current = shiftedNodes;
+        commentsRef.current = shiftedComments;
+        mountGraphRef.current = shiftedNodes;
+        mountCommentsRef.current = shiftedComments;
+        mountScaleRef.current = capturedScale;
+        onBeforeRemount?.();
+        setMountNonce(nonce => nonce + 1);
+    };
+
     return {
         mountNonce,
         mountGraphRef,
         mountCommentsRef,
         mountScaleRef,
         handleCanvasDrop,
+        remountWithGraph,
     };
 };
