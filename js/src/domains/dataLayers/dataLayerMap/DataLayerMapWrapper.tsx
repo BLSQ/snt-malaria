@@ -24,6 +24,7 @@ import { MESSAGES } from '../../messages';
 import { useGetMetricValues } from '../hooks/useGetMetrics';
 import { MetricType, MetricValue } from '../types/metrics';
 import { DataLayerMap } from './DataLayerMap';
+import { ExportMetricValuesCsvButton } from './ExportMetricValuesCsvButton';
 
 const styles = {
     card: {
@@ -128,7 +129,7 @@ export const DataLayerMapWrapper: FC<Props> = ({
                         <Stack
                             direction="row"
                             spacing={2}
-                            alignItems="end"
+                            alignItems="center"
                             sx={{ flexShrink: 0 }}
                         >
                             {yearOptions.length > 0 && (
@@ -170,6 +171,10 @@ export const DataLayerMapWrapper: FC<Props> = ({
                                         {formatMessage(MESSAGES.compositeEditor)}
                                     </Button>
                                 )}
+                            <ExportMetricValuesCsvButton
+                                metricType={metricType}
+                                year={year}
+                            />
                             {(onRemove && (
                                 <IconButton
                                     overrideIcon={CancelOutlinedIcon}
