@@ -12,8 +12,9 @@ import { noOp } from 'Iaso/utils';
 import { useImportMetricValues } from './hooks/useImportMetricValues';
 import { MESSAGES } from './messages';
 
-const yearOptions = Array.from({ length: 20 }, (_, i) => {
-    const year = 2020 + i;
+const currentYear = new Date().getFullYear();
+const yearOptions = Array.from({ length: currentYear - 2000 + 1 }, (_, i) => {
+    const year = 2000 + i;
     return { label: year.toString(), value: year };
 });
 
