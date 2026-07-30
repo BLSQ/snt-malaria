@@ -48,13 +48,13 @@ const useValidation = () => {
                     .min(
                         SCENARIO_YEAR_RANGE.min,
                         formatMessage(MESSAGES.minYear, {
-                            year: SCENARIO_YEAR_RANGE.min,
+                            year: SCENARIO_YEAR_RANGE.min.toString(),
                         }),
                     )
                     .max(
                         SCENARIO_YEAR_RANGE.max,
                         formatMessage(MESSAGES.maxYear, {
-                            year: SCENARIO_YEAR_RANGE.max,
+                            year: SCENARIO_YEAR_RANGE.max.toString(),
                         }),
                     ),
                 end_year: Yup.number()
@@ -62,13 +62,13 @@ const useValidation = () => {
                     .min(
                         SCENARIO_YEAR_RANGE.min,
                         formatMessage(MESSAGES.minYear, {
-                            year: SCENARIO_YEAR_RANGE.min,
+                            year: SCENARIO_YEAR_RANGE.min.toString(),
                         }),
                     )
                     .max(
                         SCENARIO_YEAR_RANGE.max,
                         formatMessage(MESSAGES.maxYear, {
-                            year: SCENARIO_YEAR_RANGE.max,
+                            year: SCENARIO_YEAR_RANGE.max.toString(),
                         }),
                     )
                     .when('start_year', (start_year, schema) => {
@@ -81,29 +81,7 @@ const useValidation = () => {
                               )
                             : schema;
                     }),
-                reference_year: Yup.number()
-                    .required()
-                    .test('reference-year-range', '', function (value) {
-                        const { start_year, end_year } = this.parent;
-                        const min = start_year ?? SCENARIO_YEAR_RANGE.min;
-                        const max = end_year ?? SCENARIO_YEAR_RANGE.max;
-                        if (value === undefined || value === null) return true;
-                        if (value < min) {
-                            return this.createError({
-                                message: formatMessage(MESSAGES.minYear, {
-                                    year: min,
-                                }),
-                            });
-                        }
-                        if (value > max) {
-                            return this.createError({
-                                message: formatMessage(MESSAGES.maxYear, {
-                                    year: max,
-                                }),
-                            });
-                        }
-                        return true;
-                    }),
+                reference_year: Yup.number().required(),
             }),
         [formatMessage],
     );
