@@ -3,6 +3,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
+    isConcreteLegend,
     LEGEND_TYPE_MAX_ITEMS,
     LEGEND_TYPE_MIN_ITEMS,
     LegendTypes,
@@ -37,7 +38,7 @@ const useValidationSchema = () => {
     return useMemo(
         () =>
             Yup.object().shape({
-                // Composites get an auto-generated code server-side, so the Variable is not required.
+                // Composites get an auto-generated data key server-side.
                 code: Yup.string().when('is_composite', {
                     is: true,
                     then: schema => schema.notRequired(),
@@ -62,12 +63,9 @@ const useValidationSchema = () => {
                 legend_type: Yup.string().required(
                     formatMessage(MESSAGES.required),
                 ),
-                // Manual scale items are required for a concrete legend type (regular layers, and
-                // composites set to linear/threshold/ordinal). "auto" and "from connected layer"
-                // (reference) compute the buckets server-side, so no manual items are needed.
+                // auto/reference buckets are computed server-side.
                 legend_config: Yup.array().when('legend_type', {
-                    is: (legendType: string) =>
-                        legendType === 'auto' || legendType === 'reference',
+                    is: (legendType: string) => !isConcreteLegend(legendType),
                     then: schema => schema.notRequired(),
                     otherwise: schema =>
                         schema
@@ -135,8 +133,6 @@ export const useMetricTypeFormState = (
     const validationSchema = useValidationSchema();
     return useFormik({
         initialValues: initialValue || DEFAULT_METRIC_TYPE,
-        // Editing a composite loads its graph asynchronously (to read the legend choice), so the
-        // form model is only complete once that resolves - reinitialize when it does.
         enableReinitialize: true,
         validationSchema,
         validateOnMount: true,

@@ -35,7 +35,7 @@ export type MetricTypeFormModel = {
     origin: string;
     legend_config: Scale[];
     is_population?: boolean;
-    /** Composite = a variant built with the node editor; legend/scale is auto-computed server-side. */
+    /** Composite = a layer built with the node editor rather than imported values. */
     is_composite?: boolean;
 };
 

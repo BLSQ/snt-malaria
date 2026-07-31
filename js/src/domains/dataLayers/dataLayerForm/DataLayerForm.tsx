@@ -1,31 +1,58 @@
 import React, { FC, useMemo } from 'react';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import LayersIcon from '@mui/icons-material/Layers';
 import { Box, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 
+import { SxStyles } from 'Iaso/types/general';
 import {
+    isConcreteLegend,
     LEGEND_TYPE_MAX_ITEMS,
     LEGEND_TYPE_MIN_ITEMS,
     LegendTypes,
 } from '../../../constants/legend';
 import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
-import { MESSAGES as COMPOSITE_MESSAGES } from '../../compositeLayerEditor/messages';
+import { getCompositeLegendOptions } from '../../compositeLayerEditor/utils/legendOptions';
 import { useGetLegendTypes } from '../../planning/hooks/useGetLegendTypes';
 import { MESSAGES } from '../messages';
 import { MetricTypeFormModel } from '../types/metrics';
-import { LayerTypeSelect } from './LayerTypeSelect';
+import { LAYER_TYPES, LayerTypeSelect } from './LayerTypeSelect';
 import { LegendConfigForm } from './LegendConfigForm';
 
 type MetricTypeFormProps = {
     metricType?: MetricTypeFormModel;
     isRestricted?: boolean;
     categoryOptions: { label: string; value: string }[];
-    /** Whether composite layers are available (dev-features flag + settings-write permission). */
     showCompositeLayers?: boolean;
 };
+
+const styles = {
+    layerTypeRow: {
+        display: 'flex',
+        gap: 2,
+        alignItems: 'center',
+        mt: 2,
+    },
+    layerTypeSelect: {
+        flexGrow: 1,
+    },
+    populationCheckbox: {
+        flexShrink: 0,
+        whiteSpace: 'nowrap',
+    },
+    layerTypeInfo: {
+        display: 'block',
+        mt: 0.5,
+    },
+    sectionTitle: {
+        mt: 3,
+        mb: 1,
+    },
+    firstSectionTitle: {
+        mt: 2,
+        mb: 0,
+    },
+} satisfies SxStyles;
 
 export const MetricTypeForm: FC<MetricTypeFormProps> = ({
     metricType = undefined,
@@ -57,95 +84,50 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
     const isEditing = !!metricType?.id;
     const isComposite = !!values.is_composite;
 
-    // Composites mirror the output node's legend picker: "auto" (default) + "based on a data layer"
-    // (reference) on top of the concrete types. The scale/buckets are computed server-side, so no
-    // manual scale rows are shown for them.
     const compositeLegendOptions = useMemo(
-        () => [
-            {
-                value: 'auto',
-                label: formatMessage(COMPOSITE_MESSAGES.legendAuto),
-            },
-            {
-                value: 'reference',
-                label: formatMessage(COMPOSITE_MESSAGES.legendReference),
-            },
-            {
-                value: 'linear',
-                label: formatMessage(COMPOSITE_MESSAGES.legendLinear),
-            },
-            {
-                value: 'threshold',
-                label: formatMessage(COMPOSITE_MESSAGES.legendThreshold),
-            },
-            {
-                value: 'ordinal',
-                label: formatMessage(COMPOSITE_MESSAGES.legendOrdinal),
-            },
-        ],
+        () => getCompositeLegendOptions(formatMessage),
         [formatMessage],
     );
-
-    // Composite is offered only when available, and never as a conversion of an existing layer
-    // (a composite owns a graph, so the variant is fixed at creation).
-    const layerType = isComposite ? 'composite' : 'data';
-    const layerTypeOptions = useMemo(() => {
-        const options = [
-            {
-                value: 'data',
-                label: formatMessage(MESSAGES.layerTypeData),
-                icon: <LayersIcon fontSize="small" />,
-            },
-        ];
-        if (showCompositeLayers && (isComposite || !isEditing)) {
-            options.push({
-                value: 'composite',
-                label: formatMessage(MESSAGES.compositeLayer),
-                icon: <AccountTreeIcon fontSize="small" />,
-            });
-        }
-        return options;
-    }, [formatMessage, showCompositeLayers, isComposite, isEditing]);
 
     // Switching type keeps the dependent fields coherent: composites default the legend to "auto"
     // and pre-fill the category, regular layers reset to a concrete legend type.
     const onChangeLayerType = (value: string) => {
-        const composite = value === 'composite';
+        const composite = value === LAYER_TYPES.COMPOSITE;
         setFieldValueAndState('is_composite', composite);
         setFieldValueAndState(
             'legend_type',
-            composite ? 'auto' : LegendTypes.THRESHOLD,
+            composite ? LegendTypes.AUTO : LegendTypes.THRESHOLD,
         );
         if (composite && !values.category) {
             setFieldValueAndState('category', 'Composite');
         }
     };
 
-    // Short explainer shown under the layer type selector.
     const layerTypeInfo = isComposite
         ? MESSAGES.layerTypeCompositeInfo
         : MESSAGES.layerTypeDataInfo;
 
-    // The scale/bucket editor is shown for a concrete legend type (regular layers, and composites
-    // set to linear/threshold/ordinal). "auto" and "from connected layer" compute it server-side.
-    const showScaleConfig =
-        values.legend_type !== 'auto' && values.legend_type !== 'reference';
+    const showScaleConfig = isConcreteLegend(values.legend_type);
 
     return (
         <Box>
-            {/* Layer type + the independent population flag on one row: the selector grows, the
-                checkbox takes only the space it needs. */}
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 2 }}>
-                <Box sx={{ flexGrow: 1 }}>
+            <Box sx={styles.layerTypeRow}>
+                <Box sx={styles.layerTypeSelect}>
                     <LayerTypeSelect
-                        label={formatMessage(MESSAGES.layerType)}
-                        value={layerType}
-                        options={layerTypeOptions}
+                        value={
+                            isComposite
+                                ? LAYER_TYPES.COMPOSITE
+                                : LAYER_TYPES.DATA
+                        }
                         onChange={onChangeLayerType}
+                        // A composite owns a graph, so an existing layer can never switch variant.
+                        showComposite={
+                            showCompositeLayers && (isComposite || !isEditing)
+                        }
                         disabled={isRestricted || (isEditing && isComposite)}
                     />
                 </Box>
-                <Box sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
+                <Box sx={styles.populationCheckbox}>
                     <InputComponent
                         keyValue="is_population"
                         onChange={setFieldValueAndState}
@@ -160,16 +142,15 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
             <Typography
                 variant="caption"
                 color="text.secondary"
-                sx={{ display: 'block', mt: 0.5 }}
+                sx={styles.layerTypeInfo}
             >
                 {formatMessage(layerTypeInfo)}
             </Typography>
 
-            {/* General metadata section. */}
-            <Typography variant="subtitle1" sx={{ mt: 2, mb: 0 }}>
+            <Typography variant="subtitle1" sx={styles.firstSectionTitle}>
                 {formatMessage(MESSAGES.generalSectionTitle)}
             </Typography>
-            {/* Composites get an auto-generated data key, so the field is hidden for them. */}
+            {/* Composites get an auto-generated data key. */}
             {!isComposite && (
                 <InputComponent
                     keyValue="code"
@@ -234,8 +215,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 </Grid>
             </Grid>
 
-            {/* Section 2 — data configuration, led by the legend selection. */}
-            <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>
+            <Typography variant="subtitle1" sx={styles.sectionTitle}>
                 {formatMessage(MESSAGES.legendSectionTitle)}
             </Typography>
             <InputComponent

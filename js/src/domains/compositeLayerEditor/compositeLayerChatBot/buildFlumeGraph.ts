@@ -1,6 +1,7 @@
 import dagre from 'dagre';
 import { FlumeNodes } from 'flume';
-import { FlumeGraph } from '../types/flumeGraph';
+import { LegendTypes } from '../../../constants/legend';
+import { FlumeGraph, FlumeNodeInputData } from '../types/flumeGraph';
 import { MeasuredSize } from '../utils/flumeStage';
 import { GeneratedGraph, GeneratedGraphNode, GraphNodeType } from './types';
 
@@ -268,6 +269,7 @@ export const centerGraph = (
 export const buildFlumeGraphFromSpec = (
     graph: GeneratedGraph,
     previousNodes: FlumeGraph = {},
+    currentLegend?: FlumeNodeInputData['legend'],
 ): FlumeNodes => {
     const nodes: FlumeNodes = {};
     const isContentOnlyUpdate = Object.keys(previousNodes).length > 0;
@@ -401,9 +403,14 @@ export const buildFlumeGraphFromSpec = (
         width: NODE_WIDTH.output,
         x: outputX,
         y: outputY,
-        // The layer name is owned by the creation dialogue, not the graph.
+        // The legend configured for the layer (incl. its manual buckets) is kept unless the AI
+        // picks a different legend type.
         inputData: {
-            legend: { legendType: graph.output.legend_type ?? 'auto' },
+            legend:
+                graph.output.legend_type &&
+                graph.output.legend_type !== currentLegend?.legendType
+                    ? { legendType: graph.output.legend_type }
+                    : (currentLegend ?? { legendType: LegendTypes.AUTO }),
         },
         connections: { inputs: {}, outputs: {} },
     };

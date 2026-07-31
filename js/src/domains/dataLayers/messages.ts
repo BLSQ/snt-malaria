@@ -49,10 +49,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.layerTypeData',
         defaultMessage: 'Standard data layer',
     },
-    layerTypePopulation: {
-        id: 'iaso.snt_malaria.settings.dataLayers.layerTypePopulation',
-        defaultMessage: 'Population layer',
-    },
     layerTypeDataInfo: {
         id: 'iaso.snt_malaria.settings.dataLayers.layerTypeDataInfo',
         defaultMessage:

@@ -4,10 +4,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from iaso.api.common.permissions import HasAccountFeatureFlag
+from iaso.models.metric import MetricType
 from plugins.snt_malaria.models import CompositeLayer
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
-from plugins.snt_malaria.services.composite.evaluator import CompositeGraphError
+from plugins.snt_malaria.services.composite.evaluator import CompositeGraphError, CompositeGraphIncompleteError
+from plugins.snt_malaria.services.composite.graph import apply_legend_to_graph, is_runnable, read_legend_from_graph
 from plugins.snt_malaria.services.composite.persistence import (
+    apply_composite_metadata,
+    create_composite_metric_type,
     preview_composite_layer,
     run_and_persist_composite_layer,
     update_composite_metric_type,
@@ -15,6 +19,7 @@ from plugins.snt_malaria.services.composite.persistence import (
 
 from .permissions import SHOW_DEV_FEATURES, CompositeLayerPermission
 from .serializers import (
+    METRIC_METADATA_FIELDS,
     CompositeLayerListSerializer,
     CompositeLayerPreviewSerializer,
     CompositeLayerRetrieveSerializer,
@@ -24,10 +29,11 @@ from .serializers import (
 
 class CompositeLayerViewSet(viewsets.ModelViewSet):
     """
-    Composite data layers built with the visual node editor.
+    Composite data layers: a serialized node graph plus the ``MetricType`` it produces.
 
-    Creating one runs the serialized Flume graph on the backend and persists the result as a new
-    ``MetricType`` + ``MetricValue`` rows, so it appears on the data layers map like any other layer.
+    POST creates the layer right away, with a seeded graph and a ``MetricType`` that has no values
+    yet. Any write carrying a runnable graph evaluates it and refreshes that ``MetricType`` and its
+    ``MetricValue`` rows; a graph that cannot run yet is stored as-is.
     """
 
     ordering_fields = ["id", "name", "updated_at"]
@@ -55,37 +61,61 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
 
     @staticmethod
     def _pop_metric_metadata(serializer):
-        """Pop the MetricType-only metadata fields off validated_data (they are not CompositeLayer
-        columns, so they must not reach ``serializer.save()``). Returns only the provided keys."""
+        """Pop the MetricType-only metadata off validated_data (it must not reach
+        ``serializer.save()``). Returns only the provided keys."""
         data = serializer.validated_data
-        metadata = {}
-        for field in ("category", "description", "units", "unit_symbol", "is_population"):
-            if field in data:
-                metadata[field] = data.pop(field)
-        return metadata
+        return {field: data.pop(field) for field in METRIC_METADATA_FIELDS if field in data}
+
+    @staticmethod
+    def _account_metric_type_id(metric_type_id, account):
+        """A graph can name a layer that has since been deleted, so ids read from it are checked."""
+        if metric_type_id is None:
+            return None
+        if not MetricType.objects.filter(id=metric_type_id, account=account).exists():
+            return None
+        return metric_type_id
 
     def perform_create(self, serializer):
         account = self.request.user.iaso_profile.account
-        name = (serializer.validated_data.get("name") or "").strip()
-        if not name:
-            raise serializers.ValidationError({"name": "This field is required."})
+        data = serializer.validated_data
+        name = data["name"].strip()
         metadata = self._pop_metric_metadata(serializer)
-        graph = serializer.validated_data["graph"]
+        legend_type = data.get("legend_type") or CompositeLayer.LegendType.AUTO
+        legend_config = data.get("legend_config") or {}
+        # The legend is mirrored onto the graph's output node; a request without a graph gets a
+        # seeded one.
+        graph = apply_legend_to_graph(data.get("graph"), legend_type, legend_config)
 
-        try:
-            metric_type = run_and_persist_composite_layer(
-                account=account,
-                graph=graph,
-                org_unit_ids=self._intervention_org_unit_ids(),
+        metric_type = None
+        if is_runnable(graph):
+            try:
+                metric_type = run_and_persist_composite_layer(
+                    account=account,
+                    graph=graph,
+                    org_unit_ids=self._intervention_org_unit_ids(),
+                    name=name,
+                    **metadata,
+                )
+            except CompositeGraphIncompleteError:
+                metric_type = None
+            except CompositeGraphError as error:
+                raise serializers.ValidationError({"graph": str(error)})
+
+        if metric_type is None:
+            metric_type = create_composite_metric_type(
+                account,
                 name=name,
+                legend_type=legend_type,
+                legend_config=legend_config,
                 **metadata,
             )
-        except CompositeGraphError as error:
-            raise serializers.ValidationError({"graph": str(error)})
 
         serializer.save(
             account=account,
             name=name,
+            graph=graph,
+            legend_type=legend_type,
+            legend_config=legend_config,
             metric_type=metric_type,
             created_by=self.request.user,
         )
@@ -104,23 +134,41 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         instance = serializer.instance
-        graph = serializer.validated_data.get("graph")
-        # Dialogue-owned metadata (may be absent on a graph-only save from the node editor).
-        name = serializer.validated_data.get("name")
+        account = self.request.user.iaso_profile.account
+        data = serializer.validated_data
         metadata = self._pop_metric_metadata(serializer)
+        name = data.get("name")
+        graph_provided = "graph" in data
+        legend_provided = "legend_type" in data or "legend_config" in data
+        graph = data.get("graph", instance.graph)
         extra = {}
 
-        if graph is not None:
-            account = self.request.user.iaso_profile.account
-            org_unit_ids = self._intervention_org_unit_ids()
+        # An explicit legend wins and is written onto the graph; otherwise the graph carries it, and
+        # it is read back out of the output node.
+        if legend_provided:
+            legend_type = data.get("legend_type", instance.legend_type)
+            legend_config = data.get("legend_config", instance.legend_config)
+            graph = apply_legend_to_graph(graph, legend_type, legend_config, instance.legend_reference_metric_type_id)
+            extra["graph"] = graph
+        elif graph_provided:
+            legend_type, legend_config, reference_metric_type_id = read_legend_from_graph(graph)
+            extra["legend_type"] = legend_type
+            extra["legend_config"] = legend_config
+            extra["legend_reference_metric_type_id"] = self._account_metric_type_id(reference_metric_type_id, account)
+        else:
+            legend_type, legend_config = instance.legend_type, instance.legend_config
+
+        metric_type = instance.metric_type
+        # An unfinished graph is still stored, keeping the values of the last successful run.
+        has_run = False
+        if (graph_provided or legend_provided) and is_runnable(graph):
             try:
-                if instance.metric_type_id:
-                    # Re-run and refresh the existing MetricType in place, keeping its id.
+                if metric_type is not None:
                     metric_type = update_composite_metric_type(
                         account=account,
-                        metric_type=instance.metric_type,
+                        metric_type=metric_type,
                         graph=graph,
-                        org_unit_ids=org_unit_ids,
+                        org_unit_ids=self._intervention_org_unit_ids(),
                         name=name,
                         **metadata,
                     )
@@ -129,16 +177,37 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
                     metric_type = run_and_persist_composite_layer(
                         account=account,
                         graph=graph,
-                        org_unit_ids=org_unit_ids,
+                        org_unit_ids=self._intervention_org_unit_ids(),
                         name=(name or instance.name),
                         **metadata,
                     )
+                has_run = True
+            except CompositeGraphIncompleteError:
+                has_run = False
             except CompositeGraphError as error:
                 raise serializers.ValidationError({"graph": str(error)})
-            extra = {"metric_type": metric_type}
-            # Keep CompositeLayer.name in sync with the layer name when the dialogue provided one.
-            if name:
-                extra["name"] = name
+
+        if not has_run:
+            if metric_type is None:
+                metric_type = create_composite_metric_type(
+                    account,
+                    name=(name or instance.name),
+                    legend_type=legend_type,
+                    legend_config=legend_config,
+                    **metadata,
+                )
+            elif metadata or name or legend_provided:
+                apply_composite_metadata(
+                    metric_type,
+                    name=name,
+                    legend_type=legend_type if legend_provided else None,
+                    legend_config=legend_config if legend_provided else None,
+                    **metadata,
+                )
+
+        extra["metric_type"] = metric_type
+        if name:
+            extra["name"] = name
 
         serializer.save(**extra)
 

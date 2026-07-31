@@ -29,17 +29,10 @@ type Props = {
     selected?: boolean;
     onClick: () => void;
     onEdit: (metricType: MetricType) => void;
-    /**
-     * Set when this layer is a composite, identifying its composite layer record. Used only to show
-     * the composite icon; editing the graph is done from the map view's "Edit composite" button.
-     */
+    /** Set when this layer is a composite, to show the composite icon. */
     compositeLayerId?: number;
     onDelete: (metricType: number) => void;
-    /**
-     * While the composite editor is open the list becomes a drag source rather than a selector:
-     * selection is locked (clicks do nothing), the row actions (comparison "+" and the more-actions
-     * menu) are hidden, and the row can be dragged onto the canvas to create a data layer node.
-     */
+    /** While the composite editor is open, the row is a drag source rather than a selector. */
     editing?: boolean;
 };
 

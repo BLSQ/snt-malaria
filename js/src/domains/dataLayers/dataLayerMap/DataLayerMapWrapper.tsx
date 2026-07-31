@@ -43,7 +43,6 @@ type Props = {
     displayOrgUnitId?: number;
     small?: boolean;
     onRemove?: () => void;
-    /** Whether composite layers are available (dev-features flag + settings-write permission). */
     showCompositeLayers?: boolean;
     /** Set when the displayed layer is a composite: enables the "Edit composite" button. */
     compositeLayerId?: number;
