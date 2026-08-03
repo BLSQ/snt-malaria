@@ -77,7 +77,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     def perform_update(self, serializer):
-        previous_reference_year = serializer.instance.reference_year
+        previous_data_layer_years = serializer.instance.data_layer_years
 
         try:
             scenario = serializer.save()
@@ -88,16 +88,16 @@ class ScenarioViewSet(viewsets.ModelViewSet):
                 raise serializers.ValidationError(_("Start year should be lower or equal end year."))
             raise serializers.ValidationError(str(e))
 
-        if scenario.reference_year != previous_reference_year:
-            self._refresh_rules_for_reference_year_change(scenario)
+        if scenario.data_layer_years != previous_data_layer_years:
+            self._refresh_rules_for_data_layer_years_change(scenario)
 
-    def _refresh_rules_for_reference_year_change(self, scenario):
-        """Recompute org_units_matched for every rule of the scenario using the new reference_year,
+    def _refresh_rules_for_data_layer_years_change(self, scenario):
+        """Recompute org_units_matched for every rule of the scenario using the new data_layer_years,
         then refresh assignments and budget once for the whole scenario rather than per rule."""
         rules = list(scenario.rules.all())
         for rule in rules:
             rule.org_units_matched = ScenarioRule.resolve_matched_org_units(
-                scenario.account, rule.matching_criteria, reference_year=scenario.reference_year
+                scenario.account, rule.matching_criteria, data_layer_years=scenario.data_layer_years
             )
         ScenarioRule.objects.bulk_update(rules, ["org_units_matched"])
 
