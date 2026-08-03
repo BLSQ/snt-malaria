@@ -835,12 +835,12 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         ou4 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="OU4")
         metric = self._percentile_metric({self.ou1: 1.0, self.ou2: 2.0, ou3: 3.0, ou4: 100.0})
 
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account,
             self._normalize_graph(metric_type_id=metric.id, normalize_type="percentile"),
             [self.ou1.id, self.ou2.id, ou3.id, ou4.id],
         ).run()
-        rounded = {ou_id: round(value, 4) for ou_id, value in values[None].items()}
+        rounded = {ou_id: round(float(value), 4) for ou_id, value in values[None].items()}
         self.assertEqual(
             rounded,
             {self.ou1.id: 0.0, self.ou2.id: 0.3333, ou3.id: 0.6667, ou4.id: 1.0},
@@ -850,7 +850,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         ou3 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="OU3")
         metric = self._percentile_metric({self.ou1: 5.0, self.ou2: 1.0, ou3: 10.0})
 
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account,
             self._normalize_graph(metric_type_id=metric.id, scale="100", normalize_type="percentile"),
             [self.ou1.id, self.ou2.id, ou3.id],
@@ -863,7 +863,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         ou3 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="OU3")
         metric = self._percentile_metric({self.ou1: 5.0, self.ou2: 5.0, ou3: 10.0})
 
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account,
             self._normalize_graph(metric_type_id=metric.id, normalize_type="percentile"),
             [self.ou1.id, self.ou2.id, ou3.id],
@@ -894,12 +894,12 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         }
         metric = self._percentile_metric(values)
 
-        _, result = CompositeGraphEvaluator(
+        result = CompositeGraphEvaluator(
             self.account,
             self._normalize_graph(metric_type_id=metric.id, normalize_type="percentile"),
             [org_unit.id for org_unit in values],
         ).run()
-        rounded = {org_unit_id: round(value, 4) for org_unit_id, value in result[None].items()}
+        rounded = {org_unit_id: round(float(value), 4) for org_unit_id, value in result[None].items()}
         self.assertEqual(
             rounded,
             {
@@ -924,7 +924,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
     def test_normalize_percentile_single_value_maps_to_midpoint(self):
         metric = self._percentile_metric({self.ou1: 42.0})
 
-        _, values = CompositeGraphEvaluator(
+        values = CompositeGraphEvaluator(
             self.account,
             self._normalize_graph(metric_type_id=metric.id, scale="100", normalize_type="percentile"),
             [self.ou1.id],
