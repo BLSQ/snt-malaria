@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
     dependencies = [
         ("iaso", "0395_oucr_geom_code"),
-        ("snt_malaria", "0056_costunittype_is_commodity"),
+        ("snt_malaria", "0058_scenarioruleintervention_and_more"),
     ]
 
     operations = [
