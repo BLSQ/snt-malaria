@@ -24,7 +24,7 @@ export const ExportMetricValuesCsvButton: FC<Props> = ({
     const params = new URLSearchParams({
         metric_type_ids: metricType.id.toString(),
     });
-    if (year) {
+    if (year && year !== '0') {
         params.set('year', year);
     }
     // Use a plain anchor here, not bluesquare-components' IconButton/react-router Link:
