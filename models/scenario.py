@@ -39,7 +39,7 @@ class Scenario(SoftDeletableModel):
     description = models.TextField(blank=True)
     start_year = models.IntegerField(blank=False, null=False)
     end_year = models.IntegerField(blank=False, null=False)
-    reference_year = models.IntegerField(null=True, blank=True)
+    data_layer_years = models.JSONField(default=dict, blank=True)
     is_locked = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
