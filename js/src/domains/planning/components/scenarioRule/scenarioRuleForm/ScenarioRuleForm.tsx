@@ -77,7 +77,7 @@ export const ScenarioRuleForm: FC<Props> = ({
     isLoadingPreview,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const { metricTypeCategories, interventionCategories } =
+    const { metricTypeCategories, interventionCategories, scenario } =
         usePlanningContext();
 
     const { data: accountSettings } = useGetAccountSettings();
@@ -211,6 +211,7 @@ export const ScenarioRuleForm: FC<Props> = ({
                     {!values.is_match_all && (
                         <MatchingCriteriaForm
                             metricTypeCategories={metricTypeCategories}
+                            dataLayerYears={scenario?.data_layer_years}
                             matchingCriteria={values.matching_criteria}
                             onAdd={addChildValue}
                             onRemove={(list_field_key: string, index: number) =>

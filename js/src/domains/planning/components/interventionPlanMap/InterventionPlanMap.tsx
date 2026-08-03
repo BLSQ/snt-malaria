@@ -85,7 +85,9 @@ export const InterventionPlanMap: FC<Props> = ({
 
     const { data: metricValues } = useGetMetricValues({
         metricTypeId: activeMetricLayer?.id || null,
-        year: scenario?.reference_year ?? undefined,
+        year: activeMetricLayer
+            ? scenario?.data_layer_years?.[String(activeMetricLayer.id)]
+            : undefined,
     });
     const getSelectedMetric = useGetOrgUnitMetric(metricValues);
 

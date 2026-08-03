@@ -1,14 +1,18 @@
 import React, { FC, useMemo } from 'react';
 import { Box, Typography, SxProps, Theme, Tooltip } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { LegendTypes } from '../../../../../constants/legend';
 import { MetricType } from '../../../../dataLayers/types/metrics';
+import { MESSAGES } from '../../../../messages';
 import { MetricTypeCriterion } from '../../../types/scenarioRule';
 
 type Props = {
     metricTypeCriterion: MetricTypeCriterion;
     metricType?: MetricType;
+    /** The year configured for this criterion's data layer on the scenario, if any (read-only). */
+    configuredYear?: number;
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
     getErrors: (keyValue: string) => string[];
@@ -30,7 +34,8 @@ const styles: Record<string, SxProps<Theme>> = {
     labelWrapper: {
         maxHeight: 40,
         display: 'flex',
-        alignItems: 'center',
+        flexDirection: 'column',
+        justifyContent: 'center',
         flexGrow: 1,
         overflow: 'hidden',
     },
@@ -47,10 +52,13 @@ const operatorOptions = [
 export const MatchingCriterionForm: FC<Props> = ({
     metricTypeCriterion,
     metricType,
+    configuredYear,
     onUpdateField,
     onRemove,
     getErrors,
 }) => {
+    const { formatMessage } = useSafeIntl();
+
     const scaleLabel = useMemo(() => {
         if (!metricType) return '';
         const domain = metricType.legend_config?.domain;
@@ -82,6 +90,13 @@ export const MatchingCriterionForm: FC<Props> = ({
                         {metricType?.name}
                     </Typography>
                 </Tooltip>
+                <Typography variant="caption" color="textSecondary" noWrap>
+                    {configuredYear != null
+                        ? formatMessage(MESSAGES.dataLayerYear, {
+                              year: configuredYear.toString(),
+                          })
+                        : formatMessage(MESSAGES.dataLayerYearNotSet)}
+                </Typography>
             </Box>
             <InputComponent
                 keyValue="operator"

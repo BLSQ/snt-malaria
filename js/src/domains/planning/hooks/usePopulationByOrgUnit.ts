@@ -53,7 +53,10 @@ export const usePopulationByOrgUnit = ({
 
     const { data: metricValues } = useGetMetricValues({
         metricTypeId: resolvedMetricTypeId,
-        year: scenario?.reference_year ?? undefined,
+        year:
+            resolvedMetricTypeId != null
+                ? scenario?.data_layer_years?.[String(resolvedMetricTypeId)]
+                : undefined,
     });
 
     return useMemo(() => {

@@ -27,6 +27,7 @@ type Props = {
         value: any,
     ) => void;
     metricTypeCategories: MetricTypeCategory[];
+    dataLayerYears?: Record<string, number>;
 };
 
 const LIST_FIELD_KEY = 'matching_criteria';
@@ -39,6 +40,7 @@ export const MatchingCriteriaForm: FC<Props> = ({
     touched,
     onUpdateField,
     metricTypeCategories,
+    dataLayerYears,
 }) => {
     const metricTypes = useMemo(
         () => metricTypeCategories.flatMap(mtc => mtc.items),
@@ -77,6 +79,13 @@ export const MatchingCriteriaForm: FC<Props> = ({
                     <MatchingCriterionForm
                         metricTypeCriterion={criterion}
                         metricType={getMetricType(criterion.metric_type)}
+                        configuredYear={
+                            criterion.metric_type != null
+                                ? dataLayerYears?.[
+                                      String(criterion.metric_type)
+                                  ]
+                                : undefined
+                        }
                         onUpdateField={(field, value) =>
                             onUpdateField(LIST_FIELD_KEY, index, field, value)
                         }
