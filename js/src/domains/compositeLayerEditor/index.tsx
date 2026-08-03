@@ -56,6 +56,7 @@ import {
     findOutputNode,
     getConnectedDataLayerIds,
     isOutputConnected,
+    removeInputConnection,
 } from './utils/graph';
 
 // Flume adds a default output node for a fresh graph; existing graphs already contain their own.
@@ -173,6 +174,7 @@ export const CompositeLayerEditor = forwardRef<
             mountCommentsRef,
             mountScaleRef,
             handleCanvasDrop,
+            remountWithGraph,
         } = useCanvasDrop({
             canvasRef,
             nodesRef,
@@ -265,6 +267,34 @@ export const CompositeLayerEditor = forwardRef<
             }
             schedulePreview(nodes);
         };
+
+        // Click a connected INPUT port to remove its connection. Handled on `click` (not mousedown)
+        // so grabbing the wire to drag it still works, and after Flume's own mouse-up so there's no
+        // race. Flume's native click leaves the wire in an inconsistent state, so we rebuild the
+        // graph without the connection and remount (keeping the view in place).
+        const handlePortClick = useCallback(
+            (event: React.MouseEvent<HTMLDivElement>) => {
+                const handle = (
+                    event.target as HTMLElement | null
+                )?.closest?.(
+                    '[data-flume-component="port-handle"]',
+                ) as HTMLElement | null;
+                if (!handle || handle.dataset.portTransputType !== 'input') {
+                    return;
+                }
+                const { nodeId, portName } = handle.dataset;
+                if (!nodeId || !portName) return;
+                // Only act if that input is actually wired up (read the graph, not the flaky DOM
+                // flag Flume may have left stale).
+                const sources =
+                    nodesRef.current?.[nodeId]?.connections?.inputs?.[portName];
+                if (!sources?.length) return;
+                remountWithGraph(
+                    removeInputConnection(nodesRef.current, nodeId, portName),
+                );
+            },
+            [remountWithGraph],
+        );
 
         // Initial paint: existing graphs don't emit an onChange, so tag their ports once mounted.
         // Also re-runs after an AI-generated graph forces a remount (`editorGeneration`).
@@ -520,6 +550,7 @@ export const CompositeLayerEditor = forwardRef<
                             event.dataTransfer.dropEffect = 'copy';
                         }}
                         onDrop={handleCanvasDrop}
+                        onClick={handlePortClick}
                     >
                         {/* Faded, not unmounted, while `isFraming` so its DOM sizes stay measurable.
                             `height: 100%` is required: Flume's root fills its parent that way, so
