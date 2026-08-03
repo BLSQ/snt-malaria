@@ -536,14 +536,49 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'End year must be greater than or equal to start year ({year})',
     },
-    referenceYear: {
-        id: 'iaso.snt_malaria.scenario.referenceYear',
-        defaultMessage: 'Reference year',
+    referenceYearLabel: {
+        id: 'iaso.snt_malaria.scenario.referenceYearLabel',
+        defaultMessage: 'Default reference year',
     },
     referenceYearHelp: {
         id: 'iaso.snt_malaria.scenario.referenceYearHelp',
         defaultMessage:
-            'The year used to evaluate rule matching criteria. When metric data exists for this year it takes priority; otherwise timeless (year-less) values are used as a fallback.',
+            'Year used by default to evaluate rule matching criteria for every data layer. ' +
+            'Falls back to timeless values when no data exists for that year. ' +
+            'Leave unset to use timeless values (or any year) by default.',
+    },
+    customizeDataLayerYears: {
+        id: 'iaso.snt_malaria.scenario.customizeDataLayerYears',
+        defaultMessage: 'Customize reference year per data layer',
+    },
+    dataLayerYearsLabel: {
+        id: 'iaso.snt_malaria.scenario.dataLayerYearsLabel',
+        defaultMessage: 'Data layer reference years',
+    },
+    dataLayerYearsHelp: {
+        id: 'iaso.snt_malaria.scenario.dataLayerYearsHelp',
+        defaultMessage:
+            'Overrides the default reference year for specific data layers only.',
+    },
+    selectDataLayer: {
+        id: 'iaso.snt_malaria.scenario.selectDataLayer',
+        defaultMessage: 'Data layer',
+    },
+    year: {
+        id: 'iaso.snt_malaria.scenario.year',
+        defaultMessage: 'Year',
+    },
+    dataLayerYear: {
+        id: 'iaso.snt_malaria.scenario.dataLayerYear',
+        defaultMessage: 'Year: {year}',
+    },
+    dataLayerYearNotSet: {
+        id: 'iaso.snt_malaria.scenario.dataLayerYearNotSet',
+        defaultMessage: 'Year: not set',
+    },
+    noDataLayersFound: {
+        id: 'iaso.snt_malaria.scenario.noDataLayersFound',
+        defaultMessage: 'No data layers found',
     },
     modalDeleteScenarioConfirm: {
         id: 'iaso.snt_malaria.label.delete.confirm',
