@@ -12,6 +12,15 @@ class CompositeLayer(models.Model):
     behaves like any other data layer on the map and can itself be used as a graph input.
     """
 
+    class LegendType(models.TextChoices):
+        # ``MetricType.LegendType`` plus two modes resolved when the graph runs: "auto" computes the
+        # buckets from the values, "reference" copies another layer's legend.
+        AUTO = "auto"
+        REFERENCE = "reference"
+        LINEAR = "linear"
+        THRESHOLD = "threshold"
+        ORDINAL = "ordinal"
+
     class Meta:
         app_label = "snt_malaria"
         ordering = ["-updated_at"]
@@ -30,6 +39,20 @@ class CompositeLayer(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="composite_layer",
+    )
+    # Legend requested for this layer, mirrored on the graph's output node. `MetricType.legend_type`
+    # and `legend_config` hold what a run resolved it to.
+    legend_type = models.CharField(max_length=40, choices=LegendType.choices, default=LegendType.AUTO)
+    # Manually configured {domain, range}, set for a concrete legend type (empty otherwise).
+    legend_config = models.JSONField(default=dict, blank=True)
+    # Layer whose legend is copied when legend_type is "reference"; unset means the first one
+    # connected to the output.
+    legend_reference_metric_type = models.ForeignKey(
+        "iaso.MetricType",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

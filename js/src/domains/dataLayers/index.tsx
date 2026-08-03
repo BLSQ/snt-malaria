@@ -1,4 +1,11 @@
-import React, { FC, useCallback, useMemo, useRef, useState } from 'react';
+import React, {
+    FC,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { Card, Stack } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
@@ -27,6 +34,7 @@ import { CompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChat
 import { GeneratedGraph } from '../compositeLayerEditor/compositeLayerChatBot/types';
 import { useCompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChatBot/useCompositeLayerAIChat';
 import { useGetCompositeLayers } from '../compositeLayerEditor/hooks/useGetCompositeLayers';
+import { CompositeLayerListItem } from '../compositeLayerEditor/types/compositeLayer';
 import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { DataLayerComparisonProvider } from './contexts/DataLayerComparisonContext';
@@ -57,8 +65,7 @@ export const DataLayers: FC = () => {
     const { displayOrgUnitId } = useParamsObject(
         baseUrls.dataLayers,
     ) as unknown as DataLayersParams;
-    // Composite layers are still in development and only exposed on dev-features accounts,
-    // to users with the settings write permission (mirrors the API permission).
+    // Composite layers are still in development (mirrors the API permission).
     const currentUser = useCurrentUser();
     const showCompositeLayers =
         hasFeatureFlag(currentUser, SHOW_DEV_FEATURES) &&
@@ -77,6 +84,18 @@ export const DataLayers: FC = () => {
 
     const { data: metricCategories, isLoading: isLoadingMetricLayers } =
         useGetMetricCategories();
+
+    // Keep the displayed layer pointing at the freshest data, so the map's legend + values refresh
+    // right after an edit (e.g. changing a composite's legend) instead of only on re-selection.
+    useEffect(() => {
+        if (!displayedMetricType) return;
+        const fresh = (metricCategories ?? [])
+            .flatMap(category => category.items)
+            .find(item => item.id === displayedMetricType.id);
+        if (fresh && fresh !== displayedMetricType) {
+            setDisplayedMetricType(fresh);
+        }
+    }, [metricCategories, displayedMetricType]);
     const existingCategoryOptions = useMemo(
         () =>
             (metricCategories ?? []).map(category => ({
@@ -107,7 +126,6 @@ export const DataLayers: FC = () => {
         () => compositeLayerEditorRef.current?.getCurrentGraph() ?? null,
         [],
     );
-    // Wrapper owns the chat state + graph reads; the chat panel below is presentational.
     const {
         messages: aiChatMessages,
         isLoading: isAiChatLoading,
@@ -120,18 +138,27 @@ export const DataLayers: FC = () => {
 
     const { data: compositeLayers } =
         useGetCompositeLayers(showCompositeLayers);
-    const compositeLayerIdByMetricType = useMemo(() => {
-        const map = new Map<number, number>();
+    const compositeLayerByMetricType = useMemo(() => {
+        const map = new Map<number, CompositeLayerListItem>();
         (compositeLayers ?? []).forEach(layer => {
             if (layer.metric_type) {
-                map.set(layer.metric_type, layer.id);
+                map.set(layer.metric_type, layer);
             }
         });
         return map;
     }, [compositeLayers]);
+    const compositeLayerIdByMetricType = useMemo(
+        () =>
+            new Map(
+                [...compositeLayerByMetricType].map(([metricTypeId, layer]) => [
+                    metricTypeId,
+                    layer.id,
+                ]),
+            ),
+        [compositeLayerByMetricType],
+    );
 
-    // MetricType of the composite currently being edited, so the list can keep it selected while
-    // the editor is open (undefined for a brand-new composite that has no resulting layer yet).
+    // Keeps the edited composite selected in the list while the editor is open.
     const editedCompositeMetricTypeId = useMemo(
         () =>
             (compositeLayers ?? []).find(
@@ -147,8 +174,7 @@ export const DataLayers: FC = () => {
     }, []);
 
     // Whether the sidebar shows the AI chat instead of the draggable data layer list, while the
-    // composite editor is open - starts false (data layer list) even when AI is configured, so it
-    // has to be switched into deliberately via the editor header's toggle (see hasAiApiKey below).
+    // composite editor is open. Switched into deliberately via the editor header's toggle.
     const [isAiChatMode, setIsAiChatMode] = useState<boolean>(false);
     const toggleAiChatMode = useCallback(() => {
         setIsAiChatMode(aiChatMode => !aiChatMode);
@@ -172,16 +198,19 @@ export const DataLayers: FC = () => {
         setIsMetricTypeFormOpen(true);
     }, []);
 
-    const onCreateCompositeLayer = useCallback(() => {
-        setEditingCompositeLayerId(undefined);
-        setIsCompositeEditorOpen(true);
-    }, []);
-
-    // Editing a composite's graph is a dedicated action, distinct from editing its legend.
     const onEditCompositeLayer = useCallback((compositeLayerId: number) => {
         setEditingCompositeLayerId(compositeLayerId);
         setIsCompositeEditorOpen(true);
     }, []);
+
+    // The dialogue persists the new composite; we then open the editor to build its graph.
+    const onCompositeCreated = useCallback(
+        (compositeLayerId: number) => {
+            onDialogClose();
+            onEditCompositeLayer(compositeLayerId);
+        },
+        [onDialogClose, onEditCompositeLayer],
+    );
 
     const onCloseCompositeEditor = useCallback(() => {
         setIsCompositeEditorOpen(false);
@@ -194,16 +223,12 @@ export const DataLayers: FC = () => {
     // After saving, close the editor and show the resulting composite layer on the map.
     const onCompositeSaved = useCallback(
         (metricType?: MetricType) => {
-            setIsCompositeEditorOpen(false);
-            setEditingCompositeLayerId(undefined);
-            setSidebarCollapsed(false);
-            setIsAiChatMode(false);
-            resetAiChat();
+            onCloseCompositeEditor();
             if (metricType) {
                 setDisplayedMetricType(metricType);
             }
         },
-        [resetAiChat],
+        [onCloseCompositeEditor],
     );
 
     // Two-step spotlight when the account has no layers yet
@@ -269,9 +294,6 @@ export const DataLayers: FC = () => {
                                                     onCreate={
                                                         onCreateMetricType
                                                     }
-                                                    onCreateComposite={
-                                                        onCreateCompositeLayer
-                                                    }
                                                     createActionRef={
                                                         onboarding.anchorRefs[0]
                                                     }
@@ -296,9 +318,6 @@ export const DataLayers: FC = () => {
                                                 onEditMetricType={
                                                     onEditMetricType
                                                 }
-                                                onEditCompositeLayer={
-                                                    onEditCompositeLayer
-                                                }
                                                 compositeLayerIdByMetricType={
                                                     compositeLayerIdByMetricType
                                                 }
@@ -315,7 +334,7 @@ export const DataLayers: FC = () => {
                     )}
                     <MainColumn>
                         <PaperFullHeight>
-                            {isCompositeEditorOpen ? (
+                            {isCompositeEditorOpen && editingCompositeLayerId ? (
                                 <CompositeLayerEditor
                                     ref={compositeLayerEditorRef}
                                     compositeLayerId={editingCompositeLayerId}
@@ -336,6 +355,17 @@ export const DataLayers: FC = () => {
                                     <DataLayerMapWrapper
                                         metricType={displayedMetricType}
                                         orgUnits={orgUnits || []}
+                                        showCompositeLayers={
+                                            showCompositeLayers
+                                        }
+                                        compositeLayerId={
+                                            displayedMetricType
+                                                ? compositeLayerIdByMetricType.get(
+                                                      displayedMetricType.id,
+                                                  )
+                                                : undefined
+                                        }
+                                        onEditComposite={onEditCompositeLayer}
                                     />
                                     <DataLayerComparisonContainer />
                                 </Stack>
@@ -349,6 +379,15 @@ export const DataLayers: FC = () => {
                         closeDialog={onDialogClose}
                         metricType={selectedMetricType}
                         categoryOptions={existingCategoryOptions}
+                        showCompositeLayers={showCompositeLayers}
+                        compositeLayer={
+                            selectedMetricType
+                                ? compositeLayerByMetricType.get(
+                                      selectedMetricType.id,
+                                  )
+                                : undefined
+                        }
+                        onCompositeCreated={onCompositeCreated}
                     />
                 )}
             </PageContainer>

@@ -52,7 +52,11 @@ import {
     measureNodeSizes,
     shiftGraphForRemount,
 } from './utils/flumeStage';
-import { getConnectedDataLayerIds, isOutputConnected } from './utils/graph';
+import {
+    findOutputNode,
+    getConnectedDataLayerIds,
+    isOutputConnected,
+} from './utils/graph';
 
 // Flume adds a default output node for a fresh graph; existing graphs already contain their own.
 const DEFAULT_NODES = [{ type: 'output' }];
@@ -79,7 +83,8 @@ const styles = {
         minHeight: 0,
         // Match the corner radius used by the SNT maps.
         borderRadius: (theme: Theme) => `${theme.shape.borderRadius * 2}px`,
-        border: (theme: Theme) => `1px solid ${theme.palette.divider}`,
+        // Framed in the active colour: the editor is a distinct editing mode.
+        border: (theme: Theme) => `2px solid ${theme.palette.primary.main}`,
         overflow: 'hidden',
     },
     helper: {
@@ -98,8 +103,8 @@ type Props = {
     onClose: () => void;
     /** Called after a successful save with the resulting layer, so it can be shown on the map. */
     onSaved?: (metricType?: MetricType) => void;
-    /** When set, the editor loads and updates this existing composite layer. */
-    compositeLayerId?: number;
+    /** The composite layer whose graph is being edited. */
+    compositeLayerId: number;
     /** Whether the data layers sidebar is currently collapsed (owned by the parent page). */
     sidebarCollapsed?: boolean;
     /** Toggles the data layers sidebar (mirrors the scenario editor's rules-panel toggle). */
@@ -179,7 +184,7 @@ export const CompositeLayerEditor = forwardRef<
         });
 
         // Data layers wired into the output (even behind transformations), ordered; drives the
-        // "based on a data layer" legend picker ordering.
+        // reference layer picker ordering.
         const [connectedLayerIds, setConnectedLayerIds] = useState<number[]>(
             [],
         );
@@ -191,15 +196,18 @@ export const CompositeLayerEditor = forwardRef<
         const viewResetPendingRef = useRef(false); // skip restoring mountScaleRef on this mount
         const [isFraming, setIsFraming] = useState(false); // hide the canvas while true
 
+        // The layer this graph produces is left out: it would read, then overwrite, its own values.
         const metricOptions: MetricOption[] = useMemo(() => {
             if (!metricCategories) return [];
             return metricCategories.flatMap(category =>
-                category.items.map(item => ({
-                    value: item.id,
-                    label: item.name,
-                })),
+                category.items
+                    .filter(item => item.id !== existingLayer?.metric_type)
+                    .map(item => ({
+                        value: item.id,
+                        label: item.name,
+                    })),
             );
-        }, [metricCategories]);
+        }, [metricCategories, existingLayer]);
 
         const config = useMemo(
             () => createCompositeFlumeConfig(metricOptions, formatMessage),
@@ -241,8 +249,7 @@ export const CompositeLayerEditor = forwardRef<
             }
         }, [existingLayer]);
 
-        const isReady =
-            !isLoadingMetrics && (!compositeLayerId || !isLoadingLayer);
+        const isReady = !isLoadingMetrics && !isLoadingLayer;
 
         const syncPortConnections = usePortConnectionSync(canvasRef);
 
@@ -313,6 +320,8 @@ export const CompositeLayerEditor = forwardRef<
             (graph: GeneratedGraph) => {
                 let nodes: FlumeNodes;
                 let comments: FlumeCommentMap;
+                const currentLegend = findOutputNode(nodesRef.current)?.inputData
+                    ?.legend;
 
                 if (hasSameNodeIds(nodesRef.current, graph)) {
                     const shifted = shiftGraphForRemount(
@@ -320,13 +329,17 @@ export const CompositeLayerEditor = forwardRef<
                         commentsRef.current,
                         canvasRef.current,
                     );
-                    nodes = buildFlumeGraphFromSpec(graph, shifted.nodes);
+                    nodes = buildFlumeGraphFromSpec(
+                        graph,
+                        shifted.nodes,
+                        currentLegend,
+                    );
                     comments = shifted.comments;
                     mountScaleRef.current = shifted.scale;
                     viewResetPendingRef.current = false;
                     setIsFraming(false);
                 } else {
-                    nodes = buildFlumeGraphFromSpec(graph);
+                    nodes = buildFlumeGraphFromSpec(graph, {}, currentLegend);
                     comments = {};
                     viewResetPendingRef.current = true;
                     setIsFraming(true);
@@ -458,10 +471,7 @@ export const CompositeLayerEditor = forwardRef<
             );
         };
 
-        // Main-panel title: the edited layer's name, or "New composite layer" for a fresh one.
-        const headerTitle = compositeLayerId
-            ? existingLayer?.name || formatMessage(MESSAGES.title)
-            : formatMessage(MESSAGES.newCompositeLayer);
+        const headerTitle = existingLayer?.name || formatMessage(MESSAGES.title);
 
         const nodes = useMemo(
             () =>
@@ -525,7 +535,7 @@ export const CompositeLayerEditor = forwardRef<
                             }}
                         >
                             <NodeEditor
-                                key={`${compositeLayerId ?? 'new'}-${mountNonce}-${editorGeneration}`}
+                                key={`${compositeLayerId}-${mountNonce}-${editorGeneration}`}
                                 portTypes={config.portTypes}
                                 nodeTypes={config.nodeTypes}
                                 nodes={nodes}

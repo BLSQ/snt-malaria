@@ -2,14 +2,15 @@ import React from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { Colors, Controls, FlumeConfig } from 'flume';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { LegendTypes } from '../../constants/legend';
 import { MetricType } from '../dataLayers/types/metrics';
 import { CompositeOutputPreview } from './components/CompositeOutputPreview';
 import { MappingsControl } from './components/MappingsControl';
-import { NameControl } from './components/NameControl';
 import { NodeHelperText } from './components/NodeHelperText';
 import { NodeMapPreview } from './components/NodeMapPreview';
 import { MESSAGES } from './messages';
 import { CompositePreviewState } from './types/compositeLayer';
+import { getCompositeLegendOptions } from './utils/legendOptions';
 
 type FormatMessage = ReturnType<typeof useSafeIntl>['formatMessage'];
 
@@ -30,7 +31,7 @@ export type CompositeEditorContext = {
     preview?: CompositePreviewState;
     /**
      * MetricType ids of the data layers wired into the output node (even behind transformations),
-     * in traversal order. Used to order the "based on a data layer" legend picker connected-first.
+     * in traversal order. Used to order the reference layer picker connected-first.
      */
     connectedLayerIds?: number[];
 };
@@ -140,15 +141,7 @@ export const createCompositeFlumeConfig = (
 ): FlumeConfig => {
     const config = new FlumeConfig();
 
-    // Legend types offered on the output node. Values mirror `MetricType.LegendType` on the
-    // backend; `auto` lets the backend pick based on whether the result is numeric or categorical.
-    const legendTypeOptions = [
-        { value: 'auto', label: formatMessage(MESSAGES.legendAuto) },
-        { value: 'linear', label: formatMessage(MESSAGES.legendLinear) },
-        { value: 'threshold', label: formatMessage(MESSAGES.legendThreshold) },
-        { value: 'ordinal', label: formatMessage(MESSAGES.legendOrdinal) },
-        { value: 'reference', label: formatMessage(MESSAGES.legendReference) },
-    ];
+    const legendTypeOptions = getCompositeLegendOptions(formatMessage);
 
     config
         // Connectable port carrying a per-org-unit numeric vector.
@@ -315,29 +308,6 @@ export const createCompositeFlumeConfig = (
                 }),
             ],
         })
-        // Composite layer name (control only, not connectable). Single-line input.
-        .addPortType({
-            type: 'nameText',
-            name: 'name',
-            label: formatMessage(MESSAGES.nameControlLabel),
-            hidePort: true,
-            controls: [
-                Controls.custom({
-                    name: 'name',
-                    label: formatMessage(MESSAGES.nameControlLabel),
-                    defaultValue: '',
-                    render: (data: any, onChange: any) =>
-                        React.createElement(NameControl, {
-                            value: data,
-                            label: formatMessage(MESSAGES.nameControlLabel),
-                            placeholder: formatMessage(
-                                MESSAGES.namePlaceholder,
-                            ),
-                            onChange,
-                        }),
-                }),
-            ],
-        })
         // Legend type picker for the output layer (control only, not connectable).
         .addPortType({
             type: 'legendType',
@@ -349,13 +319,12 @@ export const createCompositeFlumeConfig = (
                     name: 'legendType',
                     label: formatMessage(MESSAGES.legendTypeLabel),
                     options: legendTypeOptions,
-                    defaultValue: 'auto',
+                    defaultValue: LegendTypes.AUTO,
                 }),
             ],
         })
-        // Reference layer picker, shown on the output node only when the legend type is
-        // "Based on a data layer". Reuses the same options as the data layer node's picker so it
-        // looks and behaves identically.
+        // Reference layer picker, shown on the output node only when the legend type is "Use
+        // reference layer". Reuses the data layer node's picker options so it behaves identically.
         .addPortType({
             type: 'referenceLayer',
             name: 'referenceLayer',
@@ -536,16 +505,15 @@ export const createCompositeFlumeConfig = (
             sortIndex: 100,
             initialWidth: 330,
             // Dynamic inputs so the reference-layer picker only appears when the legend type is
-            // "Based on a data layer" (Flume renders built-in controls unconditionally otherwise).
+            // "Use reference layer" (Flume renders built-in controls unconditionally otherwise).
             inputs: (ports: any) => (inputData: any) => {
                 const isReference =
-                    inputData?.legend?.legendType === 'reference';
+                    inputData?.legend?.legendType === LegendTypes.REFERENCE;
                 return [
                     ports.layerValues({
                         name: 'layer',
                         label: formatMessage(MESSAGES.outputLayerPortLabel),
                     }),
-                    ports.nameText(),
                     ports.legendType(),
                     ...(isReference ? [ports.referenceLayer()] : []),
                     ports.outputPreview(),

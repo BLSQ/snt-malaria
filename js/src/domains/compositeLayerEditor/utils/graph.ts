@@ -1,6 +1,8 @@
 import { FlumeGraph, FlumeGraphNode } from '../types/flumeGraph';
 
-const findOutputNode = (graph: FlumeGraph): FlumeGraphNode | undefined =>
+export const findOutputNode = (
+    graph: FlumeGraph,
+): FlumeGraphNode | undefined =>
     Object.values(graph ?? {}).find(node => node?.type === 'output');
 
 /** Whether the output node has anything wired into its `layer` input. */

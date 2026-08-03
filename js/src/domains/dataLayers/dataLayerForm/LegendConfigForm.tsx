@@ -64,7 +64,7 @@ export const LegendConfigForm: FC<Props> = ({
 
     return (
         <Box sx={styles.legendConfigContainer}>
-            <Typography variant="body1" sx={styles.title}>
+            <Typography variant="subtitle2" sx={styles.title}>
                 {formatMessage(MESSAGES.scale)}
             </Typography>
 

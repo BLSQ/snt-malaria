@@ -1,8 +1,8 @@
 """
-Backend execution of the composite-layer node graph produced by the Flume editor.
+Execution of a composite layer's node graph.
 
-The frontend serializes a Flume graph as ``{ nodeId: {id, type, x, y, connections, inputData} }``.
-The evaluator resolves it in dependency order (with cycle detection) and evaluates each node:
+A Flume graph is serialized as ``{ nodeId: {id, type, x, y, connections, inputData} }``. The
+evaluator resolves it in dependency order (with cycle detection) and evaluates each node:
 
 - ``dataLayer``: reads a picked ``MetricType`` and returns its value per org unit for every year it has.
 - ``formula``:   evaluates an infix expression per org unit over its connected inputs (``a``, ``b``, …)
@@ -67,6 +67,14 @@ class CompositeGraphError(Exception):
     """Raised when a graph is structurally invalid or a formula cannot be evaluated."""
 
 
+class CompositeGraphIncompleteError(CompositeGraphError):
+    """Raised when a graph is merely unfinished: a node is not wired up or not configured yet.
+
+    Saving such a graph is legitimate (the user is still building it), so callers store it and skip
+    the value refresh instead of reporting an error.
+    """
+
+
 def iter_all_values(values_by_year: ValuesByYear) -> Iterator[Value]:
     """Yield every value across all years of a ``{year: {org_unit_id: value}}`` mapping."""
     for by_ou in values_by_year.values():
@@ -107,37 +115,33 @@ class CompositeGraphEvaluator:
         self.output_legend_type: str | None = None
         # When the legend type is "reference", the MetricType whose legend should be reused.
         self.output_reference_metric_type_id = None
+        # Manually-configured legend {domain, range} (None => auto-compute the buckets).
+        self.output_legend_config = None
 
-    def run(self, require_name: bool = True) -> Tuple[str, ValuesByYear]:
-        """Evaluate the graph and return ``(name, {year: {org_unit_id: value}})`` for the output node.
-
-        ``require_name`` is relaxed for the live preview, where the graph is often evaluated before
-        the user has typed a name.
-        """
+    def run(self) -> ValuesByYear:
+        """Evaluate the graph and return ``{year: {org_unit_id: value}}`` for the output node."""
         if not isinstance(self.graph, dict) or not self.graph:
-            raise CompositeGraphError("Graph is empty.")
+            raise CompositeGraphIncompleteError("Graph is empty.")
 
         output_nodes = [node for node in self.graph.values() if node.get("type") == "output"]
         if len(output_nodes) != 1:
-            raise CompositeGraphError("Graph must contain exactly one output node.")
+            raise CompositeGraphIncompleteError("Graph must contain exactly one output node.")
 
         output_node = output_nodes[0]
-        name = (self._get_control_value(output_node, "name", "name") or "").strip()
-        if require_name and not name:
-            raise CompositeGraphError("The output node must have a name.")
 
         self.output_legend_type = self._get_control_value(output_node, "legend", "legendType")
+        self.output_legend_config = self._get_control_value(output_node, "legend", "legendConfig")
         self.output_reference_metric_type_id = self._get_control_value(
             output_node, "referenceLayer", "referenceMetricTypeId"
         )
 
         source = self._get_single_input_source(output_node, "layer")
         if source is None:
-            raise CompositeGraphError("The output node is not connected to anything.")
+            raise CompositeGraphIncompleteError("The output node is not connected to anything.")
 
         values_by_year = self._resolve(source["nodeId"])
         if not any(by_ou for by_ou in values_by_year.values()):
-            raise CompositeGraphError("The graph produced no values for the current districts.")
+            raise CompositeGraphIncompleteError("The graph produced no values for the current districts.")
 
         if any(isinstance(value, str) for value in iter_all_values(values_by_year)):
             source_node = self.graph.get(source["nodeId"])
@@ -147,7 +151,7 @@ class CompositeGraphEvaluator:
                 # Reuse the source layer's own category order so its ordinal legend is preserved.
                 self.output_category_order = self._data_layer_category_order(source_node)
 
-        return name, values_by_year
+        return values_by_year
 
     def connected_data_layer_metric_type_ids(self) -> List[int]:
         """MetricType ids of the data layers wired into the output, in traversal order (deduped).
@@ -220,7 +224,7 @@ class CompositeGraphEvaluator:
         try:
             metric_type_id = int(raw_id)
         except (TypeError, ValueError):
-            raise CompositeGraphError("A data layer node has no selected layer.")
+            raise CompositeGraphIncompleteError("A data layer node has no selected layer.")
 
         # Categorical layers (e.g. seasonality) store their category in ``string_value`` with a null
         # ``value``, so read both and keep whichever the row carries. Year-less rows go under the
@@ -257,11 +261,11 @@ class CompositeGraphEvaluator:
                 inputs[port] = self._resolve(source["nodeId"])
 
         if not inputs:
-            raise CompositeGraphError("A formula node has no connected inputs.")
+            raise CompositeGraphIncompleteError("A formula node has no connected inputs.")
 
         expression = (self._get_control_value(node, "formula", "formula") or "").strip()
         if not expression:
-            raise CompositeGraphError("A formula node has an empty formula.")
+            raise CompositeGraphIncompleteError("A formula node has an empty formula.")
 
         self._validate_formula_variables(expression, inputs.keys())
 
@@ -342,12 +346,11 @@ class CompositeGraphEvaluator:
         if unknown:
             raise CompositeGraphError(f"Formula references unconnected inputs: {', '.join(sorted(unknown))}.")
 
-    # The ``classify`` node type is labelled "Reclassify" in the editor, hence the wording of the
-    # user-facing error messages below.
+    # A ``classify`` node is named "Reclassify" for users, hence the error messages below.
     def _resolve_classify(self, node: dict) -> ValuesByYear:
         source = self._get_single_input_source(node, "a")
         if source is None:
-            raise CompositeGraphError("A reclassify node has no connected input.")
+            raise CompositeGraphIncompleteError("A reclassify node has no connected input.")
         input_by_year = self._resolve(source["nodeId"])
 
         rules, default_label = self._parse_classify_config(node)
@@ -378,7 +381,7 @@ class CompositeGraphEvaluator:
         """
         source = self._get_single_input_source(node, "a")
         if source is None:
-            raise CompositeGraphError("A normalize node has no connected input.")
+            raise CompositeGraphIncompleteError("A normalize node has no connected input.")
         input_by_year = self._resolve(source["nodeId"])
 
         raw_scale = self._get_control_value(node, "scale", "scale")
@@ -423,7 +426,7 @@ class CompositeGraphEvaluator:
                 inputs[port] = self._resolve(source["nodeId"])
 
         if not inputs:
-            raise CompositeGraphError("A combine node has no connected inputs.")
+            raise CompositeGraphIncompleteError("A combine node has no connected inputs.")
 
         raw_operation = self._get_control_value(node, "operation", "operation") or "mean"
         reducer = COMBINE_OPERATIONS.get(raw_operation)
@@ -456,10 +459,10 @@ class CompositeGraphEvaluator:
                 raise CompositeGraphError(f"A reclassify rule has an invalid operator '{op}'.")
             label = (raw_rule.get("label") or "").strip()
             if not label:
-                raise CompositeGraphError("A reclassify rule is missing its category label.")
+                raise CompositeGraphIncompleteError("A reclassify rule is missing its category label.")
             threshold = raw_rule.get("value")
             if threshold is None or threshold == "":
-                raise CompositeGraphError(f"The reclassify rule for '{label}' is missing its value.")
+                raise CompositeGraphIncompleteError(f"The reclassify rule for '{label}' is missing its value.")
             try:
                 threshold = float(threshold)
             except (TypeError, ValueError):
@@ -467,7 +470,7 @@ class CompositeGraphEvaluator:
             rules.append((CLASSIFY_OPERATORS[op], threshold, label))
 
         if not rules and not default_label:
-            raise CompositeGraphError("A reclassify node has no mappings.")
+            raise CompositeGraphIncompleteError("A reclassify node has no mappings.")
         return rules, default_label
 
     def _classify_category_order(self, node: dict) -> List[str]:

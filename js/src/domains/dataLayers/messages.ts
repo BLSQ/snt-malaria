@@ -29,9 +29,35 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.createLayer',
         defaultMessage: 'Create layer',
     },
-    createCompositeLayer: {
-        id: 'iaso.snt_malaria.settings.dataLayers.createCompositeLayer',
-        defaultMessage: 'New composite layer',
+    continueToEditor: {
+        id: 'iaso.snt_malaria.settings.dataLayers.continueToEditor',
+        defaultMessage: 'Continue',
+    },
+    generalSectionTitle: {
+        id: 'iaso.snt_malaria.settings.dataLayers.generalSectionTitle',
+        defaultMessage: 'General',
+    },
+    legendSectionTitle: {
+        id: 'iaso.snt_malaria.settings.dataLayers.legendSectionTitle',
+        defaultMessage: 'Legend & scale',
+    },
+    layerType: {
+        id: 'iaso.snt_malaria.settings.dataLayers.layerType',
+        defaultMessage: 'Layer type',
+    },
+    layerTypeData: {
+        id: 'iaso.snt_malaria.settings.dataLayers.layerTypeData',
+        defaultMessage: 'Standard data layer',
+    },
+    layerTypeDataInfo: {
+        id: 'iaso.snt_malaria.settings.dataLayers.layerTypeDataInfo',
+        defaultMessage:
+            "A layer whose data is imported from a CSV file or OpenHEXA. The data key needs to match the source data's.",
+    },
+    layerTypeCompositeInfo: {
+        id: 'iaso.snt_malaria.settings.dataLayers.layerTypeCompositeInfo',
+        defaultMessage:
+            'A layer composed of other layers. Combine any number of input layers using operations and transformations.',
     },
     deleteLayer: {
         id: 'iaso.snt_malaria.settings.dataLayers.deleteLayer',
@@ -48,10 +74,6 @@ export const MESSAGES = defineMessages({
     editLayer: {
         id: 'iaso.snt_malaria.settings.dataLayers.editLayer',
         defaultMessage: 'Edit Layer',
-    },
-    editCompositeLayer: {
-        id: 'iaso.snt_malaria.settings.dataLayers.editCompositeLayer',
-        defaultMessage: 'Edit composite layer',
     },
     compositeLayer: {
         id: 'iaso.snt_malaria.settings.dataLayers.compositeLayer',
@@ -96,7 +118,7 @@ export const MESSAGES = defineMessages({
     },
     label: {
         id: 'iaso.snt_malaria.settings.dataLayers.label',
-        defaultMessage: 'Label',
+        defaultMessage: 'Name',
     },
     legendType: {
         id: 'iaso.snt_malaria.settings.dataLayers.legendType',
@@ -177,7 +199,7 @@ export const MESSAGES = defineMessages({
     },
     variable: {
         id: 'iaso.snt_malaria.settings.dataLayers.variable',
-        defaultMessage: 'Variable',
+        defaultMessage: 'Data key',
     },
     is_population: {
         id: 'iaso.snt_malaria.settings.dataLayers.isPopulation',

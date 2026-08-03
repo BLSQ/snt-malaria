@@ -99,7 +99,8 @@ export const extractGraphSpecFromFlume = (
         nodes,
         output: {
             source: outputNode ? (singleInputId(outputNode, 'layer') ?? null) : null,
-            name: ((outputNode?.inputData.name?.name as string) ?? '').trim(),
+            // The layer name is owned by the creation dialogue, not the graph.
+            name: '',
             legend_type:
                 (outputNode?.inputData.legend?.legendType as string) ?? 'auto',
         },

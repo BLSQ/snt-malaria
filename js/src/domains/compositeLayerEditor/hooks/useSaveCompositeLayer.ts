@@ -31,15 +31,16 @@ export const useSaveCompositeLayer = (): UseMutationResult<
                 }
             },
         },
-        mutationFn: ({ graph, comments, id }: SaveCompositeLayerPayload) =>
-            id
-                ? patchRequest(`/api/snt_malaria/composite_layers/${id}/`, {
-                      graph,
-                      comments,
-                  })
-                : postRequest('/api/snt_malaria/composite_layers/', {
-                      graph,
-                      comments,
-                  }),
+        mutationFn: ({ id, ...rest }: SaveCompositeLayerPayload) => {
+            // Omit undefined fields so a partial update keeps the backend's current value.
+            const body = Object.fromEntries(
+                Object.entries(rest).filter(
+                    ([, value]) => value !== undefined,
+                ),
+            );
+            return id
+                ? patchRequest(`/api/snt_malaria/composite_layers/${id}/`, body)
+                : postRequest('/api/snt_malaria/composite_layers/', body);
+        },
     });
 };

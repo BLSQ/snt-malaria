@@ -6,7 +6,10 @@ import {
     IntlMessage,
     useSafeIntl,
 } from 'bluesquare-components';
+import { isConcreteLegend } from '../../../constants/legend';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
+import { useSaveCompositeLayer } from '../../compositeLayerEditor/hooks/useSaveCompositeLayer';
+import { CompositeLayerListItem } from '../../compositeLayerEditor/types/compositeLayer';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
 import { useMetricTypeFormState } from '../hooks/useMetricTypeFormState';
 import { MESSAGES } from '../messages';
@@ -18,6 +21,11 @@ interface MetricTypeDialogProps {
     closeDialog: () => void;
     metricType?: MetricType;
     categoryOptions: DropdownOptions<string>[];
+    showCompositeLayers?: boolean;
+    /** Composite layer record of the edited layer, when it is a composite. */
+    compositeLayer?: CompositeLayerListItem;
+    /** Called with the id of a freshly created composite, to continue into the node editor. */
+    onCompositeCreated?: (compositeLayerId: number) => void;
 }
 
 export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
@@ -25,12 +33,18 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
     closeDialog,
     metricType = undefined,
     categoryOptions,
+    showCompositeLayers = false,
+    compositeLayer = undefined,
+    onCompositeCreated = undefined,
 }) => {
     const [errorMessage, setErrorMessage] = useState<IntlMessage | undefined>();
     const [errorHeadline, setErrorHeadline] = useState<
         IntlMessage | undefined
     >();
     const { formatMessage } = useSafeIntl();
+
+    const isEditingComposite = compositeLayer !== undefined;
+    const { mutate: saveCompositeLayer } = useSaveCompositeLayer();
 
     const setErrorCode = useCallback(
         (code?: string) => {
@@ -62,6 +76,11 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
 
     const metricTypeFormModel = useMemo(() => {
         if (metricType) {
+            // A composite's legend lives on its composite layer record; the MetricType holds what
+            // the last run resolved it to.
+            const legendSource = isEditingComposite
+                ? compositeLayer.legend_config
+                : metricType.legend_config;
             return {
                 id: metricType.id,
                 name: metricType.name,
@@ -72,34 +91,72 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
                 unit_symbol: metricType.unit_symbol,
                 comments: metricType.comments,
                 category: metricType.category,
-                scale: JSON.stringify(
-                    metricType.legend_config.domain,
-                ).replaceAll('"', ''),
-                legend_type: metricType.legend_type,
+                legend_type: isEditingComposite
+                    ? compositeLayer.legend_type
+                    : metricType.legend_type,
                 origin: metricType.origin,
                 is_population: metricType.metric_kind === 'population',
-                legend_config: metricType.legend_config.domain.map(
+                is_composite: isEditingComposite,
+                legend_config: (legendSource.domain || []).map(
                     (value, index) => ({
                         value,
-                        color: metricType.legend_config.range[index],
+                        color: (legendSource.range || [])[index],
                     }),
                 ),
             };
         }
         return undefined;
-    }, [metricType]);
+    }, [metricType, isEditingComposite, compositeLayer]);
 
-    const onSubmit = (values: MetricTypeFormModel) => {
-        const payload = {
+    // A composite's values come from its graph, so only the metadata + legend are saved here.
+    const submitCompositeLayer = (values: MetricTypeFormModel) => {
+        saveCompositeLayer(
+            {
+                id: compositeLayer?.id,
+                name: values.name,
+                category: values.category,
+                description: values.description,
+                units: values.units,
+                unit_symbol: values.unit_symbol,
+                is_population: !!values.is_population,
+                legend_type: values.legend_type,
+                legend_config: isConcreteLegend(values.legend_type)
+                    ? {
+                          domain: values.legend_config.map(item => item.value),
+                          range: values.legend_config.map(item => item.color),
+                      }
+                    : undefined,
+            },
+            {
+                onSuccess: saved => {
+                    setErrorCode(undefined);
+                    closeDialog();
+                    if (!compositeLayer) {
+                        onCompositeCreated?.(saved.id);
+                    }
+                },
+            },
+        );
+    };
+
+    const submitDataLayer = ({
+        is_composite: _isComposite,
+        ...values
+    }: MetricTypeFormModel) => {
+        submitMetricType({
             ...values,
             metric_kind: values.is_population ? 'population' : 'any',
             legend_config: {
                 domain: values.legend_config.map(item => item.value),
                 range: values.legend_config.map(item => item.color),
             },
-        };
-        submitMetricType(payload);
+        });
     };
+
+    const onSubmit = (values: MetricTypeFormModel) =>
+        values.is_composite
+            ? submitCompositeLayer(values)
+            : submitDataLayer(values);
 
     const formik = useMetricTypeFormState(metricTypeFormModel, onSubmit);
 
@@ -107,6 +164,14 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
         setErrorCode(undefined);
         closeDialog();
     };
+
+    // Creating a composite saves it, then continues into the node editor.
+    const isCreatingComposite = !metricType && formik.values.is_composite;
+    const confirmMessage = metricType
+        ? MESSAGES.editLayer
+        : isCreatingComposite
+          ? MESSAGES.continueToEditor
+          : MESSAGES.createLayer;
 
     return (
         <ConfirmCancelModal
@@ -122,9 +187,7 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
             closeDialog={closeDialog}
             onConfirm={formik.handleSubmit}
             onCancel={handleCancel}
-            confirmMessage={
-                metricType ? MESSAGES.editLayer : MESSAGES.createLayer
-            }
+            confirmMessage={confirmMessage}
             cancelMessage={MESSAGES.cancel}
             closeOnConfirm={false}
             allowConfirm={
@@ -136,6 +199,7 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
                     metricType={metricTypeFormModel}
                     isRestricted={metricType?.origin === 'openhexa'}
                     categoryOptions={categoryOptions}
+                    showCompositeLayers={showCompositeLayers}
                 />
             </ExtendedFormikProvider>
             {errorMessage && (

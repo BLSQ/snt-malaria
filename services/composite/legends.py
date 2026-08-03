@@ -15,17 +15,23 @@ from iaso.models.metric import MetricType
 from iaso.utils.legend import SEVEN_SHADES, get_range_from_count
 
 from .evaluator import CompositeGraphEvaluator, Value, ValuesByYear, iter_all_values
+from .graph import CONCRETE_LEGEND_TYPES, REFERENCE_LEGEND, is_valid_legend_config
 
 
 # Number of colours used for an auto-generated threshold legend (=> num_colors - 1 breakpoints).
 NUM_THRESHOLD_COLORS = len(SEVEN_SHADES)
 
-# Legend type value (UI-only) that reuses another layer's legend instead of computing one.
-REFERENCE_LEGEND = "reference"
-
 
 def _is_categorical(values: Iterable[Value]) -> bool:
     return any(isinstance(value, str) for value in values)
+
+
+def placeholder_legend(legend_type=None, legend_config=None) -> Tuple[str, dict]:
+    """Legend for a composite that has no values yet: the requested one when it is concrete enough
+    to stand on its own, else an empty threshold legend until the first successful run."""
+    if legend_type in CONCRETE_LEGEND_TYPES and is_valid_legend_config(legend_config):
+        return legend_type, {"domain": list(legend_config["domain"]), "range": list(legend_config["range"])}
+    return MetricType.LegendType.THRESHOLD, {"domain": [], "range": list(SEVEN_SHADES)}
 
 
 def _ordinal_legend_config(domain: List) -> dict:
@@ -35,8 +41,8 @@ def _ordinal_legend_config(domain: List) -> dict:
 
 
 def _linear_legend_config(low: float, high: float) -> dict:
-    # d3's ``scaleLinear`` needs ``len(domain) == len(range)``, so emit exactly two of each; the
-    # frontend interpolates colours between ``low`` and ``high``.
+    # d3's ``scaleLinear`` needs ``len(domain) == len(range)``, so emit exactly two of each and let
+    # the colours be interpolated between ``low`` and ``high``.
     return {"domain": [low, high], "range": [SEVEN_SHADES[0], SEVEN_SHADES[-1]]}
 
 
@@ -139,6 +145,12 @@ def resolve_output_legend(
         # legend falls through to the ordinal builder below.
         if reference is not None and (not categorical or reference.legend_type == MetricType.LegendType.ORDINAL):
             return reference.legend_type, copy.deepcopy(reference.legend_config)
+
+    # A configured legend is used verbatim; categorical results only accept an ordinal one.
+    manual = evaluator.output_legend_config
+    if selected in CONCRETE_LEGEND_TYPES and is_valid_legend_config(manual):
+        if not categorical or selected == MetricType.LegendType.ORDINAL:
+            return selected, {"domain": list(manual["domain"]), "range": list(manual["range"])}
 
     if categorical:
         legend_type = MetricType.LegendType.ORDINAL

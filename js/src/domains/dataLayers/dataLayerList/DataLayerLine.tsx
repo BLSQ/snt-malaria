@@ -29,16 +29,10 @@ type Props = {
     selected?: boolean;
     onClick: () => void;
     onEdit: (metricType: MetricType) => void;
-    /** Present only for composite layers: opens the node editor for that composite. */
-    onEditComposite?: (compositeLayerId: number) => void;
-    /** Set when this layer is a composite, identifying its composite layer record. */
+    /** Set when this layer is a composite, to show the composite icon. */
     compositeLayerId?: number;
     onDelete: (metricType: number) => void;
-    /**
-     * While the composite editor is open the list becomes a drag source rather than a selector:
-     * selection is locked (clicks do nothing), the row actions (comparison "+" and the more-actions
-     * menu) are hidden, and the row can be dragged onto the canvas to create a data layer node.
-     */
+    /** While the composite editor is open, the row is a drag source rather than a selector. */
     editing?: boolean;
 };
 
@@ -83,7 +77,6 @@ export const DataLayerLine: FC<Props> = ({
     selected = false,
     onClick,
     onEdit,
-    onEditComposite,
     compositeLayerId,
     onDelete,
     editing = false,
@@ -212,15 +205,6 @@ export const DataLayerLine: FC<Props> = ({
                             <MenuItem onClick={() => onEdit(metricType)}>
                                 {formatMessage(MESSAGES.editLayer)}
                             </MenuItem>
-                            {isComposite && onEditComposite && (
-                                <MenuItem
-                                    onClick={() =>
-                                        onEditComposite(compositeLayerId)
-                                    }
-                                >
-                                    {formatMessage(MESSAGES.editCompositeLayer)}
-                                </MenuItem>
-                            )}
                             <DeleteModal
                                 type="menuItem"
                                 onConfirm={() => onDelete(metricType.id)}

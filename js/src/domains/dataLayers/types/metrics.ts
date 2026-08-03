@@ -35,6 +35,8 @@ export type MetricTypeFormModel = {
     origin: string;
     legend_config: Scale[];
     is_population?: boolean;
+    /** Composite = a layer built with the node editor rather than imported values. */
+    is_composite?: boolean;
 };
 
 export type MetricValue = {

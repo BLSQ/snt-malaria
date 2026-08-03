@@ -29,7 +29,11 @@ export type CompositeNodeType =
  */
 export type FlumeNodeInputData = {
     metricType?: { metricTypeId?: number | string };
-    legend?: { legendType?: string };
+    legend?: {
+        legendType?: string;
+        /** Manually-configured buckets for a concrete legend type (set in the dialogue). */
+        legendConfig?: { domain: (number | string)[]; range: string[] };
+    };
 } & Record<string, Record<string, unknown> | undefined>;
 
 export type FlumeGraphNode = {

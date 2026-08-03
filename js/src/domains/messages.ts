@@ -326,6 +326,10 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Edit',
         id: 'iaso.label.edit',
     },
+    compositeEditor: {
+        defaultMessage: 'Edit composite',
+        id: 'iaso.snt_malaria.dataLayers.compositeEditor',
+    },
     editScenarioRule: {
         id: 'iaso.snt_malaria.scenarioRule.edit',
         defaultMessage: 'Edit rule',

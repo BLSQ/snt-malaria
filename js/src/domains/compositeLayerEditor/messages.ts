@@ -5,10 +5,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.title',
         defaultMessage: 'Composite layer editor',
     },
-    newCompositeLayer: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.newCompositeLayer',
-        defaultMessage: 'New composite layer',
-    },
     showDataLayers: {
         id: 'iaso.snt_malaria.compositeLayerEditor.showDataLayers',
         defaultMessage: 'Show data layers',
@@ -232,14 +228,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.outputLayerPortLabel',
         defaultMessage: 'Composite layer',
     },
-    nameControlLabel: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.nameControlLabel',
-        defaultMessage: 'Composite layer name',
-    },
-    namePlaceholder: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.namePlaceholder',
-        defaultMessage: 'My composite layer',
-    },
     // Legend controls on the output node.
     legendTypeLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.legendTypeLabel',
@@ -263,7 +251,7 @@ export const MESSAGES = defineMessages({
     },
     legendReference: {
         id: 'iaso.snt_malaria.compositeLayerEditor.legendReference',
-        defaultMessage: 'Based on a data layer',
+        defaultMessage: 'Use reference layer',
     },
     copyLegendFrom: {
         id: 'iaso.snt_malaria.compositeLayerEditor.copyLegendFrom',
