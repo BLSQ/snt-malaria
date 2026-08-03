@@ -9,7 +9,7 @@ import {
 } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { noOp } from 'Iaso/utils';
-import { DataLayerYearOptions } from '../../constants/shared';
+import { currentYear, DataLayerYearOptions } from '../../constants/shared';
 import { useImportMetricValues } from './hooks/useImportMetricValues';
 import { MESSAGES } from './messages';
 
@@ -42,9 +42,7 @@ type Props = {
 const ImportMetricValuesModal: FC<Props> = ({ isOpen, closeDialog }) => {
     const { formatMessage } = useSafeIntl();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [selectedYear, setSelectedYear] = useState(
-        DataLayerYearOptions[0].value,
-    );
+    const [selectedYear, setSelectedYear] = useState(currentYear);
 
     const { mutate: importMetricValues } = useImportMetricValues();
 
