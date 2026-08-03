@@ -1,7 +1,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box, Button, Collapse, Typography } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { useFormikContext } from 'formik';
 import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
 import InputComponent from 'Iaso/components/forms/InputComponent';
@@ -49,6 +50,7 @@ const styles = {
     chevronOpen: {
         transform: 'rotate(180deg)',
     },
+    yearInput: { width: 94 },
 } satisfies SxStyles;
 
 const ScenarioForm: React.FC = () => {
@@ -245,6 +247,7 @@ const ScenarioForm: React.FC = () => {
                                 <InputComponent
                                     type="select"
                                     keyValue={metricTypeId}
+                                    clearable={false}
                                     value={year}
                                     onChange={(_field, value) =>
                                         onChangeDataLayerYear(
@@ -253,7 +256,7 @@ const ScenarioForm: React.FC = () => {
                                         )
                                     }
                                     options={DataLayerYearOptions}
-                                    wrapperSx={{ width: 120 }}
+                                    wrapperSx={styles.yearInput}
                                     withMarginTop={false}
                                 />
                                 <DeleteIconButton
@@ -288,18 +291,19 @@ const ScenarioForm: React.FC = () => {
                                     setNewLayerYear(value ?? undefined)
                                 }
                                 options={DataLayerYearOptions}
-                                wrapperSx={{ width: 120 }}
+                                wrapperSx={styles.yearInput}
                                 withMarginTop={false}
+                                clearable={false}
                             />
-                            <Button
+                            <IconButton
                                 onClick={onAddDataLayerYear}
+                                tooltipMessage={MESSAGES.add}
+                                overrideIcon={AddCircleOutlineOutlinedIcon}
                                 disabled={
                                     newLayer === undefined ||
                                     newLayerYear === undefined
                                 }
-                            >
-                                {formatMessage(MESSAGES.add)}
-                            </Button>
+                            />
                         </Box>
                     )}
                     {metricCategories.length === 0 && (

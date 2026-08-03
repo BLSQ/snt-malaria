@@ -23,6 +23,7 @@ const styles: SxStyles = {
     formControl: {
         minWidth: '200px',
         maxWidth: '100%',
+        width: '100%',
     },
     selectMap: (theme: Theme) => ({
         // TODO Should use a theme color; hex matches MapLegend chip for now (#1F2B3DBF).
