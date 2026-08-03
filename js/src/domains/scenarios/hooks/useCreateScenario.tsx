@@ -10,14 +10,14 @@ export const useCreateScenario = (): UseMutationResult => {
             description,
             start_year,
             end_year,
-            reference_year,
+            data_layer_years,
         }: ScenarioFormValues) =>
             postRequest('/api/snt_malaria/scenarios/', {
                 name,
                 description,
                 start_year,
                 end_year,
-                reference_year,
+                data_layer_years,
             }),
         invalidateQueryKey: ['scenarios'],
     });
