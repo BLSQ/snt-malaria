@@ -47,8 +47,8 @@ export const EditorHeader: FC<Props> = ({
                     <Tooltip
                         title={formatMessage(
                             sidebarCollapsed
-                                ? MESSAGES.showDataLayers
-                                : MESSAGES.hideDataLayers,
+                                ? MESSAGES.showSidePanel
+                                : MESSAGES.hideSidePanel,
                         )}
                     >
                         <IconButton size="small" onClick={onToggleSidebar}>

@@ -1,5 +1,14 @@
-import { Paper, Box, AppBar as MuiAppBar, Card } from '@mui/material';
+import {
+    Paper,
+    Box,
+    AppBar as MuiAppBar,
+    Card,
+    ListSubheader,
+} from '@mui/material';
 import { styled } from '@mui/material/styles';
+
+// Theme spacing steps of padding MUI's CardContent applies on every side (see CardStyled).
+const CARD_CONTENT_PADDING = 2;
 
 export const PaperFullHeight = styled(Paper)(({ theme }) => ({
     height: `calc(100vh - ${theme.spacing(12)})`,
@@ -62,6 +71,26 @@ export const CardScrollable = styled(Card)(({}) => ({
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
+}));
+
+/**
+ * Sticky category header for the card-hosted lists (data layers, node library).
+ *
+ * Beyond re-affirming sticky/opaque-background and dropping MUI's default text-secondary
+ * colour and side gutters, the `top` offset is what stops rows leaking above the header:
+ * these lists scroll inside `CardStyled`'s `CardContent`, whose `padding-top` sits *above*
+ * where `top: 0` pins a sticky child. That leaves a `CARD_CONTENT_PADDING`-tall strip at the
+ * top of the scrollport which the header doesn't cover, so rows scrolling past show through
+ * it. Pinning one padding-step higher makes the header flush with the visible top edge.
+ */
+export const StickyListSubheader = styled(ListSubheader)(({ theme }) => ({
+    position: 'sticky',
+    top: theme.spacing(-CARD_CONTENT_PADDING),
+    zIndex: 2,
+    backgroundColor: theme.palette.background.paper,
+    color: theme.palette.text.primary,
+    paddingLeft: 0,
+    paddingRight: 0,
 }));
 
 // Wraps a settings form inside its card, adding top spacing so it doesn't sit

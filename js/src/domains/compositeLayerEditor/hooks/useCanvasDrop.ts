@@ -111,11 +111,16 @@ export const useCanvasDrop = ({
                 text: '',
                 x: dropX,
                 y: dropY,
-                // Flume's own defaults for a right-click-added comment (commentsReducer.js).
+                // Flume's own dimensions for a right-click-added comment (commentsReducer.js);
+                // the colour is one of its eight fixed slots, remapped onto our palette in
+                // `flumeTheme.ts` - `purple` resolves to the theme's primary.
                 width: 200,
                 height: 30,
-                color: 'blue',
-                isNew: false,
+                color: 'purple',
+                // Flume's Comment opens straight into its autofocused textarea when mounted with
+                // this set, then dispatches REMOVE_COMMENT_NEW to drop the flag - so it reaches
+                // `onCommentsChange` (and the saved graph) without it.
+                isNew: true,
             };
         } else if (nodeLibraryType) {
             const operator = OPERATOR_NODE_TYPES[nodeLibraryType];

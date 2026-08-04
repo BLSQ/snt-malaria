@@ -1,17 +1,11 @@
-import React, { FC, Fragment, useMemo, useState } from 'react';
-import { Box, List, ListSubheader } from '@mui/material';
-import { SearchInput, useSafeIntl } from 'bluesquare-components';
-import { SxStyles } from 'Iaso/types/general';
+import React, { FC, Fragment, useMemo } from 'react';
+import { List } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
+import { StickyListSubheader } from '../../../components/styledComponents';
 import { DataLayerLine } from '../../dataLayers/dataLayerList/DataLayerLine';
 import { MetricTypeCategory } from '../../dataLayers/types/metrics';
-import { MESSAGES } from '../messages';
-import { getOperatorLibraryItems } from './operatorLibraryItems';
-import { OperatorLibraryLine } from './OperatorLibraryLine';
-
-const styles = {
-    search: { px: 2, pt: 2, pb: 1 },
-    category: { color: 'text.primary', px: 0 },
-} satisfies SxStyles;
+import { getNodeLibraryGroups } from './nodeLibraryGroups';
+import { NodeLibraryLine } from './NodeLibraryLine';
 
 type Props = {
     metricCategories: MetricTypeCategory[];
@@ -20,6 +14,9 @@ type Props = {
     /** The composite layer's own underlying layer, highlighted the same way it is in the plain
      * browsing list. */
     selectedMetricTypeId?: number;
+    /** Filter typed into the search field, which lives in the card header (see
+     * `NodeLibrarySearch`) so it stays visible while this list scrolls. */
+    searchTerm: string;
 };
 
 const matches = (haystack: string, term: string): boolean =>
@@ -28,28 +25,32 @@ const matches = (haystack: string, term: string): boolean =>
 const noop = () => undefined;
 
 /**
- * Searchable, categorized drag-and-drop source for the composite editor canvas: transformation
- * node types (+ Comment) up top, then every data layer category, same grouping as the plain
- * browsing list. Only rendered while the composite editor is open.
+ * Searchable, categorized drag-and-drop source for the composite editor canvas: the node
+ * library's own categories (transformations, tools) first, then every data layer category with
+ * the same grouping as the plain browsing list. Only rendered while the composite editor is open.
  */
 export const NodeLibrary: FC<Props> = ({
     metricCategories,
     compositeLayerIdByMetricType,
     selectedMetricTypeId,
+    searchTerm,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const [searchTerm, setSearchTerm] = useState('');
 
-    const operatorItems = useMemo(
-        () => getOperatorLibraryItems(formatMessage),
-        [formatMessage],
-    );
-    const filteredOperatorItems = useMemo(
+    // Categories with nothing left after filtering drop out entirely, headings included.
+    const nodeGroups = useMemo(
         () =>
-            searchTerm
-                ? operatorItems.filter(item => matches(item.label, searchTerm))
-                : operatorItems,
-        [operatorItems, searchTerm],
+            getNodeLibraryGroups(formatMessage)
+                .map(group => ({
+                    ...group,
+                    items: searchTerm
+                        ? group.items.filter(item =>
+                              matches(item.label, searchTerm),
+                          )
+                        : group.items,
+                }))
+                .filter(group => group.items.length > 0),
+        [formatMessage, searchTerm],
     );
 
     const filteredMetricCategories = useMemo(
@@ -67,52 +68,36 @@ export const NodeLibrary: FC<Props> = ({
     );
 
     return (
-        <>
-            <Box sx={styles.search}>
-                <SearchInput
-                    label={formatMessage(MESSAGES.searchForNodePlaceholder)}
-                    keyValue="nodeLibrarySearch"
-                    value={searchTerm}
-                    onChange={setSearchTerm}
-                    onEnterPressed={noop}
-                    clearable
-                />
-            </Box>
-            <List sx={{ py: 0 }}>
-                {filteredOperatorItems.length > 0 && (
-                    <Fragment>
-                        <ListSubheader sx={styles.category}>
-                            {formatMessage(MESSAGES.operatorsCategoryLabel)}
-                        </ListSubheader>
-                        {filteredOperatorItems.map(item => (
-                            <OperatorLibraryLine item={item} key={item.type} />
-                        ))}
-                    </Fragment>
-                )}
-                {filteredMetricCategories.map(metricCategory => (
-                    <Fragment key={metricCategory.name}>
-                        <ListSubheader sx={styles.category}>
-                            {metricCategory.name}
-                        </ListSubheader>
-                        {metricCategory.items.map(metricType => (
-                            <DataLayerLine
-                                metricType={metricType}
-                                key={metricType.id}
-                                onClick={noop}
-                                onEdit={noop}
-                                onDelete={noop}
-                                compositeLayerId={compositeLayerIdByMetricType.get(
-                                    metricType.id,
-                                )}
-                                selected={
-                                    metricType.id === selectedMetricTypeId
-                                }
-                                editing
-                            />
-                        ))}
-                    </Fragment>
-                ))}
-            </List>
-        </>
+        <List sx={{ py: 0 }}>
+            {nodeGroups.map(group => (
+                <Fragment key={group.label}>
+                    <StickyListSubheader>{group.label}</StickyListSubheader>
+                    {group.items.map(item => (
+                        <NodeLibraryLine item={item} key={item.type} />
+                    ))}
+                </Fragment>
+            ))}
+            {filteredMetricCategories.map(metricCategory => (
+                <Fragment key={metricCategory.name}>
+                    <StickyListSubheader>
+                        {metricCategory.name}
+                    </StickyListSubheader>
+                    {metricCategory.items.map(metricType => (
+                        <DataLayerLine
+                            metricType={metricType}
+                            key={metricType.id}
+                            onClick={noop}
+                            onEdit={noop}
+                            onDelete={noop}
+                            compositeLayerId={compositeLayerIdByMetricType.get(
+                                metricType.id,
+                            )}
+                            selected={metricType.id === selectedMetricTypeId}
+                            editing
+                        />
+                    ))}
+                </Fragment>
+            ))}
+        </List>
     );
 };

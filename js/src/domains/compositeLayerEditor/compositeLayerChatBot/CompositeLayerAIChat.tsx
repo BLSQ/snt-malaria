@@ -19,13 +19,22 @@ const chatStyles = {
     header: { display: 'none' },
 } satisfies SxStyles;
 
+// On top of ChatPanel's own uniform flex `gap` between `emptyState` children, both the title row
+// and the subhead below get the same extra `mb`, so title→subhead and subhead→description end up
+// equally (more) spaced than a bare `gap` alone would give them.
+const EMPTY_STATE_EXTRA_GAP = 1;
+
 const emptyStateStyles = {
     title: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 0.75,
-        mb: 1,
+        mb: EMPTY_STATE_EXTRA_GAP,
+    },
+    subhead: {
+        fontWeight: 700,
+        mb: EMPTY_STATE_EXTRA_GAP,
     },
 } satisfies SxStyles;
 
@@ -72,7 +81,7 @@ export const CompositeLayerAIChat: FC<Props> = ({
                                 {formatMessage(MESSAGES.compositeLayerAITitle)}
                             </Typography>
                         </Box>
-                        <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                        <Typography variant="body1" sx={emptyStateStyles.subhead}>
                             {formatMessage(
                                 MESSAGES.compositeLayerAIEmptyStateTitle,
                             )}

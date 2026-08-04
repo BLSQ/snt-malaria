@@ -1,14 +1,10 @@
 import React, { FC, Fragment, useEffect, useRef } from 'react';
-import { List, ListSubheader, Typography } from '@mui/material';
+import { List, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { SxStyles } from 'Iaso/types/general';
+import { StickyListSubheader } from '../../../components/styledComponents';
 import { MESSAGES } from '../messages';
 import { MetricType, MetricTypeCategory } from '../types/metrics';
 import { DataLayerLine } from './DataLayerLine';
-
-const styles = {
-    category: { color: 'text.primary', px: 0 },
-} satisfies SxStyles;
 
 type Props = {
     metricCategories: MetricTypeCategory[];
@@ -52,9 +48,9 @@ export const DataLayerList: FC<Props> = ({
             <List sx={{ py: 0 }}>
                 {metricCategories.map(metricCategory => (
                     <Fragment key={metricCategory.name}>
-                        <ListSubheader sx={styles.category}>
+                        <StickyListSubheader>
                             {metricCategory.name}
-                        </ListSubheader>
+                        </StickyListSubheader>
                         {metricCategory.items.map(metricType => (
                             <DataLayerLine
                                 metricType={metricType}

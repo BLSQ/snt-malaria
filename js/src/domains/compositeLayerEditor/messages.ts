@@ -5,13 +5,13 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.title',
         defaultMessage: 'Composite layer editor',
     },
-    showDataLayers: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.showDataLayers',
-        defaultMessage: 'Show data layers',
+    showSidePanel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.showSidePanel',
+        defaultMessage: 'Show side panel',
     },
-    hideDataLayers: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.hideDataLayers',
-        defaultMessage: 'Hide data layers',
+    hideSidePanel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.hideSidePanel',
+        defaultMessage: 'Hide side panel',
     },
     save: {
         id: 'iaso.snt_malaria.compositeLayerEditor.save',
@@ -288,9 +288,18 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.searchForNodePlaceholder',
         defaultMessage: 'Search for node',
     },
-    operatorsCategoryLabel: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.operatorsCategoryLabel',
-        defaultMessage: 'Operators',
+    nodeLibraryHint: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.nodeLibraryHint',
+        defaultMessage:
+            'Drag and drop any of these layers or transformations into the canvas on the right to build your composite layer',
+    },
+    transformationsCategoryLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.transformationsCategoryLabel',
+        defaultMessage: 'Transformations',
+    },
+    toolsCategoryLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.toolsCategoryLabel',
+        defaultMessage: 'Tools',
     },
     commentNodeLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.commentNodeLabel',

@@ -1,27 +1,37 @@
 import React, { FC } from 'react';
-import { Tab, Tabs } from '@mui/material';
+import { Tab, Tabs, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
 
 export type CompositeSidebarTab = 'library' | 'ai';
 
-const tabSx = { textTransform: 'none', minHeight: 48 } as const;
+const styles = {
+    tab: { textTransform: 'none', minHeight: 48 },
+} satisfies SxStyles;
 
 type Props = {
     tab: CompositeSidebarTab;
     onChangeTab: (tab: CompositeSidebarTab) => void;
+    /** Whether the AI chat is available at all (the account has an AI API key configured). With
+     * no chat to switch to there is nothing to tab between, so a plain title is shown instead. */
+    showTabs: boolean;
 };
 
-/**
- * Tabs at the top of the composite editor's sidebar, switching between the node library and the
- * AI chat. Only rendered when the account has an AI API key configured (see `dataLayers/index.tsx`)
- * - otherwise the sidebar is just the node library, no tabs needed.
- */
-export const CompositeSidebarTabsHeader: FC<Props> = ({
+/** Switches the composite editor's sidebar between the node library and the AI chat. */
+export const CompositeSidebarTabs: FC<Props> = ({
     tab,
     onChangeTab,
+    showTabs,
 }) => {
     const { formatMessage } = useSafeIntl();
+    if (!showTabs) {
+        return (
+            <Typography variant="h6">
+                {formatMessage(MESSAGES.nodeLibraryTabLabel)}
+            </Typography>
+        );
+    }
     return (
         <Tabs
             value={tab}
@@ -34,12 +44,12 @@ export const CompositeSidebarTabsHeader: FC<Props> = ({
             <Tab
                 value="library"
                 label={formatMessage(MESSAGES.nodeLibraryTabLabel)}
-                sx={tabSx}
+                sx={styles.tab}
             />
             <Tab
                 value="ai"
                 label={formatMessage(MESSAGES.aiModeTabLabel)}
-                sx={tabSx}
+                sx={styles.tab}
             />
         </Tabs>
     );

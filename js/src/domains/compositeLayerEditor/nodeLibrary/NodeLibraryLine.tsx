@@ -2,7 +2,7 @@ import React, { FC, useCallback } from 'react';
 import { Box, ListItem, Typography, useTheme } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { COMPOSITE_NODE_TYPE_DND_MIME } from '../dragAndDrop';
-import { OperatorLibraryItem } from './operatorLibraryItems';
+import { NodeLibraryItem } from './nodeLibraryGroups';
 
 const styles = {
     root: {
@@ -23,13 +23,13 @@ const styles = {
 } satisfies SxStyles;
 
 type Props = {
-    item: OperatorLibraryItem;
+    item: NodeLibraryItem;
 };
 
-/** Draggable row for one node-library entry (an operator node type, or Comment). Mirrors
+/** Draggable row for one node-library entry (a transformation node, or a canvas tool). Mirrors
  * `dataLayers/dataLayerList/DataLayerLine.tsx`'s drag-image-cloning technique so the dragged
  * preview looks the same regardless of which list it came from. */
-export const OperatorLibraryLine: FC<Props> = ({ item }) => {
+export const NodeLibraryLine: FC<Props> = ({ item }) => {
     const theme = useTheme();
     const onDragStart = useCallback(
         (e: React.DragEvent<HTMLElement>) => {
@@ -66,8 +66,9 @@ export const OperatorLibraryLine: FC<Props> = ({ item }) => {
     return (
         <ListItem draggable onDragStart={onDragStart} sx={styles.root}>
             <Box sx={styles.details}>
-                {/* `color="action"` matches the composite icon shown on data layer rows below. */}
-                <Icon sx={styles.icon} color="action" />
+                {/* Primary-coloured to set these apart from the data layer rows below, which use
+                    the muted `action` colour. */}
+                <Icon sx={styles.icon} color="primary" />
                 <Typography variant="body2">{item.label}</Typography>
             </Box>
         </ListItem>

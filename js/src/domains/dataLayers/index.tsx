@@ -34,12 +34,12 @@ import { CompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChat
 import { GeneratedGraph } from '../compositeLayerEditor/compositeLayerChatBot/types';
 import { useCompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChatBot/useCompositeLayerAIChat';
 import { useGetCompositeLayers } from '../compositeLayerEditor/hooks/useGetCompositeLayers';
-import { MESSAGES as COMPOSITE_MESSAGES } from '../compositeLayerEditor/messages';
 import {
     CompositeSidebarTab,
-    CompositeSidebarTabsHeader,
-} from '../compositeLayerEditor/nodeLibrary/CompositeSidebarTabsHeader';
+    CompositeSidebarTabs,
+} from '../compositeLayerEditor/nodeLibrary/CompositeSidebarTabs';
 import { NodeLibrary } from '../compositeLayerEditor/nodeLibrary/NodeLibrary';
+import { NodeLibrarySearch } from '../compositeLayerEditor/nodeLibrary/NodeLibrarySearch';
 import { CompositeLayerListItem } from '../compositeLayerEditor/types/compositeLayer';
 import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
@@ -184,6 +184,10 @@ export const DataLayers: FC = () => {
     const [sidebarTab, setSidebarTab] = useState<CompositeSidebarTab>(
         'library',
     );
+    // Owned here rather than by NodeLibrary: the search field lives in the card header (so it
+    // stays put while the list scrolls) and the filtering happens in the card's content.
+    const [nodeSearchTerm, setNodeSearchTerm] = useState<string>('');
+    const isAiChatTab = sidebarTab === 'ai' && hasAiApiKey;
 
     const [selectedMetricType, setSelectedMetricType] = useState<MetricType>();
 
@@ -222,6 +226,7 @@ export const DataLayers: FC = () => {
         setEditingCompositeLayerId(undefined);
         setSidebarCollapsed(false);
         setSidebarTab('library');
+        setNodeSearchTerm('');
         resetAiChat();
     }, [resetAiChat]);
 
@@ -286,28 +291,33 @@ export const DataLayers: FC = () => {
                                 {isCompositeEditorOpen ? (
                                     <Card sx={styles.card}>
                                         <CardStyled
+                                            flushContent={isAiChatTab}
                                             header={
-                                                hasAiApiKey ? (
-                                                    <CompositeSidebarTabsHeader
+                                                <>
+                                                    <CompositeSidebarTabs
                                                         tab={sidebarTab}
                                                         onChangeTab={
                                                             setSidebarTab
                                                         }
+                                                        showTabs={hasAiApiKey}
                                                     />
-                                                ) : (
-                                                    formatMessage(
-                                                        COMPOSITE_MESSAGES.nodeLibraryTabLabel,
-                                                    )
-                                                )
+                                                    {!isAiChatTab && (
+                                                        <NodeLibrarySearch
+                                                            value={
+                                                                nodeSearchTerm
+                                                            }
+                                                            onChange={
+                                                                setNodeSearchTerm
+                                                            }
+                                                        />
+                                                    )}
+                                                </>
                                             }
                                         >
-                                            {sidebarTab === 'ai' &&
-                                            hasAiApiKey ? (
+                                            {isAiChatTab ? (
                                                 <CompositeLayerAIChat
                                                     messages={aiChatMessages}
-                                                    isLoading={
-                                                        isAiChatLoading
-                                                    }
+                                                    isLoading={isAiChatLoading}
                                                     onSendMessage={
                                                         sendAiChatMessage
                                                     }
@@ -323,6 +333,7 @@ export const DataLayers: FC = () => {
                                                     selectedMetricTypeId={
                                                         editedCompositeMetricTypeId
                                                     }
+                                                    searchTerm={nodeSearchTerm}
                                                 />
                                             )}
                                         </CardStyled>
