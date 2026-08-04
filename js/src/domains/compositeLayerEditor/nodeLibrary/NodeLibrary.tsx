@@ -1,4 +1,4 @@
-import React, { FC, Fragment, useMemo } from 'react';
+import React, { FC, Fragment, useEffect, useMemo, useRef } from 'react';
 import { List } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { StickyListSubheader } from '../../../components/styledComponents';
@@ -34,6 +34,13 @@ export const NodeLibrary: FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
 
+    // The browsing list shares this scroll container, so its offset would carry over and hide the
+    // first categories.
+    const listRef = useRef<HTMLUListElement>(null);
+    useEffect(() => {
+        listRef.current?.closest('.MuiCardContent-root')?.scrollTo({ top: 0 });
+    }, []);
+
     // Empty categories drop out, heading included.
     const nodeGroups = useMemo(
         () =>
@@ -65,7 +72,7 @@ export const NodeLibrary: FC<Props> = ({
     );
 
     return (
-        <List sx={{ py: 0 }}>
+        <List sx={{ py: 0 }} ref={listRef}>
             {nodeGroups.map(group => (
                 <Fragment key={group.label}>
                     <StickyListSubheader>{group.label}</StickyListSubheader>
