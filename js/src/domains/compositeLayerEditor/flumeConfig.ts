@@ -287,6 +287,32 @@ export const createCompositeFlumeConfig = (
                     ],
                     defaultValue: '1',
                 }),
+                Controls.select({
+                    name: 'normalizeType',
+                    label: formatMessage(MESSAGES.normalizeTypeLabel),
+                    // Values are consumed by the backend evaluator.
+                    options: [
+                        {
+                            value: 'min-max',
+                            label: formatMessage(
+                                MESSAGES.normalizeTypeMinMaxLabel,
+                            ),
+                            description: formatMessage(
+                                MESSAGES.normalizeTypeMinMaxDescription,
+                            ),
+                        },
+                        {
+                            value: 'percentile',
+                            label: formatMessage(
+                                MESSAGES.normalizeTypePercentileLabel,
+                            ),
+                            description: formatMessage(
+                                MESSAGES.normalizeTypePercentileDescription,
+                            ),
+                        },
+                    ],
+                    defaultValue: 'min-max',
+                }),
             ],
         })
         // Reclassify rules editor (control only, not connectable).

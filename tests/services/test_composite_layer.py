@@ -58,10 +58,12 @@ def _combine_node(node_id, input_sources, output_targets, operation=None):
     }
 
 
-def _normalize_node(node_id, input_sources, output_targets, scale=None):
+def _normalize_node(node_id, input_sources, output_targets, scale=None, normalize_type=None):
     input_data = {}
     if scale is not None:
-        input_data["scale"] = {"scale": scale}
+        input_data.setdefault("scale", {})["scale"] = scale
+    if normalize_type is not None:
+        input_data.setdefault("scale", {})["normalizeType"] = normalize_type
     return {
         "id": node_id,
         "type": "normalize",
@@ -740,7 +742,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         with self.assertRaises(CompositeGraphError):
             CompositeGraphEvaluator(self.account, self._combine_graph(operation="median"), self.org_unit_ids).run()
 
-    def _normalize_graph(self, metric_type_id=None, scale=None):
+    def _normalize_graph(self, metric_type_id=None, scale=None, normalize_type=None, name="Normalized"):
         return {
             "layer1": _data_layer_node(
                 "layer1", metric_type_id or self.metric_a.id, [{"nodeId": "norm", "portName": "a"}]
@@ -750,6 +752,7 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
                 input_sources={"a": [{"nodeId": "layer1", "portName": "values"}]},
                 output_targets=[{"nodeId": "out", "portName": "layer"}],
                 scale=scale,
+                normalize_type=normalize_type,
             ),
             "out": _output_node("out", [{"nodeId": "norm", "portName": "result"}]),
         }
@@ -813,7 +816,122 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         with self.assertRaises(CompositeGraphError):
             CompositeGraphEvaluator(self.account, self._normalize_graph(scale="huge"), self.org_unit_ids).run()
 
-    def _classify_graph(self):
+    def test_normalize_invalid_type_raises(self):
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(
+                self.account, self._normalize_graph(normalize_type="median"), self.org_unit_ids
+            ).run()
+
+    def _percentile_metric(self, values_by_org_unit):
+        metric = MetricType.objects.create(account=self.account, name="Percentile input", code="percentile_input")
+        for org_unit, value in values_by_org_unit.items():
+            MetricValue.objects.create(metric_type=metric, org_unit=org_unit, year=None, value=value)
+        return metric
+
+    def test_normalize_percentile_ignores_outlier_magnitude(self):
+        # [1, 2, 3, 100]: min-max would crush 1/2/3 near zero because 100 stretches the whole
+        # scale. Percentile only cares about ordering, so the ranks are evenly spaced.
+        ou3 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="OU3")
+        ou4 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="OU4")
+        metric = self._percentile_metric({self.ou1: 1.0, self.ou2: 2.0, ou3: 3.0, ou4: 100.0})
+
+        values = CompositeGraphEvaluator(
+            self.account,
+            self._normalize_graph(metric_type_id=metric.id, normalize_type="percentile"),
+            [self.ou1.id, self.ou2.id, ou3.id, ou4.id],
+        ).run()
+        rounded = {ou_id: round(float(value), 4) for ou_id, value in values[None].items()}
+        self.assertEqual(
+            rounded,
+            {self.ou1.id: 0.0, self.ou2.id: 0.3333, ou3.id: 0.6667, ou4.id: 1.0},
+        )
+
+    def test_normalize_percentile_scale_100(self):
+        ou3 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="OU3")
+        metric = self._percentile_metric({self.ou1: 5.0, self.ou2: 1.0, ou3: 10.0})
+
+        values = CompositeGraphEvaluator(
+            self.account,
+            self._normalize_graph(metric_type_id=metric.id, scale="100", normalize_type="percentile"),
+            [self.ou1.id, self.ou2.id, ou3.id],
+        ).run()
+        self.assertEqual(values, {None: {self.ou2.id: 0.0, self.ou1.id: 50.0, ou3.id: 100.0}})
+
+    def test_normalize_percentile_ties_share_average_rank(self):
+        # ou1 and ou2 are tied for the lowest two spots (ranks 0 and 1), so they share rank 0.5;
+        # ou3 alone takes the top rank (2). Scaled by /(n-1) = /2.
+        ou3 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="OU3")
+        metric = self._percentile_metric({self.ou1: 5.0, self.ou2: 5.0, ou3: 10.0})
+
+        values = CompositeGraphEvaluator(
+            self.account,
+            self._normalize_graph(metric_type_id=metric.id, normalize_type="percentile"),
+            [self.ou1.id, self.ou2.id, ou3.id],
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: 0.25, self.ou2.id: 0.25, ou3.id: 1.0}})
+
+    def test_normalize_percentile_ten_values_with_duplicates(self):
+        # 10 values with two duplicate groups: 20 appears twice (ou4, ou9) and 40 appears three
+        # times (ou1, ou7, ou10). Sorted: 10, 20, 20, 30, 40, 40, 40, 50, 60, 100 -> ranks
+        # 0, 1.5, 1.5, 3, 5, 5, 5, 7, 8, 9 (ties share the average of the positions they span).
+        # Scaled by /(n-1) = /9, every duplicate group lands on exactly the same output value,
+        # regardless of how far apart the duplicated values themselves are (20 vs 40).
+        extra_org_units = [
+            self.create_snt_org_unit(org_unit_type=self.org_unit_type, name=f"OU{i}") for i in range(3, 11)
+        ]
+        ou3, ou4, ou5, ou6, ou7, ou8, ou9, ou10 = extra_org_units
+        values = {
+            self.ou1: 40.0,
+            self.ou2: 10.0,
+            ou3: 60.0,
+            ou4: 20.0,
+            ou5: 100.0,
+            ou6: 30.0,
+            ou7: 40.0,
+            ou8: 50.0,
+            ou9: 20.0,
+            ou10: 40.0,
+        }
+        metric = self._percentile_metric(values)
+
+        result = CompositeGraphEvaluator(
+            self.account,
+            self._normalize_graph(metric_type_id=metric.id, normalize_type="percentile"),
+            [org_unit.id for org_unit in values],
+        ).run()
+        rounded = {org_unit_id: round(float(value), 4) for org_unit_id, value in result[None].items()}
+        self.assertEqual(
+            rounded,
+            {
+                self.ou2.id: 0.0,  # 10 -> lowest, unique -> rank 0/9
+                ou4.id: 0.1667,  # 20 -> tied with ou9 -> average rank 1.5/9
+                ou9.id: 0.1667,  # 20 -> tied with ou4
+                ou6.id: 0.3333,  # 30 -> unique -> rank 3/9
+                self.ou1.id: 0.5556,  # 40 -> tied with ou7, ou10 -> average rank 5/9
+                ou7.id: 0.5556,  # 40 -> tied
+                ou10.id: 0.5556,  # 40 -> tied
+                ou8.id: 0.7778,  # 50 -> unique -> rank 7/9
+                ou3.id: 0.8889,  # 60 -> unique -> rank 8/9
+                ou5.id: 1.0,  # 100 -> highest, unique -> rank 9/9
+            },
+        )
+        # The three 40s and the two 20s land on exactly the same value, even though a 40 is twice
+        # as far from a 20 as a 20 is from the minimum: percentile only cares about order.
+        self.assertEqual(rounded[self.ou1.id], rounded[ou7.id])
+        self.assertEqual(rounded[self.ou1.id], rounded[ou10.id])
+        self.assertEqual(rounded[ou4.id], rounded[ou9.id])
+
+    def test_normalize_percentile_single_value_maps_to_midpoint(self):
+        metric = self._percentile_metric({self.ou1: 42.0})
+
+        values = CompositeGraphEvaluator(
+            self.account,
+            self._normalize_graph(metric_type_id=metric.id, scale="100", normalize_type="percentile"),
+            [self.ou1.id],
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: 50.0}})
+
+    def _classify_graph(self, name="Risk band"):
         # metric_a: ou1=2, ou2=4  ->  < 3 = LOW, else HIGH
         return {
             "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "cls", "portName": "a"}]),

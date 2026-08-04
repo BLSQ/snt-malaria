@@ -8,7 +8,8 @@ evaluator resolves it in dependency order (with cycle detection) and evaluates e
 - ``formula``:   evaluates an infix expression per org unit over its connected inputs (``a``, ``b``, …)
                  using ``simpleeval``. A string result makes the output categorical (ordinal).
 - ``classify``:  maps a numeric input to category labels using ordered threshold rules.
-- ``normalize``: min-max rescales a numeric input to 0-1 or 0-100, per year.
+- ``normalize``: rescales a numeric input to 0-1 or 0-100, per year, either by min-max position or
+                 by percentile rank.
 - ``combine``:   reduces any number of numeric inputs per org unit (mean/sum/min/max).
 - ``output``:    the single terminal node; its connected input is the resulting composite layer.
 
@@ -373,11 +374,15 @@ class CompositeGraphEvaluator:
         return result
 
     def _resolve_normalize(self, node: dict) -> ValuesByYear:
-        """Min-max rescale a numeric input to ``[0, scale]``, independently per year.
+        """Rescale a numeric input to ``[0, scale]``, independently per year.
 
-        Each year is rescaled against its own min/max so a value expresses the org unit's relative
-        position within that year's distribution (years stay comparable to each other on the same
-        0-1 / 0-100 axis even when absolute magnitudes drift over time).
+        Two normalization types are offered (both scoped to the year's own distribution, so years
+        stay comparable to each other even when absolute magnitudes drift over time):
+
+        - ``min-max``: position between the distribution's min and max. Magnitude-sensitive, so a
+          single outlier stretches the scale and crushes the other values together.
+        - ``percentile``: fraction of values the input beats. Rank-based and magnitude-blind, so
+          outliers don't distort the rest of the distribution.
         """
         source = self._get_single_input_source(node, "a")
         if source is None:
@@ -390,6 +395,10 @@ class CompositeGraphEvaluator:
         except (TypeError, ValueError):
             raise CompositeGraphError(f"A normalize node has an invalid scale '{raw_scale}'.")
 
+        normalize_type = self._get_control_value(node, "scale", "normalizeType") or "min-max"
+        if normalize_type not in ("min-max", "percentile"):
+            raise CompositeGraphError(f"A normalize node has an unknown normalization type '{normalize_type}'.")
+
         result: ValuesByYear = {}
         for year, by_ou in input_by_year.items():
             if not by_ou:
@@ -401,16 +410,48 @@ class CompositeGraphEvaluator:
                 except (TypeError, ValueError):
                     raise CompositeGraphError("Normalize can only be applied to a numeric input.")
 
-            low = min(numeric.values())
-            high = max(numeric.values())
-            span = high - low
-            if span == 0:
-                # Degenerate distribution (all values equal): there is no relative position, so
-                # map everything to the midpoint rather than arbitrarily to the min or max.
-                result[year] = {org_unit_id: scale / 2 for org_unit_id in numeric}
+            if normalize_type == "percentile":
+                result[year] = self._percentile_rank(numeric, scale)
             else:
-                result[year] = {org_unit_id: (value - low) / span * scale for org_unit_id, value in numeric.items()}
+                result[year] = self._min_max_scale(numeric, scale)
         return result
+
+    @staticmethod
+    def _min_max_scale(numeric: Dict[int, float], scale: float) -> ValuesByOrgUnit:
+        low = min(numeric.values())
+        high = max(numeric.values())
+        span = high - low
+        if span == 0:
+            # Degenerate distribution (all values equal): there is no relative position, so map
+            # everything to the midpoint rather than arbitrarily to the min or max.
+            return {org_unit_id: scale / 2 for org_unit_id in numeric}
+        return {org_unit_id: (value - low) / span * scale for org_unit_id, value in numeric.items()}
+
+    @staticmethod
+    def _percentile_rank(numeric: Dict[int, float], scale: float) -> ValuesByOrgUnit:
+        """Fractional rank of each value among its peers, scaled to ``[0, scale]``.
+
+        Tied values share the average of the ranks they span (e.g. two values tied for 2nd/3rd
+        place both get rank 2.5), so ties land on the same output value instead of an arbitrary
+        one breaking first.
+        """
+        n = len(numeric)
+        if n == 1:
+            (only_org_unit_id,) = numeric
+            return {only_org_unit_id: scale / 2}
+
+        ordered = sorted(numeric.items(), key=lambda item: item[1])
+        ranks: Dict[int, float] = {}
+        i = 0
+        while i < n:
+            j = i
+            while j + 1 < n and ordered[j + 1][1] == ordered[i][1]:
+                j += 1
+            average_rank = (i + j) / 2
+            for org_unit_id, _value in ordered[i : j + 1]:
+                ranks[org_unit_id] = average_rank
+            i = j + 1
+        return {org_unit_id: rank / (n - 1) * scale for org_unit_id, rank in ranks.items()}
 
     def _resolve_combine(self, node: dict) -> ValuesByYear:
         """Reduce any number of numeric inputs per org unit with a symmetric operation.

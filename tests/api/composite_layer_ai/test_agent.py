@@ -55,6 +55,13 @@ class BuildSystemPromptTestCase(SimpleTestCase):
 
         self.assertNotIn("## Current graph in the editor", prompt)
 
+    def test_normalize_type_documented_in_prompt(self):
+        prompt = build_system_prompt(METRIC_TYPES)
+
+        self.assertIn("normalize_type", prompt)
+        self.assertIn("min-max", prompt)
+        self.assertIn("percentile", prompt)
+
 
 GRAPH_RESPONSE = {
     "graph": {
@@ -101,6 +108,49 @@ class ParseCompositeLayerGraphResponseTestCase(SimpleTestCase):
             parse_composite_layer_graph_response(
                 "Which data layer did you mean - rainfall or incidence?",
             )
+
+    def test_normalize_node_with_percentile_type_parses(self):
+        response = json.dumps(
+            {
+                "graph": {
+                    "nodes": [
+                        {"id": "rainfall", "type": "dataLayer", "metric_type_id": "1"},
+                        {
+                            "id": "norm",
+                            "type": "normalize",
+                            "input": "rainfall",
+                            "scale": 1,
+                            "normalize_type": "percentile",
+                        },
+                    ],
+                    "output": {"source": "norm", "name": "Rainfall percentile", "legend_type": "auto"},
+                },
+                "message": "Created a percentile-normalized layer from the rainfall data.",
+            }
+        )
+
+        parsed = parse_composite_layer_graph_response(response)
+
+        self.assertEqual(parsed.graph.nodes[1].normalize_type, "percentile")
+
+    def test_normalize_node_without_type_parses_with_none(self):
+        # normalize_type is optional; the backend evaluator defaults a missing value to "min-max".
+        response = json.dumps(
+            {
+                "graph": {
+                    "nodes": [
+                        {"id": "rainfall", "type": "dataLayer", "metric_type_id": "1"},
+                        {"id": "norm", "type": "normalize", "input": "rainfall", "scale": 1},
+                    ],
+                    "output": {"source": "norm", "name": "Rainfall normalized", "legend_type": "auto"},
+                },
+                "message": "Created.",
+            }
+        )
+
+        parsed = parse_composite_layer_graph_response(response)
+
+        self.assertIsNone(parsed.graph.nodes[1].normalize_type)
 
     def test_schema_invalid_json_raises_validation_error_not_json_decode_error(self):
         # Regression test: a `classify` node with a numeric `default` (the model tried to make

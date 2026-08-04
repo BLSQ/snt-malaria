@@ -31,10 +31,18 @@ A composite layer is a small directed graph of nodes, evaluated per org unit:
   or "max". Prefer `combine` over a `formula` that just adds/averages/min/maxes its inputs (e.g.
   `(a+b+c)/3`, `a+b`, `min(a,b)`) - it says what it does and needs no formula syntax. Only fall back
   to `formula` for arithmetic `combine` can't express (weights, non-symmetric operations, conditionals).
-- `normalize`: min-max rescales a single numeric input (`input`) to a 0-`scale` range (`scale` is 1
-  or 100), independently per year - i.e. it re-expresses each org unit's value as its relative
-  position between the layer's min and max. This CANNOT be reproduced with a `formula`, since a
-  formula only ever sees one org unit's inputs at a time and has no access to the layer's min/max.
+- `normalize`: rescales a single numeric input (`input`) to a 0-`scale` range (`scale` is 1 or 100),
+  independently per year, using one of two methods given as `normalize_type` (defaults to
+  "min-max" when omitted):
+  - "min-max": re-expresses each org unit's value as its relative position between the layer's own
+    min and max. Sensitive to outliers - a single extreme value stretches the scale and crushes
+    every other value together near one end.
+  - "percentile": re-expresses each org unit's value as the fraction of other org units it
+    outranks, based purely on order, not magnitude. Prefer this over "min-max" when the layer has
+    outliers or a skewed distribution that would otherwise dominate the scale, or when the user
+    asks to rank/order org units rather than measure relative magnitude.
+  This CANNOT be reproduced with a `formula`, since a formula only ever sees one org unit's inputs
+  at a time and has no access to the layer's distribution.
 - `classify`: maps a single numeric input to a category label using an ordered list of threshold
   rules (e.g. "< 100" -> "Low"), with a `default` label used when no rule matches. A `classify`
   node's own output is categorical (text). It CAN feed a `formula` node (e.g. to compare it against
@@ -56,7 +64,7 @@ explanation of what you did in the `message` field instead:
       {"id": "<unique id you choose, e.g. \\"rainfall\\">", "type": "dataLayer", "metric_type_id": "<id from the catalog above, as a string>"},
       {"id": "<unique id>", "type": "formula", "inputs": ["<id of another node>", ...], "formula": "<infix expression using a, b, c, ...>"},
       {"id": "<unique id>", "type": "combine", "inputs": ["<id of another node>", ...], "operation": "<mean|sum|min|max>"},
-      {"id": "<unique id>", "type": "normalize", "input": "<id of a numeric-producing node>", "scale": 1},
+      {"id": "<unique id>", "type": "normalize", "input": "<id of a numeric-producing node>", "scale": 1, "normalize_type": "<min-max|percentile, defaults to min-max>"},
       {"id": "<unique id>", "type": "classify", "input": "<id of a numeric-producing node>", "rules": [{"op": "<", "value": 100, "label": "Low"}], "default": "<label for anything matching no rule>"}
     ],
     "output": {"source": "<id of the node producing the final result>", "name": "<human readable name>", "legend_type": "auto"}
@@ -118,6 +126,7 @@ class GraphNodeSpec(BaseModel, extra="allow"):
     default: Optional[str] = None
     # normalize
     scale: Optional[float] = None
+    normalize_type: Optional[str] = None
 
 
 class GraphOutputSpec(BaseModel):

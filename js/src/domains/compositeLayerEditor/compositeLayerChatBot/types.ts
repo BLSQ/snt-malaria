@@ -13,6 +13,8 @@ export type ClassifyRuleSpec = {
 
 export type CombineOperation = 'mean' | 'sum' | 'min' | 'max';
 
+export type NormalizeType = 'min-max' | 'percentile';
+
 export type GraphNodeType =
     | 'dataLayer'
     | 'formula'
@@ -22,7 +24,7 @@ export type GraphNodeType =
 
 // A single abstract node in the AI-generated graph. Which fields are relevant depends on `type`:
 // dataLayer -> metric_type_id; formula -> inputs + formula; combine -> inputs + operation;
-// normalize -> input + scale; classify -> input + rules + default.
+// normalize -> input + scale + normalize_type; classify -> input + rules + default.
 export type GeneratedGraphNode = {
     id: string;
     type: GraphNodeType;
@@ -34,6 +36,7 @@ export type GeneratedGraphNode = {
     rules?: ClassifyRuleSpec[];
     default?: string;
     scale?: 1 | 100;
+    normalize_type?: NormalizeType;
 };
 
 export type LegendType = 'auto' | 'linear' | 'threshold' | 'ordinal';
