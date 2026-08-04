@@ -1,4 +1,4 @@
-import React from 'react';
+import { SvgIconComponent } from '@mui/icons-material';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import CategoryIcon from '@mui/icons-material/Category';
 import CompressIcon from '@mui/icons-material/Compress';
@@ -6,7 +6,6 @@ import FunctionsIcon from '@mui/icons-material/Functions';
 import LayersIcon from '@mui/icons-material/Layers';
 import MediationIcon from '@mui/icons-material/Mediation';
 import { IntlMessage } from 'bluesquare-components';
-import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from './messages';
 import { CompositeNodeType, FlumeNodeInputData } from './types/flumeGraph';
 
@@ -27,7 +26,7 @@ export const OPERATOR_OUTPUT_PORT_NAME = 'result';
 
 export type OperatorNodeTypeConfig = {
     type: OperatorNodeType;
-    icon: React.ComponentType<{ sx?: SxStyles[string] }>;
+    icon: SvgIconComponent;
     sortIndex: number;
     width: number;
     labelMessage: IntlMessage;
@@ -83,10 +82,7 @@ export const OPERATOR_NODE_TYPE_LIST: OperatorNodeTypeConfig[] = Object.values(
 ).sort((a, b) => a.sortIndex - b.sortIndex);
 
 /** Icon shown in each Flume node's canvas header, keyed by node type (see `NodeHeaderContent`). */
-export const NODE_TYPE_ICONS: Record<
-    CompositeNodeType,
-    React.ComponentType<{ sx?: SxStyles[string] }>
-> = {
+export const NODE_TYPE_ICONS: Record<CompositeNodeType, SvgIconComponent> = {
     dataLayer: LayersIcon,
     output: AccountTreeIcon,
     formula: OPERATOR_NODE_TYPES.formula.icon,

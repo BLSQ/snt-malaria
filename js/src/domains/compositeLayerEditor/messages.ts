@@ -13,14 +13,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.hideDataLayers',
         defaultMessage: 'Hide data layers',
     },
-    switchToAiGeneration: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.switchToAiGeneration',
-        defaultMessage: 'Generate with AI',
-    },
-    switchToDataLayerList: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.switchToDataLayerList',
-        defaultMessage: 'Back to data layer list',
-    },
     save: {
         id: 'iaso.snt_malaria.compositeLayerEditor.save',
         defaultMessage: 'Save',
@@ -282,6 +274,31 @@ export const MESSAGES = defineMessages({
     firstConnectedLayerPlaceholder: {
         id: 'iaso.snt_malaria.compositeLayerEditor.firstConnectedLayerPlaceholder',
         defaultMessage: '[First connected layer]',
+    },
+    // Node library sidebar (tabs, search, Comment annotation entry).
+    nodeLibraryTabLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.nodeLibraryTabLabel',
+        defaultMessage: 'Node library',
+    },
+    aiModeTabLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.aiModeTabLabel',
+        defaultMessage: 'AI Mode',
+    },
+    searchForNodePlaceholder: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.searchForNodePlaceholder',
+        defaultMessage: 'Search for node',
+    },
+    operatorsCategoryLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.operatorsCategoryLabel',
+        defaultMessage: 'Operators',
+    },
+    commentNodeLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.commentNodeLabel',
+        defaultMessage: 'Comment',
+    },
+    commentNodeDescription: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.commentNodeDescription',
+        defaultMessage: 'A comment for documenting nodes.',
     },
     compositeLayerAITitle: {
         id: 'iaso.snt_malaria.compositeLayerEditor.ai.title',

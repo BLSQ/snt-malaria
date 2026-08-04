@@ -19,11 +19,6 @@ type Props = {
     /** Maps a MetricType id to the composite layer that produced it, when it is a composite. */
     compositeLayerIdByMetricType: Map<number, number>;
     deleteMetricType: (metricTypeId: number) => void;
-    /**
-     * True while the composite editor is open: rows become drag sources for the canvas, selection
-     * is locked to the currently-edited layer, and per-row actions are hidden.
-     */
-    editing?: boolean;
 };
 
 export const DataLayerList: FC<Props> = ({
@@ -33,23 +28,21 @@ export const DataLayerList: FC<Props> = ({
     onEditMetricType,
     compositeLayerIdByMetricType,
     deleteMetricType,
-    editing = false,
 }) => {
     const { formatMessage } = useSafeIntl();
 
     // Auto-select the first layer only on the initial load. Doing it on every `metricCategories`
     // change would clobber the parent's selection whenever the list refetches (e.g. after saving a
-    // composite, which should stay displayed). Never auto-select while editing: selection is locked
-    // to the layer being edited.
+    // composite, which should stay displayed).
     const hasAutoSelected = useRef(false);
     useEffect(() => {
-        if (editing || hasAutoSelected.current) return;
+        if (hasAutoSelected.current) return;
         const firstMetricType = metricCategories[0]?.items[0];
         if (firstMetricType) {
             hasAutoSelected.current = true;
             onSelectMetricType(firstMetricType);
         }
-    }, [metricCategories, onSelectMetricType, editing]);
+    }, [metricCategories, onSelectMetricType]);
     return (
         (metricCategories.length === 0 && (
             <Typography variant="body2" color="textSecondary">
@@ -75,7 +68,6 @@ export const DataLayerList: FC<Props> = ({
                                 selected={
                                     metricType.id === selectedMetricTypeId
                                 }
-                                editing={editing}
                             />
                         ))}
                     </Fragment>

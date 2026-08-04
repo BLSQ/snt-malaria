@@ -34,6 +34,12 @@ import { CompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChat
 import { GeneratedGraph } from '../compositeLayerEditor/compositeLayerChatBot/types';
 import { useCompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChatBot/useCompositeLayerAIChat';
 import { useGetCompositeLayers } from '../compositeLayerEditor/hooks/useGetCompositeLayers';
+import { MESSAGES as COMPOSITE_MESSAGES } from '../compositeLayerEditor/messages';
+import {
+    CompositeSidebarTab,
+    CompositeSidebarTabsHeader,
+} from '../compositeLayerEditor/nodeLibrary/CompositeSidebarTabsHeader';
+import { NodeLibrary } from '../compositeLayerEditor/nodeLibrary/NodeLibrary';
 import { CompositeLayerListItem } from '../compositeLayerEditor/types/compositeLayer';
 import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
@@ -173,12 +179,11 @@ export const DataLayers: FC = () => {
         setSidebarCollapsed(collapsed => !collapsed);
     }, []);
 
-    // Whether the sidebar shows the AI chat instead of the draggable data layer list, while the
-    // composite editor is open. Switched into deliberately via the editor header's toggle.
-    const [isAiChatMode, setIsAiChatMode] = useState<boolean>(false);
-    const toggleAiChatMode = useCallback(() => {
-        setIsAiChatMode(aiChatMode => !aiChatMode);
-    }, []);
+    // Which sidebar tab is active while the composite editor is open: the node library (default)
+    // or the AI chat. Irrelevant once `hasAiApiKey` is false - the sidebar is just the library then.
+    const [sidebarTab, setSidebarTab] = useState<CompositeSidebarTab>(
+        'library',
+    );
 
     const [selectedMetricType, setSelectedMetricType] = useState<MetricType>();
 
@@ -216,7 +221,7 @@ export const DataLayers: FC = () => {
         setIsCompositeEditorOpen(false);
         setEditingCompositeLayerId(undefined);
         setSidebarCollapsed(false);
-        setIsAiChatMode(false);
+        setSidebarTab('library');
         resetAiChat();
     }, [resetAiChat]);
 
@@ -278,14 +283,50 @@ export const DataLayers: FC = () => {
                     {!sidebarCollapsed && (
                         <SidebarColumn>
                             <PaperFullHeight>
-                                {isCompositeEditorOpen &&
-                                isAiChatMode &&
-                                hasAiApiKey ? (
-                                    <CompositeLayerAIChat
-                                        messages={aiChatMessages}
-                                        isLoading={isAiChatLoading}
-                                        onSendMessage={sendAiChatMessage}
-                                    />
+                                {isCompositeEditorOpen ? (
+                                    <Card sx={styles.card}>
+                                        <CardStyled
+                                            header={
+                                                hasAiApiKey ? (
+                                                    <CompositeSidebarTabsHeader
+                                                        tab={sidebarTab}
+                                                        onChangeTab={
+                                                            setSidebarTab
+                                                        }
+                                                    />
+                                                ) : (
+                                                    formatMessage(
+                                                        COMPOSITE_MESSAGES.nodeLibraryTabLabel,
+                                                    )
+                                                )
+                                            }
+                                        >
+                                            {sidebarTab === 'ai' &&
+                                            hasAiApiKey ? (
+                                                <CompositeLayerAIChat
+                                                    messages={aiChatMessages}
+                                                    isLoading={
+                                                        isAiChatLoading
+                                                    }
+                                                    onSendMessage={
+                                                        sendAiChatMessage
+                                                    }
+                                                />
+                                            ) : (
+                                                <NodeLibrary
+                                                    metricCategories={
+                                                        metricCategories || []
+                                                    }
+                                                    compositeLayerIdByMetricType={
+                                                        compositeLayerIdByMetricType
+                                                    }
+                                                    selectedMetricTypeId={
+                                                        editedCompositeMetricTypeId
+                                                    }
+                                                />
+                                            )}
+                                        </CardStyled>
+                                    </Card>
                                 ) : (
                                     <Card sx={styles.card}>
                                         <CardStyled
@@ -311,9 +352,7 @@ export const DataLayers: FC = () => {
                                                     setDisplayedMetricType
                                                 }
                                                 selectedMetricTypeId={
-                                                    isCompositeEditorOpen
-                                                        ? editedCompositeMetricTypeId
-                                                        : displayedMetricType?.id
+                                                    displayedMetricType?.id
                                                 }
                                                 onEditMetricType={
                                                     onEditMetricType
@@ -324,7 +363,6 @@ export const DataLayers: FC = () => {
                                                 deleteMetricType={
                                                     deleteMetricType
                                                 }
-                                                editing={isCompositeEditorOpen}
                                             />
                                         </CardStyled>
                                     </Card>
@@ -342,9 +380,6 @@ export const DataLayers: FC = () => {
                                     onSaved={onCompositeSaved}
                                     sidebarCollapsed={sidebarCollapsed}
                                     onToggleSidebar={toggleSidebar}
-                                    isAiChatMode={isAiChatMode}
-                                    onToggleAiChatMode={toggleAiChatMode}
-                                    showAiChatToggle={hasAiApiKey}
                                 />
                             ) : (
                                 <Stack

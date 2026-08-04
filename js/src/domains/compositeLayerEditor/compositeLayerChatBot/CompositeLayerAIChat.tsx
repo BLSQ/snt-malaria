@@ -13,13 +13,19 @@ type Props = {
 };
 
 const chatStyles = {
-    header: {
-        pb: 0,
-        minHeight: '65px',
+    // The node library's tabs already say "AI Mode" - no need for ChatPanel's own sticky title
+    // row on top of that. Its title text is shown once instead, centered above the empty-state
+    // copy (see `emptyState` below).
+    header: { display: 'none' },
+} satisfies SxStyles;
+
+const emptyStateStyles = {
+    title: {
         display: 'flex',
-        alignContent: 'center',
-        border: 'none',
-        ' p': { fontSize: '1.25rem', ml: 0.5 },
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 0.75,
+        mb: 1,
     },
 } satisfies SxStyles;
 
@@ -49,13 +55,23 @@ export const CompositeLayerAIChat: FC<Props> = ({
                 messages={messages}
                 isLoading={isLoading}
                 title={formatMessage(MESSAGES.compositeLayerAITitle)}
-                titleIcon={<AutoAwesomeIcon color="primary" fontSize="small" />}
                 placeholder={formatMessage(
                     MESSAGES.compositeLayerAIPlaceholder,
                 )}
                 sx={chatStyles}
                 emptyState={
                     <Box>
+                        <Box sx={emptyStateStyles.title}>
+                            <AutoAwesomeIcon
+                                color="primary"
+                                fontSize="small"
+                            />
+                            <Typography
+                                sx={{ fontWeight: 700, fontSize: '1.25rem' }}
+                            >
+                                {formatMessage(MESSAGES.compositeLayerAITitle)}
+                            </Typography>
+                        </Box>
                         <Typography variant="body1" sx={{ fontWeight: 700 }}>
                             {formatMessage(
                                 MESSAGES.compositeLayerAIEmptyStateTitle,
