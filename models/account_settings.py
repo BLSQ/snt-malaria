@@ -25,7 +25,6 @@ def get_intervention_org_units(account):
 
 
 def get_account_metric_type_ids(account) -> set:
-    """Return the set of MetricType ids that belong to this account."""
     return set(MetricType.objects.filter(account=account).values_list("id", flat=True))
 
 

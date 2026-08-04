@@ -571,6 +571,26 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         rule.refresh_from_db()
         self.assertEqual(rule.org_units_matched, [])
 
+    def test_scenario_update_omitting_data_layer_years_does_not_wipe_it(self):
+        """A PUT that omits `data_layer_years` entirely must leave the scenario's existing value
+        untouched, not silently reset it to `{}` (the field has no `default=` for this reason)."""
+        metric_type = MetricType.objects.create(account=self.account, name="ITN", code="ITN", units="ratio")
+        self.scenario.data_layer_years = {str(metric_type.id): 2025}
+        self.scenario.save()
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        payload = {
+            "id": self.scenario.id,
+            "name": "Renamed scenario",
+            "start_year": self.scenario.start_year,
+            "end_year": self.scenario.end_year,
+        }
+        response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.scenario.refresh_from_db()
+        self.assertEqual(self.scenario.data_layer_years, {str(metric_type.id): 2025})
+
     def test_scenario_duplicate_with_full_perm(self):
         # Making sure that the right assignments are in place before duplication
         self.scenario.refresh_assignments(self.user_with_full_perm)

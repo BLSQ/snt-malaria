@@ -64,7 +64,9 @@ const ScenarioForm: React.FC = () => {
         [metricCategories],
     );
 
-    const [customizeExpanded, setCustomizeExpanded] = useState(false);
+    const [customizeExpanded, setCustomizeExpanded] = useState(
+        () => Object.keys(values.data_layer_years).length > 0,
+    );
     const [newLayer, setNewLayer] = useState<MetricType | undefined>(undefined);
     const [newLayerYear, setNewLayerYear] = useState<number | undefined>(
         undefined,

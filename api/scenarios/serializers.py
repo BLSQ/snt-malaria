@@ -38,7 +38,8 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False, allow_blank=True)
     start_year = serializers.IntegerField(required=True)
     end_year = serializers.IntegerField(required=True)
-    data_layer_years = serializers.DictField(child=serializers.IntegerField(), required=False, default=dict)
+    # No `default=`: DRF would use it to silently overwrite an omitted field with `{}` on a full PUT.
+    data_layer_years = serializers.DictField(child=serializers.IntegerField(), required=False)
 
     SCENARIO_MIN_YEAR = 2024
     SCENARIO_MAX_YEAR = 2035

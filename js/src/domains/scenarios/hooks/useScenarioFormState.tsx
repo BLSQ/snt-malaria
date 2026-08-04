@@ -34,42 +34,6 @@ const initialValues: ScenarioFormValues = {
 };
 
 /**
- * Splits a flat `data_layer_years` map (as stored on the backend) back into a
- * `reference_year` + override pairs, for the edit form. There is no persisted
- * "this was the default" flag, so the most frequent year in the map is treated
- * as the reference year, and only entries that differ from it are shown as
- * per-layer overrides - this keeps the "customize per data layer" section from
- * re-listing every layer once a reference year has been saved once.
- */
-export const splitDataLayerYears = (
-    dataLayerYears: Record<string, number>,
-): Pick<ScenarioFormValues, 'reference_year' | 'data_layer_years'> => {
-    const entries = Object.entries(dataLayerYears ?? {});
-    if (entries.length === 0) {
-        return { reference_year: undefined, data_layer_years: {} };
-    }
-
-    const counts = new Map<number, number>();
-    entries.forEach(([, year]) => {
-        counts.set(year, (counts.get(year) ?? 0) + 1);
-    });
-
-    let referenceYear: number | undefined;
-    let maxCount = 0;
-    counts.forEach((count, year) => {
-        if (count > maxCount) {
-            maxCount = count;
-            referenceYear = year;
-        }
-    });
-
-    const overrides = Object.fromEntries(
-        entries.filter(([, year]) => year !== referenceYear),
-    );
-    return { reference_year: referenceYear, data_layer_years: overrides };
-};
-
-/**
  * Builds the flat `data_layer_years` payload sent to the backend: the reference
  * year applied to every known data layer, with per-layer overrides on top. When
  * no reference year is set, only the explicit overrides are sent (a layer with
@@ -154,17 +118,17 @@ export const useScenarioFormState = (
         if (!scenario) {
             return initialValues;
         }
-        const { reference_year, data_layer_years } = splitDataLayerYears(
-            scenario.data_layer_years,
-        );
+        // reference_year stays unset: there's no way to tell a "same year everywhere"
+        // dict apart from a few coincidental per-layer overrides, so guessing one back
+        // from data_layer_years risks expanding it to layers the user never touched.
         return {
             id: scenario.id,
             name: scenario.name,
             description: scenario.description,
             start_year: scenario.start_year,
             end_year: scenario.end_year,
-            reference_year,
-            data_layer_years,
+            reference_year: undefined,
+            data_layer_years: scenario.data_layer_years ?? {},
         };
     }, [scenario]);
 
