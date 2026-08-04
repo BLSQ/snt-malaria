@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-24 07:46+0000\n"
+"POT-Creation-Date: 2026-08-04 14:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -70,8 +70,8 @@ msgid ""
 "Cannot delete this intervention because it is used by one or more scenario "
 "rules."
 msgstr ""
-"Il est impossible de supprimer cette intervention car elle est utilisée "
-"par une ou plusieurs règles de scénario."
+"Il est impossible de supprimer cette intervention car elle est utilisée par "
+"une ou plusieurs règles de scénario."
 
 #: plugins/snt_malaria/api/scenarios/serializers.py
 msgid "Cannot modify a locked scenario."
@@ -85,6 +85,11 @@ msgstr "L'année de début doit être entre 2024 et 2035."
 #: plugins/snt_malaria/api/scenarios/views.py
 msgid "Start year should be lower or equal end year."
 msgstr "L'année de début doit être la même ou avant l'année de fin"
+
+#: plugins/snt_malaria/api/scenarios/serializers.py
+#, python-format
+msgid "Invalid metric type ids: %(ids)s"
+msgstr "Metric type id invalides: %(ids)s"
 
 #: plugins/snt_malaria/api/scenarios/serializers.py
 msgid "A scenario with this name already exists for your account."
