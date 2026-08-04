@@ -6,6 +6,7 @@ import { DropdownButton } from '../../../../../components/DropdownButton';
 import { useGetChildError } from '../../../../../hooks/useGetChildError';
 import { MetricTypeCategory } from '../../../../dataLayers/types/metrics';
 import { MESSAGES } from '../../../../messages';
+import { getDataLayerYear } from '../../../../scenarios/types';
 import { defaultMatchingCriteria } from '../../../hooks/useScenarioRuleFormState';
 import { MetricTypeCriterion } from '../../../types/scenarioRule';
 import { MatchingCriterionForm } from './MatchingCriterionForm';
@@ -79,13 +80,10 @@ export const MatchingCriteriaForm: FC<Props> = ({
                     <MatchingCriterionForm
                         metricTypeCriterion={criterion}
                         metricType={getMetricType(criterion.metric_type)}
-                        configuredYear={
-                            criterion.metric_type != null
-                                ? dataLayerYears?.[
-                                      String(criterion.metric_type)
-                                  ]
-                                : undefined
-                        }
+                        configuredYear={getDataLayerYear(
+                            dataLayerYears,
+                            criterion.metric_type,
+                        )}
                         onUpdateField={(field, value) =>
                             onUpdateField(LIST_FIELD_KEY, index, field, value)
                         }

@@ -33,15 +33,8 @@ const styles = {
         flexGrow: 1,
     },
     collapsibleToggle: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 0.5,
-        border: 'none',
-        background: 'transparent',
-        cursor: 'pointer',
-        padding: 0,
         color: 'text.secondary',
-        font: 'inherit',
+        textTransform: 'none',
     },
     chevron: {
         fontSize: 20,
@@ -207,22 +200,23 @@ const ScenarioForm: React.FC = () => {
                 />
             </Box>
             <Box mt={2}>
-                <Box
-                    component="button"
-                    type="button"
+                <Button
+                    size="small"
                     sx={styles.collapsibleToggle}
                     onClick={() => setCustomizeExpanded(prev => !prev)}
+                    endIcon={
+                        <ExpandMoreIcon
+                            sx={[
+                                styles.chevron,
+                                customizeExpanded && styles.chevronOpen,
+                            ]}
+                        />
+                    }
                 >
                     <Typography variant="caption" color="text.secondary">
                         {formatMessage(MESSAGES.customizeDataLayerYears)}
                     </Typography>
-                    <ExpandMoreIcon
-                        sx={[
-                            styles.chevron,
-                            customizeExpanded && styles.chevronOpen,
-                        ]}
-                    />
-                </Box>
+                </Button>
                 <Collapse in={customizeExpanded}>
                     <Typography
                         variant="caption"

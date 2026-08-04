@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useGetMetricValues } from '../../dataLayers/hooks/useGetMetrics';
+import { getDataLayerYear } from '../../scenarios/types';
 import { usePlanningContext } from '../contexts/PlanningContext';
 
 // Fallback: SNT convention code used when no default_population_id is configured.
@@ -53,10 +54,10 @@ export const usePopulationByOrgUnit = ({
 
     const { data: metricValues } = useGetMetricValues({
         metricTypeId: resolvedMetricTypeId,
-        year:
-            resolvedMetricTypeId != null
-                ? scenario?.data_layer_years?.[String(resolvedMetricTypeId)]
-                : undefined,
+        year: getDataLayerYear(
+            scenario?.data_layer_years,
+            resolvedMetricTypeId,
+        ),
     });
 
     return useMemo(() => {

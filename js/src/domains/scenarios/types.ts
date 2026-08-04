@@ -18,3 +18,9 @@ export type Scenario = {
     updated_at: string; // ISO 8601 formatted date string
     is_locked: boolean;
 };
+
+export const getDataLayerYear = (
+    dataLayerYears: Record<string, number> | undefined,
+    metricTypeId: number | null | undefined,
+): number | undefined =>
+    metricTypeId != null ? dataLayerYears?.[String(metricTypeId)] : undefined;

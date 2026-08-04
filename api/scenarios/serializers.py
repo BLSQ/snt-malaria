@@ -4,10 +4,9 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from iaso.api.common import UserSerializer
-from iaso.models import MetricType
 from plugins.snt_malaria.api.scenarios.utils import get_interventions, get_missing_headers
 from plugins.snt_malaria.models import Scenario, ScenarioRule
-from plugins.snt_malaria.models.account_settings import get_intervention_org_units
+from plugins.snt_malaria.models.account_settings import get_account_metric_type_ids, get_intervention_org_units
 
 
 class ScenarioSerializer(serializers.ModelSerializer):
@@ -72,9 +71,7 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
 
         request = self.context.get("request")
         account = request.user.iaso_profile.account
-        account_metric_type_ids = {
-            str(mt_id) for mt_id in MetricType.objects.filter(account=account).values_list("id", flat=True)
-        }
+        account_metric_type_ids = {str(mt_id) for mt_id in get_account_metric_type_ids(account)}
         invalid_keys = [key for key in value if key not in account_metric_type_ids]
         if invalid_keys:
             raise serializers.ValidationError(_("Invalid metric type ids: %(ids)s") % {"ids": invalid_keys})
