@@ -26,11 +26,7 @@ import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { CanvasControls } from './components/CanvasControls';
 import { EditorHeader } from './components/EditorHeader';
 import { NodeHeaderContent } from './components/NodeHeaderContent';
-import {
-    buildFlumeGraphFromSpec,
-    centerGraph,
-    relayoutWithMeasuredSizes,
-} from './compositeLayerChatBot/buildFlumeGraph';
+import { buildFlumeGraphFromSpec } from './compositeLayerChatBot/buildFlumeGraph';
 import { extractGraphSpecFromFlume } from './compositeLayerChatBot/extractGraphSpec';
 import { CurrentGraph, GeneratedGraph } from './compositeLayerChatBot/types';
 import {
@@ -58,6 +54,7 @@ import {
     isOutputConnected,
     removeInputConnection,
 } from './utils/graph';
+import { centerGraph, relayoutWithMeasuredSizes } from './utils/graphLayout';
 
 // Flume adds a default output node for a fresh graph; existing graphs already contain their own.
 const DEFAULT_NODES = [{ type: 'output' }];

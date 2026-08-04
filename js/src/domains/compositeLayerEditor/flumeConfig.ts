@@ -9,6 +9,10 @@ import { MappingsControl } from './components/MappingsControl';
 import { NodeHelperText } from './components/NodeHelperText';
 import { NodeMapPreview } from './components/NodeMapPreview';
 import { MESSAGES } from './messages';
+import {
+    OPERATOR_NODE_TYPES,
+    OPERATOR_OUTPUT_PORT_NAME,
+} from './nodeTypeRegistry';
 import { CompositePreviewState } from './types/compositeLayer';
 import { getCompositeLegendOptions } from './utils/legendOptions';
 
@@ -425,10 +429,12 @@ export const createCompositeFlumeConfig = (
         })
         .addNodeType({
             type: 'formula',
-            label: formatMessage(MESSAGES.formulaNodeLabel),
-            description: formatMessage(MESSAGES.formulaNodeDescription),
-            sortIndex: 1,
-            initialWidth: 260,
+            label: formatMessage(OPERATOR_NODE_TYPES.formula.labelMessage),
+            description: formatMessage(
+                OPERATOR_NODE_TYPES.formula.descriptionMessage,
+            ),
+            sortIndex: OPERATOR_NODE_TYPES.formula.sortIndex,
+            initialWidth: OPERATOR_NODE_TYPES.formula.width,
             // Dynamic inputs: Flume calls this with the node's live connections, so returning a
             // function lets the port list grow as inputs get connected.
             inputs: (ports: any) =>
@@ -446,17 +452,19 @@ export const createCompositeFlumeConfig = (
                 ),
             outputs: (ports: any) => [
                 ports.layerValues({
-                    name: 'result',
+                    name: OPERATOR_OUTPUT_PORT_NAME,
                     label: formatMessage(MESSAGES.resultPortLabel),
                 }),
             ],
         })
         .addNodeType({
             type: 'combine',
-            label: formatMessage(MESSAGES.combineNodeLabel),
-            description: formatMessage(MESSAGES.combineNodeDescription),
-            sortIndex: 2,
-            initialWidth: 260,
+            label: formatMessage(OPERATOR_NODE_TYPES.combine.labelMessage),
+            description: formatMessage(
+                OPERATOR_NODE_TYPES.combine.descriptionMessage,
+            ),
+            sortIndex: OPERATOR_NODE_TYPES.combine.sortIndex,
+            initialWidth: OPERATOR_NODE_TYPES.combine.width,
             inputs: (ports: any) =>
                 dynamicValueInputs(
                     ports,
@@ -468,17 +476,19 @@ export const createCompositeFlumeConfig = (
                 ),
             outputs: (ports: any) => [
                 ports.layerValues({
-                    name: 'result',
+                    name: OPERATOR_OUTPUT_PORT_NAME,
                     label: formatMessage(MESSAGES.resultPortLabel),
                 }),
             ],
         })
         .addNodeType({
             type: 'normalize',
-            label: formatMessage(MESSAGES.normalizeNodeLabel),
-            description: formatMessage(MESSAGES.normalizeNodeDescription),
-            sortIndex: 3,
-            initialWidth: 260,
+            label: formatMessage(OPERATOR_NODE_TYPES.normalize.labelMessage),
+            description: formatMessage(
+                OPERATOR_NODE_TYPES.normalize.descriptionMessage,
+            ),
+            sortIndex: OPERATOR_NODE_TYPES.normalize.sortIndex,
+            initialWidth: OPERATOR_NODE_TYPES.normalize.width,
             inputs: (ports: any) => [
                 ports.layerValues({
                     name: 'a',
@@ -492,17 +502,19 @@ export const createCompositeFlumeConfig = (
             ],
             outputs: (ports: any) => [
                 ports.layerValues({
-                    name: 'result',
+                    name: OPERATOR_OUTPUT_PORT_NAME,
                     label: formatMessage(MESSAGES.resultPortLabel),
                 }),
             ],
         })
         .addNodeType({
             type: 'classify',
-            label: formatMessage(MESSAGES.classifyNodeLabel),
-            description: formatMessage(MESSAGES.classifyNodeDescription),
-            sortIndex: 4,
-            initialWidth: 320,
+            label: formatMessage(OPERATOR_NODE_TYPES.classify.labelMessage),
+            description: formatMessage(
+                OPERATOR_NODE_TYPES.classify.descriptionMessage,
+            ),
+            sortIndex: OPERATOR_NODE_TYPES.classify.sortIndex,
+            initialWidth: OPERATOR_NODE_TYPES.classify.width,
             inputs: (ports: any) => [
                 ports.layerValues({
                     name: 'a',
@@ -516,7 +528,7 @@ export const createCompositeFlumeConfig = (
             ],
             outputs: (ports: any) => [
                 ports.layerValues({
-                    name: 'result',
+                    name: OPERATOR_OUTPUT_PORT_NAME,
                     label: formatMessage(MESSAGES.classPortLabel),
                 }),
             ],
