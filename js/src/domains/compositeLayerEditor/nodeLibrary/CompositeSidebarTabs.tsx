@@ -13,8 +13,7 @@ const styles = {
 type Props = {
     tab: CompositeSidebarTab;
     onChangeTab: (tab: CompositeSidebarTab) => void;
-    /** Whether the AI chat is available at all (the account has an AI API key configured). With
-     * no chat to switch to there is nothing to tab between, so a plain title is shown instead. */
+    /** False when the account has no AI API key: nothing to tab to, so a title is shown. */
     showTabs: boolean;
 };
 

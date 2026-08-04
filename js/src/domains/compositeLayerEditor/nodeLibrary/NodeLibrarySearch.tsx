@@ -5,8 +5,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
 
 const styles = {
-    // `mt` is the gap below the sidebar tabs; the card header has no bottom padding of its own, so
-    // the gap before the list comes from `mb` here.
+    // The card header has no bottom padding, so `mb` is the gap before the list.
     root: { mt: 2.5, mb: 1 },
     hint: { display: 'block', mt: 1, color: 'text.secondary' },
 } satisfies SxStyles;
@@ -19,8 +18,8 @@ type Props = {
 const noop = () => undefined;
 
 /**
- * The node library's search field and drag-and-drop hint. Rendered into the card's header rather
- * than inside `NodeLibrary` itself so it stays put while the nodes scroll under it.
+ * The library's search field and hint. Rendered into the card header, not `NodeLibrary`, so it
+ * stays put while the nodes scroll under it.
  */
 export const NodeLibrarySearch: FC<Props> = ({ value, onChange }) => {
     const { formatMessage } = useSafeIntl();

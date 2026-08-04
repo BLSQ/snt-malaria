@@ -26,16 +26,14 @@ type Props = {
     item: NodeLibraryItem;
 };
 
-/** Draggable row for one node-library entry (a transformation node, or a canvas tool). Mirrors
- * `dataLayers/dataLayerList/DataLayerLine.tsx`'s drag-image-cloning technique so the dragged
- * preview looks the same regardless of which list it came from. */
+/** Draggable row for one node-library entry. */
 export const NodeLibraryLine: FC<Props> = ({ item }) => {
     const theme = useTheme();
     const onDragStart = useCallback(
         (e: React.DragEvent<HTMLElement>) => {
             e.dataTransfer.setData(COMPOSITE_NODE_TYPE_DND_MIME, item.type);
             e.dataTransfer.effectAllowed = 'copy';
-            // See DataLayerLine.tsx: clone the row so the drag image keeps its rounded corners.
+            // Clone the row so the drag image keeps its rounded corners (as DataLayerLine).
             const row = e.currentTarget;
             const rect = row.getBoundingClientRect();
             const clone = row.cloneNode(true) as HTMLElement;
@@ -66,8 +64,7 @@ export const NodeLibraryLine: FC<Props> = ({ item }) => {
     return (
         <ListItem draggable onDragStart={onDragStart} sx={styles.root}>
             <Box sx={styles.details}>
-                {/* Primary-coloured to set these apart from the data layer rows below, which use
-                    the muted `action` colour. */}
+                {/* Primary-coloured, unlike the muted data layer rows below. */}
                 <Icon sx={styles.icon} color="primary" />
                 <Typography variant="body2">{item.label}</Typography>
             </Box>

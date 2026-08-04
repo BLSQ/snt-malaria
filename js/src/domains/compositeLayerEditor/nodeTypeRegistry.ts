@@ -10,14 +10,9 @@ import { MESSAGES } from './messages';
 import { CompositeNodeType, FlumeNodeInputData } from './types/flumeGraph';
 
 /**
- * Single source of truth for the 4 "operator" node types' metadata (icon, label, description,
- * canvas width, sort order in Flume's add-node menu, and the `inputData` a brand-new instance of
- * the node gets). Consumed by `flumeConfig.ts` (Flume node type registration),
- * `NodeHeaderContent.tsx` (canvas node header icon), `utils/graphLayout.ts` (layout width) and the
- * node library (drag-and-drop entries) - one definition per node type instead of one per consumer.
- *
- * `dataLayer`/`output` aren't included: their default data and dimensions are already
- * special-cased wherever they're built (they're never created "empty" the way an operator is).
+ * Metadata for the operator node types, shared by `flumeConfig.ts`, `NodeHeaderContent.tsx`,
+ * `utils/graphLayout.ts` and the node library. `dataLayer`/`output` are left out: they are never
+ * created empty, so their defaults are special-cased where they're built.
  */
 export type OperatorNodeType = 'formula' | 'combine' | 'normalize' | 'classify';
 

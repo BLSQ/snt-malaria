@@ -44,17 +44,15 @@ type UseCanvasDrop = {
     remountWithGraph: (nextNodes: FlumeGraph) => void;
 };
 
-// Random suffix shared by every kind of id this hook mints (node or comment), so drops never
-// collide even if two land in the same millisecond.
+// Suffixed so two drops in the same millisecond can't collide.
 const randomIdSuffix = (): string =>
     `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 /**
- * Drop a node-library entry (a data layer, an operator node type, or Comment) from the sidebar
- * onto the canvas → build the corresponding node/comment and remount with the new graph (Flume
- * has no imperative "add node" API). To keep the view from jumping, `shiftGraphForRemount`
- * pre-shifts everything by the current pan and the scale is restored, so the only visible change
- * is the new node appearing under the cursor.
+ * Drop a node-library entry (data layer, operator node or Comment) onto the canvas: build it and
+ * remount with the new graph, since Flume has no imperative "add node" API. To keep the view from
+ * jumping, `shiftGraphForRemount` pre-shifts everything by the current pan and the scale is
+ * restored, so the only visible change is the new node appearing under the cursor.
  */
 export const useCanvasDrop = ({
     canvasRef,
@@ -68,8 +66,7 @@ export const useCanvasDrop = ({
     const mountScaleRef = useRef<number>();
 
     const handleCanvasDrop = (event: React.DragEvent<HTMLDivElement>) => {
-        // Only ever set by the node library's operator/Comment rows - checked first so it can't
-        // be confused with the data layer path's `text/plain` fallback below.
+        // Checked before the data layer path, whose `text/plain` fallback would also match.
         const nodeLibraryType = event.dataTransfer.getData(
             COMPOSITE_NODE_TYPE_DND_MIME,
         ) as CompositeNodeLibraryDragType | '';
@@ -111,15 +108,13 @@ export const useCanvasDrop = ({
                 text: '',
                 x: dropX,
                 y: dropY,
-                // Flume's own dimensions for a right-click-added comment (commentsReducer.js);
-                // the colour is one of its eight fixed slots, remapped onto our palette in
-                // `flumeTheme.ts` - `purple` resolves to the theme's primary.
+                // Flume's own dimensions (commentsReducer.js); `purple` is one of its eight
+                // fixed colour slots, remapped in `flumeTheme.ts`.
                 width: 200,
                 height: 30,
                 color: 'purple',
-                // Flume's Comment opens straight into its autofocused textarea when mounted with
-                // this set, then dispatches REMOVE_COMMENT_NEW to drop the flag - so it reaches
-                // `onCommentsChange` (and the saved graph) without it.
+                // Opens straight into its autofocused textarea, then Flume drops the flag, so
+                // it never reaches the saved graph.
                 isNew: true,
             };
         } else if (nodeLibraryType) {

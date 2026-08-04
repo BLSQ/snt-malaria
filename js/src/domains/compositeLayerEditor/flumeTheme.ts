@@ -6,9 +6,8 @@ import { alpha, Theme } from '@mui/material';
  * body uses a light tint (dark text stays readable) with a stronger, saturated border, while the
  * colour-picker swatch shows the solid colour.
  */
-// Every one of Flume's eight slots has to resolve to something, but this theme has no pink or
-// yellow of its own, so those two stay explicit accents. `yellow` is the shared Iaso brand yellow
-// (`bluesquare-components`' rawTheme `palette.yellow`, which MUI's typings don't expose).
+// All eight slots must resolve to something; the theme has no pink, and its yellow
+// (`bluesquare-components`' rawTheme `palette.yellow`) isn't in MUI's typings.
 const COMMENT_ACCENT_PINK = '#E5399A';
 const COMMENT_ACCENT_YELLOW = '#FFD835';
 

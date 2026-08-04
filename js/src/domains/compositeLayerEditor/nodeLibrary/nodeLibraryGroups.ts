@@ -20,10 +20,8 @@ export type NodeLibraryGroup = {
 };
 
 /**
- * The node library's own categories, listed above the data layer ones:
- * - Transformations: a projection of `nodeTypeRegistry.ts`'s node types, which all take layer
- *   values in and return transformed values.
- * - Tools: canvas aids that aren't graph nodes at all, so they have no registry entry.
+ * The library's own categories, above the data layer ones. Tools are canvas aids rather than graph
+ * nodes, so they have no `nodeTypeRegistry` entry.
  */
 export const getNodeLibraryGroups = (
     formatMessage: FormatMessage,

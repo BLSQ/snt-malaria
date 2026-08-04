@@ -74,14 +74,9 @@ export const CardScrollable = styled(Card)(({}) => ({
 }));
 
 /**
- * Sticky category header for the card-hosted lists (data layers, node library).
- *
- * Beyond re-affirming sticky/opaque-background and dropping MUI's default text-secondary
- * colour and side gutters, the `top` offset is what stops rows leaking above the header:
- * these lists scroll inside `CardStyled`'s `CardContent`, whose `padding-top` sits *above*
- * where `top: 0` pins a sticky child. That leaves a `CARD_CONTENT_PADDING`-tall strip at the
- * top of the scrollport which the header doesn't cover, so rows scrolling past show through
- * it. Pinning one padding-step higher makes the header flush with the visible top edge.
+ * Sticky category header for the card-hosted lists (data layers, node library). The negative `top`
+ * matters: `top: 0` would pin below `CardContent`'s padding, leaving a strip at the top of the
+ * scrollport where rows scrolling past show above the header.
  */
 export const StickyListSubheader = styled(ListSubheader)(({ theme }) => ({
     position: 'sticky',

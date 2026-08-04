@@ -13,15 +13,11 @@ type Props = {
 };
 
 const chatStyles = {
-    // The node library's tabs already say "AI Mode" - no need for ChatPanel's own sticky title
-    // row on top of that. Its title text is shown once instead, centered above the empty-state
-    // copy (see `emptyState` below).
+    // The sidebar tabs already say "AI Mode"; the title is shown in the empty state instead.
     header: { display: 'none' },
 } satisfies SxStyles;
 
-// On top of ChatPanel's own uniform flex `gap` between `emptyState` children, both the title row
-// and the subhead below get the same extra `mb`, so title→subhead and subhead→description end up
-// equally (more) spaced than a bare `gap` alone would give them.
+// Added to ChatPanel's own flex `gap` on both rows, so the two gaps stay equal.
 const EMPTY_STATE_EXTRA_GAP = 1;
 
 const emptyStateStyles = {

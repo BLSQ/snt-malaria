@@ -7,9 +7,8 @@ const styles = {
     cardHeader: {
         pb: 0,
         minHeight: '65px',
-        // The card is a fixed-height flex column whose content area's flex-basis is its full
-        // scroll height, so without this the flex algorithm shrinks the header down to
-        // `minHeight` and `overflow: hidden` below clips whatever no longer fits.
+        // Without this the flex algorithm shrinks the header to `minHeight` (the content area's
+        // flex-basis is its whole scroll height) and `overflow: hidden` clips what no longer fits.
         flexShrink: 0,
         '& .MuiCardHeader-content': {
             overflow: 'hidden',
@@ -39,11 +38,7 @@ type Props = {
     header?: ReactNode;
     isLoading?: boolean;
     headerSx?: SxProps;
-    /**
-     * Drops the content area's padding (and its scrolling) so the child reaches the card's edges.
-     * For children that own their own internal padding and scrolling, e.g. a chat panel whose
-     * dividers are meant to span the full width.
-     */
+    /** Drops the content area's padding and scrolling, for children that own their own. */
     flushContent?: boolean;
     children: ReactNode;
 };

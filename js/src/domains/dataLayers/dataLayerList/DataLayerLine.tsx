@@ -165,8 +165,7 @@ export const DataLayerLine: FC<Props> = ({
         >
             <Box sx={styles.metricTypeDetails}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    {/* One icon per row: composites swap the generic layer icon for their own
-                        rather than carrying both, which also keeps every name aligned. */}
+                    {/* Composites swap the layer icon for their own rather than showing both. */}
                     {isComposite ? (
                         <Tooltip title={formatMessage(MESSAGES.compositeLayer)}>
                             <AccountTreeIcon

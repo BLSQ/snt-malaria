@@ -11,11 +11,9 @@ type Props = {
     metricCategories: MetricTypeCategory[];
     /** Maps a MetricType id to the composite layer that produced it, when it is a composite. */
     compositeLayerIdByMetricType: Map<number, number>;
-    /** The composite layer's own underlying layer, highlighted the same way it is in the plain
-     * browsing list. */
+    /** The composite layer's own underlying layer, highlighted as in the browsing list. */
     selectedMetricTypeId?: number;
-    /** Filter typed into the search field, which lives in the card header (see
-     * `NodeLibrarySearch`) so it stays visible while this list scrolls. */
+    /** Filter from `NodeLibrarySearch`, which lives in the card header. */
     searchTerm: string;
 };
 
@@ -25,9 +23,8 @@ const matches = (haystack: string, term: string): boolean =>
 const noop = () => undefined;
 
 /**
- * Searchable, categorized drag-and-drop source for the composite editor canvas: the node
- * library's own categories (transformations, tools) first, then every data layer category with
- * the same grouping as the plain browsing list. Only rendered while the composite editor is open.
+ * Drag-and-drop source for the composite editor canvas: the library's own categories first, then
+ * the data layer ones. Only rendered while the editor is open.
  */
 export const NodeLibrary: FC<Props> = ({
     metricCategories,
@@ -37,7 +34,7 @@ export const NodeLibrary: FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
 
-    // Categories with nothing left after filtering drop out entirely, headings included.
+    // Empty categories drop out, heading included.
     const nodeGroups = useMemo(
         () =>
             getNodeLibraryGroups(formatMessage)

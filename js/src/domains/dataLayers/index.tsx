@@ -179,13 +179,11 @@ export const DataLayers: FC = () => {
         setSidebarCollapsed(collapsed => !collapsed);
     }, []);
 
-    // Which sidebar tab is active while the composite editor is open: the node library (default)
-    // or the AI chat. Irrelevant once `hasAiApiKey` is false - the sidebar is just the library then.
+    // Only meaningful while the composite editor is open, and only when there is an AI key.
     const [sidebarTab, setSidebarTab] = useState<CompositeSidebarTab>(
         'library',
     );
-    // Owned here rather than by NodeLibrary: the search field lives in the card header (so it
-    // stays put while the list scrolls) and the filtering happens in the card's content.
+    // Owned here: the field sits in the card header, the filtering happens in its content.
     const [nodeSearchTerm, setNodeSearchTerm] = useState<string>('');
     const isAiChatTab = sidebarTab === 'ai' && hasAiApiKey;
 
