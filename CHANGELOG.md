@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.16.0](https://github.com/BLSQ/snt-malaria/compare/2.15.0...2.16.0) (2026-08-05)
+
+
+### Features
+
+* **composite layers:** consolidate create/edit flow for data layers ([c4b7a54](https://github.com/BLSQ/snt-malaria/commit/c4b7a54f65e144e75ca4e6a041fe1429f9ded774))
+* **CompositeLayer:** Add percentile normalization operator ([#348](https://github.com/BLSQ/snt-malaria/issues/348)) ([08a0fe8](https://github.com/BLSQ/snt-malaria/commit/08a0fe8e11be1c85c72b6704cc7fddd4714b4fc1))
+* **CompositeLayer:** generate flume by claude ([#338](https://github.com/BLSQ/snt-malaria/issues/338)) ([9c9dced](https://github.com/BLSQ/snt-malaria/commit/9c9dced49860db329566051e8a13cbd89d1b387e))
+* **compositeLayers:** Flume chat improvements ([f0b1012](https://github.com/BLSQ/snt-malaria/commit/f0b1012f272dc0008cf6d4ab166c8f6d42972d79))
+* **DataLayers:** Add CSV export button for metric values ([#352](https://github.com/BLSQ/snt-malaria/issues/352)) ([72c4599](https://github.com/BLSQ/snt-malaria/commit/72c45996a3464696e9f8c8efc8b89984e3dcc8ae))
+* **Interventions:** Manage interventions ([#347](https://github.com/BLSQ/snt-malaria/issues/347)) ([b698720](https://github.com/BLSQ/snt-malaria/commit/b698720907f11c37b988c4c453176be377779b12))
+
+
+### Bug Fixes
+
+* **composite layers:** Node looses connector on click ([45fa0dd](https://github.com/BLSQ/snt-malaria/commit/45fa0dd08393784112d56e9c5703e91316bc83bf))
+* **MetricValuesImport:** Enable data import for years starting 2000 ([#349](https://github.com/BLSQ/snt-malaria/issues/349)) ([9104b36](https://github.com/BLSQ/snt-malaria/commit/9104b36ef43092a5ab9e928a92118b3a4ec8a93c))
+* SNT cron ([#343](https://github.com/BLSQ/snt-malaria/issues/343)) ([74f3219](https://github.com/BLSQ/snt-malaria/commit/74f3219d0a40ce388d68dd5c475f658ee77e5e87))
+
 ## [2.15.0](https://github.com/BLSQ/snt-malaria/compare/2.14.0...2.15.0) (2026-07-17)
 
 
