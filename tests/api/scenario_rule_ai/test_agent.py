@@ -33,6 +33,15 @@ class BuildSystemPromptTestCase(SimpleTestCase):
         self.assertIn("Vector control:", prompt)
         self.assertIn('- id=10, name="Bednets"', prompt)
 
+    def test_colors_catalog_is_included_and_required(self):
+        # The palette is global (not account-specific), so it's always present regardless of args.
+        prompt = build_system_prompt(METRIC_TYPES, INTERVENTIONS)
+
+        self.assertNotIn("{colors_catalog}", prompt)
+        self.assertIn('value="#b71c1c", name="Red 900"', prompt)
+        self.assertIn("Always set a `color` for every rule - it is required, not optional", prompt)
+        self.assertIn("never reuse", prompt)
+
     def test_empty_catalogs(self):
         prompt = build_system_prompt([], [])
 
@@ -69,6 +78,14 @@ class BuildSystemPromptTestCase(SimpleTestCase):
 
         self.assertIn("describe what the rule DOES", prompt)
         self.assertIn("not restate its `matching_criteria`", prompt)
+
+    def test_rules_must_have_at_least_one_intervention(self):
+        # Regression: the model suggested a match-all "baseline" rule with no interventions - a
+        # no-op, since a rule with nothing to assign does nothing regardless of what it matches.
+        prompt = build_system_prompt(METRIC_TYPES, INTERVENTIONS)
+
+        self.assertIn("Every rule MUST assign at least one intervention", prompt)
+        self.assertIn("`interventions` may never be empty, for\n  match-all rules included", prompt)
 
     def test_ordinal_metric_type_lists_valid_categories(self):
         metric_types = [
