@@ -100,6 +100,16 @@ class CompositeLayerAIViewSet(viewsets.ViewSet):
                     {"error": "The AI service is temporarily unavailable. Please try again later."},
                     status=status.HTTP_503_SERVICE_UNAVAILABLE,
                 )
+            if e.status_code == 400:
+                # A persistent configuration problem (e.g. an invalid/out-of-credit API key) rather
+                # than a transient failure - "try again" would be misleading. The account's Anthropic
+                # key is an admin-level config the end user has no visibility or control over, so log
+                # Anthropic's own detail for an admin to diagnose, but never show it to the user.
+                logger.error("Claude API rejected the request: %s", e)
+                return Response(
+                    {"error": "The AI service rejected this request. Please contact your administrator."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             logger.exception("Composite Layer AI error")
             return Response(
                 {"error": "Failed to generate composite layer. Please try again."},

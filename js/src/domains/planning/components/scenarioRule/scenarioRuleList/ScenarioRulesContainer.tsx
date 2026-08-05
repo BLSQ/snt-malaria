@@ -38,6 +38,9 @@ type Props = {
     onShowForm: (rule?: ScenarioRule) => void;
     rules: ScenarioRule[];
     createRuleRef?: Ref<HTMLButtonElement>;
+    hasAiApiKey?: boolean;
+    showAIChat?: boolean;
+    onToggleAIChat?: () => void;
 };
 
 type ReorderScenarioRulesParams = {
@@ -52,6 +55,9 @@ export const ScenarioRulesContainer: FC<Props> = ({
     onShowForm,
     rules,
     createRuleRef,
+    hasAiApiKey,
+    showAIChat,
+    onToggleAIChat,
 }) => {
     const { mutate: reorderScenarioRules } =
         useReorderScenarioRules(scenarioId);
@@ -74,6 +80,9 @@ export const ScenarioRulesContainer: FC<Props> = ({
                 <ScenarioRulesHeader
                     onCreateRule={onShowForm}
                     createRuleRef={createRuleRef}
+                    hasAiApiKey={hasAiApiKey}
+                    showAIChat={showAIChat}
+                    onToggleAIChat={onToggleAIChat}
                 />
             }
             isLoading={isLoading}

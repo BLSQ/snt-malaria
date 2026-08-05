@@ -58,6 +58,17 @@ export const SidebarColumn = styled(Box)(({ theme }) => ({
     },
 }));
 
+// An optional AI chat pane rendered before SidebarColumn (e.g. the scenario rule builder's
+// `| chat | rules | map |` layout). Same flex weight as SidebarColumn so the two panels share the
+// width evenly; flexbox alone shrinks MainColumn proportionally when this is added as a sibling -
+// no changes needed to the other columns' flex values.
+export const ChatColumn = styled(Box)(({ theme }) => ({
+    flex: 2,
+    [theme.breakpoints.up('md')]: {
+        minWidth: 450,
+    },
+}));
+
 export const MainColumn = styled(Box)({
     flex: 7,
     minWidth: 0,

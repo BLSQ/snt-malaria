@@ -107,6 +107,29 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
 
     @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
+    def test_claude_400_never_leaks_anthropics_message_to_the_user(self, mock_gen):
+        # E.g. an out-of-credit or invalid API key - an admin-level config problem the end user has
+        # no visibility or control over (they don't use their own Anthropic subscription), so the
+        # response must stay generic regardless of what Anthropic's error body says.
+        mock_response = MagicMock()
+        mock_response.status_code = 400
+        mock_gen.side_effect = anthropic.APIStatusError(
+            "bad request",
+            response=mock_response,
+            body={
+                "type": "error",
+                "error": {"type": "invalid_request_error", "message": "Your credit balance is too low."},
+            },
+        )
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(BASE_URL, {"message": "Create a composite layer"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("contact your administrator", response.data["error"])
+        self.assertNotIn("credit balance", response.data["error"])
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
     def test_successful_generation(self, mock_gen):
         mock_gen.return_value = self._mock_generate_composite_layer_graph(with_graph=True)
         self.client.force_authenticate(self.user)
