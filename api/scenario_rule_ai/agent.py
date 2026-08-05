@@ -8,6 +8,8 @@ import anthropic
 from django.conf import settings
 from pydantic import BaseModel, Field, ValidationError
 
+from iaso.utils.colors import COLOR_CHOICES
+
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +19,7 @@ logger = logging.getLogger(__name__)
 # example) need no escaping.
 METRIC_TYPES_CATALOG_PLACEHOLDER = "{metric_types_catalog}"
 INTERVENTIONS_CATALOG_PLACEHOLDER = "{interventions_catalog}"
+COLORS_CATALOG_PLACEHOLDER = "{colors_catalog}"
 
 SCENARIO_RULE_SYSTEM_PROMPT_TEMPLATE = """You are an expert at building malaria intervention scenario rules.
 
@@ -45,6 +48,9 @@ When an org unit is matched by more than one rule, here is how their interventio
 ## Available interventions for this account
 {interventions_catalog}
 
+## Available colors
+{colors_catalog}
+
 When the user asks you to create or modify scenario rules, you MUST respond with ONLY the JSON below -
 no text before or after it, not even a short acknowledgment or lead-in sentence. Put any explanation of
 what you did in the `message` field instead. Always return the COMPLETE set of rules for the scenario,
@@ -58,7 +64,8 @@ ordered from lowest to highest priority - not just the ones that changed:
       "matching_criteria": [
         {"metric_type": <id from the data layer catalog above, as an integer>, "operator": "<one of ==, <=, >=, <, >>", "value": <number>}
       ],
-      "interventions": [<id from the interventions catalog above, as an integer>, ...]
+      "interventions": [<id from the interventions catalog above, as an integer>, ...],
+      "color": "<required - a hex value from the color palette above, chosen to suit this rule and stay distinct from the others>"
     }
   ],
   "message": "<your explanation to the user of what you created or changed>"
@@ -75,6 +82,11 @@ ordered from lowest to highest priority - not just the ones that changed:
   catalog above (e.g. produced by a `classify` composite layer), in which case use one of its listed
   valid values as a text label (`string_value`) instead. A categorical condition's operator MUST be
   "==" - categorical values have no numeric order, so <, <=, >, >= are never valid for them.
+- Every rule MUST assign at least one intervention - `interventions` may never be empty, for
+  match-all rules included. A rule with no interventions matches org units but does nothing (a
+  no-op): never create, suggest, or leave in place a rule with an empty `interventions` list, even as
+  a placeholder "baseline" rule - a baseline rule still needs a real intervention (e.g. basic case
+  management) to have any purpose.
 - To modify an existing rule (visible in "Current rules" below), include its `id` and repeat every field
   as you want it to end up, not just the changed field - the returned rule replaces it entirely.
 - To remove an existing rule, simply omit it from the returned list.
@@ -82,6 +94,15 @@ ordered from lowest to highest priority - not just the ones that changed:
   assigns, or its role in the scenario - not restate its `matching_criteria`, which is already shown
   next to the name in the UI. For example, prefer "SMC rollout" or "Bednets - peak season" over
   "High risk areas" or "Rainfall > 100" for a rule assigning SMC/bednets.
+- Always set a `color` for every rule - it is required, not optional. `color` is purely cosmetic (used
+  to tell rules apart on the map/list) and has no effect on matching or interventions, but you must
+  still choose deliberately: pick a color that suits the rule's role using your own judgement (e.g.
+  shades of red/orange for higher-severity or higher-priority rules, green/blue for lower-risk or
+  routine ones), and keep every rule in your response visually distinct from the others - never reuse
+  the same color for two rules in the same response unless the user explicitly asks you to. Only ever
+  use a value from the color palette above - never invent a hex code that isn't listed there. When
+  modifying an existing rule, keep its current color unless the user asks you to change it or the
+  overall set needs rebalancing for distinctness.
 - If the request is ambiguous, or references a data layer or intervention that doesn't exist, respond
   with plain text asking a clarifying question instead of JSON.
 - In the `message` field (and in any plain-text clarifying question), never write a numeric id, for
@@ -116,6 +137,7 @@ class GeneratedScenarioRuleSpec(BaseModel, extra="allow"):
     is_match_all: bool = False
     matching_criteria: list[MatchingCriterionSpec] = Field(default_factory=list)
     interventions: list[int] = Field(default_factory=list)
+    color: Optional[str] = None
 
 
 class GeneratedScenarioRulesResponse(BaseModel):
@@ -164,6 +186,13 @@ def _build_interventions_catalog(interventions: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _build_colors_catalog() -> str:
+    # The palette is a fixed, global list (not account-specific), same one the manual color picker
+    # (ColorPicker) and _pick_new_rule_color's auto-assignment draw from - never built from
+    # account data, so this needs no argument.
+    return "\n".join(f'- value="{hex_code}", name="{label}"' for hex_code, label in COLOR_CHOICES)
+
+
 def build_system_prompt(
     metric_types: list[dict],
     interventions: list[dict],
@@ -176,7 +205,9 @@ def build_system_prompt(
         SCENARIO_RULE_SYSTEM_PROMPT_TEMPLATE.replace(
             METRIC_TYPES_CATALOG_PLACEHOLDER, _build_metric_types_catalog(metric_types)
         )
-    ).replace(INTERVENTIONS_CATALOG_PLACEHOLDER, _build_interventions_catalog(interventions))
+        .replace(INTERVENTIONS_CATALOG_PLACEHOLDER, _build_interventions_catalog(interventions))
+        .replace(COLORS_CATALOG_PLACEHOLDER, _build_colors_catalog())
+    )
     if current_rules:
         prompt += CURRENT_RULES_SECTION + json.dumps(current_rules, indent=2)
     return prompt

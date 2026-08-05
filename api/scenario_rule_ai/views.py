@@ -1,6 +1,8 @@
 import logging
 import random
 
+from typing import Optional
+
 import anthropic
 
 from django.db import transaction
@@ -41,10 +43,23 @@ def _pick_new_rule_color(used_colors: set) -> str:
     return random.choice(unused or palette)
 
 
+def _normalize_color(value) -> Optional[str]:
+    """Case-insensitive match against the fixed color palette, returning its canonical (palette)
+    casing. None if `value` isn't a string or isn't a real palette color - callers treat that as
+    "no color specified" rather than rejecting the whole rule, since color is purely cosmetic."""
+    if not isinstance(value, str):
+        return None
+    value_lower = value.lower()
+    for hex_code, _label in COLOR_CHOICES:
+        if hex_code.lower() == value_lower:
+            return hex_code
+    return None
+
+
 def _rule_to_ai_context(rule: ScenarioRule) -> dict:
     """Whitelisted view of a rule sent to the AI: definition only - name, criteria (thresholds, not
-    values), interventions. Never `org_units_matched`/`org_units_excluded`/`org_units_included` (real
-    org unit ids tied to a resolved health-metric condition), and never any MetricValue data."""
+    values), interventions, color. Never `org_units_matched`/`org_units_excluded`/`org_units_included`
+    (real org unit ids tied to a resolved health-metric condition), and never any MetricValue data."""
     return {
         "id": rule.id,
         "name": rule.name,
@@ -53,10 +68,17 @@ def _rule_to_ai_context(rule: ScenarioRule) -> dict:
             [] if is_match_all(rule.matching_criteria) else jsonlogic_to_matching_criteria(rule.matching_criteria)
         ),
         "interventions": [intervention.id for intervention in rule.interventions.all()],
+        "color": rule.color,
     }
 
 
 def _rule_spec_to_payload(spec: dict, metric_type_by_id: dict) -> dict:
+    if not spec.get("interventions"):
+        # A rule with no interventions matches org units but assigns nothing - a no-op. Caught here
+        # (not just in the prompt) since the model doesn't always follow that instruction, e.g. when
+        # proposing a placeholder "baseline" rule.
+        raise serializers.ValidationError(f'Rule "{spec.get("name")}" has no interventions and would be a no-op.')
+
     if spec.get("is_match_all"):
         matching_criteria = {"all": True}
     else:
@@ -85,11 +107,15 @@ def _rule_spec_to_payload(spec: dict, metric_type_by_id: dict) -> dict:
                 f'Rule "{spec.get("name")}" has no matching criteria and is not match-all.'
             )
 
-    return {
+    payload = {
         "name": spec.get("name") or "",
         "matching_criteria": matching_criteria,
         "interventions": spec.get("interventions") or [],
     }
+    color = _normalize_color(spec.get("color"))
+    if color:
+        payload["color"] = color
+    return payload
 
 
 @extend_schema(tags=["SNT Malaria"])
@@ -237,12 +263,20 @@ class ScenarioRuleAIViewSet(viewsets.ViewSet):
             )
 
             if existing_rule:
+                # The AI is instructed to always choose a color, but tolerate it omitting one (a
+                # purely cosmetic field, not worth failing the rule over) by leaving the existing
+                # color untouched - the payload simply has no "color" key in that case.
+                if "color" in payload:
+                    used_colors.add(payload["color"])
                 write_serializer = ScenarioRuleUpdateSerializer(existing_rule, data=payload, context=context)
                 write_serializer.is_valid(raise_exception=True)
                 rule = write_serializer.save(updated_by=user, org_units_matched=org_units_matched)
             else:
                 payload["scenario"] = scenario.id
-                payload["color"] = _pick_new_rule_color(used_colors)
+                if "color" not in payload:
+                    # Same tolerance as above, but a brand new rule has no existing color to fall
+                    # back to, so auto-pick one distinct from what's already in use.
+                    payload["color"] = _pick_new_rule_color(used_colors)
                 used_colors.add(payload["color"])
                 write_serializer = ScenarioRuleCreateSerializer(data=payload, context=context)
                 write_serializer.is_valid(raise_exception=True)

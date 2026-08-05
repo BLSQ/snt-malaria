@@ -65,7 +65,9 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
             code="bednets",
         )
 
-    def _rule_spec(self, id=None, name="High incidence", is_match_all=False, criteria=None, interventions=None):
+    def _rule_spec(
+        self, id=None, name="High incidence", is_match_all=False, criteria=None, interventions=None, color=None
+    ):
         return {
             "id": id,
             "name": name,
@@ -76,6 +78,7 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
                 else [{"metric_type": self.metric_type.id, "operator": ">", "value": 400}]
             ),
             "interventions": interventions if interventions is not None else [self.intervention.id],
+            "color": color,
         }
 
     def _mock_result(self, rules=None, message="Done."):
@@ -220,6 +223,112 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(len(set(colors)), 3)
 
     @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
+    def test_ai_specified_color_is_used_for_new_rule(self, mock_gen):
+        mock_gen.return_value = self._mock_result(rules=[self._rule_spec(color="#b71c1c")])
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(BASE_URL, {"scenario": self.scenario.id, "message": "add a rule"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        rule = ScenarioRule.objects.get(scenario=self.scenario)
+        self.assertEqual(rule.color, "#B71C1C")
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
+    def test_ai_specified_color_case_insensitive_normalized(self, mock_gen):
+        mock_gen.return_value = self._mock_result(rules=[self._rule_spec(color="#B71C1C")])
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(BASE_URL, {"scenario": self.scenario.id, "message": "add a rule"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        rule = ScenarioRule.objects.get(scenario=self.scenario)
+        self.assertEqual(rule.color, "#B71C1C")
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
+    def test_invalid_color_falls_back_to_auto_pick_not_rejected(self, mock_gen):
+        mock_gen.return_value = self._mock_result(rules=[self._rule_spec(color="not-a-real-color")])
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(BASE_URL, {"scenario": self.scenario.id, "message": "add a rule"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        rule = ScenarioRule.objects.get(scenario=self.scenario)
+        self.assertNotEqual(rule.color, "not-a-real-color")
+        self.assertTrue(rule.color)
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
+    def test_ai_specified_color_updates_existing_rule(self, mock_gen):
+        existing_rule = ScenarioRule.objects.create(
+            name="Old rule",
+            priority=1,
+            color="#000000",
+            scenario=self.scenario,
+            created_by=self.user,
+            matching_criteria={"and": [{">": [{"var": self.metric_type.id}, 100]}]},
+            org_units_matched=[],
+        )
+        existing_rule.interventions.add(self.intervention)
+
+        mock_gen.return_value = self._mock_result(rules=[self._rule_spec(id=existing_rule.id, color="#B71C1C")])
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(
+            BASE_URL, {"scenario": self.scenario.id, "message": "change the color"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        existing_rule.refresh_from_db()
+        self.assertEqual(existing_rule.color, "#B71C1C")
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
+    def test_omitted_color_keeps_existing_color_on_update(self, mock_gen):
+        existing_rule = ScenarioRule.objects.create(
+            name="Old rule",
+            priority=1,
+            color="#000000",
+            scenario=self.scenario,
+            created_by=self.user,
+            matching_criteria={"and": [{">": [{"var": self.metric_type.id}, 100]}]},
+            org_units_matched=[],
+        )
+        existing_rule.interventions.add(self.intervention)
+
+        mock_gen.return_value = self._mock_result(
+            rules=[self._rule_spec(id=existing_rule.id, name="Renamed rule", color=None)]
+        )
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(
+            BASE_URL, {"scenario": self.scenario.id, "message": "rename the rule"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        existing_rule.refresh_from_db()
+        self.assertEqual(existing_rule.color, "#000000")
+        self.assertEqual(existing_rule.name, "Renamed rule")
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
+    def test_current_rules_context_includes_color(self, mock_gen):
+        existing_rule = ScenarioRule.objects.create(
+            name="Existing",
+            priority=1,
+            color="#B71C1C",
+            scenario=self.scenario,
+            created_by=self.user,
+            matching_criteria={"and": [{">": [{"var": self.metric_type.id}, 400]}]},
+            org_units_matched=[],
+        )
+        existing_rule.interventions.add(self.intervention)
+
+        mock_gen.return_value = self._mock_result(rules=None)
+        self.client.force_authenticate(self.user)
+
+        self.client.post(BASE_URL, {"scenario": self.scenario.id, "message": "hi"}, format="json")
+
+        current_rules = mock_gen.call_args.kwargs["current_rules"]
+        self.assertEqual(current_rules[0]["color"], "#B71C1C")
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
     def test_categorical_criterion_with_equality_operator_succeeds(self, mock_gen):
         mock_gen.return_value = self._mock_result(
             rules=[
@@ -338,6 +447,18 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(ScenarioRule.objects.filter(scenario=self.scenario).count(), 0)
 
     @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
+    def test_rule_with_no_interventions_rejected(self, mock_gen):
+        # A rule with no interventions matches org units but assigns nothing - a no-op that must
+        # never be persisted, even a match-all "baseline" one.
+        mock_gen.return_value = self._mock_result(rules=[self._rule_spec(is_match_all=True, interventions=[])])
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(BASE_URL, {"scenario": self.scenario.id, "message": "add a rule"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(ScenarioRule.objects.filter(scenario=self.scenario).count(), 0)
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
     def test_successful_generation_updates_existing_rule_in_place(self, mock_gen):
         existing_rule = ScenarioRule.objects.create(
             name="Old name",
@@ -443,7 +564,9 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
         current_rules = mock_gen.call_args.kwargs["current_rules"]
         self.assertEqual(len(current_rules), 1)
         sent_rule = current_rules[0]
-        self.assertEqual(set(sent_rule.keys()), {"id", "name", "is_match_all", "matching_criteria", "interventions"})
+        self.assertEqual(
+            set(sent_rule.keys()), {"id", "name", "is_match_all", "matching_criteria", "interventions", "color"}
+        )
         self.assertEqual(
             sent_rule["matching_criteria"], [{"metric_type": self.metric_type.id, "operator": ">", "value": 400}]
         )
