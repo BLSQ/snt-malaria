@@ -13,8 +13,14 @@ export type Scenario = {
     description: string;
     start_year: number;
     end_year: number;
-    reference_year: number | null;
+    data_layer_years: Record<string, number>;
     created_at: string; // ISO 8601 formatted date string
     updated_at: string; // ISO 8601 formatted date string
     is_locked: boolean;
 };
+
+export const getDataLayerYear = (
+    dataLayerYears: Record<string, number> | undefined,
+    metricTypeId: number | null | undefined,
+): number | undefined =>
+    metricTypeId != null ? dataLayerYears?.[String(metricTypeId)] : undefined;

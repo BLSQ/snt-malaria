@@ -16,6 +16,10 @@ export type DropdownOptions<T> = {
     original: Form;
 };
 
+export const flattenMetricTypes = (
+    metricCategories: MetricTypeCategory[] = [],
+): MetricType[] => metricCategories.flatMap(category => category.items);
+
 export const useGetMetricTypes: <T = MetricType>(
     includeUtility?: boolean,
 ) => UseQueryResult<T[], Error> = (includeUtility = false) => {

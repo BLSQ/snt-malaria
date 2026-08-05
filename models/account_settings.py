@@ -24,6 +24,10 @@ def get_intervention_org_units(account):
     return qs
 
 
+def get_account_metric_type_ids(account) -> set:
+    return set(MetricType.objects.filter(account=account).values_list("id", flat=True))
+
+
 class AccountSettings(models.Model):
     """
     This model is used to store the settings for the SNT account.

@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useCallback } from 'react';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import {
     FormControl,
@@ -10,20 +10,22 @@ import {
     Typography,
 } from '@mui/material';
 
-import { useSafeIntl } from 'bluesquare-components';
+import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 
 import { MessageDescriptor } from 'react-intl';
 import { SxStyles } from 'Iaso/types/general';
+import { flattenMetricTypes } from '../domains/dataLayers/hooks/useGetMetrics';
 import { MetricType } from '../domains/dataLayers/types/metrics';
 import { MetricTypeCategory } from '../domains/dataLayers/types/metrics';
 
-/** Closed control only: match [MapLegend] chip; `sx` is the OutlinedInput root. */
+/** `sx` is the OutlinedInput root. `map` matches the [MapLegend] chip; `form` is a plain field. */
 const styles: SxStyles = {
     formControl: {
         minWidth: '200px',
         maxWidth: '100%',
+        width: '100%',
     },
-    select: (theme: Theme) => ({
+    selectMap: (theme: Theme) => ({
         // TODO Should use a theme color; hex matches MapLegend chip for now (#1F2B3DBF).
         backgroundColor: '#1F2B3DBF',
         color: 'white',
@@ -53,6 +55,16 @@ const styles: SxStyles = {
             fill: 'white',
         },
     }),
+    selectForm: (theme: Theme) => ({
+        minHeight: 0,
+        '& .MuiSelect-select': {
+            py: theme.spacing(1),
+            display: 'flex',
+            alignItems: 'center',
+            fontSize: theme.typography.body2.fontSize,
+            fontFamily: theme.typography.fontFamily,
+        },
+    }),
     category: {
         color: 'rgba(31, 43, 61, 0.6)',
         display: 'block',
@@ -66,32 +78,30 @@ const styles: SxStyles = {
 };
 
 type Props = {
-    initialSelection?: MetricType;
+    selection?: MetricType;
     onLayerChange: (metric?: MetricType) => void;
-    placeholder?: MessageDescriptor;
+    placeholder?: IntlMessage;
     metricCategories?: MetricTypeCategory[];
+    /** 'map' (default) is the dark pill used as a map overlay; 'form' is a plain outlined select for use inside forms. */
+    variant?: 'map' | 'form';
 };
 
 export const LayerSelect: FC<Props> = ({
-    initialSelection,
+    selection,
     placeholder,
     metricCategories,
     onLayerChange,
+    variant = 'map',
 }) => {
     const { formatMessage } = useSafeIntl();
-
-    const [selectedMetricType, setSelectedMetricType] = useState<
-        MetricType | undefined
-    >(initialSelection);
 
     const handleChange = useCallback(
         (event: SelectChangeEvent<number>) => {
             const newMetricId = event.target.value as number;
-            const newMetric = metricCategories
-                ?.flatMap(category => category.items)
-                .find(metric => metric.id === newMetricId);
+            const newMetric = flattenMetricTypes(metricCategories).find(
+                metric => metric.id === newMetricId,
+            );
             onLayerChange(newMetric);
-            setSelectedMetricType(newMetric);
         },
         [metricCategories, onLayerChange],
     );
@@ -100,11 +110,11 @@ export const LayerSelect: FC<Props> = ({
         <FormControl sx={styles.formControl}>
             <Select
                 id="layer-select"
-                value={selectedMetricType?.id ?? ''}
+                value={selection?.id ?? ''}
                 onChange={handleChange}
                 variant="outlined"
                 IconComponent={ArrowDropDownIcon}
-                sx={styles.select}
+                sx={variant === 'map' ? styles.selectMap : styles.selectForm}
                 displayEmpty
             >
                 <MenuItem value="" sx={styles.menuItem}>

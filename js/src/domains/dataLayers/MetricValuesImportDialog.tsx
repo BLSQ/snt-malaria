@@ -9,14 +9,9 @@ import {
 } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { noOp } from 'Iaso/utils';
+import { currentYear, DataLayerYearOptions } from '../../constants/shared';
 import { useImportMetricValues } from './hooks/useImportMetricValues';
 import { MESSAGES } from './messages';
-
-const currentYear = new Date().getFullYear();
-const yearOptions = Array.from({ length: currentYear - 2000 + 1 }, (_, i) => {
-    const year = 2000 + i;
-    return { label: year.toString(), value: year };
-});
 
 type ImportActionProps = {
     onClick: () => void;
@@ -47,7 +42,7 @@ type Props = {
 const ImportMetricValuesModal: FC<Props> = ({ isOpen, closeDialog }) => {
     const { formatMessage } = useSafeIntl();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [selectedYear, setSelectedYear] = useState(yearOptions[0].value);
+    const [selectedYear, setSelectedYear] = useState(currentYear);
 
     const { mutate: importMetricValues } = useImportMetricValues();
 
@@ -92,7 +87,7 @@ const ImportMetricValuesModal: FC<Props> = ({ isOpen, closeDialog }) => {
             <InputComponent
                 type="select"
                 keyValue="id"
-                options={yearOptions}
+                options={DataLayerYearOptions}
                 value={selectedYear}
                 label={MESSAGES.selectYear}
                 onChange={(_, value) => setSelectedYear(value)}

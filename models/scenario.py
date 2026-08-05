@@ -39,7 +39,7 @@ class Scenario(SoftDeletableModel):
     description = models.TextField(blank=True)
     start_year = models.IntegerField(blank=False, null=False)
     end_year = models.IntegerField(blank=False, null=False)
-    reference_year = models.IntegerField(null=True, blank=True)
+    data_layer_years = models.JSONField(default=dict, blank=True)
     is_locked = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -182,7 +182,7 @@ class ScenarioRule(models.Model):
         super().save(*args, **kwargs)
 
     @staticmethod
-    def resolve_matched_org_units(account, matching_criteria, reference_year=None):
+    def resolve_matched_org_units(account, matching_criteria, data_layer_years=None):
         """Evaluate matching_criteria and return the raw list of matched org unit IDs.
 
         This is the criteria-only result, before exclusion/inclusion overrides.
@@ -192,9 +192,10 @@ class ScenarioRule(models.Model):
         2. if matching_criteria is JSONLogic, intersect with org units whose MetricValues satisfy it
            (match-all skips this step - every org unit qualifies)
 
-        When reference_year is provided, MetricValues are filtered per metric type:
-        year=reference_year is preferred; falls back to year=NULL (timeless values) when
-        no reference_year data exists for that metric type.
+        data_layer_years maps metric_type_id -> year. For each metric type referenced in
+        matching_criteria: if a year is configured, year=<that year> is preferred, falling back to
+        year=NULL (timeless values) when no data exists for that metric type at that year. If no year
+        is configured for a metric type, its values are not filtered by year at all.
         """
         if matching_criteria is None:
             return []
@@ -206,18 +207,22 @@ class ScenarioRule(models.Model):
 
         metric_values = MetricValue.objects.filter(metric_type__account=account, org_unit_id__isnull=False)
 
-        if reference_year is not None:
-            conditions = matching_criteria.get("and", [])
-            year_q = Q()
-            for condition in conditions:
-                op = next(iter(condition))
-                mt_id = condition[op][0]["var"]
-                if metric_values.filter(metric_type_id=mt_id, year=reference_year).exists():
-                    year_q |= Q(metric_type_id=mt_id, year=reference_year)
-                else:
-                    year_q |= Q(metric_type_id=mt_id, year__isnull=True)
-            if conditions:
-                metric_values = metric_values.filter(year_q)
+        data_layer_years = {int(mt_id): year for mt_id, year in (data_layer_years or {}).items()}
+
+        conditions = matching_criteria.get("and", [])
+        year_q = Q()
+        for condition in conditions:
+            op = next(iter(condition))
+            mt_id = condition[op][0]["var"]
+            year = data_layer_years.get(mt_id)
+            if year is None:
+                year_q |= Q(metric_type_id=mt_id)
+            elif metric_values.filter(metric_type_id=mt_id, year=year).exists():
+                year_q |= Q(metric_type_id=mt_id, year=year)
+            else:
+                year_q |= Q(metric_type_id=mt_id, year__isnull=True)
+        if conditions:
+            metric_values = metric_values.filter(year_q)
 
         q = jsonlogic_to_exists_q_clauses(matching_criteria, metric_values, "metric_type_id", "org_unit_id")
         matched_ids = metric_values.filter(q).distinct().values_list("org_unit_id", flat=True)

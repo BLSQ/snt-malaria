@@ -8,10 +8,15 @@ import {
 } from 'bluesquare-components';
 import { FormikProvider } from 'formik';
 import { UseMutateFunction } from 'react-query';
+import {
+    flattenMetricTypes,
+    useGetMetricCategories,
+} from '../../dataLayers/hooks/useGetMetrics';
 import { MESSAGES } from '../../messages';
 import { useCreateScenario } from '../hooks/useCreateScenario';
 import { useDuplicateScenario } from '../hooks/useDuplicateScenario';
 import {
+    buildDataLayerYears,
     ScenarioFormValues,
     useScenarioFormState,
 } from '../hooks/useScenarioFormState';
@@ -77,7 +82,7 @@ type ScenarioDialogProps = {
     onClose: (shouldRedirect: number | boolean) => void;
     scenario?: Scenario;
     titleMessage?: string;
-    operation: UseMutateFunction<unknown, unknown, ScenarioFormValues, unknown>;
+    operation: UseMutateFunction<unknown, unknown, unknown, unknown>;
     confirmMessage?: IntlMessage;
 };
 
@@ -92,13 +97,29 @@ const ScenarioDialog: FC<ScenarioDialogProps> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
 
+    const { data: metricCategories = [] } = useGetMetricCategories();
+    const metricTypeIds = useMemo(
+        () => flattenMetricTypes(metricCategories).map(item => item.id),
+        [metricCategories],
+    );
+
     const onSubmit = (values: ScenarioFormValues) => {
-        operation(values, {
-            onSuccess: (data: Scenario) => {
-                closeDialog();
-                onClose(data.id);
+        operation(
+            {
+                ...values,
+                data_layer_years: buildDataLayerYears(
+                    values.reference_year,
+                    values.data_layer_years,
+                    metricTypeIds,
+                ),
             },
-        });
+            {
+                onSuccess: (data: Scenario) => {
+                    closeDialog();
+                    onClose(data.id);
+                },
+            },
+        );
     };
     const formik = useScenarioFormState(scenario, onSubmit);
 

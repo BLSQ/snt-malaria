@@ -63,7 +63,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         scenario = serializer.validated_data["scenario"]
         matching_criteria = serializer.validated_data.get("matching_criteria")
         org_units_matched = ScenarioRule.resolve_matched_org_units(
-            scenario.account, matching_criteria, reference_year=scenario.reference_year
+            scenario.account, matching_criteria, data_layer_years=scenario.data_layer_years
         )
 
         rule: ScenarioRule = serializer.save(created_by=user, org_units_matched=org_units_matched)
@@ -99,7 +99,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         instance = serializer.instance
         matching_criteria = serializer.validated_data.get("matching_criteria", instance.matching_criteria)
         org_units_matched = ScenarioRule.resolve_matched_org_units(
-            instance.scenario.account, matching_criteria, reference_year=instance.scenario.reference_year
+            instance.scenario.account, matching_criteria, data_layer_years=instance.scenario.data_layer_years
         )
 
         rule: ScenarioRule = serializer.save(updated_by=user, org_units_matched=org_units_matched)
@@ -139,8 +139,10 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
 
         account = request.user.iaso_profile.account
         matching_criteria = serializer.validated_data.get("matching_criteria")
-        reference_year = serializer.validated_data.get("reference_year")
-        matched = set(ScenarioRule.resolve_matched_org_units(account, matching_criteria, reference_year=reference_year))
+        data_layer_years = serializer.validated_data.get("data_layer_years")
+        matched = set(
+            ScenarioRule.resolve_matched_org_units(account, matching_criteria, data_layer_years=data_layer_years)
+        )
 
         excluded = set(serializer.validated_data.get("org_units_excluded", []))
         included = set(serializer.validated_data.get("org_units_included", []))

@@ -7,6 +7,7 @@ import { Map as SNTMap } from '../../../../components/Map';
 import { useGetMetricValues } from '../../../dataLayers/hooks/useGetMetrics';
 import { MetricType } from '../../../dataLayers/types/metrics';
 import { MESSAGES } from '../../../messages';
+import { getDataLayerYear } from '../../../scenarios/types';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import {
     getMapStyleForOrgUnit,
@@ -85,7 +86,10 @@ export const InterventionPlanMap: FC<Props> = ({
 
     const { data: metricValues } = useGetMetricValues({
         metricTypeId: activeMetricLayer?.id || null,
-        year: scenario?.reference_year ?? undefined,
+        year: getDataLayerYear(
+            scenario?.data_layer_years,
+            activeMetricLayer?.id,
+        ),
     });
     const getSelectedMetric = useGetOrgUnitMetric(metricValues);
 
@@ -153,7 +157,7 @@ export const InterventionPlanMap: FC<Props> = ({
                 <Box sx={styles.actionBox}>
                     <LayerSelect
                         placeholder={MESSAGES.noLayer}
-                        initialSelection={selectedMetricLayer}
+                        selection={selectedMetricLayer}
                         metricCategories={metricTypeCategories}
                         onLayerChange={setSelectedMetricLayer}
                     />

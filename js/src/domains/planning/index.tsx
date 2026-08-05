@@ -179,7 +179,7 @@ export const Planning: FC = () => {
             }
 
             return previewScenarioRule(
-                { ...rule, reference_year: scenario?.reference_year },
+                { ...rule, data_layer_years: scenario?.data_layer_years },
                 {
                     onSuccess: data => setMatchedOrgUnitIds(data as number[]),
                 },

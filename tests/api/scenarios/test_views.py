@@ -449,20 +449,20 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result["start_year"], ["Start year should be lower or equal end year."])
 
-    def test_scenario_update_reference_year_change_refreshes_matched_org_units_and_assignments(self):
-        """Changing reference_year on a scenario should recompute org_units_matched for all of its
-        rules (using the new reference_year) and refresh the resulting assignments accordingly."""
+    def test_scenario_update_data_layer_years_change_refreshes_matched_org_units_and_assignments(self):
+        """Changing data_layer_years on a scenario should recompute org_units_matched for all of its
+        rules (using the new data_layer_years) and refresh the resulting assignments accordingly."""
         metric_type = MetricType.objects.create(account=self.account, name="ITN", code="ITN", units="ratio")
         MetricValue.objects.create(metric_type=metric_type, org_unit=self.district1, value=100, year=2020)
         MetricValue.objects.create(metric_type=metric_type, org_unit=self.district2, value=100, year=2021)
 
         rule = ScenarioRule.objects.create(
-            name="Reference year rule",
+            name="Data layer years rule",
             priority=10,
             matching_criteria={"and": [{">=": [{"var": metric_type.id}, 50]}]},
             created_by=self.user_with_full_perm,
             scenario=self.scenario,
-            org_units_matched=[],  # stale, would be recomputed once reference_year is set
+            org_units_matched=[],  # stale, would be recomputed once data_layer_years is set
         )
         rule.interventions.add(self.intervention_chemo_iptp)
 
@@ -472,7 +472,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             "name": self.scenario.name,
             "start_year": self.scenario.start_year,
             "end_year": self.scenario.end_year,
-            "reference_year": 2020,
+            "data_layer_years": {str(metric_type.id): 2020},
         }
         response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -485,8 +485,8 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             ).exists()
         )
 
-        # Changing reference_year again should recompute matched org units once more.
-        payload["reference_year"] = 2021
+        # Changing data_layer_years again should recompute matched org units once more.
+        payload["data_layer_years"] = {str(metric_type.id): 2021}
         response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -503,8 +503,47 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             ).exists()
         )
 
-    def test_scenario_update_without_reference_year_change_does_not_recompute_matched_org_units(self):
-        """Updating fields other than reference_year should not touch org_units_matched, even for
+    def test_scenario_update_data_layer_years_with_two_metric_types_recomputes_each_independently(self):
+        """Two data layers configured with two different years each recompute matched org units
+        using their own metric type's data at their own configured year."""
+        metric_type_a = MetricType.objects.create(account=self.account, name="ITN", code="ITN", units="ratio")
+        metric_type_b = MetricType.objects.create(account=self.account, name="IRS", code="IRS", units="ratio")
+        MetricValue.objects.create(metric_type=metric_type_a, org_unit=self.district1, value=100, year=2020)
+        MetricValue.objects.create(metric_type=metric_type_b, org_unit=self.district2, value=100, year=2021)
+
+        rule = ScenarioRule.objects.create(
+            name="Two data layers rule",
+            priority=10,
+            matching_criteria={
+                "and": [
+                    {">=": [{"var": metric_type_a.id}, 50]},
+                    {">=": [{"var": metric_type_b.id}, 50]},
+                ]
+            },
+            created_by=self.user_with_full_perm,
+            scenario=self.scenario,
+            org_units_matched=[],
+        )
+        rule.interventions.add(self.intervention_chemo_iptp)
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        payload = {
+            "id": self.scenario.id,
+            "name": self.scenario.name,
+            "start_year": self.scenario.start_year,
+            "end_year": self.scenario.end_year,
+            "data_layer_years": {str(metric_type_a.id): 2020, str(metric_type_b.id): 2021},
+        }
+        response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # district1 satisfies metric_type_a at 2020, district2 satisfies metric_type_b at 2021,
+        # but neither satisfies both conditions, so the intersection is empty.
+        rule.refresh_from_db()
+        self.assertEqual(rule.org_units_matched, [])
+
+    def test_scenario_update_without_data_layer_years_change_does_not_recompute_matched_org_units(self):
+        """Updating fields other than data_layer_years should not touch org_units_matched, even for
         rules whose matching_criteria would now resolve differently."""
         metric_type = MetricType.objects.create(account=self.account, name="ITN", code="ITN", units="ratio")
         MetricValue.objects.create(metric_type=metric_type, org_unit=self.district1, value=100, year=2020)
@@ -531,6 +570,26 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
 
         rule.refresh_from_db()
         self.assertEqual(rule.org_units_matched, [])
+
+    def test_scenario_update_omitting_data_layer_years_does_not_wipe_it(self):
+        """A PUT that omits `data_layer_years` entirely must leave the scenario's existing value
+        untouched, not silently reset it to `{}` (the field has no `default=` for this reason)."""
+        metric_type = MetricType.objects.create(account=self.account, name="ITN", code="ITN", units="ratio")
+        self.scenario.data_layer_years = {str(metric_type.id): 2025}
+        self.scenario.save()
+
+        self.client.force_authenticate(self.user_with_full_perm)
+        payload = {
+            "id": self.scenario.id,
+            "name": "Renamed scenario",
+            "start_year": self.scenario.start_year,
+            "end_year": self.scenario.end_year,
+        }
+        response = self.client.put(f"{self.BASE_URL}{self.scenario.id}/", payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.scenario.refresh_from_db()
+        self.assertEqual(self.scenario.data_layer_years, {str(metric_type.id): 2025})
 
     def test_scenario_duplicate_with_full_perm(self):
         # Making sure that the right assignments are in place before duplication

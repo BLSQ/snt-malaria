@@ -6,7 +6,7 @@ from rest_framework import serializers
 from iaso.api.common import UserSerializer
 from plugins.snt_malaria.api.scenarios.utils import get_interventions, get_missing_headers
 from plugins.snt_malaria.models import Scenario, ScenarioRule
-from plugins.snt_malaria.models.account_settings import get_intervention_org_units
+from plugins.snt_malaria.models.account_settings import get_account_metric_type_ids, get_intervention_org_units
 
 
 class ScenarioSerializer(serializers.ModelSerializer):
@@ -23,7 +23,7 @@ class ScenarioSerializer(serializers.ModelSerializer):
             "updated_at",
             "start_year",
             "end_year",
-            "reference_year",
+            "data_layer_years",
             "is_locked",
         ]
         read_only_fields = [
@@ -38,14 +38,15 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False, allow_blank=True)
     start_year = serializers.IntegerField(required=True)
     end_year = serializers.IntegerField(required=True)
-    reference_year = serializers.IntegerField(required=False, allow_null=True)
+    # No `default=`: DRF would use it to silently overwrite an omitted field with `{}` on a full PUT.
+    data_layer_years = serializers.DictField(child=serializers.IntegerField(), required=False)
 
     SCENARIO_MIN_YEAR = 2024
     SCENARIO_MAX_YEAR = 2035
 
     class Meta:
         model = Scenario
-        fields = ["id", "name", "description", "start_year", "end_year", "reference_year", "is_locked"]
+        fields = ["id", "name", "description", "start_year", "end_year", "data_layer_years", "is_locked"]
         read_only_fields = ["id"]
 
     def validate(self, data):
@@ -62,6 +63,19 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
 
         if self.initial_data.get("end_year") and value > int(self.initial_data["end_year"]):
             raise serializers.ValidationError(_("Start year should be lower or equal end year."))
+
+        return value
+
+    def validate_data_layer_years(self, value):
+        if not value:
+            return value
+
+        request = self.context.get("request")
+        account = request.user.iaso_profile.account
+        account_metric_type_ids = {str(mt_id) for mt_id in get_account_metric_type_ids(account)}
+        invalid_keys = [key for key in value if key not in account_metric_type_ids]
+        if invalid_keys:
+            raise serializers.ValidationError(_("Invalid metric type ids: %(ids)s") % {"ids": invalid_keys})
 
         return value
 

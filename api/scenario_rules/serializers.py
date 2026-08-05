@@ -2,9 +2,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from iaso.api.common.serializer_fields import JSONSchemaField
-from iaso.models import MetricType, OrgUnit
+from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Scenario, ScenarioRule
-from plugins.snt_malaria.models.account_settings import get_intervention_org_units
+from plugins.snt_malaria.models.account_settings import get_account_metric_type_ids, get_intervention_org_units
 from plugins.snt_malaria.models.intervention import Intervention
 from plugins.snt_malaria.models.scenario import SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
@@ -77,7 +77,9 @@ class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
 
 class ScenarioRulePreviewSerializer(serializers.ModelSerializer):
     matching_criteria = serializers.JSONField(required=False, allow_null=True, default=None)
-    reference_year = serializers.IntegerField(required=False, allow_null=True)
+    data_layer_years = serializers.DictField(
+        child=serializers.IntegerField(), required=False, allow_null=True, default=dict
+    )
 
     class Meta:
         model = ScenarioRule
@@ -85,7 +87,7 @@ class ScenarioRulePreviewSerializer(serializers.ModelSerializer):
             "matching_criteria",
             "org_units_excluded",
             "org_units_included",
-            "reference_year",
+            "data_layer_years",
         ]
 
 
@@ -140,7 +142,7 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
 
         user = self.context["request"].user
         account = user.iaso_profile.account
-        account_metric_types = MetricType.objects.filter(account=account).values_list("id", flat=True)
+        account_metric_types = get_account_metric_type_ids(account)
         invalid_metric_types = []
 
         conditions = matching_criteria["and"]

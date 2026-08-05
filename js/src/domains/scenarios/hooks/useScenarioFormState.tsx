@@ -11,7 +11,11 @@ export type ScenarioFormValues = {
     description: string;
     start_year: number;
     end_year: number;
-    reference_year: number;
+    // Frontend-only convenience: the year applied to every data layer that has no
+    // entry in `data_layer_years`. Not persisted as its own backend field - it gets
+    // flattened into `data_layer_years` at submit time, see `buildDataLayerYears`.
+    reference_year?: number;
+    data_layer_years: Record<string, number>;
 };
 
 export const SCENARIO_YEAR_RANGE = {
@@ -19,17 +23,34 @@ export const SCENARIO_YEAR_RANGE = {
     max: 2035,
 } as const;
 
-export const defaultReferenceYear = Math.round(
-    (SCENARIO_YEAR_RANGE.min + SCENARIO_YEAR_RANGE.max) / 2,
-);
-
 const initialValues: ScenarioFormValues = {
     id: undefined,
     name: '',
     description: '',
     start_year: SCENARIO_YEAR_RANGE.min,
     end_year: SCENARIO_YEAR_RANGE.max,
-    reference_year: defaultReferenceYear,
+    reference_year: undefined,
+    data_layer_years: {},
+};
+
+/**
+ * Builds the flat `data_layer_years` payload sent to the backend: the reference
+ * year applied to every known data layer, with per-layer overrides on top. When
+ * no reference year is set, only the explicit overrides are sent (a layer with
+ * no entry has no year filter applied, i.e. all years are considered).
+ */
+export const buildDataLayerYears = (
+    referenceYear: number | undefined,
+    overrides: Record<string, number>,
+    metricTypeIds: number[],
+): Record<string, number> => {
+    if (referenceYear === undefined) {
+        return overrides;
+    }
+    const defaults = Object.fromEntries(
+        metricTypeIds.map(id => [String(id), referenceYear]),
+    );
+    return { ...defaults, ...overrides };
 };
 
 const useValidation = () => {
@@ -48,13 +69,13 @@ const useValidation = () => {
                     .min(
                         SCENARIO_YEAR_RANGE.min,
                         formatMessage(MESSAGES.minYear, {
-                            year: SCENARIO_YEAR_RANGE.min,
+                            year: SCENARIO_YEAR_RANGE.min.toString(),
                         }),
                     )
                     .max(
                         SCENARIO_YEAR_RANGE.max,
                         formatMessage(MESSAGES.maxYear, {
-                            year: SCENARIO_YEAR_RANGE.max,
+                            year: SCENARIO_YEAR_RANGE.max.toString(),
                         }),
                     ),
                 end_year: Yup.number()
@@ -62,13 +83,13 @@ const useValidation = () => {
                     .min(
                         SCENARIO_YEAR_RANGE.min,
                         formatMessage(MESSAGES.minYear, {
-                            year: SCENARIO_YEAR_RANGE.min,
+                            year: SCENARIO_YEAR_RANGE.min.toString(),
                         }),
                     )
                     .max(
                         SCENARIO_YEAR_RANGE.max,
                         formatMessage(MESSAGES.maxYear, {
-                            year: SCENARIO_YEAR_RANGE.max,
+                            year: SCENARIO_YEAR_RANGE.max.toString(),
                         }),
                     )
                     .when('start_year', (start_year, schema) => {
@@ -81,29 +102,8 @@ const useValidation = () => {
                               )
                             : schema;
                     }),
-                reference_year: Yup.number()
-                    .required()
-                    .test('reference-year-range', '', function (value) {
-                        const { start_year, end_year } = this.parent;
-                        const min = start_year ?? SCENARIO_YEAR_RANGE.min;
-                        const max = end_year ?? SCENARIO_YEAR_RANGE.max;
-                        if (value === undefined || value === null) return true;
-                        if (value < min) {
-                            return this.createError({
-                                message: formatMessage(MESSAGES.minYear, {
-                                    year: min,
-                                }),
-                            });
-                        }
-                        if (value > max) {
-                            return this.createError({
-                                message: formatMessage(MESSAGES.maxYear, {
-                                    year: max,
-                                }),
-                            });
-                        }
-                        return true;
-                    }),
+                reference_year: Yup.number().nullable(),
+                data_layer_years: Yup.object(),
             }),
         [formatMessage],
     );
@@ -115,18 +115,21 @@ export const useScenarioFormState = (
 ) => {
     const validationSchema = useValidation();
     const values = useMemo(() => {
-        return scenario
-            ? {
-                  id: scenario.id,
-                  name: scenario.name,
-                  description: scenario.description,
-                  start_year: scenario.start_year,
-                  end_year: scenario.end_year,
-                  reference_year:
-                      scenario.reference_year ??
-                      Math.round((scenario.start_year + scenario.end_year) / 2),
-              }
-            : initialValues;
+        if (!scenario) {
+            return initialValues;
+        }
+        // reference_year stays unset: there's no way to tell a "same year everywhere"
+        // dict apart from a few coincidental per-layer overrides, so guessing one back
+        // from data_layer_years risks expanding it to layers the user never touched.
+        return {
+            id: scenario.id,
+            name: scenario.name,
+            description: scenario.description,
+            start_year: scenario.start_year,
+            end_year: scenario.end_year,
+            reference_year: undefined,
+            data_layer_years: scenario.data_layer_years ?? {},
+        };
     }, [scenario]);
 
     return useFormik({
