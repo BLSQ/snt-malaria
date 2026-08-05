@@ -4,7 +4,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import { StickyListSubheader } from '../../../components/styledComponents';
 import { DataLayerLine } from '../../dataLayers/dataLayerList/DataLayerLine';
 import { MetricTypeCategory } from '../../dataLayers/types/metrics';
-import { getNodeLibraryGroups } from './nodeLibraryGroups';
+import { useNodeLibraryGroups } from './nodeLibraryGroups';
 import { NodeLibraryLine } from './NodeLibraryLine';
 
 type Props = {
@@ -41,10 +41,12 @@ export const NodeLibrary: FC<Props> = ({
         listRef.current?.closest('.MuiCardContent-root')?.scrollTo({ top: 0 });
     }, []);
 
+    const nodeLibraryGroups = useNodeLibraryGroups(formatMessage);
+
     // Empty categories drop out, heading included.
     const nodeGroups = useMemo(
         () =>
-            getNodeLibraryGroups(formatMessage)
+            nodeLibraryGroups
                 .map(group => ({
                     ...group,
                     items: searchTerm
@@ -54,7 +56,7 @@ export const NodeLibrary: FC<Props> = ({
                         : group.items,
                 }))
                 .filter(group => group.items.length > 0),
-        [formatMessage, searchTerm],
+        [nodeLibraryGroups, searchTerm],
     );
 
     const filteredMetricCategories = useMemo(

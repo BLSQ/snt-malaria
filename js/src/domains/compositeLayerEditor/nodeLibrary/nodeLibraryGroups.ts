@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { SvgIconComponent } from '@mui/icons-material';
 import CommentOutlinedIcon from '@mui/icons-material/CommentOutlined';
 import { useSafeIntl } from 'bluesquare-components';
@@ -21,29 +22,36 @@ export type NodeLibraryGroup = {
 
 /**
  * The library's own categories, above the data layer ones. Tools are canvas aids rather than graph
- * nodes, so they have no `nodeTypeRegistry` entry.
+ * nodes, so they have no `nodeTypeRegistry` entry. Memoizes internally so callers don't need their
+ * own `useMemo` to avoid rebuilding this on every render.
  */
-export const getNodeLibraryGroups = (
+export const useNodeLibraryGroups = (
     formatMessage: FormatMessage,
-): NodeLibraryGroup[] => [
-    {
-        label: formatMessage(MESSAGES.transformationsCategoryLabel),
-        items: OPERATOR_NODE_TYPE_LIST.map(entry => ({
-            type: entry.type,
-            label: formatMessage(entry.labelMessage),
-            description: formatMessage(entry.descriptionMessage),
-            icon: entry.icon,
-        })),
-    },
-    {
-        label: formatMessage(MESSAGES.toolsCategoryLabel),
-        items: [
+): NodeLibraryGroup[] =>
+    useMemo(
+        () => [
             {
-                type: 'comment' as const,
-                label: formatMessage(MESSAGES.commentNodeLabel),
-                description: formatMessage(MESSAGES.commentNodeDescription),
-                icon: CommentOutlinedIcon,
+                label: formatMessage(MESSAGES.transformationsCategoryLabel),
+                items: OPERATOR_NODE_TYPE_LIST.map(entry => ({
+                    type: entry.type,
+                    label: formatMessage(entry.labelMessage),
+                    description: formatMessage(entry.descriptionMessage),
+                    icon: entry.icon,
+                })),
+            },
+            {
+                label: formatMessage(MESSAGES.toolsCategoryLabel),
+                items: [
+                    {
+                        type: 'comment' as const,
+                        label: formatMessage(MESSAGES.commentNodeLabel),
+                        description: formatMessage(
+                            MESSAGES.commentNodeDescription,
+                        ),
+                        icon: CommentOutlinedIcon,
+                    },
+                ],
             },
         ],
-    },
-];
+        [formatMessage],
+    );
