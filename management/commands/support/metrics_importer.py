@@ -7,6 +7,8 @@ into MetricType and MetricValue models, including legend configuration.
 
 import csv
 
+from typing import Optional
+
 from django.core.management.base import CommandError
 from django.db import transaction
 
@@ -29,6 +31,14 @@ class MetricsImporter:
         self.style = style
         self.stdout_write = stdout_writer or print
         self.metric_type_scales = {}
+
+    @staticmethod
+    def _parse_year(row: dict) -> Optional[int]:
+        """Rows with no YEAR column (or an empty value) are timeless - year=None, not 0, so
+        consumers (ScenarioRule.resolve_matched_org_units, the composite evaluator, ...)
+        recognize them as such."""
+        year_raw = row.get("YEAR")
+        return int(year_raw) if year_raw else None
 
     def import_metrics(self, metadata_file_path, dataset_file_path, pop_dataset_file_path=None):
         """Import metrics from CSV files.
@@ -284,7 +294,7 @@ class MetricsImporter:
                             org_unit=org_unit,
                             value=value,
                             string_value=string_value,
-                            year=int(row.get("YEAR", 0)),
+                            year=self._parse_year(row),
                         )
                         value_count += 1
 
