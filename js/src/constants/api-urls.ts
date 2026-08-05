@@ -3,3 +3,5 @@ export const exportScenarioAPIPath =
 
 export const exportMetricValuesTemplateAPIPath =
     '/api/metricvalues/csv_template/';
+
+export const exportMetricValuesAPIPath = '/api/metricvalues/export_csv/';

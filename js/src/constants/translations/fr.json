@@ -117,6 +117,7 @@
     "iaso.snt_malaria.settings.dataLayers.deleteLayer": "Supprimer la couche",
     "iaso.snt_malaria.settings.dataLayers.deleteLayerConfirmMessage": "Êtes-vous sûr de vouloir supprimer ce type de métrique ?",
     "iaso.snt_malaria.settings.dataLayers.downloadCSVTemplate": "Télécharger le Template CSV",
+    "iaso.snt_malaria.settings.dataLayers.exportCSV": "Exporter en CSV",
     "iaso.snt_malaria.settings.dataLayers.importCSV": "Importer les valeurs métriques",
     "iaso.snt_malaria.settings.dataLayers.metricValuesImportSuccess": "Importation des valeurs métriques réussie.",
     "iaso.snt_malaria.settings.dataLayers.metricValuesImportError": "Erreur lors de l'importation des valeurs métriques.",

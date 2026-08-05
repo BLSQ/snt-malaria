@@ -17,6 +17,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenario.importCSV',
         defaultMessage: 'Import CSV',
     },
+    exportCSV: {
+        id: 'iaso.snt_malaria.settings.dataLayers.exportCSV',
+        defaultMessage: 'Export to CSV',
+    },
     addScaleItem: {
         id: 'iaso.snt_malaria.settings.dataLayers.addScaleItem',
         defaultMessage: 'Add range',
