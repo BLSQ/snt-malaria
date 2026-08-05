@@ -241,7 +241,6 @@
     "iaso.snt_malaria.scenario.referenceYearLabel": "Default reference year",
     "iaso.snt_malaria.scenario.referenceYearHelp": "Year used by default to evaluate rule matching criteria for every data layer. Falls back to timeless values when no data exists for that year. Leave unset to use timeless values (or any year) by default.",
     "iaso.snt_malaria.scenario.customizeDataLayerYears": "Customize reference year per data layer",
-    "iaso.snt_malaria.scenario.dataLayerYearsLabel": "Data layer reference years",
     "iaso.snt_malaria.scenario.dataLayerYearsHelp": "Overrides the default reference year for specific data layers only.",
     "iaso.snt_malaria.scenario.selectDataLayer": "Data layer",
     "iaso.snt_malaria.scenario.year": "Year",

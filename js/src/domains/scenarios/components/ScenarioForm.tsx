@@ -274,7 +274,7 @@ const ScenarioForm: React.FC = () => {
                                     variant="form"
                                     placeholder={MESSAGES.selectDataLayer}
                                     metricCategories={availableMetricCategories}
-                                    initialSelection={newLayer}
+                                    selection={newLayer}
                                     onLayerChange={setNewLayer}
                                 />
                             </Box>

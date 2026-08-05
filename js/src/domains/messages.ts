@@ -551,10 +551,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenario.customizeDataLayerYears',
         defaultMessage: 'Customize reference year per data layer',
     },
-    dataLayerYearsLabel: {
-        id: 'iaso.snt_malaria.scenario.dataLayerYearsLabel',
-        defaultMessage: 'Data layer reference years',
-    },
     dataLayerYearsHelp: {
         id: 'iaso.snt_malaria.scenario.dataLayerYearsHelp',
         defaultMessage:

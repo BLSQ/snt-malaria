@@ -240,7 +240,6 @@
     "iaso.snt_malaria.scenario.referenceYearLabel": "Année de référence par défaut",
     "iaso.snt_malaria.scenario.referenceYearHelp": "Année utilisée par défaut pour évaluer les critères de correspondance des règles pour chaque couche de données. Utilise les valeurs intemporelles en repli si aucune donnée n'existe pour cette année. Laissez non défini pour utiliser par défaut les valeurs intemporelles (ou n'importe quelle année).",
     "iaso.snt_malaria.scenario.customizeDataLayerYears": "Personnaliser l'année de référence par couche de données",
-    "iaso.snt_malaria.scenario.dataLayerYearsLabel": "Années de référence par couche de données",
     "iaso.snt_malaria.scenario.dataLayerYearsHelp": "Remplace l'année de référence par défaut pour des couches de données spécifiques uniquement.",
     "iaso.snt_malaria.scenario.selectDataLayer": "Couche de données",
     "iaso.snt_malaria.scenario.year": "Année",

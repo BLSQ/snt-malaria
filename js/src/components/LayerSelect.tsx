@@ -10,7 +10,7 @@ import {
     Typography,
 } from '@mui/material';
 
-import { useSafeIntl } from 'bluesquare-components';
+import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 
 import { MessageDescriptor } from 'react-intl';
 import { SxStyles } from 'Iaso/types/general';
@@ -78,16 +78,16 @@ const styles: SxStyles = {
 };
 
 type Props = {
-    initialSelection?: MetricType;
+    selection?: MetricType;
     onLayerChange: (metric?: MetricType) => void;
-    placeholder?: MessageDescriptor;
+    placeholder?: IntlMessage;
     metricCategories?: MetricTypeCategory[];
     /** 'map' (default) is the dark pill used as a map overlay; 'form' is a plain outlined select for use inside forms. */
     variant?: 'map' | 'form';
 };
 
 export const LayerSelect: FC<Props> = ({
-    initialSelection,
+    selection,
     placeholder,
     metricCategories,
     onLayerChange,
@@ -110,7 +110,7 @@ export const LayerSelect: FC<Props> = ({
         <FormControl sx={styles.formControl}>
             <Select
                 id="layer-select"
-                value={initialSelection?.id ?? ''}
+                value={selection?.id ?? ''}
                 onChange={handleChange}
                 variant="outlined"
                 IconComponent={ArrowDropDownIcon}
