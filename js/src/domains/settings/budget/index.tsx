@@ -12,9 +12,9 @@ import {
     CardScrollable,
     SettingsFormContainer,
 } from '../../../components/styledComponents';
+import { useGetBudgetSettings } from '../../../hooks/useGetBudgetSettings';
 import { MESSAGES } from '../../messages';
 import { useBudgetSettingsFormState } from './hooks/useBudgetSettingsFormState';
-import { useGetBudgetSettings } from './hooks/useGetBudgetSettings';
 import { useSaveBudgetSettings } from './hooks/useSaveBudgetSettings';
 import { BudgetSettingsFormValues } from './types';
 

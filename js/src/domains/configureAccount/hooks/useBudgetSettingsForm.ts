@@ -5,12 +5,12 @@ import { useFormik } from 'formik';
 
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 
+import { useGetBudgetSettings } from '../../../hooks/useGetBudgetSettings';
 import { MESSAGES } from '../messages';
 import {
     budgetSettingsValidationSchema,
     BudgetSettingsFormValues,
 } from './useBudgetSettingsValidation';
-import { useGetBudgetSettings } from './useGetBudgetSettings';
 import { useUpdateBudgetSettings } from './useUpdateBudgetSettings';
 
 type UseBudgetSettingsFormResult = {
