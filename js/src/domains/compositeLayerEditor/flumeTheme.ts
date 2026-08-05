@@ -6,11 +6,16 @@ import { alpha, Theme } from '@mui/material';
  * body uses a light tint (dark text stays readable) with a stronger, saturated border, while the
  * colour-picker swatch shows the solid colour.
  */
+// All eight slots must resolve to something; the theme has no pink, and its yellow
+// (`bluesquare-components`' rawTheme `palette.yellow`) isn't in MUI's typings.
+const COMMENT_ACCENT_PINK = '#E5399A';
+const COMMENT_ACCENT_YELLOW = '#FFD835';
+
 const commentPalette = (theme: Theme): Record<string, string> => ({
     purple: theme.palette.primary.main,
-    blue: '#3D74FF',
-    pink: '#E5399A',
-    yellow: '#FFC107',
+    blue: theme.palette.secondary.main,
+    pink: COMMENT_ACCENT_PINK,
+    yellow: COMMENT_ACCENT_YELLOW,
     orange: theme.palette.warning.main,
     red: theme.palette.error.main,
     green: theme.palette.success.main,

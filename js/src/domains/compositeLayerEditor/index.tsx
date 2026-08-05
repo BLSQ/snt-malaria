@@ -26,11 +26,7 @@ import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { CanvasControls } from './components/CanvasControls';
 import { EditorHeader } from './components/EditorHeader';
 import { NodeHeaderContent } from './components/NodeHeaderContent';
-import {
-    buildFlumeGraphFromSpec,
-    centerGraph,
-    relayoutWithMeasuredSizes,
-} from './compositeLayerChatBot/buildFlumeGraph';
+import { buildFlumeGraphFromSpec } from './compositeLayerChatBot/buildFlumeGraph';
 import { extractGraphSpecFromFlume } from './compositeLayerChatBot/extractGraphSpec';
 import { CurrentGraph, GeneratedGraph } from './compositeLayerChatBot/types';
 import {
@@ -58,6 +54,7 @@ import {
     isOutputConnected,
     removeInputConnection,
 } from './utils/graph';
+import { centerGraph, relayoutWithMeasuredSizes } from './utils/graphLayout';
 
 // Flume adds a default output node for a fresh graph; existing graphs already contain their own.
 const DEFAULT_NODES = [{ type: 'output' }];
@@ -110,11 +107,6 @@ type Props = {
     sidebarCollapsed?: boolean;
     /** Toggles the data layers sidebar (mirrors the scenario editor's rules-panel toggle). */
     onToggleSidebar?: () => void;
-    /** Whether the sidebar shows the AI chat rather than the data layer list. Passed to the header. */
-    isAiChatMode?: boolean;
-    onToggleAiChatMode?: () => void;
-    /** Shows the AI chat toggle in the header - only when the account has an AI API key. */
-    showAiChatToggle?: boolean;
 };
 
 // Imperative handle for the sibling AI chat panel (rendered by the parent) to push a generated
@@ -136,9 +128,6 @@ export const CompositeLayerEditor = forwardRef<
             compositeLayerId,
             sidebarCollapsed = false,
             onToggleSidebar,
-            isAiChatMode = false,
-            onToggleAiChatMode,
-            showAiChatToggle = false,
         },
         ref,
     ) => {
@@ -532,9 +521,6 @@ export const CompositeLayerEditor = forwardRef<
                             title={headerTitle}
                             sidebarCollapsed={sidebarCollapsed}
                             onToggleSidebar={onToggleSidebar}
-                            isAiChatMode={isAiChatMode}
-                            onToggleAiChatMode={onToggleAiChatMode}
-                            showAiChatToggle={showAiChatToggle}
                             onRearrange={handleRearrange}
                             onCancel={onClose}
                             onSave={handleSave}

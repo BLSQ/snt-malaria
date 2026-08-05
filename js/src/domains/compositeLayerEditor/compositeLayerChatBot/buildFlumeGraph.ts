@@ -1,36 +1,15 @@
-import dagre from 'dagre';
 import { FlumeNodes } from 'flume';
 import { LegendTypes } from '../../../constants/legend';
+import { OPERATOR_OUTPUT_PORT_NAME } from '../nodeTypeRegistry';
 import { FlumeGraph, FlumeNodeInputData } from '../types/flumeGraph';
-import { MeasuredSize } from '../utils/flumeStage';
+import {
+    DagreNodeSpec,
+    DagreLayoutResult,
+    NODE_HEIGHT,
+    NODE_WIDTH,
+    runDagreLayout,
+} from '../utils/graphLayout';
 import { GeneratedGraph, GeneratedGraphNode, GraphNodeType } from './types';
-
-// Horizontal gap dagre leaves between ranks (columns), and vertical gap between nodes stacked in
-// the same rank.
-const DAGRE_RANK_SEP = 60;
-const DAGRE_NODE_SEP = 24;
-
-const NODE_WIDTH: Record<GraphNodeType | 'output', number> = {
-    dataLayer: 330,
-    formula: 260,
-    combine: 260,
-    normalize: 260,
-    classify: 320,
-    output: 330,
-};
-
-// Rough rendered height per node type, to size dagre's layout so rows don't overlap - not
-// pixel-exact. `dataLayer`/`output` default to an EXPANDED map preview (flumeConfig.ts:
-// `expanded: data?.expanded ?? true`), so their estimate includes the map. dagre's estimate pass
-// is corrected against real DOM sizes afterwards (see `relayoutWithMeasuredSizes`).
-const NODE_HEIGHT: Record<GraphNodeType | 'output', number> = {
-    dataLayer: 360,
-    formula: 150,
-    combine: 140,
-    normalize: 130,
-    classify: 140,
-    output: 410,
-};
 
 // Rows of a classify node's rules table each add roughly this much height on top of its base size
 // (see MappingsControl.tsx: one grid row per rule, control height + row gap).
@@ -65,10 +44,10 @@ const estimateNodeHeight = (
 // Port name a node's result is exposed under, keyed by node type - matches flumeConfig.ts.
 const OUTPUT_PORT_NAME: Record<GraphNodeType, string> = {
     dataLayer: 'values',
-    formula: 'result',
-    combine: 'result',
-    normalize: 'result',
-    classify: 'result',
+    formula: OPERATOR_OUTPUT_PORT_NAME,
+    combine: OPERATOR_OUTPUT_PORT_NAME,
+    normalize: OPERATOR_OUTPUT_PORT_NAME,
+    classify: OPERATOR_OUTPUT_PORT_NAME,
 };
 
 // Names given to a formula/combine node's value inputs, in order: a, b, c, … (see flumeConfig.ts).
@@ -117,41 +96,6 @@ const collectEdges = (graph: GeneratedGraph): Array<{ from: string; to: string }
     return edges;
 };
 
-type DagreNodeSpec = { id: string; width: number; height: number };
-type DagreEdge = { from: string; to: string };
-type DagreLayoutResult = { x: number; y: number; width: number; height: number };
-
-/**
- * Lays out a set of nodes with dagre (layered "Sugiyama-style" left-to-right layout). Shared by
- * `layoutWithDagre` (size estimates) and `relayoutWithMeasuredSizes` (real DOM sizes); they differ
- * only in where node sizes and edges come from.
- */
-const runDagreLayout = (
-    nodeSpecs: DagreNodeSpec[],
-    edges: DagreEdge[],
-): Map<string, DagreLayoutResult> => {
-    const g = new dagre.graphlib.Graph();
-    g.setGraph({ rankdir: 'LR', nodesep: DAGRE_NODE_SEP, ranksep: DAGRE_RANK_SEP });
-    g.setDefaultEdgeLabel(() => ({}));
-
-    nodeSpecs.forEach(({ id, width, height }) => {
-        g.setNode(id, { width, height });
-    });
-    edges.forEach(({ from, to }) => {
-        if (g.hasNode(from) && g.hasNode(to)) g.setEdge(from, to);
-    });
-
-    dagre.layout(g);
-
-    const positions = new Map<string, DagreLayoutResult>();
-    nodeSpecs.forEach(({ id, width, height }) => {
-        // dagre positions a node by its center; the rest of this file positions by top-left.
-        const { x, y } = g.node(id);
-        positions.set(id, { x: x - width / 2, y: y - height / 2, width, height });
-    });
-    return positions;
-};
-
 // Lays out the whole graph (incl. the synthetic output) from size *estimates* - a structural
 // update's first pass, before anything has rendered. See `buildFlumeGraphFromSpec`.
 const layoutWithDagre = (
@@ -168,91 +112,6 @@ const layoutWithDagre = (
         height: estimateNodeHeight('output'),
     });
     return runDagreLayout(nodeSpecs, collectEdges(graph));
-};
-
-// A graph's overall extent, in the same top-left coordinate space as `FlumeGraphNode.x`/`y`.
-export type GraphBoundingBox = {
-    minX: number;
-    minY: number;
-    maxX: number;
-    maxY: number;
-};
-
-export type RelayoutResult = {
-    nodes: FlumeGraph;
-    boundingBox: GraphBoundingBox;
-};
-
-// Edges from an already-wired FlumeGraph, read uniformly from each node's `connections.inputs`
-// (unlike `collectEdges`, which reads the AI spec's per-type input/inputs/source fields).
-const collectFlumeGraphEdges = (
-    nodes: FlumeGraph,
-): Array<{ from: string; to: string }> => {
-    const edges: Array<{ from: string; to: string }> = [];
-    Object.values(nodes).forEach(node => {
-        Object.values(node.connections.inputs).forEach(connections => {
-            connections.forEach(connection =>
-                edges.push({ from: connection.nodeId, to: node.id }),
-            );
-        });
-    });
-    return edges;
-};
-
-/**
- * Re-lays-out an already-built graph from REAL measured node sizes rather than estimates, correcting
- * for content that only sizes itself once rendered (a wrapped layer name, a classify rules table).
- * Only positions change; data/connections pass through untouched. Also returns the bounding box so
- * the caller can frame it (see `centerGraph`) without re-measuring.
- */
-export const relayoutWithMeasuredSizes = (
-    nodes: FlumeGraph,
-    measuredSizes: Map<string, MeasuredSize>,
-): RelayoutResult => {
-    const nodeSpecs: DagreNodeSpec[] = Object.values(nodes).map(node => {
-        const measured = measuredSizes.get(node.id);
-        return {
-            id: node.id,
-            width: measured?.width ?? node.width ?? NODE_WIDTH[node.type],
-            height: measured?.height ?? NODE_HEIGHT[node.type],
-        };
-    });
-    const positions = runDagreLayout(nodeSpecs, collectFlumeGraphEdges(nodes));
-
-    const relaidNodes: FlumeGraph = {};
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    Object.entries(nodes).forEach(([id, node]) => {
-        const position = positions.get(id);
-        if (!position) return;
-        relaidNodes[id] = { ...node, x: position.x, y: position.y };
-        minX = Math.min(minX, position.x);
-        minY = Math.min(minY, position.y);
-        maxX = Math.max(maxX, position.x + position.width);
-        maxY = Math.max(maxY, position.y + position.height);
-    });
-
-    return { nodes: relaidNodes, boundingBox: { minX, minY, maxX, maxY } };
-};
-
-/**
- * Shifts every node so the bounding box is centered on the stage origin (0,0). With Flume's default
- * `translate: 0` on a fresh mount, the box's center lands at the viewport center with no pan; paired
- * with `computeFitScale` as `initialScale`, the graph arrives pre-framed on its first paint.
- */
-export const centerGraph = (
-    nodes: FlumeGraph,
-    boundingBox: GraphBoundingBox,
-): FlumeGraph => {
-    const shiftX = (boundingBox.minX + boundingBox.maxX) / 2;
-    const shiftY = (boundingBox.minY + boundingBox.maxY) / 2;
-    const centered: FlumeGraph = {};
-    Object.entries(nodes).forEach(([id, node]) => {
-        centered[id] = { ...node, x: node.x - shiftX, y: node.y - shiftY };
-    });
-    return centered;
 };
 
 /**

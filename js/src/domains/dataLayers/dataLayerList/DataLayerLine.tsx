@@ -1,6 +1,7 @@
 import React, { FC, useCallback } from 'react';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
+import LayersIcon from '@mui/icons-material/Layers';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import {
     Box,
@@ -163,11 +164,22 @@ export const DataLayerLine: FC<Props> = ({
             onClick={editing ? undefined : onClick}
         >
             <Box sx={styles.metricTypeDetails}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                    {isComposite && (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    {/* Composites swap the layer icon for their own rather than showing both. */}
+                    {isComposite ? (
                         <Tooltip title={formatMessage(MESSAGES.compositeLayer)}>
-                            <AccountTreeIcon fontSize="small" color="action" />
+                            <AccountTreeIcon
+                                fontSize="small"
+                                color="action"
+                                sx={styles.metricTypeIcon}
+                            />
                         </Tooltip>
+                    ) : (
+                        <LayersIcon
+                            fontSize="small"
+                            color="action"
+                            sx={styles.metricTypeIcon}
+                        />
                     )}
                     <Typography variant="body2">{metricType.name}</Typography>
                 </Box>

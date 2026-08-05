@@ -4,6 +4,13 @@ import { theme as defaultTheme } from 'bluesquare-components';
 
 const primaryMain = '#673AB7';
 
+// Styling the scrollbar opts out of the native one, which insets its thumb; the inset restores
+// that margin via a transparent border (see `background-clip` below).
+const scrollbarSize = 13;
+const scrollbarThumbInset = 3;
+const scrollbarThumb = alpha('#1F2B3D', 0.24);
+const scrollbarThumbHighlight = primaryMain;
+
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
@@ -53,6 +60,41 @@ export const theme = createTheme({
         },
     },
     components: {
+        // Applied app-wide: Iaso renders <CssBaseline /> under the active plugin's theme.
+        MuiCssBaseline: {
+            styleOverrides: {
+                // `scrollbar-color` has no hover/active states, and Chrome honours it over
+                // `::-webkit-scrollbar` when both are set - so it is scoped to browsers without
+                // the pseudo-elements (Firefox), which get a plain thumb.
+                '@supports not selector(::-webkit-scrollbar)': {
+                    '*': {
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: `${scrollbarThumb} transparent`,
+                    },
+                },
+                '*::-webkit-scrollbar': {
+                    width: scrollbarSize,
+                    height: scrollbarSize,
+                },
+                '*::-webkit-scrollbar-track': {
+                    backgroundColor: 'transparent',
+                },
+                '*::-webkit-scrollbar-thumb': {
+                    backgroundColor: scrollbarThumb,
+                    borderRadius: scrollbarSize,
+                    border: `${scrollbarThumbInset}px solid transparent`,
+                    backgroundClip: 'content-box',
+                },
+                // `:active` too, so it stays highlighted while dragged past its own edges.
+                '*::-webkit-scrollbar-thumb:hover, *::-webkit-scrollbar-thumb:active':
+                    {
+                        backgroundColor: scrollbarThumbHighlight,
+                    },
+                '*::-webkit-scrollbar-corner': {
+                    backgroundColor: 'transparent',
+                },
+            },
+        },
         MuiPaper: {
             defaultProps: {
                 elevation: 0,

@@ -13,13 +13,24 @@ type Props = {
 };
 
 const chatStyles = {
-    header: {
-        pb: 0,
-        minHeight: '65px',
+    // The sidebar tabs already say "AI Mode"; the title is shown in the empty state instead.
+    header: { display: 'none' },
+} satisfies SxStyles;
+
+// Added to ChatPanel's own flex `gap` on both rows, so the two gaps stay equal.
+const EMPTY_STATE_EXTRA_GAP = 1;
+
+const emptyStateStyles = {
+    title: {
         display: 'flex',
-        alignContent: 'center',
-        border: 'none',
-        ' p': { fontSize: '1.25rem', ml: 0.5 },
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 0.75,
+        mb: EMPTY_STATE_EXTRA_GAP,
+    },
+    subhead: {
+        fontWeight: 700,
+        mb: EMPTY_STATE_EXTRA_GAP,
     },
 } satisfies SxStyles;
 
@@ -49,14 +60,24 @@ export const CompositeLayerAIChat: FC<Props> = ({
                 messages={messages}
                 isLoading={isLoading}
                 title={formatMessage(MESSAGES.compositeLayerAITitle)}
-                titleIcon={<AutoAwesomeIcon color="primary" fontSize="small" />}
                 placeholder={formatMessage(
                     MESSAGES.compositeLayerAIPlaceholder,
                 )}
                 sx={chatStyles}
                 emptyState={
                     <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                        <Box sx={emptyStateStyles.title}>
+                            <AutoAwesomeIcon
+                                color="primary"
+                                fontSize="small"
+                            />
+                            <Typography
+                                sx={{ fontWeight: 700, fontSize: '1.25rem' }}
+                            >
+                                {formatMessage(MESSAGES.compositeLayerAITitle)}
+                            </Typography>
+                        </Box>
+                        <Typography variant="body1" sx={emptyStateStyles.subhead}>
                             {formatMessage(
                                 MESSAGES.compositeLayerAIEmptyStateTitle,
                             )}

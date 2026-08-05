@@ -1,6 +1,11 @@
 import React, { MutableRefObject, RefObject, useRef, useState } from 'react';
 import { FlumeCommentMap } from 'flume';
 import { DATA_LAYER_DND_MIME } from '../../dataLayers/dragAndDrop';
+import {
+    COMPOSITE_NODE_TYPE_DND_MIME,
+    CompositeNodeLibraryDragType,
+} from '../dragAndDrop';
+import { OPERATOR_NODE_TYPES } from '../nodeTypeRegistry';
 import { FlumeGraph, FlumeGraphNode } from '../types/flumeGraph';
 import {
     getStageElement,
@@ -39,9 +44,13 @@ type UseCanvasDrop = {
     remountWithGraph: (nextNodes: FlumeGraph) => void;
 };
 
+// Suffixed so two drops in the same millisecond can't collide.
+const randomIdSuffix = (): string =>
+    `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
 /**
- * Drop a data layer from the sidebar onto the canvas → build a preselected `dataLayer` node and
- * remount with the new graph (Flume has no imperative "add node" API). To keep the view from
+ * Drop a node-library entry (data layer, operator node or Comment) onto the canvas: build it and
+ * remount with the new graph, since Flume has no imperative "add node" API. To keep the view from
  * jumping, `shiftGraphForRemount` pre-shifts everything by the current pan and the scale is
  * restored, so the only visible change is the new node appearing under the cursor.
  */
@@ -57,11 +66,20 @@ export const useCanvasDrop = ({
     const mountScaleRef = useRef<number>();
 
     const handleCanvasDrop = (event: React.DragEvent<HTMLDivElement>) => {
-        const raw =
-            event.dataTransfer.getData(DATA_LAYER_DND_MIME) ||
-            event.dataTransfer.getData('text/plain');
-        const metricTypeId = raw ? Number(raw) : NaN;
-        if (!raw || Number.isNaN(metricTypeId)) return;
+        // Checked before the data layer path, whose `text/plain` fallback would also match.
+        const nodeLibraryType = event.dataTransfer.getData(
+            COMPOSITE_NODE_TYPE_DND_MIME,
+        ) as CompositeNodeLibraryDragType | '';
+
+        const metricRaw = nodeLibraryType
+            ? ''
+            : event.dataTransfer.getData(DATA_LAYER_DND_MIME) ||
+              event.dataTransfer.getData('text/plain');
+        const metricTypeId = metricRaw ? Number(metricRaw) : NaN;
+
+        if (!nodeLibraryType && (!metricRaw || Number.isNaN(metricTypeId))) {
+            return;
+        }
         event.preventDefault();
 
         const stage = getStageElement(canvasRef.current);
@@ -83,19 +101,48 @@ export const useCanvasDrop = ({
             canvasRef.current,
         );
 
-        const newNodeId = `dl-${Date.now().toString(36)}-${Math.random()
-            .toString(36)
-            .slice(2, 8)}`;
-        const newNode: FlumeGraphNode = {
-            id: newNodeId,
-            x: dropX,
-            y: dropY,
-            type: 'dataLayer',
-            width: 330,
-            connections: { inputs: {}, outputs: {} },
-            inputData: { metricType: { metricTypeId } },
-        };
-        shiftedNodes[newNodeId] = newNode;
+        if (nodeLibraryType === 'comment') {
+            const newCommentId = `comment-${randomIdSuffix()}`;
+            shiftedComments[newCommentId] = {
+                id: newCommentId,
+                text: '',
+                x: dropX,
+                y: dropY,
+                // Flume's own dimensions (commentsReducer.js); `purple` is one of its eight
+                // fixed colour slots, remapped in `flumeTheme.ts`.
+                width: 200,
+                height: 30,
+                color: 'purple',
+                // Opens straight into its autofocused textarea, then Flume drops the flag, so
+                // it never reaches the saved graph.
+                isNew: true,
+            };
+        } else if (nodeLibraryType) {
+            const operator = OPERATOR_NODE_TYPES[nodeLibraryType];
+            const newNodeId = `${nodeLibraryType}-${randomIdSuffix()}`;
+            const newNode: FlumeGraphNode = {
+                id: newNodeId,
+                x: dropX,
+                y: dropY,
+                type: nodeLibraryType,
+                width: operator.width,
+                connections: { inputs: {}, outputs: {} },
+                inputData: operator.defaultInputData(),
+            };
+            shiftedNodes[newNodeId] = newNode;
+        } else {
+            const newNodeId = `dl-${randomIdSuffix()}`;
+            const newNode: FlumeGraphNode = {
+                id: newNodeId,
+                x: dropX,
+                y: dropY,
+                type: 'dataLayer',
+                width: 330,
+                connections: { inputs: {}, outputs: {} },
+                inputData: { metricType: { metricTypeId } },
+            };
+            shiftedNodes[newNodeId] = newNode;
+        }
 
         nodesRef.current = shiftedNodes;
         commentsRef.current = shiftedComments;

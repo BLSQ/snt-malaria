@@ -5,21 +5,13 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.title',
         defaultMessage: 'Composite layer editor',
     },
-    showDataLayers: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.showDataLayers',
-        defaultMessage: 'Show data layers',
+    showSidePanel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.showSidePanel',
+        defaultMessage: 'Show side panel',
     },
-    hideDataLayers: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.hideDataLayers',
-        defaultMessage: 'Hide data layers',
-    },
-    switchToAiGeneration: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.switchToAiGeneration',
-        defaultMessage: 'Generate with AI',
-    },
-    switchToDataLayerList: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.switchToDataLayerList',
-        defaultMessage: 'Back to data layer list',
+    hideSidePanel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.hideSidePanel',
+        defaultMessage: 'Hide side panel',
     },
     save: {
         id: 'iaso.snt_malaria.compositeLayerEditor.save',
@@ -282,6 +274,40 @@ export const MESSAGES = defineMessages({
     firstConnectedLayerPlaceholder: {
         id: 'iaso.snt_malaria.compositeLayerEditor.firstConnectedLayerPlaceholder',
         defaultMessage: '[First connected layer]',
+    },
+    // Node library sidebar (tabs, search, Comment annotation entry).
+    nodeLibraryTabLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.nodeLibraryTabLabel',
+        defaultMessage: 'Node library',
+    },
+    aiModeTabLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.aiModeTabLabel',
+        defaultMessage: 'AI Mode',
+    },
+    searchForNodePlaceholder: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.searchForNodePlaceholder',
+        defaultMessage: 'Search for node',
+    },
+    nodeLibraryHint: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.nodeLibraryHint',
+        defaultMessage:
+            'Drag and drop any of these layers or transformations into the canvas on the right to build your composite layer',
+    },
+    transformationsCategoryLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.transformationsCategoryLabel',
+        defaultMessage: 'Transformations',
+    },
+    toolsCategoryLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.toolsCategoryLabel',
+        defaultMessage: 'Tools',
+    },
+    commentNodeLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.commentNodeLabel',
+        defaultMessage: 'Comment',
+    },
+    commentNodeDescription: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.commentNodeDescription',
+        defaultMessage: 'A comment for documenting nodes.',
     },
     compositeLayerAITitle: {
         id: 'iaso.snt_malaria.compositeLayerEditor.ai.title',
