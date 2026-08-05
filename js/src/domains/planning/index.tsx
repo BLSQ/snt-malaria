@@ -19,6 +19,7 @@ import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
 import {
+    ChatColumn,
     MainColumn,
     PaperFullHeight,
     PageContainer,
@@ -37,6 +38,8 @@ import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
 import { BudgetTable } from './components/budgeting/BudgetTable';
 import { InterventionPlanHeader } from './components/interventionPlan/InterventionPlanHeader';
 import { InterventionPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
+import { ScenarioRuleAIChat } from './components/scenarioRule/scenarioRuleAiChat/ScenarioRuleAIChat';
+import { useScenarioRuleAIChat } from './components/scenarioRule/scenarioRuleAiChat/useScenarioRuleAIChat';
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
 import { ScenarioSummaryTab } from './components/ScenarioSummaryTab';
 import {
@@ -105,6 +108,7 @@ export const Planning: FC = () => {
     const { data: metricTypeCategories } = useGetMetricCategories('any');
     const { data: interventionCategories } = useGetInterventionCategories();
     const { data: accountSettings } = useGetAccountSettings();
+    const hasAiApiKey = Boolean(accountSettings?.has_ai_api_key);
     const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
     const { data: orgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits({
         orgUnitParentId: displayOrgUnitId,
@@ -130,6 +134,14 @@ export const Planning: FC = () => {
     const handleDeleteScenario = () => {
         deleteScenario(scenarioId);
     };
+
+    const [showAIChat, setShowAIChat] = useState(false);
+    const toggleAIChat = useCallback(() => setShowAIChat(v => !v), []);
+    const {
+        messages: aiChatMessages,
+        isLoading: isAiChatLoading,
+        sendMessage: sendAiChatMessage,
+    } = useScenarioRuleAIChat({ scenarioId });
 
     const handleToggleLockScenario = () => {
         if (scenario) {
@@ -257,6 +269,15 @@ export const Planning: FC = () => {
             <TopBar title={title} disableShadow sx={{ zIndex: 401 }} />
             <PageContainer>
                 <SidebarLayout>
+                    {showAIChat && hasAiApiKey && (
+                        <ChatColumn>
+                            <ScenarioRuleAIChat
+                                messages={aiChatMessages}
+                                isLoading={isAiChatLoading}
+                                onSendMessage={sendAiChatMessage}
+                            />
+                        </ChatColumn>
+                    )}
                     <ScenarioRulesSidebar
                         onPreviewScenarioRule={onPreviewScenarioRule}
                         scenarioId={scenarioId}
@@ -265,6 +286,9 @@ export const Planning: FC = () => {
                         createRuleRef={tour.anchorRefs[0]}
                         matchedOrgUnitIds={matchedOrgUnitIds}
                         isLoadingPreview={isLoadingPreview}
+                        hasAiApiKey={hasAiApiKey}
+                        showAIChat={showAIChat}
+                        onToggleAIChat={toggleAIChat}
                     />
                     <MainColumn>
                         {activeTab === 'summary' ? (
