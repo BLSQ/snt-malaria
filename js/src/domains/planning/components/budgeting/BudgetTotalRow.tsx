@@ -3,6 +3,8 @@ import { TableCell, TableRow, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ProgressBar } from '../../../../components/LinearProgress';
+import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
+import { getCurrencySymbol } from '../../../../utils/currency';
 import { MESSAGES } from '../../../messages';
 import { formatBigNumber } from '../../libs/cost-utils';
 
@@ -22,6 +24,8 @@ export const BudgetTotalRow: FC<{
     };
 }> = ({ yearRange, colors, totalCosts }) => {
     const { formatMessage } = useSafeIntl();
+    const { data: budgetSettings } = useGetBudgetSettings();
+    const currencySymbol = getCurrencySymbol(budgetSettings?.local_currency);
 
     return (
         <TableRow sx={styles.row}>
@@ -41,7 +45,10 @@ export const BudgetTotalRow: FC<{
                         component="span"
                         sx={styles.emphasis}
                     >
-                        {formatBigNumber(totalCosts.yearlyTotal[year] || 0)}
+                        {formatBigNumber(
+                            totalCosts.yearlyTotal[year] || 0,
+                            currencySymbol,
+                        )}
                     </Typography>
                 </TableCell>
             ))}
@@ -51,7 +58,7 @@ export const BudgetTotalRow: FC<{
                     component="span"
                     sx={styles.emphasis}
                 >
-                    {formatBigNumber(totalCosts.totalCost)}
+                    {formatBigNumber(totalCosts.totalCost, currencySymbol)}
                 </Typography>
             </TableCell>
             <TableCell align="right">

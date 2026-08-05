@@ -24,6 +24,8 @@ import {
     useAutoYAxisWidth,
 } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
+import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
+import { getCurrencySymbol } from '../../../../utils/currency';
 import { useGetInterventionCostBreakdownLineCategories } from '../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
@@ -161,6 +163,8 @@ export const CostPerInterventionSummary: FC = () => {
     const { budgets, orgUnits, interventionCategories } = usePlanningContext();
     const { data: costCategories = [], isLoading } =
         useGetInterventionCostBreakdownLineCategories();
+    const { data: budgetSettings } = useGetBudgetSettings();
+    const currencySymbol = getCurrencySymbol(budgetSettings?.local_currency);
 
     const orgUnitIds = useMemo(
         () => new Set(orgUnits.map(ou => ou.id)),
@@ -274,7 +278,7 @@ export const CostPerInterventionSummary: FC = () => {
             if (value > 0) {
                 rows.push({
                     label: category.label,
-                    value: formatBigNumber(value),
+                    value: formatBigNumber(value, currencySymbol),
                     color: shadeForSegment(base, index, costCategories.length),
                 });
             }
@@ -323,7 +327,10 @@ export const CostPerInterventionSummary: FC = () => {
                             <XAxis
                                 type="number"
                                 tickFormatter={value =>
-                                    formatBigNumber(value as number)
+                                    formatBigNumber(
+                                        value as number,
+                                        currencySymbol,
+                                    )
                                 }
                                 {...axisProps}
                                 tickMargin={4}

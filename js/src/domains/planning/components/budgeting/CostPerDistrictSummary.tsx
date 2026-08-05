@@ -5,6 +5,8 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { Map as SNTMap } from '../../../../components/Map';
 import { WidgetCard } from '../../../../components/WidgetCard';
+import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
+import { getCurrencySymbol } from '../../../../utils/currency';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { aggregateOrgUnitCosts } from '../../libs/budget-aggregation';
@@ -24,6 +26,8 @@ const styles = {
 export const CostPerDistrictSummary: FC = () => {
     const { formatMessage } = useSafeIntl();
     const { budgets, orgUnits } = usePlanningContext();
+    const { data: budgetSettings } = useGetBudgetSettings();
+    const currencySymbol = getCurrencySymbol(budgetSettings?.local_currency);
     const [selectedInterventionId, setSelectedInterventionId] =
         useState<number>(0);
 
@@ -77,10 +81,10 @@ export const CostPerDistrictSummary: FC = () => {
             );
             return {
                 color: fillColor as string,
-                label: formatBigNumber(cost),
+                label: formatBigNumber(cost, currencySymbol),
             };
         },
-        [orgUnitCosts, legendConfig, getActiveCost],
+        [orgUnitCosts, legendConfig, getActiveCost, currencySymbol],
     );
 
     const interventionOptions = useMemo(() => {

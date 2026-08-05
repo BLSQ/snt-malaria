@@ -20,6 +20,11 @@ import {
 } from '../../../../components/charts/ChartTooltip';
 import { useAutoYAxisWidth } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
+import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
+import {
+    formatCurrencyAmount,
+    getCurrencySymbol,
+} from '../../../../utils/currency';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { useGetBudgetByGrant } from '../../hooks/useGetBudgetByGrant';
@@ -40,6 +45,8 @@ export const BudgetSummary: FC = () => {
     const { gridProps, axisProps } = useChartTheme();
     const { scenarioId } = usePlanningContext();
     const { data, isLoading } = useGetBudgetByGrant(scenarioId);
+    const { data: budgetSettings } = useGetBudgetSettings();
+    const currencySymbol = getCurrencySymbol(budgetSettings?.local_currency);
 
     const withinColor = blueGrey[200]; // #B0BEC5
     const excessColor = red[500]; // #F44336
@@ -74,8 +81,9 @@ export const BudgetSummary: FC = () => {
     // Size the (numeric) value axis to its widest formatted tick (e.g. the top
     // "100.00M"), which the domain max produces, so labels aren't clipped.
     const yAxisLabels = useMemo(
-        () => (chartData.length > 0 ? [formatBigNumber(yMax)] : []),
-        [chartData, yMax],
+        () =>
+            chartData.length > 0 ? [formatBigNumber(yMax, currencySymbol)] : [],
+        [chartData, yMax, currencySymbol],
     );
     const { width: yAxisWidth } = useAutoYAxisWidth({ labels: yAxisLabels });
 
@@ -87,13 +95,13 @@ export const BudgetSummary: FC = () => {
         const rows: ChartTooltipRow[] = [
             {
                 label: formatMessage(MESSAGES.summaryTotalCostTitle),
-                value: formatBigNumber(datum.cost),
+                value: formatBigNumber(datum.cost, currencySymbol),
             },
         ];
         if (datum.amount != null) {
             rows.push({
                 label: formatMessage(MESSAGES.grantEnvelope),
-                value: formatBigNumber(datum.amount),
+                value: formatBigNumber(datum.amount, currencySymbol),
             });
         }
         return <ChartTooltip title={datum.name} rows={rows} />;
@@ -113,7 +121,10 @@ export const BudgetSummary: FC = () => {
             ) : (
                 <>
                     <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        {Math.round(totalCost).toLocaleString()}
+                        {formatCurrencyAmount(
+                            Math.round(totalCost),
+                            budgetSettings?.local_currency,
+                        )}
                     </Typography>
                     <Box sx={styles.chartBody}>
                         <ResponsiveContainer width="100%" height="100%">
@@ -139,7 +150,10 @@ export const BudgetSummary: FC = () => {
                                 <YAxis
                                     domain={[0, yMax]}
                                     tickFormatter={value =>
-                                        formatBigNumber(value as number)
+                                        formatBigNumber(
+                                            value as number,
+                                            currencySymbol,
+                                        )
                                     }
                                     {...axisProps}
                                     width={yAxisWidth}
