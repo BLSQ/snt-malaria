@@ -48,19 +48,20 @@ export const formatSignedPercentValue = (value: number) => {
     return `${pct > 0 ? '+' : ''}${pct}%`;
 };
 
-export const formatBigNumber = (value: number) => {
+export const formatBigNumber = (value: number, currencySymbol?: string) => {
     const abs = Math.abs(value);
     const sign = value < 0 ? '-' : '';
+    const prefix = `${sign}${currencySymbol ?? ''}`;
     if (abs >= 1_000_000_000) {
-        return `${sign}${(abs / 1_000_000_000).toFixed(2)}B`;
+        return `${prefix}${(abs / 1_000_000_000).toFixed(2)}B`;
     }
     if (abs >= 1_000_000) {
-        return `${sign}${(abs / 1_000_000).toFixed(2)}M`;
+        return `${prefix}${(abs / 1_000_000).toFixed(2)}M`;
     }
     if (abs >= 1_000) {
-        return `${sign}${(abs / 1_000).toFixed(2)}K`;
+        return `${prefix}${(abs / 1_000).toFixed(2)}K`;
     }
-    return value.toFixed(2);
+    return `${currencySymbol ?? ''}${value.toFixed(2)}`;
 };
 
 /** Compact quantity formatting: whole units below 1000, else K/M/B, e.g. 534233 -> "534.23K". */
