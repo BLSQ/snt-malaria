@@ -23,7 +23,7 @@ def migrate_year_zero_to_null(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("snt_malaria", "0059_compositelayer_legend_config_and_more"),
+        ("snt_malaria", "0060_remove_scenario_reference_year_and_more"),
     ]
 
     operations = [
