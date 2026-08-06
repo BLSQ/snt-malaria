@@ -168,7 +168,9 @@ export const DataLayerMapWrapper: FC<Props> = ({
                                             onEditComposite(compositeLayerId)
                                         }
                                     >
-                                        {formatMessage(MESSAGES.compositeEditor)}
+                                        {formatMessage(
+                                            MESSAGES.compositeEditor,
+                                        )}
                                     </Button>
                                 )}
                             <ExportMetricValuesCsvButton

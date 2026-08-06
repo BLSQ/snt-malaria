@@ -67,17 +67,17 @@ export const CompositeLayerAIChat: FC<Props> = ({
                 emptyState={
                     <Box>
                         <Box sx={emptyStateStyles.title}>
-                            <AutoAwesomeIcon
-                                color="primary"
-                                fontSize="small"
-                            />
+                            <AutoAwesomeIcon color="primary" fontSize="small" />
                             <Typography
                                 sx={{ fontWeight: 700, fontSize: '1.25rem' }}
                             >
                                 {formatMessage(MESSAGES.compositeLayerAITitle)}
                             </Typography>
                         </Box>
-                        <Typography variant="body1" sx={emptyStateStyles.subhead}>
+                        <Typography
+                            variant="body1"
+                            sx={emptyStateStyles.subhead}
+                        >
                             {formatMessage(
                                 MESSAGES.compositeLayerAIEmptyStateTitle,
                             )}

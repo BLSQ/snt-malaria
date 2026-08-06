@@ -77,7 +77,12 @@ export const LayerTypeSelect: FC<Props> = ({
     }, [formatMessage, showComposite]);
 
     return (
-        <FormControl fullWidth size="small" disabled={disabled} sx={styles.control}>
+        <FormControl
+            fullWidth
+            size="small"
+            disabled={disabled}
+            sx={styles.control}
+        >
             <InputLabel id="layer-type-label">{label}</InputLabel>
             <Select
                 labelId="layer-type-label"

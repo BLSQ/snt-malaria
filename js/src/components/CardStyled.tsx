@@ -62,9 +62,7 @@ export const CardStyled: FC<Props> = ({
             <CardHeader sx={headerStyles} title={header} />
 
             <CardContent
-                sx={
-                    flushContent ? styles.cardContentFlush : styles.cardContent
-                }
+                sx={flushContent ? styles.cardContentFlush : styles.cardContent}
             >
                 {isLoading ? <LoadingSpinner absolute={true} /> : children}
             </CardContent>

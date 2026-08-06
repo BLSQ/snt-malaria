@@ -21,5 +21,8 @@ export const getCompositeLegendOptions = (
         value: LegendTypes.THRESHOLD,
         label: formatMessage(MESSAGES.legendThreshold),
     },
-    { value: LegendTypes.ORDINAL, label: formatMessage(MESSAGES.legendOrdinal) },
+    {
+        value: LegendTypes.ORDINAL,
+        label: formatMessage(MESSAGES.legendOrdinal),
+    },
 ];

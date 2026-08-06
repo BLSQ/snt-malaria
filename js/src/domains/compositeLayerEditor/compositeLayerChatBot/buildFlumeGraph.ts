@@ -83,7 +83,9 @@ const OUTPUT_NODE_ID = 'output';
 
 // All edges in the graph (including the output's own connection), as plain id pairs - the only
 // shape dagre needs. Kept separate from `addConnection`'s port-level wiring below.
-const collectEdges = (graph: GeneratedGraph): Array<{ from: string; to: string }> => {
+const collectEdges = (
+    graph: GeneratedGraph,
+): Array<{ from: string; to: string }> => {
     const edges: Array<{ from: string; to: string }> = [];
     graph.nodes.forEach(node => {
         upstreamIds(node).forEach(sourceId =>
@@ -132,7 +134,9 @@ export const buildFlumeGraphFromSpec = (
 ): FlumeNodes => {
     const nodes: FlumeNodes = {};
     const isContentOnlyUpdate = Object.keys(previousNodes).length > 0;
-    const dagrePositions = isContentOnlyUpdate ? undefined : layoutWithDagre(graph);
+    const dagrePositions = isContentOnlyUpdate
+        ? undefined
+        : layoutWithDagre(graph);
 
     const positionFor = (id: string): { x: number; y: number } =>
         (isContentOnlyUpdate ? previousNodes[id] : dagrePositions?.get(id)) ?? {

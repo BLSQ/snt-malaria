@@ -180,9 +180,8 @@ export const DataLayers: FC = () => {
     }, []);
 
     // Only meaningful while the composite editor is open, and only when there is an AI key.
-    const [sidebarTab, setSidebarTab] = useState<CompositeSidebarTab>(
-        'library',
-    );
+    const [sidebarTab, setSidebarTab] =
+        useState<CompositeSidebarTab>('library');
     // Owned here: the field sits in the card header, the filtering happens in its content.
     const [nodeSearchTerm, setNodeSearchTerm] = useState<string>('');
     const isAiChatTab = sidebarTab === 'ai' && hasAiApiKey;
@@ -381,7 +380,8 @@ export const DataLayers: FC = () => {
                     )}
                     <MainColumn>
                         <PaperFullHeight>
-                            {isCompositeEditorOpen && editingCompositeLayerId ? (
+                            {isCompositeEditorOpen &&
+                            editingCompositeLayerId ? (
                                 <CompositeLayerEditor
                                     ref={compositeLayerEditorRef}
                                     compositeLayerId={editingCompositeLayerId}

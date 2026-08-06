@@ -34,9 +34,7 @@ export const useSaveCompositeLayer = (): UseMutationResult<
         mutationFn: ({ id, ...rest }: SaveCompositeLayerPayload) => {
             // Omit undefined fields so a partial update keeps the backend's current value.
             const body = Object.fromEntries(
-                Object.entries(rest).filter(
-                    ([, value]) => value !== undefined,
-                ),
+                Object.entries(rest).filter(([, value]) => value !== undefined),
             );
             return id
                 ? patchRequest(`/api/snt_malaria/composite_layers/${id}/`, body)
