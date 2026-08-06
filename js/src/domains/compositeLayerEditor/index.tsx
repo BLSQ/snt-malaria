@@ -61,7 +61,10 @@ const DEFAULT_NODES = [{ type: 'output' }];
 
 // "content-only" = same node ids as before (incl. the always-present `output`): parameter tweaks,
 // positions kept. Anything else is "structural" and gets re-laid-out (see handleGenerateGraph).
-const hasSameNodeIds = (previousNodes: FlumeGraph, graph: GeneratedGraph): boolean => {
+const hasSameNodeIds = (
+    previousNodes: FlumeGraph,
+    graph: GeneratedGraph,
+): boolean => {
     const previousIds = new Set(Object.keys(previousNodes));
     const nextIds = new Set([...graph.nodes.map(node => node.id), 'output']);
     if (previousIds.size !== nextIds.size) return false;
@@ -263,9 +266,7 @@ export const CompositeLayerEditor = forwardRef<
         // graph without the connection and remount (keeping the view in place).
         const handlePortClick = useCallback(
             (event: React.MouseEvent<HTMLDivElement>) => {
-                const handle = (
-                    event.target as HTMLElement | null
-                )?.closest?.(
+                const handle = (event.target as HTMLElement | null)?.closest?.(
                     '[data-flume-component="port-handle"]',
                 ) as HTMLElement | null;
                 if (!handle || handle.dataset.portTransputType !== 'input') {
@@ -339,8 +340,8 @@ export const CompositeLayerEditor = forwardRef<
             (graph: GeneratedGraph) => {
                 let nodes: FlumeNodes;
                 let comments: FlumeCommentMap;
-                const currentLegend = findOutputNode(nodesRef.current)?.inputData
-                    ?.legend;
+                const currentLegend = findOutputNode(nodesRef.current)
+                    ?.inputData?.legend;
 
                 if (hasSameNodeIds(nodesRef.current, graph)) {
                     const shifted = shiftGraphForRemount(
@@ -490,7 +491,8 @@ export const CompositeLayerEditor = forwardRef<
             );
         };
 
-        const headerTitle = existingLayer?.name || formatMessage(MESSAGES.title);
+        const headerTitle =
+            existingLayer?.name || formatMessage(MESSAGES.title);
 
         const nodes = useMemo(
             () =>
@@ -503,11 +505,9 @@ export const CompositeLayerEditor = forwardRef<
 
         const comments = useMemo(
             () =>
-                aiGraph
-                    ? aiComments
-                    : mountNonce === 0
-                      ? existingLayer?.comments
-                      : mountCommentsRef.current,
+                (aiGraph && aiComments) ||
+                (mountNonce === 0 && existingLayer?.comments) ||
+                mountCommentsRef.current,
             [aiGraph, aiComments, mountNonce, existingLayer, mountCommentsRef],
         );
 

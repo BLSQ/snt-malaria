@@ -30,7 +30,10 @@ export type OperatorNodeTypeConfig = {
     defaultInputData: () => FlumeNodeInputData;
 };
 
-export const OPERATOR_NODE_TYPES: Record<OperatorNodeType, OperatorNodeTypeConfig> = {
+export const OPERATOR_NODE_TYPES: Record<
+    OperatorNodeType,
+    OperatorNodeTypeConfig
+> = {
     formula: {
         type: 'formula',
         icon: FunctionsIcon,

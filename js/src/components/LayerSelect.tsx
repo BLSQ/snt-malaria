@@ -12,7 +12,6 @@ import {
 
 import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 
-import { MessageDescriptor } from 'react-intl';
 import { SxStyles } from 'Iaso/types/general';
 import { flattenMetricTypes } from '../domains/dataLayers/hooks/useGetMetrics';
 import { MetricType } from '../domains/dataLayers/types/metrics';

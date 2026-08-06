@@ -167,11 +167,10 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
 
     // Creating a composite saves it, then continues into the node editor.
     const isCreatingComposite = !metricType && formik.values.is_composite;
-    const confirmMessage = metricType
-        ? MESSAGES.editLayer
-        : isCreatingComposite
-          ? MESSAGES.continueToEditor
-          : MESSAGES.createLayer;
+    const confirmMessage =
+        (metricType && MESSAGES.editLayer) ||
+        (isCreatingComposite && MESSAGES.continueToEditor) ||
+        MESSAGES.createLayer;
 
     return (
         <ConfirmCancelModal

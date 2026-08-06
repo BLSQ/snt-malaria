@@ -78,7 +78,9 @@ const useValidationSchema = () => {
                                     color: Yup.string()
                                         .matches(
                                             /^#([0-9A-F]{3}){1,2}$/i,
-                                            formatMessage(MESSAGES.invalidColor),
+                                            formatMessage(
+                                                MESSAGES.invalidColor,
+                                            ),
                                         )
                                         .required(
                                             formatMessage(MESSAGES.required),

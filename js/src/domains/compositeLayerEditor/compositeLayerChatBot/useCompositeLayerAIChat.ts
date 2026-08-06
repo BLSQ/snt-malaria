@@ -2,11 +2,7 @@ import { useCallback, useState } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { ChatMessage } from 'Iaso/components/ChatPanel/ChatPanel';
 import { MESSAGES } from '../messages';
-import {
-    ConversationEntry,
-    CurrentGraph,
-    GeneratedGraph,
-} from './types';
+import { ConversationEntry, CurrentGraph, GeneratedGraph } from './types';
 import { useSendCompositeLayerAIMessage } from './useSendCompositeLayerAIMessage';
 
 type Args = {

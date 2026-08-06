@@ -48,7 +48,8 @@ type Props = {
  */
 export const NodeHeaderContent: FC<Props> = ({ nodeType, actions }) => {
     const { formatMessage } = useSafeIntl();
-    const Icon = NODE_TYPE_ICONS[nodeType?.type as keyof typeof NODE_TYPE_ICONS];
+    const Icon =
+        NODE_TYPE_ICONS[nodeType?.type as keyof typeof NODE_TYPE_ICONS];
     const deletable = nodeType?.deletable !== false;
     return (
         <Box sx={styles.root}>

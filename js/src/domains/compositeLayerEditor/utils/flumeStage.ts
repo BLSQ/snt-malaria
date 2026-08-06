@@ -75,14 +75,19 @@ export type MeasuredSize = { width: number; height: number };
 /** Real rendered size (in stage-space units, i.e. screen px / scale) of every node currently on
  * `stage`, keyed by `data-node-id`. Used to re-lay-out a graph from its actual DOM sizes instead
  * of estimates - see `relayoutWithMeasuredSizes` in graphLayout.ts. */
-export const measureNodeSizes = (stage: HTMLElement): Map<string, MeasuredSize> => {
+export const measureNodeSizes = (
+    stage: HTMLElement,
+): Map<string, MeasuredSize> => {
     const { scale } = readStageTransform(stage);
     const sizes = new Map<string, MeasuredSize>();
     stage.querySelectorAll<HTMLElement>(NODE_SELECTOR).forEach(el => {
         const id = el.dataset.nodeId;
         if (!id) return;
         const rect = el.getBoundingClientRect();
-        sizes.set(id, { width: rect.width / scale, height: rect.height / scale });
+        sizes.set(id, {
+            width: rect.width / scale,
+            height: rect.height / scale,
+        });
     });
     return sizes;
 };
