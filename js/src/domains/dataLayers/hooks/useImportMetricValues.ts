@@ -11,7 +11,7 @@ export const useImportMetricValues = (): UseMutationResult =>
                 fileData: {
                     file: file,
                 },
-                data: { year },
+                data: year ? { year } : {},
             }),
         invalidateQueryKey: ['metricCategories', 'metricValues'], // We need both as metric categories contain metric values
         snackSuccessMessage: MESSAGES.metricValuesImportSuccess,

@@ -229,17 +229,17 @@ class DemoScenarioSeeder:
         self.stdout_write(f"Created {len(to_create)} yearly cost assignments for '{scenario.name}'")
 
     def _ensure_population_for_scenario_years(self, scenario):
-        """The metrics dataset has no YEAR column so MetricValues are imported with year=0.
-        The budget calculator queries by exact year, so copy the year=0 baseline values to
-        every year in the scenario range so the calculation produces non-zero results."""
+        """The metrics dataset has no YEAR column so MetricValues are imported as timeless
+        (year=None). The budget calculator queries by exact year, so copy the timeless baseline
+        values to every year in the scenario range so the calculation produces non-zero results."""
         pop_metric_types = MetricType.objects.filter(
             account=scenario.account,
             metric_kind=MetricType.MetricKind.POPULATION,
         )
 
-        base_values = list(MetricValue.objects.filter(metric_type__in=pop_metric_types, year=0))
+        base_values = list(MetricValue.objects.filter(metric_type__in=pop_metric_types, year__isnull=True))
         if not base_values:
-            self.stdout_write("WARNING: no year=0 population values found; budget may be empty")
+            self.stdout_write("WARNING: no timeless population values found; budget may be empty")
             return
 
         to_create = []
