@@ -2,7 +2,11 @@ import React, { FC, useMemo } from 'react';
 import { AccountBalanceOutlined } from '@mui/icons-material';
 import { Box, Typography, useTheme } from '@mui/material';
 import { blueGrey, red } from '@mui/material/colors';
-import { useSafeIntl } from 'bluesquare-components';
+import {
+    formatCurrencyAmount,
+    getCurrencySymbol,
+    useSafeIntl,
+} from 'bluesquare-components';
 import {
     Bar,
     BarChart,
@@ -21,10 +25,6 @@ import {
 import { useAutoYAxisWidth } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
-import {
-    formatCurrencyAmount,
-    getCurrencySymbol,
-} from '../../../../utils/currency';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { useGetBudgetByGrant } from '../../hooks/useGetBudgetByGrant';

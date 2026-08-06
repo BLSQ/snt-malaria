@@ -11,10 +11,9 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { getCurrencySymbol, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
-import { getCurrencySymbol } from '../../../../utils/currency';
 import { pluralize } from '../../../../utils/pluralize';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';

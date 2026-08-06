@@ -1,7 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { DropdownOptions } from 'Iaso/types/utils';
 import { BudgetSettings } from '../../../../hooks/useGetBudgetSettings';
-import { getCurrencySymbol } from '../../../../utils/currency';
 import { MetricType } from '../../../dataLayers/types/metrics';
 
 type InterventionContextType = {
@@ -10,7 +9,6 @@ type InterventionContextType = {
     populationOptions: DropdownOptions<number | null>[];
     grantOptions: DropdownOptions<number>[];
     currency?: string;
-    currencySymbol?: string;
 };
 
 const defaultCurrency = 'USD';
@@ -25,7 +23,6 @@ const InterventionContext = createContext<InterventionContextType>({
     populationOptions: emptyPopulationOptions,
     grantOptions: [],
     currency: defaultCurrency,
-    currencySymbol: getCurrencySymbol(defaultCurrency),
 });
 
 export const useInterventionContext = () => useContext(InterventionContext);
@@ -64,7 +61,6 @@ export const InterventionProvider = ({
                 populationOptions,
                 grantOptions,
                 currency,
-                currencySymbol: getCurrencySymbol(currency),
             }}
         >
             {children}

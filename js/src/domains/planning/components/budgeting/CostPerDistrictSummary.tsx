@@ -1,12 +1,11 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { MapOutlined } from '@mui/icons-material';
 import { Box } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { getCurrencySymbol, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { Map as SNTMap } from '../../../../components/Map';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
-import { getCurrencySymbol } from '../../../../utils/currency';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { aggregateOrgUnitCosts } from '../../libs/budget-aggregation';

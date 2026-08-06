@@ -1,10 +1,9 @@
 import React, { FC } from 'react';
 import { TableCell, TableRow, Typography } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { getCurrencySymbol, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ProgressBar } from '../../../../components/LinearProgress';
 import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
-import { getCurrencySymbol } from '../../../../utils/currency';
 import { MESSAGES } from '../../../messages';
 import { formatBigNumber } from '../../libs/cost-utils';
 

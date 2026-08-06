@@ -2,7 +2,7 @@ import React, { FC, useMemo } from 'react';
 import { VaccinesOutlined } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { lighten } from '@mui/material/styles';
-import { useSafeIntl } from 'bluesquare-components';
+import { getCurrencySymbol, useSafeIntl } from 'bluesquare-components';
 import {
     Bar,
     BarChart,
@@ -25,7 +25,6 @@ import {
 } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
-import { getCurrencySymbol } from '../../../../utils/currency';
 import { useGetInterventionCostBreakdownLineCategories } from '../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';

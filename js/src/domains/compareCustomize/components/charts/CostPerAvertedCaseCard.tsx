@@ -1,7 +1,7 @@
 import React, { FC, useMemo } from 'react';
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
 import { Box } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { formatCurrencyAmount, useSafeIntl } from 'bluesquare-components';
 import {
     Bar,
     BarChart,
@@ -21,7 +21,6 @@ import { ChartTooltip } from '../../../../components/charts/ChartTooltip';
 import { useAutoYAxisWidth } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
-import { formatCurrencyAmount } from '../../../../utils/currency';
 import { MESSAGES } from '../../../messages';
 import { formatBigNumber } from '../../../planning/libs/cost-utils';
 import { useComparisonDataContext } from '../../ComparisonDataContext';

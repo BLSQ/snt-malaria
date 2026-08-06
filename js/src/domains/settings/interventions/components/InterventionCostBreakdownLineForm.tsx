@@ -36,7 +36,7 @@ export const InterventionCostBreakdownLineForm: FC<Props> = ({
         costCategoryOptions,
         costUnitTypeOptions,
         populationOptions,
-        currencySymbol,
+        currency,
     } = useInterventionContext();
 
     const selectedUnitLabel =
@@ -131,7 +131,7 @@ export const InterventionCostBreakdownLineForm: FC<Props> = ({
                         errors={getErrors('unit_cost')}
                         numberInputOptions={{
                             decimalScale: 2,
-                            prefix: currencySymbol,
+                            currency,
                         }}
                         wrapperSx={{ minWidth: 0 }}
                     />

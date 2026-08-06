@@ -5,7 +5,6 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
-import { getCurrencySymbol } from '../../../../utils/currency';
 import { MESSAGES } from '../../../messages';
 import { GrantFormValues } from '../types';
 import { DonorSelect } from './DonorSelect';
@@ -16,7 +15,6 @@ export const GrantForm: FC = () => {
     const { values, errors, touched, setFieldValueAndState } =
         useGetExtendedFormikContext<GrantFormValues>();
     const { data: budgetSettings } = useGetBudgetSettings();
-    const currencySymbol = getCurrencySymbol(budgetSettings?.local_currency);
 
     const getErrors = useTranslatedErrors({
         errors,
@@ -60,7 +58,7 @@ export const GrantForm: FC = () => {
                     wrapperSx={{ flexGrow: 1 }}
                     numberInputOptions={{
                         decimalScale: 2,
-                        prefix: currencySymbol,
+                        currency: budgetSettings?.local_currency,
                     }}
                 />
             </Stack>
