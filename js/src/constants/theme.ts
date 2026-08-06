@@ -63,10 +63,11 @@ export const theme = createTheme({
         // Applied app-wide: Iaso renders <CssBaseline /> under the active plugin's theme.
         MuiCssBaseline: {
             styleOverrides: {
-                // `scrollbar-color` has no hover/active states, and Chrome honours it over
-                // `::-webkit-scrollbar` when both are set - so it is scoped to browsers without
-                // the pseudo-elements (Firefox), which get a plain thumb.
-                '@supports not selector(::-webkit-scrollbar)': {
+                // Scoped to browsers without webkit scrollbar styling (Firefox), which
+                // get a plain, hoverless thumb instead. Checked against `-thumb`, not the
+                // bare `::-webkit-scrollbar`, since Firefox recognises that one too (for
+                // its own hide/resize webcompat shim) without styling it.
+                '@supports not selector(::-webkit-scrollbar-thumb)': {
                     '*': {
                         scrollbarWidth: 'thin',
                         scrollbarColor: `${scrollbarThumb} transparent`,
