@@ -2,7 +2,7 @@ import React, { FC, useMemo } from 'react';
 import { VaccinesOutlined } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { lighten } from '@mui/material/styles';
-import { getCurrencySymbol, useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import {
     Bar,
     BarChart,
@@ -24,7 +24,6 @@ import {
     useAutoYAxisWidth,
 } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
-import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { useGetInterventionCostBreakdownLineCategories } from '../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
@@ -159,11 +158,10 @@ const CostBarShape: FC<CostBarShapeProps> = ({
 export const CostPerInterventionSummary: FC = () => {
     const { formatMessage } = useSafeIntl();
     const { gridProps, axisProps } = useChartTheme();
-    const { budgets, orgUnits, interventionCategories } = usePlanningContext();
+    const { budgets, orgUnits, interventionCategories, currency } =
+        usePlanningContext();
     const { data: costCategories = [], isLoading } =
         useGetInterventionCostBreakdownLineCategories();
-    const { data: budgetSettings } = useGetBudgetSettings();
-    const currencySymbol = getCurrencySymbol(budgetSettings?.local_currency);
 
     const orgUnitIds = useMemo(
         () => new Set(orgUnits.map(ou => ou.id)),
@@ -277,7 +275,7 @@ export const CostPerInterventionSummary: FC = () => {
             if (value > 0) {
                 rows.push({
                     label: category.label,
-                    value: formatBigNumber(value, currencySymbol),
+                    value: formatBigNumber(value, currency),
                     color: shadeForSegment(base, index, costCategories.length),
                 });
             }
@@ -328,7 +326,7 @@ export const CostPerInterventionSummary: FC = () => {
                                 tickFormatter={value =>
                                     formatBigNumber(
                                         value as number,
-                                        currencySymbol,
+                                        currency,
                                     )
                                 }
                                 {...axisProps}

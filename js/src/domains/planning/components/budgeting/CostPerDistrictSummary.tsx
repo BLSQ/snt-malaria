@@ -1,11 +1,10 @@
 import React, { FC, useCallback, useMemo, useState } from 'react';
 import { MapOutlined } from '@mui/icons-material';
 import { Box } from '@mui/material';
-import { getCurrencySymbol, useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { Map as SNTMap } from '../../../../components/Map';
 import { WidgetCard } from '../../../../components/WidgetCard';
-import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { aggregateOrgUnitCosts } from '../../libs/budget-aggregation';
@@ -24,9 +23,7 @@ const styles = {
 
 export const CostPerDistrictSummary: FC = () => {
     const { formatMessage } = useSafeIntl();
-    const { budgets, orgUnits } = usePlanningContext();
-    const { data: budgetSettings } = useGetBudgetSettings();
-    const currencySymbol = getCurrencySymbol(budgetSettings?.local_currency);
+    const { budgets, orgUnits, currency } = usePlanningContext();
     const [selectedInterventionId, setSelectedInterventionId] =
         useState<number>(0);
 
@@ -80,10 +77,10 @@ export const CostPerDistrictSummary: FC = () => {
             );
             return {
                 color: fillColor as string,
-                label: formatBigNumber(cost, currencySymbol),
+                label: formatBigNumber(cost, currency),
             };
         },
-        [orgUnitCosts, legendConfig, getActiveCost, currencySymbol],
+        [orgUnitCosts, legendConfig, getActiveCost, currency],
     );
 
     const interventionOptions = useMemo(() => {

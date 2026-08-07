@@ -6,6 +6,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ProgressBar } from '../../../../components/LinearProgress';
 import { MESSAGES } from '../../../messages';
+import { usePlanningContext } from '../../contexts/PlanningContext';
 import { formatBigNumber } from '../../libs/cost-utils';
 import { CostLineRow, CostLineRowData } from './CostLineRow';
 
@@ -42,6 +43,8 @@ export const BudgetRow: FC<Props> = ({
 }) => {
     const [open, setOpen] = React.useState(false);
     const { formatMessage } = useSafeIntl();
+
+    const { currency } = usePlanningContext();
     return (
         <>
             <TableRow>
@@ -81,7 +84,10 @@ export const BudgetRow: FC<Props> = ({
                             component="span"
                             sx={{ ...styles.emphasis }}
                         >
-                            {formatBigNumber(intervention.yearCosts[year] || 0)}
+                            {formatBigNumber(
+                                intervention.yearCosts[year] || 0,
+                                currency,
+                            )}
                         </Typography>
                     </TableCell>
                 ))}
@@ -92,7 +98,7 @@ export const BudgetRow: FC<Props> = ({
                         component="span"
                         sx={styles.supEmphasis}
                     >
-                        {formatBigNumber(intervention.totalCost)}
+                        {formatBigNumber(intervention.totalCost, currency)}
                     </Typography>
                 </TableCell>
                 <TableCell align="center">

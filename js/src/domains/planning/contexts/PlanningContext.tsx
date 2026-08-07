@@ -7,6 +7,7 @@ import React, {
     useState,
 } from 'react';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { useGetBudgetSettings } from '../../../hooks/useGetBudgetSettings';
 import { createTimeoutService } from '../../../services/timeoutService';
 import { MetricTypeCategory } from '../../dataLayers/types/metrics';
 import { InterventionCategory } from '../../interventions/types';
@@ -35,6 +36,7 @@ type PlanningContextType = {
     interventionPlans: InterventionPlan[];
     scenarioYearlyCostAssignments: ScenarioYearlyCostAssignment[];
     budgets: Budget[];
+    currency: string;
     showRulesPanel: boolean;
     toggleShowRulesPanel: () => void;
     saveYearlyCoverage: (params: SaveYearlyCoverageParams) => void;
@@ -65,6 +67,7 @@ const PlanningContext = createContext<PlanningContextType>({
     interventionPlans: [],
     scenarioYearlyCostAssignments: [],
     budgets: [],
+    currency: '',
     showRulesPanel: true,
     toggleShowRulesPanel: () => {},
     saveYearlyCoverage: () => {},
@@ -108,6 +111,8 @@ export const PlanningProvider = ({
         useGetScenarioYearlyCostAssignments(scenarioId);
     const { mutate: saveScenarioYearlyCostAssignment } =
         useSaveScenarioYearlyCostAssignment();
+    const { data: budgetSettings } = useGetBudgetSettings();
+    const currency = budgetSettings?.local_currency ?? '';
     const timeoutServiceRef = useRef(createTimeoutService());
 
     useEffect(() => {
@@ -193,6 +198,7 @@ export const PlanningProvider = ({
                 isEditing,
                 scenarioYearlyCostAssignments,
                 budgets,
+                currency,
                 showRulesPanel,
                 toggleShowRulesPanel,
                 saveYearlyCoverage,

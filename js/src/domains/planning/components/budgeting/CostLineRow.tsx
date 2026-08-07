@@ -11,9 +11,8 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { getCurrencySymbol, useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { pluralize } from '../../../../utils/pluralize';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
@@ -83,9 +82,7 @@ const clampPercentage = (value: number) => {
 };
 
 export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
-    const { saveYearlyCoverage } = usePlanningContext();
-    const { data: budgetSettings } = useGetBudgetSettings();
-    const currencySymbol = getCurrencySymbol(budgetSettings?.local_currency);
+    const { saveYearlyCoverage, currency } = usePlanningContext();
     const [coverageInputsByYear, setCoverageInputsByYear] = React.useState<
         Record<number, string>
     >({});
@@ -194,7 +191,7 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
             ))}
             <TableCell align="right">
                 <Typography variant="body2" component="div">
-                    {formatBigNumber(costLine.totalCost, currencySymbol)}
+                    {formatBigNumber(costLine.totalCost, currency)}
                 </Typography>
                 {costLine.unitName && costLine.quantity > 0 && (
                     <Typography
@@ -208,10 +205,7 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
                 )}
             </TableCell>
             <TableCell align="center">
-                <CostLineTooltip
-                    costLine={costLine}
-                    currencySymbol={currencySymbol}
-                />
+                <CostLineTooltip costLine={costLine} />
             </TableCell>
         </TableRow>
     );
@@ -287,14 +281,11 @@ const CostDriverIcon: FC<CostDriverIconProps> = ({ isProportional }) => (
 
 type TooltipProps = {
     costLine: CostLineRowData;
-    currencySymbol: string;
 };
 
-export const CostLineTooltip: FC<TooltipProps> = ({
-    costLine,
-    currencySymbol,
-}) => {
+export const CostLineTooltip: FC<TooltipProps> = ({ costLine }) => {
     const { formatMessage } = useSafeIntl();
+    const { currency } = usePlanningContext();
     const bufferPercent = Math.round((costLine.buffer - 1) * 100);
     const unitLabel = useMemo(
         () =>
@@ -338,7 +329,7 @@ export const CostLineTooltip: FC<TooltipProps> = ({
                             )}
                         </Typography>
                         <Typography variant="body2" textAlign={'right'}>
-                            {currencySymbol}
+                            {currency}
                             {costLine.unitCost.toFixed(2)}
                         </Typography>
                     </Stack>

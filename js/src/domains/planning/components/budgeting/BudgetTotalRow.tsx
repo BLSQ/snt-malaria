@@ -1,10 +1,10 @@
 import React, { FC } from 'react';
 import { TableCell, TableRow, Typography } from '@mui/material';
-import { getCurrencySymbol, useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ProgressBar } from '../../../../components/LinearProgress';
-import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { MESSAGES } from '../../../messages';
+import { usePlanningContext } from '../../contexts/PlanningContext';
 import { formatBigNumber } from '../../libs/cost-utils';
 
 const styles = {
@@ -23,9 +23,7 @@ export const BudgetTotalRow: FC<{
     };
 }> = ({ yearRange, colors, totalCosts }) => {
     const { formatMessage } = useSafeIntl();
-    const { data: budgetSettings } = useGetBudgetSettings();
-    const currencySymbol = getCurrencySymbol(budgetSettings?.local_currency);
-
+    const { currency } = usePlanningContext();
     return (
         <TableRow sx={styles.row}>
             <TableCell align="left" colSpan={2}>
@@ -46,7 +44,7 @@ export const BudgetTotalRow: FC<{
                     >
                         {formatBigNumber(
                             totalCosts.yearlyTotal[year] || 0,
-                            currencySymbol,
+                            currency,
                         )}
                     </Typography>
                 </TableCell>
@@ -57,7 +55,7 @@ export const BudgetTotalRow: FC<{
                     component="span"
                     sx={styles.emphasis}
                 >
-                    {formatBigNumber(totalCosts.totalCost, currencySymbol)}
+                    {formatBigNumber(totalCosts.totalCost, currency)}
                 </Typography>
             </TableCell>
             <TableCell align="right">
