@@ -45,10 +45,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
             description="Under 5",
             units="children",
         )
-        # Population is resolved from this configured reference year regardless of which
-        # calendar year the budget is being calculated for.
-        self.scenario.data_layer_years = {str(self.metric_under_5.id): 2025}
-        self.scenario.save(update_fields=["data_layer_years"])
 
         self.unit_type = CostUnitType.objects.create(
             account=self.account,
@@ -171,10 +167,9 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         result = service.calculate_year(2026)
 
         # default yearly value = 1
-        # population comes from the configured reference year (2025), not 2026: 1000 + 2000 = 3000
-        # quantity = 3000 * 1 * 0.5 * buffer(1.1) = 1650
-        # total_cost = 1650 * 2 * (1 + 0.03)^1 = 3399
-        self.assertEqual(result.total_cost, 3399.0)
+        # quantity = (1500 + 2500) * 1 * 0.5 * buffer(1.1) = 2200
+        # total_cost = 2200 * 2 * (1 + 0.03)^1 = 4532
+        self.assertEqual(result.total_cost, 4532.0)
 
     def test_inverted_conversion_factor_divides_quantity(self):
         self.population_line.conversion_factor = Decimal("2")
@@ -213,62 +208,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 660.0)
         self.assertEqual(result.interventions[0].total_cost, 1320.0)
 
-    def test_population_uses_configured_reference_year_regardless_of_calculation_year(self):
-        """The reference year (2025) is used for population in every calculation year, even
-        though MetricValues also exist for 2026 with different values."""
-        service = BudgetCalculationService(self.scenario)
-
-        result_2025 = service.calculate_year(2025)
-        result_2026 = service.calculate_year(2026)
-
-        # Both years use the district_1(1000) + district_2(2000) = 3000 snapshot from 2025,
-        # not the 2026 MetricValues (1500 + 2500 = 4000).
-        self.assertEqual(result_2025.interventions[0].cost_breakdown[0].population, 3000.0)
-        self.assertEqual(result_2026.interventions[0].cost_breakdown[0].population, 3000.0)
-
-    def test_population_falls_back_to_timeless_snapshot_when_configured_year_has_no_data(self):
-        """When the configured reference year has no MetricValue for an org unit, that org unit's
-        population falls back to the timeless (year=None) snapshot rather than contributing zero."""
-        self.scenario.data_layer_years = {str(self.metric_under_5.id): 2099}
-        self.scenario.save(update_fields=["data_layer_years"])
-        MetricValue.objects.create(
-            metric_type=self.metric_under_5,
-            org_unit=self.district_1,
-            year=None,
-            value=Decimal("5000"),
-        )
-        MetricValue.objects.create(
-            metric_type=self.metric_under_5,
-            org_unit=self.district_2,
-            year=None,
-            value=Decimal("6000"),
-        )
-
-        service = BudgetCalculationService(self.scenario)
-        result = service.calculate_year(2025)
-
-        self.assertEqual(result.interventions[0].cost_breakdown[0].population, 11000.0)
-
-    def test_population_falls_back_to_timeless_snapshot_when_no_reference_year_configured(self):
-        """With no reference year configured at all for the layer, population falls back to the
-        timeless (year=None) snapshot rather than matching the calculation year."""
-        self.scenario.data_layer_years = {}
-        self.scenario.save(update_fields=["data_layer_years"])
-        MetricValue.objects.create(
-            metric_type=self.metric_under_5,
-            org_unit=self.district_1,
-            year=None,
-            value=Decimal("700"),
-        )
-
-        service = BudgetCalculationService(self.scenario)
-        result = service.calculate_year(2025)
-
-        # Only district_1 has a timeless value, so only it contributes.
-        self.assertEqual(len(result.org_units_costs), 1)
-        self.assertEqual(result.org_units_costs[0].org_unit_id, self.district_1.id)
-        self.assertEqual(result.interventions[0].cost_breakdown[0].population, 700.0)
-
     def test_no_assignments_results_in_zero_quantity_and_cost(self):
         # Remove the existing assignment to ensure no cost lines are included in the calculation.
         InterventionAssignment.objects.all().delete()
@@ -302,10 +241,9 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         result = service.calculate_year(2026)
 
-        # population comes from the configured reference year (2025), not 2026: 1000 + 2000 = 3000
-        # quantity = 3000 * 1 * 0.5 * buffer(1.1) = 1650
-        # total_cost = 1650 * 2 * (1 + 0)^1 = 3300
-        self.assertEqual(result.total_cost, 3300.0)
+        # quantity = (1500 + 2500) * 1 * 0.5 * buffer(1.1) = 2200
+        # total_cost = 2200 * 2 * (1 + 0)^1 = 4400
+        self.assertEqual(result.total_cost, 4400.0)
 
     def test_missing_yearly_multiplier_and_inflation_rate_results_in_cost_without_multipliers(self):
         BudgetSettings.objects.all().delete()
@@ -315,10 +253,9 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
         result = service.calculate_year(2026)
 
-        # population comes from the configured reference year (2025), not 2026: 1000 + 2000 = 3000
-        # quantity = 3000 * 1 * 0.5 * buffer(1.1) = 1650
-        # total_cost = 1650 * 2 = 3300
-        self.assertEqual(result.total_cost, 3300.0)
+        # quantity = (1500 + 2500) * 1 * 0.5 * buffer(1.1) = 2200
+        # total_cost = 2200 * 2 = 4400
+        self.assertEqual(result.total_cost, 4400.0)
 
     def test_fixed_cost_not_included_when_intervention_has_no_org_unit_assignment(self):
         """An intervention with only a fixed cost line and no org unit assignment contributes nothing."""
@@ -391,8 +328,6 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         A second intervention with only a population cost line is unaffected by the fixed cost.
         """
         scenario = self.create_snt_scenario(self.account, self.user, start_year=2025, end_year=2025)
-        scenario.data_layer_years = {str(self.metric_under_5.id): 2025}
-        scenario.save(update_fields=["data_layer_years"])
         category = self.create_snt_intervention_category()
 
         # Intervention A: population + fixed cost, assigned to two districts.
