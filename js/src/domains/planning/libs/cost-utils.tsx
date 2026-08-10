@@ -1,3 +1,4 @@
+import { formatCurrencyAmount } from 'bluesquare-components';
 import { BudgetIntervention } from '../types/budget';
 
 export const INTERVENTION_COLORS = {
@@ -48,19 +49,21 @@ export const formatSignedPercentValue = (value: number) => {
     return `${pct > 0 ? '+' : ''}${pct}%`;
 };
 
-export const formatBigNumber = (value: number) => {
+export const formatBigNumber = (value: number, currency?: string) => {
     const abs = Math.abs(value);
-    const sign = value < 0 ? '-' : '';
+    const sign = value < 0 ? -1 : 1;
+
+    let formattedValue;
     if (abs >= 1_000_000_000) {
-        return `${sign}${(abs / 1_000_000_000).toFixed(2)}B`;
+        formattedValue = `${((abs / 1_000_000_000) * sign).toFixed(2)}B`;
+    } else if (abs >= 1_000_000) {
+        formattedValue = `${((abs / 1_000_000) * sign).toFixed(2)}M`;
+    } else if (abs >= 1_000) {
+        formattedValue = `${((abs / 1_000) * sign).toFixed(2)}K`;
+    } else {
+        formattedValue = value.toFixed(2);
     }
-    if (abs >= 1_000_000) {
-        return `${sign}${(abs / 1_000_000).toFixed(2)}M`;
-    }
-    if (abs >= 1_000) {
-        return `${sign}${(abs / 1_000).toFixed(2)}K`;
-    }
-    return value.toFixed(2);
+    return `${formatCurrencyAmount(formattedValue, currency)}`;
 };
 
 /** Compact quantity formatting: whole units below 1000, else K/M/B, e.g. 534233 -> "534.23K". */

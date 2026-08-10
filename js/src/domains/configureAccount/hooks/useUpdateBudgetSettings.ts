@@ -3,7 +3,7 @@ import { UseMutationResult } from 'react-query';
 import { patchRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 
-import { BudgetSettings } from './useGetBudgetSettings';
+import { BudgetSettings } from '../../../hooks/useGetBudgetSettings';
 
 export type UpdateBudgetSettingsPayload = {
     id: number;
@@ -25,6 +25,6 @@ export const useUpdateBudgetSettings = (): UseMutationResult<
 > =>
     useSnackMutation<BudgetSettings, unknown, UpdateBudgetSettingsPayload>({
         mutationFn: updateBudgetSettings,
-        invalidateQueryKey: ['snt_malaria_configureAccount_budget_settings'],
+        invalidateQueryKey: ['snt_malaria_budget_settings'],
         ignoreErrorCodes: [400],
     });

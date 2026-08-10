@@ -3,6 +3,7 @@ import { Stack, TextField } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
+import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../../messages';
 import { GrantFormValues } from '../types';
@@ -13,6 +14,7 @@ export const GrantForm: FC = () => {
 
     const { values, errors, touched, setFieldValueAndState } =
         useGetExtendedFormikContext<GrantFormValues>();
+    const { data: budgetSettings } = useGetBudgetSettings();
 
     const getErrors = useTranslatedErrors({
         errors,
@@ -54,6 +56,10 @@ export const GrantForm: FC = () => {
                     labelString={formatMessage(MESSAGES.grantAmount)}
                     withMarginTop={false}
                     wrapperSx={{ flexGrow: 1 }}
+                    numberInputOptions={{
+                        decimalScale: 2,
+                        currency: budgetSettings?.local_currency,
+                    }}
                 />
             </Stack>
             <DonorSelect

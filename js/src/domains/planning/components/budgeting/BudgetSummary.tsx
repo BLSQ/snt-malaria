@@ -2,7 +2,7 @@ import React, { FC, useMemo } from 'react';
 import { AccountBalanceOutlined } from '@mui/icons-material';
 import { Box, Typography, useTheme } from '@mui/material';
 import { blueGrey, red } from '@mui/material/colors';
-import { useSafeIntl } from 'bluesquare-components';
+import { formatCurrencyAmount, useSafeIntl } from 'bluesquare-components';
 import {
     Bar,
     BarChart,
@@ -38,7 +38,7 @@ export const BudgetSummary: FC = () => {
     const { formatMessage } = useSafeIntl();
     const theme = useTheme();
     const { gridProps, axisProps } = useChartTheme();
-    const { scenarioId } = usePlanningContext();
+    const { scenarioId, currency } = usePlanningContext();
     const { data, isLoading } = useGetBudgetByGrant(scenarioId);
 
     const withinColor = blueGrey[200]; // #B0BEC5
@@ -74,8 +74,8 @@ export const BudgetSummary: FC = () => {
     // Size the (numeric) value axis to its widest formatted tick (e.g. the top
     // "100.00M"), which the domain max produces, so labels aren't clipped.
     const yAxisLabels = useMemo(
-        () => (chartData.length > 0 ? [formatBigNumber(yMax)] : []),
-        [chartData, yMax],
+        () => (chartData.length > 0 ? [formatBigNumber(yMax, currency)] : []),
+        [chartData, yMax, currency],
     );
     const { width: yAxisWidth } = useAutoYAxisWidth({ labels: yAxisLabels });
 
@@ -87,13 +87,13 @@ export const BudgetSummary: FC = () => {
         const rows: ChartTooltipRow[] = [
             {
                 label: formatMessage(MESSAGES.summaryTotalCostTitle),
-                value: formatBigNumber(datum.cost),
+                value: formatBigNumber(datum.cost, currency),
             },
         ];
         if (datum.amount != null) {
             rows.push({
                 label: formatMessage(MESSAGES.grantEnvelope),
-                value: formatBigNumber(datum.amount),
+                value: formatBigNumber(datum.amount, currency),
             });
         }
         return <ChartTooltip title={datum.name} rows={rows} />;
@@ -113,7 +113,7 @@ export const BudgetSummary: FC = () => {
             ) : (
                 <>
                     <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        {Math.round(totalCost).toLocaleString()}
+                        {formatCurrencyAmount(Math.round(totalCost), currency)}
                     </Typography>
                     <Box sx={styles.chartBody}>
                         <ResponsiveContainer width="100%" height="100%">
@@ -139,7 +139,10 @@ export const BudgetSummary: FC = () => {
                                 <YAxis
                                     domain={[0, yMax]}
                                     tickFormatter={value =>
-                                        formatBigNumber(value as number)
+                                        formatBigNumber(
+                                            value as number,
+                                            currency,
+                                        )
                                     }
                                     {...axisProps}
                                     width={yAxisWidth}

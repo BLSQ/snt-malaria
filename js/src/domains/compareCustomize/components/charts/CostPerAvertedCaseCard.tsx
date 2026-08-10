@@ -1,7 +1,7 @@
 import React, { FC, useMemo } from 'react';
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
 import { Box } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { formatCurrencyAmount, useSafeIntl } from 'bluesquare-components';
 import {
     Bar,
     BarChart,
@@ -20,6 +20,7 @@ import { useChartTheme } from '../../../../components/charts/chartTheme';
 import { ChartTooltip } from '../../../../components/charts/ChartTooltip';
 import { useAutoYAxisWidth } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
+import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { MESSAGES } from '../../../messages';
 import { formatBigNumber } from '../../../planning/libs/cost-utils';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
@@ -29,12 +30,6 @@ import {
 } from '../../utils/chartData';
 import { computeNiceTicks } from '../../utils/chartUtils';
 import { SCENARIO_BASE_COLORS } from '../../utils/colors';
-
-const formatCostValue = (value: number): string =>
-    new Intl.NumberFormat(undefined, {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-    }).format(value);
 
 const styles = {
     chartBody: {
@@ -51,9 +46,15 @@ type CostTooltipProps = {
         relativeCost: string;
         avertedCases: string;
     };
+    currencyCode?: string;
 };
 
-const CostTooltip: FC<CostTooltipProps> = ({ active, payload, labels }) => {
+const CostTooltip: FC<CostTooltipProps> = ({
+    active,
+    payload,
+    labels,
+    currencyCode,
+}) => {
     if (!active || !payload?.length) return null;
     const d = payload[0].payload;
     return (
@@ -62,11 +63,11 @@ const CostTooltip: FC<CostTooltipProps> = ({ active, payload, labels }) => {
             rows={[
                 {
                     label: labels.costPerAverted,
-                    value: formatCostValue(d.value),
+                    value: formatCurrencyAmount(d.value, currencyCode),
                 },
                 {
                     label: labels.relativeCost,
-                    value: formatBigNumber(d.relativeCost),
+                    value: formatCurrencyAmount(d.relativeCost, currencyCode),
                 },
                 {
                     label: labels.avertedCases,
@@ -88,6 +89,8 @@ export const CostPerAvertedCaseCard: FC = () => {
     } = useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
     const { axisColor, gridProps, axisProps } = useChartTheme();
+    const { data: budgetSettings } = useGetBudgetSettings();
+    const currencyCode = budgetSettings?.local_currency;
     const isLoading = isImpactLoading || isBudgetLoading;
     const hasComparison = scenarios.length >= 2;
 
@@ -162,7 +165,7 @@ export const CostPerAvertedCaseCard: FC = () => {
                                 tickFormatter={(v: number) =>
                                     v === 0
                                         ? formatMessage(MESSAGES.baselineLabel)
-                                        : formatCostValue(v)
+                                        : formatCurrencyAmount(v, currencyCode)
                                 }
                                 {...axisProps}
                                 tickMargin={2}
@@ -173,6 +176,7 @@ export const CostPerAvertedCaseCard: FC = () => {
                                 cursor={false}
                                 content={
                                     <CostTooltip
+                                        currencyCode={currencyCode}
                                         labels={{
                                             costPerAverted: formatMessage(
                                                 MESSAGES.costPerAvertedCaseLabel,

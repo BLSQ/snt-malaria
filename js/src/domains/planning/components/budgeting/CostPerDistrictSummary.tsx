@@ -23,7 +23,7 @@ const styles = {
 
 export const CostPerDistrictSummary: FC = () => {
     const { formatMessage } = useSafeIntl();
-    const { budgets, orgUnits } = usePlanningContext();
+    const { budgets, orgUnits, currency } = usePlanningContext();
     const [selectedInterventionId, setSelectedInterventionId] =
         useState<number>(0);
 
@@ -77,10 +77,10 @@ export const CostPerDistrictSummary: FC = () => {
             );
             return {
                 color: fillColor as string,
-                label: formatBigNumber(cost),
+                label: formatBigNumber(cost, currency),
             };
         },
-        [orgUnitCosts, legendConfig, getActiveCost],
+        [orgUnitCosts, legendConfig, getActiveCost, currency],
     );
 
     const interventionOptions = useMemo(() => {

@@ -4,6 +4,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ProgressBar } from '../../../../components/LinearProgress';
 import { MESSAGES } from '../../../messages';
+import { usePlanningContext } from '../../contexts/PlanningContext';
 import { formatBigNumber } from '../../libs/cost-utils';
 
 const styles = {
@@ -22,7 +23,7 @@ export const BudgetTotalRow: FC<{
     };
 }> = ({ yearRange, colors, totalCosts }) => {
     const { formatMessage } = useSafeIntl();
-
+    const { currency } = usePlanningContext();
     return (
         <TableRow sx={styles.row}>
             <TableCell align="left" colSpan={2}>
@@ -41,7 +42,10 @@ export const BudgetTotalRow: FC<{
                         component="span"
                         sx={styles.emphasis}
                     >
-                        {formatBigNumber(totalCosts.yearlyTotal[year] || 0)}
+                        {formatBigNumber(
+                            totalCosts.yearlyTotal[year] || 0,
+                            currency,
+                        )}
                     </Typography>
                 </TableCell>
             ))}
@@ -51,7 +55,7 @@ export const BudgetTotalRow: FC<{
                     component="span"
                     sx={styles.emphasis}
                 >
-                    {formatBigNumber(totalCosts.totalCost)}
+                    {formatBigNumber(totalCosts.totalCost, currency)}
                 </Typography>
             </TableCell>
             <TableCell align="right">
