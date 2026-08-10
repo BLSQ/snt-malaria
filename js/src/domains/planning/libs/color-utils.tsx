@@ -27,6 +27,24 @@ export const CATEGORY_COLORS = [
     blueGrey[300],
 ];
 
+/**
+ * Assigns each distinct key a stable colour from `CATEGORY_COLORS`, cycling
+ * through the palette in the order keys first appear. Duplicate keys reuse
+ * their first-assigned colour.
+ */
+export function assignCategoricalColors<T>(keys: T[]): Map<T, string> {
+    const colorByKey = new Map<T, string>();
+    keys.forEach(key => {
+        if (!colorByKey.has(key)) {
+            colorByKey.set(
+                key,
+                CATEGORY_COLORS[colorByKey.size % CATEGORY_COLORS.length],
+            );
+        }
+    });
+    return colorByKey;
+}
+
 export const INTERVENTION_COLORS = {
     ACTs: '#A2CAEA',
     RDTs: '#ACDF9B',

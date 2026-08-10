@@ -1,7 +1,7 @@
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import { BubbleChartOutlined } from '@mui/icons-material';
 import { Box, Typography, useTheme } from '@mui/material';
-import { getCurrencySymbol, useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import {
     CartesianGrid,
     Legend,
@@ -24,12 +24,14 @@ import {
     WidgetCard,
     WidgetCardDropdown,
 } from '../../../../components/WidgetCard';
-import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { useInterventionCategoryColors } from '../../hooks/useInterventionCategoryColors';
 import { aggregatePopulationLayersByIntervention } from '../../libs/budget-aggregation';
-import { CATEGORY_COLORS } from '../../libs/color-utils';
+import {
+    assignCategoricalColors,
+    CATEGORY_COLORS,
+} from '../../libs/color-utils';
 import { formatBigNumber } from '../../libs/cost-utils';
 
 const DOT_RADIUS = 6;
@@ -108,9 +110,7 @@ const PopulationLayerDot: FC<DotShapeProps> = ({ cx, cy, payload }) => {
 export const CostVsPopulationSummary: FC = () => {
     const { formatMessage } = useSafeIntl();
     const { gridProps, axisProps } = useChartTheme();
-    const { budgets } = usePlanningContext();
-    const { data: budgetSettings } = useGetBudgetSettings();
-    const currencySymbol = getCurrencySymbol(budgetSettings?.local_currency);
+    const { budgets, currency } = usePlanningContext();
     const [xMetric, setXMetric] = useState<XMetric>('total');
     const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
@@ -122,17 +122,14 @@ export const CostVsPopulationSummary: FC = () => {
         [budgets],
     );
 
-    useEffect(() => {
-        if (selectedYear === null && availableYears.length > 0) {
-            setSelectedYear(availableYears[0]);
-        }
-    }, [availableYears, selectedYear]);
+    // Defaults to the most recent year until the user picks one explicitly.
+    const effectiveYear = selectedYear ?? availableYears[0] ?? null;
 
     const interventions = useMemo(
         () =>
-            budgets.find(budget => budget.year === selectedYear)
+            budgets.find(budget => budget.year === effectiveYear)
                 ?.interventions ?? [],
-        [budgets, selectedYear],
+        [budgets, effectiveYear],
     );
 
     const { orderedInterventions } =
@@ -170,15 +167,10 @@ export const CostVsPopulationSummary: FC = () => {
     // across renders for a given scenario). A single distinct layer needs no
     // categorical colour or legend.
     const colorByLayerName = useMemo(() => {
-        const names = Array.from(new Set(rawRows.map(row => row.layerName)));
-        if (names.length <= 1) {
-            return new Map<string, string>();
-        }
-        const map = new Map<string, string>();
-        names.forEach((name, index) => {
-            map.set(name, CATEGORY_COLORS[index % CATEGORY_COLORS.length]);
-        });
-        return map;
+        const colors = assignCategoricalColors(
+            rawRows.map(row => row.layerName),
+        );
+        return colors.size <= 1 ? new Map<string, string>() : colors;
     }, [rawRows]);
 
     const chartData = useMemo(
@@ -231,11 +223,11 @@ export const CostVsPopulationSummary: FC = () => {
             },
             {
                 label: formatMessage(MESSAGES.layerCostLabel),
-                value: formatBigNumber(row.cost, currencySymbol),
+                value: formatBigNumber(row.cost, currency),
             },
             {
                 label: formatMessage(MESSAGES.costPerCapitaLabel),
-                value: formatBigNumber(row.costPerCapita, currencySymbol),
+                value: formatBigNumber(row.costPerCapita, currency),
             },
         ];
         return <ChartTooltip title={row.interventionLabel} rows={rows} />;
@@ -259,7 +251,7 @@ export const CostVsPopulationSummary: FC = () => {
             onChange: value => setXMetric(value as XMetric),
         },
         {
-            value: selectedYear ?? '',
+            value: effectiveYear ?? '',
             options: availableYears.map(year => ({
                 value: year,
                 label: String(year),
@@ -298,10 +290,7 @@ export const CostVsPopulationSummary: FC = () => {
                                 dataKey={xDataKey}
                                 domain={xDomain}
                                 tickFormatter={value =>
-                                    formatBigNumber(
-                                        value as number,
-                                        currencySymbol,
-                                    )
+                                    formatBigNumber(value as number, currency)
                                 }
                                 {...axisProps}
                                 tickMargin={4}

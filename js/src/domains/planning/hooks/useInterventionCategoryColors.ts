@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { usePlanningContext } from '../contexts/PlanningContext';
-import { CATEGORY_COLORS } from '../libs/color-utils';
+import { assignCategoricalColors, CATEGORY_COLORS } from '../libs/color-utils';
 import { BudgetIntervention } from '../types/budget';
 
 const UNCATEGORIZED_KEY = -1;
@@ -66,23 +66,18 @@ export const useInterventionCategoryColors = (
     }, [interventions, categoryIdByInterventionId]);
 
     const colorByInterventionId = useMemo(() => {
-        const colorByCategoryId = new Map<number, string>();
+        const categoryIdOf = (intervention: BudgetIntervention) =>
+            categoryIdByInterventionId.get(intervention.id) ??
+            UNCATEGORIZED_KEY;
+        const colorByCategoryId = assignCategoricalColors(
+            orderedInterventions.map(categoryIdOf),
+        );
         const result = new Map<number, string>();
-        let next = 0;
         orderedInterventions.forEach(intervention => {
-            const categoryId =
-                categoryIdByInterventionId.get(intervention.id) ??
-                UNCATEGORIZED_KEY;
-            if (!colorByCategoryId.has(categoryId)) {
-                colorByCategoryId.set(
-                    categoryId,
-                    CATEGORY_COLORS[next % CATEGORY_COLORS.length],
-                );
-                next += 1;
-            }
             result.set(
                 intervention.id,
-                colorByCategoryId.get(categoryId) ?? CATEGORY_COLORS[0],
+                colorByCategoryId.get(categoryIdOf(intervention)) ??
+                    CATEGORY_COLORS[0],
             );
         });
         return result;

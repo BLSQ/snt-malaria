@@ -203,10 +203,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.summary.costVsPopulationTitle',
         defaultMessage: 'Cost vs. population covered',
     },
-    populationCoveredLabel: {
-        id: 'iaso.snt_malaria.summary.populationCoveredLabel',
-        defaultMessage: 'Population covered',
-    },
     costPerCapitaLabel: {
         id: 'iaso.snt_malaria.summary.costPerCapitaLabel',
         defaultMessage: 'Cost per person',
