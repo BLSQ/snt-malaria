@@ -23,12 +23,15 @@ export type GraphNodeType =
     | 'classify';
 
 // A single abstract node in the AI-generated graph. Which fields are relevant depends on `type`:
-// dataLayer -> metric_type_id; formula -> inputs + formula; combine -> inputs + operation;
-// normalize -> input + scale + normalize_type; classify -> input + rules + default.
+// dataLayer -> metric_type_id (+ optional selected_year); formula -> inputs + formula;
+// combine -> inputs + operation; normalize -> input + scale + normalize_type;
+// classify -> input + rules + default.
 export type GeneratedGraphNode = {
     id: string;
     type: GraphNodeType;
     metric_type_id?: string;
+    /** Pins a `dataLayer` node to this single year (as a string), turning it non-yearly. */
+    selected_year?: string;
     inputs?: string[];
     formula?: string;
     operation?: CombineOperation;

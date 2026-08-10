@@ -37,6 +37,7 @@ import {
 import { flumeContextMenuStyles, flumeThemeSx } from './flumeTheme';
 import { useCanvasDrop } from './hooks/useCanvasDrop';
 import { useCompositePreview } from './hooks/useCompositePreview';
+import { useDataLayerYears } from './hooks/useDataLayerYears';
 import { useGetCompositeLayer } from './hooks/useGetCompositeLayers';
 import { usePortConnectionSync } from './hooks/usePortConnectionSync';
 import { useSaveCompositeLayer } from './hooks/useSaveCompositeLayer';
@@ -50,9 +51,11 @@ import {
 } from './utils/flumeStage';
 import {
     findOutputNode,
+    getAllDataLayerMetricTypeIds,
     getConnectedDataLayerIds,
     isOutputConnected,
     removeInputConnection,
+    withDefaultSelectedYear,
 } from './utils/graph';
 import { centerGraph, relayoutWithMeasuredSizes } from './utils/graphLayout';
 
@@ -182,6 +185,12 @@ export const CompositeLayerEditor = forwardRef<
         const [connectedLayerIds, setConnectedLayerIds] = useState<number[]>(
             [],
         );
+        // Every dataLayer node's picked metric type, connected or not; drives which years the
+        // "Yearly values" control offers per node.
+        const [dataLayerMetricTypeIds, setDataLayerMetricTypeIds] = useState<
+            number[]
+        >([]);
+        const yearsByMetricTypeId = useDataLayerYears(dataLayerMetricTypeIds);
         const [editorGeneration, setEditorGeneration] = useState(0);
         // Two-phase framing for a structural update (nodes added/removed): with no real DOM sizes
         // yet, it mounts once hidden with size *estimates*, then the measure-and-correct effect
@@ -230,8 +239,15 @@ export const CompositeLayerEditor = forwardRef<
                 metricTypeById,
                 preview,
                 connectedLayerIds,
+                yearsByMetricTypeId,
             };
-        }, [metricCategories, orgUnits, preview, connectedLayerIds]);
+        }, [
+            metricCategories,
+            orgUnits,
+            preview,
+            connectedLayerIds,
+            yearsByMetricTypeId,
+        ]);
 
         // Seed the working graph + comments from the loaded layer (NodeEditor only reads these at mount).
         useEffect(() => {
@@ -252,6 +268,7 @@ export const CompositeLayerEditor = forwardRef<
             // Wait a frame so ports added/removed by this change are in the DOM before we tag them.
             requestAnimationFrame(() => syncPortConnections(nodes));
             setConnectedLayerIds(getConnectedDataLayerIds(nodes));
+            setDataLayerMetricTypeIds(getAllDataLayerMetricTypeIds(nodes));
             // Clear the preview immediately on disconnect (don't wait out the debounce on a stale map).
             if (!isOutputConnected(nodes)) {
                 markDisconnected();
@@ -300,6 +317,9 @@ export const CompositeLayerEditor = forwardRef<
         useEffect(() => {
             if (!isReady) return;
             setConnectedLayerIds(getConnectedDataLayerIds(nodesRef.current));
+            setDataLayerMetricTypeIds(
+                getAllDataLayerMetricTypeIds(nodesRef.current),
+            );
             runPreview(nodesRef.current);
             // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [isReady, existingLayer]);
@@ -316,6 +336,9 @@ export const CompositeLayerEditor = forwardRef<
                 syncPortConnections(nodesRef.current),
             );
             setConnectedLayerIds(getConnectedDataLayerIds(nodesRef.current));
+            setDataLayerMetricTypeIds(
+                getAllDataLayerMetricTypeIds(nodesRef.current),
+            );
             runPreview(nodesRef.current);
             return () => cancelAnimationFrame(frame);
             // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -371,6 +394,7 @@ export const CompositeLayerEditor = forwardRef<
                 setAiComments(comments);
                 setEditorGeneration(generation => generation + 1);
                 setConnectedLayerIds(getConnectedDataLayerIds(nodes));
+                setDataLayerMetricTypeIds(getAllDataLayerMetricTypeIds(nodes));
                 if (previewTimer.current) clearTimeout(previewTimer.current);
                 if (isOutputConnected(nodes)) {
                     runPreview(nodes);
@@ -496,10 +520,12 @@ export const CompositeLayerEditor = forwardRef<
 
         const nodes = useMemo(
             () =>
-                aiGraph ??
-                (mountNonce === 0
-                    ? existingLayer?.graph
-                    : mountGraphRef.current),
+                withDefaultSelectedYear(
+                    aiGraph ??
+                        (mountNonce === 0
+                            ? existingLayer?.graph
+                            : mountGraphRef.current),
+                ),
             [aiGraph, mountNonce, existingLayer, mountGraphRef],
         );
 

@@ -76,6 +76,19 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.year',
         defaultMessage: 'Year',
     },
+    yearlyValuesLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.yearlyValuesLabel',
+        defaultMessage: 'Yearly values',
+    },
+    yearlyOptionLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.yearlyOptionLabel',
+        defaultMessage: 'Yearly',
+    },
+    yearlyValuesHelperText: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.yearlyValuesHelperText',
+        defaultMessage:
+            'This layer has data for multiple years. Leave it "Yearly" to combine or transform the data year by year downstream, or pick a single year to use only that year, turning this layer non-yearly.',
+    },
     computingPreview: {
         id: 'iaso.snt_malaria.compositeLayerEditor.computingPreview',
         defaultMessage: 'Computing preview…',

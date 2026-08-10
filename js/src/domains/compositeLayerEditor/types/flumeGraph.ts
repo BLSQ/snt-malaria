@@ -28,7 +28,11 @@ export type CompositeNodeType =
  * shapes read outside of Flume controls are typed explicitly.
  */
 export type FlumeNodeInputData = {
-    metricType?: { metricTypeId?: number | string };
+    metricType?: {
+        metricTypeId?: number | string;
+        /** Pins the node's output to this single year (as timeless). Absent/`''` = all years. */
+        selectedYear?: number | string;
+    };
     legend?: {
         legendType?: string;
         /** Manually-configured buckets for a concrete legend type (set in the dialogue). */

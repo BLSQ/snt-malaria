@@ -62,6 +62,35 @@ class BuildSystemPromptTestCase(SimpleTestCase):
         self.assertIn("min-max", prompt)
         self.assertIn("percentile", prompt)
 
+    def test_selected_year_documented_in_prompt(self):
+        prompt = build_system_prompt(METRIC_TYPES)
+
+        self.assertIn("selected_year", prompt)
+        self.assertIn("## Working with years", prompt)
+
+    def test_multi_year_comparison_via_repeated_data_layer_documented_in_prompt(self):
+        # The AI must know it can add the same metric type as two separate dataLayer nodes, each
+        # pinned to a different year, to compare specific years of one layer against each other.
+        prompt = build_system_prompt(METRIC_TYPES)
+
+        self.assertIn("multiple separate `dataLayer` nodes", prompt)
+        self.assertIn("2023 rainfall ÷ 2022 rainfall", prompt)
+
+    def test_years_included_in_catalog_when_present(self):
+        metric_types_with_years = [
+            {"id": 1, "name": "Rainfall", "description": "", "years": [2024, 2023, 2022]},
+        ]
+
+        prompt = build_system_prompt(metric_types_with_years)
+
+        self.assertIn("years=[2024, 2023, 2022]", prompt)
+
+    def test_years_omitted_from_catalog_when_absent(self):
+        # METRIC_TYPES has no "years" key at all (a non-yearly layer) - nothing should be appended.
+        prompt = build_system_prompt(METRIC_TYPES)
+
+        self.assertNotIn("years=", prompt)
+
 
 GRAPH_RESPONSE = {
     "graph": {
@@ -108,6 +137,29 @@ class ParseCompositeLayerGraphResponseTestCase(SimpleTestCase):
             parse_composite_layer_graph_response(
                 "Which data layer did you mean - rainfall or incidence?",
             )
+
+    def test_data_layer_node_with_selected_year_parses(self):
+        response = json.dumps(
+            {
+                "graph": {
+                    "nodes": [
+                        {"id": "rainfall", "type": "dataLayer", "metric_type_id": "1", "selected_year": "2023"},
+                    ],
+                    "output": {"source": "rainfall", "name": "Rainfall 2023", "legend_type": "auto"},
+                },
+                "message": "Pinned the rainfall layer to 2023.",
+            }
+        )
+
+        parsed = parse_composite_layer_graph_response(response)
+
+        self.assertEqual(parsed.graph.nodes[0].selected_year, "2023")
+
+    def test_data_layer_node_without_selected_year_parses_as_none(self):
+        # selected_year is optional; the backend evaluator treats a missing value as "all years".
+        parsed = parse_composite_layer_graph_response(GRAPH_RESPONSE_JSON)
+
+        self.assertIsNone(parsed.graph.nodes[0].selected_year)
 
     def test_normalize_node_with_percentile_type_parses(self):
         response = json.dumps(

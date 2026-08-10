@@ -4,7 +4,7 @@ import anthropic
 
 from rest_framework import status
 
-from iaso.models import Account, MetricType
+from iaso.models import Account, MetricType, MetricValue
 from plugins.snt_malaria.permissions import SNT_SETTINGS_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
@@ -184,3 +184,30 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
         metric_types_sent = call_args[0][2]
         self.assertEqual(len(metric_types_sent), 1)
         self.assertEqual(metric_types_sent[0]["name"], "Rainfall")
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
+    def test_yearly_metric_type_has_years_in_catalog(self, mock_gen):
+        org_unit_type = self.create_snt_org_unit_type(name="DISTRICT")
+        org_unit = self.create_snt_org_unit(org_unit_type=org_unit_type, name="OU1")
+        MetricValue.objects.create(metric_type=self.metric_type, org_unit=org_unit, year=2023, value=1.0)
+        MetricValue.objects.create(metric_type=self.metric_type, org_unit=org_unit, year=2024, value=2.0)
+        mock_gen.return_value = self._mock_generate_composite_layer_graph(with_graph=False)
+        self.client.force_authenticate(self.user)
+
+        self.client.post(BASE_URL, {"message": "hi"}, format="json")
+
+        metric_types_sent = mock_gen.call_args[0][2]
+        self.assertEqual(metric_types_sent[0]["years"], [2024, 2023])
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
+    def test_non_yearly_metric_type_has_no_years_in_catalog(self, mock_gen):
+        org_unit_type = self.create_snt_org_unit_type(name="DISTRICT")
+        org_unit = self.create_snt_org_unit(org_unit_type=org_unit_type, name="OU1")
+        MetricValue.objects.create(metric_type=self.metric_type, org_unit=org_unit, year=None, value=1.0)
+        mock_gen.return_value = self._mock_generate_composite_layer_graph(with_graph=False)
+        self.client.force_authenticate(self.user)
+
+        self.client.post(BASE_URL, {"message": "hi"}, format="json")
+
+        metric_types_sent = mock_gen.call_args[0][2]
+        self.assertNotIn("years", metric_types_sent[0])

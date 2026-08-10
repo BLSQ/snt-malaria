@@ -155,10 +155,13 @@ export const buildFlumeGraphFromSpec = (
                 x,
                 y,
                 inputData: {
-                    // Must be a number: Flume's Select matches against numeric option values with
-                    // `===` (see MetricOption in flumeConfig.ts).
                     metricType: {
+                        // Both must be numbers: Flume's Select matches option values with `===`
+                        // (see MetricOption / the "Yearly values" control in flumeConfig.ts).
                         metricTypeId: Number(node.metric_type_id),
+                        ...(node.selected_year
+                            ? { selectedYear: Number(node.selected_year) }
+                            : {}),
                     },
                 },
                 connections: { inputs: {}, outputs: {} },

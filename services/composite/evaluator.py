@@ -227,17 +227,20 @@ class CompositeGraphEvaluator:
         except (TypeError, ValueError):
             raise CompositeGraphIncompleteError("A data layer node has no selected layer.")
 
+        pinned_year = self._get_pinned_year(node)
+
         # Categorical layers (e.g. seasonality) store their category in ``string_value`` with a null
         # ``value``, so read both and keep whichever the row carries. Year-less rows go under the
         # ``None`` (timeless) bucket. The account filter on the join keeps tenancy in one query; the
         # ownership check below only runs when nothing came back.
-        rows = list(
-            MetricValue.objects.filter(
-                metric_type_id=metric_type_id,
-                metric_type__account=self.account,
-                org_unit_id__in=self.org_unit_ids,
-            ).values_list("org_unit_id", "year", "value", "string_value")
+        queryset = MetricValue.objects.filter(
+            metric_type_id=metric_type_id,
+            metric_type__account=self.account,
+            org_unit_id__in=self.org_unit_ids,
         )
+        if pinned_year is not None:
+            queryset = queryset.filter(year=pinned_year)
+        rows = list(queryset.values_list("org_unit_id", "year", "value", "string_value"))
         if not rows and not MetricType.objects.filter(id=metric_type_id, account=self.account).exists():
             raise CompositeGraphError(f"Metric type {metric_type_id} does not belong to this account.")
 
@@ -249,8 +252,26 @@ class CompositeGraphEvaluator:
                 resolved = string_value
             else:
                 continue
-            values_by_year.setdefault(year, {})[org_unit_id] = resolved
+            # A pinned year collapses every row into the timeless bucket, so the node's output
+            # broadcasts (like any other timeless source) into whatever it's combined with.
+            bucket_year = None if pinned_year is not None else year
+            values_by_year.setdefault(bucket_year, {})[org_unit_id] = resolved
         return values_by_year
+
+    @staticmethod
+    def _get_pinned_year(node: dict) -> Optional[int]:
+        """The data layer's pinned year, or ``None`` for "all years" (unset, blank, or invalid).
+
+        The frontend's own "all years" sentinel is the non-numeric string ``"all"``, which falls
+        through the same ``int()`` failure as any other unset/invalid value below.
+        """
+        raw_year = CompositeGraphEvaluator._get_control_value(node, "metricType", "selectedYear")
+        if raw_year in (None, ""):
+            return None
+        try:
+            return int(raw_year)
+        except (TypeError, ValueError):
+            return None
 
     def _resolve_formula(self, node: dict) -> ValuesByYear:
         # Inputs are dynamic (a, b, c, …), so resolve whichever ports are actually connected.

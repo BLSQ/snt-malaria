@@ -1,3 +1,4 @@
+import { ALL_YEARS_VALUE } from '../flumeConfig';
 import { FlumeGraph, FlumeGraphNode } from '../types/flumeGraph';
 import {
     ClassifyRuleSpec,
@@ -46,12 +47,18 @@ export const extractGraphSpecFromFlume = (
         const { inputData } = node;
         if (node.type === 'dataLayer') {
             const rawId = inputData.metricType?.metricTypeId;
+            const rawYear = inputData.metricType?.selectedYear;
+            const hasPinnedYear =
+                rawYear !== undefined &&
+                rawYear !== '' &&
+                rawYear !== ALL_YEARS_VALUE;
             nodes.push({
                 id: node.id,
                 type: 'dataLayer',
                 ...(rawId !== undefined && rawId !== ''
                     ? { metric_type_id: String(rawId) }
                     : {}),
+                ...(hasPinnedYear ? { selected_year: String(rawYear) } : {}),
             });
         } else if (node.type === 'formula') {
             nodes.push({
