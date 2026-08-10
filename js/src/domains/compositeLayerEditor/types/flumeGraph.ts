@@ -23,6 +23,16 @@ export type CompositeNodeType =
     | 'classify'
     | 'output';
 
+/** Every `CompositeNodeType`, keyed by itself. */
+export const NODE_TYPES = {
+    dataLayer: 'dataLayer',
+    formula: 'formula',
+    combine: 'combine',
+    normalize: 'normalize',
+    classify: 'classify',
+    output: 'output',
+} as const satisfies Record<CompositeNodeType, CompositeNodeType>;
+
 /**
  * Per-port control values. The keys are port names; the nested keys are control names. The two
  * shapes read outside of Flume controls are typed explicitly.

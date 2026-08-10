@@ -14,6 +14,7 @@ import {
     OPERATOR_OUTPUT_PORT_NAME,
 } from './nodeTypeRegistry';
 import { CompositePreviewState } from './types/compositeLayer';
+import { NODE_TYPES } from './types/flumeGraph';
 import { getCompositeLegendOptions } from './utils/legendOptions';
 
 type FormatMessage = ReturnType<typeof useSafeIntl>['formatMessage'];
@@ -494,7 +495,7 @@ export const createCompositeFlumeConfig = (
 
     config
         .addNodeType({
-            type: 'dataLayer',
+            type: NODE_TYPES.dataLayer,
             label: formatMessage(MESSAGES.dataLayerNodeLabel),
             description: formatMessage(MESSAGES.dataLayerNodeDescription),
             sortIndex: 0,
@@ -531,7 +532,7 @@ export const createCompositeFlumeConfig = (
             ],
         })
         .addNodeType({
-            type: 'formula',
+            type: NODE_TYPES.formula,
             label: formatMessage(OPERATOR_NODE_TYPES.formula.labelMessage),
             description: formatMessage(
                 OPERATOR_NODE_TYPES.formula.descriptionMessage,
@@ -561,7 +562,7 @@ export const createCompositeFlumeConfig = (
             ],
         })
         .addNodeType({
-            type: 'combine',
+            type: NODE_TYPES.combine,
             label: formatMessage(OPERATOR_NODE_TYPES.combine.labelMessage),
             description: formatMessage(
                 OPERATOR_NODE_TYPES.combine.descriptionMessage,
@@ -585,7 +586,7 @@ export const createCompositeFlumeConfig = (
             ],
         })
         .addNodeType({
-            type: 'normalize',
+            type: NODE_TYPES.normalize,
             label: formatMessage(OPERATOR_NODE_TYPES.normalize.labelMessage),
             description: formatMessage(
                 OPERATOR_NODE_TYPES.normalize.descriptionMessage,
@@ -611,7 +612,7 @@ export const createCompositeFlumeConfig = (
             ],
         })
         .addNodeType({
-            type: 'classify',
+            type: NODE_TYPES.classify,
             label: formatMessage(OPERATOR_NODE_TYPES.classify.labelMessage),
             description: formatMessage(
                 OPERATOR_NODE_TYPES.classify.descriptionMessage,
@@ -638,7 +639,7 @@ export const createCompositeFlumeConfig = (
         })
         // Always present, cannot be added again or removed.
         .addNodeType({
-            type: 'output',
+            type: NODE_TYPES.output,
             label: formatMessage(MESSAGES.outputNodeLabel),
             description: formatMessage(MESSAGES.outputNodeDescription),
             addable: false,

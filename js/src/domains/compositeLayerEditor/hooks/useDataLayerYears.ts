@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { getRequest } from 'Iaso/libs/Api';
-import { useSnackQueries } from 'Iaso/libs/apiHooks';
+import { useSnackQuery } from 'Iaso/libs/apiHooks';
 import { MetricValue } from '../../dataLayers/types/metrics';
 
 /**
@@ -8,38 +8,43 @@ import { MetricValue } from '../../dataLayers/types/metrics';
  * values" control's `getOptions`, which — unlike a custom Flume control — can't fetch its own
  * data, so this is computed once here and handed down through `CompositeEditorContext`.
  *
- * Shares its cache with `useGetMetricValues({ metricTypeId })` (same query key shape), so a node's
- * own map preview doesn't re-fetch what this hook already loaded, and vice versa.
+ * Fetches all ids in a single request: `metric_type_id` accepts a comma-separated list.
  */
 export const useDataLayerYears = (
     metricTypeIds: number[],
 ): Map<number, number[]> => {
-    const results = useSnackQueries(
-        metricTypeIds.map(metricTypeId => ({
-            queryKey: ['metricValues', metricTypeId, undefined, undefined],
-            queryFn: () =>
-                getRequest(`/api/metricvalues/?metric_type_id=${metricTypeId}`),
-            options: {
-                cacheTime: Infinity,
-                staleTime: 1000 * 60 * 15,
-                refetchOnWindowFocus: false,
-            },
-        })),
-    );
+    const idsKey = [...metricTypeIds].sort((a, b) => a - b).join(',');
+
+    const { data } = useSnackQuery({
+        queryKey: ['metricValues', 'byMetricTypeIds', idsKey],
+        queryFn: () =>
+            idsKey
+                ? getRequest(`/api/metricvalues/?metric_type_id=${idsKey}`)
+                : Promise.resolve([]),
+        options: {
+            enabled: metricTypeIds.length > 0,
+            cacheTime: Infinity,
+            staleTime: 1000 * 60 * 15,
+            refetchOnWindowFocus: false,
+        },
+    });
 
     return useMemo(() => {
         const yearsByMetricTypeId = new Map<number, number[]>();
-        metricTypeIds.forEach((metricTypeId, index) => {
-            const values = (results[index]?.data ?? []) as MetricValue[];
-            const distinct = new Set<number>();
-            values.forEach(value => {
-                if (value.year != null) distinct.add(value.year);
-            });
+        const distinctByMetricTypeId = new Map<number, Set<number>>();
+        metricTypeIds.forEach(metricTypeId =>
+            distinctByMetricTypeId.set(metricTypeId, new Set()),
+        );
+        ((data ?? []) as MetricValue[]).forEach(value => {
+            if (value.year == null) return;
+            distinctByMetricTypeId.get(value.metric_type)?.add(value.year);
+        });
+        distinctByMetricTypeId.forEach((distinct, metricTypeId) => {
             yearsByMetricTypeId.set(
                 metricTypeId,
                 [...distinct].sort((a, b) => b - a),
             );
         });
         return yearsByMetricTypeId;
-    }, [metricTypeIds, results]);
+    }, [metricTypeIds, data]);
 };

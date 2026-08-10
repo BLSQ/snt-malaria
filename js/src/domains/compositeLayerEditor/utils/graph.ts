@@ -1,8 +1,8 @@
 import { ALL_YEARS_VALUE } from '../flumeConfig';
-import { FlumeGraph, FlumeGraphNode } from '../types/flumeGraph';
+import { FlumeGraph, FlumeGraphNode, NODE_TYPES } from '../types/flumeGraph';
 
 export const findOutputNode = (graph: FlumeGraph): FlumeGraphNode | undefined =>
-    Object.values(graph ?? {}).find(node => node?.type === 'output');
+    Object.values(graph ?? {}).find(node => node?.type === NODE_TYPES.output);
 
 /** Whether the output node has anything wired into its `layer` input. */
 export const isOutputConnected = (graph: FlumeGraph): boolean => {
@@ -68,7 +68,7 @@ export const getConnectedDataLayerIds = (graph: FlumeGraph): number[] => {
         visited.add(nodeId);
         const node = nodes[nodeId];
         if (!node) return;
-        if (node.type === 'dataLayer') {
+        if (node.type === NODE_TYPES.dataLayer) {
             const raw = node.inputData?.metricType?.metricTypeId;
             const id = raw === '' || raw == null ? undefined : Number(raw);
             if (
@@ -96,7 +96,7 @@ export const getConnectedDataLayerIds = (graph: FlumeGraph): number[] => {
 export const getAllDataLayerMetricTypeIds = (graph: FlumeGraph): number[] => {
     const ids = new Set<number>();
     Object.values(graph ?? {}).forEach(node => {
-        if (node?.type !== 'dataLayer') return;
+        if (node?.type !== NODE_TYPES.dataLayer) return;
         const raw = node.inputData?.metricType?.metricTypeId;
         const id = raw === '' || raw == null ? undefined : Number(raw);
         if (id !== undefined && !Number.isNaN(id)) ids.add(id);
@@ -118,7 +118,7 @@ export const withDefaultSelectedYear = (
     let changed = false;
     const next: FlumeGraph = { ...graph };
     Object.entries(graph).forEach(([nodeId, node]) => {
-        if (node?.type !== 'dataLayer') return;
+        if (node?.type !== NODE_TYPES.dataLayer) return;
         if (node.inputData?.metricType?.selectedYear !== undefined) return;
         changed = true;
         next[nodeId] = {

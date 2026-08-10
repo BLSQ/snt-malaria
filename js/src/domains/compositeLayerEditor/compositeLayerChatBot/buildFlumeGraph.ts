@@ -1,7 +1,7 @@
 import { FlumeNodes } from 'flume';
 import { LegendTypes } from '../../../constants/legend';
 import { OPERATOR_OUTPUT_PORT_NAME } from '../nodeTypeRegistry';
-import { FlumeGraph, FlumeNodeInputData } from '../types/flumeGraph';
+import { FlumeGraph, FlumeNodeInputData, NODE_TYPES } from '../types/flumeGraph';
 import {
     DagreNodeSpec,
     DagreLayoutResult,
@@ -28,8 +28,8 @@ const DYNAMIC_ROW_HEIGHT: Partial<Record<GraphNodeType, number>> = {
 // How many "dynamic" elements (rule rows, connected input ports, ...) a node renders beyond its
 // NODE_HEIGHT base - dataLayer/normalize/output have none, so this returns 0 for them.
 const dynamicElementCount = (node: GeneratedGraphNode): number => {
-    if (node.type === 'classify') return node.rules?.length ?? 0;
-    if (node.type === 'formula' || node.type === 'combine')
+    if (node.type === NODE_TYPES.classify) return node.rules?.length ?? 0;
+    if (node.type === NODE_TYPES.formula || node.type === NODE_TYPES.combine)
         return node.inputs?.length ?? 0;
     return 0;
 };
@@ -55,9 +55,9 @@ const formulaInputName = (index: number): string =>
     String.fromCharCode('a'.charCodeAt(0) + index);
 
 const upstreamIds = (node: GeneratedGraphNode): string[] => {
-    if (node.type === 'formula' || node.type === 'combine')
+    if (node.type === NODE_TYPES.formula || node.type === NODE_TYPES.combine)
         return node.inputs ?? [];
-    if (node.type === 'classify' || node.type === 'normalize')
+    if (node.type === NODE_TYPES.classify || node.type === NODE_TYPES.normalize)
         return node.input ? [node.input] : [];
     return [];
 };
@@ -111,7 +111,7 @@ const layoutWithDagre = (
     nodeSpecs.push({
         id: OUTPUT_NODE_ID,
         width: NODE_WIDTH.output,
-        height: estimateNodeHeight('output'),
+        height: estimateNodeHeight(NODE_TYPES.output),
     });
     return runDagreLayout(nodeSpecs, collectEdges(graph));
 };
@@ -147,10 +147,10 @@ export const buildFlumeGraphFromSpec = (
     graph.nodes.forEach(node => {
         const { x, y } = positionFor(node.id);
 
-        if (node.type === 'dataLayer') {
+        if (node.type === NODE_TYPES.dataLayer) {
             nodes[node.id] = {
                 id: node.id,
-                type: 'dataLayer',
+                type: NODE_TYPES.dataLayer,
                 width: NODE_WIDTH.dataLayer,
                 x,
                 y,
@@ -166,20 +166,20 @@ export const buildFlumeGraphFromSpec = (
                 },
                 connections: { inputs: {}, outputs: {} },
             };
-        } else if (node.type === 'formula') {
+        } else if (node.type === NODE_TYPES.formula) {
             nodes[node.id] = {
                 id: node.id,
-                type: 'formula',
+                type: NODE_TYPES.formula,
                 width: NODE_WIDTH.formula,
                 x,
                 y,
                 inputData: { formula: { formula: node.formula ?? '' } },
                 connections: { inputs: {}, outputs: {} },
             };
-        } else if (node.type === 'combine') {
+        } else if (node.type === NODE_TYPES.combine) {
             nodes[node.id] = {
                 id: node.id,
-                type: 'combine',
+                type: NODE_TYPES.combine,
                 width: NODE_WIDTH.combine,
                 x,
                 y,
@@ -188,10 +188,10 @@ export const buildFlumeGraphFromSpec = (
                 },
                 connections: { inputs: {}, outputs: {} },
             };
-        } else if (node.type === 'normalize') {
+        } else if (node.type === NODE_TYPES.normalize) {
             nodes[node.id] = {
                 id: node.id,
-                type: 'normalize',
+                type: NODE_TYPES.normalize,
                 width: NODE_WIDTH.normalize,
                 x,
                 y,
@@ -204,10 +204,10 @@ export const buildFlumeGraphFromSpec = (
                 },
                 connections: { inputs: {}, outputs: {} },
             };
-        } else if (node.type === 'classify') {
+        } else if (node.type === NODE_TYPES.classify) {
             nodes[node.id] = {
                 id: node.id,
-                type: 'classify',
+                type: NODE_TYPES.classify,
                 width: NODE_WIDTH.classify,
                 x,
                 y,
@@ -230,7 +230,7 @@ export const buildFlumeGraphFromSpec = (
 
     // Wire connections now that every node exists (so both endpoints can be updated together).
     graph.nodes.forEach(node => {
-        if (node.type === 'formula' || node.type === 'combine') {
+        if (node.type === NODE_TYPES.formula || node.type === NODE_TYPES.combine) {
             (node.inputs ?? []).forEach((sourceId, index) => {
                 const sourceType = nodes[sourceId]?.type as
                     | GraphNodeType
@@ -246,7 +246,8 @@ export const buildFlumeGraphFromSpec = (
                 );
             });
         } else if (
-            (node.type === 'classify' || node.type === 'normalize') &&
+            (node.type === NODE_TYPES.classify ||
+                node.type === NODE_TYPES.normalize) &&
             node.input
         ) {
             const sourceType = nodes[node.input]?.type as
@@ -270,7 +271,7 @@ export const buildFlumeGraphFromSpec = (
 
     nodes[OUTPUT_NODE_ID] = {
         id: OUTPUT_NODE_ID,
-        type: 'output',
+        type: NODE_TYPES.output,
         width: NODE_WIDTH.output,
         x: outputX,
         y: outputY,

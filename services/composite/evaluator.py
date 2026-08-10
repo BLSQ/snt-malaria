@@ -259,7 +259,7 @@ class CompositeGraphEvaluator:
         return values_by_year
 
     @staticmethod
-    def _get_pinned_year(node: dict) -> Optional[int]:
+    def _get_pinned_year(node: dict) -> int | None:
         """The data layer's pinned year, or ``None`` for "all years" (unset, blank, or invalid).
 
         The frontend's own "all years" sentinel is the non-numeric string ``"all"``, which falls
