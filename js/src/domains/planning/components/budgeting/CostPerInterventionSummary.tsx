@@ -27,6 +27,7 @@ import { WidgetCard } from '../../../../components/WidgetCard';
 import { useGetInterventionCostBreakdownLineCategories } from '../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
+import { useInterventionCategoryColors } from '../../hooks/useInterventionCategoryColors';
 import {
     aggregateInterventionCosts,
     aggregateOrgUnitCosts,
@@ -36,14 +37,12 @@ import {
     formatBigNumber,
     getCostBreakdownChartData,
 } from '../../libs/cost-utils';
-import { BudgetIntervention } from '../../types/budget';
 
 const BAR_SIZE = 22;
 const BAR_RADIUS = 4;
 // Lightest cost-segment is this much lighter than the bar's base colour. Each
 // cost segment (procurement, distribution, ...) is a progressively lighter hue.
 const MAX_LIGHTEN = 0.6;
-const UNCATEGORIZED_KEY = -1;
 const BASE_COLOR_KEY = '__baseColor';
 const TOTAL_KEY = '__total';
 
@@ -168,70 +167,16 @@ export const CostPerInterventionSummary: FC = () => {
         [orgUnits],
     );
 
-    // Intervention id -> its intervention category id.
-    const categoryIdByInterventionId = useMemo(() => {
-        const map = new Map<number, number>();
-        interventionCategories.forEach(category => {
-            category.interventions.forEach(intervention => {
-                map.set(intervention.id, category.id);
-            });
-        });
-        return map;
-    }, [interventionCategories]);
+    const interventions = useMemo(
+        () =>
+            aggregateInterventionCosts(
+                aggregateOrgUnitCosts(budgets, orgUnitIds),
+            ),
+        [budgets, orgUnitIds],
+    );
 
-    // Interventions sorted so that those sharing a category sit together
-    // (groups ordered by total cost desc, interventions within a group too).
-    const orderedInterventions = useMemo(() => {
-        const interventions = aggregateInterventionCosts(
-            aggregateOrgUnitCosts(budgets, orgUnitIds),
-        );
-
-        const categoryOf = (intervention: BudgetIntervention) =>
-            categoryIdByInterventionId.get(intervention.id) ??
-            UNCATEGORIZED_KEY;
-
-        const totalByCategory = new Map<number, number>();
-        interventions.forEach(intervention => {
-            const categoryId = categoryOf(intervention);
-            totalByCategory.set(
-                categoryId,
-                (totalByCategory.get(categoryId) ?? 0) +
-                    intervention.total_cost,
-            );
-        });
-
-        return [...interventions].sort((a, b) => {
-            const catA = categoryOf(a);
-            const catB = categoryOf(b);
-            if (catA !== catB) {
-                return (
-                    (totalByCategory.get(catB) ?? 0) -
-                    (totalByCategory.get(catA) ?? 0)
-                );
-            }
-            return b.total_cost - a.total_cost;
-        });
-    }, [budgets, orgUnitIds, categoryIdByInterventionId]);
-
-    // Stable base colour per category, assigned in the order categories first
-    // appear in the (cost-sorted) intervention list.
-    const baseColorByCategoryId = useMemo(() => {
-        const map = new Map<number, string>();
-        let next = 0;
-        orderedInterventions.forEach(intervention => {
-            const categoryId =
-                categoryIdByInterventionId.get(intervention.id) ??
-                UNCATEGORIZED_KEY;
-            if (!map.has(categoryId)) {
-                map.set(
-                    categoryId,
-                    CATEGORY_COLORS[next % CATEGORY_COLORS.length],
-                );
-                next += 1;
-            }
-        });
-        return map;
-    }, [orderedInterventions, categoryIdByInterventionId]);
+    const { orderedInterventions, colorByInterventionId } =
+        useInterventionCategoryColors(interventions);
 
     // Chart rows enriched with each bar's base colour and total so the custom
     // bar shape (and the tooltip) can colour the cost segments consistently.
@@ -242,10 +187,8 @@ export const CostPerInterventionSummary: FC = () => {
         return rows.map((row, index) => {
             const intervention = orderedInterventions[index];
             const baseColor =
-                baseColorByCategoryId.get(
-                    categoryIdByInterventionId.get(intervention.id) ??
-                        UNCATEGORIZED_KEY,
-                ) ?? CATEGORY_COLORS[0];
+                colorByInterventionId.get(intervention.id) ??
+                CATEGORY_COLORS[0];
             const total = costCategories.reduce(
                 (sum, category) => sum + Number(row[category.value] ?? 0),
                 0,
@@ -256,12 +199,7 @@ export const CostPerInterventionSummary: FC = () => {
                 [TOTAL_KEY]: total,
             };
         });
-    }, [
-        orderedInterventions,
-        baseColorByCategoryId,
-        categoryIdByInterventionId,
-        costCategories,
-    ]);
+    }, [orderedInterventions, colorByInterventionId, costCategories]);
 
     const renderTooltip = ({ active, payload }: any) => {
         if (!active || !payload?.length) {

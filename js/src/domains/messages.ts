@@ -199,6 +199,26 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.summary.costPerInterventionTitle',
         defaultMessage: 'Cost per intervention',
     },
+    costVsPopulationTitle: {
+        id: 'iaso.snt_malaria.summary.costVsPopulationTitle',
+        defaultMessage: 'Cost vs. population covered',
+    },
+    populationCoveredLabel: {
+        id: 'iaso.snt_malaria.summary.populationCoveredLabel',
+        defaultMessage: 'Population covered',
+    },
+    costPerCapitaLabel: {
+        id: 'iaso.snt_malaria.summary.costPerCapitaLabel',
+        defaultMessage: 'Cost per person',
+    },
+    layerCostLabel: {
+        id: 'iaso.snt_malaria.summary.layerCostLabel',
+        defaultMessage: 'Cost',
+    },
+    yearLabel: {
+        id: 'iaso.snt_malaria.summary.yearLabel',
+        defaultMessage: 'Year',
+    },
     costSettings: {
         id: 'iaso.snt_malaria.label.costSettings',
         defaultMessage: 'Cost settings',

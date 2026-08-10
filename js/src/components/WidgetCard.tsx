@@ -19,8 +19,9 @@ type Props<T extends string | number = string | number> = {
     icon?: React.ElementType;
     iconSx?: Record<string, unknown>;
     actions?: ReactNode;
-    // Optional built-in header select (pill style); use instead of `actions`.
-    dropdown?: WidgetCardDropdown<T>;
+    // Optional built-in header select(s) (pill style); use instead of
+    // `actions`. Pass an array to render several selects side by side.
+    dropdown?: WidgetCardDropdown<T> | WidgetCardDropdown<T>[];
     cardSx?: Record<string, unknown>;
     headerSx?: Record<string, unknown>;
     bodySx?: Record<string, unknown>;
@@ -94,14 +95,10 @@ export const WidgetCard = <T extends string | number = string | number>({
     bodySx,
     isLoading,
 }: Props<T>) => {
-    // Size the dropdown to its longest option (in `ch`, plus room for the arrow
-    // and padding) so it doesn't resize when the selection changes.
-    const dropdownMinWidth = dropdown
-        ? `calc(${dropdown.options.reduce(
-              (max, option) => Math.max(max, option.label.length),
-              dropdown.placeholder?.length ?? 0,
-          )}ch + 2.5rem)`
-        : undefined;
+    let dropdowns: WidgetCardDropdown<T>[] = [];
+    if (dropdown) {
+        dropdowns = Array.isArray(dropdown) ? dropdown : [dropdown];
+    }
 
     return (
         <Box sx={{ ...styles.card, ...cardSx }}>
@@ -129,38 +126,59 @@ export const WidgetCard = <T extends string | number = string | number>({
                         </Tooltip>
                     )}
                 </Box>
-                {dropdown ? (
-                    <Select
-                        size="small"
-                        value={dropdown.value ?? ''}
-                        onChange={event =>
-                            dropdown.onChange(event.target.value as T)
-                        }
-                        displayEmpty
-                        disabled={dropdown.disabled}
-                        sx={{
-                            minWidth: dropdownMinWidth,
-                            ...(dropdown.value === '' ||
-                            dropdown.value === undefined ||
-                            dropdown.value === null
-                                ? { color: 'text.secondary' }
-                                : {}),
-                        }}
-                    >
-                        {dropdown.placeholder !== undefined && (
-                            <MenuItem value="" sx={{ color: 'text.secondary' }}>
-                                {dropdown.placeholder}
-                            </MenuItem>
-                        )}
-                        {dropdown.options.map(option => (
-                            <MenuItem
-                                key={String(option.value)}
-                                value={option.value}
-                            >
-                                {option.label}
-                            </MenuItem>
-                        ))}
-                    </Select>
+                {dropdowns.length > 0 ? (
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        {dropdowns.map(d => {
+                            // Size the dropdown to its longest option (in `ch`,
+                            // plus room for the arrow and padding) so it
+                            // doesn't resize when the selection changes.
+                            const dropdownMinWidth = `calc(${d.options.reduce(
+                                (max, option) =>
+                                    Math.max(max, option.label.length),
+                                d.placeholder?.length ?? 0,
+                            )}ch + 2.5rem)`;
+                            const dropdownKey = d.options
+                                .map(option => option.value)
+                                .join('-');
+                            return (
+                                <Select
+                                    key={dropdownKey}
+                                    size="small"
+                                    value={d.value ?? ''}
+                                    onChange={event =>
+                                        d.onChange(event.target.value as T)
+                                    }
+                                    displayEmpty
+                                    disabled={d.disabled}
+                                    sx={{
+                                        minWidth: dropdownMinWidth,
+                                        ...(d.value === '' ||
+                                        d.value === undefined ||
+                                        d.value === null
+                                            ? { color: 'text.secondary' }
+                                            : {}),
+                                    }}
+                                >
+                                    {d.placeholder !== undefined && (
+                                        <MenuItem
+                                            value=""
+                                            sx={{ color: 'text.secondary' }}
+                                        >
+                                            {d.placeholder}
+                                        </MenuItem>
+                                    )}
+                                    {d.options.map(option => (
+                                        <MenuItem
+                                            key={String(option.value)}
+                                            value={option.value}
+                                        >
+                                            {option.label}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            );
+                        })}
+                    </Box>
                 ) : (
                     actions
                 )}

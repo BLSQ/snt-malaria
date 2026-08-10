@@ -88,6 +88,69 @@ export const aggregateInterventionCosts = (
         orgUnitCosts.flatMap(ouc => ouc.interventions ?? []),
     ).sort((a, b) => b.total_cost - a.total_cost);
 
+export type PopulationLayer = {
+    id: number;
+    name: string;
+    population: number;
+    // Sum of every cost line targeting this layer (across org units, years,
+    // and cost categories) -- unlike population, cost is real spend and is
+    // additive, so it isn't deduplicated per org unit the way population is.
+    cost: number;
+};
+
+/**
+ * Population and cost per intervention, broken down by population layer (a
+ * cost line's `target_population_layer_id`). An intervention's cost lines
+ * can target different, non-exclusive population layers (e.g. under-5s and
+ * pregnant women), so layers are kept separate rather than merged into one
+ * figure -- each layer gets its own population and the cost of the specific
+ * line(s) that targeted it.
+ *
+ * Reads `Budget.interventions` (the top-level list) rather than
+ * `org_units_costs`: it's already aggregated server-side across every org
+ * unit in the budget, so no org-unit bookkeeping is needed here. Cost lines
+ * sharing a layer are summed for `cost`, but `population` is taken once
+ * (not summed) since those lines duplicate the same server-computed figure
+ * rather than each holding a slice of it.
+ *
+ * Grouped by id rather than `target_population` (the layer's display name):
+ * names aren't guaranteed unique, so grouping by name could silently merge
+ * two distinct layers.
+ */
+export const aggregatePopulationLayersByIntervention = (
+    interventions: BudgetIntervention[],
+): Map<number, PopulationLayer[]> => {
+    const result = new Map<number, PopulationLayer[]>();
+
+    interventions.forEach(intervention => {
+        // layer id -> { name, population, cost }.
+        const layerById = new Map<number, PopulationLayer>();
+
+        (intervention.cost_breakdown ?? []).forEach(line => {
+            if (
+                line.target_population_layer_id == null ||
+                !line.target_population ||
+                !line.population
+            ) {
+                return;
+            }
+            const layerId = line.target_population_layer_id;
+            const layer = layerById.get(layerId) ?? {
+                id: layerId,
+                name: line.target_population,
+                population: line.population,
+                cost: 0,
+            };
+            layer.cost += line.total_cost;
+            layerById.set(layerId, layer);
+        });
+
+        result.set(intervention.id, Array.from(layerById.values()));
+    });
+
+    return result;
+};
+
 // Backend cost category value (InterventionCostBreakdownLineCategory.PROCUREMENT).
 const PROCUREMENT_CATEGORY = 'Procurement';
 

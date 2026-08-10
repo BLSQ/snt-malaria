@@ -170,6 +170,7 @@ class BudgetCalculationService:
                     "conversion_factor": None,
                     "invert_conversion_factor": False,
                     "target_population": None,
+                    "target_population_layer_id": None,
                 }
             )
         )
@@ -190,6 +191,7 @@ class BudgetCalculationService:
                         "conversion_factor": None,
                         "invert_conversion_factor": False,
                         "target_population": None,
+                        "target_population_layer_id": None,
                     }
                 )
             )
@@ -217,6 +219,9 @@ class BudgetCalculationService:
                     bd["conversion_factor"] = cost_line.conversion_factor
                     bd["invert_conversion_factor"] = cost_line.invert_conversion_factor
                     bd["target_population"] = cost_line.population_layer.name if cost_line.population_layer else None
+                    bd["target_population_layer_id"] = (
+                        cost_line.population_layer.id if cost_line.population_layer else None
+                    )
 
             if row.org_unit_id is not None:
                 org_unit_totals[row.org_unit_id]["total_cost"] += row.total_cost
@@ -236,6 +241,9 @@ class BudgetCalculationService:
                         ou_bd["invert_conversion_factor"] = cost_line.invert_conversion_factor
                         ou_bd["target_population"] = (
                             cost_line.population_layer.name if cost_line.population_layer else None
+                        )
+                        ou_bd["target_population_layer_id"] = (
+                            cost_line.population_layer.id if cost_line.population_layer else None
                         )
 
             category_totals[row.category]["id"] = row.cost_line_id
@@ -375,6 +383,7 @@ class BudgetCalculationService:
                     conversion_factor=bd["conversion_factor"],
                     invert_conversion_factor=bd["invert_conversion_factor"],
                     target_population=bd["target_population"],
+                    target_population_layer_id=bd["target_population_layer_id"],
                     buffer=float(self.buffer),
                 )
                 for _, bd in sorted(intervention_breakdowns[intervention_id].items(), key=lambda x: x[0])
@@ -425,6 +434,7 @@ class BudgetCalculationService:
                         conversion_factor=bd["conversion_factor"],
                         invert_conversion_factor=bd["invert_conversion_factor"],
                         target_population=bd["target_population"],
+                        target_population_layer_id=bd["target_population_layer_id"],
                         buffer=float(self.buffer),
                     )
                     for _, bd in sorted(
