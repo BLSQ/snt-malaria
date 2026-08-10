@@ -157,8 +157,7 @@ const CostBarShape: FC<CostBarShapeProps> = ({
 export const CostPerInterventionSummary: FC = () => {
     const { formatMessage } = useSafeIntl();
     const { gridProps, axisProps } = useChartTheme();
-    const { budgets, orgUnits, interventionCategories, currency } =
-        usePlanningContext();
+    const { budgets, orgUnits, currency } = usePlanningContext();
     const { data: costCategories = [], isLoading } =
         useGetInterventionCostBreakdownLineCategories();
 
@@ -262,10 +261,7 @@ export const CostPerInterventionSummary: FC = () => {
                             <XAxis
                                 type="number"
                                 tickFormatter={value =>
-                                    formatBigNumber(
-                                        value as number,
-                                        currency,
-                                    )
+                                    formatBigNumber(value as number, currency)
                                 }
                                 {...axisProps}
                                 tickMargin={4}
