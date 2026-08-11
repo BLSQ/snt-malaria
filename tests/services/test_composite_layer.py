@@ -22,13 +22,16 @@ from plugins.snt_malaria.services.composite.persistence import (
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestMixin
 
 
-def _data_layer_node(node_id, metric_type_id, output_targets):
+def _data_layer_node(node_id, metric_type_id, output_targets, selected_year=None):
+    metric_type = {"metricTypeId": metric_type_id}
+    if selected_year is not None:
+        metric_type["selectedYear"] = selected_year
     return {
         "id": node_id,
         "type": "dataLayer",
         "x": 0,
         "y": 0,
-        "inputData": {"metricType": {"metricTypeId": metric_type_id}},
+        "inputData": {"metricType": metric_type},
         "connections": {"inputs": {}, "outputs": {"values": output_targets}},
     }
 
@@ -580,6 +583,107 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
                 2024: {self.ou1.id: 22.0, self.ou2.id: 6.0},
             },
         )
+
+    def test_data_layer_pin_collapses_to_timeless(self):
+        # Pinning a yearly layer to one year turns its output timeless (bucketed under None).
+        metric_c = self._yearly_metric(
+            "layer_c", {2023: {self.ou1: 10.0, self.ou2: 1.0}, 2024: {self.ou1: 20.0, self.ou2: 2.0}}
+        )
+        graph = {
+            "layer1": _data_layer_node(
+                "layer1", metric_c.id, [{"nodeId": "out", "portName": "layer"}], selected_year=2023
+            ),
+            "out": _output_node("out", [{"nodeId": "layer1", "portName": "values"}]),
+        }
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 10.0, self.ou2.id: 1.0}})
+
+    def test_data_layer_pin_combined_with_yearly_layer_broadcasts(self):
+        # A pinned (now-timeless) layer combined with a still-yearly layer broadcasts across every
+        # year the other layer covers, exactly like any other timeless source.
+        metric_c = self._yearly_metric(
+            "layer_c", {2023: {self.ou1: 10.0, self.ou2: 1.0}, 2024: {self.ou1: 20.0, self.ou2: 2.0}}
+        )
+        metric_d = self._yearly_metric(
+            "layer_d", {2023: {self.ou1: 3.0, self.ou2: 5.0}, 2024: {self.ou1: 4.0, self.ou2: 6.0}}
+        )
+        graph = {
+            "layer1": _data_layer_node(
+                "layer1", metric_c.id, [{"nodeId": "formula1", "portName": "a"}], selected_year=2023
+            ),
+            "layer2": _data_layer_node("layer2", metric_d.id, [{"nodeId": "formula1", "portName": "b"}]),
+            "formula1": _formula_node(
+                "formula1",
+                "a + b",
+                {
+                    "a": [{"nodeId": "layer1", "portName": "values"}],
+                    "b": [{"nodeId": "layer2", "portName": "values"}],
+                },
+                [{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", [{"nodeId": "formula1", "portName": "result"}]),
+        }
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(
+            values,
+            {
+                2023: {self.ou1.id: 13.0, self.ou2.id: 6.0},
+                2024: {self.ou1.id: 14.0, self.ou2.id: 7.0},
+            },
+        )
+
+    def test_data_layer_unset_pin_matches_existing_behavior(self):
+        # Explicitly passing selected_year=None reproduces the unset-pin (all years) behavior.
+        MetricValue.objects.create(metric_type=self.metric_a, org_unit=self.ou1, year=2024, value=50.0)
+        graph = {
+            "layer1": _data_layer_node(
+                "layer1", self.metric_a.id, [{"nodeId": "out", "portName": "layer"}], selected_year=None
+            ),
+            "out": _output_node("out", [{"nodeId": "layer1", "portName": "values"}]),
+        }
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(
+            values,
+            {
+                None: {self.ou1.id: 2.0, self.ou2.id: 4.0},
+                2024: {self.ou1.id: 50.0},
+            },
+        )
+
+    def test_data_layer_invalid_pin_ignored(self):
+        # A garbage selected_year value is ignored (falls through to all years), no exception.
+        metric_c = self._yearly_metric(
+            "layer_c", {2023: {self.ou1: 10.0, self.ou2: 1.0}, 2024: {self.ou1: 20.0, self.ou2: 2.0}}
+        )
+        graph = {
+            "layer1": _data_layer_node(
+                "layer1",
+                metric_c.id,
+                [{"nodeId": "out", "portName": "layer"}],
+                selected_year="not-a-year",
+            ),
+            "out": _output_node("out", [{"nodeId": "layer1", "portName": "values"}]),
+        }
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(
+            values,
+            {
+                2023: {self.ou1.id: 10.0, self.ou2.id: 1.0},
+                2024: {self.ou1.id: 20.0, self.ou2.id: 2.0},
+            },
+        )
+
+    def test_data_layer_pin_omits_org_units_missing_that_year(self):
+        # An org unit with no row for the pinned year is simply absent, no fallback to another year.
+        metric_c = self._yearly_metric("layer_c", {2023: {self.ou1: 10.0}})
+        graph = {
+            "layer1": _data_layer_node(
+                "layer1", metric_c.id, [{"nodeId": "out", "portName": "layer"}], selected_year=2023
+            ),
+            "out": _output_node("out", [{"nodeId": "layer1", "portName": "values"}]),
+        }
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 10.0}})
 
     def test_multi_year_persists_one_metric_value_per_year(self):
         metric_c = self._yearly_metric(

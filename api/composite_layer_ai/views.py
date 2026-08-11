@@ -6,7 +6,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
-from iaso.models import MetricType
+from iaso.models import MetricType, MetricValue
 from plugins.snt_malaria.api.composite_layers.permissions import CompositeLayerPermission
 
 from .agent import generate_composite_layer_graph
@@ -55,6 +55,23 @@ class CompositeLayerAIViewSet(viewsets.ViewSet):
         metric_types = list(
             MetricType.objects.filter(account=account, is_utility=False).values("id", "name", "description")
         )
+
+        # Which years each layer has data for (never the values themselves), so the prompt can
+        # offer the model real years to pin a `dataLayer` node to instead of it guessing one.
+        years_by_metric_type: dict[int, list[int]] = {}
+        year_rows = (
+            MetricValue.objects.filter(
+                metric_type_id__in=[metric_type["id"] for metric_type in metric_types], year__isnull=False
+            )
+            .values_list("metric_type_id", "year")
+            .distinct()
+        )
+        for metric_type_id, year in year_rows:
+            years_by_metric_type.setdefault(metric_type_id, []).append(year)
+        for metric_type in metric_types:
+            years = years_by_metric_type.get(metric_type["id"])
+            if years:
+                metric_type["years"] = sorted(years, reverse=True)
 
         try:
             result = generate_composite_layer_graph(

@@ -20,7 +20,14 @@ METRIC_TYPES_CATALOG_PLACEHOLDER = "{metric_types_catalog}"
 COMPOSITE_LAYER_SYSTEM_PROMPT_TEMPLATE = """You are an expert at building composite malaria data layers with a visual node graph editor.
 
 A composite layer is a small directed graph of nodes, evaluated per org unit:
-- `dataLayer`: reads an existing data layer (metric type), unmodified.
+- `dataLayer`: reads an existing data layer (metric type), unmodified. Some data layers have
+  values for multiple years ("yearly"); others have one value that never changes ("non-yearly").
+  Optionally set `selected_year` to a year from that layer's `years` list in the catalog below -
+  this pins the node to only that year's values, turning its output non-yearly from here on
+  (useful to fix a reference year, or to combine one year of a layer with every year of another -
+  see "Working with years" below). Omit `selected_year` (the default) to pass every year through
+  unchanged. Only set it on a layer that actually has a `years` list - it does nothing useful on
+  a layer that's already non-yearly.
 - `formula`: evaluates an infix math expression over one or more inputs. Inputs are referenced
   inside the formula as `a`, `b`, `c`, ... in the same order as the node's `inputs` list. An input
   is usually numeric, but it can also be the categorical text label produced by a `classify` node -
@@ -52,6 +59,27 @@ A composite layer is a small directed graph of nodes, evaluated per org unit:
   layer (`source`), a `name`, and a `legend_type` (one of "auto", "linear", "threshold", "ordinal";
   "auto" picks a sensible default based on the result - use it unless the user asks for a specific one).
 
+## Working with years
+`formula` and `combine` are the only nodes with more than one input, so they're the only place
+years from different sources actually meet. When they run, each of their inputs is either yearly
+(has real years) or non-yearly (one fixed value); the result's years follow automatically:
+- non-yearly + non-yearly -> non-yearly.
+- yearly + non-yearly -> yearly: the non-yearly input's single value is reused for every year of
+  the yearly one(s) (e.g. a fixed population layer combined with a yearly rainfall layer stays
+  yearly, one population figure reused for every rainfall year).
+- yearly + yearly -> only the years present in BOTH survive (e.g. rainfall for 2022-2024 combined
+  with incidence for 2023-2025 produces output for 2023-2024 only).
+A single `formula`/`combine` node always evaluates one year at a time - its own expression can
+never reference two different years in one go, and a single `dataLayer` node can only be pinned to
+one year. This does NOT rule out comparing specific years of the same layer against each other:
+add that layer as multiple separate `dataLayer` nodes (same `metric_type_id`), each pinned to a
+different `selected_year`, then feed them into one `formula`/`combine` node - each pinned node is
+non-yearly on its own, so combining them is the ordinary non-yearly + non-yearly case above. E.g.
+"2023 rainfall ÷ 2022 rainfall" = two `dataLayer` nodes on the rainfall metric type, one with
+`selected_year: "2023"` (-> `a`) and one with `selected_year: "2022"` (-> `b`), feeding a `formula`
+node with `a / b`. The same trick fixes one reference year against an otherwise-yearly input
+(broadcasting per the rule above), even without a second pinned node.
+
 ## Available data layers for this account
 {metric_types_catalog}
 
@@ -61,7 +89,7 @@ explanation of what you did in the `message` field instead:
 {
   "graph": {
     "nodes": [
-      {"id": "<unique id you choose, e.g. \\"rainfall\\">", "type": "dataLayer", "metric_type_id": "<id from the catalog above, as a string>"},
+      {"id": "<unique id you choose, e.g. \\"rainfall\\">", "type": "dataLayer", "metric_type_id": "<id from the catalog above, as a string>", "selected_year": "<optional, a year from that layer's \\"years\\" list, as a string - omit to pass every year through>"},
       {"id": "<unique id>", "type": "formula", "inputs": ["<id of another node>", ...], "formula": "<infix expression using a, b, c, ...>"},
       {"id": "<unique id>", "type": "combine", "inputs": ["<id of another node>", ...], "operation": "<mean|sum|min|max>"},
       {"id": "<unique id>", "type": "normalize", "input": "<id of a numeric-producing node>", "scale": 1, "normalize_type": "<min-max|percentile, defaults to min-max>"},
@@ -74,6 +102,9 @@ explanation of what you did in the `message` field instead:
 
 ## Rules
 - Only reference data layer ids that appear in the catalog above.
+- Only set a `dataLayer` node's `selected_year` to a year that's actually in that layer's `years`
+  list in the catalog. If the user asks to pin a year a layer doesn't have, say so in `message`
+  instead of guessing a nearby one.
 - Every node needs a unique `id`; reference nodes by that id from `inputs`/`input`/`source`.
 - A graph can mix any number of `dataLayer`, `formula`, `combine`, `normalize` and `classify` nodes -
   chain them as needed (e.g. combine three layers with `combine`, then reclassify the result into
@@ -114,6 +145,7 @@ class GraphNodeSpec(BaseModel, extra="allow"):
     type: str
     # dataLayer
     metric_type_id: Optional[str] = None
+    selected_year: Optional[str] = None
     # formula, combine
     inputs: Optional[list[str]] = None
     formula: Optional[str] = None
@@ -154,6 +186,10 @@ def _build_metric_types_catalog(metric_types: list[dict]) -> str:
         line = f'- id={metric_type["id"]}, name="{metric_type["name"]}"'
         if metric_type.get("description"):
             line += f', description="{metric_type["description"]}"'
+        # Years the layer has data for (newest first), so the model can pick a real `selected_year`
+        # instead of guessing one - omitted entirely for a non-yearly layer.
+        if metric_type.get("years"):
+            line += f", years={metric_type['years']}"
         lines.append(line)
     return "\n".join(lines)
 

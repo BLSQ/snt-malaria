@@ -6,7 +6,7 @@ import {
     CompositeNodeLibraryDragType,
 } from '../dragAndDrop';
 import { OPERATOR_NODE_TYPES } from '../nodeTypeRegistry';
-import { FlumeGraph, FlumeGraphNode } from '../types/flumeGraph';
+import { FlumeGraph, FlumeGraphNode, NODE_TYPES } from '../types/flumeGraph';
 import {
     getStageElement,
     readStageTransform,
@@ -136,7 +136,7 @@ export const useCanvasDrop = ({
                 id: newNodeId,
                 x: dropX,
                 y: dropY,
-                type: 'dataLayer',
+                type: NODE_TYPES.dataLayer,
                 width: 330,
                 connections: { inputs: {}, outputs: {} },
                 inputData: { metricType: { metricTypeId } },

@@ -2,7 +2,7 @@ import React, { FC, useMemo, useState } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { useGetMetricValues } from '../../dataLayers/hooks/useGetMetrics';
-import { MetricType } from '../../dataLayers/types/metrics';
+import { MetricType, MetricValue } from '../../dataLayers/types/metrics';
 import { usePreviewYearSelection } from '../hooks/usePreviewYearSelection';
 import { MESSAGES } from '../messages';
 import { CollapsibleMapPreview } from './CollapsibleMapPreview';
@@ -17,6 +17,16 @@ type Props = {
     expanded?: boolean;
     /** Called when the user toggles the preview, so the state can be persisted. */
     onExpandedChange?: (expanded: boolean) => void;
+    /** When set, mirrors the node's pinned output: forces this single year, hides the picker. */
+    pinnedYear?: number;
+};
+
+/** What `CollapsibleMapPreview` needs to show either a fixed pinned year or a browsable one. */
+type YearPicker = {
+    values?: MetricValue[];
+    yearOptions?: number[];
+    selectedYear?: number;
+    onYearChange?: (year: number) => void;
 };
 
 /**
@@ -31,9 +41,12 @@ export const NodeMapPreview: FC<Props> = ({
     onResize,
     expanded: initialExpanded = false,
     onExpandedChange,
+    pinnedYear,
 }) => {
     const { formatMessage } = useSafeIntl();
     const [expanded, setExpanded] = useState(initialExpanded);
+
+    const isPinned = pinnedYear != null;
 
     const { data: metricValues } = useGetMetricValues({
         metricTypeId: expanded && metricTypeId ? metricTypeId : null,
@@ -46,8 +59,20 @@ export const NodeMapPreview: FC<Props> = ({
         });
         return [...distinct].sort((a, b) => b - a);
     }, [metricValues]);
+
     const { isMultiYear, selectedYear, setSelectedYear, displayedValues } =
-        usePreviewYearSelection(years, metricValues);
+        usePreviewYearSelection(isPinned ? [] : years, metricValues);
+
+    // A pinned node has nothing to browse: show only its pinned year, no picker. Otherwise let the
+    // preview browse whichever years are actually available.
+    const yearPicker: YearPicker = isPinned
+        ? { values: (metricValues ?? []).filter(value => value.year === pinnedYear) }
+        : {
+              values: displayedValues,
+              yearOptions: isMultiYear ? years : undefined,
+              selectedYear,
+              onYearChange: setSelectedYear,
+          };
 
     const handleExpandedChange = (next: boolean) => {
         setExpanded(next);
@@ -60,14 +85,14 @@ export const NodeMapPreview: FC<Props> = ({
             disabled={!metricTypeId}
             disabledLabel={formatMessage(MESSAGES.selectLayerToPreview)}
             orgUnits={orgUnits}
-            metricValues={displayedValues}
+            metricValues={yearPicker.values}
             legendConfig={metricType}
             defaultExpanded={initialExpanded}
             onExpandedChange={handleExpandedChange}
             onResize={onResize}
-            yearOptions={isMultiYear ? years : undefined}
-            selectedYear={selectedYear}
-            onYearChange={setSelectedYear}
+            yearOptions={yearPicker.yearOptions}
+            selectedYear={yearPicker.selectedYear}
+            onYearChange={yearPicker.onYearChange}
         />
     );
 };

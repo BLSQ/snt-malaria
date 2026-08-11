@@ -1,4 +1,5 @@
-import { FlumeGraph, FlumeGraphNode } from '../types/flumeGraph';
+import { ALL_YEARS_VALUE } from '../flumeConfig';
+import { FlumeGraph, FlumeGraphNode, NODE_TYPES } from '../types/flumeGraph';
 import {
     ClassifyRuleSpec,
     CombineOperation,
@@ -44,35 +45,41 @@ export const extractGraphSpecFromFlume = (
 
     Object.values(graph).forEach(node => {
         const { inputData } = node;
-        if (node.type === 'dataLayer') {
+        if (node.type === NODE_TYPES.dataLayer) {
             const rawId = inputData.metricType?.metricTypeId;
+            const rawYear = inputData.metricType?.selectedYear;
+            const hasPinnedYear =
+                rawYear !== undefined &&
+                rawYear !== '' &&
+                rawYear !== ALL_YEARS_VALUE;
             nodes.push({
                 id: node.id,
-                type: 'dataLayer',
+                type: NODE_TYPES.dataLayer,
                 ...(rawId !== undefined && rawId !== ''
                     ? { metric_type_id: String(rawId) }
                     : {}),
+                ...(hasPinnedYear ? { selected_year: String(rawYear) } : {}),
             });
-        } else if (node.type === 'formula') {
+        } else if (node.type === NODE_TYPES.formula) {
             nodes.push({
                 id: node.id,
-                type: 'formula',
+                type: NODE_TYPES.formula,
                 inputs: orderedInputIds(node),
                 formula: (inputData.formula?.formula as string) ?? '',
             });
-        } else if (node.type === 'combine') {
+        } else if (node.type === NODE_TYPES.combine) {
             nodes.push({
                 id: node.id,
-                type: 'combine',
+                type: NODE_TYPES.combine,
                 inputs: orderedInputIds(node),
                 operation:
                     (inputData.operation?.operation as CombineOperation) ??
                     'mean',
             });
-        } else if (node.type === 'normalize') {
+        } else if (node.type === NODE_TYPES.normalize) {
             nodes.push({
                 id: node.id,
-                type: 'normalize',
+                type: NODE_TYPES.normalize,
                 input: singleInputId(node, 'a'),
                 // The scale/normalizeType controls store string values, see flumeConfig.ts.
                 scale: Number(inputData.scale?.scale ?? '1') as 1 | 100,
@@ -80,18 +87,18 @@ export const extractGraphSpecFromFlume = (
                     (inputData.scale?.normalizeType as NormalizeType) ??
                     'min-max',
             });
-        } else if (node.type === 'classify') {
+        } else if (node.type === NODE_TYPES.classify) {
             const config = inputData.config?.rules as
                 | { rules?: ClassifyRuleSpec[]; default?: string }
                 | undefined;
             nodes.push({
                 id: node.id,
-                type: 'classify',
+                type: NODE_TYPES.classify,
                 input: singleInputId(node, 'a'),
                 rules: config?.rules ?? [],
                 default: config?.default ?? '',
             });
-        } else if (node.type === 'output') {
+        } else if (node.type === NODE_TYPES.output) {
             outputNode = node;
         }
         // Any other node type is not part of the spec contract - skip it.

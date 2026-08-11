@@ -14,6 +14,7 @@ import {
     OPERATOR_OUTPUT_PORT_NAME,
 } from './nodeTypeRegistry';
 import { CompositePreviewState } from './types/compositeLayer';
+import { NODE_TYPES } from './types/flumeGraph';
 import { getCompositeLegendOptions } from './utils/legendOptions';
 
 type FormatMessage = ReturnType<typeof useSafeIntl>['formatMessage'];
@@ -22,6 +23,18 @@ export type MetricOption = {
     value: number;
     label: string;
 };
+
+/** Sentinel `selectedYear` value meaning "no pin" — a real (non-numeric) option, not just an
+ * absent key, so it's always available to navigate back to after picking a year. */
+export const ALL_YEARS_VALUE = 'all';
+
+/** Parses a Flume control's raw persisted value into a real number, or `undefined` if unset. */
+const parseControlNumber = (raw: unknown): number | undefined =>
+    raw === '' || raw == null ? undefined : Number(raw);
+
+/** Same as `parseControlNumber`, but also treats the "all years" sentinel as unset. */
+const parsePinnedYear = (raw: unknown): number | undefined =>
+    raw === ALL_YEARS_VALUE ? undefined : parseControlNumber(raw);
 
 /**
  * Context handed to Flume's controls via the `NodeEditor` `context` prop. The map preview controls
@@ -38,6 +51,12 @@ export type CompositeEditorContext = {
      * in traversal order. Used to order the reference layer picker connected-first.
      */
     connectedLayerIds?: number[];
+    /**
+     * Distinct years available per metric type, for every `dataLayer` node's picked layer. Powers
+     * the "Yearly values" control's `getOptions` — a `Controls.select` resolves options
+     * synchronously, so the underlying fetch is done once here rather than per-control.
+     */
+    yearsByMetricTypeId?: Map<number, number[]>;
 };
 
 /** Order metric options so the currently-connected data layers come first (in traversal order). */
@@ -147,6 +166,111 @@ export const createCompositeFlumeConfig = (
 
     const legendTypeOptions = getCompositeLegendOptions(formatMessage);
 
+    // Distinct years available for a `dataLayer` node's currently-picked metric type, or `[]` if
+    // none is picked yet — shared by the "Yearly values" select's options and by the node's own
+    // `inputs` (which hides that select and its helper text entirely when there's nothing to pin).
+    const getYearsForMetricType = (
+        inputData: any,
+        context: CompositeEditorContext,
+    ): number[] => {
+        const metricTypeId = parseControlNumber(
+            inputData?.metricType?.metricTypeId,
+        );
+        return (
+            (metricTypeId != null &&
+                context?.yearsByMetricTypeId?.get(metricTypeId)) ||
+            []
+        );
+    };
+
+    const metricTypeIdControl = Controls.select({
+        name: 'metricTypeId',
+        label: formatMessage(MESSAGES.dataLayerNodeLabel),
+        options: metricOptions,
+        placeholder: formatMessage(MESSAGES.dataLayerPlaceholder),
+    });
+
+    // Only included on the node when its picked layer actually has years (see the `dataLayer`
+    // node's `inputs` below) — nothing to pin on an already-timeless layer.
+    const selectedYearControl = Controls.select({
+        name: 'selectedYear',
+        label: formatMessage(MESSAGES.yearlyValuesLabel),
+        // Shown once a node has no picked year yet — same wording as the "yearly"
+        // option itself, so a fresh node reads the same whether or not `defaultValue`
+        // below has actually been applied to it yet.
+        placeholder: formatMessage(MESSAGES.yearlyOptionLabel),
+        defaultValue: ALL_YEARS_VALUE,
+        // Options depend on which layer THIS node has picked, so they're computed from
+        // the whole node's `inputData` (Flume's `getOptions` receives it, unlike a
+        // custom control's `portData`) plus `context.yearsByMetricTypeId` — fetched once
+        // for every data layer node up in the editor, not per-control (a `Controls.select`
+        // resolves options synchronously, so it can't fetch its own years).
+        getOptions: (inputData: any, context: CompositeEditorContext) => [
+            {
+                value: ALL_YEARS_VALUE,
+                label: formatMessage(MESSAGES.yearlyOptionLabel),
+            },
+            ...getYearsForMetricType(inputData, context).map(year => ({
+                value: year,
+                label: String(year),
+            })),
+        ],
+    });
+
+    // Paired with `selectedYearControl` — included/excluded together.
+    const yearlyValuesHelperTextControl = Controls.custom({
+        name: 'yearlyValuesHelperText',
+        label: '',
+        // Explains the `selectedYear` select just above (control only, no data of its
+        // own) — placed here, inside this port, so it sits right under that dropdown
+        // rather than under the map preview below.
+        render: () =>
+            React.createElement(NodeHelperText, {
+                text: formatMessage(MESSAGES.yearlyValuesHelperText),
+            }),
+    });
+
+    const mapPreviewControl = Controls.custom({
+        name: 'mapPreview',
+        label: '',
+        // Flume hands a custom control (data, onChange, context, redraw, portProps, portData).
+        // `data`/`onChange` are this control's own persisted value (used to remember the expanded
+        // state); `portData` holds every control on THIS port, so the sibling selects' values are
+        // read from it (falling back to the whole-node shape just in case); `context` carries the
+        // org units + metric metadata.
+        render: (
+            data: any,
+            onChange: any,
+            context: CompositeEditorContext,
+            redraw: any,
+            _portProps: any,
+            portData: any,
+        ) => {
+            const metricTypeId = parseControlNumber(
+                portData?.metricTypeId ?? portData?.metricType?.metricTypeId,
+            );
+            const pinnedYear = parsePinnedYear(
+                portData?.selectedYear ?? portData?.metricType?.selectedYear,
+            );
+            return React.createElement(NodeMapPreview, {
+                metricTypeId,
+                metricType: metricTypeId
+                    ? context?.metricTypeById?.get(metricTypeId)
+                    : undefined,
+                orgUnits: context?.orgUnits ?? [],
+                // `redraw` recomputes connection curves; call it while the node resizes
+                // (expand/collapse) so wires stay attached to the ports.
+                onResize: redraw,
+                // Persist the expanded state in this control's own data so it survives
+                // save/reload. Default to expanded until the user collapses it.
+                expanded: data?.expanded ?? true,
+                onExpandedChange: (next: boolean) =>
+                    onChange({ ...(data || {}), expanded: next }),
+                pinnedYear,
+            });
+        },
+    });
+
     config
         // Connectable port carrying a per-org-unit numeric vector.
         .addPortType({
@@ -157,61 +281,18 @@ export const createCompositeFlumeConfig = (
         })
         // Data layer picker plus a collapsible mini-map preview of the picked layer. Both controls
         // share this port's data, so the preview reads the selected id straight from `portData`.
+        // The node's `inputs` (below) overrides `controls` per instance to drop the year select +
+        // its helper text when the picked layer has no years — this default is only a fallback.
         .addPortType({
             type: 'metricSelect',
             name: 'metricType',
             label: formatMessage(MESSAGES.dataLayerNodeLabel),
             hidePort: true,
             controls: [
-                Controls.select({
-                    name: 'metricTypeId',
-                    label: formatMessage(MESSAGES.dataLayerNodeLabel),
-                    options: metricOptions,
-                    placeholder: formatMessage(MESSAGES.dataLayerPlaceholder),
-                }),
-                Controls.custom({
-                    name: 'mapPreview',
-                    label: '',
-                    // Flume hands a custom control (data, onChange, context, redraw, portProps,
-                    // portData). `data`/`onChange` are this control's own persisted value (used to
-                    // remember the expanded state); `portData` holds every control on THIS port, so
-                    // we read the sibling select's value from it; `context` carries the org units +
-                    // metric metadata.
-                    render: (
-                        data: any,
-                        onChange: any,
-                        context: CompositeEditorContext,
-                        redraw: any,
-                        _portProps: any,
-                        portData: any,
-                    ) => {
-                        // Flume passes this port's shared control data here, so the sibling select's
-                        // value lives at `metricTypeId`. Fall back to the whole-node shape just in
-                        // case, then normalise the id.
-                        const rawId =
-                            portData?.metricTypeId ??
-                            portData?.metricType?.metricTypeId;
-                        const metricTypeId =
-                            rawId === '' || rawId == null
-                                ? undefined
-                                : Number(rawId);
-                        return React.createElement(NodeMapPreview, {
-                            metricTypeId,
-                            metricType: metricTypeId
-                                ? context?.metricTypeById?.get(metricTypeId)
-                                : undefined,
-                            orgUnits: context?.orgUnits ?? [],
-                            // `redraw` recomputes connection curves; call it while the node resizes
-                            // (expand/collapse) so wires stay attached to the ports.
-                            onResize: redraw,
-                            // Persist the expanded state in this control's own data so it survives
-                            // save/reload. Default to expanded until the user collapses it.
-                            expanded: data?.expanded ?? true,
-                            onExpandedChange: (next: boolean) =>
-                                onChange({ ...(data || {}), expanded: next }),
-                        });
-                    },
-                }),
+                metricTypeIdControl,
+                selectedYearControl,
+                yearlyValuesHelperTextControl,
+                mapPreviewControl,
             ],
         })
         // Infix formula input (control only, not connectable).
@@ -414,12 +495,35 @@ export const createCompositeFlumeConfig = (
 
     config
         .addNodeType({
-            type: 'dataLayer',
+            type: NODE_TYPES.dataLayer,
             label: formatMessage(MESSAGES.dataLayerNodeLabel),
             description: formatMessage(MESSAGES.dataLayerNodeDescription),
             sortIndex: 0,
             initialWidth: 330,
-            inputs: (ports: any) => [ports.metricSelect()],
+            // Dynamic so the year select + its helper text can drop out entirely once the picked
+            // layer is known to have no years — Flume re-runs this on every `inputData` change
+            // (the same mechanism the `formula` node already uses for its growing input list).
+            inputs: (ports: any) =>
+                (
+                    inputData: any,
+                    _connections: any,
+                    context: CompositeEditorContext,
+                ) => {
+                    const hasYears =
+                        getYearsForMetricType(inputData, context).length > 0;
+                    return [
+                        ports.metricSelect({
+                            controls: hasYears
+                                ? [
+                                      metricTypeIdControl,
+                                      selectedYearControl,
+                                      yearlyValuesHelperTextControl,
+                                      mapPreviewControl,
+                                  ]
+                                : [metricTypeIdControl, mapPreviewControl],
+                        }),
+                    ];
+                },
             outputs: (ports: any) => [
                 ports.layerValues({
                     name: 'values',
@@ -428,7 +532,7 @@ export const createCompositeFlumeConfig = (
             ],
         })
         .addNodeType({
-            type: 'formula',
+            type: NODE_TYPES.formula,
             label: formatMessage(OPERATOR_NODE_TYPES.formula.labelMessage),
             description: formatMessage(
                 OPERATOR_NODE_TYPES.formula.descriptionMessage,
@@ -458,7 +562,7 @@ export const createCompositeFlumeConfig = (
             ],
         })
         .addNodeType({
-            type: 'combine',
+            type: NODE_TYPES.combine,
             label: formatMessage(OPERATOR_NODE_TYPES.combine.labelMessage),
             description: formatMessage(
                 OPERATOR_NODE_TYPES.combine.descriptionMessage,
@@ -482,7 +586,7 @@ export const createCompositeFlumeConfig = (
             ],
         })
         .addNodeType({
-            type: 'normalize',
+            type: NODE_TYPES.normalize,
             label: formatMessage(OPERATOR_NODE_TYPES.normalize.labelMessage),
             description: formatMessage(
                 OPERATOR_NODE_TYPES.normalize.descriptionMessage,
@@ -508,7 +612,7 @@ export const createCompositeFlumeConfig = (
             ],
         })
         .addNodeType({
-            type: 'classify',
+            type: NODE_TYPES.classify,
             label: formatMessage(OPERATOR_NODE_TYPES.classify.labelMessage),
             description: formatMessage(
                 OPERATOR_NODE_TYPES.classify.descriptionMessage,
@@ -535,7 +639,7 @@ export const createCompositeFlumeConfig = (
         })
         // Always present, cannot be added again or removed.
         .addNodeType({
-            type: 'output',
+            type: NODE_TYPES.output,
             label: formatMessage(MESSAGES.outputNodeLabel),
             description: formatMessage(MESSAGES.outputNodeDescription),
             addable: false,
