@@ -1,4 +1,11 @@
-import React, { FC, useCallback, useEffect, useId, useState } from 'react';
+import React, {
+    FC,
+    ReactNode,
+    useCallback,
+    useEffect,
+    useId,
+    useState,
+} from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
@@ -30,6 +37,9 @@ const MAP_SCALE = 0.5;
 const INVERSE_SCALE_PCT = `${100 / MAP_SCALE}%`;
 // The node grows/shrinks over MUI's Collapse animation; keep redrawing connections for its duration.
 const RESIZE_REDRAW_MS = 350;
+// Added on top of the dialog's normal "lg" width when a side panel is present, so the map stays
+// the same size as in a side-panel-less dialog instead of shrinking to make room for it.
+const SIDE_PANEL_WIDTH = 320;
 
 const defaultOrgUnitStyle = {
     label: '',
@@ -163,9 +173,29 @@ const styles = {
         height: '70vh',
         p: 0,
     },
+    dialogBody: {
+        display: 'flex',
+        height: '100%',
+    },
     dialogMap: {
+        flex: 1,
         height: '100%',
         width: '100%',
+        minWidth: 0,
+    },
+    dialogSidePanel: {
+        width: SIDE_PANEL_WIDTH,
+        flexShrink: 0,
+        height: '100%',
+        overflowY: 'auto',
+        borderLeft: theme => `1px solid ${theme.palette.divider}`,
+        p: 1.5,
+    },
+    dialogPaperWithSidePanel: {
+        '& .MuiDialog-paper': {
+            maxWidth: theme =>
+                `${theme.breakpoints.values.lg + SIDE_PANEL_WIDTH}px`,
+        },
     },
 } satisfies SxStyles;
 
@@ -193,6 +223,19 @@ type Props = {
     selectedYear?: number;
     /** Called when the user picks a different year. */
     onYearChange?: (year: number) => void;
+    /** Overrides the legend-derived per-org-unit style (e.g. selection highlighting instead of a choropleth). */
+    getOrgUnitMapMisc?: (orgUnitId: number) => {
+        label: string | number | undefined;
+        color: string | undefined;
+    };
+    /** Org units to highlight on both the thumbnail and the enlarged map. */
+    selectedOrgUnitIds?: number[];
+    /** Overrides the default highlight border color for `selectedOrgUnitIds`. */
+    selectedBorderColor?: string;
+    /** Called when a district is clicked, on both the thumbnail and the enlarged dialog map. */
+    onOrgUnitClick?: (orgUnitId: number) => void;
+    /** Rendered beside the map inside the enlarged dialog (e.g. a searchable district list). */
+    dialogSidePanel?: ReactNode;
 };
 
 /**
@@ -214,6 +257,11 @@ export const CollapsibleMapPreview: FC<Props> = ({
     yearOptions,
     selectedYear,
     onYearChange,
+    getOrgUnitMapMisc: getOrgUnitMapMiscProp,
+    selectedOrgUnitIds,
+    selectedBorderColor,
+    onOrgUnitClick,
+    dialogSidePanel,
 }) => {
     const { formatMessage } = useSafeIntl();
     const [expanded, setExpanded] = useState(defaultExpanded);
@@ -236,7 +284,7 @@ export const CollapsibleMapPreview: FC<Props> = ({
     }, [expanded, hasToggled, onResize]);
 
     const getSelectedMetric = useGetOrgUnitMetric(metricValues);
-    const getOrgUnitMapMisc = useCallback(
+    const legendDerivedGetOrgUnitMapMisc = useCallback(
         (orgUnitId: number) => {
             if (!legendConfig) return defaultOrgUnitStyle;
             return getMapStyleForOrgUnit(
@@ -246,6 +294,8 @@ export const CollapsibleMapPreview: FC<Props> = ({
         },
         [legendConfig, getSelectedMetric],
     );
+    const getOrgUnitMapMisc =
+        getOrgUnitMapMiscProp ?? legendDerivedGetOrgUnitMapMisc;
 
     const toggle = () => {
         setHasToggled(true);
@@ -285,6 +335,9 @@ export const CollapsibleMapPreview: FC<Props> = ({
                             orgUnits={orgUnits}
                             legendConfig={legendConfig as MetricType}
                             getOrgUnitMapMisc={getOrgUnitMapMisc}
+                            selectedOrgUnitIds={selectedOrgUnitIds}
+                            selectedBorderColor={selectedBorderColor}
+                            onOrgUnitClick={onOrgUnitClick}
                             hideLegend
                             hideControls
                             disableInteractions
@@ -337,8 +390,9 @@ export const CollapsibleMapPreview: FC<Props> = ({
             <Dialog
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
-                maxWidth="lg"
+                maxWidth={dialogSidePanel ? false : 'lg'}
                 fullWidth
+                sx={dialogSidePanel ? styles.dialogPaperWithSidePanel : undefined}
             >
                 <DialogTitle sx={styles.dialogTitle}>
                     {label}
@@ -352,22 +406,36 @@ export const CollapsibleMapPreview: FC<Props> = ({
                 </DialogTitle>
                 <DialogContent sx={styles.dialogContent}>
                     {dialogOpen && (
-                        <Box
-                            sx={styles.dialogMap}
-                            // The dialog is portaled but still bubbles React events through the
-                            // Flume node tree, so a map drag would otherwise start Flume's node-drag
-                            // and pan the canvas (fighting Leaflet -> jump-back). Only swallow the
-                            // initiating mousedown: stopping mousemove/mouseup here would also block
-                            // them from reaching `document`, where Leaflet listens during a drag.
-                            onMouseDown={e => e.stopPropagation()}
-                            onWheel={e => e.stopPropagation()}
-                        >
-                            <SNTMap
-                                id={`composite-node-map-dialog-${mapId}`}
-                                orgUnits={orgUnits}
-                                legendConfig={legendConfig as MetricType}
-                                getOrgUnitMapMisc={getOrgUnitMapMisc}
-                            />
+                        <Box sx={styles.dialogBody}>
+                            <Box
+                                sx={styles.dialogMap}
+                                // The dialog is portaled but still bubbles React events through the
+                                // Flume node tree, so a map drag would otherwise start Flume's node-drag
+                                // and pan the canvas (fighting Leaflet -> jump-back). Only swallow the
+                                // initiating mousedown: stopping mousemove/mouseup here would also block
+                                // them from reaching `document`, where Leaflet listens during a drag.
+                                onMouseDown={e => e.stopPropagation()}
+                                onWheel={e => e.stopPropagation()}
+                            >
+                                <SNTMap
+                                    id={`composite-node-map-dialog-${mapId}`}
+                                    orgUnits={orgUnits}
+                                    legendConfig={legendConfig as MetricType}
+                                    getOrgUnitMapMisc={getOrgUnitMapMisc}
+                                    selectedOrgUnitIds={selectedOrgUnitIds}
+                                    selectedBorderColor={selectedBorderColor}
+                                    onOrgUnitClick={onOrgUnitClick}
+                                />
+                            </Box>
+                            {dialogSidePanel && (
+                                <Box
+                                    sx={styles.dialogSidePanel}
+                                    onMouseDown={e => e.stopPropagation()}
+                                    onWheel={e => e.stopPropagation()}
+                                >
+                                    {dialogSidePanel}
+                                </Box>
+                            )}
                         </Box>
                     )}
                 </DialogContent>

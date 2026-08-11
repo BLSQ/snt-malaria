@@ -47,16 +47,33 @@ def _formula_node(node_id, formula, input_sources, output_targets):
     }
 
 
-def _combine_node(node_id, input_sources, output_targets, operation=None):
+def _combine_node(node_id, input_sources, output_targets, operation=None, priority_order=None):
     input_data = {}
     if operation is not None:
         input_data["operation"] = {"operation": operation}
+    if priority_order is not None:
+        input_data.setdefault("operation", {})["priorityOrder"] = priority_order
     return {
         "id": node_id,
         "type": "combine",
         "x": 0,
         "y": 0,
         "inputData": input_data,
+        "connections": {"inputs": input_sources, "outputs": {"result": output_targets}},
+    }
+
+
+def _filter_node(node_id, input_sources, output_targets, mode="all", ids=None):
+    return {
+        "id": node_id,
+        "type": "filter",
+        "x": 0,
+        "y": 0,
+        "inputData": {
+            "selection": {
+                "orgUnits": {"mode": mode, "ids": ids or []},
+            }
+        },
         "connections": {"inputs": input_sources, "outputs": {"result": output_targets}},
     }
 
@@ -845,6 +862,388 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
     def test_combine_unknown_operation_raises(self):
         with self.assertRaises(CompositeGraphError):
             CompositeGraphEvaluator(self.account, self._combine_graph(operation="median"), self.org_unit_ids).run()
+
+    def _filter_graph(self, metric_type_id=None, mode="all", ids=None):
+        return {
+            "layer1": _data_layer_node(
+                "layer1", metric_type_id or self.metric_a.id, [{"nodeId": "filt", "portName": "a"}]
+            ),
+            "filt": _filter_node(
+                "filt",
+                input_sources={"a": [{"nodeId": "layer1", "portName": "values"}]},
+                output_targets=[{"nodeId": "out", "portName": "layer"}],
+                mode=mode,
+                ids=ids,
+            ),
+            "out": _output_node("out", [{"nodeId": "filt", "portName": "result"}]),
+        }
+
+    # metric_a: ou1=2, ou2=4.
+    def test_filter_all_minus_ids(self):
+        values = CompositeGraphEvaluator(
+            self.account, self._filter_graph(mode="all", ids=[self.ou2.id]), self.org_unit_ids
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.0}})
+
+    def test_filter_none_plus_ids(self):
+        values = CompositeGraphEvaluator(
+            self.account, self._filter_graph(mode="none", ids=[self.ou1.id]), self.org_unit_ids
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.0}})
+
+    def test_filter_all_with_no_overrides_is_identity(self):
+        values = CompositeGraphEvaluator(self.account, self._filter_graph(mode="all"), self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 4.0}})
+
+    def test_filter_preserves_years(self):
+        metric_c = self._yearly_metric(
+            "layer_c", {2023: {self.ou1: 10.0, self.ou2: 1.0}, 2024: {self.ou1: 20.0, self.ou2: 2.0}}
+        )
+        values = CompositeGraphEvaluator(
+            self.account,
+            self._filter_graph(metric_type_id=metric_c.id, mode="all", ids=[self.ou2.id]),
+            self.org_unit_ids,
+        ).run()
+        self.assertEqual(values, {2023: {self.ou1.id: 10.0}, 2024: {self.ou1.id: 20.0}})
+
+    def test_filter_drops_year_bucket_it_empties(self):
+        # 2024's only district is ou2, which the filter removes: the year disappears entirely
+        # rather than surviving as an empty bucket.
+        metric_c = self._yearly_metric("layer_c", {2023: {self.ou1: 10.0, self.ou2: 1.0}, 2024: {self.ou2: 2.0}})
+        values = CompositeGraphEvaluator(
+            self.account,
+            self._filter_graph(metric_type_id=metric_c.id, mode="all", ids=[self.ou2.id]),
+            self.org_unit_ids,
+        ).run()
+        self.assertEqual(values, {2023: {self.ou1.id: 10.0}})
+
+    def test_filter_keeps_categorical_values(self):
+        seasonality = self._seasonality_layer()
+        values = CompositeGraphEvaluator(
+            self.account,
+            self._filter_graph(metric_type_id=seasonality.id, mode="all", ids=[self.ou2.id]),
+            self.org_unit_ids,
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: "Peak"}})
+
+    def test_filter_with_empty_selection_raises_incomplete(self):
+        with self.assertRaises(CompositeGraphIncompleteError):
+            CompositeGraphEvaluator(self.account, self._filter_graph(mode="none"), self.org_unit_ids).run()
+
+    def test_filter_without_input_raises(self):
+        graph = self._filter_graph(mode="all")
+        graph["filt"]["connections"]["inputs"] = {}
+        with self.assertRaises(CompositeGraphIncompleteError):
+            CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+
+    def test_filter_ignores_unknown_org_unit_ids(self):
+        values = CompositeGraphEvaluator(
+            self.account,
+            self._filter_graph(mode="none", ids=[999999, self.ou1.id]),
+            self.org_unit_ids,
+        ).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.0}})
+
+    def test_filter_unknown_mode_raises(self):
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(self.account, self._filter_graph(mode="some"), self.org_unit_ids).run()
+
+    def test_filter_then_normalize_rescales_over_the_subset(self):
+        # Regression test for the "drop, don't null" invariant: normalize must succeed and rescale
+        # over just the surviving district(s), rather than crashing on a null value.
+        graph = {
+            "layer1": _data_layer_node("layer1", self.metric_a.id, [{"nodeId": "filt", "portName": "a"}]),
+            "filt": _filter_node(
+                "filt",
+                input_sources={"a": [{"nodeId": "layer1", "portName": "values"}]},
+                output_targets=[{"nodeId": "norm", "portName": "a"}],
+                mode="all",
+                ids=[self.ou2.id],
+            ),
+            "norm": _normalize_node(
+                "norm",
+                input_sources={"a": [{"nodeId": "filt", "portName": "result"}]},
+                output_targets=[{"nodeId": "out", "portName": "layer"}],
+            ),
+            "out": _output_node("out", [{"nodeId": "norm", "portName": "result"}]),
+        }
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        # A single surviving value has no relative position, so it maps to the midpoint.
+        self.assertEqual(values, {None: {self.ou1.id: 0.5}})
+
+    def test_filter_persists_only_selected_districts(self):
+        metric_type = run_and_persist_composite_layer(
+            name="North only",
+            account=self.account,
+            graph=self._filter_graph(mode="all", ids=[self.ou2.id]),
+            org_unit_ids=self.org_unit_ids,
+        )
+        values = {mv.org_unit_id: mv.value for mv in MetricValue.objects.filter(metric_type=metric_type)}
+        self.assertEqual(values, {self.ou1.id: 2.0})
+
+    def _filtered_layer_stack_graph(self, entries, priority_order=None):
+        """Wires one filtered data layer per entry into a `combine` node set to "stack".
+
+        ``entries`` is a list of ``(metric_type_id, mode, ids)`` tuples, one per input port
+        (a, b, c, … in order).
+        """
+        graph = {}
+        input_sources = {}
+        for index, (metric_type_id, mode, ids) in enumerate(entries):
+            port = chr(ord("a") + index)
+            layer_id = f"layer{index + 1}"
+            filter_id = f"filter{index + 1}"
+            graph[layer_id] = _data_layer_node(layer_id, metric_type_id, [{"nodeId": filter_id, "portName": "a"}])
+            graph[filter_id] = _filter_node(
+                filter_id,
+                input_sources={"a": [{"nodeId": layer_id, "portName": "values"}]},
+                output_targets=[{"nodeId": "comb", "portName": port}],
+                mode=mode,
+                ids=ids,
+            )
+            input_sources[port] = [{"nodeId": filter_id, "portName": "result"}]
+        graph["comb"] = _combine_node(
+            "comb",
+            input_sources=input_sources,
+            output_targets=[{"nodeId": "out", "portName": "layer"}],
+            operation="stack",
+            priority_order=priority_order,
+        )
+        graph["out"] = _output_node("out", [{"nodeId": "comb", "portName": "result"}])
+        return graph
+
+    def test_stack_merges_disjoint_inputs(self):
+        # metric_a filtered to ou1 only, metric_b filtered to ou2 only -> the union covers both.
+        graph = self._filtered_layer_stack_graph(
+            [
+                (self.metric_a.id, "none", [self.ou1.id]),
+                (self.metric_b.id, "none", [self.ou2.id]),
+            ],
+            priority_order=["a", "b"],
+        )
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 5.0}})
+
+    def test_stack_higher_priority_wins_on_overlap(self):
+        # metric_a covers {ou1, ou2}, metric_b covers {ou2} too -> b (last, highest) wins at ou2.
+        graph = self._filtered_layer_stack_graph(
+            [
+                (self.metric_a.id, "all", None),
+                (self.metric_b.id, "none", [self.ou2.id]),
+            ],
+            priority_order=["a", "b"],
+        )
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        # metric_a: ou1=2, ou2=4; metric_b: ou2=5 wins over metric_a's ou2=4.
+        self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 5.0}})
+
+    def test_stack_falls_through_to_lower_priority(self):
+        # Same graph as above: ou1 is only covered by the lower-priority input (a), so its value
+        # survives even though b is the higher-priority port overall.
+        graph = self._filtered_layer_stack_graph(
+            [
+                (self.metric_a.id, "all", None),
+                (self.metric_b.id, "none", [self.ou2.id]),
+            ],
+            priority_order=["a", "b"],
+        )
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values[None][self.ou1.id], 2.0)
+
+    def test_stack_three_inputs_priority_chain(self):
+        # a covers {ou1, ou2} (1, 2); b covers {ou1, ou2} (10, 20); c covers {ou2} (200).
+        # priority_order=["b", "c", "a"]: a is highest priority, c is next, b is lowest.
+        metric_a2 = self._yearly_metric("solo_a", {None: {self.ou1: 1.0, self.ou2: 2.0}})
+        metric_b2 = self._yearly_metric("solo_b", {None: {self.ou1: 10.0, self.ou2: 20.0}})
+        metric_c2 = self._yearly_metric("solo_c", {None: {self.ou2: 200.0}})
+        graph = self._filtered_layer_stack_graph(
+            [
+                (metric_a2.id, "all", None),
+                (metric_b2.id, "all", None),
+                (metric_c2.id, "all", None),
+            ],
+            priority_order=["b", "c", "a"],
+        )
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        # ou1: only a and b have it -> a (highest) wins. ou2: a, b and c all have it -> a wins too.
+        self.assertEqual(values, {None: {self.ou1.id: 1.0, self.ou2.id: 2.0}})
+
+    def test_stack_uses_union_not_intersection(self):
+        # Disjoint filtered inputs: stack covers their union, while a symmetric reducer like mean
+        # (which requires every input to share the district) produces no values at all.
+        graph = self._filtered_layer_stack_graph(
+            [
+                (self.metric_a.id, "none", [self.ou1.id]),
+                (self.metric_b.id, "none", [self.ou2.id]),
+            ],
+            priority_order=["a", "b"],
+        )
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(set(values[None].keys()), {self.ou1.id, self.ou2.id})
+
+        graph["comb"]["inputData"]["operation"] = {"operation": "mean"}
+        with self.assertRaises(CompositeGraphIncompleteError):
+            CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+
+    def test_stack_ignores_disconnected_port_in_priority_order(self):
+        graph = self._filtered_layer_stack_graph(
+            [
+                (self.metric_a.id, "all", None),
+                (self.metric_b.id, "all", None),
+            ],
+            priority_order=["z", "a", "b"],
+        )
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        # b (last real entry) still wins on the overlap.
+        self.assertEqual(values, {None: {self.ou1.id: 3.0, self.ou2.id: 5.0}})
+
+    def test_stack_defaults_to_sorted_ports_without_priority_order(self):
+        graph = self._filtered_layer_stack_graph(
+            [
+                (self.metric_a.id, "all", None),
+                (self.metric_b.id, "all", None),
+            ],
+            priority_order=None,
+        )
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        # No priorityOrder -> falls back to sorted port letters (a, b, …), so b wins.
+        self.assertEqual(values, {None: {self.ou1.id: 3.0, self.ou2.id: 5.0}})
+
+    def test_stack_unlisted_port_is_lowest_priority(self):
+        ou3 = self.create_snt_org_unit(org_unit_type=self.org_unit_type, name="OU3")
+        metric_c2 = self._yearly_metric("solo_c", {None: {ou3: 999.0}})
+        org_unit_ids = [self.ou1.id, self.ou2.id, ou3.id]
+        # a is connected but omitted from priorityOrder -> it must land at the LOWEST priority, so
+        # on the a/b overlap (ou1, ou2) the explicitly-listed b still wins; c sits on a disjoint
+        # district (ou3) and is unaffected either way, proving a's demotion didn't leak into it.
+        graph = self._filtered_layer_stack_graph(
+            [
+                (self.metric_a.id, "all", None),
+                (self.metric_b.id, "all", None),
+                (metric_c2.id, "all", None),
+            ],
+            priority_order=["b", "c"],
+        )
+        values = CompositeGraphEvaluator(self.account, graph, org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 3.0, self.ou2.id: 5.0, ou3.id: 999.0}})
+
+    def test_stack_duplicate_entries_collapse(self):
+        graph = self._filtered_layer_stack_graph(
+            [
+                (self.metric_a.id, "all", None),
+                (self.metric_b.id, "all", None),
+            ],
+            priority_order=["a", "a", "b"],
+        )
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 3.0, self.ou2.id: 5.0}})
+
+    def test_stack_invalid_priority_order_type_falls_back(self):
+        graph = self._filtered_layer_stack_graph(
+            [
+                (self.metric_a.id, "all", None),
+                (self.metric_b.id, "all", None),
+            ],
+            priority_order="a",
+        )
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        # Malformed (non-list) priorityOrder -> falls back to sorted ports, b wins.
+        self.assertEqual(values, {None: {self.ou1.id: 3.0, self.ou2.id: 5.0}})
+
+    def test_stack_single_input_is_identity(self):
+        graph = self._filtered_layer_stack_graph([(self.metric_a.id, "all", None)], priority_order=None)
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 4.0}})
+
+    def test_stack_aligns_years_with_timeless_broadcast(self):
+        metric_c = self._yearly_metric(
+            "layer_c", {2023: {self.ou1: 10.0, self.ou2: 20.0}, 2024: {self.ou1: 30.0, self.ou2: 40.0}}
+        )
+        values = CompositeGraphEvaluator(
+            self.account,
+            self._combine_graph(operation="stack", metric_ids=[metric_c.id, self.metric_a.id]),
+            self.org_unit_ids,
+        ).run()
+        # metric_a (b, highest priority) is timeless and fully covers both org units every year,
+        # so it wins in every broadcast year.
+        self.assertEqual(
+            values,
+            {2023: {self.ou1.id: 2.0, self.ou2.id: 4.0}, 2024: {self.ou1.id: 2.0, self.ou2.id: 4.0}},
+        )
+
+    def test_stack_year_specific_fall_through(self):
+        # b (higher priority) is missing ou2 in 2024 only, so that year falls through to a.
+        metric_a2 = self._yearly_metric(
+            "layer_a2", {2023: {self.ou1: 10.0, self.ou2: 20.0}, 2024: {self.ou1: 30.0, self.ou2: 40.0}}
+        )
+        metric_b2 = self._yearly_metric("layer_b2", {2023: {self.ou1: 100.0, self.ou2: 200.0}, 2024: {self.ou1: 300.0}})
+        values = CompositeGraphEvaluator(
+            self.account,
+            self._combine_graph(operation="stack", metric_ids=[metric_a2.id, metric_b2.id]),
+            self.org_unit_ids,
+        ).run()
+        self.assertEqual(
+            values,
+            {
+                2023: {self.ou1.id: 100.0, self.ou2.id: 200.0},
+                2024: {self.ou1.id: 300.0, self.ou2.id: 40.0},
+            },
+        )
+
+    def test_stack_without_inputs_raises(self):
+        graph = self._combine_graph(operation="stack")
+        graph["comb"]["connections"]["inputs"] = {}
+        with self.assertRaises(CompositeGraphError):
+            CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+
+    def test_stack_of_categorical_inputs_keeps_labels(self):
+        seasonality = self._seasonality_layer()
+        second = MetricType.objects.create(
+            account=self.account,
+            name="Seasonality 2",
+            code="seasonality_2",
+            legend_type=MetricType.LegendType.ORDINAL,
+            legend_config={"domain": ["High", "Low"], "range": ["#111111", "#222222"]},
+        )
+        MetricValue.objects.create(metric_type=second, org_unit=self.ou1, year=None, value=None, string_value="High")
+        graph = self._filtered_layer_stack_graph(
+            [
+                (seasonality.id, "none", [self.ou2.id]),
+                (second.id, "none", [self.ou1.id]),
+            ],
+            priority_order=["a", "b"],
+        )
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou2.id: "Low", self.ou1.id: "High"}})
+
+    def test_stack_mixed_numeric_and_categorical_is_stringified(self):
+        seasonality = self._seasonality_layer()
+        graph = self._filtered_layer_stack_graph(
+            [
+                (self.metric_a.id, "none", [self.ou1.id]),
+                (seasonality.id, "none", [self.ou2.id]),
+            ],
+            priority_order=["a", "b"],
+        )
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: "2.0", self.ou2.id: "Low"}})
+
+    def test_stack_of_filters_persists_full_coverage(self):
+        graph = self._filtered_layer_stack_graph(
+            [
+                (self.metric_a.id, "none", [self.ou1.id]),
+                (self.metric_b.id, "none", [self.ou2.id]),
+            ],
+            priority_order=["a", "b"],
+        )
+        metric_type = run_and_persist_composite_layer(
+            name="Stacked",
+            account=self.account,
+            graph=graph,
+            org_unit_ids=self.org_unit_ids,
+        )
+        values = {mv.org_unit_id: mv.value for mv in MetricValue.objects.filter(metric_type=metric_type)}
+        self.assertEqual(values, {self.ou1.id: 2.0, self.ou2.id: 5.0})
 
     def _normalize_graph(self, metric_type_id=None, scale=None, normalize_type=None, name="Normalized"):
         return {

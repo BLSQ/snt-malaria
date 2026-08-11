@@ -1,5 +1,7 @@
 import { ALL_YEARS_VALUE } from '../flumeConfig';
 import { FlumeGraph, FlumeGraphNode, NODE_TYPES } from '../types/flumeGraph';
+import { normalizeSelection } from '../utils/orgUnitSelection';
+import { resolveStackOrder } from '../utils/stackOrder';
 import {
     ClassifyRuleSpec,
     CombineOperation,
@@ -15,16 +17,23 @@ const MAX_DYNAMIC_INPUTS = 26;
 const dynamicInputName = (index: number): string =>
     String.fromCharCode('a'.charCodeAt(0) + index);
 
+// Connected upstream (port, nodeId) pairs in port order (a, b, c, …).
+const orderedInputEntries = (
+    node: FlumeGraphNode,
+): Array<{ port: string; nodeId: string }> => {
+    const entries: Array<{ port: string; nodeId: string }> = [];
+    for (let index = 0; index < MAX_DYNAMIC_INPUTS; index += 1) {
+        const port = dynamicInputName(index);
+        const connected = node.connections.inputs[port];
+        if (connected?.[0]) entries.push({ port, nodeId: connected[0].nodeId });
+    }
+    return entries;
+};
+
 // Connected upstream node ids in port order (a, b, c, …) - the same order the formula variables
 // reference, so it becomes the spec's `inputs` list.
-const orderedInputIds = (node: FlumeGraphNode): string[] => {
-    const ids: string[] = [];
-    for (let index = 0; index < MAX_DYNAMIC_INPUTS; index += 1) {
-        const connected = node.connections.inputs[dynamicInputName(index)];
-        if (connected?.[0]) ids.push(connected[0].nodeId);
-    }
-    return ids;
-};
+const orderedInputIds = (node: FlumeGraphNode): string[] =>
+    orderedInputEntries(node).map(entry => entry.nodeId);
 
 const singleInputId = (
     node: FlumeGraphNode,
@@ -68,13 +77,31 @@ export const extractGraphSpecFromFlume = (
                 formula: (inputData.formula?.formula as string) ?? '',
             });
         } else if (node.type === NODE_TYPES.combine) {
+            const operation =
+                (inputData.operation?.operation as CombineOperation) ??
+                'mean';
+            const entries = orderedInputEntries(node);
+            // For "stack", the spec's `inputs` order IS the priority order (ascending - last
+            // wins), so emit the resolved priority order rather than plain port order, so the
+            // round-tripped spec still matches whatever the user last set via the priority control.
+            const inputs =
+                operation === 'stack'
+                    ? resolveStackOrder(
+                          inputData.operation?.priorityOrder,
+                          entries.map(entry => entry.port),
+                      )
+                          .map(
+                              port =>
+                                  entries.find(entry => entry.port === port)
+                                      ?.nodeId,
+                          )
+                          .filter((id): id is string => id !== undefined)
+                    : entries.map(entry => entry.nodeId);
             nodes.push({
                 id: node.id,
                 type: NODE_TYPES.combine,
-                inputs: orderedInputIds(node),
-                operation:
-                    (inputData.operation?.operation as CombineOperation) ??
-                    'mean',
+                inputs,
+                operation,
             });
         } else if (node.type === NODE_TYPES.normalize) {
             nodes.push({
@@ -98,10 +125,19 @@ export const extractGraphSpecFromFlume = (
                 rules: config?.rules ?? [],
                 default: config?.default ?? '',
             });
+        } else if (node.type === NODE_TYPES.filter) {
+            nodes.push({
+                id: node.id,
+                type: NODE_TYPES.filter,
+                input: singleInputId(node, 'a'),
+                org_units: normalizeSelection(
+                    inputData.selection?.orgUnits,
+                ),
+            });
         } else if (node.type === NODE_TYPES.output) {
             outputNode = node;
         }
-        // Any other node type is not part of the spec contract - skip it.
+        // Any other node type (e.g. a canvas comment) is not part of the spec contract - skip it.
     });
 
     if (nodes.length === 0) return null;

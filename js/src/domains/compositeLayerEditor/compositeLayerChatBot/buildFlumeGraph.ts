@@ -9,6 +9,7 @@ import {
     NODE_WIDTH,
     runDagreLayout,
 } from '../utils/graphLayout';
+import { normalizeSelection } from '../utils/orgUnitSelection';
 import { GeneratedGraph, GeneratedGraphNode, GraphNodeType } from './types';
 
 // Rows of a classify node's rules table each add roughly this much height on top of its base size
@@ -26,11 +27,16 @@ const DYNAMIC_ROW_HEIGHT: Partial<Record<GraphNodeType, number>> = {
 };
 
 // How many "dynamic" elements (rule rows, connected input ports, ...) a node renders beyond its
-// NODE_HEIGHT base - dataLayer/normalize/output have none, so this returns 0 for them.
+// NODE_HEIGHT base - dataLayer/normalize/filter/output have none, so this returns 0 for them.
 const dynamicElementCount = (node: GeneratedGraphNode): number => {
     if (node.type === NODE_TYPES.classify) return node.rules?.length ?? 0;
-    if (node.type === NODE_TYPES.formula || node.type === NODE_TYPES.combine)
-        return node.inputs?.length ?? 0;
+    if (node.type === NODE_TYPES.formula || node.type === NODE_TYPES.combine) {
+        const count = node.inputs?.length ?? 0;
+        // A "stack" combine also renders one priority row per input, on top of its port row.
+        return node.type === NODE_TYPES.combine && node.operation === 'stack'
+            ? count * 2
+            : count;
+    }
     return 0;
 };
 
@@ -48,6 +54,7 @@ const OUTPUT_PORT_NAME: Record<GraphNodeType, string> = {
     combine: OPERATOR_OUTPUT_PORT_NAME,
     normalize: OPERATOR_OUTPUT_PORT_NAME,
     classify: OPERATOR_OUTPUT_PORT_NAME,
+    filter: OPERATOR_OUTPUT_PORT_NAME,
 };
 
 // Names given to a formula/combine node's value inputs, in order: a, b, c, … (see flumeConfig.ts).
@@ -57,7 +64,11 @@ const formulaInputName = (index: number): string =>
 const upstreamIds = (node: GeneratedGraphNode): string[] => {
     if (node.type === NODE_TYPES.formula || node.type === NODE_TYPES.combine)
         return node.inputs ?? [];
-    if (node.type === NODE_TYPES.classify || node.type === NODE_TYPES.normalize)
+    if (
+        node.type === NODE_TYPES.classify ||
+        node.type === NODE_TYPES.normalize ||
+        node.type === NODE_TYPES.filter
+    )
         return node.input ? [node.input] : [];
     return [];
 };
@@ -119,7 +130,8 @@ const layoutWithDagre = (
 /**
  * Converts the AI's abstract graph spec into a Flume-compatible node map matching the composite
  * layer editor's real node types (`dataLayer` / `formula` / `combine` / `normalize` / `classify` /
- * `output`, see flumeConfig.ts). Node ids from the spec are reused verbatim as Flume node ids.
+ * `filter` / `output`, see flumeConfig.ts). Node ids from the spec are reused verbatim as Flume
+ * node ids.
  *
  * `previousNodes` controls positioning:
  * - The current canvas graph (content-only update): every node keeps its previous `x`/`y`.
@@ -184,7 +196,20 @@ export const buildFlumeGraphFromSpec = (
                 x,
                 y,
                 inputData: {
-                    operation: { operation: node.operation ?? 'mean' },
+                    operation: {
+                        operation: node.operation ?? 'mean',
+                        // The spec's `inputs` order IS the priority order (ascending - last wins),
+                        // and inputs[i] is wired to port letter i below, so the priority order is
+                        // simply the first N port letters in the same order.
+                        ...(node.operation === 'stack'
+                            ? {
+                                  priorityOrder: (node.inputs ?? []).map(
+                                      (_input, index) =>
+                                          formulaInputName(index),
+                                  ),
+                              }
+                            : {}),
+                    },
                 },
                 connections: { inputs: {}, outputs: {} },
             };
@@ -225,6 +250,20 @@ export const buildFlumeGraphFromSpec = (
                 },
                 connections: { inputs: {}, outputs: {} },
             };
+        } else if (node.type === NODE_TYPES.filter) {
+            nodes[node.id] = {
+                id: node.id,
+                type: NODE_TYPES.filter,
+                width: NODE_WIDTH.filter,
+                x,
+                y,
+                inputData: {
+                    selection: {
+                        orgUnits: normalizeSelection(node.org_units),
+                    },
+                },
+                connections: { inputs: {}, outputs: {} },
+            };
         }
     });
 
@@ -247,7 +286,8 @@ export const buildFlumeGraphFromSpec = (
             });
         } else if (
             (node.type === NODE_TYPES.classify ||
-                node.type === NODE_TYPES.normalize) &&
+                node.type === NODE_TYPES.normalize ||
+                node.type === NODE_TYPES.filter) &&
             node.input
         ) {
             const sourceType = nodes[node.input]?.type as

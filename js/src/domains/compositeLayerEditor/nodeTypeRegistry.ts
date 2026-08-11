@@ -2,19 +2,26 @@ import { SvgIconComponent } from '@mui/icons-material';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import CategoryIcon from '@mui/icons-material/Category';
 import CompressIcon from '@mui/icons-material/Compress';
+import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import FunctionsIcon from '@mui/icons-material/Functions';
 import LayersIcon from '@mui/icons-material/Layers';
 import MediationIcon from '@mui/icons-material/Mediation';
 import { IntlMessage } from 'bluesquare-components';
 import { MESSAGES } from './messages';
 import { CompositeNodeType, FlumeNodeInputData } from './types/flumeGraph';
+import { DEFAULT_ORG_UNIT_SELECTION } from './utils/orgUnitSelection';
 
 /**
  * Metadata for the operator node types, shared by `flumeConfig.ts`, `NodeHeaderContent.tsx`,
  * `utils/graphLayout.ts` and the node library. `dataLayer`/`output` are left out: they are never
  * created empty, so their defaults are special-cased where they're built.
  */
-export type OperatorNodeType = 'formula' | 'combine' | 'normalize' | 'classify';
+export type OperatorNodeType =
+    | 'formula'
+    | 'combine'
+    | 'normalize'
+    | 'classify'
+    | 'filter';
 
 /** Port name every operator node's result is exposed under (see `flumeConfig.ts`). */
 export const OPERATOR_OUTPUT_PORT_NAME = 'result';
@@ -72,6 +79,17 @@ export const OPERATOR_NODE_TYPES: Record<
             config: { rules: { rules: [], default: '' } },
         }),
     },
+    filter: {
+        type: 'filter',
+        icon: FilterAltOutlinedIcon,
+        sortIndex: 5,
+        width: 330,
+        labelMessage: MESSAGES.filterNodeLabel,
+        descriptionMessage: MESSAGES.filterNodeDescription,
+        defaultInputData: () => ({
+            selection: { orgUnits: { ...DEFAULT_ORG_UNIT_SELECTION } },
+        }),
+    },
 };
 
 /** `OPERATOR_NODE_TYPES`, ordered the way they should appear in any node-type listing. */
@@ -87,4 +105,5 @@ export const NODE_TYPE_ICONS: Record<CompositeNodeType, SvgIconComponent> = {
     combine: OPERATOR_NODE_TYPES.combine.icon,
     normalize: OPERATOR_NODE_TYPES.normalize.icon,
     classify: OPERATOR_NODE_TYPES.classify.icon,
+    filter: OPERATOR_NODE_TYPES.filter.icon,
 };

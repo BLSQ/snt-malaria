@@ -8,6 +8,8 @@ import { CompositeOutputPreview } from './components/CompositeOutputPreview';
 import { MappingsControl } from './components/MappingsControl';
 import { NodeHelperText } from './components/NodeHelperText';
 import { NodeMapPreview } from './components/NodeMapPreview';
+import { OrgUnitFilterControl } from './components/OrgUnitFilterControl';
+import { StackPriorityControl } from './components/StackPriorityControl';
 import { MESSAGES } from './messages';
 import {
     OPERATOR_NODE_TYPES,
@@ -16,6 +18,8 @@ import {
 import { CompositePreviewState } from './types/compositeLayer';
 import { NODE_TYPES } from './types/flumeGraph';
 import { getCompositeLegendOptions } from './utils/legendOptions';
+import { DEFAULT_ORG_UNIT_SELECTION } from './utils/orgUnitSelection';
+import { resolveStackOrder } from './utils/stackOrder';
 
 type FormatMessage = ReturnType<typeof useSafeIntl>['formatMessage'];
 
@@ -98,6 +102,17 @@ const dynamicInputCount = (connections: any): number => {
     return Math.min(highestConnected + 2, MAX_DYNAMIC_INPUTS);
 };
 
+/** Dynamic-input port names that currently have a connection, in slot order (a, b, c, …). */
+const connectedDynamicInputNames = (connections: any): string[] => {
+    const inputs = connections?.inputs ?? {};
+    const names: string[] = [];
+    for (let i = 0; i < MAX_DYNAMIC_INPUTS; i += 1) {
+        const name = dynamicInputName(i);
+        if (inputs[name]?.length) names.push(name);
+    }
+    return names;
+};
+
 // The formula node is evaluated with simpleeval on the backend, so its infix syntax (operators,
 // conditionals, …) is documented there. Linked from the formula node's helper text.
 const FORMULA_SYNTAX_DOCS_URL =
@@ -149,9 +164,11 @@ const dynamicValueInputs =
  * - `formula`:   infix expression over a dynamic number of inputs (`a`, `b`, `c`, …). Starts with
  *                a single input and grows one slot per connection. Evaluated on the backend
  *                (simpleeval).
- * - `combine`:   reduce a dynamic number of inputs per org unit (mean/sum/min/max).
+ * - `combine`:   reduce a dynamic number of inputs per org unit (mean/sum/min/max), or stack them
+ *                by priority (each org unit takes the highest-priority input that has a value).
  * - `normalize`: min-max rescale a single numeric input to 0-1 or 0-100, per year.
  * - `classify`:  map a single numeric input to categories via threshold rules.
+ * - `filter`:    restrict a single input to a selected set of org units.
  * - `output`:    the single terminal node producing the composite layer. It is always present,
  *                cannot be added again and cannot be deleted.
  *
@@ -271,6 +288,39 @@ export const createCompositeFlumeConfig = (
         },
     });
 
+    // The combine operation dropdown; extracted so the `combine` node can swap in a second control
+    // (the stack priority list) alongside it without redefining the select itself.
+    const combineOperationControl = Controls.select({
+        name: 'operation',
+        label: formatMessage(MESSAGES.combineOperationLabel),
+        // Values are the reducer/operation names consumed by the backend evaluator.
+        options: [
+            { value: 'mean', label: formatMessage(MESSAGES.combineOpMean) },
+            { value: 'sum', label: formatMessage(MESSAGES.combineOpSum) },
+            { value: 'min', label: formatMessage(MESSAGES.combineOpMin) },
+            { value: 'max', label: formatMessage(MESSAGES.combineOpMax) },
+            {
+                value: 'stack',
+                label: formatMessage(MESSAGES.combineOpStack),
+                description: formatMessage(MESSAGES.combineOpStackDescription),
+            },
+        ],
+        defaultValue: 'mean',
+    });
+
+    // Only shown when `operation` is "stack": lets the user set the priority order of the
+    // currently-connected inputs. `order` is resolved (see `resolveStackOrder`) before this is
+    // instantiated per node in the `combine` node's `inputs` factory below, so the control itself
+    // just renders and reorders it.
+    const stackPriorityControl = (order: string[]) =>
+        Controls.custom({
+            name: 'priorityOrder',
+            label: formatMessage(MESSAGES.stackPriorityLabel),
+            defaultValue: [],
+            render: (_data: any, onChange: any) =>
+                React.createElement(StackPriorityControl, { order, onChange }),
+        });
+
     config
         // Connectable port carrying a per-org-unit numeric vector.
         .addPortType({
@@ -320,38 +370,41 @@ export const createCompositeFlumeConfig = (
             hidePort: true,
             controls: [],
         })
-        // Combine operation picker (control only, not connectable). Only symmetric
-        // (order-independent) reducers are offered, since the inputs a, b, c, … are unlabeled
-        // and interchangeable.
+        // Combine operation picker (control only, not connectable). Four of the five operations
+        // are symmetric (order-independent) reducers, safe with unlabeled, interchangeable inputs
+        // a, b, c, …; "stack" is the exception and gets a second control (see the `combine` node's
+        // `inputs` factory below) once picked.
         .addPortType({
             type: 'combineOperation',
             name: 'operation',
             label: formatMessage(MESSAGES.combineOperationLabel),
             hidePort: true,
+            controls: [combineOperationControl],
+        })
+        // District selection editor for the `filter` node (control only, not connectable): an
+        // all/none base toggle plus a single override list, with a minimap preview.
+        .addPortType({
+            type: 'orgUnitSelection',
+            name: 'selection',
+            label: formatMessage(MESSAGES.filterDistrictsLabel),
+            hidePort: true,
             controls: [
-                Controls.select({
-                    name: 'operation',
-                    label: formatMessage(MESSAGES.combineOperationLabel),
-                    // Values are the reducer names consumed by the backend evaluator.
-                    options: [
-                        {
-                            value: 'mean',
-                            label: formatMessage(MESSAGES.combineOpMean),
-                        },
-                        {
-                            value: 'sum',
-                            label: formatMessage(MESSAGES.combineOpSum),
-                        },
-                        {
-                            value: 'min',
-                            label: formatMessage(MESSAGES.combineOpMin),
-                        },
-                        {
-                            value: 'max',
-                            label: formatMessage(MESSAGES.combineOpMax),
-                        },
-                    ],
-                    defaultValue: 'mean',
+                Controls.custom({
+                    name: 'orgUnits',
+                    label: formatMessage(MESSAGES.filterDistrictsLabel),
+                    defaultValue: DEFAULT_ORG_UNIT_SELECTION,
+                    render: (
+                        data: any,
+                        onChange: any,
+                        context: CompositeEditorContext,
+                        redraw: any,
+                    ) =>
+                        React.createElement(OrgUnitFilterControl, {
+                            value: data,
+                            onChange,
+                            orgUnits: context?.orgUnits ?? [],
+                            onResize: redraw,
+                        }),
                 }),
             ],
         })
@@ -569,15 +622,58 @@ export const createCompositeFlumeConfig = (
             ),
             sortIndex: OPERATOR_NODE_TYPES.combine.sortIndex,
             initialWidth: OPERATOR_NODE_TYPES.combine.width,
+            // Unlike the other dynamic-input nodes, this one needs `inputData` (not just
+            // `connections`) to know whether to show the stack priority control, so it can't share
+            // the generic `dynamicValueInputs` helper.
             inputs: (ports: any) =>
-                dynamicValueInputs(
-                    ports,
-                    ports.combineOperation(),
-                    helperTextPort(
-                        ports,
-                        formatMessage(MESSAGES.combineNodeDescription),
-                    ),
-                ),
+                (inputData: any, connections: any) => {
+                    const isStack =
+                        inputData?.operation?.operation === 'stack';
+                    const connected = connectedDynamicInputNames(connections);
+                    const order = resolveStackOrder(
+                        inputData?.operation?.priorityOrder,
+                        connected,
+                    );
+                    const count = dynamicInputCount(connections);
+                    const valuePorts = Array.from(
+                        { length: count },
+                        (_, i) => {
+                            const name = dynamicInputName(i);
+                            const rank = order.indexOf(name);
+                            // In stack mode the port label carries its resolved rank, so the wire
+                            // itself reads e.g. "b (2)" - directly linking it to the priority row.
+                            return ports.layerValues({
+                                name,
+                                label:
+                                    isStack && rank >= 0
+                                        ? `${name} (${rank + 1})`
+                                        : name,
+                            });
+                        },
+                    );
+                    return [
+                        ...valuePorts,
+                        ports.combineOperation({
+                            controls: isStack
+                                ? [
+                                      combineOperationControl,
+                                      stackPriorityControl(order),
+                                  ]
+                                : [combineOperationControl],
+                        }),
+                        // Stack mode's hint lives inside the priority control itself, above the order list.
+                        ...(isStack
+                            ? []
+                            : [
+                                  helperTextPort(
+                                      ports,
+                                      formatMessage(
+                                          MESSAGES.combineNodeDescription,
+                                      ),
+                                  ),
+                              ]),
+                    ];
+                },
             outputs: (ports: any) => [
                 ports.layerValues({
                     name: OPERATOR_OUTPUT_PORT_NAME,
@@ -634,6 +730,32 @@ export const createCompositeFlumeConfig = (
                 ports.layerValues({
                     name: OPERATOR_OUTPUT_PORT_NAME,
                     label: formatMessage(MESSAGES.classPortLabel),
+                }),
+            ],
+        })
+        .addNodeType({
+            type: NODE_TYPES.filter,
+            label: formatMessage(OPERATOR_NODE_TYPES.filter.labelMessage),
+            description: formatMessage(
+                OPERATOR_NODE_TYPES.filter.descriptionMessage,
+            ),
+            sortIndex: OPERATOR_NODE_TYPES.filter.sortIndex,
+            initialWidth: OPERATOR_NODE_TYPES.filter.width,
+            inputs: (ports: any) => [
+                ports.layerValues({
+                    name: 'a',
+                    label: formatMessage(MESSAGES.valuePortLabel),
+                }),
+                ports.orgUnitSelection(),
+                helperTextPort(
+                    ports,
+                    formatMessage(MESSAGES.filterNodeDescription),
+                ),
+            ],
+            outputs: (ports: any) => [
+                ports.layerValues({
+                    name: OPERATOR_OUTPUT_PORT_NAME,
+                    label: formatMessage(MESSAGES.resultPortLabel),
                 }),
             ],
         })

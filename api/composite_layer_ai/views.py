@@ -8,6 +8,7 @@ from rest_framework.response import Response
 
 from iaso.models import MetricType, MetricValue
 from plugins.snt_malaria.api.composite_layers.permissions import CompositeLayerPermission
+from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 
 from .agent import generate_composite_layer_graph
 from .serializers import (
@@ -73,11 +74,14 @@ class CompositeLayerAIViewSet(viewsets.ViewSet):
             if years:
                 metric_type["years"] = sorted(years, reverse=True)
 
+        org_units = list(get_intervention_org_units(account).values("id", "name").order_by("name"))
+
         try:
             result = generate_composite_layer_graph(
                 message,
                 conversation_history,
                 metric_types,
+                org_units,
                 api_key=api_key,
                 current_graph=current_graph,
             )
