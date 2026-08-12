@@ -63,7 +63,9 @@ export const formatBigNumber = (value: number, currency?: string) => {
     } else {
         formattedValue = value.toFixed(2);
     }
-    return `${formatCurrencyAmount(formattedValue, currency)}`;
+    return currency
+        ? `${formatCurrencyAmount(formattedValue, currency)}`
+        : formattedValue;
 };
 
 /** Compact quantity formatting: whole units below 1000, else K/M/B, e.g. 534233 -> "534.23K". */
