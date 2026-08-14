@@ -12,39 +12,34 @@ import {
 
 describe('clamp', () => {
     it('passes a value already within range through unchanged', () => {
-        expect(clamp(5, 0, 10)).to.equal(5);
+        expect(clamp(5, 0, 10)).toBe(5);
     });
     it('clamps below the minimum', () => {
-        expect(clamp(-1, 0, 10)).to.equal(0);
+        expect(clamp(-1, 0, 10)).toBe(0);
     });
     it('clamps above the maximum', () => {
-        expect(clamp(11, 0, 10)).to.equal(10);
+        expect(clamp(11, 0, 10)).toBe(10);
     });
 });
 
 describe('computeFitScale', () => {
     it('never enlarges a box that already fits', () => {
-        expect(computeFitScale(100, 100, 1000, 1000)).to.equal(1);
+        expect(computeFitScale(100, 100, 1000, 1000)).toBe(1);
     });
 
     it('shrinks to fit a box larger than the viewport, minus padding', () => {
         // (1000 - 2*40) / 2000 = 0.46
-        expect(computeFitScale(2000, 500, 1000, 1000)).to.be.closeTo(
-            0.46,
-            0.001,
-        );
+        expect(computeFitScale(2000, 500, 1000, 1000)).toBeCloseTo(0.46, 5);
     });
 
     it('picks the more constraining dimension', () => {
         const byWidth = computeFitScale(2000, 100, 1000, 1000);
         const byHeight = computeFitScale(100, 2000, 1000, 1000);
-        expect(byWidth).to.be.closeTo(byHeight, 0.001);
+        expect(byWidth).toBeCloseTo(byHeight, 5);
     });
 
     it('clamps to MIN_SCALE for an extremely large box', () => {
-        expect(computeFitScale(1_000_000, 1_000_000, 500, 500)).to.equal(
-            MIN_SCALE,
-        );
+        expect(computeFitScale(1_000_000, 1_000_000, 500, 500)).toBe(MIN_SCALE);
     });
 });
 
@@ -78,15 +73,15 @@ const buildStage = ({
 describe('getStageElement', () => {
     it('finds the stage element inside the canvas wrapper', () => {
         const { canvas, stage } = buildStage();
-        expect(getStageElement(canvas)).to.equal(stage);
+        expect(getStageElement(canvas)).toBe(stage);
     });
 
     it('returns null for a null canvas', () => {
-        expect(getStageElement(null)).to.equal(null);
+        expect(getStageElement(null)).toBe(null);
     });
 
     it('returns null when the canvas has no mounted stage', () => {
-        expect(getStageElement(document.createElement('div'))).to.equal(null);
+        expect(getStageElement(document.createElement('div'))).toBe(null);
     });
 });
 
@@ -97,7 +92,7 @@ describe('readStageTransform', () => {
             translateX: 100,
             translateY: -50,
         });
-        expect(readStageTransform(stage)).to.deep.equal({
+        expect(readStageTransform(stage)).toEqual({
             scale: 2.5,
             translateX: 100,
             translateY: -50,
@@ -106,7 +101,7 @@ describe('readStageTransform', () => {
 
     it('defaults to scale 1 / no translate when nothing is rendered yet', () => {
         const stage = document.createElement('div');
-        expect(readStageTransform(stage)).to.deep.equal({
+        expect(readStageTransform(stage)).toEqual({
             scale: 1,
             translateX: 0,
             translateY: 0,
@@ -115,7 +110,7 @@ describe('readStageTransform', () => {
 });
 
 describe('measureNodeSizes', () => {
-    it('divides each node\'s rendered rect by the current scale', () => {
+    it("divides each node's rendered rect by the current scale", () => {
         const { stage } = buildStage({ scale: 2 });
         const nodeEl = document.createElement('div');
         nodeEl.setAttribute('data-flume-component', 'node');
@@ -128,7 +123,7 @@ describe('measureNodeSizes', () => {
 
         const sizes = measureNodeSizes(stage);
 
-        expect(sizes.get('n1')).to.deep.equal({ width: 100, height: 50 });
+        expect(sizes.get('n1')).toEqual({ width: 100, height: 50 });
     });
 
     it('skips a node element with no data-node-id', () => {
@@ -137,7 +132,7 @@ describe('measureNodeSizes', () => {
         nodeEl.setAttribute('data-flume-component', 'node');
         stage.appendChild(nodeEl);
 
-        expect(measureNodeSizes(stage).size).to.equal(0);
+        expect(measureNodeSizes(stage).size).toBe(0);
     });
 });
 
@@ -146,8 +141,8 @@ describe('shiftGraphForRemount', () => {
         const nodes = { a: { x: 10, y: 20 } } as any;
         const comments = { c: { x: 1, y: 2 } } as any;
         const result = shiftGraphForRemount(nodes, comments, null);
-        expect(result).to.deep.equal({ nodes, comments, scale: 1 });
-        expect(result.nodes).to.equal(nodes);
+        expect(result).toEqual({ nodes, comments, scale: 1 });
+        expect(result.nodes).toBe(nodes);
     });
 
     it('shifts nodes and comments by the current pan, in stage-space units', () => {
@@ -162,11 +157,11 @@ describe('shiftGraphForRemount', () => {
         const result = shiftGraphForRemount(nodes, comments, canvas);
 
         // shiftX = translateX / scale = 50, shiftY = translateY / scale = 25.
-        expect(result.scale).to.equal(2);
-        expect(result.nodes.a.x).to.equal(10 - 50);
-        expect(result.nodes.a.y).to.equal(20 - 25);
-        expect(result.comments.c.x).to.equal(1 - 50);
-        expect(result.comments.c.y).to.equal(2 - 25);
+        expect(result.scale).toBe(2);
+        expect(result.nodes.a.x).toBe(10 - 50);
+        expect(result.nodes.a.y).toBe(20 - 25);
+        expect(result.comments.c.x).toBe(1 - 50);
+        expect(result.comments.c.y).toBe(2 - 25);
     });
 });
 
@@ -180,7 +175,7 @@ describe('dispatchWheel', () => {
 
         dispatchWheel(stage, -100, 50, 60, 3);
 
-        expect(received).to.deep.equal([-100, -100, -100]);
+        expect(received).toEqual([-100, -100, -100]);
     });
 });
 
@@ -220,11 +215,11 @@ describe('dispatchPan', () => {
 
         dispatchPan(stage, 0, 0, 30, 10);
 
-        expect(events[0]).to.deep.equal({ type: 'mousedown', x: 0, y: 0 });
+        expect(events[0]).toEqual({ type: 'mousedown', x: 0, y: 0 });
         // Crosses the >6px drag threshold before the real move.
-        expect(events[1]).to.deep.equal({ type: 'mousemove', x: 10, y: 0 });
+        expect(events[1]).toEqual({ type: 'mousemove', x: 10, y: 0 });
         // Released at the point yielding the requested (dx, dy) delta.
-        expect(events[2]).to.deep.equal({ type: 'mouseup', x: -20, y: -10 });
+        expect(events[2]).toEqual({ type: 'mouseup', x: -20, y: -10 });
 
         document.body.removeChild(stage);
     });

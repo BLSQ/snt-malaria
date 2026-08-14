@@ -27,7 +27,7 @@ describe('runDagreLayout', () => {
             ],
             [{ from: 'a', to: 'b' }],
         );
-        expect(positions.get('a')!.x).to.be.lessThan(positions.get('b')!.x);
+        expect(positions.get('a')!.x).toBeLessThan(positions.get('b')!.x);
     });
 
     it('passes width/height through unchanged', () => {
@@ -35,7 +35,7 @@ describe('runDagreLayout', () => {
             [{ id: 'a', width: 123, height: 45 }],
             [],
         );
-        expect(positions.get('a')).to.include({ width: 123, height: 45 });
+        expect(positions.get('a')).toMatchObject({ width: 123, height: 45 });
     });
 
     it('ignores edges referencing a node not in the spec list', () => {
@@ -44,7 +44,7 @@ describe('runDagreLayout', () => {
                 [{ id: 'a', width: 100, height: 50 }],
                 [{ from: 'a', to: 'missing' }],
             ),
-        ).to.not.throw();
+        ).not.toThrow();
     });
 
     it('lays out a lone node without any edges', () => {
@@ -52,7 +52,7 @@ describe('runDagreLayout', () => {
             [{ id: 'a', width: 100, height: 50 }],
             [],
         );
-        expect(positions.get('a')).to.not.equal(undefined);
+        expect(positions.get('a')).not.toBe(undefined);
     });
 });
 
@@ -85,13 +85,13 @@ describe('relayoutWithMeasuredSizes', () => {
         );
 
         // Only positions change - data/connections/type pass through untouched.
-        expect(nodes.a.type).to.equal('dataLayer');
-        expect(nodes.a.connections).to.deep.equal(graph.a.connections);
-        expect(typeof nodes.a.x).to.equal('number');
-        expect(typeof nodes.a.y).to.equal('number');
+        expect(nodes.a.type).toBe('dataLayer');
+        expect(nodes.a.connections).toEqual(graph.a.connections);
+        expect(typeof nodes.a.x).toBe('number');
+        expect(typeof nodes.a.y).toBe('number');
         // Bounding box covers both nodes' extents.
-        expect(boundingBox.maxX).to.be.greaterThan(boundingBox.minX);
-        expect(boundingBox.maxY - boundingBox.minY).to.be.at.least(
+        expect(boundingBox.maxX).toBeGreaterThan(boundingBox.minX);
+        expect(boundingBox.maxY - boundingBox.minY).toBeGreaterThanOrEqual(
             NODE_HEIGHT.formula,
         );
     });
@@ -99,12 +99,8 @@ describe('relayoutWithMeasuredSizes', () => {
     it('falls back to the type default size when nothing is measured', () => {
         const graph: FlumeGraph = { a: node({ id: 'a' }) };
         const { boundingBox } = relayoutWithMeasuredSizes(graph, new Map());
-        expect(boundingBox.maxX - boundingBox.minX).to.equal(
-            NODE_WIDTH.dataLayer,
-        );
-        expect(boundingBox.maxY - boundingBox.minY).to.equal(
-            NODE_HEIGHT.dataLayer,
-        );
+        expect(boundingBox.maxX - boundingBox.minX).toBe(NODE_WIDTH.dataLayer);
+        expect(boundingBox.maxY - boundingBox.minY).toBe(NODE_HEIGHT.dataLayer);
     });
 });
 
@@ -120,9 +116,9 @@ describe('centerGraph', () => {
             maxX: 100,
             maxY: 50,
         });
-        expect(centered.a.x).to.equal(-50);
-        expect(centered.a.y).to.equal(-25);
-        expect(centered.b.x).to.equal(50);
-        expect(centered.b.y).to.equal(25);
+        expect(centered.a.x).toBe(-50);
+        expect(centered.a.y).toBe(-25);
+        expect(centered.b.x).toBe(50);
+        expect(centered.b.y).toBe(25);
     });
 });

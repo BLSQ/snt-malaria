@@ -92,10 +92,7 @@ export const OrgUnitSelectionPanel: FC<Props> = ({
                 exclusive
                 fullWidth
                 size="small"
-                onChange={(
-                    _event,
-                    nextMode: OrgUnitSelectionMode | null,
-                ) => {
+                onChange={(_event, nextMode: OrgUnitSelectionMode | null) => {
                     if (nextMode) {
                         onChange(setSelectionMode(value, nextMode));
                     }

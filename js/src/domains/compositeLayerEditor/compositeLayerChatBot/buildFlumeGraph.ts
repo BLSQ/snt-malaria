@@ -1,7 +1,11 @@
 import { FlumeNodes } from 'flume';
 import { LegendTypes } from '../../../constants/legend';
 import { OPERATOR_OUTPUT_PORT_NAME } from '../nodeTypeRegistry';
-import { FlumeGraph, FlumeNodeInputData, NODE_TYPES } from '../types/flumeGraph';
+import {
+    FlumeGraph,
+    FlumeNodeInputData,
+    NODE_TYPES,
+} from '../types/flumeGraph';
 import {
     DagreNodeSpec,
     DagreLayoutResult,
@@ -269,7 +273,10 @@ export const buildFlumeGraphFromSpec = (
 
     // Wire connections now that every node exists (so both endpoints can be updated together).
     graph.nodes.forEach(node => {
-        if (node.type === NODE_TYPES.formula || node.type === NODE_TYPES.combine) {
+        if (
+            node.type === NODE_TYPES.formula ||
+            node.type === NODE_TYPES.combine
+        ) {
             (node.inputs ?? []).forEach((sourceId, index) => {
                 const sourceType = nodes[sourceId]?.type as
                     | GraphNodeType

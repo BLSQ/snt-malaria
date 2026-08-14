@@ -194,7 +194,8 @@ export const MESSAGES = defineMessages({
     },
     combineOpStackDescription: {
         id: 'iaso.snt_malaria.compositeLayerEditor.combineOpStackDescription',
-        defaultMessage: 'Merges input layers by stacking them in a priority order',
+        defaultMessage:
+            'Merges input layers by stacking them in a priority order',
     },
     stackPriorityLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.stackPriorityLabel',
@@ -321,11 +322,13 @@ export const MESSAGES = defineMessages({
     },
     filterCheckboxHintAllMode: {
         id: 'iaso.snt_malaria.compositeLayerEditor.filterCheckboxHintAllMode',
-        defaultMessage: 'Every district is selected except the ones you check below.',
+        defaultMessage:
+            'Every district is selected except the ones you check below.',
     },
     filterCheckboxHintNoneMode: {
         id: 'iaso.snt_malaria.compositeLayerEditor.filterCheckboxHintNoneMode',
-        defaultMessage: 'No district is selected except the ones you check below.',
+        defaultMessage:
+            'No district is selected except the ones you check below.',
     },
     filterPickedCount: {
         id: 'iaso.snt_malaria.compositeLayerEditor.filterPickedCount',

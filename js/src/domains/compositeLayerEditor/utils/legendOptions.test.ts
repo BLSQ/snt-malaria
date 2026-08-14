@@ -6,7 +6,7 @@ const formatMessage = (message: { id: string }) => message.id;
 
 describe('getCompositeLegendOptions', () => {
     it('lists auto, reference, then the three concrete legend types, in that order', () => {
-        expect(getCompositeLegendOptions(formatMessage)).to.deep.equal([
+        expect(getCompositeLegendOptions(formatMessage)).toEqual([
             { value: LegendTypes.AUTO, label: MESSAGES.legendAuto.id },
             {
                 value: LegendTypes.REFERENCE,

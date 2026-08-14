@@ -72,7 +72,8 @@ export const toggleOrgUnit = (
 export const setSelectionMode = (
     selection: OrgUnitSelection,
     mode: OrgUnitSelectionMode,
-): OrgUnitSelection => (mode === selection.mode ? selection : { ...selection, mode });
+): OrgUnitSelection =>
+    mode === selection.mode ? selection : { ...selection, mode };
 
 /** Discards the override list, keeping the base mode - a fresh start. */
 export const resetSelectionOverrides = (

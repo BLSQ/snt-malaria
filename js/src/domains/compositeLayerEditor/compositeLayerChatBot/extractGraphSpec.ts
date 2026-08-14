@@ -99,8 +99,7 @@ export const extractGraphSpecFromFlume = (
             });
         } else if (node.type === NODE_TYPES.combine) {
             const operation =
-                (inputData.operation?.operation as CombineOperation) ??
-                'mean';
+                (inputData.operation?.operation as CombineOperation) ?? 'mean';
             const entries = orderedInputEntries(node);
             const inputs =
                 operation === 'stack'
@@ -142,9 +141,7 @@ export const extractGraphSpecFromFlume = (
                 id: node.id,
                 type: NODE_TYPES.filter,
                 input: singleInputId(node, 'a'),
-                org_units: normalizeSelection(
-                    inputData.selection?.orgUnits,
-                ),
+                org_units: normalizeSelection(inputData.selection?.orgUnits),
             });
         } else if (node.type === NODE_TYPES.output) {
             outputNode = node;

@@ -556,7 +556,8 @@ export const createCompositeFlumeConfig = (
             // Dynamic so the year select + its helper text can drop out entirely once the picked
             // layer is known to have no years — Flume re-runs this on every `inputData` change
             // (the same mechanism the `formula` node already uses for its growing input list).
-            inputs: (ports: any) =>
+            inputs:
+                (ports: any) =>
                 (
                     inputData: any,
                     _connections: any,
@@ -625,55 +626,50 @@ export const createCompositeFlumeConfig = (
             // Unlike the other dynamic-input nodes, this one needs `inputData` (not just
             // `connections`) to know whether to show the stack priority control, so it can't share
             // the generic `dynamicValueInputs` helper.
-            inputs: (ports: any) =>
-                (inputData: any, connections: any) => {
-                    const isStack =
-                        inputData?.operation?.operation === 'stack';
-                    const connected = connectedDynamicInputNames(connections);
-                    const order = resolveStackOrder(
-                        inputData?.operation?.priorityOrder,
-                        connected,
-                    );
-                    const count = dynamicInputCount(connections);
-                    const valuePorts = Array.from(
-                        { length: count },
-                        (_, i) => {
-                            const name = dynamicInputName(i);
-                            const rank = order.indexOf(name);
-                            // In stack mode the port label carries its resolved rank, so the wire
-                            // itself reads e.g. "b (2)" - directly linking it to the priority row.
-                            return ports.layerValues({
-                                name,
-                                label:
-                                    isStack && rank >= 0
-                                        ? `${name} (${rank + 1})`
-                                        : name,
-                            });
-                        },
-                    );
-                    return [
-                        ...valuePorts,
-                        ports.combineOperation({
-                            controls: isStack
-                                ? [
-                                      combineOperationControl,
-                                      stackPriorityControl(order),
-                                  ]
-                                : [combineOperationControl],
-                        }),
-                        // Stack mode's hint lives inside the priority control itself, above the order list.
-                        ...(isStack
-                            ? []
-                            : [
-                                  helperTextPort(
-                                      ports,
-                                      formatMessage(
-                                          MESSAGES.combineNodeDescription,
-                                      ),
+            inputs: (ports: any) => (inputData: any, connections: any) => {
+                const isStack = inputData?.operation?.operation === 'stack';
+                const connected = connectedDynamicInputNames(connections);
+                const order = resolveStackOrder(
+                    inputData?.operation?.priorityOrder,
+                    connected,
+                );
+                const count = dynamicInputCount(connections);
+                const valuePorts = Array.from({ length: count }, (_, i) => {
+                    const name = dynamicInputName(i);
+                    const rank = order.indexOf(name);
+                    // In stack mode the port label carries its resolved rank, so the wire
+                    // itself reads e.g. "b (2)" - directly linking it to the priority row.
+                    return ports.layerValues({
+                        name,
+                        label:
+                            isStack && rank >= 0
+                                ? `${name} (${rank + 1})`
+                                : name,
+                    });
+                });
+                return [
+                    ...valuePorts,
+                    ports.combineOperation({
+                        controls: isStack
+                            ? [
+                                  combineOperationControl,
+                                  stackPriorityControl(order),
+                              ]
+                            : [combineOperationControl],
+                    }),
+                    // Stack mode's hint lives inside the priority control itself, above the order list.
+                    ...(isStack
+                        ? []
+                        : [
+                              helperTextPort(
+                                  ports,
+                                  formatMessage(
+                                      MESSAGES.combineNodeDescription,
                                   ),
-                              ]),
-                    ];
-                },
+                              ),
+                          ]),
+                ];
+            },
             outputs: (ports: any) => [
                 ports.layerValues({
                     name: OPERATOR_OUTPUT_PORT_NAME,

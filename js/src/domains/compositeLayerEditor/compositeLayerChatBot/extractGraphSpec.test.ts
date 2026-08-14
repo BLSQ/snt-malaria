@@ -14,11 +14,11 @@ const node = (overrides: Partial<FlumeGraph[string]>): FlumeGraph[string] => ({
 describe('extractGraphSpecFromFlume', () => {
     it('returns null for an effectively empty editor (only the default output node)', () => {
         const graph: FlumeGraph = { out: node({ id: 'out', type: 'output' }) };
-        expect(extractGraphSpecFromFlume(graph)).to.equal(null);
+        expect(extractGraphSpecFromFlume(graph)).toBe(null);
     });
 
     it('returns null for a genuinely empty graph', () => {
-        expect(extractGraphSpecFromFlume({})).to.equal(null);
+        expect(extractGraphSpecFromFlume({})).toBe(null);
     });
 
     describe('dataLayer', () => {
@@ -30,7 +30,7 @@ describe('extractGraphSpecFromFlume', () => {
                 }),
             };
             const spec = extractGraphSpecFromFlume(graph);
-            expect(spec?.nodes[0]).to.deep.equal({
+            expect(spec?.nodes[0]).toEqual({
                 id: 'layer1',
                 type: 'dataLayer',
                 metric_type_id: '5',
@@ -47,7 +47,7 @@ describe('extractGraphSpecFromFlume', () => {
                 }),
             };
             const spec = extractGraphSpecFromFlume(graph);
-            expect(spec?.nodes[0]).to.deep.equal({
+            expect(spec?.nodes[0]).toEqual({
                 id: 'layer1',
                 type: 'dataLayer',
                 metric_type_id: '5',
@@ -65,13 +65,13 @@ describe('extractGraphSpecFromFlume', () => {
                 }),
             };
             const spec = extractGraphSpecFromFlume(graph);
-            expect(spec?.nodes[0]).to.not.have.property('selected_year');
+            expect(spec?.nodes[0]).not.toHaveProperty('selected_year');
         });
 
         it('omits metric_type_id when no layer has been picked yet', () => {
             const graph: FlumeGraph = { layer1: node({ id: 'layer1' }) };
             const spec = extractGraphSpecFromFlume(graph);
-            expect(spec?.nodes[0]).to.deep.equal({
+            expect(spec?.nodes[0]).toEqual({
                 id: 'layer1',
                 type: 'dataLayer',
             });
@@ -94,7 +94,7 @@ describe('extractGraphSpecFromFlume', () => {
             }),
         };
         const spec = extractGraphSpecFromFlume(graph);
-        expect(spec?.nodes[0]).to.deep.equal({
+        expect(spec?.nodes[0]).toEqual({
             id: 'f',
             type: 'formula',
             inputs: ['layer1', 'layer2'],
@@ -119,7 +119,7 @@ describe('extractGraphSpecFromFlume', () => {
                 }),
             };
             const spec = extractGraphSpecFromFlume(graph);
-            expect(spec?.nodes[0]).to.deep.equal({
+            expect(spec?.nodes[0]).toEqual({
                 id: 'c',
                 type: 'combine',
                 inputs: ['layer1', 'layer2'],
@@ -141,7 +141,7 @@ describe('extractGraphSpecFromFlume', () => {
                 }),
             };
             const spec = extractGraphSpecFromFlume(graph);
-            expect(spec?.nodes[0].operation).to.equal('mean');
+            expect(spec?.nodes[0].operation).toBe('mean');
         });
 
         it('for "stack", emits inputs in the resolved priority order rather than port order', () => {
@@ -165,7 +165,7 @@ describe('extractGraphSpecFromFlume', () => {
                 }),
             };
             const spec = extractGraphSpecFromFlume(graph);
-            expect(spec?.nodes[0]).to.deep.equal({
+            expect(spec?.nodes[0]).toEqual({
                 id: 'c',
                 type: 'combine',
                 inputs: ['layer2', 'layer1'],
@@ -189,7 +189,7 @@ describe('extractGraphSpecFromFlume', () => {
                 }),
             };
             const spec = extractGraphSpecFromFlume(graph);
-            expect(spec?.nodes[0].inputs).to.deep.equal(['layer1', 'layer2']);
+            expect(spec?.nodes[0].inputs).toEqual(['layer1', 'layer2']);
         });
     });
 
@@ -206,7 +206,7 @@ describe('extractGraphSpecFromFlume', () => {
             }),
         };
         const spec = extractGraphSpecFromFlume(graph);
-        expect(spec?.nodes[0]).to.deep.equal({
+        expect(spec?.nodes[0]).toEqual({
             id: 'n',
             type: 'normalize',
             input: 'layer1',
@@ -235,7 +235,7 @@ describe('extractGraphSpecFromFlume', () => {
             }),
         };
         const spec = extractGraphSpecFromFlume(graph);
-        expect(spec?.nodes[0]).to.deep.equal({
+        expect(spec?.nodes[0]).toEqual({
             id: 'cl',
             type: 'classify',
             input: 'layer1',
@@ -259,7 +259,7 @@ describe('extractGraphSpecFromFlume', () => {
             }),
         };
         const spec = extractGraphSpecFromFlume(graph);
-        expect(spec?.nodes[0]).to.deep.equal({
+        expect(spec?.nodes[0]).toEqual({
             id: 'filt',
             type: 'filter',
             input: 'layer1',
@@ -287,7 +287,7 @@ describe('extractGraphSpecFromFlume', () => {
                 }),
             };
             const spec = extractGraphSpecFromFlume(graph);
-            expect(spec?.output).to.deep.equal({
+            expect(spec?.output).toEqual({
                 source: 'layer1',
                 name: '',
                 legend_type: 'ordinal',
@@ -303,7 +303,7 @@ describe('extractGraphSpecFromFlume', () => {
                 out: node({ id: 'out', type: 'output' }),
             };
             const spec = extractGraphSpecFromFlume(graph);
-            expect(spec?.output).to.deep.equal({
+            expect(spec?.output).toEqual({
                 source: null,
                 name: '',
                 legend_type: 'auto',
@@ -320,7 +320,7 @@ describe('extractGraphSpecFromFlume', () => {
             weird: node({ id: 'weird', type: 'unknown' as never }),
         };
         const spec = extractGraphSpecFromFlume(graph);
-        expect(spec?.nodes).to.have.length(1);
-        expect(spec?.nodes[0].id).to.equal('layer1');
+        expect(spec?.nodes).toHaveLength(1);
+        expect(spec?.nodes[0].id).toBe('layer1');
     });
 });

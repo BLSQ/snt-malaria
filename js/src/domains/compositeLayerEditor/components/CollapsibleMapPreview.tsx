@@ -392,7 +392,11 @@ export const CollapsibleMapPreview: FC<Props> = ({
                 onClose={() => setDialogOpen(false)}
                 maxWidth={dialogSidePanel ? false : 'lg'}
                 fullWidth
-                sx={dialogSidePanel ? styles.dialogPaperWithSidePanel : undefined}
+                sx={
+                    dialogSidePanel
+                        ? styles.dialogPaperWithSidePanel
+                        : undefined
+                }
             >
                 <DialogTitle sx={styles.dialogTitle}>
                     {label}
