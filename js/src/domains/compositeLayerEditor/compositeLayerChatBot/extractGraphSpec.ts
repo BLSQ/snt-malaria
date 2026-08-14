@@ -41,6 +41,27 @@ const singleInputId = (
 ): string | undefined => node.connections.inputs[portName]?.[0]?.nodeId;
 
 /**
+ * A "stack" combine node's connected node ids, reordered to match the resolved priority order
+ * (ascending - the last entry wins) rather than plain port order, so the round-tripped spec still
+ * matches whatever the user last set via the priority control.
+ */
+const stackOrderedInputIds = (
+    entries: Array<{ port: string; nodeId: string }>,
+    priorityOrder: unknown,
+): string[] => {
+    const order = resolveStackOrder(
+        priorityOrder,
+        entries.map(entry => entry.port),
+    );
+    const nodeIdByPort = new Map(
+        entries.map(entry => [entry.port, entry.nodeId]),
+    );
+    return order
+        .map(port => nodeIdByPort.get(port))
+        .filter((id): id is string => id !== undefined);
+};
+
+/**
  * Converts the editor's Flume node map back into the abstract graph spec the AI works with - the
  * exact reverse of `buildFlumeGraphFromSpec`. Sent as chat context so the model can make iterative
  * changes relative to what's on the canvas. Returns null for an effectively empty editor (only the
@@ -81,21 +102,12 @@ export const extractGraphSpecFromFlume = (
                 (inputData.operation?.operation as CombineOperation) ??
                 'mean';
             const entries = orderedInputEntries(node);
-            // For "stack", the spec's `inputs` order IS the priority order (ascending - last
-            // wins), so emit the resolved priority order rather than plain port order, so the
-            // round-tripped spec still matches whatever the user last set via the priority control.
             const inputs =
                 operation === 'stack'
-                    ? resolveStackOrder(
+                    ? stackOrderedInputIds(
+                          entries,
                           inputData.operation?.priorityOrder,
-                          entries.map(entry => entry.port),
                       )
-                          .map(
-                              port =>
-                                  entries.find(entry => entry.port === port)
-                                      ?.nodeId,
-                          )
-                          .filter((id): id is string => id !== undefined)
                     : entries.map(entry => entry.nodeId);
             nodes.push({
                 id: node.id,

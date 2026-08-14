@@ -1,10 +1,9 @@
 import React, { FC } from 'react';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import { Box, IconButton } from '@mui/material';
+import { Box } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
+import { StackPriorityRow } from './StackPriorityRow';
 
 const styles = {
     root: {
@@ -19,24 +18,6 @@ const styles = {
         color: 'text.secondary',
         fontSize: 11,
         lineHeight: 1.3,
-    },
-    row: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 0.75,
-        border: theme => `1px solid ${theme.palette.divider}`,
-        borderRadius: '6px',
-        padding: theme => theme.spacing(0.25, 0.5),
-    },
-    rank: {
-        minWidth: 16,
-        textAlign: 'center',
-        color: 'text.secondary',
-        fontSize: 12,
-    },
-    portLabel: {
-        flex: 1,
-        fontSize: 13,
     },
 } satisfies SxStyles;
 
@@ -77,30 +58,15 @@ export const StackPriorityControl: FC<Props> = ({ order, onChange }) => {
                 {formatMessage(MESSAGES.stackPriorityHint)}
             </Box>
             {order.map((port, index) => (
-                <Box sx={styles.row} key={port}>
-                    <Box component="span" sx={styles.rank}>
-                        {index + 1}
-                    </Box>
-                    <Box component="span" sx={styles.portLabel}>
-                        {port}
-                    </Box>
-                    <IconButton
-                        size="small"
-                        disabled={index === 0}
-                        onClick={() => move(index, -1)}
-                        aria-label={formatMessage(MESSAGES.stackMoveUp)}
-                    >
-                        <ArrowUpwardIcon fontSize="inherit" />
-                    </IconButton>
-                    <IconButton
-                        size="small"
-                        disabled={index === order.length - 1}
-                        onClick={() => move(index, 1)}
-                        aria-label={formatMessage(MESSAGES.stackMoveDown)}
-                    >
-                        <ArrowDownwardIcon fontSize="inherit" />
-                    </IconButton>
-                </Box>
+                <StackPriorityRow
+                    key={port}
+                    port={port}
+                    rank={index + 1}
+                    isFirst={index === 0}
+                    isLast={index === order.length - 1}
+                    onMoveUp={() => move(index, -1)}
+                    onMoveDown={() => move(index, 1)}
+                />
             ))}
         </Box>
     );

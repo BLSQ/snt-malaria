@@ -181,7 +181,7 @@ this graph, and always return the COMPLETE updated graph:
 
 
 class OrgUnitSelectionSpec(BaseModel, extra="allow"):
-    mode: str = "none"
+    mode: str = "all"
     ids: list[int] = Field(default_factory=list)
 
 

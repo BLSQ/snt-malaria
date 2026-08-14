@@ -3,11 +3,7 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import {
     Box,
     Button,
-    Checkbox,
     List,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
     ToggleButton,
     ToggleButtonGroup,
     Typography,
@@ -24,6 +20,7 @@ import {
     setSelectionMode,
     toggleOrgUnit,
 } from '../utils/orgUnitSelection';
+import { DistrictListItem } from './DistrictListItem';
 
 const styles = {
     root: {
@@ -71,7 +68,7 @@ export const OrgUnitSelectionPanel: FC<Props> = ({
     orgUnits,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState<string>('');
 
     const filteredOrgUnits = useMemo(() => {
         const term = search.trim().toLowerCase();
@@ -127,28 +124,16 @@ export const OrgUnitSelectionPanel: FC<Props> = ({
                 clearable
             />
             <List dense sx={styles.list}>
-                {filteredOrgUnits.map(orgUnit => {
-                    const picked = isDistrictPicked(value, orgUnit.id);
-                    return (
-                        <ListItemButton
-                            key={orgUnit.id}
-                            dense
-                            onClick={() =>
-                                onChange(toggleOrgUnit(value, orgUnit.id))
-                            }
-                        >
-                            <ListItemIcon>
-                                <Checkbox
-                                    edge="start"
-                                    checked={picked}
-                                    tabIndex={-1}
-                                    disableRipple
-                                />
-                            </ListItemIcon>
-                            <ListItemText primary={orgUnit.name} />
-                        </ListItemButton>
-                    );
-                })}
+                {filteredOrgUnits.map(orgUnit => (
+                    <DistrictListItem
+                        key={orgUnit.id}
+                        orgUnit={orgUnit}
+                        picked={isDistrictPicked(value, orgUnit.id)}
+                        onToggle={orgUnitId =>
+                            onChange(toggleOrgUnit(value, orgUnitId))
+                        }
+                    />
+                ))}
                 {filteredOrgUnits.length === 0 && (
                     <Typography
                         variant="body2"

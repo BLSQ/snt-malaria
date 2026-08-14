@@ -285,6 +285,29 @@ class ParseCompositeLayerGraphResponseTestCase(SimpleTestCase):
         self.assertEqual(filter_node.org_units.mode, "none")
         self.assertEqual(filter_node.org_units.ids, [10, 11])
 
+    def test_filter_node_org_units_without_mode_defaults_to_all(self):
+        response = json.dumps(
+            {
+                "graph": {
+                    "nodes": [
+                        {"id": "rainfall", "type": "dataLayer", "metric_type_id": "1"},
+                        {
+                            "id": "f",
+                            "type": "filter",
+                            "input": "rainfall",
+                            "org_units": {"ids": [10, 11]},
+                        },
+                    ],
+                    "output": {"source": "f", "name": "Filtered rainfall", "legend_type": "auto"},
+                },
+                "message": "Created.",
+            }
+        )
+
+        parsed = parse_composite_layer_graph_response(response)
+
+        self.assertEqual(parsed.graph.nodes[1].org_units.mode, "all")
+
     def test_filter_node_without_org_units_parses_as_none(self):
         response = json.dumps(
             {

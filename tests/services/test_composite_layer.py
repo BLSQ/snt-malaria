@@ -948,6 +948,15 @@ class CompositeLayerEvaluatorTestCase(SNTMalariaTestMixin, TestCase):
         with self.assertRaises(CompositeGraphError):
             CompositeGraphEvaluator(self.account, self._filter_graph(mode="some"), self.org_unit_ids).run()
 
+    def test_filter_missing_mode_defaults_to_all(self):
+        # A missing `mode` key (as opposed to an explicit "none") must default to "all" - matching
+        # the frontend's own empty state and the AI spec's default - so an incomplete selection
+        # config is a no-op (every district kept) rather than silently filtering everything out.
+        graph = self._filter_graph(mode="all")
+        graph["filt"]["inputData"]["selection"]["orgUnits"] = {}
+        values = CompositeGraphEvaluator(self.account, graph, self.org_unit_ids).run()
+        self.assertEqual(values, {None: {self.ou1.id: 2.0, self.ou2.id: 4.0}})
+
     def test_filter_then_normalize_rescales_over_the_subset(self):
         # Regression test for the "drop, don't null" invariant: normalize must succeed and rescale
         # over just the surviving district(s), rather than crashing on a null value.

@@ -87,7 +87,8 @@ export const MESSAGES = defineMessages({
     yearlyValuesHelperText: {
         id: 'iaso.snt_malaria.compositeLayerEditor.yearlyValuesHelperText',
         defaultMessage:
-            'This layer has data for multiple years. Leave it "Yearly" to combine or transform the data year by year downstream, or pick a single year to use only that year, turning this layer non-yearly.',
+            'This layer has data for multiple years. Leave it "Yearly" to ' +
+            'combine or transform the data year by year downstream, or pick a single year to use only that year, turning this layer non-yearly.',
     },
     computingPreview: {
         id: 'iaso.snt_malaria.compositeLayerEditor.computingPreview',

@@ -516,7 +516,10 @@ class CompositeGraphEvaluator:
         field rather than separate included/excluded ones.
         """
         config = self._get_control_value(node, "selection", "orgUnits") or {}
-        mode = (config.get("mode") or "none").lower()
+        # Same default as the frontend's own empty state (DEFAULT_ORG_UNIT_SELECTION) and the AI
+        # spec's OrgUnitSelectionSpec, so a missing/incomplete selection is a no-op (every district
+        # kept) rather than silently filtering everything out.
+        mode = (config.get("mode") or "all").lower()
         if mode not in ("all", "none"):
             raise CompositeGraphError(f"A filter node has an unknown selection mode '{mode}'.")
 
