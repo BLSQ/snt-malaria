@@ -83,8 +83,14 @@ export type CompositeLayerAIRequest = {
     current_graph?: CurrentGraph | null;
 };
 
+export type QuickReplyQuestion = {
+    question: string;
+    options: string[];
+};
+
 export type CompositeLayerAIResponse = {
     assistant_message: string;
     graph: GeneratedGraph | null;
+    quick_replies: QuickReplyQuestion[] | null;
     conversation_history: ConversationEntry[];
 };
