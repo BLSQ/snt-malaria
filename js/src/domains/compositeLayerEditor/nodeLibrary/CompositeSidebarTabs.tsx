@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Tab, Tabs, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
@@ -7,6 +7,7 @@ import { MESSAGES } from '../messages';
 export type CompositeSidebarTab = 'library' | 'ai';
 
 const styles = {
+    noTabsTitle: { display: 'flex', alignItems: 'center', minHeight: 48 },
     tab: { textTransform: 'none', minHeight: 48 },
 } satisfies SxStyles;
 
@@ -26,9 +27,11 @@ export const CompositeSidebarTabs: FC<Props> = ({
     const { formatMessage } = useSafeIntl();
     if (!showTabs) {
         return (
-            <Typography variant="h6">
-                {formatMessage(MESSAGES.nodeLibraryTabLabel)}
-            </Typography>
+            <Box sx={styles.noTabsTitle}>
+                <Typography variant="h6">
+                    {formatMessage(MESSAGES.nodeLibraryTabLabel)}
+                </Typography>
+            </Box>
         );
     }
     return (
