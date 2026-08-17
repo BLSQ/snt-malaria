@@ -21,6 +21,7 @@ export type CompositeNodeType =
     | 'combine'
     | 'normalize'
     | 'classify'
+    | 'filter'
     | 'output';
 
 /** Every `CompositeNodeType`, keyed by itself. */
@@ -30,6 +31,7 @@ export const NODE_TYPES = {
     combine: 'combine',
     normalize: 'normalize',
     classify: 'classify',
+    filter: 'filter',
     output: 'output',
 } as const satisfies Record<CompositeNodeType, CompositeNodeType>;
 

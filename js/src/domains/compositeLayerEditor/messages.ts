@@ -87,7 +87,8 @@ export const MESSAGES = defineMessages({
     yearlyValuesHelperText: {
         id: 'iaso.snt_malaria.compositeLayerEditor.yearlyValuesHelperText',
         defaultMessage:
-            'This layer has data for multiple years. Leave it "Yearly" to combine or transform the data year by year downstream, or pick a single year to use only that year, turning this layer non-yearly.',
+            'This layer has data for multiple years. Leave it "Yearly" to ' +
+            'combine or transform the data year by year downstream, or pick a single year to use only that year, turning this layer non-yearly.',
     },
     computingPreview: {
         id: 'iaso.snt_malaria.compositeLayerEditor.computingPreview',
@@ -165,7 +166,7 @@ export const MESSAGES = defineMessages({
     combineNodeDescription: {
         id: 'iaso.snt_malaria.compositeLayerEditor.combineNodeDescription',
         defaultMessage:
-            'Combine any number of inputs per district with one operation: mean, sum, minimum or maximum. Adds an input slot each time you connect one.',
+            'Combine any number of inputs per district with one operation: mean, sum, minimum, maximum, or stack them by priority. Adds an input slot each time you connect one.',
     },
     combineOperationLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.combineOperationLabel',
@@ -186,6 +187,32 @@ export const MESSAGES = defineMessages({
     combineOpMax: {
         id: 'iaso.snt_malaria.compositeLayerEditor.combineOpMax',
         defaultMessage: 'Maximum',
+    },
+    combineOpStack: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.combineOpStack',
+        defaultMessage: 'Stack',
+    },
+    combineOpStackDescription: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.combineOpStackDescription',
+        defaultMessage:
+            'Merges input layers by stacking them in a priority order',
+    },
+    stackPriorityLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.stackPriorityLabel',
+        defaultMessage: 'Priority',
+    },
+    stackPriorityHint: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.stackPriorityHint',
+        defaultMessage:
+            'Order the input layers by priority. Layers that are lower in the stack override inputs from layers that are higher up.',
+    },
+    stackMoveUp: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.stackMoveUp',
+        defaultMessage: 'Move up in priority',
+    },
+    stackMoveDown: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.stackMoveDown',
+        defaultMessage: 'Move down in priority',
     },
     normalizeNodeLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.normalizeNodeLabel',
@@ -242,6 +269,70 @@ export const MESSAGES = defineMessages({
     classPortLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.classPortLabel',
         defaultMessage: 'Class',
+    },
+    // Filter node.
+    filterNodeLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterNodeLabel',
+        defaultMessage: 'Filter districts',
+    },
+    filterNodeDescription: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterNodeDescription',
+        defaultMessage:
+            'Keep only a selected set of districts from the input; every other district ends up with no data, as if this layer never covered it.',
+    },
+    filterDistrictsLabel: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterDistrictsLabel',
+        defaultMessage: 'Districts',
+    },
+    filterModeAll: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterModeAll',
+        defaultMessage: 'Exclude selected',
+    },
+    filterModeNone: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterModeNone',
+        defaultMessage: 'Include selected',
+    },
+    filterSelectionSummary: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterSelectionSummary',
+        defaultMessage: '{selected} of {total} districts selected',
+    },
+    filterEditDistricts: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterEditDistricts',
+        defaultMessage: 'Districts',
+    },
+    filterSelectAllDistricts: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterSelectAllDistricts',
+        defaultMessage: 'Exclude selected',
+    },
+    filterSelectNoDistricts: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterSelectNoDistricts',
+        defaultMessage: 'Include selected',
+    },
+    filterSearchDistrictsPlaceholder: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterSearchDistrictsPlaceholder',
+        defaultMessage: 'Search districts',
+    },
+    filterNoSearchResults: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterNoSearchResults',
+        defaultMessage: 'No districts match your search.',
+    },
+    filterResetOverrides: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterResetOverrides',
+        defaultMessage: 'Reset',
+    },
+    filterCheckboxHintAllMode: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterCheckboxHintAllMode',
+        defaultMessage:
+            'Every district is selected except the ones you check below.',
+    },
+    filterCheckboxHintNoneMode: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterCheckboxHintNoneMode',
+        defaultMessage:
+            'No district is selected except the ones you check below.',
+    },
+    filterPickedCount: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.filterPickedCount',
+        defaultMessage: '{count} checked',
     },
     outputNodeLabel: {
         id: 'iaso.snt_malaria.compositeLayerEditor.outputNodeLabel',

@@ -14,6 +14,7 @@ export const NODE_WIDTH: Record<CompositeNodeType, number> = {
     combine: OPERATOR_NODE_TYPES.combine.width,
     normalize: OPERATOR_NODE_TYPES.normalize.width,
     classify: OPERATOR_NODE_TYPES.classify.width,
+    filter: OPERATOR_NODE_TYPES.filter.width,
     output: 330,
 };
 
@@ -27,6 +28,7 @@ export const NODE_HEIGHT: Record<CompositeNodeType, number> = {
     combine: 140,
     normalize: 130,
     classify: 140,
+    filter: 380,
     output: 410,
 };
 

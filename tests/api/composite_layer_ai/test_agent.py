@@ -17,24 +17,41 @@ METRIC_TYPES = [
     {"id": 2, "name": "Incidence", "description": ""},
 ]
 
+ORG_UNITS = [
+    {"id": 10, "name": "North district"},
+    {"id": 11, "name": "South district"},
+]
+
 
 class BuildSystemPromptTestCase(SimpleTestCase):
     def test_catalog_placeholder_is_replaced(self):
-        prompt = build_system_prompt(METRIC_TYPES)
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertNotIn("{metric_types_catalog}", prompt)
         self.assertIn('- id=1, name="Rainfall", description="Yearly rainfall"', prompt)
         self.assertIn('- id=2, name="Incidence"', prompt)
 
     def test_empty_catalog(self):
-        prompt = build_system_prompt([])
+        prompt = build_system_prompt([], ORG_UNITS)
 
         self.assertIn("(no data layers available for this account)", prompt)
+
+    def test_org_units_catalog_placeholder_is_replaced(self):
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+
+        self.assertNotIn("{org_units_catalog}", prompt)
+        self.assertIn('- id=10, name="North district"', prompt)
+        self.assertIn('- id=11, name="South district"', prompt)
+
+    def test_empty_org_units_catalog(self):
+        prompt = build_system_prompt(METRIC_TYPES, [])
+
+        self.assertIn("(no districts available for this account)", prompt)
 
     def test_json_schema_braces_survive_substitution(self):
         # The template is applied with str.replace, so the literal braces of the JSON schema
         # example must come through unescaped and intact.
-        prompt = build_system_prompt(METRIC_TYPES)
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn('"graph": {', prompt)
         self.assertIn('"output": {"source":', prompt)
@@ -45,25 +62,25 @@ class BuildSystemPromptTestCase(SimpleTestCase):
             "output": {"source": "rainfall", "name": "Rainfall", "legend_type": "auto"},
         }
 
-        prompt = build_system_prompt(METRIC_TYPES, current_graph=current_graph)
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS, current_graph=current_graph)
 
         self.assertIn("## Current graph in the editor", prompt)
         self.assertIn(json.dumps(current_graph, indent=2), prompt)
 
     def test_no_current_graph_section_when_absent(self):
-        prompt = build_system_prompt(METRIC_TYPES, current_graph=None)
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS, current_graph=None)
 
         self.assertNotIn("## Current graph in the editor", prompt)
 
     def test_normalize_type_documented_in_prompt(self):
-        prompt = build_system_prompt(METRIC_TYPES)
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn("normalize_type", prompt)
         self.assertIn("min-max", prompt)
         self.assertIn("percentile", prompt)
 
     def test_selected_year_documented_in_prompt(self):
-        prompt = build_system_prompt(METRIC_TYPES)
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn("selected_year", prompt)
         self.assertIn("## Working with years", prompt)
@@ -71,7 +88,7 @@ class BuildSystemPromptTestCase(SimpleTestCase):
     def test_multi_year_comparison_via_repeated_data_layer_documented_in_prompt(self):
         # The AI must know it can add the same metric type as two separate dataLayer nodes, each
         # pinned to a different year, to compare specific years of one layer against each other.
-        prompt = build_system_prompt(METRIC_TYPES)
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn("multiple separate `dataLayer` nodes", prompt)
         self.assertIn("2023 rainfall ÷ 2022 rainfall", prompt)
@@ -81,15 +98,42 @@ class BuildSystemPromptTestCase(SimpleTestCase):
             {"id": 1, "name": "Rainfall", "description": "", "years": [2024, 2023, 2022]},
         ]
 
-        prompt = build_system_prompt(metric_types_with_years)
+        prompt = build_system_prompt(metric_types_with_years, ORG_UNITS)
 
         self.assertIn("years=[2024, 2023, 2022]", prompt)
 
     def test_years_omitted_from_catalog_when_absent(self):
         # METRIC_TYPES has no "years" key at all (a non-yearly layer) - nothing should be appended.
-        prompt = build_system_prompt(METRIC_TYPES)
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertNotIn("years=", prompt)
+
+    def test_filter_node_documented_in_prompt(self):
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+
+        self.assertIn("`filter`", prompt)
+        self.assertIn("org_units", prompt)
+        self.assertIn('"mode"', prompt)
+        self.assertIn('"ids"', prompt)
+
+    def test_stack_operation_documented_in_prompt(self):
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+
+        self.assertIn("stack", prompt)
+        self.assertIn("ORDER-DEPENDENT", prompt)
+        self.assertIn("ASCENDING priority", prompt)
+
+    def test_never_invent_org_unit_ids_documented_in_prompt(self):
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+
+        self.assertIn("never invent an id", prompt)
+
+    def test_filter_mode_choice_heuristic_documented_in_prompt(self):
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+
+        self.assertIn("keeps `ids` shortest", prompt)
+        self.assertIn("explicitly says", prompt)
+        self.assertIn("always wins over the shortest-list heuristic", prompt)
 
 
 GRAPH_RESPONSE = {
@@ -124,6 +168,17 @@ class ParseCompositeLayerGraphResponseTestCase(SimpleTestCase):
         # "You're right - that's a needless round-trip." before the graph), with no code fence to
         # strip - regression test for the resulting raw-JSON-dumped-into-chat bug.
         response_text = f"You're right, let's simplify that.\n\n{GRAPH_RESPONSE_JSON}"
+
+        parsed = parse_composite_layer_graph_response(response_text)
+
+        self.assertEqual(parsed.message, GRAPH_RESPONSE["message"])
+        self.assertEqual(parsed.graph.nodes[0].id, "rainfall")
+
+    def test_conversational_remark_after_with_no_fence(self):
+        # The model is told not to add text outside the JSON, but sometimes appends a trailing
+        # remark anyway, with no code fence to strip - regression test for the resulting
+        # "Extra data" JSONDecodeError that (before this fix) dumped the raw JSON into the chat.
+        response_text = f"{GRAPH_RESPONSE_JSON}\n\nLet me know if you'd like any changes."
 
         parsed = parse_composite_layer_graph_response(response_text)
 
@@ -204,6 +259,98 @@ class ParseCompositeLayerGraphResponseTestCase(SimpleTestCase):
 
         self.assertIsNone(parsed.graph.nodes[1].normalize_type)
 
+    def test_filter_node_parses(self):
+        response = json.dumps(
+            {
+                "graph": {
+                    "nodes": [
+                        {"id": "rainfall", "type": "dataLayer", "metric_type_id": "1"},
+                        {
+                            "id": "north_only",
+                            "type": "filter",
+                            "input": "rainfall",
+                            "org_units": {"mode": "none", "ids": [10, 11]},
+                        },
+                    ],
+                    "output": {"source": "north_only", "name": "Northern rainfall", "legend_type": "auto"},
+                },
+                "message": "Filtered to the northern districts.",
+            }
+        )
+
+        parsed = parse_composite_layer_graph_response(response)
+
+        filter_node = parsed.graph.nodes[1]
+        self.assertEqual(filter_node.input, "rainfall")
+        self.assertEqual(filter_node.org_units.mode, "none")
+        self.assertEqual(filter_node.org_units.ids, [10, 11])
+
+    def test_filter_node_org_units_without_mode_defaults_to_all(self):
+        response = json.dumps(
+            {
+                "graph": {
+                    "nodes": [
+                        {"id": "rainfall", "type": "dataLayer", "metric_type_id": "1"},
+                        {
+                            "id": "f",
+                            "type": "filter",
+                            "input": "rainfall",
+                            "org_units": {"ids": [10, 11]},
+                        },
+                    ],
+                    "output": {"source": "f", "name": "Filtered rainfall", "legend_type": "auto"},
+                },
+                "message": "Created.",
+            }
+        )
+
+        parsed = parse_composite_layer_graph_response(response)
+
+        self.assertEqual(parsed.graph.nodes[1].org_units.mode, "all")
+
+    def test_filter_node_without_org_units_parses_as_none(self):
+        response = json.dumps(
+            {
+                "graph": {
+                    "nodes": [
+                        {"id": "rainfall", "type": "dataLayer", "metric_type_id": "1"},
+                        {"id": "f", "type": "filter", "input": "rainfall"},
+                    ],
+                    "output": {"source": "f", "name": "Filtered rainfall", "legend_type": "auto"},
+                },
+                "message": "Created.",
+            }
+        )
+
+        parsed = parse_composite_layer_graph_response(response)
+
+        self.assertIsNone(parsed.graph.nodes[1].org_units)
+
+    def test_combine_stack_operation_parses(self):
+        response = json.dumps(
+            {
+                "graph": {
+                    "nodes": [
+                        {"id": "rainfall", "type": "dataLayer", "metric_type_id": "1"},
+                        {"id": "incidence", "type": "dataLayer", "metric_type_id": "2"},
+                        {
+                            "id": "merged",
+                            "type": "combine",
+                            "inputs": ["rainfall", "incidence"],
+                            "operation": "stack",
+                        },
+                    ],
+                    "output": {"source": "merged", "name": "Merged layer", "legend_type": "auto"},
+                },
+                "message": "Stacked the two layers.",
+            }
+        )
+
+        parsed = parse_composite_layer_graph_response(response)
+
+        self.assertEqual(parsed.graph.nodes[2].operation, "stack")
+        self.assertEqual(parsed.graph.nodes[2].inputs, ["rainfall", "incidence"])
+
     def test_schema_invalid_json_raises_validation_error_not_json_decode_error(self):
         # Regression test: a `classify` node with a numeric `default` (the model tried to make
         # classify emit numbers instead of text labels) is valid JSON that fails our schema - the
@@ -228,7 +375,7 @@ class GenerateCompositeLayerGraphTestCase(SimpleTestCase):
     def test_conversational_response_is_shown_verbatim(self, mock_call_claude):
         mock_call_claude.return_value = "Which data layer did you mean - rainfall or incidence?"
 
-        result = generate_composite_layer_graph("create a layer", [], [])
+        result = generate_composite_layer_graph("create a layer", [], [], [])
 
         self.assertEqual(result["assistant_message"], mock_call_claude.return_value)
         self.assertIsNone(result["graph"])
@@ -244,7 +391,7 @@ class GenerateCompositeLayerGraphTestCase(SimpleTestCase):
         }
         mock_call_claude.return_value = json.dumps(invalid_response)
 
-        result = generate_composite_layer_graph("create a layer", [], [])
+        result = generate_composite_layer_graph("create a layer", [], [], [])
 
         self.assertEqual(result["assistant_message"], invalid_response["message"])
         self.assertIsNone(result["graph"])
@@ -257,7 +404,23 @@ class GenerateCompositeLayerGraphTestCase(SimpleTestCase):
             {"graph": {"nodes": [{"id": "x", "type": "classify", "input": "y", "default": 4}]}}
         )
 
-        result = generate_composite_layer_graph("create a layer", [], [])
+        result = generate_composite_layer_graph("create a layer", [], [], [])
 
         self.assertIn("couldn't put together a valid graph", result["assistant_message"])
+        self.assertIsNone(result["graph"])
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
+    def test_malformed_json_graph_attempt_uses_generic_fallback_not_raw_text(self, mock_call_claude):
+        # Starts with "{" (an attempted graph, per the prompt's own contract) but a dropped quote
+        # makes it invalid JSON - must degrade the same as a schema-invalid response, never dump
+        # this broken text to the user as if it were a conversational reply.
+        mock_call_claude.return_value = (
+            '{"graph": {"nodes": [], "output": {source": "x", "name": "test", "legend_type": "auto"}}, '
+            '"message": "Here you go."}'
+        )
+
+        result = generate_composite_layer_graph("create a layer", [], [], [])
+
+        self.assertIn("couldn't put together a valid graph", result["assistant_message"])
+        self.assertNotIn("nodes", result["assistant_message"])
         self.assertIsNone(result["graph"])

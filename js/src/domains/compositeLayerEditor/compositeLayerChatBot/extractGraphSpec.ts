@@ -1,5 +1,7 @@
 import { ALL_YEARS_VALUE } from '../flumeConfig';
 import { FlumeGraph, FlumeGraphNode, NODE_TYPES } from '../types/flumeGraph';
+import { normalizeSelection } from '../utils/orgUnitSelection';
+import { resolveStackOrder } from '../utils/stackOrder';
 import {
     ClassifyRuleSpec,
     CombineOperation,
@@ -15,21 +17,49 @@ const MAX_DYNAMIC_INPUTS = 26;
 const dynamicInputName = (index: number): string =>
     String.fromCharCode('a'.charCodeAt(0) + index);
 
+// Connected upstream (port, nodeId) pairs in port order (a, b, c, …).
+const orderedInputEntries = (
+    node: FlumeGraphNode,
+): Array<{ port: string; nodeId: string }> => {
+    const entries: Array<{ port: string; nodeId: string }> = [];
+    for (let index = 0; index < MAX_DYNAMIC_INPUTS; index += 1) {
+        const port = dynamicInputName(index);
+        const connected = node.connections.inputs[port];
+        if (connected?.[0]) entries.push({ port, nodeId: connected[0].nodeId });
+    }
+    return entries;
+};
+
 // Connected upstream node ids in port order (a, b, c, …) - the same order the formula variables
 // reference, so it becomes the spec's `inputs` list.
-const orderedInputIds = (node: FlumeGraphNode): string[] => {
-    const ids: string[] = [];
-    for (let index = 0; index < MAX_DYNAMIC_INPUTS; index += 1) {
-        const connected = node.connections.inputs[dynamicInputName(index)];
-        if (connected?.[0]) ids.push(connected[0].nodeId);
-    }
-    return ids;
-};
+const orderedInputIds = (node: FlumeGraphNode): string[] =>
+    orderedInputEntries(node).map(entry => entry.nodeId);
 
 const singleInputId = (
     node: FlumeGraphNode,
     portName: string,
 ): string | undefined => node.connections.inputs[portName]?.[0]?.nodeId;
+
+/**
+ * A "stack" combine node's connected node ids, reordered to match the resolved priority order
+ * (ascending - the last entry wins) rather than plain port order, so the round-tripped spec still
+ * matches whatever the user last set via the priority control.
+ */
+const stackOrderedInputIds = (
+    entries: Array<{ port: string; nodeId: string }>,
+    priorityOrder: unknown,
+): string[] => {
+    const order = resolveStackOrder(
+        priorityOrder,
+        entries.map(entry => entry.port),
+    );
+    const nodeIdByPort = new Map(
+        entries.map(entry => [entry.port, entry.nodeId]),
+    );
+    return order
+        .map(port => nodeIdByPort.get(port))
+        .filter((id): id is string => id !== undefined);
+};
 
 /**
  * Converts the editor's Flume node map back into the abstract graph spec the AI works with - the
@@ -68,13 +98,21 @@ export const extractGraphSpecFromFlume = (
                 formula: (inputData.formula?.formula as string) ?? '',
             });
         } else if (node.type === NODE_TYPES.combine) {
+            const operation =
+                (inputData.operation?.operation as CombineOperation) ?? 'mean';
+            const entries = orderedInputEntries(node);
+            const inputs =
+                operation === 'stack'
+                    ? stackOrderedInputIds(
+                          entries,
+                          inputData.operation?.priorityOrder,
+                      )
+                    : entries.map(entry => entry.nodeId);
             nodes.push({
                 id: node.id,
                 type: NODE_TYPES.combine,
-                inputs: orderedInputIds(node),
-                operation:
-                    (inputData.operation?.operation as CombineOperation) ??
-                    'mean',
+                inputs,
+                operation,
             });
         } else if (node.type === NODE_TYPES.normalize) {
             nodes.push({
@@ -98,10 +136,17 @@ export const extractGraphSpecFromFlume = (
                 rules: config?.rules ?? [],
                 default: config?.default ?? '',
             });
+        } else if (node.type === NODE_TYPES.filter) {
+            nodes.push({
+                id: node.id,
+                type: NODE_TYPES.filter,
+                input: singleInputId(node, 'a'),
+                org_units: normalizeSelection(inputData.selection?.orgUnits),
+            });
         } else if (node.type === NODE_TYPES.output) {
             outputNode = node;
         }
-        // Any other node type is not part of the spec contract - skip it.
+        // Any other node type (e.g. a canvas comment) is not part of the spec contract - skip it.
     });
 
     if (nodes.length === 0) return null;

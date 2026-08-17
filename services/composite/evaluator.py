@@ -10,10 +10,17 @@ evaluator resolves it in dependency order (with cycle detection) and evaluates e
 - ``classify``:  maps a numeric input to category labels using ordered threshold rules.
 - ``normalize``: rescales a numeric input to 0-1 or 0-100, per year, either by min-max position or
                  by percentile rank.
-- ``combine``:   reduces any number of numeric inputs per org unit (mean/sum/min/max).
+- ``combine``:   reduces any number of numeric inputs per org unit (mean/sum/min/max), or stacks
+                 them by priority (see ``_resolve_stack``).
+- ``filter``:    restricts a single input to a selected set of org units.
 - ``output``:    the single terminal node; its connected input is the resulting composite layer.
 
-Values are keyed by year internally as ``{year: {org_unit_id: value}}`` (``None`` = timeless).
+Values are keyed by year internally as ``{year: {org_unit_id: value}}`` (``None`` = timeless). An
+org unit absent from a year's mapping means "no value here" - no node ever stores ``None``; a
+``filter`` node drops org units it doesn't select rather than nulling them out, which is what lets
+``combine``'s ``stack`` operation treat "does this input have a value for this org unit" as a plain
+membership check.
+
 When yearly layers are combined, the result covers the intersection of their years, while timeless
 layers broadcast across every resulting year.
 """
@@ -55,13 +62,21 @@ FORMULA_FUNCTIONS = {
 }
 
 # Reducers available to a ``combine`` node. All are symmetric (order-independent), which is what
-# makes a single dropdown safe: the unlabeled inputs a, b, c, … are interchangeable.
+# makes a single dropdown safe: the unlabeled inputs a, b, c, … are interchangeable. ``stack`` (see
+# STACK_OPERATION below) is deliberately not in this dict: it is the one ``combine`` operation that
+# is NOT a symmetric reducer, so it takes a separate code path (``_resolve_stack``).
 COMBINE_OPERATIONS: Dict[str, Callable[[List[float]], float]] = {
     "mean": lambda values: sum(values) / len(values),
     "sum": sum,
     "min": min,
     "max": max,
 }
+
+# The one ``combine`` operation that merges its inputs over the UNION of their org units by
+# priority, instead of reducing the INTERSECTION with a symmetric function. Priority is given
+# explicitly (``inputData.operation.priorityOrder``, see ``_resolve_stack_order``) since the
+# unlabeled ports a, b, c, … are ordered only by connection slot, not by meaning.
+STACK_OPERATION = "stack"
 
 
 class CompositeGraphError(Exception):
@@ -211,6 +226,8 @@ class CompositeGraphEvaluator:
             result = self._resolve_classify(node)
         elif node_type == "normalize":
             result = self._resolve_normalize(node)
+        elif node_type == "filter":
+            result = self._resolve_filter(node)
         elif node_type == "combine":
             result = self._resolve_combine(node)
         else:
@@ -275,15 +292,7 @@ class CompositeGraphEvaluator:
 
     def _resolve_formula(self, node: dict) -> ValuesByYear:
         # Inputs are dynamic (a, b, c, …), so resolve whichever ports are actually connected.
-        inputs: Dict[str, ValuesByYear] = {}
-        connected_ports = (node.get("connections") or {}).get("inputs") or {}
-        for port in connected_ports:
-            source = self._get_single_input_source(node, port)
-            if source is not None:
-                inputs[port] = self._resolve(source["nodeId"])
-
-        if not inputs:
-            raise CompositeGraphIncompleteError("A formula node has no connected inputs.")
+        inputs = self._resolve_dynamic_inputs(node, "A formula node has no connected inputs.")
 
         expression = (self._get_control_value(node, "formula", "formula") or "").strip()
         if not expression:
@@ -474,23 +483,85 @@ class CompositeGraphEvaluator:
             i = j + 1
         return {org_unit_id: rank / (n - 1) * scale for org_unit_id, rank in ranks.items()}
 
-    def _resolve_combine(self, node: dict) -> ValuesByYear:
-        """Reduce any number of numeric inputs per org unit with a symmetric operation.
+    def _resolve_filter(self, node: dict) -> ValuesByYear:
+        """Keep only the selected org units, dropping every other one from the result.
 
-        Inputs are year-aligned like a formula (intersection of yearly inputs, timeless inputs
-        broadcast), and only org units present in every connected input for a year are combined.
+        A district that isn't selected is *absent* from the output, never present with a null
+        value - see the module docstring's "no node ever stores None" invariant. Filtering does
+        not coerce values, so it works unchanged on numeric or categorical input.
         """
+        source = self._get_single_input_source(node, "a")
+        if source is None:
+            raise CompositeGraphIncompleteError("A filter node has no connected input.")
+        input_by_year = self._resolve(source["nodeId"])
+
+        selected = self._resolve_selected_org_units(node)
+        if not selected:
+            raise CompositeGraphIncompleteError("A filter node has no selected districts.")
+
+        result: ValuesByYear = {}
+        for year, by_ou in input_by_year.items():
+            kept = {org_unit_id: value for org_unit_id, value in by_ou.items() if org_unit_id in selected}
+            if kept:
+                result[year] = kept
+        return result
+
+    def _resolve_selected_org_units(self, node: dict) -> set:
+        """Districts a filter node targets: an all/none base, flipped by one override list.
+
+        Same resolution as ``ScenarioRule._compute_org_unit_ids``: the mode toggle stands in for
+        that model's ``matching_criteria`` (``"all"`` == match-all, ``"none"`` == inclusion-only).
+        Only one direction of override is ever meaningful for a given mode - under ``all`` the list
+        is what gets dropped, under ``none`` it's what gets kept - so there is a single ``ids``
+        field rather than separate included/excluded ones.
+        """
+        config = self._get_control_value(node, "selection", "orgUnits") or {}
+        # Same default as the frontend's own empty state (DEFAULT_ORG_UNIT_SELECTION) and the AI
+        # spec's OrgUnitSelectionSpec, so a missing/incomplete selection is a no-op (every district
+        # kept) rather than silently filtering everything out.
+        mode = (config.get("mode") or "all").lower()
+        if mode not in ("all", "none"):
+            raise CompositeGraphError(f"A filter node has an unknown selection mode '{mode}'.")
+
+        ids = self._org_unit_id_set(config.get("ids"))
+        return set(self.org_unit_ids) - ids if mode == "all" else ids
+
+    @staticmethod
+    def _org_unit_id_set(raw) -> set:
+        if not isinstance(raw, list):
+            return set()
+        ids = set()
+        for entry in raw:
+            try:
+                ids.add(int(entry))
+            except (TypeError, ValueError):
+                continue
+        return ids
+
+    def _resolve_dynamic_inputs(self, node: dict, empty_message: str) -> Dict[str, ValuesByYear]:
+        """Resolve every connected dynamic port (a, b, c, …) of a multi-input node."""
         inputs: Dict[str, ValuesByYear] = {}
         connected_ports = (node.get("connections") or {}).get("inputs") or {}
         for port in connected_ports:
             source = self._get_single_input_source(node, port)
             if source is not None:
                 inputs[port] = self._resolve(source["nodeId"])
-
         if not inputs:
-            raise CompositeGraphIncompleteError("A combine node has no connected inputs.")
+            raise CompositeGraphIncompleteError(empty_message)
+        return inputs
+
+    def _resolve_combine(self, node: dict) -> ValuesByYear:
+        """Reduce any number of numeric inputs per org unit with a symmetric operation.
+
+        Inputs are year-aligned like a formula (intersection of yearly inputs, timeless inputs
+        broadcast), and only org units present in every connected input for a year are combined.
+        """
+        inputs = self._resolve_dynamic_inputs(node, "A combine node has no connected inputs.")
 
         raw_operation = self._get_control_value(node, "operation", "operation") or "mean"
+        if raw_operation == STACK_OPERATION:
+            return self._resolve_stack(node, inputs)
+
         reducer = COMBINE_OPERATIONS.get(raw_operation)
         if reducer is None:
             raise CompositeGraphError(f"A combine node has an unknown operation '{raw_operation}'.")
@@ -507,6 +578,52 @@ class CompositeGraphEvaluator:
                     raise CompositeGraphError("Combine can only be applied to numeric inputs.")
                 result.setdefault(year, {})[org_unit_id] = float(reducer(numbers))
         return result
+
+    def _resolve_stack(self, node: dict, inputs: Dict[str, ValuesByYear]) -> ValuesByYear:
+        """Merge inputs by priority: each org unit takes its value from the highest-priority input
+        that has one, falling through to lower-priority inputs where it doesn't.
+
+        Unlike the symmetric reducers, this covers the UNION of the inputs' org units rather than
+        their intersection - an org unit missing from an input (e.g. filtered out upstream) is not
+        a reason to drop it, it is the reason to fall through. Years are aligned exactly as for the
+        other operations; priority is ascending, so the LAST port in the resolved order wins.
+        """
+        order = self._resolve_stack_order(node, inputs.keys())
+        _target_years, aligned = self._align_input_years(inputs)
+
+        result: ValuesByYear = {}
+        for year, per_port in aligned.items():
+            merged: ValuesByOrgUnit = {}
+            for port in order:
+                merged.update(per_port[port])
+            if merged:
+                result[year] = merged
+
+        # A stack can mix numeric and categorical inputs; as in `_resolve_formula`, one string
+        # result makes the whole layer categorical so rows aren't stored/rendered as a mix.
+        if any(isinstance(value, str) for value in iter_all_values(result)):
+            result = {year: {ou: str(value) for ou, value in by_ou.items()} for year, by_ou in result.items()}
+        return result
+
+    @staticmethod
+    def _resolve_stack_order(node: dict, ports: Iterable[str]) -> List[str]:
+        """Connected ports from lowest to highest priority.
+
+        ``priorityOrder`` is a hint that can drift from the live connections, so it is reconciled
+        rather than trusted: entries for ports that are no longer connected are dropped, duplicates
+        collapse to their first occurrence, and any connected port the list doesn't mention is
+        inserted at the LOWEST-priority end - a newly wired input then only fills gaps the other
+        inputs leave, instead of silently overriding them.
+        """
+        connected = set(ports)
+        raw = CompositeGraphEvaluator._get_control_value(node, "operation", "priorityOrder")
+        ordered: List[str] = []
+        if isinstance(raw, list):
+            for entry in raw:
+                if isinstance(entry, str) and entry in connected and entry not in ordered:
+                    ordered.append(entry)
+        missing = sorted(connected - set(ordered))
+        return missing + ordered
 
     def _parse_classify_config(self, node: dict) -> Tuple[List[Tuple[Callable, float, str]], str]:
         """Return ``([(op_fn, threshold, label), ...], default_label)`` from a classify node."""

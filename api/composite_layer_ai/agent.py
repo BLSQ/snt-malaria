@@ -6,7 +6,7 @@ from typing import Optional
 import anthropic
 
 from django.conf import settings
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 
 logger = logging.getLogger(__name__)
@@ -16,6 +16,13 @@ logger = logging.getLogger(__name__)
 # template is applied with str.replace (not str.format), so literal braces in the prompt (e.g. the
 # JSON schema example) need no escaping.
 METRIC_TYPES_CATALOG_PLACEHOLDER = "{metric_types_catalog}"
+
+# Substituted with the account's district (org unit) catalog, same mechanism as the placeholder above.
+ORG_UNITS_CATALOG_PLACEHOLDER = "{org_units_catalog}"
+
+# Shown instead of any raw model output whenever a graph attempt couldn't be turned into a valid
+# graph, whether it failed to parse as JSON at all or parsed but didn't match the schema.
+GRAPH_PARSE_FAILURE_MESSAGE = "I couldn't put together a valid graph for that - could you try rephrasing your request?"
 
 COMPOSITE_LAYER_SYSTEM_PROMPT_TEMPLATE = """You are an expert at building composite malaria data layers with a visual node graph editor.
 
@@ -34,10 +41,32 @@ A composite layer is a small directed graph of nodes, evaluated per org unit:
   in that case only compare it against a string literal (e.g. `a == "High"`), don't use it in
   arithmetic. Supported: + - * / ^, comparisons, and the functions abs/min/max/round.
 - `combine`: reduces one or more numeric inputs (`inputs`, same convention as `formula`) into one
-  value per org unit with a single symmetric operation, given as `operation`: "mean", "sum", "min",
-  or "max". Prefer `combine` over a `formula` that just adds/averages/min/maxes its inputs (e.g.
+  value per org unit with a single `operation`: "mean", "sum", "min", "max", or "stack".
+  - "mean"/"sum"/"min"/"max" are symmetric - the order of `inputs` does not matter.
+  - "stack" is ORDER-DEPENDENT: for each org unit it takes the value of the LAST input in the
+    `inputs` list that has one, falling through to an earlier input when it doesn't (e.g. because
+    an upstream `filter` dropped that district from a more specific layer). List `inputs` in
+    ASCENDING priority - the most authoritative/final layer LAST, earlier ones as fallbacks. Its
+    main use is combining several `filter`-restricted layers into one, each covering a different
+    (or partly overlapping, with a clear winner) set of districts.
+  Prefer `combine` over a `formula` that just adds/averages/min/maxes its inputs (e.g.
   `(a+b+c)/3`, `a+b`, `min(a,b)`) - it says what it does and needs no formula syntax. Only fall back
   to `formula` for arithmetic `combine` can't express (weights, non-symmetric operations, conditionals).
+- `filter`: restricts a single input (`input`) to a subset of districts (org units). Districts it
+  drops have NO value from there on - downstream nodes see a gap there, not a zero, and a `combine`
+  node set to "stack" falls through to another input for that district. Given as `org_units`:
+  {"mode": "all"|"none", "ids": [<org unit ids>]}, read as "start from every district (`all`) or
+  from none (`none`), then flip the districts in `ids`" - under `all`, `ids` are the ones dropped;
+  under `none`, `ids` are the only ones kept. Only use ids that appear in the districts catalog
+  below - never invent one. Its main use is in front of a `combine` node set to
+  `operation: "stack"`, so different districts take their value from different layers.
+  - If the user names the districts to act on without saying "include" or "exclude", pick
+    whichever mode keeps `ids` shortest (e.g. keeping 99 of 100 districts is "all" minus the 1
+    excluded, not "none" plus the 99 included).
+  - If the user explicitly says "exclude"/"all except"/"everyone but" some districts, use `all`
+    with those districts in `ids`, even if that list is the longer one. Likewise, an explicit
+    "include"/"only"/"just" means `none` with those districts in `ids`. An explicit instruction
+    always wins over the shortest-list heuristic above.
 - `normalize`: rescales a single numeric input (`input`) to a 0-`scale` range (`scale` is 1 or 100),
   independently per year, using one of two methods given as `normalize_type` (defaults to
   "min-max" when omitted):
@@ -83,6 +112,9 @@ node with `a / b`. The same trick fixes one reference year against an otherwise-
 ## Available data layers for this account
 {metric_types_catalog}
 
+## Available districts for this account
+{org_units_catalog}
+
 When the user asks you to create or modify a composite layer, you MUST respond with ONLY the JSON
 below - no text before or after it, not even a short acknowledgment or lead-in sentence. Put any
 explanation of what you did in the `message` field instead:
@@ -91,9 +123,10 @@ explanation of what you did in the `message` field instead:
     "nodes": [
       {"id": "<unique id you choose, e.g. \\"rainfall\\">", "type": "dataLayer", "metric_type_id": "<id from the catalog above, as a string>", "selected_year": "<optional, a year from that layer's \\"years\\" list, as a string - omit to pass every year through>"},
       {"id": "<unique id>", "type": "formula", "inputs": ["<id of another node>", ...], "formula": "<infix expression using a, b, c, ...>"},
-      {"id": "<unique id>", "type": "combine", "inputs": ["<id of another node>", ...], "operation": "<mean|sum|min|max>"},
+      {"id": "<unique id>", "type": "combine", "inputs": ["<id of another node>", ...], "operation": "<mean|sum|min|max|stack>"},
       {"id": "<unique id>", "type": "normalize", "input": "<id of a numeric-producing node>", "scale": 1, "normalize_type": "<min-max|percentile, defaults to min-max>"},
-      {"id": "<unique id>", "type": "classify", "input": "<id of a numeric-producing node>", "rules": [{"op": "<", "value": 100, "label": "Low"}], "default": "<label for anything matching no rule>"}
+      {"id": "<unique id>", "type": "classify", "input": "<id of a numeric-producing node>", "rules": [{"op": "<", "value": 100, "label": "Low"}], "default": "<label for anything matching no rule>"},
+      {"id": "<unique id>", "type": "filter", "input": "<id of a node>", "org_units": {"mode": "<all|none>", "ids": [<org unit ids from the catalog above>]}}
     ],
     "output": {"source": "<id of the node producing the final result>", "name": "<human readable name>", "legend_type": "auto"}
   },
@@ -101,15 +134,22 @@ explanation of what you did in the `message` field instead:
 }
 
 ## Rules
-- Only reference data layer ids that appear in the catalog above.
+- Only reference data layer ids that appear in the data layers catalog above, and only reference
+  org unit ids that appear in the districts catalog above (for a `filter` node's `org_units.ids`) -
+  never invent an id for either.
 - Only set a `dataLayer` node's `selected_year` to a year that's actually in that layer's `years`
   list in the catalog. If the user asks to pin a year a layer doesn't have, say so in `message`
   instead of guessing a nearby one.
 - Every node needs a unique `id`; reference nodes by that id from `inputs`/`input`/`source`.
-- A graph can mix any number of `dataLayer`, `formula`, `combine`, `normalize` and `classify` nodes -
-  chain them as needed (e.g. combine three layers with `combine`, then reclassify the result into
-  categories).
-- `formula` and `combine` nodes need at least one input; `normalize` and `classify` need exactly one.
+- A graph can mix any number of `dataLayer`, `formula`, `combine`, `normalize`, `classify` and
+  `filter` nodes - chain them as needed (e.g. combine three layers with `combine`, then reclassify
+  the result into categories).
+- `formula` and `combine` nodes need at least one input; `normalize`, `classify` and `filter` need
+  exactly one.
+- For `combine` with `operation: "stack"`, the `inputs` order IS the priority order: list the most
+  authoritative/final layer LAST, earlier ones as fallbacks. Change priority by re-ordering
+  `inputs` directly; never add a separate field for it. `stack` needs at least two inputs to be
+  meaningful.
 - `classify` nodes need at least one rule, a default, or both.
 - A `classify` node's `rules[].label` and `default` are always text strings - never emit a bare
   number for either, and never invent extra rule fields (e.g. a numeric `value_label`), even if the
@@ -140,6 +180,11 @@ this graph, and always return the COMPLETE updated graph:
 """
 
 
+class OrgUnitSelectionSpec(BaseModel, extra="allow"):
+    mode: str = "all"
+    ids: list[int] = Field(default_factory=list)
+
+
 class GraphNodeSpec(BaseModel, extra="allow"):
     id: str
     type: str
@@ -151,7 +196,7 @@ class GraphNodeSpec(BaseModel, extra="allow"):
     formula: Optional[str] = None
     # combine
     operation: Optional[str] = None
-    # classify, normalize
+    # classify, normalize, filter
     input: Optional[str] = None
     # classify
     rules: Optional[list[dict]] = None
@@ -159,6 +204,8 @@ class GraphNodeSpec(BaseModel, extra="allow"):
     # normalize
     scale: Optional[float] = None
     normalize_type: Optional[str] = None
+    # filter
+    org_units: Optional[OrgUnitSelectionSpec] = None
 
 
 class GraphOutputSpec(BaseModel):
@@ -194,16 +241,23 @@ def _build_metric_types_catalog(metric_types: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _build_org_units_catalog(org_units: list[dict]) -> str:
+    if not org_units:
+        return "(no districts available for this account)"
+    return "\n".join(f'- id={org_unit["id"]}, name="{org_unit["name"]}"' for org_unit in org_units)
+
+
 def build_system_prompt(
     metric_types: list[dict],
+    org_units: list[dict],
     current_graph: Optional[dict] = None,
 ) -> str:
-    """Build the final system prompt: the template with the account's data layer catalog
-    substituted, plus - when the editor holds a graph - a section appended so the model can make
-    iterative changes relative to it."""
+    """Build the final system prompt: the template with the account's data layer and district
+    catalogs substituted, plus - when the editor holds a graph - a section appended so the model
+    can make iterative changes relative to it."""
     prompt = COMPOSITE_LAYER_SYSTEM_PROMPT_TEMPLATE.replace(
         METRIC_TYPES_CATALOG_PLACEHOLDER, _build_metric_types_catalog(metric_types)
-    )
+    ).replace(ORG_UNITS_CATALOG_PLACEHOLDER, _build_org_units_catalog(org_units))
     if current_graph:
         prompt += CURRENT_GRAPH_SECTION + json.dumps(current_graph, indent=2)
     return prompt
@@ -213,13 +267,14 @@ def call_claude(
     message: str,
     conversation_history: list[dict],
     metric_types: list[dict],
+    org_units: list[dict],
     api_key: Optional[str] = None,
     current_graph: Optional[dict] = None,
 ) -> str:
     """Call Claude API with the conversation and return the raw response text."""
     client = anthropic.Anthropic(api_key=api_key)
 
-    system_prompt = build_system_prompt(metric_types, current_graph=current_graph)
+    system_prompt = build_system_prompt(metric_types, org_units, current_graph=current_graph)
 
     messages = [{"role": entry["role"], "content": entry["content"]} for entry in conversation_history]
     messages.append({"role": "user", "content": message})
@@ -236,16 +291,16 @@ def call_claude(
 
 def _extract_json_text(response_text: str) -> str:
     """Extract the JSON object substring from Claude's response: strips a markdown code fence if
-    present, otherwise falls back to the outermost {...} span if the model added a conversational
-    lead-in with no fence (e.g. "You're right - ..." before the graph, despite being told not to
-    add text outside the JSON)."""
+    present, otherwise falls back to the outermost {...} span if the model added conversational
+    text around the graph with no fence (a lead-in before it, a remark after it, or both), despite
+    being told not to add text outside the JSON."""
     text = response_text.strip()
 
     if "```json" in text:
         text = text.split("```json")[1].split("```")[0].strip()
     elif "```" in text:
         text = text.split("```")[1].split("```")[0].strip()
-    elif not text.startswith("{") and "{" in text and "}" in text:
+    elif "{" in text and "}" in text:
         text = text[text.index("{") : text.rindex("}") + 1]
 
     return text
@@ -254,15 +309,21 @@ def _extract_json_text(response_text: str) -> str:
 def parse_composite_layer_graph_response(response_text: str) -> GeneratedCompositeLayerGraphResponse:
     """Parse Claude's response into a GeneratedCompositeLayerGraphResponse.
 
-    Raises `json.JSONDecodeError` if no JSON object could be found/parsed at all (a genuinely
-    conversational reply, e.g. a clarifying question), or `pydantic.ValidationError` if JSON was
-    found but doesn't match the expected graph schema (the model attempted a graph but got its
-    shape wrong, e.g. a wrong field type) - callers should treat these two cases differently, see
-    `generate_composite_layer_graph`. The parsed (but schema-invalid) dict is attached to the
-    latter as `raw_data`, so a caller can still recover e.g. the model's own `message` field
-    without re-parsing `response_text` itself.
+    Raises `json.JSONDecodeError` if no JSON object could be found/parsed at all, or
+    `pydantic.ValidationError` if JSON was found but doesn't match the expected graph schema (the
+    model attempted a graph but got its shape wrong, e.g. a wrong field type) - callers should
+    treat these two cases differently, see `generate_composite_layer_graph`. Either exception gets
+    the extracted text attached (`extracted_text` / `raw_data`), so a caller can tell a genuinely
+    conversational reply (e.g. a clarifying question) apart from a botched graph attempt without
+    re-extracting `response_text` itself, and can still recover e.g. the model's own `message`
+    field from a schema-invalid-but-parseable response.
     """
-    data = json.loads(_extract_json_text(response_text))
+    extracted_text = _extract_json_text(response_text)
+    try:
+        data = json.loads(extracted_text)
+    except json.JSONDecodeError as e:
+        e.extracted_text = extracted_text
+        raise
     try:
         return GeneratedCompositeLayerGraphResponse(**data)
     except ValidationError as e:
@@ -274,6 +335,7 @@ def generate_composite_layer_graph(
     message: str,
     conversation_history: list[dict],
     metric_types: list[dict],
+    org_units: list[dict],
     api_key: Optional[str] = None,
     current_graph: Optional[dict] = None,
 ) -> dict:
@@ -288,6 +350,7 @@ def generate_composite_layer_graph(
         message,
         conversation_history,
         metric_types,
+        org_units,
         api_key=api_key,
         current_graph=current_graph,
     )
@@ -305,7 +368,17 @@ def generate_composite_layer_graph(
             "conversation_history": new_history,
         }
     except json.JSONDecodeError as e:
-        # Conversational reply, no JSON found - see parse_composite_layer_graph_response.
+        extracted_text = getattr(e, "extracted_text", "")
+        if extracted_text.startswith("{"):
+            # Looked like an attempted graph (starts with the JSON object the prompt demands) but
+            # failed to even parse as JSON - never show that raw, broken text to the user.
+            logger.warning("Response looked like a graph attempt but wasn't valid JSON: %s", e)
+            return {
+                "assistant_message": GRAPH_PARSE_FAILURE_MESSAGE,
+                "graph": None,
+                "conversation_history": new_history,
+            }
+        # Genuinely conversational reply, no JSON found - see parse_composite_layer_graph_response.
         logger.info("Response was not a composite layer graph (likely conversational): %s", e)
         return {
             "assistant_message": response_text,
@@ -318,8 +391,7 @@ def generate_composite_layer_graph(
         logger.warning("Response had JSON that didn't match the graph schema: %s", e)
         fallback_message = getattr(e, "raw_data", {}).get("message")
         return {
-            "assistant_message": fallback_message
-            or "I couldn't put together a valid graph for that - could you try rephrasing your request?",
+            "assistant_message": fallback_message or GRAPH_PARSE_FAILURE_MESSAGE,
             "graph": None,
             "conversation_history": new_history,
         }

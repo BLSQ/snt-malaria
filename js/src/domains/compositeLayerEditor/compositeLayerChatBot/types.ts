@@ -11,21 +11,28 @@ export type ClassifyRuleSpec = {
     label: string;
 };
 
-export type CombineOperation = 'mean' | 'sum' | 'min' | 'max';
+export type CombineOperation = 'mean' | 'sum' | 'min' | 'max' | 'stack';
 
 export type NormalizeType = 'min-max' | 'percentile';
+
+export type OrgUnitSelectionSpec = {
+    mode: 'all' | 'none';
+    ids?: number[];
+};
 
 export type GraphNodeType =
     | 'dataLayer'
     | 'formula'
     | 'combine'
     | 'normalize'
-    | 'classify';
+    | 'classify'
+    | 'filter';
 
 // A single abstract node in the AI-generated graph. Which fields are relevant depends on `type`:
 // dataLayer -> metric_type_id (+ optional selected_year); formula -> inputs + formula;
-// combine -> inputs + operation; normalize -> input + scale + normalize_type;
-// classify -> input + rules + default.
+// combine -> inputs + operation (`inputs` order IS the priority order when operation is "stack",
+// ascending - the LAST entry wins); normalize -> input + scale + normalize_type;
+// classify -> input + rules + default; filter -> input + org_units.
 export type GeneratedGraphNode = {
     id: string;
     type: GraphNodeType;
@@ -40,6 +47,7 @@ export type GeneratedGraphNode = {
     default?: string;
     scale?: 1 | 100;
     normalize_type?: NormalizeType;
+    org_units?: OrgUnitSelectionSpec;
 };
 
 export type LegendType = 'auto' | 'linear' | 'threshold' | 'ordinal';
