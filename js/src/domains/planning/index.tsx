@@ -141,6 +141,9 @@ export const Planning: FC = () => {
         messages: aiChatMessages,
         isLoading: isAiChatLoading,
         sendMessage: sendAiChatMessage,
+        pendingAttachments: aiChatPendingAttachments,
+        onAttachFiles: onAiChatAttachFiles,
+        onRemoveAttachment: onAiChatRemoveAttachment,
     } = useScenarioRuleAIChat({ scenarioId });
 
     const handleToggleLockScenario = () => {
@@ -275,6 +278,9 @@ export const Planning: FC = () => {
                                 messages={aiChatMessages}
                                 isLoading={isAiChatLoading}
                                 onSendMessage={sendAiChatMessage}
+                                pendingAttachments={aiChatPendingAttachments}
+                                onAttachFiles={onAiChatAttachFiles}
+                                onRemoveAttachment={onAiChatRemoveAttachment}
                             />
                         </ChatColumn>
                     )}

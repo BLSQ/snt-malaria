@@ -3,8 +3,6 @@ import random
 
 from typing import Optional
 
-import anthropic
-
 from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
@@ -14,6 +12,7 @@ from rest_framework.response import Response
 
 from iaso.models import MetricType
 from iaso.utils.colors import COLOR_CHOICES, DEFAULT_COLOR
+from plugins.snt_malaria.api.ai_chat.mixins import AIChatAttachmentViewSetMixin
 from plugins.snt_malaria.api.scenario_rules.serializers import (
     ScenarioRuleCreateSerializer,
     ScenarioRuleListSerializer,
@@ -21,6 +20,7 @@ from plugins.snt_malaria.api.scenario_rules.serializers import (
 )
 from plugins.snt_malaria.models import Intervention, ScenarioRule
 from plugins.snt_malaria.services import BudgetCalculationService
+from plugins.snt_malaria.services.ai_chat import classify_anthropic_error
 
 from .agent import generate_scenario_rules
 from .matching_criteria import is_match_all, jsonlogic_to_matching_criteria, matching_criteria_to_jsonlogic
@@ -119,7 +119,7 @@ def _rule_spec_to_payload(spec: dict, metric_type_by_id: dict) -> dict:
 
 
 @extend_schema(tags=["SNT Malaria"])
-class ScenarioRuleAIViewSet(viewsets.ViewSet):
+class ScenarioRuleAIViewSet(AIChatAttachmentViewSetMixin, viewsets.ViewSet):
     """AI-powered scenario rule generation.
 
     Send a natural language message describing the desired scenario rules. The AI sees the account's
@@ -129,6 +129,9 @@ class ScenarioRuleAIViewSet(viewsets.ViewSet):
     """
 
     permission_classes = [ScenarioRuleAIPermission]
+    API_KEY_MISSING_ERROR = (
+        "Scenario Rule AI API key is not configured for this account. Please contact your administrator."
+    )
 
     def get_serializer_context(self):
         return {"request": self.request}
@@ -144,16 +147,12 @@ class ScenarioRuleAIViewSet(viewsets.ViewSet):
         scenario = serializer.validated_data["scenario"]
         message = serializer.validated_data["message"]
         conversation_history = serializer.validated_data.get("conversation_history", [])
+        attachments = serializer.validated_data.get("attachments", [])
 
         account = scenario.account
-        api_key = account.anthropic_api_key or None
+        api_key = self._get_api_key(request)
         if not api_key:
-            return Response(
-                {
-                    "error": "Scenario Rule AI API key is not configured for this account. Please contact your administrator."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"error": self.API_KEY_MISSING_ERROR}, status=status.HTTP_400_BAD_REQUEST)
 
         # Match exactly what the rule builder itself can reference as criteria - the planning page's
         # own catalog (metricTypeCategories, used by MatchingCriteriaForm/ScenarioRuleLine) is fetched
@@ -184,35 +183,13 @@ class ScenarioRuleAIViewSet(viewsets.ViewSet):
                 interventions,
                 api_key=api_key,
                 current_rules=current_rules or None,
+                attachments=attachments,
             )
-        except anthropic.APIStatusError as e:
-            if e.status_code == 503:
-                logger.warning("Claude API returned 503")
-                return Response(
-                    {"error": "The AI service is temporarily unavailable. Please try again later."},
-                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
-                )
-            if e.status_code == 400:
-                # A persistent configuration problem (e.g. an invalid/out-of-credit API key) rather
-                # than a transient failure - "try again" would be misleading. The account's Anthropic
-                # key is an admin-level config the end user has no visibility or control over, so log
-                # Anthropic's own detail for an admin to diagnose, but never show it to the user.
-                logger.error("Claude API rejected the request: %s", e)
-                return Response(
-                    {"error": "The AI service rejected this request. Please contact your administrator."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            logger.exception("Scenario Rule AI error")
-            return Response(
-                {"error": "Failed to generate scenario rules. Please try again."},
-                status=status.HTTP_400_BAD_REQUEST,
+        except Exception as e:
+            status_code, body = classify_anthropic_error(
+                e, generic_message="Failed to generate scenario rules. Please try again.", logger=logger
             )
-        except Exception:
-            logger.exception("Scenario Rule AI error")
-            return Response(
-                {"error": "Failed to generate scenario rules. Please try again."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(body, status=status_code)
 
         if result["rules"] is None:
             return Response(result, status=status.HTTP_200_OK)
@@ -234,6 +211,7 @@ class ScenarioRuleAIViewSet(viewsets.ViewSet):
             {
                 "assistant_message": result["assistant_message"],
                 "rules": persisted_rules,
+                "quick_replies": result["quick_replies"],
                 "conversation_history": result["conversation_history"],
             },
             status=status.HTTP_200_OK,

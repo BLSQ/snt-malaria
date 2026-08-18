@@ -2,7 +2,12 @@ import React, { FC } from 'react';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { Box, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { ChatMessage, ChatPanel } from 'Iaso/components/ChatPanel/ChatPanel';
+import {
+    ChatMessage,
+    ChatPanel,
+    PendingAttachment,
+    SendMessageOptions,
+} from 'Iaso/components/ChatPanel/ChatPanel';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../../../../components/CardStyled';
 import { IconBoxed } from '../../../../../components/IconBoxed';
@@ -12,7 +17,10 @@ import { MESSAGES } from '../../../../messages';
 type Props = {
     messages: ChatMessage[];
     isLoading: boolean;
-    onSendMessage: (message: string) => void;
+    onSendMessage: (message: string, options?: SendMessageOptions) => void;
+    pendingAttachments: PendingAttachment[];
+    onAttachFiles: (files: File[]) => void;
+    onRemoveAttachment: (id: string) => void;
 };
 
 // Added to ChatPanel's own flex `gap` on both rows, so the two gaps stay equal.
@@ -46,6 +54,9 @@ export const ScenarioRuleAIChat: FC<Props> = ({
     messages,
     isLoading,
     onSendMessage,
+    pendingAttachments,
+    onAttachFiles,
+    onRemoveAttachment,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -99,6 +110,9 @@ export const ScenarioRuleAIChat: FC<Props> = ({
                         </Box>
                     }
                     onSendMessage={onSendMessage}
+                    pendingAttachments={pendingAttachments}
+                    onAttachFiles={onAttachFiles}
+                    onRemoveAttachment={onRemoveAttachment}
                     interpretMarkdown={true}
                 />
             </CardStyled>

@@ -1,9 +1,8 @@
+import {
+    AIChatRequest,
+    AIChatResponse,
+} from '../../../../../hooks/aiChat/types';
 import { MetricTypeCriterion } from '../../../types/scenarioRule';
-
-export type ConversationEntry = {
-    role: 'user' | 'assistant';
-    content: string;
-};
 
 // The rule set the AI proposes - and, once generated, has already persisted server-side. Same flat
 // shape as MetricTypeCriterion, so no jsonlogic conversion is needed anywhere in this feature.
@@ -15,14 +14,10 @@ export type GeneratedScenarioRuleSpec = {
     interventions: number[];
 };
 
-export type ScenarioRuleAIRequest = {
+export type ScenarioRuleAIRequest = AIChatRequest & {
     scenario: number;
-    message: string;
-    conversation_history: ConversationEntry[];
 };
 
-export type ScenarioRuleAIResponse = {
-    assistant_message: string;
+export type ScenarioRuleAIResponse = AIChatResponse & {
     rules: GeneratedScenarioRuleSpec[] | null;
-    conversation_history: ConversationEntry[];
 };

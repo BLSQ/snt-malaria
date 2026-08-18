@@ -1,13 +1,4 @@
-export type AttachmentReference = {
-    file_id: string;
-    filename: string;
-};
-
-export type ConversationEntry = {
-    role: 'user' | 'assistant';
-    content: string;
-    attachments?: AttachmentReference[];
-};
+import { AIChatRequest, AIChatResponse } from '../../../hooks/aiChat/types';
 
 export type ClassifyOperator = '<' | '<=' | '>' | '>=' | '==' | '!=';
 
@@ -83,27 +74,10 @@ export type CurrentGraph = {
     output: CurrentGraphOutput;
 };
 
-export type CompositeLayerAIRequest = {
-    message: string;
-    conversation_history: ConversationEntry[];
+export type CompositeLayerAIRequest = AIChatRequest & {
     current_graph?: CurrentGraph | null;
-    attachments?: AttachmentReference[];
 };
 
-export type UploadedAttachment = {
-    file_id: string;
-    filename: string;
-    size_bytes: number;
-};
-
-export type QuickReplyQuestion = {
-    question: string;
-    options: string[];
-};
-
-export type CompositeLayerAIResponse = {
-    assistant_message: string;
+export type CompositeLayerAIResponse = AIChatResponse & {
     graph: GeneratedGraph | null;
-    quick_replies: QuickReplyQuestion[] | null;
-    conversation_history: ConversationEntry[];
 };
