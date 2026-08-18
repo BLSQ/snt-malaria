@@ -489,7 +489,8 @@
     "iaso.snt_malaria.compositeLayerEditor.ai.title": "Générer avec l'IA",
     "iaso.snt_malaria.compositeLayerEditor.ai.placeholder": "Décrivez la couche composite que vous souhaitez créer...",
     "iaso.snt_malaria.compositeLayerEditor.ai.error": "Erreur lors de la génération de la couche composite. Veuillez réessayer.",
+    "iaso.snt_malaria.compositeLayerEditor.ai.attachmentUploadError": "Impossible de joindre {filename}.",
     "iaso.snt_malaria.compositeLayerEditor.ai.emptyStateTitle": "Décrivez la couche composite que vous souhaitez créer",
-    "iaso.snt_malaria.compositeLayerEditor.ai.emptyStateDescription": "Décrivez les métriques, formules et seuils que vous souhaitez combiner — l'IA construit le graphe pour vous.",
+    "iaso.snt_malaria.compositeLayerEditor.ai.emptyStateDescription": "Décrivez les métriques, formules et seuils que vous souhaitez combiner, ou téléversez des documents pour donner du contexte — l'IA construit le graphe pour vous.",
     "iaso.snt_malaria.dataLayers.compositeEditor": "Modifier le composite"
 }

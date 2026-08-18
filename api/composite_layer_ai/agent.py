@@ -282,6 +282,23 @@ def build_system_prompt(
     return prompt
 
 
+def _build_message(role: str, content: str, attachments: Optional[list[dict]] = None) -> dict:
+    """Build a single Anthropic message as content blocks."""
+    blocks = [
+        {
+            "type": "document",
+            "source": {"type": "file", "file_id": attachment["file_id"]},
+            "title": attachment.get("filename"),
+            # Every later turn resends the full history, including this same block - caching it
+            # avoids Claude reprocessing the document on every turn after the one that attached it.
+            "cache_control": {"type": "ephemeral"},
+        }
+        for attachment in attachments or []
+    ]
+    blocks.append({"type": "text", "text": content})
+    return {"role": role, "content": blocks}
+
+
 def call_claude(
     message: str,
     conversation_history: list[dict],
@@ -289,20 +306,25 @@ def call_claude(
     org_units: list[dict],
     api_key: Optional[str] = None,
     current_graph: Optional[dict] = None,
+    attachments: Optional[list[dict]] = None,
 ) -> str:
     """Call Claude API with the conversation and return the raw response text."""
     client = anthropic.Anthropic(api_key=api_key)
 
     system_prompt = build_system_prompt(metric_types, org_units, current_graph=current_graph)
 
-    messages = [{"role": entry["role"], "content": entry["content"]} for entry in conversation_history]
-    messages.append({"role": "user", "content": message})
+    messages = [
+        _build_message(entry["role"], entry["content"], entry.get("attachments")) for entry in conversation_history
+    ]
+    messages.append(_build_message("user", message, attachments))
 
-    response = client.messages.create(
+    # Required whenever a `document` block references a file_id - harmless otherwise.
+    response = client.beta.messages.create(
         model=settings.COMPOSITE_LAYER_AI_MODEL,
         max_tokens=4096,
         system=system_prompt,
         messages=messages,
+        betas=["files-api-2025-04-14"],
     )
 
     return response.content[0].text
@@ -369,6 +391,7 @@ def generate_composite_layer_graph(
     org_units: list[dict],
     api_key: Optional[str] = None,
     current_graph: Optional[dict] = None,
+    attachments: Optional[list[dict]] = None,
 ) -> dict:
     """Call the AI and return the parsed graph spec plus updated conversation history.
 
@@ -386,10 +409,15 @@ def generate_composite_layer_graph(
         org_units,
         api_key=api_key,
         current_graph=current_graph,
+        attachments=attachments,
     )
 
+    user_entry = {"role": "user", "content": message}
+    if attachments:
+        # So a later turn's resent history still references the same uploaded file.
+        user_entry["attachments"] = attachments
     new_history = list(conversation_history) + [
-        {"role": "user", "content": message},
+        user_entry,
         {"role": "assistant", "content": response_text},
     ]
 

@@ -5,6 +5,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import {
     ChatMessage,
     ChatPanel,
+    PendingAttachment,
     SendMessageOptions,
 } from 'Iaso/components/ChatPanel/ChatPanel';
 import { SxStyles } from 'Iaso/types/general';
@@ -14,6 +15,9 @@ type Props = {
     messages: ChatMessage[];
     isLoading: boolean;
     onSendMessage: (message: string, options?: SendMessageOptions) => void;
+    pendingAttachments: PendingAttachment[];
+    onAttachFiles: (files: File[]) => void;
+    onRemoveAttachment: (id: string) => void;
 };
 
 const chatStyles = {
@@ -42,6 +46,9 @@ export const CompositeLayerAIChat: FC<Props> = ({
     messages,
     isLoading,
     onSendMessage,
+    pendingAttachments,
+    onAttachFiles,
+    onRemoveAttachment,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -95,6 +102,9 @@ export const CompositeLayerAIChat: FC<Props> = ({
                 }
                 onSendMessage={onSendMessage}
                 interpretMarkdown={true}
+                pendingAttachments={pendingAttachments}
+                onAttachFiles={onAttachFiles}
+                onRemoveAttachment={onRemoveAttachment}
             />
         </Card>
     );

@@ -2,14 +2,17 @@ from unittest.mock import MagicMock, patch
 
 import anthropic
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
 from iaso.models import Account, MetricType, MetricValue
+from plugins.snt_malaria.api.composite_layer_ai.serializers import MAX_ATTACHMENT_SIZE_BYTES
 from plugins.snt_malaria.permissions import SNT_SETTINGS_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
 BASE_URL = "/api/snt_malaria/composite_layer_ai/"
+ATTACHMENTS_URL = "/api/snt_malaria/composite_layer_ai/attachments/"
 
 
 class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
@@ -211,3 +214,95 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
 
         metric_types_sent = mock_gen.call_args[0][2]
         self.assertNotIn("years", metric_types_sent[0])
+
+
+class CompositeLayerAIAttachmentAPITestCase(CompositeLayerAIAPITestCase):
+    def _pdf_file(self, name="report.pdf", content=b"%PDF-1.4 test", content_type="application/pdf"):
+        return SimpleUploadedFile(name, content, content_type=content_type)
+
+    def test_unauthenticated_returns_401(self):
+        response = self.client.post(ATTACHMENTS_URL, {"file": self._pdf_file()}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_missing_file_returns_400(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.post(ATTACHMENTS_URL, {}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_non_pdf_content_is_rejected_regardless_of_declared_content_type(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.post(
+            ATTACHMENTS_URL,
+            {
+                "file": self._pdf_file(
+                    name="report.docx",
+                    content=b"This is not actually a PDF.",
+                    content_type="application/pdf",
+                )
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Only PDF files", str(response.data["file"]))
+
+    def test_oversized_file_returns_400(self):
+        self.client.force_authenticate(self.user)
+        oversized = self._pdf_file(content=b"%PDF-1.4 " + b"0" * MAX_ATTACHMENT_SIZE_BYTES)
+
+        response = self.client.post(ATTACHMENTS_URL, {"file": oversized}, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("too large", str(response.data["file"]))
+
+    def test_missing_api_key_returns_400(self):
+        self.client.force_authenticate(self.user_no_key)
+        response = self.client.post(ATTACHMENTS_URL, {"file": self._pdf_file()}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.views.anthropic.Anthropic")
+    def test_successful_upload_returns_file_id(self, mock_anthropic_cls):
+        mock_client = MagicMock()
+        mock_client.beta.files.upload.return_value = MagicMock(id="file_abc123", size_bytes=13)
+        mock_anthropic_cls.return_value = mock_client
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(ATTACHMENTS_URL, {"file": self._pdf_file()}, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["file_id"], "file_abc123")
+        self.assertEqual(response.data["filename"], "report.pdf")
+        mock_client.beta.files.upload.assert_called_once()
+        self.assertEqual(mock_client.beta.files.upload.call_args.kwargs["betas"], ["files-api-2025-04-14"])
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.views.anthropic.Anthropic")
+    def test_upload_error_returns_400(self, mock_anthropic_cls):
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.status_code = 400
+        mock_client.beta.files.upload.side_effect = anthropic.APIStatusError(
+            "bad request", response=mock_response, body=None
+        )
+        mock_anthropic_cls.return_value = mock_client
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(ATTACHMENTS_URL, {"file": self._pdf_file()}, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.views.anthropic.Anthropic")
+    def test_delete_calls_anthropic_files_delete(self, mock_anthropic_cls):
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        self.client.force_authenticate(self.user)
+
+        response = self.client.delete(f"{ATTACHMENTS_URL}file_abc123/")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        mock_client.beta.files.delete.assert_called_once_with("file_abc123", betas=["files-api-2025-04-14"])
+
+    def test_delete_without_api_key_returns_204_without_calling_anthropic(self):
+        self.client.force_authenticate(self.user_no_key)
+
+        response = self.client.delete(f"{ATTACHMENTS_URL}file_abc123/")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

@@ -6,6 +6,7 @@ from django.test import SimpleTestCase
 from pydantic import ValidationError
 
 from plugins.snt_malaria.api.composite_layer_ai.agent import (
+    _build_message,
     build_system_prompt,
     generate_composite_layer_graph,
     parse_composite_layer_graph_response,
@@ -437,7 +438,67 @@ class ParseCompositeLayerGraphResponseTestCase(SimpleTestCase):
             parse_composite_layer_graph_response(invalid_response)
 
 
+class BuildMessageTestCase(SimpleTestCase):
+    def test_text_only_message_has_single_text_block(self):
+        message = _build_message("user", "hello")
+
+        self.assertEqual(message["role"], "user")
+        self.assertEqual(message["content"], [{"type": "text", "text": "hello"}])
+
+    def test_attachment_produces_document_block_before_text(self):
+        message = _build_message(
+            "user",
+            "summarize this",
+            attachments=[{"file_id": "file_abc123", "filename": "report.pdf"}],
+        )
+
+        self.assertEqual(
+            message["content"],
+            [
+                {
+                    "type": "document",
+                    "source": {"type": "file", "file_id": "file_abc123"},
+                    "title": "report.pdf",
+                    "cache_control": {"type": "ephemeral"},
+                },
+                {"type": "text", "text": "summarize this"},
+            ],
+        )
+
+    def test_multiple_attachments_each_produce_a_document_block(self):
+        message = _build_message(
+            "user",
+            "compare these",
+            attachments=[
+                {"file_id": "file_1", "filename": "a.pdf"},
+                {"file_id": "file_2", "filename": "b.pdf"},
+            ],
+        )
+
+        self.assertEqual(len(message["content"]), 3)
+        self.assertEqual(message["content"][0]["source"]["file_id"], "file_1")
+        self.assertEqual(message["content"][1]["source"]["file_id"], "file_2")
+
+
 class GenerateCompositeLayerGraphTestCase(SimpleTestCase):
+    @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
+    def test_attachments_are_forwarded_to_call_claude_and_carried_into_history(self, mock_call_claude):
+        mock_call_claude.return_value = "Here's a summary."
+        attachments = [{"file_id": "file_abc123", "filename": "report.pdf"}]
+
+        result = generate_composite_layer_graph("summarize", [], [], [], attachments=attachments)
+
+        self.assertEqual(mock_call_claude.call_args.kwargs["attachments"], attachments)
+        self.assertEqual(result["conversation_history"][0]["attachments"], attachments)
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
+    def test_no_attachments_key_on_history_entry_when_none_sent(self, mock_call_claude):
+        mock_call_claude.return_value = "hi"
+
+        result = generate_composite_layer_graph("hi", [], [], [])
+
+        self.assertNotIn("attachments", result["conversation_history"][0])
+
     @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
     def test_non_json_response_falls_back_to_verbatim_text(self, mock_call_claude):
         # Anomaly fallback: the model returned no JSON at all despite the always-JSON instruction.
