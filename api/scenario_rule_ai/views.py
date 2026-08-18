@@ -259,7 +259,7 @@ class ScenarioRuleAIViewSet(viewsets.ViewSet):
             payload = _rule_spec_to_payload(spec, metric_type_by_id)
             existing_rule = existing_by_id.get(spec.get("id"))
             org_units_matched = ScenarioRule.resolve_matched_org_units(
-                scenario.account, payload["matching_criteria"], reference_year=scenario.reference_year
+                scenario.account, payload["matching_criteria"], data_layer_years=scenario.data_layer_years
             )
 
             if existing_rule:
