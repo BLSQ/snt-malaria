@@ -3,7 +3,6 @@ from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from iaso.api.common.permissions import HasAccountFeatureFlag
 from iaso.models.metric import MetricType
 from plugins.snt_malaria.models import CompositeLayer
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
@@ -17,7 +16,7 @@ from plugins.snt_malaria.services.composite.persistence import (
     update_composite_metric_type,
 )
 
-from .permissions import SHOW_DEV_FEATURES, CompositeLayerPermission
+from .permissions import CompositeLayerPermission
 from .serializers import (
     METRIC_METADATA_FIELDS,
     CompositeLayerListSerializer,
@@ -38,7 +37,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
 
     ordering_fields = ["id", "name", "updated_at"]
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
-    permission_classes = [CompositeLayerPermission, HasAccountFeatureFlag(SHOW_DEV_FEATURES)]
+    permission_classes = [CompositeLayerPermission]
 
     def get_queryset(self):
         user = self.request.user

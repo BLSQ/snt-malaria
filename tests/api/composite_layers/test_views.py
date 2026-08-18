@@ -1,8 +1,7 @@
 from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 from rest_framework import status
 
-from iaso.models import AccountFeatureFlag, MetricType, MetricValue, OrgUnit
-from plugins.snt_malaria.api.composite_layers.permissions import SHOW_DEV_FEATURES
+from iaso.models import MetricType, MetricValue, OrgUnit
 from plugins.snt_malaria.models import CompositeLayer
 from plugins.snt_malaria.permissions import SNT_SETTINGS_READ_PERMISSION, SNT_SETTINGS_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
@@ -61,11 +60,6 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
             username="user_no_perms", account=self.account, permissions=[]
         )
 
-        self.dev_features_flag, _ = AccountFeatureFlag.objects.get_or_create(
-            code=SHOW_DEV_FEATURES, defaults={"name": "Display dev features in web."}
-        )
-        self.account.feature_flags.add(self.dev_features_flag)
-
         point = Point(x=4, y=50, z=100)
         multipolygon = MultiPolygon(Polygon([[-1.3, 2.5], [-1.7, 2.8], [-1.1, 4.1], [-1.3, 2.5]]))
         org_unit_type = self.create_snt_org_unit_type(name="DISTRICT")
@@ -93,25 +87,16 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
         MetricValue.objects.create(metric_type=self.metric_b, org_unit=self.district_1, year=None, value=3.0)
         MetricValue.objects.create(metric_type=self.metric_b, org_unit=self.district_2, year=None, value=5.0)
 
-        # Other account (dev flag enabled too) for tenancy tests.
+        # Other account, for tenancy tests.
         self.other_account, _, self.other_version, _ = self.create_account_datasource_version_project(
             "other source", "Other Account", "other project"
         )
-        self.other_account.feature_flags.add(self.dev_features_flag)
         self.other_user = self.create_user_with_profile(username="other_user", account=self.other_account)
         self.other_composite_layer = CompositeLayer.objects.create(
             account=self.other_account,
             name="Other composite",
             graph={},
             created_by=self.other_user,
-        )
-
-        # Account without the dev features flag, to test the feature gate.
-        self.no_flag_account, _, _, _ = self.create_account_datasource_version_project(
-            "no flag source", "No Flag Account", "no flag project"
-        )
-        self.no_flag_user = self.create_user_with_profile(
-            username="no_flag_user", account=self.no_flag_account, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
         )
 
     def _multiply_graph(self, formula="a * b"):
@@ -582,13 +567,4 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self.client.delete(f"{self.BASE_URL}{composite_layer.id}/")
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_without_dev_features_flag_returns_403(self):
-        self.client.force_authenticate(user=self.no_flag_user)
-
-        response = self.client.get(self.BASE_URL)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-        response = self.client.post(f"{self.BASE_URL}preview/", {"graph": self._multiply_graph()}, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
