@@ -138,9 +138,10 @@ that's an explanation of a graph you generated/modified, or a short intro to a c
 }
 Use `quick_replies` when the user needs to choose between a few concrete, mutually exclusive
 options to proceed (e.g. specific data layer names, thresholds, approaches) - one entry per
-question, 2-6 short options each, exactly one pick expected per question. Omit it (null) when the
-request is clear enough to just build/update the graph, or the missing information isn't a short
-pick-one list (e.g. needs a free-form number). Never prefix a `question` or an `option` with a
+question, at most 5 questions total, 2-6 short options each, exactly one pick expected per
+question. Omit it (null) when the request is clear enough to just build/update the graph, or the
+missing information isn't a short pick-one list (e.g. needs a free-form number).
+Never prefix a `question` or an `option` with a
 letter or number (no "a.", "1)", "Option 2:", etc.) - the UI numbers/distinguishes them
 structurally, so both fields must be the clean label text only.
 
@@ -352,6 +353,15 @@ def parse_composite_layer_graph_response(response_text: str) -> GeneratedComposi
         raise
 
 
+def _graph_response(assistant_message: str, conversation_history: list[dict], *, graph=None, quick_replies=None):
+    return {
+        "assistant_message": assistant_message,
+        "graph": graph,
+        "quick_replies": quick_replies,
+        "conversation_history": conversation_history,
+    }
+
+
 def generate_composite_layer_graph(
     message: str,
     conversation_history: list[dict],
@@ -385,41 +395,39 @@ def generate_composite_layer_graph(
 
     try:
         parsed = parse_composite_layer_graph_response(response_text)
-        return {
-            "assistant_message": parsed.message,
-            "graph": parsed.graph.model_dump() if parsed.graph else None,
-            "quick_replies": [q.model_dump() for q in parsed.quick_replies] if parsed.quick_replies else None,
-            "conversation_history": new_history,
-        }
+        return _graph_response(
+            parsed.message,
+            new_history,
+            graph=parsed.graph.model_dump() if parsed.graph else None,
+            quick_replies=[q.model_dump() for q in parsed.quick_replies] if parsed.quick_replies else None,
+        )
     except json.JSONDecodeError as e:
         extracted_text = getattr(e, "extracted_text", "")
         if extracted_text.startswith("{"):
             # Looked like an attempted graph (starts with the JSON object the prompt demands) but
             # failed to even parse as JSON - never show that raw, broken text to the user.
             logger.warning("Response looked like a graph attempt but wasn't valid JSON: %s", e)
-            return {
-                "assistant_message": GRAPH_PARSE_FAILURE_MESSAGE,
-                "graph": None,
-                "quick_replies": None,
-                "conversation_history": new_history,
-            }
+            return _graph_response(GRAPH_PARSE_FAILURE_MESSAGE, new_history)
         # Genuinely conversational reply, no JSON found - see parse_composite_layer_graph_response.
         logger.info("Response was not a composite layer graph (likely conversational): %s", e)
-        return {
-            "assistant_message": response_text,
-            "graph": None,
-            "quick_replies": None,
-            "conversation_history": new_history,
-        }
+        return _graph_response(response_text, new_history)
     except ValidationError as e:
-        # JSON found but schema-invalid - fall back to the model's own "message"/"quick_replies"
-        # (still on e.raw_data, see parse_composite_layer_graph_response) rather than showing raw
-        # JSON. A malformed `graph` sub-object shouldn't cost a good clarifying question its options.
+        # JSON found but schema-invalid - fall back to the model's own "message" (still on
+        # e.raw_data, see parse_composite_layer_graph_response) rather than showing raw JSON.
+        # `quick_replies` is re-validated on its own below rather than trusted as-is from raw_data,
+        # since the ValidationError may have been raised by `quick_replies` itself (e.g. too few
+        # options) rather than by `graph` - in which case raw_data's copy is exactly the invalid data.
         logger.warning("Response had JSON that didn't match the response schema: %s", e)
         raw_data = getattr(e, "raw_data", {})
-        return {
-            "assistant_message": raw_data.get("message") or GRAPH_PARSE_FAILURE_MESSAGE,
-            "graph": None,
-            "quick_replies": raw_data.get("quick_replies"),
-            "conversation_history": new_history,
-        }
+        quick_replies = None
+        try:
+            quick_replies = [
+                QuickReplyQuestion(**question).model_dump() for question in raw_data.get("quick_replies") or []
+            ]
+        except (TypeError, ValidationError):
+            pass
+        return _graph_response(
+            raw_data.get("message") or GRAPH_PARSE_FAILURE_MESSAGE,
+            new_history,
+            quick_replies=quick_replies or None,
+        )

@@ -543,3 +543,21 @@ class GenerateCompositeLayerGraphTestCase(SimpleTestCase):
         self.assertEqual(result["assistant_message"], "Which one did you mean?")
         self.assertIsNone(result["graph"])
         self.assertEqual(result["quick_replies"], [{"question": "Which one?", "options": ["Rainfall", "Incidence"]}])
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
+    def test_validation_error_drops_quick_replies_that_are_themselves_invalid(self, mock_call_claude):
+        # Here it's `quick_replies` that violates its own schema (only one option), not `graph` -
+        # the salvage path must not forward that invalid data just because parsing overall failed.
+        mock_call_claude.return_value = json.dumps(
+            {
+                "message": "Which one did you mean?",
+                "graph": None,
+                "quick_replies": [{"question": "Which one?", "options": ["Only one"]}],
+            }
+        )
+
+        result = generate_composite_layer_graph("create a layer", [], [], [])
+
+        self.assertEqual(result["assistant_message"], "Which one did you mean?")
+        self.assertIsNone(result["graph"])
+        self.assertIsNone(result["quick_replies"])
