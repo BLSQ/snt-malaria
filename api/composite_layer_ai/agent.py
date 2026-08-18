@@ -8,6 +8,16 @@ import anthropic
 from django.conf import settings
 from pydantic import BaseModel, Field, ValidationError
 
+from plugins.snt_malaria.services.ai_chat import (
+    ANTHROPIC_FILES_BETA,
+    QuickReplyQuestion,
+    append_turn,
+    build_conversation,
+    extract_json_text,
+    parse_quick_replies,
+    quick_replies_field,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -232,15 +242,10 @@ class GeneratedGraph(BaseModel):
     output: GraphOutputSpec
 
 
-class QuickReplyQuestion(BaseModel):
-    question: str
-    options: list[str] = Field(min_length=2, max_length=6)
-
-
 class GeneratedCompositeLayerGraphResponse(BaseModel):
     message: str
     graph: Optional[GeneratedGraph] = None
-    quick_replies: Optional[list[QuickReplyQuestion]] = Field(default=None, max_length=5)
+    quick_replies: Optional[list[QuickReplyQuestion]] = quick_replies_field()
 
 
 def _build_metric_types_catalog(metric_types: list[dict]) -> str:
@@ -282,23 +287,6 @@ def build_system_prompt(
     return prompt
 
 
-def _build_message(role: str, content: str, attachments: Optional[list[dict]] = None) -> dict:
-    """Build a single Anthropic message as content blocks."""
-    blocks = [
-        {
-            "type": "document",
-            "source": {"type": "file", "file_id": attachment["file_id"]},
-            "title": attachment.get("filename"),
-            # Every later turn resends the full history, including this same block - caching it
-            # avoids Claude reprocessing the document on every turn after the one that attached it.
-            "cache_control": {"type": "ephemeral"},
-        }
-        for attachment in attachments or []
-    ]
-    blocks.append({"type": "text", "text": content})
-    return {"role": role, "content": blocks}
-
-
 def call_claude(
     message: str,
     conversation_history: list[dict],
@@ -313,39 +301,15 @@ def call_claude(
 
     system_prompt = build_system_prompt(metric_types, org_units, current_graph=current_graph)
 
-    messages = [
-        _build_message(entry["role"], entry["content"], entry.get("attachments")) for entry in conversation_history
-    ]
-    messages.append(_build_message("user", message, attachments))
-
-    # Required whenever a `document` block references a file_id - harmless otherwise.
     response = client.beta.messages.create(
         model=settings.COMPOSITE_LAYER_AI_MODEL,
         max_tokens=4096,
         system=system_prompt,
-        messages=messages,
-        betas=["files-api-2025-04-14"],
+        messages=build_conversation(message, conversation_history, attachments),
+        betas=[ANTHROPIC_FILES_BETA],
     )
 
     return response.content[0].text
-
-
-def _extract_json_text(response_text: str) -> str:
-    """Extract the JSON object substring from Claude's response: strips a markdown code fence if
-    present, otherwise falls back to the outermost {...} span if the model added conversational
-    text around the graph with no fence (e.g. "You're right - ..." before it, or a remark after it),
-    despite being told not to add text outside the JSON. Every reply - graph turn or clarifying
-    question alike - is a single JSON envelope, so this fallback applies uniformly."""
-    text = response_text.strip()
-
-    if "```json" in text:
-        text = text.split("```json")[1].split("```")[0].strip()
-    elif "```" in text:
-        text = text.split("```")[1].split("```")[0].strip()
-    elif "{" in text and "}" in text:
-        text = text[text.index("{") : text.rindex("}") + 1]
-
-    return text
 
 
 def parse_composite_layer_graph_response(response_text: str) -> GeneratedCompositeLayerGraphResponse:
@@ -362,7 +326,7 @@ def parse_composite_layer_graph_response(response_text: str) -> GeneratedComposi
     recover e.g. the model's own `message`/`quick_replies` from a schema-invalid-but-parseable
     response.
     """
-    extracted_text = _extract_json_text(response_text)
+    extracted_text = extract_json_text(response_text)
     try:
         data = json.loads(extracted_text)
     except json.JSONDecodeError as e:
@@ -412,14 +376,7 @@ def generate_composite_layer_graph(
         attachments=attachments,
     )
 
-    user_entry = {"role": "user", "content": message}
-    if attachments:
-        # So a later turn's resent history still references the same uploaded file.
-        user_entry["attachments"] = attachments
-    new_history = list(conversation_history) + [
-        user_entry,
-        {"role": "assistant", "content": response_text},
-    ]
+    new_history = append_turn(conversation_history, message, response_text, attachments)
 
     try:
         parsed = parse_composite_layer_graph_response(response_text)
@@ -442,20 +399,10 @@ def generate_composite_layer_graph(
     except ValidationError as e:
         # JSON found but schema-invalid - fall back to the model's own "message" (still on
         # e.raw_data, see parse_composite_layer_graph_response) rather than showing raw JSON.
-        # `quick_replies` is re-validated on its own below rather than trusted as-is from raw_data,
-        # since the ValidationError may have been raised by `quick_replies` itself (e.g. too few
-        # options) rather than by `graph` - in which case raw_data's copy is exactly the invalid data.
         logger.warning("Response had JSON that didn't match the response schema: %s", e)
         raw_data = getattr(e, "raw_data", {})
-        quick_replies = None
-        try:
-            quick_replies = [
-                QuickReplyQuestion(**question).model_dump() for question in raw_data.get("quick_replies") or []
-            ]
-        except (TypeError, ValidationError):
-            pass
         return _graph_response(
             raw_data.get("message") or GRAPH_PARSE_FAILURE_MESSAGE,
             new_history,
-            quick_replies=quick_replies or None,
+            quick_replies=parse_quick_replies(raw_data),
         )

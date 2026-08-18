@@ -6,7 +6,6 @@ from django.test import SimpleTestCase
 from pydantic import ValidationError
 
 from plugins.snt_malaria.api.composite_layer_ai.agent import (
-    _build_message,
     build_system_prompt,
     generate_composite_layer_graph,
     parse_composite_layer_graph_response,
@@ -436,48 +435,6 @@ class ParseCompositeLayerGraphResponseTestCase(SimpleTestCase):
 
         with self.assertRaises(ValidationError):
             parse_composite_layer_graph_response(invalid_response)
-
-
-class BuildMessageTestCase(SimpleTestCase):
-    def test_text_only_message_has_single_text_block(self):
-        message = _build_message("user", "hello")
-
-        self.assertEqual(message["role"], "user")
-        self.assertEqual(message["content"], [{"type": "text", "text": "hello"}])
-
-    def test_attachment_produces_document_block_before_text(self):
-        message = _build_message(
-            "user",
-            "summarize this",
-            attachments=[{"file_id": "file_abc123", "filename": "report.pdf"}],
-        )
-
-        self.assertEqual(
-            message["content"],
-            [
-                {
-                    "type": "document",
-                    "source": {"type": "file", "file_id": "file_abc123"},
-                    "title": "report.pdf",
-                    "cache_control": {"type": "ephemeral"},
-                },
-                {"type": "text", "text": "summarize this"},
-            ],
-        )
-
-    def test_multiple_attachments_each_produce_a_document_block(self):
-        message = _build_message(
-            "user",
-            "compare these",
-            attachments=[
-                {"file_id": "file_1", "filename": "a.pdf"},
-                {"file_id": "file_2", "filename": "b.pdf"},
-            ],
-        )
-
-        self.assertEqual(len(message["content"]), 3)
-        self.assertEqual(message["content"][0]["source"]["file_id"], "file_1")
-        self.assertEqual(message["content"][1]["source"]["file_id"], "file_2")
 
 
 class GenerateCompositeLayerGraphTestCase(SimpleTestCase):
