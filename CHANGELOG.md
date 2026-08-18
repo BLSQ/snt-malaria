@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.17.0](https://github.com/BLSQ/snt-malaria/compare/2.16.0...2.17.0) (2026-08-18)
+
+
+### Features
+
+* **Budgeting:** consistent currency handling across the app ([#358](https://github.com/BLSQ/snt-malaria/issues/358)) ([b8e0d85](https://github.com/BLSQ/snt-malaria/commit/b8e0d8536af20a7d73b11006ad4059e8ce47ed62))
+* **composite layers:** Add new org unit filter node and stack operation ([68ce0f1](https://github.com/BLSQ/snt-malaria/commit/68ce0f1aa023728fcfd6d6e536a9f2ed531532da))
+* **composite layers:** Consolidate chat, layers and node library ([16dbd24](https://github.com/BLSQ/snt-malaria/commit/16dbd242e2f5f4e0b03fb5b78cd784b1504efbdc))
+* **composite layers:** Year pinning for data layer nodes ([aeb41f5](https://github.com/BLSQ/snt-malaria/commit/aeb41f53f3acdb3378a2c7a1800b75988c871d2e))
+* **Scenario:** Scenario reference year should be per data layer ([#353](https://github.com/BLSQ/snt-malaria/issues/353)) ([7945b05](https://github.com/BLSQ/snt-malaria/commit/7945b050143d24f080b7b42e95fcc081afefa27e))
+
+
+### Bug Fixes
+
+* **composite layers:** Inconsistent panel header in no-tabs case ([991af6f](https://github.com/BLSQ/snt-malaria/commit/991af6f555dd9582d57b8957d8f6e47603f308e1))
+* **data layers:** fix inconsistent timeless data layers ([2fbdf81](https://github.com/BLSQ/snt-malaria/commit/2fbdf8143f84b04fa952dafdb2cb14b5706555ac))
+* **frontend:** formatBigNumber regression ([6cd4e34](https://github.com/BLSQ/snt-malaria/commit/6cd4e34c7b6fe041094e9b021142c90617527586))
+* **frontend:** Resolve linting and formatting inconsistencies ([#359](https://github.com/BLSQ/snt-malaria/issues/359)) ([f259014](https://github.com/BLSQ/snt-malaria/commit/f2590144ee948471919770a9e832bb2e0cb21897))
+* **frontend:** scrollbar styling for firefox ([eba0f02](https://github.com/BLSQ/snt-malaria/commit/eba0f025691cf0a99166718d32961ebf110a5d5e))
+
 ## [2.16.0](https://github.com/BLSQ/snt-malaria/compare/2.15.0...2.16.0) (2026-08-05)
 
 
