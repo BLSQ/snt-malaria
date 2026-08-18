@@ -802,6 +802,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenarioRule.ai.error',
         defaultMessage: 'Error generating scenario rules. Please try again.',
     },
+    scenarioRuleAIAttachmentUploadError: {
+        id: 'iaso.snt_malaria.scenarioRule.ai.attachmentUploadError',
+        defaultMessage: 'Could not attach {filename}.',
+    },
     scenariosTitle: {
         id: 'iaso.snt_malaria.scenarios.title',
         defaultMessage: 'Scenarios',

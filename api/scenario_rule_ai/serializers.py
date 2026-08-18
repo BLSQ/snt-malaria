@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
+from plugins.snt_malaria.api.ai_chat.serializers import (
+    attachments_field,
+    conversation_history_field,
+    quick_replies_field,
+)
 from plugins.snt_malaria.models import Scenario
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
 
@@ -8,12 +13,8 @@ from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
 class ScenarioRuleAIRequestSerializer(serializers.Serializer):
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
     message = serializers.CharField(help_text="User message describing the scenario rules to create or modify")
-    conversation_history = serializers.ListField(
-        child=serializers.DictField(),
-        required=False,
-        default=list,
-        help_text="Previous conversation messages",
-    )
+    conversation_history = conversation_history_field()
+    attachments = attachments_field()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -36,4 +37,5 @@ class ScenarioRuleAIRequestSerializer(serializers.Serializer):
 class ScenarioRuleAIResponseSerializer(serializers.Serializer):
     assistant_message = serializers.CharField()
     rules = serializers.ListField(child=serializers.DictField(), allow_null=True)
+    quick_replies = quick_replies_field()
     conversation_history = serializers.ListField(child=serializers.DictField())

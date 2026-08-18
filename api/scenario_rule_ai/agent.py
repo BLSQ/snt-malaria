@@ -9,9 +9,24 @@ from django.conf import settings
 from pydantic import BaseModel, Field, ValidationError
 
 from iaso.utils.colors import COLOR_CHOICES
+from plugins.snt_malaria.services.ai_chat import (
+    ANTHROPIC_FILES_BETA,
+    QuickReplyQuestion,
+    append_turn,
+    build_conversation,
+    extract_json_text,
+    parse_quick_replies,
+    quick_replies_field,
+)
 
 
 logger = logging.getLogger(__name__)
+
+# Shown instead of any raw model output whenever a rules attempt couldn't be turned into a valid
+# rule set, whether it failed to parse as JSON at all or parsed but didn't match the schema.
+RULES_PARSE_FAILURE_MESSAGE = (
+    "I couldn't put together a valid set of rules for that - could you try rephrasing your request?"
+)
 
 
 # Substituted into the prompt template per request with the account's catalogs. The template is
@@ -51,10 +66,11 @@ When an org unit is matched by more than one rule, here is how their interventio
 ## Available colors
 {colors_catalog}
 
-When the user asks you to create or modify scenario rules, you MUST respond with ONLY the JSON below -
-no text before or after it, not even a short acknowledgment or lead-in sentence. Put any explanation of
-what you did in the `message` field instead. Always return the COMPLETE set of rules for the scenario,
-ordered from lowest to highest priority - not just the ones that changed:
+Always respond with ONLY the JSON below - no text before or after it, not even a short acknowledgment
+or lead-in sentence. Put all user-facing text in the `message` field - whether that's an explanation of
+the rules you created/changed, or a short intro to a clarifying question. Whenever you do return rules,
+return the COMPLETE set for the scenario, ordered from lowest to highest priority - not just the ones
+that changed:
 {
   "rules": [
     {
@@ -67,9 +83,20 @@ ordered from lowest to highest priority - not just the ones that changed:
       "interventions": [<id from the interventions catalog above, as an integer>, ...],
       "color": "<required - a hex value from the color palette above, chosen to suit this rule and stay distinct from the others>"
     }
-  ],
-  "message": "<your explanation to the user of what you created or changed>"
+  ] or null if this turn has no rules to save,
+  "message": "<your explanation, or a short intro if you're asking clarifying questions>",
+  "quick_replies": [
+    {"question": "<short question label>", "options": ["<short candidate answer>", "<short candidate answer>", ...]},
+    ...
+  ] or null
 }
+Use `quick_replies` when the user needs to choose between a few concrete, mutually exclusive options to
+proceed (e.g. specific data layer or intervention names, thresholds, which rule to change) - one entry
+per question, at most 5 questions total, 2-6 short options each, exactly one pick expected per question.
+Omit it (null) when the request is clear enough to just create/update the rules, or the missing
+information isn't a short pick-one list (e.g. needs a free-form number).
+Never prefix a `question` or an `option` with a letter or number (no "a.", "1)", "Option 2:", etc.) - the
+UI numbers/distinguishes them structurally, so both fields must be the clean label text only.
 
 ## Rules
 - Only reference metric type ids that appear in the data layer catalog above, and intervention ids that
@@ -103,8 +130,9 @@ ordered from lowest to highest priority - not just the ones that changed:
   use a value from the color palette above - never invent a hex code that isn't listed there. When
   modifying an existing rule, keep its current color unless the user asks you to change it or the
   overall set needs rebalancing for distinctness.
-- If the request is ambiguous, or references a data layer or intervention that doesn't exist, respond
-  with plain text asking a clarifying question instead of JSON.
+- If the request is ambiguous, or references a data layer or intervention that doesn't exist, set `rules`
+  to null, and either ask directly in `message` or - when there's a short enumerable set of good candidate
+  answers - use `quick_replies` instead of guessing.
 - In the `message` field (and in any plain-text clarifying question), never write a numeric id, for
   any reason - not even in parentheses to disambiguate two data layers or interventions that happen to
   share the same name (e.g. never write "'TEST' (id 97)"). The user reading it has no way to look up
@@ -141,8 +169,9 @@ class GeneratedScenarioRuleSpec(BaseModel, extra="allow"):
 
 
 class GeneratedScenarioRulesResponse(BaseModel):
-    rules: list[GeneratedScenarioRuleSpec]
     message: str
+    rules: Optional[list[GeneratedScenarioRuleSpec]] = None
+    quick_replies: Optional[list[QuickReplyQuestion]] = quick_replies_field()
 
 
 def _build_metric_types_catalog(metric_types: list[dict]) -> str:
@@ -220,57 +249,57 @@ def call_claude(
     interventions: list[dict],
     api_key: Optional[str] = None,
     current_rules: Optional[list[dict]] = None,
+    attachments: Optional[list[dict]] = None,
 ) -> str:
     """Call Claude API with the conversation and return the raw response text."""
     client = anthropic.Anthropic(api_key=api_key)
 
     system_prompt = build_system_prompt(metric_types, interventions, current_rules=current_rules)
 
-    messages = [{"role": entry["role"], "content": entry["content"]} for entry in conversation_history]
-    messages.append({"role": "user", "content": message})
-
-    response = client.messages.create(
+    response = client.beta.messages.create(
         model=settings.SCENARIO_RULE_AI_MODEL,
         max_tokens=4096,
         system=system_prompt,
-        messages=messages,
+        messages=build_conversation(message, conversation_history, attachments),
+        betas=[ANTHROPIC_FILES_BETA],
     )
 
     return response.content[0].text
 
 
-def _extract_json_text(response_text: str) -> str:
-    """Extract the JSON object substring from Claude's response: strips a markdown code fence if
-    present, otherwise falls back to the outermost {...} span if the model added a conversational
-    lead-in with no fence, despite being told not to add text outside the JSON."""
-    text = response_text.strip()
-
-    if "```json" in text:
-        text = text.split("```json")[1].split("```")[0].strip()
-    elif "```" in text:
-        text = text.split("```")[1].split("```")[0].strip()
-    elif not text.startswith("{") and "{" in text and "}" in text:
-        text = text[text.index("{") : text.rindex("}") + 1]
-
-    return text
-
-
 def parse_scenario_rules_response(response_text: str) -> GeneratedScenarioRulesResponse:
     """Parse Claude's response into a GeneratedScenarioRulesResponse.
 
-    Raises `json.JSONDecodeError` if no JSON object could be found/parsed at all (a genuinely
-    conversational reply, e.g. a clarifying question), or `pydantic.ValidationError` if JSON was found
-    but doesn't match the expected rules schema - callers should treat these two cases differently,
-    see `generate_scenario_rules`. The parsed (but schema-invalid) dict is attached to the latter as
-    `raw_data`, so a caller can still recover e.g. the model's own `message` field without re-parsing
-    `response_text` itself.
+    Every well-formed reply is a single JSON envelope, whether it's a rules turn (`rules` set) or a
+    clarifying-question turn (`rules: null`, optionally with `quick_replies`). Raises
+    `json.JSONDecodeError` if no JSON object could be found/parsed at all, or
+    `pydantic.ValidationError` if JSON was found but doesn't match the response schema - callers
+    should treat these two cases differently, see `generate_scenario_rules`. Either exception gets the
+    extracted text attached (`extracted_text` / `raw_data`), so a caller can tell a genuinely
+    conversational reply apart from a botched rules attempt without re-extracting `response_text`
+    itself, and can still recover e.g. the model's own `message`/`quick_replies` from a
+    schema-invalid-but-parseable response.
     """
-    data = json.loads(_extract_json_text(response_text))
+    extracted_text = extract_json_text(response_text)
+    try:
+        data = json.loads(extracted_text)
+    except json.JSONDecodeError as e:
+        e.extracted_text = extracted_text
+        raise
     try:
         return GeneratedScenarioRulesResponse(**data)
     except ValidationError as e:
         e.raw_data = data
         raise
+
+
+def _rules_response(assistant_message: str, conversation_history: list[dict], *, rules=None, quick_replies=None):
+    return {
+        "assistant_message": assistant_message,
+        "rules": rules,
+        "quick_replies": quick_replies,
+        "conversation_history": conversation_history,
+    }
 
 
 def generate_scenario_rules(
@@ -280,12 +309,15 @@ def generate_scenario_rules(
     interventions: list[dict],
     api_key: Optional[str] = None,
     current_rules: Optional[list[dict]] = None,
+    attachments: Optional[list[dict]] = None,
 ) -> dict:
     """Call the AI and return the parsed rule set plus updated conversation history.
 
     Returns a dict with:
     - assistant_message: The agent's response text
-    - rules: the generated list of rule specs (None if the response was conversational)
+    - rules: the generated list of rule specs (None on a clarifying-question turn)
+    - quick_replies: a list of {question, options} groups to render as selectable buttons (None if
+      the model didn't offer any)
     - conversation_history: Updated conversation history
     """
     response_text = call_claude(
@@ -295,36 +327,36 @@ def generate_scenario_rules(
         interventions,
         api_key=api_key,
         current_rules=current_rules,
+        attachments=attachments,
     )
 
-    new_history = list(conversation_history) + [
-        {"role": "user", "content": message},
-        {"role": "assistant", "content": response_text},
-    ]
+    new_history = append_turn(conversation_history, message, response_text, attachments)
 
     try:
         parsed = parse_scenario_rules_response(response_text)
-        return {
-            "assistant_message": parsed.message,
-            "rules": [rule.model_dump() for rule in parsed.rules],
-            "conversation_history": new_history,
-        }
+        return _rules_response(
+            parsed.message,
+            new_history,
+            rules=[rule.model_dump() for rule in parsed.rules] if parsed.rules is not None else None,
+            quick_replies=[q.model_dump() for q in parsed.quick_replies] if parsed.quick_replies else None,
+        )
     except json.JSONDecodeError as e:
-        # Conversational reply, no JSON found - see parse_scenario_rules_response.
+        extracted_text = getattr(e, "extracted_text", "")
+        if extracted_text.startswith("{"):
+            # Looked like an attempted rule set (starts with the JSON object the prompt demands) but
+            # failed to even parse as JSON - never show that raw, broken text to the user.
+            logger.warning("Response looked like a rules attempt but wasn't valid JSON: %s", e)
+            return _rules_response(RULES_PARSE_FAILURE_MESSAGE, new_history)
+        # Genuinely conversational reply, no JSON found - see parse_scenario_rules_response.
         logger.info("Response was not a scenario rule set (likely conversational): %s", e)
-        return {
-            "assistant_message": response_text,
-            "rules": None,
-            "conversation_history": new_history,
-        }
+        return _rules_response(response_text, new_history)
     except ValidationError as e:
         # JSON found but schema-invalid - fall back to the model's own "message" (still on
         # e.raw_data, see parse_scenario_rules_response) rather than showing raw JSON.
         logger.warning("Response had JSON that didn't match the rules schema: %s", e)
-        fallback_message = getattr(e, "raw_data", {}).get("message")
-        return {
-            "assistant_message": fallback_message
-            or "I couldn't put together a valid set of rules for that - could you try rephrasing your request?",
-            "rules": None,
-            "conversation_history": new_history,
-        }
+        raw_data = getattr(e, "raw_data", {})
+        return _rules_response(
+            raw_data.get("message") or RULES_PARSE_FAILURE_MESSAGE,
+            new_history,
+            quick_replies=parse_quick_replies(raw_data),
+        )

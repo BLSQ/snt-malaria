@@ -2,15 +2,18 @@ from unittest.mock import MagicMock, patch
 
 import anthropic
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
 from iaso.models import Account, MetricType
+from plugins.snt_malaria.api.ai_chat.serializers import MAX_ATTACHMENT_SIZE_BYTES
 from plugins.snt_malaria.models import ScenarioRule
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
 BASE_URL = "/api/snt_malaria/scenario_rule_ai/"
+ATTACHMENTS_URL = "/api/snt_malaria/scenario_rule_ai/attachments/"
 
 
 class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
@@ -81,10 +84,11 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
             "color": color,
         }
 
-    def _mock_result(self, rules=None, message="Done."):
+    def _mock_result(self, rules=None, message="Done.", quick_replies=None):
         return {
             "assistant_message": message,
             "rules": rules,
+            "quick_replies": quick_replies,
             "conversation_history": [
                 {"role": "user", "content": "add a rule"},
                 {"role": "assistant", "content": message},
@@ -595,3 +599,93 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
         interventions_sent = call_args[0][3]
         self.assertEqual(sorted(m["name"] for m in metric_types_sent), sorted(["Incidence", "Incidence category"]))
         self.assertEqual([i["name"] for i in interventions_sent], ["Bednets"])
+
+
+class ScenarioRuleAIAttachmentAPITestCase(ScenarioRuleAIAPITestCase):
+    def _pdf_file(self, name="strategy.pdf", content=b"%PDF-1.4 test", content_type="application/pdf"):
+        return SimpleUploadedFile(name, content, content_type=content_type)
+
+    def test_unauthenticated_returns_401(self):
+        response = self.client.post(ATTACHMENTS_URL, {"file": self._pdf_file()}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_user_no_perm_returns_403(self):
+        self.client.force_authenticate(self.user_no_perm)
+        response = self.client.post(ATTACHMENTS_URL, {"file": self._pdf_file()}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_missing_file_returns_400(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.post(ATTACHMENTS_URL, {}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_non_pdf_content_is_rejected_regardless_of_declared_content_type(self):
+        self.client.force_authenticate(self.user)
+        response = self.client.post(
+            ATTACHMENTS_URL,
+            {"file": self._pdf_file(name="strategy.docx", content=b"This is not actually a PDF.")},
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Only PDF files", str(response.data["file"]))
+
+    def test_oversized_file_returns_400(self):
+        self.client.force_authenticate(self.user)
+        oversized = self._pdf_file(content=b"%PDF-1.4 " + b"0" * MAX_ATTACHMENT_SIZE_BYTES)
+
+        response = self.client.post(ATTACHMENTS_URL, {"file": oversized}, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("too large", str(response.data["file"]))
+
+    def test_missing_api_key_returns_400(self):
+        self.client.force_authenticate(self.user_no_key)
+        response = self.client.post(ATTACHMENTS_URL, {"file": self._pdf_file()}, format="multipart")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("plugins.snt_malaria.services.ai_chat.anthropic_files.anthropic.Anthropic")
+    def test_successful_upload_returns_file_id(self, mock_anthropic_cls):
+        mock_client = MagicMock()
+        mock_client.beta.files.upload.return_value = MagicMock(id="file_abc123", size_bytes=13)
+        mock_anthropic_cls.return_value = mock_client
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(ATTACHMENTS_URL, {"file": self._pdf_file()}, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["file_id"], "file_abc123")
+        self.assertEqual(response.data["filename"], "strategy.pdf")
+        self.assertEqual(mock_client.beta.files.upload.call_args.kwargs["betas"], ["files-api-2025-04-14"])
+
+    @patch("plugins.snt_malaria.services.ai_chat.anthropic_files.anthropic.Anthropic")
+    def test_upload_error_returns_400(self, mock_anthropic_cls):
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.status_code = 400
+        mock_client.beta.files.upload.side_effect = anthropic.APIStatusError(
+            "bad request", response=mock_response, body=None
+        )
+        mock_anthropic_cls.return_value = mock_client
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(ATTACHMENTS_URL, {"file": self._pdf_file()}, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("plugins.snt_malaria.services.ai_chat.anthropic_files.anthropic.Anthropic")
+    def test_delete_calls_anthropic_files_delete(self, mock_anthropic_cls):
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        self.client.force_authenticate(self.user)
+
+        response = self.client.delete(f"{ATTACHMENTS_URL}file_abc123/")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        mock_client.beta.files.delete.assert_called_once_with("file_abc123", betas=["files-api-2025-04-14"])
+
+    def test_delete_without_api_key_returns_204_without_calling_anthropic(self):
+        self.client.force_authenticate(self.user_no_key)
+
+        response = self.client.delete(f"{ATTACHMENTS_URL}file_abc123/")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

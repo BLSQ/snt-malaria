@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from plugins.snt_malaria.api.scenario_rule_ai.agent import (
     build_system_prompt,
+    call_claude,
     generate_scenario_rules,
     parse_scenario_rules_response,
 )
@@ -282,3 +283,120 @@ class GenerateScenarioRulesTestCase(SimpleTestCase):
         self.assertEqual(result["rules"][0]["name"], "High incidence")
         self.assertEqual(result["rules"][0]["interventions"], [10])
         self.assertEqual(len(result["conversation_history"]), 2)
+
+
+class QuickRepliesTestCase(SimpleTestCase):
+    def test_clarifying_turn_parses_with_null_rules_and_quick_replies(self):
+        response = json.dumps(
+            {
+                "message": "Which intervention should this rule assign?",
+                "rules": None,
+                "quick_replies": [{"question": "Intervention", "options": ["Bednets", "SMC"]}],
+            }
+        )
+
+        parsed = parse_scenario_rules_response(response)
+
+        self.assertIsNone(parsed.rules)
+        self.assertEqual(parsed.quick_replies[0].question, "Intervention")
+        self.assertEqual(parsed.quick_replies[0].options, ["Bednets", "SMC"])
+
+    def test_single_option_question_is_rejected(self):
+        # A pick-one question with nothing to pick between is a prompt-following failure, not a
+        # usable question - the UI would render a radio group with one choice.
+        response = json.dumps(
+            {"message": "Pick one", "rules": None, "quick_replies": [{"question": "Layer", "options": ["Incidence"]}]}
+        )
+
+        with self.assertRaises(ValidationError):
+            parse_scenario_rules_response(response)
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.agent.call_claude")
+    def test_quick_replies_are_returned_on_a_clarifying_turn(self, mock_call_claude):
+        mock_call_claude.return_value = json.dumps(
+            {
+                "message": "Which layer?",
+                "rules": None,
+                "quick_replies": [{"question": "Layer", "options": ["Incidence", "Rainfall"]}],
+            }
+        )
+
+        result = generate_scenario_rules("add a rule", [], METRIC_TYPES, INTERVENTIONS)
+
+        self.assertIsNone(result["rules"])
+        self.assertEqual(result["assistant_message"], "Which layer?")
+        self.assertEqual(result["quick_replies"], [{"question": "Layer", "options": ["Incidence", "Rainfall"]}])
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.agent.call_claude")
+    def test_valid_quick_replies_survive_a_schema_invalid_rule_set(self, mock_call_claude):
+        # The ValidationError came from `rules`, so the questions themselves are still usable and
+        # are the only actionable thing left in the turn.
+        mock_call_claude.return_value = json.dumps(
+            {
+                "message": "Almost - one thing first.",
+                "rules": [{"is_match_all": True, "interventions": [10]}],
+                "quick_replies": [{"question": "Layer", "options": ["Incidence", "Rainfall"]}],
+            }
+        )
+
+        result = generate_scenario_rules("add a rule", [], METRIC_TYPES, INTERVENTIONS)
+
+        self.assertIsNone(result["rules"])
+        self.assertEqual(result["assistant_message"], "Almost - one thing first.")
+        self.assertEqual(result["quick_replies"], [{"question": "Layer", "options": ["Incidence", "Rainfall"]}])
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.agent.call_claude")
+    def test_invalid_quick_replies_are_dropped_rather_than_failing_the_turn(self, mock_call_claude):
+        mock_call_claude.return_value = json.dumps(
+            {
+                "message": "Here you go.",
+                "rules": [{"is_match_all": True, "interventions": [10]}],
+                "quick_replies": [{"question": "Layer", "options": ["Only one"]}],
+            }
+        )
+
+        result = generate_scenario_rules("add a rule", [], METRIC_TYPES, INTERVENTIONS)
+
+        self.assertIsNone(result["quick_replies"])
+        self.assertEqual(result["assistant_message"], "Here you go.")
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.agent.call_claude")
+    def test_botched_json_object_is_not_shown_raw_to_the_user(self, mock_call_claude):
+        mock_call_claude.return_value = '{"message": "Here you go", "rules": [{'
+
+        result = generate_scenario_rules("add a rule", [], METRIC_TYPES, INTERVENTIONS)
+
+        self.assertIn("couldn't put together a valid set of rules", result["assistant_message"])
+        self.assertNotIn("{", result["assistant_message"])
+        self.assertIsNone(result["rules"])
+
+
+class AttachmentsTestCase(SimpleTestCase):
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.agent.call_claude")
+    def test_attachments_are_forwarded_to_call_claude_and_carried_into_history(self, mock_call_claude):
+        mock_call_claude.return_value = "Which rules should I base on this document?"
+        attachments = [{"file_id": "file_abc123", "filename": "strategy.pdf"}]
+
+        result = generate_scenario_rules("use this", [], METRIC_TYPES, INTERVENTIONS, attachments=attachments)
+
+        self.assertEqual(mock_call_claude.call_args.kwargs["attachments"], attachments)
+        self.assertEqual(result["conversation_history"][0]["attachments"], attachments)
+
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.agent.anthropic.Anthropic")
+    def test_call_claude_sends_document_blocks_with_the_files_beta(self, mock_anthropic_cls):
+        mock_client = mock_anthropic_cls.return_value
+        mock_client.beta.messages.create.return_value.content = [type("Block", (), {"text": "ok"})()]
+
+        call_claude(
+            "use this",
+            [],
+            METRIC_TYPES,
+            INTERVENTIONS,
+            attachments=[{"file_id": "file_abc123", "filename": "strategy.pdf"}],
+        )
+
+        kwargs = mock_client.beta.messages.create.call_args.kwargs
+        self.assertEqual(kwargs["betas"], ["files-api-2025-04-14"])
+        first_block = kwargs["messages"][0]["content"][0]
+        self.assertEqual(first_block["type"], "document")
+        self.assertEqual(first_block["source"]["file_id"], "file_abc123")
