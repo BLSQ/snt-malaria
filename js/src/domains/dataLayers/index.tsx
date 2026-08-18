@@ -13,7 +13,6 @@ import { userHasPermission } from 'Iaso/domains/users/utils';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 
 import { SxStyles } from 'Iaso/types/general';
-import { hasFeatureFlag, SHOW_DEV_FEATURES } from 'Iaso/utils/featureFlags';
 import { useCurrentUser } from 'Iaso/utils/usersUtils';
 import { CardStyled } from '../../components/CardStyled';
 import {
@@ -71,11 +70,8 @@ export const DataLayers: FC = () => {
     const { displayOrgUnitId } = useParamsObject(
         baseUrls.dataLayers,
     ) as unknown as DataLayersParams;
-    // Composite layers are still in development (mirrors the API permission).
     const currentUser = useCurrentUser();
-    const showCompositeLayers =
-        hasFeatureFlag(currentUser, SHOW_DEV_FEATURES) &&
-        userHasPermission(SETTINGS_WRITE, currentUser);
+    const showCompositeLayers = userHasPermission(SETTINGS_WRITE, currentUser);
 
     const [displayedMetricType, setDisplayedMetricType] =
         useState<MetricType>();

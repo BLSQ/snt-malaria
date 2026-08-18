@@ -3,10 +3,6 @@ from rest_framework import permissions
 from plugins.snt_malaria.permissions import SNT_SETTINGS_READ_PERMISSION, SNT_SETTINGS_WRITE_PERMISSION
 
 
-# Account feature flag gating the composite layer editor (frontend and API).
-SHOW_DEV_FEATURES = "SHOW_DEV_FEATURES"
-
-
 class CompositeLayerPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
