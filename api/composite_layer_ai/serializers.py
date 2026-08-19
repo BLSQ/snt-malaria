@@ -17,7 +17,13 @@ class CompositeLayerAIRequestSerializer(serializers.Serializer):
     )
 
 
+class QuickReplyQuestionSerializer(serializers.Serializer):
+    question = serializers.CharField()
+    options = serializers.ListField(child=serializers.CharField())
+
+
 class CompositeLayerAIResponseSerializer(serializers.Serializer):
     assistant_message = serializers.CharField()
     graph = serializers.DictField(allow_null=True)
+    quick_replies = QuickReplyQuestionSerializer(many=True, allow_null=True, required=False, default=None)
     conversation_history = serializers.ListField(child=serializers.DictField())

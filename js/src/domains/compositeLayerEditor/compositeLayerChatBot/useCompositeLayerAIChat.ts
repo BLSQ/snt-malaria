@@ -1,6 +1,10 @@
 import { useCallback, useState } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
-import { ChatMessage } from 'Iaso/components/ChatPanel/ChatPanel';
+import {
+    applyQuickReplyAnswer,
+    ChatMessage,
+    SendMessageOptions,
+} from 'Iaso/components/ChatPanel/ChatPanel';
 import { MESSAGES } from '../messages';
 import { ConversationEntry, CurrentGraph, GeneratedGraph } from './types';
 import { useSendCompositeLayerAIMessage } from './useSendCompositeLayerAIMessage';
@@ -14,7 +18,7 @@ type Args = {
 type Result = {
     messages: ChatMessage[];
     isLoading: boolean;
-    sendMessage: (message: string) => void;
+    sendMessage: (message: string, options?: SendMessageOptions) => void;
     reset: () => void;
 };
 
@@ -32,11 +36,21 @@ export const useCompositeLayerAIChat = ({
     const { mutate: sendMessage, isLoading } = useSendCompositeLayerAIMessage();
 
     const handleSendMessage = useCallback(
-        (message: string) => {
-            setMessages(prev => [
-                ...prev,
-                { role: 'user', content: message, id: crypto.randomUUID() },
-            ]);
+        (message: string, options?: SendMessageOptions) => {
+            const { displayContent, quickReplyAnswer } = options ?? {};
+            setMessages(prev => {
+                const messagesWithAnswer = quickReplyAnswer
+                    ? applyQuickReplyAnswer(prev, quickReplyAnswer)
+                    : prev;
+                return [
+                    ...messagesWithAnswer,
+                    {
+                        role: 'user',
+                        content: displayContent ?? message,
+                        id: crypto.randomUUID(),
+                    },
+                ];
+            });
 
             sendMessage(
                 {
@@ -52,6 +66,7 @@ export const useCompositeLayerAIChat = ({
                                 role: 'assistant',
                                 content: data.assistant_message,
                                 id: crypto.randomUUID(),
+                                quickReplies: data.quick_replies ?? undefined,
                             },
                         ]);
                         setConversationHistory(data.conversation_history);

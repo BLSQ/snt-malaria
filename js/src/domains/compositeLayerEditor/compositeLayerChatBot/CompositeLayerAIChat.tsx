@@ -2,14 +2,18 @@ import React, { FC } from 'react';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { Box, Card, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { ChatMessage, ChatPanel } from 'Iaso/components/ChatPanel/ChatPanel';
+import {
+    ChatMessage,
+    ChatPanel,
+    SendMessageOptions,
+} from 'Iaso/components/ChatPanel/ChatPanel';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
 
 type Props = {
     messages: ChatMessage[];
     isLoading: boolean;
-    onSendMessage: (message: string) => void;
+    onSendMessage: (message: string, options?: SendMessageOptions) => void;
 };
 
 const chatStyles = {

@@ -135,6 +135,13 @@ class BuildSystemPromptTestCase(SimpleTestCase):
         self.assertIn("explicitly says", prompt)
         self.assertIn("always wins over the shortest-list heuristic", prompt)
 
+    def test_quick_replies_documented_in_prompt(self):
+        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+
+        self.assertIn("quick_replies", prompt)
+        self.assertIn("Never prefix a `question` or an `option` with a", prompt)
+        self.assertIn("clean label text only", prompt)
+
 
 GRAPH_RESPONSE = {
     "graph": {
@@ -192,6 +199,66 @@ class ParseCompositeLayerGraphResponseTestCase(SimpleTestCase):
             parse_composite_layer_graph_response(
                 "Which data layer did you mean - rainfall or incidence?",
             )
+
+    def test_chat_only_response_with_quick_replies_parses(self):
+        # The primary shape for a clarifying question: valid JSON, graph is null, quick_replies
+        # carries the selectable questions.
+        response = json.dumps(
+            {
+                "message": "A couple of things to pin down first:",
+                "graph": None,
+                "quick_replies": [
+                    {"question": "Which incidence source?", "options": ["SNIS adjusted", "SNIS crude"]},
+                ],
+            }
+        )
+
+        parsed = parse_composite_layer_graph_response(response)
+
+        self.assertIsNone(parsed.graph)
+        self.assertEqual(parsed.quick_replies[0].question, "Which incidence source?")
+        self.assertEqual(parsed.quick_replies[0].options, ["SNIS adjusted", "SNIS crude"])
+
+    def test_quick_replies_omitted_parses_as_none(self):
+        parsed = parse_composite_layer_graph_response(GRAPH_RESPONSE_JSON)
+
+        self.assertIsNone(parsed.quick_replies)
+
+    def test_quick_reply_question_with_fewer_than_two_options_raises(self):
+        response = json.dumps(
+            {
+                "message": "Which one?",
+                "graph": None,
+                "quick_replies": [{"question": "Which one?", "options": ["Only one"]}],
+            }
+        )
+
+        with self.assertRaises(ValidationError):
+            parse_composite_layer_graph_response(response)
+
+    def test_quick_reply_options_as_bare_string_raises(self):
+        response = json.dumps(
+            {
+                "message": "Which one?",
+                "graph": None,
+                "quick_replies": [{"question": "Which one?", "options": "Rainfall"}],
+            }
+        )
+
+        with self.assertRaises(ValidationError):
+            parse_composite_layer_graph_response(response)
+
+    def test_more_than_five_quick_reply_questions_raises(self):
+        response = json.dumps(
+            {
+                "message": "Lots to clarify:",
+                "graph": None,
+                "quick_replies": [{"question": f"Question {i}", "options": ["A", "B"]} for i in range(6)],
+            }
+        )
+
+        with self.assertRaises(ValidationError):
+            parse_composite_layer_graph_response(response)
 
     def test_data_layer_node_with_selected_year_parses(self):
         response = json.dumps(
@@ -372,13 +439,45 @@ class ParseCompositeLayerGraphResponseTestCase(SimpleTestCase):
 
 class GenerateCompositeLayerGraphTestCase(SimpleTestCase):
     @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
-    def test_conversational_response_is_shown_verbatim(self, mock_call_claude):
+    def test_non_json_response_falls_back_to_verbatim_text(self, mock_call_claude):
+        # Anomaly fallback: the model returned no JSON at all despite the always-JSON instruction.
+        # Must still degrade gracefully rather than raising or dropping the reply.
         mock_call_claude.return_value = "Which data layer did you mean - rainfall or incidence?"
 
         result = generate_composite_layer_graph("create a layer", [], [], [])
 
         self.assertEqual(result["assistant_message"], mock_call_claude.return_value)
         self.assertIsNone(result["graph"])
+        self.assertIsNone(result["quick_replies"])
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
+    def test_graph_response_returns_graph_and_message(self, mock_call_claude):
+        mock_call_claude.return_value = GRAPH_RESPONSE_JSON
+
+        result = generate_composite_layer_graph("create a layer", [], [], [])
+
+        self.assertEqual(result["assistant_message"], GRAPH_RESPONSE["message"])
+        self.assertEqual(result["graph"]["nodes"][0]["id"], "rainfall")
+        self.assertIsNone(result["quick_replies"])
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
+    def test_clarifying_question_with_quick_replies_returned(self, mock_call_claude):
+        mock_call_claude.return_value = json.dumps(
+            {
+                "message": "A couple of things to pin down first:",
+                "graph": None,
+                "quick_replies": [
+                    {"question": "Which incidence source?", "options": ["SNIS adjusted", "SNIS crude"]},
+                ],
+            }
+        )
+
+        result = generate_composite_layer_graph("build a risk layer", [], [], [])
+
+        self.assertEqual(result["assistant_message"], "A couple of things to pin down first:")
+        self.assertIsNone(result["graph"])
+        self.assertEqual(result["quick_replies"][0]["question"], "Which incidence source?")
+        self.assertEqual(result["quick_replies"][0]["options"], ["SNIS adjusted", "SNIS crude"])
 
     @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
     def test_schema_invalid_response_falls_back_to_its_own_message_not_raw_json(self, mock_call_claude):
@@ -395,6 +494,7 @@ class GenerateCompositeLayerGraphTestCase(SimpleTestCase):
 
         self.assertEqual(result["assistant_message"], invalid_response["message"])
         self.assertIsNone(result["graph"])
+        self.assertIsNone(result["quick_replies"])
 
     @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
     def test_schema_invalid_response_with_no_salvageable_message_uses_generic_fallback(self, mock_call_claude):
@@ -408,6 +508,7 @@ class GenerateCompositeLayerGraphTestCase(SimpleTestCase):
 
         self.assertIn("couldn't put together a valid graph", result["assistant_message"])
         self.assertIsNone(result["graph"])
+        self.assertIsNone(result["quick_replies"])
 
     @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
     def test_malformed_json_graph_attempt_uses_generic_fallback_not_raw_text(self, mock_call_claude):
@@ -424,3 +525,39 @@ class GenerateCompositeLayerGraphTestCase(SimpleTestCase):
         self.assertIn("couldn't put together a valid graph", result["assistant_message"])
         self.assertNotIn("nodes", result["assistant_message"])
         self.assertIsNone(result["graph"])
+        self.assertIsNone(result["quick_replies"])
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
+    def test_validation_error_salvages_quick_replies_alongside_message(self, mock_call_claude):
+        # A malformed "graph" sub-object shouldn't cost a good clarifying question its options.
+        mock_call_claude.return_value = json.dumps(
+            {
+                "message": "Which one did you mean?",
+                "graph": {"nodes": [{"id": "x", "type": "classify", "input": "y", "default": 4}]},
+                "quick_replies": [{"question": "Which one?", "options": ["Rainfall", "Incidence"]}],
+            }
+        )
+
+        result = generate_composite_layer_graph("create a layer", [], [], [])
+
+        self.assertEqual(result["assistant_message"], "Which one did you mean?")
+        self.assertIsNone(result["graph"])
+        self.assertEqual(result["quick_replies"], [{"question": "Which one?", "options": ["Rainfall", "Incidence"]}])
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
+    def test_validation_error_drops_quick_replies_that_are_themselves_invalid(self, mock_call_claude):
+        # Here it's `quick_replies` that violates its own schema (only one option), not `graph` -
+        # the salvage path must not forward that invalid data just because parsing overall failed.
+        mock_call_claude.return_value = json.dumps(
+            {
+                "message": "Which one did you mean?",
+                "graph": None,
+                "quick_replies": [{"question": "Which one?", "options": ["Only one"]}],
+            }
+        )
+
+        result = generate_composite_layer_graph("create a layer", [], [], [])
+
+        self.assertEqual(result["assistant_message"], "Which one did you mean?")
+        self.assertIsNone(result["graph"])
+        self.assertIsNone(result["quick_replies"])
