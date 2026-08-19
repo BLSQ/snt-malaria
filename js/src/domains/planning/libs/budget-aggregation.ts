@@ -152,7 +152,7 @@ export const aggregatePopulationLayersByIntervention = (
 };
 
 // Backend cost category value (InterventionCostBreakdownLineCategory.PROCUREMENT).
-const PROCUREMENT_CATEGORY = 'Procurement';
+export const PROCUREMENT_CATEGORY = 'Procurement';
 
 export type CommodityQuantity = {
     unitName: string;

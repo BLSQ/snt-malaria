@@ -111,6 +111,9 @@ export const InterventionPlanHeader: FC<Props> = ({
                     <ToggleButton value="summary" key="summary">
                         {formatMessage(MESSAGES.summaryView)}
                     </ToggleButton>
+                    <ToggleButton value="comparison" key="comparison">
+                        {formatMessage(MESSAGES.comparisonView)}
+                    </ToggleButton>
                 </ToggleButtonGroup>
             </Stack>
             <Stack direction="row" spacing={2} alignItems="center">

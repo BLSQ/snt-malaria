@@ -36,6 +36,7 @@ import { useDeleteScenario } from '../scenarios/hooks/useDeleteScenario';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
 import { BudgetTable } from './components/budgeting/BudgetTable';
+import { ScenarioComparisonTab } from './components/comparisonTab/ScenarioComparisonTab';
 import { InterventionPlanHeader } from './components/interventionPlan/InterventionPlanHeader';
 import { InterventionPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
 import { ScenarioRuleAIChat } from './components/scenarioRule/scenarioRuleAiChat/ScenarioRuleAIChat';
@@ -299,6 +300,8 @@ export const Planning: FC = () => {
                     <MainColumn>
                         {activeTab === 'summary' ? (
                             <ScenarioSummaryTab header={planHeader} />
+                        ) : activeTab === 'comparison' ? (
+                            <ScenarioComparisonTab header={planHeader} />
                         ) : (
                             <PaperFullHeight>
                                 <Card sx={styles.card}>

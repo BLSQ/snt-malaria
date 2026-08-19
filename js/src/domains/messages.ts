@@ -70,6 +70,86 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.summaryView',
         defaultMessage: 'Summary',
     },
+    comparisonView: {
+        id: 'iaso.snt_malaria.label.comparisonView',
+        defaultMessage: 'Comparison',
+    },
+    comparisonYearLabel: {
+        id: 'iaso.snt_malaria.planning.comparison.yearLabel',
+        defaultMessage: 'Year',
+    },
+    comparisonVersusLabel: {
+        id: 'iaso.snt_malaria.planning.comparison.versusLabel',
+        defaultMessage: 'vs',
+    },
+    comparisonAddScenario: {
+        id: 'iaso.snt_malaria.planning.comparison.addScenario',
+        defaultMessage: 'Add scenario',
+    },
+    comparisonRemoveScenario: {
+        id: 'iaso.snt_malaria.planning.comparison.removeScenario',
+        defaultMessage: 'Remove scenario',
+    },
+    comparisonSideBySide: {
+        id: 'iaso.snt_malaria.planning.comparison.sideBySide',
+        defaultMessage: 'Side by side',
+    },
+    comparisonOverlay: {
+        id: 'iaso.snt_malaria.planning.comparison.overlay',
+        defaultMessage: 'Overlay',
+    },
+    comparisonBudgetByInterventionTitle: {
+        id: 'iaso.snt_malaria.planning.comparison.budgetByInterventionTitle',
+        defaultMessage: 'Budget by intervention',
+    },
+    comparisonDistrictsCoveredTitle: {
+        id: 'iaso.snt_malaria.planning.comparison.districtsCoveredTitle',
+        defaultMessage: 'Districts covered',
+    },
+    comparisonDistrictsCountTitle: {
+        id: 'iaso.snt_malaria.planning.comparison.districtsCountTitle',
+        defaultMessage: 'Count of districts',
+    },
+    comparisonDistrictsPercentTitle: {
+        id: 'iaso.snt_malaria.planning.comparison.districtsPercentTitle',
+        defaultMessage: '% of total districts',
+    },
+    comparisonPopulationCoverageTitle: {
+        id: 'iaso.snt_malaria.planning.comparison.populationCoverageTitle',
+        defaultMessage: 'Population coverage',
+    },
+    comparisonPersonsAtRisk: {
+        id: 'iaso.snt_malaria.planning.comparison.personsAtRisk',
+        defaultMessage: 'Persons at risk',
+    },
+    comparisonPercentEligible: {
+        id: 'iaso.snt_malaria.planning.comparison.percentEligible',
+        defaultMessage: '% eligible',
+    },
+    comparisonPercentTotalPop: {
+        id: 'iaso.snt_malaria.planning.comparison.percentTotalPop',
+        defaultMessage: '% of total pop.',
+    },
+    comparisonIntervention: {
+        id: 'iaso.snt_malaria.planning.comparison.intervention',
+        defaultMessage: 'Intervention',
+    },
+    comparisonCommoditiesTitle: {
+        id: 'iaso.snt_malaria.planning.comparison.commoditiesTitle',
+        defaultMessage: 'Commodities',
+    },
+    comparisonCommodityLabel: {
+        id: 'iaso.snt_malaria.planning.comparison.commodityLabel',
+        defaultMessage: 'Commodity',
+    },
+    comparisonQuantityLabel: {
+        id: 'iaso.snt_malaria.planning.comparison.quantityLabel',
+        defaultMessage: 'Quantity',
+    },
+    comparisonTotalCostColumnLabel: {
+        id: 'iaso.snt_malaria.planning.comparison.totalCostColumnLabel',
+        defaultMessage: 'Total cost',
+    },
     budgetByGrantTitle: {
         id: 'iaso.snt_malaria.budgeting.budgetByGrantTitle',
         defaultMessage: 'Total cost by grant',
