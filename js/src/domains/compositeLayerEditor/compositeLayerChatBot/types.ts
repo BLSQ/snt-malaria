@@ -1,6 +1,12 @@
+export type AttachmentReference = {
+    file_id: string;
+    filename: string;
+};
+
 export type ConversationEntry = {
     role: 'user' | 'assistant';
     content: string;
+    attachments?: AttachmentReference[];
 };
 
 export type ClassifyOperator = '<' | '<=' | '>' | '>=' | '==' | '!=';
@@ -81,6 +87,13 @@ export type CompositeLayerAIRequest = {
     message: string;
     conversation_history: ConversationEntry[];
     current_graph?: CurrentGraph | null;
+    attachments?: AttachmentReference[];
+};
+
+export type UploadedAttachment = {
+    file_id: string;
+    filename: string;
+    size_bytes: number;
 };
 
 export type QuickReplyQuestion = {

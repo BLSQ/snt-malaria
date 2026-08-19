@@ -133,6 +133,9 @@ export const DataLayers: FC = () => {
         isLoading: isAiChatLoading,
         sendMessage: sendAiChatMessage,
         reset: resetAiChat,
+        pendingAttachments: aiChatPendingAttachments,
+        onAttachFiles: onAttachAiChatFiles,
+        onRemoveAttachment: onRemoveAiChatAttachment,
     } = useCompositeLayerAIChat({
         getCurrentGraph: getCurrentCompositeLayerGraph,
         onGenerate: onGenerateCompositeLayerGraph,
@@ -313,6 +316,15 @@ export const DataLayers: FC = () => {
                                                     isLoading={isAiChatLoading}
                                                     onSendMessage={
                                                         sendAiChatMessage
+                                                    }
+                                                    pendingAttachments={
+                                                        aiChatPendingAttachments
+                                                    }
+                                                    onAttachFiles={
+                                                        onAttachAiChatFiles
+                                                    }
+                                                    onRemoveAttachment={
+                                                        onRemoveAiChatAttachment
                                                     }
                                                 />
                                             ) : (

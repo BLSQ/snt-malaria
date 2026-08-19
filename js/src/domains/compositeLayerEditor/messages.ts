@@ -425,6 +425,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.ai.error',
         defaultMessage: 'Error generating composite layer. Please try again.',
     },
+    compositeLayerAIAttachmentUploadError: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.ai.attachmentUploadError',
+        defaultMessage: 'Could not attach {filename}.',
+    },
     compositeLayerAIEmptyStateTitle: {
         id: 'iaso.snt_malaria.compositeLayerEditor.ai.emptyStateTitle',
         defaultMessage: 'Describe the composite layer you want to create',
@@ -432,6 +436,6 @@ export const MESSAGES = defineMessages({
     compositeLayerAIEmptyStateDescription: {
         id: 'iaso.snt_malaria.compositeLayerEditor.ai.emptyStateDescription',
         defaultMessage:
-            'Describe the metrics, formulas and thresholds you want to combine — the AI builds the graph for you.',
+            'Describe the metrics, formulas and thresholds you want to combine, or upload documents for context — the AI builds the graph for you.',
     },
 });
