@@ -48,6 +48,10 @@ const styles = {
         fontWeight: 700,
         mb: EMPTY_STATE_EXTRA_GAP,
     },
+    aiTitle: {
+        fontWeight: 700,
+        fontSize: '1.25rem',
+    },
 } satisfies SxStyles;
 
 export const ScenarioRuleAIChat: FC<Props> = ({
@@ -88,10 +92,10 @@ export const ScenarioRuleAIChat: FC<Props> = ({
                                     color="primary"
                                     fontSize="small"
                                 />
-                                <Typography
-                                    sx={{ fontWeight: 700, fontSize: '1.25rem' }}
-                                >
-                                    {formatMessage(MESSAGES.scenarioRuleAITitle)}
+                                <Typography sx={styles.aiTitle}>
+                                    {formatMessage(
+                                        MESSAGES.scenarioRuleAITitle,
+                                    )}
                                 </Typography>
                             </Box>
                             <Typography

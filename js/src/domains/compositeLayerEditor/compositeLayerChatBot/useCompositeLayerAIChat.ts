@@ -15,7 +15,10 @@ type Args = {
     onGenerate: (graph: GeneratedGraph) => void;
 };
 
-export const useCompositeLayerAIChat = ({ getCurrentGraph, onGenerate }: Args) => {
+export const useCompositeLayerAIChat = ({
+    getCurrentGraph,
+    onGenerate,
+}: Args) => {
     const { formatMessage } = useSafeIntl();
     const { mutate: sendMessage, isLoading } = useSendCompositeLayerAIMessage();
 
@@ -38,10 +41,9 @@ export const useCompositeLayerAIChat = ({ getCurrentGraph, onGenerate }: Args) =
         errorMessage: formatMessage(MESSAGES.compositeLayerAIError),
         uploadErrorMessage: useCallback(
             (filename: string) =>
-                formatMessage(
-                    MESSAGES.compositeLayerAIAttachmentUploadError,
-                    { filename },
-                ),
+                formatMessage(MESSAGES.compositeLayerAIAttachmentUploadError, {
+                    filename,
+                }),
             [formatMessage],
         ),
     });
