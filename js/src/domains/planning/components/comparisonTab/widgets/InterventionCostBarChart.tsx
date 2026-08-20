@@ -24,7 +24,10 @@ import {
 } from '../../../../../components/useAutoYAxisWidth';
 import { MESSAGES } from '../../../../messages';
 import { CATEGORY_COLORS } from '../../../libs/color-utils';
-import { formatBigNumber, getCostBreakdownChartData } from '../../../libs/cost-utils';
+import {
+    formatBigNumber,
+    getCostBreakdownChartData,
+} from '../../../libs/cost-utils';
 import { BudgetIntervention } from '../../../types/budget';
 
 const BAR_SIZE = 22;

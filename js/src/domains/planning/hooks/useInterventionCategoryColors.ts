@@ -5,7 +5,7 @@ import { BudgetIntervention } from '../types/budget';
 
 const UNCATEGORIZED_KEY = -1;
 
-type InterventionCategoryColors = {
+export type InterventionCategoryColors = {
     // `interventions` sorted so that those sharing a category sit together
     // (groups ordered by total cost desc, interventions within a group too).
     orderedInterventions: BudgetIntervention[];
