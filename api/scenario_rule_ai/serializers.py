@@ -18,9 +18,10 @@ class ScenarioRuleAIRequestSerializer(serializers.Serializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        user = self.context["request"].user
-        account = user.iaso_profile.account
-        self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
+        request = self.context.get("request")
+        if request is not None:
+            account = request.user.iaso_profile.account
+            self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
 
     def validate_scenario(self, scenario):
         user = self.context["request"].user
