@@ -14,6 +14,7 @@ import { ChartEmptyState } from '../../../../../components/charts/ChartEmptyStat
 import { useChartTheme } from '../../../../../components/charts/chartTheme';
 import { MergedInterventionRow } from '../../../libs/comparison-aggregation';
 import { ComparisonSlot } from '../types';
+import { buildRowTooltipContent, toChartData } from './mergedRowChart';
 
 const BAR_SIZE = 40;
 const BAR_GAP = 3;
@@ -38,10 +39,8 @@ type Props = {
 };
 
 /**
- * Shared overlay-mode chart for the Comparison tab: one grouped vertical bar
- * per intervention, one bar per slot (colored by slot), used by the
- * Budget-by-intervention, Districts-covered and Population-coverage widgets
- * so overlay mode reads as one consistent visual language across them.
+ * Overlay-mode chart for the Comparison tab: one grouped vertical bar per
+ * intervention, one bar per slot, coloured by slot.
  */
 export const OverlayGroupedBarChart: FC<Props> = ({
     rows,
@@ -52,11 +51,6 @@ export const OverlayGroupedBarChart: FC<Props> = ({
 }) => {
     const { gridProps, axisProps } = useChartTheme();
 
-    const chartData = rows.map(row => ({
-        interventionLabel: row.interventionLabel,
-        ...row.valueBySlotKey,
-    }));
-
     if (rows.length === 0) {
         return <ChartEmptyState message={emptyMessage} />;
     }
@@ -65,7 +59,7 @@ export const OverlayGroupedBarChart: FC<Props> = ({
         <Box sx={styles.chartBody}>
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                    data={chartData}
+                    data={toChartData(rows)}
                     margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
                     barGap={BAR_GAP}
                     barCategoryGap={MIN_GROUP_GAP}
@@ -89,17 +83,7 @@ export const OverlayGroupedBarChart: FC<Props> = ({
                     />
                     <Tooltip
                         cursor={false}
-                        content={({ active, payload }: any) => {
-                            if (!active || !payload?.length) {
-                                return null;
-                            }
-                            const row = rows.find(
-                                r =>
-                                    r.interventionLabel ===
-                                    payload[0].payload.interventionLabel,
-                            );
-                            return row ? renderTooltip(row) : null;
-                        }}
+                        content={buildRowTooltipContent(rows, renderTooltip)}
                     />
                     {slots.map(slot => (
                         <Bar

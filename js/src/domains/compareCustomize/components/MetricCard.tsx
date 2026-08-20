@@ -9,10 +9,6 @@ import {
     type DeltaChipProps,
 } from './DeltaChip';
 
-// TKey defaults to number (compareCustomize keys entries by scenario id);
-// the Comparison tab (planning/components/comparisonTab) instantiates it
-// with a string slot key instead, since the same scenario id can occupy two
-// slots with different years there.
 export type MetricEntry<TKey extends string | number = number> = {
     id: TKey;
     color: string;

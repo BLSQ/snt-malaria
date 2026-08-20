@@ -164,7 +164,7 @@ export const InterventionCostBarChart: FC<Props> = ({
     const { formatMessage } = useSafeIntl();
     const { gridProps, axisProps } = useChartTheme();
 
-    const chartData = (
+    const chartData: ChartRow[] = (
         getCostBreakdownChartData(interventions) as ChartRow[]
     ).map((row, index) => {
         const intervention = interventions[index];
@@ -203,12 +203,9 @@ export const InterventionCostBarChart: FC<Props> = ({
         );
     };
 
-    const yAxisLabels = chartData.map(row =>
-        String((row as ChartRow).interventionType ?? ''),
-    );
     const { width: yAxisWidth, formatTick: formatYAxisTick } =
         useAutoYAxisWidth({
-            labels: yAxisLabels,
+            labels: chartData.map(row => String(row.interventionType ?? '')),
             maxLabel: Y_AXIS_MAX_LABEL,
         });
 

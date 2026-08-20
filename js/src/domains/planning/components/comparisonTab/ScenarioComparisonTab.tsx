@@ -1,7 +1,8 @@
-import React, { FC, ReactNode, useMemo, useState } from 'react';
-import { Box, Card, CardHeader, Divider } from '@mui/material';
+import React, { FC, ReactElement, useMemo, useState } from 'react';
+import { Box, Card, CardHeader, Grid } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { PaperFullHeight } from '../../../../components/styledComponents';
+import { buildMetricEntries } from '../../../compareCustomize/components/MetricCard';
 import { getScenarioColor } from '../../../compareCustomize/utils/colors';
 import { useGetScenarios } from '../../../scenarios/hooks/useGetScenarios';
 import { usePlanningContext } from '../../contexts/PlanningContext';
@@ -9,9 +10,10 @@ import { ScenarioComparisonProvider } from '../../contexts/ScenarioComparisonCon
 import { useGetAccountSettings } from '../../hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
 import { usePopulationByOrgUnit } from '../../hooks/usePopulationByOrgUnit';
-import { DisplayModeToggle } from './DisplayModeToggle';
-import { SlotSelector } from './SlotSelector';
-import { TotalCostSummary } from './TotalCostSummary';
+import { getSlotTotalCost } from '../../libs/comparison-aggregation';
+import { formatBigNumber } from '../../libs/cost-utils';
+import { ComparisonHeaderControls } from './ComparisonHeaderControls';
+import { ScenarioSlotWidget } from './ScenarioSlotWidget';
 import { ComparisonSlot, DisplayMode } from './types';
 import { useComparisonSlots } from './useComparisonSlots';
 import { useScenarioComparisonData } from './useScenarioComparisonData';
@@ -49,24 +51,8 @@ const styles = {
         flexDirection: 'column',
         gap: 1,
     },
-    controlsCard: {
-        py: 1.75,
-        px: 2.5,
+    slotsRow: {
         flexShrink: 0,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: 3,
-        flexWrap: 'wrap',
-    },
-    controlsDivider: {
-        alignSelf: 'stretch',
-        my: -1.75,
-    },
-    controlsRight: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 3,
     },
     // `height`, not `minHeight`: descendant WidgetCard/Grid height:100%
     // chains need a genuinely definite size to resolve against.
@@ -79,7 +65,7 @@ const styles = {
 } satisfies SxStyles;
 
 type Props = {
-    header: ReactNode;
+    header: ReactElement;
 };
 
 export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
@@ -157,10 +143,39 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
 
     const [displayMode, setDisplayMode] = useState<DisplayMode>('sideBySide');
 
+    const totalCostEntryBySlotKey = useMemo(() => {
+        const totalCostBySlotKey = new Map<string, number | undefined>();
+        slots.forEach(slot => {
+            totalCostBySlotKey.set(
+                slot.key,
+                getSlotTotalCost(budgetsBySlotKey.get(slot.key)),
+            );
+        });
+        const entries = buildMetricEntries(
+            slots.map(slot => ({ id: slot.key, color: slot.color })),
+            totalCostBySlotKey,
+            value => value,
+            (value: number) => formatBigNumber(value, currency),
+            { relative: true, positiveIsGreen: false },
+        );
+        return new Map(entries.map(entry => [entry.id, entry]));
+    }, [slots, budgetsBySlotKey, currency]);
+
+    const clonedHeader = React.cloneElement(header, {
+        tabActions: (
+            <ComparisonHeaderControls
+                canAddSlot={canAddSlot}
+                onAddSlot={handleAddSlot}
+                displayMode={displayMode}
+                onDisplayModeChange={setDisplayMode}
+            />
+        ),
+    });
+
     return (
         <PaperFullHeight sx={styles.column}>
             <Card sx={styles.headerCard}>
-                <CardHeader sx={styles.header} title={header} />
+                <CardHeader sx={styles.header} title={clonedHeader} />
             </Card>
             <Box sx={styles.scrollArea}>
                 <ScenarioComparisonProvider
@@ -173,38 +188,49 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                     totalPopulation={totalPopulation}
                     populationYear={populationYear}
                 >
-                    <Card sx={styles.controlsCard}>
-                        <SlotSelector
-                            slots={extraSlots}
-                            currentScenarioLabel={scenario?.name ?? ''}
-                            currentYear={currentYear}
-                            currentYearOptions={yearOptionsFor(scenario?.id)}
-                            scenarioOptionsForSlot={optionsForSlot}
-                            yearOptionsFor={yearOptionsFor}
-                            onCurrentYearChange={handleCurrentYearChange}
-                            onSlotScenarioChange={handleSlotScenarioChange}
-                            onSlotYearChange={handleSlotYearChange}
-                            onAddSlot={handleAddSlot}
-                            onRemoveSlot={handleRemoveSlot}
-                            canAddSlot={canAddSlot}
-                            colorForIndex={getScenarioColor}
-                        />
-                        <Box sx={styles.controlsRight}>
-                            <Divider
-                                orientation="vertical"
-                                sx={styles.controlsDivider}
+                    <Grid container spacing={1} sx={styles.slotsRow}>
+                        <Grid item xs={12} md={12 / slots.length}>
+                            <ScenarioSlotWidget
+                                color={getScenarioColor(0)}
+                                isCurrent
+                                currentScenarioLabel={scenario?.name ?? ''}
+                                year={currentYear}
+                                yearOptions={yearOptionsFor(scenario?.id)}
+                                onYearChange={handleCurrentYearChange}
+                                metricEntry={totalCostEntryBySlotKey.get(
+                                    'slot-0',
+                                )}
                             />
-                            <DisplayModeToggle
-                                displayMode={displayMode}
-                                onChange={setDisplayMode}
-                            />
-                            <Divider
-                                orientation="vertical"
-                                sx={styles.controlsDivider}
-                            />
-                            <TotalCostSummary />
-                        </Box>
-                    </Card>
+                        </Grid>
+                        {extraSlots.map((slot, index) => (
+                            <Grid
+                                item
+                                xs={12}
+                                md={12 / slots.length}
+                                key={`comparison-slot-${index}`}
+                            >
+                                <ScenarioSlotWidget
+                                    color={getScenarioColor(index + 1)}
+                                    isCurrent={false}
+                                    scenarioValue={slot.scenarioId}
+                                    scenarioOptions={optionsForSlot(index)}
+                                    onScenarioChange={handleSlotScenarioChange(
+                                        index,
+                                    )}
+                                    slotNumber={index + 1}
+                                    year={slot.year}
+                                    yearOptions={yearOptionsFor(
+                                        slot.scenarioId,
+                                    )}
+                                    onYearChange={handleSlotYearChange(index)}
+                                    onRemove={() => handleRemoveSlot(index)}
+                                    metricEntry={totalCostEntryBySlotKey.get(
+                                        `slot-${index + 1}`,
+                                    )}
+                                />
+                            </Grid>
+                        ))}
+                    </Grid>
                     <Box sx={styles.widget}>
                         <BudgetByInterventionWidget />
                     </Box>

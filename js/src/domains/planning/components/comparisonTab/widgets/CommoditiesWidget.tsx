@@ -2,7 +2,6 @@ import React, { FC } from 'react';
 import { Inventory2Outlined } from '@mui/icons-material';
 import {
     Box,
-    Grid,
     Table,
     TableBody,
     TableCell,
@@ -17,25 +16,29 @@ import { MESSAGES } from '../../../../messages';
 import { useGetCostUnitTypes } from '../../../../settings/costUnits/hooks/useGetCostUnitTypes';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
 import {
+    InterventionCommodities,
     getSlotCommoditiesByIntervention,
     mergeCommodityRowsBySlot,
 } from '../../../libs/comparison-aggregation';
 import { formatBigNumber, formatQuantity } from '../../../libs/cost-utils';
+import { SideBySideWidgetGrid } from './SideBySideWidgetGrid';
 
 const CHART_HEIGHT = 320;
 
 const styles = {
-    body: {
+    sideBySideBody: {
         height: CHART_HEIGHT,
+        display: 'flex',
+        flexDirection: 'column',
+    },
+    commodityList: {
+        flex: 1,
+        minHeight: 0,
         overflowY: 'auto',
     },
-    tableBody: {
+    overlayBody: {
         height: CHART_HEIGHT,
         overflow: 'auto',
-    },
-    sectionTitle: {
-        fontWeight: 600,
-        mb: 1,
     },
     interventionGroup: {
         mb: 1.5,
@@ -79,6 +82,8 @@ export const CommoditiesWidget: FC = () => {
             .map(unit => unit.name),
     );
 
+    const title = formatMessage(MESSAGES.comparisonCommoditiesTitle);
+
     if (displayMode === 'overlay') {
         const commoditiesBySlotKey = new Map(
             slots.map(slot => [
@@ -93,10 +98,10 @@ export const CommoditiesWidget: FC = () => {
 
         return (
             <WidgetCard
-                title={formatMessage(MESSAGES.comparisonCommoditiesTitle)}
+                title={title}
                 icon={Inventory2Outlined}
                 isLoading={isBudgetLoading}
-                bodySx={styles.tableBody}
+                bodySx={styles.overlayBody}
             >
                 {rows.length === 0 ? (
                     <Typography variant="body2" color="textSecondary">
@@ -185,16 +190,7 @@ export const CommoditiesWidget: FC = () => {
                                             row.cellBySlotKey[slot.key];
                                         return (
                                             <React.Fragment key={slot.key}>
-                                                <TableCell
-                                                    align="right"
-                                                    sx={[
-                                                        styles.slotHeaderCell,
-                                                        {
-                                                            borderColor:
-                                                                slot.color,
-                                                        },
-                                                    ]}
-                                                >
+                                                <TableCell align="right">
                                                     {cell
                                                         ? formatQuantity(
                                                               cell.quantity,
@@ -230,88 +226,67 @@ export const CommoditiesWidget: FC = () => {
     }
 
     return (
-        <>
-            <Typography variant="subtitle2" sx={styles.sectionTitle}>
-                {formatMessage(MESSAGES.comparisonCommoditiesTitle)}
-            </Typography>
-            <Grid container spacing={1} sx={{ flex: 1, minHeight: 0 }}>
-                {slots.map(slot => {
-                const budget = budgetsBySlotKey.get(slot.key);
+        <SideBySideWidgetGrid
+            slots={slots}
+            title={title}
+            icon={Inventory2Outlined}
+            isLoading={isBudgetLoading}
+            bodySx={styles.sideBySideBody}
+        >
+            {slot => {
                 const commoditiesByIntervention =
                     getSlotCommoditiesByIntervention(
-                        budget,
+                        budgetsBySlotKey.get(slot.key),
                         commodityUnitNames,
                     );
+                if (commoditiesByIntervention.length === 0) {
+                    return (
+                        <Typography variant="body2" color="textSecondary">
+                            {formatMessage(MESSAGES.noBudgetData)}
+                        </Typography>
+                    );
+                }
                 return (
-                    <Grid
-                        item
-                        xs={12}
-                        md={12 / slots.length}
-                        key={slot.key}
-                        sx={{ height: '100%' }}
-                    >
-                        <WidgetCard
-                            title={slot.label}
-                            icon={Inventory2Outlined}
-                            iconSx={{ color: slot.color }}
-                            isLoading={isBudgetLoading}
-                            bodySx={styles.body}
-                        >
-                            {commoditiesByIntervention.length === 0 ? (
-                                <Typography
-                                    variant="body2"
-                                    color="textSecondary"
-                                >
-                                    {formatMessage(MESSAGES.noBudgetData)}
-                                </Typography>
-                            ) : (
-                                commoditiesByIntervention.map(intervention => (
-                                    <Box
-                                        key={intervention.interventionId}
-                                        sx={styles.interventionGroup}
-                                    >
-                                        <Typography
-                                            variant="body2"
-                                            sx={styles.interventionLabel}
-                                        >
-                                            {intervention.interventionLabel}
-                                        </Typography>
-                                        {intervention.commodities.map(
-                                            commodity => (
-                                                <Box
-                                                    key={commodity.unitName}
-                                                    sx={styles.commodityRow}
-                                                >
-                                                    <Typography variant="body2">
-                                                        {commodity.unitName}
-                                                    </Typography>
-                                                    <Typography
-                                                        variant="body2"
-                                                        color="text.secondary"
-                                                    >
-                                                        {formatQuantity(
-                                                            commodity.quantity,
-                                                        )}
-                                                        {commodity.unitCost !=
-                                                            null &&
-                                                            ` · ${formatBigNumber(commodity.unitCost, currency)}`}
-                                                        {' · '}
-                                                        {formatBigNumber(
-                                                            commodity.totalCost,
-                                                            currency,
-                                                        )}
-                                                    </Typography>
-                                                </Box>
-                                            ),
-                                        )}
-                                    </Box>
-                                ))
-                            )}
-                        </WidgetCard>
-                    </Grid>
+                    <CommodityList
+                        interventions={commoditiesByIntervention}
+                        currency={currency}
+                    />
                 );
-            })}
-            </Grid>
-        </>
+            }}
+        </SideBySideWidgetGrid>
     );
 };
+
+type CommodityListProps = {
+    interventions: InterventionCommodities[];
+    currency: string;
+};
+
+const CommodityList: FC<CommodityListProps> = ({ interventions, currency }) => (
+    <Box sx={styles.commodityList}>
+        {interventions.map(intervention => (
+            <Box
+                key={intervention.interventionId}
+                sx={styles.interventionGroup}
+            >
+                <Typography variant="body2" sx={styles.interventionLabel}>
+                    {intervention.interventionLabel}
+                </Typography>
+                {intervention.commodities.map(commodity => (
+                    <Box key={commodity.unitName} sx={styles.commodityRow}>
+                        <Typography variant="body2">
+                            {commodity.unitName}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {formatQuantity(commodity.quantity)}
+                            {commodity.unitCost != null &&
+                                ` · ${formatBigNumber(commodity.unitCost, currency)}`}
+                            {' · '}
+                            {formatBigNumber(commodity.totalCost, currency)}
+                        </Typography>
+                    </Box>
+                ))}
+            </Box>
+        ))}
+    </Box>
+);

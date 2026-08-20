@@ -152,7 +152,6 @@ export const useComparisonSlots = (
     return {
         currentYear: effectiveCurrentYear,
         extraSlots,
-        scenarioOptions,
         optionsForSlot,
         yearOptionsFor,
         handleCurrentYearChange,

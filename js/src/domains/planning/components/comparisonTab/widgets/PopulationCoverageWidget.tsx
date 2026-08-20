@@ -2,7 +2,6 @@ import React, { FC } from 'react';
 import { GroupsOutlined } from '@mui/icons-material';
 import {
     Box,
-    Grid,
     Table,
     TableBody,
     TableCell,
@@ -17,27 +16,26 @@ import { WidgetCard } from '../../../../../components/WidgetCard';
 import { MESSAGES } from '../../../../messages';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
 import {
+    InterventionCoverage,
     getSlotInterventionCoverage,
     mergeSlotRowsByIntervention,
 } from '../../../libs/comparison-aggregation';
 import { formatBigNumber, formatPercentValue } from '../../../libs/cost-utils';
 import { OverlayGroupedBarChart } from './OverlayGroupedBarChart';
+import { SideBySideWidgetGrid } from './SideBySideWidgetGrid';
 
 const CHART_HEIGHT = 320;
 
 const styles = {
-    chartBody: {
+    body: {
         height: CHART_HEIGHT,
         display: 'flex',
         flexDirection: 'column',
     },
-    tableBody: {
-        height: CHART_HEIGHT,
+    tableScrollArea: {
+        flex: 1,
+        minHeight: 0,
         overflowY: 'auto',
-    },
-    sectionTitle: {
-        fontWeight: 600,
-        mb: 1,
     },
 } satisfies SxStyles;
 
@@ -94,7 +92,7 @@ export const PopulationCoverageWidget: FC = () => {
                 title={titleWithYear}
                 icon={GroupsOutlined}
                 isLoading={isBudgetLoading}
-                bodySx={styles.chartBody}
+                bodySx={styles.body}
             >
                 <OverlayGroupedBarChart
                     rows={rows}
@@ -152,91 +150,76 @@ export const PopulationCoverageWidget: FC = () => {
     }
 
     return (
-        <>
-            <Typography variant="subtitle2" sx={styles.sectionTitle}>
-                {titleWithYear}
-            </Typography>
-            <Grid container spacing={1} sx={{ flex: 1, minHeight: 0 }}>
-                {slots.map((slot, index) => (
-                    <Grid
-                        item
-                        xs={12}
-                        md={12 / slots.length}
-                        key={slot.key}
-                        sx={{ height: '100%' }}
-                    >
-                        <WidgetCard
-                        title={slot.label}
-                        icon={GroupsOutlined}
-                        iconSx={{ color: slot.color }}
-                        isLoading={isBudgetLoading}
-                        bodySx={styles.chartBody}
-                    >
-                        {coverageBySlotIndex[index].length === 0 ? (
-                            <Typography variant="body2" color="textSecondary">
-                                {formatMessage(MESSAGES.noBudgetData)}
-                            </Typography>
-                        ) : (
-                            <Box sx={styles.tableBody}>
-                                <Table size="small" stickyHeader>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>
-                                                {formatMessage(
-                                                    MESSAGES.comparisonIntervention,
-                                                )}
-                                            </TableCell>
-                                            <TableCell align="right">
-                                                {formatMessage(
-                                                    MESSAGES.comparisonPersonsAtRisk,
-                                                )}
-                                            </TableCell>
-                                            <TableCell align="right">
-                                                {formatMessage(
-                                                    MESSAGES.comparisonPercentEligible,
-                                                )}
-                                            </TableCell>
-                                            <TableCell align="right">
-                                                {formatMessage(
-                                                    MESSAGES.comparisonPercentTotalPop,
-                                                )}
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {coverageBySlotIndex[index].map(
-                                            row => (
-                                                <TableRow key={row.interventionId}>
-                                                    <TableCell>
-                                                        {row.interventionLabel}
-                                                    </TableCell>
-                                                    <TableCell align="right">
-                                                        {formatBigNumber(
-                                                            row.personsAtRisk,
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell align="right">
-                                                        {formatPercentValue(
-                                                            row.percentEligible,
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell align="right">
-                                                        {percentOfTotal(
-                                                            row.personsAtRisk,
-                                                            totalPopulation,
-                                                        ) ?? '-'}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ),
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </Box>
-                        )}
-                    </WidgetCard>
-                </Grid>
-            ))}
-            </Grid>
-        </>
+        <SideBySideWidgetGrid
+            slots={slots}
+            title={titleWithYear}
+            icon={GroupsOutlined}
+            isLoading={isBudgetLoading}
+            bodySx={styles.body}
+        >
+            {(_slot, index) =>
+                coverageBySlotIndex[index].length === 0 ? (
+                    <Typography variant="body2" color="textSecondary">
+                        {formatMessage(MESSAGES.noBudgetData)}
+                    </Typography>
+                ) : (
+                    <CoverageTable
+                        rows={coverageBySlotIndex[index]}
+                        totalPopulation={totalPopulation}
+                    />
+                )
+            }
+        </SideBySideWidgetGrid>
+    );
+};
+
+type CoverageTableProps = {
+    rows: InterventionCoverage[];
+    totalPopulation?: number;
+};
+
+const CoverageTable: FC<CoverageTableProps> = ({ rows, totalPopulation }) => {
+    const { formatMessage } = useSafeIntl();
+
+    return (
+        <Box sx={styles.tableScrollArea}>
+            <Table size="small" stickyHeader>
+                <TableHead>
+                    <TableRow>
+                        <TableCell>
+                            {formatMessage(MESSAGES.comparisonIntervention)}
+                        </TableCell>
+                        <TableCell align="right">
+                            {formatMessage(MESSAGES.comparisonPersonsAtRisk)}
+                        </TableCell>
+                        <TableCell align="right">
+                            {formatMessage(MESSAGES.comparisonPercentEligible)}
+                        </TableCell>
+                        <TableCell align="right">
+                            {formatMessage(MESSAGES.comparisonPercentTotalPop)}
+                        </TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {rows.map(row => (
+                        <TableRow key={row.interventionId}>
+                            <TableCell>{row.interventionLabel}</TableCell>
+                            <TableCell align="right">
+                                {formatBigNumber(row.personsAtRisk)}
+                            </TableCell>
+                            <TableCell align="right">
+                                {formatPercentValue(row.percentEligible)}
+                            </TableCell>
+                            <TableCell align="right">
+                                {percentOfTotal(
+                                    row.personsAtRisk,
+                                    totalPopulation,
+                                ) ?? '-'}
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </Box>
     );
 };

@@ -1,9 +1,10 @@
-import React, { FC, Ref, useCallback } from 'react';
+import React, { FC, ReactNode, Ref, useCallback } from 'react';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import {
     Box,
+    Divider,
     IconButton,
     MenuItem,
     Stack,
@@ -19,6 +20,7 @@ import ConfirmDialog from 'Iaso/components/dialogs/ConfirmDialogComponent';
 
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
 
+import { SxStyles } from 'Iaso/types/general';
 import { noOp } from 'Iaso/utils';
 import { MoreActions } from '../../../../components/MoreActions';
 import { OrgUnitSelect } from '../../../../components/OrgUnitSelect';
@@ -32,6 +34,17 @@ import {
 } from '../../../scenarios/components/ScenarioModal';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 
+const styles = {
+    root: {
+        flexWrap: 'wrap',
+        rowGap: 1,
+    },
+    tabDivider: {
+        height: 24,
+        alignSelf: 'center',
+    },
+} satisfies SxStyles;
+
 type Props = {
     activeTab: string;
     selectedOrgUnitId?: number;
@@ -41,6 +54,8 @@ type Props = {
     onToggleLockScenario: () => void;
     lockScenarioRef?: Ref<HTMLDivElement>;
     moreActionsRef?: Ref<HTMLDivElement>;
+    // Controls belonging to the active tab, rendered next to the tab switcher.
+    tabActions?: ReactNode;
 };
 
 export const InterventionPlanHeader: FC<Props> = ({
@@ -52,6 +67,7 @@ export const InterventionPlanHeader: FC<Props> = ({
     onToggleLockScenario,
     lockScenarioRef,
     moreActionsRef,
+    tabActions,
 }) => {
     const {
         scenarioId,
@@ -81,8 +97,9 @@ export const InterventionPlanHeader: FC<Props> = ({
             direction="row"
             justifyContent="space-between"
             alignItems="center"
+            sx={styles.root}
         >
-            <Stack direction="row" spacing={2}>
+            <Stack direction="row" spacing={2} alignItems="center">
                 <Tooltip
                     title={formatMessage(
                         showRulesPanel
@@ -115,6 +132,12 @@ export const InterventionPlanHeader: FC<Props> = ({
                         {formatMessage(MESSAGES.comparisonView)}
                     </ToggleButton>
                 </ToggleButtonGroup>
+                {tabActions && (
+                    <>
+                        <Divider orientation="vertical" sx={styles.tabDivider} />
+                        {tabActions}
+                    </>
+                )}
             </Stack>
             <Stack direction="row" spacing={2} alignItems="center">
                 <OrgUnitSelect

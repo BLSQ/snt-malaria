@@ -1,6 +1,5 @@
 import React, { FC } from 'react';
 import { VaccinesOutlined } from '@mui/icons-material';
-import { Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { ChartTooltip } from '../../../../../components/charts/ChartTooltip';
@@ -16,6 +15,7 @@ import {
 import { formatBigNumber } from '../../../libs/cost-utils';
 import { InterventionCostBarChart } from './InterventionCostBarChart';
 import { OverlayGroupedBarChart } from './OverlayGroupedBarChart';
+import { SideBySideWidgetGrid } from './SideBySideWidgetGrid';
 
 const CHART_HEIGHT = 320;
 
@@ -24,10 +24,6 @@ const styles = {
         height: CHART_HEIGHT,
         display: 'flex',
         flexDirection: 'column',
-    },
-    sectionTitle: {
-        fontWeight: 600,
-        mb: 1,
     },
 } satisfies SxStyles;
 
@@ -53,12 +49,14 @@ export const BudgetByInterventionWidget: FC = () => {
         interventions2,
     ];
 
+    // One hook per possible slot: the hook count can't vary with slot count.
     const colors0 = useInterventionCategoryColors(interventions0);
     const colors1 = useInterventionCategoryColors(interventions1);
     const colors2 = useInterventionCategoryColors(interventions2);
     const colorsBySlotIndex = [colors0, colors1, colors2];
 
     const isLoading = isBudgetLoading || isLoadingCategories;
+    const title = formatMessage(MESSAGES.comparisonBudgetByInterventionTitle);
 
     if (displayMode === 'overlay') {
         const rowsBySlotKey = new Map(
@@ -75,7 +73,7 @@ export const BudgetByInterventionWidget: FC = () => {
 
         return (
             <WidgetCard
-                title={formatMessage(MESSAGES.comparisonBudgetByInterventionTitle)}
+                title={title}
                 icon={VaccinesOutlined}
                 isLoading={isLoading}
                 bodySx={styles.chartBody}
@@ -104,42 +102,25 @@ export const BudgetByInterventionWidget: FC = () => {
     }
 
     return (
-        <>
-            <Typography variant="subtitle2" sx={styles.sectionTitle}>
-                {formatMessage(MESSAGES.comparisonBudgetByInterventionTitle)}
-            </Typography>
-            <Grid container spacing={1} sx={{ flex: 1, minHeight: 0 }}>
-                {slots.map((slot, index) => (
-                    <Grid
-                        item
-                        xs={12}
-                        md={12 / slots.length}
-                        key={slot.key}
-                        sx={{ height: '100%' }}
-                    >
-                        <WidgetCard
-                            title={slot.label}
-                            icon={VaccinesOutlined}
-                            iconSx={{ color: slot.color }}
-                            isLoading={isLoading}
-                            bodySx={styles.chartBody}
-                        >
-                            <InterventionCostBarChart
-                                interventions={
-                                    colorsBySlotIndex[index]
-                                        .orderedInterventions
-                                }
-                                colorByInterventionId={
-                                    colorsBySlotIndex[index]
-                                        .colorByInterventionId
-                                }
-                                costCategories={costCategories}
-                                currency={currency}
-                            />
-                        </WidgetCard>
-                    </Grid>
-                ))}
-            </Grid>
-        </>
+        <SideBySideWidgetGrid
+            slots={slots}
+            title={title}
+            icon={VaccinesOutlined}
+            isLoading={isLoading}
+            bodySx={styles.chartBody}
+        >
+            {(_slot, index) => (
+                <InterventionCostBarChart
+                    interventions={
+                        colorsBySlotIndex[index].orderedInterventions
+                    }
+                    colorByInterventionId={
+                        colorsBySlotIndex[index].colorByInterventionId
+                    }
+                    costCategories={costCategories}
+                    currency={currency}
+                />
+            )}
+        </SideBySideWidgetGrid>
     );
 };

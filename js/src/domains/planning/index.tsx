@@ -257,6 +257,32 @@ export const Planning: FC = () => {
         />
     );
 
+    const renderMainColumn = () => {
+        if (activeTab === 'summary') {
+            return <ScenarioSummaryTab header={planHeader} />;
+        }
+        if (activeTab === 'comparison') {
+            return <ScenarioComparisonTab header={planHeader} />;
+        }
+        return (
+            <PaperFullHeight>
+                <Card sx={styles.card}>
+                    <CardStyled header={planHeader}>
+                        {activeTab === 'map' && (
+                            <InterventionPlanMap
+                                matchedOrgUnitIds={matchedOrgUnitIds}
+                                previewRule={previewRule}
+                            />
+                        )}
+                        {activeTab === 'budget' && orgUnits && budget && (
+                            <BudgetTable />
+                        )}
+                    </CardStyled>
+                </Card>
+            </PaperFullHeight>
+        );
+    };
+
     return metricTypeCategories && interventionCategories ? (
         <PlanningProvider
             scenarioId={scenarioId}
@@ -297,31 +323,7 @@ export const Planning: FC = () => {
                         showAIChat={showAIChat}
                         onToggleAIChat={toggleAIChat}
                     />
-                    <MainColumn>
-                        {activeTab === 'summary' ? (
-                            <ScenarioSummaryTab header={planHeader} />
-                        ) : activeTab === 'comparison' ? (
-                            <ScenarioComparisonTab header={planHeader} />
-                        ) : (
-                            <PaperFullHeight>
-                                <Card sx={styles.card}>
-                                    <CardStyled header={planHeader}>
-                                        {activeTab === 'map' && (
-                                            <InterventionPlanMap
-                                                matchedOrgUnitIds={
-                                                    matchedOrgUnitIds
-                                                }
-                                                previewRule={previewRule}
-                                            />
-                                        )}
-                                        {activeTab === 'budget' &&
-                                            orgUnits &&
-                                            budget && <BudgetTable />}
-                                    </CardStyled>
-                                </Card>
-                            </PaperFullHeight>
-                        )}
-                    </MainColumn>
+                    <MainColumn>{renderMainColumn()}</MainColumn>
                 </SidebarLayout>
             </PageContainer>
             {tour.element}

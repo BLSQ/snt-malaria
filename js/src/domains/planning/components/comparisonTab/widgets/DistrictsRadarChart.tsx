@@ -13,6 +13,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { ChartEmptyState } from '../../../../../components/charts/ChartEmptyState';
 import { MergedInterventionRow } from '../../../libs/comparison-aggregation';
 import { ComparisonSlot } from '../types';
+import { buildRowTooltipContent, toChartData } from './mergedRowChart';
 
 const styles = {
     chartBody: {
@@ -44,11 +45,6 @@ export const DistrictsRadarChart: FC<Props> = ({
     const theme = useTheme();
     const axisColor = theme.palette.text.secondary;
 
-    const chartData = rows.map(row => ({
-        interventionLabel: row.interventionLabel,
-        ...row.valueBySlotKey,
-    }));
-
     if (rows.length === 0) {
         return <ChartEmptyState message={emptyMessage} />;
     }
@@ -56,7 +52,7 @@ export const DistrictsRadarChart: FC<Props> = ({
     return (
         <Box sx={styles.chartBody}>
             <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={chartData}>
+                <RadarChart data={toChartData(rows)}>
                     <PolarGrid stroke={theme.palette.divider} />
                     <PolarAngleAxis
                         dataKey="interventionLabel"
@@ -69,17 +65,7 @@ export const DistrictsRadarChart: FC<Props> = ({
                         tickFormatter={value => `${value}%`}
                     />
                     <Tooltip
-                        content={({ active, payload }: any) => {
-                            if (!active || !payload?.length) {
-                                return null;
-                            }
-                            const row = rows.find(
-                                r =>
-                                    r.interventionLabel ===
-                                    payload[0].payload.interventionLabel,
-                            );
-                            return row ? renderTooltip(row) : null;
-                        }}
+                        content={buildRowTooltipContent(rows, renderTooltip)}
                     />
                     {slots.map(slot => (
                         <Radar

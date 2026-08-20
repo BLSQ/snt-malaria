@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { PlaceOutlined } from '@mui/icons-material';
-import { Box, Grid, Typography } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import {
     Bar,
@@ -23,12 +23,14 @@ import { WidgetCard } from '../../../../../components/WidgetCard';
 import { MESSAGES } from '../../../../messages';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
 import {
+    InterventionDistrictCoverage,
     getSlotInterventionDistrictCoverage,
     mergeSlotRowsByIntervention,
 } from '../../../libs/comparison-aggregation';
 import { formatPercentValue } from '../../../libs/cost-utils';
 import { DistrictsRadarChart } from './DistrictsRadarChart';
 import { OverlayGroupedBarChart } from './OverlayGroupedBarChart';
+import { SideBySideWidgetGrid } from './SideBySideWidgetGrid';
 
 const CHART_HEIGHT = 280;
 const BAR_SIZE = 16;
@@ -45,10 +47,6 @@ const styles = {
         width: '100%',
         flex: 1,
         minHeight: 0,
-    },
-    sectionTitle: {
-        fontWeight: 600,
-        mb: 1,
     },
 } satisfies SxStyles;
 
@@ -115,127 +113,90 @@ export const DistrictsCoveredWidget: FC = () => {
         );
 
         return (
-            <>
-                <Typography variant="subtitle2" sx={styles.sectionTitle}>
-                    {formatMessage(MESSAGES.comparisonDistrictsCoveredTitle)}
-                </Typography>
-                <Grid container spacing={1} sx={{ flex: 1, minHeight: 0 }}>
-                    <Grid item xs={12} md={6} sx={{ height: '100%' }}>
-                        <WidgetCard
-                            title={formatMessage(
-                                MESSAGES.comparisonDistrictsCountTitle,
+            <Grid container spacing={1} sx={{ flex: 1, minHeight: 0 }}>
+                <Grid item xs={12} md={6} sx={{ height: '100%' }}>
+                    <WidgetCard
+                        title={formatMessage(
+                            MESSAGES.comparisonDistrictsCountTitle,
+                        )}
+                        icon={PlaceOutlined}
+                        isLoading={isBudgetLoading}
+                        bodySx={styles.chartBody}
+                    >
+                        <OverlayGroupedBarChart
+                            rows={countRows}
+                            slots={slots}
+                            valueFormatter={value =>
+                                String(Math.round(value))
+                            }
+                            emptyMessage={formatMessage(
+                                MESSAGES.noBudgetData,
                             )}
-                            icon={PlaceOutlined}
-                            isLoading={isBudgetLoading}
-                            bodySx={styles.chartBody}
-                        >
-                            <OverlayGroupedBarChart
-                                rows={countRows}
-                                slots={slots}
-                                valueFormatter={value =>
-                                    String(Math.round(value))
-                                }
-                                emptyMessage={formatMessage(
-                                    MESSAGES.noBudgetData,
-                                )}
-                                renderTooltip={renderCountTooltip}
-                            />
-                        </WidgetCard>
-                    </Grid>
-                    <Grid item xs={12} md={6} sx={{ height: '100%' }}>
-                        <WidgetCard
-                            title={formatMessage(
-                                MESSAGES.comparisonDistrictsPercentTitle,
-                            )}
-                            icon={PlaceOutlined}
-                            isLoading={isBudgetLoading}
-                            bodySx={styles.chartBody}
-                        >
-                            <DistrictsRadarChart
-                                rows={percentRows}
-                                slots={slots}
-                                emptyMessage={formatMessage(
-                                    MESSAGES.noBudgetData,
-                                )}
-                                renderTooltip={row => (
-                                    <ChartTooltip
-                                        title={row.interventionLabel}
-                                        rows={slots.map(slot => ({
-                                            label: slot.label,
-                                            value: `${formatPercentValue((row.valueBySlotKey[slot.key] ?? 0) / 100)}`,
-                                            color: slot.color,
-                                        }))}
-                                    />
-                                )}
-                            />
-                        </WidgetCard>
-                    </Grid>
+                            renderTooltip={renderCountTooltip}
+                        />
+                    </WidgetCard>
                 </Grid>
-            </>
+                <Grid item xs={12} md={6} sx={{ height: '100%' }}>
+                    <WidgetCard
+                        title={formatMessage(
+                            MESSAGES.comparisonDistrictsPercentTitle,
+                        )}
+                        icon={PlaceOutlined}
+                        isLoading={isBudgetLoading}
+                        bodySx={styles.chartBody}
+                    >
+                        <DistrictsRadarChart
+                            rows={percentRows}
+                            slots={slots}
+                            emptyMessage={formatMessage(
+                                MESSAGES.noBudgetData,
+                            )}
+                            renderTooltip={row => (
+                                <ChartTooltip
+                                    title={row.interventionLabel}
+                                    rows={slots.map(slot => ({
+                                        label: slot.label,
+                                        value: `${formatPercentValue((row.valueBySlotKey[slot.key] ?? 0) / 100)}`,
+                                        color: slot.color,
+                                    }))}
+                                />
+                            )}
+                        />
+                    </WidgetCard>
+                </Grid>
+            </Grid>
         );
     }
 
     return (
-        <>
-            <Typography variant="subtitle2" sx={styles.sectionTitle}>
-                {formatMessage(MESSAGES.comparisonDistrictsCoveredTitle)}
-            </Typography>
-            <Grid container spacing={1} sx={{ flex: 1, minHeight: 0 }}>
-                {slots.map((slot, index) => {
-                    const rows = coverageBySlotIndex[index];
-                    const chartData = rows.map(row => ({
-                        interventionLabel: row.interventionLabel,
-                        districtCount: row.districtCount,
-                    }));
-                    const yAxisLabels = chartData.map(
-                        row => row.interventionLabel,
-                    );
-
-                    return (
-                        <Grid
-                            item
-                            xs={12}
-                            md={12 / slots.length}
-                            key={slot.key}
-                            sx={{ height: '100%' }}
-                        >
-                            <WidgetCard
-                                title={slot.label}
-                                icon={PlaceOutlined}
-                                iconSx={{ color: slot.color }}
-                                isLoading={isBudgetLoading}
-                                bodySx={styles.chartBody}
-                            >
-                                {chartData.length === 0 ? (
-                                    <ChartEmptyState
-                                        message={formatMessage(
-                                            MESSAGES.noBudgetData,
-                                        )}
-                                    />
-                                ) : (
-                                    <DistrictsBarChart
-                                        chartData={chartData}
-                                        yAxisLabels={yAxisLabels}
-                                        color={slot.color}
-                                        totalDistrictCount={
-                                            totalDistrictCount
-                                        }
-                                        gridProps={gridProps}
-                                        axisProps={axisProps}
-                                    />
-                                )}
-                            </WidgetCard>
-                        </Grid>
-                    );
-                })}
-            </Grid>
-        </>
+        <SideBySideWidgetGrid
+            slots={slots}
+            title={formatMessage(MESSAGES.comparisonDistrictsCoveredTitle)}
+            icon={PlaceOutlined}
+            isLoading={isBudgetLoading}
+            bodySx={styles.chartBody}
+        >
+            {(slot, index) =>
+                coverageBySlotIndex[index].length === 0 ? (
+                    <ChartEmptyState
+                        message={formatMessage(MESSAGES.noBudgetData)}
+                    />
+                ) : (
+                    <DistrictsBarChart
+                        rows={coverageBySlotIndex[index]}
+                        color={slot.color}
+                        totalDistrictCount={totalDistrictCount}
+                        gridProps={gridProps}
+                        axisProps={axisProps}
+                    />
+                )
+            }
+        </SideBySideWidgetGrid>
     );
 };
 
 type DistrictsBarChartProps = {
-    chartData: { interventionLabel: string; districtCount: number }[];
-    yAxisLabels: string[];
+    rows: InterventionDistrictCoverage[];
     color: string;
     totalDistrictCount?: number;
     gridProps: Record<string, unknown>;
@@ -243,15 +204,14 @@ type DistrictsBarChartProps = {
 };
 
 const DistrictsBarChart: FC<DistrictsBarChartProps> = ({
-    chartData,
-    yAxisLabels,
+    rows,
     color,
     totalDistrictCount,
     gridProps,
     axisProps,
 }) => {
     const { width: yAxisWidth, formatTick } = useAutoYAxisWidth({
-        labels: yAxisLabels,
+        labels: rows.map(row => row.interventionLabel),
         maxLabel: Y_AXIS_MAX_LABEL,
     });
 
@@ -281,7 +241,7 @@ const DistrictsBarChart: FC<DistrictsBarChartProps> = ({
         <Box sx={styles.chartCanvas}>
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                    data={chartData}
+                    data={rows}
                     layout="vertical"
                     maxBarSize={BAR_SIZE}
                     margin={{ top: 4, right: 8, left: 0, bottom: 0 }}

@@ -11,13 +11,9 @@ import { ComparisonSlot } from './types';
  * currently selected pass `undefined`, which the hook treats as disabled.
  */
 export const useScenarioComparisonData = (slots: ComparisonSlot[]) => {
-    const slot0 = slots[0];
-    const slot1 = slots[1];
-    const slot2 = slots[2];
-
-    const budgetQuery0 = useGetLatestCalculatedBudget(slot0?.scenarioId);
-    const budgetQuery1 = useGetLatestCalculatedBudget(slot1?.scenarioId);
-    const budgetQuery2 = useGetLatestCalculatedBudget(slot2?.scenarioId);
+    const budgetQuery0 = useGetLatestCalculatedBudget(slots[0]?.scenarioId);
+    const budgetQuery1 = useGetLatestCalculatedBudget(slots[1]?.scenarioId);
+    const budgetQuery2 = useGetLatestCalculatedBudget(slots[2]?.scenarioId);
 
     const queriesByIndex = [budgetQuery0, budgetQuery1, budgetQuery2];
 
