@@ -162,6 +162,7 @@ export const WidgetCard = <T extends string | number = string | number>({
                                     {d.placeholder !== undefined && (
                                         <MenuItem
                                             value=""
+                                            disabled
                                             sx={{ color: 'text.secondary' }}
                                         >
                                             {d.placeholder}
