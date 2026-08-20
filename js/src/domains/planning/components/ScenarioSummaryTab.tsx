@@ -124,7 +124,7 @@ export const ScenarioSummaryTab: FC<Props> = ({ header }) => (
                 <Box sx={styles.rightColumn}>
                     <Box sx={styles.rightColumnContent}>
                         <Box sx={styles.growChartWidget}>
-                            <PrevalenceSummary />
+                            <CostVsPopulationSummary />
                         </Box>
                         <Box sx={styles.growMapWidget}>
                             <CostPerDistrictSummary />
@@ -133,7 +133,7 @@ export const ScenarioSummaryTab: FC<Props> = ({ header }) => (
                 </Box>
             </Box>
             <Box sx={styles.fullWidthChartWidget}>
-                <CostVsPopulationSummary />
+                <PrevalenceSummary />
             </Box>
         </Box>
     </PaperFullHeight>
