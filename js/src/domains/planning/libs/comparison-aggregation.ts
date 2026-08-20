@@ -20,19 +20,27 @@ export const getSlotInterventionCosts = (
 ): BudgetIntervention[] =>
     budget ? aggregateInterventionCosts(aggregateOrgUnitCosts([budget])) : [];
 
-export type InterventionCoverage = {
-    interventionId: number;
-    interventionLabel: string;
+export type PopulationLayerCoverage = {
+    layerId: number;
+    layerName: string;
     personsAtRisk: number;
     // Yearly coverage ratio, e.g. 0.78 for a 78% bed-net target.
     percentEligible: number;
 };
 
+export type InterventionCoverage = {
+    interventionId: number;
+    interventionLabel: string;
+    layers: PopulationLayerCoverage[];
+};
+
 /**
- * Population-coverage figures per intervention, read from the intervention's
- * proportional procurement cost line — the line that scales with population,
- * as opposed to distribution/other categories. Interventions with no such
- * line are omitted.
+ * Population-coverage figures per intervention, broken down by population
+ * layer -- an intervention's proportional procurement cost lines can target
+ * different, non-exclusive population layers (e.g. under-5s and pregnant
+ * women), so layers are kept separate rather than collapsed into a single
+ * figure (mirrors `aggregatePopulationLayersByIntervention`). Interventions
+ * with no such line are omitted.
  */
 export const getSlotInterventionCoverage = (
     budget: Budget | undefined,
@@ -42,22 +50,83 @@ export const getSlotInterventionCoverage = (
     }
     return budget.interventions
         .map(intervention => {
-            const line = intervention.cost_breakdown?.find(
-                costLine =>
-                    costLine.is_proportional &&
-                    costLine.category === PROCUREMENT_CATEGORY,
-            );
-            if (!line) {
-                return undefined;
-            }
+            const layerById = new Map<number, PopulationLayerCoverage>();
+            (intervention.cost_breakdown ?? []).forEach(line => {
+                if (
+                    !line.is_proportional ||
+                    line.category !== PROCUREMENT_CATEGORY ||
+                    line.target_population_layer_id == null ||
+                    !line.target_population
+                ) {
+                    return;
+                }
+                if (!layerById.has(line.target_population_layer_id)) {
+                    layerById.set(line.target_population_layer_id, {
+                        layerId: line.target_population_layer_id,
+                        layerName: line.target_population,
+                        personsAtRisk: line.population,
+                        percentEligible: line.yearly_value,
+                    });
+                }
+            });
             return {
                 interventionId: intervention.id,
                 interventionLabel: intervention.type,
-                personsAtRisk: line.population,
-                percentEligible: line.yearly_value,
+                layers: Array.from(layerById.values()),
             };
         })
-        .filter((row): row is InterventionCoverage => row !== undefined);
+        .filter(intervention => intervention.layers.length > 0);
+};
+
+export type CoverageCell = {
+    personsAtRisk: number;
+    percentEligible: number;
+};
+
+export type CoverageTableRow = {
+    interventionId: number;
+    interventionLabel: string;
+    layerId: number;
+    layerName: string;
+    cellBySlotKey: Record<string, CoverageCell>;
+};
+
+/**
+ * Unions each slot's per-intervention population-layer coverage into one row
+ * per (intervention, layer) pair, each carrying every slot's figures keyed
+ * by slot key -- the shape a single combined table needs. Mirrors
+ * `mergeCommodityRowsBySlot`.
+ */
+export const mergeCoverageRowsBySlot = (
+    coverageBySlotKey: Map<string, InterventionCoverage[]>,
+): CoverageTableRow[] => {
+    const rowByKey = new Map<string, CoverageTableRow>();
+
+    coverageBySlotKey.forEach((interventions, slotKey) => {
+        interventions.forEach(intervention => {
+            intervention.layers.forEach(layer => {
+                const key = `${intervention.interventionId}::${layer.layerId}`;
+                const row = rowByKey.get(key) ?? {
+                    interventionId: intervention.interventionId,
+                    interventionLabel: intervention.interventionLabel,
+                    layerId: layer.layerId,
+                    layerName: layer.layerName,
+                    cellBySlotKey: {},
+                };
+                row.cellBySlotKey[slotKey] = {
+                    personsAtRisk: layer.personsAtRisk,
+                    percentEligible: layer.percentEligible,
+                };
+                rowByKey.set(key, row);
+            });
+        });
+    });
+
+    return Array.from(rowByKey.values()).sort(
+        (a, b) =>
+            a.interventionId - b.interventionId ||
+            a.layerName.localeCompare(b.layerName),
+    );
 };
 
 export type InterventionDistrictCoverage = {
@@ -130,7 +199,10 @@ export const mergeSlotRowsByIntervention = (
 
     rowsBySlotKey.forEach((rows, slotKey) => {
         rows.forEach(row => {
-            labelByInterventionId.set(row.interventionId, row.interventionLabel);
+            labelByInterventionId.set(
+                row.interventionId,
+                row.interventionLabel,
+            );
             const valueBySlotKey =
                 valueBySlotKeyByIntervention.get(row.interventionId) ?? {};
             valueBySlotKey[slotKey] = row.value;

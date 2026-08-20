@@ -130,6 +130,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.planning.comparison.percentTotalPop',
         defaultMessage: '% of total pop.',
     },
+    comparisonPopulationLayerLabel: {
+        id: 'iaso.snt_malaria.planning.comparison.populationLayerLabel',
+        defaultMessage: 'Population layer',
+    },
     comparisonIntervention: {
         id: 'iaso.snt_malaria.planning.comparison.intervention',
         defaultMessage: 'Intervention',

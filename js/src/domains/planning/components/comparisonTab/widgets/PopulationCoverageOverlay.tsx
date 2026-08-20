@@ -1,25 +1,46 @@
 import React, { FC } from 'react';
 import { GroupsOutlined } from '@mui/icons-material';
+import {
+    Box,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow,
+    Typography,
+} from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import { ChartTooltip } from '../../../../../components/charts/ChartTooltip';
 import { WidgetCard } from '../../../../../components/WidgetCard';
 import { MESSAGES } from '../../../../messages';
 import {
     InterventionCoverage,
-    mergeSlotRowsByIntervention,
+    mergeCoverageRowsBySlot,
 } from '../../../libs/comparison-aggregation';
 import { formatBigNumber, formatPercentValue } from '../../../libs/cost-utils';
 import { ComparisonSlot } from '../types';
-import { OverlayGroupedBarChart } from './OverlayGroupedBarChart';
 
 const CHART_HEIGHT = 320;
 
 const styles = {
-    body: {
+    overlayBody: {
         height: CHART_HEIGHT,
+        overflow: 'auto',
+    },
+    slotHeaderCell: {
+        borderLeft: '2px solid',
+    },
+    slotHeaderLabel: {
         display: 'flex',
-        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 0.75,
+    },
+    slotDot: {
+        width: 8,
+        height: 8,
+        borderRadius: '50%',
+        flexShrink: 0,
     },
 } satisfies SxStyles;
 
@@ -43,89 +64,129 @@ export const PopulationCoverageOverlay: FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
 
-    const rowsBySlotKey = new Map(
-        slots.map((slot, index) => [
-            slot.key,
-            coverageBySlotIndex[index].map(row => ({
-                interventionId: row.interventionId,
-                interventionLabel: row.interventionLabel,
-                value: row.personsAtRisk,
-            })),
-        ]),
+    const coverageBySlotKey = new Map(
+        slots.map((slot, index) => [slot.key, coverageBySlotIndex[index]]),
     );
-    const rows = mergeSlotRowsByIntervention(rowsBySlotKey);
-    const coverageBySlotKeyByIntervention = new Map(
-        rows.map(row => [
-            row.interventionId,
-            new Map(
-                slots.map((slot, index) => [
-                    slot.key,
-                    coverageBySlotIndex[index].find(
-                        r => r.interventionId === row.interventionId,
-                    ),
-                ]),
-            ),
-        ]),
-    );
+    const rows = mergeCoverageRowsBySlot(coverageBySlotKey);
 
     return (
         <WidgetCard
             title={title}
             icon={GroupsOutlined}
             isLoading={isBudgetLoading}
-            bodySx={styles.body}
+            bodySx={styles.overlayBody}
         >
-            <OverlayGroupedBarChart
-                rows={rows}
-                slots={slots}
-                valueFormatter={value => formatBigNumber(value)}
-                emptyMessage={formatMessage(MESSAGES.noBudgetData)}
-                renderTooltip={row => {
-                    const bySlotKey =
-                        coverageBySlotKeyByIntervention.get(
-                            row.interventionId,
-                        ) ?? new Map();
-                    return (
-                        <ChartTooltip
-                            title={row.interventionLabel}
-                            rows={slots.map(slot => {
-                                const coverage = bySlotKey.get(slot.key);
-                                const percentTotal = coverage
-                                    ? percentOfTotal(
-                                          coverage.personsAtRisk,
-                                          totalPopulation,
-                                      )
-                                    : undefined;
-                                const parts = [
-                                    formatMessage(
-                                        MESSAGES.comparisonPersonsAtRisk,
-                                    ),
-                                    coverage
-                                        ? formatBigNumber(
-                                              coverage.personsAtRisk,
-                                          )
-                                        : '-',
-                                ];
-                                if (coverage) {
-                                    parts.push(
-                                        `${formatMessage(MESSAGES.comparisonPercentEligible)} ${formatPercentValue(coverage.percentEligible)}`,
+            {rows.length === 0 ? (
+                <Typography variant="body2" color="textSecondary">
+                    {formatMessage(MESSAGES.noBudgetData)}
+                </Typography>
+            ) : (
+                <Table size="small" stickyHeader>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell />
+                            <TableCell />
+                            {slots.map(slot => (
+                                <TableCell
+                                    key={slot.key}
+                                    colSpan={3}
+                                    align="center"
+                                    sx={[
+                                        styles.slotHeaderCell,
+                                        { borderColor: slot.color },
+                                    ]}
+                                >
+                                    <Box sx={styles.slotHeaderLabel}>
+                                        <Box
+                                            sx={[
+                                                styles.slotDot,
+                                                {
+                                                    backgroundColor: slot.color,
+                                                },
+                                            ]}
+                                        />
+                                        {slot.label}
+                                    </Box>
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                        <TableRow>
+                            <TableCell>
+                                {formatMessage(MESSAGES.comparisonIntervention)}
+                            </TableCell>
+                            <TableCell>
+                                {formatMessage(
+                                    MESSAGES.comparisonPopulationLayerLabel,
+                                )}
+                            </TableCell>
+                            {slots.map(slot => (
+                                <React.Fragment key={slot.key}>
+                                    <TableCell
+                                        align="right"
+                                        sx={[
+                                            styles.slotHeaderCell,
+                                            { borderColor: slot.color },
+                                        ]}
+                                    >
+                                        {formatMessage(
+                                            MESSAGES.comparisonPersonsAtRisk,
+                                        )}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {formatMessage(
+                                            MESSAGES.comparisonPercentEligible,
+                                        )}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {formatMessage(
+                                            MESSAGES.comparisonPercentTotalPop,
+                                        )}
+                                    </TableCell>
+                                </React.Fragment>
+                            ))}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {rows.map(row => (
+                            <TableRow
+                                key={`${row.interventionId}-${row.layerId}`}
+                            >
+                                <TableCell>{row.interventionLabel}</TableCell>
+                                <TableCell>{row.layerName}</TableCell>
+                                {slots.map(slot => {
+                                    const cell = row.cellBySlotKey[slot.key];
+                                    return (
+                                        <React.Fragment key={slot.key}>
+                                            <TableCell align="right">
+                                                {cell
+                                                    ? formatBigNumber(
+                                                          cell.personsAtRisk,
+                                                      )
+                                                    : '-'}
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                {cell
+                                                    ? formatPercentValue(
+                                                          cell.percentEligible,
+                                                      )
+                                                    : '-'}
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                {cell
+                                                    ? (percentOfTotal(
+                                                          cell.personsAtRisk,
+                                                          totalPopulation,
+                                                      ) ?? '-')
+                                                    : '-'}
+                                            </TableCell>
+                                        </React.Fragment>
                                     );
-                                }
-                                if (percentTotal) {
-                                    parts.push(
-                                        `${formatMessage(MESSAGES.comparisonPercentTotalPop)} ${percentTotal}`,
-                                    );
-                                }
-                                return {
-                                    label: slot.label,
-                                    value: parts.join(' · '),
-                                    color: slot.color,
-                                };
-                            })}
-                        />
-                    );
-                }}
-            />
+                                })}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            )}
         </WidgetCard>
     );
 };

@@ -92,6 +92,11 @@ const CoverageTable: FC<CoverageTableProps> = ({ rows, totalPopulation }) => {
                         <TableCell>
                             {formatMessage(MESSAGES.comparisonIntervention)}
                         </TableCell>
+                        <TableCell>
+                            {formatMessage(
+                                MESSAGES.comparisonPopulationLayerLabel,
+                            )}
+                        </TableCell>
                         <TableCell align="right">
                             {formatMessage(MESSAGES.comparisonPersonsAtRisk)}
                         </TableCell>
@@ -104,23 +109,28 @@ const CoverageTable: FC<CoverageTableProps> = ({ rows, totalPopulation }) => {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {rows.map(row => (
-                        <TableRow key={row.interventionId}>
-                            <TableCell>{row.interventionLabel}</TableCell>
-                            <TableCell align="right">
-                                {formatBigNumber(row.personsAtRisk)}
-                            </TableCell>
-                            <TableCell align="right">
-                                {formatPercentValue(row.percentEligible)}
-                            </TableCell>
-                            <TableCell align="right">
-                                {percentOfTotal(
-                                    row.personsAtRisk,
-                                    totalPopulation,
-                                ) ?? '-'}
-                            </TableCell>
-                        </TableRow>
-                    ))}
+                    {rows.flatMap(row =>
+                        row.layers.map(layer => (
+                            <TableRow
+                                key={`${row.interventionId}-${layer.layerId}`}
+                            >
+                                <TableCell>{row.interventionLabel}</TableCell>
+                                <TableCell>{layer.layerName}</TableCell>
+                                <TableCell align="right">
+                                    {formatBigNumber(layer.personsAtRisk)}
+                                </TableCell>
+                                <TableCell align="right">
+                                    {formatPercentValue(layer.percentEligible)}
+                                </TableCell>
+                                <TableCell align="right">
+                                    {percentOfTotal(
+                                        layer.personsAtRisk,
+                                        totalPopulation,
+                                    ) ?? '-'}
+                                </TableCell>
+                            </TableRow>
+                        )),
+                    )}
                 </TableBody>
             </Table>
         </Box>

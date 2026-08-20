@@ -516,6 +516,7 @@
     "iaso.snt_malaria.planning.comparison.personsAtRisk": "Personnes à risque",
     "iaso.snt_malaria.planning.comparison.percentEligible": "% éligible",
     "iaso.snt_malaria.planning.comparison.percentTotalPop": "% de la population totale",
+    "iaso.snt_malaria.planning.comparison.populationLayerLabel": "Couche de population",
     "iaso.snt_malaria.planning.comparison.intervention": "Intervention",
     "iaso.snt_malaria.planning.comparison.commoditiesTitle": "Produits",
     "iaso.snt_malaria.planning.comparison.districtsCountTitle": "Nombre de districts",
