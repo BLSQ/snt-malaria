@@ -793,6 +793,35 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compareCustomize.scenarioLabelWithIndex',
         defaultMessage: 'Scenario {index}',
     },
+    scenarioRuleAIChatButton: {
+        id: 'iaso.snt_malaria.scenarioRule.ai.chatButton',
+        defaultMessage: 'AI Chat',
+    },
+    scenarioRuleAITitle: {
+        id: 'iaso.snt_malaria.scenarioRule.ai.title',
+        defaultMessage: 'Generate with AI',
+    },
+    scenarioRuleAIPlaceholder: {
+        id: 'iaso.snt_malaria.scenarioRule.ai.placeholder',
+        defaultMessage: 'Describe the scenario you want to create...',
+    },
+    scenarioRuleAIEmptyStateTitle: {
+        id: 'iaso.snt_malaria.scenarioRule.ai.emptyStateTitle',
+        defaultMessage: 'Describe the scenario you want to create',
+    },
+    scenarioRuleAIEmptyStateDescription: {
+        id: 'iaso.snt_malaria.scenarioRule.ai.emptyStateDescription',
+        defaultMessage:
+            'Describe the conditions and interventions you want to set up — the AI builds the scenario for you.',
+    },
+    scenarioRuleAIError: {
+        id: 'iaso.snt_malaria.scenarioRule.ai.error',
+        defaultMessage: 'Error generating scenario rules. Please try again.',
+    },
+    scenarioRuleAIAttachmentUploadError: {
+        id: 'iaso.snt_malaria.scenarioRule.ai.attachmentUploadError',
+        defaultMessage: 'Could not attach {filename}.',
+    },
     scenariosTitle: {
         id: 'iaso.snt_malaria.scenarios.title',
         defaultMessage: 'Scenarios',

@@ -1,4 +1,5 @@
 import React, { FC, Ref } from 'react';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
 import { Button, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -11,11 +12,18 @@ type Props = {
     /** Forwarded to the "Create rule" button so callers can anchor overlays
      *  (e.g. an onboarding spotlight) to it. */
     createRuleRef?: Ref<HTMLButtonElement>;
+    /** Whether the account has an AI API key configured - gates the AI Chat button. */
+    hasAiApiKey?: boolean;
+    showAIChat?: boolean;
+    onToggleAIChat?: () => void;
 };
 
 export const ScenarioRulesHeader: FC<Props> = ({
     onCreateRule,
     createRuleRef,
+    hasAiApiKey,
+    showAIChat,
+    onToggleAIChat,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { isScenarioEditable } = usePlanningContext();
@@ -35,9 +43,20 @@ export const ScenarioRulesHeader: FC<Props> = ({
                 </Typography>
             </Stack>
             {isScenarioEditable && (
-                <Button ref={createRuleRef} onClick={() => onCreateRule()}>
-                    {formatMessage(MESSAGES.createScenarioRule)}
-                </Button>
+                <Stack spacing={1} direction="row" alignItems="center">
+                    {hasAiApiKey && (
+                        <Button
+                            variant={showAIChat ? 'contained' : 'outlined'}
+                            startIcon={<AutoAwesomeIcon />}
+                            onClick={() => onToggleAIChat?.()}
+                        >
+                            {formatMessage(MESSAGES.scenarioRuleAIChatButton)}
+                        </Button>
+                    )}
+                    <Button ref={createRuleRef} onClick={() => onCreateRule()}>
+                        {formatMessage(MESSAGES.createScenarioRule)}
+                    </Button>
+                </Stack>
             )}
         </Stack>
     );

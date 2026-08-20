@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
 from iaso.models import Account, MetricType, MetricValue
-from plugins.snt_malaria.api.composite_layer_ai.serializers import MAX_ATTACHMENT_SIZE_BYTES
+from plugins.snt_malaria.api.ai_chat.serializers import MAX_ATTACHMENT_SIZE_BYTES
 from plugins.snt_malaria.permissions import SNT_SETTINGS_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
@@ -105,6 +105,29 @@ class CompositeLayerAIAPITestCase(SNTMalariaAPITestCase):
         response = self.client.post(BASE_URL, {"message": "Create a composite layer"}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
+    def test_claude_400_never_leaks_anthropics_message_to_the_user(self, mock_gen):
+        # E.g. an out-of-credit or invalid API key - an admin-level config problem the end user has
+        # no visibility or control over (they don't use their own Anthropic subscription), so the
+        # response must stay generic regardless of what Anthropic's error body says.
+        mock_response = MagicMock()
+        mock_response.status_code = 400
+        mock_gen.side_effect = anthropic.APIStatusError(
+            "bad request",
+            response=mock_response,
+            body={
+                "type": "error",
+                "error": {"type": "invalid_request_error", "message": "Your credit balance is too low."},
+            },
+        )
+        self.client.force_authenticate(self.user)
+
+        response = self.client.post(BASE_URL, {"message": "Create a composite layer"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("contact your administrator", response.data["error"])
+        self.assertNotIn("credit balance", response.data["error"])
 
     @patch("plugins.snt_malaria.api.composite_layer_ai.views.generate_composite_layer_graph")
     def test_successful_generation(self, mock_gen):
@@ -259,7 +282,7 @@ class CompositeLayerAIAttachmentAPITestCase(CompositeLayerAIAPITestCase):
         response = self.client.post(ATTACHMENTS_URL, {"file": self._pdf_file()}, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch("plugins.snt_malaria.api.composite_layer_ai.views.anthropic.Anthropic")
+    @patch("plugins.snt_malaria.services.ai_chat.anthropic_files.anthropic.Anthropic")
     def test_successful_upload_returns_file_id(self, mock_anthropic_cls):
         mock_client = MagicMock()
         mock_client.beta.files.upload.return_value = MagicMock(id="file_abc123", size_bytes=13)
@@ -274,7 +297,7 @@ class CompositeLayerAIAttachmentAPITestCase(CompositeLayerAIAPITestCase):
         mock_client.beta.files.upload.assert_called_once()
         self.assertEqual(mock_client.beta.files.upload.call_args.kwargs["betas"], ["files-api-2025-04-14"])
 
-    @patch("plugins.snt_malaria.api.composite_layer_ai.views.anthropic.Anthropic")
+    @patch("plugins.snt_malaria.services.ai_chat.anthropic_files.anthropic.Anthropic")
     def test_upload_error_returns_400(self, mock_anthropic_cls):
         mock_client = MagicMock()
         mock_response = MagicMock()
@@ -289,7 +312,7 @@ class CompositeLayerAIAttachmentAPITestCase(CompositeLayerAIAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch("plugins.snt_malaria.api.composite_layer_ai.views.anthropic.Anthropic")
+    @patch("plugins.snt_malaria.services.ai_chat.anthropic_files.anthropic.Anthropic")
     def test_delete_calls_anthropic_files_delete(self, mock_anthropic_cls):
         mock_client = MagicMock()
         mock_anthropic_cls.return_value = mock_client

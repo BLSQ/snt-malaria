@@ -15,6 +15,10 @@ type Props = {
     createRuleRef?: Ref<HTMLButtonElement>;
     matchedOrgUnitIds?: number[];
     isLoadingPreview?: boolean;
+    /** Whether the account has an AI API key configured - gates the AI Chat button. */
+    hasAiApiKey?: boolean;
+    showAIChat?: boolean;
+    onToggleAIChat?: () => void;
 };
 
 export const ScenarioRulesPanel: FC<Props> = ({
@@ -25,6 +29,9 @@ export const ScenarioRulesPanel: FC<Props> = ({
     createRuleRef,
     matchedOrgUnitIds,
     isLoadingPreview,
+    hasAiApiKey,
+    showAIChat,
+    onToggleAIChat,
 }) => {
     const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
 
@@ -79,6 +86,9 @@ export const ScenarioRulesPanel: FC<Props> = ({
                     isLoading={isLoading}
                     rules={rules}
                     createRuleRef={createRuleRef}
+                    hasAiApiKey={hasAiApiKey}
+                    showAIChat={showAIChat}
+                    onToggleAIChat={onToggleAIChat}
                 />
             )}
         </CardScrollable>
