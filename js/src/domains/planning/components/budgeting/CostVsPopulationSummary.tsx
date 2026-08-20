@@ -27,7 +27,10 @@ import {
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { useInterventionCategoryColors } from '../../hooks/useInterventionCategoryColors';
-import { aggregatePopulationLayersByIntervention } from '../../libs/budget-aggregation';
+import {
+    aggregatePopulationLayersByIntervention,
+    PopulationLayer,
+} from '../../libs/budget-aggregation';
 import {
     assignCategoricalColors,
     CATEGORY_COLORS,
@@ -122,8 +125,30 @@ export const CostVsPopulationSummary: FC = () => {
         [budgets],
     );
 
-    // Defaults to the most recent year until the user picks one explicitly.
-    const effectiveYear = selectedYear ?? availableYears[0] ?? null;
+    // Defaults to the most recent year with values until the user picks one explicitly.
+    const populationLayersByYear = useMemo(() => {
+        const map = new Map<number, Map<number, PopulationLayer[]>>();
+        budgets.forEach(budget => {
+            map.set(
+                budget.year,
+                aggregatePopulationLayersByIntervention(budget.interventions),
+            );
+        });
+        return map;
+    }, [budgets]);
+
+    const firstYearWithData = useMemo(
+        () =>
+            availableYears.find(year =>
+                Array.from(
+                    populationLayersByYear.get(year)?.values() ?? [],
+                ).some(layers => layers.some(layer => layer.population > 0)),
+            ) ?? null,
+        [availableYears, populationLayersByYear],
+    );
+
+    const effectiveYear =
+        selectedYear ?? firstYearWithData ?? availableYears[0] ?? null;
 
     const interventions = useMemo(
         () =>
@@ -136,8 +161,10 @@ export const CostVsPopulationSummary: FC = () => {
         useInterventionCategoryColors(interventions);
 
     const populationLayersByInterventionId = useMemo(
-        () => aggregatePopulationLayersByIntervention(interventions),
-        [interventions],
+        () =>
+            populationLayersByYear.get(effectiveYear ?? -1) ??
+            new Map<number, PopulationLayer[]>(),
+        [populationLayersByYear, effectiveYear],
     );
 
     const rawRows = useMemo(() => {
