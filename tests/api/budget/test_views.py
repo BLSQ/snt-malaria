@@ -135,6 +135,12 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         smc_cost_line.is_proportional = True
         smc_cost_line.save(update_fields=["population_layer", "is_proportional"])
 
+        # Population is resolved from this configured reference year, not from whichever
+        # calendar year the budget happens to be calculating (all years above carry the
+        # same value, so this doesn't change the expected totals below).
+        self.scenario.data_layer_years = {str(metric_type_pop_under_5.id): self.scenario.start_year}
+        self.scenario.save(update_fields=["data_layer_years"])
+
     def test_calculate_budget_no_metric_values(self):
         InterventionCostBreakdownLine.objects.update(population_layer=None, is_proportional=False)
         MetricType.objects.all().delete()

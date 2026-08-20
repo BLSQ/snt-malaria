@@ -22,6 +22,7 @@ class BudgetBreakdownItem(BudgetBaseModel):
     conversion_factor: Optional[float] = None
     invert_conversion_factor: Optional[bool] = False
     target_population: Optional[str] = None
+    target_population_layer_id: Optional[int] = None
     buffer: Optional[float] = None
 
 

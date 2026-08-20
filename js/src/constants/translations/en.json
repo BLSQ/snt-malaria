@@ -493,5 +493,11 @@
     "iaso.snt_malaria.compositeLayerEditor.ai.attachmentUploadError": "Could not attach {filename}.",
     "iaso.snt_malaria.compositeLayerEditor.ai.emptyStateTitle": "Describe the composite layer you want to create",
     "iaso.snt_malaria.compositeLayerEditor.ai.emptyStateDescription": "Describe the metrics, formulas and thresholds you want to combine, or upload documents for context — the AI builds the graph for you.",
-    "iaso.snt_malaria.dataLayers.compositeEditor": "Edit composite"
+    "iaso.snt_malaria.dataLayers.compositeEditor": "Edit composite",
+    "iaso.snt_malaria.compositeLayerEditor.ai.emptyStateDescription": "Describe the metrics, formulas and thresholds you want to combine — the AI builds the graph for you.",
+    "iaso.snt_malaria.dataLayers.compositeEditor": "Edit composite",
+    "iaso.snt_malaria.summary.costVsPopulationTitle": "Cost vs. population covered",
+    "iaso.snt_malaria.summary.costPerCapitaLabel": "Cost per person",
+    "iaso.snt_malaria.summary.layerCostLabel": "Cost",
+    "iaso.snt_malaria.summary.yearLabel": "Year"
 }

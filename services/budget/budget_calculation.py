@@ -145,6 +145,34 @@ class BudgetCalculationService:
         items.sort(key=lambda item: item.total_cost, reverse=True)
         return items
 
+    @staticmethod
+    def _default_breakdown_entry():
+        """Fresh, empty accumulator for one cost line's contribution to a breakdown (by intervention,
+        or by org unit + intervention -- both use this same shape)."""
+        return {
+            "id": None,
+            "category": None,
+            "total_cost": Decimal("0"),
+            "quantity": Decimal("0"),
+            "population": Decimal("0"),
+            "unit_cost": None,
+            "cost_unit_name": None,
+            "conversion_factor": None,
+            "invert_conversion_factor": False,
+            "target_population": None,
+            "target_population_layer_id": None,
+        }
+
+    @staticmethod
+    def _populate_breakdown_from_cost_line(entry, cost_line):
+        """Fills in a breakdown entry's cost-line-derived (as opposed to accumulated) fields."""
+        entry["unit_cost"] = cost_line.unit_cost
+        entry["cost_unit_name"] = cost_line.unit_type.name if cost_line.unit_type else None
+        entry["conversion_factor"] = cost_line.conversion_factor
+        entry["invert_conversion_factor"] = cost_line.invert_conversion_factor
+        entry["target_population"] = cost_line.population_layer.name if cost_line.population_layer else None
+        entry["target_population_layer_id"] = cost_line.population_layer.id if cost_line.population_layer else None
+
     def calculate_year(self, year):
         """Calculate the budget for a given year, based on the population-driven formula and the scenario data.
         The calculation is done in several steps:
@@ -157,42 +185,12 @@ class BudgetCalculationService:
         rows = self._compute_breakdown_line_rows(year)
 
         intervention_totals = defaultdict(lambda: {"total_cost": Decimal("0")})
-        intervention_breakdowns = defaultdict(
-            lambda: defaultdict(
-                lambda: {
-                    "id": None,
-                    "category": None,
-                    "total_cost": Decimal("0"),
-                    "quantity": Decimal("0"),
-                    "population": Decimal("0"),
-                    "unit_cost": None,
-                    "cost_unit_name": None,
-                    "conversion_factor": None,
-                    "invert_conversion_factor": False,
-                    "target_population": None,
-                }
-            )
-        )
+        intervention_breakdowns = defaultdict(lambda: defaultdict(self._default_breakdown_entry))
 
         org_unit_totals = defaultdict(lambda: {"total_cost": Decimal("0")})
         org_unit_intervention_totals = defaultdict(lambda: defaultdict(lambda: {"total_cost": Decimal("0")}))
         org_unit_intervention_breakdowns = defaultdict(
-            lambda: defaultdict(
-                lambda: defaultdict(
-                    lambda: {
-                        "id": None,
-                        "category": None,
-                        "total_cost": Decimal("0"),
-                        "quantity": Decimal("0"),
-                        "population": Decimal("0"),
-                        "unit_cost": None,
-                        "cost_unit_name": None,
-                        "conversion_factor": None,
-                        "invert_conversion_factor": False,
-                        "target_population": None,
-                    }
-                )
-            )
+            lambda: defaultdict(lambda: defaultdict(self._default_breakdown_entry))
         )
 
         category_totals = defaultdict(lambda: {"id": None, "total_cost": Decimal("0"), "quantity": Decimal("0")})
@@ -212,11 +210,7 @@ class BudgetCalculationService:
             if bd["unit_cost"] is None:
                 cost_line = self.cost_line_by_id.get(row.cost_line_id)
                 if cost_line:
-                    bd["unit_cost"] = cost_line.unit_cost
-                    bd["cost_unit_name"] = cost_line.unit_type.name if cost_line.unit_type else None
-                    bd["conversion_factor"] = cost_line.conversion_factor
-                    bd["invert_conversion_factor"] = cost_line.invert_conversion_factor
-                    bd["target_population"] = cost_line.population_layer.name if cost_line.population_layer else None
+                    self._populate_breakdown_from_cost_line(bd, cost_line)
 
             if row.org_unit_id is not None:
                 org_unit_totals[row.org_unit_id]["total_cost"] += row.total_cost
@@ -230,13 +224,7 @@ class BudgetCalculationService:
                 if ou_bd["unit_cost"] is None:
                     cost_line = self.cost_line_by_id.get(row.cost_line_id)
                     if cost_line:
-                        ou_bd["unit_cost"] = cost_line.unit_cost
-                        ou_bd["cost_unit_name"] = cost_line.unit_type.name if cost_line.unit_type else None
-                        ou_bd["conversion_factor"] = cost_line.conversion_factor
-                        ou_bd["invert_conversion_factor"] = cost_line.invert_conversion_factor
-                        ou_bd["target_population"] = (
-                            cost_line.population_layer.name if cost_line.population_layer else None
-                        )
+                        self._populate_breakdown_from_cost_line(ou_bd, cost_line)
 
             category_totals[row.category]["id"] = row.cost_line_id
             category_totals[row.category]["total_cost"] += row.total_cost
@@ -356,6 +344,30 @@ class BudgetCalculationService:
         # Buffer is already included in ``quantity``; only unit cost and inflation apply here.
         return quantity * Decimal(str(unit_cost)) * inflation_multiplier
 
+    def _build_breakdown_items(self, breakdown_dict):
+        """
+        Turns one intervention's (or one org-unit + intervention's) accumulated breakdown dict
+        into the sorted, positive-cost `BudgetBreakdownItem` list the API response exposes.
+        """
+        return [
+            BudgetBreakdownItem(
+                id=bd["id"],
+                category=bd["category"],
+                total_cost=bd["total_cost"],
+                quantity=bd["quantity"],
+                population=bd["population"],
+                unit_cost=bd["unit_cost"],
+                cost_unit_name=bd["cost_unit_name"],
+                conversion_factor=bd["conversion_factor"],
+                invert_conversion_factor=bd["invert_conversion_factor"],
+                target_population=bd["target_population"],
+                target_population_layer_id=bd["target_population_layer_id"],
+                buffer=float(self.buffer),
+            )
+            for _, bd in sorted(breakdown_dict.items(), key=lambda x: x[0])
+            if bd["total_cost"] > 0
+        ]
+
     def _build_interventions(self, intervention_totals, intervention_breakdowns):
         """
         Build the list of interventions with their cost breakdown, based on the computed totals and breakdowns.
@@ -363,23 +375,7 @@ class BudgetCalculationService:
         """
         interventions = []
         for intervention_id, totals in sorted(intervention_totals.items(), key=lambda x: x[0]):
-            breakdown_items = [
-                BudgetBreakdownItem(
-                    id=bd["id"],
-                    category=bd["category"],
-                    total_cost=bd["total_cost"],
-                    quantity=bd["quantity"],
-                    population=bd["population"],
-                    unit_cost=bd["unit_cost"],
-                    cost_unit_name=bd["cost_unit_name"],
-                    conversion_factor=bd["conversion_factor"],
-                    invert_conversion_factor=bd["invert_conversion_factor"],
-                    target_population=bd["target_population"],
-                    buffer=float(self.buffer),
-                )
-                for _, bd in sorted(intervention_breakdowns[intervention_id].items(), key=lambda x: x[0])
-                if bd["total_cost"] > 0
-            ]
+            breakdown_items = self._build_breakdown_items(intervention_breakdowns[intervention_id])
             if totals["total_cost"] <= 0:
                 continue
             intervention_meta = self.intervention_meta_by_id.get(intervention_id, {})
@@ -413,25 +409,9 @@ class BudgetCalculationService:
             for intervention_id, iv_totals in sorted(
                 org_unit_intervention_totals[org_unit_id].items(), key=lambda x: x[0]
             ):
-                breakdown_items = [
-                    BudgetBreakdownItem(
-                        id=bd["id"],
-                        category=bd["category"],
-                        total_cost=bd["total_cost"],
-                        quantity=bd["quantity"],
-                        population=bd["population"],
-                        unit_cost=bd["unit_cost"],
-                        cost_unit_name=bd["cost_unit_name"],
-                        conversion_factor=bd["conversion_factor"],
-                        invert_conversion_factor=bd["invert_conversion_factor"],
-                        target_population=bd["target_population"],
-                        buffer=float(self.buffer),
-                    )
-                    for _, bd in sorted(
-                        org_unit_intervention_breakdowns[org_unit_id][intervention_id].items(), key=lambda x: x[0]
-                    )
-                    if bd["total_cost"] > 0
-                ]
+                breakdown_items = self._build_breakdown_items(
+                    org_unit_intervention_breakdowns[org_unit_id][intervention_id]
+                )
                 if iv_totals["total_cost"] <= 0:
                     continue
                 intervention_meta = self.intervention_meta_by_id.get(intervention_id, {})

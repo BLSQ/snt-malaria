@@ -30,7 +30,14 @@ export type BudgetInterventionCostLine = {
     cost_unit_name: string | null;
     conversion_factor: number | null;
     invert_conversion_factor: boolean;
+    // Resolved name of the line's population layer (`population_layer.name`),
+    // or null for fixed-cost lines that don't target a population.
     target_population: string | null;
+    target_population_layer_id: number | null;
+    // Population the line's cost was computed against (0 when the line has
+    // no population layer). Lines sharing a layer duplicate the same figure
+    // rather than splitting it, so don't sum `population` across lines.
+    population: number;
     buffer: number | null;
 };
 

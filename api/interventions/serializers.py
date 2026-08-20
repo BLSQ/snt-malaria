@@ -19,11 +19,13 @@ class InterventionSerializer(serializers.ModelSerializer):
             "code",
             "description",
             "intervention_category",
+            "target_population",
             "created_at",
             "updated_at",
         ]
         read_only_fields = [
             "id",
+            "target_population",
             "created_at",
             "updated_at",
         ]

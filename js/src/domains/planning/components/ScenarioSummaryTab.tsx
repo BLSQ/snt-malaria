@@ -6,6 +6,7 @@ import { BudgetSummary } from './budgeting/BudgetSummary';
 import { CommoditiesSummary } from './budgeting/CommoditiesSummary';
 import { CostPerDistrictSummary } from './budgeting/CostPerDistrictSummary';
 import { CostPerInterventionSummary } from './budgeting/CostPerInterventionSummary';
+import { CostVsPopulationSummary } from './budgeting/CostVsPopulationSummary';
 import { PrevalenceSummary } from './budgeting/PrevalenceSummary';
 
 // Minimum widget heights so charts (ResponsiveContainer height="100%") get a
@@ -85,11 +86,14 @@ const styles = {
         flex: 2,
         minHeight: MAP_HEIGHT,
     },
-    // Pins the widget content to the box resolved by flex, so the chart's own
-    // rendered height can never feed back into the column height.
     growWidgetContent: {
         position: 'absolute',
         inset: 0,
+    },
+    fullWidthChartWidget: {
+        width: '100%',
+        height: CHART_HEIGHT,
+        mt: 1,
     },
 } satisfies SxStyles;
 
@@ -120,13 +124,16 @@ export const ScenarioSummaryTab: FC<Props> = ({ header }) => (
                 <Box sx={styles.rightColumn}>
                     <Box sx={styles.rightColumnContent}>
                         <Box sx={styles.growChartWidget}>
-                            <PrevalenceSummary />
+                            <CostVsPopulationSummary />
                         </Box>
                         <Box sx={styles.growMapWidget}>
                             <CostPerDistrictSummary />
                         </Box>
                     </Box>
                 </Box>
+            </Box>
+            <Box sx={styles.fullWidthChartWidget}>
+                <PrevalenceSummary />
             </Box>
         </Box>
     </PaperFullHeight>
