@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Scenario } from '../../../scenarios/types';
+import { usePlanningContext } from '../../contexts/PlanningContext';
 
 export const MAX_EXTRA_SLOTS = 2;
 
@@ -31,13 +32,14 @@ export const useComparisonSlots = (
         return map;
     }, [scenarios]);
 
-    const [currentYear, setCurrentYear] = useState<number | undefined>(
-        undefined,
-    );
+    const {
+        comparisonCurrentYear: currentYear,
+        setComparisonCurrentYear: setCurrentYear,
+        comparisonExtraSlots: extraSlots,
+        setComparisonExtraSlots: setExtraSlots,
+    } = usePlanningContext();
     const effectiveCurrentYear =
         currentYear ?? currentScenario?.start_year ?? new Date().getFullYear();
-
-    const [extraSlots, setExtraSlots] = useState<ExtraSlotState[]>([]);
 
     const scenarioOptions: ScenarioOption[] = useMemo(
         () =>
@@ -67,7 +69,7 @@ export const useComparisonSlots = (
         (_key: string, value: unknown) => {
             setCurrentYear(Number(value));
         },
-        [],
+        [setCurrentYear],
     );
 
     const handleAddSlot = useCallback(() => {
@@ -92,11 +94,20 @@ export const useComparisonSlots = (
                 },
             ];
         });
-    }, [scenarioOptions, scenarioById, currentScenario, effectiveCurrentYear]);
+    }, [
+        scenarioOptions,
+        scenarioById,
+        currentScenario,
+        effectiveCurrentYear,
+        setExtraSlots,
+    ]);
 
-    const handleRemoveSlot = useCallback((index: number) => {
-        setExtraSlots(prev => prev.filter((_, i) => i !== index));
-    }, []);
+    const handleRemoveSlot = useCallback(
+        (index: number) => {
+            setExtraSlots(prev => prev.filter((_, i) => i !== index));
+        },
+        [setExtraSlots],
+    );
 
     const handleSlotScenarioChange = useCallback(
         (index: number) => (_key: string, value: unknown) => {
@@ -108,14 +119,16 @@ export const useComparisonSlots = (
                 next[index] = {
                     scenarioId,
                     year: clampYear(
-                        previousYear ?? scenario?.start_year ?? effectiveCurrentYear,
+                        previousYear ??
+                            scenario?.start_year ??
+                            effectiveCurrentYear,
                         scenario,
                     ),
                 };
                 return next;
             });
         },
-        [scenarioById, effectiveCurrentYear],
+        [scenarioById, effectiveCurrentYear, setExtraSlots],
     );
 
     const handleSlotYearChange = useCallback(
@@ -129,7 +142,7 @@ export const useComparisonSlots = (
                 return next;
             });
         },
-        [],
+        [setExtraSlots],
     );
 
     const yearOptionsFor = useCallback(
@@ -141,7 +154,11 @@ export const useComparisonSlots = (
                 return [];
             }
             const years: { label: string; value: number }[] = [];
-            for (let year = scenario.start_year; year <= scenario.end_year; year += 1) {
+            for (
+                let year = scenario.start_year;
+                year <= scenario.end_year;
+                year += 1
+            ) {
                 years.push({ label: String(year), value: year });
             }
             return years;

@@ -1,5 +1,7 @@
 import React, {
     createContext,
+    Dispatch,
+    SetStateAction,
     useCallback,
     useContext,
     useEffect,
@@ -13,6 +15,7 @@ import { MetricTypeCategory } from '../../dataLayers/types/metrics';
 import { InterventionCategory } from '../../interventions/types';
 import { sortByStringProp } from '../../planning/libs/list-utils';
 import { Scenario } from '../../scenarios/types';
+import type { ExtraSlotState } from '../components/comparisonTab/useComparisonSlots';
 import { useGetScenarioYearlyCostAssignments } from '../hooks/useGetScenarioYearlyCostAssignments';
 import { useSaveScenarioYearlyCostAssignment } from '../hooks/useSaveScenarioYearlyCostAssignment';
 import { Budget } from '../types/budget';
@@ -41,6 +44,13 @@ type PlanningContextType = {
     toggleShowRulesPanel: () => void;
     saveYearlyCoverage: (params: SaveYearlyCoverageParams) => void;
     toggleIsEditing: () => void;
+    // Comparison tab's slot selection, kept here (rather than local to the
+    // tab) so it survives switching away from and back to the tab. Reset
+    // whenever scenarioId changes, see the effect below.
+    comparisonCurrentYear: number | undefined;
+    setComparisonCurrentYear: Dispatch<SetStateAction<number | undefined>>;
+    comparisonExtraSlots: ExtraSlotState[];
+    setComparisonExtraSlots: Dispatch<SetStateAction<ExtraSlotState[]>>;
 };
 
 type SaveYearlyCoverageParams = {
@@ -72,6 +82,10 @@ const PlanningContext = createContext<PlanningContextType>({
     toggleShowRulesPanel: () => {},
     saveYearlyCoverage: () => {},
     toggleIsEditing: () => {},
+    comparisonCurrentYear: undefined,
+    setComparisonCurrentYear: () => {},
+    comparisonExtraSlots: [],
+    setComparisonExtraSlots: () => {},
 });
 
 export const usePlanningContext = () => useContext(PlanningContext);
@@ -149,6 +163,21 @@ export const PlanningProvider = ({
         [],
     );
 
+    const [comparisonCurrentYear, setComparisonCurrentYear] = useState<
+        number | undefined
+    >(undefined);
+    const [comparisonExtraSlots, setComparisonExtraSlots] = useState<
+        ExtraSlotState[]
+    >([]);
+    const previousScenarioIdRef = useRef(scenarioId);
+    useEffect(() => {
+        if (previousScenarioIdRef.current !== scenarioId) {
+            previousScenarioIdRef.current = scenarioId;
+            setComparisonCurrentYear(undefined);
+            setComparisonExtraSlots([]);
+        }
+    }, [scenarioId]);
+
     const saveYearlyCoverage = useCallback(
         ({
             assignmentId,
@@ -203,6 +232,10 @@ export const PlanningProvider = ({
                 toggleShowRulesPanel,
                 saveYearlyCoverage,
                 toggleIsEditing,
+                comparisonCurrentYear,
+                setComparisonCurrentYear,
+                comparisonExtraSlots,
+                setComparisonExtraSlots,
             }}
         >
             {children}
