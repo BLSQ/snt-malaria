@@ -2,11 +2,15 @@ import React, { FC, useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { useGetInterventionCostBreakdownLineCategories } from '../../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
 import { MESSAGES } from '../../../../messages';
+import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
-import { useInterventionCategoryColors } from '../../../hooks/useInterventionCategoryColors';
+import {
+    buildCategoryIdByInterventionId,
+    useInterventionCategoryColors,
+} from '../../../hooks/useInterventionCategoryColors';
 import {
     alignToSharedOrder,
-    getSharedInterventionOrder,
+    getSharedInterventionOrderByCategory,
     getSlotInterventionCosts,
 } from '../../../libs/comparison-aggregation';
 import { MAX_SLOTS } from '../useComparisonSlots';
@@ -23,8 +27,13 @@ export const BudgetByInterventionWidget: FC = () => {
     const { formatMessage } = useSafeIntl();
     const { slots, budgetsBySlotKey, isBudgetLoading, currency, displayMode } =
         useScenarioComparisonContext();
+    const { interventionCategories } = usePlanningContext();
     const { data: costCategories = [], isLoading: isLoadingCategories } =
         useGetInterventionCostBreakdownLineCategories();
+    const categoryIdByInterventionId = useMemo(
+        () => buildCategoryIdByInterventionId(interventionCategories),
+        [interventionCategories],
+    );
 
     // Looked up outside the memos below so each one only recomputes when its
     // own slot's budget actually changes, not whenever any slot's does.
@@ -71,20 +80,24 @@ export const BudgetByInterventionWidget: FC = () => {
         );
     }
 
-    // Shared row order across slots (union of interventions, alphabetical),
-    // so the same intervention lands on the same chart row in every slot
-    // even when slots don't share the exact same intervention set. A slot
-    // missing an intervention gets a zero-cost placeholder row rather than
-    // skipping it, so the row still reserves its position -- unless the slot
-    // has no data at all, in which case it's left empty so the chart falls
-    // back to its own "no budget data" state instead of an all-empty grid.
-    const sharedOrder = getSharedInterventionOrder(
+    // Shared row order across slots (union of interventions, grouped by
+    // category so it matches the bars' category colouring -- see
+    // `useInterventionCategoryColors`), so the same intervention lands on
+    // the same chart row in every slot even when slots don't share the exact
+    // same intervention set. A slot missing an intervention gets a
+    // zero-cost placeholder row rather than skipping it, so the row still
+    // reserves its position -- unless the slot has no data at all, in which
+    // case it's left empty so the chart falls back to its own "no budget
+    // data" state instead of an all-empty grid.
+    const sharedOrder = getSharedInterventionOrderByCategory(
         interventionsBySlotIndex.map(interventions =>
             interventions.map(intervention => ({
                 interventionId: intervention.id,
                 interventionLabel: intervention.type,
+                cost: intervention.total_cost,
             })),
         ),
+        categoryIdByInterventionId,
     );
     const alignedInterventionsBySlotIndex = alignToSharedOrder(
         interventionsBySlotIndex,

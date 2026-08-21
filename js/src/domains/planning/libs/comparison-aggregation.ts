@@ -1,3 +1,7 @@
+import {
+    orderByCategoryCost,
+    UNCATEGORIZED_KEY,
+} from '../hooks/useInterventionCategoryColors';
 import { Budget, BudgetIntervention } from '../types/budget';
 import {
     aggregateInterventionCosts,
@@ -249,6 +253,53 @@ export const getSharedInterventionOrder = (
     });
     return Array.from(byId.values()).sort((a, b) =>
         a.interventionLabel.localeCompare(b.interventionLabel),
+    );
+};
+
+export type InterventionCostIdentity = InterventionIdentity & {
+    cost: number;
+};
+
+/**
+ * Same shared-row-order purpose as `getSharedInterventionOrder`, but grouped
+ * by intervention category (largest-cost category first, largest
+ * intervention within a category first) instead of alphabetically -- so
+ * charts that colour bars by category (see `useInterventionCategoryColors`)
+ * keep same-category bars adjacent instead of scattering them alphabetically.
+ * Cost is summed across every slot so the order is stable regardless of
+ * which slot it's read from.
+ */
+export const getSharedInterventionOrderByCategory = (
+    rowsBySlotIndex: InterventionCostIdentity[][],
+    categoryIdByInterventionId: Map<number, number>,
+): InterventionIdentity[] => {
+    const totalCostById = new Map<number, number>();
+    const labelById = new Map<number, string>();
+    rowsBySlotIndex.forEach(rows => {
+        rows.forEach(row => {
+            totalCostById.set(
+                row.interventionId,
+                (totalCostById.get(row.interventionId) ?? 0) + row.cost,
+            );
+            if (!labelById.has(row.interventionId)) {
+                labelById.set(row.interventionId, row.interventionLabel);
+            }
+        });
+    });
+
+    const identities: InterventionIdentity[] = Array.from(
+        totalCostById.keys(),
+    ).map(interventionId => ({
+        interventionId,
+        interventionLabel: labelById.get(interventionId) ?? '',
+    }));
+
+    return orderByCategoryCost(
+        identities,
+        identity =>
+            categoryIdByInterventionId.get(identity.interventionId) ??
+            UNCATEGORIZED_KEY,
+        identity => totalCostById.get(identity.interventionId) ?? 0,
     );
 };
 

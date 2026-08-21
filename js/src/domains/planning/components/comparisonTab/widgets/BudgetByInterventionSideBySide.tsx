@@ -23,9 +23,11 @@ const styles = {
 type Props = {
     title: string;
     slots: ComparisonSlot[];
-    // Already aligned to a shared, alphabetical row order across slots (see
-    // `BudgetByInterventionWidget`'s use of `getSharedInterventionOrder`), so
-    // the same intervention lands on the same row in every slot's chart.
+    // Already aligned to a shared, category-grouped row order across slots
+    // (see `BudgetByInterventionWidget`'s use of
+    // `getSharedInterventionOrderByCategory`), so the same intervention
+    // lands on the same row in every slot's chart, and same-category
+    // interventions stay adjacent to match their shared bar colour.
     interventionsBySlotIndex: BudgetIntervention[][];
     colorsBySlotIndex: InterventionCategoryColors[];
     costCategories: CostCategory[];
