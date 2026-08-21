@@ -92,41 +92,94 @@ export type CoverageTableRow = {
 };
 
 /**
- * Unions each slot's per-intervention population-layer coverage into one row
- * per (intervention, layer) pair, each carrying every slot's figures keyed
- * by slot key -- the shape a single combined table needs. Mirrors
- * `mergeCommodityRowsBySlot`.
+ * A single (intervention, sub-item) row for one slot, flattened out of
+ * whatever nested per-intervention shape the caller holds -- the common
+ * input shape `mergeSubRowsBySlot` groups into a combined table row.
  */
-export const mergeCoverageRowsBySlot = (
-    coverageBySlotKey: Map<string, InterventionCoverage[]>,
-): CoverageTableRow[] => {
-    const rowByKey = new Map<string, CoverageTableRow>();
+type SubRow<TCell> = {
+    interventionId: number;
+    interventionLabel: string;
+    subKey: string | number;
+    subLabel: string;
+    cell: TCell;
+};
 
-    coverageBySlotKey.forEach((interventions, slotKey) => {
-        interventions.forEach(intervention => {
-            intervention.layers.forEach(layer => {
-                const key = `${intervention.interventionId}::${layer.layerId}`;
-                const row = rowByKey.get(key) ?? {
-                    interventionId: intervention.interventionId,
-                    interventionLabel: intervention.interventionLabel,
-                    layerId: layer.layerId,
-                    layerName: layer.layerName,
-                    cellBySlotKey: {},
-                };
-                row.cellBySlotKey[slotKey] = {
-                    personsAtRisk: layer.personsAtRisk,
-                    percentEligible: layer.percentEligible,
-                };
-                rowByKey.set(key, row);
-            });
+type MergedSubRow<TCell> = {
+    interventionId: number;
+    interventionLabel: string;
+    subKey: string | number;
+    subLabel: string;
+    cellBySlotKey: Record<string, TCell>;
+};
+
+/**
+ * Shared core of `mergeCoverageRowsBySlot` and `mergeCommodityRowsBySlot`:
+ * unions each slot's (intervention, sub-item) rows -- population layer or
+ * commodity line -- into one row per (interventionId, subKey) pair, each
+ * carrying every slot's cell keyed by slot key, sorted by intervention then
+ * the sub-item's label.
+ */
+const mergeSubRowsBySlot = <TCell>(
+    rowsBySlotKey: Map<string, SubRow<TCell>[]>,
+): MergedSubRow<TCell>[] => {
+    const rowByKey = new Map<string, MergedSubRow<TCell>>();
+
+    rowsBySlotKey.forEach((rows, slotKey) => {
+        rows.forEach(row => {
+            const key = `${row.interventionId}::${row.subKey}`;
+            const merged = rowByKey.get(key) ?? {
+                interventionId: row.interventionId,
+                interventionLabel: row.interventionLabel,
+                subKey: row.subKey,
+                subLabel: row.subLabel,
+                cellBySlotKey: {},
+            };
+            merged.cellBySlotKey[slotKey] = row.cell;
+            rowByKey.set(key, merged);
         });
     });
 
     return Array.from(rowByKey.values()).sort(
         (a, b) =>
             a.interventionId - b.interventionId ||
-            a.layerName.localeCompare(b.layerName),
+            a.subLabel.localeCompare(b.subLabel),
     );
+};
+
+/**
+ * Unions each slot's per-intervention population-layer coverage into one row
+ * per (intervention, layer) pair, each carrying every slot's figures keyed
+ * by slot key -- the shape a single combined table needs.
+ */
+export const mergeCoverageRowsBySlot = (
+    coverageBySlotKey: Map<string, InterventionCoverage[]>,
+): CoverageTableRow[] => {
+    const subRowsBySlotKey = new Map<string, SubRow<CoverageCell>[]>();
+    coverageBySlotKey.forEach((interventions, slotKey) => {
+        subRowsBySlotKey.set(
+            slotKey,
+            interventions.flatMap(intervention =>
+                intervention.layers.map(layer => ({
+                    interventionId: intervention.interventionId,
+                    interventionLabel: intervention.interventionLabel,
+                    subKey: layer.layerId,
+                    subLabel: layer.layerName,
+                    cell: {
+                        personsAtRisk: layer.personsAtRisk,
+                        percentEligible: layer.percentEligible,
+                    },
+                })),
+            ),
+        );
+    });
+
+    return mergeSubRowsBySlot(subRowsBySlotKey).map(row => ({
+        interventionId: row.interventionId,
+        interventionLabel: row.interventionLabel,
+        layerId: row.subKey as number,
+        layerName: row.subLabel,
+        cellBySlotKey: row.cellBySlotKey,
+    }));
 };
 
 export type InterventionDistrictCoverage = {
@@ -198,6 +251,30 @@ export const getSharedInterventionOrder = (
         a.interventionLabel.localeCompare(b.interventionLabel),
     );
 };
+
+/**
+ * Reorders each slot's rows to match `sharedOrder` (see
+ * `getSharedInterventionOrder`), filling in `makePlaceholder` for any
+ * intervention missing from that slot -- unless the slot has no data at all,
+ * in which case it's left empty so its chart falls back to its own "no
+ * data" state instead of an all-placeholder grid.
+ */
+export const alignToSharedOrder = <T>(
+    rowsBySlotIndex: T[][],
+    sharedOrder: InterventionIdentity[],
+    getInterventionId: (row: T) => number,
+    makePlaceholder: (identity: InterventionIdentity) => T,
+): T[][] =>
+    rowsBySlotIndex.map(rows => {
+        if (rows.length === 0) {
+            return rows;
+        }
+        const byId = new Map(rows.map(row => [getInterventionId(row), row]));
+        return sharedOrder.map(
+            identity =>
+                byId.get(identity.interventionId) ?? makePlaceholder(identity),
+        );
+    });
 
 export type InterventionSlotRow = {
     interventionId: number;
@@ -291,33 +368,32 @@ export type CommodityTableRow = {
 export const mergeCommodityRowsBySlot = (
     commoditiesBySlotKey: Map<string, InterventionCommodities[]>,
 ): CommodityTableRow[] => {
-    const rowByKey = new Map<string, CommodityTableRow>();
-
+    const subRowsBySlotKey = new Map<string, SubRow<CommodityCell>[]>();
     commoditiesBySlotKey.forEach((interventions, slotKey) => {
-        interventions.forEach(intervention => {
-            intervention.commodities.forEach(commodity => {
-                const key = `${intervention.interventionId}::${commodity.unitName}`;
-                const row = rowByKey.get(key) ?? {
+        subRowsBySlotKey.set(
+            slotKey,
+            interventions.flatMap(intervention =>
+                intervention.commodities.map(commodity => ({
                     interventionId: intervention.interventionId,
                     interventionLabel: intervention.interventionLabel,
-                    unitName: commodity.unitName,
-                    cellBySlotKey: {},
-                };
-                row.cellBySlotKey[slotKey] = {
-                    quantity: commodity.quantity,
-                    unitCost: commodity.unitCost,
-                    totalCost: commodity.totalCost,
-                };
-                rowByKey.set(key, row);
-            });
-        });
+                    subKey: commodity.unitName,
+                    subLabel: commodity.unitName,
+                    cell: {
+                        quantity: commodity.quantity,
+                        unitCost: commodity.unitCost,
+                        totalCost: commodity.totalCost,
+                    },
+                })),
+            ),
+        );
     });
 
-    return Array.from(rowByKey.values()).sort(
-        (a, b) =>
-            a.interventionId - b.interventionId ||
-            a.unitName.localeCompare(b.unitName),
-    );
+    return mergeSubRowsBySlot(subRowsBySlotKey).map(row => ({
+        interventionId: row.interventionId,
+        interventionLabel: row.interventionLabel,
+        unitName: row.subLabel,
+        cellBySlotKey: row.cellBySlotKey,
+    }));
 };
 
 /**
