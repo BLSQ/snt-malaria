@@ -13,7 +13,11 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../../messages';
 import { InterventionCoverage } from '../../../libs/comparison-aggregation';
-import { formatBigNumber, formatPercentValue } from '../../../libs/cost-utils';
+import {
+    formatBigNumber,
+    formatPercentValue,
+    percentOfTotal,
+} from '../../../libs/cost-utils';
 import { ComparisonSlot } from '../types';
 import { SideBySideWidgetGrid } from './SideBySideWidgetGrid';
 
@@ -31,9 +35,6 @@ const styles = {
         overflowY: 'auto',
     },
 } satisfies SxStyles;
-
-const percentOfTotal = (value: number, total?: number): string | undefined =>
-    total ? formatPercentValue(value / total) : undefined;
 
 type Props = {
     title: string;

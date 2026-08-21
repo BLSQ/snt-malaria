@@ -10,7 +10,7 @@ import {
     InterventionDistrictCoverage,
     mergeSlotRowsByIntervention,
 } from '../../../libs/comparison-aggregation';
-import { formatPercentValue } from '../../../libs/cost-utils';
+import { formatPercentValue, percentOfTotal } from '../../../libs/cost-utils';
 import { ComparisonSlot } from '../types';
 import { DistrictsRadarChart } from './DistrictsRadarChart';
 import { OverlayGroupedBarChart } from './OverlayGroupedBarChart';
@@ -18,6 +18,13 @@ import { OverlayGroupedBarChart } from './OverlayGroupedBarChart';
 const CHART_HEIGHT = 280;
 
 const styles = {
+    grid: {
+        flex: 1,
+        minHeight: 0,
+    },
+    gridItem: {
+        height: '100%',
+    },
     chartBody: {
         height: CHART_HEIGHT,
         display: 'flex',

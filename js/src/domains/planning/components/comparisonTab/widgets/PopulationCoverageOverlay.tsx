@@ -17,7 +17,11 @@ import {
     InterventionCoverage,
     mergeCoverageRowsBySlot,
 } from '../../../libs/comparison-aggregation';
-import { formatBigNumber, formatPercentValue } from '../../../libs/cost-utils';
+import {
+    formatBigNumber,
+    formatPercentValue,
+    percentOfTotal,
+} from '../../../libs/cost-utils';
 import { ComparisonSlot } from '../types';
 
 const CHART_HEIGHT = 320;
@@ -43,9 +47,6 @@ const styles = {
         flexShrink: 0,
     },
 } satisfies SxStyles;
-
-const percentOfTotal = (value: number, total?: number): string | undefined =>
-    total ? formatPercentValue(value / total) : undefined;
 
 type Props = {
     title: string;

@@ -20,7 +20,7 @@ import {
 } from '../../../../../components/useAutoYAxisWidth';
 import { MESSAGES } from '../../../../messages';
 import { InterventionDistrictCoverage } from '../../../libs/comparison-aggregation';
-import { formatPercentValue } from '../../../libs/cost-utils';
+import { percentOfTotal } from '../../../libs/cost-utils';
 import { ComparisonSlot } from '../types';
 import { SideBySideWidgetGrid } from './SideBySideWidgetGrid';
 
@@ -41,9 +41,6 @@ const styles = {
         minHeight: 0,
     },
 } satisfies SxStyles;
-
-const percentOfTotal = (value: number, total?: number): string | undefined =>
-    total ? formatPercentValue(value / total) : undefined;
 
 type Props = {
     slots: ComparisonSlot[];
