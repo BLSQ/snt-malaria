@@ -4,12 +4,8 @@ import { Box, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../../messages';
-import {
-    InterventionCommodities,
-    getSlotCommoditiesByIntervention,
-} from '../../../libs/comparison-aggregation';
+import { InterventionCommodities } from '../../../libs/comparison-aggregation';
 import { formatBigNumber, formatQuantity } from '../../../libs/cost-utils';
-import { Budget } from '../../../types/budget';
 import { ComparisonSlot } from '../types';
 import { SideBySideWidgetGrid } from './SideBySideWidgetGrid';
 
@@ -44,19 +40,17 @@ const styles = {
 type Props = {
     title: string;
     slots: ComparisonSlot[];
-    budgetsBySlotKey: Map<string, Budget | undefined>;
+    commoditiesBySlotIndex: InterventionCommodities[][];
     isBudgetLoading: boolean;
     currency: string;
-    commodityUnitNames: Set<string>;
 };
 
 export const CommoditiesSideBySide: FC<Props> = ({
     title,
     slots,
-    budgetsBySlotKey,
+    commoditiesBySlotIndex,
     isBudgetLoading,
     currency,
-    commodityUnitNames,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -68,12 +62,8 @@ export const CommoditiesSideBySide: FC<Props> = ({
             isLoading={isBudgetLoading}
             bodySx={styles.sideBySideBody}
         >
-            {slot => {
-                const commoditiesByIntervention =
-                    getSlotCommoditiesByIntervention(
-                        budgetsBySlotKey.get(slot.key),
-                        commodityUnitNames,
-                    );
+            {(_slot, index) => {
+                const commoditiesByIntervention = commoditiesBySlotIndex[index];
                 if (commoditiesByIntervention.length === 0) {
                     return (
                         <Typography variant="body2" color="textSecondary">

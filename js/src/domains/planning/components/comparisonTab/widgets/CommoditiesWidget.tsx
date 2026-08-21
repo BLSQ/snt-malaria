@@ -1,8 +1,9 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../../messages';
 import { useGetCostUnitTypes } from '../../../../settings/costUnits/hooks/useGetCostUnitTypes';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
+import { getSlotCommoditiesByIntervention } from '../../../libs/comparison-aggregation';
 import { CommoditiesOverlay } from './CommoditiesOverlay';
 import { CommoditiesSideBySide } from './CommoditiesSideBySide';
 
@@ -12,19 +13,33 @@ export const CommoditiesWidget: FC = () => {
         useScenarioComparisonContext();
     const { data: costUnitTypes } = useGetCostUnitTypes();
 
-    const commodityUnitNames = new Set(
-        (costUnitTypes ?? [])
-            .filter(unit => unit.is_commodity)
-            .map(unit => unit.name),
+    const commodityUnitNames = useMemo(
+        () =>
+            new Set(
+                (costUnitTypes ?? [])
+                    .filter(unit => unit.is_commodity)
+                    .map(unit => unit.name),
+            ),
+        [costUnitTypes],
+    );
+
+    const commoditiesBySlotIndex = useMemo(
+        () =>
+            slots.map(slot =>
+                getSlotCommoditiesByIntervention(
+                    budgetsBySlotKey.get(slot.key),
+                    commodityUnitNames,
+                ),
+            ),
+        [slots, budgetsBySlotKey, commodityUnitNames],
     );
 
     const props = {
         title: formatMessage(MESSAGES.comparisonCommoditiesTitle),
         slots,
-        budgetsBySlotKey,
+        commoditiesBySlotIndex,
         isBudgetLoading,
         currency,
-        commodityUnitNames,
     };
 
     return displayMode === 'overlay' ? (

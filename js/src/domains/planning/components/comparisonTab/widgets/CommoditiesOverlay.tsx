@@ -14,11 +14,10 @@ import { SxStyles } from 'Iaso/types/general';
 import { WidgetCard } from '../../../../../components/WidgetCard';
 import { MESSAGES } from '../../../../messages';
 import {
-    getSlotCommoditiesByIntervention,
+    InterventionCommodities,
     mergeCommodityRowsBySlot,
 } from '../../../libs/comparison-aggregation';
 import { formatBigNumber, formatQuantity } from '../../../libs/cost-utils';
-import { Budget } from '../../../types/budget';
 import { ComparisonSlot } from '../types';
 
 const CHART_HEIGHT = 320;
@@ -48,30 +47,22 @@ const styles = {
 type Props = {
     title: string;
     slots: ComparisonSlot[];
-    budgetsBySlotKey: Map<string, Budget | undefined>;
+    commoditiesBySlotIndex: InterventionCommodities[][];
     isBudgetLoading: boolean;
     currency: string;
-    commodityUnitNames: Set<string>;
 };
 
 export const CommoditiesOverlay: FC<Props> = ({
     title,
     slots,
-    budgetsBySlotKey,
+    commoditiesBySlotIndex,
     isBudgetLoading,
     currency,
-    commodityUnitNames,
 }) => {
     const { formatMessage } = useSafeIntl();
 
     const commoditiesBySlotKey = new Map(
-        slots.map(slot => [
-            slot.key,
-            getSlotCommoditiesByIntervention(
-                budgetsBySlotKey.get(slot.key),
-                commodityUnitNames,
-            ),
-        ]),
+        slots.map((slot, index) => [slot.key, commoditiesBySlotIndex[index]]),
     );
     const rows = mergeCommodityRowsBySlot(commoditiesBySlotKey);
 
