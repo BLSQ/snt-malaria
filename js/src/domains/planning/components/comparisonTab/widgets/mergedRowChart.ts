@@ -5,6 +5,7 @@ export const toChartData = (
     rows: MergedInterventionRow[],
 ): Record<string, string | number>[] =>
     rows.map(row => ({
+        interventionId: row.interventionId,
         interventionLabel: row.interventionLabel,
         ...row.valueBySlotKey,
     }));
@@ -19,7 +20,7 @@ export const buildRowTooltipContent =
             return null;
         }
         const row = rows.find(
-            r => r.interventionLabel === payload[0].payload.interventionLabel,
+            r => r.interventionId === payload[0].payload.interventionId,
         );
         return row ? renderTooltip(row) : null;
     };
