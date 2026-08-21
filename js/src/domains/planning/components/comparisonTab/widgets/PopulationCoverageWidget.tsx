@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../../messages';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
@@ -17,8 +17,12 @@ export const PopulationCoverageWidget: FC = () => {
         populationYear,
     } = useScenarioComparisonContext();
 
-    const coverageBySlotIndex = slots.map(slot =>
-        getSlotInterventionCoverage(budgetsBySlotKey.get(slot.key)),
+    const coverageBySlotIndex = useMemo(
+        () =>
+            slots.map(slot =>
+                getSlotInterventionCoverage(budgetsBySlotKey.get(slot.key)),
+            ),
+        [slots, budgetsBySlotKey],
     );
 
     const title = formatMessage(MESSAGES.comparisonPopulationCoverageTitle);

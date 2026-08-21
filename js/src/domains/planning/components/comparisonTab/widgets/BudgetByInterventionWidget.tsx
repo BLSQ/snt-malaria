@@ -26,14 +26,23 @@ export const BudgetByInterventionWidget: FC = () => {
     const { data: costCategories = [], isLoading: isLoadingCategories } =
         useGetInterventionCostBreakdownLineCategories();
 
-    const interventions0 = getSlotInterventionCosts(
-        budgetsBySlotKey.get(slots[0]?.key ?? ''),
+    // Looked up outside the memos below so each one only recomputes when its
+    // own slot's budget actually changes, not whenever any slot's does.
+    const budget0 = budgetsBySlotKey.get(slots[0]?.key ?? '');
+    const budget1 = budgetsBySlotKey.get(slots[1]?.key ?? '');
+    const budget2 = budgetsBySlotKey.get(slots[2]?.key ?? '');
+
+    const interventions0 = useMemo(
+        () => getSlotInterventionCosts(budget0),
+        [budget0],
     );
-    const interventions1 = getSlotInterventionCosts(
-        budgetsBySlotKey.get(slots[1]?.key ?? ''),
+    const interventions1 = useMemo(
+        () => getSlotInterventionCosts(budget1),
+        [budget1],
     );
-    const interventions2 = getSlotInterventionCosts(
-        budgetsBySlotKey.get(slots[2]?.key ?? ''),
+    const interventions2 = useMemo(
+        () => getSlotInterventionCosts(budget2),
+        [budget2],
     );
     const interventionsBySlotIndex = [
         interventions0,
@@ -77,28 +86,17 @@ export const BudgetByInterventionWidget: FC = () => {
             })),
         ),
     );
-    const alignedInterventionsBySlotIndex = interventionsBySlotIndex.map(
-        interventions => {
-            if (interventions.length === 0) {
-                return interventions;
-            }
-            const byId = new Map(
-                interventions.map(intervention => [
-                    intervention.id,
-                    intervention,
-                ]),
-            );
-            return sharedOrder.map<BudgetIntervention>(
-                ({ interventionId, interventionLabel }) =>
-                    byId.get(interventionId) ?? {
-                        id: interventionId,
-                        type: interventionLabel,
-                        code: '',
-                        total_cost: 0,
-                        cost_breakdown: [],
-                    },
-            );
-        },
+    const alignedInterventionsBySlotIndex = alignToSharedOrder(
+        interventionsBySlotIndex,
+        sharedOrder,
+        intervention => intervention.id,
+        ({ interventionId, interventionLabel }) => ({
+            id: interventionId,
+            type: interventionLabel,
+            code: '',
+            total_cost: 0,
+            cost_breakdown: [],
+        }),
     );
 
     return (
