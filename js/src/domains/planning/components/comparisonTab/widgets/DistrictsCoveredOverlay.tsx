@@ -32,9 +32,6 @@ const styles = {
     },
 } satisfies SxStyles;
 
-const percentOfTotal = (value: number, total?: number): string | undefined =>
-    total ? formatPercentValue(value / total) : undefined;
-
 type Props = {
     slots: ComparisonSlot[];
     coverageBySlotIndex: InterventionDistrictCoverage[][];
@@ -92,8 +89,8 @@ export const DistrictsCoveredOverlay: FC<Props> = ({
     );
 
     return (
-        <Grid container spacing={1} sx={{ flex: 1, minHeight: 0 }}>
-            <Grid item xs={12} md={6} sx={{ height: '100%' }}>
+        <Grid container spacing={1} sx={styles.grid}>
+            <Grid item xs={12} md={6} sx={styles.gridItem}>
                 <WidgetCard
                     title={formatMessage(
                         MESSAGES.comparisonDistrictsCountTitle,
@@ -111,7 +108,7 @@ export const DistrictsCoveredOverlay: FC<Props> = ({
                     />
                 </WidgetCard>
             </Grid>
-            <Grid item xs={12} md={6} sx={{ height: '100%' }}>
+            <Grid item xs={12} md={6} sx={styles.gridItem}>
                 <WidgetCard
                     title={formatMessage(
                         MESSAGES.comparisonDistrictsPercentTitle,

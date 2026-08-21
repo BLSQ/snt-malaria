@@ -1,10 +1,10 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import { useChartTheme } from '../../../../../components/charts/chartTheme';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
 import {
+    alignToSharedOrder,
     getSharedInterventionOrder,
     getSlotInterventionDistrictCoverage,
-    InterventionDistrictCoverage,
 } from '../../../libs/comparison-aggregation';
 import { DistrictsCoveredOverlay } from './DistrictsCoveredOverlay';
 import { DistrictsCoveredSideBySide } from './DistrictsCoveredSideBySide';
@@ -19,8 +19,14 @@ export const DistrictsCoveredWidget: FC = () => {
     } = useScenarioComparisonContext();
     const { gridProps, axisProps } = useChartTheme();
 
-    const coverageBySlotIndex = slots.map(slot =>
-        getSlotInterventionDistrictCoverage(budgetsBySlotKey.get(slot.key)),
+    const coverageBySlotIndex = useMemo(
+        () =>
+            slots.map(slot =>
+                getSlotInterventionDistrictCoverage(
+                    budgetsBySlotKey.get(slot.key),
+                ),
+            ),
+        [slots, budgetsBySlotKey],
     );
 
     if (displayMode === 'overlay') {
@@ -35,20 +41,16 @@ export const DistrictsCoveredWidget: FC = () => {
     }
 
     const sharedOrder = getSharedInterventionOrder(coverageBySlotIndex);
-    const alignedCoverageBySlotIndex = coverageBySlotIndex.map(rows => {
-        if (rows.length === 0) {
-            return rows;
-        }
-        const byId = new Map(rows.map(row => [row.interventionId, row]));
-        return sharedOrder.map<InterventionDistrictCoverage>(
-            ({ interventionId, interventionLabel }) =>
-                byId.get(interventionId) ?? {
-                    interventionId,
-                    interventionLabel,
-                    districtCount: 0,
-                },
-        );
-    });
+    const alignedCoverageBySlotIndex = alignToSharedOrder(
+        coverageBySlotIndex,
+        sharedOrder,
+        row => row.interventionId,
+        ({ interventionId, interventionLabel }) => ({
+            interventionId,
+            interventionLabel,
+            districtCount: 0,
+        }),
+    );
 
     return (
         <DistrictsCoveredSideBySide
