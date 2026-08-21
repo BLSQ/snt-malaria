@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 import { VaccinesOutlined } from '@mui/icons-material';
 import { SxStyles } from 'Iaso/types/general';
 import { InterventionCategoryColors } from '../../../hooks/useInterventionCategoryColors';
+import { BudgetIntervention } from '../../../types/budget';
 import { ComparisonSlot } from '../types';
 import {
     CostCategory,
@@ -22,6 +23,10 @@ const styles = {
 type Props = {
     title: string;
     slots: ComparisonSlot[];
+    // Already aligned to a shared, alphabetical row order across slots (see
+    // `BudgetByInterventionWidget`'s use of `getSharedInterventionOrder`), so
+    // the same intervention lands on the same row in every slot's chart.
+    interventionsBySlotIndex: BudgetIntervention[][];
     colorsBySlotIndex: InterventionCategoryColors[];
     costCategories: CostCategory[];
     isLoading: boolean;
@@ -31,6 +36,7 @@ type Props = {
 export const BudgetByInterventionSideBySide: FC<Props> = ({
     title,
     slots,
+    interventionsBySlotIndex,
     colorsBySlotIndex,
     costCategories,
     isLoading,
@@ -45,7 +51,7 @@ export const BudgetByInterventionSideBySide: FC<Props> = ({
     >
         {(_slot, index) => (
             <InterventionCostBarChart
-                interventions={colorsBySlotIndex[index].orderedInterventions}
+                interventions={interventionsBySlotIndex[index]}
                 colorByInterventionId={
                     colorsBySlotIndex[index].colorByInterventionId
                 }

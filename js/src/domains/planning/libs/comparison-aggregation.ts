@@ -169,6 +169,36 @@ export const getSlotInterventionDistrictCoverage = (
     );
 };
 
+export type InterventionIdentity = {
+    interventionId: number;
+    interventionLabel: string;
+};
+
+/**
+ * Union of intervention identities across every slot, ordered alphabetically
+ * by label. Gives side-by-side per-slot charts/tables (each rendered as its
+ * own independent chart, unlike the overlay's single merged one) a shared
+ * row order, so the same intervention lands on the same row in every slot
+ * even when slots don't share the exact same intervention set -- sorting
+ * each slot's own list independently can't guarantee that when the sets
+ * differ.
+ */
+export const getSharedInterventionOrder = (
+    rowsBySlotIndex: InterventionIdentity[][],
+): InterventionIdentity[] => {
+    const byId = new Map<number, InterventionIdentity>();
+    rowsBySlotIndex.forEach(rows => {
+        rows.forEach(row => {
+            if (!byId.has(row.interventionId)) {
+                byId.set(row.interventionId, row);
+            }
+        });
+    });
+    return Array.from(byId.values()).sort((a, b) =>
+        a.interventionLabel.localeCompare(b.interventionLabel),
+    );
+};
+
 export type InterventionSlotRow = {
     interventionId: number;
     interventionLabel: string;
