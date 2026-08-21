@@ -61,16 +61,19 @@ export const NodeLibrary: FC<Props> = ({
 
     const filteredMetricCategories = useMemo(
         () =>
-            (searchTerm
-                ? metricCategories.map(category => ({
-                      ...category,
-                      items: category.items.filter(item =>
-                          matches(item.name, searchTerm),
-                      ),
-                  }))
-                : metricCategories
-            ).filter(category => category.items.length > 0),
-        [metricCategories, searchTerm],
+            metricCategories
+                .map(category => ({
+                    ...category,
+                    items: category.items.filter(
+                        item =>
+                            item.id !== selectedMetricTypeId &&
+                            (searchTerm
+                                ? matches(item.name, searchTerm)
+                                : true),
+                    ),
+                }))
+                .filter(category => category.items.length > 0),
+        [metricCategories, searchTerm, selectedMetricTypeId],
     );
 
     return (
@@ -98,7 +101,6 @@ export const NodeLibrary: FC<Props> = ({
                             compositeLayerId={compositeLayerIdByMetricType.get(
                                 metricType.id,
                             )}
-                            selected={metricType.id === selectedMetricTypeId}
                             editing
                         />
                     ))}
