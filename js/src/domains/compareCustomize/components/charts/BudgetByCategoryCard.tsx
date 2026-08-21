@@ -66,7 +66,7 @@ const getCategoryTotals = (
             intervention.cost_breakdown?.forEach(line => {
                 totals.set(
                     line.category,
-                    (totals.get(line.category) ?? 0) + line.cost,
+                    (totals.get(line.category) ?? 0) + line.total_cost,
                 );
             });
         });
