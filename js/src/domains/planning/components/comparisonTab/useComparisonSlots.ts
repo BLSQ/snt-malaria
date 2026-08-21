@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { DropdownOptions } from 'bluesquare-components';
 import { Scenario } from '../../../scenarios/types';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 
@@ -15,8 +16,6 @@ export type ExtraSlotState = {
     scenarioId: number;
     year: number;
 };
-
-export type ScenarioOption = { label: string; value: number };
 
 const clampYear = (year: number, scenario?: Scenario): number => {
     if (!scenario) return year;
@@ -48,7 +47,7 @@ export const useComparisonSlots = (
     const effectiveCurrentYear =
         currentYear ?? currentScenario?.start_year ?? new Date().getFullYear();
 
-    const scenarioOptions: ScenarioOption[] = useMemo(
+    const scenarioOptions: DropdownOptions<number>[] = useMemo(
         () =>
             (scenarios ?? []).map(scenario => ({
                 label: scenario.name,

@@ -1,13 +1,12 @@
 import React, { FC } from 'react';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import { Box, IconButton, Typography } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { DropdownOptions, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { DeltaChip } from '../../../compareCustomize/components/DeltaChip';
 import { MetricEntry } from '../../../compareCustomize/components/MetricCard';
 import { MESSAGES } from '../../../messages';
-import { ScenarioOption } from './useComparisonSlots';
 
 const YEAR_FIELD_WIDTH = 108;
 const SCENARIO_FIELD_WIDTH = 176;
@@ -80,7 +79,7 @@ type Props = {
     isCurrent: boolean;
     currentScenarioLabel?: string;
     scenarioValue?: number;
-    scenarioOptions?: ScenarioOption[];
+    scenarioOptions?: DropdownOptions<number>[];
     onScenarioChange?: (key: string, value: unknown) => void;
     slotNumber?: number;
     year: number;
