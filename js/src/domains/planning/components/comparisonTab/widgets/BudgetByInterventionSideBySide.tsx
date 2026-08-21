@@ -57,6 +57,7 @@ export const BudgetByInterventionSideBySide: FC<Props> = ({
                 }
                 costCategories={costCategories}
                 currency={currency}
+                isLoading={isLoading}
             />
         )}
     </SideBySideWidgetGrid>

@@ -46,6 +46,7 @@ export const CostPerInterventionSummary: FC = () => {
                 colorByInterventionId={colorByInterventionId}
                 costCategories={costCategories}
                 currency={currency}
+                isLoading={isLoading}
             />
         </WidgetCard>
     );

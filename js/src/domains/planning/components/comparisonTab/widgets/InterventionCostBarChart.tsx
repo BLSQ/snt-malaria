@@ -151,6 +151,7 @@ type Props = {
     colorByInterventionId: Map<number, string>;
     costCategories: CostCategory[];
     currency: string;
+    isLoading?: boolean;
 };
 
 /**
@@ -163,6 +164,7 @@ export const InterventionCostBarChart: FC<Props> = ({
     colorByInterventionId,
     costCategories,
     currency,
+    isLoading,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { gridProps, axisProps } = useChartTheme();
@@ -212,7 +214,7 @@ export const InterventionCostBarChart: FC<Props> = ({
             maxLabel: Y_AXIS_MAX_LABEL,
         });
 
-    if (chartData.length === 0) {
+    if (isLoading || chartData.length === 0) {
         return (
             <Typography variant="body2" color="textSecondary">
                 {formatMessage(MESSAGES.noBudgetData)}
