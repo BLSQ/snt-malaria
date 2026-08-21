@@ -23,7 +23,10 @@ export const useScenarioComparisonData = (slots: ComparisonSlot[]) => {
     const budgetQuery1 = useGetLatestCalculatedBudget(slots[1]?.scenarioId);
     const budgetQuery2 = useGetLatestCalculatedBudget(slots[2]?.scenarioId);
 
-    const queriesByIndex = [budgetQuery0, budgetQuery1, budgetQuery2];
+    const queriesByIndex = useMemo(
+        () => [budgetQuery0, budgetQuery1, budgetQuery2],
+        [budgetQuery0, budgetQuery1, budgetQuery2],
+    );
 
     const budgetsBySlotKey = useMemo(() => {
         const map = new Map<string, Budget | undefined>();
@@ -35,7 +38,7 @@ export const useScenarioComparisonData = (slots: ComparisonSlot[]) => {
             );
         });
         return map;
-    }, [slots, budgetQuery0.data, budgetQuery1.data, budgetQuery2.data]);
+    }, [slots, queriesByIndex]);
 
     const isBudgetLoading = slots.some(
         (_, index) => queriesByIndex[index]?.isFetching,

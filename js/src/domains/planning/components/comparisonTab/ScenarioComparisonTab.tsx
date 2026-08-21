@@ -206,34 +206,33 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                                 )}
                             />
                         </Grid>
-                        {extraSlots.map((slot, index) => (
-                            <Grid
-                                item
-                                xs={12}
-                                md={slotColumnWidth}
-                                key={`comparison-slot-${index}`}
-                            >
-                                <ScenarioSlotWidget
-                                    color={getScenarioColor(index + 1)}
-                                    isCurrent={false}
-                                    scenarioValue={slot.scenarioId}
-                                    scenarioOptions={optionsForSlot(index)}
-                                    onScenarioChange={handleSlotScenarioChange(
-                                        index,
-                                    )}
-                                    slotNumber={index + 1}
-                                    year={slot.year}
-                                    yearOptions={yearOptionsFor(
-                                        slot.scenarioId,
-                                    )}
-                                    onYearChange={handleSlotYearChange(index)}
-                                    onRemove={() => handleRemoveSlot(index)}
-                                    metricEntry={totalCostEntryBySlotKey.get(
-                                        `slot-${index + 1}`,
-                                    )}
-                                />
-                            </Grid>
-                        ))}
+                        {React.Children.toArray(
+                            extraSlots.map((slot, index) => (
+                                <Grid item xs={12} md={slotColumnWidth}>
+                                    <ScenarioSlotWidget
+                                        color={getScenarioColor(index + 1)}
+                                        isCurrent={false}
+                                        scenarioValue={slot.scenarioId}
+                                        scenarioOptions={optionsForSlot(index)}
+                                        onScenarioChange={handleSlotScenarioChange(
+                                            index,
+                                        )}
+                                        slotNumber={index + 1}
+                                        year={slot.year}
+                                        yearOptions={yearOptionsFor(
+                                            slot.scenarioId,
+                                        )}
+                                        onYearChange={handleSlotYearChange(
+                                            index,
+                                        )}
+                                        onRemove={() => handleRemoveSlot(index)}
+                                        metricEntry={totalCostEntryBySlotKey.get(
+                                            `slot-${index + 1}`,
+                                        )}
+                                    />
+                                </Grid>
+                            )),
+                        )}
                     </Grid>
                     <Box sx={styles.widget}>
                         <BudgetByInterventionWidget />

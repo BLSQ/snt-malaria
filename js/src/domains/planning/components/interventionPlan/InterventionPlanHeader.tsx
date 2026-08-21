@@ -134,7 +134,10 @@ export const InterventionPlanHeader: FC<Props> = ({
                 </ToggleButtonGroup>
                 {tabActions && (
                     <>
-                        <Divider orientation="vertical" sx={styles.tabDivider} />
+                        <Divider
+                            orientation="vertical"
+                            sx={styles.tabDivider}
+                        />
                         {tabActions}
                     </>
                 )}
