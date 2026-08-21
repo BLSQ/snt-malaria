@@ -141,6 +141,10 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
     const { budgetsBySlotKey, isBudgetLoading } =
         useScenarioComparisonData(slots);
 
+    // `slots` is briefly empty while the current scenario is still loading
+    // (e.g. right after switching scenarios) -- guard against `12 / 0`.
+    const slotColumnWidth = slots.length > 0 ? 12 / slots.length : 12;
+
     const [displayMode, setDisplayMode] = useState<DisplayMode>('sideBySide');
 
     const totalCostEntryBySlotKey = useMemo(() => {
@@ -189,7 +193,7 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                     populationYear={populationYear}
                 >
                     <Grid container spacing={1} sx={styles.slotsRow}>
-                        <Grid item xs={12} md={12 / slots.length}>
+                        <Grid item xs={12} md={slotColumnWidth}>
                             <ScenarioSlotWidget
                                 color={getScenarioColor(0)}
                                 isCurrent
@@ -206,7 +210,7 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                             <Grid
                                 item
                                 xs={12}
-                                md={12 / slots.length}
+                                md={slotColumnWidth}
                                 key={`comparison-slot-${index}`}
                             >
                                 <ScenarioSlotWidget

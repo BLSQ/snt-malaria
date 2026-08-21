@@ -1,16 +1,23 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { useGetInterventionCostBreakdownLineCategories } from '../../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
 import { MESSAGES } from '../../../../messages';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
 import { useInterventionCategoryColors } from '../../../hooks/useInterventionCategoryColors';
 import {
+    alignToSharedOrder,
     getSharedInterventionOrder,
     getSlotInterventionCosts,
 } from '../../../libs/comparison-aggregation';
-import { BudgetIntervention } from '../../../types/budget';
+import { MAX_SLOTS } from '../useComparisonSlots';
 import { BudgetByInterventionOverlay } from './BudgetByInterventionOverlay';
 import { BudgetByInterventionSideBySide } from './BudgetByInterventionSideBySide';
+
+if (MAX_SLOTS !== 3) {
+    throw new Error(
+        'MAX_SLOTS changed: update the 3 fixed useInterventionCategoryColors calls below (and useScenarioComparisonData.ts) to match.',
+    );
+}
 
 export const BudgetByInterventionWidget: FC = () => {
     const { formatMessage } = useSafeIntl();

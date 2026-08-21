@@ -3,6 +3,13 @@ import { Scenario } from '../../../scenarios/types';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 
 export const MAX_EXTRA_SLOTS = 2;
+// Total slots shown at once: the current scenario (always slot 0) plus up to
+// MAX_EXTRA_SLOTS comparison slots. `useScenarioComparisonData.ts` and
+// `BudgetByInterventionWidget.tsx` can't loop this (React's rules of hooks
+// forbid a variable number of hook calls), so they each hardcode 3 fixed
+// slot-indexed hook calls -- the assertions there catch a `MAX_EXTRA_SLOTS`
+// change that isn't reflected in those hardcoded calls.
+export const MAX_SLOTS = MAX_EXTRA_SLOTS + 1;
 
 export type ExtraSlotState = {
     scenarioId: number;
@@ -54,6 +61,15 @@ export const useComparisonSlots = (
         () => new Set(extraSlots.map(slot => slot.scenarioId)),
         [extraSlots],
     );
+
+    // Whether any scenario is left to assign to a new slot -- without this,
+    // `canAddSlot` would stay true purely from slot count even when every
+    // scenario is already in use, rendering an "Add scenario" button that
+    // silently does nothing when clicked.
+    const hasAvailableScenario = useMemo(() => {
+        const used = new Set([currentScenario?.id, ...usedScenarioIds]);
+        return scenarioOptions.some(option => !used.has(option.value));
+    }, [scenarioOptions, currentScenario, usedScenarioIds]);
 
     const optionsForSlot = useCallback(
         (index: number) =>
@@ -145,11 +161,24 @@ export const useComparisonSlots = (
         [setExtraSlots],
     );
 
+    // Slot 0's scenario comes from `currentScenario` (the Planning page's own
+    // `useGetScenario`), a separate query from the one that populates
+    // `scenarioById` (`useGetScenarios`) -- falling back to it here avoids a
+    // window where slot 0 already shows a selected year but `scenarioById`
+    // hasn't resolved yet, leaving the dropdown with no options for an
+    // already-selected value.
+    const resolveScenario = useCallback(
+        (scenarioId?: number): Scenario | undefined => {
+            if (scenarioId == null) return undefined;
+            if (scenarioId === currentScenario?.id) return currentScenario;
+            return scenarioById.get(scenarioId);
+        },
+        [scenarioById, currentScenario],
+    );
+
     const yearOptionsFor = useCallback(
         (scenarioId?: number) => {
-            const scenario = scenarioId
-                ? scenarioById.get(scenarioId)
-                : undefined;
+            const scenario = resolveScenario(scenarioId);
             if (!scenario) {
                 return [];
             }
@@ -163,7 +192,7 @@ export const useComparisonSlots = (
             }
             return years;
         },
-        [scenarioById],
+        [resolveScenario],
     );
 
     return {
@@ -176,6 +205,6 @@ export const useComparisonSlots = (
         handleRemoveSlot,
         handleSlotScenarioChange,
         handleSlotYearChange,
-        canAddSlot: extraSlots.length < MAX_EXTRA_SLOTS,
+        canAddSlot: extraSlots.length < MAX_EXTRA_SLOTS && hasAvailableScenario,
     };
 };
