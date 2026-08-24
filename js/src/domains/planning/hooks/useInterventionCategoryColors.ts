@@ -10,9 +10,9 @@ import { BudgetIntervention } from '../types/budget';
 // falling back to an ungrouped order.
 export const UNCATEGORIZED_KEY = -1;
 
-export function buildCategoryIdByInterventionId(
+export const buildCategoryIdByInterventionId = (
     interventionCategories: InterventionCategory[],
-): Map<number, number> {
+): Map<number, number> => {
     const map = new Map<number, number>();
     interventionCategories.forEach(category => {
         category.interventions.forEach(intervention => {
@@ -20,17 +20,17 @@ export function buildCategoryIdByInterventionId(
         });
     });
     return map;
-}
+};
 
 /**
  * Orders `items` so that those sharing a category sit together (largest-cost
  * category first, largest item within a category first).
  */
-export function orderByCategoryCost<T>(
+export const orderByCategoryCost = <T>(
     items: T[],
     categoryIdOf: (item: T) => number,
     costOf: (item: T) => number,
-): T[] {
+): T[] => {
     const totalByCategory = new Map<number, number>();
     items.forEach(item => {
         const categoryId = categoryIdOf(item);
@@ -51,7 +51,7 @@ export function orderByCategoryCost<T>(
         }
         return costOf(b) - costOf(a);
     });
-}
+};
 
 /**
  * Assigns each intervention category a stable colour from `CATEGORY_COLORS`,
@@ -61,9 +61,9 @@ export function orderByCategoryCost<T>(
  * same category could get a different colour per slot/year/budget depending
  * on where it lands in that particular cost sort.
  */
-function buildColorByCategoryId(
+const buildColorByCategoryId = (
     interventionCategories: InterventionCategory[],
-): Map<number, string> {
+): Map<number, string> => {
     const sortedCategories = sortByStringProp(interventionCategories, 'name');
     const colorByCategoryId = new Map<number, string>();
     sortedCategories.forEach((category, index) => {
@@ -73,7 +73,7 @@ function buildColorByCategoryId(
         );
     });
     return colorByCategoryId;
-}
+};
 
 export type InterventionCategoryColors = {
     // `interventions` sorted so that those sharing a category sit together

@@ -1,4 +1,4 @@
-import React, { FC, ReactElement, useMemo, useState } from 'react';
+import React, { FC, ReactElement, ReactNode, useMemo, useState } from 'react';
 import { Box, Card, CardHeader, Grid } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { PaperFullHeight } from '../../../../components/styledComponents';
@@ -65,7 +65,7 @@ const styles = {
 } satisfies SxStyles;
 
 type Props = {
-    header: ReactElement;
+    header: (tabActions?: ReactNode) => ReactElement;
 };
 
 export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
@@ -165,21 +165,20 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
         return new Map(entries.map(entry => [entry.id, entry]));
     }, [slots, budgetsBySlotKey, currency]);
 
-    const clonedHeader = React.cloneElement(header, {
-        tabActions: (
-            <ComparisonHeaderControls
-                canAddSlot={canAddSlot}
-                onAddSlot={handleAddSlot}
-                displayMode={displayMode}
-                onDisplayModeChange={setDisplayMode}
-            />
-        ),
-    });
-
     return (
         <PaperFullHeight sx={styles.column}>
             <Card sx={styles.headerCard}>
-                <CardHeader sx={styles.header} title={clonedHeader} />
+                <CardHeader
+                    sx={styles.header}
+                    title={header(
+                        <ComparisonHeaderControls
+                            canAddSlot={canAddSlot}
+                            onAddSlot={handleAddSlot}
+                            displayMode={displayMode}
+                            onDisplayModeChange={setDisplayMode}
+                        />,
+                    )}
+                />
             </Card>
             <Box sx={styles.scrollArea}>
                 <ScenarioComparisonProvider
