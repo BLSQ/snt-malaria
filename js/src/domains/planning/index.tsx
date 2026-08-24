@@ -1,6 +1,7 @@
 import React, {
     ComponentProps,
     FC,
+    ReactNode,
     useCallback,
     useEffect,
     useMemo,
@@ -132,9 +133,9 @@ export const Planning: FC = () => {
 
     const { mutateAsync: updateScenario } = useUpdateScenario(scenarioId);
 
-    const handleDeleteScenario = () => {
+    const handleDeleteScenario = useCallback(() => {
         deleteScenario(scenarioId);
-    };
+    }, [deleteScenario, scenarioId]);
 
     const [showAIChat, setShowAIChat] = useState(false);
     const toggleAIChat = useCallback(() => setShowAIChat(v => !v), []);
@@ -147,11 +148,11 @@ export const Planning: FC = () => {
         onRemoveAttachment: onAiChatRemoveAttachment,
     } = useScenarioRuleAIChat({ scenarioId });
 
-    const handleToggleLockScenario = () => {
+    const handleToggleLockScenario = useCallback(() => {
         if (scenario) {
             updateScenario({ ...scenario, is_locked: !scenario.is_locked });
         }
-    };
+    }, [scenario, updateScenario]);
 
     const canEditScenario = useUserCanEditScenario(scenario);
 
@@ -244,30 +245,42 @@ export const Planning: FC = () => {
         ],
     });
 
-    const planHeader = (
-        <InterventionPlanHeader
-            onTabChange={onSetTab}
-            activeTab={activeTab}
-            onDeleteScenario={handleDeleteScenario}
-            onToggleLockScenario={handleToggleLockScenario}
-            onOrgUnitChange={handleDisplayOrgUnitChange}
-            selectedOrgUnitId={displayOrgUnitId}
-            lockScenarioRef={tour.anchorRefs[2]}
-            moreActionsRef={tour.anchorRefs[1]}
-        />
+    const renderPlanHeader = useCallback(
+        (tabActions?: ReactNode) => (
+            <InterventionPlanHeader
+                onTabChange={onSetTab}
+                activeTab={activeTab}
+                onDeleteScenario={handleDeleteScenario}
+                onToggleLockScenario={handleToggleLockScenario}
+                onOrgUnitChange={handleDisplayOrgUnitChange}
+                selectedOrgUnitId={displayOrgUnitId}
+                lockScenarioRef={tour.anchorRefs[2]}
+                moreActionsRef={tour.anchorRefs[1]}
+                tabActions={tabActions}
+            />
+        ),
+        [
+            onSetTab,
+            activeTab,
+            handleDeleteScenario,
+            handleToggleLockScenario,
+            handleDisplayOrgUnitChange,
+            displayOrgUnitId,
+            tour.anchorRefs,
+        ],
     );
 
     const renderMainColumn = () => {
         if (activeTab === 'summary') {
-            return <ScenarioSummaryTab header={planHeader} />;
+            return <ScenarioSummaryTab header={renderPlanHeader()} />;
         }
         if (activeTab === 'comparison') {
-            return <ScenarioComparisonTab header={planHeader} />;
+            return <ScenarioComparisonTab header={renderPlanHeader} />;
         }
         return (
             <PaperFullHeight>
                 <Card sx={styles.card}>
-                    <CardStyled header={planHeader}>
+                    <CardStyled header={renderPlanHeader()}>
                         {activeTab === 'map' && (
                             <InterventionPlanMap
                                 matchedOrgUnitIds={matchedOrgUnitIds}

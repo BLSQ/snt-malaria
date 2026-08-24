@@ -12,7 +12,7 @@ import {
 import { SxStyles } from 'Iaso/types/general';
 import { ChartEmptyState } from '../../../../../components/charts/ChartEmptyState';
 import { useChartTheme } from '../../../../../components/charts/chartTheme';
-import { MergedInterventionRow } from '../../../libs/comparison-aggregation';
+import { MergedInterventionRow } from '../../../types/comparisonAggregation';
 import { ComparisonSlot } from '../types';
 import { buildRowTooltipContent, toChartData } from './mergedRowChart';
 

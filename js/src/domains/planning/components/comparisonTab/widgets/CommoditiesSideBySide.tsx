@@ -4,8 +4,8 @@ import { Box, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../../messages';
-import { InterventionCommodities } from '../../../libs/comparison-aggregation';
 import { formatBigNumber, formatQuantity } from '../../../libs/cost-utils';
+import { InterventionCommodities } from '../../../types/comparisonAggregation';
 import { ComparisonSlot } from '../types';
 import { SideBySideWidgetGrid } from './SideBySideWidgetGrid';
 

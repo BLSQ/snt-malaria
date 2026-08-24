@@ -4,6 +4,23 @@ import {
 } from '../hooks/useInterventionCategoryColors';
 import { Budget, BudgetIntervention } from '../types/budget';
 import {
+    CommodityCell,
+    CommodityTableRow,
+    CoverageCell,
+    CoverageTableRow,
+    InterventionCommodities,
+    InterventionCommodityLine,
+    InterventionCostIdentity,
+    InterventionCoverage,
+    InterventionDistrictCoverage,
+    InterventionIdentity,
+    InterventionSlotRow,
+    MergedInterventionRow,
+    MergedSubRow,
+    PopulationLayerCoverage,
+    SubRow,
+} from '../types/comparisonAggregation';
+import {
     aggregateInterventionCosts,
     aggregateOrgUnitCosts,
     PROCUREMENT_CATEGORY,
@@ -23,20 +40,6 @@ export const getSlotInterventionCosts = (
     budget: Budget | undefined,
 ): BudgetIntervention[] =>
     budget ? aggregateInterventionCosts(aggregateOrgUnitCosts([budget])) : [];
-
-export type PopulationLayerCoverage = {
-    layerId: number;
-    layerName: string;
-    personsAtRisk: number;
-    // Yearly coverage ratio, e.g. 0.78 for a 78% bed-net target.
-    percentEligible: number;
-};
-
-export type InterventionCoverage = {
-    interventionId: number;
-    interventionLabel: string;
-    layers: PopulationLayerCoverage[];
-};
 
 /**
  * Population-coverage figures per intervention, broken down by population
@@ -80,40 +83,6 @@ export const getSlotInterventionCoverage = (
             };
         })
         .filter(intervention => intervention.layers.length > 0);
-};
-
-export type CoverageCell = {
-    personsAtRisk: number;
-    percentEligible: number;
-};
-
-export type CoverageTableRow = {
-    interventionId: number;
-    interventionLabel: string;
-    layerId: number;
-    layerName: string;
-    cellBySlotKey: Record<string, CoverageCell>;
-};
-
-/**
- * A single (intervention, sub-item) row for one slot, flattened out of
- * whatever nested per-intervention shape the caller holds -- the common
- * input shape `mergeSubRowsBySlot` groups into a combined table row.
- */
-type SubRow<TCell> = {
-    interventionId: number;
-    interventionLabel: string;
-    subKey: string | number;
-    subLabel: string;
-    cell: TCell;
-};
-
-type MergedSubRow<TCell> = {
-    interventionId: number;
-    interventionLabel: string;
-    subKey: string | number;
-    subLabel: string;
-    cellBySlotKey: Record<string, TCell>;
 };
 
 /**
@@ -186,12 +155,6 @@ export const mergeCoverageRowsBySlot = (
     }));
 };
 
-export type InterventionDistrictCoverage = {
-    interventionId: number;
-    interventionLabel: string;
-    districtCount: number;
-};
-
 /**
  * Year-accurate count of districts covered per intervention, derived from
  * `org_units_costs` (already filtered server-side to non-zero cost for this
@@ -226,11 +189,6 @@ export const getSlotInterventionDistrictCoverage = (
     );
 };
 
-export type InterventionIdentity = {
-    interventionId: number;
-    interventionLabel: string;
-};
-
 /**
  * Union of intervention identities across every slot, ordered alphabetically
  * by label. Gives side-by-side per-slot charts/tables (each rendered as its
@@ -254,10 +212,6 @@ export const getSharedInterventionOrder = (
     return Array.from(byId.values()).sort((a, b) =>
         a.interventionLabel.localeCompare(b.interventionLabel),
     );
-};
-
-export type InterventionCostIdentity = InterventionIdentity & {
-    cost: number;
 };
 
 /**
@@ -327,18 +281,6 @@ export const alignToSharedOrder = <T>(
         );
     });
 
-export type InterventionSlotRow = {
-    interventionId: number;
-    interventionLabel: string;
-    value: number;
-};
-
-export type MergedInterventionRow = {
-    interventionId: number;
-    interventionLabel: string;
-    valueBySlotKey: Record<string, number>;
-};
-
 /**
  * Unions per-slot intervention rows into one row per intervention, each
  * carrying every slot's value keyed by slot key. Every slot key is
@@ -383,32 +325,6 @@ export const mergeSlotRowsByIntervention = (
             return { interventionId, interventionLabel, valueBySlotKey };
         },
     );
-};
-
-export type InterventionCommodityLine = {
-    unitName: string;
-    quantity: number;
-    unitCost: number | null;
-    totalCost: number;
-};
-
-export type InterventionCommodities = {
-    interventionId: number;
-    interventionLabel: string;
-    commodities: InterventionCommodityLine[];
-};
-
-export type CommodityCell = {
-    quantity: number;
-    unitCost: number | null;
-    totalCost: number;
-};
-
-export type CommodityTableRow = {
-    interventionId: number;
-    interventionLabel: string;
-    unitName: string;
-    cellBySlotKey: Record<string, CommodityCell>;
 };
 
 /**

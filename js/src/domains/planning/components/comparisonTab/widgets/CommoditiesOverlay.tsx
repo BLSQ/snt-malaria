@@ -13,11 +13,9 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { WidgetCard } from '../../../../../components/WidgetCard';
 import { MESSAGES } from '../../../../messages';
-import {
-    InterventionCommodities,
-    mergeCommodityRowsBySlot,
-} from '../../../libs/comparison-aggregation';
+import { mergeCommodityRowsBySlot } from '../../../libs/comparison-aggregation';
 import { formatBigNumber, formatQuantity } from '../../../libs/cost-utils';
+import { InterventionCommodities } from '../../../types/comparisonAggregation';
 import { ComparisonSlot } from '../types';
 
 const CHART_HEIGHT = 320;

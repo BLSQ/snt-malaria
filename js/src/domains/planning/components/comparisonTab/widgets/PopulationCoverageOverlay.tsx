@@ -13,15 +13,13 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { WidgetCard } from '../../../../../components/WidgetCard';
 import { MESSAGES } from '../../../../messages';
-import {
-    InterventionCoverage,
-    mergeCoverageRowsBySlot,
-} from '../../../libs/comparison-aggregation';
+import { mergeCoverageRowsBySlot } from '../../../libs/comparison-aggregation';
 import {
     formatBigNumber,
     formatPercentValue,
     percentOfTotal,
 } from '../../../libs/cost-utils';
+import { InterventionCoverage } from '../../../types/comparisonAggregation';
 import { ComparisonSlot } from '../types';
 
 const CHART_HEIGHT = 320;

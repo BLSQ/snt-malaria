@@ -6,11 +6,9 @@ import { SxStyles } from 'Iaso/types/general';
 import { ChartTooltip } from '../../../../../components/charts/ChartTooltip';
 import { WidgetCard } from '../../../../../components/WidgetCard';
 import { MESSAGES } from '../../../../messages';
-import {
-    InterventionDistrictCoverage,
-    mergeSlotRowsByIntervention,
-} from '../../../libs/comparison-aggregation';
+import { mergeSlotRowsByIntervention } from '../../../libs/comparison-aggregation';
 import { formatPercentValue, percentOfTotal } from '../../../libs/cost-utils';
+import { InterventionDistrictCoverage } from '../../../types/comparisonAggregation';
 import { ComparisonSlot } from '../types';
 import { DistrictsRadarChart } from './DistrictsRadarChart';
 import { OverlayGroupedBarChart } from './OverlayGroupedBarChart';

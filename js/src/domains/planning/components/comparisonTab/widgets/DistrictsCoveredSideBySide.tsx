@@ -19,8 +19,8 @@ import {
     useAutoYAxisWidth,
 } from '../../../../../components/useAutoYAxisWidth';
 import { MESSAGES } from '../../../../messages';
-import { InterventionDistrictCoverage } from '../../../libs/comparison-aggregation';
 import { percentOfTotal } from '../../../libs/cost-utils';
+import { InterventionDistrictCoverage } from '../../../types/comparisonAggregation';
 import { ComparisonSlot } from '../types';
 import { SideBySideWidgetGrid } from './SideBySideWidgetGrid';
 

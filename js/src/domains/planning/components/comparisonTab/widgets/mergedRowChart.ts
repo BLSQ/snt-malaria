@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { MergedInterventionRow } from '../../../libs/comparison-aggregation';
+import { MergedInterventionRow } from '../../../types/comparisonAggregation';
 
 export const toChartData = (
     rows: MergedInterventionRow[],
