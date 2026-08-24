@@ -271,20 +271,35 @@ def _build_org_units_catalog(org_units: list[dict]) -> str:
     return "\n".join(f'- id={org_unit["id"]}, name="{org_unit["name"]}"' for org_unit in org_units)
 
 
-def build_system_prompt(
+def build_static_system_prompt(metric_types: list[dict], org_units: list[dict]) -> str:
+    """Build the part of the system prompt that's static for a given account: the instructional
+    template with its data layer and district catalogs substituted in. Unlike the current graph
+    (see `build_system_blocks`), this is identical across every turn of a session and across
+    sessions for the same account, which is what makes it worth caching as its own block."""
+    return COMPOSITE_LAYER_SYSTEM_PROMPT_TEMPLATE.replace(
+        METRIC_TYPES_CATALOG_PLACEHOLDER, _build_metric_types_catalog(metric_types)
+    ).replace(ORG_UNITS_CATALOG_PLACEHOLDER, _build_org_units_catalog(org_units))
+
+
+def build_system_blocks(
     metric_types: list[dict],
     org_units: list[dict],
     current_graph: Optional[dict] = None,
-) -> str:
-    """Build the final system prompt: the template with the account's data layer and district
-    catalogs substituted, plus - when the editor holds a graph - a section appended so the model
-    can make iterative changes relative to it."""
-    prompt = COMPOSITE_LAYER_SYSTEM_PROMPT_TEMPLATE.replace(
-        METRIC_TYPES_CATALOG_PLACEHOLDER, _build_metric_types_catalog(metric_types)
-    ).replace(ORG_UNITS_CATALOG_PLACEHOLDER, _build_org_units_catalog(org_units))
+) -> list[dict]:
+    """Build the `system` param as content blocks. The static template+catalogs are marked as a
+    single cached block, since a chat session resends the same system prompt on every turn - only
+    the current graph changes turn to turn, so it's appended uncached after the cache breakpoint
+    rather than invalidating the cache every time the user edits the graph."""
+    blocks = [
+        {
+            "type": "text",
+            "text": build_static_system_prompt(metric_types, org_units),
+            "cache_control": {"type": "ephemeral", "ttl": "1h"},
+        }
+    ]
     if current_graph:
-        prompt += CURRENT_GRAPH_SECTION + json.dumps(current_graph, indent=2)
-    return prompt
+        blocks.append({"type": "text", "text": CURRENT_GRAPH_SECTION + json.dumps(current_graph, indent=2)})
+    return blocks
 
 
 def call_claude(
@@ -299,12 +314,10 @@ def call_claude(
     """Call Claude API with the conversation and return the raw response text."""
     client = anthropic.Anthropic(api_key=api_key)
 
-    system_prompt = build_system_prompt(metric_types, org_units, current_graph=current_graph)
-
     response = client.beta.messages.create(
         model=settings.COMPOSITE_LAYER_AI_MODEL,
         max_tokens=4096,
-        system=system_prompt,
+        system=build_system_blocks(metric_types, org_units, current_graph=current_graph),
         messages=build_conversation(message, conversation_history, attachments),
         betas=[ANTHROPIC_FILES_BETA],
     )
