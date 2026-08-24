@@ -26,7 +26,7 @@ export const ThresholdLegend: FunctionComponent<Props> = ({
 
     const labelFormat = useCallback(
         (item: DefaultThresholdInput): DefaultThresholdInput | undefined => {
-            return typeof item === 'number' ? formatBigNumber(item) : item;
+            return formatBigNumber(item as number) ?? item;
         },
         [],
     );
