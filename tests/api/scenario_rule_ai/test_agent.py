@@ -6,7 +6,8 @@ from django.test import SimpleTestCase
 from pydantic import ValidationError
 
 from plugins.snt_malaria.api.scenario_rule_ai.agent import (
-    build_system_prompt,
+    build_static_system_prompt,
+    build_system_blocks,
     call_claude,
     generate_scenario_rules,
     parse_scenario_rules_response,
@@ -25,7 +26,7 @@ INTERVENTIONS = [
 
 class BuildSystemPromptTestCase(SimpleTestCase):
     def test_catalogs_placeholder_is_replaced(self):
-        prompt = build_system_prompt(METRIC_TYPES, INTERVENTIONS)
+        prompt = build_static_system_prompt(METRIC_TYPES, INTERVENTIONS)
 
         self.assertNotIn("{metric_types_catalog}", prompt)
         self.assertNotIn("{interventions_catalog}", prompt)
@@ -36,7 +37,7 @@ class BuildSystemPromptTestCase(SimpleTestCase):
 
     def test_colors_catalog_is_included_and_required(self):
         # The palette is global (not account-specific), so it's always present regardless of args.
-        prompt = build_system_prompt(METRIC_TYPES, INTERVENTIONS)
+        prompt = build_static_system_prompt(METRIC_TYPES, INTERVENTIONS)
 
         self.assertNotIn("{colors_catalog}", prompt)
         self.assertIn('value="#b71c1c", name="Red 900"', prompt)
@@ -44,7 +45,7 @@ class BuildSystemPromptTestCase(SimpleTestCase):
         self.assertIn("never reuse", prompt)
 
     def test_empty_catalogs(self):
-        prompt = build_system_prompt([], [])
+        prompt = build_static_system_prompt([], [])
 
         self.assertIn("(no data layers available for this account)", prompt)
         self.assertIn("(no interventions available for this account)", prompt)
@@ -53,7 +54,7 @@ class BuildSystemPromptTestCase(SimpleTestCase):
         # Matches Scenario.refresh_assignments/ScenarioRule.refresh_assignments (models/scenario.py):
         # different categories always merge; same category is won by the highest-priority rule; two
         # interventions of the same category within one rule leave only the first actually assigned.
-        prompt = build_system_prompt(METRIC_TYPES, INTERVENTIONS)
+        prompt = build_static_system_prompt(METRIC_TYPES, INTERVENTIONS)
 
         self.assertIn("last rule in the list has the highest priority", prompt)
         self.assertIn("DIFFERENT intervention categories are always merged", prompt)
@@ -65,7 +66,7 @@ class BuildSystemPromptTestCase(SimpleTestCase):
         # Regression: the model was writing ids in parentheses to disambiguate two catalog entries
         # with the same name (e.g. "'TEST' (id 97)") - the instruction must explicitly forbid that,
         # not just say "use names," and give it another way to disambiguate.
-        prompt = build_system_prompt(METRIC_TYPES, INTERVENTIONS)
+        prompt = build_static_system_prompt(METRIC_TYPES, INTERVENTIONS)
 
         self.assertIn("never write a numeric id", prompt)
         self.assertIn("not even in parentheses", prompt)
@@ -75,7 +76,7 @@ class BuildSystemPromptTestCase(SimpleTestCase):
         # Regression: the model was naming rules after their matching_criteria (e.g. "High risk
         # areas" for a "Risk stratification == Elevée" rule), which just repeats what the UI already
         # shows next to the name - the name should instead say what the rule does.
-        prompt = build_system_prompt(METRIC_TYPES, INTERVENTIONS)
+        prompt = build_static_system_prompt(METRIC_TYPES, INTERVENTIONS)
 
         self.assertIn("describe what the rule DOES", prompt)
         self.assertIn("not restate its `matching_criteria`", prompt)
@@ -83,7 +84,7 @@ class BuildSystemPromptTestCase(SimpleTestCase):
     def test_rules_must_have_at_least_one_intervention(self):
         # Regression: the model suggested a match-all "baseline" rule with no interventions - a
         # no-op, since a rule with nothing to assign does nothing regardless of what it matches.
-        prompt = build_system_prompt(METRIC_TYPES, INTERVENTIONS)
+        prompt = build_static_system_prompt(METRIC_TYPES, INTERVENTIONS)
 
         self.assertIn("Every rule MUST assign at least one intervention", prompt)
         self.assertIn("`interventions` may never be empty, for\n  match-all rules included", prompt)
@@ -99,7 +100,7 @@ class BuildSystemPromptTestCase(SimpleTestCase):
             }
         ]
 
-        prompt = build_system_prompt(metric_types, [])
+        prompt = build_static_system_prompt(metric_types, [])
 
         self.assertIn('categorical - valid values: ["Low", "Medium", "High"]', prompt)
         self.assertIn('use operator "=="', prompt)
@@ -115,36 +116,49 @@ class BuildSystemPromptTestCase(SimpleTestCase):
             }
         ]
 
-        prompt = build_system_prompt(metric_types, [])
+        prompt = build_static_system_prompt(metric_types, [])
 
         self.assertIn("typical value range: 0 to 500", prompt)
 
     def test_metric_type_without_legend_config_has_no_range_or_categories(self):
-        prompt = build_system_prompt(METRIC_TYPES, [])
+        prompt = build_static_system_prompt(METRIC_TYPES, [])
 
         self.assertNotIn("typical value range", prompt)
         self.assertNotIn("categorical - valid values", prompt)
 
     def test_json_schema_braces_survive_substitution(self):
-        prompt = build_system_prompt(METRIC_TYPES, INTERVENTIONS)
+        prompt = build_static_system_prompt(METRIC_TYPES, INTERVENTIONS)
 
         self.assertIn('"rules": [', prompt)
         self.assertIn('"message": "<your explanation', prompt)
 
-    def test_current_rules_section_appended(self):
+
+class BuildSystemBlocksTestCase(SimpleTestCase):
+    def test_static_block_is_cached(self):
+        blocks = build_system_blocks(METRIC_TYPES, INTERVENTIONS)
+
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["cache_control"], {"type": "ephemeral", "ttl": "1h"})
+        self.assertEqual(blocks[0]["text"], build_static_system_prompt(METRIC_TYPES, INTERVENTIONS))
+
+    def test_current_rules_appended_as_separate_uncached_block(self):
+        # Kept out of the cached block since it changes on every turn - bundling it in would
+        # invalidate the cache each time the user edits the rule set.
         current_rules = [
             {"id": 1, "name": "High incidence", "is_match_all": False, "matching_criteria": [], "interventions": [10]}
         ]
 
-        prompt = build_system_prompt(METRIC_TYPES, INTERVENTIONS, current_rules=current_rules)
+        blocks = build_system_blocks(METRIC_TYPES, INTERVENTIONS, current_rules=current_rules)
 
-        self.assertIn("## Current rules for this scenario", prompt)
-        self.assertIn(json.dumps(current_rules, indent=2), prompt)
+        self.assertEqual(len(blocks), 2)
+        self.assertNotIn("cache_control", blocks[1])
+        self.assertIn("## Current rules for this scenario", blocks[1]["text"])
+        self.assertIn(json.dumps(current_rules, indent=2), blocks[1]["text"])
 
-    def test_no_current_rules_section_when_absent(self):
-        prompt = build_system_prompt(METRIC_TYPES, INTERVENTIONS, current_rules=None)
+    def test_no_second_block_when_current_rules_absent(self):
+        blocks = build_system_blocks(METRIC_TYPES, INTERVENTIONS, current_rules=None)
 
-        self.assertNotIn("## Current rules for this scenario", prompt)
+        self.assertEqual(len(blocks), 1)
 
 
 RULES_RESPONSE = {
