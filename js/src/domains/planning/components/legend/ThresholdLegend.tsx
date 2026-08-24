@@ -1,7 +1,8 @@
-import React, { FunctionComponent, useMemo } from 'react';
+import React, { FunctionComponent, useCallback, useMemo } from 'react';
 import { useTheme } from '@mui/material';
 import { LegendThreshold, LegendItem, LegendLabel } from '@visx/legend';
 
+import { DefaultThresholdInput } from '@visx/scale';
 import { ScaleThreshold } from 'Iaso/components/LegendBuilder/types';
 import { formatBigNumber } from '../../libs/cost-utils';
 import { getLegend, shouldReverse } from '../../libs/map-utils';
@@ -23,13 +24,20 @@ export const ThresholdLegend: FunctionComponent<Props> = ({
         [threshold, isReversed],
     );
 
+    const labelFormat = useCallback(
+        (item: DefaultThresholdInput): DefaultThresholdInput | undefined => {
+            return formatBigNumber(item as number) ?? item;
+        },
+        [],
+    );
+
     return (
         <LegendThreshold
             scale={legend}
             labelDelimiter="-"
             labelLower="< "
             labelUpper="> "
-            labelFormat={formatBigNumber}
+            labelFormat={labelFormat}
         >
             {labels =>
                 labels.map(label => (

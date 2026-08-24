@@ -50,6 +50,10 @@ export const formatSignedPercentValue = (value: number) => {
 };
 
 export const formatBigNumber = (value: number, currency?: string) => {
+    if (!value || typeof value !== 'number') {
+        return;
+    }
+
     const abs = Math.abs(value);
     const sign = value < 0 ? -1 : 1;
 
