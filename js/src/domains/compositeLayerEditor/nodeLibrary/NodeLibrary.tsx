@@ -1,9 +1,16 @@
-import React, { FC, Fragment, useEffect, useMemo, useRef } from 'react';
+import React, {
+    FC,
+    Fragment,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+} from 'react';
 import { List } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { StickyListSubheader } from '../../../components/styledComponents';
 import { DataLayerLine } from '../../dataLayers/dataLayerList/DataLayerLine';
-import { MetricTypeCategory } from '../../dataLayers/types/metrics';
+import { MetricType, MetricTypeCategory } from '../../dataLayers/types/metrics';
 import { useNodeLibraryGroups } from './nodeLibraryGroups';
 import { NodeLibraryLine } from './NodeLibraryLine';
 
@@ -59,21 +66,24 @@ export const NodeLibrary: FC<Props> = ({
         [nodeLibraryGroups, searchTerm],
     );
 
+    const isNodeEligible = useCallback(
+        (item: MetricType) => {
+            if (item.id === selectedMetricTypeId) return false;
+            if (!searchTerm) return true;
+            return matches(item.name, searchTerm);
+        },
+        [searchTerm, selectedMetricTypeId],
+    );
+
     const filteredMetricCategories = useMemo(
         () =>
             metricCategories
                 .map(category => ({
                     ...category,
-                    items: category.items.filter(
-                        item =>
-                            item.id !== selectedMetricTypeId &&
-                            (searchTerm
-                                ? matches(item.name, searchTerm)
-                                : true),
-                    ),
+                    items: category.items.filter(isNodeEligible),
                 }))
                 .filter(category => category.items.length > 0),
-        [metricCategories, searchTerm, selectedMetricTypeId],
+        [metricCategories, isNodeEligible],
     );
 
     return (
