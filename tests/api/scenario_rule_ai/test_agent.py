@@ -298,6 +298,19 @@ class GenerateScenarioRulesTestCase(SimpleTestCase):
         self.assertEqual(result["rules"][0]["interventions"], [10])
         self.assertEqual(len(result["conversation_history"]), 2)
 
+    @patch("plugins.snt_malaria.api.scenario_rule_ai.agent.call_claude")
+    def test_history_stores_message_not_raw_rules_json(self, mock_call_claude):
+        # current_rules is already rebuilt fresh from the database on every turn, so history only
+        # needs the conversational text - storing the raw JSON rule-set dump too would just be
+        # resent dead weight on every later turn.
+        mock_call_claude.return_value = RULES_RESPONSE_JSON
+
+        result = generate_scenario_rules("add a rule", [], METRIC_TYPES, INTERVENTIONS)
+
+        assistant_entry = result["conversation_history"][-1]
+        self.assertEqual(assistant_entry["content"], RULES_RESPONSE["message"])
+        self.assertNotIn("matching_criteria", assistant_entry["content"])
+
 
 class QuickRepliesTestCase(SimpleTestCase):
     def test_clarifying_turn_parses_with_null_rules_and_quick_replies(self):

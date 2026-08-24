@@ -493,6 +493,19 @@ class GenerateCompositeLayerGraphTestCase(SimpleTestCase):
         self.assertIsNone(result["quick_replies"])
 
     @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
+    def test_history_stores_message_not_raw_graph_json(self, mock_call_claude):
+        # current_graph is already resent fresh from the live editor on every turn, so history only
+        # needs the conversational text - storing the raw JSON graph dump too would just be resent
+        # dead weight on every later turn.
+        mock_call_claude.return_value = GRAPH_RESPONSE_JSON
+
+        result = generate_composite_layer_graph("create a layer", [], [], [])
+
+        assistant_entry = result["conversation_history"][-1]
+        self.assertEqual(assistant_entry["content"], GRAPH_RESPONSE["message"])
+        self.assertNotIn("nodes", assistant_entry["content"])
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
     def test_clarifying_question_with_quick_replies_returned(self, mock_call_claude):
         mock_call_claude.return_value = json.dumps(
             {
