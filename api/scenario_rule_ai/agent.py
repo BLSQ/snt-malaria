@@ -222,24 +222,42 @@ def _build_colors_catalog() -> str:
     return "\n".join(f'- value="{hex_code}", name="{label}"' for hex_code, label in COLOR_CHOICES)
 
 
-def build_system_prompt(
-    metric_types: list[dict],
-    interventions: list[dict],
-    current_rules: Optional[list[dict]] = None,
-) -> str:
-    """Build the final system prompt: the template with the account's catalogs substituted, plus -
-    when the scenario already has rules - a section appended so the model can make iterative changes
-    relative to them."""
-    prompt = (
+def build_static_system_prompt(metric_types: list[dict], interventions: list[dict]) -> str:
+    """Build the part of the system prompt that's static for a given account: the instructional
+    template with its data layer, intervention, and color catalogs substituted in. Unlike the
+    current rules (see `build_system_blocks`), this is identical across every turn of a session and
+    across sessions for the same account, which is what makes it worth caching as its own block."""
+    return (
         SCENARIO_RULE_SYSTEM_PROMPT_TEMPLATE.replace(
             METRIC_TYPES_CATALOG_PLACEHOLDER, _build_metric_types_catalog(metric_types)
         )
         .replace(INTERVENTIONS_CATALOG_PLACEHOLDER, _build_interventions_catalog(interventions))
         .replace(COLORS_CATALOG_PLACEHOLDER, _build_colors_catalog())
     )
+
+
+def build_system_blocks(
+    metric_types: list[dict],
+    interventions: list[dict],
+    current_rules: Optional[list[dict]] = None,
+) -> list[dict]:
+    """Build the `system` param as content blocks. The static template+catalogs are marked as a
+    single cached block, since a chat session resends the same system prompt on every turn - only
+    the current rules change turn to turn, so they're appended uncached after the cache breakpoint
+    rather than invalidating the cache every time the user edits the rule set."""
+    blocks = [
+        {
+            "type": "text",
+            "text": build_static_system_prompt(metric_types, interventions),
+            # 1h rather than the 5m default: turns in this chat are often minutes apart (the user
+            # reviews the generated rules in the editor between messages), so the short-lived
+            # default would frequently miss and pay full cache-write price on every turn anyway.
+            "cache_control": {"type": "ephemeral", "ttl": "1h"},
+        }
+    ]
     if current_rules:
-        prompt += CURRENT_RULES_SECTION + json.dumps(current_rules, indent=2)
-    return prompt
+        blocks.append({"type": "text", "text": CURRENT_RULES_SECTION + json.dumps(current_rules, indent=2)})
+    return blocks
 
 
 def call_claude(
@@ -254,12 +272,10 @@ def call_claude(
     """Call Claude API with the conversation and return the raw response text."""
     client = anthropic.Anthropic(api_key=api_key)
 
-    system_prompt = build_system_prompt(metric_types, interventions, current_rules=current_rules)
-
     response = client.beta.messages.create(
         model=settings.SCENARIO_RULE_AI_MODEL,
         max_tokens=4096,
-        system=system_prompt,
+        system=build_system_blocks(metric_types, interventions, current_rules=current_rules),
         messages=build_conversation(message, conversation_history, attachments),
         betas=[ANTHROPIC_FILES_BETA],
     )
