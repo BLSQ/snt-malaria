@@ -346,33 +346,35 @@ def generate_scenario_rules(
         attachments=attachments,
     )
 
-    new_history = append_turn(conversation_history, message, response_text, attachments)
-
+    rules = None
+    quick_replies = None
     try:
         parsed = parse_scenario_rules_response(response_text)
-        return _rules_response(
-            parsed.message,
-            new_history,
-            rules=[rule.model_dump() for rule in parsed.rules] if parsed.rules is not None else None,
-            quick_replies=[q.model_dump() for q in parsed.quick_replies] if parsed.quick_replies else None,
-        )
+        assistant_message = parsed.message
+        rules = [rule.model_dump() for rule in parsed.rules] if parsed.rules is not None else None
+        quick_replies = [q.model_dump() for q in parsed.quick_replies] if parsed.quick_replies else None
     except json.JSONDecodeError as e:
         extracted_text = getattr(e, "extracted_text", "")
         if extracted_text.startswith("{"):
             # Looked like an attempted rule set (starts with the JSON object the prompt demands) but
             # failed to even parse as JSON - never show that raw, broken text to the user.
             logger.warning("Response looked like a rules attempt but wasn't valid JSON: %s", e)
-            return _rules_response(RULES_PARSE_FAILURE_MESSAGE, new_history)
-        # Genuinely conversational reply, no JSON found - see parse_scenario_rules_response.
-        logger.info("Response was not a scenario rule set (likely conversational): %s", e)
-        return _rules_response(response_text, new_history)
+            assistant_message = RULES_PARSE_FAILURE_MESSAGE
+        else:
+            # Genuinely conversational reply, no JSON found - see parse_scenario_rules_response.
+            logger.info("Response was not a scenario rule set (likely conversational): %s", e)
+            assistant_message = response_text
     except ValidationError as e:
         # JSON found but schema-invalid - fall back to the model's own "message" (still on
         # e.raw_data, see parse_scenario_rules_response) rather than showing raw JSON.
         logger.warning("Response had JSON that didn't match the rules schema: %s", e)
         raw_data = getattr(e, "raw_data", {})
-        return _rules_response(
-            raw_data.get("message") or RULES_PARSE_FAILURE_MESSAGE,
-            new_history,
-            quick_replies=parse_quick_replies(raw_data),
-        )
+        assistant_message = raw_data.get("message") or RULES_PARSE_FAILURE_MESSAGE
+        quick_replies = parse_quick_replies(raw_data)
+
+    # Store just the user-facing message in history, not the raw JSON rule-set dump - current_rules
+    # is already rebuilt fresh from the database on every turn, so history never needs to carry the
+    # rules themselves, only what was said.
+    new_history = append_turn(conversation_history, message, assistant_message, attachments)
+
+    return _rules_response(assistant_message, new_history, rules=rules, quick_replies=quick_replies)

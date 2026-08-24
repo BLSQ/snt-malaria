@@ -389,33 +389,35 @@ def generate_composite_layer_graph(
         attachments=attachments,
     )
 
-    new_history = append_turn(conversation_history, message, response_text, attachments)
-
+    graph = None
+    quick_replies = None
     try:
         parsed = parse_composite_layer_graph_response(response_text)
-        return _graph_response(
-            parsed.message,
-            new_history,
-            graph=parsed.graph.model_dump() if parsed.graph else None,
-            quick_replies=[q.model_dump() for q in parsed.quick_replies] if parsed.quick_replies else None,
-        )
+        assistant_message = parsed.message
+        graph = parsed.graph.model_dump() if parsed.graph else None
+        quick_replies = [q.model_dump() for q in parsed.quick_replies] if parsed.quick_replies else None
     except json.JSONDecodeError as e:
         extracted_text = getattr(e, "extracted_text", "")
         if extracted_text.startswith("{"):
             # Looked like an attempted graph (starts with the JSON object the prompt demands) but
             # failed to even parse as JSON - never show that raw, broken text to the user.
             logger.warning("Response looked like a graph attempt but wasn't valid JSON: %s", e)
-            return _graph_response(GRAPH_PARSE_FAILURE_MESSAGE, new_history)
-        # Genuinely conversational reply, no JSON found - see parse_composite_layer_graph_response.
-        logger.info("Response was not a composite layer graph (likely conversational): %s", e)
-        return _graph_response(response_text, new_history)
+            assistant_message = GRAPH_PARSE_FAILURE_MESSAGE
+        else:
+            # Genuinely conversational reply, no JSON found - see parse_composite_layer_graph_response.
+            logger.info("Response was not a composite layer graph (likely conversational): %s", e)
+            assistant_message = response_text
     except ValidationError as e:
         # JSON found but schema-invalid - fall back to the model's own "message" (still on
         # e.raw_data, see parse_composite_layer_graph_response) rather than showing raw JSON.
         logger.warning("Response had JSON that didn't match the response schema: %s", e)
         raw_data = getattr(e, "raw_data", {})
-        return _graph_response(
-            raw_data.get("message") or GRAPH_PARSE_FAILURE_MESSAGE,
-            new_history,
-            quick_replies=parse_quick_replies(raw_data),
-        )
+        assistant_message = raw_data.get("message") or GRAPH_PARSE_FAILURE_MESSAGE
+        quick_replies = parse_quick_replies(raw_data)
+
+    # Store just the user-facing message in history, not the raw JSON graph dump - current_graph is
+    # already resent fresh (from the live editor state) on every turn, so history never needs to
+    # carry the graph itself, only what was said.
+    new_history = append_turn(conversation_history, message, assistant_message, attachments)
+
+    return _graph_response(assistant_message, new_history, graph=graph, quick_replies=quick_replies)
