@@ -3,11 +3,11 @@ import { VaccinesOutlined } from '@mui/icons-material';
 import { SxStyles } from 'Iaso/types/general';
 import { InterventionCategoryColors } from '../../../hooks/useInterventionCategoryColors';
 import { BudgetIntervention } from '../../../types/budget';
-import { ComparisonSlot } from '../types';
 import {
     CostCategory,
     InterventionCostBarChart,
-} from './InterventionCostBarChart';
+} from '../../widgets/InterventionCostBarChart';
+import { ComparisonSlot } from '../types';
 import { SideBySideWidgetGrid } from './SideBySideWidgetGrid';
 
 const CHART_HEIGHT = 320;

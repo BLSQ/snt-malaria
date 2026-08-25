@@ -38,8 +38,13 @@ export const getSlotTotalCost = (
 
 export const getSlotInterventionCosts = (
     budget: Budget | undefined,
+    orgUnitIds?: Set<number>,
 ): BudgetIntervention[] =>
-    budget ? aggregateInterventionCosts(aggregateOrgUnitCosts([budget])) : [];
+    budget
+        ? aggregateInterventionCosts(
+              aggregateOrgUnitCosts([budget], orgUnitIds),
+          )
+        : [];
 
 /**
  * Population-coverage figures per intervention, broken down by population
@@ -159,32 +164,38 @@ export const mergeCoverageRowsBySlot = (
  * Year-accurate count of districts covered per intervention, derived from
  * `org_units_costs` (already filtered server-side to non-zero cost for this
  * budget's year) rather than the scenario-wide `InterventionPlan.org_units`.
+ * When `orgUnitIds` is provided, only those org units are counted (mirrors
+ * `aggregateOrgUnitCosts`'s filtering).
  */
 export const getSlotInterventionDistrictCoverage = (
     budget: Budget | undefined,
+    orgUnitIds?: Set<number>,
 ): InterventionDistrictCoverage[] => {
     if (!budget) {
         return [];
     }
-    const orgUnitIdsByInterventionId = new Map<number, Set<number>>();
+    const districtIdsByInterventionId = new Map<number, Set<number>>();
     const labelByInterventionId = new Map<number, string>();
 
     (budget.org_units_costs ?? []).forEach(orgUnitCost => {
+        if (orgUnitIds && !orgUnitIds.has(orgUnitCost.org_unit_id)) {
+            return;
+        }
         (orgUnitCost.interventions ?? []).forEach(intervention => {
             labelByInterventionId.set(intervention.id, intervention.type);
-            const orgUnitIds =
-                orgUnitIdsByInterventionId.get(intervention.id) ??
+            const districtIds =
+                districtIdsByInterventionId.get(intervention.id) ??
                 new Set<number>();
-            orgUnitIds.add(orgUnitCost.org_unit_id);
-            orgUnitIdsByInterventionId.set(intervention.id, orgUnitIds);
+            districtIds.add(orgUnitCost.org_unit_id);
+            districtIdsByInterventionId.set(intervention.id, districtIds);
         });
     });
 
-    return Array.from(orgUnitIdsByInterventionId.entries()).map(
-        ([interventionId, orgUnitIds]) => ({
+    return Array.from(districtIdsByInterventionId.entries()).map(
+        ([interventionId, districtIds]) => ({
             interventionId,
             interventionLabel: labelByInterventionId.get(interventionId) ?? '',
-            districtCount: orgUnitIds.size,
+            districtCount: districtIds.size,
         }),
     );
 };

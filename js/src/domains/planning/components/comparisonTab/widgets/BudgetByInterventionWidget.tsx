@@ -25,8 +25,14 @@ if (MAX_SLOTS !== 3) {
 
 export const BudgetByInterventionWidget: FC = () => {
     const { formatMessage } = useSafeIntl();
-    const { slots, budgetsBySlotKey, isBudgetLoading, currency, displayMode } =
-        useScenarioComparisonContext();
+    const {
+        slots,
+        budgetsBySlotKey,
+        isBudgetLoading,
+        currency,
+        displayMode,
+        orgUnitIds,
+    } = useScenarioComparisonContext();
     const { interventionCategories } = usePlanningContext();
     const { data: costCategories = [], isLoading: isLoadingCategories } =
         useGetInterventionCostBreakdownLineCategories();
@@ -42,16 +48,16 @@ export const BudgetByInterventionWidget: FC = () => {
     const budget2 = budgetsBySlotKey.get(slots[2]?.key ?? '');
 
     const interventions0 = useMemo(
-        () => getSlotInterventionCosts(budget0),
-        [budget0],
+        () => getSlotInterventionCosts(budget0, orgUnitIds),
+        [budget0, orgUnitIds],
     );
     const interventions1 = useMemo(
-        () => getSlotInterventionCosts(budget1),
-        [budget1],
+        () => getSlotInterventionCosts(budget1, orgUnitIds),
+        [budget1, orgUnitIds],
     );
     const interventions2 = useMemo(
-        () => getSlotInterventionCosts(budget2),
-        [budget2],
+        () => getSlotInterventionCosts(budget2, orgUnitIds),
+        [budget2, orgUnitIds],
     );
     const interventionsBySlotIndex = [
         interventions0,

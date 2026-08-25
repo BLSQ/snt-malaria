@@ -14,9 +14,14 @@ type ScenarioComparisonContextType = {
     isBudgetLoading: boolean;
     currency: string;
     displayMode: DisplayMode;
+    // The header's org-unit selector, narrowed to the intervention org-unit
+    // type (see `PlanningContext.orgUnits`) -- threaded into the per-slot
+    // aggregation helpers so this tab respects the same selection every
+    // other tab does, instead of always aggregating the whole country.
+    orgUnitIds: Set<number>;
     // Shared "total" denominators, fetched once for the whole tab rather
     // than per widget: total number of intervention-level org units
-    // (districts) in the country, and total population (with the year it
+    // (districts) in the selection, and total population (with the year it
     // was resolved for -- see `usePopulationByOrgUnit`).
     totalDistrictCount?: number;
     totalPopulation?: number;
@@ -29,6 +34,7 @@ const ScenarioComparisonContext = createContext<ScenarioComparisonContextType>({
     isBudgetLoading: false,
     currency: '',
     displayMode: 'sideBySide',
+    orgUnitIds: new Set(),
 });
 
 export const useScenarioComparisonContext = () =>
@@ -43,6 +49,7 @@ export const ScenarioComparisonProvider: FC<
     isBudgetLoading,
     currency,
     displayMode,
+    orgUnitIds,
     totalDistrictCount,
     totalPopulation,
     populationYear,
@@ -59,6 +66,7 @@ export const ScenarioComparisonProvider: FC<
             isBudgetLoading,
             currency,
             displayMode,
+            orgUnitIds,
             totalDistrictCount,
             totalPopulation,
             populationYear,
@@ -69,6 +77,7 @@ export const ScenarioComparisonProvider: FC<
             isBudgetLoading,
             currency,
             displayMode,
+            orgUnitIds,
             totalDistrictCount,
             totalPopulation,
             populationYear,

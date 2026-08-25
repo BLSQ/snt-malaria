@@ -1,4 +1,4 @@
-import React, { FC, ReactElement, ReactNode, useMemo, useState } from 'react';
+import React, { FC, ReactElement, ReactNode, useMemo } from 'react';
 import { Box, Card, CardHeader, Grid } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { PaperFullHeight } from '../../../../components/styledComponents';
@@ -8,13 +8,12 @@ import { useGetScenarios } from '../../../scenarios/hooks/useGetScenarios';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { ScenarioComparisonProvider } from '../../contexts/ScenarioComparisonContext';
 import { useGetAccountSettings } from '../../hooks/useGetAccountSettings';
-import { useGetOrgUnits } from '../../hooks/useGetOrgUnits';
 import { usePopulationByOrgUnit } from '../../hooks/usePopulationByOrgUnit';
 import { getSlotTotalCost } from '../../libs/comparison-aggregation';
 import { formatBigNumber } from '../../libs/cost-utils';
 import { ComparisonHeaderControls } from './ComparisonHeaderControls';
 import { ScenarioSlotWidget } from './ScenarioSlotWidget';
-import { ComparisonSlot, DisplayMode } from './types';
+import { ComparisonSlot } from './types';
 import { useComparisonSlots } from './useComparisonSlots';
 import { useScenarioComparisonData } from './useScenarioComparisonData';
 import { BudgetByInterventionWidget } from './widgets/BudgetByInterventionWidget';
@@ -69,30 +68,40 @@ type Props = {
 };
 
 export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
-    const { scenario, currency } = usePlanningContext();
+    const {
+        scenario,
+        currency,
+        orgUnits,
+        comparisonDisplayMode: displayMode,
+        setComparisonDisplayMode: setDisplayMode,
+    } = usePlanningContext();
     const { data: scenarios } = useGetScenarios();
     const { data: accountSettings } = useGetAccountSettings();
-    const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
-    const { data: allOrgUnits } = useGetOrgUnits({
-        orgUnitTypeId: interventionTypeId,
-        enabled: !!interventionTypeId,
-    });
     const { populationByOrgUnit, year: populationYear } =
         usePopulationByOrgUnit({
             metricTypeId: accountSettings?.default_population_id,
         });
 
-    const totalDistrictCount = allOrgUnits?.length;
+    // `orgUnits` is already scoped to the header's org-unit selector (see
+    // `PlanningContext`), so every aggregation fed by it respects the same
+    // selection as the other tabs instead of always covering the whole
+    // country.
+    const orgUnitIds = useMemo(
+        () => new Set(orgUnits.map(orgUnit => orgUnit.id)),
+        [orgUnits],
+    );
+
+    const totalDistrictCount = orgUnits.length;
     const totalPopulation = useMemo(() => {
-        if (!populationByOrgUnit || !allOrgUnits) {
+        if (!populationByOrgUnit) {
             return undefined;
         }
-        return allOrgUnits.reduce(
+        return orgUnits.reduce(
             (total, orgUnit) =>
                 total + (populationByOrgUnit.get(orgUnit.id) ?? 0),
             0,
         );
-    }, [populationByOrgUnit, allOrgUnits]);
+    }, [populationByOrgUnit, orgUnits]);
 
     const {
         currentYear,
@@ -145,8 +154,6 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
     // (e.g. right after switching scenarios) -- guard against `12 / 0`.
     const slotColumnWidth = slots.length > 0 ? 12 / slots.length : 12;
 
-    const [displayMode, setDisplayMode] = useState<DisplayMode>('sideBySide');
-
     const totalCostEntryBySlotKey = useMemo(() => {
         const totalCostBySlotKey = new Map<string, number | undefined>();
         slots.forEach(slot => {
@@ -187,6 +194,7 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                     isBudgetLoading={isBudgetLoading}
                     currency={currency}
                     displayMode={displayMode}
+                    orgUnitIds={orgUnitIds}
                     totalDistrictCount={totalDistrictCount}
                     totalPopulation={totalPopulation}
                     populationYear={populationYear}

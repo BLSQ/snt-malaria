@@ -126,6 +126,37 @@ describe('getSlotInterventionCosts', () => {
             expect.objectContaining({ id: 1, total_cost: 150 }),
         ]);
     });
+
+    it('only sums org units in orgUnitIds when it is provided', () => {
+        const budget = makeBudget({
+            org_units_costs: [
+                makeOrgUnitCost({
+                    org_unit_id: 1,
+                    interventions: [
+                        makeIntervention({
+                            id: 1,
+                            type: 'Bed nets',
+                            total_cost: 100,
+                        }),
+                    ],
+                }),
+                makeOrgUnitCost({
+                    org_unit_id: 2,
+                    interventions: [
+                        makeIntervention({
+                            id: 1,
+                            type: 'Bed nets',
+                            total_cost: 50,
+                        }),
+                    ],
+                }),
+            ],
+        });
+
+        expect(getSlotInterventionCosts(budget, new Set([1]))).toEqual([
+            expect.objectContaining({ id: 1, total_cost: 100 }),
+        ]);
+    });
 });
 
 describe('getSlotInterventionCoverage', () => {
@@ -360,6 +391,36 @@ describe('getSlotInterventionDistrictCoverage', () => {
                 districtCount: 2,
             },
             { interventionId: 2, interventionLabel: 'IRS', districtCount: 1 },
+        ]);
+    });
+
+    it('only counts org units in orgUnitIds when it is provided', () => {
+        const budget = makeBudget({
+            org_units_costs: [
+                makeOrgUnitCost({
+                    org_unit_id: 1,
+                    interventions: [
+                        makeIntervention({ id: 1, type: 'Bed nets' }),
+                    ],
+                }),
+                makeOrgUnitCost({
+                    org_unit_id: 2,
+                    interventions: [
+                        makeIntervention({ id: 1, type: 'Bed nets' }),
+                        makeIntervention({ id: 2, type: 'IRS' }),
+                    ],
+                }),
+            ],
+        });
+
+        expect(
+            getSlotInterventionDistrictCoverage(budget, new Set([1])),
+        ).toEqual([
+            {
+                interventionId: 1,
+                interventionLabel: 'Bed nets',
+                districtCount: 1,
+            },
         ]);
     });
 });

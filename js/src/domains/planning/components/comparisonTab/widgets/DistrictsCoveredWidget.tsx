@@ -15,6 +15,7 @@ export const DistrictsCoveredWidget: FC = () => {
         budgetsBySlotKey,
         isBudgetLoading,
         displayMode,
+        orgUnitIds,
         totalDistrictCount,
     } = useScenarioComparisonContext();
     const { gridProps, axisProps } = useChartTheme();
@@ -24,9 +25,10 @@ export const DistrictsCoveredWidget: FC = () => {
             slots.map(slot =>
                 getSlotInterventionDistrictCoverage(
                     budgetsBySlotKey.get(slot.key),
+                    orgUnitIds,
                 ),
             ),
-        [slots, budgetsBySlotKey],
+        [slots, budgetsBySlotKey, orgUnitIds],
     );
 
     if (displayMode === 'overlay') {

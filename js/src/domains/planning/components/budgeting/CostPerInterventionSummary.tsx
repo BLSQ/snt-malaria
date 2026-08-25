@@ -10,7 +10,7 @@ import {
     aggregateInterventionCosts,
     aggregateOrgUnitCosts,
 } from '../../libs/budget-aggregation';
-import { InterventionCostBarChart } from '../comparisonTab/widgets/InterventionCostBarChart';
+import { InterventionCostBarChart } from '../widgets/InterventionCostBarChart';
 
 export const CostPerInterventionSummary: FC = () => {
     const { formatMessage } = useSafeIntl();

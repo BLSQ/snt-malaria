@@ -12,23 +12,23 @@ import {
     YAxis,
 } from 'recharts';
 import { SxStyles } from 'Iaso/types/general';
-import { roundedRightRectPath } from '../../../../../components/charts/barPaths';
-import { useChartTheme } from '../../../../../components/charts/chartTheme';
+import { roundedRightRectPath } from '../../../../components/charts/barPaths';
+import { useChartTheme } from '../../../../components/charts/chartTheme';
 import {
     ChartTooltip,
     ChartTooltipRow,
-} from '../../../../../components/charts/ChartTooltip';
+} from '../../../../components/charts/ChartTooltip';
 import {
     AUTO_Y_AXIS_TICK_MARGIN,
     useAutoYAxisWidth,
-} from '../../../../../components/useAutoYAxisWidth';
-import { MESSAGES } from '../../../../messages';
-import { CATEGORY_COLORS } from '../../../libs/color-utils';
+} from '../../../../components/useAutoYAxisWidth';
+import { MESSAGES } from '../../../messages';
+import { CATEGORY_COLORS } from '../../libs/color-utils';
 import {
     formatBigNumber,
     getCostBreakdownChartData,
-} from '../../../libs/cost-utils';
-import { BudgetIntervention } from '../../../types/budget';
+} from '../../libs/cost-utils';
+import { BudgetIntervention } from '../../types/budget';
 
 const BAR_SIZE = 22;
 const BAR_RADIUS = 4;
