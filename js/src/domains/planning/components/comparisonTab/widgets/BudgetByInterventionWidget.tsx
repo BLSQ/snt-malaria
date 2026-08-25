@@ -68,27 +68,15 @@ export const BudgetByInterventionWidget: FC = () => {
     const isLoading = isBudgetLoading || isLoadingCategories;
     const title = formatMessage(MESSAGES.comparisonBudgetByInterventionTitle);
 
-    if (displayMode === 'overlay') {
-        return (
-            <BudgetByInterventionOverlay
-                title={title}
-                slots={slots}
-                interventionsBySlotIndex={interventionsBySlotIndex}
-                isLoading={isLoading}
-                currency={currency}
-            />
-        );
-    }
-
     // Shared row order across slots (union of interventions, grouped by
     // category so it matches the bars' category colouring -- see
     // `useInterventionCategoryColors`), so the same intervention lands on
-    // the same chart row in every slot even when slots don't share the exact
-    // same intervention set. A slot missing an intervention gets a
-    // zero-cost placeholder row rather than skipping it, so the row still
-    // reserves its position -- unless the slot has no data at all, in which
-    // case it's left empty so the chart falls back to its own "no budget
-    // data" state instead of an all-empty grid.
+    // the same chart row/bar-group in every slot, in both display modes,
+    // even when slots don't share the exact same intervention set. A slot
+    // missing an intervention gets a zero-cost placeholder row rather than
+    // skipping it, so the row still reserves its position -- unless the slot
+    // has no data at all, in which case it's left empty so the chart falls
+    // back to its own "no budget data" state instead of an all-empty grid.
     const sharedOrder = getSharedInterventionOrderByCategory(
         interventionsBySlotIndex.map(interventions =>
             interventions.map(intervention => ({
@@ -111,6 +99,18 @@ export const BudgetByInterventionWidget: FC = () => {
             cost_breakdown: [],
         }),
     );
+
+    if (displayMode === 'overlay') {
+        return (
+            <BudgetByInterventionOverlay
+                title={title}
+                slots={slots}
+                interventionsBySlotIndex={alignedInterventionsBySlotIndex}
+                isLoading={isLoading}
+                currency={currency}
+            />
+        );
+    }
 
     return (
         <BudgetByInterventionSideBySide
