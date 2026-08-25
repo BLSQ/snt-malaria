@@ -3,7 +3,11 @@ import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../../messages';
 import { useGetCostUnitTypes } from '../../../../settings/costUnits/hooks/useGetCostUnitTypes';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
-import { getSlotCommoditiesByIntervention } from '../../../libs/comparison-aggregation';
+import {
+    alignToSharedOrder,
+    getSharedInterventionOrder,
+    getSlotCommoditiesByIntervention,
+} from '../../../libs/comparison-aggregation';
 import { CommoditiesOverlay } from './CommoditiesOverlay';
 import { CommoditiesSideBySide } from './CommoditiesSideBySide';
 
@@ -34,17 +38,39 @@ export const CommoditiesWidget: FC = () => {
         [slots, budgetsBySlotKey, commodityUnitNames],
     );
 
-    const props = {
-        title: formatMessage(MESSAGES.comparisonCommoditiesTitle),
-        slots,
-        commoditiesBySlotIndex,
-        isBudgetLoading,
-        currency,
-    };
+    const title = formatMessage(MESSAGES.comparisonCommoditiesTitle);
 
-    return displayMode === 'overlay' ? (
-        <CommoditiesOverlay {...props} />
-    ) : (
-        <CommoditiesSideBySide {...props} />
+    if (displayMode === 'overlay') {
+        return (
+            <CommoditiesOverlay
+                title={title}
+                slots={slots}
+                commoditiesBySlotIndex={commoditiesBySlotIndex}
+                isBudgetLoading={isBudgetLoading}
+                currency={currency}
+            />
+        );
+    }
+
+    const sharedOrder = getSharedInterventionOrder(commoditiesBySlotIndex);
+    const alignedCommoditiesBySlotIndex = alignToSharedOrder(
+        commoditiesBySlotIndex,
+        sharedOrder,
+        row => row.interventionId,
+        ({ interventionId, interventionLabel }) => ({
+            interventionId,
+            interventionLabel,
+            commodities: [],
+        }),
+    );
+
+    return (
+        <CommoditiesSideBySide
+            title={title}
+            slots={slots}
+            commoditiesBySlotIndex={alignedCommoditiesBySlotIndex}
+            isBudgetLoading={isBudgetLoading}
+            currency={currency}
+        />
     );
 };

@@ -2,7 +2,11 @@ import React, { FC, useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../../messages';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
-import { getSlotInterventionCoverage } from '../../../libs/comparison-aggregation';
+import {
+    alignToSharedOrder,
+    getSharedInterventionOrder,
+    getSlotInterventionCoverage,
+} from '../../../libs/comparison-aggregation';
 import { PopulationCoverageOverlay } from './PopulationCoverageOverlay';
 import { PopulationCoverageSideBySide } from './PopulationCoverageSideBySide';
 
@@ -41,11 +45,23 @@ export const PopulationCoverageWidget: FC = () => {
         );
     }
 
+    const sharedOrder = getSharedInterventionOrder(coverageBySlotIndex);
+    const alignedCoverageBySlotIndex = alignToSharedOrder(
+        coverageBySlotIndex,
+        sharedOrder,
+        row => row.interventionId,
+        ({ interventionId, interventionLabel }) => ({
+            interventionId,
+            interventionLabel,
+            layers: [],
+        }),
+    );
+
     return (
         <PopulationCoverageSideBySide
             title={titleWithYear}
             slots={slots}
-            coverageBySlotIndex={coverageBySlotIndex}
+            coverageBySlotIndex={alignedCoverageBySlotIndex}
             isBudgetLoading={isBudgetLoading}
             totalPopulation={totalPopulation}
         />
