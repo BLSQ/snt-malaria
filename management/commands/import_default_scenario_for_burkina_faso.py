@@ -1,4 +1,5 @@
 import csv
+import logging
 import os
 
 from django.core.management.base import BaseCommand
@@ -11,6 +12,8 @@ from plugins.snt_malaria.models.intervention import Intervention
 from plugins.snt_malaria.models.scenario import Scenario
 
 
+logger = logging.getLogger(__name__)
+
 BURKINA_ACCOUNT_ID = 1
 DEFAULT_SCENARIO_NAME = "WHO scenario"
 # To use this script in it's current form, you need to add this file to the correct folder
@@ -22,9 +25,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         account = Account.objects.get(pk=BURKINA_ACCOUNT_ID)
-        print(f"Account: {account.name}")
-        print("---------------------------------------------------------")
-        print("1. Get or create the default scenario")
+        logger.info(f"Account: {account.name}")
+        logger.info("---------------------------------------------------------")
+        logger.info("1. Get or create the default scenario")
         created_by = User.objects.filter(iaso_profile__account=account).first()
         default_scenario, created = Scenario.objects.get_or_create(
             name__iexact=DEFAULT_SCENARIO_NAME,  # This should be adjusted (see below)
@@ -35,11 +38,11 @@ class Command(BaseCommand):
             },
         )
         if not created:
-            print("2. Remove interventions mix related to default scenario if it exists")
+            logger.info("2. Remove interventions mix related to default scenario if it exists")
             InterventionAssignment.objects.filter(scenario=default_scenario).delete()
 
-        print("3. Creating default scenario's interventions mix")
-        print("---------------------------------------------------------")
+        logger.info("3. Creating default scenario's interventions mix")
+        logger.info("---------------------------------------------------------")
         intervention_count = 1
         with open(BFA_INTERVENTION_MIX, newline="", encoding="utf-8") as csvfile:
             csvreader = csv.DictReader(csvfile)
@@ -65,11 +68,11 @@ class Command(BaseCommand):
                                 created_by=created_by,
                             )
                         )
-                        print(
+                        logger.info(
                             f"{intervention_count}. The intervention '{intervention.name}' is added to '{default_scenario.name}' scenario on '{org_unit.name}' Org unit"
                         )
                         intervention_count += 1
 
             InterventionAssignment.objects.bulk_create(assignments)
-        print("---------------------------------------------------------")
-        print("Successfully done")
+        logger.info("---------------------------------------------------------")
+        logger.info("Successfully done")
