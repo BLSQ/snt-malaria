@@ -6,7 +6,8 @@ from django.test import SimpleTestCase
 from pydantic import ValidationError
 
 from plugins.snt_malaria.api.composite_layer_ai.agent import (
-    build_system_prompt,
+    build_static_system_prompt,
+    build_system_blocks,
     generate_composite_layer_graph,
     parse_composite_layer_graph_response,
 )
@@ -25,62 +26,46 @@ ORG_UNITS = [
 
 class BuildSystemPromptTestCase(SimpleTestCase):
     def test_catalog_placeholder_is_replaced(self):
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+        prompt = build_static_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertNotIn("{metric_types_catalog}", prompt)
         self.assertIn('- id=1, name="Rainfall", description="Yearly rainfall"', prompt)
         self.assertIn('- id=2, name="Incidence"', prompt)
 
     def test_empty_catalog(self):
-        prompt = build_system_prompt([], ORG_UNITS)
+        prompt = build_static_system_prompt([], ORG_UNITS)
 
         self.assertIn("(no data layers available for this account)", prompt)
 
     def test_org_units_catalog_placeholder_is_replaced(self):
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+        prompt = build_static_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertNotIn("{org_units_catalog}", prompt)
         self.assertIn('- id=10, name="North district"', prompt)
         self.assertIn('- id=11, name="South district"', prompt)
 
     def test_empty_org_units_catalog(self):
-        prompt = build_system_prompt(METRIC_TYPES, [])
+        prompt = build_static_system_prompt(METRIC_TYPES, [])
 
         self.assertIn("(no districts available for this account)", prompt)
 
     def test_json_schema_braces_survive_substitution(self):
         # The template is applied with str.replace, so the literal braces of the JSON schema
         # example must come through unescaped and intact.
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+        prompt = build_static_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn('"graph": {', prompt)
         self.assertIn('"output": {"source":', prompt)
 
-    def test_current_graph_section_appended(self):
-        current_graph = {
-            "nodes": [{"id": "rainfall", "type": "dataLayer", "metric_type_id": "1"}],
-            "output": {"source": "rainfall", "name": "Rainfall", "legend_type": "auto"},
-        }
-
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS, current_graph=current_graph)
-
-        self.assertIn("## Current graph in the editor", prompt)
-        self.assertIn(json.dumps(current_graph, indent=2), prompt)
-
-    def test_no_current_graph_section_when_absent(self):
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS, current_graph=None)
-
-        self.assertNotIn("## Current graph in the editor", prompt)
-
     def test_normalize_type_documented_in_prompt(self):
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+        prompt = build_static_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn("normalize_type", prompt)
         self.assertIn("min-max", prompt)
         self.assertIn("percentile", prompt)
 
     def test_selected_year_documented_in_prompt(self):
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+        prompt = build_static_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn("selected_year", prompt)
         self.assertIn("## Working with years", prompt)
@@ -88,7 +73,7 @@ class BuildSystemPromptTestCase(SimpleTestCase):
     def test_multi_year_comparison_via_repeated_data_layer_documented_in_prompt(self):
         # The AI must know it can add the same metric type as two separate dataLayer nodes, each
         # pinned to a different year, to compare specific years of one layer against each other.
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+        prompt = build_static_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn("multiple separate `dataLayer` nodes", prompt)
         self.assertIn("2023 rainfall ÷ 2022 rainfall", prompt)
@@ -98,18 +83,18 @@ class BuildSystemPromptTestCase(SimpleTestCase):
             {"id": 1, "name": "Rainfall", "description": "", "years": [2024, 2023, 2022]},
         ]
 
-        prompt = build_system_prompt(metric_types_with_years, ORG_UNITS)
+        prompt = build_static_system_prompt(metric_types_with_years, ORG_UNITS)
 
         self.assertIn("years=[2024, 2023, 2022]", prompt)
 
     def test_years_omitted_from_catalog_when_absent(self):
         # METRIC_TYPES has no "years" key at all (a non-yearly layer) - nothing should be appended.
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+        prompt = build_static_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertNotIn("years=", prompt)
 
     def test_filter_node_documented_in_prompt(self):
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+        prompt = build_static_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn("`filter`", prompt)
         self.assertIn("org_units", prompt)
@@ -117,30 +102,59 @@ class BuildSystemPromptTestCase(SimpleTestCase):
         self.assertIn('"ids"', prompt)
 
     def test_stack_operation_documented_in_prompt(self):
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+        prompt = build_static_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn("stack", prompt)
         self.assertIn("ORDER-DEPENDENT", prompt)
         self.assertIn("ASCENDING priority", prompt)
 
     def test_never_invent_org_unit_ids_documented_in_prompt(self):
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+        prompt = build_static_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn("never invent an id", prompt)
 
     def test_filter_mode_choice_heuristic_documented_in_prompt(self):
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+        prompt = build_static_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn("keeps `ids` shortest", prompt)
         self.assertIn("explicitly says", prompt)
         self.assertIn("always wins over the shortest-list heuristic", prompt)
 
     def test_quick_replies_documented_in_prompt(self):
-        prompt = build_system_prompt(METRIC_TYPES, ORG_UNITS)
+        prompt = build_static_system_prompt(METRIC_TYPES, ORG_UNITS)
 
         self.assertIn("quick_replies", prompt)
         self.assertIn("Never prefix a `question` or an `option` with a", prompt)
         self.assertIn("clean label text only", prompt)
+
+
+class BuildSystemBlocksTestCase(SimpleTestCase):
+    def test_static_block_is_cached(self):
+        blocks = build_system_blocks(METRIC_TYPES, ORG_UNITS)
+
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["cache_control"], {"type": "ephemeral", "ttl": "1h"})
+        self.assertEqual(blocks[0]["text"], build_static_system_prompt(METRIC_TYPES, ORG_UNITS))
+
+    def test_current_graph_appended_as_separate_uncached_block(self):
+        # Kept out of the cached block since it changes on every turn - bundling it in would
+        # invalidate the cache each time the user edits the graph.
+        current_graph = {
+            "nodes": [{"id": "rainfall", "type": "dataLayer", "metric_type_id": "1"}],
+            "output": {"source": "rainfall", "name": "Rainfall", "legend_type": "auto"},
+        }
+
+        blocks = build_system_blocks(METRIC_TYPES, ORG_UNITS, current_graph=current_graph)
+
+        self.assertEqual(len(blocks), 2)
+        self.assertNotIn("cache_control", blocks[1])
+        self.assertIn("## Current graph in the editor", blocks[1]["text"])
+        self.assertIn(json.dumps(current_graph, indent=2), blocks[1]["text"])
+
+    def test_no_second_block_when_current_graph_absent(self):
+        blocks = build_system_blocks(METRIC_TYPES, ORG_UNITS, current_graph=None)
+
+        self.assertEqual(len(blocks), 1)
 
 
 GRAPH_RESPONSE = {
@@ -477,6 +491,19 @@ class GenerateCompositeLayerGraphTestCase(SimpleTestCase):
         self.assertEqual(result["assistant_message"], GRAPH_RESPONSE["message"])
         self.assertEqual(result["graph"]["nodes"][0]["id"], "rainfall")
         self.assertIsNone(result["quick_replies"])
+
+    @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
+    def test_history_stores_message_not_raw_graph_json(self, mock_call_claude):
+        # current_graph is already resent fresh from the live editor on every turn, so history only
+        # needs the conversational text - storing the raw JSON graph dump too would just be resent
+        # dead weight on every later turn.
+        mock_call_claude.return_value = GRAPH_RESPONSE_JSON
+
+        result = generate_composite_layer_graph("create a layer", [], [], [])
+
+        assistant_entry = result["conversation_history"][-1]
+        self.assertEqual(assistant_entry["content"], GRAPH_RESPONSE["message"])
+        self.assertNotIn("nodes", assistant_entry["content"])
 
     @patch("plugins.snt_malaria.api.composite_layer_ai.agent.call_claude")
     def test_clarifying_question_with_quick_replies_returned(self, mock_call_claude):

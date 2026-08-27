@@ -222,24 +222,42 @@ def _build_colors_catalog() -> str:
     return "\n".join(f'- value="{hex_code}", name="{label}"' for hex_code, label in COLOR_CHOICES)
 
 
-def build_system_prompt(
-    metric_types: list[dict],
-    interventions: list[dict],
-    current_rules: Optional[list[dict]] = None,
-) -> str:
-    """Build the final system prompt: the template with the account's catalogs substituted, plus -
-    when the scenario already has rules - a section appended so the model can make iterative changes
-    relative to them."""
-    prompt = (
+def build_static_system_prompt(metric_types: list[dict], interventions: list[dict]) -> str:
+    """Build the part of the system prompt that's static for a given account: the instructional
+    template with its data layer, intervention, and color catalogs substituted in. Unlike the
+    current rules (see `build_system_blocks`), this is identical across every turn of a session and
+    across sessions for the same account, which is what makes it worth caching as its own block."""
+    return (
         SCENARIO_RULE_SYSTEM_PROMPT_TEMPLATE.replace(
             METRIC_TYPES_CATALOG_PLACEHOLDER, _build_metric_types_catalog(metric_types)
         )
         .replace(INTERVENTIONS_CATALOG_PLACEHOLDER, _build_interventions_catalog(interventions))
         .replace(COLORS_CATALOG_PLACEHOLDER, _build_colors_catalog())
     )
+
+
+def build_system_blocks(
+    metric_types: list[dict],
+    interventions: list[dict],
+    current_rules: Optional[list[dict]] = None,
+) -> list[dict]:
+    """Build the `system` param as content blocks. The static template+catalogs are marked as a
+    single cached block, since a chat session resends the same system prompt on every turn - only
+    the current rules change turn to turn, so they're appended uncached after the cache breakpoint
+    rather than invalidating the cache every time the user edits the rule set."""
+    blocks = [
+        {
+            "type": "text",
+            "text": build_static_system_prompt(metric_types, interventions),
+            # 1h rather than the 5m default: turns in this chat are often minutes apart (the user
+            # reviews the generated rules in the editor between messages), so the short-lived
+            # default would frequently miss and pay full cache-write price on every turn anyway.
+            "cache_control": {"type": "ephemeral", "ttl": "1h"},
+        }
+    ]
     if current_rules:
-        prompt += CURRENT_RULES_SECTION + json.dumps(current_rules, indent=2)
-    return prompt
+        blocks.append({"type": "text", "text": CURRENT_RULES_SECTION + json.dumps(current_rules, indent=2)})
+    return blocks
 
 
 def call_claude(
@@ -254,12 +272,10 @@ def call_claude(
     """Call Claude API with the conversation and return the raw response text."""
     client = anthropic.Anthropic(api_key=api_key)
 
-    system_prompt = build_system_prompt(metric_types, interventions, current_rules=current_rules)
-
     response = client.beta.messages.create(
         model=settings.SCENARIO_RULE_AI_MODEL,
         max_tokens=4096,
-        system=system_prompt,
+        system=build_system_blocks(metric_types, interventions, current_rules=current_rules),
         messages=build_conversation(message, conversation_history, attachments),
         betas=[ANTHROPIC_FILES_BETA],
     )
@@ -330,33 +346,35 @@ def generate_scenario_rules(
         attachments=attachments,
     )
 
-    new_history = append_turn(conversation_history, message, response_text, attachments)
-
+    rules = None
+    quick_replies = None
     try:
         parsed = parse_scenario_rules_response(response_text)
-        return _rules_response(
-            parsed.message,
-            new_history,
-            rules=[rule.model_dump() for rule in parsed.rules] if parsed.rules is not None else None,
-            quick_replies=[q.model_dump() for q in parsed.quick_replies] if parsed.quick_replies else None,
-        )
+        assistant_message = parsed.message
+        rules = [rule.model_dump() for rule in parsed.rules] if parsed.rules is not None else None
+        quick_replies = [q.model_dump() for q in parsed.quick_replies] if parsed.quick_replies else None
     except json.JSONDecodeError as e:
         extracted_text = getattr(e, "extracted_text", "")
         if extracted_text.startswith("{"):
             # Looked like an attempted rule set (starts with the JSON object the prompt demands) but
             # failed to even parse as JSON - never show that raw, broken text to the user.
             logger.warning("Response looked like a rules attempt but wasn't valid JSON: %s", e)
-            return _rules_response(RULES_PARSE_FAILURE_MESSAGE, new_history)
-        # Genuinely conversational reply, no JSON found - see parse_scenario_rules_response.
-        logger.info("Response was not a scenario rule set (likely conversational): %s", e)
-        return _rules_response(response_text, new_history)
+            assistant_message = RULES_PARSE_FAILURE_MESSAGE
+        else:
+            # Genuinely conversational reply, no JSON found - see parse_scenario_rules_response.
+            logger.info("Response was not a scenario rule set (likely conversational): %s", e)
+            assistant_message = response_text
     except ValidationError as e:
         # JSON found but schema-invalid - fall back to the model's own "message" (still on
         # e.raw_data, see parse_scenario_rules_response) rather than showing raw JSON.
         logger.warning("Response had JSON that didn't match the rules schema: %s", e)
         raw_data = getattr(e, "raw_data", {})
-        return _rules_response(
-            raw_data.get("message") or RULES_PARSE_FAILURE_MESSAGE,
-            new_history,
-            quick_replies=parse_quick_replies(raw_data),
-        )
+        assistant_message = raw_data.get("message") or RULES_PARSE_FAILURE_MESSAGE
+        quick_replies = parse_quick_replies(raw_data)
+
+    # Store just the user-facing message in history, not the raw JSON rule-set dump - current_rules
+    # is already rebuilt fresh from the database on every turn, so history never needs to carry the
+    # rules themselves, only what was said.
+    new_history = append_turn(conversation_history, message, assistant_message, attachments)
+
+    return _rules_response(assistant_message, new_history, rules=rules, quick_replies=quick_replies)
