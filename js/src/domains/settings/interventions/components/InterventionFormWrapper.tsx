@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import CheckIcon from '@mui/icons-material/Check';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Button, Stack, Typography } from '@mui/material';
 import {
@@ -15,6 +16,7 @@ import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { ExtendedFormikProvider } from '../../../../hooks/useGetExtendedFormikContext';
 import { useGetMetricTypes } from '../../../dataLayers/hooks/useGetMetrics';
 import { useDeleteIntervention } from '../../../interventions/hooks/useDeleteIntervention';
+import { useDuplicateIntervention } from '../../../interventions/hooks/useDuplicateIntervention';
 import { useGetInterventionCostBreakdownLineCategories } from '../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
 import { useGetInterventionCostUnitTypes } from '../../../interventions/hooks/useGetInterventionCostUnitType';
 import { useGetInterventionDetails } from '../../../interventions/hooks/useGetInterventionDetails';
@@ -94,6 +96,8 @@ export const InterventionFormWrapper: FC<Props> = ({
         useSaveIntervention();
     const { mutate: deleteIntervention, isLoading: isDeleting } =
         useDeleteIntervention();
+    const { mutateAsync: duplicateIntervention, isLoading: isDuplicating } =
+        useDuplicateIntervention();
     const {
         mutateAsync: saveInterventionDetails,
         isLoading: isSavingInterventionDetails,
@@ -171,6 +175,18 @@ export const InterventionFormWrapper: FC<Props> = ({
         deleteIntervention(intervention.id, { onSuccess: onDeleted });
     }, [intervention, deleteIntervention, onDeleted]);
 
+    const handleDuplicate = useCallback(async () => {
+        if (!intervention) {
+            return;
+        }
+        const duplicated = (await duplicateIntervention(
+            intervention.id,
+        )) as Intervention;
+        if (duplicated?.id != null) {
+            onSaved(duplicated.id);
+        }
+    }, [intervention, duplicateIntervention, onSaved]);
+
     const isSaving = isSavingIntervention || isSavingInterventionDetails;
 
     return (
@@ -190,6 +206,17 @@ export const InterventionFormWrapper: FC<Props> = ({
                                 : intervention?.name}
                         </Typography>
                         <Stack direction="row" spacing={1}>
+                            {!isNew && (
+                                <Button
+                                    onClick={handleDuplicate}
+                                    variant="outlined"
+                                    color="primary"
+                                    startIcon={<ContentCopyIcon />}
+                                    disabled={isDuplicating}
+                                >
+                                    {formatMessage(MESSAGES.duplicate)}
+                                </Button>
+                            )}
                             {!isNew && (
                                 <DeleteInterventionModal
                                     titleMessage={formatMessage(

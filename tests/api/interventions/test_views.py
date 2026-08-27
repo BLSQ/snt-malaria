@@ -387,3 +387,86 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         self.client.force_authenticate(user=self.user_write)
         response = self.client.delete(f"{BASE_URL}{other_intervention.id}/")
         self.assertJSONResponse(response, status.HTTP_404_NOT_FOUND)
+
+    # Duplicate
+
+    def test_duplicate_intervention_copies_basic_fields_under_unique_name(self):
+        self.intervention_vaccination_rts.impact_ref = "deployed_int_rts"
+        self.intervention_vaccination_rts.description = "Original description"
+        self.intervention_vaccination_rts.save()
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.post(f"{BASE_URL}{self.intervention_vaccination_rts.id}/duplicate/")
+
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+        self.assertNotEqual(result["id"], self.intervention_vaccination_rts.id)
+        self.assertEqual(result["name"], f"{self.intervention_vaccination_rts.name} (copy)")
+
+        duplicate = Intervention.objects.get(id=result["id"])
+        self.assertEqual(duplicate.intervention_category, self.intervention_vaccination_rts.intervention_category)
+        self.assertEqual(duplicate.code, self.intervention_vaccination_rts.code)
+        self.assertEqual(duplicate.short_name, self.intervention_vaccination_rts.short_name)
+        self.assertEqual(duplicate.impact_ref, "deployed_int_rts")
+        self.assertEqual(duplicate.description, "Original description")
+        self.assertEqual(duplicate.created_by, self.user_write)
+        # The source intervention keeps its own name.
+        self.intervention_vaccination_rts.refresh_from_db()
+        self.assertEqual(self.intervention_vaccination_rts.name, "RTS,S")
+
+    def test_duplicate_intervention_copies_all_cost_breakdown_lines_to_new_rows(self):
+        self.intervention_vaccination_rts.cost_breakdown_lines.create(
+            name="Cost Line 2",
+            unit_cost=25,
+            category="Distribution",
+            unit_type=self.unit_type_per_itn,
+            created_by=self.user_write,
+        )
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.post(f"{BASE_URL}{self.intervention_vaccination_rts.id}/duplicate/")
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+
+        source_lines = self.intervention_vaccination_rts.cost_breakdown_lines.order_by("name")
+        duplicate_lines = Intervention.objects.get(id=result["id"]).cost_breakdown_lines.order_by("name")
+
+        self.assertEqual(source_lines.count(), 2)
+        self.assertEqual(
+            [(line.name, line.unit_cost, line.category, line.unit_type_id) for line in duplicate_lines],
+            [(line.name, line.unit_cost, line.category, line.unit_type_id) for line in source_lines],
+        )
+        # New rows, not the same objects re-parented or shared.
+        self.assertFalse(
+            set(duplicate_lines.values_list("id", flat=True)) & set(source_lines.values_list("id", flat=True))
+        )
+        for line in duplicate_lines:
+            self.assertEqual(line.created_by, self.user_write)
+
+    def test_duplicate_intervention_twice_increments_copy_suffix(self):
+        self.client.force_authenticate(user=self.user_write)
+        url = f"{BASE_URL}{self.intervention_vaccination_rts.id}/duplicate/"
+
+        first = self.assertJSONResponse(self.client.post(url), status.HTTP_201_CREATED)
+        second = self.assertJSONResponse(self.client.post(url), status.HTTP_201_CREATED)
+
+        self.assertEqual(first["name"], "RTS,S (copy)")
+        self.assertEqual(second["name"], "RTS,S (copy) 2")
+
+    def test_duplicate_intervention_with_read_perm_forbidden(self):
+        self.client.force_authenticate(user=self.user_read)
+        response = self.client.post(f"{BASE_URL}{self.intervention_vaccination_rts.id}/duplicate/")
+        self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
+
+    def test_duplicate_intervention_no_auth(self):
+        response = self.client.post(f"{BASE_URL}{self.intervention_vaccination_rts.id}/duplicate/")
+        self.assertJSONResponse(response, status.HTTP_401_UNAUTHORIZED)
+
+    def test_duplicate_other_account_intervention_not_found(self):
+        other_account, _ = self.create_snt_account(name="Other Account For Duplicate")
+        other_category = self.create_snt_intervention_category(account=other_account, created_by=self.user_write)
+        other_intervention = self.create_snt_intervention(
+            intervention_category=other_category, created_by=self.user_write
+        )
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.post(f"{BASE_URL}{other_intervention.id}/duplicate/")
+        self.assertJSONResponse(response, status.HTTP_404_NOT_FOUND)

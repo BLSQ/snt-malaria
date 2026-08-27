@@ -10,6 +10,7 @@ from plugins.snt_malaria.api.interventions.permissions import InterventionPermis
 from plugins.snt_malaria.api.interventions.serializers import (
     InterventionDetailSerializer,
     InterventionDetailWriteSerializer,
+    InterventionDuplicateSerializer,
     InterventionSerializer,
 )
 from plugins.snt_malaria.models import Intervention
@@ -52,6 +53,20 @@ class InterventionViewSet(viewsets.ModelViewSet):
     @staticmethod
     def _raise_for_integrity_error(error):
         raise serializers.ValidationError(str(error))
+
+    @action(detail=True, methods=["post"], serializer_class=InterventionDuplicateSerializer)
+    def duplicate(self, request, pk):
+        source = self.get_object()
+        serializer = self.get_serializer(
+            data=request.data,
+            context={**self.get_serializer_context(), "source": source},
+        )
+        serializer.is_valid(raise_exception=True)
+        duplicate = serializer.save(created_by=request.user)
+        return Response(
+            InterventionSerializer(duplicate, context=self.get_serializer_context()).data,
+            status=status.HTTP_201_CREATED,
+        )
 
     @action(detail=True, methods=["get"], serializer_class=InterventionDetailSerializer)
     def details(self, request, pk):
