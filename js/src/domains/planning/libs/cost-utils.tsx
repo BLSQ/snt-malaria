@@ -49,6 +49,13 @@ export const formatSignedPercentValue = (value: number) => {
     return `${pct > 0 ? '+' : ''}${pct}%`;
 };
 
+/** `value` as a percentage of `total`, or `undefined` when `total` is falsy. */
+export const percentOfTotal = (
+    value: number,
+    total?: number,
+): string | undefined =>
+    total ? formatPercentValue(value / total) : undefined;
+
 export const formatBigNumber = (value: number, currency?: string) => {
     if (!value || typeof value !== 'number') {
         return;

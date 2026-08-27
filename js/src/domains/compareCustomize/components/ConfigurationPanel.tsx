@@ -16,21 +16,17 @@ import { alpha } from '@mui/material/styles';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
+import { DropdownOptions } from 'Iaso/types/utils';
 import { YearRangeSlider } from '../../../components/YearRangeSlider';
 import { MESSAGES } from '../../messages';
-import {
-    ImpactProviderMeta,
-    ScenarioId,
-    ScenarioMatchWarning,
-    ScenarioOption,
-} from '../types';
+import { ImpactProviderMeta, ScenarioId, ScenarioMatchWarning } from '../types';
 import { getScenarioColor } from '../utils/colors';
 
 type Props = {
     baselineScenarioId: ScenarioId;
     comparisonScenarioIds: ScenarioId[];
-    scenarioOptions: ScenarioOption[];
-    comparisonOptions: ScenarioOption[];
+    scenarioOptions: DropdownOptions<number>[];
+    comparisonOptions: DropdownOptions<number>[];
     onBaselineSelect: (_key: string, value: unknown) => void;
     onComparisonSelect: (
         index: number,

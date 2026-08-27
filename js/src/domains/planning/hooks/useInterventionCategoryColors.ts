@@ -1,16 +1,86 @@
 import { useMemo } from 'react';
+import { InterventionCategory } from '../../interventions/types';
 import { usePlanningContext } from '../contexts/PlanningContext';
-import { assignCategoricalColors, CATEGORY_COLORS } from '../libs/color-utils';
+import { CATEGORY_COLORS } from '../libs/color-utils';
+import { sortByStringProp } from '../libs/list-utils';
 import { BudgetIntervention } from '../types/budget';
 
-const UNCATEGORIZED_KEY = -1;
+// Exported so other places that need the same category grouping (e.g. the
+// comparison tab's shared row order across slots) can reuse it instead of
+// falling back to an ungrouped order.
+export const UNCATEGORIZED_KEY = -1;
 
-type InterventionCategoryColors = {
+export const buildCategoryIdByInterventionId = (
+    interventionCategories: InterventionCategory[],
+): Map<number, number> => {
+    const map = new Map<number, number>();
+    interventionCategories.forEach(category => {
+        category.interventions.forEach(intervention => {
+            map.set(intervention.id, category.id);
+        });
+    });
+    return map;
+};
+
+/**
+ * Orders `items` so that those sharing a category sit together (largest-cost
+ * category first, largest item within a category first).
+ */
+export const orderByCategoryCost = <T>(
+    items: T[],
+    categoryIdOf: (item: T) => number,
+    costOf: (item: T) => number,
+): T[] => {
+    const totalByCategory = new Map<number, number>();
+    items.forEach(item => {
+        const categoryId = categoryIdOf(item);
+        totalByCategory.set(
+            categoryId,
+            (totalByCategory.get(categoryId) ?? 0) + costOf(item),
+        );
+    });
+
+    return [...items].sort((a, b) => {
+        const catA = categoryIdOf(a);
+        const catB = categoryIdOf(b);
+        if (catA !== catB) {
+            return (
+                (totalByCategory.get(catB) ?? 0) -
+                (totalByCategory.get(catA) ?? 0)
+            );
+        }
+        return costOf(b) - costOf(a);
+    });
+};
+
+/**
+ * Assigns each intervention category a stable colour from `CATEGORY_COLORS`,
+ * keyed by category id. Categories are sorted by name first so the colour
+ * depends only on the category's own identity, not on the cost ranking of
+ * whichever interventions happen to be passed to the hook -- otherwise the
+ * same category could get a different colour per slot/year/budget depending
+ * on where it lands in that particular cost sort.
+ */
+const buildColorByCategoryId = (
+    interventionCategories: InterventionCategory[],
+): Map<number, string> => {
+    const sortedCategories = sortByStringProp(interventionCategories, 'name');
+    const colorByCategoryId = new Map<number, string>();
+    sortedCategories.forEach((category, index) => {
+        colorByCategoryId.set(
+            category.id,
+            CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+        );
+    });
+    return colorByCategoryId;
+};
+
+export type InterventionCategoryColors = {
     // `interventions` sorted so that those sharing a category sit together
     // (groups ordered by total cost desc, interventions within a group too).
     orderedInterventions: BudgetIntervention[];
-    // Stable base colour per intervention, assigned in the order categories
-    // first appear in the (cost-sorted) intervention list.
+    // Stable base colour per intervention, derived from its category's own
+    // identity (see `buildColorByCategoryId`).
     colorByInterventionId: Map<number, string>;
 };
 
@@ -27,61 +97,41 @@ export const useInterventionCategoryColors = (
     const { interventionCategories } = usePlanningContext();
 
     // Intervention id -> its intervention category id.
-    const categoryIdByInterventionId = useMemo(() => {
-        const map = new Map<number, number>();
-        interventionCategories.forEach(category => {
-            category.interventions.forEach(intervention => {
-                map.set(intervention.id, category.id);
-            });
-        });
-        return map;
-    }, [interventionCategories]);
+    const categoryIdByInterventionId = useMemo(
+        () => buildCategoryIdByInterventionId(interventionCategories),
+        [interventionCategories],
+    );
 
-    const orderedInterventions = useMemo(() => {
-        const categoryOf = (intervention: BudgetIntervention) =>
-            categoryIdByInterventionId.get(intervention.id) ??
-            UNCATEGORIZED_KEY;
+    const orderedInterventions = useMemo(
+        () =>
+            orderByCategoryCost(
+                interventions,
+                intervention =>
+                    categoryIdByInterventionId.get(intervention.id) ??
+                    UNCATEGORIZED_KEY,
+                intervention => intervention.total_cost,
+            ),
+        [interventions, categoryIdByInterventionId],
+    );
 
-        const totalByCategory = new Map<number, number>();
-        interventions.forEach(intervention => {
-            const categoryId = categoryOf(intervention);
-            totalByCategory.set(
-                categoryId,
-                (totalByCategory.get(categoryId) ?? 0) +
-                    intervention.total_cost,
-            );
-        });
-
-        return [...interventions].sort((a, b) => {
-            const catA = categoryOf(a);
-            const catB = categoryOf(b);
-            if (catA !== catB) {
-                return (
-                    (totalByCategory.get(catB) ?? 0) -
-                    (totalByCategory.get(catA) ?? 0)
-                );
-            }
-            return b.total_cost - a.total_cost;
-        });
-    }, [interventions, categoryIdByInterventionId]);
+    const colorByCategoryId = useMemo(
+        () => buildColorByCategoryId(interventionCategories),
+        [interventionCategories],
+    );
 
     const colorByInterventionId = useMemo(() => {
-        const categoryIdOf = (intervention: BudgetIntervention) =>
-            categoryIdByInterventionId.get(intervention.id) ??
-            UNCATEGORIZED_KEY;
-        const colorByCategoryId = assignCategoricalColors(
-            orderedInterventions.map(categoryIdOf),
-        );
         const result = new Map<number, string>();
         orderedInterventions.forEach(intervention => {
+            const categoryId =
+                categoryIdByInterventionId.get(intervention.id) ??
+                UNCATEGORIZED_KEY;
             result.set(
                 intervention.id,
-                colorByCategoryId.get(categoryIdOf(intervention)) ??
-                    CATEGORY_COLORS[0],
+                colorByCategoryId.get(categoryId) ?? CATEGORY_COLORS[0],
             );
         });
         return result;
-    }, [orderedInterventions, categoryIdByInterventionId]);
+    }, [orderedInterventions, categoryIdByInterventionId, colorByCategoryId]);
 
     return { orderedInterventions, colorByInterventionId };
 };

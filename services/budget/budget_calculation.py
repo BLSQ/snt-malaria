@@ -161,6 +161,8 @@ class BudgetCalculationService:
             "invert_conversion_factor": False,
             "target_population": None,
             "target_population_layer_id": None,
+            "is_proportional": False,
+            "yearly_value": Decimal("0"),
         }
 
     @staticmethod
@@ -172,6 +174,7 @@ class BudgetCalculationService:
         entry["invert_conversion_factor"] = cost_line.invert_conversion_factor
         entry["target_population"] = cost_line.population_layer.name if cost_line.population_layer else None
         entry["target_population_layer_id"] = cost_line.population_layer.id if cost_line.population_layer else None
+        entry["is_proportional"] = cost_line.is_proportional
 
     def calculate_year(self, year):
         """Calculate the budget for a given year, based on the population-driven formula and the scenario data.
@@ -211,6 +214,7 @@ class BudgetCalculationService:
                 cost_line = self.cost_line_by_id.get(row.cost_line_id)
                 if cost_line:
                     self._populate_breakdown_from_cost_line(bd, cost_line)
+                    bd["yearly_value"] = row.yearly_value
 
             if row.org_unit_id is not None:
                 org_unit_totals[row.org_unit_id]["total_cost"] += row.total_cost
@@ -225,6 +229,7 @@ class BudgetCalculationService:
                     cost_line = self.cost_line_by_id.get(row.cost_line_id)
                     if cost_line:
                         self._populate_breakdown_from_cost_line(ou_bd, cost_line)
+                        ou_bd["yearly_value"] = row.yearly_value
 
             category_totals[row.category]["id"] = row.cost_line_id
             category_totals[row.category]["total_cost"] += row.total_cost
@@ -315,6 +320,8 @@ class BudgetCalculationService:
             intervention_id=intervention_id,
             category=category,
             population=population,
+            is_proportional=line.is_proportional,
+            yearly_value=yearly_value,
             quantity=quantity,
             total_cost=line_cost,
             grant_id=grant_id,
@@ -324,7 +331,8 @@ class BudgetCalculationService:
         """
         Calculate using yearly value as quantity. Added once per intervention regardless of org units.
         """
-        quantity = self._get_yearly_value(line, year) * self.buffer
+        yearly_value = self._get_yearly_value(line, year)
+        quantity = yearly_value * self.buffer
         line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
         if line_cost <= 0:
             return None
@@ -335,6 +343,8 @@ class BudgetCalculationService:
             org_unit_id=None,
             intervention_id=intervention_id,
             category=category,
+            is_proportional=line.is_proportional,
+            yearly_value=yearly_value,
             quantity=quantity,
             total_cost=line_cost,
             grant_id=grant_id,
@@ -362,6 +372,8 @@ class BudgetCalculationService:
                 invert_conversion_factor=bd["invert_conversion_factor"],
                 target_population=bd["target_population"],
                 target_population_layer_id=bd["target_population_layer_id"],
+                is_proportional=bd["is_proportional"],
+                yearly_value=bd["yearly_value"],
                 buffer=float(self.buffer),
             )
             for _, bd in sorted(breakdown_dict.items(), key=lambda x: x[0])

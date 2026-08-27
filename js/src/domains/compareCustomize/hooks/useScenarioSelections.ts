@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DropdownOptions } from 'bluesquare-components';
 import { Scenario } from '../../scenarios/types';
-import { ScenarioId, ScenarioOption } from '../types';
+import { ScenarioId } from '../types';
 import { MAX_COMPARISONS } from '../utils/constants';
 
 /**
@@ -17,7 +18,7 @@ export const useScenarioSelections = (scenarios?: Scenario[]) => {
         ScenarioId[]
     >([]);
 
-    const scenarioOptions: ScenarioOption[] = useMemo(
+    const scenarioOptions: DropdownOptions<number>[] = useMemo(
         () =>
             scenarios?.map(scenario => ({
                 label: scenario.name,
@@ -26,7 +27,7 @@ export const useScenarioSelections = (scenarios?: Scenario[]) => {
         [scenarios],
     );
 
-    const comparisonOptions: ScenarioOption[] = useMemo(
+    const comparisonOptions: DropdownOptions<number>[] = useMemo(
         () =>
             scenarioOptions.filter(
                 option => option.value !== baselineScenarioId,

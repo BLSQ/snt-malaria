@@ -1,0 +1,132 @@
+import React, { FC, useMemo } from 'react';
+import { useSafeIntl } from 'bluesquare-components';
+import { useGetInterventionCostBreakdownLineCategories } from '../../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
+import { MESSAGES } from '../../../../messages';
+import { usePlanningContext } from '../../../contexts/PlanningContext';
+import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
+import {
+    buildCategoryIdByInterventionId,
+    useInterventionCategoryColors,
+} from '../../../hooks/useInterventionCategoryColors';
+import {
+    alignToSharedOrder,
+    getSharedInterventionOrderByCategory,
+    getSlotInterventionCosts,
+} from '../../../libs/comparison-aggregation';
+import { MAX_SLOTS } from '../useComparisonSlots';
+import { BudgetByInterventionOverlay } from './BudgetByInterventionOverlay';
+import { BudgetByInterventionSideBySide } from './BudgetByInterventionSideBySide';
+
+if (MAX_SLOTS !== 3) {
+    throw new Error(
+        'MAX_SLOTS changed: update the 3 fixed useInterventionCategoryColors calls below (and useScenarioComparisonData.ts) to match.',
+    );
+}
+
+export const BudgetByInterventionWidget: FC = () => {
+    const { formatMessage } = useSafeIntl();
+    const {
+        slots,
+        budgetsBySlotKey,
+        isBudgetLoading,
+        currency,
+        displayMode,
+        orgUnitIds,
+    } = useScenarioComparisonContext();
+    const { interventionCategories } = usePlanningContext();
+    const { data: costCategories = [], isLoading: isLoadingCategories } =
+        useGetInterventionCostBreakdownLineCategories();
+    const categoryIdByInterventionId = useMemo(
+        () => buildCategoryIdByInterventionId(interventionCategories),
+        [interventionCategories],
+    );
+
+    // Looked up outside the memos below so each one only recomputes when its
+    // own slot's budget actually changes, not whenever any slot's does.
+    const budget0 = budgetsBySlotKey.get(slots[0]?.key ?? '');
+    const budget1 = budgetsBySlotKey.get(slots[1]?.key ?? '');
+    const budget2 = budgetsBySlotKey.get(slots[2]?.key ?? '');
+
+    const interventions0 = useMemo(
+        () => getSlotInterventionCosts(budget0, orgUnitIds),
+        [budget0, orgUnitIds],
+    );
+    const interventions1 = useMemo(
+        () => getSlotInterventionCosts(budget1, orgUnitIds),
+        [budget1, orgUnitIds],
+    );
+    const interventions2 = useMemo(
+        () => getSlotInterventionCosts(budget2, orgUnitIds),
+        [budget2, orgUnitIds],
+    );
+    const interventionsBySlotIndex = [
+        interventions0,
+        interventions1,
+        interventions2,
+    ];
+
+    // One hook per possible slot: the hook count can't vary with slot count.
+    const colors0 = useInterventionCategoryColors(interventions0);
+    const colors1 = useInterventionCategoryColors(interventions1);
+    const colors2 = useInterventionCategoryColors(interventions2);
+    const colorsBySlotIndex = [colors0, colors1, colors2];
+
+    const isLoading = isBudgetLoading || isLoadingCategories;
+    const title = formatMessage(MESSAGES.comparisonBudgetByInterventionTitle);
+
+    // Shared row order across slots (union of interventions, grouped by
+    // category so it matches the bars' category colouring -- see
+    // `useInterventionCategoryColors`), so the same intervention lands on
+    // the same chart row/bar-group in every slot, in both display modes,
+    // even when slots don't share the exact same intervention set. A slot
+    // missing an intervention gets a zero-cost placeholder row rather than
+    // skipping it, so the row still reserves its position -- unless the slot
+    // has no data at all, in which case it's left empty so the chart falls
+    // back to its own "no budget data" state instead of an all-empty grid.
+    const sharedOrder = getSharedInterventionOrderByCategory(
+        interventionsBySlotIndex.map(interventions =>
+            interventions.map(intervention => ({
+                interventionId: intervention.id,
+                interventionLabel: intervention.type,
+                cost: intervention.total_cost,
+            })),
+        ),
+        categoryIdByInterventionId,
+    );
+    const alignedInterventionsBySlotIndex = alignToSharedOrder(
+        interventionsBySlotIndex,
+        sharedOrder,
+        intervention => intervention.id,
+        ({ interventionId, interventionLabel }) => ({
+            id: interventionId,
+            type: interventionLabel,
+            code: '',
+            total_cost: 0,
+            cost_breakdown: [],
+        }),
+    );
+
+    if (displayMode === 'overlay') {
+        return (
+            <BudgetByInterventionOverlay
+                title={title}
+                slots={slots}
+                interventionsBySlotIndex={alignedInterventionsBySlotIndex}
+                isLoading={isLoading}
+                currency={currency}
+            />
+        );
+    }
+
+    return (
+        <BudgetByInterventionSideBySide
+            title={title}
+            slots={slots}
+            interventionsBySlotIndex={alignedInterventionsBySlotIndex}
+            colorsBySlotIndex={colorsBySlotIndex}
+            costCategories={costCategories}
+            isLoading={isLoading}
+            currency={currency}
+        />
+    );
+};

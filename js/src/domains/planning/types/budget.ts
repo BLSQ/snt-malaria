@@ -2,6 +2,7 @@ import { InterventionOrgUnit } from './interventionAssignments';
 
 export type Budget = {
     year: number;
+    total_cost: number;
     interventions: BudgetIntervention[];
     org_units_costs: BudgetOrgUnit[];
 };
@@ -38,6 +39,12 @@ export type BudgetInterventionCostLine = {
     // no population layer). Lines sharing a layer duplicate the same figure
     // rather than splitting it, so don't sum `population` across lines.
     population: number;
+    // Whether this line scales with population (population * yearly_value *
+    // conversion_ratio), as opposed to a fixed per-intervention cost.
+    is_proportional: boolean;
+    // The line's configured coverage ratio for this year (e.g. 0.78 for a
+    // 78% bed-net coverage target). 0 for lines with no yearly assignment.
+    yearly_value: number;
     buffer: number | null;
 };
 

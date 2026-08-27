@@ -1,10 +1,5 @@
 export type ScenarioId = number | '';
 
-export type ScenarioOption = {
-    label: string;
-    value: number;
-};
-
 export type ScenarioDisplay = {
     id: number;
     label: string;

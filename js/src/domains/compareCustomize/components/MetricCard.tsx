@@ -1,8 +1,7 @@
-import React, { FC, ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import { Box, Grid, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { WidgetCard } from '../../../components/WidgetCard';
-import { ScenarioDisplay } from '../types';
 import {
     DeltaChip,
     getDeltaChip,
@@ -10,19 +9,19 @@ import {
     type DeltaChipProps,
 } from './DeltaChip';
 
-export type MetricEntry = {
-    id: number;
+export type MetricEntry<TKey extends string | number = number> = {
+    id: TKey;
     color: string;
     isBaseline: boolean;
     value: string;
     chip?: DeltaChipProps;
 };
 
-type Props = {
+type Props<TKey extends string | number = number> = {
     title: string;
     icon: React.ElementType;
     isLoading: boolean;
-    entries: MetricEntry[];
+    entries: MetricEntry<TKey>[];
     keyPrefix: string;
     subtext?: ReactNode;
 };
@@ -49,13 +48,16 @@ const styles = {
     },
 } satisfies SxStyles;
 
-export const buildMetricEntries = <TData,>(
-    scenarios: ScenarioDisplay[],
-    dataMap: Map<number, TData | undefined>,
+export const buildMetricEntries = <
+    TData,
+    TKey extends string | number = number,
+>(
+    scenarios: { id: TKey; color: string }[],
+    dataMap: Map<TKey, TData | undefined>,
     extractor: (data: TData | undefined) => number | undefined,
     formatter: (v: number) => string,
     delta: DeltaChipOptions,
-): MetricEntry[] => {
+): MetricEntry<TKey>[] => {
     const baselineId = scenarios[0]?.id;
     const baselineValue =
         baselineId !== undefined
@@ -77,14 +79,14 @@ export const buildMetricEntries = <TData,>(
     });
 };
 
-export const MetricCard: FC<Props> = ({
+export const MetricCard = <TKey extends string | number = number>({
     title,
     icon,
     isLoading,
     entries,
     keyPrefix,
     subtext,
-}) => (
+}: Props<TKey>) => (
     <Grid item xs={12} md={3}>
         <WidgetCard title={title} icon={icon} isLoading={isLoading}>
             <Box sx={styles.valuesList}>
