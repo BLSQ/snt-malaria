@@ -6,6 +6,7 @@ import {
     TuneOutlined,
 } from '@mui/icons-material';
 import { SvgIconProps } from '@mui/material';
+import { IMPACT } from 'Iaso/utils/featureFlags';
 import { MESSAGES as dataLayersMessages } from '../domains/dataLayers/messages';
 import { MESSAGES } from '../domains/messages';
 import { SETTINGS_READ } from './permissions';
@@ -29,6 +30,7 @@ export const menu = [
         label: MESSAGES.compareCustomizeTitle,
         key: 'snt_malaria/compare-customize',
         permissions: [],
+        featureFlag: IMPACT,
         icon: (props: SvgIconProps) => <CompareOutlined {...props} />,
     },
     {

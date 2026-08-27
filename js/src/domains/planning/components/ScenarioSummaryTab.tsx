@@ -1,6 +1,8 @@
 import React, { FC, ReactNode } from 'react';
 import { Box, Card, CardHeader } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
+import { hasFeatureFlag, IMPACT } from 'Iaso/utils/featureFlags';
+import { useCurrentUser } from 'Iaso/utils/usersUtils';
 import { PaperFullHeight } from '../../../components/styledComponents';
 import { BudgetSummary } from './budgeting/BudgetSummary';
 import { CommoditiesSummary } from './budgeting/CommoditiesSummary';
@@ -101,40 +103,46 @@ type Props = {
     header: ReactNode;
 };
 
-export const ScenarioSummaryTab: FC<Props> = ({ header }) => (
-    <PaperFullHeight sx={styles.column}>
-        <Card sx={styles.headerCard}>
-            <CardHeader sx={styles.header} title={header} />
-        </Card>
-        <Box sx={styles.scrollArea}>
-            <Box sx={styles.grid}>
-                <Box sx={styles.leftColumn}>
-                    <Box sx={styles.growChartWidget}>
-                        <Box sx={styles.growWidgetContent}>
-                            <BudgetSummary />
-                        </Box>
-                    </Box>
-                    <CommoditiesSummary />
-                    <Box sx={styles.growChartWidget}>
-                        <Box sx={styles.growWidgetContent}>
-                            <CostPerInterventionSummary />
-                        </Box>
-                    </Box>
-                </Box>
-                <Box sx={styles.rightColumn}>
-                    <Box sx={styles.rightColumnContent}>
+export const ScenarioSummaryTab: FC<Props> = ({ header }) => {
+    const currentUser = useCurrentUser();
+    const showImpact = hasFeatureFlag(currentUser, IMPACT);
+    return (
+        <PaperFullHeight sx={styles.column}>
+            <Card sx={styles.headerCard}>
+                <CardHeader sx={styles.header} title={header} />
+            </Card>
+            <Box sx={styles.scrollArea}>
+                <Box sx={styles.grid}>
+                    <Box sx={styles.leftColumn}>
                         <Box sx={styles.growChartWidget}>
-                            <CostVsPopulationSummary />
+                            <Box sx={styles.growWidgetContent}>
+                                <BudgetSummary />
+                            </Box>
                         </Box>
-                        <Box sx={styles.growMapWidget}>
-                            <CostPerDistrictSummary />
+                        <CommoditiesSummary />
+                        <Box sx={styles.growChartWidget}>
+                            <Box sx={styles.growWidgetContent}>
+                                <CostPerInterventionSummary />
+                            </Box>
+                        </Box>
+                    </Box>
+                    <Box sx={styles.rightColumn}>
+                        <Box sx={styles.rightColumnContent}>
+                            <Box sx={styles.growChartWidget}>
+                                <CostVsPopulationSummary />
+                            </Box>
+                            <Box sx={styles.growMapWidget}>
+                                <CostPerDistrictSummary />
+                            </Box>
                         </Box>
                     </Box>
                 </Box>
+                {showImpact && (
+                    <Box sx={styles.fullWidthChartWidget}>
+                        <PrevalenceSummary />
+                    </Box>
+                )}
             </Box>
-            <Box sx={styles.fullWidthChartWidget}>
-                <PrevalenceSummary />
-            </Box>
-        </Box>
-    </PaperFullHeight>
-);
+        </PaperFullHeight>
+    );
+};
