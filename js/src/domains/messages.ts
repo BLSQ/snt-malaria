@@ -90,21 +90,9 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.planning.comparison.removeScenario',
         defaultMessage: 'Remove scenario',
     },
-    comparisonSideBySide: {
-        id: 'iaso.snt_malaria.planning.comparison.sideBySide',
-        defaultMessage: 'Side by side',
-    },
-    comparisonOverlay: {
-        id: 'iaso.snt_malaria.planning.comparison.overlay',
-        defaultMessage: 'Overlay',
-    },
     comparisonBudgetByInterventionTitle: {
         id: 'iaso.snt_malaria.planning.comparison.budgetByInterventionTitle',
         defaultMessage: 'Budget by intervention',
-    },
-    comparisonDistrictsCoveredTitle: {
-        id: 'iaso.snt_malaria.planning.comparison.districtsCoveredTitle',
-        defaultMessage: 'Districts covered',
     },
     comparisonDistrictsCountTitle: {
         id: 'iaso.snt_malaria.planning.comparison.districtsCountTitle',

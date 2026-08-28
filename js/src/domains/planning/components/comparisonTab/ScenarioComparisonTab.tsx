@@ -11,7 +11,7 @@ import { useGetAccountSettings } from '../../hooks/useGetAccountSettings';
 import { usePopulationByOrgUnit } from '../../hooks/usePopulationByOrgUnit';
 import { getSlotTotalCost } from '../../libs/comparison-aggregation';
 import { formatBigNumber } from '../../libs/cost-utils';
-import { ComparisonHeaderControls } from './ComparisonHeaderControls';
+import { AddScenarioButton } from './AddScenarioButton';
 import { ScenarioSlotWidget } from './ScenarioSlotWidget';
 import { ComparisonSlot } from './types';
 import { useComparisonSlots } from './useComparisonSlots';
@@ -68,13 +68,7 @@ type Props = {
 };
 
 export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
-    const {
-        scenario,
-        currency,
-        orgUnits,
-        comparisonDisplayMode: displayMode,
-        setComparisonDisplayMode: setDisplayMode,
-    } = usePlanningContext();
+    const { scenario, currency, orgUnits } = usePlanningContext();
     const { data: scenarios } = useGetScenarios();
     const { data: accountSettings } = useGetAccountSettings();
     const { populationByOrgUnit, year: populationYear } =
@@ -178,11 +172,9 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                 <CardHeader
                     sx={styles.header}
                     title={header(
-                        <ComparisonHeaderControls
+                        <AddScenarioButton
                             canAddSlot={canAddSlot}
                             onAddSlot={handleAddSlot}
-                            displayMode={displayMode}
-                            onDisplayModeChange={setDisplayMode}
                         />,
                     )}
                 />
@@ -193,7 +185,6 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                     budgetsBySlotKey={budgetsBySlotKey}
                     isBudgetLoading={isBudgetLoading}
                     currency={currency}
-                    displayMode={displayMode}
                     orgUnitIds={orgUnitIds}
                     totalDistrictCount={totalDistrictCount}
                     totalPopulation={totalPopulation}

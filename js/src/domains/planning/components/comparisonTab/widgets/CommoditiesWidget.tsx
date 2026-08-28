@@ -1,19 +1,19 @@
 import React, { FC, useMemo } from 'react';
+import { Inventory2Outlined } from '@mui/icons-material';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../../messages';
 import { useGetCostUnitTypes } from '../../../../settings/costUnits/hooks/useGetCostUnitTypes';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
 import {
-    alignToSharedOrder,
-    getSharedInterventionOrder,
     getSlotCommoditiesByIntervention,
+    mergeCommodityRowsBySlot,
 } from '../../../libs/comparison-aggregation';
-import { CommoditiesOverlay } from './CommoditiesOverlay';
-import { CommoditiesSideBySide } from './CommoditiesSideBySide';
+import { formatBigNumber, formatQuantity } from '../../../libs/cost-utils';
+import { SlotComparisonRow, SlotComparisonTable } from './SlotComparisonTable';
 
 export const CommoditiesWidget: FC = () => {
     const { formatMessage } = useSafeIntl();
-    const { slots, budgetsBySlotKey, isBudgetLoading, currency, displayMode } =
+    const { slots, budgetsBySlotKey, isBudgetLoading, currency } =
         useScenarioComparisonContext();
     const { data: costUnitTypes } = useGetCostUnitTypes();
 
@@ -27,50 +27,54 @@ export const CommoditiesWidget: FC = () => {
         [costUnitTypes],
     );
 
-    const commoditiesBySlotIndex = useMemo(
-        () =>
-            slots.map(slot =>
+    const rows = useMemo<SlotComparisonRow[]>(() => {
+        const commoditiesBySlotKey = new Map(
+            slots.map(slot => [
+                slot.key,
                 getSlotCommoditiesByIntervention(
                     budgetsBySlotKey.get(slot.key),
                     commodityUnitNames,
                 ),
-            ),
-        [slots, budgetsBySlotKey, commodityUnitNames],
-    );
-
-    const title = formatMessage(MESSAGES.comparisonCommoditiesTitle);
-
-    if (displayMode === 'overlay') {
-        return (
-            <CommoditiesOverlay
-                title={title}
-                slots={slots}
-                commoditiesBySlotIndex={commoditiesBySlotIndex}
-                isBudgetLoading={isBudgetLoading}
-                currency={currency}
-            />
+            ]),
         );
-    }
-
-    const sharedOrder = getSharedInterventionOrder(commoditiesBySlotIndex);
-    const alignedCommoditiesBySlotIndex = alignToSharedOrder(
-        commoditiesBySlotIndex,
-        sharedOrder,
-        row => row.interventionId,
-        ({ interventionId, interventionLabel }) => ({
-            interventionId,
-            interventionLabel,
-            commodities: [],
-        }),
-    );
+        return mergeCommodityRowsBySlot(commoditiesBySlotKey).map(row => ({
+            key: `${row.interventionId}-${row.unitName}`,
+            interventionLabel: row.interventionLabel,
+            subLabel: row.unitName,
+            cellsBySlotKey: Object.fromEntries(
+                slots.map(slot => {
+                    const cell = row.cellBySlotKey[slot.key];
+                    return [
+                        slot.key,
+                        [
+                            cell ? formatQuantity(cell.quantity) : '-',
+                            cell?.unitCost != null
+                                ? formatBigNumber(cell.unitCost, currency)
+                                : '-',
+                            cell
+                                ? formatBigNumber(cell.totalCost, currency)
+                                : '-',
+                        ],
+                    ];
+                }),
+            ),
+        }));
+    }, [slots, budgetsBySlotKey, commodityUnitNames, currency]);
 
     return (
-        <CommoditiesSideBySide
-            title={title}
+        <SlotComparisonTable
+            title={formatMessage(MESSAGES.comparisonCommoditiesTitle)}
+            icon={Inventory2Outlined}
+            isLoading={isBudgetLoading}
             slots={slots}
-            commoditiesBySlotIndex={alignedCommoditiesBySlotIndex}
-            isBudgetLoading={isBudgetLoading}
-            currency={currency}
+            subColumnLabel={formatMessage(MESSAGES.comparisonCommodityLabel)}
+            perSlotColumnLabels={[
+                formatMessage(MESSAGES.comparisonQuantityLabel),
+                formatMessage(MESSAGES.budgetingCostLineUnitCost),
+                formatMessage(MESSAGES.comparisonTotalCostColumnLabel),
+            ]}
+            rows={rows}
+            emptyMessage={formatMessage(MESSAGES.noBudgetData)}
         />
     );
 };

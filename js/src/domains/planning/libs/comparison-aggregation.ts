@@ -201,38 +201,11 @@ export const getSlotInterventionDistrictCoverage = (
 };
 
 /**
- * Union of intervention identities across every slot, ordered alphabetically
- * by label. Gives side-by-side per-slot charts/tables (each rendered as its
- * own independent chart, unlike the overlay's single merged one) a shared
- * row order, so the same intervention lands on the same row in every slot
- * even when slots don't share the exact same intervention set -- sorting
- * each slot's own list independently can't guarantee that when the sets
- * differ.
- */
-export const getSharedInterventionOrder = (
-    rowsBySlotIndex: InterventionIdentity[][],
-): InterventionIdentity[] => {
-    const byId = new Map<number, InterventionIdentity>();
-    rowsBySlotIndex.forEach(rows => {
-        rows.forEach(row => {
-            if (!byId.has(row.interventionId)) {
-                byId.set(row.interventionId, row);
-            }
-        });
-    });
-    return Array.from(byId.values()).sort((a, b) =>
-        a.interventionLabel.localeCompare(b.interventionLabel),
-    );
-};
-
-/**
- * Same shared-row-order purpose as `getSharedInterventionOrder`, but grouped
- * by intervention category (largest-cost category first, largest
- * intervention within a category first) instead of alphabetically -- so
- * charts that colour bars by category (see `useInterventionCategoryColors`)
- * keep same-category bars adjacent instead of scattering them alphabetically.
- * Cost is summed across every slot so the order is stable regardless of
- * which slot it's read from.
+ * Union of intervention identities across every slot, ordered by intervention
+ * category (largest-cost category first, largest intervention within a
+ * category first) so the merged chart's bar groups keep same-category
+ * interventions adjacent instead of scattering them. Cost is summed across
+ * every slot so the order doesn't depend on which slot it's read from.
  */
 export const getSharedInterventionOrderByCategory = (
     rowsBySlotIndex: InterventionCostIdentity[][],
@@ -267,30 +240,6 @@ export const getSharedInterventionOrderByCategory = (
         identity => totalCostById.get(identity.interventionId) ?? 0,
     );
 };
-
-/**
- * Reorders each slot's rows to match `sharedOrder` (see
- * `getSharedInterventionOrder`), filling in `makePlaceholder` for any
- * intervention missing from that slot -- unless the slot has no data at all,
- * in which case it's left empty so its chart falls back to its own "no
- * data" state instead of an all-placeholder grid.
- */
-export const alignToSharedOrder = <T>(
-    rowsBySlotIndex: T[][],
-    sharedOrder: InterventionIdentity[],
-    getInterventionId: (row: T) => number,
-    makePlaceholder: (identity: InterventionIdentity) => T,
-): T[][] =>
-    rowsBySlotIndex.map(rows => {
-        if (rows.length === 0) {
-            return rows;
-        }
-        const byId = new Map(rows.map(row => [getInterventionId(row), row]));
-        return sharedOrder.map(
-            identity =>
-                byId.get(identity.interventionId) ?? makePlaceholder(identity),
-        );
-    });
 
 /**
  * Unions per-slot intervention rows into one row per intervention, each

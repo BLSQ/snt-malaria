@@ -39,10 +39,10 @@ type Props = {
 };
 
 /**
- * Overlay-mode chart for the Comparison tab: one grouped vertical bar per
- * intervention, one bar per slot, coloured by slot.
+ * Comparison-tab chart: one grouped vertical bar per intervention, one bar
+ * per slot within the group, coloured by slot.
  */
-export const OverlayGroupedBarChart: FC<Props> = ({
+export const SlotGroupedBarChart: FC<Props> = ({
     rows,
     slots,
     valueFormatter,

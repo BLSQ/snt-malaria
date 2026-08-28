@@ -5,7 +5,7 @@ import React, {
     useContext,
     useMemo,
 } from 'react';
-import { ComparisonSlot, DisplayMode } from '../components/comparisonTab/types';
+import { ComparisonSlot } from '../components/comparisonTab/types';
 import { Budget } from '../types/budget';
 
 type ScenarioComparisonContextType = {
@@ -13,7 +13,6 @@ type ScenarioComparisonContextType = {
     budgetsBySlotKey: Map<string, Budget | undefined>;
     isBudgetLoading: boolean;
     currency: string;
-    displayMode: DisplayMode;
     // The header's org-unit selector, narrowed to the intervention org-unit
     // type (see `PlanningContext.orgUnits`) -- threaded into the per-slot
     // aggregation helpers so this tab respects the same selection every
@@ -33,7 +32,6 @@ const ScenarioComparisonContext = createContext<ScenarioComparisonContextType>({
     budgetsBySlotKey: new Map(),
     isBudgetLoading: false,
     currency: '',
-    displayMode: 'sideBySide',
     orgUnitIds: new Set(),
 });
 
@@ -48,14 +46,13 @@ export const ScenarioComparisonProvider: FC<
     budgetsBySlotKey,
     isBudgetLoading,
     currency,
-    displayMode,
     orgUnitIds,
     totalDistrictCount,
     totalPopulation,
     populationYear,
 }) => {
-    // Without this, every render of `ScenarioComparisonTab` (e.g. toggling
-    // `displayMode`, changing one slot's year) rebuilds this object, forcing
+    // Without this, every render of `ScenarioComparisonTab` (e.g. changing
+    // one slot's year) rebuilds this object, forcing
     // every widget to re-render even though most of these fields (`slots`,
     // `budgetsBySlotKey`, `totalPopulation`) are already independently
     // memoized upstream and haven't actually changed.
@@ -65,7 +62,6 @@ export const ScenarioComparisonProvider: FC<
             budgetsBySlotKey,
             isBudgetLoading,
             currency,
-            displayMode,
             orgUnitIds,
             totalDistrictCount,
             totalPopulation,
@@ -76,7 +72,6 @@ export const ScenarioComparisonProvider: FC<
             budgetsBySlotKey,
             isBudgetLoading,
             currency,
-            displayMode,
             orgUnitIds,
             totalDistrictCount,
             totalPopulation,

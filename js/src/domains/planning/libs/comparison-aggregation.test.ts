@@ -8,13 +8,10 @@ import {
     InterventionCommodities,
     InterventionCostIdentity,
     InterventionCoverage,
-    InterventionIdentity,
     InterventionSlotRow,
 } from '../types/comparisonAggregation';
 import { PROCUREMENT_CATEGORY } from './budget-aggregation';
 import {
-    alignToSharedOrder,
-    getSharedInterventionOrder,
     getSharedInterventionOrderByCategory,
     getSlotCommoditiesByIntervention,
     getSlotInterventionCosts,
@@ -425,35 +422,6 @@ describe('getSlotInterventionDistrictCoverage', () => {
     });
 });
 
-describe('getSharedInterventionOrder', () => {
-    it('unions intervention identities across slots, sorted alphabetically by label', () => {
-        const rowsBySlotIndex: InterventionIdentity[][] = [
-            [
-                { interventionId: 2, interventionLabel: 'IRS' },
-                { interventionId: 1, interventionLabel: 'Bed nets' },
-            ],
-            [{ interventionId: 3, interventionLabel: 'ACT' }],
-        ];
-
-        expect(getSharedInterventionOrder(rowsBySlotIndex)).toEqual([
-            { interventionId: 3, interventionLabel: 'ACT' },
-            { interventionId: 1, interventionLabel: 'Bed nets' },
-            { interventionId: 2, interventionLabel: 'IRS' },
-        ]);
-    });
-
-    it('keeps the first-seen identity for a duplicate intervention id', () => {
-        const rowsBySlotIndex: InterventionIdentity[][] = [
-            [{ interventionId: 1, interventionLabel: 'Bed nets (old label)' }],
-            [{ interventionId: 1, interventionLabel: 'Bed nets (new label)' }],
-        ];
-
-        expect(getSharedInterventionOrder(rowsBySlotIndex)).toEqual([
-            { interventionId: 1, interventionLabel: 'Bed nets (old label)' },
-        ]);
-    });
-});
-
 describe('getSharedInterventionOrderByCategory', () => {
     it('sums cost across slots and orders by category cost then intervention cost', () => {
         const rowsBySlotIndex: InterventionCostIdentity[][] = [
@@ -479,42 +447,6 @@ describe('getSharedInterventionOrderByCategory', () => {
             { interventionId: 1, interventionLabel: 'Bed nets' },
             { interventionId: 2, interventionLabel: 'IRS' },
         ]);
-    });
-});
-
-describe('alignToSharedOrder', () => {
-    const sharedOrder: InterventionIdentity[] = [
-        { interventionId: 1, interventionLabel: 'Bed nets' },
-        { interventionId: 2, interventionLabel: 'IRS' },
-    ];
-
-    it('reorders rows to match the shared order, filling gaps with a placeholder', () => {
-        const rowsBySlotIndex = [[{ interventionId: 2, value: 50 }]];
-
-        const result = alignToSharedOrder(
-            rowsBySlotIndex,
-            sharedOrder,
-            row => row.interventionId,
-            identity => ({ interventionId: identity.interventionId, value: 0 }),
-        );
-
-        expect(result).toEqual([
-            [
-                { interventionId: 1, value: 0 },
-                { interventionId: 2, value: 50 },
-            ],
-        ]);
-    });
-
-    it('leaves an empty slot empty instead of filling it with placeholders', () => {
-        const result = alignToSharedOrder(
-            [[]],
-            sharedOrder,
-            (row: { interventionId: number }) => row.interventionId,
-            identity => ({ interventionId: identity.interventionId, value: 0 }),
-        );
-
-        expect(result).toEqual([[]]);
     });
 });
 

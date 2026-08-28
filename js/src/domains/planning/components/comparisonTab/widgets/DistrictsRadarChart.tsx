@@ -33,7 +33,7 @@ type Props = {
 
 /**
  * Radar view of the same districts-covered figures as
- * `OverlayGroupedBarChart`, expressed as a percentage of the total district
+ * `SlotGroupedBarChart`, expressed as a percentage of the total district
  * count so every intervention shares one comparable 0-100 scale.
  */
 export const DistrictsRadarChart: FC<Props> = ({

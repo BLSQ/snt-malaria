@@ -1,132 +1,120 @@
 import React, { FC, useMemo } from 'react';
+import { VaccinesOutlined } from '@mui/icons-material';
 import { useSafeIntl } from 'bluesquare-components';
-import { useGetInterventionCostBreakdownLineCategories } from '../../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
+import { SxStyles } from 'Iaso/types/general';
+import { ChartTooltip } from '../../../../../components/charts/ChartTooltip';
+import { WidgetCard } from '../../../../../components/WidgetCard';
 import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
+import { buildCategoryIdByInterventionId } from '../../../hooks/useInterventionCategoryColors';
 import {
-    buildCategoryIdByInterventionId,
-    useInterventionCategoryColors,
-} from '../../../hooks/useInterventionCategoryColors';
-import {
-    alignToSharedOrder,
     getSharedInterventionOrderByCategory,
     getSlotInterventionCosts,
+    mergeSlotRowsByIntervention,
 } from '../../../libs/comparison-aggregation';
-import { MAX_SLOTS } from '../useComparisonSlots';
-import { BudgetByInterventionOverlay } from './BudgetByInterventionOverlay';
-import { BudgetByInterventionSideBySide } from './BudgetByInterventionSideBySide';
+import { formatBigNumber } from '../../../libs/cost-utils';
+import { SlotGroupedBarChart } from './SlotGroupedBarChart';
 
-if (MAX_SLOTS !== 3) {
-    throw new Error(
-        'MAX_SLOTS changed: update the 3 fixed useInterventionCategoryColors calls below (and useScenarioComparisonData.ts) to match.',
-    );
-}
+const CHART_HEIGHT = 320;
+
+const styles = {
+    chartBody: {
+        height: CHART_HEIGHT,
+        display: 'flex',
+        flexDirection: 'column',
+    },
+} satisfies SxStyles;
 
 export const BudgetByInterventionWidget: FC = () => {
     const { formatMessage } = useSafeIntl();
-    const {
-        slots,
-        budgetsBySlotKey,
-        isBudgetLoading,
-        currency,
-        displayMode,
-        orgUnitIds,
-    } = useScenarioComparisonContext();
+    const { slots, budgetsBySlotKey, isBudgetLoading, currency, orgUnitIds } =
+        useScenarioComparisonContext();
     const { interventionCategories } = usePlanningContext();
-    const { data: costCategories = [], isLoading: isLoadingCategories } =
-        useGetInterventionCostBreakdownLineCategories();
+
     const categoryIdByInterventionId = useMemo(
         () => buildCategoryIdByInterventionId(interventionCategories),
         [interventionCategories],
     );
 
-    // Looked up outside the memos below so each one only recomputes when its
-    // own slot's budget actually changes, not whenever any slot's does.
-    const budget0 = budgetsBySlotKey.get(slots[0]?.key ?? '');
-    const budget1 = budgetsBySlotKey.get(slots[1]?.key ?? '');
-    const budget2 = budgetsBySlotKey.get(slots[2]?.key ?? '');
-
-    const interventions0 = useMemo(
-        () => getSlotInterventionCosts(budget0, orgUnitIds),
-        [budget0, orgUnitIds],
+    const interventionsBySlotIndex = useMemo(
+        () =>
+            slots.map(slot =>
+                getSlotInterventionCosts(
+                    budgetsBySlotKey.get(slot.key),
+                    orgUnitIds,
+                ),
+            ),
+        [slots, budgetsBySlotKey, orgUnitIds],
     );
-    const interventions1 = useMemo(
-        () => getSlotInterventionCosts(budget1, orgUnitIds),
-        [budget1, orgUnitIds],
-    );
-    const interventions2 = useMemo(
-        () => getSlotInterventionCosts(budget2, orgUnitIds),
-        [budget2, orgUnitIds],
-    );
-    const interventionsBySlotIndex = [
-        interventions0,
-        interventions1,
-        interventions2,
-    ];
 
-    // One hook per possible slot: the hook count can't vary with slot count.
-    const colors0 = useInterventionCategoryColors(interventions0);
-    const colors1 = useInterventionCategoryColors(interventions1);
-    const colors2 = useInterventionCategoryColors(interventions2);
-    const colorsBySlotIndex = [colors0, colors1, colors2];
+    // Order the merged chart's bar groups by intervention category (largest
+    // cost first), so same-category interventions stay adjacent. The merge
+    // itself already unions interventions across slots and zero-fills the
+    // ones a slot lacks -- all we add here is that ordering, as an explicit
+    // sort of the merged rows.
+    const rows = useMemo(() => {
+        const sharedOrder = getSharedInterventionOrderByCategory(
+            interventionsBySlotIndex.map(interventions =>
+                interventions.map(intervention => ({
+                    interventionId: intervention.id,
+                    interventionLabel: intervention.type,
+                    cost: intervention.total_cost,
+                })),
+            ),
+            categoryIdByInterventionId,
+        );
+        const orderIndexById = new Map(
+            sharedOrder.map((identity, index) => [
+                identity.interventionId,
+                index,
+            ]),
+        );
+        const rowsBySlotKey = new Map(
+            slots.map((slot, index) => [
+                slot.key,
+                interventionsBySlotIndex[index].map(intervention => ({
+                    interventionId: intervention.id,
+                    interventionLabel: intervention.type,
+                    value: intervention.total_cost,
+                })),
+            ]),
+        );
+        return mergeSlotRowsByIntervention(rowsBySlotKey).sort(
+            (a, b) =>
+                (orderIndexById.get(a.interventionId) ?? 0) -
+                (orderIndexById.get(b.interventionId) ?? 0),
+        );
+    }, [interventionsBySlotIndex, categoryIdByInterventionId, slots]);
 
-    const isLoading = isBudgetLoading || isLoadingCategories;
     const title = formatMessage(MESSAGES.comparisonBudgetByInterventionTitle);
 
-    // Shared row order across slots (union of interventions, grouped by
-    // category so it matches the bars' category colouring -- see
-    // `useInterventionCategoryColors`), so the same intervention lands on
-    // the same chart row/bar-group in every slot, in both display modes,
-    // even when slots don't share the exact same intervention set. A slot
-    // missing an intervention gets a zero-cost placeholder row rather than
-    // skipping it, so the row still reserves its position -- unless the slot
-    // has no data at all, in which case it's left empty so the chart falls
-    // back to its own "no budget data" state instead of an all-empty grid.
-    const sharedOrder = getSharedInterventionOrderByCategory(
-        interventionsBySlotIndex.map(interventions =>
-            interventions.map(intervention => ({
-                interventionId: intervention.id,
-                interventionLabel: intervention.type,
-                cost: intervention.total_cost,
-            })),
-        ),
-        categoryIdByInterventionId,
-    );
-    const alignedInterventionsBySlotIndex = alignToSharedOrder(
-        interventionsBySlotIndex,
-        sharedOrder,
-        intervention => intervention.id,
-        ({ interventionId, interventionLabel }) => ({
-            id: interventionId,
-            type: interventionLabel,
-            code: '',
-            total_cost: 0,
-            cost_breakdown: [],
-        }),
-    );
-
-    if (displayMode === 'overlay') {
-        return (
-            <BudgetByInterventionOverlay
-                title={title}
-                slots={slots}
-                interventionsBySlotIndex={alignedInterventionsBySlotIndex}
-                isLoading={isLoading}
-                currency={currency}
-            />
-        );
-    }
-
     return (
-        <BudgetByInterventionSideBySide
+        <WidgetCard
             title={title}
-            slots={slots}
-            interventionsBySlotIndex={alignedInterventionsBySlotIndex}
-            colorsBySlotIndex={colorsBySlotIndex}
-            costCategories={costCategories}
-            isLoading={isLoading}
-            currency={currency}
-        />
+            icon={VaccinesOutlined}
+            isLoading={isBudgetLoading}
+            bodySx={styles.chartBody}
+        >
+            <SlotGroupedBarChart
+                rows={rows}
+                slots={slots}
+                valueFormatter={value => formatBigNumber(value, currency)}
+                emptyMessage={formatMessage(MESSAGES.noBudgetData)}
+                renderTooltip={row => (
+                    <ChartTooltip
+                        title={row.interventionLabel}
+                        rows={slots.map(slot => ({
+                            label: slot.label,
+                            value: formatBigNumber(
+                                row.valueBySlotKey[slot.key] ?? 0,
+                                currency,
+                            ),
+                            color: slot.color,
+                        }))}
+                    />
+                )}
+            />
+        </WidgetCard>
     );
 };
