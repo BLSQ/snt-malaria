@@ -10,6 +10,7 @@ import {
     CoverageTableRow,
     InterventionCommodities,
     InterventionCommodityLine,
+    InterventionCostDeltaRow,
     InterventionCostIdentity,
     InterventionCoverage,
     InterventionDistrictCoverage,
@@ -18,7 +19,9 @@ import {
     MergedInterventionRow,
     MergedSubRow,
     PopulationLayerCoverage,
+    SlotYearlyCostRow,
     SubRow,
+    YearlyCost,
 } from '../types/comparisonAggregation';
 import {
     aggregateInterventionCosts,
@@ -28,8 +31,10 @@ import {
 
 /**
  * Aggregation helpers for the Comparison tab. Unlike `budget-aggregation.ts`,
- * which operates on a scenario's full multi-year `Budget[]`, these all take
- * a single, already year-scoped `Budget` — one per comparison slot.
+ * which operates on a scenario's full multi-year `Budget[]`, the `getSlot*`
+ * helpers take a single, already year-scoped `Budget` — one per comparison
+ * slot — and the `merge*` helpers union a pre-extracted per-slot row set into
+ * one combined table/chart shape.
  */
 
 export const getSlotTotalCost = (
@@ -285,6 +290,86 @@ export const mergeSlotRowsByIntervention = (
             return { interventionId, interventionLabel, valueBySlotKey };
         },
     );
+};
+
+/**
+ * Per-intervention cost change from a base scenario to each compared
+ * scenario: `cost(intervention, comparedSlot) - cost(intervention, base)`.
+ * Unions interventions across the base and every compared slot (a slot
+ * missing an intervention counts it as 0), so the small-multiple panels
+ * share one row order -- ordered by the base scenario's intervention cost,
+ * largest first.
+ */
+export const mergeInterventionCostDeltas = (
+    baseCosts: BudgetIntervention[],
+    comparedCostsBySlotKey: Map<string, BudgetIntervention[]>,
+): InterventionCostDeltaRow[] => {
+    const slotKeys = Array.from(comparedCostsBySlotKey.keys());
+    const baseCostById = new Map<number, number>();
+    const labelById = new Map<number, string>();
+    baseCosts.forEach(intervention => {
+        baseCostById.set(intervention.id, intervention.total_cost);
+        labelById.set(intervention.id, intervention.type);
+    });
+
+    const comparedCostBySlotKeyById = new Map<number, Record<string, number>>();
+    comparedCostsBySlotKey.forEach((costs, slotKey) => {
+        costs.forEach(intervention => {
+            labelById.set(intervention.id, intervention.type);
+            const bySlotKey =
+                comparedCostBySlotKeyById.get(intervention.id) ?? {};
+            bySlotKey[slotKey] = intervention.total_cost;
+            comparedCostBySlotKeyById.set(intervention.id, bySlotKey);
+        });
+    });
+
+    const interventionIds = new Set<number>([
+        ...baseCostById.keys(),
+        ...comparedCostBySlotKeyById.keys(),
+    ]);
+
+    return Array.from(interventionIds)
+        .map(interventionId => {
+            const baseCost = baseCostById.get(interventionId) ?? 0;
+            const comparedCosts =
+                comparedCostBySlotKeyById.get(interventionId) ?? {};
+            const deltaBySlotKey: Record<string, number> = {};
+            slotKeys.forEach(slotKey => {
+                deltaBySlotKey[slotKey] =
+                    (comparedCosts[slotKey] ?? 0) - baseCost;
+            });
+            return {
+                interventionId,
+                interventionLabel: labelById.get(interventionId) ?? '',
+                deltaBySlotKey,
+            };
+        })
+        .sort(
+            (a, b) =>
+                (baseCostById.get(b.interventionId) ?? 0) -
+                    (baseCostById.get(a.interventionId) ?? 0) ||
+                a.interventionLabel.localeCompare(b.interventionLabel),
+        );
+};
+
+/**
+ * Unions each slot's total-cost-by-year series into recharts rows, one per
+ * year (ascending), each carrying every slot's cost for that year keyed by
+ * slot key. A slot with no budget for a year omits that key, so the line
+ * chart draws a gap rather than a zero.
+ */
+export const mergeSlotYearlyCostsByYear = (
+    costsBySlotKey: Map<string, YearlyCost[]>,
+): SlotYearlyCostRow[] => {
+    const rowByYear = new Map<number, SlotYearlyCostRow>();
+    costsBySlotKey.forEach((costs, slotKey) => {
+        costs.forEach(({ year, totalCost }) => {
+            const row = rowByYear.get(year) ?? { year };
+            row[slotKey] = totalCost;
+            rowByYear.set(year, row);
+        });
+    });
+    return Array.from(rowByYear.values()).sort((a, b) => a.year - b.year);
 };
 
 /**

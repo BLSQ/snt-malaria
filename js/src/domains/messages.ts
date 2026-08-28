@@ -90,9 +90,33 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.planning.comparison.removeScenario',
         defaultMessage: 'Remove scenario',
     },
+    comparisonTotalCostPerYearTitle: {
+        id: 'iaso.snt_malaria.planning.comparison.totalCostPerYearTitle',
+        defaultMessage: 'Total cost per year',
+    },
     comparisonBudgetByInterventionTitle: {
         id: 'iaso.snt_malaria.planning.comparison.budgetByInterventionTitle',
         defaultMessage: 'Budget by intervention',
+    },
+    comparisonCostDifferenceTitle: {
+        id: 'iaso.snt_malaria.planning.comparison.costDifferenceTitle',
+        defaultMessage: 'Cost difference by intervention',
+    },
+    comparisonCostDifferenceEmpty: {
+        id: 'iaso.snt_malaria.planning.comparison.costDifferenceEmpty',
+        defaultMessage: 'Add a scenario to compare cost differences',
+    },
+    comparisonCostChange: {
+        id: 'iaso.snt_malaria.planning.comparison.costChange',
+        defaultMessage: 'Cost change',
+    },
+    comparisonCostDecrease: {
+        id: 'iaso.snt_malaria.planning.comparison.costDecrease',
+        defaultMessage: 'Decrease',
+    },
+    comparisonCostIncrease: {
+        id: 'iaso.snt_malaria.planning.comparison.costIncrease',
+        defaultMessage: 'Increase',
     },
     comparisonDistrictsCountTitle: {
         id: 'iaso.snt_malaria.planning.comparison.districtsCountTitle',

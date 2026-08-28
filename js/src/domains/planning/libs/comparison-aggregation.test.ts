@@ -20,7 +20,9 @@ import {
     getSlotTotalCost,
     mergeCommodityRowsBySlot,
     mergeCoverageRowsBySlot,
+    mergeInterventionCostDeltas,
     mergeSlotRowsByIntervention,
+    mergeSlotYearlyCostsByYear,
 } from './comparison-aggregation';
 
 const makeCostLine = (
@@ -79,6 +81,39 @@ describe('getSlotTotalCost', () => {
 
     it('returns undefined for an undefined budget', () => {
         expect(getSlotTotalCost(undefined)).toBeUndefined();
+    });
+});
+
+describe('mergeSlotYearlyCostsByYear', () => {
+    it('unions per-slot yearly costs into rows ordered by year, keyed by slot', () => {
+        expect(
+            mergeSlotYearlyCostsByYear(
+                new Map([
+                    [
+                        'slot-0',
+                        [
+                            { year: 2026, totalCost: 200 },
+                            { year: 2025, totalCost: 100 },
+                        ],
+                    ],
+                    ['slot-1', [{ year: 2026, totalCost: 500 }]],
+                ]),
+            ),
+        ).toEqual([
+            { year: 2025, 'slot-0': 100 },
+            { year: 2026, 'slot-0': 200, 'slot-1': 500 },
+        ]);
+    });
+
+    it('returns an empty array when no slot has any yearly costs', () => {
+        expect(
+            mergeSlotYearlyCostsByYear(
+                new Map([
+                    ['slot-0', []],
+                    ['slot-1', []],
+                ]),
+            ),
+        ).toEqual([]);
     });
 });
 
@@ -488,6 +523,65 @@ describe('mergeSlotRowsByIntervention', () => {
                 valueBySlotKey: { slotA: 50, slotB: 0 },
             },
         ]);
+    });
+});
+
+describe('mergeInterventionCostDeltas', () => {
+    it('computes each compared slot delta vs the base, ordered by base cost', () => {
+        const base = [
+            makeIntervention({ id: 1, type: 'Bed nets', total_cost: 100 }),
+            makeIntervention({ id: 2, type: 'IRS', total_cost: 500 }),
+        ];
+        const comparedCostsBySlotKey = new Map([
+            [
+                'slot-1',
+                [
+                    makeIntervention({
+                        id: 1,
+                        type: 'Bed nets',
+                        total_cost: 130,
+                    }),
+                    makeIntervention({ id: 2, type: 'IRS', total_cost: 400 }),
+                ],
+            ],
+            [
+                'slot-2',
+                [
+                    makeIntervention({
+                        id: 1,
+                        type: 'Bed nets',
+                        total_cost: 90,
+                    }),
+                    // intervention 3 is new in this scenario, absent from base
+                    makeIntervention({ id: 3, type: 'SMC', total_cost: 60 }),
+                ],
+            ],
+        ]);
+
+        expect(
+            mergeInterventionCostDeltas(base, comparedCostsBySlotKey),
+        ).toEqual([
+            // IRS first: largest base cost
+            {
+                interventionId: 2,
+                interventionLabel: 'IRS',
+                deltaBySlotKey: { 'slot-1': -100, 'slot-2': -500 },
+            },
+            {
+                interventionId: 1,
+                interventionLabel: 'Bed nets',
+                deltaBySlotKey: { 'slot-1': 30, 'slot-2': -10 },
+            },
+            {
+                interventionId: 3,
+                interventionLabel: 'SMC',
+                deltaBySlotKey: { 'slot-1': 0, 'slot-2': 60 },
+            },
+        ]);
+    });
+
+    it('returns an empty array when no scenario has intervention costs', () => {
+        expect(mergeInterventionCostDeltas([], new Map())).toEqual([]);
     });
 });
 

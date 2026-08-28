@@ -7,10 +7,15 @@ import React, {
 } from 'react';
 import { ComparisonSlot } from '../components/comparisonTab/types';
 import { Budget } from '../types/budget';
+import { YearlyCost } from '../types/comparisonAggregation';
 
 type ScenarioComparisonContextType = {
     slots: ComparisonSlot[];
     budgetsBySlotKey: Map<string, Budget | undefined>;
+    // Per-slot total-cost-by-year series -- the cost-over-time chart needs the
+    // whole series, not just the slot's selected year, but not the full
+    // `Budget` objects either.
+    totalCostsBySlotKey: Map<string, YearlyCost[]>;
     isBudgetLoading: boolean;
     currency: string;
     // The header's org-unit selector, narrowed to the intervention org-unit
@@ -30,6 +35,7 @@ type ScenarioComparisonContextType = {
 const ScenarioComparisonContext = createContext<ScenarioComparisonContextType>({
     slots: [],
     budgetsBySlotKey: new Map(),
+    totalCostsBySlotKey: new Map(),
     isBudgetLoading: false,
     currency: '',
     orgUnitIds: new Set(),
@@ -44,6 +50,7 @@ export const ScenarioComparisonProvider: FC<
     children,
     slots,
     budgetsBySlotKey,
+    totalCostsBySlotKey,
     isBudgetLoading,
     currency,
     orgUnitIds,
@@ -60,6 +67,7 @@ export const ScenarioComparisonProvider: FC<
         () => ({
             slots,
             budgetsBySlotKey,
+            totalCostsBySlotKey,
             isBudgetLoading,
             currency,
             orgUnitIds,
@@ -70,6 +78,7 @@ export const ScenarioComparisonProvider: FC<
         [
             slots,
             budgetsBySlotKey,
+            totalCostsBySlotKey,
             isBudgetLoading,
             currency,
             orgUnitIds,

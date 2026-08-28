@@ -18,8 +18,10 @@ import { useComparisonSlots } from './useComparisonSlots';
 import { useScenarioComparisonData } from './useScenarioComparisonData';
 import { BudgetByInterventionWidget } from './widgets/BudgetByInterventionWidget';
 import { CommoditiesWidget } from './widgets/CommoditiesWidget';
+import { CostDifferenceWidget } from './widgets/CostDifferenceWidget';
 import { DistrictsCoveredWidget } from './widgets/DistrictsCoveredWidget';
 import { PopulationCoverageWidget } from './widgets/PopulationCoverageWidget';
+import { TotalCostPerYearWidget } from './widgets/TotalCostPerYearWidget';
 
 const CHART_HEIGHT = 360;
 
@@ -141,7 +143,7 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
         return result;
     }, [scenario, currentYear, extraSlots, scenarioNameById]);
 
-    const { budgetsBySlotKey, isBudgetLoading } =
+    const { budgetsBySlotKey, totalCostsBySlotKey, isBudgetLoading } =
         useScenarioComparisonData(slots);
 
     // `slots` is briefly empty while the current scenario is still loading
@@ -183,6 +185,7 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                 <ScenarioComparisonProvider
                     slots={slots}
                     budgetsBySlotKey={budgetsBySlotKey}
+                    totalCostsBySlotKey={totalCostsBySlotKey}
                     isBudgetLoading={isBudgetLoading}
                     currency={currency}
                     orgUnitIds={orgUnitIds}
@@ -233,7 +236,13 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                         )}
                     </Grid>
                     <Box sx={styles.widget}>
+                        <TotalCostPerYearWidget />
+                    </Box>
+                    <Box sx={styles.widget}>
                         <BudgetByInterventionWidget />
+                    </Box>
+                    <Box sx={styles.widget}>
+                        <CostDifferenceWidget />
                     </Box>
                     <Box sx={styles.widget}>
                         <PopulationCoverageWidget />
