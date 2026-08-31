@@ -13,11 +13,14 @@ type Args = {
     // Sent with each message so the AI can iterate on the current canvas (null when empty).
     getCurrentGraph: () => CurrentGraph | null;
     onGenerate: (graph: GeneratedGraph) => void;
+    // Restores a pre-turn canvas snapshot when the user reverts an AI change.
+    onRestoreGraph: (graph: CurrentGraph | null) => void;
 };
 
 export const useCompositeLayerAIChat = ({
     getCurrentGraph,
     onGenerate,
+    onRestoreGraph,
 }: Args) => {
     const { formatMessage } = useSafeIntl();
     const { mutate: sendMessage, isLoading } = useSendCompositeLayerAIMessage();
@@ -38,6 +41,19 @@ export const useCompositeLayerAIChat = ({
             },
             [onGenerate],
         ),
+        captureRevertSnapshot: useCallback(
+            () => getCurrentGraph(),
+            [getCurrentGraph],
+        ),
+        didApplyChange: useCallback(
+            (data: CompositeLayerAIResponse) => Boolean(data.graph),
+            [],
+        ),
+        onRevertSnapshot: useCallback(
+            (snapshot: CurrentGraph | null) => onRestoreGraph(snapshot),
+            [onRestoreGraph],
+        ),
+        revertNoteMessage: formatMessage(MESSAGES.compositeLayerAIRevertNote),
         errorMessage: formatMessage(MESSAGES.compositeLayerAIError),
         uploadErrorMessage: useCallback(
             (filename: string) =>

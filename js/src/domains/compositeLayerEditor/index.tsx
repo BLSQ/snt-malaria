@@ -121,6 +121,9 @@ export type CompositeLayerEditorHandle = {
     applyGeneratedGraph: (graph: GeneratedGraph) => void;
     /** Spec of the graph currently on the canvas, sent to the AI as context (null when empty). */
     getCurrentGraph: () => CurrentGraph | null;
+    /** Restores a graph captured earlier by `getCurrentGraph` (AI chat "revert"); `null` clears
+     * the canvas back to an empty editor. */
+    restoreGraph: (graph: CurrentGraph | null) => void;
 };
 
 export const CompositeLayerEditor = forwardRef<
@@ -483,6 +486,22 @@ export const CompositeLayerEditor = forwardRef<
             setEditorGeneration(generation => generation + 1);
         }, [mountScaleRef]);
 
+        // Restore a snapshot from getCurrentGraph (AI chat "revert"). CurrentGraph is structurally
+        // a superset of GeneratedGraph (its output may be unwired / use editor-only legend values),
+        // and buildFlumeGraphFromSpec already tolerates that - it's the same shape sent to the AI
+        // as `current_graph` context - so it can go straight through handleGenerateGraph. A null
+        // snapshot means the canvas was empty when captured: remount to a clean editor.
+        const handleRestoreGraph = useCallback(
+            (graph: CurrentGraph | null) => {
+                if (!graph || graph.nodes.length === 0) {
+                    remountWithGraph({});
+                    return;
+                }
+                handleGenerateGraph(graph as unknown as GeneratedGraph);
+            },
+            [handleGenerateGraph, remountWithGraph],
+        );
+
         useImperativeHandle(
             ref,
             () => ({
@@ -491,8 +510,9 @@ export const CompositeLayerEditor = forwardRef<
                 // (including hand-built graphs that never came from the AI).
                 getCurrentGraph: () =>
                     extractGraphSpecFromFlume(nodesRef.current),
+                restoreGraph: handleRestoreGraph,
             }),
-            [handleGenerateGraph],
+            [handleGenerateGraph, handleRestoreGraph],
         );
 
         const handleSave = () => {
