@@ -1,12 +1,17 @@
 import { postRequest } from 'bluesquare-components';
 import { useMutation, useQueryClient } from 'react-query';
-import { ScenarioRuleAIRequest, ScenarioRuleAIResponse } from './types';
+import {
+    ScenarioRuleAIRequest,
+    ScenarioRuleAIResponse,
+    ScenarioRuleRestoreRequest,
+    ScenarioRuleRestoreResponse,
+} from './types';
 
 // Query keys any other scenario rule mutation invalidates (see useReorderScenarioRules,
-// useCreateUpdateScenarioRule) - the AI endpoint persists rules itself, so on a response that
+// useCreateUpdateScenarioRule) - the AI endpoints persist rules themselves, so on a response that
 // changed anything, the same downstream state (rules list, assignments, impact, budget) needs a
 // refresh.
-const invalidateScenarioQueries = (
+export const invalidateScenarioQueries = (
     queryClient: ReturnType<typeof useQueryClient>,
     scenarioId: number,
 ) => {
@@ -27,6 +32,22 @@ export const useSendScenarioRuleAIMessage = (scenarioId: number) => {
                     invalidateScenarioQueries(queryClient, scenarioId);
                 }
             },
+        },
+    );
+};
+
+// Reverts an earlier AI turn by re-persisting the rule set the chat captured just before it.
+export const useRestoreScenarioRules = (scenarioId: number) => {
+    const queryClient = useQueryClient();
+    return useMutation<
+        ScenarioRuleRestoreResponse,
+        Error,
+        ScenarioRuleRestoreRequest
+    >(
+        (data: ScenarioRuleRestoreRequest) =>
+            postRequest('/api/snt_malaria/scenario_rule_ai/restore/', data),
+        {
+            onSuccess: () => invalidateScenarioQueries(queryClient, scenarioId),
         },
     );
 };
