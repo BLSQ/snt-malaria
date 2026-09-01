@@ -79,7 +79,7 @@ type PanelRow = {
 
 // Line from the zero axis to the delta, with a dot at the end -- the pasted
 // reference chart's lollipop look, which recharts can't draw natively.
-const LollipopBar = (props: any) => {
+const LollipopBar: FC = (props: any) => {
     const { x, y, width, height, fill, payload } = props;
     const cy = y + height / 2;
     const positive = (payload?.delta ?? 0) >= 0;

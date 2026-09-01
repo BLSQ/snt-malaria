@@ -64,9 +64,9 @@ export const useScenarioComparisonData = (slots: ComparisonSlot[]) => {
     }, [slots, results0, results1, results2]);
 
     const isBudgetLoading =
-        Boolean(budgetQuery0?.isFetching) ||
-        Boolean(budgetQuery1?.isFetching) ||
-        Boolean(budgetQuery2?.isFetching);
+        budgetQuery0?.isFetching ||
+        budgetQuery1?.isFetching ||
+        budgetQuery2?.isFetching;
 
     return { budgetsBySlotKey, totalCostsBySlotKey, isBudgetLoading };
 };
