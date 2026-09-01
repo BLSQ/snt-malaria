@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { AnonymousRoutePath, RoutePath } from 'Iaso/constants/routes';
+import { IMPACT } from 'Iaso/utils/featureFlags';
 
 import { CompareCustomize } from '../domains/compareCustomize';
 import { ConfigureAccount } from '../domains/configureAccount';
@@ -38,6 +39,7 @@ export const compareCustomizePath: RoutePath = {
     routerUrl: `${baseUrls.compareCustomize}/*`,
     element: <CompareCustomize />,
     permissions: [],
+    featureFlag: IMPACT,
 };
 
 export const settingsPath: RoutePath = {
