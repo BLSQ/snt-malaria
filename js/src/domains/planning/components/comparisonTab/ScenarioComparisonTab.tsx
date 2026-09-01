@@ -11,15 +11,17 @@ import { useGetAccountSettings } from '../../hooks/useGetAccountSettings';
 import { usePopulationByOrgUnit } from '../../hooks/usePopulationByOrgUnit';
 import { getSlotTotalCost } from '../../libs/comparison-aggregation';
 import { formatBigNumber } from '../../libs/cost-utils';
-import { ComparisonHeaderControls } from './ComparisonHeaderControls';
+import { AddScenarioButton } from './AddScenarioButton';
 import { ScenarioSlotWidget } from './ScenarioSlotWidget';
 import { ComparisonSlot } from './types';
 import { useComparisonSlots } from './useComparisonSlots';
 import { useScenarioComparisonData } from './useScenarioComparisonData';
 import { BudgetByInterventionWidget } from './widgets/BudgetByInterventionWidget';
 import { CommoditiesWidget } from './widgets/CommoditiesWidget';
+import { CostDifferenceWidget } from './widgets/CostDifferenceWidget';
 import { DistrictsCoveredWidget } from './widgets/DistrictsCoveredWidget';
 import { PopulationCoverageWidget } from './widgets/PopulationCoverageWidget';
+import { TotalCostPerYearWidget } from './widgets/TotalCostPerYearWidget';
 
 const CHART_HEIGHT = 360;
 
@@ -68,13 +70,7 @@ type Props = {
 };
 
 export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
-    const {
-        scenario,
-        currency,
-        orgUnits,
-        comparisonDisplayMode: displayMode,
-        setComparisonDisplayMode: setDisplayMode,
-    } = usePlanningContext();
+    const { scenario, currency, orgUnits } = usePlanningContext();
     const { data: scenarios } = useGetScenarios();
     const { data: accountSettings } = useGetAccountSettings();
     const { populationByOrgUnit, year: populationYear } =
@@ -147,7 +143,7 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
         return result;
     }, [scenario, currentYear, extraSlots, scenarioNameById]);
 
-    const { budgetsBySlotKey, isBudgetLoading } =
+    const { budgetsBySlotKey, totalCostsBySlotKey, isBudgetLoading } =
         useScenarioComparisonData(slots);
 
     // `slots` is briefly empty while the current scenario is still loading
@@ -178,11 +174,9 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                 <CardHeader
                     sx={styles.header}
                     title={header(
-                        <ComparisonHeaderControls
+                        <AddScenarioButton
                             canAddSlot={canAddSlot}
                             onAddSlot={handleAddSlot}
-                            displayMode={displayMode}
-                            onDisplayModeChange={setDisplayMode}
                         />,
                     )}
                 />
@@ -191,9 +185,9 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                 <ScenarioComparisonProvider
                     slots={slots}
                     budgetsBySlotKey={budgetsBySlotKey}
+                    totalCostsBySlotKey={totalCostsBySlotKey}
                     isBudgetLoading={isBudgetLoading}
                     currency={currency}
-                    displayMode={displayMode}
                     orgUnitIds={orgUnitIds}
                     totalDistrictCount={totalDistrictCount}
                     totalPopulation={totalPopulation}
@@ -242,7 +236,13 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                         )}
                     </Grid>
                     <Box sx={styles.widget}>
+                        <TotalCostPerYearWidget />
+                    </Box>
+                    <Box sx={styles.widget}>
                         <BudgetByInterventionWidget />
+                    </Box>
+                    <Box sx={styles.widget}>
+                        <CostDifferenceWidget />
                     </Box>
                     <Box sx={styles.widget}>
                         <PopulationCoverageWidget />

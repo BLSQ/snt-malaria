@@ -10,6 +10,7 @@ import {
     CoverageTableRow,
     InterventionCommodities,
     InterventionCommodityLine,
+    InterventionCostDeltaRow,
     InterventionCostIdentity,
     InterventionCoverage,
     InterventionDistrictCoverage,
@@ -18,7 +19,9 @@ import {
     MergedInterventionRow,
     MergedSubRow,
     PopulationLayerCoverage,
+    SlotYearlyCostRow,
     SubRow,
+    YearlyCost,
 } from '../types/comparisonAggregation';
 import {
     aggregateInterventionCosts,
@@ -28,8 +31,10 @@ import {
 
 /**
  * Aggregation helpers for the Comparison tab. Unlike `budget-aggregation.ts`,
- * which operates on a scenario's full multi-year `Budget[]`, these all take
- * a single, already year-scoped `Budget` — one per comparison slot.
+ * which operates on a scenario's full multi-year `Budget[]`, the `getSlot*`
+ * helpers take a single, already year-scoped `Budget` — one per comparison
+ * slot — and the `merge*` helpers union a pre-extracted per-slot row set into
+ * one combined table/chart shape.
  */
 
 export const getSlotTotalCost = (
@@ -201,38 +206,11 @@ export const getSlotInterventionDistrictCoverage = (
 };
 
 /**
- * Union of intervention identities across every slot, ordered alphabetically
- * by label. Gives side-by-side per-slot charts/tables (each rendered as its
- * own independent chart, unlike the overlay's single merged one) a shared
- * row order, so the same intervention lands on the same row in every slot
- * even when slots don't share the exact same intervention set -- sorting
- * each slot's own list independently can't guarantee that when the sets
- * differ.
- */
-export const getSharedInterventionOrder = (
-    rowsBySlotIndex: InterventionIdentity[][],
-): InterventionIdentity[] => {
-    const byId = new Map<number, InterventionIdentity>();
-    rowsBySlotIndex.forEach(rows => {
-        rows.forEach(row => {
-            if (!byId.has(row.interventionId)) {
-                byId.set(row.interventionId, row);
-            }
-        });
-    });
-    return Array.from(byId.values()).sort((a, b) =>
-        a.interventionLabel.localeCompare(b.interventionLabel),
-    );
-};
-
-/**
- * Same shared-row-order purpose as `getSharedInterventionOrder`, but grouped
- * by intervention category (largest-cost category first, largest
- * intervention within a category first) instead of alphabetically -- so
- * charts that colour bars by category (see `useInterventionCategoryColors`)
- * keep same-category bars adjacent instead of scattering them alphabetically.
- * Cost is summed across every slot so the order is stable regardless of
- * which slot it's read from.
+ * Union of intervention identities across every slot, ordered by intervention
+ * category (largest-cost category first, largest intervention within a
+ * category first) so the merged chart's bar groups keep same-category
+ * interventions adjacent instead of scattering them. Cost is summed across
+ * every slot so the order doesn't depend on which slot it's read from.
  */
 export const getSharedInterventionOrderByCategory = (
     rowsBySlotIndex: InterventionCostIdentity[][],
@@ -267,30 +245,6 @@ export const getSharedInterventionOrderByCategory = (
         identity => totalCostById.get(identity.interventionId) ?? 0,
     );
 };
-
-/**
- * Reorders each slot's rows to match `sharedOrder` (see
- * `getSharedInterventionOrder`), filling in `makePlaceholder` for any
- * intervention missing from that slot -- unless the slot has no data at all,
- * in which case it's left empty so its chart falls back to its own "no
- * data" state instead of an all-placeholder grid.
- */
-export const alignToSharedOrder = <T>(
-    rowsBySlotIndex: T[][],
-    sharedOrder: InterventionIdentity[],
-    getInterventionId: (row: T) => number,
-    makePlaceholder: (identity: InterventionIdentity) => T,
-): T[][] =>
-    rowsBySlotIndex.map(rows => {
-        if (rows.length === 0) {
-            return rows;
-        }
-        const byId = new Map(rows.map(row => [getInterventionId(row), row]));
-        return sharedOrder.map(
-            identity =>
-                byId.get(identity.interventionId) ?? makePlaceholder(identity),
-        );
-    });
 
 /**
  * Unions per-slot intervention rows into one row per intervention, each
@@ -336,6 +290,86 @@ export const mergeSlotRowsByIntervention = (
             return { interventionId, interventionLabel, valueBySlotKey };
         },
     );
+};
+
+/**
+ * Per-intervention cost change from a base scenario to each compared
+ * scenario: `cost(intervention, comparedSlot) - cost(intervention, base)`.
+ * Unions interventions across the base and every compared slot (a slot
+ * missing an intervention counts it as 0), so the small-multiple panels
+ * share one row order -- ordered by the base scenario's intervention cost,
+ * largest first.
+ */
+export const mergeInterventionCostDeltas = (
+    baseCosts: BudgetIntervention[],
+    comparedCostsBySlotKey: Map<string, BudgetIntervention[]>,
+): InterventionCostDeltaRow[] => {
+    const slotKeys = Array.from(comparedCostsBySlotKey.keys());
+    const baseCostById = new Map<number, number>();
+    const labelById = new Map<number, string>();
+    baseCosts.forEach(intervention => {
+        baseCostById.set(intervention.id, intervention.total_cost);
+        labelById.set(intervention.id, intervention.type);
+    });
+
+    const comparedCostBySlotKeyById = new Map<number, Record<string, number>>();
+    comparedCostsBySlotKey.forEach((costs, slotKey) => {
+        costs.forEach(intervention => {
+            labelById.set(intervention.id, intervention.type);
+            const bySlotKey =
+                comparedCostBySlotKeyById.get(intervention.id) ?? {};
+            bySlotKey[slotKey] = intervention.total_cost;
+            comparedCostBySlotKeyById.set(intervention.id, bySlotKey);
+        });
+    });
+
+    const interventionIds = new Set<number>([
+        ...baseCostById.keys(),
+        ...comparedCostBySlotKeyById.keys(),
+    ]);
+
+    return Array.from(interventionIds)
+        .map(interventionId => {
+            const baseCost = baseCostById.get(interventionId) ?? 0;
+            const comparedCosts =
+                comparedCostBySlotKeyById.get(interventionId) ?? {};
+            const deltaBySlotKey: Record<string, number> = {};
+            slotKeys.forEach(slotKey => {
+                deltaBySlotKey[slotKey] =
+                    (comparedCosts[slotKey] ?? 0) - baseCost;
+            });
+            return {
+                interventionId,
+                interventionLabel: labelById.get(interventionId) ?? '',
+                deltaBySlotKey,
+            };
+        })
+        .sort(
+            (a, b) =>
+                (baseCostById.get(b.interventionId) ?? 0) -
+                    (baseCostById.get(a.interventionId) ?? 0) ||
+                a.interventionLabel.localeCompare(b.interventionLabel),
+        );
+};
+
+/**
+ * Unions each slot's total-cost-by-year series into recharts rows, one per
+ * year (ascending), each carrying every slot's cost for that year keyed by
+ * slot key. A slot with no budget for a year omits that key, so the line
+ * chart draws a gap rather than a zero.
+ */
+export const mergeSlotYearlyCostsByYear = (
+    costsBySlotKey: Map<string, YearlyCost[]>,
+): SlotYearlyCostRow[] => {
+    const rowByYear = new Map<number, SlotYearlyCostRow>();
+    costsBySlotKey.forEach((costs, slotKey) => {
+        costs.forEach(({ year, totalCost }) => {
+            const row = rowByYear.get(year) ?? { year };
+            row[slotKey] = totalCost;
+            rowByYear.set(year, row);
+        });
+    });
+    return Array.from(rowByYear.values()).sort((a, b) => a.year - b.year);
 };
 
 /**

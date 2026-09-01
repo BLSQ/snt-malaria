@@ -11,5 +11,3 @@ export type ComparisonSlot = {
     // already showing) -- its scenario can't be changed, only its year.
     isCurrent: boolean;
 };
-
-export type DisplayMode = 'sideBySide' | 'overlay';

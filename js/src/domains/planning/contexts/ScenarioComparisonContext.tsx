@@ -5,15 +5,19 @@ import React, {
     useContext,
     useMemo,
 } from 'react';
-import { ComparisonSlot, DisplayMode } from '../components/comparisonTab/types';
+import { ComparisonSlot } from '../components/comparisonTab/types';
 import { Budget } from '../types/budget';
+import { YearlyCost } from '../types/comparisonAggregation';
 
 type ScenarioComparisonContextType = {
     slots: ComparisonSlot[];
     budgetsBySlotKey: Map<string, Budget | undefined>;
+    // Per-slot total-cost-by-year series -- the cost-over-time chart needs the
+    // whole series, not just the slot's selected year, but not the full
+    // `Budget` objects either.
+    totalCostsBySlotKey: Map<string, YearlyCost[]>;
     isBudgetLoading: boolean;
     currency: string;
-    displayMode: DisplayMode;
     // The header's org-unit selector, narrowed to the intervention org-unit
     // type (see `PlanningContext.orgUnits`) -- threaded into the per-slot
     // aggregation helpers so this tab respects the same selection every
@@ -31,9 +35,9 @@ type ScenarioComparisonContextType = {
 const ScenarioComparisonContext = createContext<ScenarioComparisonContextType>({
     slots: [],
     budgetsBySlotKey: new Map(),
+    totalCostsBySlotKey: new Map(),
     isBudgetLoading: false,
     currency: '',
-    displayMode: 'sideBySide',
     orgUnitIds: new Set(),
 });
 
@@ -46,16 +50,16 @@ export const ScenarioComparisonProvider: FC<
     children,
     slots,
     budgetsBySlotKey,
+    totalCostsBySlotKey,
     isBudgetLoading,
     currency,
-    displayMode,
     orgUnitIds,
     totalDistrictCount,
     totalPopulation,
     populationYear,
 }) => {
-    // Without this, every render of `ScenarioComparisonTab` (e.g. toggling
-    // `displayMode`, changing one slot's year) rebuilds this object, forcing
+    // Without this, every render of `ScenarioComparisonTab` (e.g. changing
+    // one slot's year) rebuilds this object, forcing
     // every widget to re-render even though most of these fields (`slots`,
     // `budgetsBySlotKey`, `totalPopulation`) are already independently
     // memoized upstream and haven't actually changed.
@@ -63,9 +67,9 @@ export const ScenarioComparisonProvider: FC<
         () => ({
             slots,
             budgetsBySlotKey,
+            totalCostsBySlotKey,
             isBudgetLoading,
             currency,
-            displayMode,
             orgUnitIds,
             totalDistrictCount,
             totalPopulation,
@@ -74,9 +78,9 @@ export const ScenarioComparisonProvider: FC<
         [
             slots,
             budgetsBySlotKey,
+            totalCostsBySlotKey,
             isBudgetLoading,
             currency,
-            displayMode,
             orgUnitIds,
             totalDistrictCount,
             totalPopulation,

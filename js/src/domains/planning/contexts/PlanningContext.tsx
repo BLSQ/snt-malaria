@@ -15,7 +15,6 @@ import { MetricTypeCategory } from '../../dataLayers/types/metrics';
 import { InterventionCategory } from '../../interventions/types';
 import { sortByStringProp } from '../../planning/libs/list-utils';
 import { Scenario } from '../../scenarios/types';
-import type { DisplayMode } from '../components/comparisonTab/types';
 import type { ExtraSlotState } from '../components/comparisonTab/useComparisonSlots';
 import { useGetScenarioYearlyCostAssignments } from '../hooks/useGetScenarioYearlyCostAssignments';
 import { useSaveScenarioYearlyCostAssignment } from '../hooks/useSaveScenarioYearlyCostAssignment';
@@ -52,11 +51,6 @@ type PlanningContextType = {
     setComparisonCurrentYear: Dispatch<SetStateAction<number | undefined>>;
     comparisonExtraSlots: ExtraSlotState[];
     setComparisonExtraSlots: Dispatch<SetStateAction<ExtraSlotState[]>>;
-    // Comparison tab's display mode, kept here for the same reason as the
-    // slot selection above -- it's a UI preference, not scenario-specific
-    // data, so it isn't reset when scenarioId changes.
-    comparisonDisplayMode: DisplayMode;
-    setComparisonDisplayMode: Dispatch<SetStateAction<DisplayMode>>;
 };
 
 type SaveYearlyCoverageParams = {
@@ -92,8 +86,6 @@ const PlanningContext = createContext<PlanningContextType>({
     setComparisonCurrentYear: () => {},
     comparisonExtraSlots: [],
     setComparisonExtraSlots: () => {},
-    comparisonDisplayMode: 'sideBySide',
-    setComparisonDisplayMode: () => {},
 });
 
 export const usePlanningContext = () => useContext(PlanningContext);
@@ -177,8 +169,6 @@ export const PlanningProvider = ({
     const [comparisonExtraSlots, setComparisonExtraSlots] = useState<
         ExtraSlotState[]
     >([]);
-    const [comparisonDisplayMode, setComparisonDisplayMode] =
-        useState<DisplayMode>('sideBySide');
     const previousScenarioIdRef = useRef(scenarioId);
     useEffect(() => {
         if (previousScenarioIdRef.current !== scenarioId) {
@@ -246,8 +236,6 @@ export const PlanningProvider = ({
                 setComparisonCurrentYear,
                 comparisonExtraSlots,
                 setComparisonExtraSlots,
-                comparisonDisplayMode,
-                setComparisonDisplayMode,
             }}
         >
             {children}

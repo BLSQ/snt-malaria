@@ -8,13 +8,10 @@ import {
     InterventionCommodities,
     InterventionCostIdentity,
     InterventionCoverage,
-    InterventionIdentity,
     InterventionSlotRow,
 } from '../types/comparisonAggregation';
 import { PROCUREMENT_CATEGORY } from './budget-aggregation';
 import {
-    alignToSharedOrder,
-    getSharedInterventionOrder,
     getSharedInterventionOrderByCategory,
     getSlotCommoditiesByIntervention,
     getSlotInterventionCosts,
@@ -23,7 +20,9 @@ import {
     getSlotTotalCost,
     mergeCommodityRowsBySlot,
     mergeCoverageRowsBySlot,
+    mergeInterventionCostDeltas,
     mergeSlotRowsByIntervention,
+    mergeSlotYearlyCostsByYear,
 } from './comparison-aggregation';
 
 const makeCostLine = (
@@ -82,6 +81,39 @@ describe('getSlotTotalCost', () => {
 
     it('returns undefined for an undefined budget', () => {
         expect(getSlotTotalCost(undefined)).toBeUndefined();
+    });
+});
+
+describe('mergeSlotYearlyCostsByYear', () => {
+    it('unions per-slot yearly costs into rows ordered by year, keyed by slot', () => {
+        expect(
+            mergeSlotYearlyCostsByYear(
+                new Map([
+                    [
+                        'slot-0',
+                        [
+                            { year: 2026, totalCost: 200 },
+                            { year: 2025, totalCost: 100 },
+                        ],
+                    ],
+                    ['slot-1', [{ year: 2026, totalCost: 500 }]],
+                ]),
+            ),
+        ).toEqual([
+            { year: 2025, 'slot-0': 100 },
+            { year: 2026, 'slot-0': 200, 'slot-1': 500 },
+        ]);
+    });
+
+    it('returns an empty array when no slot has any yearly costs', () => {
+        expect(
+            mergeSlotYearlyCostsByYear(
+                new Map([
+                    ['slot-0', []],
+                    ['slot-1', []],
+                ]),
+            ),
+        ).toEqual([]);
     });
 });
 
@@ -425,35 +457,6 @@ describe('getSlotInterventionDistrictCoverage', () => {
     });
 });
 
-describe('getSharedInterventionOrder', () => {
-    it('unions intervention identities across slots, sorted alphabetically by label', () => {
-        const rowsBySlotIndex: InterventionIdentity[][] = [
-            [
-                { interventionId: 2, interventionLabel: 'IRS' },
-                { interventionId: 1, interventionLabel: 'Bed nets' },
-            ],
-            [{ interventionId: 3, interventionLabel: 'ACT' }],
-        ];
-
-        expect(getSharedInterventionOrder(rowsBySlotIndex)).toEqual([
-            { interventionId: 3, interventionLabel: 'ACT' },
-            { interventionId: 1, interventionLabel: 'Bed nets' },
-            { interventionId: 2, interventionLabel: 'IRS' },
-        ]);
-    });
-
-    it('keeps the first-seen identity for a duplicate intervention id', () => {
-        const rowsBySlotIndex: InterventionIdentity[][] = [
-            [{ interventionId: 1, interventionLabel: 'Bed nets (old label)' }],
-            [{ interventionId: 1, interventionLabel: 'Bed nets (new label)' }],
-        ];
-
-        expect(getSharedInterventionOrder(rowsBySlotIndex)).toEqual([
-            { interventionId: 1, interventionLabel: 'Bed nets (old label)' },
-        ]);
-    });
-});
-
 describe('getSharedInterventionOrderByCategory', () => {
     it('sums cost across slots and orders by category cost then intervention cost', () => {
         const rowsBySlotIndex: InterventionCostIdentity[][] = [
@@ -479,42 +482,6 @@ describe('getSharedInterventionOrderByCategory', () => {
             { interventionId: 1, interventionLabel: 'Bed nets' },
             { interventionId: 2, interventionLabel: 'IRS' },
         ]);
-    });
-});
-
-describe('alignToSharedOrder', () => {
-    const sharedOrder: InterventionIdentity[] = [
-        { interventionId: 1, interventionLabel: 'Bed nets' },
-        { interventionId: 2, interventionLabel: 'IRS' },
-    ];
-
-    it('reorders rows to match the shared order, filling gaps with a placeholder', () => {
-        const rowsBySlotIndex = [[{ interventionId: 2, value: 50 }]];
-
-        const result = alignToSharedOrder(
-            rowsBySlotIndex,
-            sharedOrder,
-            row => row.interventionId,
-            identity => ({ interventionId: identity.interventionId, value: 0 }),
-        );
-
-        expect(result).toEqual([
-            [
-                { interventionId: 1, value: 0 },
-                { interventionId: 2, value: 50 },
-            ],
-        ]);
-    });
-
-    it('leaves an empty slot empty instead of filling it with placeholders', () => {
-        const result = alignToSharedOrder(
-            [[]],
-            sharedOrder,
-            (row: { interventionId: number }) => row.interventionId,
-            identity => ({ interventionId: identity.interventionId, value: 0 }),
-        );
-
-        expect(result).toEqual([[]]);
     });
 });
 
@@ -556,6 +523,65 @@ describe('mergeSlotRowsByIntervention', () => {
                 valueBySlotKey: { slotA: 50, slotB: 0 },
             },
         ]);
+    });
+});
+
+describe('mergeInterventionCostDeltas', () => {
+    it('computes each compared slot delta vs the base, ordered by base cost', () => {
+        const base = [
+            makeIntervention({ id: 1, type: 'Bed nets', total_cost: 100 }),
+            makeIntervention({ id: 2, type: 'IRS', total_cost: 500 }),
+        ];
+        const comparedCostsBySlotKey = new Map([
+            [
+                'slot-1',
+                [
+                    makeIntervention({
+                        id: 1,
+                        type: 'Bed nets',
+                        total_cost: 130,
+                    }),
+                    makeIntervention({ id: 2, type: 'IRS', total_cost: 400 }),
+                ],
+            ],
+            [
+                'slot-2',
+                [
+                    makeIntervention({
+                        id: 1,
+                        type: 'Bed nets',
+                        total_cost: 90,
+                    }),
+                    // intervention 3 is new in this scenario, absent from base
+                    makeIntervention({ id: 3, type: 'SMC', total_cost: 60 }),
+                ],
+            ],
+        ]);
+
+        expect(
+            mergeInterventionCostDeltas(base, comparedCostsBySlotKey),
+        ).toEqual([
+            // IRS first: largest base cost
+            {
+                interventionId: 2,
+                interventionLabel: 'IRS',
+                deltaBySlotKey: { 'slot-1': -100, 'slot-2': -500 },
+            },
+            {
+                interventionId: 1,
+                interventionLabel: 'Bed nets',
+                deltaBySlotKey: { 'slot-1': 30, 'slot-2': -10 },
+            },
+            {
+                interventionId: 3,
+                interventionLabel: 'SMC',
+                deltaBySlotKey: { 'slot-1': 0, 'slot-2': 60 },
+            },
+        ]);
+    });
+
+    it('returns an empty array when no scenario has intervention costs', () => {
+        expect(mergeInterventionCostDeltas([], new Map())).toEqual([]);
     });
 });
 

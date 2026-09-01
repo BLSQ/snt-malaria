@@ -73,6 +73,23 @@ export type MergedInterventionRow = {
     valueBySlotKey: Record<string, number>;
 };
 
+export type YearlyCost = {
+    year: number;
+    totalCost: number;
+};
+
+export type InterventionCostDeltaRow = {
+    interventionId: number;
+    interventionLabel: string;
+    // `cost(intervention, comparedSlot) - cost(intervention, baseSlot)`, one
+    // entry per compared slot key.
+    deltaBySlotKey: Record<string, number>;
+};
+
+// One recharts row for the total-cost-per-year chart: `year` plus one entry
+// per slot key. A slot missing a year has no key (the line shows a gap).
+export type SlotYearlyCostRow = Record<string, number>;
+
 export type InterventionCommodityLine = {
     unitName: string;
     quantity: number;

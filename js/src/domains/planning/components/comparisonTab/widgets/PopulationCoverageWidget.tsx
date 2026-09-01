@@ -1,14 +1,18 @@
 import React, { FC, useMemo } from 'react';
+import { GroupsOutlined } from '@mui/icons-material';
 import { useSafeIntl } from 'bluesquare-components';
 import { MESSAGES } from '../../../../messages';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
 import {
-    alignToSharedOrder,
-    getSharedInterventionOrder,
     getSlotInterventionCoverage,
+    mergeCoverageRowsBySlot,
 } from '../../../libs/comparison-aggregation';
-import { PopulationCoverageOverlay } from './PopulationCoverageOverlay';
-import { PopulationCoverageSideBySide } from './PopulationCoverageSideBySide';
+import {
+    formatBigNumber,
+    formatPercentValue,
+    percentOfTotal,
+} from '../../../libs/cost-utils';
+import { SlotComparisonRow, SlotComparisonTable } from './SlotComparisonTable';
 
 export const PopulationCoverageWidget: FC = () => {
     const { formatMessage } = useSafeIntl();
@@ -16,54 +20,64 @@ export const PopulationCoverageWidget: FC = () => {
         slots,
         budgetsBySlotKey,
         isBudgetLoading,
-        displayMode,
         totalPopulation,
         populationYear,
     } = useScenarioComparisonContext();
 
-    const coverageBySlotIndex = useMemo(
-        () =>
-            slots.map(slot =>
+    const rows = useMemo<SlotComparisonRow[]>(() => {
+        const coverageBySlotKey = new Map(
+            slots.map(slot => [
+                slot.key,
                 getSlotInterventionCoverage(budgetsBySlotKey.get(slot.key)),
+            ]),
+        );
+        return mergeCoverageRowsBySlot(coverageBySlotKey).map(row => ({
+            key: `${row.interventionId}-${row.layerId}`,
+            interventionLabel: row.interventionLabel,
+            subLabel: row.layerName,
+            cellsBySlotKey: Object.fromEntries(
+                slots.map(slot => {
+                    const cell = row.cellBySlotKey[slot.key];
+                    return [
+                        slot.key,
+                        [
+                            cell ? formatBigNumber(cell.personsAtRisk) : '-',
+                            cell
+                                ? formatPercentValue(cell.percentEligible)
+                                : '-',
+                            cell
+                                ? (percentOfTotal(
+                                      cell.personsAtRisk,
+                                      totalPopulation,
+                                  ) ?? '-')
+                                : '-',
+                        ],
+                    ];
+                }),
             ),
-        [slots, budgetsBySlotKey],
-    );
+        }));
+    }, [slots, budgetsBySlotKey, totalPopulation]);
 
     const title = formatMessage(MESSAGES.comparisonPopulationCoverageTitle);
     const titleWithYear =
         populationYear != null ? `${title} (${populationYear})` : title;
 
-    if (displayMode === 'overlay') {
-        return (
-            <PopulationCoverageOverlay
-                title={titleWithYear}
-                slots={slots}
-                coverageBySlotIndex={coverageBySlotIndex}
-                isBudgetLoading={isBudgetLoading}
-                totalPopulation={totalPopulation}
-            />
-        );
-    }
-
-    const sharedOrder = getSharedInterventionOrder(coverageBySlotIndex);
-    const alignedCoverageBySlotIndex = alignToSharedOrder(
-        coverageBySlotIndex,
-        sharedOrder,
-        row => row.interventionId,
-        ({ interventionId, interventionLabel }) => ({
-            interventionId,
-            interventionLabel,
-            layers: [],
-        }),
-    );
-
     return (
-        <PopulationCoverageSideBySide
+        <SlotComparisonTable
             title={titleWithYear}
+            icon={GroupsOutlined}
+            isLoading={isBudgetLoading}
             slots={slots}
-            coverageBySlotIndex={alignedCoverageBySlotIndex}
-            isBudgetLoading={isBudgetLoading}
-            totalPopulation={totalPopulation}
+            subColumnLabel={formatMessage(
+                MESSAGES.comparisonPopulationLayerLabel,
+            )}
+            perSlotColumnLabels={[
+                formatMessage(MESSAGES.comparisonPersonsAtRisk),
+                formatMessage(MESSAGES.comparisonPercentEligible),
+                formatMessage(MESSAGES.comparisonPercentTotalPop),
+            ]}
+            rows={rows}
+            emptyMessage={formatMessage(MESSAGES.noBudgetData)}
         />
     );
 };
