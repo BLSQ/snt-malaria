@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.18.0](https://github.com/BLSQ/snt-malaria/compare/2.17.0...2.18.0) (2026-09-01)
+
+
+### Features
+
+* **AI Chat:** Integrate document upload ([ac84d9c](https://github.com/BLSQ/snt-malaria/commit/ac84d9c0cd86906789e8c3ff314decac6ee72679))
+* **ai:** reduce unnecessary prompt size context ([#377](https://github.com/BLSQ/snt-malaria/issues/377)) ([9528a47](https://github.com/BLSQ/snt-malaria/commit/9528a47aef1f01cfda962ab7b219a5ce6fb2d5df))
+* **budgetComparison:** compare scenarios ([#373](https://github.com/BLSQ/snt-malaria/issues/373)) ([684b4fa](https://github.com/BLSQ/snt-malaria/commit/684b4fa552acf3c977716385846d1e14f8adf7cd))
+* **Impact features:** Gate impact-related UI behind IMPACT flag ([#380](https://github.com/BLSQ/snt-malaria/issues/380)) ([d992f8e](https://github.com/BLSQ/snt-malaria/commit/d992f8e2eef5ef3f6a016f730b16202f1e4174c6))
+* **Planning:** Add Cost vs. Population Covered summary chart ([#363](https://github.com/BLSQ/snt-malaria/issues/363)) ([85573a6](https://github.com/BLSQ/snt-malaria/commit/85573a6eb4cc25a4e9be87433f97c822d158e842))
+* **rule builder:** AI chat integration in scenario builder ([#372](https://github.com/BLSQ/snt-malaria/issues/372)) ([2fd9351](https://github.com/BLSQ/snt-malaria/commit/2fd9351e8dc50ac50e65e993ab10d25246e4c868))
+
+
+### Bug Fixes
+
+* **compare:** Fix regression of missing budget data in comparison ([#375](https://github.com/BLSQ/snt-malaria/issues/375)) ([fc706ae](https://github.com/BLSQ/snt-malaria/commit/fc706aef4c05e9c1e4ccec9fa12a401a7dac37e5))
+* **CompositeLayer:** Exclude selected layer from node library ([#376](https://github.com/BLSQ/snt-malaria/issues/376)) ([f3c6821](https://github.com/BLSQ/snt-malaria/commit/f3c682131558b8c177ceeab398c3f76b78495b6b))
+* **Map:** Replace CARTO tile layer with OSM ([#378](https://github.com/BLSQ/snt-malaria/issues/378)) ([aa58b5a](https://github.com/BLSQ/snt-malaria/commit/aa58b5a6af62662916af2e097dc6b0a3ecb4a401))
+* **Planning:** Handle non-numeric threshold legend labels ([#374](https://github.com/BLSQ/snt-malaria/issues/374)) ([e17de3f](https://github.com/BLSQ/snt-malaria/commit/e17de3fe5bc18a4b0c67b095e3be61d786a07231))
+
 ## [2.17.0](https://github.com/BLSQ/snt-malaria/compare/2.16.0...2.17.0) (2026-08-18)
 
 
