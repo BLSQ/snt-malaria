@@ -6,7 +6,7 @@ from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import
     InterventionCostBreakdownLineSerializer,
     InterventionCostBreakdownLineWriteSerializer,
 )
-from plugins.snt_malaria.models import Grant, Intervention
+from plugins.snt_malaria.models import Grant, Intervention, InterventionCostBreakdownLine
 
 
 class InterventionSerializer(serializers.ModelSerializer):
@@ -95,3 +95,64 @@ class InterventionDetailWriteSerializer(serializers.ModelSerializer):
                 )
 
         return intervention
+
+
+class InterventionDuplicateSerializer(serializers.Serializer):
+    """Deep-copies an intervention (basic fields + every cost breakdown line) under a unique name.
+
+    The source intervention is passed through the serializer context as ``source``.
+    """
+
+    _COPY_FIELDS = ["short_name", "code", "impact_ref", "description", "grant"]
+    _COPY_LINE_FIELDS = [
+        "name",
+        "category",
+        "unit_type",
+        "population_layer",
+        "unit_cost",
+        "is_proportional",
+        "conversion_factor",
+        "invert_conversion_factor",
+    ]
+
+    def create(self, validated_data):
+        source = self.context["source"]
+        created_by = validated_data["created_by"]
+
+        with transaction.atomic():
+            duplicate = Intervention.objects.create(
+                intervention_category=source.intervention_category,
+                created_by=created_by,
+                name=self._build_unique_name(source),
+                target_population=list(source.target_population),
+                **{field: getattr(source, field) for field in self._COPY_FIELDS},
+            )
+
+            InterventionCostBreakdownLine.objects.bulk_create(
+                [
+                    InterventionCostBreakdownLine(
+                        intervention=duplicate,
+                        created_by=created_by,
+                        updated_by=created_by,
+                        **{field: getattr(line, field) for field in self._COPY_LINE_FIELDS},
+                    )
+                    for line in source.cost_breakdown_lines.all()
+                ]
+            )
+
+        return duplicate
+
+    @staticmethod
+    def _build_unique_name(source):
+        taken_names = set(
+            Intervention.objects.filter(intervention_category=source.intervention_category).values_list(
+                "name", flat=True
+            )
+        )
+        base_name = f"{source.name} (copy)"
+        candidate = base_name
+        suffix = 2
+        while candidate in taken_names:
+            candidate = f"{base_name} {suffix}"
+            suffix += 1
+        return candidate
