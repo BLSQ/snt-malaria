@@ -41,18 +41,12 @@ export const useCompositeLayerAIChat = ({
             },
             [onGenerate],
         ),
-        captureRevertSnapshot: useCallback(
-            () => getCurrentGraph(),
-            [getCurrentGraph],
-        ),
+        captureRevertSnapshot: getCurrentGraph,
         didApplyChange: useCallback(
             (data: CompositeLayerAIResponse) => Boolean(data.graph),
             [],
         ),
-        onRevertSnapshot: useCallback(
-            (snapshot: CurrentGraph | null) => onRestoreGraph(snapshot),
-            [onRestoreGraph],
-        ),
+        onRevertSnapshot: onRestoreGraph,
         revertNoteMessage: formatMessage(MESSAGES.compositeLayerAIRevertNote),
         errorMessage: formatMessage(MESSAGES.compositeLayerAIError),
         uploadErrorMessage: useCallback(

@@ -77,7 +77,7 @@ describe('useAIChat revert', () => {
             setResponse({ ...RESPONSE_WITH_CHANGE, rules: null });
             result.current.sendMessage('just chatting');
         });
-        expect(result.current.messages.at(-1)!.revertable).toBeUndefined();
+        expect(result.current.messages.at(-1)!.revertable).toBeFalsy();
     });
 
     it('restores the captured snapshot and marks the turn reverted', async () => {

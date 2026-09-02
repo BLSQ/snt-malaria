@@ -64,12 +64,7 @@ export const useScenarioRuleAIChat = ({ scenarioId, rules }: Args) => {
             (data: ScenarioRuleAIResponse) => data.rules != null,
             [],
         ),
-        onRevertSnapshot: useCallback(
-            async (snapshot: ScenarioRuleRestoreRequest) => {
-                await restoreRules(snapshot);
-            },
-            [restoreRules],
-        ),
+        onRevertSnapshot: restoreRules,
         revertNoteMessage: formatMessage(MESSAGES.scenarioRuleAIRevertNote),
         errorMessage: formatMessage(MESSAGES.scenarioRuleAIError),
         uploadErrorMessage: useCallback(

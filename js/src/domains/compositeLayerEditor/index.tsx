@@ -486,18 +486,24 @@ export const CompositeLayerEditor = forwardRef<
             setEditorGeneration(generation => generation + 1);
         }, [mountScaleRef]);
 
-        // Restore a snapshot from getCurrentGraph (AI chat "revert"). CurrentGraph is structurally
-        // a superset of GeneratedGraph (its output may be unwired / use editor-only legend values),
-        // and buildFlumeGraphFromSpec already tolerates that - it's the same shape sent to the AI
-        // as `current_graph` context - so it can go straight through handleGenerateGraph. A null
-        // snapshot means the canvas was empty when captured: remount to a clean editor.
+        // Restore a snapshot from getCurrentGraph (AI chat "revert"). A CurrentGraph only differs
+        // from a GeneratedGraph in its `output` (source may be null, legend_type is a looser
+        // string); normalising `source` and letting handleGenerateGraph/buildFlumeGraphFromSpec
+        // handle the rest is the same path the editor already uses for `current_graph` context. A
+        // null snapshot means the canvas was empty when captured: remount to a clean editor.
         const handleRestoreGraph = useCallback(
             (graph: CurrentGraph | null) => {
                 if (!graph || graph.nodes.length === 0) {
                     remountWithGraph({});
                     return;
                 }
-                handleGenerateGraph(graph as unknown as GeneratedGraph);
+                handleGenerateGraph({
+                    ...graph,
+                    output: {
+                        ...graph.output,
+                        source: graph.output.source ?? '',
+                    },
+                } as GeneratedGraph);
             },
             [handleGenerateGraph, remountWithGraph],
         );

@@ -14,13 +14,6 @@ import {
 } from './types';
 import { useAIChatAttachments } from './useAIChatAttachments';
 
-// Appended to conversation_history on a revert so the model treats the freshly re-derived
-// rules/graph (sent uncached every turn) as authoritative and drops the proposal it just made.
-// Sent to the model only, never shown to the user - kept in English, not translated.
-const REVERT_HISTORY_NOTE =
-    '(I reverted the previous change. Treat the current rules/graph shown as the source of truth and disregard the reverted proposal.)';
-const REVERT_HISTORY_ACK = 'Understood.';
-
 type Args<
     TRequest extends AIChatRequest,
     TResponse extends AIChatResponse,
@@ -46,7 +39,7 @@ type Args<
     didApplyChange?: (data: TResponse) => boolean;
     /** Feature-specific restore of a snapshot from `captureRevertSnapshot`. May be async; a
      * rejection surfaces `errorMessage` and leaves the message revertable for a retry. */
-    onRevertSnapshot?: (snapshot: TSnapshot) => Promise<void> | void;
+    onRevertSnapshot?: (snapshot: TSnapshot) => Promise<unknown> | void;
     /** Assistant-bubble line appended after a successful revert. */
     revertNoteMessage?: string;
 };
@@ -106,9 +99,6 @@ export const useAIChat = <
                 file_id: attachment.id,
                 filename: attachment.filename,
             }));
-            const snapshot = captureRevertSnapshot?.();
-            const canRevert = typeof captureRevertSnapshot === 'function';
-
             setMessages(prev => {
                 const messagesWithAnswer = quickReplyAnswer
                     ? applyQuickReplyAnswer(prev, quickReplyAnswer)
@@ -137,11 +127,15 @@ export const useAIChat = <
                     onSuccess: data => {
                         const assistantId = crypto.randomUUID();
                         const revertable =
-                            canRevert && (didApplyChange?.(data) ?? false);
+                            Boolean(captureRevertSnapshot) &&
+                            !!didApplyChange?.(data);
+                        // Capture the pre-turn state only now that the reply is known to be an
+                        // applied change - a plain Q&A turn never needs a snapshot. The reply is
+                        // applied by `onReply` further down, so the state read here is still pre-turn.
                         if (revertable) {
                             revertSnapshots.current.set(
                                 assistantId,
-                                snapshot as TSnapshot,
+                                captureRevertSnapshot!(),
                             );
                         }
                         setMessages(prev => [
@@ -151,7 +145,7 @@ export const useAIChat = <
                                 content: data.assistant_message,
                                 id: assistantId,
                                 quickReplies: data.quick_replies ?? undefined,
-                                revertable: revertable || undefined,
+                                revertable,
                             },
                         ]);
                         setConversationHistory(data.conversation_history);
@@ -184,14 +178,14 @@ export const useAIChat = <
 
     const revert = useCallback(
         async (messageId: string) => {
-            if (!revertSnapshots.current.has(messageId)) {
+            const target = messages.find(m => m.id === messageId);
+            if (!target?.revertable || target.reverted) {
                 return;
             }
-            const snapshot = revertSnapshots.current.get(
-                messageId,
-            ) as TSnapshot;
             try {
-                await onRevertSnapshot?.(snapshot);
+                await onRevertSnapshot?.(
+                    revertSnapshots.current.get(messageId) as TSnapshot,
+                );
             } catch {
                 setMessages(prev => [
                     ...prev,
@@ -203,13 +197,11 @@ export const useAIChat = <
                 ]);
                 return;
             }
+            // The reverted turn and every later one now describe a state that no longer exists;
+            // marking them `reverted` disables their own revert action. The current state the model
+            // sees is rebuilt fresh each turn, so no conversation-history fixup is needed.
             setMessages(prev => {
                 const targetIndex = prev.findIndex(m => m.id === messageId);
-                // The reverted turn and everything after it can no longer be reverted on their
-                // own - their snapshots describe a state that no longer exists.
-                prev.slice(targetIndex).forEach(m =>
-                    revertSnapshots.current.delete(m.id),
-                );
                 const updated = prev.map((m, index) =>
                     m.revertable && !m.reverted && index >= targetIndex
                         ? { ...m, reverted: true }
@@ -226,13 +218,8 @@ export const useAIChat = <
                       ]
                     : updated;
             });
-            setConversationHistory(prev => [
-                ...prev,
-                { role: 'user', content: REVERT_HISTORY_NOTE },
-                { role: 'assistant', content: REVERT_HISTORY_ACK },
-            ]);
         },
-        [onRevertSnapshot, revertNoteMessage, errorMessage],
+        [messages, onRevertSnapshot, revertNoteMessage, errorMessage],
     );
 
     const reset = useCallback(() => {

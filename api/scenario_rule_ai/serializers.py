@@ -22,18 +22,6 @@ RULE_RESTORE_STALE_ERROR = (
 )
 
 
-def validate_scenario_writable(scenario, user):
-    """Shared guard for both AI entry points: the scenario must be unlocked and the user must own it
-    (or hold the full-write permission)."""
-    if scenario.is_locked:
-        raise serializers.ValidationError("Cannot generate rules for a locked scenario.")
-
-    if scenario.created_by != user and not user.has_perm(SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()):
-        raise PermissionDenied("You don't have permission to edit this scenario")
-
-    return scenario
-
-
 class _AccountScopedScenarioSerializer(serializers.Serializer):
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
 
@@ -45,7 +33,13 @@ class _AccountScopedScenarioSerializer(serializers.Serializer):
             self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
 
     def validate_scenario(self, scenario):
-        return validate_scenario_writable(scenario, self.context["request"].user)
+        """Both AI entry points require an unlocked scenario the user is allowed to edit."""
+        if scenario.is_locked:
+            raise serializers.ValidationError("Cannot generate rules for a locked scenario.")
+        user = self.context["request"].user
+        if scenario.created_by != user and not user.has_perm(SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()):
+            raise PermissionDenied("You don't have permission to edit this scenario")
+        return scenario
 
 
 class ScenarioRuleAIRequestSerializer(_AccountScopedScenarioSerializer):
@@ -69,10 +63,10 @@ class ScenarioRuleRestoreRequestSerializer(_AccountScopedScenarioSerializer):
     rules = serializers.ListField(child=serializers.DictField())
 
     def save(self):
-        scenario = self.validated_data["scenario"]
-        user = self.context["request"].user
         try:
-            return persist_scenario_rule_set(scenario, self.validated_data["rules"], user, self.context)
+            return persist_scenario_rule_set(
+                self.validated_data["scenario"], self.validated_data["rules"], self.context
+            )
         except serializers.ValidationError as e:
             logger.warning("Scenario rule restore rejected a stale snapshot: %s", e)
             raise serializers.ValidationError({"rules": [RULE_RESTORE_STALE_ERROR]})

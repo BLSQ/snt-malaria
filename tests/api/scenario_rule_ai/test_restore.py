@@ -35,9 +35,6 @@ class ScenarioRuleAIRestoreAPITestCase(SNTMalariaAPITestCase):
         self.intervention = self.create_snt_intervention(
             intervention_category=self.int_category, created_by=self.user, name="Bednets", code="bednets"
         )
-        self.other_intervention = self.create_snt_intervention(
-            intervention_category=self.int_category, created_by=self.user, name="IRS", code="irs"
-        )
 
     def _create_rule(self, name, priority, *, value=100, color="#b71c1c", interventions=None):
         rule = ScenarioRule.objects.create(

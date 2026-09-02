@@ -103,18 +103,17 @@ def _rule_spec_to_payload(spec: dict, metric_type_by_id: dict) -> dict:
 
 
 @transaction.atomic
-def persist_scenario_rule_set(
-    scenario, rule_specs: list[dict], user, context: dict, metric_types: Optional[list[dict]] = None
-) -> list[dict]:
+def persist_scenario_rule_set(scenario, rule_specs: list[dict], context: dict) -> list[dict]:
     """Create/update/delete ScenarioRules so the scenario matches `rule_specs` exactly, reprioritize
     them in the given order (lowest priority first), and refresh assignments + budget once. Raises
     `serializers.ValidationError` (rolling the transaction back) if any rule fails validation.
 
     Shared by the AI generate endpoint (`ScenarioRuleAIViewSet.create`) and the AI-chat "revert"
     (`ScenarioRuleAIViewSet.restore`) - both hand it a complete desired rule set. `context` must
-    carry `request` (the write serializers scope querysets by account from it)."""
-    metric_types = build_account_metric_types(scenario.account) if metric_types is None else metric_types
-    metric_type_by_id = {metric_type["id"]: metric_type for metric_type in metric_types}
+    carry `request` (the write serializers scope querysets by account from it, and `created_by` /
+    `updated_by` come from `request.user`)."""
+    user = context["request"].user
+    metric_type_by_id = {mt["id"]: mt for mt in build_account_metric_types(scenario.account)}
 
     existing_by_id = {rule.id: rule for rule in scenario.rules.all()}
     submitted_ids = {spec["id"] for spec in rule_specs if spec.get("id")}
@@ -123,7 +122,7 @@ def persist_scenario_rule_set(
     if to_delete_ids:
         ScenarioRule.objects.filter(id__in=to_delete_ids).delete()
 
-    used_colors = {rule.color for rule_id, rule in existing_by_id.items() if rule_id in submitted_ids}
+    used_colors = {rule.color for rule in existing_by_id.values() if rule.id in submitted_ids}
 
     saved_rules = []
     for spec in rule_specs:

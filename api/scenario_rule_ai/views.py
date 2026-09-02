@@ -29,13 +29,12 @@ def _rule_to_ai_context(rule: ScenarioRule) -> dict:
     """Whitelisted view of a rule sent to the AI: definition only - name, criteria (thresholds, not
     values), interventions, color. Never `org_units_matched`/`org_units_excluded`/`org_units_included`
     (real org unit ids tied to a resolved health-metric condition), and never any MetricValue data."""
+    match_all = is_match_all(rule.matching_criteria)
     return {
         "id": rule.id,
         "name": rule.name,
-        "is_match_all": is_match_all(rule.matching_criteria),
-        "matching_criteria": (
-            [] if is_match_all(rule.matching_criteria) else jsonlogic_to_matching_criteria(rule.matching_criteria)
-        ),
+        "is_match_all": match_all,
+        "matching_criteria": [] if match_all else jsonlogic_to_matching_criteria(rule.matching_criteria),
         "interventions": [intervention.id for intervention in rule.interventions.all()],
         "color": rule.color,
     }
@@ -110,9 +109,7 @@ class ScenarioRuleAIViewSet(AIChatAttachmentViewSetMixin, viewsets.ViewSet):
             return Response(result, status=status.HTTP_200_OK)
 
         try:
-            persisted_rules = persist_scenario_rule_set(
-                scenario, result["rules"], request.user, self.get_serializer_context(), metric_types=metric_types
-            )
+            persisted_rules = persist_scenario_rule_set(scenario, result["rules"], self.get_serializer_context())
         except serializers.ValidationError as e:
             logger.warning("Scenario Rule AI produced an invalid rule set: %s", e)
             return Response(
