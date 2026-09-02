@@ -16,6 +16,7 @@ Example usage:
         --output-file plugins/snt_malaria/NER_health_pyramid.gpkg
 """
 
+import logging
 import sqlite3
 
 from pathlib import Path
@@ -25,6 +26,9 @@ import geopandas as gpd
 import pandas as pd
 
 from django.core.management.base import BaseCommand, CommandError
+
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -106,12 +110,12 @@ class Command(BaseCommand):
                 )
 
                 # See the merge results
-                print(outer_merged_gdf["_merge"].value_counts())
+                logger.warning(outer_merged_gdf["_merge"].value_counts())
 
                 # Records only in filtered_pyramid (right)
                 right_only = outer_merged_gdf[outer_merged_gdf["_merge"] == "right_only"]
-                print(f"\nRecords only in filtered_pyramid: {len(right_only)}")
-                print(right_only[["LEVEL_3_ID"]])
+                logger.warning(f"Records only in filtered_pyramid: {len(right_only)}")
+                logger.warning(right_only[["LEVEL_3_ID"]])
 
                 raise ValueError(
                     f"Merge dropped records! Expected {len(filtered_pyramid)} rows, "
