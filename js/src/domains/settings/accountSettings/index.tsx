@@ -60,9 +60,8 @@ export const AccountSettingsTab: FC = () => {
         initialValues,
         enableReinitialize: true,
         onSubmit: values => {
-            if (!accountSettings?.id) return;
             save({
-                id: accountSettings.id,
+                id: accountSettings?.id,
                 focus_org_unit_type_id: values.focus_org_unit_type_id,
                 intervention_org_unit_type_id:
                     values.intervention_org_unit_type_id,
@@ -108,7 +107,7 @@ export const AccountSettingsTab: FC = () => {
                             variant="contained"
                             color="primary"
                             startIcon={<CheckIcon />}
-                            disabled={isSaving || !accountSettings?.id}
+                            disabled={isSaving}
                         >
                             {formatMessage(MESSAGES.save)}
                         </Button>
