@@ -1,18 +1,16 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback } from 'react';
 import { UseMutateFunction } from 'react-query';
 import {
-    applyQuickReplyAnswer,
     ChatMessage,
+    ChatMessageAttachment,
     PendingAttachment,
     SendMessageOptions,
 } from 'Iaso/components/ChatPanel/ChatPanel';
-import {
-    AIChatRequest,
-    AIChatResponse,
-    AttachmentReference,
-    ConversationEntry,
-} from './types';
+import { AIChatRequest, AIChatResponse, AttachmentReference } from './types';
 import { useAIChatAttachments } from './useAIChatAttachments';
+import { useChatTranscript } from './useChatTranscript';
+import { useConversationHistory } from './useConversationHistory';
+import { useRevertSnapshots } from './useRevertSnapshots';
 
 type Args<
     TRequest extends AIChatRequest,
@@ -55,6 +53,16 @@ type Result = {
     onRemoveAttachment: (id: string) => void;
 };
 
+const toAttachmentReferences = (
+    attachments: ChatMessageAttachment[] | undefined,
+): AttachmentReference[] | undefined =>
+    attachments?.length
+        ? attachments.map(attachment => ({
+              file_id: attachment.id,
+              filename: attachment.filename,
+          }))
+        : undefined;
+
 /** Conversation state, quick replies and document attachments for an AI chat, owned by the wrapper
  * page so the chat panel itself stays presentational. */
 export const useAIChat = <
@@ -74,13 +82,24 @@ export const useAIChat = <
     onRevertSnapshot,
     revertNoteMessage,
 }: Args<TRequest, TResponse, TSnapshot>): Result => {
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [conversationHistory, setConversationHistory] = useState<
-        ConversationEntry[]
-    >([]);
-    // Pre-turn snapshots keyed by the assistant message they can restore to. A ref, not state:
-    // nothing rendered reads it, it only needs to be current when `revert` fires.
-    const revertSnapshots = useRef<Map<string, TSnapshot>>(new Map());
+    const {
+        messages,
+        addUserTurn,
+        addAssistantReply,
+        addAssistantNote,
+        markRevertedFrom,
+        reset: resetTranscript,
+    } = useChatTranscript();
+    const {
+        history: conversationHistory,
+        record: recordHistory,
+        reset: resetHistory,
+    } = useConversationHistory();
+    const { captureIfApplied, getSnapshot, clearSnapshots } =
+        useRevertSnapshots({
+            captureRevertSnapshot,
+            didApplyChange,
+        });
     const {
         pendingAttachments,
         onAttachFiles,
@@ -93,25 +112,11 @@ export const useAIChat = <
         (message: string, options?: SendMessageOptions) => {
             const { displayContent, quickReplyAnswer, attachments } =
                 options ?? {};
-            const attachmentRefs: AttachmentReference[] = (
-                attachments ?? []
-            ).map(attachment => ({
-                file_id: attachment.id,
-                filename: attachment.filename,
-            }));
-            setMessages(prev => {
-                const messagesWithAnswer = quickReplyAnswer
-                    ? applyQuickReplyAnswer(prev, quickReplyAnswer)
-                    : prev;
-                return [
-                    ...messagesWithAnswer,
-                    {
-                        role: 'user',
-                        content: displayContent ?? message,
-                        id: crypto.randomUUID(),
-                        attachments,
-                    },
-                ];
+
+            addUserTurn({
+                content: displayContent ?? message,
+                quickReplyAnswer,
+                attachments,
             });
             clearSent((attachments ?? []).map(a => a.id));
 
@@ -119,60 +124,37 @@ export const useAIChat = <
                 buildRequest({
                     message,
                     conversation_history: conversationHistory,
-                    attachments: attachmentRefs.length
-                        ? attachmentRefs
-                        : undefined,
+                    attachments: toAttachmentReferences(attachments),
                 }),
                 {
                     onSuccess: data => {
                         const assistantId = crypto.randomUUID();
-                        const revertable =
-                            Boolean(captureRevertSnapshot) &&
-                            !!didApplyChange?.(data);
-                        // Capture the pre-turn state only now that the reply is known to be an
-                        // applied change - a plain Q&A turn never needs a snapshot. The reply is
-                        // applied by `onReply` further down, so the state read here is still pre-turn.
-                        if (revertable) {
-                            revertSnapshots.current.set(
-                                assistantId,
-                                captureRevertSnapshot!(),
-                            );
-                        }
-                        setMessages(prev => [
-                            ...prev,
-                            {
-                                role: 'assistant',
-                                content: data.assistant_message,
-                                id: assistantId,
-                                quickReplies: data.quick_replies ?? undefined,
-                                revertable,
-                            },
-                        ]);
-                        setConversationHistory(data.conversation_history);
+                        const revertable = captureIfApplied(assistantId, data);
+                        addAssistantReply({
+                            id: assistantId,
+                            content: data.assistant_message,
+                            quickReplies: data.quick_replies,
+                            revertable,
+                        });
+                        recordHistory(data.conversation_history);
                         onReply?.(data);
                     },
-                    onError: () => {
-                        setMessages(prev => [
-                            ...prev,
-                            {
-                                role: 'assistant',
-                                content: errorMessage,
-                                id: crypto.randomUUID(),
-                            },
-                        ]);
-                    },
+                    onError: () => addAssistantNote(errorMessage),
                 },
             );
         },
         [
-            conversationHistory,
+            addUserTurn,
+            clearSent,
             sendMessage,
             buildRequest,
+            conversationHistory,
+            captureIfApplied,
+            addAssistantReply,
+            recordHistory,
             onReply,
+            addAssistantNote,
             errorMessage,
-            clearSent,
-            captureRevertSnapshot,
-            didApplyChange,
         ],
     );
 
@@ -183,51 +165,33 @@ export const useAIChat = <
                 return;
             }
             try {
-                await onRevertSnapshot?.(
-                    revertSnapshots.current.get(messageId) as TSnapshot,
-                );
+                await onRevertSnapshot?.(getSnapshot(messageId) as TSnapshot);
             } catch {
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        role: 'assistant',
-                        content: errorMessage,
-                        id: crypto.randomUUID(),
-                    },
-                ]);
+                addAssistantNote(errorMessage);
                 return;
             }
-            // The reverted turn and every later one now describe a state that no longer exists;
-            // marking them `reverted` disables their own revert action. The current state the model
-            // sees is rebuilt fresh each turn, so no conversation-history fixup is needed.
-            setMessages(prev => {
-                const targetIndex = prev.findIndex(m => m.id === messageId);
-                const updated = prev.map((m, index) =>
-                    m.revertable && !m.reverted && index >= targetIndex
-                        ? { ...m, reverted: true }
-                        : m,
-                );
-                return revertNoteMessage
-                    ? [
-                          ...updated,
-                          {
-                              role: 'assistant' as const,
-                              content: revertNoteMessage,
-                              id: crypto.randomUUID(),
-                          },
-                      ]
-                    : updated;
-            });
+            markRevertedFrom(messageId);
+            if (revertNoteMessage) {
+                addAssistantNote(revertNoteMessage);
+            }
         },
-        [messages, onRevertSnapshot, revertNoteMessage, errorMessage],
+        [
+            messages,
+            onRevertSnapshot,
+            getSnapshot,
+            addAssistantNote,
+            errorMessage,
+            markRevertedFrom,
+            revertNoteMessage,
+        ],
     );
 
     const reset = useCallback(() => {
         resetAttachments();
-        revertSnapshots.current.clear();
-        setMessages([]);
-        setConversationHistory([]);
-    }, [resetAttachments]);
+        clearSnapshots();
+        resetTranscript();
+        resetHistory();
+    }, [resetAttachments, clearSnapshots, resetTranscript, resetHistory]);
 
     return {
         messages,
