@@ -30,6 +30,8 @@ type Props = {
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
     getErrors: (keyValue: string) => string[];
+    /** OpenHexa layers lock the scale break; only the color stays editable. */
+    disableValues?: boolean;
 };
 
 export const ScaleForm: FC<Props> = ({
@@ -39,6 +41,7 @@ export const ScaleForm: FC<Props> = ({
     onUpdateField,
     onRemove,
     getErrors,
+    disableValues = false,
 }) => {
     return (
         <Stack direction="row" spacing={2} sx={styles.scaleContainter}>
@@ -50,6 +53,7 @@ export const ScaleForm: FC<Props> = ({
                 errors={getErrors('value')}
                 wrapperSx={{ flexGrow: 1 }}
                 withMarginTop={false}
+                disabled={disableValues}
             />
             <Box pt={1}>
                 <ColorPicker

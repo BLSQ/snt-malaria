@@ -41,6 +41,8 @@ type Props = {
         value: any,
     ) => void;
     legendType: string;
+    /** OpenHexa layers lock the scale breaks; only the colors stay editable. */
+    disableValues?: boolean;
 };
 
 const LIST_FIELD_KEY = 'legend_config';
@@ -55,6 +57,7 @@ export const LegendConfigForm: FC<Props> = ({
     touched,
     onUpdateField,
     legendType,
+    disableValues = false,
 }) => {
     const { formatMessage } = useSafeIntl();
     const getChildError = useGetChildError<Scale>({
@@ -78,7 +81,10 @@ export const LegendConfigForm: FC<Props> = ({
                         }
                         onRemove={() => onRemove(LIST_FIELD_KEY, index)}
                         getErrors={key => getChildError(key, index)}
-                        canBeRemoved={legendConfig.length > minItems}
+                        canBeRemoved={
+                            !disableValues && legendConfig.length > minItems
+                        }
+                        disableValues={disableValues}
                     />
                 )),
             )}
@@ -88,14 +94,16 @@ export const LegendConfigForm: FC<Props> = ({
                     {errors}
                 </Typography>
             )}
-            <Button
-                onClick={() =>
-                    onAdd(LIST_FIELD_KEY, DEFAULT_LEGEND_CONFIG_ITEM, {})
-                }
-                disabled={legendConfig.length >= maxItems}
-            >
-                {formatMessage(MESSAGES.addScaleItem)}
-            </Button>
+            {!disableValues && (
+                <Button
+                    onClick={() =>
+                        onAdd(LIST_FIELD_KEY, DEFAULT_LEGEND_CONFIG_ITEM, {})
+                    }
+                    disabled={legendConfig.length >= maxItems}
+                >
+                    {formatMessage(MESSAGES.addScaleItem)}
+                </Button>
+            )}
         </Box>
     );
 };

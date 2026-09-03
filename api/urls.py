@@ -17,6 +17,7 @@ from .intervention_assignments.views import InterventionAssignmentViewSet
 from .intervention_categories.views import InterventionCategoryViewSet
 from .intervention_cost_breakdown_line.views import InterventionCostBreakdownLineViewSet
 from .interventions.views import InterventionViewSet
+from .openhexa_data_layers.views import OpenHexaDataLayerViewSet
 from .scenario_rules.views import ScenarioRuleViewSet
 from .scenarios.views import ScenarioViewSet
 
@@ -54,5 +55,6 @@ router.register(r"snt_malaria/impact_age_groups", ImpactAgeGroupsViewSet, basena
 router.register(r"snt_malaria/account_settings", AccountSettingsViewSet, basename="account_settings")
 router.register(r"snt_malaria/account_setup", SNTAccountSetupViewSet, basename="account_setup")
 router.register(r"snt_malaria/composite_layers", CompositeLayerViewSet, basename="composite_layers")
+router.register(r"snt_malaria/openhexa/data_layers", OpenHexaDataLayerViewSet, basename="openhexa_data_layers")
 router.register(r"snt_malaria/composite_layer_ai", CompositeLayerAIViewSet, basename="composite_layer_ai")
 router.register(r"snt_malaria/scenario_rule_ai", ScenarioRuleAIViewSet, basename="scenario_rule_ai")
