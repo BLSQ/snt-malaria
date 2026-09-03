@@ -33,6 +33,8 @@ type Props = {
     /** Set when this layer is a composite, to show the composite icon. */
     compositeLayerId?: number;
     onDelete: (metricType: number) => void;
+    /** Re-run the OpenHexa value import (only offered for openhexa-origin layers). */
+    onRefreshOpenHexaLayer: (metricType: MetricType) => void;
     /** While the composite editor is open, the row is a drag source rather than a selector. */
     editing?: boolean;
 };
@@ -80,6 +82,7 @@ export const DataLayerLine: FC<Props> = ({
     onEdit,
     compositeLayerId,
     onDelete,
+    onRefreshOpenHexaLayer,
     editing = false,
 }) => {
     const isComposite = compositeLayerId !== undefined;
@@ -217,6 +220,18 @@ export const DataLayerLine: FC<Props> = ({
                             <MenuItem onClick={() => onEdit(metricType)}>
                                 {formatMessage(MESSAGES.editLayer)}
                             </MenuItem>
+                            {metricType.origin === 'openhexa' && (
+                                <MenuItem
+                                    onClick={() => {
+                                        setShowMoreActions(false);
+                                        onRefreshOpenHexaLayer(metricType);
+                                    }}
+                                >
+                                    {formatMessage(
+                                        MESSAGES.refreshFromOpenHexa,
+                                    )}
+                                </MenuItem>
+                            )}
                             <DeleteModal
                                 type="menuItem"
                                 onConfirm={() => onDelete(metricType.id)}

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-02 16:49+0000\n"
+"POT-Creation-Date: 2026-09-03 11:50+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -102,6 +102,19 @@ msgstr "Impossible d'obtenir une URL de téléchargement pour « {filename} »."
 msgid "File '{filename}' is not valid JSON: {error}"
 msgstr "Le fichier « {filename} » n'est pas un JSON valide : {error}"
 
+#: plugins/snt_malaria/api/openhexa_data_layers/importer.py
+#, python-brace-format
+msgid "The source file has no '{column}' column."
+msgstr "Le fichier source ne contient pas de colonne « {column} »."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/importer.py
+#, python-brace-format
+msgid "{rows} rows read, {matched} org units matched, writing {count} values"
+msgstr ""
+"{rows} lignes lues, {matched} unités d'organisation correspondantes, écriture "
+"de {count} valeurs"
+
+#: plugins/snt_malaria/api/openhexa_data_layers/serializers.py
 #: plugins/snt_malaria/api/openhexa_data_layers/views.py
 #, python-brace-format
 msgid "The OpenHexa workspace configuration is missing the '{key}' key."
@@ -109,13 +122,42 @@ msgstr ""
 "La configuration de l'espace de travail OpenHexa ne contient pas la clé "
 "« {key} »."
 
+#: plugins/snt_malaria/api/openhexa_data_layers/serializers.py
+msgid "This data layer is not defined in OpenHexa."
+msgstr "Cette couche de données n'est pas définie dans OpenHexa."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/serializers.py
+msgid ""
+"A layer with this data key already exists and is not managed by OpenHexa."
+msgstr ""
+"Une couche avec cette clé de données existe déjà et n'est pas gérée par "
+"OpenHexa."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/source.py
+#, python-brace-format
+msgid ""
+"Dataset identifier '{name}' is not defined in SNT_config.json "
+"(SNT_DATASET_IDENTIFIERS)."
+msgstr ""
+"L'identifiant de jeu de données « {name} » n'est pas défini dans "
+"SNT_config.json (SNT_DATASET_IDENTIFIERS)."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/source.py
+msgid "This data layer has no usable SOURCE_DATA."
+msgstr "Cette couche de données n'a pas de SOURCE_DATA exploitable."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/source.py
+msgid "SOURCE_DATA is missing DATASET.NAME, FILENAME or COLUMN."
+msgstr "SOURCE_DATA n'a pas de DATASET.NAME, FILENAME ou COLUMN."
+
 #: plugins/snt_malaria/api/openhexa_data_layers/views.py
 msgid "Failed to fetch data layers from OpenHexa."
 msgstr "Échec de la récupération des couches de données depuis OpenHexa."
 
 #: plugins/snt_malaria/api/openhexa_data_layers/views.py
 msgid "The OpenHexa data layer configuration file is malformed."
-msgstr "Le fichier de configuration des couches de données OpenHexa est mal formé."
+msgstr ""
+"Le fichier de configuration des couches de données OpenHexa est mal formé."
 
 #: plugins/snt_malaria/api/scenarios/serializers.py
 msgid "Cannot modify a locked scenario."
@@ -186,6 +228,10 @@ msgstr "Configuration - Lecture"
 #: plugins/snt_malaria/permissions.py
 msgid "Settings - Write"
 msgstr "Configuration - Écriture"
+
+#, python-brace-format
+#~ msgid "Writing {count} values"
+#~ msgstr "Écriture de {count} valeurs"
 
 #~ msgid "Population"
 #~ msgstr "Population"

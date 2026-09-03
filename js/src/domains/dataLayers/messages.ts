@@ -102,6 +102,15 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.openHexaLayersAlreadyImported',
         defaultMessage: 'Already imported (hidden): {layers}',
     },
+    openHexaImportStarted: {
+        id: 'iaso.snt_malaria.settings.dataLayers.openHexaImportStarted',
+        defaultMessage:
+            'Import started. The layer values will appear once the task completes.',
+    },
+    refreshFromOpenHexa: {
+        id: 'iaso.snt_malaria.settings.dataLayers.refreshFromOpenHexa',
+        defaultMessage: 'Refresh from OpenHexa',
+    },
     deleteLayer: {
         id: 'iaso.snt_malaria.settings.dataLayers.deleteLayer',
         defaultMessage: 'Delete Layer',

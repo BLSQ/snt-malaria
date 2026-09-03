@@ -6,17 +6,18 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
+from iaso.api.tasks.serializers import TaskSerializer
 from iaso.utils.openhexa import get_openhexa_config
+from plugins.snt_malaria.tasks.import_openhexa_data_layer import import_openhexa_data_layer
 
-from .client import fetch_data_layer_metadata
+from .client import METADATA_FILENAME, fetch_dataset_json
+from .constants import CONFIG_DATASET_KEY
 from .metadata import parse_data_layers
 from .permissions import OpenHexaDataLayerPermission
-from .serializers import OpenHexaDataLayerSerializer
+from .serializers import ImportOpenHexaDataLayerSerializer, OpenHexaDataLayerSerializer
 
 
 logger = logging.getLogger(__name__)
-
-CONFIG_DATASET_KEY = "snt_configuration_dataset"
 
 
 @extend_schema(tags=["SNT Malaria - OpenHexa data layers"])
@@ -51,7 +52,7 @@ class OpenHexaDataLayerViewSet(viewsets.ViewSet):
             )
 
         try:
-            metadata = fetch_data_layer_metadata(openhexa_url, openhexa_token, workspace_slug, dataset_slug)
+            metadata = fetch_dataset_json(openhexa_url, openhexa_token, workspace_slug, dataset_slug, METADATA_FILENAME)
         except ValidationError as error:
             return Response({"error": error.messages[0]}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         except Exception:
@@ -71,3 +72,21 @@ class OpenHexaDataLayerViewSet(viewsets.ViewSet):
             )
 
         return Response({"results": OpenHexaDataLayerSerializer(layers, many=True).data})
+
+    def create(self, request):
+        """Create (or refresh) a data layer from OpenHexa and launch its value import.
+
+        Body: ``{"code": "<layer key>", "legend_config": {...}?}``. The ``MetricType`` shell
+        is upserted synchronously; the ``import_openhexa_data_layer`` task then loads the
+        values from the layer's source file.
+        """
+        serializer = ImportOpenHexaDataLayerSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        metric_type = serializer.save()
+
+        task = import_openhexa_data_layer(metric_type_id=metric_type.id, user=request.user)
+
+        return Response(
+            {"task": TaskSerializer(instance=task).data, "metric_type_id": metric_type.id},
+            status=status.HTTP_201_CREATED,
+        )
