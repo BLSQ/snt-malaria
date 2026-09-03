@@ -15,6 +15,8 @@ type Props = {
     /** Maps a MetricType id to the composite layer that produced it, when it is a composite. */
     compositeLayerIdByMetricType: Map<number, number>;
     deleteMetricType: (metricTypeId: number) => void;
+    /** Re-run the OpenHexa value import for an openhexa-origin layer. */
+    onRefreshOpenHexaLayer: (metricType: MetricType) => void;
 };
 
 export const DataLayerList: FC<Props> = ({
@@ -24,6 +26,7 @@ export const DataLayerList: FC<Props> = ({
     onEditMetricType,
     compositeLayerIdByMetricType,
     deleteMetricType,
+    onRefreshOpenHexaLayer,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -61,6 +64,7 @@ export const DataLayerList: FC<Props> = ({
                                     metricType.id,
                                 )}
                                 onDelete={() => deleteMetricType(metricType.id)}
+                                onRefreshOpenHexaLayer={onRefreshOpenHexaLayer}
                                 selected={
                                     metricType.id === selectedMetricTypeId
                                 }
