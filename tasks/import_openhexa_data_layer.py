@@ -15,7 +15,7 @@ from plugins.snt_malaria.api.openhexa_data_layers.client import (
     download_dataset_file,
     fetch_dataset_json,
 )
-from plugins.snt_malaria.api.openhexa_data_layers.constants import CONFIG_DATASET_KEY
+from plugins.snt_malaria.api.openhexa_data_layers.constants import CONFIG_DATASET_KEY, IMPORT_TASK_NAME
 from plugins.snt_malaria.api.openhexa_data_layers.importer import import_metric_values
 from plugins.snt_malaria.api.openhexa_data_layers.source import resolve_source_file
 
@@ -23,7 +23,7 @@ from plugins.snt_malaria.api.openhexa_data_layers.source import resolve_source_f
 logger = logging.getLogger(__name__)
 
 
-@task_decorator(task_name="import_openhexa_data_layer")
+@task_decorator(task_name=IMPORT_TASK_NAME)
 def import_openhexa_data_layer(metric_type_id: int, task: Task = None):
     task.report_progress_and_stop_if_killed(progress_message="Starting OpenHexa data layer import")
 

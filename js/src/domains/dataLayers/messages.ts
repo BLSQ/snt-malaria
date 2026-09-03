@@ -111,6 +111,14 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.refreshFromOpenHexa',
         defaultMessage: 'Refresh from OpenHexa',
     },
+    importRunning: {
+        id: 'iaso.snt_malaria.settings.dataLayers.importRunning',
+        defaultMessage: 'Importing data from OpenHexa…',
+    },
+    importFailed: {
+        id: 'iaso.snt_malaria.settings.dataLayers.importFailed',
+        defaultMessage: 'OpenHexa import failed',
+    },
     deleteLayer: {
         id: 'iaso.snt_malaria.settings.dataLayers.deleteLayer',
         defaultMessage: 'Delete Layer',

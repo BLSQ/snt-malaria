@@ -327,3 +327,51 @@ class ImportOpenHexaDataLayerTestCase(SNTMalariaAPITestCase):
         self.client.force_authenticate(self.reader)
         response = self.client.post(self.BASE_URL, data={"code": "INCIDENCE_CRUDE"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_import_status_returns_latest_task_per_metric_type(self):
+        from iaso.models import Task
+        from plugins.snt_malaria.api.openhexa_data_layers.constants import IMPORT_TASK_NAME
+
+        mt = MetricType.objects.create(
+            account=self.account,
+            code="INCIDENCE_CRUDE",
+            name="Crude incidence",
+            legend_type="threshold",
+            origin=MetricType.MetricTypeOrigin.OPENHEXA,
+        )
+        other_account = self.create_account_datasource_version_project("s2", "Other", "p2")[0]
+
+        Task.objects.create(
+            name=IMPORT_TASK_NAME,
+            account=self.account,
+            launcher=self.user,
+            status="ERRORED",
+            params={"kwargs": {"metric_type_id": mt.id}},
+            progress_message="boom",
+        )
+        latest = Task.objects.create(
+            name=IMPORT_TASK_NAME,
+            account=self.account,
+            launcher=self.user,
+            status="SUCCESS",
+            params={"kwargs": {"metric_type_id": mt.id}},
+            progress_message="12 rows read",
+        )
+        # A task for another account must not leak.
+        Task.objects.create(
+            name=IMPORT_TASK_NAME,
+            account=other_account,
+            launcher=self.user,
+            status="RUNNING",
+            params={"kwargs": {"metric_type_id": 999}},
+        )
+
+        self.client.force_authenticate(self.user)
+        response = self.client.get(f"{self.BASE_URL}import_status/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        body = response.json()
+        self.assertEqual(list(body), [str(mt.id)])
+        self.assertEqual(body[str(mt.id)]["status"], "SUCCESS")
+        self.assertEqual(body[str(mt.id)]["task_id"], latest.id)
+        self.assertEqual(body[str(mt.id)]["progress_message"], "12 rows read")

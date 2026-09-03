@@ -2,6 +2,7 @@ import React, { FC, Fragment, useEffect, useRef } from 'react';
 import { List, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { StickyListSubheader } from '../../../components/styledComponents';
+import { OpenHexaImportStatusByMetricType } from '../hooks/useGetOpenHexaImportStatus';
 import { MESSAGES } from '../messages';
 import { MetricType, MetricTypeCategory } from '../types/metrics';
 import { DataLayerLine } from './DataLayerLine';
@@ -17,6 +18,8 @@ type Props = {
     deleteMetricType: (metricTypeId: number) => void;
     /** Re-run the OpenHexa value import for an openhexa-origin layer. */
     onRefreshOpenHexaLayer: (metricType: MetricType) => void;
+    /** Latest value-import task status, keyed by metric type id. */
+    openHexaImportStatus?: OpenHexaImportStatusByMetricType;
 };
 
 export const DataLayerList: FC<Props> = ({
@@ -27,6 +30,7 @@ export const DataLayerList: FC<Props> = ({
     compositeLayerIdByMetricType,
     deleteMetricType,
     onRefreshOpenHexaLayer,
+    openHexaImportStatus,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -65,6 +69,9 @@ export const DataLayerList: FC<Props> = ({
                                 )}
                                 onDelete={() => deleteMetricType(metricType.id)}
                                 onRefreshOpenHexaLayer={onRefreshOpenHexaLayer}
+                                importStatus={
+                                    openHexaImportStatus?.[metricType.id]
+                                }
                                 selected={
                                     metricType.id === selectedMetricTypeId
                                 }
