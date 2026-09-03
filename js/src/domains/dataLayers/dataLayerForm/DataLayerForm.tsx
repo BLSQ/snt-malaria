@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo } from 'react';
+import React, { FC, useCallback, useEffect, useMemo } from 'react';
 import { Alert, Box, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
@@ -160,6 +160,23 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
         },
         [importableLayers, applyOpenHexaLayer],
     );
+
+    // Default to the first importable layer so the form is never left in an invalid
+    // "nothing selected" state; a manual pick sets `code` and stops this from re-firing.
+    useEffect(() => {
+        if (
+            canPickOpenHexaLayer &&
+            !values.code &&
+            importableLayers.length > 0
+        ) {
+            applyOpenHexaLayer(importableLayers[0]);
+        }
+    }, [
+        canPickOpenHexaLayer,
+        values.code,
+        importableLayers,
+        applyOpenHexaLayer,
+    ]);
 
     // Switching type keeps the dependent fields coherent: composites default the legend to "auto"
     // and pre-fill the category, regular layers reset to a concrete legend type, OpenHexa layers
