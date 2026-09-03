@@ -110,6 +110,7 @@
     "iaso.snt_malaria.settings.dataLayers.openHexaColorsEditable": "couleurs modifiables",
     "iaso.snt_malaria.settings.dataLayers.openHexaDataLayersError": "Impossible de charger les couches de données depuis OpenHexa.",
     "iaso.snt_malaria.settings.dataLayers.openHexaLayersUnimportable": "Certaines couches de données OpenHexa ne peuvent pas être importées et sont masquées de la liste :",
+    "iaso.snt_malaria.settings.dataLayers.openHexaLayersAlreadyImported": "Déjà importées (masquées) : {layers}",
     "iaso.snt_malaria.settings.dataLayers.searchByName": "Rechercher par nom",
     "iaso.snt_malaria.settings.dataLayers.noLayersFound": "Aucune couche trouvée.",
     "iaso.snt_malaria.settings.dataLayers.variable": "Clé de données",

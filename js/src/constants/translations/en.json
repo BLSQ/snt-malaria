@@ -111,6 +111,7 @@
     "iaso.snt_malaria.settings.dataLayers.openHexaColorsEditable": "colors editable",
     "iaso.snt_malaria.settings.dataLayers.openHexaDataLayersError": "Could not load data layers from OpenHexa.",
     "iaso.snt_malaria.settings.dataLayers.openHexaLayersUnimportable": "Some OpenHexa data layers cannot be imported and are hidden from the list:",
+    "iaso.snt_malaria.settings.dataLayers.openHexaLayersAlreadyImported": "Already imported (hidden): {layers}",
     "iaso.snt_malaria.settings.dataLayers.searchByName": "Search by name",
     "iaso.snt_malaria.settings.dataLayers.noLayersFound": "No layers found.",
     "iaso.snt_malaria.settings.dataLayers.variable": "Data key",

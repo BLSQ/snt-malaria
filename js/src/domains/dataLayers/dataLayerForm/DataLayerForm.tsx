@@ -26,6 +26,9 @@ type MetricTypeFormProps = {
     categoryOptions: { label: string; value: string }[];
     showCompositeLayers?: boolean;
     showOpenHexaLayers?: boolean;
+    /** Codes of the account's existing metric types - an OpenHexa layer whose code is
+     *  already taken can't be imported again (code is unique per account). */
+    existingCodes?: Set<string>;
 };
 
 const LAYER_TYPE_INFO: Record<string, typeof MESSAGES.layerTypeDataInfo> = {
@@ -71,11 +74,14 @@ const styles = {
     },
 } satisfies SxStyles;
 
+const NO_CODES: Set<string> = new Set();
+
 export const MetricTypeForm: FC<MetricTypeFormProps> = ({
     metricType = undefined,
     categoryOptions,
     showCompositeLayers = false,
     showOpenHexaLayers = false,
+    existingCodes = NO_CODES,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { data: legendTypeOptions, isLoading: loadingLegendTypeOptions } =
@@ -122,16 +128,21 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
         isError: openHexaDataLayersError,
     } = useGetOpenHexaDataLayers(showOpenHexaLayers && !isEditing);
 
-    // Layers whose scale doesn't fit their legend type can't be created through the form
-    // (the scale is read-only), so they are kept out of the picker and listed as a warning.
-    const [importableLayers, unimportableLayers] = useMemo(() => {
-        const importable: OpenHexaDataLayer[] = [];
-        const unimportable: OpenHexaDataLayer[] = [];
-        (openHexaDataLayers ?? []).forEach(layer =>
-            (layer.error ? unimportable : importable).push(layer),
-        );
-        return [importable, unimportable];
-    }, [openHexaDataLayers]);
+    // Split the OpenHexa layers: importable ones feed the picker; the rest are listed so the
+    // user knows why they're missing - already created (code is unique per account), or a
+    // scale that doesn't fit its legend type.
+    const [importableLayers, unimportableLayers, alreadyImportedLayers] =
+        useMemo(() => {
+            const importable: OpenHexaDataLayer[] = [];
+            const unimportable: OpenHexaDataLayer[] = [];
+            const alreadyImported: OpenHexaDataLayer[] = [];
+            (openHexaDataLayers ?? []).forEach(layer => {
+                if (existingCodes.has(layer.code)) alreadyImported.push(layer);
+                else if (layer.error) unimportable.push(layer);
+                else importable.push(layer);
+            });
+            return [importable, unimportable, alreadyImported];
+        }, [openHexaDataLayers, existingCodes]);
 
     const openHexaLayerOptions = useMemo(
         () =>
@@ -286,6 +297,22 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                     >
                         {formatMessage(MESSAGES.openHexaDataLayerHelp)}
                     </Typography>
+                    {alreadyImportedLayers.length > 0 && (
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={styles.layerTypeInfo}
+                        >
+                            {formatMessage(
+                                MESSAGES.openHexaLayersAlreadyImported,
+                                {
+                                    layers: alreadyImportedLayers
+                                        .map(layer => layer.name)
+                                        .join(', '),
+                                },
+                            )}
+                        </Typography>
+                    )}
                     {unimportableLayers.length > 0 && (
                         <Alert severity="warning" sx={styles.unimportableAlert}>
                             {formatMessage(MESSAGES.openHexaLayersUnimportable)}
