@@ -1,5 +1,5 @@
-import React, { FC, useMemo } from 'react';
-import { Box, Grid, Typography } from '@mui/material';
+import React, { FC, useCallback, useMemo } from 'react';
+import { Alert, Box, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
@@ -14,16 +14,24 @@ import {
 import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
 import { getCompositeLegendOptions } from '../../compositeLayerEditor/utils/legendOptions';
 import { useGetLegendTypes } from '../../planning/hooks/useGetLegendTypes';
+import { useGetOpenHexaDataLayers } from '../hooks/useGetOpenHexaDataLayers';
 import { MESSAGES } from '../messages';
-import { MetricTypeFormModel } from '../types/metrics';
+import { MetricTypeFormModel, OpenHexaDataLayer } from '../types/metrics';
 import { LAYER_TYPES, LayerTypeSelect } from './LayerTypeSelect';
 import { LegendConfigForm } from './LegendConfigForm';
+import { openHexaLayerToFormPatch } from './openHexaAutofill';
 
 type MetricTypeFormProps = {
     metricType?: MetricTypeFormModel;
-    isRestricted?: boolean;
     categoryOptions: { label: string; value: string }[];
     showCompositeLayers?: boolean;
+    showOpenHexaLayers?: boolean;
+};
+
+const LAYER_TYPE_INFO: Record<string, typeof MESSAGES.layerTypeDataInfo> = {
+    [LAYER_TYPES.COMPOSITE]: MESSAGES.layerTypeCompositeInfo,
+    [LAYER_TYPES.OPENHEXA]: MESSAGES.layerTypeOpenHexaInfo,
+    [LAYER_TYPES.DATA]: MESSAGES.layerTypeDataInfo,
 };
 
 const styles = {
@@ -52,13 +60,22 @@ const styles = {
         mt: 2,
         mb: 0,
     },
+    readOnlyHint: {
+        ml: 1,
+        textTransform: 'none',
+        fontWeight: 'normal',
+    },
+    unimportableAlert: {
+        mt: 1,
+        '& ul': { m: 0, pl: 2.5 },
+    },
 } satisfies SxStyles;
 
 export const MetricTypeForm: FC<MetricTypeFormProps> = ({
     metricType = undefined,
-    isRestricted = false,
     categoryOptions,
     showCompositeLayers = false,
+    showOpenHexaLayers = false,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { data: legendTypeOptions, isLoading: loadingLegendTypeOptions } =
@@ -83,29 +100,105 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
 
     const isEditing = !!metricType?.id;
     const isComposite = !!values.is_composite;
+    // OpenHexa layers own their metadata + scale: everything but the legend colors is read-only.
+    const isOpenHexa = values.origin === 'openhexa';
+    const canPickOpenHexaLayer = isOpenHexa && !isEditing;
+
+    const layerKind =
+        (isComposite && LAYER_TYPES.COMPOSITE) ||
+        (isOpenHexa && LAYER_TYPES.OPENHEXA) ||
+        LAYER_TYPES.DATA;
 
     const compositeLegendOptions = useMemo(
         () => getCompositeLegendOptions(formatMessage),
         [formatMessage],
     );
 
-    // Switching type keeps the dependent fields coherent: composites default the legend to "auto"
-    // and pre-fill the category, regular layers reset to a concrete legend type.
-    const onChangeLayerType = (value: string) => {
-        const composite = value === LAYER_TYPES.COMPOSITE;
-        setFieldValueAndState('is_composite', composite);
-        setFieldValueAndState(
-            'legend_type',
-            composite ? LegendTypes.AUTO : LegendTypes.THRESHOLD,
-        );
-        if (composite && !values.category) {
-            setFieldValueAndState('category', 'Composite');
-        }
-    };
+    // Fetched as soon as the dialog opens (not only once the type is picked) so the
+    // picker is populated instantly; the result is cached for the whole session.
+    const {
+        data: openHexaDataLayers,
+        isFetching: isLoadingOpenHexaDataLayers,
+        isError: openHexaDataLayersError,
+    } = useGetOpenHexaDataLayers(showOpenHexaLayers && !isEditing);
 
-    const layerTypeInfo = isComposite
-        ? MESSAGES.layerTypeCompositeInfo
-        : MESSAGES.layerTypeDataInfo;
+    // Layers whose scale doesn't fit their legend type can't be created through the form
+    // (the scale is read-only), so they are kept out of the picker and listed as a warning.
+    const [importableLayers, unimportableLayers] = useMemo(() => {
+        const importable: OpenHexaDataLayer[] = [];
+        const unimportable: OpenHexaDataLayer[] = [];
+        (openHexaDataLayers ?? []).forEach(layer =>
+            (layer.error ? unimportable : importable).push(layer),
+        );
+        return [importable, unimportable];
+    }, [openHexaDataLayers]);
+
+    const openHexaLayerOptions = useMemo(
+        () =>
+            importableLayers.map(layer => ({
+                label: layer.name,
+                value: layer.code,
+            })),
+        [importableLayers],
+    );
+
+    const applyOpenHexaLayer = useCallback(
+        (layer?: OpenHexaDataLayer) => {
+            if (!layer) return;
+            Object.entries(openHexaLayerToFormPatch(layer)).forEach(
+                ([field, value]) => setFieldValueAndState(field, value),
+            );
+        },
+        [setFieldValueAndState],
+    );
+
+    const onSelectOpenHexaLayer = useCallback(
+        (_keyValue: string, code: string) => {
+            applyOpenHexaLayer(
+                importableLayers.find(layer => layer.code === code),
+            );
+        },
+        [importableLayers, applyOpenHexaLayer],
+    );
+
+    // Switching type keeps the dependent fields coherent: composites default the legend to "auto"
+    // and pre-fill the category, regular layers reset to a concrete legend type, OpenHexa layers
+    // clear the read-only metadata so a data layer must actually be picked.
+    const onChangeLayerType = useCallback(
+        (value: string) => {
+            const composite = value === LAYER_TYPES.COMPOSITE;
+            const openhexa = value === LAYER_TYPES.OPENHEXA;
+            const wasOpenHexa = values.origin === 'openhexa';
+            setFieldValueAndState('is_composite', composite);
+            setFieldValueAndState('origin', openhexa ? 'openhexa' : 'custom');
+            setFieldValueAndState(
+                'legend_type',
+                composite ? LegendTypes.AUTO : LegendTypes.THRESHOLD,
+            );
+            // Crossing the OpenHexa boundary wipes the autofilled/read-only metadata: entering,
+            // so the picker (not stale hand-typed values) drives the layer; leaving, so the now
+            // editable fields start blank.
+            if (openhexa !== wasOpenHexa) {
+                (
+                    [
+                        'code',
+                        'name',
+                        'description',
+                        'source',
+                        'units',
+                        'unit_symbol',
+                        'category',
+                    ] as const
+                ).forEach(field => setFieldValueAndState(field, ''));
+                setFieldValueAndState('is_population', false);
+                setFieldValueAndState('legend_range_tail', []);
+            }
+            if (composite && !values.category) {
+                setFieldValueAndState('category', 'Composite');
+            }
+        },
+        [setFieldValueAndState, values.category, values.origin],
+    );
 
     const showScaleConfig = isConcreteLegend(values.legend_type);
 
@@ -114,17 +207,16 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
             <Box sx={styles.layerTypeRow}>
                 <Box sx={styles.layerTypeSelect}>
                     <LayerTypeSelect
-                        value={
-                            isComposite
-                                ? LAYER_TYPES.COMPOSITE
-                                : LAYER_TYPES.DATA
-                        }
+                        value={layerKind}
                         onChange={onChangeLayerType}
                         // A composite owns a graph, so an existing layer can never switch variant.
                         showComposite={
                             showCompositeLayers && (isComposite || !isEditing)
                         }
-                        disabled={isRestricted || (isEditing && isComposite)}
+                        showOpenHexa={
+                            showOpenHexaLayers && (isOpenHexa || !isEditing)
+                        }
+                        disabled={isEditing && (isComposite || isOpenHexa)}
                     />
                 </Box>
                 <Box sx={styles.populationCheckbox}>
@@ -136,6 +228,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                         label={MESSAGES.is_population}
                         errors={getErrors('is_population')}
                         withMarginTop={false}
+                        disabled={isOpenHexa}
                     />
                 </Box>
             </Box>
@@ -144,11 +237,68 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 color="text.secondary"
                 sx={styles.layerTypeInfo}
             >
-                {formatMessage(layerTypeInfo)}
+                {formatMessage(LAYER_TYPE_INFO[layerKind])}
             </Typography>
+
+            {canPickOpenHexaLayer && (
+                <>
+                    <InputComponent
+                        type="select"
+                        keyValue="openHexaDataLayer"
+                        clearable={false}
+                        options={openHexaLayerOptions}
+                        value={values.code || null}
+                        onChange={onSelectOpenHexaLayer}
+                        label={MESSAGES.openHexaDataLayer}
+                        required
+                        loading={isLoadingOpenHexaDataLayers}
+                        errors={
+                            openHexaDataLayersError
+                                ? [
+                                      formatMessage(
+                                          MESSAGES.openHexaDataLayersError,
+                                      ),
+                                  ]
+                                : []
+                        }
+                    />
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={styles.layerTypeInfo}
+                    >
+                        {formatMessage(MESSAGES.openHexaDataLayerHelp)}
+                    </Typography>
+                    {unimportableLayers.length > 0 && (
+                        <Alert severity="warning" sx={styles.unimportableAlert}>
+                            {formatMessage(MESSAGES.openHexaLayersUnimportable)}
+                            <ul>
+                                {React.Children.toArray(
+                                    unimportableLayers.map(layer => (
+                                        <li>
+                                            <strong>{layer.name}</strong>:{' '}
+                                            {layer.error}
+                                        </li>
+                                    )),
+                                )}
+                            </ul>
+                        </Alert>
+                    )}
+                </>
+            )}
 
             <Typography variant="subtitle1" sx={styles.firstSectionTitle}>
                 {formatMessage(MESSAGES.generalSectionTitle)}
+                {isOpenHexa && (
+                    <Typography
+                        component="span"
+                        variant="caption"
+                        color="text.secondary"
+                        sx={styles.readOnlyHint}
+                    >
+                        {formatMessage(MESSAGES.openHexaFieldsReadOnly)}
+                    </Typography>
+                )}
             </Typography>
             {/* Composites get an auto-generated data key. */}
             {!isComposite && (
@@ -160,7 +310,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                     label={MESSAGES.variable}
                     required
                     errors={getErrors('code')}
-                    disabled={isEditing || isRestricted}
+                    disabled={isEditing || isOpenHexa}
                 />
             )}
             <InputComponent
@@ -171,6 +321,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 label={MESSAGES.label}
                 required
                 errors={getErrors('name')}
+                disabled={isOpenHexa}
             />
             <InputComponent
                 keyValue="category"
@@ -183,6 +334,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 label={MESSAGES.category}
                 required
                 errors={getErrors('category')}
+                disabled={isOpenHexa}
             />
             <InputComponent
                 keyValue="description"
@@ -191,6 +343,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 type="textarea"
                 label={MESSAGES.description}
                 errors={getErrors('description')}
+                disabled={isOpenHexa}
             />
             <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
@@ -201,6 +354,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                         type="text"
                         label={MESSAGES.units}
                         errors={getErrors('units')}
+                        disabled={isOpenHexa}
                     />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -211,12 +365,23 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                         type="text"
                         label={MESSAGES.unitSymbol}
                         errors={getErrors('unit_symbol')}
+                        disabled={isOpenHexa}
                     />
                 </Grid>
             </Grid>
 
             <Typography variant="subtitle1" sx={styles.sectionTitle}>
                 {formatMessage(MESSAGES.legendSectionTitle)}
+                {isOpenHexa && (
+                    <Typography
+                        component="span"
+                        variant="caption"
+                        color="text.secondary"
+                        sx={styles.readOnlyHint}
+                    >
+                        {formatMessage(MESSAGES.openHexaColorsEditable)}
+                    </Typography>
+                )}
             </Typography>
             <InputComponent
                 type="select"
@@ -233,7 +398,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                 label={MESSAGES.legendType}
                 errors={getErrors('legend_type')}
                 loading={!isComposite && loadingLegendTypeOptions}
-                disabled={isRestricted}
+                disabled={isOpenHexa}
             />
             {showScaleConfig && (
                 <LegendConfigForm
@@ -246,6 +411,7 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                     onUpdateField={setChildFieldValueAndState}
                     minItems={LEGEND_TYPE_MIN_ITEMS[values.legend_type]}
                     maxItems={LEGEND_TYPE_MAX_ITEMS[values.legend_type]}
+                    disableValues={isOpenHexa}
                 />
             )}
         </Box>

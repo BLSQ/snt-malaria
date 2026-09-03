@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-04 14:00+0000\n"
+"POT-Creation-Date: 2026-09-02 16:49+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -72,6 +72,50 @@ msgid ""
 msgstr ""
 "Il est impossible de supprimer cette intervention car elle est utilisée par "
 "une ou plusieurs règles de scénario."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/client.py
+#, python-brace-format
+msgid "OpenHexa dataset '{slug}' was not found in workspace '{workspace}'."
+msgstr ""
+"Le jeu de données OpenHexa « {slug} » est introuvable dans l'espace de "
+"travail « {workspace} »."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/client.py
+#, python-brace-format
+msgid "OpenHexa dataset '{slug}' has no versions."
+msgstr "Le jeu de données OpenHexa « {slug} » n'a aucune version."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/client.py
+#, python-brace-format
+msgid "File '{filename}' was not found in OpenHexa dataset '{slug}'."
+msgstr ""
+"Le fichier « {filename} » est introuvable dans le jeu de données OpenHexa "
+"« {slug} »."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/client.py
+#, python-brace-format
+msgid "Could not get a download URL for '{filename}'."
+msgstr "Impossible d'obtenir une URL de téléchargement pour « {filename} »."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/client.py
+#, python-brace-format
+msgid "File '{filename}' is not valid JSON: {error}"
+msgstr "Le fichier « {filename} » n'est pas un JSON valide : {error}"
+
+#: plugins/snt_malaria/api/openhexa_data_layers/views.py
+#, python-brace-format
+msgid "The OpenHexa workspace configuration is missing the '{key}' key."
+msgstr ""
+"La configuration de l'espace de travail OpenHexa ne contient pas la clé "
+"« {key} »."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/views.py
+msgid "Failed to fetch data layers from OpenHexa."
+msgstr "Échec de la récupération des couches de données depuis OpenHexa."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/views.py
+msgid "The OpenHexa data layer configuration file is malformed."
+msgstr "Le fichier de configuration des couches de données OpenHexa est mal formé."
 
 #: plugins/snt_malaria/api/scenarios/serializers.py
 msgid "Cannot modify a locked scenario."
