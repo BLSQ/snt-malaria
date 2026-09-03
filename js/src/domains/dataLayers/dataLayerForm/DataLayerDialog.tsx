@@ -11,6 +11,7 @@ import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikConte
 import { useSaveCompositeLayer } from '../../compositeLayerEditor/hooks/useSaveCompositeLayer';
 import { CompositeLayerListItem } from '../../compositeLayerEditor/types/compositeLayer';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
+import { useGetMetricTypes } from '../hooks/useGetMetrics';
 import { useMetricTypeFormState } from '../hooks/useMetricTypeFormState';
 import { MESSAGES } from '../messages';
 import { MetricType, MetricTypeFormModel } from '../types/metrics';
@@ -48,6 +49,14 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
 
     const isEditingComposite = compositeLayer !== undefined;
     const { mutate: saveCompositeLayer } = useSaveCompositeLayer();
+
+    // Code is unique per account (utility types like population included), so an OpenHexa
+    // layer whose code is already taken can't be imported again.
+    const { data: existingMetricTypes } = useGetMetricTypes(true);
+    const existingCodes = useMemo(
+        () => new Set((existingMetricTypes ?? []).map(mt => mt.code)),
+        [existingMetricTypes],
+    );
 
     const setErrorCode = useCallback(
         (code?: string) => {
@@ -198,6 +207,7 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
                     categoryOptions={categoryOptions}
                     showCompositeLayers={showCompositeLayers}
                     showOpenHexaLayers={showOpenHexaLayers}
+                    existingCodes={existingCodes}
                 />
             </ExtendedFormikProvider>
             {errorMessage && (

@@ -98,6 +98,10 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Some OpenHexa data layers cannot be imported and are hidden from the list:',
     },
+    openHexaLayersAlreadyImported: {
+        id: 'iaso.snt_malaria.settings.dataLayers.openHexaLayersAlreadyImported',
+        defaultMessage: 'Already imported (hidden): {layers}',
+    },
     deleteLayer: {
         id: 'iaso.snt_malaria.settings.dataLayers.deleteLayer',
         defaultMessage: 'Delete Layer',
