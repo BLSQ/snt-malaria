@@ -17,8 +17,14 @@ export const useImportOpenHexaDataLayer = ({
     useSnackMutation({
         mutationFn: (body: ImportOpenHexaDataLayerPayload) =>
             postRequest('/api/snt_malaria/openhexa/data_layers/', body),
-        // Categories + values so the map and the list pick up the new (still empty) layer.
-        invalidateQueryKey: ['metricTypes', 'metricCategories', 'metricValues'],
+        // Categories + values so the map and the list pick up the new (still empty) layer;
+        // import status so the row badge shows the freshly-launched task.
+        invalidateQueryKey: [
+            'metricTypes',
+            'metricCategories',
+            'metricValues',
+            'openHexaImportStatus',
+        ],
         snackSuccessMessage: MESSAGES.openHexaImportStarted,
         options: {
             onSuccess: () => onSuccess?.(),
