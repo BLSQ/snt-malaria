@@ -55,6 +55,7 @@ import { DataLayerMapWrapper } from './dataLayerMap/DataLayerMapWrapper';
 import { useDeleteMetricType } from './hooks/useDeleteMetricType';
 import { useGetMetricCategories } from './hooks/useGetMetrics';
 import { useGetOpenHexaDataLayers } from './hooks/useGetOpenHexaDataLayers';
+import { useImportOpenHexaDataLayer } from './hooks/useImportOpenHexaDataLayer';
 import { MESSAGES } from './messages';
 import { MetricType } from './types/metrics';
 
@@ -121,6 +122,12 @@ export const DataLayers: FC = () => {
     );
 
     const { mutate: deleteMetricType } = useDeleteMetricType();
+    const { mutate: importOpenHexaDataLayer } = useImportOpenHexaDataLayer();
+    const refreshOpenHexaLayer = useCallback(
+        (metricType: MetricType) =>
+            importOpenHexaDataLayer({ code: metricType.code }),
+        [importOpenHexaDataLayer],
+    );
 
     const [isMetricTypeFormOpen, setIsMetricTypeFormOpen] =
         useState<boolean>(false);
@@ -402,6 +409,9 @@ export const DataLayers: FC = () => {
                                                 }
                                                 deleteMetricType={
                                                     deleteMetricType
+                                                }
+                                                onRefreshOpenHexaLayer={
+                                                    refreshOpenHexaLayer
                                                 }
                                             />
                                         </CardStyled>

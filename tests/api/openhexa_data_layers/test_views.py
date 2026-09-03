@@ -56,7 +56,7 @@ SAMPLE_METADATA = {
     },
 }
 
-FETCH_PATH = "plugins.snt_malaria.api.openhexa_data_layers.views.fetch_data_layer_metadata"
+FETCH_PATH = "plugins.snt_malaria.api.openhexa_data_layers.views.fetch_dataset_json"
 
 
 class OpenHexaDataLayerViewSetTestCase(SNTMalariaAPITestCase):
@@ -235,3 +235,95 @@ class OpenHexaMetricTypeShellTestCase(SNTMalariaAPITestCase):
         metric_type = MetricType.objects.get(account=self.account, code="INCIDENCE_CRUDE")
         self.assertEqual(metric_type.origin, MetricType.MetricTypeOrigin.OPENHEXA)
         self.assertEqual(metric_type.metricvalue_set.count(), 0)
+
+
+SERIALIZER_FETCH_PATH = "plugins.snt_malaria.api.openhexa_data_layers.serializers.fetch_dataset_json"
+
+
+class ImportOpenHexaDataLayerTestCase(SNTMalariaAPITestCase):
+    """Phase 2: one action upserts the MetricType shell and launches the value-import task."""
+
+    BASE_URL = "/api/snt_malaria/openhexa/data_layers/"
+    auto_create_account = False
+
+    def setUp(self):
+        super().setUp()
+        from plugins.snt_malaria.permissions import SNT_SETTINGS_WRITE_PERMISSION
+
+        self.account, self.source, self.version, self.project = self.create_account_datasource_version_project(
+            "source", "Test Account", "project"
+        )
+        self.user = self.create_user_with_profile(
+            username="writer", account=self.account, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
+        )
+        self.reader = self.create_user_with_profile(
+            username="reader", account=self.account, permissions=[SNT_SETTINGS_READ_PERMISSION]
+        )
+        instance = OpenHEXAInstance.objects.create(
+            name="Test OpenHEXA", url="https://test.openhexa.org/graphql/", token="test-token"
+        )
+        OpenHEXAWorkspace.objects.create(
+            openhexa_instance=instance,
+            account=self.account,
+            slug="snt-testing",
+            config={"snt_configuration_dataset": "snt-configuration"},
+        )
+
+    @patch(SERIALIZER_FETCH_PATH, return_value=SAMPLE_METADATA)
+    def test_upserts_metric_type_and_launches_task(self, _mock_fetch):
+        self.client.force_authenticate(self.user)
+        response = self.client.post(self.BASE_URL, data={"code": "INCIDENCE_CRUDE"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
+        body = response.json()
+        self.assertIn("task", body)
+        metric_type = MetricType.objects.get(account=self.account, code="INCIDENCE_CRUDE")
+        self.assertEqual(body["metric_type_id"], metric_type.id)
+        self.assertEqual(metric_type.origin, MetricType.MetricTypeOrigin.OPENHEXA)
+        self.assertEqual(metric_type.name, "Crude incidence (DHIS2)")
+
+        from iaso.models import Task
+
+        self.assertTrue(Task.objects.filter(name="import_openhexa_data_layer", launcher=self.user).exists())
+
+    @patch(SERIALIZER_FETCH_PATH, return_value=SAMPLE_METADATA)
+    def test_reimport_updates_the_existing_openhexa_layer(self, _mock_fetch):
+        MetricType.objects.create(
+            account=self.account,
+            code="INCIDENCE_CRUDE",
+            name="stale",
+            legend_type="threshold",
+            origin=MetricType.MetricTypeOrigin.OPENHEXA,
+        )
+        self.client.force_authenticate(self.user)
+        response = self.client.post(self.BASE_URL, data={"code": "INCIDENCE_CRUDE"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
+        self.assertEqual(MetricType.objects.filter(account=self.account, code="INCIDENCE_CRUDE").count(), 1)
+        self.assertEqual(
+            MetricType.objects.get(account=self.account, code="INCIDENCE_CRUDE").name, "Crude incidence (DHIS2)"
+        )
+
+    @patch(SERIALIZER_FETCH_PATH, return_value=SAMPLE_METADATA)
+    def test_rejects_when_code_belongs_to_a_non_openhexa_layer(self, _mock_fetch):
+        MetricType.objects.create(
+            account=self.account,
+            code="INCIDENCE_CRUDE",
+            name="custom",
+            legend_type="threshold",
+            origin=MetricType.MetricTypeOrigin.CUSTOM,
+        )
+        self.client.force_authenticate(self.user)
+        response = self.client.post(self.BASE_URL, data={"code": "INCIDENCE_CRUDE"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch(SERIALIZER_FETCH_PATH, return_value=SAMPLE_METADATA)
+    def test_rejects_unknown_code(self, _mock_fetch):
+        self.client.force_authenticate(self.user)
+        response = self.client.post(self.BASE_URL, data={"code": "NOPE"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_reader_cannot_import(self):
+        self.client.force_authenticate(self.reader)
+        response = self.client.post(self.BASE_URL, data={"code": "INCIDENCE_CRUDE"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
