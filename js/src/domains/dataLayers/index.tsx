@@ -9,6 +9,7 @@ import React, {
 import { Card, Stack } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
+import { useGetPipelineConfig } from 'Iaso/domains/openHexa/hooks/useGetPipelineConfig';
 import { userHasPermission } from 'Iaso/domains/users/utils';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 
@@ -53,6 +54,7 @@ import { DataLayerListHeader } from './dataLayerList/DataLayerListHeader';
 import { DataLayerMapWrapper } from './dataLayerMap/DataLayerMapWrapper';
 import { useDeleteMetricType } from './hooks/useDeleteMetricType';
 import { useGetMetricCategories } from './hooks/useGetMetrics';
+import { useGetOpenHexaDataLayers } from './hooks/useGetOpenHexaDataLayers';
 import { MESSAGES } from './messages';
 import { MetricType } from './types/metrics';
 
@@ -75,6 +77,14 @@ export const DataLayers: FC = () => {
     ) as unknown as DataLayersParams;
     const currentUser = useCurrentUser();
     const showCompositeLayers = userHasPermission(SETTINGS_WRITE, currentUser);
+
+    const { data: pipelineConfig } = useGetPipelineConfig();
+    const showOpenHexaLayers = Boolean(
+        pipelineConfig?.configured &&
+        pipelineConfig?.config?.snt_configuration_dataset,
+    );
+    // Warm the cache so the data-layer picker is ready before the dialog opens.
+    useGetOpenHexaDataLayers(showOpenHexaLayers);
 
     const [displayedMetricType, setDisplayedMetricType] =
         useState<MetricType>();
@@ -446,6 +456,7 @@ export const DataLayers: FC = () => {
                         metricType={selectedMetricType}
                         categoryOptions={existingCategoryOptions}
                         showCompositeLayers={showCompositeLayers}
+                        showOpenHexaLayers={showOpenHexaLayers}
                         compositeLayer={
                             selectedMetricType
                                 ? compositeLayerByMetricType.get(

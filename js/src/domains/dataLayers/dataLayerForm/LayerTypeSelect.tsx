@@ -10,12 +10,14 @@ import {
     Select,
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { OpenHexaSvg } from 'Iaso/components/svg/OpenHexaSvg';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
 
 export const LAYER_TYPES = {
     DATA: 'data',
     COMPOSITE: 'composite',
+    OPENHEXA: 'openhexa',
 };
 
 type Option = {
@@ -29,6 +31,8 @@ type Props = {
     onChange: (value: string) => void;
     /** Whether the composite option is offered. */
     showComposite?: boolean;
+    /** Whether the OpenHexa data layer option is offered (account has OpenHexa configured). */
+    showOpenHexa?: boolean;
     disabled?: boolean;
 };
 
@@ -53,6 +57,7 @@ export const LayerTypeSelect: FC<Props> = ({
     value,
     onChange,
     showComposite = false,
+    showOpenHexa = false,
     disabled = false,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -66,6 +71,13 @@ export const LayerTypeSelect: FC<Props> = ({
                 icon: <LayersIcon fontSize="small" />,
             },
         ];
+        if (showOpenHexa) {
+            layerTypes.push({
+                value: LAYER_TYPES.OPENHEXA,
+                label: formatMessage(MESSAGES.layerTypeOpenHexa),
+                icon: <OpenHexaSvg fontSize="small" disabled={false} />,
+            });
+        }
         if (showComposite) {
             layerTypes.push({
                 value: LAYER_TYPES.COMPOSITE,
@@ -74,7 +86,7 @@ export const LayerTypeSelect: FC<Props> = ({
             });
         }
         return layerTypes;
-    }, [formatMessage, showComposite]);
+    }, [formatMessage, showComposite, showOpenHexa]);
 
     return (
         <FormControl
