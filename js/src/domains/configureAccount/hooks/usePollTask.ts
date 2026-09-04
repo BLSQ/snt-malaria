@@ -2,24 +2,21 @@ import { useEffect, useState } from 'react';
 
 import { UseQueryResult } from 'react-query';
 
+import { TaskStatus } from 'Iaso/domains/tasks/types';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
 
-export const TASK_STATUS_TERMINAL = ['SUCCESS', 'ERRORED', 'KILLED'] as const;
-export type TaskStatusTerminal = (typeof TASK_STATUS_TERMINAL)[number];
+import { isTerminalTaskStatus } from '../../../constants/taskStatus';
 
 export type Task = {
     id: number;
-    status: 'QUEUED' | 'RUNNING' | TaskStatusTerminal | string;
+    status: TaskStatus;
     progress_value: number;
     end_value: number;
     progress_message: string | null;
     name?: string;
     result?: { message?: string } | null;
 };
-
-const isTerminal = (status: string | undefined): boolean =>
-    TASK_STATUS_TERMINAL.includes(status as TaskStatusTerminal);
 
 type ApiLikeError = { status?: number };
 
@@ -52,7 +49,8 @@ export const usePollTask = (
         queryFn: () => getRequest(`/api/tasks/${taskId}/`),
         options: {
             enabled: Boolean(taskId) && !hasFailed,
-            refetchInterval: data => (isTerminal(data?.status) ? false : 2000),
+            refetchInterval: data =>
+                isTerminalTaskStatus(data?.status) ? false : 2000,
             refetchIntervalInBackground: false,
             refetchOnWindowFocus: false,
             refetchOnReconnect: false,

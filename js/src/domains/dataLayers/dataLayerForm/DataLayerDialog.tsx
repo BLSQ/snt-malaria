@@ -12,6 +12,7 @@ import { useSaveCompositeLayer } from '../../compositeLayerEditor/hooks/useSaveC
 import { CompositeLayerListItem } from '../../compositeLayerEditor/types/compositeLayer';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
 import { useGetMetricTypes } from '../hooks/useGetMetrics';
+import { useImportOpenHexaDataLayer } from '../hooks/useImportOpenHexaDataLayer';
 import { useMetricTypeFormState } from '../hooks/useMetricTypeFormState';
 import { MESSAGES } from '../messages';
 import { MetricType, MetricTypeFormModel } from '../types/metrics';
@@ -86,6 +87,14 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
         },
     });
 
+    // Creating an OpenHexa layer upserts the shell and launches the value-import task.
+    const { mutate: importOpenHexaDataLayer } = useImportOpenHexaDataLayer({
+        onSuccess: () => {
+            setErrorCode(undefined);
+            closeDialog();
+        },
+    });
+
     const metricTypeFormModel = useMemo(() => {
         if (metricType) {
             // A composite's legend lives on its composite layer record; the MetricType holds what
@@ -151,13 +160,20 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
         legend_range_tail,
         ...values
     }: MetricTypeFormModel) => {
+        const legend_config = domainRangeFromScale(
+            values.legend_config,
+            legend_range_tail,
+        );
+        // Creating an OpenHexa layer goes through the import endpoint (shell + task);
+        // editing one (id present) still PATCHes /api/metrictypes/ - colours only, no re-download.
+        if (values.origin === 'openhexa' && !values.id) {
+            importOpenHexaDataLayer({ code: values.code, legend_config });
+            return;
+        }
         submitMetricType({
             ...values,
             metric_kind: values.is_population ? 'population' : 'any',
-            legend_config: domainRangeFromScale(
-                values.legend_config,
-                legend_range_tail,
-            ),
+            legend_config,
         });
     };
 

@@ -52,6 +52,8 @@ import { DataLayerMapWrapper } from './dataLayerMap/DataLayerMapWrapper';
 import { useDeleteMetricType } from './hooks/useDeleteMetricType';
 import { useGetMetricCategories } from './hooks/useGetMetrics';
 import { useGetOpenHexaDataLayers } from './hooks/useGetOpenHexaDataLayers';
+import { useGetOpenHexaImportStatus } from './hooks/useGetOpenHexaImportStatus';
+import { useImportOpenHexaDataLayer } from './hooks/useImportOpenHexaDataLayer';
 import { MESSAGES } from './messages';
 import { MetricType } from './types/metrics';
 
@@ -82,6 +84,9 @@ export const DataLayers: FC = () => {
     );
     // Warm the cache so the data-layer picker is ready before the dialog opens.
     useGetOpenHexaDataLayers(showOpenHexaLayers);
+    // Also refetches the layer list + values when an import task it tracked completes.
+    const { data: openHexaImportStatus } =
+        useGetOpenHexaImportStatus(showOpenHexaLayers);
 
     const [displayedMetricType, setDisplayedMetricType] =
         useState<MetricType>();
@@ -118,6 +123,12 @@ export const DataLayers: FC = () => {
     );
 
     const { mutate: deleteMetricType } = useDeleteMetricType();
+    const { mutate: importOpenHexaDataLayer } = useImportOpenHexaDataLayer();
+    const refreshOpenHexaLayer = useCallback(
+        (metricType: MetricType) =>
+            importOpenHexaDataLayer({ code: metricType.code }),
+        [importOpenHexaDataLayer],
+    );
 
     const [isMetricTypeFormOpen, setIsMetricTypeFormOpen] =
         useState<boolean>(false);
@@ -388,6 +399,12 @@ export const DataLayers: FC = () => {
                                                 }
                                                 deleteMetricType={
                                                     deleteMetricType
+                                                }
+                                                onRefreshOpenHexaLayer={
+                                                    refreshOpenHexaLayer
+                                                }
+                                                openHexaImportStatus={
+                                                    openHexaImportStatus
                                                 }
                                             />
                                         </CardStyled>

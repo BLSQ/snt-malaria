@@ -1,22 +1,25 @@
 import logging
 
 from django.core.exceptions import ValidationError
+from django.db.models.fields.json import KeyTextTransform, KeyTransform
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from iaso.utils.openhexa import get_openhexa_config
+from iaso.api.tasks.serializers import TaskSerializer
+from iaso.models import Task
+from plugins.snt_malaria.tasks.import_openhexa_data_layer import import_openhexa_data_layer
 
-from .client import fetch_data_layer_metadata
+from .client import METADATA_FILENAME, fetch_dataset_json, resolve_config_dataset
+from .constants import IMPORT_TASK_NAME
 from .metadata import parse_data_layers
 from .permissions import OpenHexaDataLayerPermission
-from .serializers import OpenHexaDataLayerSerializer
+from .serializers import ImportOpenHexaDataLayerSerializer, OpenHexaDataLayerSerializer
 
 
 logger = logging.getLogger(__name__)
-
-CONFIG_DATASET_KEY = "snt_configuration_dataset"
 
 
 @extend_schema(tags=["SNT Malaria - OpenHexa data layers"])
@@ -35,23 +38,8 @@ class OpenHexaDataLayerViewSet(viewsets.ViewSet):
         account = request.user.iaso_profile.account
 
         try:
-            openhexa_url, openhexa_token, workspace_slug, workspace = get_openhexa_config(account)
-        except ValidationError as error:
-            return Response({"error": error.messages[0]}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
-        dataset_slug = (workspace.config or {}).get(CONFIG_DATASET_KEY)
-        if not dataset_slug:
-            return Response(
-                {
-                    "error": _("The OpenHexa workspace configuration is missing the '{key}' key.").format(
-                        key=CONFIG_DATASET_KEY
-                    )
-                },
-                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-
-        try:
-            metadata = fetch_data_layer_metadata(openhexa_url, openhexa_token, workspace_slug, dataset_slug)
+            openhexa_url, openhexa_token, workspace_slug, dataset_slug = resolve_config_dataset(account)
+            metadata = fetch_dataset_json(openhexa_url, openhexa_token, workspace_slug, dataset_slug, METADATA_FILENAME)
         except ValidationError as error:
             return Response({"error": error.messages[0]}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         except Exception:
@@ -71,3 +59,48 @@ class OpenHexaDataLayerViewSet(viewsets.ViewSet):
             )
 
         return Response({"results": OpenHexaDataLayerSerializer(layers, many=True).data})
+
+    def create(self, request):
+        """Create (or refresh) a data layer from OpenHexa and launch its value import.
+
+        Body: ``{"code": "<layer key>", "legend_config": {...}?}``. The ``MetricType`` shell
+        is upserted synchronously; the ``import_openhexa_data_layer`` task then loads the
+        values from the layer's source file.
+        """
+        serializer = ImportOpenHexaDataLayerSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        metric_type = serializer.save()
+
+        task = import_openhexa_data_layer(metric_type_id=metric_type.id, user=request.user)
+
+        return Response(
+            {"task": TaskSerializer(instance=task).data, "metric_type_id": metric_type.id},
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=False, methods=["get"], url_path="import_status")
+    def import_status(self, request):
+        """Latest value-import task status per OpenHexa data layer for the account.
+
+        Returns ``{ "<metric_type_id>": {task_id, status, progress_message}, ... }`` - the
+        data layer list uses it to show a per-row import badge.
+        """
+        account = request.user.iaso_profile.account
+        latest_per_layer = (
+            Task.objects.filter(account=account, name=IMPORT_TASK_NAME)
+            .annotate(mt_id=KeyTextTransform("metric_type_id", KeyTransform("kwargs", "params")))
+            .filter(mt_id__isnull=False)
+            .order_by("mt_id", "-created_at")
+            .distinct("mt_id")
+            .values("mt_id", "id", "status", "progress_message")
+        )
+        return Response(
+            {
+                row["mt_id"]: {
+                    "task_id": row["id"],
+                    "status": row["status"],
+                    "progress_message": row["progress_message"],
+                }
+                for row in latest_per_layer
+            }
+        )
