@@ -18,6 +18,7 @@ type Props = {
     messages: ChatMessage[];
     isLoading: boolean;
     onSendMessage: (message: string, options?: SendMessageOptions) => void;
+    onRevert: (messageId: string) => void;
     pendingAttachments: PendingAttachment[];
     onAttachFiles: (files: File[]) => void;
     onRemoveAttachment: (id: string) => void;
@@ -58,6 +59,7 @@ export const ScenarioRuleAIChat: FC<Props> = ({
     messages,
     isLoading,
     onSendMessage,
+    onRevert,
     pendingAttachments,
     onAttachFiles,
     onRemoveAttachment,
@@ -114,6 +116,7 @@ export const ScenarioRuleAIChat: FC<Props> = ({
                         </Box>
                     }
                     onSendMessage={onSendMessage}
+                    onRevert={onRevert}
                     pendingAttachments={pendingAttachments}
                     onAttachFiles={onAttachFiles}
                     onRemoveAttachment={onRemoveAttachment}

@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -9,12 +11,19 @@ from plugins.snt_malaria.api.ai_chat.serializers import (
 from plugins.snt_malaria.models import Scenario
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
 
+from .rule_set import persist_scenario_rule_set
 
-class ScenarioRuleAIRequestSerializer(serializers.Serializer):
+
+logger = logging.getLogger(__name__)
+
+RULE_RESTORE_STALE_ERROR = (
+    "Couldn't restore this rule set - a data layer or intervention it uses no longer exists. "
+    "The rules currently in the scenario were left unchanged."
+)
+
+
+class _AccountScopedScenarioSerializer(serializers.Serializer):
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
-    message = serializers.CharField(help_text="User message describing the scenario rules to create or modify")
-    conversation_history = conversation_history_field()
-    attachments = attachments_field()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -24,15 +33,19 @@ class ScenarioRuleAIRequestSerializer(serializers.Serializer):
             self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
 
     def validate_scenario(self, scenario):
-        user = self.context["request"].user
-
+        """Both AI entry points require an unlocked scenario the user is allowed to edit."""
         if scenario.is_locked:
             raise serializers.ValidationError("Cannot generate rules for a locked scenario.")
-
+        user = self.context["request"].user
         if scenario.created_by != user and not user.has_perm(SNT_SCENARIO_FULL_WRITE_PERMISSION.full_name()):
             raise PermissionDenied("You don't have permission to edit this scenario")
-
         return scenario
+
+
+class ScenarioRuleAIRequestSerializer(_AccountScopedScenarioSerializer):
+    message = serializers.CharField(help_text="User message describing the scenario rules to create or modify")
+    conversation_history = conversation_history_field()
+    attachments = attachments_field()
 
 
 class ScenarioRuleAIResponseSerializer(serializers.Serializer):
@@ -40,3 +53,24 @@ class ScenarioRuleAIResponseSerializer(serializers.Serializer):
     rules = serializers.ListField(child=serializers.DictField(), allow_null=True)
     quick_replies = quick_replies_field()
     conversation_history = serializers.ListField(child=serializers.DictField())
+
+
+class ScenarioRuleRestoreRequestSerializer(_AccountScopedScenarioSerializer):
+    """Re-persists a complete rule set the chat client captured before an earlier AI turn (the
+    transcript's "revert" action). Reuses the exact generate pipeline, so it recreates/deletes rules,
+    reprioritizes, and refreshes assignments + budget in one transaction."""
+
+    rules = serializers.ListField(child=serializers.DictField())
+
+    def save(self):
+        try:
+            return persist_scenario_rule_set(
+                self.validated_data["scenario"], self.validated_data["rules"], self.context
+            )
+        except serializers.ValidationError as e:
+            logger.warning("Scenario rule restore rejected a stale snapshot: %s", e)
+            raise serializers.ValidationError({"rules": [RULE_RESTORE_STALE_ERROR]})
+
+
+class ScenarioRuleRestoreResponseSerializer(serializers.Serializer):
+    rules = serializers.ListField(child=serializers.DictField())

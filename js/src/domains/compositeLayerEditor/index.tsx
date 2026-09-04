@@ -121,6 +121,9 @@ export type CompositeLayerEditorHandle = {
     applyGeneratedGraph: (graph: GeneratedGraph) => void;
     /** Spec of the graph currently on the canvas, sent to the AI as context (null when empty). */
     getCurrentGraph: () => CurrentGraph | null;
+    /** Restores a graph captured earlier by `getCurrentGraph` (AI chat "revert"); `null` clears
+     * the canvas back to an empty editor. */
+    restoreGraph: (graph: CurrentGraph | null) => void;
 };
 
 export const CompositeLayerEditor = forwardRef<
@@ -483,6 +486,28 @@ export const CompositeLayerEditor = forwardRef<
             setEditorGeneration(generation => generation + 1);
         }, [mountScaleRef]);
 
+        // Restore a snapshot from getCurrentGraph (AI chat "revert"). A CurrentGraph only differs
+        // from a GeneratedGraph in its `output` (source may be null, legend_type is a looser
+        // string); normalising `source` and letting handleGenerateGraph/buildFlumeGraphFromSpec
+        // handle the rest is the same path the editor already uses for `current_graph` context. A
+        // null snapshot means the canvas was empty when captured: remount to a clean editor.
+        const handleRestoreGraph = useCallback(
+            (graph: CurrentGraph | null) => {
+                if (!graph || graph.nodes.length === 0) {
+                    remountWithGraph({});
+                    return;
+                }
+                handleGenerateGraph({
+                    ...graph,
+                    output: {
+                        ...graph.output,
+                        source: graph.output.source ?? '',
+                    },
+                } as GeneratedGraph);
+            },
+            [handleGenerateGraph, remountWithGraph],
+        );
+
         useImperativeHandle(
             ref,
             () => ({
@@ -491,8 +516,9 @@ export const CompositeLayerEditor = forwardRef<
                 // (including hand-built graphs that never came from the AI).
                 getCurrentGraph: () =>
                     extractGraphSpecFromFlume(nodesRef.current),
+                restoreGraph: handleRestoreGraph,
             }),
-            [handleGenerateGraph],
+            [handleGenerateGraph, handleRestoreGraph],
         );
 
         const handleSave = () => {

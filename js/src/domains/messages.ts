@@ -918,6 +918,11 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenarioRule.ai.attachmentUploadError',
         defaultMessage: 'Could not attach {filename}.',
     },
+    scenarioRuleAIRevertNote: {
+        id: 'iaso.snt_malaria.scenarioRule.ai.revertNote',
+        defaultMessage:
+            'Reverted — the scenario rules are back to how they were before that change.',
+    },
     scenariosTitle: {
         id: 'iaso.snt_malaria.scenarios.title',
         defaultMessage: 'Scenarios',

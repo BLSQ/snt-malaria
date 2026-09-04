@@ -438,4 +438,9 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Describe the metrics, formulas and thresholds you want to combine, or upload documents for context — the AI builds the graph for you.',
     },
+    compositeLayerAIRevertNote: {
+        id: 'iaso.snt_malaria.compositeLayerEditor.ai.revertNote',
+        defaultMessage:
+            'Reverted — the canvas is back to how it was before that change.',
+    },
 });

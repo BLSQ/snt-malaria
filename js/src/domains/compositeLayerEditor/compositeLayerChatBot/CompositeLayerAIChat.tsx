@@ -15,6 +15,7 @@ type Props = {
     messages: ChatMessage[];
     isLoading: boolean;
     onSendMessage: (message: string, options?: SendMessageOptions) => void;
+    onRevert: (messageId: string) => void;
     pendingAttachments: PendingAttachment[];
     onAttachFiles: (files: File[]) => void;
     onRemoveAttachment: (id: string) => void;
@@ -46,6 +47,7 @@ export const CompositeLayerAIChat: FC<Props> = ({
     messages,
     isLoading,
     onSendMessage,
+    onRevert,
     pendingAttachments,
     onAttachFiles,
     onRemoveAttachment,
@@ -101,6 +103,7 @@ export const CompositeLayerAIChat: FC<Props> = ({
                     </Box>
                 }
                 onSendMessage={onSendMessage}
+                onRevert={onRevert}
                 interpretMarkdown={true}
                 pendingAttachments={pendingAttachments}
                 onAttachFiles={onAttachFiles}

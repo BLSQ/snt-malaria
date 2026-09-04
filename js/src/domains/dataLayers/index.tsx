@@ -30,7 +30,10 @@ import {
     CompositeLayerEditorHandle,
 } from '../compositeLayerEditor';
 import { CompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChatBot/CompositeLayerAIChat';
-import { GeneratedGraph } from '../compositeLayerEditor/compositeLayerChatBot/types';
+import {
+    CurrentGraph,
+    GeneratedGraph,
+} from '../compositeLayerEditor/compositeLayerChatBot/types';
 import { useCompositeLayerAIChat } from '../compositeLayerEditor/compositeLayerChatBot/useCompositeLayerAIChat';
 import { useGetCompositeLayers } from '../compositeLayerEditor/hooks/useGetCompositeLayers';
 import {
@@ -128,10 +131,17 @@ export const DataLayers: FC = () => {
         () => compositeLayerEditorRef.current?.getCurrentGraph() ?? null,
         [],
     );
+    const onRestoreCompositeLayerGraph = useCallback(
+        (graph: CurrentGraph | null) => {
+            compositeLayerEditorRef.current?.restoreGraph(graph);
+        },
+        [],
+    );
     const {
         messages: aiChatMessages,
         isLoading: isAiChatLoading,
         sendMessage: sendAiChatMessage,
+        revert: revertAiChatMessage,
         reset: resetAiChat,
         pendingAttachments: aiChatPendingAttachments,
         onAttachFiles: onAttachAiChatFiles,
@@ -139,6 +149,7 @@ export const DataLayers: FC = () => {
     } = useCompositeLayerAIChat({
         getCurrentGraph: getCurrentCompositeLayerGraph,
         onGenerate: onGenerateCompositeLayerGraph,
+        onRestoreGraph: onRestoreCompositeLayerGraph,
     });
 
     const { data: compositeLayers } =
@@ -316,6 +327,9 @@ export const DataLayers: FC = () => {
                                                     isLoading={isAiChatLoading}
                                                     onSendMessage={
                                                         sendAiChatMessage
+                                                    }
+                                                    onRevert={
+                                                        revertAiChatMessage
                                                     }
                                                     pendingAttachments={
                                                         aiChatPendingAttachments

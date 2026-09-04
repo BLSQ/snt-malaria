@@ -143,10 +143,11 @@ export const Planning: FC = () => {
         messages: aiChatMessages,
         isLoading: isAiChatLoading,
         sendMessage: sendAiChatMessage,
+        revert: revertAiChatMessage,
         pendingAttachments: aiChatPendingAttachments,
         onAttachFiles: onAiChatAttachFiles,
         onRemoveAttachment: onAiChatRemoveAttachment,
-    } = useScenarioRuleAIChat({ scenarioId });
+    } = useScenarioRuleAIChat({ scenarioId, rules: scenarioRules || [] });
 
     const handleToggleLockScenario = useCallback(() => {
         if (scenario) {
@@ -318,6 +319,7 @@ export const Planning: FC = () => {
                                 messages={aiChatMessages}
                                 isLoading={isAiChatLoading}
                                 onSendMessage={sendAiChatMessage}
+                                onRevert={revertAiChatMessage}
                                 pendingAttachments={aiChatPendingAttachments}
                                 onAttachFiles={onAiChatAttachFiles}
                                 onRemoveAttachment={onAiChatRemoveAttachment}

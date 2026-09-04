@@ -12,6 +12,7 @@ export type GeneratedScenarioRuleSpec = {
     is_match_all: boolean;
     matching_criteria: MetricTypeCriterion[];
     interventions: number[];
+    color?: string;
 };
 
 export type ScenarioRuleAIRequest = AIChatRequest & {
@@ -20,4 +21,15 @@ export type ScenarioRuleAIRequest = AIChatRequest & {
 
 export type ScenarioRuleAIResponse = AIChatResponse & {
     rules: GeneratedScenarioRuleSpec[] | null;
+};
+
+// Sent to POST /scenario_rule_ai/restore/ when the user reverts an AI change: the complete rule set
+// as it stood just before that turn. Re-persisted through the same pipeline as a generated set.
+export type ScenarioRuleRestoreRequest = {
+    scenario: number;
+    rules: GeneratedScenarioRuleSpec[];
+};
+
+export type ScenarioRuleRestoreResponse = {
+    rules: GeneratedScenarioRuleSpec[];
 };
