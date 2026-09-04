@@ -4,10 +4,8 @@ from rest_framework import serializers
 
 from iaso.api.common.serializer_fields import JSONSchemaField
 from iaso.models import MetricType
-from iaso.utils.openhexa import get_openhexa_config
 
-from .client import METADATA_FILENAME, fetch_dataset_json
-from .constants import CONFIG_DATASET_KEY
+from .client import METADATA_FILENAME, fetch_dataset_json, resolve_config_dataset
 from .metadata import build_data_layer
 
 
@@ -45,21 +43,7 @@ class ImportOpenHexaDataLayerSerializer(serializers.Serializer):
         account = self.context["request"].user.iaso_profile.account
 
         try:
-            openhexa_url, openhexa_token, workspace_slug, workspace = get_openhexa_config(account)
-        except DjangoValidationError as error:
-            raise serializers.ValidationError({"code": error.messages[0]})
-
-        dataset_slug = (workspace.config or {}).get(CONFIG_DATASET_KEY)
-        if not dataset_slug:
-            raise serializers.ValidationError(
-                {
-                    "code": _("The OpenHexa workspace configuration is missing the '{key}' key.").format(
-                        key=CONFIG_DATASET_KEY
-                    )
-                }
-            )
-
-        try:
+            openhexa_url, openhexa_token, workspace_slug, dataset_slug = resolve_config_dataset(account)
             metadata = fetch_dataset_json(openhexa_url, openhexa_token, workspace_slug, dataset_slug, METADATA_FILENAME)
         except DjangoValidationError as error:
             raise serializers.ValidationError({"code": error.messages[0]})
@@ -78,12 +62,11 @@ class ImportOpenHexaDataLayerSerializer(serializers.Serializer):
                 {"code": _("A layer with this data key already exists and is not managed by OpenHexa.")}
             )
 
-        data["account"] = account
         data["layer"] = layer
         return data
 
     def save(self):
-        account = self.validated_data["account"]
+        account = self.context["request"].user.iaso_profile.account
         layer = self.validated_data["layer"]
         legend_config = self.validated_data.get("legend_config") or layer["legend_config"]
 

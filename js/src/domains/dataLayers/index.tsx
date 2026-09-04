@@ -8,10 +8,8 @@ import React, {
 } from 'react';
 import { Card, Stack } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
-import { useQueryClient } from 'react-query';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useGetPipelineConfig } from 'Iaso/domains/openHexa/hooks/useGetPipelineConfig';
-import { TaskStatus } from 'Iaso/domains/tasks/types';
 import { userHasPermission } from 'Iaso/domains/users/utils';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 
@@ -26,7 +24,6 @@ import {
     SidebarLayout,
 } from '../../components/styledComponents';
 import { SETTINGS_WRITE } from '../../constants/permissions';
-import { isInFlightTaskStatus, TASK_STATUS } from '../../constants/taskStatus';
 import { baseUrls } from '../../constants/urls';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import {
@@ -87,33 +84,9 @@ export const DataLayers: FC = () => {
     );
     // Warm the cache so the data-layer picker is ready before the dialog opens.
     useGetOpenHexaDataLayers(showOpenHexaLayers);
+    // Also refetches the layer list + values when an import task it tracked completes.
     const { data: openHexaImportStatus } =
         useGetOpenHexaImportStatus(showOpenHexaLayers);
-
-    // When an import task finishes, pull the freshly written layer + values so the list and
-    // map update without a manual reload.
-    const queryClient = useQueryClient();
-    const prevImportStatusRef = useRef<Record<number, TaskStatus>>({});
-    useEffect(() => {
-        if (!openHexaImportStatus) return;
-        const prev = prevImportStatusRef.current;
-        const justFinished = Object.values(openHexaImportStatus).some(
-            entry =>
-                entry.status === TASK_STATUS.SUCCESS &&
-                isInFlightTaskStatus(prev[entry.task_id]),
-        );
-        prevImportStatusRef.current = Object.fromEntries(
-            Object.values(openHexaImportStatus).map(entry => [
-                entry.task_id,
-                entry.status,
-            ]),
-        );
-        if (justFinished) {
-            queryClient.invalidateQueries(['metricTypes']);
-            queryClient.invalidateQueries(['metricCategories']);
-            queryClient.invalidateQueries(['metricValues']);
-        }
-    }, [openHexaImportStatus, queryClient]);
 
     const [displayedMetricType, setDisplayedMetricType] =
         useState<MetricType>();

@@ -1,6 +1,7 @@
 import logging
 
 from django.core.exceptions import ValidationError
+from django.db.models.fields.json import KeyTextTransform, KeyTransform
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
@@ -9,11 +10,10 @@ from rest_framework.response import Response
 
 from iaso.api.tasks.serializers import TaskSerializer
 from iaso.models import Task
-from iaso.utils.openhexa import get_openhexa_config
 from plugins.snt_malaria.tasks.import_openhexa_data_layer import import_openhexa_data_layer
 
-from .client import METADATA_FILENAME, fetch_dataset_json
-from .constants import CONFIG_DATASET_KEY, IMPORT_TASK_NAME
+from .client import METADATA_FILENAME, fetch_dataset_json, resolve_config_dataset
+from .constants import IMPORT_TASK_NAME
 from .metadata import parse_data_layers
 from .permissions import OpenHexaDataLayerPermission
 from .serializers import ImportOpenHexaDataLayerSerializer, OpenHexaDataLayerSerializer
@@ -38,22 +38,7 @@ class OpenHexaDataLayerViewSet(viewsets.ViewSet):
         account = request.user.iaso_profile.account
 
         try:
-            openhexa_url, openhexa_token, workspace_slug, workspace = get_openhexa_config(account)
-        except ValidationError as error:
-            return Response({"error": error.messages[0]}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
-        dataset_slug = (workspace.config or {}).get(CONFIG_DATASET_KEY)
-        if not dataset_slug:
-            return Response(
-                {
-                    "error": _("The OpenHexa workspace configuration is missing the '{key}' key.").format(
-                        key=CONFIG_DATASET_KEY
-                    )
-                },
-                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-
-        try:
+            openhexa_url, openhexa_token, workspace_slug, dataset_slug = resolve_config_dataset(account)
             metadata = fetch_dataset_json(openhexa_url, openhexa_token, workspace_slug, dataset_slug, METADATA_FILENAME)
         except ValidationError as error:
             return Response({"error": error.messages[0]}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -97,26 +82,25 @@ class OpenHexaDataLayerViewSet(viewsets.ViewSet):
     def import_status(self, request):
         """Latest value-import task status per OpenHexa data layer for the account.
 
-        Returns ``{ "<metric_type_id>": {task_id, status, progress_message, created_at,
-        ended_at}, ... }`` - the data layer list uses it to show a per-row import badge.
+        Returns ``{ "<metric_type_id>": {task_id, status, progress_message}, ... }`` - the
+        data layer list uses it to show a per-row import badge.
         """
         account = request.user.iaso_profile.account
-        tasks = (
+        latest_per_layer = (
             Task.objects.filter(account=account, name=IMPORT_TASK_NAME)
-            .order_by("-created_at")
-            .values("id", "status", "progress_message", "created_at", "ended_at", "params")
+            .annotate(mt_id=KeyTextTransform("metric_type_id", KeyTransform("kwargs", "params")))
+            .filter(mt_id__isnull=False)
+            .order_by("mt_id", "-created_at")
+            .distinct("mt_id")
+            .values("mt_id", "id", "status", "progress_message")
         )
-
-        latest_by_metric_type: dict = {}
-        for task in tasks:
-            metric_type_id = ((task["params"] or {}).get("kwargs") or {}).get("metric_type_id")
-            if metric_type_id is None or metric_type_id in latest_by_metric_type:
-                continue
-            latest_by_metric_type[metric_type_id] = {
-                "task_id": task["id"],
-                "status": task["status"],
-                "progress_message": task["progress_message"],
-                "created_at": task["created_at"],
-                "ended_at": task["ended_at"],
+        return Response(
+            {
+                row["mt_id"]: {
+                    "task_id": row["id"],
+                    "status": row["status"],
+                    "progress_message": row["progress_message"],
+                }
+                for row in latest_per_layer
             }
-        return Response(latest_by_metric_type)
+        )

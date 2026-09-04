@@ -60,9 +60,8 @@ def resolve_source_file(definition: dict, snt_config: dict) -> SourceFile:
     if not isinstance(source_data, dict):
         raise ValidationError(_("This data layer has no usable SOURCE_DATA."))
 
-    dataset_name = ((source_data.get("DATASET") or {}) if isinstance(source_data.get("DATASET"), dict) else {}).get(
-        "NAME"
-    )
+    dataset = source_data.get("DATASET")
+    dataset_name = dataset.get("NAME") if isinstance(dataset, dict) else None
     filename_template = source_data.get("FILENAME")
     column = source_data.get("COLUMN")
     if not dataset_name or not filename_template or not column:
