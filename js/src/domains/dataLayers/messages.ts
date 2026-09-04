@@ -63,6 +63,45 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'A layer composed of other layers. Combine any number of input layers using operations and transformations.',
     },
+    layerTypeOpenHexa: {
+        id: 'iaso.snt_malaria.settings.dataLayers.layerTypeOpenHexa',
+        defaultMessage: 'OpenHexa data layer',
+    },
+    layerTypeOpenHexaInfo: {
+        id: 'iaso.snt_malaria.settings.dataLayers.layerTypeOpenHexaInfo',
+        defaultMessage:
+            'A layer defined in your OpenHexa configuration. Its metadata and default legend are filled in from OpenHexa.',
+    },
+    openHexaDataLayer: {
+        id: 'iaso.snt_malaria.settings.dataLayers.openHexaDataLayer',
+        defaultMessage: 'Data layer',
+    },
+    openHexaDataLayerHelp: {
+        id: 'iaso.snt_malaria.settings.dataLayers.openHexaDataLayerHelp',
+        defaultMessage:
+            'Metadata and default legend come from this data layer.',
+    },
+    openHexaFieldsReadOnly: {
+        id: 'iaso.snt_malaria.settings.dataLayers.openHexaFieldsReadOnly',
+        defaultMessage: 'read-only · from data layer',
+    },
+    openHexaColorsEditable: {
+        id: 'iaso.snt_malaria.settings.dataLayers.openHexaColorsEditable',
+        defaultMessage: 'colors editable',
+    },
+    openHexaDataLayersError: {
+        id: 'iaso.snt_malaria.settings.dataLayers.openHexaDataLayersError',
+        defaultMessage: 'Could not load data layers from OpenHexa.',
+    },
+    openHexaLayersUnimportable: {
+        id: 'iaso.snt_malaria.settings.dataLayers.openHexaLayersUnimportable',
+        defaultMessage:
+            'Some OpenHexa data layers cannot be imported and are hidden from the list:',
+    },
+    openHexaLayersAlreadyImported: {
+        id: 'iaso.snt_malaria.settings.dataLayers.openHexaLayersAlreadyImported',
+        defaultMessage: 'Already imported (hidden): {layers}',
+    },
     deleteLayer: {
         id: 'iaso.snt_malaria.settings.dataLayers.deleteLayer',
         defaultMessage: 'Delete Layer',

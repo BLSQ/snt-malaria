@@ -11,10 +11,12 @@ import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikConte
 import { useSaveCompositeLayer } from '../../compositeLayerEditor/hooks/useSaveCompositeLayer';
 import { CompositeLayerListItem } from '../../compositeLayerEditor/types/compositeLayer';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
+import { useGetMetricTypes } from '../hooks/useGetMetrics';
 import { useMetricTypeFormState } from '../hooks/useMetricTypeFormState';
 import { MESSAGES } from '../messages';
 import { MetricType, MetricTypeFormModel } from '../types/metrics';
 import { MetricTypeForm } from './DataLayerForm';
+import { domainRangeFromScale, scaleFromDomainRange } from './legendScale';
 
 interface MetricTypeDialogProps {
     open: boolean;
@@ -22,6 +24,7 @@ interface MetricTypeDialogProps {
     metricType?: MetricType;
     categoryOptions: DropdownOptions<string>[];
     showCompositeLayers?: boolean;
+    showOpenHexaLayers?: boolean;
     /** Composite layer record of the edited layer, when it is a composite. */
     compositeLayer?: CompositeLayerListItem;
     /** Called with the id of a freshly created composite, to continue into the node editor. */
@@ -34,6 +37,7 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
     metricType = undefined,
     categoryOptions,
     showCompositeLayers = false,
+    showOpenHexaLayers = false,
     compositeLayer = undefined,
     onCompositeCreated = undefined,
 }) => {
@@ -45,6 +49,14 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
 
     const isEditingComposite = compositeLayer !== undefined;
     const { mutate: saveCompositeLayer } = useSaveCompositeLayer();
+
+    // Code is unique per account (utility types like population included), so an OpenHexa
+    // layer whose code is already taken can't be imported again.
+    const { data: existingMetricTypes } = useGetMetricTypes(true);
+    const existingCodes = useMemo(
+        () => new Set((existingMetricTypes ?? []).map(mt => mt.code)),
+        [existingMetricTypes],
+    );
 
     const setErrorCode = useCallback(
         (code?: string) => {
@@ -97,11 +109,9 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
                 origin: metricType.origin,
                 is_population: metricType.metric_kind === 'population',
                 is_composite: isEditingComposite,
-                legend_config: (legendSource.domain || []).map(
-                    (value, index) => ({
-                        value,
-                        color: (legendSource.range || [])[index],
-                    }),
+                legend_config: scaleFromDomainRange(legendSource),
+                legend_range_tail: (legendSource?.range ?? []).slice(
+                    (legendSource?.domain ?? []).length,
                 ),
             };
         }
@@ -121,10 +131,7 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
                 is_population: !!values.is_population,
                 legend_type: values.legend_type,
                 legend_config: isConcreteLegend(values.legend_type)
-                    ? {
-                          domain: values.legend_config.map(item => item.value),
-                          range: values.legend_config.map(item => item.color),
-                      }
+                    ? domainRangeFromScale(values.legend_config)
                     : undefined,
             },
             {
@@ -141,15 +148,16 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
 
     const submitDataLayer = ({
         is_composite: _isComposite,
+        legend_range_tail,
         ...values
     }: MetricTypeFormModel) => {
         submitMetricType({
             ...values,
             metric_kind: values.is_population ? 'population' : 'any',
-            legend_config: {
-                domain: values.legend_config.map(item => item.value),
-                range: values.legend_config.map(item => item.color),
-            },
+            legend_config: domainRangeFromScale(
+                values.legend_config,
+                legend_range_tail,
+            ),
         });
     };
 
@@ -196,9 +204,10 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
             <ExtendedFormikProvider formik={formik}>
                 <MetricTypeForm
                     metricType={metricTypeFormModel}
-                    isRestricted={metricType?.origin === 'openhexa'}
                     categoryOptions={categoryOptions}
                     showCompositeLayers={showCompositeLayers}
+                    showOpenHexaLayers={showOpenHexaLayers}
+                    existingCodes={existingCodes}
                 />
             </ExtendedFormikProvider>
             {errorMessage && (
