@@ -1,22 +1,25 @@
 import { UseMutationResult } from 'react-query';
 
-import { patchRequest } from 'Iaso/libs/Api';
+import { patchRequest, postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 
 import { AccountSettings } from '../../../planning/types/accountSettings';
 
 export type SaveAccountSettingsPayload = {
-    id: number;
+    id?: number;
     focus_org_unit_type_id: number | null;
     intervention_org_unit_type_id: number | null;
     default_population_id: number | null;
 };
 
+// POST upserts the account's singleton row, so a missing id just means "create".
 const saveAccountSettings = ({
     id,
     ...body
 }: SaveAccountSettingsPayload): Promise<AccountSettings> =>
-    patchRequest(`/api/snt_malaria/account_settings/${id}/`, body);
+    id
+        ? patchRequest(`/api/snt_malaria/account_settings/${id}/`, body)
+        : postRequest(`/api/snt_malaria/account_settings/`, body);
 
 export const useSaveAccountSettingsTab = (): UseMutationResult<
     AccountSettings,
