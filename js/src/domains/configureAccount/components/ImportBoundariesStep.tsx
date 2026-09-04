@@ -6,6 +6,7 @@ import { MessageDescriptor } from 'react-intl';
 
 import { SxStyles } from 'Iaso/types/general';
 
+import { isFailedTaskStatus, TASK_STATUS } from '../../../constants/taskStatus';
 import { baseUrls } from '../../../constants/urls';
 import { usePollTask } from '../hooks/usePollTask';
 import { MESSAGES } from '../messages';
@@ -44,11 +45,9 @@ export const ImportBoundariesStep: FunctionComponent<Props> = ({
     const { formatMessage } = useSafeIntl();
 
     const { data: task, isError: taskFetchError } = usePollTask(taskId);
-    const importDone = task?.status === 'SUCCESS';
+    const importDone = task?.status === TASK_STATUS.SUCCESS;
     const importTerminalFailure =
-        task?.status === 'ERRORED' ||
-        task?.status === 'KILLED' ||
-        taskFetchError;
+        isFailedTaskStatus(task?.status) || taskFetchError;
 
     const hasStepperError = !taskId || (!importDone && importTerminalFailure);
 
@@ -128,7 +127,7 @@ export const ImportBoundariesStep: FunctionComponent<Props> = ({
             {importTerminalFailure && (
                 <Typography sx={styles.error}>
                     {stepErrorWithHelp(
-                        task?.status === 'KILLED'
+                        task?.status === TASK_STATUS.KILLED
                             ? MESSAGES.importKilled
                             : MESSAGES.importErrored,
                     )}

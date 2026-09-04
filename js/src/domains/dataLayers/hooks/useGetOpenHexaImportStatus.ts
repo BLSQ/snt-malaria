@@ -2,6 +2,7 @@ import { UseQueryResult } from 'react-query';
 import { TaskStatus } from 'Iaso/domains/tasks/types';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
+import { isInFlightTaskStatus } from '../../../constants/taskStatus';
 
 export type OpenHexaImportStatus = {
     task_id: number;
@@ -16,8 +17,6 @@ export type OpenHexaImportStatusByMetricType = Record<
     string,
     OpenHexaImportStatus
 >;
-
-const IN_FLIGHT: TaskStatus[] = ['QUEUED', 'RUNNING'];
 
 export const useGetOpenHexaImportStatus = (
     enabled = true,
@@ -34,7 +33,7 @@ export const useGetOpenHexaImportStatus = (
             refetchInterval: data =>
                 data &&
                 Object.values(data).some(entry =>
-                    IN_FLIGHT.includes(entry.status),
+                    isInFlightTaskStatus(entry.status),
                 )
                     ? 5000
                     : false,
