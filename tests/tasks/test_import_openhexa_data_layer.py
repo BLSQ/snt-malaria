@@ -10,11 +10,12 @@ from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 TASK_PATH = "plugins.snt_malaria.tasks.import_openhexa_data_layer"
 
 
-def _fake_fetch_dataset_json(metadata):
-    """One patched fetch_dataset_json call serves both config files, keyed by filename."""
+def _fake_fetch_dataset_jsons(metadata):
+    """Stand-in for fetch_dataset_jsons: returns the requested files keyed by filename."""
 
-    def fetch(_url, _token, _ws, _slug, filename):
-        return metadata if filename == METADATA_FILENAME else SNT_CONFIG if filename == CONFIG_FILENAME else {}
+    def fetch(_url, _token, _ws, _slug, filenames):
+        available = {METADATA_FILENAME: metadata, CONFIG_FILENAME: SNT_CONFIG}
+        return {name: available.get(name, {}) for name in filenames}
 
     return fetch
 
@@ -64,15 +65,14 @@ class ImportOpenHexaDataLayerTaskTestCase(SNTMalariaTestCase):
             origin=MetricType.MetricTypeOrigin.OPENHEXA,
         )
         self.task = Task.objects.create(name="import_openhexa_data_layer", launcher=self.user, account=self.account)
-        self.workspace = mock.Mock(config={"snt_configuration_dataset": "snt-configuration"})
 
-    def _run(self):
+    def _run(self, metadata=METADATA):
         with (
             mock.patch(
-                f"{TASK_PATH}.get_openhexa_config",
-                return_value=("https://oh/graphql/", "token", "ws", self.workspace),
+                f"{TASK_PATH}.resolve_config_dataset",
+                return_value=("https://oh/graphql/", "token", "ws", "snt-configuration"),
             ),
-            mock.patch(f"{TASK_PATH}.fetch_dataset_json", side_effect=_fake_fetch_dataset_json(METADATA)),
+            mock.patch(f"{TASK_PATH}.fetch_dataset_jsons", side_effect=_fake_fetch_dataset_jsons(metadata)),
             mock.patch(f"{TASK_PATH}.download_dataset_file", return_value=SOURCE_CSV) as download,
         ):
             import_openhexa_data_layer(metric_type_id=self.metric_type.id, task=self.task, _immediate=True)
@@ -90,14 +90,7 @@ class ImportOpenHexaDataLayerTaskTestCase(SNTMalariaTestCase):
         self.assertEqual(self.task.status, SUCCESS)
 
     def test_fails_when_layer_no_longer_defined(self):
-        with (
-            mock.patch(
-                f"{TASK_PATH}.get_openhexa_config",
-                return_value=("https://oh/graphql/", "token", "ws", self.workspace),
-            ),
-            mock.patch(f"{TASK_PATH}.fetch_dataset_json", side_effect=_fake_fetch_dataset_json({})),
-        ):
-            import_openhexa_data_layer(metric_type_id=self.metric_type.id, task=self.task, _immediate=True)
+        self._run(metadata={})
 
         self.task.refresh_from_db()
         self.assertEqual(self.task.status, ERRORED)
