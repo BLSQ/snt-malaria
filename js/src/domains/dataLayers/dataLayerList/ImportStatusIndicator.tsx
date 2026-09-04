@@ -3,6 +3,10 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { CircularProgress, Tooltip } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import {
+    isFailedTaskStatus,
+    isInFlightTaskStatus,
+} from '../../../constants/taskStatus';
 import { OpenHexaImportStatus } from '../hooks/useGetOpenHexaImportStatus';
 import { MESSAGES } from '../messages';
 
@@ -21,14 +25,14 @@ export const ImportStatusIndicator: FC<Props> = ({ importStatus }) => {
     if (!importStatus) return null;
     const { status, progress_message: message } = importStatus;
 
-    if (status === 'RUNNING' || status === 'QUEUED') {
+    if (isInFlightTaskStatus(status)) {
         return (
             <Tooltip title={message || formatMessage(MESSAGES.importRunning)}>
                 <CircularProgress size={14} sx={styles.icon} />
             </Tooltip>
         );
     }
-    if (status === 'ERRORED' || status === 'KILLED') {
+    if (isFailedTaskStatus(status)) {
         return (
             <Tooltip title={message || formatMessage(MESSAGES.importFailed)}>
                 <ErrorOutlineIcon
