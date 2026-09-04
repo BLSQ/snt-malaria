@@ -27,13 +27,15 @@ def _parse_year(raw: Optional[str]) -> Optional[int]:
     return int(raw) if raw not in (None, "") else None
 
 
-def _org_units_by_source_ref(account) -> dict:
-    org_units = OrgUnit.objects.filter(
-        version__account=account,
-        version=account.default_version,
-        source_ref__isnull=False,
-    ).exclude(source_ref="")
-    return {ou.source_ref: ou for ou in org_units}
+def _org_unit_id_by_source_ref(account) -> dict:
+    """``{source_ref: org_unit_id}`` for the account's default version - just the ids, no
+    geometry columns / model instances, since only the FK id is needed."""
+    pairs = (
+        OrgUnit.objects.filter(version__account=account, version=account.default_version, source_ref__isnull=False)
+        .exclude(source_ref="")
+        .values_list("source_ref", "id")
+    )
+    return dict(pairs)
 
 
 def import_metric_values(metric_type, csv_text: str, column: str, task=None) -> int:
@@ -49,59 +51,47 @@ def import_metric_values(metric_type, csv_text: str, column: str, task=None) -> 
     if column not in fieldnames:
         raise ValidationError(_("The source file has no '{column}' column.").format(column=column))
 
-    org_units_by_ref = _org_units_by_source_ref(metric_type.account)
-    logger.info(
-        "import_metric_values: %d org units with a source_ref in account %s (version %s)",
-        len(org_units_by_ref),
-        metric_type.account_id,
-        metric_type.account.default_version_id,
-    )
+    org_unit_id_by_ref = _org_unit_id_by_source_ref(metric_type.account)
 
     # De-duplicate on (org unit, year): a later row for the same key wins, and the unique
     # constraint on MetricValue stays satisfied for bulk_create.
     values_by_key: dict = {}
     total_rows = 0
-    blank_id_rows = 0
-    empty_value_rows = 0
     matched_refs = set()
     unmatched_refs = set()
     for row in reader:
         total_rows += 1
         ref = (row.get(ORG_UNIT_ID_COLUMN) or "").strip()
-        if not ref:
-            blank_id_rows += 1
-            continue
-        org_unit = org_units_by_ref.get(ref)
-        if org_unit is None:
-            unmatched_refs.add(ref)
+        org_unit_id = org_unit_id_by_ref.get(ref) if ref else None
+        if org_unit_id is None:
+            if ref:
+                unmatched_refs.add(ref)
             continue
         matched_refs.add(ref)
         raw_value = row.get(column)
         if raw_value in (None, ""):
-            empty_value_rows += 1
             continue
         try:
             value, string_value = float(raw_value), ""
         except (TypeError, ValueError):
             value, string_value = None, str(raw_value)
         year = _parse_year(row.get(YEAR_COLUMN))
-        values_by_key[(org_unit.id, year)] = MetricValue(
+        values_by_key[(org_unit_id, year)] = MetricValue(
             metric_type=metric_type,
-            org_unit=org_unit,
+            org_unit_id=org_unit_id,
             year=year,
             value=value,
             string_value=string_value,
         )
 
     logger.info(
-        "import_metric_values: %d CSV rows -> %d matched org units, %d unmatched %s ids, "
-        "%d blank ids, %d matched-but-empty values, %d values to write (after (org_unit, year) de-dup)",
+        "import_metric_values: %d org units with a source_ref; %d CSV rows -> %d matched org units, "
+        "%d unmatched %s ids, %d values to write (after (org_unit, year) de-dup)",
+        len(org_unit_id_by_ref),
         total_rows,
         len(matched_refs),
         len(unmatched_refs),
         ORG_UNIT_ID_COLUMN,
-        blank_id_rows,
-        empty_value_rows,
         len(values_by_key),
     )
     if unmatched_refs:

@@ -75,6 +75,13 @@ msgstr ""
 
 #: plugins/snt_malaria/api/openhexa_data_layers/client.py
 #, python-brace-format
+msgid "The OpenHexa workspace configuration is missing the '{key}' key."
+msgstr ""
+"La configuration de l'espace de travail OpenHexa ne contient pas la clé "
+"« {key} »."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/client.py
+#, python-brace-format
 msgid "OpenHexa dataset '{slug}' was not found in workspace '{workspace}'."
 msgstr ""
 "Le jeu de données OpenHexa « {slug} » est introuvable dans l'espace de "
@@ -120,16 +127,8 @@ msgstr "Le fichier source ne contient pas de colonne « {column} »."
 #, python-brace-format
 msgid "{rows} rows read, {matched} org units matched, writing {count} values"
 msgstr ""
-"{rows} lignes lues, {matched} unités d'organisation correspondantes, écriture "
-"de {count} valeurs"
-
-#: plugins/snt_malaria/api/openhexa_data_layers/serializers.py
-#: plugins/snt_malaria/api/openhexa_data_layers/views.py
-#, python-brace-format
-msgid "The OpenHexa workspace configuration is missing the '{key}' key."
-msgstr ""
-"La configuration de l'espace de travail OpenHexa ne contient pas la clé "
-"« {key} »."
+"{rows} lignes lues, {matched} unités d'organisation correspondantes, "
+"écriture de {count} valeurs"
 
 #: plugins/snt_malaria/api/openhexa_data_layers/serializers.py
 msgid "This data layer is not defined in OpenHexa."

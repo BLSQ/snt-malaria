@@ -8,14 +8,14 @@ import logging
 
 from beanstalk_worker import task_decorator
 from iaso.models import MetricType, Task
-from iaso.utils.openhexa import get_openhexa_config
 from plugins.snt_malaria.api.openhexa_data_layers.client import (
     CONFIG_FILENAME,
     METADATA_FILENAME,
     download_dataset_file,
-    fetch_dataset_json,
+    fetch_dataset_jsons,
+    resolve_config_dataset,
 )
-from plugins.snt_malaria.api.openhexa_data_layers.constants import CONFIG_DATASET_KEY, IMPORT_TASK_NAME
+from plugins.snt_malaria.api.openhexa_data_layers.constants import IMPORT_TASK_NAME
 from plugins.snt_malaria.api.openhexa_data_layers.importer import import_metric_values
 from plugins.snt_malaria.api.openhexa_data_layers.source import resolve_source_file
 
@@ -37,24 +37,22 @@ def import_openhexa_data_layer(metric_type_id: int, task: Task = None):
         account.name,
     )
 
-    openhexa_url, openhexa_token, workspace_slug, workspace = get_openhexa_config(account)
-    dataset_slug = (workspace.config or {}).get(CONFIG_DATASET_KEY)
-    if not dataset_slug:
-        raise ValueError(f"OpenHexa workspace config is missing the '{CONFIG_DATASET_KEY}' key")
+    openhexa_url, openhexa_token, workspace_slug, dataset_slug = resolve_config_dataset(account)
     logger.info("import_openhexa_data_layer: workspace '%s', configuration dataset '%s'", workspace_slug, dataset_slug)
 
     task.report_progress_and_stop_if_killed(progress_message="Reading the OpenHexa configuration")
-    metadata = fetch_dataset_json(openhexa_url, openhexa_token, workspace_slug, dataset_slug, METADATA_FILENAME)
+    config_files = fetch_dataset_jsons(
+        openhexa_url, openhexa_token, workspace_slug, dataset_slug, [METADATA_FILENAME, CONFIG_FILENAME]
+    )
+    metadata, snt_config = config_files[METADATA_FILENAME], config_files[CONFIG_FILENAME]
+
     definition = metadata.get(metric_type.code)
     if not isinstance(definition, dict):
         raise ValueError(f"Data layer '{metric_type.code}' is no longer defined in SNT_metadata.json")
     logger.info(
-        "import_openhexa_data_layer: SOURCE_DATA for '%s' = %s", metric_type.code, definition.get("SOURCE_DATA")
-    )
-
-    snt_config = fetch_dataset_json(openhexa_url, openhexa_token, workspace_slug, dataset_slug, CONFIG_FILENAME)
-    logger.info(
-        "import_openhexa_data_layer: SNT_config.json COUNTRY_CODE=%s, SNT_DATASET_IDENTIFIERS keys=%s",
+        "import_openhexa_data_layer: '%s' SOURCE_DATA=%s, SNT_config COUNTRY_CODE=%s, dataset identifiers=%s",
+        metric_type.code,
+        definition.get("SOURCE_DATA"),
         (snt_config.get("SNT_CONFIG") or {}).get("COUNTRY_CODE"),
         sorted((snt_config.get("SNT_DATASET_IDENTIFIERS") or {}).keys()),
     )
