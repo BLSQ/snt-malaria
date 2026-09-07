@@ -140,6 +140,14 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.noLayersFound',
         defaultMessage: 'No layers found.',
     },
+    expandCategory: {
+        id: 'iaso.snt_malaria.settings.dataLayers.expandCategory',
+        defaultMessage: 'Expand category',
+    },
+    collapseCategory: {
+        id: 'iaso.snt_malaria.settings.dataLayers.collapseCategory',
+        defaultMessage: 'Collapse category',
+    },
     required: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.required',
         defaultMessage: 'This field is required',
