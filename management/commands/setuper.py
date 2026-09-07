@@ -11,22 +11,18 @@ from plugins.snt_malaria.management.commands.support.intervention_seeder import 
 
 
 class Command(BaseCommand):
-    help = "Set up a new Account, Project, DataSource, and import org units and metrics data"
+    help = "Set up a new Account, Project, DataSource, and import org units"
 
     accounts_config = {
         "RDC": {
             "account_name": "Democratic Republic Of The Congo",
             "project_name": "DRC",
             "data_source_name": "RDC",
-            "dataset_slug": "snt-results",
-            "dataset_workspaceslug": "drc-snt-data-pre-processing",
         },
         "BFA": {
             "account_name": "Burkina Faso",
             "project_name": "BFA",
             "data_source_name": "BFA",
-            "dataset_slug": "snt-results",
-            "dataset_workspaceslug": "bfa-snt-process",
         },
     }
 
@@ -154,19 +150,8 @@ class Command(BaseCommand):
             # Seed interventions
             InterventionSeeder(account, self.stdout.write).create_interventions()
 
-            # Import metrics data (calls import_openhexa_metrics command)
-            self.stdout.write(self.style.SUCCESS("You can now run the following command to import metrics data:"))
-            self.stdout.write(
-                self.style.NOTICE(
-                    f"./manage.py import_openhexa_metrics --workspace_slug {account_config['dataset_workspaceslug']} --dataset_slug {account_config['dataset_slug']} --account-id {account.id}"
-                )
-            )
-            self.stdout.write(self.style.SUCCESS("OR this one if you run under docker"))
-            self.stdout.write(
-                self.style.NOTICE(
-                    f"docker compose run --rm iaso manage import_openhexa_metrics --workspace_slug {account_config['dataset_workspaceslug']} --dataset_slug {account_config['dataset_slug']} --account-id {account.id}"
-                )
-            )
+            # Data layer values are imported per layer from the Data Layers screen (OpenHexa data
+            # layer type), which launches the import_openhexa_data_layer background task.
 
             self.stdout.write(self.style.NOTICE(f"You can now try to login main user: {main_username}"))
             if "password" in locals():
