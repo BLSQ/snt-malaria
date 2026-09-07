@@ -72,8 +72,9 @@ def _download_file(client: OpenHEXAClient, files: list, filename: str, dataset_s
             )
         )
 
-    # get_version_files already selects downloadUrl; only fall back to the mutation if it is absent.
-    download_url = match.get("downloadUrl") or client.get_file_download_url(match["id"])
+    # Always mint a fresh signed URL via prepareFileDownload; the one on the listing item
+    # can be short-lived / stale by the time a background task gets here.
+    download_url = client.get_file_download_url(match["id"])
     if not download_url:
         raise ValidationError(_("Could not get a download URL for '{filename}'.").format(filename=filename))
 

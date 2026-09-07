@@ -22,9 +22,13 @@ UNMATCHED_SAMPLE_SIZE = 20
 
 
 def _parse_year(raw: Optional[str]) -> Optional[int]:
-    # No YEAR column, or an empty cell, means the value is timeless (year=None, not 0) so
-    # downstream consumers recognise it as such. Real year handling lands in phase 4.
-    return int(raw) if raw not in (None, "") else None
+    # No YEAR column, an empty cell, or an unparseable value all mean the value is timeless
+    # (year=None, not 0) so downstream consumers recognise it as such. A bad cell must not
+    # abort the whole import. Real year handling lands in phase 4.
+    try:
+        return int(raw) if raw not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
 
 
 def _org_unit_id_by_source_ref(account) -> dict:
@@ -104,7 +108,18 @@ def import_metric_values(metric_type, csv_text: str, column: str, task=None) -> 
             "" if len(unmatched_refs) <= UNMATCHED_SAMPLE_SIZE else " ...",
         )
     if not values_by_key:
-        logger.warning("import_metric_values: no values matched - the layer will be created empty")
+        # Never let an unusable file wipe a layer's existing values: a refresh after an
+        # org-unit re-import or a source scheme change would otherwise delete everything.
+        logger.warning(
+            "import_metric_values: no rows matched an org unit for metric type %s ('%s') - keeping existing values",
+            metric_type.id,
+            metric_type.code,
+        )
+        raise ValidationError(
+            _("None of the {rows} source rows matched an org unit (by {column}).").format(
+                rows=total_rows, column=ORG_UNIT_ID_COLUMN
+            )
+        )
 
     if task is not None:
         task.report_progress_and_stop_if_killed(
