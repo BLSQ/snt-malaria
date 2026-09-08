@@ -125,6 +125,7 @@
     "iaso.snt_malaria.settings.dataLayers.units": "Unités",
     "iaso.snt_malaria.settings.dataLayers.unitSymbol": "Symbole d'unité",
     "iaso.snt_malaria.settings.dataLayers.scale": "Echelle",
+    "iaso.snt_malaria.settings.dataLayers.legendTopColor": "Couleur des valeurs au-dessus du dernier seuil",
     "iaso.snt_malaria.settings.dataLayers.legendType": "Type de légende",
     "iaso.snt_malaria.settings.dataLayers.editLayer": "Modifier la couche",
     "iaso.snt_malaria.settings.dataLayers.compositeLayer": "Couche composite",

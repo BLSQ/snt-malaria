@@ -1,8 +1,10 @@
 import React, { FC } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { FormikErrors, FormikTouched } from 'formik';
+import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
 import { SxStyles } from 'Iaso/types/general';
+import { hasOpenEndedTopBucket } from '../../../constants/legend';
 import { useGetChildError } from '../../../hooks/useGetChildError';
 import { DEFAULT_LEGEND_CONFIG_ITEM } from '../hooks/useMetricTypeFormState';
 import { MESSAGES } from '../messages';
@@ -24,6 +26,13 @@ const styles: SxStyles = {
             visibility: 'visible',
         },
     },
+    topColorRow: {
+        mt: 1,
+        mb: 2,
+    },
+    topColorLabel: {
+        flexGrow: 1,
+    },
 };
 
 type Props = {
@@ -43,6 +52,10 @@ type Props = {
     legendType: string;
     /** OpenHexa layers lock the scale breaks; only the colors stay editable. */
     disableValues?: boolean;
+    /** Colour of the open-ended `>= last break` bucket; only shown when the legend type
+     *  `hasOpenEndedTopBucket`. */
+    topColor: string;
+    onChangeTopColor: (color: string) => void;
 };
 
 const LIST_FIELD_KEY = 'legend_config';
@@ -58,6 +71,8 @@ export const LegendConfigForm: FC<Props> = ({
     onUpdateField,
     legendType,
     disableValues = false,
+    topColor,
+    onChangeTopColor,
 }) => {
     const { formatMessage } = useSafeIntl();
     const getChildError = useGetChildError<Scale>({
@@ -103,6 +118,25 @@ export const LegendConfigForm: FC<Props> = ({
                 >
                     {formatMessage(MESSAGES.addScaleItem)}
                 </Button>
+            )}
+
+            {hasOpenEndedTopBucket(legendType) && (
+                <Stack
+                    direction="row"
+                    spacing={2}
+                    alignItems="center"
+                    sx={styles.topColorRow}
+                >
+                    <Typography variant="body2" sx={styles.topColorLabel}>
+                        {formatMessage(MESSAGES.legendTopColor)}
+                    </Typography>
+                    <ColorPicker
+                        currentColor={topColor}
+                        onChangeColor={onChangeTopColor}
+                        displayLabel={false}
+                    />
+                    <Box width={40} />
+                </Stack>
             )}
         </Box>
     );

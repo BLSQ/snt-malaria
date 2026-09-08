@@ -56,10 +56,23 @@ describe('openHexaLayerToFormPatch', () => {
         ).toBe('threshold');
     });
 
-    it('keeps the extra top-bucket colour(s) in legend_range_tail', () => {
-        // 6 domain breaks, 7 colours -> 6 editable rows + 1 tail colour
-        expect(openHexaLayerToFormPatch(layer()).legend_range_tail).toEqual([
+    it('keeps the extra top-bucket colour in legend_top_color', () => {
+        // 6 domain breaks, 7 colours -> 6 editable rows + 1 top-bucket colour
+        expect(openHexaLayerToFormPatch(layer()).legend_top_color).toBe(
             '#A93A42',
-        ]);
+        );
+    });
+
+    it('falls back to the last band colour when the metadata has no extra colour', () => {
+        expect(
+            openHexaLayerToFormPatch(
+                layer({
+                    legend_config: {
+                        domain: [50, 150],
+                        range: ['#aaa', '#bbb'],
+                    },
+                }),
+            ).legend_top_color,
+        ).toBe('#bbb');
     });
 });

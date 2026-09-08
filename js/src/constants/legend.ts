@@ -11,6 +11,11 @@ export const LegendTypes = {
 export const isConcreteLegend = (legendType?: string): boolean =>
     legendType !== LegendTypes.AUTO && legendType !== LegendTypes.REFERENCE;
 
+/** Legend types with an open-ended top bucket (values above the last break), so their
+ *  `range` carries one more colour than the domain has breaks. */
+export const hasOpenEndedTopBucket = (legendType?: string): boolean =>
+    legendType === LegendTypes.THRESHOLD;
+
 export const LEGEND_TYPE_MAX_ITEMS: Record<string, number> = {
     [LegendTypes.ORDINAL]: 4,
     [LegendTypes.THRESHOLD]: 9,
