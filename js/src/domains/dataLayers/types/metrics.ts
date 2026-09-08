@@ -34,9 +34,27 @@ export type MetricTypeFormModel = {
     legend_type: string;
     origin: string;
     legend_config: Scale[];
+    /** OpenHexa legend colours beyond the editable scale rows (the extra top bucket). */
+    legend_range_tail?: string[];
     is_population?: boolean;
     /** Composite = a layer built with the node editor rather than imported values. */
     is_composite?: boolean;
+};
+
+/** A data-layer definition read from the OpenHexa `SNT_metadata.json` file. */
+export type OpenHexaDataLayer = {
+    code: string;
+    name: string;
+    description: string;
+    source: string;
+    units: string;
+    category: string;
+    unit_symbol: string;
+    legend_type: string;
+    legend_config: ScaleDomainRange;
+    metric_kind: MetricKind;
+    /** Set when the layer can't be imported as-is (e.g. its scale doesn't fit its legend type). */
+    error?: string;
 };
 
 export type MetricValue = {
