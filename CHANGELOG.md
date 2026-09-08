@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.19.0](https://github.com/BLSQ/snt-malaria/compare/2.18.0...2.19.0) (2026-09-08)
+
+
+### Features
+
+* **accountSettings:** Allow initial saving of account settings via POST upsert ([#385](https://github.com/BLSQ/snt-malaria/issues/385)) ([4f2bf78](https://github.com/BLSQ/snt-malaria/commit/4f2bf7879f1fff778ab482088df270ef36824c58))
+* **AI Chat:** Revert to previous message in ai chat ([#384](https://github.com/BLSQ/snt-malaria/issues/384)) ([975c33f](https://github.com/BLSQ/snt-malaria/commit/975c33f76249ff156b013afd10bd4faef6c36f14))
+* **comparison:** budget comparison fine tuning ([#382](https://github.com/BLSQ/snt-malaria/issues/382)) ([4e75038](https://github.com/BLSQ/snt-malaria/commit/4e7503856df98e064f94b92ce584e2ea641c4be5))
+* **dataLayers:** Make data layer list categories collapsible (#SNT-543) ([#388](https://github.com/BLSQ/snt-malaria/issues/388)) ([4d9c815](https://github.com/BLSQ/snt-malaria/commit/4d9c815be09f66123e37b6f89f186c2fc13084eb))
+* **Intervention:** Duplicate intervention with cost lines ([#381](https://github.com/BLSQ/snt-malaria/issues/381)) ([a32f954](https://github.com/BLSQ/snt-malaria/commit/a32f954fa108bc8d3d416a9b49df1794b3ebdf9f))
+
 ## [2.18.0](https://github.com/BLSQ/snt-malaria/compare/2.17.0...2.18.0) (2026-09-01)
 
 
