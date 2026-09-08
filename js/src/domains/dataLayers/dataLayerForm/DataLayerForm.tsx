@@ -19,6 +19,7 @@ import { MESSAGES } from '../messages';
 import { MetricTypeFormModel, OpenHexaDataLayer } from '../types/metrics';
 import { LAYER_TYPES, LayerTypeSelect } from './LayerTypeSelect';
 import { LegendConfigForm } from './LegendConfigForm';
+import { DEFAULT_COLOR } from './legendScale';
 import { openHexaLayerToFormPatch } from './openHexaAutofill';
 
 type MetricTypeFormProps = {
@@ -219,13 +220,18 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                     ] as const
                 ).forEach(field => setFieldValueAndState(field, ''));
                 setFieldValueAndState('is_population', false);
-                setFieldValueAndState('legend_range_tail', []);
+                setFieldValueAndState('legend_top_color', DEFAULT_COLOR);
             }
             if (composite && !values.category) {
                 setFieldValueAndState('category', 'Composite');
             }
         },
         [setFieldValueAndState, values.category, values.origin],
+    );
+
+    const onChangeTopColor = useCallback(
+        (color: string) => setFieldValueAndState('legend_top_color', color),
+        [setFieldValueAndState],
     );
 
     const showScaleConfig = isConcreteLegend(values.legend_type);
@@ -456,6 +462,8 @@ export const MetricTypeForm: FC<MetricTypeFormProps> = ({
                     minItems={LEGEND_TYPE_MIN_ITEMS[values.legend_type]}
                     maxItems={LEGEND_TYPE_MAX_ITEMS[values.legend_type]}
                     disableValues={isOpenHexa}
+                    topColor={values.legend_top_color}
+                    onChangeTopColor={onChangeTopColor}
                 />
             )}
         </Box>

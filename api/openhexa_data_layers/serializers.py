@@ -63,12 +63,21 @@ class ImportOpenHexaDataLayerSerializer(serializers.Serializer):
             )
 
         data["layer"] = layer
+        data["existing"] = existing
         return data
 
     def save(self):
         account = self.context["request"].user.iaso_profile.account
         layer = self.validated_data["layer"]
-        legend_config = self.validated_data.get("legend_config") or layer["legend_config"]
+        existing = self.validated_data["existing"]
+        # A "Refresh from OpenHexa" only re-pulls values + metadata; keep the legend colours
+        # the user may have edited (the create dialog seeds them from the file, edits go
+        # through PATCH /api/metrictypes/). An explicit legend_config in the payload wins.
+        legend_config = (
+            self.validated_data.get("legend_config")
+            or (existing.legend_config if existing else None)
+            or layer["legend_config"]
+        )
 
         metric_type, _created = MetricType.objects.update_or_create(
             account=account,

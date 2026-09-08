@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-04 12:01+0000\n"
+"POT-Creation-Date: 2026-09-04 12:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -116,6 +116,13 @@ msgstr "Le fichier source ne contient pas de colonne « {column} »."
 
 #: plugins/snt_malaria/api/openhexa_data_layers/importer.py
 #, python-brace-format
+msgid "None of the {rows} source rows matched an org unit (by {column})."
+msgstr ""
+"Aucune des {rows} lignes du fichier source ne correspond à une unité "
+"d'organisation (via {column})."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/importer.py
+#, python-brace-format
 msgid "{rows} rows read, {matched} org units matched, writing {count} values"
 msgstr ""
 "{rows} lignes lues, {matched} unités d'organisation correspondantes, "
@@ -148,6 +155,10 @@ msgstr "Cette couche de données n'a pas de SOURCE_DATA exploitable."
 #: plugins/snt_malaria/api/openhexa_data_layers/source.py
 msgid "SOURCE_DATA is missing DATASET.NAME, FILENAME or COLUMN."
 msgstr "SOURCE_DATA n'a pas de DATASET.NAME, FILENAME ou COLUMN."
+
+#: plugins/snt_malaria/api/openhexa_data_layers/source.py
+msgid "SNT_config.json does not define SNT_CONFIG.COUNTRY_CODE."
+msgstr "SNT_config.json ne définit pas SNT_CONFIG.COUNTRY_CODE."
 
 #: plugins/snt_malaria/api/openhexa_data_layers/views.py
 msgid "Failed to fetch data layers from OpenHexa."

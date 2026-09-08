@@ -50,3 +50,14 @@ class ResolveSourceFileTestCase(SimpleTestCase):
             resolve_source_file({"SOURCE_DATA": {"DATASET": {"NAME": "DHIS2_INCIDENCE"}}}, SNT_CONFIG)
         with self.assertRaises(ValidationError):
             resolve_source_file({}, SNT_CONFIG)
+
+    def test_missing_country_code_raises_a_clear_error(self):
+        with self.assertRaisesMessage(ValidationError, "COUNTRY_CODE"):
+            resolve_source_file(_definition(), {"SNT_DATASET_IDENTIFIERS": SNT_CONFIG["SNT_DATASET_IDENTIFIERS"]})
+
+    def test_exact_key_wins_over_a_prefix_collision(self):
+        config = {
+            "SNT_CONFIG": {"COUNTRY_CODE": "COD"},
+            "SNT_DATASET_IDENTIFIERS": {"DHIS2_INCIDENCE": "wrong", "SNT_DHIS2_INCIDENCE": "right"},
+        }
+        self.assertEqual(resolve_source_file(_definition(name="SNT_DHIS2_INCIDENCE"), config).dataset_slug, "right")
