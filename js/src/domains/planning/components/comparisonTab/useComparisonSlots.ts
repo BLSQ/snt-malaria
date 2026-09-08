@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
-import { DropdownOptions } from 'bluesquare-components';
+import { DropdownOptions, useSafeIntl } from 'bluesquare-components';
+import { MESSAGES } from '../../../messages';
 import { Scenario } from '../../../scenarios/types';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 
@@ -12,13 +13,19 @@ export const MAX_EXTRA_SLOTS = 2;
 // change that isn't reflected in those hardcoded calls.
 export const MAX_SLOTS = MAX_EXTRA_SLOTS + 1;
 
+// Sentinel year meaning "aggregate every year of the scenario" rather than a
+// single calendar year. 0 is safe: no scenario spans year 0.
+export const ALL_YEARS = 0;
+
+export const isAllYears = (year: number): boolean => year === ALL_YEARS;
+
 export type ExtraSlotState = {
     scenarioId: number;
     year: number;
 };
 
 const clampYear = (year: number, scenario?: Scenario): number => {
-    if (!scenario) return year;
+    if (isAllYears(year) || !scenario) return year;
     return Math.min(Math.max(year, scenario.start_year), scenario.end_year);
 };
 
@@ -32,6 +39,8 @@ export const useComparisonSlots = (
     currentScenario: Scenario | undefined,
     scenarios: Scenario[] | undefined,
 ) => {
+    const { formatMessage } = useSafeIntl();
+
     const scenarioById = useMemo(() => {
         const map = new Map<number, Scenario>();
         (scenarios ?? []).forEach(scenario => map.set(scenario.id, scenario));
@@ -44,8 +53,7 @@ export const useComparisonSlots = (
         comparisonExtraSlots: extraSlots,
         setComparisonExtraSlots: setExtraSlots,
     } = usePlanningContext();
-    const effectiveCurrentYear =
-        currentYear ?? currentScenario?.start_year ?? new Date().getFullYear();
+    const effectiveCurrentYear = currentYear ?? ALL_YEARS;
 
     const scenarioOptions: DropdownOptions<number>[] = useMemo(
         () =>
@@ -100,22 +108,9 @@ export const useComparisonSlots = (
             if (!option) {
                 return prev;
             }
-            const scenario = scenarioById.get(option.value);
-            return [
-                ...prev,
-                {
-                    scenarioId: option.value,
-                    year: scenario?.start_year ?? effectiveCurrentYear,
-                },
-            ];
+            return [...prev, { scenarioId: option.value, year: ALL_YEARS }];
         });
-    }, [
-        scenarioOptions,
-        scenarioById,
-        currentScenario,
-        effectiveCurrentYear,
-        setExtraSlots,
-    ]);
+    }, [scenarioOptions, currentScenario, setExtraSlots]);
 
     const handleRemoveSlot = useCallback(
         (index: number) => {
@@ -133,17 +128,12 @@ export const useComparisonSlots = (
                 const previousYear = next[index]?.year;
                 next[index] = {
                     scenarioId,
-                    year: clampYear(
-                        previousYear ??
-                            scenario?.start_year ??
-                            effectiveCurrentYear,
-                        scenario,
-                    ),
+                    year: clampYear(previousYear ?? ALL_YEARS, scenario),
                 };
                 return next;
             });
         },
-        [scenarioById, effectiveCurrentYear, setExtraSlots],
+        [scenarioById, setExtraSlots],
     );
 
     const handleSlotYearChange = useCallback(
@@ -181,7 +171,12 @@ export const useComparisonSlots = (
             if (!scenario) {
                 return [];
             }
-            const years: { label: string; value: number }[] = [];
+            const years: { label: string; value: number }[] = [
+                {
+                    label: formatMessage(MESSAGES.comparisonAllYears),
+                    value: ALL_YEARS,
+                },
+            ];
             for (
                 let year = scenario.start_year;
                 year <= scenario.end_year;
@@ -191,7 +186,7 @@ export const useComparisonSlots = (
             }
             return years;
         },
-        [resolveScenario],
+        [resolveScenario, formatMessage],
     );
 
     return {

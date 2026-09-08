@@ -510,6 +510,8 @@
     "iaso.snt_malaria.summary.yearLabel": "Année",
     "iaso.snt_malaria.label.comparisonView": "Comparaison",
     "iaso.snt_malaria.planning.comparison.yearLabel": "Année",
+    "iaso.snt_malaria.planning.comparison.allYears": "Toutes les années",
+    "iaso.snt_malaria.planning.comparison.populationCoverageAllYears": "La couverture de la population n'est pas disponible lorsqu'un scénario est réglé sur « Toutes les années ». Sélectionnez une année précise pour chaque scénario pour l'afficher.",
     "iaso.snt_malaria.planning.comparison.totalCostPerYearTitle": "Coût total par année",
     "iaso.snt_malaria.planning.comparison.budgetByInterventionTitle": "Budget par intervention",
     "iaso.snt_malaria.planning.comparison.costDifferenceTitle": "Différence de coût par intervention",
