@@ -285,17 +285,46 @@ class AccountSettingsAPITests(SNTMalariaAPITestCase):
         self.account_settings.refresh_from_db()
         self.assertEqual(self.account_settings.account_id, self.account.id)
 
-    def test_post_not_allowed(self):
+    def test_post_creates_settings_when_none_exist(self):
+        """POST creates the account's singleton row when it does not exist yet."""
+        self.account_settings.delete()
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
             BASE_URL,
-            {
-                "account": self.account.id,
-                "intervention_org_unit_type_id": self.out_district.id,
-            },
+            {"intervention_org_unit_type_id": self.out_district.id},
             format="json",
         )
-        self.assertJSONResponse(response, status.HTTP_405_METHOD_NOT_ALLOWED)
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+        self.assertEqual(result["intervention_org_unit_type_id"], self.out_district.id)
+        created = AccountSettings.objects.get(account=self.account)
+        self.assertEqual(created.intervention_org_unit_type_id, self.out_district.id)
+
+    def test_post_upserts_onto_existing_singleton(self):
+        """POST fills in an unset field on the existing row instead of creating a duplicate."""
+        self.assertIsNone(self.account_settings.focus_org_unit_type_id)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            BASE_URL,
+            {"focus_org_unit_type_id": self.region_type.id},
+            format="json",
+        )
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+        self.assertEqual(result["id"], self.account_settings.id)
+        self.assertEqual(result["focus_org_unit_type_id"], self.region_type.id)
+        self.assertEqual(AccountSettings.objects.filter(account=self.account).count(), 1)
+
+    def test_post_modify_already_set_field_without_perm_forbidden(self):
+        """POST wires in the same guard as PATCH: changing an already-set field needs the write perm."""
+        # `intervention_org_unit_type` is already set to `out_district` in setUp.
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            BASE_URL,
+            {"intervention_org_unit_type_id": self.region_type.id},
+            format="json",
+        )
+        self.assertJSONResponse(response, status.HTTP_403_FORBIDDEN)
+        self.account_settings.refresh_from_db()
+        self.assertEqual(self.account_settings.intervention_org_unit_type_id, self.out_district.id)
 
     def test_delete_not_allowed(self):
         self.client.force_authenticate(user=self.user)
