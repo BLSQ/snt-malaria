@@ -511,6 +511,8 @@
     "iaso.snt_malaria.summary.yearLabel": "Year",
     "iaso.snt_malaria.label.comparisonView": "Comparison",
     "iaso.snt_malaria.planning.comparison.yearLabel": "Year",
+    "iaso.snt_malaria.planning.comparison.allYears": "All years",
+    "iaso.snt_malaria.planning.comparison.populationCoverageAllYears": "Population coverage is not available when a scenario is set to \"All years\". Select a specific year for each scenario to see it.",
     "iaso.snt_malaria.planning.comparison.totalCostPerYearTitle": "Total cost per year",
     "iaso.snt_malaria.planning.comparison.budgetByInterventionTitle": "Budget by intervention",
     "iaso.snt_malaria.planning.comparison.costDifferenceTitle": "Cost difference by intervention",

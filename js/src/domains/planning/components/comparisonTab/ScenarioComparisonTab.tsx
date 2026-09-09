@@ -1,9 +1,17 @@
-import React, { FC, ReactElement, ReactNode, useMemo } from 'react';
+import React, {
+    FC,
+    ReactElement,
+    ReactNode,
+    useCallback,
+    useMemo,
+} from 'react';
 import { Box, Card, CardHeader, Grid } from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { PaperFullHeight } from '../../../../components/styledComponents';
 import { buildMetricEntries } from '../../../compareCustomize/components/MetricCard';
 import { getScenarioColor } from '../../../compareCustomize/utils/colors';
+import { MESSAGES } from '../../../messages';
 import { useGetScenarios } from '../../../scenarios/hooks/useGetScenarios';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { ScenarioComparisonProvider } from '../../contexts/ScenarioComparisonContext';
@@ -14,7 +22,7 @@ import { formatBigNumber } from '../../libs/cost-utils';
 import { AddScenarioButton } from './AddScenarioButton';
 import { ScenarioSlotWidget } from './ScenarioSlotWidget';
 import { ComparisonSlot } from './types';
-import { useComparisonSlots } from './useComparisonSlots';
+import { isAllYears, useComparisonSlots } from './useComparisonSlots';
 import { useScenarioComparisonData } from './useScenarioComparisonData';
 import { BudgetByInterventionWidget } from './widgets/BudgetByInterventionWidget';
 import { CommoditiesWidget } from './widgets/CommoditiesWidget';
@@ -70,6 +78,7 @@ type Props = {
 };
 
 export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
+    const { formatMessage } = useSafeIntl();
     const { scenario, currency, orgUnits } = usePlanningContext();
     const { data: scenarios } = useGetScenarios();
     const { data: accountSettings } = useGetAccountSettings();
@@ -118,6 +127,14 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
         return map;
     }, [scenarios]);
 
+    const formatYear = useCallback(
+        (year: number) =>
+            isAllYears(year)
+                ? formatMessage(MESSAGES.comparisonAllYears)
+                : String(year),
+        [formatMessage],
+    );
+
     const slots: ComparisonSlot[] = useMemo(() => {
         const result: ComparisonSlot[] = [];
         if (scenario) {
@@ -125,7 +142,7 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                 key: 'slot-0',
                 scenarioId: scenario.id,
                 year: currentYear,
-                label: `${scenario.name} (${currentYear})`,
+                label: `${scenario.name} (${formatYear(currentYear)})`,
                 color: getScenarioColor(0),
                 isCurrent: true,
             });
@@ -135,13 +152,13 @@ export const ScenarioComparisonTab: FC<Props> = ({ header }) => {
                 key: `slot-${index + 1}`,
                 scenarioId: slot.scenarioId,
                 year: slot.year,
-                label: `${scenarioNameById.get(slot.scenarioId) ?? ''} (${slot.year})`,
+                label: `${scenarioNameById.get(slot.scenarioId) ?? ''} (${formatYear(slot.year)})`,
                 color: getScenarioColor(index + 1),
                 isCurrent: false,
             });
         });
         return result;
-    }, [scenario, currentYear, extraSlots, scenarioNameById]);
+    }, [scenario, currentYear, extraSlots, scenarioNameById, formatYear]);
 
     const { budgetsBySlotKey, totalCostsBySlotKey, isBudgetLoading } =
         useScenarioComparisonData(slots);

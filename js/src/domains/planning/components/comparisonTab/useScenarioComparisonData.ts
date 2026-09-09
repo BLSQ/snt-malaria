@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import { useGetLatestCalculatedBudget } from '../../hooks/useGetLatestCalculatedBudget';
+import { mergeBudgets } from '../../libs/budget-aggregation';
 import { Budget } from '../../types/budget';
 import { YearlyCost } from '../../types/comparisonAggregation';
 import { ComparisonSlot } from './types';
-import { MAX_SLOTS } from './useComparisonSlots';
+import { isAllYears, MAX_SLOTS } from './useComparisonSlots';
 
 if (MAX_SLOTS !== 3) {
     throw new Error(
@@ -11,15 +12,31 @@ if (MAX_SLOTS !== 3) {
     );
 }
 
+// A slot showing a single calendar year resolves to that year's `Budget`; a
+// slot set to "All years" resolves to every year of the scenario merged into
+// one synthetic budget (see `mergeBudgets`).
+const resolveSlotBudget = (
+    results: Budget[] | undefined,
+    year: number,
+): Budget | undefined => {
+    if (!results || results.length === 0) {
+        return undefined;
+    }
+    return isAllYears(year)
+        ? mergeBudgets(results)
+        : results.find(result => result.year === year);
+};
+
 /**
  * Fetches each slot's calculated budget (already computed for every year of
- * its scenario). Exposes the single year the slot has selected
- * (`budgetsBySlotKey`) plus a lean per-slot total-cost-by-year series
- * (`totalCostsBySlotKey`, for the cost-over-time chart) -- the full `Budget`
- * objects for the other years never leave this hook. Always calls exactly
- * `MAX_SLOTS` (currently 3) `useGetLatestCalculatedBudget` hooks (React's
- * rules of hooks forbid a variable count); slots beyond what's currently
- * selected pass `undefined`, which the hook treats as disabled.
+ * its scenario). Exposes the budget the slot has selected -- one year, or all
+ * years merged (`budgetsBySlotKey`) -- plus a lean per-slot
+ * total-cost-by-year series (`totalCostsBySlotKey`, for the cost-over-time
+ * chart) -- the full `Budget` objects for the other years never leave this
+ * hook. Always calls exactly `MAX_SLOTS` (currently 3)
+ * `useGetLatestCalculatedBudget` hooks (React's rules of hooks forbid a
+ * variable count); slots beyond what's currently selected pass `undefined`,
+ * which the hook treats as disabled.
  */
 export const useScenarioComparisonData = (slots: ComparisonSlot[]) => {
     const budgetQuery0 = useGetLatestCalculatedBudget(slots[0]?.scenarioId);
@@ -40,9 +57,7 @@ export const useScenarioComparisonData = (slots: ComparisonSlot[]) => {
         slots.forEach((slot, index) => {
             map.set(
                 slot.key,
-                resultsByIndex[index]?.find(
-                    result => result.year === slot.year,
-                ),
+                resolveSlotBudget(resultsByIndex[index], slot.year),
             );
         });
         return map;

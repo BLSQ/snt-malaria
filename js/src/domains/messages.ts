@@ -78,6 +78,15 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.planning.comparison.yearLabel',
         defaultMessage: 'Year',
     },
+    comparisonAllYears: {
+        id: 'iaso.snt_malaria.planning.comparison.allYears',
+        defaultMessage: 'All years',
+    },
+    comparisonPopulationCoverageAllYears: {
+        id: 'iaso.snt_malaria.planning.comparison.populationCoverageAllYears',
+        defaultMessage:
+            'Population coverage is not available when a scenario is set to "All years". Select a specific year for each scenario to see it.',
+    },
     comparisonVersusLabel: {
         id: 'iaso.snt_malaria.planning.comparison.versusLabel',
         defaultMessage: 'vs',
