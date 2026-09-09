@@ -1,3 +1,5 @@
+import logging
+
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
@@ -9,6 +11,9 @@ from django.contrib.auth.models import User
 from iaso.utils.colors import COLOR_CHOICES, DISPERSED_COLOR_ORDER
 from plugins.snt_malaria.models.intervention import Intervention, InterventionAssignment
 from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_intervention_column(name, code):
@@ -60,7 +65,7 @@ def get_assignments_from_row(user, scenario, row, interventions):
 
         assigned_value = row[intervention_name]
         if assigned_value == 1:
-            print(
+            logger.debug(
                 f"creating intervention with name {intervention_name} and id {intervention['id']} and for OU {row['org_unit_id']}"
             )
             assignment = InterventionAssignment(

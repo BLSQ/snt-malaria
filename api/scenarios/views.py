@@ -1,4 +1,5 @@
 import csv
+import logging
 
 from datetime import datetime
 
@@ -34,6 +35,9 @@ from .serializers import (
     ScenarioSerializer,
     ScenarioWriteSerializer,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class ScenarioViewSet(viewsets.ModelViewSet):
@@ -119,6 +123,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         try:
             new_scenario = serializer.save(account=request.user.iaso_profile.account, created_by=request.user)
         except Exception as e:
+            logger.exception("Error saving duplicated scenario")
             raise ValidationError(f"Error saving scenario: {e}")
 
         duplicate_rules(initial_scenario, new_scenario, request.user)
