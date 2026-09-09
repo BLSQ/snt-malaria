@@ -1,0 +1,197 @@
+import React, { FC, ReactNode, useCallback } from 'react';
+import CloseIcon from '@mui/icons-material/Close';
+import {
+    Alert,
+    Box,
+    Button,
+    Card,
+    Divider,
+    IconButton,
+    Stack,
+    Typography,
+} from '@mui/material';
+import { useSafeIntl } from 'bluesquare-components';
+import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
+import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
+import { MESSAGES } from '../messages';
+import { StepDataControls } from './steps/StepDataControls';
+import { StepDetails } from './steps/StepDetails';
+import { StepLegend } from './steps/StepLegend';
+import { StepType } from './steps/StepType';
+import { LAST_WIZARD_STEP, WIZARD_STEPS } from './useDataLayerWizard';
+import { DataLayerWizardController } from './useDataLayerWizardController';
+import { WizardStepRail } from './WizardStepRail';
+
+const styles: SxStyles = {
+    card: { height: '100%', display: 'flex', flexDirection: 'column' },
+    header: {
+        p: 2,
+        pb: 1.5,
+        gap: 1.5,
+    },
+    headerRow: { alignItems: 'center' },
+    title: { flexGrow: 1, fontWeight: 600 },
+    body: { flexGrow: 1, overflow: 'auto', p: 2 },
+    bodyFlush: {
+        flexGrow: 1,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+    },
+    footer: {
+        p: 2,
+        gap: 1,
+        justifyContent: 'flex-end',
+    },
+};
+
+type Props = {
+    controller: DataLayerWizardController;
+    showOpenHexa: boolean;
+    showComposite: boolean;
+    /** District list for the manual grid and the generated CSV template. */
+    orgUnits: OrgUnit[];
+    /** Node library / AI tabs for the composite layer's graph step, supplied by the
+     *  page (it owns the composite-editor wiring). */
+    compositeGraphSlot?: ReactNode;
+    /** "Next: Legend" on the composite graph step — persists the graph, then advances. */
+    onCompositeNext?: () => void;
+};
+
+export const DataLayerWizardPanel: FC<Props> = ({
+    controller,
+    showOpenHexa,
+    showComposite,
+    orgUnits,
+    compositeGraphSlot,
+    onCompositeNext,
+}) => {
+    const { formatMessage } = useSafeIntl();
+    const {
+        formik,
+        stepLabels,
+        activeStep,
+        goNext,
+        goBack,
+        canAdvance,
+        layerType,
+        setLayerType,
+        staged,
+        patch,
+        requestClose,
+        submit,
+        isSubmitting,
+        submitError,
+        clearSubmitError,
+        isCompositeGraphStep,
+        existingCodes,
+        populationHolderName,
+        categoryOptions,
+    } = controller;
+
+    const isLastStep = activeStep === LAST_WIZARD_STEP;
+
+    const onPrimary = useCallback(() => {
+        if (isCompositeGraphStep) {
+            // Persists the graph; its onSaved then finalises the layer.
+            onCompositeNext?.();
+        } else if (isLastStep) {
+            submit();
+        } else {
+            goNext();
+        }
+    }, [isCompositeGraphStep, isLastStep, onCompositeNext, submit, goNext]);
+
+    const onBack = useCallback(() => {
+        clearSubmitError();
+        goBack();
+    }, [clearSubmitError, goBack]);
+
+    return (
+        <Card sx={styles.card}>
+            <Stack sx={styles.header}>
+                <Stack direction="row" sx={styles.headerRow}>
+                    <Typography variant="h6" sx={styles.title}>
+                        {formatMessage(MESSAGES.wizardTitle)}
+                    </Typography>
+                    <IconButton size="small" onClick={requestClose}>
+                        <CloseIcon fontSize="small" />
+                    </IconButton>
+                </Stack>
+                <WizardStepRail activeStep={activeStep} steps={stepLabels} />
+            </Stack>
+            <Divider />
+
+            <ExtendedFormikProvider formik={formik}>
+                {isCompositeGraphStep ? (
+                    <Box sx={styles.bodyFlush}>{compositeGraphSlot}</Box>
+                ) : (
+                    <Box sx={styles.body}>
+                        {activeStep === WIZARD_STEPS.TYPE && (
+                            <StepType
+                                layerType={layerType}
+                                onChangeLayerType={setLayerType}
+                                showOpenHexa={showOpenHexa}
+                                showComposite={showComposite}
+                                populationHolderName={populationHolderName}
+                            />
+                        )}
+                        {activeStep === WIZARD_STEPS.DETAILS && (
+                            <StepDetails
+                                layerType={layerType}
+                                categoryOptions={categoryOptions}
+                                existingCodes={existingCodes}
+                            />
+                        )}
+                        {activeStep === WIZARD_STEPS.DATA && (
+                            <StepDataControls
+                                layerType={layerType}
+                                method={staged.method}
+                                onChangeMethod={method => patch({ method })}
+                                csvFile={staged.csvFile}
+                                onChangeCsvFile={csvFile => patch({ csvFile })}
+                                year={staged.csvYear}
+                                onChangeYear={csvYear => patch({ csvYear })}
+                                code={formik.values.code}
+                                orgUnits={orgUnits}
+                            />
+                        )}
+                        {activeStep === WIZARD_STEPS.LEGEND && (
+                            <StepLegend layerType={layerType} />
+                        )}
+                    </Box>
+                )}
+            </ExtendedFormikProvider>
+
+            {submitError && (
+                <Alert severity="error" sx={{ mx: 2, mb: 1 }}>
+                    {formatMessage(submitError)}
+                </Alert>
+            )}
+
+            <Divider />
+            <Stack direction="row" sx={styles.footer}>
+                {activeStep > WIZARD_STEPS.TYPE && (
+                    <Button onClick={onBack} disabled={isSubmitting}>
+                        {formatMessage(MESSAGES.wizardBack)}
+                    </Button>
+                )}
+                <Button
+                    variant="contained"
+                    onClick={onPrimary}
+                    disabled={
+                        isSubmitting ||
+                        (isLastStep ? !formik.isValid : !canAdvance)
+                    }
+                >
+                    {isLastStep
+                        ? formatMessage(MESSAGES.createLayer)
+                        : formatMessage(MESSAGES.wizardNext, {
+                              step: stepLabels[activeStep + 1],
+                          })}
+                </Button>
+            </Stack>
+        </Card>
+    );
+};

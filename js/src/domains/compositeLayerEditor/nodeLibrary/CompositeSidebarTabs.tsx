@@ -7,7 +7,11 @@ import { MESSAGES } from '../messages';
 export type CompositeSidebarTab = 'library' | 'ai';
 
 const styles = {
-    noTabsTitle: { display: 'flex', alignItems: 'center', minHeight: theme => theme.spacing(6) },
+    noTabsTitle: {
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: theme => theme.spacing(6),
+    },
     tab: { textTransform: 'none', minHeight: 48 },
 } satisfies SxStyles;
 

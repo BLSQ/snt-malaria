@@ -157,13 +157,13 @@ export const useGetOrgUnitMetric = (
 };
 
 export const getMapStyleForOrgUnit = (
-    metricType: MetricType,
+    legend: Pick<MetricType, 'legend_type' | 'legend_config'>,
     metric?: { label: string; value: string | number },
 ) => {
     const color = getColorForShape(
         metric?.value,
-        metricType?.legend_type,
-        metricType?.legend_config,
+        legend?.legend_type,
+        legend?.legend_config,
     );
     return { color, label: formatMetricValue(metric?.label) };
 };

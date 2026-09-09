@@ -23,6 +23,9 @@ type Props = {
     onCancel: () => void;
     onSave: () => void;
     isSaving: boolean;
+    /** Hides the Cancel / Save buttons - the creation wizard drives navigation from its
+     *  own Back / "Next: Legend" footer instead. */
+    hideActions?: boolean;
 };
 
 /** Header bar of the composite editor: sidebar toggle, title, and cancel/save actions. */
@@ -34,6 +37,7 @@ export const EditorHeader: FC<Props> = ({
     onCancel,
     onSave,
     isSaving,
+    hideActions = false,
 }) => {
     const { formatMessage } = useSafeIntl();
     return (
@@ -68,23 +72,27 @@ export const EditorHeader: FC<Props> = ({
                         <SchemaIcon color="primary" />
                     </IconButton>
                 </Tooltip>
-                <Button
-                    variant="outlined"
-                    color="primary"
-                    size="small"
-                    onClick={onCancel}
-                >
-                    {formatMessage(MESSAGES.cancel)}
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    onClick={onSave}
-                    disabled={isSaving}
-                >
-                    {formatMessage(MESSAGES.save)}
-                </Button>
+                {!hideActions && (
+                    <>
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            size="small"
+                            onClick={onCancel}
+                        >
+                            {formatMessage(MESSAGES.cancel)}
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            size="small"
+                            onClick={onSave}
+                            disabled={isSaving}
+                        >
+                            {formatMessage(MESSAGES.save)}
+                        </Button>
+                    </>
+                )}
             </Stack>
         </Stack>
     );

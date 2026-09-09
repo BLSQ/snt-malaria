@@ -35,6 +35,17 @@ const DEFAULT_METRIC_TYPE: MetricTypeFormModel = {
     is_composite: false,
 };
 
+/** A fresh, fully-owned copy of the empty form model — for callers that reset a
+ *  long-lived formik instance (e.g. the creation wizard) and must not hand back a
+ *  shared, possibly-mutated singleton. */
+export const makeDefaultMetricType = (): MetricTypeFormModel => ({
+    ...DEFAULT_METRIC_TYPE,
+    legend_config: [
+        { ...DEFAULT_LEGEND_CONFIG_ITEM },
+        { ...DEFAULT_LEGEND_CONFIG_ITEM },
+    ],
+});
+
 const HEX_COLOR = /^#([0-9A-F]{3}){1,2}$/i;
 
 const useValidationSchema = () => {
