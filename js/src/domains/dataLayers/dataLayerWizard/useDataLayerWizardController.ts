@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 import { isConcreteLegend, LegendTypes } from '../../../constants/legend';
 import { useSaveCompositeLayer } from '../../compositeLayerEditor/hooks/useSaveCompositeLayer';
+import { CompositeLayerListItem } from '../../compositeLayerEditor/types/compositeLayer';
 import { legendConfigFromForm } from '../dataLayerForm/legendScale';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
 import { useDeleteMetricType } from '../hooks/useDeleteMetricType';
@@ -9,6 +10,7 @@ import { useGetMetricTypes } from '../hooks/useGetMetrics';
 import { useImportMetricValues } from '../hooks/useImportMetricValues';
 import { useImportOpenHexaDataLayer } from '../hooks/useImportOpenHexaDataLayer';
 import {
+    editFormModel,
     makeDefaultMetricType,
     useMetricTypeFormState,
 } from '../hooks/useMetricTypeFormState';
@@ -21,6 +23,7 @@ import {
 import { WizardLayerType } from './constants';
 import { gridCsvFile } from './csvFromGrid';
 import {
+    EDIT_RANGE,
     useDataLayerWizard,
     WIZARD_STEP_LABELS,
     WIZARD_STEPS,
@@ -53,11 +56,52 @@ const layerTypeToFormFields = (
         layerType === 'composite' ? LegendTypes.AUTO : LegendTypes.THRESHOLD,
 });
 
-/** Server validation code (e.g. `uniqueCode`) → the matching wizard message,
- *  mirroring `DataLayerDialog`'s error mapping. */
+const layerTypeOf = (model: MetricTypeFormModel): WizardLayerType => {
+    if (model.is_composite) return 'composite';
+    if (model.origin === 'openhexa') return 'openhexa';
+    return 'data';
+};
+
+/** Server validation code (e.g. `uniqueCode`) → the matching wizard message. */
 const errorMessage = (code: string): IntlMessage =>
     (MESSAGES[`${code}Error` as keyof typeof MESSAGES] as IntlMessage) ??
     MESSAGES.genericError;
+
+/** `/api/metrictypes/` payload shared by a standard layer's create and edit save
+ *  (edit adds `id`). */
+const metricTypePayload = (
+    values: MetricTypeFormModel,
+    legend_config: ScaleDomainRange | undefined,
+) => ({
+    name: values.name,
+    code: values.code,
+    description: values.description,
+    source: values.source,
+    units: values.units,
+    unit_symbol: values.unit_symbol,
+    comments: values.comments,
+    category: values.category,
+    origin: values.origin,
+    legend_type: values.legend_type,
+    legend_config,
+    metric_kind: values.is_population ? 'population' : 'any',
+});
+
+/** `/api/snt_malaria/composite_layers/` payload shared by minting the draft shell
+ *  and saving an edited composite's metadata + legend (edit adds `id`). */
+const compositeLayerPayload = (
+    values: MetricTypeFormModel,
+    legend_config: ScaleDomainRange | undefined,
+) => ({
+    name: values.name,
+    category: values.category,
+    description: values.description,
+    units: values.units,
+    unit_symbol: values.unit_symbol,
+    is_population: !!values.is_population,
+    legend_type: values.legend_type,
+    legend_config,
+});
 
 export const useDataLayerWizardController = ({
     onCreated,
@@ -67,8 +111,13 @@ export const useDataLayerWizardController = ({
     const { formatMessage } = useSafeIntl();
     const [isOpen, setIsOpen] = useState(false);
     const [discardOpen, setDiscardOpen] = useState(false);
-    /** Set when a create call fails; shown as an alert, cleared on retry / step change. */
+    /** Set when a create/save call fails; shown as an alert, cleared on retry / step change. */
     const [submitError, setSubmitError] = useState<IntlMessage>();
+    /** The layer being edited (Details + Legend only); undefined for a create run. */
+    const [editing, setEditing] = useState<{
+        metricType: MetricType;
+        compositeLayer?: CompositeLayerListItem;
+    }>();
     /** MetricType id of a composite shell created for step 3, kept so it can be
      *  cleaned up if the wizard is abandoned before it is finished. */
     const [pendingCompositeMetricTypeId, setPendingCompositeMetricTypeId] =
@@ -102,6 +151,8 @@ export const useDataLayerWizardController = ({
     // Silent: the wizard mints a draft shell before the graph exists; the "Saved"
     // toast belongs to the graph save, not this one.
     const { mutateAsync: saveComposite } = useSaveCompositeLayer(true);
+    // A user-driven composite metadata/legend edit — keep its "Saved" toast.
+    const { mutateAsync: updateComposite } = useSaveCompositeLayer();
     const { mutate: deleteMetricType } = useDeleteMetricType();
 
     const formik = useMetricTypeFormState(undefined, () => undefined);
@@ -113,6 +164,8 @@ export const useDataLayerWizardController = ({
     const resetAll = useCallback(() => {
         formik.resetForm({ values: makeDefaultMetricType() });
         resetStaged();
+        setEditing(undefined);
+        setSubmitError(undefined);
         setPendingCompositeMetricTypeId(undefined);
     }, [formik, resetStaged]);
 
@@ -120,6 +173,20 @@ export const useDataLayerWizardController = ({
         resetAll();
         setIsOpen(true);
     }, [resetAll]);
+
+    /** Edit an existing layer: pre-filled Details + Legend, no Type / Data steps. */
+    const openForEdit = useCallback(
+        (metricType: MetricType, compositeLayer?: CompositeLayerListItem) => {
+            const model = editFormModel(metricType, compositeLayer);
+            formik.resetForm({ values: model });
+            wizard.start(EDIT_RANGE, { layerType: layerTypeOf(model) });
+            setEditing({ metricType, compositeLayer });
+            setSubmitError(undefined);
+            setPendingCompositeMetricTypeId(undefined);
+            setIsOpen(true);
+        },
+        [formik, wizard],
+    );
 
     const close = useCallback(() => {
         setIsOpen(false);
@@ -129,8 +196,8 @@ export const useDataLayerWizardController = ({
     }, [resetAll, onClosed]);
 
     const hasProgress = useMemo(
-        () => formik.dirty || wizard.activeStep > WIZARD_STEPS.TYPE,
-        [formik.dirty, wizard.activeStep],
+        () => formik.dirty || wizard.activeStepIndex > 0,
+        [formik.dirty, wizard.activeStepIndex],
     );
 
     const requestClose = useCallback(() => {
@@ -225,16 +292,9 @@ export const useDataLayerWizardController = ({
         try {
             // Persist the shell so the node editor (keyed by a real id) can run.
             // The legend step is already done, so it goes in now.
-            const saved = await saveComposite({
-                name: formik.values.name,
-                category: formik.values.category,
-                description: formik.values.description,
-                units: formik.values.units,
-                unit_symbol: formik.values.unit_symbol,
-                is_population: !!formik.values.is_population,
-                legend_type: formik.values.legend_type,
-                legend_config: legendPayload(),
-            });
+            const saved = await saveComposite(
+                compositeLayerPayload(formik.values, legendPayload()),
+            );
             patch({ compositeLayerId: saved.id });
             setPendingCompositeMetricTypeId(saved.metric_type ?? undefined);
             wizard.goNext();
@@ -249,24 +309,9 @@ export const useDataLayerWizardController = ({
     const submitStandard = useCallback(async () => {
         const values = formik.values;
         // Create the type first (the CSV import needs its `code` column).
-        const created = (await createMetricType({
-            name: values.name,
-            code: values.code,
-            description: values.description,
-            source: values.source,
-            units: values.units,
-            unit_symbol: values.unit_symbol,
-            comments: values.comments,
-            category: values.category,
-            origin: values.origin,
-            legend_type: values.legend_type,
-            legend_config: legendConfigFromForm(
-                values.legend_type,
-                values.legend_config,
-                values.legend_top_color,
-            ),
-            metric_kind: values.is_population ? 'population' : 'any',
-        } as any)) as MetricType;
+        const created = (await createMetricType(
+            metricTypePayload(values, legendPayload()) as any,
+        )) as MetricType;
 
         // The layer now exists; a failing value import shouldn't trap the user in
         // the wizard — `useImportMetricValues` already snackbars the error, and the
@@ -301,44 +346,73 @@ export const useDataLayerWizardController = ({
     }, [
         formik.values,
         staged,
+        legendPayload,
         createMetricType,
         importValues,
         onCreated,
         close,
     ]);
 
+    const submitEdit = useCallback(async () => {
+        const values = formik.values;
+        const legend_config = legendPayload();
+        if (editing?.compositeLayer) {
+            const saved = await updateComposite({
+                id: editing.compositeLayer.id,
+                ...compositeLayerPayload(values, legend_config),
+            });
+            onCreated(saved.metric_type_detail ?? undefined);
+        } else {
+            const updated = (await createMetricType({
+                id: editing?.metricType.id,
+                ...metricTypePayload(values, legend_config),
+            } as any)) as MetricType;
+            onCreated(updated);
+        }
+        close();
+    }, [
+        editing,
+        formik.values,
+        legendPayload,
+        updateComposite,
+        createMetricType,
+        onCreated,
+        close,
+    ]);
+
+    const submitOpenHexaCreate = useCallback(async () => {
+        await importOpenHexa({
+            code: formik.values.code,
+            legend_config: legendPayload(),
+        });
+        onCreated(undefined);
+        close();
+    }, [formik.values.code, legendPayload, importOpenHexa, onCreated, close]);
+
     const submit = useCallback(async () => {
         setSubmitError(undefined);
         setIsSubmitting(true);
         try {
-            if (staged.layerType === 'openhexa') {
-                await importOpenHexa({
-                    code: formik.values.code,
-                    legend_config: legendConfigFromForm(
-                        formik.values.legend_type,
-                        formik.values.legend_config,
-                        formik.values.legend_top_color,
-                    ) as ScaleDomainRange,
-                });
-                onCreated(undefined);
-                close();
+            if (editing) {
+                await submitEdit();
+            } else if (staged.layerType === 'openhexa') {
+                await submitOpenHexaCreate();
             } else {
                 await submitStandard();
             }
         } catch {
             // createMetricType's onError already resolved a specific message;
-            // fall back to a generic one for the openhexa path.
+            // fall back to a generic one for the openhexa / composite path.
             setSubmitError(prev => prev ?? MESSAGES.genericError);
         } finally {
             setIsSubmitting(false);
         }
     }, [
+        editing,
+        submitEdit,
         staged.layerType,
-        formik.values,
-        importOpenHexa,
+        submitOpenHexaCreate,
         submitStandard,
-        onCreated,
-        close,
     ]);
 
     /** The composite node editor persisted the graph (the last step); the shell
@@ -356,15 +430,15 @@ export const useDataLayerWizardController = ({
 
     const stepLabels = useMemo(
         () =>
-            WIZARD_STEP_LABELS.map((label, index) =>
+            wizard.steps.map(step =>
                 formatMessage(
-                    index === WIZARD_STEPS.DATA &&
+                    step === WIZARD_STEPS.DATA &&
                         staged.layerType === 'composite'
                         ? MESSAGES.wizardStepGraph
-                        : label,
+                        : WIZARD_STEP_LABELS[step],
                 ),
             ),
-        [formatMessage, staged.layerType],
+        [formatMessage, wizard.steps, staged.layerType],
     );
 
     const resolveMainView = (): WizardMainView => {
@@ -375,9 +449,20 @@ export const useDataLayerWizardController = ({
     };
     const wizardMainView = resolveMainView();
 
+    const isEditing = Boolean(editing);
+    // Resolved once here (the only place that knows both `isEditing` and the
+    // layer type) so the panel and the discard modal don't each re-derive it.
+    const titleMessage = isEditing ? MESSAGES.editLayer : MESSAGES.wizardTitle;
+    const discardMessage =
+        (isEditing && MESSAGES.wizardDiscardEditConfirm) ||
+        (staged.layerType === 'composite' &&
+            MESSAGES.wizardDiscardGraphConfirm) ||
+        MESSAGES.wizardDiscardLayerConfirm;
+
     return {
         isOpen,
         open,
+        openForEdit,
         close,
         requestClose,
         discardOpen,
@@ -385,10 +470,16 @@ export const useDataLayerWizardController = ({
         cancelDiscard,
         formik,
         stepLabels,
+        titleMessage,
+        discardMessage,
         activeStep: wizard.activeStep,
+        activeStepIndex: wizard.activeStepIndex,
+        lastStep: wizard.lastStep,
         goNext,
         goBack,
         canAdvance,
+        isEditing,
+        editingMetricType: editing?.metricType,
         layerType: staged.layerType,
         setLayerType,
         staged,

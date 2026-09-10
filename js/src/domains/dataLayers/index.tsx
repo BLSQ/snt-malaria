@@ -48,7 +48,6 @@ import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { DataLayerComparisonProvider } from './contexts/DataLayerComparisonContext';
 import { DataLayerComparisonContainer } from './dataLayerComparison/dataLayerComparisonContainer';
-import { DataLayerDialog } from './dataLayerForm/DataLayerDialog';
 import { DataLayerList } from './dataLayerList/DataLayerList';
 import { DataLayerListHeader } from './dataLayerList/DataLayerListHeader';
 import { DataLayerMapWrapper } from './dataLayerMap/DataLayerMapWrapper';
@@ -139,9 +138,6 @@ export const DataLayers: FC = () => {
         [importOpenHexaDataLayer],
     );
 
-    const [isMetricTypeFormOpen, setIsMetricTypeFormOpen] =
-        useState<boolean>(false);
-
     const [isCompositeEditorOpen, setIsCompositeEditorOpen] =
         useState<boolean>(false);
     const [editingCompositeLayerId, setEditingCompositeLayerId] = useState<
@@ -214,32 +210,10 @@ export const DataLayers: FC = () => {
     const [nodeSearchTerm, setNodeSearchTerm] = useState<string>('');
     const isAiChatTab = sidebarTab === 'ai' && hasAiApiKey;
 
-    const [selectedMetricType, setSelectedMetricType] = useState<MetricType>();
-
-    const onDialogClose = useCallback(() => {
-        setIsMetricTypeFormOpen(false);
-        setSelectedMetricType(undefined);
-    }, [setIsMetricTypeFormOpen, setSelectedMetricType]);
-
-    // "Edit Layer" always opens the legend editor, for composites and regular layers alike.
-    const onEditMetricType = useCallback((metricType: MetricType) => {
-        setSelectedMetricType(metricType);
-        setIsMetricTypeFormOpen(true);
-    }, []);
-
     const onEditCompositeLayer = useCallback((compositeLayerId: number) => {
         setEditingCompositeLayerId(compositeLayerId);
         setIsCompositeEditorOpen(true);
     }, []);
-
-    // The dialogue persists the new composite; we then open the editor to build its graph.
-    const onCompositeCreated = useCallback(
-        (compositeLayerId: number) => {
-            onDialogClose();
-            onEditCompositeLayer(compositeLayerId);
-        },
-        [onDialogClose, onEditCompositeLayer],
-    );
 
     const onCloseCompositeEditor = useCallback(() => {
         setIsCompositeEditorOpen(false);
@@ -262,7 +236,7 @@ export const DataLayers: FC = () => {
     );
 
     // Four-step creation wizard (Type -> Details -> Legend -> Data/Graph); editing
-    // an existing layer still goes through DataLayerDialog below.
+    // an existing layer runs its Details + Legend steps pre-filled.
     const onWizardCreated = useCallback((metricType?: MetricType) => {
         if (metricType) {
             setDisplayedMetricType(metricType);
@@ -273,6 +247,15 @@ export const DataLayers: FC = () => {
         categoryOptions: existingCategoryOptions,
         onClosed: onCloseCompositeEditor,
     });
+
+    const onEditMetricType = useCallback(
+        (metricType: MetricType) =>
+            wizard.openForEdit(
+                metricType,
+                compositeLayerByMetricType.get(metricType.id),
+            ),
+        [wizard, compositeLayerByMetricType],
+    );
 
     // The composite node editor runs both for "Edit graph" and, inside the creation
     // wizard, as its Data step (Turn 2a keeps the editor in the flow).
@@ -430,19 +413,20 @@ export const DataLayers: FC = () => {
         return layerListCard;
     };
 
+    const compositeLayerIdFor = (
+        metricType?: MetricType,
+    ): number | undefined =>
+        metricType
+            ? compositeLayerIdByMetricType.get(metricType.id)
+            : undefined;
+
     const mapColumn = (
         <Stack direction="row" gap={1} sx={{ height: '100%' }}>
             <DataLayerMapWrapper
                 metricType={displayedMetricType}
                 orgUnits={orgUnits || []}
                 showCompositeLayers={showCompositeLayers}
-                compositeLayerId={
-                    displayedMetricType
-                        ? compositeLayerIdByMetricType.get(
-                              displayedMetricType.id,
-                          )
-                        : undefined
-                }
+                compositeLayerId={compositeLayerIdFor(displayedMetricType)}
                 onEditComposite={onEditCompositeLayer}
             />
             <DataLayerComparisonContainer />
@@ -475,6 +459,19 @@ export const DataLayers: FC = () => {
             );
         }
         if (!wizard.isOpen) return mapColumn;
+        if (wizard.isEditing) {
+            // Editing shows the real layer as a reference; the panel handles the form.
+            return (
+                <DataLayerMapWrapper
+                    metricType={wizard.editingMetricType}
+                    orgUnits={orgUnits || []}
+                    showCompositeLayers={showCompositeLayers}
+                    compositeLayerId={compositeLayerIdFor(
+                        wizard.editingMetricType,
+                    )}
+                />
+            );
+        }
         switch (wizard.wizardMainView) {
             case 'standardData':
                 return (
@@ -519,27 +516,10 @@ export const DataLayers: FC = () => {
                         <PaperFullHeight>{renderMainColumn()}</PaperFullHeight>
                     </MainColumn>
                 </SidebarLayout>
-                {isMetricTypeFormOpen && (
-                    <DataLayerDialog
-                        open={isMetricTypeFormOpen}
-                        closeDialog={onDialogClose}
-                        metricType={selectedMetricType}
-                        categoryOptions={existingCategoryOptions}
-                        showCompositeLayers={showCompositeLayers}
-                        showOpenHexaLayers={showOpenHexaLayers}
-                        compositeLayer={
-                            selectedMetricType
-                                ? compositeLayerByMetricType.get(
-                                      selectedMetricType.id,
-                                  )
-                                : undefined
-                        }
-                        onCompositeCreated={onCompositeCreated}
-                    />
-                )}
                 <DiscardWizardModal
                     open={wizard.discardOpen}
-                    isComposite={wizard.layerType === 'composite'}
+                    titleMessage={wizard.titleMessage}
+                    message={wizard.discardMessage}
                     onConfirm={wizard.confirmDiscard}
                     onCancel={wizard.cancelDiscard}
                 />

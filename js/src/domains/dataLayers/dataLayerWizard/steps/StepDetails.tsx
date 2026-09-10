@@ -1,24 +1,33 @@
 import React, { FC } from 'react';
-import { Grid } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
+import { SxStyles } from 'Iaso/types/general';
 import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../messages';
 import { MetricTypeFormModel } from '../../types/metrics';
 import { WizardLayerType } from '../constants';
 import { OpenHexaSourcePicker } from '../OpenHexaSourcePicker';
 
+const styles: SxStyles = {
+    readOnlyHint: { display: 'block', mt: 2, mb: 1 },
+};
+
 type Props = {
     layerType: WizardLayerType;
     categoryOptions: { label: string; value: string }[];
     existingCodes: Set<string>;
+    /** Editing an existing layer: the data key is immutable, and an OpenHexa
+     *  layer's metadata is owned by the source (only its legend stays editable). */
+    isEditing?: boolean;
 };
 
 export const StepDetails: FC<Props> = ({
     layerType,
     categoryOptions,
     existingCodes,
+    isEditing = false,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { values, setFieldValueAndState, errors, touched } =
@@ -30,18 +39,29 @@ export const StepDetails: FC<Props> = ({
         messages: MESSAGES,
     });
 
-    if (layerType === 'openhexa') {
-        return <OpenHexaSourcePicker existingCodes={existingCodes} />;
-    }
-
     const isComposite = layerType === 'composite';
+    const isOpenHexa = layerType === 'openhexa';
 
     return (
-        <div>
+        <Box>
+            {/* Create-time source choice; editing an existing layer keeps its source. */}
+            {isOpenHexa && !isEditing && (
+                <OpenHexaSourcePicker existingCodes={existingCodes} />
+            )}
+            {isOpenHexa && (
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={styles.readOnlyHint}
+                >
+                    {formatMessage(MESSAGES.openHexaFieldsReadOnly)}
+                </Typography>
+            )}
             <InputComponent
                 keyValue="name"
                 type="text"
                 required
+                disabled={isOpenHexa}
                 onChange={setFieldValueAndState}
                 value={values.name}
                 label={MESSAGES.label}
@@ -52,6 +72,7 @@ export const StepDetails: FC<Props> = ({
                     keyValue="code"
                     type="text"
                     required
+                    disabled={isEditing || isOpenHexa}
                     onChange={setFieldValueAndState}
                     value={values.code}
                     label={MESSAGES.variable}
@@ -64,6 +85,7 @@ export const StepDetails: FC<Props> = ({
                 required
                 freeSolo
                 clearable={false}
+                disabled={isOpenHexa}
                 options={categoryOptions}
                 onChange={setFieldValueAndState}
                 value={values.category}
@@ -73,6 +95,7 @@ export const StepDetails: FC<Props> = ({
             <InputComponent
                 keyValue="description"
                 type="textarea"
+                disabled={isOpenHexa}
                 onChange={setFieldValueAndState}
                 value={values.description}
                 label={MESSAGES.description}
@@ -83,6 +106,7 @@ export const StepDetails: FC<Props> = ({
                     <InputComponent
                         keyValue="units"
                         type="text"
+                        disabled={isOpenHexa}
                         onChange={setFieldValueAndState}
                         value={values.units}
                         label={MESSAGES.units}
@@ -93,6 +117,7 @@ export const StepDetails: FC<Props> = ({
                     <InputComponent
                         keyValue="unit_symbol"
                         type="text"
+                        disabled={isOpenHexa}
                         onChange={setFieldValueAndState}
                         value={values.unit_symbol}
                         label={MESSAGES.unitSymbol}
@@ -100,6 +125,6 @@ export const StepDetails: FC<Props> = ({
                     />
                 </Grid>
             </Grid>
-        </div>
+        </Box>
     );
 };

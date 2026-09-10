@@ -33,22 +33,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.createLayer',
         defaultMessage: 'Create layer',
     },
-    continueToEditor: {
-        id: 'iaso.snt_malaria.settings.dataLayers.continueToEditor',
-        defaultMessage: 'Continue',
-    },
-    generalSectionTitle: {
-        id: 'iaso.snt_malaria.settings.dataLayers.generalSectionTitle',
-        defaultMessage: 'General',
-    },
-    legendSectionTitle: {
-        id: 'iaso.snt_malaria.settings.dataLayers.legendSectionTitle',
-        defaultMessage: 'Legend & scale',
-    },
-    layerType: {
-        id: 'iaso.snt_malaria.settings.dataLayers.layerType',
-        defaultMessage: 'Layer type',
-    },
     layerTypeData: {
         id: 'iaso.snt_malaria.settings.dataLayers.layerTypeData',
         defaultMessage: 'Standard data layer',
@@ -83,11 +67,7 @@ export const MESSAGES = defineMessages({
     },
     openHexaFieldsReadOnly: {
         id: 'iaso.snt_malaria.settings.dataLayers.openHexaFieldsReadOnly',
-        defaultMessage: 'read-only · from data layer',
-    },
-    openHexaColorsEditable: {
-        id: 'iaso.snt_malaria.settings.dataLayers.openHexaColorsEditable',
-        defaultMessage: 'colors editable',
+        defaultMessage: 'Filled in from OpenHexa — read-only.',
     },
     openHexaDataLayersError: {
         id: 'iaso.snt_malaria.settings.dataLayers.openHexaDataLayersError',
@@ -143,17 +123,9 @@ export const MESSAGES = defineMessages({
         id: 'ias.snt_malaria.settings.dataLayers.addToComparison',
         defaultMessage: 'Add to comparison maps',
     },
-    codeImmutableErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.dataLayers.errors.codeImmutableHeadline',
-        defaultMessage: 'Layer code is immutable.',
-    },
     genericError: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.genericError',
         defaultMessage: 'Please try again.',
-    },
-    genericErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.dataLayers.errors.genericErrorHeadline',
-        defaultMessage: 'An unexpected error occurred.',
     },
     invalidColor: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.invalidColor',
@@ -171,10 +143,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeError',
         defaultMessage:
             'A Layer with this code already exists. Please choose a different code.',
-    },
-    uniqueCodeErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeErrorHeadline',
-        defaultMessage: 'Layer with this code already exists.',
     },
     label: {
         id: 'iaso.snt_malaria.settings.dataLayers.label',
@@ -290,6 +258,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.title',
         defaultMessage: 'New data layer',
     },
+    wizardSaveChanges: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.saveChanges',
+        defaultMessage: 'Save changes',
+    },
     wizardStepType: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.stepType',
         defaultMessage: 'Type',
@@ -393,10 +365,6 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Values are imported from OpenHexa by a background task when you create the layer. Follow its progress in the layer list.',
     },
-    wizardOpenHexaSourceDetails: {
-        id: 'iaso.snt_malaria.settings.dataLayers.wizard.openHexaSourceDetails',
-        defaultMessage: 'Details from OpenHexa',
-    },
     wizardOpenHexaTaskPending: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.openHexaTaskPending',
         defaultMessage:
@@ -420,5 +388,9 @@ export const MESSAGES = defineMessages({
     wizardDiscardGraphConfirm: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.discardGraphConfirm',
         defaultMessage: 'Leaving now discards this layer and its graph.',
+    },
+    wizardDiscardEditConfirm: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.discardEditConfirm',
+        defaultMessage: 'Discard your unsaved changes to this layer?',
     },
 });

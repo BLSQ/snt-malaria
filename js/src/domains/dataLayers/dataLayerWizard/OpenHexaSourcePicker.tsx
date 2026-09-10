@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react';
-import { Alert, Box, Stack, Typography } from '@mui/material';
+import { Alert, Box, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
@@ -12,25 +12,15 @@ import { MetricTypeFormModel, OpenHexaDataLayer } from '../types/metrics';
 const styles: SxStyles = {
     hint: { display: 'block', mt: 0.5 },
     alert: { mt: 1, '& ul': { m: 0, pl: 2.5 } },
-    details: {
-        mt: 2,
-        p: 1.5,
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider',
-    },
-    detailsTitle: { fontWeight: 600, mb: 1 },
-    row: { justifyContent: 'space-between', gap: 2 },
-    rowLabel: { color: 'text.secondary', flexShrink: 0 },
-    rowValue: { textAlign: 'right', wordBreak: 'break-word' },
 };
 
 type Props = {
     existingCodes: Set<string>;
 };
 
-/** Trimmed copy of the OpenHexa branch of `DataLayerForm`, for the wizard's Details
- *  step: pick a source layer, its metadata + default legend then fill the form. */
+/** Picks a source layer from OpenHexa and autofills the form with its metadata +
+ *  default legend; the picked values then show read-only in the field set below
+ *  (see `StepDetails`), same as it does when editing an existing OpenHexa layer. */
 export const OpenHexaSourcePicker: FC<Props> = ({ existingCodes }) => {
     const { formatMessage } = useSafeIntl();
     const { values, setFieldValueAndState } =
@@ -76,26 +66,8 @@ export const OpenHexaSourcePicker: FC<Props> = ({ existingCodes }) => {
         }
     }, [values.code, importable, applyLayer]);
 
-    const detailRows: { label: string; value?: string }[] = [
-        { label: formatMessage(MESSAGES.variable), value: values.code },
-        { label: formatMessage(MESSAGES.category), value: values.category },
-        { label: formatMessage(MESSAGES.units), value: values.units },
-        {
-            label: formatMessage(MESSAGES.unitSymbol),
-            value: values.unit_symbol,
-        },
-        {
-            label: formatMessage(MESSAGES.legendType),
-            value: values.legend_type,
-        },
-        {
-            label: formatMessage(MESSAGES.description),
-            value: values.description,
-        },
-    ].filter(row => Boolean(row.value));
-
     return (
-        <div>
+        <Box>
             <InputComponent
                 type="select"
                 keyValue="openHexaDataLayer"
@@ -122,33 +94,6 @@ export const OpenHexaSourcePicker: FC<Props> = ({ existingCodes }) => {
             >
                 {formatMessage(MESSAGES.openHexaDataLayerHelp)}
             </Typography>
-            {values.code && detailRows.length > 0 && (
-                <Box sx={styles.details}>
-                    <Typography variant="body2" sx={styles.detailsTitle}>
-                        {formatMessage(MESSAGES.wizardOpenHexaSourceDetails)}
-                    </Typography>
-                    <Stack spacing={0.75}>
-                        {React.Children.toArray(
-                            detailRows.map(row => (
-                                <Stack direction="row" sx={styles.row}>
-                                    <Typography
-                                        variant="caption"
-                                        sx={styles.rowLabel}
-                                    >
-                                        {row.label}
-                                    </Typography>
-                                    <Typography
-                                        variant="caption"
-                                        sx={styles.rowValue}
-                                    >
-                                        {row.value}
-                                    </Typography>
-                                </Stack>
-                            )),
-                        )}
-                    </Stack>
-                </Box>
-            )}
             {alreadyImported.length > 0 && (
                 <Typography
                     variant="caption"
@@ -183,6 +128,6 @@ export const OpenHexaSourcePicker: FC<Props> = ({ existingCodes }) => {
             >
                 {formatMessage(MESSAGES.wizardOpenHexaManualRefresh)}
             </Typography>
-        </div>
+        </Box>
     );
 };

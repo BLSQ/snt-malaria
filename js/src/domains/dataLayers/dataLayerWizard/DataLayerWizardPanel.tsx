@@ -19,7 +19,7 @@ import { StepDataControls } from './steps/StepDataControls';
 import { StepDetails } from './steps/StepDetails';
 import { StepLegend } from './steps/StepLegend';
 import { StepType } from './steps/StepType';
-import { LAST_WIZARD_STEP, WIZARD_STEPS } from './useDataLayerWizard';
+import { WIZARD_STEPS } from './useDataLayerWizard';
 import { DataLayerWizardController } from './useDataLayerWizardController';
 import { WizardStepRail } from './WizardStepRail';
 
@@ -71,10 +71,14 @@ export const DataLayerWizardPanel: FC<Props> = ({
     const {
         formik,
         stepLabels,
+        titleMessage,
         activeStep,
+        activeStepIndex,
+        lastStep,
         goNext,
         goBack,
         canAdvance,
+        isEditing,
         layerType,
         setLayerType,
         staged,
@@ -90,7 +94,7 @@ export const DataLayerWizardPanel: FC<Props> = ({
         categoryOptions,
     } = controller;
 
-    const isLastStep = activeStep === LAST_WIZARD_STEP;
+    const isLastStep = activeStep === lastStep;
 
     const onPrimary = useCallback(() => {
         if (isCompositeGraphStep) {
@@ -113,13 +117,16 @@ export const DataLayerWizardPanel: FC<Props> = ({
             <Stack sx={styles.header}>
                 <Stack direction="row" sx={styles.headerRow}>
                     <Typography variant="h6" sx={styles.title}>
-                        {formatMessage(MESSAGES.wizardTitle)}
+                        {formatMessage(titleMessage)}
                     </Typography>
                     <IconButton size="small" onClick={requestClose}>
                         <CloseIcon fontSize="small" />
                     </IconButton>
                 </Stack>
-                <WizardStepRail activeStep={activeStep} steps={stepLabels} />
+                <WizardStepRail
+                    activeStep={activeStepIndex}
+                    steps={stepLabels}
+                />
             </Stack>
             <Divider />
 
@@ -142,6 +149,7 @@ export const DataLayerWizardPanel: FC<Props> = ({
                                 layerType={layerType}
                                 categoryOptions={categoryOptions}
                                 existingCodes={existingCodes}
+                                isEditing={isEditing}
                             />
                         )}
                         {activeStep === WIZARD_STEPS.DATA && (
@@ -172,7 +180,7 @@ export const DataLayerWizardPanel: FC<Props> = ({
 
             <Divider />
             <Stack direction="row" sx={styles.footer}>
-                {activeStep > WIZARD_STEPS.TYPE && (
+                {activeStepIndex > 0 && (
                     <Button onClick={onBack} disabled={isSubmitting}>
                         {formatMessage(MESSAGES.wizardBack)}
                     </Button>
@@ -186,9 +194,13 @@ export const DataLayerWizardPanel: FC<Props> = ({
                     }
                 >
                     {isLastStep
-                        ? formatMessage(MESSAGES.createLayer)
+                        ? formatMessage(
+                              isEditing
+                                  ? MESSAGES.wizardSaveChanges
+                                  : MESSAGES.createLayer,
+                          )
                         : formatMessage(MESSAGES.wizardNext, {
-                              step: stepLabels[activeStep + 1],
+                              step: stepLabels[activeStepIndex + 1],
                           })}
                 </Button>
             </Stack>

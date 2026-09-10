@@ -9,9 +9,14 @@ import {
     LEGEND_TYPE_MIN_ITEMS,
     LegendTypes,
 } from '../../../constants/legend';
-import { DEFAULT_COLOR } from '../dataLayerForm/legendScale';
+import { CompositeLayerListItem } from '../../compositeLayerEditor/types/compositeLayer';
+import {
+    DEFAULT_COLOR,
+    initialTopColor,
+    scaleFromDomainRange,
+} from '../dataLayerForm/legendScale';
 import { MESSAGES } from '../messages';
-import { MetricTypeFormModel } from '../types/metrics';
+import { MetricType, MetricTypeFormModel } from '../types/metrics';
 
 export const DEFAULT_LEGEND_CONFIG_ITEM = {
     color: DEFAULT_COLOR,
@@ -45,6 +50,39 @@ export const makeDefaultMetricType = (): MetricTypeFormModel => ({
         { ...DEFAULT_LEGEND_CONFIG_ITEM },
     ],
 });
+
+/** Form model for editing an existing layer. A composite's legend lives on its
+ *  composite-layer record, not the MetricType. */
+export const editFormModel = (
+    metricType: MetricType,
+    compositeLayer?: Pick<
+        CompositeLayerListItem,
+        'legend_config' | 'legend_type'
+    >,
+): MetricTypeFormModel => {
+    const legendSource = compositeLayer
+        ? compositeLayer.legend_config
+        : metricType.legend_config;
+    return {
+        id: metricType.id,
+        name: metricType.name,
+        code: metricType.code,
+        description: metricType.description,
+        source: metricType.source,
+        units: metricType.units,
+        unit_symbol: metricType.unit_symbol,
+        comments: metricType.comments,
+        category: metricType.category,
+        legend_type: compositeLayer
+            ? compositeLayer.legend_type
+            : metricType.legend_type,
+        origin: metricType.origin,
+        is_population: metricType.metric_kind === 'population',
+        is_composite: Boolean(compositeLayer),
+        legend_config: scaleFromDomainRange(legendSource),
+        legend_top_color: initialTopColor(legendSource),
+    };
+};
 
 const HEX_COLOR = /^#([0-9A-F]{3}){1,2}$/i;
 

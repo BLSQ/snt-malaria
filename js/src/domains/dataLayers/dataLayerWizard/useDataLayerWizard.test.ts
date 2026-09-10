@@ -1,6 +1,10 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { useDataLayerWizard, WIZARD_STEPS } from './useDataLayerWizard';
+import {
+    EDIT_RANGE,
+    useDataLayerWizard,
+    WIZARD_STEPS,
+} from './useDataLayerWizard';
 
 describe('useDataLayerWizard', () => {
     it('starts on the Type step with a standard layer', () => {
@@ -26,6 +30,27 @@ describe('useDataLayerWizard', () => {
         expect(WIZARD_STEPS.TYPE).toBeLessThan(WIZARD_STEPS.DETAILS);
         expect(WIZARD_STEPS.DETAILS).toBeLessThan(WIZARD_STEPS.LEGEND);
         expect(WIZARD_STEPS.LEGEND).toBeLessThan(WIZARD_STEPS.DATA);
+    });
+
+    it('start(EDIT_RANGE) runs only Details -> Legend', () => {
+        const { result } = renderHook(() => useDataLayerWizard());
+        act(() => result.current.start(EDIT_RANGE));
+        expect(result.current.activeStep).toBe(WIZARD_STEPS.DETAILS);
+        expect(result.current.activeStepIndex).toBe(0);
+        expect(result.current.lastStep).toBe(WIZARD_STEPS.LEGEND);
+        act(() => result.current.goBack());
+        expect(result.current.activeStep).toBe(WIZARD_STEPS.DETAILS);
+        act(() => {
+            result.current.goNext();
+            result.current.goNext();
+        });
+        expect(result.current.activeStep).toBe(WIZARD_STEPS.LEGEND);
+    });
+
+    it("start() can seed staged state, e.g. an edit run's known layer type", () => {
+        const { result } = renderHook(() => useDataLayerWizard());
+        act(() => result.current.start(EDIT_RANGE, { layerType: 'openhexa' }));
+        expect(result.current.staged.layerType).toBe('openhexa');
     });
 
     it('reset() clears every staged field and returns to the first step', () => {

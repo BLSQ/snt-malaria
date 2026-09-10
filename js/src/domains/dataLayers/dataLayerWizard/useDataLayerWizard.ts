@@ -14,7 +14,27 @@ export const WIZARD_STEPS = {
 
 export type WizardStep = (typeof WIZARD_STEPS)[keyof typeof WIZARD_STEPS];
 
-export const LAST_WIZARD_STEP: WizardStep = WIZARD_STEPS.DATA;
+/** A contiguous span of `WIZARD_STEPS` to run. Editing an existing layer runs a
+ *  subset (Details + Legend) — its type is fixed and its values are managed
+ *  elsewhere — while creating one runs the full span. */
+export type WizardStepRange = { first: WizardStep; last: WizardStep };
+
+export const CREATE_RANGE: WizardStepRange = {
+    first: WIZARD_STEPS.TYPE,
+    last: WIZARD_STEPS.DATA,
+};
+export const EDIT_RANGE: WizardStepRange = {
+    first: WIZARD_STEPS.DETAILS,
+    last: WIZARD_STEPS.LEGEND,
+};
+
+const stepsInRange = ({ first, last }: WizardStepRange): WizardStep[] => {
+    const steps: WizardStep[] = [];
+    for (let step = first; step <= last; step += 1) {
+        steps.push(step as WizardStep);
+    }
+    return steps;
+};
 
 /** Step titles, index-aligned with `WIZARD_STEPS`. The last one is overridden to
  *  "Graph" for a composite layer (see `stepLabels` in the controller). */
@@ -46,7 +66,10 @@ const INITIAL: StagedState = {
 };
 
 export const useDataLayerWizard = () => {
-    const [activeStep, setActiveStep] = useState<WizardStep>(WIZARD_STEPS.TYPE);
+    const [range, setRange] = useState<WizardStepRange>(CREATE_RANGE);
+    const [activeStep, setActiveStep] = useState<WizardStep>(
+        CREATE_RANGE.first,
+    );
     const [staged, setStaged] = useState<StagedState>(INITIAL);
 
     const patch = useCallback(
@@ -55,11 +78,19 @@ export const useDataLayerWizard = () => {
         [],
     );
 
-    /** Back to a pristine wizard: first step, every staged field cleared. */
-    const reset = useCallback(() => {
-        setActiveStep(WIZARD_STEPS.TYPE);
-        setStaged({ ...INITIAL });
-    }, []);
+    /** Start a fresh run over the given step range (create or edit), at its first
+     *  step, with every staged field cleared (`initialStaged` seeds it, e.g. with
+     *  the layer type an edit run already knows). */
+    const start = useCallback(
+        (nextRange: WizardStepRange, initialStaged?: Partial<StagedState>) => {
+            setRange(nextRange);
+            setActiveStep(nextRange.first);
+            setStaged({ ...INITIAL, ...initialStaged });
+        },
+        [],
+    );
+
+    const reset = useCallback(() => start(CREATE_RANGE), [start]);
 
     const setLayerType = useCallback((layerType: WizardLayerType) => {
         setStaged(prev => ({
@@ -88,18 +119,20 @@ export const useDataLayerWizard = () => {
 
     const goNext = useCallback(
         () =>
-            setActiveStep(
-                step => Math.min(step + 1, LAST_WIZARD_STEP) as WizardStep,
-            ),
-        [],
+            setActiveStep(step => Math.min(step + 1, range.last) as WizardStep),
+        [range.last],
     );
     const goBack = useCallback(
         () =>
             setActiveStep(
-                step => Math.max(step - 1, WIZARD_STEPS.TYPE) as WizardStep,
+                step => Math.max(step - 1, range.first) as WizardStep,
             ),
-        [],
+        [range.first],
     );
+
+    const steps = useMemo(() => stepsInRange(range), [range]);
+    const activeStepIndex = activeStep - range.first;
+    const lastStep = range.last;
 
     const isCompositeGraphStep = useMemo(
         () =>
@@ -109,12 +142,16 @@ export const useDataLayerWizard = () => {
     );
 
     return {
+        steps,
         activeStep,
+        activeStepIndex,
+        lastStep,
         setActiveStep,
         goNext,
         goBack,
         staged,
         patch,
+        start,
         reset,
         setLayerType,
         setGridValue,

@@ -1,21 +1,29 @@
 import React, { FC } from 'react';
 import { Typography } from '@mui/material';
-import { ConfirmCancelModal, useSafeIntl } from 'bluesquare-components';
+import {
+    ConfirmCancelModal,
+    IntlMessage,
+    useSafeIntl,
+} from 'bluesquare-components';
 import { MESSAGES } from '../messages';
 
 type Props = {
     open: boolean;
-    isComposite: boolean;
+    titleMessage: IntlMessage;
+    message: IntlMessage;
     onConfirm: () => void;
     onCancel: () => void;
 };
 
-/** "Nothing is saved yet" confirmation, shown when the user leaves the creation
- *  wizard with unsaved progress. Rendered by the page so it survives the sidebar
- *  swapping to the composite node editor on the graph step. */
+/** Confirmation shown when the user leaves the wizard with unsaved progress.
+ *  Rendered by the page so it survives the sidebar swapping to the composite node
+ *  editor on the graph step. `titleMessage`/`message` are resolved by the wizard
+ *  controller, which is the only place that knows whether this is an edit run and
+ *  what layer type it is. */
 export const DiscardWizardModal: FC<Props> = ({
     open,
-    isComposite,
+    titleMessage,
+    message,
     onConfirm,
     onCancel,
 }) => {
@@ -26,7 +34,7 @@ export const DiscardWizardModal: FC<Props> = ({
             open={open}
             id="data-layer-wizard-discard"
             dataTestId="data-layer-wizard-discard"
-            titleMessage={MESSAGES.wizardTitle}
+            titleMessage={titleMessage}
             onConfirm={onConfirm}
             onCancel={onCancel}
             closeDialog={onCancel}
@@ -34,13 +42,7 @@ export const DiscardWizardModal: FC<Props> = ({
             confirmMessage={MESSAGES.cancel}
             cancelMessage={MESSAGES.wizardBack}
         >
-            <Typography>
-                {formatMessage(
-                    isComposite
-                        ? MESSAGES.wizardDiscardGraphConfirm
-                        : MESSAGES.wizardDiscardLayerConfirm,
-                )}
-            </Typography>
+            <Typography>{formatMessage(message)}</Typography>
         </ConfirmCancelModal>
     );
 };
