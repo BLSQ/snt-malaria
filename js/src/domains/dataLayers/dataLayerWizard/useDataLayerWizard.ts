@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { currentYear } from '../../../constants/shared';
 import { MESSAGES } from '../messages';
-import { StandardValueMethod, WizardLayerType } from './constants';
+import { WizardLayerType } from './constants';
 
 export const WIZARD_STEPS = {
     TYPE: 0,
@@ -13,6 +13,17 @@ export const WIZARD_STEPS = {
 } as const;
 
 export type WizardStep = (typeof WIZARD_STEPS)[keyof typeof WIZARD_STEPS];
+
+const sortedUniqueYears = (years: number[]): number[] =>
+    Array.from(new Set(years)).sort((a, b) => a - b);
+
+const mergeYearValues = (
+    base: Record<number, string> | undefined,
+    updates: Record<number, string>,
+): Record<number, string> => ({ ...base, ...updates });
+
+/** A standard layer's table always starts with a single column for the current year. */
+const DEFAULT_GRID_YEARS = [currentYear];
 
 /** Editing an existing layer runs Details then Legend only — its type is fixed and
  *  its values are managed elsewhere — which skips Data, so the two runs aren't a
@@ -39,11 +50,11 @@ export const WIZARD_STEP_LABELS = [
 
 type StagedState = {
     layerType: WizardLayerType;
-    method: StandardValueMethod;
-    csvFile: File | null;
-    csvYear: number;
-    /** Manual grid entries, keyed by org unit id; blank/absent means no value. */
-    gridValues: Record<number, string>;
+    /** Table values for a standard layer: org unit id -> year -> raw text; blank or
+     *  absent means no value. */
+    gridValues: Record<number, Record<number, string>>;
+    /** Year columns currently shown in the table, in display order. */
+    gridYears: number[];
     /** Persisted composite shell id, once the graph step creates it (2a keeps the
      *  editor in-flow). */
     compositeLayerId?: number;
@@ -52,10 +63,8 @@ type StagedState = {
 
 const INITIAL: StagedState = {
     layerType: 'data',
-    method: 'csv',
-    csvFile: null,
-    csvYear: currentYear,
     gridValues: {},
+    gridYears: DEFAULT_GRID_YEARS,
 };
 
 export const useDataLayerWizard = () => {
@@ -87,10 +96,10 @@ export const useDataLayerWizard = () => {
         setStaged(prev => ({
             ...prev,
             layerType,
-            // Value-entry choices only apply to a standard layer; drop them otherwise.
+            // Table entries only apply to a standard layer; drop them otherwise.
             ...(layerType === 'data'
                 ? {}
-                : { method: 'csv', csvFile: null, gridValues: {} }),
+                : { gridValues: {}, gridYears: DEFAULT_GRID_YEARS }),
             // A composite shell no longer belongs to a layer of a different type;
             // the controller deletes the persisted record first.
             ...(layerType === 'composite'
@@ -105,11 +114,75 @@ export const useDataLayerWizard = () => {
     }, []);
 
     const setGridValue = useCallback(
-        (orgUnitId: number, value: string) =>
+        (orgUnitId: number, year: number, value: string) =>
             setStaged(prev => ({
                 ...prev,
-                gridValues: { ...prev.gridValues, [orgUnitId]: value },
+                gridValues: {
+                    ...prev.gridValues,
+                    [orgUnitId]: mergeYearValues(prev.gridValues[orgUnitId], {
+                        [year]: value,
+                    }),
+                },
             })),
+        [],
+    );
+
+    const addGridYear = useCallback(
+        (year: number) =>
+            setStaged(prev =>
+                prev.gridYears.includes(year)
+                    ? prev
+                    : {
+                          ...prev,
+                          gridYears: sortedUniqueYears([
+                              ...prev.gridYears,
+                              year,
+                          ]),
+                      },
+            ),
+        [],
+    );
+
+    const removeGridYear = useCallback(
+        (year: number) =>
+            setStaged(prev => ({
+                ...prev,
+                gridYears: prev.gridYears.filter(y => y !== year),
+                gridValues: Object.fromEntries(
+                    Object.entries(prev.gridValues).map(
+                        ([orgUnitId, byYear]) => {
+                            const { [year]: _removed, ...rest } = byYear;
+                            return [orgUnitId, rest];
+                        },
+                    ),
+                ),
+            })),
+        [],
+    );
+
+    /** Merges CSV-parsed values into the table (adding any new year columns), so
+     *  uploading a file fills the table without discarding what's already there. */
+    const mergeGridFromCsv = useCallback(
+        (
+            years: number[],
+            valuesByOrgUnit: Record<number, Record<number, string>>,
+        ) =>
+            setStaged(prev => {
+                const gridYears = sortedUniqueYears([
+                    ...prev.gridYears,
+                    ...years,
+                ]);
+                const gridValues = { ...prev.gridValues };
+                Object.entries(valuesByOrgUnit).forEach(
+                    ([orgUnitId, byYear]) => {
+                        gridValues[Number(orgUnitId)] = mergeYearValues(
+                            gridValues[Number(orgUnitId)],
+                            byYear,
+                        );
+                    },
+                );
+                return { ...prev, gridYears, gridValues };
+            }),
         [],
     );
 
@@ -154,6 +227,9 @@ export const useDataLayerWizard = () => {
         reset,
         setLayerType,
         setGridValue,
+        addGridYear,
+        removeGridYear,
+        mergeGridFromCsv,
         isCompositeGraphStep,
     };
 };

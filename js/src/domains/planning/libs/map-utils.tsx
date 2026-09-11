@@ -10,7 +10,7 @@ import {
 } from '../../dataLayers/types/metrics';
 import { MESSAGES } from '../../messages';
 import { defaultLegend } from './color-utils';
-import { formatMetricValue } from './metric-utils';
+import { formatMetricValue, hasNumericMetricValue } from './metric-utils';
 
 export const defaultZoomSnap = 0.25;
 export const defaultZoomDelta = 0.5;
@@ -135,7 +135,7 @@ export const useGetOrgUnitMetric = (
                 return undefined;
             }
 
-            if (metricValue.value || metricValue.value === 0) {
+            if (hasNumericMetricValue(metricValue)) {
                 return {
                     label: metricValue.value,
                     value: metricValue.value.toString(),

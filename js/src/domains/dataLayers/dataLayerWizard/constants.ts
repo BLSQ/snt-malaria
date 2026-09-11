@@ -7,5 +7,3 @@ export const REQUIRED_METRIC_VALUES_HEADERS = [
 ] as const;
 
 export type WizardLayerType = 'data' | 'openhexa' | 'composite';
-
-export type StandardValueMethod = 'csv' | 'manual';

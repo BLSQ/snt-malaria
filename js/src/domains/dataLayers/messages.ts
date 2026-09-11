@@ -302,25 +302,18 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.populationNoHolder',
         defaultMessage: 'No layer is the population denominator yet.',
     },
-    wizardDataQuestion: {
-        id: 'iaso.snt_malaria.settings.dataLayers.wizard.dataQuestion',
-        defaultMessage: 'How do you want to get values in?',
+    wizardImportCsvHint: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.importCsvHint',
+        defaultMessage:
+            'Upload a CSV to fill the table below, then fine-tune it there before saving.',
     },
-    wizardMethodUploadCsv: {
-        id: 'iaso.snt_malaria.settings.dataLayers.wizard.methodUploadCsv',
-        defaultMessage: 'Upload CSV',
+    wizardAddYear: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.addYear',
+        defaultMessage: 'Add year',
     },
-    wizardMethodUploadCsvHint: {
-        id: 'iaso.snt_malaria.settings.dataLayers.wizard.methodUploadCsvHint',
-        defaultMessage: 'Best for a full year of data',
-    },
-    wizardMethodManual: {
-        id: 'iaso.snt_malaria.settings.dataLayers.wizard.methodManual',
-        defaultMessage: 'Enter manually',
-    },
-    wizardMethodManualHint: {
-        id: 'iaso.snt_malaria.settings.dataLayers.wizard.methodManualHint',
-        defaultMessage: 'Type or paste into the grid',
+    wizardRemoveYear: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.removeYear',
+        defaultMessage: 'Remove {year}',
     },
     wizardManualPaste: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.manualPaste',
@@ -328,12 +321,12 @@ export const MESSAGES = defineMessages({
     },
     wizardManualFilledCount: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.manualFilledCount',
-        defaultMessage: '{filled} of {total} districts filled',
+        defaultMessage: '{filled} of {total} values filled',
     },
     wizardManualPasteHelp: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.manualPasteHelp',
         defaultMessage:
-            'Paste one value per line, in the district order shown, to fill the column.',
+            'Paste one value per line, in the district order shown, to fill a year column.',
     },
     wizardValueAboveHundred: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.valueAboveHundred',
@@ -346,10 +339,6 @@ export const MESSAGES = defineMessages({
     wizardGridDistrict: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.gridDistrict',
         defaultMessage: 'District',
-    },
-    wizardGridValue: {
-        id: 'iaso.snt_malaria.settings.dataLayers.wizard.gridValue',
-        defaultMessage: 'Value',
     },
     wizardSummaryAddsToCategory: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.summaryAddsToCategory',
@@ -367,7 +356,7 @@ export const MESSAGES = defineMessages({
     },
     wizardOpenHexaImportComplete: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.openHexaImportComplete',
-        defaultMessage: 'Import complete — see the preview.',
+        defaultMessage: 'Import complete — check the result table.',
     },
     wizardPreviewPlaceholder: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.previewPlaceholder',

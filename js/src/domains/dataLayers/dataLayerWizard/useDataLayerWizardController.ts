@@ -11,7 +11,7 @@ import {
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
 import { useDeleteMetricType } from '../hooks/useDeleteMetricType';
 import { useGetMetricTypes } from '../hooks/useGetMetrics';
-import { useImportMetricValues } from '../hooks/useImportMetricValues';
+import { useImportMetricValuesJson } from '../hooks/useImportMetricValuesJson';
 import { useImportOpenHexaDataLayer } from '../hooks/useImportOpenHexaDataLayer';
 import {
     editFormModel,
@@ -25,7 +25,7 @@ import {
     ScaleDomainRange,
 } from '../types/metrics';
 import { WizardLayerType } from './constants';
-import { gridCsvFile } from './csvFromGrid';
+import { parseYearlyCsv } from './gridCsv';
 import {
     EDIT_STEPS,
     useDataLayerWizard,
@@ -145,7 +145,7 @@ export const useDataLayerWizardController = ({
         onError: (code: string) => setSubmitError(errorMessage(code)),
         onSuccess: () => undefined,
     });
-    const { mutateAsync: importValues } = useImportMetricValues();
+    const { mutateAsync: importGridValues } = useImportMetricValuesJson();
     const { mutateAsync: importOpenHexa } = useImportOpenHexaDataLayer();
     // Silent: the wizard mints a draft shell before the graph exists; the "Saved"
     // toast belongs to the graph save, not this one.
@@ -158,8 +158,8 @@ export const useDataLayerWizardController = ({
 
     // Wipe every trace of an in-progress creation: the formik model (values,
     // touched, errors, submit count) back to a fresh copy of the empty defaults,
-    // and all staged wizard state (step, layer type, CSV file, grid, year,
-    // composite shell). Run on open, on close, and on a confirmed discard.
+    // and all staged wizard state (step, layer type, table, composite shell). Run
+    // on open, on close, and on a confirmed discard.
     const resetAll = useCallback(() => {
         formik.resetForm({ values: makeDefaultMetricType() });
         resetStaged();
@@ -282,43 +282,48 @@ export const useDataLayerWizardController = ({
             : undefined;
     }, [formik.values]);
 
-    /** Imports the manual-entry grid against the layer's `code` — used when leaving
-     *  the Data step, so a bad value surfaces its error there instead of silently
-     *  reaching Legend with no values. No-op if nothing was entered (a layer can
-     *  still be created with no values yet), and for the `csv` method: a file is
-     *  imported the moment it's picked (`onCsvFileSelected`), for a live preview
-     *  right there on the Data step, so there's nothing left to do here. */
-    const importStagedValues = useCallback(async () => {
-        if (staged.method !== 'manual') return;
-        const rows = Object.entries(staged.gridValues).map(
-            ([orgUnitId, value]) => ({
-                orgUnitId: Number(orgUnitId),
-                adm1Name: '',
-                adm2Name: '',
-                value,
-            }),
-        );
-        if (rows.some(row => row.value.trim() !== '')) {
-            await importValues({
-                file: gridCsvFile(rows, formik.values.code),
-                year: staged.csvYear,
+    /** Sends the table (every non-blank cell) as JSON, replacing whatever the
+     *  server has for the years the table currently covers — used when leaving the
+     *  Data step, so a bad value surfaces its error there instead of silently
+     *  reaching Legend with no values. No-op if there are no year columns at all
+     *  (shouldn't normally happen — the table always starts with one). */
+    const submitGridValues = useCallback(
+        async (metricTypeId: number) => {
+            if (staged.gridYears.length === 0) return;
+            const values: {
+                org_unit_id: number;
+                year: number;
+                value: string;
+            }[] = [];
+            Object.entries(staged.gridValues).forEach(([orgUnitId, byYear]) => {
+                Object.entries(byYear).forEach(([year, value]) => {
+                    if (value.trim() !== '') {
+                        values.push({
+                            org_unit_id: Number(orgUnitId),
+                            year: Number(year),
+                            value: value.trim(),
+                        });
+                    }
+                });
             });
-        }
-    }, [
-        staged.method,
-        staged.gridValues,
-        staged.csvYear,
-        formik.values.code,
-        importValues,
-    ]);
-
-    const onCsvFileSelected = useCallback(
-        (file: File | null) => {
-            patch({ csvFile: file });
-            if (!file || !staged.createdMetricTypeId) return;
-            importValues({ file, year: staged.csvYear }).catch(() => undefined);
+            await importGridValues({
+                metric_type_id: metricTypeId,
+                years: staged.gridYears,
+                values,
+            });
         },
-        [patch, importValues, staged.createdMetricTypeId, staged.csvYear],
+        [staged.gridYears, staged.gridValues, importGridValues],
+    );
+
+    /** Parses a picked CSV and merges it into the table right away — nothing is
+     *  sent to the backend here, so the user can fine-tune it before it's saved. */
+    const onCsvFileSelected = useCallback(
+        async (file: File) => {
+            const text = await file.text();
+            const { years, valuesByOrgUnit } = parseYearlyCsv(text);
+            wizard.mergeGridFromCsv(years, valuesByOrgUnit);
+        },
+        [wizard],
     );
 
     const goNext = useCallback(async () => {
@@ -341,13 +346,12 @@ export const useDataLayerWizardController = ({
             leavingDetails &&
             staged.layerType === 'data' &&
             !staged.createdMetricTypeId;
-        // CSV imports the moment it's picked (`onCsvFileSelected`); only the manual
-        // grid still needs importing when Data is left.
+        const createdMetricTypeId = staged.createdMetricTypeId;
         const needsStandardImport =
             leavingData &&
             staged.layerType === 'data' &&
-            staged.method === 'manual' &&
-            Boolean(staged.createdMetricTypeId);
+            staged.gridYears.length > 0 &&
+            Boolean(createdMetricTypeId);
         if (
             !needsCompositeShell &&
             !needsOpenHexaImport &&
@@ -384,8 +388,8 @@ export const useDataLayerWizardController = ({
                     metricTypePayload(formik.values, legendPayload()) as any,
                 )) as MetricType;
                 patch({ createdMetricTypeId: created.id });
-            } else if (needsStandardImport) {
-                await importStagedValues();
+            } else if (needsStandardImport && createdMetricTypeId) {
+                await submitGridValues(createdMetricTypeId);
             }
             wizard.goNext();
         } catch {
@@ -402,11 +406,11 @@ export const useDataLayerWizardController = ({
         staged.layerType,
         staged.compositeLayerId,
         staged.createdMetricTypeId,
-        staged.method,
+        staged.gridYears,
         saveComposite,
         importOpenHexa,
         createMetricType,
-        importStagedValues,
+        submitGridValues,
         formik.values,
         legendPayload,
         patch,
@@ -584,9 +588,10 @@ export const useDataLayerWizardController = ({
         layerType: staged.layerType,
         setLayerType,
         staged,
-        patch,
         onCsvFileSelected,
         setGridValue: wizard.setGridValue,
+        addGridYear: wizard.addGridYear,
+        removeGridYear: wizard.removeGridYear,
         isCompositeGraphStep: wizard.isCompositeGraphStep,
         /** Which component the main column shows while the wizard is open; the page
          *  falls back to the map when it is closed. */

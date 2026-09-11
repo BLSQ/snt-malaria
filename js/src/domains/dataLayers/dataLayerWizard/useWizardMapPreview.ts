@@ -25,9 +25,7 @@ export type WizardMapPreview = {
     legendConfig: MapLegendConfig;
 };
 
-/** Real map-preview data shared by the wizard's Data and Legend steps: the legend
- *  currently being edited (or its still-generic defaults, pre-Legend-step), coloured
- *  over whatever values the layer already has server-side — never client-parsed,
+/** Real values shared by the wizard's Data and Legend steps — never client-parsed,
  *  since every layer type's record already exists by the Data step (see
  *  `useDataLayerWizardController.goNext`). */
 export const useWizardMapPreview = (

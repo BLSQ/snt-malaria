@@ -85,7 +85,6 @@ export const DataLayerWizardPanel: FC<Props> = ({
         layerType,
         setLayerType,
         staged,
-        patch,
         onCsvFileSelected,
         requestClose,
         submit,
@@ -160,13 +159,8 @@ export const DataLayerWizardPanel: FC<Props> = ({
                         {activeStep === WIZARD_STEPS.DATA && (
                             <StepDataControls
                                 layerType={layerType}
-                                method={staged.method}
-                                onChangeMethod={method => patch({ method })}
-                                csvFile={staged.csvFile}
-                                onChangeCsvFile={onCsvFileSelected}
-                                year={staged.csvYear}
-                                onChangeYear={csvYear => patch({ csvYear })}
-                                code={formik.values.code}
+                                onUploadCsv={onCsvFileSelected}
+                                years={staged.gridYears}
                                 orgUnits={orgUnits}
                                 openHexaStatus={preview.openHexaStatus}
                             />

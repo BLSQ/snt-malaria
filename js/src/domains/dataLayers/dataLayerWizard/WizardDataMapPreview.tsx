@@ -11,8 +11,7 @@ type Props = {
     orgUnits: OrgUnit[];
 };
 
-/** The map card shown once a layer's real values are ready — shared by the Data
- *  step's CSV/OpenHexa previews and the Legend step, which differ only in header. */
+/** The map card shown once a layer's real values are ready, on the Legend step. */
 export const WizardDataMapPreview: FC<Props> = ({
     header,
     legendConfig,

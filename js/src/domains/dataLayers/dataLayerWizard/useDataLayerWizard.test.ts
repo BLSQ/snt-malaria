@@ -54,38 +54,78 @@ describe('useDataLayerWizard', () => {
         const { result } = renderHook(() => useDataLayerWizard());
         act(() => {
             result.current.setLayerType('composite');
-            result.current.setGridValue(3, '9');
-            result.current.patch({
-                csvFile: new File(['x'], 'x.csv'),
-                csvYear: 2020,
-                compositeLayerId: 42,
-            });
+            result.current.setGridValue(3, 2024, '9');
+            result.current.patch({ compositeLayerId: 42 });
             result.current.goNext();
         });
         act(() => result.current.reset());
         expect(result.current.activeStep).toBe(WIZARD_STEPS.TYPE);
         expect(result.current.staged).toEqual({
             layerType: 'data',
-            method: 'csv',
-            csvFile: null,
-            csvYear: expect.any(Number),
             gridValues: {},
+            gridYears: [expect.any(Number)],
         });
     });
 
-    it('drops staged CSV / grid choices when leaving the standard type', () => {
+    it('drops staged table entries when leaving the standard type', () => {
         const { result } = renderHook(() => useDataLayerWizard());
         act(() => {
-            result.current.setGridValue(7, '42');
-            result.current.patch({
-                csvFile: new File(['x'], 'x.csv'),
-                method: 'manual',
-            });
+            result.current.setGridValue(7, 2024, '42');
+            result.current.addGridYear(2025);
         });
         act(() => result.current.setLayerType('composite'));
-        expect(result.current.staged.csvFile).toBeNull();
         expect(result.current.staged.gridValues).toEqual({});
-        expect(result.current.staged.method).toBe('csv');
+        expect(result.current.staged.gridYears).toEqual([expect.any(Number)]);
+    });
+
+    it('addGridYear adds a sorted, deduplicated column', () => {
+        const { result } = renderHook(() => useDataLayerWizard());
+        const initialYear = result.current.staged.gridYears[0];
+        act(() => {
+            result.current.addGridYear(initialYear + 2);
+            result.current.addGridYear(initialYear + 1);
+            result.current.addGridYear(initialYear + 1);
+        });
+        expect(result.current.staged.gridYears).toEqual([
+            initialYear,
+            initialYear + 1,
+            initialYear + 2,
+        ]);
+    });
+
+    it('removeGridYear drops the column and its values', () => {
+        const { result } = renderHook(() => useDataLayerWizard());
+        const [year] = result.current.staged.gridYears;
+        act(() => {
+            result.current.addGridYear(year + 1);
+            result.current.setGridValue(1, year, '10');
+            result.current.setGridValue(1, year + 1, '20');
+        });
+        act(() => result.current.removeGridYear(year));
+        expect(result.current.staged.gridYears).toEqual([year + 1]);
+        expect(result.current.staged.gridValues[1]).toEqual({
+            [year + 1]: '20',
+        });
+    });
+
+    it('mergeGridFromCsv adds new year columns and fills values without discarding existing ones', () => {
+        const { result } = renderHook(() => useDataLayerWizard());
+        const [year] = result.current.staged.gridYears;
+        act(() => result.current.setGridValue(1, year, 'kept'));
+        act(() =>
+            result.current.mergeGridFromCsv([year + 1], {
+                1: { [year + 1]: 'new' },
+                2: { [year + 1]: '5' },
+            }),
+        );
+        expect(result.current.staged.gridYears).toEqual([year, year + 1]);
+        expect(result.current.staged.gridValues[1]).toEqual({
+            [year]: 'kept',
+            [year + 1]: 'new',
+        });
+        expect(result.current.staged.gridValues[2]).toEqual({
+            [year + 1]: '5',
+        });
     });
 
     it('clears a staged composite shell id when switching away from composite', () => {
