@@ -1,13 +1,15 @@
 import React, { FC, useCallback } from 'react';
-import { Alert, Box, Link, Stack, Typography } from '@mui/material';
+import { Box, Link, Stack, Typography } from '@mui/material';
 import { FilesUpload, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { DataLayerYearOptions } from '../../../../constants/shared';
+import { OpenHexaImportStatus } from '../../hooks/useGetOpenHexaImportStatus';
 import { MESSAGES } from '../../messages';
 import { StandardValueMethod, WizardLayerType } from '../constants';
 import { templateCsv } from '../csvFromGrid';
+import { OpenHexaImportStatusMessage } from '../OpenHexaImportStatusMessage';
 import { toOrgUnitRows } from '../orgUnitRows';
 import { SelectableCard } from '../SelectableCard';
 
@@ -29,6 +31,8 @@ type Props = {
     /** Data key of the layer being created — the template's value column. */
     code: string;
     orgUnits: OrgUnit[];
+    /** OpenHexa's live import status — see `OpenHexaImportStatusMessage`. */
+    openHexaStatus?: OpenHexaImportStatus;
 };
 
 const METHODS: {
@@ -58,6 +62,7 @@ export const StepDataControls: FC<Props> = ({
     onChangeYear,
     code,
     orgUnits,
+    openHexaStatus,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -81,9 +86,7 @@ export const StepDataControls: FC<Props> = ({
                 <Typography variant="subtitle2" sx={styles.question}>
                     {formatMessage(MESSAGES.wizardStepData)}
                 </Typography>
-                <Alert severity="info" icon={false}>
-                    {formatMessage(MESSAGES.wizardOpenHexaImportInfo)}
-                </Alert>
+                <OpenHexaImportStatusMessage status={openHexaStatus} />
                 <Typography
                     variant="caption"
                     color="text.secondary"

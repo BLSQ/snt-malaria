@@ -3,7 +3,11 @@ import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 import { isConcreteLegend, LegendTypes } from '../../../constants/legend';
 import { useSaveCompositeLayer } from '../../compositeLayerEditor/hooks/useSaveCompositeLayer';
 import { CompositeLayerListItem } from '../../compositeLayerEditor/types/compositeLayer';
-import { legendConfigFromForm } from '../dataLayerForm/legendScale';
+import {
+    initialTopColor,
+    legendConfigFromForm,
+    scaleFromDomainRange,
+} from '../dataLayerForm/legendScale';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
 import { useDeleteMetricType } from '../hooks/useDeleteMetricType';
 import { useGetMetricTypes } from '../hooks/useGetMetrics';
@@ -23,11 +27,10 @@ import {
 import { WizardLayerType } from './constants';
 import { gridCsvFile } from './csvFromGrid';
 import {
-    EDIT_RANGE,
+    EDIT_STEPS,
     useDataLayerWizard,
     WIZARD_STEP_LABELS,
     WIZARD_STEPS,
-    WizardStep,
 } from './useDataLayerWizard';
 
 /** Which component the page shows in the main column while the wizard is open. */
@@ -118,10 +121,6 @@ export const useDataLayerWizardController = ({
         metricType: MetricType;
         compositeLayer?: CompositeLayerListItem;
     }>();
-    /** MetricType id of a composite shell created for step 3, kept so it can be
-     *  cleaned up if the wizard is abandoned before it is finished. */
-    const [pendingCompositeMetricTypeId, setPendingCompositeMetricTypeId] =
-        useState<number>();
 
     const wizard = useDataLayerWizard();
     const { staged, patch, reset: resetStaged } = wizard;
@@ -166,7 +165,6 @@ export const useDataLayerWizardController = ({
         resetStaged();
         setEditing(undefined);
         setSubmitError(undefined);
-        setPendingCompositeMetricTypeId(undefined);
     }, [formik, resetStaged]);
 
     const open = useCallback(() => {
@@ -179,10 +177,9 @@ export const useDataLayerWizardController = ({
         (metricType: MetricType, compositeLayer?: CompositeLayerListItem) => {
             const model = editFormModel(metricType, compositeLayer);
             formik.resetForm({ values: model });
-            wizard.start(EDIT_RANGE, { layerType: layerTypeOf(model) });
+            wizard.start(EDIT_STEPS, { layerType: layerTypeOf(model) });
             setEditing({ metricType, compositeLayer });
             setSubmitError(undefined);
-            setPendingCompositeMetricTypeId(undefined);
             setIsOpen(true);
         },
         [formik, wizard],
@@ -208,22 +205,25 @@ export const useDataLayerWizardController = ({
         close();
     }, [hasProgress, close]);
 
+    // A composite shell's underlying MetricType id lives in the same
+    // `createdMetricTypeId` field as a standard/OpenHexa layer's — one mechanism
+    // for "a record was already created for this run and needs cleaning up".
     const confirmDiscard = useCallback(() => {
-        if (pendingCompositeMetricTypeId) {
-            deleteMetricType(pendingCompositeMetricTypeId);
+        if (staged.createdMetricTypeId) {
+            deleteMetricType(staged.createdMetricTypeId);
         }
         close();
-    }, [pendingCompositeMetricTypeId, deleteMetricType, close]);
+    }, [staged.createdMetricTypeId, deleteMetricType, close]);
 
     const cancelDiscard = useCallback(() => setDiscardOpen(false), []);
 
     const setLayerType = useCallback(
         (layerType: WizardLayerType) => {
-            // Leaving 'composite' after a draft shell was minted: delete it so it
-            // doesn't linger on the server (wizard.setLayerType clears the id).
-            if (layerType !== 'composite' && pendingCompositeMetricTypeId) {
-                deleteMetricType(pendingCompositeMetricTypeId);
-                setPendingCompositeMetricTypeId(undefined);
+            // A record already created for a different type no longer belongs to
+            // this run: delete it so it doesn't linger on the server
+            // (wizard.setLayerType clears the id).
+            if (layerType !== staged.layerType && staged.createdMetricTypeId) {
+                deleteMetricType(staged.createdMetricTypeId);
             }
             wizard.setLayerType(layerType);
             Object.entries(layerTypeToFormFields(layerType)).forEach(
@@ -233,7 +233,13 @@ export const useDataLayerWizardController = ({
                 formik.setFieldValue('category', 'Composite');
             }
         },
-        [wizard, formik, pendingCompositeMetricTypeId, deleteMetricType],
+        [
+            wizard,
+            formik,
+            staged.layerType,
+            staged.createdMetricTypeId,
+            deleteMetricType,
+        ],
     );
 
     // Recomputed every render: formik keeps a stable object identity while its
@@ -276,79 +282,148 @@ export const useDataLayerWizardController = ({
             : undefined;
     }, [formik.values]);
 
+    /** Imports the manual-entry grid against the layer's `code` — used when leaving
+     *  the Data step, so a bad value surfaces its error there instead of silently
+     *  reaching Legend with no values. No-op if nothing was entered (a layer can
+     *  still be created with no values yet), and for the `csv` method: a file is
+     *  imported the moment it's picked (`onCsvFileSelected`), for a live preview
+     *  right there on the Data step, so there's nothing left to do here. */
+    const importStagedValues = useCallback(async () => {
+        if (staged.method !== 'manual') return;
+        const rows = Object.entries(staged.gridValues).map(
+            ([orgUnitId, value]) => ({
+                orgUnitId: Number(orgUnitId),
+                adm1Name: '',
+                adm2Name: '',
+                value,
+            }),
+        );
+        if (rows.some(row => row.value.trim() !== '')) {
+            await importValues({
+                file: gridCsvFile(rows, formik.values.code),
+                year: staged.csvYear,
+            });
+        }
+    }, [
+        staged.method,
+        staged.gridValues,
+        staged.csvYear,
+        formik.values.code,
+        importValues,
+    ]);
+
+    const onCsvFileSelected = useCallback(
+        (file: File | null) => {
+            patch({ csvFile: file });
+            if (!file || !staged.createdMetricTypeId) return;
+            importValues({ file, year: staged.csvYear }).catch(() => undefined);
+        },
+        [patch, importValues, staged.createdMetricTypeId, staged.csvYear],
+    );
+
     const goNext = useCallback(async () => {
-        const nextStep = (wizard.activeStep + 1) as WizardStep;
-        const needsShell =
-            nextStep === WIZARD_STEPS.DATA &&
+        // Steps aren't always a contiguous run of `WIZARD_STEPS` (an edit skips
+        // Data), so the actual next step is a lookup, not `activeStep + 1`.
+        const nextStep = wizard.steps[wizard.activeStepIndex + 1];
+        const leavingDetails = nextStep === WIZARD_STEPS.DATA;
+        const leavingData =
+            wizard.activeStep === WIZARD_STEPS.DATA &&
+            nextStep === WIZARD_STEPS.LEGEND;
+        const needsCompositeShell =
+            leavingDetails &&
             staged.layerType === 'composite' &&
             !staged.compositeLayerId;
-        if (!needsShell) {
+        const needsOpenHexaImport =
+            leavingDetails &&
+            staged.layerType === 'openhexa' &&
+            !staged.createdMetricTypeId;
+        const needsStandardCreate =
+            leavingDetails &&
+            staged.layerType === 'data' &&
+            !staged.createdMetricTypeId;
+        // CSV imports the moment it's picked (`onCsvFileSelected`); only the manual
+        // grid still needs importing when Data is left.
+        const needsStandardImport =
+            leavingData &&
+            staged.layerType === 'data' &&
+            staged.method === 'manual' &&
+            Boolean(staged.createdMetricTypeId);
+        if (
+            !needsCompositeShell &&
+            !needsOpenHexaImport &&
+            !needsStandardCreate &&
+            !needsStandardImport
+        ) {
             wizard.goNext();
             return;
         }
         if (busyRef.current) return;
         busyRef.current = true;
         setIsSubmitting(true);
+        setSubmitError(undefined);
         try {
-            // Persist the shell so the node editor (keyed by a real id) can run.
-            // The legend step is already done, so it goes in now.
-            const saved = await saveComposite(
-                compositeLayerPayload(formik.values, legendPayload()),
-            );
-            patch({ compositeLayerId: saved.id });
-            setPendingCompositeMetricTypeId(saved.metric_type ?? undefined);
+            if (needsCompositeShell) {
+                // Persist the shell so the node editor (keyed by a real id) can run.
+                // The legend step comes after the graph now, so it isn't known yet —
+                // the shell's legend is filled in later, at final submit.
+                const saved = await saveComposite(
+                    compositeLayerPayload(formik.values, legendPayload()),
+                );
+                patch({
+                    compositeLayerId: saved.id,
+                    createdMetricTypeId: saved.metric_type ?? undefined,
+                });
+            } else if (needsOpenHexaImport) {
+                const { metric_type_id: metricTypeId } = await importOpenHexa({
+                    code: formik.values.code,
+                    legend_config: legendPayload(),
+                });
+                patch({ createdMetricTypeId: metricTypeId });
+            } else if (needsStandardCreate) {
+                const created = (await createMetricType(
+                    metricTypePayload(formik.values, legendPayload()) as any,
+                )) as MetricType;
+                patch({ createdMetricTypeId: created.id });
+            } else if (needsStandardImport) {
+                await importStagedValues();
+            }
             wizard.goNext();
         } catch {
-            setSubmitError(MESSAGES.genericError);
+            // createMetricType's onError already resolved a specific message for
+            // needsStandardCreate (e.g. a duplicate code); fall back to a generic
+            // one for the other, snackbar-only failure paths.
+            setSubmitError(prev => prev ?? MESSAGES.genericError);
         } finally {
             busyRef.current = false;
             setIsSubmitting(false);
         }
-    }, [wizard, staged, saveComposite, formik.values, legendPayload, patch]);
+    }, [
+        wizard,
+        staged.layerType,
+        staged.compositeLayerId,
+        staged.createdMetricTypeId,
+        staged.method,
+        saveComposite,
+        importOpenHexa,
+        createMetricType,
+        importStagedValues,
+        formik.values,
+        legendPayload,
+        patch,
+    ]);
 
     const submitStandard = useCallback(async () => {
-        const values = formik.values;
-        // Create the type first (the CSV import needs its `code` column).
-        const created = (await createMetricType(
-            metricTypePayload(values, legendPayload()) as any,
-        )) as MetricType;
-
-        // The layer now exists; a failing value import shouldn't trap the user in
-        // the wizard — `useImportMetricValues` already snackbars the error, and the
-        // values can be imported later from the layer's Data menu.
-        try {
-            if (staged.method === 'manual') {
-                const rows = Object.entries(staged.gridValues).map(
-                    ([orgUnitId, value]) => ({
-                        orgUnitId: Number(orgUnitId),
-                        adm1Name: '',
-                        adm2Name: '',
-                        value,
-                    }),
-                );
-                if (rows.some(row => row.value.trim() !== '')) {
-                    await importValues({
-                        file: gridCsvFile(rows, values.code),
-                        year: staged.csvYear,
-                    });
-                }
-            } else if (staged.csvFile) {
-                await importValues({
-                    file: staged.csvFile,
-                    year: staged.csvYear,
-                });
-            }
-        } catch {
-            // swallowed on purpose — see comment above
-        }
-        onCreated(created);
+        const updated = (await createMetricType({
+            id: staged.createdMetricTypeId,
+            ...metricTypePayload(formik.values, legendPayload()),
+        } as any)) as MetricType;
+        onCreated(updated);
         close();
     }, [
+        staged.createdMetricTypeId,
         formik.values,
-        staged,
         legendPayload,
         createMetricType,
-        importValues,
         onCreated,
         close,
     ]);
@@ -380,14 +455,24 @@ export const useDataLayerWizardController = ({
         close,
     ]);
 
-    const submitOpenHexaCreate = useCallback(async () => {
-        await importOpenHexa({
-            code: formik.values.code,
-            legend_config: legendPayload(),
+    /** Finalise a newly-created composite: the shell was minted before its graph
+     *  step (with no legend yet) and the graph itself is already saved, so this
+     *  just fills in the metadata + legend now that both are known. */
+    const submitCompositeCreate = useCallback(async () => {
+        const saved = await updateComposite({
+            id: staged.compositeLayerId,
+            ...compositeLayerPayload(formik.values, legendPayload()),
         });
-        onCreated(undefined);
+        onCreated(saved.metric_type_detail ?? undefined);
         close();
-    }, [formik.values.code, legendPayload, importOpenHexa, onCreated, close]);
+    }, [
+        staged.compositeLayerId,
+        formik.values,
+        legendPayload,
+        updateComposite,
+        onCreated,
+        close,
+    ]);
 
     const submit = useCallback(async () => {
         setSubmitError(undefined);
@@ -395,14 +480,16 @@ export const useDataLayerWizardController = ({
         try {
             if (editing) {
                 await submitEdit();
-            } else if (staged.layerType === 'openhexa') {
-                await submitOpenHexaCreate();
+            } else if (staged.layerType === 'composite') {
+                await submitCompositeCreate();
             } else {
+                // Standard and OpenHexa are both already created by `goNext`; this
+                // just finalises their legend.
                 await submitStandard();
             }
         } catch {
             // createMetricType's onError already resolved a specific message;
-            // fall back to a generic one for the openhexa / composite path.
+            // fall back to a generic one for the composite path.
             setSubmitError(prev => prev ?? MESSAGES.genericError);
         } finally {
             setIsSubmitting(false);
@@ -411,19 +498,32 @@ export const useDataLayerWizardController = ({
         editing,
         submitEdit,
         staged.layerType,
-        submitOpenHexaCreate,
+        submitCompositeCreate,
         submitStandard,
     ]);
 
-    /** The composite node editor persisted the graph (the last step); the shell
-     *  already carries the metadata + legend, so just finalise. */
+    /** The composite node editor persisted the graph and, since it ran, the backend
+     *  resolved a concrete legend from it (an "auto"/"reference" request becomes a
+     *  real threshold/linear/ordinal one) — seed the Legend step's fields with it so
+     *  it starts from what the graph actually produced instead of generic defaults,
+     *  same as an OpenHexa pick autofills Details. Then move on to Legend instead of
+     *  finishing; `submitCompositeCreate` does that once the user confirms it. */
     const onCompositeGraphSaved = useCallback(
         (metricType?: MetricType) => {
-            setPendingCompositeMetricTypeId(undefined);
-            onCreated(metricType);
-            close();
+            if (metricType) {
+                formik.setFieldValue('legend_type', metricType.legend_type);
+                formik.setFieldValue(
+                    'legend_config',
+                    scaleFromDomainRange(metricType.legend_config),
+                );
+                formik.setFieldValue(
+                    'legend_top_color',
+                    initialTopColor(metricType.legend_config),
+                );
+            }
+            goNext();
         },
-        [onCreated, close],
+        [formik, goNext],
     );
 
     const clearSubmitError = useCallback(() => setSubmitError(undefined), []);
@@ -457,6 +557,7 @@ export const useDataLayerWizardController = ({
         (isEditing && MESSAGES.wizardDiscardEditConfirm) ||
         (staged.layerType === 'composite' &&
             MESSAGES.wizardDiscardGraphConfirm) ||
+        (staged.createdMetricTypeId && MESSAGES.wizardDiscardCreatedConfirm) ||
         MESSAGES.wizardDiscardLayerConfirm;
 
     return {
@@ -484,6 +585,7 @@ export const useDataLayerWizardController = ({
         setLayerType,
         staged,
         patch,
+        onCsvFileSelected,
         setGridValue: wizard.setGridValue,
         isCompositeGraphStep: wizard.isCompositeGraphStep,
         /** Which component the main column shows while the wizard is open; the page

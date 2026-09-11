@@ -29,3 +29,7 @@ export const isFailedTaskStatus = (status?: string): boolean =>
 /** Task will not change any more (succeeded or failed). */
 export const isTerminalTaskStatus = (status?: string): boolean =>
     includesStatus(TERMINAL, status);
+
+/** Task finished and produced data. */
+export const isSuccessTaskStatus = (status?: string): boolean =>
+    status === TASK_STATUS.SUCCESS;

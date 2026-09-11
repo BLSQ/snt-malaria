@@ -1,11 +1,15 @@
 import React, { FC } from 'react';
-import { Alert, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { MapLegendConfig } from '../../dataLayerMap/DataLayerMap';
+import { OpenHexaImportStatus } from '../../hooks/useGetOpenHexaImportStatus';
 import { MESSAGES } from '../../messages';
-import { MetricTypeFormModel } from '../../types/metrics';
+import { MetricTypeFormModel, MetricValue } from '../../types/metrics';
 import { StandardValueMethod, WizardLayerType } from '../constants';
 import { ManualValueGrid } from '../ManualValueGrid';
+import { OpenHexaImportStatusMessage } from '../OpenHexaImportStatusMessage';
+import { WizardDataMapPreview } from '../WizardDataMapPreview';
 import { WizardMainCard } from '../WizardMainCard';
 
 type Props = {
@@ -16,6 +20,11 @@ type Props = {
     gridValues: Record<number, string>;
     onGridChange: (orgUnitId: number, value: string) => void;
     values: MetricTypeFormModel;
+    createdMetricTypeId?: number;
+    openHexaStatus?: OpenHexaImportStatus;
+    previewReady: boolean;
+    previewMetricValues?: MetricValue[];
+    previewLegendConfig: MapLegendConfig;
 };
 
 export const StepDataMain: FC<Props> = ({
@@ -26,6 +35,10 @@ export const StepDataMain: FC<Props> = ({
     gridValues,
     onGridChange,
     values,
+    openHexaStatus,
+    previewReady,
+    previewMetricValues,
+    previewLegendConfig,
 }) => {
     const { formatMessage } = useSafeIntl();
     const header = (
@@ -35,6 +48,16 @@ export const StepDataMain: FC<Props> = ({
     );
 
     if (layerType === 'openhexa') {
+        if (previewReady) {
+            return (
+                <WizardDataMapPreview
+                    header={header}
+                    legendConfig={previewLegendConfig}
+                    metricValues={previewMetricValues}
+                    orgUnits={orgUnits}
+                />
+            );
+        }
         return (
             <WizardMainCard header={header} centered>
                 <Typography variant="h6">{values.name}</Typography>
@@ -42,11 +65,7 @@ export const StepDataMain: FC<Props> = ({
                     {values.code}
                     {values.units ? ` · ${values.units}` : ''}
                 </Typography>
-                <Alert severity="info" icon={false} sx={{ maxWidth: 460 }}>
-                    {formatMessage(MESSAGES.wizardOpenHexaTaskPending)}
-                    <br />
-                    {formatMessage(MESSAGES.wizardOpenHexaImportInfo)}
-                </Alert>
+                <OpenHexaImportStatusMessage status={openHexaStatus} />
             </WizardMainCard>
         );
     }
@@ -65,10 +84,28 @@ export const StepDataMain: FC<Props> = ({
         );
     }
 
+    if (csvFile) {
+        return (
+            <WizardDataMapPreview
+                header={
+                    <Stack>
+                        {header}
+                        <Typography variant="caption" color="text.secondary">
+                            {csvFile.name}
+                        </Typography>
+                    </Stack>
+                }
+                legendConfig={previewLegendConfig}
+                metricValues={previewMetricValues}
+                orgUnits={orgUnits}
+            />
+        );
+    }
+
     return (
         <WizardMainCard header={header} centered>
             <Typography variant="body1">
-                {csvFile ? csvFile.name : formatMessage(MESSAGES.importCSV)}
+                {formatMessage(MESSAGES.importCSV)}
             </Typography>
             <Typography variant="caption" color="text.secondary">
                 {formatMessage(MESSAGES.importCSVYearCaption)}

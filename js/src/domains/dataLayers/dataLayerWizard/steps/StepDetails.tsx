@@ -21,6 +21,7 @@ type Props = {
     /** Editing an existing layer: the data key is immutable, and an OpenHexa
      *  layer's metadata is owned by the source (only its legend stays editable). */
     isEditing?: boolean;
+    codeLocked?: boolean;
 };
 
 export const StepDetails: FC<Props> = ({
@@ -28,6 +29,7 @@ export const StepDetails: FC<Props> = ({
     categoryOptions,
     existingCodes,
     isEditing = false,
+    codeLocked = false,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { values, setFieldValueAndState, errors, touched } =
@@ -46,7 +48,10 @@ export const StepDetails: FC<Props> = ({
         <Box>
             {/* Create-time source choice; editing an existing layer keeps its source. */}
             {isOpenHexa && !isEditing && (
-                <OpenHexaSourcePicker existingCodes={existingCodes} />
+                <OpenHexaSourcePicker
+                    existingCodes={existingCodes}
+                    disabled={codeLocked}
+                />
             )}
             {isOpenHexa && (
                 <Typography
@@ -72,7 +77,7 @@ export const StepDetails: FC<Props> = ({
                     keyValue="code"
                     type="text"
                     required
-                    disabled={isEditing || isOpenHexa}
+                    disabled={isEditing || isOpenHexa || codeLocked}
                     onChange={setFieldValueAndState}
                     value={values.code}
                     label={MESSAGES.variable}

@@ -363,22 +363,16 @@ export const MESSAGES = defineMessages({
     wizardOpenHexaImportInfo: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.openHexaImportInfo',
         defaultMessage:
-            'Values are imported from OpenHexa by a background task when you create the layer. Follow its progress in the layer list.',
+            'The layer was created and its values are loading from OpenHexa in the background — you can carry on through the wizard while it runs.',
     },
-    wizardOpenHexaTaskPending: {
-        id: 'iaso.snt_malaria.settings.dataLayers.wizard.openHexaTaskPending',
-        defaultMessage:
-            'No import has run yet — it starts when you create the layer.',
+    wizardOpenHexaImportComplete: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.openHexaImportComplete',
+        defaultMessage: 'Import complete — see the preview.',
     },
     wizardPreviewPlaceholder: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.previewPlaceholder',
         defaultMessage:
             'A preview of your layer appears here once you add its data.',
-    },
-    wizardPreviewAfterImport: {
-        id: 'iaso.snt_malaria.settings.dataLayers.wizard.previewAfterImport',
-        defaultMessage:
-            'The map preview appears once the OpenHexa import has run, after you create the layer.',
     },
     wizardDiscardLayerConfirm: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.discardLayerConfirm',
@@ -388,6 +382,11 @@ export const MESSAGES = defineMessages({
     wizardDiscardGraphConfirm: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.discardGraphConfirm',
         defaultMessage: 'Leaving now discards this layer and its graph.',
+    },
+    wizardDiscardCreatedConfirm: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.discardCreatedConfirm',
+        defaultMessage:
+            'Leaving now removes this layer and any values already imported for it.',
     },
     wizardDiscardEditConfirm: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.discardEditConfirm',

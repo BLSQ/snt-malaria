@@ -21,6 +21,7 @@ import { StepLegend } from './steps/StepLegend';
 import { StepType } from './steps/StepType';
 import { WIZARD_STEPS } from './useDataLayerWizard';
 import { DataLayerWizardController } from './useDataLayerWizardController';
+import { WizardMapPreview } from './useWizardMapPreview';
 import { WizardStepRail } from './WizardStepRail';
 
 const styles: SxStyles = {
@@ -48,6 +49,7 @@ const styles: SxStyles = {
 
 type Props = {
     controller: DataLayerWizardController;
+    preview: WizardMapPreview;
     showOpenHexa: boolean;
     showComposite: boolean;
     /** District list for the manual grid and the generated CSV template. */
@@ -61,6 +63,7 @@ type Props = {
 
 export const DataLayerWizardPanel: FC<Props> = ({
     controller,
+    preview,
     showOpenHexa,
     showComposite,
     orgUnits,
@@ -83,6 +86,7 @@ export const DataLayerWizardPanel: FC<Props> = ({
         setLayerType,
         staged,
         patch,
+        onCsvFileSelected,
         requestClose,
         submit,
         isSubmitting,
@@ -150,6 +154,7 @@ export const DataLayerWizardPanel: FC<Props> = ({
                                 categoryOptions={categoryOptions}
                                 existingCodes={existingCodes}
                                 isEditing={isEditing}
+                                codeLocked={Boolean(staged.createdMetricTypeId)}
                             />
                         )}
                         {activeStep === WIZARD_STEPS.DATA && (
@@ -158,11 +163,12 @@ export const DataLayerWizardPanel: FC<Props> = ({
                                 method={staged.method}
                                 onChangeMethod={method => patch({ method })}
                                 csvFile={staged.csvFile}
-                                onChangeCsvFile={csvFile => patch({ csvFile })}
+                                onChangeCsvFile={onCsvFileSelected}
                                 year={staged.csvYear}
                                 onChangeYear={csvYear => patch({ csvYear })}
                                 code={formik.values.code}
                                 orgUnits={orgUnits}
+                                openHexaStatus={preview.openHexaStatus}
                             />
                         )}
                         {activeStep === WIZARD_STEPS.LEGEND && (

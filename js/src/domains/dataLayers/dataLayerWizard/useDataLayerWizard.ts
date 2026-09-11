@@ -6,43 +6,35 @@ import { StandardValueMethod, WizardLayerType } from './constants';
 export const WIZARD_STEPS = {
     TYPE: 0,
     DETAILS: 1,
-    LEGEND: 2,
-    // Data / graph is the last step: the values (or composite graph) are entered
-    // against the legend configured just before.
-    DATA: 3,
+    // Data / graph comes before Legend: the values (or composite graph) need to
+    // exist for the Legend step's map preview to show anything real.
+    DATA: 2,
+    LEGEND: 3,
 } as const;
 
 export type WizardStep = (typeof WIZARD_STEPS)[keyof typeof WIZARD_STEPS];
 
-/** A contiguous span of `WIZARD_STEPS` to run. Editing an existing layer runs a
- *  subset (Details + Legend) — its type is fixed and its values are managed
- *  elsewhere — while creating one runs the full span. */
-export type WizardStepRange = { first: WizardStep; last: WizardStep };
+/** Editing an existing layer runs Details then Legend only — its type is fixed and
+ *  its values are managed elsewhere — which skips Data, so the two runs aren't a
+ *  contiguous span of `WIZARD_STEPS` and each is listed explicitly. */
+export const CREATE_STEPS: WizardStep[] = [
+    WIZARD_STEPS.TYPE,
+    WIZARD_STEPS.DETAILS,
+    WIZARD_STEPS.DATA,
+    WIZARD_STEPS.LEGEND,
+];
+export const EDIT_STEPS: WizardStep[] = [
+    WIZARD_STEPS.DETAILS,
+    WIZARD_STEPS.LEGEND,
+];
 
-export const CREATE_RANGE: WizardStepRange = {
-    first: WIZARD_STEPS.TYPE,
-    last: WIZARD_STEPS.DATA,
-};
-export const EDIT_RANGE: WizardStepRange = {
-    first: WIZARD_STEPS.DETAILS,
-    last: WIZARD_STEPS.LEGEND,
-};
-
-const stepsInRange = ({ first, last }: WizardStepRange): WizardStep[] => {
-    const steps: WizardStep[] = [];
-    for (let step = first; step <= last; step += 1) {
-        steps.push(step as WizardStep);
-    }
-    return steps;
-};
-
-/** Step titles, index-aligned with `WIZARD_STEPS`. The last one is overridden to
+/** Step titles, index-aligned with `WIZARD_STEPS`. The Data one is overridden to
  *  "Graph" for a composite layer (see `stepLabels` in the controller). */
 export const WIZARD_STEP_LABELS = [
     MESSAGES.wizardStepType,
     MESSAGES.wizardStepDetails,
-    MESSAGES.wizardStepLegend,
     MESSAGES.wizardStepData,
+    MESSAGES.wizardStepLegend,
 ];
 
 type StagedState = {
@@ -55,6 +47,7 @@ type StagedState = {
     /** Persisted composite shell id, once the graph step creates it (2a keeps the
      *  editor in-flow). */
     compositeLayerId?: number;
+    createdMetricTypeId?: number;
 };
 
 const INITIAL: StagedState = {
@@ -66,10 +59,8 @@ const INITIAL: StagedState = {
 };
 
 export const useDataLayerWizard = () => {
-    const [range, setRange] = useState<WizardStepRange>(CREATE_RANGE);
-    const [activeStep, setActiveStep] = useState<WizardStep>(
-        CREATE_RANGE.first,
-    );
+    const [steps, setSteps] = useState<WizardStep[]>(CREATE_STEPS);
+    const [activeStep, setActiveStep] = useState<WizardStep>(CREATE_STEPS[0]);
     const [staged, setStaged] = useState<StagedState>(INITIAL);
 
     const patch = useCallback(
@@ -78,19 +69,19 @@ export const useDataLayerWizard = () => {
         [],
     );
 
-    /** Start a fresh run over the given step range (create or edit), at its first
-     *  step, with every staged field cleared (`initialStaged` seeds it, e.g. with
-     *  the layer type an edit run already knows). */
+    /** Start a fresh run over the given steps (create or edit), at the first one,
+     *  with every staged field cleared (`initialStaged` seeds it, e.g. with the
+     *  layer type an edit run already knows). */
     const start = useCallback(
-        (nextRange: WizardStepRange, initialStaged?: Partial<StagedState>) => {
-            setRange(nextRange);
-            setActiveStep(nextRange.first);
+        (nextSteps: WizardStep[], initialStaged?: Partial<StagedState>) => {
+            setSteps(nextSteps);
+            setActiveStep(nextSteps[0]);
             setStaged({ ...INITIAL, ...initialStaged });
         },
         [],
     );
 
-    const reset = useCallback(() => start(CREATE_RANGE), [start]);
+    const reset = useCallback(() => start(CREATE_STEPS), [start]);
 
     const setLayerType = useCallback((layerType: WizardLayerType) => {
         setStaged(prev => ({
@@ -100,11 +91,16 @@ export const useDataLayerWizard = () => {
             ...(layerType === 'data'
                 ? {}
                 : { method: 'csv', csvFile: null, gridValues: {} }),
-            // A composite shell no longer belongs to a non-composite layer; the
-            // controller deletes the persisted record before this runs.
+            // A composite shell no longer belongs to a layer of a different type;
+            // the controller deletes the persisted record first.
             ...(layerType === 'composite'
                 ? {}
                 : { compositeLayerId: undefined }),
+            // Same for a standard/OpenHexa MetricType already created for a
+            // previous pick — reselecting the same type keeps it.
+            ...(layerType === prev.layerType
+                ? {}
+                : { createdMetricTypeId: undefined }),
         }));
     }, []);
 
@@ -119,20 +115,23 @@ export const useDataLayerWizard = () => {
 
     const goNext = useCallback(
         () =>
-            setActiveStep(step => Math.min(step + 1, range.last) as WizardStep),
-        [range.last],
+            setActiveStep(step => {
+                const index = steps.indexOf(step);
+                return steps[Math.min(index + 1, steps.length - 1)];
+            }),
+        [steps],
     );
     const goBack = useCallback(
         () =>
-            setActiveStep(
-                step => Math.max(step - 1, range.first) as WizardStep,
-            ),
-        [range.first],
+            setActiveStep(step => {
+                const index = steps.indexOf(step);
+                return steps[Math.max(index - 1, 0)];
+            }),
+        [steps],
     );
 
-    const steps = useMemo(() => stepsInRange(range), [range]);
-    const activeStepIndex = activeStep - range.first;
-    const lastStep = range.last;
+    const activeStepIndex = steps.indexOf(activeStep);
+    const lastStep = steps[steps.length - 1];
 
     const isCompositeGraphStep = useMemo(
         () =>

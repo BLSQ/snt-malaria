@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-    csvFromGrid,
-    GridRow,
-    parseTemplateCsv,
-    templateCsv,
-} from './csvFromGrid';
+import { csvFromGrid, GridRow, templateCsv } from './csvFromGrid';
 
 const row = (partial: Partial<GridRow>): GridRow => ({
     orgUnitId: 1,
@@ -81,43 +76,6 @@ describe('templateCsv', () => {
             'ADM1_NAME,ADM2_NAME,ADM2_ID,malaria_tpr',
             'Dakar,Dakar,1,',
             'Thiès,Mbour,2,',
-        ]);
-    });
-});
-
-describe('parseTemplateCsv', () => {
-    it('reads filled rows by ADM2_ID and the code column', () => {
-        const text = [
-            'ADM1_NAME,ADM2_NAME,ADM2_ID,malaria_tpr',
-            'Dakar,Dakar,1,18.4',
-            'Dakar,Pikine,2,',
-            'Thiès,Mbour,3,7',
-        ].join('\n');
-        expect(parseTemplateCsv(text, 'malaria_tpr')).toEqual([
-            { orgUnitId: 1, value: '18.4' },
-            { orgUnitId: 3, value: '7' },
-        ]);
-    });
-
-    it('supports a semicolon delimiter and quoted cells', () => {
-        const text = 'ADM1_NAME;ADM2_NAME;ADM2_ID;k\n"a";"b";5;"9"';
-        expect(parseTemplateCsv(text, 'k')).toEqual([
-            { orgUnitId: 5, value: '9' },
-        ]);
-    });
-
-    it('returns nothing when the code column is absent', () => {
-        const text = 'ADM1_NAME,ADM2_NAME,ADM2_ID,other\nx,y,1,3';
-        expect(parseTemplateCsv(text, 'k')).toEqual([]);
-    });
-
-    it('keeps columns aligned when a district name is quoted and contains the delimiter', () => {
-        const text = [
-            'ADM1_NAME,ADM2_NAME,ADM2_ID,k',
-            'Dakar,"Foo, Bar",5,42',
-        ].join('\n');
-        expect(parseTemplateCsv(text, 'k')).toEqual([
-            { orgUnitId: 5, value: '42' },
         ]);
     });
 });

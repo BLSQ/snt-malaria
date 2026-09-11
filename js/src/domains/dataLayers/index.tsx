@@ -55,6 +55,7 @@ import { DataLayerWizardMain } from './dataLayerWizard/DataLayerWizardMain';
 import { DataLayerWizardPanel } from './dataLayerWizard/DataLayerWizardPanel';
 import { DiscardWizardModal } from './dataLayerWizard/DiscardWizardModal';
 import { useDataLayerWizardController } from './dataLayerWizard/useDataLayerWizardController';
+import { useWizardMapPreview } from './dataLayerWizard/useWizardMapPreview';
 import { WizardLegendPreview } from './dataLayerWizard/WizardLegendPreview';
 import { WizardPreviewPlaceholder } from './dataLayerWizard/WizardPreviewPlaceholder';
 import { useDeleteMetricType } from './hooks/useDeleteMetricType';
@@ -235,7 +236,7 @@ export const DataLayers: FC = () => {
         [onCloseCompositeEditor],
     );
 
-    // Four-step creation wizard (Type -> Details -> Legend -> Data/Graph); editing
+    // Four-step creation wizard (Type -> Details -> Data/Graph -> Legend); editing
     // an existing layer runs its Details + Legend steps pre-filled.
     const onWizardCreated = useCallback((metricType?: MetricType) => {
         if (metricType) {
@@ -247,6 +248,7 @@ export const DataLayers: FC = () => {
         categoryOptions: existingCategoryOptions,
         onClosed: onCloseCompositeEditor,
     });
+    const wizardPreview = useWizardMapPreview(wizard);
 
     const onEditMetricType = useCallback(
         (metricType: MetricType) =>
@@ -398,6 +400,7 @@ export const DataLayers: FC = () => {
             return (
                 <DataLayerWizardPanel
                     controller={wizard}
+                    preview={wizardPreview}
                     showOpenHexa={showOpenHexaLayers}
                     showComposite={showCompositeLayers}
                     orgUnits={orgUnits || []}
@@ -428,6 +431,11 @@ export const DataLayers: FC = () => {
                 showCompositeLayers={showCompositeLayers}
                 compositeLayerId={compositeLayerIdFor(displayedMetricType)}
                 onEditComposite={onEditCompositeLayer}
+                importStatus={
+                    displayedMetricType
+                        ? openHexaImportStatus?.[displayedMetricType.id]
+                        : undefined
+                }
             />
             <DataLayerComparisonContainer />
         </Stack>
@@ -477,6 +485,7 @@ export const DataLayers: FC = () => {
                 return (
                     <DataLayerWizardMain
                         controller={wizard}
+                        preview={wizardPreview}
                         orgUnits={orgUnits || []}
                     />
                 );
@@ -484,6 +493,7 @@ export const DataLayers: FC = () => {
                 return (
                     <WizardLegendPreview
                         controller={wizard}
+                        preview={wizardPreview}
                         orgUnits={orgUnits || []}
                     />
                 );

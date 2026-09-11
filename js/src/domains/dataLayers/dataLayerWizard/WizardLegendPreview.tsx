@@ -1,119 +1,66 @@
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { FC } from 'react';
 import { Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { isConcreteLegend } from '../../../constants/legend';
-import { legendConfigFromForm } from '../dataLayerForm/legendScale';
-import { DataLayerMap, MapLegendConfig } from '../dataLayerMap/DataLayerMap';
 import { MESSAGES } from '../messages';
-import { MetricValue, ScaleDomainRange } from '../types/metrics';
-import { parseTemplateCsv } from './csvFromGrid';
+import { OpenHexaImportStatusMessage } from './OpenHexaImportStatusMessage';
 import { DataLayerWizardController } from './useDataLayerWizardController';
+import { WizardMapPreview } from './useWizardMapPreview';
+import { WizardDataMapPreview } from './WizardDataMapPreview';
 import { WizardMainCard } from './WizardMainCard';
 import { WizardPreviewPlaceholder } from './WizardPreviewPlaceholder';
 
 type Props = {
     controller: DataLayerWizardController;
+    preview: WizardMapPreview;
     orgUnits: OrgUnit[];
 };
 
-const toMetricValue = (orgUnitId: number, raw: string): MetricValue => {
-    const numeric = Number(raw);
-    return {
-        id: -orgUnitId,
-        metric_type: -1,
-        org_unit: orgUnitId,
-        year: null,
-        value: Number.isFinite(numeric) ? numeric : (null as unknown as number),
-        string_value: Number.isFinite(numeric) ? '' : raw,
-    };
-};
-
-/** Legend-step map preview built from the values staged in the wizard (manual grid
- *  or the uploaded CSV) and the legend currently being edited — never the layer that
- *  happened to be selected before the wizard opened. Composite layers configure
- *  their legend before the graph exists, and OpenHexa values arrive only after the
- *  post-create import, so both get a placeholder here. */
-export const WizardLegendPreview: FC<Props> = ({ controller, orgUnits }) => {
+/** Legend-step map preview. Every layer type is already created by the time this
+ *  step is reached (see `useDataLayerWizardController.goNext`) — a standard layer's
+ *  values were imported leaving Data, a composite's graph was saved, and an OpenHexa
+ *  layer's import is running in the background — so this just fetches the real
+ *  thing, coloured with the legend currently being edited. Never the layer that
+ *  happened to be selected before the wizard opened. */
+export const WizardLegendPreview: FC<Props> = ({
+    controller,
+    preview,
+    orgUnits,
+}) => {
     const { formatMessage } = useSafeIntl();
-    const { formik, staged } = controller;
+    const { formik } = controller;
+    const {
+        ready,
+        isOpenHexa,
+        isComposite,
+        createdMetricTypeId,
+        openHexaStatus,
+        metricValues,
+        legendConfig,
+    } = preview;
     const values = formik.values;
 
-    // Decode the uploaded file once; re-parsing on a `code` change is cheap.
-    const [csvText, setCsvText] = useState<string>('');
-    useEffect(() => {
-        if (staged.method !== 'csv' || !staged.csvFile) {
-            setCsvText('');
-            return undefined;
-        }
-        let cancelled = false;
-        staged.csvFile.text().then(text => {
-            if (!cancelled) setCsvText(text);
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, [staged.method, staged.csvFile]);
-
-    const legendConfig: MapLegendConfig = useMemo(
-        () => ({
-            units: values.units,
-            unit_symbol: values.unit_symbol,
-            legend_type: values.legend_type,
-            legend_config: (isConcreteLegend(values.legend_type)
-                ? legendConfigFromForm(
-                      values.legend_type,
-                      values.legend_config,
-                      values.legend_top_color,
-                  )
-                : { domain: [], range: [] }) as ScaleDomainRange,
-        }),
-        [
-            values.units,
-            values.unit_symbol,
-            values.legend_type,
-            values.legend_config,
-            values.legend_top_color,
-        ],
-    );
-
-    const metricValues = useMemo(() => {
-        if (staged.method === 'manual') {
-            return Object.entries(staged.gridValues)
-                .filter(([, raw]) => raw.trim() !== '')
-                .map(([orgUnitId, raw]) =>
-                    toMetricValue(Number(orgUnitId), raw.trim()),
-                );
-        }
-        return parseTemplateCsv(csvText, values.code).map(row =>
-            toMetricValue(row.orgUnitId, row.value),
-        );
-    }, [staged.method, staged.gridValues, csvText, values.code]);
-
-    if (staged.layerType === 'composite') {
-        return <WizardPreviewPlaceholder />;
-    }
-    if (staged.layerType === 'openhexa') {
+    if (isOpenHexa && !ready) {
         return (
-            <WizardPreviewPlaceholder
-                message={MESSAGES.wizardPreviewAfterImport}
-            />
+            <WizardMainCard centered>
+                <OpenHexaImportStatusMessage status={openHexaStatus} />
+            </WizardMainCard>
         );
+    }
+    if (isComposite && !createdMetricTypeId) {
+        return <WizardPreviewPlaceholder />;
     }
 
     return (
-        <WizardMainCard
+        <WizardDataMapPreview
             header={
                 <Typography variant="h6" noWrap>
                     {values.name || formatMessage(MESSAGES.wizardStepLegend)}
                 </Typography>
             }
-        >
-            <DataLayerMap
-                legendConfig={legendConfig}
-                metricValues={metricValues}
-                orgUnits={orgUnits}
-            />
-        </WizardMainCard>
+            legendConfig={legendConfig}
+            metricValues={metricValues}
+            orgUnits={orgUnits}
+        />
     );
 };
