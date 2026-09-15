@@ -216,11 +216,38 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(composite_layer.metric_type.legend_config, legend_config)
 
     def test_create_with_invalid_legend_config_returns_400(self):
+        """An ordinal legend needs one colour per domain entry, so a shorter 'range' is rejected."""
         self.client.force_authenticate(user=self.user)
         payload = {
             "name": "Bad legend",
             "legend_type": "ordinal",
             "legend_config": {"domain": [1, 2], "range": ["#aaaaaa"]},
+        }
+        response = self.client.post(self.BASE_URL, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("legend_config", response.data)
+
+    def test_create_with_threshold_legend_stores_open_ended_range(self):
+        """A threshold legend's 'range' carries one extra colour for the bucket above the last
+        breakpoint, so domain=N/range=N+1 must be accepted rather than requiring equal lengths."""
+        self.client.force_authenticate(user=self.user)
+        legend_config = {"domain": [10, 20], "range": ["#aaaaaa", "#bbbbbb", "#cccccc"]}
+        payload = {"name": "Threshold legend", "legend_type": "threshold", "legend_config": legend_config}
+        response = self.client.post(self.BASE_URL, payload, format="json")
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+
+        composite_layer = CompositeLayer.objects.get(id=result["id"])
+        self.assertEqual(composite_layer.legend_type, MetricType.LegendType.THRESHOLD)
+        self.assertEqual(composite_layer.legend_config, legend_config)
+
+    def test_create_with_threshold_legend_and_equal_length_range_returns_400(self):
+        """A threshold legend missing its open-ended top-bucket colour (equal domain/range lengths)
+        is a genuine mismatch, not the valid shape — it must still be rejected."""
+        self.client.force_authenticate(user=self.user)
+        payload = {
+            "name": "Bad threshold legend",
+            "legend_type": "threshold",
+            "legend_config": {"domain": [10, 20], "range": ["#aaaaaa", "#bbbbbb"]},
         }
         response = self.client.post(self.BASE_URL, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -368,7 +395,7 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
 
     def test_patch_legend_auto_clears_manual_config(self):
         composite_layer = self._create_composite_layer()
-        legend_config = {"domain": [10, 20], "range": ["#aaaaaa", "#bbbbbb"]}
+        legend_config = {"domain": [10, 20], "range": ["#aaaaaa", "#bbbbbb", "#cccccc"]}
         self.client.patch(
             f"{self.BASE_URL}{composite_layer.id}/",
             {"legend_type": "threshold", "legend_config": legend_config},

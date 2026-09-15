@@ -515,15 +515,18 @@ export const useDataLayerWizardController = ({
     const onCompositeGraphSaved = useCallback(
         (metricType?: MetricType) => {
             if (metricType) {
-                formik.setFieldValue('legend_type', metricType.legend_type);
-                formik.setFieldValue(
-                    'legend_config',
-                    scaleFromDomainRange(metricType.legend_config),
-                );
-                formik.setFieldValue(
-                    'legend_top_color',
-                    initialTopColor(metricType.legend_config),
-                );
+                // A single `setValues` call so Formik validates the fully merged legend
+                // fields once — three separate `setFieldValue` calls each validate
+                // against a stale snapshot missing the other two, which can leave
+                // `isValid` (and the Submit button) stuck on a spurious error.
+                formik.setValues({
+                    ...formik.values,
+                    legend_type: metricType.legend_type,
+                    legend_config: scaleFromDomainRange(
+                        metricType.legend_config,
+                    ),
+                    legend_top_color: initialTopColor(metricType.legend_config),
+                });
             }
             goNext();
         },
