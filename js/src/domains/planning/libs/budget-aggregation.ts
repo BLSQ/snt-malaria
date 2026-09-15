@@ -6,11 +6,11 @@ import {
 } from '../types/budget';
 
 /** Group items by key, merging duplicates via `merge`. */
-function mergeByKey<T>(
+const mergeByKey = <T>(
     items: T[],
     getKey: (item: T) => string,
     merge: (existing: T, incoming: T) => T,
-): T[] {
+): T[] => {
     const map = new Map<string, T>();
     items.forEach(item => {
         const key = getKey(item);
@@ -18,7 +18,7 @@ function mergeByKey<T>(
         map.set(key, existing ? merge(existing, item) : { ...item });
     });
     return Array.from(map.values());
-}
+};
 
 type CostLineKeyFn = (line: BudgetInterventionCostLine) => string;
 
@@ -30,21 +30,21 @@ const byCategory: CostLineKeyFn = line => line.category;
 const byCategoryUnitAndLayer: CostLineKeyFn = line =>
     `${line.category}::${line.cost_unit_name ?? ''}::${line.target_population_layer_id ?? ''}`;
 
-function mergeCostLines(
+const mergeCostLines = (
     lines: BudgetInterventionCostLine[],
     getKey: CostLineKeyFn = byCategory,
-): BudgetInterventionCostLine[] {
+): BudgetInterventionCostLine[] => {
     return mergeByKey(lines, getKey, (a, b) => ({
         ...a,
         total_cost: a.total_cost + b.total_cost,
         quantity: a.quantity + b.quantity,
     }));
-}
+};
 
-function mergeInterventions(
+const mergeInterventions = (
     interventions: BudgetIntervention[],
     getLineKey: CostLineKeyFn = byCategory,
-): BudgetIntervention[] {
+): BudgetIntervention[] => {
     return mergeByKey(
         interventions,
         intervention => String(intervention.id),
@@ -57,12 +57,12 @@ function mergeInterventions(
             ),
         }),
     );
-}
+};
 
-function mergeOrgUnits(
+const mergeOrgUnits = (
     orgUnits: BudgetOrgUnit[],
     getLineKey: CostLineKeyFn = byCategory,
-): BudgetOrgUnit[] {
+): BudgetOrgUnit[] => {
     return mergeByKey(
         orgUnits,
         orgUnit => String(orgUnit.org_unit_id),
@@ -75,7 +75,7 @@ function mergeOrgUnits(
             ),
         }),
     );
-}
+};
 
 /**
  * Collapses a scenario's per-year `Budget[]` into one synthetic budget
