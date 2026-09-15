@@ -12,6 +12,7 @@ import {
     formatPercentValue,
     percentOfTotal,
 } from '../../../libs/cost-utils';
+import { isAllYears } from '../useComparisonSlots';
 import { SlotComparisonRow, SlotComparisonTable } from './SlotComparisonTable';
 
 export const PopulationCoverageWidget: FC = () => {
@@ -24,7 +25,18 @@ export const PopulationCoverageWidget: FC = () => {
         populationYear,
     } = useScenarioComparisonContext();
 
+    // Persons-at-risk and %-eligible are per-year figures with no meaningful
+    // sum across years, so the table is replaced by an explanatory message
+    // whenever a slot is set to "All years".
+    const unavailableForAllYears = useMemo(
+        () => slots.some(slot => isAllYears(slot.year)),
+        [slots],
+    );
+
     const rows = useMemo<SlotComparisonRow[]>(() => {
+        if (unavailableForAllYears) {
+            return [];
+        }
         const coverageBySlotKey = new Map(
             slots.map(slot => [
                 slot.key,
@@ -56,11 +68,15 @@ export const PopulationCoverageWidget: FC = () => {
                 }),
             ),
         }));
-    }, [slots, budgetsBySlotKey, totalPopulation]);
+    }, [slots, budgetsBySlotKey, totalPopulation, unavailableForAllYears]);
 
     const title = formatMessage(MESSAGES.comparisonPopulationCoverageTitle);
     const titleWithYear =
         populationYear != null ? `${title} (${populationYear})` : title;
+
+    const emptyMessage = unavailableForAllYears
+        ? formatMessage(MESSAGES.comparisonPopulationCoverageAllYears)
+        : formatMessage(MESSAGES.noBudgetData);
 
     return (
         <SlotComparisonTable
@@ -77,7 +93,7 @@ export const PopulationCoverageWidget: FC = () => {
                 formatMessage(MESSAGES.comparisonPercentTotalPop),
             ]}
             rows={rows}
-            emptyMessage={formatMessage(MESSAGES.noBudgetData)}
+            emptyMessage={emptyMessage}
         />
     );
 };

@@ -6,11 +6,11 @@ import {
 } from '../types/budget';
 
 /** Group items by key, merging duplicates via `merge`. */
-function mergeByKey<T>(
+const mergeByKey = <T>(
     items: T[],
     getKey: (item: T) => string,
     merge: (existing: T, incoming: T) => T,
-): T[] {
+): T[] => {
     const map = new Map<string, T>();
     items.forEach(item => {
         const key = getKey(item);
@@ -18,49 +18,84 @@ function mergeByKey<T>(
         map.set(key, existing ? merge(existing, item) : { ...item });
     });
     return Array.from(map.values());
-}
+};
 
-function mergeCostLines(
+type CostLineKeyFn = (line: BudgetInterventionCostLine) => string;
+
+const byCategory: CostLineKeyFn = line => line.category;
+
+// Keeps procurement lines distinct by commodity unit and population layer, so
+// the per-commodity / per-layer widgets still see real sub-rows after an
+// across-years merge that `byCategory` would otherwise collapse into one line.
+const byCategoryUnitAndLayer: CostLineKeyFn = line =>
+    `${line.category}::${line.cost_unit_name ?? ''}::${line.target_population_layer_id ?? ''}`;
+
+const mergeCostLines = (
     lines: BudgetInterventionCostLine[],
-): BudgetInterventionCostLine[] {
-    return mergeByKey(
-        lines,
-        line => line.category,
-        (a, b) => ({ ...a, total_cost: a.total_cost + b.total_cost }),
-    );
-}
+    getKey: CostLineKeyFn = byCategory,
+): BudgetInterventionCostLine[] => {
+    return mergeByKey(lines, getKey, (a, b) => ({
+        ...a,
+        total_cost: a.total_cost + b.total_cost,
+        quantity: a.quantity + b.quantity,
+    }));
+};
 
-function mergeInterventions(
+const mergeInterventions = (
     interventions: BudgetIntervention[],
-): BudgetIntervention[] {
+    getLineKey: CostLineKeyFn = byCategory,
+): BudgetIntervention[] => {
     return mergeByKey(
         interventions,
         intervention => String(intervention.id),
         (a, b) => ({
             ...a,
             total_cost: a.total_cost + b.total_cost,
-            cost_breakdown: mergeCostLines([
-                ...(a.cost_breakdown ?? []),
-                ...(b.cost_breakdown ?? []),
-            ]),
+            cost_breakdown: mergeCostLines(
+                [...(a.cost_breakdown ?? []), ...(b.cost_breakdown ?? [])],
+                getLineKey,
+            ),
         }),
     );
-}
+};
 
-function mergeOrgUnits(orgUnits: BudgetOrgUnit[]): BudgetOrgUnit[] {
+const mergeOrgUnits = (
+    orgUnits: BudgetOrgUnit[],
+    getLineKey: CostLineKeyFn = byCategory,
+): BudgetOrgUnit[] => {
     return mergeByKey(
         orgUnits,
         orgUnit => String(orgUnit.org_unit_id),
         (a, b) => ({
             ...a,
             total_cost: a.total_cost + b.total_cost,
-            interventions: mergeInterventions([
-                ...(a.interventions ?? []),
-                ...(b.interventions ?? []),
-            ]),
+            interventions: mergeInterventions(
+                [...(a.interventions ?? []), ...(b.interventions ?? [])],
+                getLineKey,
+            ),
         }),
     );
-}
+};
+
+/**
+ * Collapses a scenario's per-year `Budget[]` into one synthetic budget
+ * covering every year: costs and quantities are summed, and an org unit /
+ * commodity / population layer is kept if it appears in any year. Powers the
+ * Comparison tab's "All years" slot selection. `year` is 0 -- no real budget
+ * spans year 0, so it doubles as the "all years" sentinel.
+ */
+export const mergeBudgets = (budgets: Budget[]): Budget => ({
+    year: 0,
+    total_cost: budgets.reduce((sum, budget) => sum + budget.total_cost, 0),
+    interventions: mergeInterventions(
+        budgets.flatMap(budget => budget.interventions ?? []),
+        byCategoryUnitAndLayer,
+    ),
+    org_units_costs: mergeOrgUnits(
+        budgets.flatMap(budget => budget.org_units_costs ?? []),
+        byCategoryUnitAndLayer,
+    ),
+});
 
 /**
  * Flattens per-year org-unit costs into a single "entire period" list,
