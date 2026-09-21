@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-21 12:43+0000\n"
+"POT-Creation-Date: 2026-09-21 13:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -109,15 +109,6 @@ msgstr "Impossible d'obtenir une URL de téléchargement pour « {filename} »."
 msgid "File '{filename}' is not valid JSON: {error}"
 msgstr "Le fichier « {filename} » n'est pas un JSON valide : {error}"
 
-#: plugins/snt_malaria/api/openhexa_data_layers/metadata.py
-#, python-format
-msgid ""
-"A '%(legend_type)s' legend needs %(expected)s scale breaks, but this layer "
-"defines %(scale_count)s."
-msgstr ""
-"Une légende '%(legend_type)s' nécessite %(expected)s seuils, mais cette "
-"couche en définit %(scale_count)s."
-
 #: plugins/snt_malaria/api/openhexa_data_layers/importer.py
 #, python-brace-format
 msgid "The source file has no '{column}' column."
@@ -129,6 +120,15 @@ msgid "{rows} rows read, {matched} org units matched, writing {count} values"
 msgstr ""
 "{rows} lignes lues, {matched} unités d'organisation correspondantes, "
 "écriture de {count} valeurs"
+
+#: plugins/snt_malaria/api/openhexa_data_layers/metadata.py
+#, python-format
+msgid ""
+"A '%(legend_type)s' legend needs %(expected)s scale breaks, but this layer "
+"defines %(scale_count)s."
+msgstr ""
+"Une légende '%(legend_type)s' nécessite %(expected)s seuils, mais cette "
+"couche en définit %(scale_count)s."
 
 #: plugins/snt_malaria/api/openhexa_data_layers/serializers.py
 msgid "This data layer is not defined in OpenHexa."
@@ -236,6 +236,11 @@ msgstr "Configuration - Lecture"
 #: plugins/snt_malaria/permissions.py
 msgid "Settings - Write"
 msgstr "Configuration - Écriture"
+
+#: plugins/snt_malaria/tasks/import_openhexa_data_layer.py
+#, python-brace-format
+msgid "Data layer '{code}' is no longer defined in SNT_metadata.json"
+msgstr "La couche de données '{code}' n'est plus définie dans SNT_metadata.json"
 
 #, python-brace-format
 #~ msgid "Writing {count} values"

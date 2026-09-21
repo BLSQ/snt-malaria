@@ -6,6 +6,8 @@ source CSV named by the layer's SOURCE_DATA and (re)builds its MetricValue rows.
 
 import logging
 
+from django.utils.translation import gettext_lazy as _
+
 from beanstalk_worker import task_decorator
 from iaso.models import MetricType, Task
 from plugins.snt_malaria.api.openhexa_data_layers.client import (
@@ -48,7 +50,9 @@ def import_openhexa_data_layer(metric_type_id: int, task: Task = None):
 
     definition = metadata.get(metric_type.code)
     if not isinstance(definition, dict):
-        raise ValueError(f"Data layer '{metric_type.code}' is no longer defined in SNT_metadata.json")
+        raise ValueError(
+            _("Data layer '{code}' is no longer defined in SNT_metadata.json").format(code=metric_type.code)
+        )
     logger.info(
         "import_openhexa_data_layer: '%s' SOURCE_DATA=%s, SNT_config COUNTRY_CODE=%s, dataset identifiers=%s",
         metric_type.code,
