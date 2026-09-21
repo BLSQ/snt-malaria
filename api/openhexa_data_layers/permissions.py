@@ -8,6 +8,9 @@ class OpenHexaDataLayerPermission(permissions.BasePermission):
         user = request.user
         if not user or not user.is_authenticated or not hasattr(user, "iaso_profile"):
             return False
-        return user.has_perm(SNT_SETTINGS_READ_PERMISSION.full_name()) or user.has_perm(
-            SNT_SETTINGS_WRITE_PERMISSION.full_name()
-        )
+        if request.method in permissions.SAFE_METHODS:
+            return user.has_perm(SNT_SETTINGS_READ_PERMISSION.full_name()) or user.has_perm(
+                SNT_SETTINGS_WRITE_PERMISSION.full_name()
+            )
+        # Importing a data layer writes MetricType + MetricValue rows.
+        return user.has_perm(SNT_SETTINGS_WRITE_PERMISSION.full_name())

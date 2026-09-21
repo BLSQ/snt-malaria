@@ -22,8 +22,10 @@ import { SxStyles } from 'Iaso/types/general';
 import * as CorePermission from 'Iaso/utils/permissions';
 import { useDataLayerComparisonContext } from '../contexts/DataLayerComparisonContext';
 import { DATA_LAYER_DND_MIME } from '../dragAndDrop';
+import { OpenHexaImportStatus } from '../hooks/useGetOpenHexaImportStatus';
 import { MESSAGES } from '../messages';
 import { MetricType } from '../types/metrics';
+import { ImportStatusIndicator } from './ImportStatusIndicator';
 
 type Props = {
     metricType: MetricType;
@@ -33,6 +35,10 @@ type Props = {
     /** Set when this layer is a composite, to show the composite icon. */
     compositeLayerId?: number;
     onDelete: (metricType: number) => void;
+    /** Re-run the OpenHexa value import (only offered for openhexa-origin layers). */
+    onRefreshOpenHexaLayer: (metricType: MetricType) => void;
+    /** Latest OpenHexa value-import task status for this layer, if any. */
+    importStatus?: OpenHexaImportStatus;
     /** While the composite editor is open, the row is a drag source rather than a selector. */
     editing?: boolean;
 };
@@ -80,6 +86,8 @@ export const DataLayerLine: FC<Props> = ({
     onEdit,
     compositeLayerId,
     onDelete,
+    onRefreshOpenHexaLayer,
+    importStatus,
     editing = false,
 }) => {
     const isComposite = compositeLayerId !== undefined;
@@ -182,6 +190,7 @@ export const DataLayerLine: FC<Props> = ({
                         />
                     )}
                     <Typography variant="body2">{metricType.name}</Typography>
+                    <ImportStatusIndicator importStatus={importStatus} />
                 </Box>
             </Box>
             <Box
@@ -217,6 +226,18 @@ export const DataLayerLine: FC<Props> = ({
                             <MenuItem onClick={() => onEdit(metricType)}>
                                 {formatMessage(MESSAGES.editLayer)}
                             </MenuItem>
+                            {metricType.origin === 'openhexa' && (
+                                <MenuItem
+                                    onClick={() => {
+                                        setShowMoreActions(false);
+                                        onRefreshOpenHexaLayer(metricType);
+                                    }}
+                                >
+                                    {formatMessage(
+                                        MESSAGES.refreshFromOpenHexa,
+                                    )}
+                                </MenuItem>
+                            )}
                             <DeleteModal
                                 type="menuItem"
                                 onConfirm={() => onDelete(metricType.id)}
