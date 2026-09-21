@@ -31,6 +31,12 @@ def _normalize(identifier: str) -> str:
 
 
 def _lookup_dataset_slug(dataset_name: str, identifiers: dict) -> str:
+    # Prefer an exact key match; only fall back to prefix-insensitive matching so an
+    # SNT_config that happens to define both "X" and "SNT_X" still resolves deterministically.
+    if dataset_name in identifiers:
+        logger.info("SOURCE_DATA dataset '%s' -> dataset slug '%s'", dataset_name, identifiers[dataset_name])
+        return identifiers[dataset_name]
+
     by_normalized = {_normalize(key): (key, slug) for key, slug in identifiers.items()}
     match = by_normalized.get(_normalize(dataset_name))
     if not match:
@@ -71,6 +77,8 @@ def resolve_source_file(definition: dict, snt_config: dict) -> SourceFile:
     dataset_slug = _lookup_dataset_slug(dataset_name, identifiers)
 
     country_code = (snt_config.get("SNT_CONFIG") or {}).get("COUNTRY_CODE") or ""
+    if "{COUNTRY_CODE}" in filename_template and not country_code:
+        raise ValidationError(_("SNT_config.json does not define SNT_CONFIG.COUNTRY_CODE."))
     filename = filename_template.replace("{COUNTRY_CODE}", country_code)
 
     return SourceFile(dataset_slug=dataset_slug, filename=filename, column=column)

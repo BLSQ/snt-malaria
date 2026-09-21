@@ -17,7 +17,11 @@ import { useMetricTypeFormState } from '../hooks/useMetricTypeFormState';
 import { MESSAGES } from '../messages';
 import { MetricType, MetricTypeFormModel } from '../types/metrics';
 import { MetricTypeForm } from './DataLayerForm';
-import { domainRangeFromScale, scaleFromDomainRange } from './legendScale';
+import {
+    initialTopColor,
+    legendConfigFromForm,
+    scaleFromDomainRange,
+} from './legendScale';
 
 interface MetricTypeDialogProps {
     open: boolean;
@@ -119,9 +123,7 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
                 is_population: metricType.metric_kind === 'population',
                 is_composite: isEditingComposite,
                 legend_config: scaleFromDomainRange(legendSource),
-                legend_range_tail: (legendSource?.range ?? []).slice(
-                    (legendSource?.domain ?? []).length,
-                ),
+                legend_top_color: initialTopColor(legendSource),
             };
         }
         return undefined;
@@ -140,7 +142,11 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
                 is_population: !!values.is_population,
                 legend_type: values.legend_type,
                 legend_config: isConcreteLegend(values.legend_type)
-                    ? domainRangeFromScale(values.legend_config)
+                    ? legendConfigFromForm(
+                          values.legend_type,
+                          values.legend_config,
+                          values.legend_top_color,
+                      )
                     : undefined,
             },
             {
@@ -157,12 +163,13 @@ export const DataLayerDialog: FC<MetricTypeDialogProps> = ({
 
     const submitDataLayer = ({
         is_composite: _isComposite,
-        legend_range_tail,
+        legend_top_color,
         ...values
     }: MetricTypeFormModel) => {
-        const legend_config = domainRangeFromScale(
+        const legend_config = legendConfigFromForm(
+            values.legend_type,
             values.legend_config,
-            legend_range_tail,
+            legend_top_color,
         );
         // Creating an OpenHexa layer goes through the import endpoint (shell + task);
         // editing one (id present) still PATCHes /api/metrictypes/ - colours only, no re-download.

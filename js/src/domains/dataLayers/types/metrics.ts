@@ -34,8 +34,10 @@ export type MetricTypeFormModel = {
     legend_type: string;
     origin: string;
     legend_config: Scale[];
-    /** OpenHexa legend colours beyond the editable scale rows (the extra top bucket). */
-    legend_range_tail?: string[];
+    /** Threshold legends have one more bucket than breaks: this colours the open-ended
+     *  `>= last break` one. Kept out of `legend_config` so its row count still matches the
+     *  breaks; only read when the legend type `hasOpenEndedTopBucket`. */
+    legend_top_color: string;
     is_population?: boolean;
     /** Composite = a layer built with the node editor rather than imported values. */
     is_composite?: boolean;

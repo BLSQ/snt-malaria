@@ -212,6 +212,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.scale',
         defaultMessage: 'Scale',
     },
+    legendTopColor: {
+        id: 'iaso.snt_malaria.settings.dataLayers.legendTopColor',
+        defaultMessage: 'Colour for values above the last break',
+    },
     scaleItemsCount: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.scaleItemsCount',
         defaultMessage: 'Invalid number of scale items',

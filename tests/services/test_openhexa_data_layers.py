@@ -49,6 +49,18 @@ class ImportMetricValuesTestCase(SNTMalariaTestCase):
         import_metric_values(self.metric_type, timeless, "INCIDENCE_CRUDE")
         self.assertIsNone(MetricValue.objects.get(metric_type=self.metric_type).year)
 
+    def test_unparseable_year_is_treated_as_timeless_not_a_crash(self):
+        import_metric_values(
+            self.metric_type, "ADM2_ID,YEAR,INCIDENCE_CRUDE\nOU1,2024.0,10\nOU2,N/A,3\n", "INCIDENCE_CRUDE"
+        )
+        self.assertEqual(MetricValue.objects.filter(metric_type=self.metric_type, year__isnull=True).count(), 2)
+
+    def test_raises_and_keeps_values_when_nothing_matches(self):
+        import_metric_values(self.metric_type, "ADM2_ID,INCIDENCE_CRUDE\nOU1,1\nOU2,2\n", "INCIDENCE_CRUDE")
+        with self.assertRaises(ValidationError):
+            import_metric_values(self.metric_type, "ADM2_ID,INCIDENCE_CRUDE\nGHOST,1\n", "INCIDENCE_CRUDE")
+        self.assertEqual(MetricValue.objects.filter(metric_type=self.metric_type).count(), 2)
+
     def test_non_numeric_value_goes_to_string_value(self):
         import_metric_values(self.metric_type, "ADM2_ID,INCIDENCE_CRUDE\nOU1,high\n", "INCIDENCE_CRUDE")
         value = MetricValue.objects.get(metric_type=self.metric_type)
