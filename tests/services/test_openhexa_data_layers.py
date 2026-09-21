@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 
 from iaso.models import MetricType, MetricValue, OrgUnit
-from plugins.snt_malaria.api.openhexa_data_layers.importer import import_metric_values
+from plugins.snt_malaria.services.openhexa_data_layers import import_metric_values
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 

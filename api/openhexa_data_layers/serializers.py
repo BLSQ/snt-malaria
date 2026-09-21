@@ -4,8 +4,12 @@ from rest_framework import serializers
 
 from iaso.api.common.serializer_fields import JSONSchemaField
 from iaso.models import MetricType
+from plugins.snt_malaria.providers.openhexa_data_layers import (
+    METADATA_FILENAME,
+    fetch_dataset_json,
+    resolve_config_dataset,
+)
 
-from .client import METADATA_FILENAME, fetch_dataset_json, resolve_config_dataset
 from .metadata import build_data_layer
 
 

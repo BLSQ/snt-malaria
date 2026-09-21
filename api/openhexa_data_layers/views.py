@@ -11,9 +11,13 @@ from rest_framework.response import Response
 
 from iaso.api.tasks.serializers import TaskSerializer
 from iaso.models import Task
+from plugins.snt_malaria.providers.openhexa_data_layers import (
+    METADATA_FILENAME,
+    fetch_dataset_json,
+    resolve_config_dataset,
+)
 from plugins.snt_malaria.tasks.import_openhexa_data_layer import import_openhexa_data_layer
 
-from .client import METADATA_FILENAME, fetch_dataset_json, resolve_config_dataset
 from .constants import IMPORT_TASK_NAME
 from .metadata import parse_data_layers
 from .permissions import OpenHexaDataLayerPermission

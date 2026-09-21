@@ -8,10 +8,9 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from iaso.utils.openhexa import get_openhexa_config
+from plugins.snt_malaria.api.openhexa_data_layers.constants import CONFIG_DATASET_KEY
+from plugins.snt_malaria.api.openhexa_data_layers.jsonc import loads_jsonc
 from plugins.snt_malaria.management.commands.support.openhexa_client import OpenHEXAClient
-
-from .constants import CONFIG_DATASET_KEY
-from .jsonc import loads_jsonc
 
 
 logger = logging.getLogger(__name__)

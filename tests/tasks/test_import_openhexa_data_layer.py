@@ -2,7 +2,7 @@ from unittest import mock
 
 from iaso.models import MetricType, MetricValue, OrgUnit, Task
 from iaso.models.base import ERRORED, SUCCESS
-from plugins.snt_malaria.api.openhexa_data_layers.client import CONFIG_FILENAME, METADATA_FILENAME
+from plugins.snt_malaria.providers.openhexa_data_layers import CONFIG_FILENAME, METADATA_FILENAME
 from plugins.snt_malaria.tasks.import_openhexa_data_layer import import_openhexa_data_layer
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 

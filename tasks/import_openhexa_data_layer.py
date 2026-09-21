@@ -10,16 +10,16 @@ from django.utils.translation import gettext_lazy as _
 
 from beanstalk_worker import task_decorator
 from iaso.models import MetricType, Task
-from plugins.snt_malaria.api.openhexa_data_layers.client import (
+from plugins.snt_malaria.api.openhexa_data_layers.constants import IMPORT_TASK_NAME
+from plugins.snt_malaria.api.openhexa_data_layers.source import resolve_source_file
+from plugins.snt_malaria.providers.openhexa_data_layers import (
     CONFIG_FILENAME,
     METADATA_FILENAME,
     download_dataset_file,
     fetch_dataset_jsons,
     resolve_config_dataset,
 )
-from plugins.snt_malaria.api.openhexa_data_layers.constants import IMPORT_TASK_NAME
-from plugins.snt_malaria.api.openhexa_data_layers.importer import import_metric_values
-from plugins.snt_malaria.api.openhexa_data_layers.source import resolve_source_file
+from plugins.snt_malaria.services.openhexa_data_layers import import_metric_values
 
 
 logger = logging.getLogger(__name__)
