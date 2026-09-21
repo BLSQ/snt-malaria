@@ -7,6 +7,8 @@ proper multi-language handling comes later.
 
 from typing import Any
 
+from django.utils.translation import gettext_lazy as _
+
 from iaso.models.metric import MetricType
 from iaso.utils.legend import NINE_SHADES, ORDINAL, get_range_from_count
 
@@ -50,7 +52,11 @@ def _scale_error(legend_type: str, scale_count: int) -> str:
     if low <= scale_count <= high:
         return ""
     expected = str(low) if low == high else f"{low}-{high}"
-    return f"A '{legend_type}' legend needs {expected} scale breaks, but this layer defines {scale_count}."
+    return _("A '%(legend_type)s' legend needs %(expected)s scale breaks, but this layer defines %(scale_count)s.") % {
+        "legend_type": legend_type,
+        "expected": expected,
+        "scale_count": scale_count,
+    }
 
 
 def build_data_layer(code: str, definition: dict) -> dict:
