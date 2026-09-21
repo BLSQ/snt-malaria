@@ -328,6 +328,14 @@ class ImportOpenHexaDataLayerTestCase(SNTMalariaAPITestCase):
         response = self.client.post(self.BASE_URL, data={"code": "INCIDENCE_CRUDE"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    @patch(SERIALIZER_FETCH_PATH, side_effect=RuntimeError("boom"))
+    def test_returns_502_when_openhexa_fetch_fails(self, _mock_fetch):
+        self.client.force_authenticate(self.user)
+        response = self.client.post(self.BASE_URL, data={"code": "INCIDENCE_CRUDE"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
+        self.assertFalse(MetricType.objects.filter(account=self.account, code="INCIDENCE_CRUDE").exists())
+
     def test_import_status_returns_latest_task_per_metric_type(self):
         from iaso.models import Task
         from plugins.snt_malaria.api.openhexa_data_layers.constants import IMPORT_TASK_NAME

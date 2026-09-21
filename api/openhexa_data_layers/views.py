@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.response import Response
 
 from iaso.api.tasks.serializers import TaskSerializer
@@ -67,9 +68,20 @@ class OpenHexaDataLayerViewSet(viewsets.ViewSet):
         is upserted synchronously; the ``import_openhexa_data_layer`` task then loads the
         values from the layer's source file.
         """
+        account = request.user.iaso_profile.account
         serializer = ImportOpenHexaDataLayerSerializer(data=request.data, context={"request": request})
-        serializer.is_valid(raise_exception=True)
-        metric_type = serializer.save()
+
+        try:
+            serializer.is_valid(raise_exception=True)
+            metric_type = serializer.save()
+        except DRFValidationError:
+            raise
+        except Exception:
+            logger.exception("Failed to import OpenHexa data layer for account %s", account.id)
+            return Response(
+                {"error": _("Failed to fetch data layers from OpenHexa.")},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
 
         task = import_openhexa_data_layer(metric_type_id=metric_type.id, user=request.user)
 

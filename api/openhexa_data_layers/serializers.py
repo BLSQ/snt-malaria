@@ -45,8 +45,8 @@ class ImportOpenHexaDataLayerSerializer(serializers.Serializer):
         try:
             openhexa_url, openhexa_token, workspace_slug, dataset_slug = resolve_config_dataset(account)
             metadata = fetch_dataset_json(openhexa_url, openhexa_token, workspace_slug, dataset_slug, METADATA_FILENAME)
-        except DjangoValidationError as error:
-            raise serializers.ValidationError({"code": error.messages[0]})
+        except DjangoValidationError as djangoError:
+            raise serializers.ValidationError({"code": djangoError.messages[0]})
 
         definition = metadata.get(data["code"])
         if not isinstance(definition, dict):
