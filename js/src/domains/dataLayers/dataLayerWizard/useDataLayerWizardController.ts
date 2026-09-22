@@ -8,6 +8,7 @@ import {
     legendConfigFromForm,
     scaleFromDomainRange,
 } from '../dataLayerForm/legendScale';
+import { useCancelOpenHexaImport } from '../hooks/useCancelOpenHexaImport';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
 import { useDeleteMetricType } from '../hooks/useDeleteMetricType';
 import { useGetMetricTypes } from '../hooks/useGetMetrics';
@@ -132,6 +133,19 @@ export const useDataLayerWizardController = ({
     const { mutateAsync: saveComposite } = useSaveCompositeLayer(true);
     const { mutateAsync: updateComposite } = useSaveCompositeLayer();
     const { mutate: deleteMetricType } = useDeleteMetricType();
+    const { mutate: cancelOpenHexaImport } = useCancelOpenHexaImport();
+
+    // Discarding an OpenHexa layer's shell should also stop its background value
+    // import; the task is looked up server-side by the metric type id.
+    const discardMetricType = useCallback(
+        (metricTypeId: number, layerType: WizardLayerType) => {
+            deleteMetricType(metricTypeId);
+            if (layerType === 'openhexa') {
+                cancelOpenHexaImport({ metric_type_id: metricTypeId });
+            }
+        },
+        [deleteMetricType, cancelOpenHexaImport],
+    );
 
     const formik = useMetricTypeFormState(undefined, () => undefined);
 
@@ -181,17 +195,22 @@ export const useDataLayerWizardController = ({
 
     const confirmDiscard = useCallback(() => {
         if (staged.createdMetricTypeId) {
-            deleteMetricType(staged.createdMetricTypeId);
+            discardMetricType(staged.createdMetricTypeId, staged.layerType);
         }
         close();
-    }, [staged.createdMetricTypeId, deleteMetricType, close]);
+    }, [
+        staged.createdMetricTypeId,
+        staged.layerType,
+        discardMetricType,
+        close,
+    ]);
 
     const cancelDiscard = useCallback(() => setDiscardOpen(false), []);
 
     const setLayerType = useCallback(
         (layerType: WizardLayerType) => {
             if (layerType !== staged.layerType && staged.createdMetricTypeId) {
-                deleteMetricType(staged.createdMetricTypeId);
+                discardMetricType(staged.createdMetricTypeId, staged.layerType);
             }
             wizard.setLayerType(layerType);
             Object.entries(layerTypeToFormFields(layerType)).forEach(
@@ -206,7 +225,7 @@ export const useDataLayerWizardController = ({
             formik,
             staged.layerType,
             staged.createdMetricTypeId,
-            deleteMetricType,
+            discardMetricType,
         ],
     );
 
@@ -228,7 +247,27 @@ export const useDataLayerWizardController = ({
             canAdvance = true;
     }
 
-    const goBack = wizard.goBack;
+    // Going back from Data un-does the OpenHexa import `goNext` already triggered
+    // (mirrors `setLayerType`'s cleanup): otherwise the picked layer's code stays
+    // locked in and disappears from the picker's options (it now shows as already
+    // imported), leaving the Select pointed at a value that's no longer offered.
+    const goBack = useCallback(() => {
+        if (
+            wizard.activeStep === WIZARD_STEPS.DATA &&
+            staged.layerType === 'openhexa' &&
+            staged.createdMetricTypeId
+        ) {
+            discardMetricType(staged.createdMetricTypeId, staged.layerType);
+            patch({ createdMetricTypeId: undefined });
+        }
+        wizard.goBack();
+    }, [
+        wizard,
+        staged.layerType,
+        staged.createdMetricTypeId,
+        discardMetricType,
+        patch,
+    ]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     // Guards the composite-shell save against a double-click while it's in flight

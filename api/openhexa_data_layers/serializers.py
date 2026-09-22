@@ -100,3 +100,9 @@ class ImportOpenHexaDataLayerSerializer(serializers.Serializer):
             },
         )
         return metric_type
+
+
+class CancelOpenHexaImportSerializer(serializers.Serializer):
+    """Which layer's in-flight value import to stop, by its ``MetricType`` id."""
+
+    metric_type_id = serializers.IntegerField()

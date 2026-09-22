@@ -10,7 +10,7 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.response import Response
 
 from iaso.api.tasks.serializers import TaskSerializer
-from iaso.models import Task
+from iaso.models import ALIVE_STATUSES, Task
 from plugins.snt_malaria.providers.openhexa_data_layers import (
     METADATA_FILENAME,
     fetch_dataset_json,
@@ -21,7 +21,11 @@ from plugins.snt_malaria.tasks.import_openhexa_data_layer import import_openhexa
 from .constants import IMPORT_TASK_NAME
 from .metadata import parse_data_layers
 from .permissions import OpenHexaDataLayerPermission
-from .serializers import ImportOpenHexaDataLayerSerializer, OpenHexaDataLayerSerializer
+from .serializers import (
+    CancelOpenHexaImportSerializer,
+    ImportOpenHexaDataLayerSerializer,
+    OpenHexaDataLayerSerializer,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -120,3 +124,23 @@ class OpenHexaDataLayerViewSet(viewsets.ViewSet):
                 for row in latest_per_layer
             }
         )
+
+    @action(detail=False, methods=["post"], url_path="cancel_import")
+    def cancel_import(self, request):
+        """Ask a data layer's in-flight value import to stop, if it hasn't already finished.
+
+        Body: ``{"metric_type_id": <id>}``. The task cooperatively checks the kill flag at its
+        next checkpoint, so this doesn't stop it instantly.
+        """
+        account = request.user.iaso_profile.account
+        serializer = CancelOpenHexaImportSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        metric_type_id = serializer.validated_data["metric_type_id"]
+
+        (
+            Task.objects.filter(account=account, name=IMPORT_TASK_NAME, status__in=ALIVE_STATUSES)
+            .annotate(mt_id=KeyTextTransform("metric_type_id", KeyTransform("kwargs", "params")))
+            .filter(mt_id=str(metric_type_id))
+            .update(should_be_killed=True)
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
