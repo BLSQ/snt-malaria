@@ -18,6 +18,7 @@ import {
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
+import { OpenHexaSvg } from 'Iaso/components/svg/OpenHexaSvg';
 import { SxStyles } from 'Iaso/types/general';
 import * as CorePermission from 'Iaso/utils/permissions';
 import { useDataLayerComparisonContext } from '../contexts/DataLayerComparisonContext';
@@ -91,6 +92,7 @@ export const DataLayerLine: FC<Props> = ({
     editing = false,
 }) => {
     const isComposite = compositeLayerId !== undefined;
+    const isOpenHexa = metricType.origin === 'openhexa';
     const theme = useTheme();
     const onDragStart = useCallback(
         (e: React.DragEvent<HTMLElement>) => {
@@ -173,12 +175,22 @@ export const DataLayerLine: FC<Props> = ({
         >
             <Box sx={styles.metricTypeDetails}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    {/* Composites swap the layer icon for their own rather than showing both. */}
+                    {/* Composites and OpenHexa layers swap the layer icon for their own rather than showing both. */}
                     {isComposite ? (
                         <Tooltip title={formatMessage(MESSAGES.compositeLayer)}>
                             <AccountTreeIcon
                                 fontSize="small"
                                 color="action"
+                                sx={styles.metricTypeIcon}
+                            />
+                        </Tooltip>
+                    ) : isOpenHexa ? (
+                        <Tooltip
+                            title={formatMessage(MESSAGES.layerTypeOpenHexa)}
+                        >
+                            <OpenHexaSvg
+                                fontSize="small"
+                                disabled={false}
                                 sx={styles.metricTypeIcon}
                             />
                         </Tooltip>

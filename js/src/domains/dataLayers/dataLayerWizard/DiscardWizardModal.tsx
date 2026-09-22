@@ -15,11 +15,6 @@ type Props = {
     onCancel: () => void;
 };
 
-/** Confirmation shown when the user leaves the wizard with unsaved progress.
- *  Rendered by the page so it survives the sidebar swapping to the composite node
- *  editor on the graph step. `titleMessage`/`message` are resolved by the wizard
- *  controller, which is the only place that knows whether this is an edit run and
- *  what layer type it is. */
 export const DiscardWizardModal: FC<Props> = ({
     open,
     titleMessage,

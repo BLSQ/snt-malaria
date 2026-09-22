@@ -33,7 +33,6 @@ import {
     WIZARD_STEPS,
 } from './useDataLayerWizard';
 
-/** Which component the page shows in the main column while the wizard is open. */
 export type WizardMainView =
     | 'compositeGraph'
     | 'standardData'
@@ -41,12 +40,8 @@ export type WizardMainView =
     | 'intro';
 
 type ControllerArgs = {
-    /** Called with the freshly created layer (when its object is available) so the
-     *  page can select it on the map. */
     onCreated: (metricType?: MetricType) => void;
     categoryOptions: { label: string; value: string }[];
-    /** Runs when the wizard closes, so the page can tear down composite-editor
-     *  side panels it opened for the graph step. */
     onClosed?: () => void;
 };
 
@@ -65,13 +60,10 @@ const layerTypeOf = (model: MetricTypeFormModel): WizardLayerType => {
     return 'data';
 };
 
-/** Server validation code (e.g. `uniqueCode`) → the matching wizard message. */
 const errorMessage = (code: string): IntlMessage =>
     (MESSAGES[`${code}Error` as keyof typeof MESSAGES] as IntlMessage) ??
     MESSAGES.genericError;
 
-/** `/api/metrictypes/` payload shared by a standard layer's create and edit save
- *  (edit adds `id`). */
 const metricTypePayload = (
     values: MetricTypeFormModel,
     legend_config: ScaleDomainRange | undefined,
@@ -90,8 +82,6 @@ const metricTypePayload = (
     metric_kind: values.is_population ? 'population' : 'any',
 });
 
-/** `/api/snt_malaria/composite_layers/` payload shared by minting the draft shell
- *  and saving an edited composite's metadata + legend (edit adds `id`). */
 const compositeLayerPayload = (
     values: MetricTypeFormModel,
     legend_config: ScaleDomainRange | undefined,
@@ -114,7 +104,6 @@ export const useDataLayerWizardController = ({
     const { formatMessage } = useSafeIntl();
     const [isOpen, setIsOpen] = useState(false);
     const [discardOpen, setDiscardOpen] = useState(false);
-    /** Set when a create/save call fails; shown as an alert, cleared on retry / step change. */
     const [submitError, setSubmitError] = useState<IntlMessage>();
     /** The layer being edited (Details + Legend only); undefined for a create run. */
     const [editing, setEditing] = useState<{
@@ -125,7 +114,6 @@ export const useDataLayerWizardController = ({
     const wizard = useDataLayerWizard();
     const { staged, patch, reset: resetStaged } = wizard;
 
-    // Only needed once the wizard is open (unique codes).
     const { data: allMetricTypes } = useGetMetricTypes<MetricType>(
         true,
         isOpen,
@@ -141,19 +129,12 @@ export const useDataLayerWizardController = ({
     });
     const { mutateAsync: importGridValues } = useImportMetricValuesJson();
     const { mutateAsync: importOpenHexa } = useImportOpenHexaDataLayer();
-    // Silent: the wizard mints a draft shell before the graph exists; the "Saved"
-    // toast belongs to the graph save, not this one.
     const { mutateAsync: saveComposite } = useSaveCompositeLayer(true);
-    // A user-driven composite metadata/legend edit — keep its "Saved" toast.
     const { mutateAsync: updateComposite } = useSaveCompositeLayer();
     const { mutate: deleteMetricType } = useDeleteMetricType();
 
     const formik = useMetricTypeFormState(undefined, () => undefined);
 
-    // Wipe every trace of an in-progress creation: the formik model (values,
-    // touched, errors, submit count) back to a fresh copy of the empty defaults,
-    // and all staged wizard state (step, layer type, table, composite shell). Run
-    // on open, on close, and on a confirmed discard.
     const resetAll = useCallback(() => {
         formik.resetForm({ values: makeDefaultMetricType() });
         resetStaged();
@@ -166,7 +147,6 @@ export const useDataLayerWizardController = ({
         setIsOpen(true);
     }, [resetAll]);
 
-    /** Edit an existing layer: pre-filled Details + Legend, no Type / Data steps. */
     const openForEdit = useCallback(
         (metricType: MetricType, compositeLayer?: CompositeLayerListItem) => {
             const model = editFormModel(metricType, compositeLayer);
@@ -199,9 +179,6 @@ export const useDataLayerWizardController = ({
         close();
     }, [hasProgress, close]);
 
-    // A composite shell's underlying MetricType id lives in the same
-    // `createdMetricTypeId` field as a standard/OpenHexa layer's — one mechanism
-    // for "a record was already created for this run and needs cleaning up".
     const confirmDiscard = useCallback(() => {
         if (staged.createdMetricTypeId) {
             deleteMetricType(staged.createdMetricTypeId);
@@ -213,9 +190,6 @@ export const useDataLayerWizardController = ({
 
     const setLayerType = useCallback(
         (layerType: WizardLayerType) => {
-            // A record already created for a different type no longer belongs to
-            // this run: delete it so it doesn't linger on the server
-            // (wizard.setLayerType clears the id).
             if (layerType !== staged.layerType && staged.createdMetricTypeId) {
                 deleteMetricType(staged.createdMetricTypeId);
             }
@@ -236,9 +210,6 @@ export const useDataLayerWizardController = ({
         ],
     );
 
-    // Recomputed every render: formik keeps a stable object identity while its
-    // `errors`/`values` mutate, so memoising on `formik` would go stale (e.g. the
-    // OpenHexa source auto-fill clearing the Details errors).
     const { errors: formikErrors, values: formikValues } = formik;
     let canAdvance: boolean;
     switch (wizard.activeStep) {
@@ -254,7 +225,6 @@ export const useDataLayerWizardController = ({
             canAdvance = formik.isValid;
             break;
         default:
-            // Type and Data steps have no blocking client-side validation.
             canAdvance = true;
     }
 
@@ -276,11 +246,6 @@ export const useDataLayerWizardController = ({
             : undefined;
     }, [formik.values]);
 
-    /** Sends the table (every non-blank cell) as JSON, replacing whatever the
-     *  server has for the years the table currently covers — used when leaving the
-     *  Data step, so a bad value surfaces its error there instead of silently
-     *  reaching Legend with no values. No-op if there are no year columns at all
-     *  (shouldn't normally happen — the table always starts with one). */
     const submitGridValues = useCallback(
         async (metricTypeId: number) => {
             if (staged.gridYears.length === 0) return;
@@ -309,8 +274,6 @@ export const useDataLayerWizardController = ({
         [staged.gridYears, staged.gridValues, importGridValues],
     );
 
-    /** Parses a picked CSV and merges it into the table right away — nothing is
-     *  sent to the backend here, so the user can fine-tune it before it's saved. */
     const onCsvFileSelected = useCallback(
         async (file: File) => {
             const text = await file.text();
@@ -387,9 +350,6 @@ export const useDataLayerWizardController = ({
             }
             wizard.goNext();
         } catch {
-            // createMetricType's onError already resolved a specific message for
-            // needsStandardCreate (e.g. a duplicate code); fall back to a generic
-            // one for the other, snackbar-only failure paths.
             setSubmitError(prev => prev ?? MESSAGES.genericError);
         } finally {
             busyRef.current = false;

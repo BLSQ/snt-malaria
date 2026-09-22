@@ -23,8 +23,6 @@ type Props = {
     onCancel: () => void;
     onSave: () => void;
     isSaving: boolean;
-    /** Hides the Cancel / Save buttons - the creation wizard drives navigation from its
-     *  own Back / "Next: Legend" footer instead. */
     hideActions?: boolean;
 };
 

@@ -58,8 +58,6 @@ type Props = {
     steps: string[];
 };
 
-/** Compact step rail for the creation wizard's narrow side panel: stacked
- *  circle-over-label items with connectors that absorb the leftover width. */
 export const WizardStepRail: FC<Props> = ({ activeStep, steps }) => (
     <Box sx={styles.root}>
         {steps.map((label, idx) => {

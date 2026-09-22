@@ -113,8 +113,6 @@ type Props = {
     sidebarCollapsed?: boolean;
     /** Toggles the data layers sidebar (mirrors the scenario editor's rules-panel toggle). */
     onToggleSidebar?: () => void;
-    /** Hides the header's Cancel / Save buttons - the creation wizard drives Back / Next
-     *  from its own footer and calls `saveGraph()` on the handle. */
     hideActions?: boolean;
 };
 
@@ -127,7 +125,6 @@ export type CompositeLayerEditorHandle = {
     /** Restores a graph captured earlier by `getCurrentGraph` (AI chat "revert"); `null` clears
      * the canvas back to an empty editor. */
     restoreGraph: (graph: CurrentGraph | null) => void;
-    /** Persists the current graph, then fires `onSaved` - the wizard's "Next: Legend". */
     saveGraph: () => void;
 };
 

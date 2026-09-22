@@ -8,8 +8,6 @@ import {
 } from '../types/compositeLayer';
 
 export const useSaveCompositeLayer = (
-    /** Suppress the "Saved" snackbar — for internal saves the user didn't ask for,
-     *  e.g. the creation wizard minting a draft shell before the graph is built. */
     silent = false,
 ): UseMutationResult<CompositeLayer, unknown, SaveCompositeLayerPayload> => {
     const queryClient = useQueryClient();

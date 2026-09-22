@@ -16,14 +16,9 @@ const styles: SxStyles = {
 
 type Props = {
     existingCodes: Set<string>;
-    /** The layer was already created for the current pick — changing it now would
-     *  orphan that layer, so the select locks. */
     disabled?: boolean;
 };
 
-/** Picks a source layer from OpenHexa and autofills the form with its metadata +
- *  default legend; the picked values then show read-only in the field set below
- *  (see `StepDetails`), same as it does when editing an existing OpenHexa layer. */
 export const OpenHexaSourcePicker: FC<Props> = ({
     existingCodes,
     disabled = false,

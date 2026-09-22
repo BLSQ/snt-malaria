@@ -9,9 +9,6 @@ import {
 } from '../../planning/libs/map-utils';
 import { MetricType, MetricValue } from '../types/metrics';
 
-/** Just the fields the choropleth + legend need — a persisted `MetricType` is a
- *  superset, and the creation wizard can supply only these while its layer is
- *  still being built. */
 export type MapLegendConfig = Pick<
     MetricType,
     'units' | 'unit_symbol' | 'legend_type' | 'legend_config'

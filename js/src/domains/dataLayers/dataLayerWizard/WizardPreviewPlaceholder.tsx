@@ -12,12 +12,9 @@ const styles = {
 } satisfies SxStyles;
 
 type Props = {
-    /** Defaults to the generic "preview appears once you add data" copy. */
     message?: IntlMessage;
 };
 
-/** Fills the wizard's main area where a map has nothing to show yet — the Type and
- *  Details steps, and the Legend step for layers whose values don't exist client-side. */
 export const WizardPreviewPlaceholder: FC<Props> = ({
     message = MESSAGES.wizardPreviewPlaceholder,
 }) => {

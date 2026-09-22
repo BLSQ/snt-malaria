@@ -259,15 +259,11 @@ export const DataLayers: FC = () => {
         [wizard, compositeLayerByMetricType],
     );
 
-    // The composite node editor runs both for "Edit graph" and, inside the creation
-    // wizard, as its Data step (Turn 2a keeps the editor in the flow).
     const activeCompositeLayerId =
         editingCompositeLayerId ?? wizard.compositeLayerId;
     const isCompositeEditorActive =
         isCompositeEditorOpen || wizard.isCompositeGraphStep;
 
-    // The wizard's graph step persisted the graph — restore the sidebar (the user
-    // may have collapsed it) and let the wizard finalise the layer.
     const onWizardGraphSaved = useCallback(
         (metricType?: MetricType) => {
             setSidebarCollapsed(false);

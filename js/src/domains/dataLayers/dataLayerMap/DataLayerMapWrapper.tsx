@@ -50,8 +50,6 @@ type Props = {
     /** Set when the displayed layer is a composite: enables the "Edit composite" button. */
     compositeLayerId?: number;
     onEditComposite?: (compositeLayerId: number) => void;
-    /** An in-flight or just-finished OpenHexa import for this layer, if any — shown
-     *  as a spinner/error badge next to its name, same as the layer list's row. */
     importStatus?: OpenHexaImportStatus;
 };
 

@@ -17,12 +17,6 @@ type Props = {
     orgUnits: OrgUnit[];
 };
 
-/** Legend-step map preview. Every layer type is already created by the time this
- *  step is reached (see `useDataLayerWizardController.goNext`) — a standard layer's
- *  values were imported leaving Data, a composite's graph was saved, and an OpenHexa
- *  layer's import is running in the background — so this just fetches the real
- *  thing, coloured with the legend currently being edited. Never the layer that
- *  happened to be selected before the wizard opened. */
 export const WizardLegendPreview: FC<Props> = ({
     controller,
     preview,
@@ -42,9 +36,6 @@ export const WizardLegendPreview: FC<Props> = ({
     const values = formik.values;
     const isStandard = staged.layerType === 'data';
 
-    // A standard layer's values can span several years now; the year picker only
-    // applies there — other layer types already resolve to a single value set.
-    // Reuses the same year-selection logic as the composite editor's node previews.
     const years = useMemo(() => {
         if (!isStandard) return [];
         return Array.from(

@@ -52,12 +52,8 @@ type Props = {
     preview: WizardMapPreview;
     showOpenHexa: boolean;
     showComposite: boolean;
-    /** District list for the manual grid and the generated CSV template. */
     orgUnits: OrgUnit[];
-    /** Node library / AI tabs for the composite layer's graph step, supplied by the
-     *  page (it owns the composite-editor wiring). */
     compositeGraphSlot?: ReactNode;
-    /** "Next: Legend" on the composite graph step — persists the graph, then advances. */
     onCompositeNext?: () => void;
 };
 
@@ -100,7 +96,6 @@ export const DataLayerWizardPanel: FC<Props> = ({
 
     const onPrimary = useCallback(() => {
         if (isCompositeGraphStep) {
-            // Persists the graph; its onSaved then finalises the layer.
             onCompositeNext?.();
         } else if (isLastStep) {
             submit();

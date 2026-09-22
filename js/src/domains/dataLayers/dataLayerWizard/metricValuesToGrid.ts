@@ -12,11 +12,6 @@ const metricValueText = (metricValue: MetricValue): string =>
         ? String(metricValue.value)
         : metricValue.string_value;
 
-/**
- * OpenHexa imports are timeless in practice (no YEAR column in the source), so
- * `year` is usually null; fall back to the current year so the read-only grid
- * still has a column to show the value under.
- */
 export const metricValuesToGrid = (
     metricValues: MetricValue[] = [],
 ): MetricValueGrid => {

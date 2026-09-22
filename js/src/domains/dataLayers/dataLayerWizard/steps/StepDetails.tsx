@@ -19,8 +19,6 @@ type Props = {
     layerType: WizardLayerType;
     categoryOptions: { label: string; value: string }[];
     existingCodes: Set<string>;
-    /** Editing an existing layer: the data key is immutable, and an OpenHexa
-     *  layer's metadata is owned by the source (only its legend stays editable). */
     isEditing?: boolean;
     codeLocked?: boolean;
 };
@@ -47,7 +45,6 @@ export const StepDetails: FC<Props> = ({
 
     return (
         <Box>
-            {/* Create-time source choice; editing an existing layer keeps its source. */}
             {isOpenHexa && !isEditing && (
                 <OpenHexaSourcePicker
                     existingCodes={existingCodes}

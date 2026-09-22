@@ -26,8 +26,6 @@ type Props = {
     children: ReactNode;
 };
 
-/** Keyboard-accessible radio-style card, shared by the wizard's layer-type and
- *  value-method pickers. Callers own the inner layout. */
 export const SelectableCard: FC<Props> = ({
     selected,
     onSelect,
