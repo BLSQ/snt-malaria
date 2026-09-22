@@ -125,19 +125,13 @@ export const useDataLayerWizardController = ({
     const wizard = useDataLayerWizard();
     const { staged, patch, reset: resetStaged } = wizard;
 
-    // Only needed once the wizard is open (unique codes + population-holder name).
+    // Only needed once the wizard is open (unique codes).
     const { data: allMetricTypes } = useGetMetricTypes<MetricType>(
         true,
         isOpen,
     );
     const existingCodes = useMemo(
         () => new Set((allMetricTypes ?? []).map(mt => mt.code)),
-        [allMetricTypes],
-    );
-    const populationHolderName = useMemo(
-        () =>
-            (allMetricTypes ?? []).find(mt => mt.metric_kind === 'population')
-                ?.name,
         [allMetricTypes],
     );
 
@@ -606,7 +600,6 @@ export const useDataLayerWizardController = ({
         submitError,
         clearSubmitError,
         existingCodes,
-        populationHolderName,
         categoryOptions,
     };
 };

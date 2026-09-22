@@ -547,8 +547,6 @@
     "iaso.snt_malaria.settings.dataLayers.wizard.stepLegend": "Légende",
     "iaso.snt_malaria.settings.dataLayers.wizard.back": "Retour",
     "iaso.snt_malaria.settings.dataLayers.wizard.typeQuestion": "Quel type de couche ?",
-    "iaso.snt_malaria.settings.dataLayers.wizard.populationHolder": "{holder} l'est aujourd'hui — cocher cette case le remplacera.",
-    "iaso.snt_malaria.settings.dataLayers.wizard.populationNoHolder": "Aucune couche n'est le dénominateur de population pour l'instant.",
     "iaso.snt_malaria.settings.dataLayers.wizard.importCsvHint": "Importez un CSV pour remplir le tableau ci-dessous, puis ajustez-le avant d'enregistrer.",
     "iaso.snt_malaria.settings.dataLayers.wizard.addYear": "Ajouter une année",
     "iaso.snt_malaria.settings.dataLayers.wizard.removeYear": "Supprimer {year}",

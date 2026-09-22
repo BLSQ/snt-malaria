@@ -548,8 +548,6 @@
     "iaso.snt_malaria.settings.dataLayers.wizard.stepLegend": "Legend",
     "iaso.snt_malaria.settings.dataLayers.wizard.back": "Back",
     "iaso.snt_malaria.settings.dataLayers.wizard.typeQuestion": "What kind of layer is this?",
-    "iaso.snt_malaria.settings.dataLayers.wizard.populationHolder": "{holder} holds it today — ticking this replaces it.",
-    "iaso.snt_malaria.settings.dataLayers.wizard.populationNoHolder": "No layer is the population denominator yet.",
     "iaso.snt_malaria.settings.dataLayers.wizard.importCsvHint": "Upload a CSV to fill the table below, then fine-tune it there before saving.",
     "iaso.snt_malaria.settings.dataLayers.wizard.addYear": "Add year",
     "iaso.snt_malaria.settings.dataLayers.wizard.removeYear": "Remove {year}",

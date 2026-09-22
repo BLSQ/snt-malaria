@@ -294,14 +294,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.typeQuestion',
         defaultMessage: 'What kind of layer is this?',
     },
-    wizardPopulationHolder: {
-        id: 'iaso.snt_malaria.settings.dataLayers.wizard.populationHolder',
-        defaultMessage: '{holder} holds it today — ticking this replaces it.',
-    },
-    wizardPopulationNoHolder: {
-        id: 'iaso.snt_malaria.settings.dataLayers.wizard.populationNoHolder',
-        defaultMessage: 'No layer is the population denominator yet.',
-    },
     wizardImportCsvHint: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.importCsvHint',
         defaultMessage:

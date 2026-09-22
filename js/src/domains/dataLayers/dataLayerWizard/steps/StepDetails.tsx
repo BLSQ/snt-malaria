@@ -12,6 +12,7 @@ import { OpenHexaSourcePicker } from '../OpenHexaSourcePicker';
 
 const styles: SxStyles = {
     readOnlyHint: { display: 'block', mt: 2, mb: 1 },
+    population: { mt: 3 },
 };
 
 type Props = {
@@ -130,6 +131,17 @@ export const StepDetails: FC<Props> = ({
                     />
                 </Grid>
             </Grid>
+            <Box sx={styles.population}>
+                <InputComponent
+                    keyValue="is_population"
+                    type="checkbox"
+                    onChange={setFieldValueAndState}
+                    value={values.is_population}
+                    label={MESSAGES.is_population}
+                    withMarginTop={false}
+                    disabled={isOpenHexa}
+                />
+            </Box>
         </Box>
     );
 };

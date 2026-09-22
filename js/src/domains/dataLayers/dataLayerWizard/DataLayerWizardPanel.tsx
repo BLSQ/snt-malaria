@@ -93,7 +93,6 @@ export const DataLayerWizardPanel: FC<Props> = ({
         clearSubmitError,
         isCompositeGraphStep,
         existingCodes,
-        populationHolderName,
         categoryOptions,
     } = controller;
 
@@ -144,7 +143,6 @@ export const DataLayerWizardPanel: FC<Props> = ({
                                 onChangeLayerType={setLayerType}
                                 showOpenHexa={showOpenHexa}
                                 showComposite={showComposite}
-                                populationHolderName={populationHolderName}
                             />
                         )}
                         {activeStep === WIZARD_STEPS.DETAILS && (
