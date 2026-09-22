@@ -1,12 +1,10 @@
 import React, { FC, ReactNode, useCallback } from 'react';
-import CloseIcon from '@mui/icons-material/Close';
 import {
     Alert,
     Box,
     Button,
     Card,
     Divider,
-    IconButton,
     Stack,
     Typography,
 } from '@mui/material';
@@ -31,8 +29,7 @@ const styles: SxStyles = {
         pb: 1.5,
         gap: 1.5,
     },
-    headerRow: { alignItems: 'center' },
-    title: { flexGrow: 1, fontWeight: 600 },
+    title: { fontWeight: 600 },
     body: { flexGrow: 1, overflow: 'auto', p: 2 },
     bodyFlush: {
         flexGrow: 1,
@@ -43,8 +40,9 @@ const styles: SxStyles = {
     footer: {
         p: 2,
         gap: 1,
-        justifyContent: 'flex-end',
+        justifyContent: 'space-between',
     },
+    footerActions: { gap: 1 },
 };
 
 type Props = {
@@ -112,20 +110,14 @@ export const DataLayerWizardPanel: FC<Props> = ({
     return (
         <Card sx={styles.card}>
             <Stack sx={styles.header}>
-                <Stack direction="row" sx={styles.headerRow}>
-                    <Typography variant="h6" sx={styles.title}>
-                        {formatMessage(titleMessage)}
-                    </Typography>
-                    <IconButton size="small" onClick={requestClose}>
-                        <CloseIcon fontSize="small" />
-                    </IconButton>
-                </Stack>
+                <Typography variant="h6" sx={styles.title}>
+                    {formatMessage(titleMessage)}
+                </Typography>
                 <WizardStepRail
                     activeStep={activeStepIndex}
                     steps={stepLabels}
                 />
             </Stack>
-            <Divider />
 
             <ExtendedFormikProvider formik={formik}>
                 {isCompositeGraphStep ? (
@@ -173,29 +165,34 @@ export const DataLayerWizardPanel: FC<Props> = ({
 
             <Divider />
             <Stack direction="row" sx={styles.footer}>
-                {activeStepIndex > 0 && (
-                    <Button onClick={onBack} disabled={isSubmitting}>
-                        {formatMessage(MESSAGES.wizardBack)}
-                    </Button>
-                )}
-                <Button
-                    variant="contained"
-                    onClick={onPrimary}
-                    disabled={
-                        isSubmitting ||
-                        (isLastStep ? !formik.isValid : !canAdvance)
-                    }
-                >
-                    {isLastStep
-                        ? formatMessage(
-                              isEditing
-                                  ? MESSAGES.wizardSaveChanges
-                                  : MESSAGES.createLayer,
-                          )
-                        : formatMessage(MESSAGES.wizardNext, {
-                              step: stepLabels[activeStepIndex + 1],
-                          })}
+                <Button onClick={requestClose} disabled={isSubmitting}>
+                    {formatMessage(MESSAGES.cancel)}
                 </Button>
+                <Stack direction="row" sx={styles.footerActions}>
+                    {activeStepIndex > 0 && (
+                        <Button onClick={onBack} disabled={isSubmitting}>
+                            {formatMessage(MESSAGES.wizardBack)}
+                        </Button>
+                    )}
+                    <Button
+                        variant="contained"
+                        onClick={onPrimary}
+                        disabled={
+                            isSubmitting ||
+                            (isLastStep ? !formik.isValid : !canAdvance)
+                        }
+                    >
+                        {isLastStep
+                            ? formatMessage(
+                                  isEditing
+                                      ? MESSAGES.wizardSaveChanges
+                                      : MESSAGES.createLayer,
+                              )
+                            : formatMessage(MESSAGES.wizardNext, {
+                                  step: stepLabels[activeStepIndex + 1],
+                              })}
+                    </Button>
+                </Stack>
             </Stack>
         </Card>
     );

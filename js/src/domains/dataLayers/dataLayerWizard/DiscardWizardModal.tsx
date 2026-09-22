@@ -34,8 +34,8 @@ export const DiscardWizardModal: FC<Props> = ({
             onCancel={onCancel}
             closeDialog={onCancel}
             onClose={onCancel}
-            confirmMessage={MESSAGES.cancel}
-            cancelMessage={MESSAGES.wizardBack}
+            confirmMessage={MESSAGES.confirm}
+            cancelMessage={MESSAGES.cancel}
         >
             <Typography>{formatMessage(message)}</Typography>
         </ConfirmCancelModal>

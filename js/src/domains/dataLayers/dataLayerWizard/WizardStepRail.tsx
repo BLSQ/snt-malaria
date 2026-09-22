@@ -18,37 +18,43 @@ const stepState = (index: number, activeStep: number): StepState => {
 };
 
 const styles = {
-    root: { display: 'flex', alignItems: 'flex-start', width: '100%' },
+    root: {
+        display: 'flex',
+        alignItems: 'flex-start',
+        width: '100%',
+        marginTop: 2,
+    },
     item: {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         gap: 0.5,
         flex: '0 0 auto',
-        width: 64,
+        width: 68,
     },
     circle: {
-        width: 22,
-        height: 22,
+        width: 26,
+        height: 26,
         borderRadius: '50%',
         color: 'common.white',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontWeight: 700,
-        fontSize: 12,
+        fontSize: 13,
         flexShrink: 0,
     },
     label: {
         textAlign: 'center',
         lineHeight: 1.15,
         fontWeight: 600,
+        fontSize: 13,
     },
     connector: {
         flex: '1 1 auto',
         minWidth: 8,
         height: '2px',
-        mt: '10px',
+        mt: '13px',
         bgcolor: 'text.disabled',
     },
 } satisfies SxStyles;
@@ -72,7 +78,7 @@ export const WizardStepRail: FC<Props> = ({ activeStep, steps }) => (
                             ]}
                         >
                             {state === 'completed' ? (
-                                <CheckIcon sx={{ fontSize: 15 }} />
+                                <CheckIcon sx={{ fontSize: 16 }} />
                             ) : (
                                 idx + 1
                             )}

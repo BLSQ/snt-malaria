@@ -5,6 +5,10 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Cancel',
         id: 'iaso.label.cancel',
     },
+    confirm: {
+        defaultMessage: 'Confirm',
+        id: 'iaso.label.confirm',
+    },
     description: {
         id: 'iaso.snt_malaria.label.description',
         defaultMessage: 'Description',

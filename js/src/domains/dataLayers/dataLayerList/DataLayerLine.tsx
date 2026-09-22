@@ -190,6 +190,7 @@ export const DataLayerLine: FC<Props> = ({
                         >
                             <OpenHexaSvg
                                 fontSize="small"
+                                color="action"
                                 disabled={false}
                                 sx={styles.metricTypeIcon}
                             />
