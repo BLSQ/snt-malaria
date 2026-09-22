@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 
 from django.contrib.gis.geos import GEOSGeometry
@@ -7,6 +8,8 @@ from django.core.management.base import BaseCommand
 from iaso.models import *
 from iaso.utils.gis import simplify_geom
 
+
+logger = logging.getLogger(__name__)
 
 # FILENAME = "BFA_districts.geojson"
 FILE_LOCATION = "pyramids/COD_shp.geojson"
@@ -34,6 +37,6 @@ class Command(BaseCommand):
                 org_unit.geom = GEOSGeometry(json.dumps(unit["geometry"]))
                 org_unit.simplified_geom = simplify_geom(org_unit.geom)
                 org_unit.save()
-                print(f"SUCCESS: parsed geom for source_ref {source_ref}")
+                logger.info(f"Successfully parsed geom for source_ref {source_ref}")
             except Exception:
-                print(f"ERROR: Can't parse geom for source_ref {source_ref}")
+                logger.exception(f"Can't parse geom for source_ref {source_ref}")
