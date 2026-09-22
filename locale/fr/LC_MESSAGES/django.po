@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-21 13:58+0000\n"
+"POT-Creation-Date: 2026-09-22 12:46+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -72,61 +72,6 @@ msgid ""
 msgstr ""
 "Il est impossible de supprimer cette intervention car elle est utilisée par "
 "une ou plusieurs règles de scénario."
-
-#: plugins/snt_malaria/api/openhexa_data_layers/client.py
-#, python-brace-format
-msgid "The OpenHexa workspace configuration is missing the '{key}' key."
-msgstr ""
-"La configuration de l'espace de travail OpenHexa ne contient pas la clé "
-"« {key} »."
-
-#: plugins/snt_malaria/api/openhexa_data_layers/client.py
-#, python-brace-format
-msgid "OpenHexa dataset '{slug}' was not found in workspace '{workspace}'."
-msgstr ""
-"Le jeu de données OpenHexa « {slug} » est introuvable dans l'espace de "
-"travail « {workspace} »."
-
-#: plugins/snt_malaria/api/openhexa_data_layers/client.py
-#, python-brace-format
-msgid "OpenHexa dataset '{slug}' has no versions."
-msgstr "Le jeu de données OpenHexa « {slug} » n'a aucune version."
-
-#: plugins/snt_malaria/api/openhexa_data_layers/client.py
-#, python-brace-format
-msgid "File '{filename}' was not found in OpenHexa dataset '{slug}'."
-msgstr ""
-"Le fichier « {filename} » est introuvable dans le jeu de données OpenHexa "
-"« {slug} »."
-
-#: plugins/snt_malaria/api/openhexa_data_layers/client.py
-#, python-brace-format
-msgid "Could not get a download URL for '{filename}'."
-msgstr "Impossible d'obtenir une URL de téléchargement pour « {filename} »."
-
-#: plugins/snt_malaria/api/openhexa_data_layers/client.py
-#, python-brace-format
-msgid "File '{filename}' is not valid JSON: {error}"
-msgstr "Le fichier « {filename} » n'est pas un JSON valide : {error}"
-
-#: plugins/snt_malaria/api/openhexa_data_layers/importer.py
-#, python-brace-format
-msgid "The source file has no '{column}' column."
-msgstr "Le fichier source ne contient pas de colonne « {column} »."
-
-#: plugins/snt_malaria/api/openhexa_data_layers/importer.py
-#, python-brace-format
-msgid "None of the {rows} source rows matched an org unit (by {column})."
-msgstr ""
-"Aucune des {rows} lignes du fichier source ne correspond à une unité "
-"d'organisation (via {column})."
-
-#: plugins/snt_malaria/api/openhexa_data_layers/importer.py
-#, python-brace-format
-msgid "{rows} rows read, {matched} org units matched, writing {count} values"
-msgstr ""
-"{rows} lignes lues, {matched} unités d'organisation correspondantes, "
-"écriture de {count} valeurs"
 
 #: plugins/snt_malaria/api/openhexa_data_layers/metadata.py
 #, python-format
@@ -248,10 +193,66 @@ msgstr "Configuration - Lecture"
 msgid "Settings - Write"
 msgstr "Configuration - Écriture"
 
+#: plugins/snt_malaria/providers/openhexa_data_layers.py
+#, python-brace-format
+msgid "The OpenHexa workspace configuration is missing the '{key}' key."
+msgstr ""
+"La configuration de l'espace de travail OpenHexa ne contient pas la clé "
+"« {key} »."
+
+#: plugins/snt_malaria/providers/openhexa_data_layers.py
+#, python-brace-format
+msgid "OpenHexa dataset '{slug}' was not found in workspace '{workspace}'."
+msgstr ""
+"Le jeu de données OpenHexa « {slug} » est introuvable dans l'espace de "
+"travail « {workspace} »."
+
+#: plugins/snt_malaria/providers/openhexa_data_layers.py
+#, python-brace-format
+msgid "OpenHexa dataset '{slug}' has no versions."
+msgstr "Le jeu de données OpenHexa « {slug} » n'a aucune version."
+
+#: plugins/snt_malaria/providers/openhexa_data_layers.py
+#, python-brace-format
+msgid "File '{filename}' was not found in OpenHexa dataset '{slug}'."
+msgstr ""
+"Le fichier « {filename} » est introuvable dans le jeu de données OpenHexa "
+"« {slug} »."
+
+#: plugins/snt_malaria/providers/openhexa_data_layers.py
+#, python-brace-format
+msgid "Could not get a download URL for '{filename}'."
+msgstr "Impossible d'obtenir une URL de téléchargement pour « {filename} »."
+
+#: plugins/snt_malaria/providers/openhexa_data_layers.py
+#, python-brace-format
+msgid "File '{filename}' is not valid JSON: {error}"
+msgstr "Le fichier « {filename} » n'est pas un JSON valide : {error}"
+
+#: plugins/snt_malaria/services/openhexa_data_layers.py
+#, python-brace-format
+msgid "The source file has no '{column}' column."
+msgstr "Le fichier source ne contient pas de colonne « {column} »."
+
+#: plugins/snt_malaria/services/openhexa_data_layers.py
+#, python-brace-format
+msgid "None of the {rows} source rows matched an org unit (by {column})."
+msgstr ""
+"Aucune des {rows} lignes du fichier source ne correspond à une unité "
+"d'organisation (via {column})."
+
+#: plugins/snt_malaria/services/openhexa_data_layers.py
+#, python-brace-format
+msgid "{rows} rows read, {matched} org units matched, writing {count} values"
+msgstr ""
+"{rows} lignes lues, {matched} unités d'organisation correspondantes, "
+"écriture de {count} valeurs"
+
 #: plugins/snt_malaria/tasks/import_openhexa_data_layer.py
 #, python-brace-format
 msgid "Data layer '{code}' is no longer defined in SNT_metadata.json"
-msgstr "La couche de données '{code}' n'est plus définie dans SNT_metadata.json"
+msgstr ""
+"La couche de données '{code}' n'est plus définie dans SNT_metadata.json"
 
 #, python-brace-format
 #~ msgid "Writing {count} values"

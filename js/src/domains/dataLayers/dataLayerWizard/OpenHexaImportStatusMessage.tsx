@@ -10,7 +10,7 @@ import { OpenHexaImportStatus } from '../hooks/useGetOpenHexaImportStatus';
 import { MESSAGES } from '../messages';
 
 const styles: SxStyles = {
-    alert: { maxWidth: 460, textAlign: 'center' },
+    alert: { textAlign: 'center', justifyContent: 'center' },
 };
 
 type Props = {

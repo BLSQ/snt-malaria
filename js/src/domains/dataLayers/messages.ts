@@ -103,6 +103,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.importFailed',
         defaultMessage: 'OpenHexa import failed',
     },
+    layerSetupIncomplete: {
+        id: 'iaso.snt_malaria.settings.dataLayers.layerSetupIncomplete',
+        defaultMessage: 'Setup was not completed for this layer',
+    },
     deleteLayer: {
         id: 'iaso.snt_malaria.settings.dataLayers.deleteLayer',
         defaultMessage: 'Delete Layer',

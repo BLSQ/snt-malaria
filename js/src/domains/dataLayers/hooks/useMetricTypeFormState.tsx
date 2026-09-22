@@ -40,9 +40,6 @@ const DEFAULT_METRIC_TYPE: MetricTypeFormModel = {
     is_composite: false,
 };
 
-/** A fresh, fully-owned copy of the empty form model — for callers that reset a
- *  long-lived formik instance (e.g. the creation wizard) and must not hand back a
- *  shared, possibly-mutated singleton. */
 export const makeDefaultMetricType = (): MetricTypeFormModel => ({
     ...DEFAULT_METRIC_TYPE,
     legend_config: [
@@ -51,8 +48,6 @@ export const makeDefaultMetricType = (): MetricTypeFormModel => ({
     ],
 });
 
-/** Form model for editing an existing layer. A composite's legend lives on its
- *  composite-layer record, not the MetricType. */
 export const editFormModel = (
     metricType: MetricType,
     compositeLayer?: Pick<

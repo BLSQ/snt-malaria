@@ -3,6 +3,7 @@ import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import LayersIcon from '@mui/icons-material/Layers';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import {
     Box,
     ClickAwayListener,
@@ -71,6 +72,7 @@ const styles: SxStyles = {
         '&:active': { cursor: 'grabbing' },
     },
     metricTypeIcon: { minWidth: 20, mr: 2 },
+    incompleteIcon: { ml: 1, flexShrink: 0 },
     metricTypeDetails: {
         flexGrow: 1,
         display: 'flex',
@@ -203,6 +205,17 @@ export const DataLayerLine: FC<Props> = ({
                         />
                     )}
                     <Typography variant="body2">{metricType.name}</Typography>
+                    {metricType.is_complete === false && (
+                        <Tooltip
+                            title={formatMessage(MESSAGES.layerSetupIncomplete)}
+                        >
+                            <WarningAmberIcon
+                                fontSize="small"
+                                color="warning"
+                                sx={styles.incompleteIcon}
+                            />
+                        </Tooltip>
+                    )}
                     <ImportStatusIndicator importStatus={importStatus} />
                 </Box>
             </Box>

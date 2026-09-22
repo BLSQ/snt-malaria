@@ -106,6 +106,7 @@
     "iaso.snt_malaria.settings.dataLayers.refreshFromOpenHexa": "Actualiser depuis OpenHexa",
     "iaso.snt_malaria.settings.dataLayers.importRunning": "Import des données depuis OpenHexa…",
     "iaso.snt_malaria.settings.dataLayers.importFailed": "Échec de l'import OpenHexa",
+    "iaso.snt_malaria.settings.dataLayers.layerSetupIncomplete": "La configuration de cette couche n'a pas été terminée",
     "iaso.snt_malaria.settings.dataLayers.searchByName": "Rechercher par nom",
     "iaso.snt_malaria.settings.dataLayers.noLayersFound": "Aucune couche trouvée.",
     "iaso.snt_malaria.settings.dataLayers.expandCategory": "Développer la catégorie",
