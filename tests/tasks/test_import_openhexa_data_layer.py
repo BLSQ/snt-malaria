@@ -1,7 +1,7 @@
 from unittest import mock
 
 from iaso.models import MetricType, MetricValue, OrgUnit, Task
-from iaso.models.base import ERRORED, SUCCESS
+from iaso.models.base import ERRORED, KILLED, SUCCESS
 from plugins.snt_malaria.providers.openhexa_data_layers import CONFIG_FILENAME, METADATA_FILENAME
 from plugins.snt_malaria.tasks.import_openhexa_data_layer import import_openhexa_data_layer
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
@@ -94,3 +94,27 @@ class ImportOpenHexaDataLayerTaskTestCase(SNTMalariaTestCase):
 
         self.task.refresh_from_db()
         self.assertEqual(self.task.status, ERRORED)
+
+    def test_cancelling_first_import_deletes_the_metric_type_shell(self):
+        self.task.should_be_killed = True
+        self.task.save()
+
+        self._run()
+
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, KILLED)
+        self.assertFalse(MetricType.objects.filter(id=self.metric_type.id).exists())
+        self.assertFalse(MetricValue.objects.filter(metric_type_id=self.metric_type.id).exists())
+
+    def test_cancelling_refresh_keeps_the_existing_metric_type_and_values(self):
+        org_unit = OrgUnit.objects.get(source_ref="OU1")
+        MetricValue.objects.create(metric_type=self.metric_type, org_unit=org_unit, value=1)
+        self.task.should_be_killed = True
+        self.task.save()
+
+        self._run()
+
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, KILLED)
+        self.assertTrue(MetricType.objects.filter(id=self.metric_type.id).exists())
+        self.assertEqual(MetricValue.objects.filter(metric_type=self.metric_type).count(), 1)
