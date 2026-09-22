@@ -138,7 +138,7 @@ export const DataLayerWizardPanel: FC<Props> = ({
                                 categoryOptions={categoryOptions}
                                 existingCodes={existingCodes}
                                 isEditing={isEditing}
-                                codeLocked={Boolean(staged.createdMetricTypeId)}
+                                codeLocked={isSubmitting}
                             />
                         )}
                         {activeStep === WIZARD_STEPS.DATA && (

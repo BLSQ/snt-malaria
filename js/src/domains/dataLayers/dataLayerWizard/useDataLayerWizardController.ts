@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 import { isConcreteLegend, LegendTypes } from '../../../constants/legend';
 import { useSaveCompositeLayer } from '../../compositeLayerEditor/hooks/useSaveCompositeLayer';
@@ -119,9 +119,17 @@ export const useDataLayerWizardController = ({
         true,
         isOpen,
     );
+    // Excludes the layer this wizard run already imported (if any): otherwise, once
+    // the Data step's import creates its MetricType, re-picking a source on Details
+    // would find its own code already "taken" and drop it from the picker's options.
     const existingCodes = useMemo(
-        () => new Set((allMetricTypes ?? []).map(mt => mt.code)),
-        [allMetricTypes],
+        () =>
+            new Set(
+                (allMetricTypes ?? [])
+                    .filter(mt => mt.id !== staged.createdMetricTypeId)
+                    .map(mt => mt.code),
+            ),
+        [allMetricTypes, staged.createdMetricTypeId],
     );
 
     const { mutateAsync: createMetricType } = useCreateOrUpdateMetricType({
@@ -247,28 +255,6 @@ export const useDataLayerWizardController = ({
             canAdvance = true;
     }
 
-    // Going back from Data un-does the OpenHexa import `goNext` already triggered
-    // (mirrors `setLayerType`'s cleanup): otherwise the picked layer's code stays
-    // locked in and disappears from the picker's options (it now shows as already
-    // imported), leaving the Select pointed at a value that's no longer offered.
-    const goBack = useCallback(() => {
-        if (
-            wizard.activeStep === WIZARD_STEPS.DATA &&
-            staged.layerType === 'openhexa' &&
-            staged.createdMetricTypeId
-        ) {
-            discardMetricType(staged.createdMetricTypeId, staged.layerType);
-            patch({ createdMetricTypeId: undefined });
-        }
-        wizard.goBack();
-    }, [
-        wizard,
-        staged.layerType,
-        staged.createdMetricTypeId,
-        discardMetricType,
-        patch,
-    ]);
-
     const [isSubmitting, setIsSubmitting] = useState(false);
     // Guards the composite-shell save against a double-click while it's in flight
     // (the button's `isSubmitting` disable is a render behind an async click).
@@ -334,10 +320,6 @@ export const useDataLayerWizardController = ({
             leavingDetails &&
             staged.layerType === 'composite' &&
             !staged.compositeLayerId;
-        const needsOpenHexaImport =
-            leavingDetails &&
-            staged.layerType === 'openhexa' &&
-            !staged.createdMetricTypeId;
         const needsStandardCreate =
             leavingDetails &&
             staged.layerType === 'data' &&
@@ -350,7 +332,6 @@ export const useDataLayerWizardController = ({
             Boolean(createdMetricTypeId);
         if (
             !needsCompositeShell &&
-            !needsOpenHexaImport &&
             !needsStandardCreate &&
             !needsStandardImport
         ) {
@@ -373,12 +354,6 @@ export const useDataLayerWizardController = ({
                     compositeLayerId: saved.id,
                     createdMetricTypeId: saved.metric_type ?? undefined,
                 });
-            } else if (needsOpenHexaImport) {
-                const { metric_type_id: metricTypeId } = await importOpenHexa({
-                    code: formik.values.code,
-                    legend_config: legendPayload(),
-                });
-                patch({ createdMetricTypeId: metricTypeId });
             } else if (needsStandardCreate) {
                 const created = (await createMetricType(
                     metricTypePayload(formik.values, legendPayload()) as any,
@@ -401,10 +376,65 @@ export const useDataLayerWizardController = ({
         staged.createdMetricTypeId,
         staged.gridYears,
         saveComposite,
-        importOpenHexa,
         createMetricType,
         submitGridValues,
         formik.values,
+        legendPayload,
+        patch,
+    ]);
+
+    // Fires once the wizard is actually showing the Data step, instead of blocking
+    // the Details -> Data transition on the import call. A fresh pick (no metric
+    // type yet) just starts the import; re-arriving with a different source than
+    // the one already imported cancels + discards that one first, so it never runs
+    // two imports for the same draft layer at once.
+    const openHexaImportInFlight = useRef(false);
+    useEffect(() => {
+        if (
+            wizard.activeStep !== WIZARD_STEPS.DATA ||
+            staged.layerType !== 'openhexa'
+        ) {
+            return;
+        }
+        const code = formik.values.code;
+        if (!code || code === staged.importedCode) return;
+        if (openHexaImportInFlight.current) return;
+        const previousMetricTypeId = staged.createdMetricTypeId;
+        openHexaImportInFlight.current = true;
+        setIsSubmitting(true);
+        setSubmitError(undefined);
+        (async () => {
+            try {
+                if (previousMetricTypeId) {
+                    cancelOpenHexaImport({
+                        metric_type_id: previousMetricTypeId,
+                    });
+                    deleteMetricType(previousMetricTypeId);
+                }
+                const { metric_type_id: metricTypeId } = await importOpenHexa({
+                    code,
+                    legend_config: legendPayload(),
+                });
+                patch({
+                    createdMetricTypeId: metricTypeId,
+                    importedCode: code,
+                });
+            } catch {
+                setSubmitError(prev => prev ?? MESSAGES.genericError);
+            } finally {
+                openHexaImportInFlight.current = false;
+                setIsSubmitting(false);
+            }
+        })();
+    }, [
+        wizard.activeStep,
+        staged.layerType,
+        staged.importedCode,
+        staged.createdMetricTypeId,
+        formik.values.code,
+        importOpenHexa,
+        cancelOpenHexaImport,
+        deleteMetricType,
         legendPayload,
         patch,
     ]);
@@ -480,8 +510,9 @@ export const useDataLayerWizardController = ({
             } else if (staged.layerType === 'composite') {
                 await submitCompositeCreate();
             } else {
-                // Standard and OpenHexa are both already created by `goNext`; this
-                // just finalises their legend.
+                // Standard is created by `goNext`, OpenHexa by the Data-step import
+                // effect; both are already created by this point, so this just
+                // finalises their legend.
                 await submitStandard();
             }
         } catch {
@@ -577,7 +608,7 @@ export const useDataLayerWizardController = ({
         activeStepIndex: wizard.activeStepIndex,
         lastStep: wizard.lastStep,
         goNext,
-        goBack,
+        goBack: wizard.goBack,
         canAdvance,
         isEditing,
         editingMetricType: editing?.metricType,

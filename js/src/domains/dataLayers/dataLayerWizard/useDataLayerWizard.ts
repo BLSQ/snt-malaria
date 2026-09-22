@@ -59,6 +59,9 @@ type StagedState = {
      *  editor in-flow). */
     compositeLayerId?: number;
     createdMetricTypeId?: number;
+    /** Code of the OpenHexa source `createdMetricTypeId` was last imported from, so a
+     *  re-pick on Details can tell whether the Data step needs to cancel + redo it. */
+    importedCode?: string;
 };
 
 const INITIAL: StagedState = {
@@ -109,7 +112,7 @@ export const useDataLayerWizard = () => {
             // previous pick — reselecting the same type keeps it.
             ...(layerType === prev.layerType
                 ? {}
-                : { createdMetricTypeId: undefined }),
+                : { createdMetricTypeId: undefined, importedCode: undefined }),
         }));
     }, []);
 
