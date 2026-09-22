@@ -19,6 +19,7 @@ export type MetricType = {
     legend_type: string;
     origin: string;
     metric_kind?: MetricKind;
+    is_complete?: boolean;
 };
 
 export type MetricTypeFormModel = {

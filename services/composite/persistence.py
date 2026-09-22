@@ -100,6 +100,7 @@ def _create_metric_type(
     units: str = "",
     unit_symbol: str = "",
     is_population: bool = False,
+    is_complete: bool = False,
 ) -> MetricType:
     return MetricType.objects.create(
         account=account,
@@ -114,6 +115,7 @@ def _create_metric_type(
         legend_type=legend_type,
         legend_config=legend_config,
         source="composite-layer-editor",
+        is_complete=is_complete,
     )
 
 
@@ -127,7 +129,8 @@ def create_composite_metric_type(
     """Create the ``MetricType`` backing a composite layer, without any ``MetricValue``.
 
     Used when the graph cannot run yet, so that the layer exists as soon as it is created; the values
-    and the resolved legend follow on the first successful run.
+    and the resolved legend follow on the first successful run. Stays hidden from data-layer lists
+    (``is_complete=False``) until then.
     """
     resolved_type, resolved_config = placeholder_legend(legend_type, legend_config)
     return _create_metric_type(account, name, resolved_type, resolved_config, **metadata)
@@ -201,6 +204,7 @@ def run_and_persist_composite_layer(
         units=units,
         unit_symbol=unit_symbol,
         is_population=is_population,
+        is_complete=True,
     )
     _write_metric_values(metric_type, values_by_year)
     return metric_type
@@ -238,7 +242,10 @@ def update_composite_metric_type(
     )
 
     metric_type.legend_type, metric_type.legend_config = resolve_output_legend(account, evaluator, values_by_year)
-    metric_type.save(update_fields=["legend_type", "legend_config", "updated_at"])
+    # The graph just ran successfully, producing real values, so the layer is now usable -
+    # relevant when this re-run is what first turns a shell into a real layer.
+    metric_type.is_complete = True
+    metric_type.save(update_fields=["legend_type", "legend_config", "is_complete", "updated_at"])
 
     MetricValue.objects.filter(metric_type=metric_type).delete()
     _write_metric_values(metric_type, values_by_year)
