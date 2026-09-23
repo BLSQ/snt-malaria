@@ -9,7 +9,6 @@ type ScenarioRulePayload = {
     id?: number;
     name: string;
     scenario: number;
-    is_match_all?: boolean;
     matching_criteria: MetricTypeCriterion[];
     interventions: number[];
     org_units_excluded?: string; // comma separated list of org unit ids
@@ -27,20 +26,17 @@ const orgUnitsFieldToApi = (value: unknown): number[] => {
 };
 
 /**
- * Map the form's is_match_all + matching_criteria into the single API
- * matching_criteria field.  Returns undefined when neither field changed
- * (so PATCH won't touch it).
+ * Map the form's matching_criteria into the API's matching_criteria field
+ * (jsonlogic, or null for an inclusion-only rule). Returns undefined when it
+ * didn't change (so PATCH won't touch it).
  */
 const resolveMatchingCriteria = (
     body: Partial<ScenarioRulePayload>,
 ): Record<string, unknown> | null | undefined => {
-    if (body.is_match_all) {
-        return { all: true };
-    }
     if (body.matching_criteria?.length) {
         return matchingCriteriaToJsonLogic(body.matching_criteria) ?? null;
     }
-    if ('matching_criteria' in body || 'is_match_all' in body) {
+    if ('matching_criteria' in body) {
         return null;
     }
     return undefined;
@@ -70,9 +66,8 @@ export const useCreateUpdateScenarioRule = (scenarioId: number) => {
     const replaceQueryData = useReplaceQueryData(scenarioId);
     return useSnackMutation({
         mutationFn: (body: Partial<ScenarioRulePayload>) => {
-            const { is_match_all: _, ...rest } = body;
             const payload: Record<string, unknown> = {
-                ...rest,
+                ...body,
                 matching_criteria: resolveMatchingCriteria(body),
             };
             if ('org_units_excluded' in body) {

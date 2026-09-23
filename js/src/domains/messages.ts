@@ -463,10 +463,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.budgeting.entirePeriod',
         defaultMessage: 'Entire period',
     },
-    excludedOrgUnits: {
-        id: 'iaso.snt_malaria.scenarioRule.excludedOrgUnits',
-        defaultMessage: 'Exclude',
-    },
     filter: {
         id: 'iaso.snt_malaria.label.filter',
         defaultMessage: 'Filter',
@@ -552,10 +548,6 @@ export const MESSAGES = defineMessages({
     importCSV: {
         id: 'iaso.snt_malaria.scenario.importCSV',
         defaultMessage: 'Import metric values',
-    },
-    includedOrgUnits: {
-        id: 'iaso.snt_malaria.scenarioRule.includedOrgUnits',
-        defaultMessage: 'Include',
     },
     interventionAssignmentRemoveAllButton: {
         id: 'iaso.snt_malaria.interventionAssignment.removeAll',
@@ -854,9 +846,13 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.resolveConflictTile',
         defaultMessage: 'Resolve Conflicts',
     },
-    ruleExceptions: {
-        id: 'iaso.snt_malaria.scenarioRule.ruleExceptions',
-        defaultMessage: 'Exceptions',
+    orgUnitsSectionLabel: {
+        id: 'iaso.snt_malaria.scenarioRule.orgUnitsSectionLabel',
+        defaultMessage: 'Org units',
+    },
+    retry: {
+        id: 'iaso.snt_malaria.label.retry',
+        defaultMessage: 'Retry',
     },
     ruleCoverage: {
         id: 'iaso.snt_malaria.scenarioRule.ruleCoverage',
@@ -873,6 +869,59 @@ export const MESSAGES = defineMessages({
     ruleNameAndColor: {
         id: 'iaso.snt_malaria.scenarioRule.ruleNameAndColor',
         defaultMessage: 'Rule name and color',
+    },
+    scopeLine: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeLine',
+        defaultMessage:
+            '{rule} by rule + {hand} handpicked − {exc} excluded = {scope} in scope',
+    },
+    scopeSearchPlaceholder: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeSearchPlaceholder',
+        defaultMessage: 'Enter search term',
+    },
+    scopeRowsShown: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeRowsShown',
+        defaultMessage: '{count} rows shown',
+    },
+    scopeFooterInScope: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeFooterInScope',
+        defaultMessage: '{count} in scope — changes apply live',
+    },
+    scopeResetOverrides: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeResetOverrides',
+        defaultMessage: 'Reset overrides',
+    },
+    scopeBranchExcludedSuffix: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeBranchExcludedSuffix',
+        defaultMessage: '{count} excluded',
+    },
+    scopeLoading: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeLoading',
+        defaultMessage: 'Loading org units…',
+    },
+    scopeNoResultTitle: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeNoResultTitle',
+        defaultMessage: 'No result found for "{query}".',
+    },
+    scopeClearFilter: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeClearFilter',
+        defaultMessage: 'Clear the filter',
+    },
+    scopeLoadErrorTitle: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeLoadErrorTitle',
+        defaultMessage: 'Could not load org units',
+    },
+    scopeLoadErrorDescription: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeLoadErrorDescription',
+        defaultMessage: 'The source version could not be reached.',
+    },
+    scopePreviewErrorTitle: {
+        id: 'iaso.snt_malaria.scenarioRule.scopePreviewErrorTitle',
+        defaultMessage: 'Could not run the rule',
+    },
+    scopePreviewErrorDescription: {
+        id: 'iaso.snt_malaria.scenarioRule.scopePreviewErrorDescription',
+        defaultMessage: 'Manual picks and exclusions are kept.',
     },
     scenarioCSV: {
         id: 'iaso.snt_malaria.scenario.scenarioCSV',

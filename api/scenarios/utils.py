@@ -119,54 +119,33 @@ def create_rules_from_import(
     scenario: Scenario,
     assignment_df: pd.DataFrame,
     interventions_qs,
-    all_org_unit_ids: set[int],
     user: User,
 ) -> list[ScenarioRule]:
     """Create ScenarioRules from a CSV import's assignment DataFrame.
 
-    Analyses the DataFrame to group org units by their intervention combination,
-    then creates one rule per group:
-    - Groups covering >50% of org units get a "match all" rule with exclusions.
-    - Smaller groups get an inclusion-only rule.
+    Analyses the DataFrame to group org units by their intervention combination, then creates one
+    inclusion-only rule per group.
     """
     groups = _build_intervention_groups(assignment_df, interventions_qs)
     if not groups:
         return []
-
-    total_count = len(all_org_unit_ids)
 
     rules = []
     groups_for_rules = []
 
     for idx, group in enumerate(groups):
         color = _get_dispersed_color(idx)
-        is_majority = len(group["org_unit_ids"]) > total_count / 2
-
-        if is_majority:
-            excluded = sorted(all_org_unit_ids - set(group["org_unit_ids"]))
-            rule = ScenarioRule(
-                scenario=scenario,
-                priority=idx + 1,
-                color=color,
-                matching_criteria={"all": True},
-                org_units_matched=[],
-                org_units_excluded=excluded,
-                org_units_included=[],
-                org_units_scope=[],
-                created_by=user,
-            )
-        else:
-            rule = ScenarioRule(
-                scenario=scenario,
-                priority=idx + 1,
-                color=color,
-                matching_criteria=None,
-                org_units_matched=[],
-                org_units_excluded=[],
-                org_units_included=group["org_unit_ids"],
-                org_units_scope=[],
-                created_by=user,
-            )
+        rule = ScenarioRule(
+            scenario=scenario,
+            priority=idx + 1,
+            color=color,
+            matching_criteria=None,
+            org_units_matched=[],
+            org_units_excluded=[],
+            org_units_included=group["org_unit_ids"],
+            org_units_scope=[],
+            created_by=user,
+        )
 
         rules.append(rule)
         groups_for_rules.append(group)

@@ -126,7 +126,8 @@ class DemoScenarioSeeder:
             created_by=user,
             priority=1,
             color="#26C6DA",
-            matching_criteria={"all": True},
+            matching_criteria=None,
+            org_units_included=ScenarioRule.resolve_all_org_unit_ids(self.account),
         )
 
         matching_criteria_seasonal = {

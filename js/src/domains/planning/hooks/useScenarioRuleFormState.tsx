@@ -8,7 +8,6 @@ export type ScenarioRuleFormValues = {
     name: string;
     scenario: number;
     color: string;
-    is_match_all: boolean;
     interventions: number[];
     matching_criteria: MetricTypeCriterion[];
     org_units_excluded?: string; // comma separated list of org unit ids
@@ -26,7 +25,6 @@ export const defaultScenarioRuleValues: ScenarioRuleFormValues = {
     scenario: 0,
     name: '',
     color: '#000000',
-    is_match_all: false,
     interventions: [],
     matching_criteria: [],
 };
@@ -36,7 +34,6 @@ const useValidation = () => {
         () =>
             Yup.object().shape({
                 name: Yup.string(),
-                is_match_all: Yup.boolean(),
                 interventions: Yup.array().of(Yup.number().required()).min(1),
                 matching_criteria: Yup.array()
                     .of(
@@ -47,23 +44,19 @@ const useValidation = () => {
                             string_value: Yup.string(),
                         }),
                     )
-                    .when('is_match_all', {
-                        is: false,
-                        then: schema =>
-                            schema.test(
-                                'criteria-or-inclusions',
-                                'required',
-                                function test(value) {
-                                    const { org_units_included } = this.parent;
-                                    if (
-                                        org_units_included &&
-                                        String(org_units_included).length > 0
-                                    )
-                                        return true;
-                                    return (value ?? []).length >= 1;
-                                },
-                            ),
-                    }),
+                    .test(
+                        'criteria-or-inclusions',
+                        'required',
+                        function test(value) {
+                            const { org_units_included } = this.parent;
+                            if (
+                                org_units_included &&
+                                String(org_units_included).length > 0
+                            )
+                                return true;
+                            return (value ?? []).length >= 1;
+                        },
+                    ),
             }),
         [],
     );

@@ -1,5 +1,6 @@
 from unittest.mock import Mock
 
+from iaso.models import OrgUnit
 from plugins.snt_malaria.api.scenario_rules.serializers import (
     ScenarioRuleCreateSerializer,
     ScenarioRuleListSerializer,
@@ -7,7 +8,7 @@ from plugins.snt_malaria.api.scenario_rules.serializers import (
     ScenarioRuleRetrieveSerializer,
     ScenarioRuleUpdateSerializer,
 )
-from plugins.snt_malaria.models import ScenarioRule
+from plugins.snt_malaria.models import AccountSettings, ScenarioRule
 from plugins.snt_malaria.tests.api.scenario_rules.common_base import ScenarioRulesTestBase
 
 
@@ -181,7 +182,7 @@ class ScenarioRuleCreateSerializerTestCase(ScenarioRulesTestBase):
         serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("matching_criteria", serializer.errors)
-        self.assertIn("is not valid under any of the given schemas", serializer.errors["matching_criteria"][0])
+        self.assertIn("'and' is a required property", serializer.errors["matching_criteria"][0])
 
     def test_invalid_matching_criteria_unknown_metric_type_id(self):
         invalid_metric_type_id = 1234567890
@@ -364,6 +365,59 @@ class ScenarioRuleCreateSerializerTestCase(ScenarioRulesTestBase):
         self.assertIn(f'Invalid pk "{self.other_scenario.id}"', serializer.errors["scenario"][0])
 
 
+class ScenarioRuleCreateSerializerInterventionLevelOnlyTestCase(ScenarioRulesTestBase):
+    """Tests that org_units_excluded/org_units_included/org_units_scope all reject org
+    units above the configured intervention level: the tree UI always resolves a
+    higher-level pick (e.g. a province) to its intervention-level org units before
+    submitting, so the API only ever needs to accept intervention-level ids."""
+
+    def setUp(self):
+        super().setUp()
+        self.context = {"request": Mock(user=self.user_with_full_perm)}
+        AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.out_district)
+        self.province_type = self.create_snt_org_unit_type(name="PROVINCE")
+        self.province = self.create_snt_org_unit(
+            org_unit_type=self.province_type,
+            name="Province 1",
+            version=self.version,
+            validation_status=OrgUnit.VALIDATION_VALID,
+            location=self.point,
+            geom=self.mock_multipolygon,
+        )
+
+    def base_data(self, **overrides):
+        data = {
+            "scenario": self.scenario.id,
+            "name": "New Rule",
+            "color": "#0000FF",
+            "matching_criteria": {"and": [{"==": [{"var": self.metric_type_population.id}, 1000]}]},
+            "interventions": [self.intervention_chemo_iptp.id],
+        }
+        data.update(overrides)
+        return data
+
+    def test_org_units_excluded_rejects_province_level_org_unit(self):
+        data = self.base_data(org_units_excluded=[self.province.id])
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("org_units_excluded", serializer.errors)
+        self.assertIn(f'Invalid pk "{self.province.id}"', serializer.errors["org_units_excluded"][0][0])
+
+    def test_org_units_included_rejects_province_level_org_unit(self):
+        data = self.base_data(org_units_included=[self.province.id])
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("org_units_included", serializer.errors)
+        self.assertIn(f'Invalid pk "{self.province.id}"', serializer.errors["org_units_included"][0][0])
+
+    def test_org_units_scope_rejects_province_level_org_unit(self):
+        data = self.base_data(org_units_scope=[self.province.id])
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("org_units_scope", serializer.errors)
+        self.assertIn(f'Invalid pk "{self.province.id}"', serializer.errors["org_units_scope"][0][0])
+
+
 class ScenarioRuleUpdateSerializerTestCase(ScenarioRulesTestBase):
     def setUp(self):
         super().setUp()
@@ -431,7 +485,7 @@ class ScenarioRuleUpdateSerializerTestCase(ScenarioRulesTestBase):
         serializer = ScenarioRuleUpdateSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("matching_criteria", serializer.errors)
-        self.assertIn("is not valid under any of the given schemas", serializer.errors["matching_criteria"][0])
+        self.assertIn("'and' is a required property", serializer.errors["matching_criteria"][0])
 
     def test_invalid_matching_criteria_unknown_metric_type_id(self):
         invalid_metric_type_id = 1234567890

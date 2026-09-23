@@ -248,7 +248,6 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
         self.scenario = self.create_snt_scenario(
             self.account, self.user, name="Import Scenario", start_year=2024, end_year=2026
         )
-        self.all_ou_ids = {self.ou1.id, self.ou2.id, self.ou3.id}
         self.col_a = get_intervention_column("Alpha", "a")
         self.col_b = get_intervention_column("Beta", "b")
 
@@ -268,7 +267,6 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
             self.scenario,
             df,
             self._interventions_qs(),
-            self.all_ou_ids,
             self.user,
         )
         self.assertEqual(len(rules), 3)
@@ -278,8 +276,9 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
             self.assertNotEqual(rule.org_units_included, [])
             self.assertTrue(rule.interventions.exists())
 
-    def test_majority_group_gets_match_all(self):
-        """Group covering >50% of org units gets a 'Match all' rule with exclusions."""
+    def test_majority_group_is_also_inclusion_only(self):
+        """There is no "match all" sentinel in matching_criteria - even a group covering >50% of
+        org units gets a plain inclusion-only rule, same as any other group."""
         df = pd.DataFrame(
             [
                 {"org_unit_id": self.ou1.id, self.col_a: 1, self.col_b: 0},
@@ -291,23 +290,20 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
             self.scenario,
             df,
             self._interventions_qs(),
-            self.all_ou_ids,
             self.user,
         )
         self.assertEqual(len(rules), 2)
 
-        majority_rule = next(r for r in rules if r.matching_criteria == {"all": True})
-        minority_rule = next(r for r in rules if r.matching_criteria is None)
+        majority_rule = next(r for r in rules if r.interventions.filter(id=self.iv_a.id).exists())
+        minority_rule = next(r for r in rules if r.interventions.filter(id=self.iv_b.id).exists())
 
-        self.assertEqual(sorted(majority_rule.org_units_excluded), [self.ou3.id])
-        self.assertEqual(majority_rule.org_units_included, [])
-        iv_ids = set(majority_rule.interventions.values_list("id", flat=True))
-        self.assertEqual(iv_ids, {self.iv_a.id})
+        self.assertIsNone(majority_rule.matching_criteria)
+        self.assertEqual(sorted(majority_rule.org_units_included), sorted([self.ou1.id, self.ou2.id]))
+        self.assertEqual(majority_rule.org_units_excluded, [])
 
+        self.assertIsNone(minority_rule.matching_criteria)
         self.assertEqual(minority_rule.org_units_included, [self.ou3.id])
         self.assertEqual(minority_rule.org_units_excluded, [])
-        iv_ids = set(minority_rule.interventions.values_list("id", flat=True))
-        self.assertEqual(iv_ids, {self.iv_b.id})
 
     def test_distinct_colors(self):
         df = pd.DataFrame(
@@ -321,7 +317,6 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
             self.scenario,
             df,
             self._interventions_qs(),
-            self.all_ou_ids,
             self.user,
         )
         colors = [r.color for r in rules]
@@ -339,7 +334,6 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
             self.scenario,
             df,
             self._interventions_qs(),
-            self.all_ou_ids,
             self.user,
         )
         combo_rule = next(r for r in rules if r.interventions.count() == 2)
@@ -358,7 +352,6 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
             self.scenario,
             df,
             self._interventions_qs(),
-            self.all_ou_ids,
             self.user,
         )
         self.assertEqual(len(rules), 0)
@@ -376,7 +369,6 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
             self.scenario,
             df,
             self._interventions_qs(),
-            self.all_ou_ids,
             self.user,
         )
         self.scenario.refresh_assignments(self.user)

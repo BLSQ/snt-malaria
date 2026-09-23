@@ -6,7 +6,6 @@ import { matchingCriteriaToJsonLogic } from '../utils/jsonLogic';
 
 type Payload = {
     data_layer_years?: Record<string, number>;
-    is_match_all?: boolean;
     matching_criteria: MetricTypeCriterion[];
     org_units_excluded?: string; // comma separated list of org unit ids
     org_units_included?: string; // comma separated list of org unit ids
@@ -15,14 +14,9 @@ type Payload = {
 export const usePreviewScenarioRule = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: (body: Partial<Payload>) => {
-            let matchingCriteria: Record<string, unknown> | null = null;
-            if (body.is_match_all) {
-                matchingCriteria = { all: true };
-            } else {
-                matchingCriteria = matchingCriteriaToJsonLogic(
-                    body.matching_criteria ?? [],
-                );
-            }
+            const matchingCriteria = matchingCriteriaToJsonLogic(
+                body.matching_criteria ?? [],
+            );
 
             const org_units_excluded = !!body.org_units_excluded
                 ? body.org_units_excluded.split(',')
