@@ -11,7 +11,7 @@ from plugins.snt_malaria.models import Intervention, ScenarioRule
 from plugins.snt_malaria.services.ai_chat import classify_anthropic_error
 
 from .agent import generate_scenario_rules
-from .matching_criteria import is_match_all, jsonlogic_to_matching_criteria
+from .matching_criteria import jsonlogic_to_matching_criteria
 from .permissions import ScenarioRuleAIPermission
 from .rule_set import build_account_metric_types, persist_scenario_rule_set
 from .serializers import (
@@ -25,11 +25,13 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
-def _rule_to_ai_context(rule: ScenarioRule) -> dict:
+def _rule_to_ai_context(rule: ScenarioRule, account_org_unit_ids: list[int]) -> dict:
     """Whitelisted view of a rule sent to the AI: definition only - name, criteria (thresholds, not
-    values), interventions, color. Never `org_units_matched`/`org_units_excluded`/`org_units_included`
-    (real org unit ids tied to a resolved health-metric condition), and never any MetricValue data."""
-    match_all = is_match_all(rule.matching_criteria)
+    values), interventions, color. Never the real `org_units_matched`/`org_units_excluded`/
+    `org_units_included` ids (tied to a resolved health-metric condition) or any MetricValue data -
+    `is_match_all` here is only a derived boolean (does org_units_included amount to "everyone"?),
+    never the ids themselves."""
+    match_all = ScenarioRule.covers_all_org_units(rule.org_units_included, account_org_unit_ids=account_org_unit_ids)
     return {
         "id": rule.id,
         "name": rule.name,
@@ -85,8 +87,10 @@ class ScenarioRuleAIViewSet(AIChatAttachmentViewSetMixin, viewsets.ViewSet):
             .annotate(category_name=F("intervention_category__name"))
             .values("id", "name", "category_name")
         )
+        account_org_unit_ids = ScenarioRule.resolve_all_org_unit_ids(account)
         current_rules = [
-            _rule_to_ai_context(rule) for rule in scenario.rules.order_by("priority").prefetch_related("interventions")
+            _rule_to_ai_context(rule, account_org_unit_ids)
+            for rule in scenario.rules.order_by("priority").prefetch_related("interventions")
         ]
 
         try:

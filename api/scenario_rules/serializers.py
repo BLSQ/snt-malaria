@@ -20,8 +20,20 @@ class ScenarioRuleQuerySerializer(serializers.Serializer):
         self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
 
 
+def _rule_is_match_all(rule: ScenarioRule, context: dict) -> bool:
+    """Read-only, derived: org_units_included/matching_criteria are the only fields that actually
+    drive matching - this just tells the frontend/AI chat when org_units_included happens to amount
+    to "every org unit", without a stored/settable match-all flag anywhere. Pass
+    `account_org_unit_ids` via serializer context (see ScenarioRuleViewSet.list) to resolve it once
+    for a whole list of rules instead of once per rule."""
+    account_org_unit_ids = context.get("account_org_unit_ids")
+    account = rule.scenario.account if account_org_unit_ids is None else None
+    return ScenarioRule.covers_all_org_units(rule.org_units_included, account, account_org_unit_ids)
+
+
 class ScenarioRuleListSerializer(serializers.ModelSerializer):
     interventions = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    is_match_all = serializers.SerializerMethodField()
 
     class Meta:
         model = ScenarioRule
@@ -33,11 +45,15 @@ class ScenarioRuleListSerializer(serializers.ModelSerializer):
             "color",
             "interventions",
             "matching_criteria",
+            "is_match_all",
             "org_units_matched",
             "org_units_excluded",
             "org_units_included",
             "org_units_scope",
         ]
+
+    def get_is_match_all(self, obj: ScenarioRule) -> bool:
+        return _rule_is_match_all(obj, self.context)
 
 
 class ScenarioRuleSmallSerializer(serializers.ModelSerializer):
@@ -53,6 +69,7 @@ class ScenarioRuleSmallSerializer(serializers.ModelSerializer):
 
 class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
     interventions = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    is_match_all = serializers.SerializerMethodField()
 
     class Meta:
         model = ScenarioRule
@@ -64,6 +81,7 @@ class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
             "color",
             "interventions",
             "matching_criteria",
+            "is_match_all",
             "org_units_matched",
             "org_units_excluded",
             "org_units_included",
@@ -73,6 +91,9 @@ class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
             "updated_by",
             "updated_at",
         ]
+
+    def get_is_match_all(self, obj: ScenarioRule) -> bool:
+        return _rule_is_match_all(obj, self.context)
 
 
 class ScenarioRulePreviewSerializer(serializers.ModelSerializer):
@@ -124,7 +145,7 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         user = self.context["request"].user
         account = user.iaso_profile.account
-        org_units = get_intervention_org_units(user.iaso_profile.account)
+        org_units = get_intervention_org_units(account)
         self.fields["org_units_excluded"].child.queryset = org_units
         self.fields["org_units_included"].child.queryset = org_units
         self.fields["org_units_scope"].child.queryset = org_units
@@ -134,10 +155,6 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
 
     def validate_matching_criteria(self, matching_criteria):
         if matching_criteria is None:
-            return matching_criteria
-
-        is_match_all = isinstance(matching_criteria, dict) and matching_criteria.get("all")
-        if is_match_all:
             return matching_criteria
 
         user = self.context["request"].user
@@ -216,6 +233,19 @@ class ScenarioRuleUpdateSerializer(ScenarioRuleWriteSerializerBase):
         for field in ["org_units_excluded", "org_units_included", "org_units_scope"]:
             if field in validated_data:
                 other_optional_values[field] = [org_unit.id for org_unit in validated_data.pop(field)]
+
+        # A rule whose org_units_included currently amounts to "every org unit" (AI "match
+        # everyone", or a manual all-select via the org unit tree) must drop that stale snapshot
+        # once real criteria take over, or resolve_org_unit_ids's union with `included` would keep
+        # matching everyone regardless of the new criteria. Only when this same request isn't
+        # already setting org_units_included itself.
+        if (
+            "matching_criteria" in validated_data
+            and validated_data["matching_criteria"] is not None
+            and "org_units_included" not in other_optional_values
+            and _rule_is_match_all(instance, self.context)
+        ):
+            other_optional_values["org_units_included"] = []
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
