@@ -131,5 +131,6 @@ def import_metric_values(metric_type, csv_text: str, column: str, task=None) -> 
     with transaction.atomic():
         MetricValue.objects.filter(metric_type=metric_type).delete()
         MetricValue.objects.bulk_create(list(values_by_key.values()), batch_size=BULK_CREATE_BATCH_SIZE)
+        metric_type.mark_complete_if_has_values()
 
     return len(values_by_key)

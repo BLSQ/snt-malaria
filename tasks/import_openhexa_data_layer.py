@@ -9,7 +9,7 @@ import logging
 from django.utils.translation import gettext_lazy as _
 
 from beanstalk_worker import task_decorator
-from iaso.models import KilledException, MetricType, MetricValue, Task
+from iaso.models import KilledException, MetricType, Task
 from plugins.snt_malaria.api.openhexa_data_layers.constants import IMPORT_TASK_NAME
 from plugins.snt_malaria.api.openhexa_data_layers.source import resolve_source_file
 from plugins.snt_malaria.providers.openhexa_data_layers import (
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 def import_openhexa_data_layer(metric_type_id: int, task: Task = None):
     metric_type = MetricType.objects.select_related("account").get(id=metric_type_id)
     account = metric_type.account
-    is_first_import = not MetricValue.objects.filter(metric_type=metric_type).exists()
+    is_first_import = not metric_type.is_complete
     logger.info(
         "import_openhexa_data_layer: metric type %s (code '%s'), account %s (%s)",
         metric_type_id,
@@ -74,6 +74,9 @@ def import_openhexa_data_layer(metric_type_id: int, task: Task = None):
             openhexa_url, openhexa_token, workspace_slug, source.dataset_slug, source.filename
         )
 
+        # Marks the metric type complete as soon as it has values (see
+        # `import_metric_values`), so the layer is usable even if the wizard tab closes
+        # before the user reaches the wizard's explicit POST .../complete/.
         count = import_metric_values(metric_type, csv_bytes.decode("utf-8"), source.column, task=task)
     except KilledException:
         if is_first_import:

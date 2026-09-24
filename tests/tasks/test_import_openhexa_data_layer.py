@@ -63,6 +63,7 @@ class ImportOpenHexaDataLayerTaskTestCase(SNTMalariaTestCase):
             name="Crude incidence",
             legend_type="threshold",
             origin=MetricType.MetricTypeOrigin.OPENHEXA,
+            is_complete=False,
         )
         self.task = Task.objects.create(name="import_openhexa_data_layer", launcher=self.user, account=self.account)
 
@@ -89,6 +90,15 @@ class ImportOpenHexaDataLayerTaskTestCase(SNTMalariaTestCase):
         self.task.refresh_from_db()
         self.assertEqual(self.task.status, SUCCESS)
 
+    def test_successful_import_marks_an_incomplete_metric_type_as_complete(self):
+        """A first import flips `is_complete` itself, instead of relying on the wizard's
+        later PATCH to the metrics API - so a shell isn't stuck incomplete forever if the
+        tab closes before that PATCH happens."""
+        self._run()
+
+        self.metric_type.refresh_from_db()
+        self.assertTrue(self.metric_type.is_complete)
+
     def test_fails_when_layer_no_longer_defined(self):
         self._run(metadata={})
 
@@ -107,6 +117,8 @@ class ImportOpenHexaDataLayerTaskTestCase(SNTMalariaTestCase):
         self.assertFalse(MetricValue.objects.filter(metric_type_id=self.metric_type.id).exists())
 
     def test_cancelling_refresh_keeps_the_existing_metric_type_and_values(self):
+        self.metric_type.is_complete = True
+        self.metric_type.save(update_fields=["is_complete"])
         org_unit = OrgUnit.objects.get(source_ref="OU1")
         MetricValue.objects.create(metric_type=self.metric_type, org_unit=org_unit, value=1)
         self.task.should_be_killed = True

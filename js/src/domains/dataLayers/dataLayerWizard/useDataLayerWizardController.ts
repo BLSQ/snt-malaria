@@ -13,6 +13,7 @@ import {
     scaleFromDomainRange,
 } from '../dataLayerForm/legendScale';
 import { useCancelOpenHexaImport } from '../hooks/useCancelOpenHexaImport';
+import { useCompleteMetricType } from '../hooks/useCompleteMetricType';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
 import { useDeleteMetricType } from '../hooks/useDeleteMetricType';
 import { useGetMetricTypes } from '../hooks/useGetMetrics';
@@ -159,6 +160,7 @@ export const useDataLayerWizardController = ({
     });
     const { mutateAsync: importGridValues } = useImportMetricValuesJson();
     const { mutateAsync: importOpenHexa } = useImportOpenHexaDataLayer();
+    const { mutateAsync: completeMetricType } = useCompleteMetricType();
     const { mutateAsync: saveComposite } = useSaveCompositeLayer(true);
     const { mutateAsync: updateComposite } = useSaveCompositeLayer();
     const { mutate: deleteMetricType } = useDeleteMetricType();
@@ -180,10 +182,10 @@ export const useDataLayerWizardController = ({
                 deleteCompositeLayer(compositeLayerId);
                 return;
             }
-            deleteMetricType(metricTypeId);
             if (layerType === 'openhexa') {
                 cancelOpenHexaImport({ metric_type_id: metricTypeId });
             }
+            deleteMetricType(metricTypeId);
         },
         [deleteMetricType, deleteCompositeLayer, cancelOpenHexaImport],
     );
@@ -535,6 +537,10 @@ export const useDataLayerWizardController = ({
             id: staged.createdMetricTypeId,
             ...metricTypePayload(formik.values, legendPayload()),
         } as any)) as MetricType;
+        // Explicit finalise step: this is what turns a wizard-created shell (standard or
+        // OpenHexa) into a real, listed layer - a no-op if OpenHexa's import task already
+        // completed it.
+        await completeMetricType(updated.id);
         onCreated(updated);
         close();
     }, [
@@ -542,6 +548,7 @@ export const useDataLayerWizardController = ({
         formik.values,
         legendPayload,
         createMetricType,
+        completeMetricType,
         onCreated,
         close,
     ]);
@@ -560,6 +567,9 @@ export const useDataLayerWizardController = ({
                 id: editing?.metricType.id,
                 ...metricTypePayload(values, legend_config),
             } as any)) as MetricType;
+            // Covers editing a layer that was never finalised (e.g. an OpenHexa import
+            // whose task never completed it) - a no-op otherwise, since it's already complete.
+            await completeMetricType(updated.id);
             onCreated(updated);
         }
         close();
@@ -569,6 +579,7 @@ export const useDataLayerWizardController = ({
         legendPayload,
         updateComposite,
         createMetricType,
+        completeMetricType,
         onCreated,
         close,
     ]);
