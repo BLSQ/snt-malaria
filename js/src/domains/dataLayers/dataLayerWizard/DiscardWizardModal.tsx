@@ -13,6 +13,7 @@ type Props = {
     message: IntlMessage;
     onConfirm: () => void;
     onCancel: () => void;
+    id?: string;
 };
 
 export const DiscardWizardModal: FC<Props> = ({
@@ -21,14 +22,15 @@ export const DiscardWizardModal: FC<Props> = ({
     message,
     onConfirm,
     onCancel,
+    id = 'data-layer-wizard-discard',
 }) => {
     const { formatMessage } = useSafeIntl();
     if (!open) return null;
     return (
         <ConfirmCancelModal
             open={open}
-            id="data-layer-wizard-discard"
-            dataTestId="data-layer-wizard-discard"
+            id={id}
+            dataTestId={id}
             titleMessage={titleMessage}
             onConfirm={onConfirm}
             onCancel={onCancel}

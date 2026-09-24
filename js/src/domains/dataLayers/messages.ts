@@ -376,4 +376,9 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.discardEditConfirm',
         defaultMessage: 'Discard your unsaved changes to this layer?',
     },
+    wizardBackGraphConfirm: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.backGraphConfirm',
+        defaultMessage:
+            'Going back now will discard any unsaved changes to the composite graph.',
+    },
 });

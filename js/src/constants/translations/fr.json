@@ -567,5 +567,6 @@
     "iaso.snt_malaria.settings.dataLayers.wizard.next": "Suivant : {step}",
     "iaso.snt_malaria.settings.dataLayers.wizard.saveChanges": "Enregistrer les modifications",
     "iaso.snt_malaria.settings.dataLayers.wizard.discardEditConfirm": "Abandonner vos modifications non enregistrées de cette couche ?",
+    "iaso.snt_malaria.settings.dataLayers.wizard.backGraphConfirm": "Revenir en arrière maintenant annulera les modifications non enregistrées du graphe composite.",
     "iaso.snt_malaria.settings.dataLayers.openHexaFieldsReadOnly": "Rempli depuis OpenHexa — lecture seule."
 }

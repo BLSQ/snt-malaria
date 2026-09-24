@@ -524,6 +524,14 @@ export const DataLayers: FC = () => {
                     onConfirm={wizard.confirmDiscard}
                     onCancel={wizard.cancelDiscard}
                 />
+                <DiscardWizardModal
+                    id="data-layer-wizard-back-graph"
+                    open={wizard.backConfirmOpen}
+                    titleMessage={wizard.titleMessage}
+                    message={MESSAGES.wizardBackGraphConfirm}
+                    onConfirm={wizard.confirmBack}
+                    onCancel={wizard.cancelBack}
+                />
             </PageContainer>
             {onboarding.element}
         </DataLayerComparisonProvider>

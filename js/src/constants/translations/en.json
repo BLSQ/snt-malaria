@@ -568,5 +568,6 @@
     "iaso.snt_malaria.settings.dataLayers.wizard.next": "Next: {step}",
     "iaso.snt_malaria.settings.dataLayers.wizard.saveChanges": "Save changes",
     "iaso.snt_malaria.settings.dataLayers.wizard.discardEditConfirm": "Discard your unsaved changes to this layer?",
+    "iaso.snt_malaria.settings.dataLayers.wizard.backGraphConfirm": "Going back now will discard any unsaved changes to the composite graph.",
     "iaso.snt_malaria.settings.dataLayers.openHexaFieldsReadOnly": "Filled in from OpenHexa — read-only."
 }

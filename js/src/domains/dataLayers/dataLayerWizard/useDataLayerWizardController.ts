@@ -105,6 +105,7 @@ export const useDataLayerWizardController = ({
     const { formatMessage } = useSafeIntl();
     const [isOpen, setIsOpen] = useState(false);
     const [discardOpen, setDiscardOpen] = useState(false);
+    const [backConfirmOpen, setBackConfirmOpen] = useState(false);
     /** The layer being edited (Details + Legend only); undefined for a create run. */
     const [editing, setEditing] = useState<{
         metricType: MetricType;
@@ -247,6 +248,21 @@ export const useDataLayerWizardController = ({
     ]);
 
     const cancelDiscard = useCallback(() => setDiscardOpen(false), []);
+
+    const requestBack = useCallback(() => {
+        if (wizard.isCompositeGraphStep) {
+            setBackConfirmOpen(true);
+            return;
+        }
+        wizard.goBack();
+    }, [wizard]);
+
+    const confirmBack = useCallback(() => {
+        setBackConfirmOpen(false);
+        wizard.goBack();
+    }, [wizard]);
+
+    const cancelBack = useCallback(() => setBackConfirmOpen(false), []);
 
     const setLayerType = useCallback(
         (layerType: WizardLayerType) => {
@@ -678,7 +694,10 @@ export const useDataLayerWizardController = ({
         activeStepIndex: wizard.activeStepIndex,
         lastStep: wizard.lastStep,
         goNext,
-        goBack: wizard.goBack,
+        goBack: requestBack,
+        backConfirmOpen,
+        confirmBack,
+        cancelBack,
         canAdvance,
         isEditing,
         editingMetricType: editing?.metricType,
