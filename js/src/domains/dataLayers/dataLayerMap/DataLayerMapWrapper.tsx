@@ -21,9 +21,7 @@ import { CardStyled } from '../../../components/CardStyled';
 import { OrgUnitSelect } from '../../../components/OrgUnitSelect';
 import { baseUrls } from '../../../constants/urls';
 import { MESSAGES } from '../../messages';
-import { ImportStatusIndicator } from '../dataLayerList/ImportStatusIndicator';
 import { useGetMetricValues } from '../hooks/useGetMetrics';
-import { OpenHexaImportStatus } from '../hooks/useGetOpenHexaImportStatus';
 import { MetricType, MetricValue } from '../types/metrics';
 import { DataLayerMap } from './DataLayerMap';
 import { ExportMetricValuesCsvButton } from './ExportMetricValuesCsvButton';
@@ -50,7 +48,6 @@ type Props = {
     /** Set when the displayed layer is a composite: enables the "Edit composite" button. */
     compositeLayerId?: number;
     onEditComposite?: (compositeLayerId: number) => void;
-    importStatus?: OpenHexaImportStatus;
 };
 
 export const DataLayerMapWrapper: FC<Props> = ({
@@ -62,7 +59,6 @@ export const DataLayerMapWrapper: FC<Props> = ({
     showCompositeLayers = false,
     compositeLayerId = undefined,
     onEditComposite = undefined,
-    importStatus = undefined,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { data: metricValues, isLoading: loadingMetricValues } =
@@ -130,7 +126,6 @@ export const DataLayerMapWrapper: FC<Props> = ({
                                 {metricType?.name || ''}
                             </Typography>
                         </Tooltip>
-                        <ImportStatusIndicator importStatus={importStatus} />
                         <Stack
                             direction="row"
                             spacing={2}

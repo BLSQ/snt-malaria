@@ -427,11 +427,6 @@ export const DataLayers: FC = () => {
                 showCompositeLayers={showCompositeLayers}
                 compositeLayerId={compositeLayerIdFor(displayedMetricType)}
                 onEditComposite={onEditCompositeLayer}
-                importStatus={
-                    displayedMetricType
-                        ? openHexaImportStatus?.[displayedMetricType.id]
-                        : undefined
-                }
             />
             <DataLayerComparisonContainer />
         </Stack>
