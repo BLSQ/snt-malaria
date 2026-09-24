@@ -298,12 +298,13 @@ export const useDataLayerWizardController = ({
                     }
                 });
             });
-            await importGridValues({
+            const response = await importGridValues({
                 metric_type_id: metricTypeId,
                 years,
                 values,
             });
             patch({ importedYears: staged.gridYears });
+            return response;
         },
         [
             staged.gridYears,
@@ -376,7 +377,21 @@ export const useDataLayerWizardController = ({
                 )) as MetricType;
                 patch({ createdMetricTypeId: created.id });
             } else if (needsStandardImport && createdMetricTypeId) {
-                await submitGridValues(createdMetricTypeId);
+                const response = await submitGridValues(createdMetricTypeId);
+                const { suggested_legend_type, suggested_legend_config } =
+                    response ?? {};
+                if (suggested_legend_type && suggested_legend_config) {
+                    formik.setValues({
+                        ...formik.values,
+                        legend_type: suggested_legend_type,
+                        legend_config: scaleFromDomainRange(
+                            suggested_legend_config,
+                        ),
+                        legend_top_color: initialTopColor(
+                            suggested_legend_config,
+                        ),
+                    });
+                }
             }
             wizard.goNext();
         } catch {
@@ -387,6 +402,7 @@ export const useDataLayerWizardController = ({
         }
     }, [
         wizard,
+        formik,
         staged.layerType,
         staged.compositeLayerId,
         staged.createdMetricTypeId,
@@ -395,7 +411,6 @@ export const useDataLayerWizardController = ({
         saveComposite,
         createMetricType,
         submitGridValues,
-        formik.values,
         legendPayload,
         patch,
     ]);
