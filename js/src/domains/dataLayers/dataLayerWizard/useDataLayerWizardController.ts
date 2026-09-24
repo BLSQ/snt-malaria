@@ -4,6 +4,7 @@ import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
 import { errorSnackBar } from 'Iaso/constants/snackBars';
 import { ApiError } from 'Iaso/libs/Api';
 import { isConcreteLegend, LegendTypes } from '../../../constants/legend';
+import { useDeleteCompositeLayer } from '../../compositeLayerEditor/hooks/useDeleteCompositeLayer';
 import { useSaveCompositeLayer } from '../../compositeLayerEditor/hooks/useSaveCompositeLayer';
 import { CompositeLayerListItem } from '../../compositeLayerEditor/types/compositeLayer';
 import {
@@ -160,18 +161,30 @@ export const useDataLayerWizardController = ({
     const { mutateAsync: saveComposite } = useSaveCompositeLayer(true);
     const { mutateAsync: updateComposite } = useSaveCompositeLayer();
     const { mutate: deleteMetricType } = useDeleteMetricType();
+    const { mutate: deleteCompositeLayer } = useDeleteCompositeLayer();
     const { mutate: cancelOpenHexaImport } = useCancelOpenHexaImport();
 
     // Discarding an OpenHexa layer's shell should also stop its background value
-    // import; the task is looked up server-side by the metric type id.
+    // import; the task is looked up server-side by the metric type id. A composite
+    // shell is deleted through its own endpoint instead: `metric_type` is a
+    // SET_NULL FK, so deleting the MetricType directly would leave the
+    // CompositeLayer row (and its graph) orphaned rather than cleaning it up.
     const discardMetricType = useCallback(
-        (metricTypeId: number, layerType: WizardLayerType) => {
+        (
+            metricTypeId: number,
+            layerType: WizardLayerType,
+            compositeLayerId?: number,
+        ) => {
+            if (layerType === 'composite' && compositeLayerId) {
+                deleteCompositeLayer(compositeLayerId);
+                return;
+            }
             deleteMetricType(metricTypeId);
             if (layerType === 'openhexa') {
                 cancelOpenHexaImport({ metric_type_id: metricTypeId });
             }
         },
-        [deleteMetricType, cancelOpenHexaImport],
+        [deleteMetricType, deleteCompositeLayer, cancelOpenHexaImport],
     );
 
     const resetAll = useCallback(() => {
@@ -218,12 +231,17 @@ export const useDataLayerWizardController = ({
 
     const confirmDiscard = useCallback(() => {
         if (staged.createdMetricTypeId) {
-            discardMetricType(staged.createdMetricTypeId, staged.layerType);
+            discardMetricType(
+                staged.createdMetricTypeId,
+                staged.layerType,
+                staged.compositeLayerId,
+            );
         }
         close();
     }, [
         staged.createdMetricTypeId,
         staged.layerType,
+        staged.compositeLayerId,
         discardMetricType,
         close,
     ]);
@@ -234,7 +252,11 @@ export const useDataLayerWizardController = ({
         (layerType: WizardLayerType) => {
             const isChanging = layerType !== staged.layerType;
             if (isChanging && staged.createdMetricTypeId) {
-                discardMetricType(staged.createdMetricTypeId, staged.layerType);
+                discardMetricType(
+                    staged.createdMetricTypeId,
+                    staged.layerType,
+                    staged.compositeLayerId,
+                );
             }
             wizard.setLayerType(layerType);
             if (isChanging) {
@@ -252,6 +274,7 @@ export const useDataLayerWizardController = ({
             formik,
             staged.layerType,
             staged.createdMetricTypeId,
+            staged.compositeLayerId,
             discardMetricType,
         ],
     );
