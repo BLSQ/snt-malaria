@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { IntlMessage, useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
+import { openSnackBar } from 'Iaso/components/snackBars/EventDispatcher';
+import { errorSnackBar } from 'Iaso/constants/snackBars';
+import { ApiError } from 'Iaso/libs/Api';
 import { isConcreteLegend, LegendTypes } from '../../../constants/legend';
 import { useSaveCompositeLayer } from '../../compositeLayerEditor/hooks/useSaveCompositeLayer';
 import { CompositeLayerListItem } from '../../compositeLayerEditor/types/compositeLayer';
@@ -61,10 +64,6 @@ const layerTypeOf = (model: MetricTypeFormModel): WizardLayerType => {
     return 'data';
 };
 
-const errorMessage = (code: string): IntlMessage =>
-    (MESSAGES[`${code}Error` as keyof typeof MESSAGES] as IntlMessage) ??
-    MESSAGES.genericError;
-
 const metricTypePayload = (
     values: MetricTypeFormModel,
     legend_config: ScaleDomainRange | undefined,
@@ -105,7 +104,6 @@ export const useDataLayerWizardController = ({
     const { formatMessage } = useSafeIntl();
     const [isOpen, setIsOpen] = useState(false);
     const [discardOpen, setDiscardOpen] = useState(false);
-    const [submitError, setSubmitError] = useState<IntlMessage>();
     /** The layer being edited (Details + Legend only); undefined for a create run. */
     const [editing, setEditing] = useState<{
         metricType: MetricType;
@@ -132,8 +130,29 @@ export const useDataLayerWizardController = ({
         [allMetricTypes, staged.createdMetricTypeId],
     );
 
+    const formik = useMetricTypeFormState(undefined, () => undefined);
+
+    const onCreateMetricTypeError = useCallback(
+        (error: ApiError) => {
+            if (error.status !== 400) return;
+            const code = error.details?.code?.[0];
+            if (code === 'uniqueCode') {
+                formik.setFieldTouched('code', true, false);
+                formik.setFieldError(
+                    'code',
+                    formatMessage(MESSAGES.uniqueCodeError),
+                );
+            } else {
+                openSnackBar(
+                    errorSnackBar(undefined, MESSAGES.genericError, error),
+                );
+            }
+        },
+        [formik, formatMessage],
+    );
+
     const { mutateAsync: createMetricType } = useCreateOrUpdateMetricType({
-        onError: (code: string) => setSubmitError(errorMessage(code)),
+        onError: onCreateMetricTypeError,
         onSuccess: () => undefined,
     });
     const { mutateAsync: importGridValues } = useImportMetricValuesJson();
@@ -155,13 +174,10 @@ export const useDataLayerWizardController = ({
         [deleteMetricType, cancelOpenHexaImport],
     );
 
-    const formik = useMetricTypeFormState(undefined, () => undefined);
-
     const resetAll = useCallback(() => {
         formik.resetForm({ values: makeDefaultMetricType() });
         resetStaged();
         setEditing(undefined);
-        setSubmitError(undefined);
     }, [formik, resetStaged]);
 
     const open = useCallback(() => {
@@ -175,7 +191,6 @@ export const useDataLayerWizardController = ({
             formik.resetForm({ values: model });
             wizard.start(EDIT_STEPS, { layerType: layerTypeOf(model) });
             setEditing({ metricType, compositeLayer });
-            setSubmitError(undefined);
             setIsOpen(true);
         },
         [formik, wizard],
@@ -358,7 +373,6 @@ export const useDataLayerWizardController = ({
         if (busyRef.current) return;
         busyRef.current = true;
         setIsSubmitting(true);
-        setSubmitError(undefined);
         try {
             if (needsCompositeShell) {
                 // Persist the shell so the node editor (keyed by a real id) can run.
@@ -395,7 +409,8 @@ export const useDataLayerWizardController = ({
             }
             wizard.goNext();
         } catch {
-            setSubmitError(prev => prev ?? MESSAGES.genericError);
+            // The failing mutation already surfaced its own error snackbar;
+            // this just stops the wizard from advancing.
         } finally {
             busyRef.current = false;
             setIsSubmitting(false);
@@ -434,7 +449,6 @@ export const useDataLayerWizardController = ({
         const previousMetricTypeId = staged.createdMetricTypeId;
         openHexaImportInFlight.current = true;
         setIsSubmitting(true);
-        setSubmitError(undefined);
         (async () => {
             try {
                 if (previousMetricTypeId) {
@@ -452,7 +466,7 @@ export const useDataLayerWizardController = ({
                     importedCode: code,
                 });
             } catch {
-                setSubmitError(prev => prev ?? MESSAGES.genericError);
+                // `importOpenHexa` already surfaced its own error snackbar.
             } finally {
                 openHexaImportInFlight.current = false;
                 setIsSubmitting(false);
@@ -534,7 +548,6 @@ export const useDataLayerWizardController = ({
     ]);
 
     const submit = useCallback(async () => {
-        setSubmitError(undefined);
         setIsSubmitting(true);
         try {
             if (editing) {
@@ -548,9 +561,7 @@ export const useDataLayerWizardController = ({
                 await submitStandard();
             }
         } catch {
-            // createMetricType's onError already resolved a specific message;
-            // fall back to a generic one for the composite path.
-            setSubmitError(prev => prev ?? MESSAGES.genericError);
+            // The failing mutation already surfaced its own error snackbar.
         } finally {
             setIsSubmitting(false);
         }
@@ -588,8 +599,6 @@ export const useDataLayerWizardController = ({
         },
         [formik, goNext],
     );
-
-    const clearSubmitError = useCallback(() => setSubmitError(undefined), []);
 
     const stepLabels = useMemo(
         () =>
@@ -659,8 +668,6 @@ export const useDataLayerWizardController = ({
         onCompositeGraphSaved,
         submit,
         isSubmitting,
-        submitError,
-        clearSubmitError,
         existingCodes,
         categoryOptions,
     };

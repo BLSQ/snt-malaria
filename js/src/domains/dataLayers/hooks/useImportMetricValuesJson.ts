@@ -25,6 +25,8 @@ export const useImportMetricValuesJson = (): UseMutationResult<
         mutationFn: (body: ImportMetricValuesJsonPayload) =>
             postRequest('/api/metricvalues/import_values/', body),
         invalidateQueryKey: ['metricCategories', 'metricValues'],
-        snackSuccessMessage: MESSAGES.metricValuesImportSuccess,
+        // This runs on the wizard's Data -> Legend transition; the wizard moving
+        // on to the next step is feedback enough, so a success toast is noise.
+        showSuccessSnackBar: false,
         snackErrorMsg: MESSAGES.metricValuesImportError,
     });

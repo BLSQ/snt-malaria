@@ -1,13 +1,5 @@
 import React, { FC, ReactNode, useCallback } from 'react';
-import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    Divider,
-    Stack,
-    Typography,
-} from '@mui/material';
+import { Box, Button, Card, Divider, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
@@ -83,8 +75,6 @@ export const DataLayerWizardPanel: FC<Props> = ({
         requestClose,
         submit,
         isSubmitting,
-        submitError,
-        clearSubmitError,
         isCompositeGraphStep,
         existingCodes,
         categoryOptions,
@@ -101,11 +91,6 @@ export const DataLayerWizardPanel: FC<Props> = ({
             goNext();
         }
     }, [isCompositeGraphStep, isLastStep, onCompositeNext, submit, goNext]);
-
-    const onBack = useCallback(() => {
-        clearSubmitError();
-        goBack();
-    }, [clearSubmitError, goBack]);
 
     return (
         <Card sx={styles.card}>
@@ -157,12 +142,6 @@ export const DataLayerWizardPanel: FC<Props> = ({
                 )}
             </ExtendedFormikProvider>
 
-            {submitError && (
-                <Alert severity="error" sx={{ mx: 2, mb: 1 }}>
-                    {formatMessage(submitError)}
-                </Alert>
-            )}
-
             <Divider />
             <Stack direction="row" sx={styles.footer}>
                 <Button onClick={requestClose} disabled={isSubmitting}>
@@ -170,7 +149,7 @@ export const DataLayerWizardPanel: FC<Props> = ({
                 </Button>
                 <Stack direction="row" sx={styles.footerActions}>
                     {activeStepIndex > 0 && (
-                        <Button onClick={onBack} disabled={isSubmitting}>
+                        <Button onClick={goBack} disabled={isSubmitting}>
                             {formatMessage(MESSAGES.wizardBack)}
                         </Button>
                     )}
