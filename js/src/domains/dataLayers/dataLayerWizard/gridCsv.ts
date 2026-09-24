@@ -82,13 +82,15 @@ export const parseYearlyCsv = (text: string): ParsedYearlyCsv => {
 
     const yearColumns = headers
         .map((header, index) => ({ year: Number(header), index }))
-        .filter(({ year }) => Number.isInteger(year));
+        .filter(
+            ({ year }, i) => headers[i].trim() !== '' && Number.isInteger(year),
+        );
 
     const valuesByOrgUnit: Record<number, Record<number, string>> = {};
     for (const line of lines.slice(1)) {
         const cells = splitCsvLine(line, delimiter);
         const orgUnitId = Number(cells[idIndex]);
-        if (Number.isFinite(orgUnitId)) {
+        if (Number.isFinite(orgUnitId) && orgUnitId > 0) {
             const rowValues: Record<number, string> = {};
             yearColumns.forEach(({ year, index }) => {
                 const value = (cells[index] ?? '').trim();
