@@ -217,15 +217,19 @@ export const useDataLayerWizardController = ({
 
     const setLayerType = useCallback(
         (layerType: WizardLayerType) => {
-            if (layerType !== staged.layerType && staged.createdMetricTypeId) {
+            const isChanging = layerType !== staged.layerType;
+            if (isChanging && staged.createdMetricTypeId) {
                 discardMetricType(staged.createdMetricTypeId, staged.layerType);
             }
             wizard.setLayerType(layerType);
-            Object.entries(layerTypeToFormFields(layerType)).forEach(
-                ([field, value]) => formik.setFieldValue(field, value),
-            );
-            if (layerType === 'composite' && !formik.values.category) {
-                formik.setFieldValue('category', 'Composite');
+            if (isChanging) {
+                formik.resetForm({
+                    values: {
+                        ...makeDefaultMetricType(),
+                        ...layerTypeToFormFields(layerType),
+                        category: layerType === 'composite' ? 'Composite' : '',
+                    },
+                });
             }
         },
         [
