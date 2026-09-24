@@ -55,6 +55,7 @@ type StagedState = {
     gridValues: Record<number, Record<number, string>>;
     /** Year columns currently shown in the table, in display order. */
     gridYears: number[];
+    importedYears?: number[];
     /** Persisted composite shell id, once the graph step creates it (2a keeps the
      *  editor in-flow). */
     compositeLayerId?: number;
@@ -102,7 +103,11 @@ export const useDataLayerWizard = () => {
             // Table entries only apply to a standard layer; drop them otherwise.
             ...(layerType === 'data'
                 ? {}
-                : { gridValues: {}, gridYears: DEFAULT_GRID_YEARS }),
+                : {
+                      gridValues: {},
+                      gridYears: DEFAULT_GRID_YEARS,
+                      importedYears: undefined,
+                  }),
             // A composite shell no longer belongs to a layer of a different type;
             // the controller deletes the persisted record first.
             ...(layerType === 'composite'

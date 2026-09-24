@@ -23,7 +23,7 @@ export const WizardLegendPreview: FC<Props> = ({
     orgUnits,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const { formik, staged } = controller;
+    const { formik } = controller;
     const {
         ready,
         isOpenHexa,
@@ -34,18 +34,20 @@ export const WizardLegendPreview: FC<Props> = ({
         legendConfig,
     } = preview;
     const values = formik.values;
-    const isStandard = staged.layerType === 'data';
 
-    const years = useMemo(() => {
-        if (!isStandard) return [];
-        return Array.from(
-            new Set(
-                (metricValues ?? [])
-                    .map(mv => mv.year)
-                    .filter((year): year is number => year != null && year > 0),
+    const years = useMemo(
+        () =>
+            Array.from(
+                new Set(
+                    (metricValues ?? [])
+                        .map(mv => mv.year)
+                        .filter(
+                            (year): year is number => year != null && year > 0,
+                        ),
+                ),
             ),
-        );
-    }, [isStandard, metricValues]);
+        [metricValues],
+    );
     const { isMultiYear, selectedYear, setSelectedYear, displayedValues } =
         usePreviewYearSelection(years, metricValues);
 
@@ -76,7 +78,7 @@ export const WizardLegendPreview: FC<Props> = ({
                     {isMultiYear && (
                         <Select
                             size="small"
-                            value={selectedYear}
+                            value={selectedYear ?? ''}
                             onChange={event =>
                                 setSelectedYear(Number(event.target.value))
                             }

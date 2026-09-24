@@ -278,6 +278,10 @@ export const useDataLayerWizardController = ({
     const submitGridValues = useCallback(
         async (metricTypeId: number) => {
             if (staged.gridYears.length === 0) return;
+            const years = Array.from(
+                new Set([...(staged.importedYears ?? []), ...staged.gridYears]),
+            );
+            if (years.length === 0) return;
             const values: {
                 org_unit_id: number;
                 year: number;
@@ -296,11 +300,18 @@ export const useDataLayerWizardController = ({
             });
             await importGridValues({
                 metric_type_id: metricTypeId,
-                years: staged.gridYears,
+                years,
                 values,
             });
+            patch({ importedYears: staged.gridYears });
         },
-        [staged.gridYears, staged.gridValues, importGridValues],
+        [
+            staged.gridYears,
+            staged.gridValues,
+            staged.importedYears,
+            importGridValues,
+            patch,
+        ],
     );
 
     const onCsvFileSelected = useCallback(
@@ -332,8 +343,9 @@ export const useDataLayerWizardController = ({
         const needsStandardImport =
             leavingData &&
             staged.layerType === 'data' &&
-            staged.gridYears.length > 0 &&
-            Boolean(createdMetricTypeId);
+            Boolean(createdMetricTypeId) &&
+            (staged.gridYears.length > 0 ||
+                (staged.importedYears?.length ?? 0) > 0);
         if (
             !needsCompositeShell &&
             !needsStandardCreate &&
@@ -379,6 +391,7 @@ export const useDataLayerWizardController = ({
         staged.compositeLayerId,
         staged.createdMetricTypeId,
         staged.gridYears,
+        staged.importedYears,
         saveComposite,
         createMetricType,
         submitGridValues,
