@@ -347,6 +347,20 @@ export const useDataLayerWizardController = ({
         const leavingData =
             wizard.activeStep === WIZARD_STEPS.DATA &&
             nextStep === WIZARD_STEPS.LEGEND;
+        // Re-entering Data after picking a different OpenHexa source on Details:
+        // discard the previous pick's import (and staged reference to it) right
+        // now, before Data opens, instead of leaving it to the Data step's import
+        // effect — otherwise the map preview briefly shows the old source's
+        // already-imported values under the newly picked one.
+        if (
+            leavingDetails &&
+            staged.layerType === 'openhexa' &&
+            staged.createdMetricTypeId &&
+            staged.importedCode !== formik.values.code
+        ) {
+            discardMetricType(staged.createdMetricTypeId, staged.layerType);
+            patch({ createdMetricTypeId: undefined, importedCode: undefined });
+        }
         const needsCompositeShell =
             leavingDetails &&
             staged.layerType === 'composite' &&
@@ -421,20 +435,22 @@ export const useDataLayerWizardController = ({
         staged.layerType,
         staged.compositeLayerId,
         staged.createdMetricTypeId,
+        staged.importedCode,
         staged.gridYears,
         staged.importedYears,
         saveComposite,
         createMetricType,
         submitGridValues,
+        discardMetricType,
         legendPayload,
         patch,
     ]);
 
     // Fires once the wizard is actually showing the Data step, instead of blocking
-    // the Details -> Data transition on the import call. A fresh pick (no metric
-    // type yet) just starts the import; re-arriving with a different source than
-    // the one already imported cancels + discards that one first, so it never runs
-    // two imports for the same draft layer at once.
+    // the Details -> Data transition on the import call. `goNext` already discards
+    // a stale previous pick's metric type (and clears `createdMetricTypeId` /
+    // `importedCode`) before Data opens, so by the time this runs it only ever
+    // sees a fresh pick to import.
     const openHexaImportInFlight = useRef(false);
     useEffect(() => {
         if (
@@ -446,17 +462,10 @@ export const useDataLayerWizardController = ({
         const code = formik.values.code;
         if (!code || code === staged.importedCode) return;
         if (openHexaImportInFlight.current) return;
-        const previousMetricTypeId = staged.createdMetricTypeId;
         openHexaImportInFlight.current = true;
         setIsSubmitting(true);
         (async () => {
             try {
-                if (previousMetricTypeId) {
-                    cancelOpenHexaImport({
-                        metric_type_id: previousMetricTypeId,
-                    });
-                    deleteMetricType(previousMetricTypeId);
-                }
                 const { metric_type_id: metricTypeId } = await importOpenHexa({
                     code,
                     legend_config: legendPayload(),
@@ -476,11 +485,8 @@ export const useDataLayerWizardController = ({
         wizard.activeStep,
         staged.layerType,
         staged.importedCode,
-        staged.createdMetricTypeId,
         formik.values.code,
         importOpenHexa,
-        cancelOpenHexaImport,
-        deleteMetricType,
         legendPayload,
         patch,
     ]);
