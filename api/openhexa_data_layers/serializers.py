@@ -83,7 +83,7 @@ class ImportOpenHexaDataLayerSerializer(serializers.Serializer):
             or layer["legend_config"]
         )
 
-        metric_type, _created = MetricType.objects.update_or_create(
+        metric_type, created = MetricType.objects.update_or_create(
             account=account,
             code=layer["code"],
             defaults={
@@ -99,4 +99,13 @@ class ImportOpenHexaDataLayerSerializer(serializers.Serializer):
                 "origin": MetricType.MetricTypeOrigin.OPENHEXA,
             },
         )
+        if created:
+            metric_type.is_complete = False
+            metric_type.save(update_fields=["is_complete"])
         return metric_type
+
+
+class CancelOpenHexaImportSerializer(serializers.Serializer):
+    """Which layer's in-flight value import to stop, by its ``MetricType`` id."""
+
+    metric_type_id = serializers.IntegerField()

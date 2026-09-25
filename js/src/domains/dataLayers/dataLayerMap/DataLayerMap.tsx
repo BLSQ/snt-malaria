@@ -9,8 +9,13 @@ import {
 } from '../../planning/libs/map-utils';
 import { MetricType, MetricValue } from '../types/metrics';
 
+export type MapLegendConfig = Pick<
+    MetricType,
+    'units' | 'unit_symbol' | 'legend_type' | 'legend_config'
+>;
+
 type Props = {
-    metricType?: MetricType;
+    legendConfig?: MapLegendConfig;
     metricValues?: MetricValue[];
     orgUnits: OrgUnit[];
 };
@@ -21,7 +26,7 @@ const defaultOrgUnitStyle = {
 };
 
 export const DataLayerMap: FC<Props> = ({
-    metricType,
+    legendConfig,
     metricValues,
     orgUnits,
 }) => {
@@ -29,14 +34,15 @@ export const DataLayerMap: FC<Props> = ({
 
     const getOrgUnitMapMisc = useCallback(
         (orgUnitId: number) => {
-            if (!metricType) {
+            if (!legendConfig) {
                 return defaultOrgUnitStyle;
             }
-            const selectedMetric = getSelectedMetric(orgUnitId);
-
-            return getMapStyleForOrgUnit(metricType, selectedMetric);
+            return getMapStyleForOrgUnit(
+                legendConfig,
+                getSelectedMetric(orgUnitId),
+            );
         },
-        [getSelectedMetric, metricType],
+        [getSelectedMetric, legendConfig],
     );
 
     return (
@@ -44,7 +50,7 @@ export const DataLayerMap: FC<Props> = ({
             id={'data-layer-map'}
             border
             orgUnits={orgUnits}
-            legendConfig={metricType}
+            legendConfig={legendConfig}
             getOrgUnitMapMisc={getOrgUnitMapMisc}
         />
     );

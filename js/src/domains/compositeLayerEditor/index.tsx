@@ -113,6 +113,7 @@ type Props = {
     sidebarCollapsed?: boolean;
     /** Toggles the data layers sidebar (mirrors the scenario editor's rules-panel toggle). */
     onToggleSidebar?: () => void;
+    hideActions?: boolean;
 };
 
 // Imperative handle for the sibling AI chat panel (rendered by the parent) to push a generated
@@ -124,6 +125,7 @@ export type CompositeLayerEditorHandle = {
     /** Restores a graph captured earlier by `getCurrentGraph` (AI chat "revert"); `null` clears
      * the canvas back to an empty editor. */
     restoreGraph: (graph: CurrentGraph | null) => void;
+    saveGraph: () => void;
 };
 
 export const CompositeLayerEditor = forwardRef<
@@ -137,6 +139,7 @@ export const CompositeLayerEditor = forwardRef<
             compositeLayerId,
             sidebarCollapsed = false,
             onToggleSidebar,
+            hideActions = false,
         },
         ref,
     ) => {
@@ -508,20 +511,7 @@ export const CompositeLayerEditor = forwardRef<
             [handleGenerateGraph, remountWithGraph],
         );
 
-        useImperativeHandle(
-            ref,
-            () => ({
-                applyGeneratedGraph: handleGenerateGraph,
-                // nodesRef is kept current by handleChange, so this reflects the live canvas
-                // (including hand-built graphs that never came from the AI).
-                getCurrentGraph: () =>
-                    extractGraphSpecFromFlume(nodesRef.current),
-                restoreGraph: handleRestoreGraph,
-            }),
-            [handleGenerateGraph, handleRestoreGraph],
-        );
-
-        const handleSave = () => {
+        const handleSave = useCallback(() => {
             saveCompositeLayer(
                 {
                     graph: nodesRef.current,
@@ -539,7 +529,21 @@ export const CompositeLayerEditor = forwardRef<
                     },
                 },
             );
-        };
+        }, [saveCompositeLayer, compositeLayerId, onSaved, onClose]);
+
+        useImperativeHandle(
+            ref,
+            () => ({
+                applyGeneratedGraph: handleGenerateGraph,
+                // nodesRef is kept current by handleChange, so this reflects the live canvas
+                // (including hand-built graphs that never came from the AI).
+                getCurrentGraph: () =>
+                    extractGraphSpecFromFlume(nodesRef.current),
+                restoreGraph: handleRestoreGraph,
+                saveGraph: handleSave,
+            }),
+            [handleGenerateGraph, handleRestoreGraph, handleSave],
+        );
 
         const headerTitle =
             existingLayer?.name || formatMessage(MESSAGES.title);
@@ -577,6 +581,7 @@ export const CompositeLayerEditor = forwardRef<
                             onCancel={onClose}
                             onSave={handleSave}
                             isSaving={isSaving}
+                            hideActions={hideActions}
                         />
                     }
                 >

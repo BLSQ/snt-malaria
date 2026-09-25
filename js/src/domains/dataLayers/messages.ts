@@ -5,6 +5,10 @@ export const MESSAGES = defineMessages({
         defaultMessage: 'Cancel',
         id: 'iaso.label.cancel',
     },
+    confirm: {
+        defaultMessage: 'Confirm',
+        id: 'iaso.label.confirm',
+    },
     description: {
         id: 'iaso.snt_malaria.label.description',
         defaultMessage: 'Description',
@@ -32,22 +36,6 @@ export const MESSAGES = defineMessages({
     createLayer: {
         id: 'iaso.snt_malaria.settings.dataLayers.createLayer',
         defaultMessage: 'Create layer',
-    },
-    continueToEditor: {
-        id: 'iaso.snt_malaria.settings.dataLayers.continueToEditor',
-        defaultMessage: 'Continue',
-    },
-    generalSectionTitle: {
-        id: 'iaso.snt_malaria.settings.dataLayers.generalSectionTitle',
-        defaultMessage: 'General',
-    },
-    legendSectionTitle: {
-        id: 'iaso.snt_malaria.settings.dataLayers.legendSectionTitle',
-        defaultMessage: 'Legend & scale',
-    },
-    layerType: {
-        id: 'iaso.snt_malaria.settings.dataLayers.layerType',
-        defaultMessage: 'Layer type',
     },
     layerTypeData: {
         id: 'iaso.snt_malaria.settings.dataLayers.layerTypeData',
@@ -83,11 +71,7 @@ export const MESSAGES = defineMessages({
     },
     openHexaFieldsReadOnly: {
         id: 'iaso.snt_malaria.settings.dataLayers.openHexaFieldsReadOnly',
-        defaultMessage: 'read-only · from data layer',
-    },
-    openHexaColorsEditable: {
-        id: 'iaso.snt_malaria.settings.dataLayers.openHexaColorsEditable',
-        defaultMessage: 'colors editable',
+        defaultMessage: 'Filled in from OpenHexa — read-only.',
     },
     openHexaDataLayersError: {
         id: 'iaso.snt_malaria.settings.dataLayers.openHexaDataLayersError',
@@ -102,11 +86,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.openHexaLayersAlreadyImported',
         defaultMessage: 'Already imported (hidden): {layers}',
     },
-    openHexaImportStarted: {
-        id: 'iaso.snt_malaria.settings.dataLayers.openHexaImportStarted',
-        defaultMessage:
-            'Import started. The layer values will appear once the task completes.',
-    },
     refreshFromOpenHexa: {
         id: 'iaso.snt_malaria.settings.dataLayers.refreshFromOpenHexa',
         defaultMessage: 'Refresh from OpenHexa',
@@ -118,6 +97,10 @@ export const MESSAGES = defineMessages({
     importFailed: {
         id: 'iaso.snt_malaria.settings.dataLayers.importFailed',
         defaultMessage: 'OpenHexa import failed',
+    },
+    layerSetupIncomplete: {
+        id: 'iaso.snt_malaria.settings.dataLayers.layerSetupIncomplete',
+        defaultMessage: 'Setup was not completed for this layer',
     },
     deleteLayer: {
         id: 'iaso.snt_malaria.settings.dataLayers.deleteLayer',
@@ -143,17 +126,9 @@ export const MESSAGES = defineMessages({
         id: 'ias.snt_malaria.settings.dataLayers.addToComparison',
         defaultMessage: 'Add to comparison maps',
     },
-    codeImmutableErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.dataLayers.errors.codeImmutableHeadline',
-        defaultMessage: 'Layer code is immutable.',
-    },
     genericError: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.genericError',
         defaultMessage: 'Please try again.',
-    },
-    genericErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.dataLayers.errors.genericErrorHeadline',
-        defaultMessage: 'An unexpected error occurred.',
     },
     invalidColor: {
         id: 'iaso.snt_malaria.settings.dataLayers.errors.invalidColor',
@@ -171,10 +146,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeError',
         defaultMessage:
             'A Layer with this code already exists. Please choose a different code.',
-    },
-    uniqueCodeErrorHeadline: {
-        id: 'iaso.snt_malaria.settings.dataLayers.errors.uniqueCodeErrorHeadline',
-        defaultMessage: 'Layer with this code already exists.',
     },
     label: {
         id: 'iaso.snt_malaria.settings.dataLayers.label',
@@ -285,5 +256,129 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.dataLayers.importCSVYearCaption',
         defaultMessage:
             'The year for which the metric values will be imported.',
+    },
+    wizardTitle: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.title',
+        defaultMessage: 'New data layer',
+    },
+    wizardSaveChanges: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.saveChanges',
+        defaultMessage: 'Save changes',
+    },
+    wizardStepType: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.stepType',
+        defaultMessage: 'Type',
+    },
+    wizardStepDetails: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.stepDetails',
+        defaultMessage: 'Details',
+    },
+    wizardStepData: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.stepData',
+        defaultMessage: 'Data',
+    },
+    wizardStepGraph: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.stepGraph',
+        defaultMessage: 'Graph',
+    },
+    wizardStepLegend: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.stepLegend',
+        defaultMessage: 'Legend',
+    },
+    wizardBack: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.back',
+        defaultMessage: 'Back',
+    },
+    wizardNext: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.next',
+        defaultMessage: 'Next: {step}',
+    },
+    wizardTypeQuestion: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.typeQuestion',
+        defaultMessage: 'What kind of layer is this?',
+    },
+    wizardImportCsvHint: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.importCsvHint',
+        defaultMessage:
+            'Upload a CSV to fill the table below, then fine-tune it there before saving.',
+    },
+    wizardAddYear: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.addYear',
+        defaultMessage: 'Add year',
+    },
+    wizardRemoveYear: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.removeYear',
+        defaultMessage: 'Remove {year}',
+    },
+    wizardManualPaste: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.manualPaste',
+        defaultMessage: 'Paste from clipboard',
+    },
+    wizardManualFilledCount: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.manualFilledCount',
+        defaultMessage: '{filled} of {total} values filled',
+    },
+    wizardManualPasteHelp: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.manualPasteHelp',
+        defaultMessage:
+            'Paste one value per line, in the district order shown, to fill a year column.',
+    },
+    wizardValueAboveHundred: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.valueAboveHundred',
+        defaultMessage: 'Above 100 while units are percent',
+    },
+    wizardGridRegion: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.gridRegion',
+        defaultMessage: 'Region',
+    },
+    wizardGridDistrict: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.gridDistrict',
+        defaultMessage: 'District',
+    },
+    wizardSummaryAddsToCategory: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.summaryAddsToCategory',
+        defaultMessage: 'Creating this layer adds it to {category}.',
+    },
+    wizardOpenHexaManualRefresh: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.openHexaManualRefresh',
+        defaultMessage:
+            'This layer keeps the snapshot you import until someone refreshes it from OpenHexa.',
+    },
+    wizardOpenHexaImportInfo: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.openHexaImportInfo',
+        defaultMessage:
+            'The layer was created and its values are loading from OpenHexa in the background — you can carry on through the wizard while it runs.',
+    },
+    wizardOpenHexaImportComplete: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.openHexaImportComplete',
+        defaultMessage: 'Import complete — check the result table.',
+    },
+    wizardPreviewPlaceholder: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.previewPlaceholder',
+        defaultMessage:
+            'A preview of your layer appears here once you add its data.',
+    },
+    wizardDiscardLayerConfirm: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.discardLayerConfirm',
+        defaultMessage:
+            'Nothing is saved yet — leaving now discards this layer.',
+    },
+    wizardDiscardGraphConfirm: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.discardGraphConfirm',
+        defaultMessage: 'Leaving now discards this layer and its graph.',
+    },
+    wizardDiscardCreatedConfirm: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.discardCreatedConfirm',
+        defaultMessage:
+            'Leaving now removes this layer and any values already imported for it.',
+    },
+    wizardDiscardEditConfirm: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.discardEditConfirm',
+        defaultMessage: 'Discard your unsaved changes to this layer?',
+    },
+    wizardBackGraphConfirm: {
+        id: 'iaso.snt_malaria.settings.dataLayers.wizard.backGraphConfirm',
+        defaultMessage:
+            'Going back now will discard any unsaved changes to the composite graph.',
     },
 });

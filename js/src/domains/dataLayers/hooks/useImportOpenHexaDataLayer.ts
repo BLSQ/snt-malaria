@@ -2,7 +2,6 @@ import { UseMutationResult } from 'react-query';
 import { Task } from 'Iaso/domains/tasks/types';
 import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { MESSAGES } from '../messages';
 import { ScaleDomainRange } from '../types/metrics';
 
 type ImportOpenHexaDataLayerPayload = {
@@ -28,9 +27,11 @@ export const useImportOpenHexaDataLayer = ({
         mutationFn: (body: ImportOpenHexaDataLayerPayload) =>
             postRequest('/api/snt_malaria/openhexa/data_layers/', body),
         // The new layer is an empty shell at this point; `openHexaImportStatus` drives the
-        // row badge and, on task completion, the layer list + values refetch.
+        // row badge and, on task completion, the layer list + values refetch. Its progress
+        // is already shown live by `OpenHexaImportStatusMessage`/`ImportStatusIndicator`,
+        // so a "started" snackbar here would just duplicate that.
         invalidateQueryKey: ['metricTypes', 'openHexaImportStatus'],
-        snackSuccessMessage: MESSAGES.openHexaImportStarted,
+        showSuccessSnackBar: false,
         options: {
             onSuccess: () => onSuccess?.(),
         },

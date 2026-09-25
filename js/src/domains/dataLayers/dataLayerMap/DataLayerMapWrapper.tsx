@@ -190,7 +190,7 @@ export const DataLayerMapWrapper: FC<Props> = ({
                 }
             >
                 <DataLayerMap
-                    metricType={metricType}
+                    legendConfig={metricType}
                     metricValues={
                         year ? metricValuesPerYear[parseInt(year)] : []
                     }

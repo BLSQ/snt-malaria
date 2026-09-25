@@ -1,3 +1,5 @@
+import { MetricValue } from '../../dataLayers/types/metrics';
+
 export const formatMetricValue = (metricValue?: string | number) => {
     if (metricValue === undefined || metricValue === null) return 'N/A';
 
@@ -6,3 +8,7 @@ export const formatMetricValue = (metricValue?: string | number) => {
     }
     return metricValue;
 };
+
+export const hasNumericMetricValue = (
+    metricValue: Pick<MetricValue, 'value'>,
+): boolean => Boolean(metricValue.value) || metricValue.value === 0;
