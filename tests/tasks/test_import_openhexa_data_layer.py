@@ -116,6 +116,21 @@ class ImportOpenHexaDataLayerTaskTestCase(SNTMalariaTestCase):
         self.assertFalse(MetricType.objects.filter(id=self.metric_type.id).exists())
         self.assertFalse(MetricValue.objects.filter(metric_type_id=self.metric_type.id).exists())
 
+    def test_cancelling_still_deletes_an_explicitly_completed_but_empty_shell(self):
+        """`is_complete=True` alone doesn't mean this run has written anything - e.g. the
+        wizard's explicit finalise step can flip it before the import ever runs - so the
+        empty-shell cleanup on kill must key off actual values, not that flag."""
+        self.metric_type.is_complete = True
+        self.metric_type.save(update_fields=["is_complete"])
+        self.task.should_be_killed = True
+        self.task.save()
+
+        self._run()
+
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, KILLED)
+        self.assertFalse(MetricType.objects.filter(id=self.metric_type.id).exists())
+
     def test_cancelling_refresh_keeps_the_existing_metric_type_and_values(self):
         self.metric_type.is_complete = True
         self.metric_type.save(update_fields=["is_complete"])

@@ -532,23 +532,42 @@ export const useDataLayerWizardController = ({
         patch,
     ]);
 
+    // Saves (or finalises) a standard/OpenHexa layer's metadata, then explicitly completes it -
+    // this is what turns a wizard-created shell into a real, listed layer. Skipped when the
+    // layer is already complete (e.g. OpenHexa's import task got there first), to avoid an
+    // unnecessary round trip.
+    const saveAndCompleteMetricType = useCallback(
+        async (payload: Record<string, unknown>) => {
+            const updated = (await createMetricType(
+                payload as any,
+            )) as MetricType;
+            if (!updated.is_complete) {
+                try {
+                    await completeMetricType(updated.id);
+                } catch {
+                    // Already surfaced its own error snackbar. The metric type itself was
+                    // saved successfully, so this best-effort, idempotent step failing must
+                    // not stop the wizard from finishing - worst case it stays flagged
+                    // incomplete until the next edit or a values import completes it.
+                }
+            }
+            return updated;
+        },
+        [createMetricType, completeMetricType],
+    );
+
     const submitStandard = useCallback(async () => {
-        const updated = (await createMetricType({
+        const updated = await saveAndCompleteMetricType({
             id: staged.createdMetricTypeId,
             ...metricTypePayload(formik.values, legendPayload()),
-        } as any)) as MetricType;
-        // Explicit finalise step: this is what turns a wizard-created shell (standard or
-        // OpenHexa) into a real, listed layer - a no-op if OpenHexa's import task already
-        // completed it.
-        await completeMetricType(updated.id);
+        });
         onCreated(updated);
         close();
     }, [
         staged.createdMetricTypeId,
         formik.values,
         legendPayload,
-        createMetricType,
-        completeMetricType,
+        saveAndCompleteMetricType,
         onCreated,
         close,
     ]);
@@ -563,13 +582,10 @@ export const useDataLayerWizardController = ({
             });
             onCreated(saved.metric_type_detail ?? undefined);
         } else {
-            const updated = (await createMetricType({
+            const updated = await saveAndCompleteMetricType({
                 id: editing?.metricType.id,
                 ...metricTypePayload(values, legend_config),
-            } as any)) as MetricType;
-            // Covers editing a layer that was never finalised (e.g. an OpenHexa import
-            // whose task never completed it) - a no-op otherwise, since it's already complete.
-            await completeMetricType(updated.id);
+            });
             onCreated(updated);
         }
         close();
@@ -578,8 +594,7 @@ export const useDataLayerWizardController = ({
         formik.values,
         legendPayload,
         updateComposite,
-        createMetricType,
-        completeMetricType,
+        saveAndCompleteMetricType,
         onCreated,
         close,
     ]);

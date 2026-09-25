@@ -9,7 +9,7 @@ import logging
 from django.utils.translation import gettext_lazy as _
 
 from beanstalk_worker import task_decorator
-from iaso.models import KilledException, MetricType, Task
+from iaso.models import KilledException, MetricType, MetricValue, Task
 from plugins.snt_malaria.api.openhexa_data_layers.constants import IMPORT_TASK_NAME
 from plugins.snt_malaria.api.openhexa_data_layers.source import resolve_source_file
 from plugins.snt_malaria.providers.openhexa_data_layers import (
@@ -29,7 +29,10 @@ logger = logging.getLogger(__name__)
 def import_openhexa_data_layer(metric_type_id: int, task: Task = None):
     metric_type = MetricType.objects.select_related("account").get(id=metric_type_id)
     account = metric_type.account
-    is_first_import = not metric_type.is_complete
+    # Independent of `is_complete`, which the wizard's explicit finalise step can flip True
+    # before this run has written anything - checking actual values is what tells us whether
+    # cancelling this run would leave behind an empty shell.
+    is_first_import = not MetricValue.objects.filter(metric_type=metric_type).exists()
     logger.info(
         "import_openhexa_data_layer: metric type %s (code '%s'), account %s (%s)",
         metric_type_id,
