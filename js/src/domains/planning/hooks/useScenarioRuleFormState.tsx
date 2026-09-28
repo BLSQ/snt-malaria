@@ -111,6 +111,7 @@ export const useScenarioRuleFormState = ({
     const formik = useFormik({
         initialValues: initialValues || defaultScenarioRuleValues,
         validationSchema,
+        validateOnMount: true,
         onSubmit: submitModifiedValues,
     });
 

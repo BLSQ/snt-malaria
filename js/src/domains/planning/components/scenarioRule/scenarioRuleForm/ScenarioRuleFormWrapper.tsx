@@ -127,7 +127,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                     title={title}
                     onCancel={onClose}
                     onSubmit={formik.handleSubmit}
-                    disabled={isSubmittingRule}
+                    disabled={isSubmittingRule || !formik.isValid}
                 />
             }
             isLoading={isSubmittingRule}

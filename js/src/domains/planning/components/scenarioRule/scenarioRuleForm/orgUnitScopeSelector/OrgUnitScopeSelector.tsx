@@ -4,7 +4,7 @@ import {
     ErrorOutline,
     Search as SearchIcon,
 } from '@mui/icons-material';
-import { Box, Button, Typography, alpha, useTheme } from '@mui/material';
+import { Box, Button, Typography, alpha } from '@mui/material';
 import { SxProps, Theme } from '@mui/material/styles';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
@@ -124,7 +124,6 @@ export const OrgUnitScopeSelector: FC<Props> = ({
     onChangeExcluded,
     onChangeHandpicked,
 }) => {
-    const theme = useTheme();
     const { formatMessage } = useSafeIntl();
 
     const {
