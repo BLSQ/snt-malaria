@@ -5,8 +5,10 @@ import { IMPACT } from 'Iaso/utils/featureFlags';
 
 import { CompareCustomize } from '../domains/compareCustomize';
 import { ConfigureAccount } from '../domains/configureAccount';
+import { Contributors } from '../domains/contributors';
 import { CostManagement } from '../domains/costManagement';
 import { DataLayers } from '../domains/dataLayers';
+import { Home } from '../domains/home';
 import { Interventions } from '../domains/interventions';
 import { Planning } from '../domains/planning';
 import { Scenarios } from '../domains/scenarios';
@@ -14,6 +16,20 @@ import { Settings } from '../domains/settings';
 import { SetupAccount } from '../domains/setupAccount';
 import { SETTINGS_READ } from './permissions';
 import { baseUrls } from './urls';
+
+export const homePath: RoutePath = {
+    baseUrl: baseUrls.home,
+    routerUrl: `${baseUrls.home}/*`,
+    element: <Home />,
+    permissions: [],
+};
+
+export const contributorsPath: RoutePath = {
+    baseUrl: baseUrls.contributors,
+    routerUrl: `${baseUrls.contributors}/*`,
+    element: <Contributors />,
+    permissions: [],
+};
 
 export const dataLayersPath: RoutePath = {
     baseUrl: baseUrls.dataLayers,
@@ -84,6 +100,8 @@ export const configureAccountPath: RoutePath = {
 };
 
 export const routes: (RoutePath | AnonymousRoutePath)[] = [
+    homePath,
+    contributorsPath,
     dataLayersPath,
     planningPath,
     scenariosPath,
