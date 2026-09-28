@@ -7,6 +7,14 @@ import {
 import { paginationPathParams } from 'Iaso/routing/common';
 
 export const RouteConfigs: Record<string, RouteConfig> = {
+    home: {
+        url: 'snt_malaria/home',
+        params: [],
+    },
+    contributors: {
+        url: 'snt_malaria/contributors',
+        params: [],
+    },
     dataLayers: {
         url: 'snt_malaria/data-layers',
         params: ['displayOrgUnitId'],
@@ -38,6 +46,8 @@ export const RouteConfigs: Record<string, RouteConfig> = {
 };
 
 export type BaseUrls = {
+    home: string;
+    contributors: string;
     dataLayers: string;
     planning: string;
     compareCustomize: string;
