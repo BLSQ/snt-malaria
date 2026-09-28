@@ -18,7 +18,7 @@ const config: Plugin = {
     redirections: [],
     menu,
     translations,
-    homeUrl: '/snt_malaria/scenarios/list',
+    homeUrl: `/${baseUrls.home}`,
     theme,
 };
 
