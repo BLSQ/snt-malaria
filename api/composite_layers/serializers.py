@@ -69,13 +69,28 @@ class CompositeLayerWriteSerializer(serializers.ModelSerializer):
     def validate_legend_config(self, legend_config):
         domain = legend_config.get("domain") if isinstance(legend_config, dict) else None
         colors = legend_config.get("range") if isinstance(legend_config, dict) else None
-        if not isinstance(domain, list) or not isinstance(colors, list) or len(domain) != len(colors):
-            raise serializers.ValidationError("Legend config must have matching 'domain' and 'range' lists.")
+        if not isinstance(domain, list) or not isinstance(colors, list):
+            raise serializers.ValidationError("Legend config must have 'domain' and 'range' lists.")
         return legend_config
 
     def validate(self, data):
         if self.instance is None and not (data.get("name") or "").strip():
             raise serializers.ValidationError({"name": "This field is required."})
+        if "legend_config" in data:
+            legend_type = data.get("legend_type") or (
+                self.instance.legend_type if self.instance else CompositeLayer.LegendType.AUTO
+            )
+            domain = data["legend_config"]["domain"]
+            colors = data["legend_config"]["range"]
+            # A threshold legend's range carries one extra colour, for the open-ended bucket above
+            # the last breakpoint (see `hasOpenEndedTopBucket` on the frontend).
+            expected_range_length = (
+                len(domain) + 1 if legend_type == CompositeLayer.LegendType.THRESHOLD else len(domain)
+            )
+            if len(colors) != expected_range_length:
+                raise serializers.ValidationError(
+                    {"legend_config": "Legend config 'range' does not match 'domain' for this legend type."}
+                )
         return data
 
 

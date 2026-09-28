@@ -66,7 +66,11 @@ export const NodeMapPreview: FC<Props> = ({
     // A pinned node has nothing to browse: show only its pinned year, no picker. Otherwise let the
     // preview browse whichever years are actually available.
     const yearPicker: YearPicker = isPinned
-        ? { values: (metricValues ?? []).filter(value => value.year === pinnedYear) }
+        ? {
+              values: (metricValues ?? []).filter(
+                  value => value.year === pinnedYear,
+              ),
+          }
         : {
               values: displayedValues,
               yearOptions: isMultiYear ? years : undefined,

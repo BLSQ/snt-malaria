@@ -7,14 +7,13 @@ import {
     SaveCompositeLayerPayload,
 } from '../types/compositeLayer';
 
-export const useSaveCompositeLayer = (): UseMutationResult<
-    CompositeLayer,
-    unknown,
-    SaveCompositeLayerPayload
-> => {
+export const useSaveCompositeLayer = (
+    silent = false,
+): UseMutationResult<CompositeLayer, unknown, SaveCompositeLayerPayload> => {
     const queryClient = useQueryClient();
     return useSnackMutation({
         snackSuccessMessage: MESSAGES.saveSuccess,
+        showSuccessSnackBar: !silent,
         // Invalidate the data layers list so the composite appears/updates immediately.
         invalidateQueryKey: ['metricTypes'],
         options: {

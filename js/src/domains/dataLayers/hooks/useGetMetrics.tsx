@@ -22,7 +22,8 @@ export const flattenMetricTypes = (
 
 export const useGetMetricTypes: <T = MetricType>(
     includeUtility?: boolean,
-) => UseQueryResult<T[], Error> = (includeUtility = false) => {
+    enabled?: boolean,
+) => UseQueryResult<T[], Error> = (includeUtility = false, enabled = true) => {
     const url = includeUtility
         ? '/api/metrictypes/?include_utility=true'
         : '/api/metrictypes/';
@@ -30,6 +31,7 @@ export const useGetMetricTypes: <T = MetricType>(
         queryKey: ['metricTypes', { includeUtility }],
         queryFn: () => getRequest(url),
         options: {
+            enabled,
             cacheTime: Infinity, // disable auto fetch on cache expiration
         },
     });

@@ -3,6 +3,7 @@ import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import LayersIcon from '@mui/icons-material/Layers';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import {
     Box,
     ClickAwayListener,
@@ -18,6 +19,7 @@ import {
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
+import { OpenHexaSvg } from 'Iaso/components/svg/OpenHexaSvg';
 import { SxStyles } from 'Iaso/types/general';
 import * as CorePermission from 'Iaso/utils/permissions';
 import { useDataLayerComparisonContext } from '../contexts/DataLayerComparisonContext';
@@ -70,6 +72,7 @@ const styles: SxStyles = {
         '&:active': { cursor: 'grabbing' },
     },
     metricTypeIcon: { minWidth: 20, mr: 2 },
+    incompleteIcon: { ml: 1, flexShrink: 0 },
     metricTypeDetails: {
         flexGrow: 1,
         display: 'flex',
@@ -91,6 +94,7 @@ export const DataLayerLine: FC<Props> = ({
     editing = false,
 }) => {
     const isComposite = compositeLayerId !== undefined;
+    const isOpenHexa = metricType.origin === 'openhexa';
     const theme = useTheme();
     const onDragStart = useCallback(
         (e: React.DragEvent<HTMLElement>) => {
@@ -173,12 +177,23 @@ export const DataLayerLine: FC<Props> = ({
         >
             <Box sx={styles.metricTypeDetails}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    {/* Composites swap the layer icon for their own rather than showing both. */}
+                    {/* Composites and OpenHexa layers swap the layer icon for their own rather than showing both. */}
                     {isComposite ? (
                         <Tooltip title={formatMessage(MESSAGES.compositeLayer)}>
                             <AccountTreeIcon
                                 fontSize="small"
                                 color="action"
+                                sx={styles.metricTypeIcon}
+                            />
+                        </Tooltip>
+                    ) : isOpenHexa ? (
+                        <Tooltip
+                            title={formatMessage(MESSAGES.layerTypeOpenHexa)}
+                        >
+                            <OpenHexaSvg
+                                fontSize="small"
+                                color="action"
+                                disabled={false}
                                 sx={styles.metricTypeIcon}
                             />
                         </Tooltip>
@@ -190,6 +205,17 @@ export const DataLayerLine: FC<Props> = ({
                         />
                     )}
                     <Typography variant="body2">{metricType.name}</Typography>
+                    {metricType.is_complete === false && (
+                        <Tooltip
+                            title={formatMessage(MESSAGES.layerSetupIncomplete)}
+                        >
+                            <WarningAmberIcon
+                                fontSize="small"
+                                color="warning"
+                                sx={styles.incompleteIcon}
+                            />
+                        </Tooltip>
+                    )}
                     <ImportStatusIndicator importStatus={importStatus} />
                 </Box>
             </Box>

@@ -52,12 +52,14 @@ export const MatchingCriteriaForm: FC<Props> = ({
         () =>
             metricTypeCategories.flatMap(
                 mtc =>
-                    mtc.items.map(mt => ({
-                        value: mt.id,
-                        label: mt.name,
-                        groupKey: mtc.name,
-                        groupLabel: mtc.name,
-                    })) || [],
+                    mtc.items
+                        .filter(mt => mt.is_complete !== false)
+                        .map(mt => ({
+                            value: mt.id,
+                            label: mt.name,
+                            groupKey: mtc.name,
+                            groupLabel: mtc.name,
+                        })) || [],
             ),
         [metricTypeCategories],
     );

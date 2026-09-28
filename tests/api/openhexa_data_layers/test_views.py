@@ -383,3 +383,80 @@ class ImportOpenHexaDataLayerTestCase(SNTMalariaAPITestCase):
         self.assertEqual(body[str(mt.id)]["status"], "SUCCESS")
         self.assertEqual(body[str(mt.id)]["task_id"], latest.id)
         self.assertEqual(body[str(mt.id)]["progress_message"], "12 rows read")
+
+    def test_cancel_import_marks_the_running_task_for_kill(self):
+        from iaso.models import Task
+        from plugins.snt_malaria.api.openhexa_data_layers.constants import IMPORT_TASK_NAME
+
+        mt = MetricType.objects.create(
+            account=self.account,
+            code="INCIDENCE_CRUDE",
+            name="Crude incidence",
+            legend_type="threshold",
+            origin=MetricType.MetricTypeOrigin.OPENHEXA,
+        )
+        running = Task.objects.create(
+            name=IMPORT_TASK_NAME,
+            account=self.account,
+            launcher=self.user,
+            status="RUNNING",
+            params={"kwargs": {"metric_type_id": mt.id}},
+        )
+
+        self.client.force_authenticate(self.user)
+        response = self.client.post(f"{self.BASE_URL}cancel_import/", data={"metric_type_id": mt.id}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        running.refresh_from_db()
+        self.assertTrue(running.should_be_killed)
+
+    def test_cancel_import_does_not_touch_an_already_finished_task(self):
+        from iaso.models import Task
+        from plugins.snt_malaria.api.openhexa_data_layers.constants import IMPORT_TASK_NAME
+
+        mt = MetricType.objects.create(
+            account=self.account,
+            code="INCIDENCE_CRUDE",
+            name="Crude incidence",
+            legend_type="threshold",
+            origin=MetricType.MetricTypeOrigin.OPENHEXA,
+        )
+        done = Task.objects.create(
+            name=IMPORT_TASK_NAME,
+            account=self.account,
+            launcher=self.user,
+            status="SUCCESS",
+            params={"kwargs": {"metric_type_id": mt.id}},
+        )
+
+        self.client.force_authenticate(self.user)
+        response = self.client.post(f"{self.BASE_URL}cancel_import/", data={"metric_type_id": mt.id}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        done.refresh_from_db()
+        self.assertFalse(done.should_be_killed)
+
+    def test_cancel_import_does_not_leak_across_accounts(self):
+        from iaso.models import Task
+        from plugins.snt_malaria.api.openhexa_data_layers.constants import IMPORT_TASK_NAME
+
+        other_account = self.create_account_datasource_version_project("s3", "Other2", "p3")[0]
+        other_task = Task.objects.create(
+            name=IMPORT_TASK_NAME,
+            account=other_account,
+            launcher=self.user,
+            status="RUNNING",
+            params={"kwargs": {"metric_type_id": 4242}},
+        )
+
+        self.client.force_authenticate(self.user)
+        response = self.client.post(f"{self.BASE_URL}cancel_import/", data={"metric_type_id": 4242}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        other_task.refresh_from_db()
+        self.assertFalse(other_task.should_be_killed)
+
+    def test_reader_cannot_cancel_import(self):
+        self.client.force_authenticate(self.reader)
+        response = self.client.post(f"{self.BASE_URL}cancel_import/", data={"metric_type_id": 1}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

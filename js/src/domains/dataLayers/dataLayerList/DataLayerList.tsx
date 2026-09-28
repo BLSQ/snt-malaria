@@ -133,9 +133,13 @@ export const DataLayerList: FC<Props> = ({
                                         onDelete={() =>
                                             deleteMetricType(metricType.id)
                                         }
-                                        onRefreshOpenHexaLayer={onRefreshOpenHexaLayer}
+                                        onRefreshOpenHexaLayer={
+                                            onRefreshOpenHexaLayer
+                                        }
                                         importStatus={
-                                            openHexaImportStatus?.[metricType.id]
+                                            openHexaImportStatus?.[
+                                                metricType.id
+                                            ]
                                         }
                                         selected={
                                             metricType.id ===

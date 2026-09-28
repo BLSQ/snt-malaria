@@ -48,10 +48,16 @@ import { useGetAccountSettings } from '../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { DataLayerComparisonProvider } from './contexts/DataLayerComparisonContext';
 import { DataLayerComparisonContainer } from './dataLayerComparison/dataLayerComparisonContainer';
-import { DataLayerDialog } from './dataLayerForm/DataLayerDialog';
 import { DataLayerList } from './dataLayerList/DataLayerList';
 import { DataLayerListHeader } from './dataLayerList/DataLayerListHeader';
 import { DataLayerMapWrapper } from './dataLayerMap/DataLayerMapWrapper';
+import { DataLayerWizardMain } from './dataLayerWizard/DataLayerWizardMain';
+import { DataLayerWizardPanel } from './dataLayerWizard/DataLayerWizardPanel';
+import { DiscardWizardModal } from './dataLayerWizard/DiscardWizardModal';
+import { useDataLayerWizardController } from './dataLayerWizard/useDataLayerWizardController';
+import { useWizardMapPreview } from './dataLayerWizard/useWizardMapPreview';
+import { WizardLegendPreview } from './dataLayerWizard/WizardLegendPreview';
+import { WizardPreviewPlaceholder } from './dataLayerWizard/WizardPreviewPlaceholder';
 import { useDeleteMetricType } from './hooks/useDeleteMetricType';
 import { useGetMetricCategories } from './hooks/useGetMetrics';
 import { useGetOpenHexaDataLayers } from './hooks/useGetOpenHexaDataLayers';
@@ -133,9 +139,6 @@ export const DataLayers: FC = () => {
         [importOpenHexaDataLayer],
     );
 
-    const [isMetricTypeFormOpen, setIsMetricTypeFormOpen] =
-        useState<boolean>(false);
-
     const [isCompositeEditorOpen, setIsCompositeEditorOpen] =
         useState<boolean>(false);
     const [editingCompositeLayerId, setEditingCompositeLayerId] = useState<
@@ -195,15 +198,6 @@ export const DataLayers: FC = () => {
         [compositeLayerByMetricType],
     );
 
-    // Keeps the edited composite selected in the list while the editor is open.
-    const editedCompositeMetricTypeId = useMemo(
-        () =>
-            (compositeLayers ?? []).find(
-                layer => layer.id === editingCompositeLayerId,
-            )?.metric_type ?? undefined,
-        [compositeLayers, editingCompositeLayerId],
-    );
-
     // Collapsible data layers sidebar (mirrors the scenario editor's rules-panel toggle).
     const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
     const toggleSidebar = useCallback(() => {
@@ -217,37 +211,10 @@ export const DataLayers: FC = () => {
     const [nodeSearchTerm, setNodeSearchTerm] = useState<string>('');
     const isAiChatTab = sidebarTab === 'ai' && hasAiApiKey;
 
-    const [selectedMetricType, setSelectedMetricType] = useState<MetricType>();
-
-    const onDialogClose = useCallback(() => {
-        setIsMetricTypeFormOpen(false);
-        setSelectedMetricType(undefined);
-    }, [setIsMetricTypeFormOpen, setSelectedMetricType]);
-
-    const onCreateMetricType = useCallback(() => {
-        setSelectedMetricType(undefined);
-        setIsMetricTypeFormOpen(true);
-    }, [setSelectedMetricType, setIsMetricTypeFormOpen]);
-
-    // "Edit Layer" always opens the legend editor, for composites and regular layers alike.
-    const onEditMetricType = useCallback((metricType: MetricType) => {
-        setSelectedMetricType(metricType);
-        setIsMetricTypeFormOpen(true);
-    }, []);
-
     const onEditCompositeLayer = useCallback((compositeLayerId: number) => {
         setEditingCompositeLayerId(compositeLayerId);
         setIsCompositeEditorOpen(true);
     }, []);
-
-    // The dialogue persists the new composite; we then open the editor to build its graph.
-    const onCompositeCreated = useCallback(
-        (compositeLayerId: number) => {
-            onDialogClose();
-            onEditCompositeLayer(compositeLayerId);
-        },
-        [onDialogClose, onEditCompositeLayer],
-    );
 
     const onCloseCompositeEditor = useCallback(() => {
         setIsCompositeEditorOpen(false);
@@ -267,6 +234,99 @@ export const DataLayers: FC = () => {
             }
         },
         [onCloseCompositeEditor],
+    );
+
+    // Four-step creation wizard (Type -> Details -> Data/Graph -> Legend); editing
+    // an existing layer runs its Details + Legend steps pre-filled.
+    const onWizardCreated = useCallback((metricType?: MetricType) => {
+        if (metricType) {
+            setDisplayedMetricType(metricType);
+        }
+    }, []);
+    const wizard = useDataLayerWizardController({
+        onCreated: onWizardCreated,
+        categoryOptions: existingCategoryOptions,
+        onClosed: onCloseCompositeEditor,
+    });
+    const wizardPreview = useWizardMapPreview(wizard);
+
+    const onEditMetricType = useCallback(
+        (metricType: MetricType) =>
+            wizard.openForEdit(
+                metricType,
+                compositeLayerByMetricType.get(metricType.id),
+            ),
+        [wizard, compositeLayerByMetricType],
+    );
+
+    const activeCompositeLayerId =
+        editingCompositeLayerId ?? wizard.compositeLayerId;
+    const isCompositeEditorActive =
+        isCompositeEditorOpen || wizard.isCompositeGraphStep;
+
+    const onWizardGraphSaved = useCallback(
+        (metricType?: MetricType) => {
+            setSidebarCollapsed(false);
+            wizard.onCompositeGraphSaved(metricType);
+        },
+        [wizard],
+    );
+
+    // Keeps the edited composite selected in the list while the editor is open.
+    const editedCompositeMetricTypeId = useMemo(
+        () =>
+            (compositeLayers ?? []).find(
+                layer => layer.id === activeCompositeLayerId,
+            )?.metric_type ?? undefined,
+        [compositeLayers, activeCompositeLayerId],
+    );
+
+    // Wizard "Next: Legend" on the composite graph step: persist the graph via the
+    // editor, whose onSaved advances the wizard.
+    const handleCompositeNext = useCallback(() => {
+        compositeLayerEditorRef.current?.saveGraph();
+    }, []);
+
+    // Node library + AI tabs — the sidebar content for the composite node editor,
+    // shared by the standalone "Edit graph" flow and the creation wizard's graph step.
+    const compositeSidebar = !isCompositeEditorActive ? null : (
+        <CardStyled
+            flushContent={isAiChatTab}
+            header={
+                <>
+                    <CompositeSidebarTabs
+                        tab={sidebarTab}
+                        onChangeTab={setSidebarTab}
+                        showTabs={hasAiApiKey}
+                    />
+                    {!isAiChatTab && (
+                        <NodeLibrarySearch
+                            value={nodeSearchTerm}
+                            onChange={setNodeSearchTerm}
+                        />
+                    )}
+                </>
+            }
+        >
+            {isAiChatTab ? (
+                <CompositeLayerAIChat
+                    messages={aiChatMessages}
+                    isLoading={isAiChatLoading}
+                    onSendMessage={sendAiChatMessage}
+                    onRevert={revertAiChatMessage}
+                    pendingAttachments={aiChatPendingAttachments}
+                    onAttachFiles={onAttachAiChatFiles}
+                    onRemoveAttachment={onRemoveAiChatAttachment}
+                />
+            ) : (
+                <NodeLibrary
+                    metricCategories={metricCategories || []}
+                    compositeLayerIdByMetricType={compositeLayerIdByMetricType}
+                    selectedMetricTypeId={editedCompositeMetricTypeId}
+                    searchTerm={nodeSearchTerm}
+                />
+            )}
+        </CardStyled>
     );
 
     // Two-step spotlight when the account has no layers yet
@@ -303,6 +363,139 @@ export const DataLayers: FC = () => {
         steps: onboardingSteps,
     });
 
+    const layerListCard = (
+        <Card sx={styles.card}>
+            <CardStyled
+                header={
+                    <DataLayerListHeader
+                        onCreate={wizard.open}
+                        createActionRef={onboarding.anchorRefs[0]}
+                        moreActionsRef={onboarding.anchorRefs[1]}
+                    />
+                }
+            >
+                <DataLayerList
+                    metricCategories={metricCategories || []}
+                    onSelectMetricType={setDisplayedMetricType}
+                    selectedMetricTypeId={displayedMetricType?.id}
+                    onEditMetricType={onEditMetricType}
+                    compositeLayerIdByMetricType={compositeLayerIdByMetricType}
+                    deleteMetricType={deleteMetricType}
+                    onRefreshOpenHexaLayer={refreshOpenHexaLayer}
+                    openHexaImportStatus={openHexaImportStatus}
+                />
+            </CardStyled>
+        </Card>
+    );
+
+    const renderSidebarColumn = () => {
+        if (isCompositeEditorOpen) {
+            return <Card sx={styles.card}>{compositeSidebar}</Card>;
+        }
+        if (wizard.isOpen) {
+            return (
+                <DataLayerWizardPanel
+                    controller={wizard}
+                    preview={wizardPreview}
+                    showOpenHexa={showOpenHexaLayers}
+                    showComposite={showCompositeLayers}
+                    orgUnits={orgUnits || []}
+                    compositeGraphSlot={
+                        wizard.isCompositeGraphStep
+                            ? compositeSidebar
+                            : undefined
+                    }
+                    onCompositeNext={handleCompositeNext}
+                />
+            );
+        }
+        return layerListCard;
+    };
+
+    const compositeLayerIdFor = (
+        metricType?: MetricType,
+    ): number | undefined =>
+        metricType
+            ? compositeLayerIdByMetricType.get(metricType.id)
+            : undefined;
+
+    const mapColumn = (
+        <Stack direction="row" gap={1} sx={{ height: '100%' }}>
+            <DataLayerMapWrapper
+                metricType={displayedMetricType}
+                orgUnits={orgUnits || []}
+                showCompositeLayers={showCompositeLayers}
+                compositeLayerId={compositeLayerIdFor(displayedMetricType)}
+                onEditComposite={onEditCompositeLayer}
+            />
+            <DataLayerComparisonContainer />
+        </Stack>
+    );
+
+    const editorProps = wizard.isCompositeGraphStep
+        ? {
+              onClose: wizard.requestClose,
+              onSaved: onWizardGraphSaved,
+              hideActions: true,
+              onToggleSidebar: undefined,
+          }
+        : {
+              onClose: onCloseCompositeEditor,
+              onSaved: onCompositeSaved,
+              hideActions: false,
+              onToggleSidebar: toggleSidebar,
+          };
+
+    const renderMainColumn = () => {
+        if (isCompositeEditorActive && activeCompositeLayerId) {
+            return (
+                <CompositeLayerEditor
+                    ref={compositeLayerEditorRef}
+                    compositeLayerId={activeCompositeLayerId}
+                    sidebarCollapsed={sidebarCollapsed}
+                    {...editorProps}
+                />
+            );
+        }
+        if (!wizard.isOpen) return mapColumn;
+        if (wizard.isEditing) {
+            // Editing shows the real layer as a reference; the panel handles the form.
+            return (
+                <DataLayerMapWrapper
+                    metricType={wizard.editingMetricType}
+                    orgUnits={orgUnits || []}
+                    showCompositeLayers={showCompositeLayers}
+                    compositeLayerId={compositeLayerIdFor(
+                        wizard.editingMetricType,
+                    )}
+                />
+            );
+        }
+        switch (wizard.wizardMainView) {
+            case 'standardData':
+                return (
+                    <DataLayerWizardMain
+                        controller={wizard}
+                        preview={wizardPreview}
+                        orgUnits={orgUnits || []}
+                    />
+                );
+            case 'legendPreview':
+                return (
+                    <WizardLegendPreview
+                        controller={wizard}
+                        preview={wizardPreview}
+                        orgUnits={orgUnits || []}
+                    />
+                );
+            case 'intro':
+                return <WizardPreviewPlaceholder />;
+            default:
+                // 'compositeGraph' before the shell exists — show the map briefly.
+                return mapColumn;
+        }
+    };
+
     return (
         <DataLayerComparisonProvider orgUnits={orgUnits ?? []}>
             {isLoadingMetricLayers && <LoadingSpinner />}
@@ -316,174 +509,29 @@ export const DataLayers: FC = () => {
                     {!sidebarCollapsed && (
                         <SidebarColumn>
                             <PaperFullHeight>
-                                {isCompositeEditorOpen ? (
-                                    <Card sx={styles.card}>
-                                        <CardStyled
-                                            flushContent={isAiChatTab}
-                                            header={
-                                                <>
-                                                    <CompositeSidebarTabs
-                                                        tab={sidebarTab}
-                                                        onChangeTab={
-                                                            setSidebarTab
-                                                        }
-                                                        showTabs={hasAiApiKey}
-                                                    />
-                                                    {!isAiChatTab && (
-                                                        <NodeLibrarySearch
-                                                            value={
-                                                                nodeSearchTerm
-                                                            }
-                                                            onChange={
-                                                                setNodeSearchTerm
-                                                            }
-                                                        />
-                                                    )}
-                                                </>
-                                            }
-                                        >
-                                            {isAiChatTab ? (
-                                                <CompositeLayerAIChat
-                                                    messages={aiChatMessages}
-                                                    isLoading={isAiChatLoading}
-                                                    onSendMessage={
-                                                        sendAiChatMessage
-                                                    }
-                                                    onRevert={
-                                                        revertAiChatMessage
-                                                    }
-                                                    pendingAttachments={
-                                                        aiChatPendingAttachments
-                                                    }
-                                                    onAttachFiles={
-                                                        onAttachAiChatFiles
-                                                    }
-                                                    onRemoveAttachment={
-                                                        onRemoveAiChatAttachment
-                                                    }
-                                                />
-                                            ) : (
-                                                <NodeLibrary
-                                                    metricCategories={
-                                                        metricCategories || []
-                                                    }
-                                                    compositeLayerIdByMetricType={
-                                                        compositeLayerIdByMetricType
-                                                    }
-                                                    selectedMetricTypeId={
-                                                        editedCompositeMetricTypeId
-                                                    }
-                                                    searchTerm={nodeSearchTerm}
-                                                />
-                                            )}
-                                        </CardStyled>
-                                    </Card>
-                                ) : (
-                                    <Card sx={styles.card}>
-                                        <CardStyled
-                                            header={
-                                                <DataLayerListHeader
-                                                    onCreate={
-                                                        onCreateMetricType
-                                                    }
-                                                    createActionRef={
-                                                        onboarding.anchorRefs[0]
-                                                    }
-                                                    moreActionsRef={
-                                                        onboarding.anchorRefs[1]
-                                                    }
-                                                />
-                                            }
-                                        >
-                                            <DataLayerList
-                                                metricCategories={
-                                                    metricCategories || []
-                                                }
-                                                onSelectMetricType={
-                                                    setDisplayedMetricType
-                                                }
-                                                selectedMetricTypeId={
-                                                    displayedMetricType?.id
-                                                }
-                                                onEditMetricType={
-                                                    onEditMetricType
-                                                }
-                                                compositeLayerIdByMetricType={
-                                                    compositeLayerIdByMetricType
-                                                }
-                                                deleteMetricType={
-                                                    deleteMetricType
-                                                }
-                                                onRefreshOpenHexaLayer={
-                                                    refreshOpenHexaLayer
-                                                }
-                                                openHexaImportStatus={
-                                                    openHexaImportStatus
-                                                }
-                                            />
-                                        </CardStyled>
-                                    </Card>
-                                )}
+                                {renderSidebarColumn()}
                             </PaperFullHeight>
                         </SidebarColumn>
                     )}
                     <MainColumn>
-                        <PaperFullHeight>
-                            {isCompositeEditorOpen &&
-                            editingCompositeLayerId ? (
-                                <CompositeLayerEditor
-                                    ref={compositeLayerEditorRef}
-                                    compositeLayerId={editingCompositeLayerId}
-                                    onClose={onCloseCompositeEditor}
-                                    onSaved={onCompositeSaved}
-                                    sidebarCollapsed={sidebarCollapsed}
-                                    onToggleSidebar={toggleSidebar}
-                                />
-                            ) : (
-                                <Stack
-                                    direction="row"
-                                    gap={1}
-                                    sx={{ height: '100%' }}
-                                >
-                                    <DataLayerMapWrapper
-                                        metricType={displayedMetricType}
-                                        orgUnits={orgUnits || []}
-                                        showCompositeLayers={
-                                            showCompositeLayers
-                                        }
-                                        compositeLayerId={
-                                            displayedMetricType
-                                                ? compositeLayerIdByMetricType.get(
-                                                      displayedMetricType.id,
-                                                  )
-                                                : undefined
-                                        }
-                                        onEditComposite={onEditCompositeLayer}
-                                    />
-                                    <DataLayerComparisonContainer />
-                                </Stack>
-                            )}
-                        </PaperFullHeight>
+                        <PaperFullHeight>{renderMainColumn()}</PaperFullHeight>
                     </MainColumn>
                 </SidebarLayout>
-                {isMetricTypeFormOpen && (
-                    <DataLayerDialog
-                        open={isMetricTypeFormOpen}
-                        closeDialog={onDialogClose}
-                        metricType={selectedMetricType}
-                        categoryOptions={existingCategoryOptions}
-                        showCompositeLayers={showCompositeLayers}
-                        showOpenHexaLayers={showOpenHexaLayers}
-                        compositeLayer={
-                            selectedMetricType
-                                ? compositeLayerByMetricType.get(
-                                      selectedMetricType.id,
-                                  )
-                                : undefined
-                        }
-                        onCompositeCreated={onCompositeCreated}
-                    />
-                )}
+                <DiscardWizardModal
+                    open={wizard.discardOpen}
+                    titleMessage={wizard.titleMessage}
+                    message={wizard.discardMessage}
+                    onConfirm={wizard.confirmDiscard}
+                    onCancel={wizard.cancelDiscard}
+                />
+                <DiscardWizardModal
+                    id="data-layer-wizard-back-graph"
+                    open={wizard.backConfirmOpen}
+                    titleMessage={wizard.titleMessage}
+                    message={MESSAGES.wizardBackGraphConfirm}
+                    onConfirm={wizard.confirmBack}
+                    onCancel={wizard.cancelBack}
+                />
             </PageContainer>
             {onboarding.element}
         </DataLayerComparisonProvider>

@@ -17,15 +17,6 @@ const styles: SxStyles = {
         mt: 2,
         fontWeight: 'medium',
     },
-    scaleContainter: {
-        mb: 2,
-        ' button': {
-            visibility: 'hidden',
-        },
-        '&:hover button': {
-            visibility: 'visible',
-        },
-    },
     topColorRow: {
         mt: 1,
         mb: 2,

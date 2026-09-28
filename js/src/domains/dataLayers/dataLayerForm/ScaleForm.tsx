@@ -14,12 +14,6 @@ const styles: SxStyles = {
     },
     scaleContainter: {
         mb: 2,
-        ' button': {
-            visibility: 'hidden',
-        },
-        '&:hover button': {
-            visibility: 'visible',
-        },
     },
 };
 
@@ -62,9 +56,7 @@ export const ScaleForm: FC<Props> = ({
                     displayLabel={false}
                 />
             </Box>
-            {(canBeRemoved && <DeleteIconButton onClick={onRemove} />) || (
-                <Box width={40} />
-            )}
+            <DeleteIconButton onClick={onRemove} disabled={!canBeRemoved} />
         </Stack>
     );
 };

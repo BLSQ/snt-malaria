@@ -17,7 +17,7 @@ export const ExportMetricValuesCsvButton: FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
 
-    if (!metricType) {
+    if (!metricType?.id) {
         return null;
     }
 
