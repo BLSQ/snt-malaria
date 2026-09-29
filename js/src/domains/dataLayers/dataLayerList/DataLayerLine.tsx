@@ -22,6 +22,7 @@ import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
 import { OpenHexaSvg } from 'Iaso/components/svg/OpenHexaSvg';
 import { SxStyles } from 'Iaso/types/general';
 import * as CorePermission from 'Iaso/utils/permissions';
+import { MESSAGES as commonMessages } from '../../messages';
 import { useDataLayerComparisonContext } from '../contexts/DataLayerComparisonContext';
 import { DATA_LAYER_DND_MIME } from '../dragAndDrop';
 import { OpenHexaImportStatus } from '../hooks/useGetOpenHexaImportStatus';
@@ -36,6 +37,7 @@ type Props = {
     onEdit: (metricType: MetricType) => void;
     /** Set when this layer is a composite, to show the composite icon. */
     compositeLayerId?: number;
+    onEditComposite?: (compositeLayerId: number) => void;
     onDelete: (metricType: number) => void;
     /** Re-run the OpenHexa value import (row menu only; absent in the composite-editor list). */
     onRefreshOpenHexaLayer?: (metricType: MetricType) => void;
@@ -88,6 +90,7 @@ export const DataLayerLine: FC<Props> = ({
     onClick,
     onEdit,
     compositeLayerId,
+    onEditComposite,
     onDelete,
     onRefreshOpenHexaLayer,
     importStatus,
@@ -252,6 +255,19 @@ export const DataLayerLine: FC<Props> = ({
                             <MenuItem onClick={() => onEdit(metricType)}>
                                 {formatMessage(MESSAGES.editLayer)}
                             </MenuItem>
+                            {compositeLayerId !== undefined &&
+                                onEditComposite && (
+                                    <MenuItem
+                                        onClick={() => {
+                                            setShowMoreActions(false);
+                                            onEditComposite(compositeLayerId);
+                                        }}
+                                    >
+                                        {formatMessage(
+                                            commonMessages.compositeEditor,
+                                        )}
+                                    </MenuItem>
+                                )}
                             {metricType.origin === 'openhexa' &&
                                 onRefreshOpenHexaLayer && (
                                     <MenuItem
