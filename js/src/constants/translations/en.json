@@ -562,7 +562,7 @@
     "iaso.snt_malaria.settings.dataLayers.wizard.discardCreatedConfirm": "Leaving now removes this layer and any values already imported for it.",
     "iaso.snt_malaria.settings.dataLayers.wizard.openHexaImportInfo": "The layer was created and its values are loading from OpenHexa in the background — you can carry on through the wizard while it runs.",
     "iaso.snt_malaria.settings.dataLayers.wizard.openHexaImportComplete": "Import complete — check the result table.",
-    "iaso.snt_malaria.settings.dataLayers.wizard.previewPlaceholder": "A preview of your layer appears here once you add its data.",
+    "iaso.snt_malaria.settings.dataLayers.wizard.previewPlaceholder": "Preview will be available when ready.",
     "iaso.snt_malaria.settings.dataLayers.wizard.next": "Next: {step}",
     "iaso.snt_malaria.settings.dataLayers.wizard.saveChanges": "Save changes",
     "iaso.snt_malaria.settings.dataLayers.wizard.discardEditConfirm": "Discard your unsaved changes to this layer?",
