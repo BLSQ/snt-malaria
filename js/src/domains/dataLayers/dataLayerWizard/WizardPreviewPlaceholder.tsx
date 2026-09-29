@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
+import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
 import { Typography } from '@mui/material';
 import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
@@ -21,7 +21,7 @@ export const WizardPreviewPlaceholder: FC<Props> = ({
     const { formatMessage } = useSafeIntl();
     return (
         <WizardMainCard centered>
-            <MapOutlinedIcon sx={styles.icon} />
+            <TableChartOutlinedIcon sx={styles.icon} />
             <Typography variant="body2" sx={styles.text}>
                 {formatMessage(message)}
             </Typography>

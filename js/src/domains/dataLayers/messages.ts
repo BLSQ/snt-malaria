@@ -356,8 +356,7 @@ export const MESSAGES = defineMessages({
     },
     wizardPreviewPlaceholder: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.previewPlaceholder',
-        defaultMessage:
-            'A preview of your layer appears here once you add its data.',
+        defaultMessage: 'Preview will be available when ready.',
     },
     wizardDiscardLayerConfirm: {
         id: 'iaso.snt_malaria.settings.dataLayers.wizard.discardLayerConfirm',
