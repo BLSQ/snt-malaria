@@ -69,9 +69,10 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Metadata and default legend come from this data layer.',
     },
-    openHexaFieldsReadOnly: {
-        id: 'iaso.snt_malaria.settings.dataLayers.openHexaFieldsReadOnly',
-        defaultMessage: 'Filled in from OpenHexa — read-only.',
+    openHexaCodeReadOnly: {
+        id: 'iaso.snt_malaria.settings.dataLayers.openHexaCodeReadOnly',
+        defaultMessage:
+            "Set by OpenHexa and can't be changed — it's used to match this layer to its source.",
     },
     openHexaDataLayersError: {
         id: 'iaso.snt_malaria.settings.dataLayers.openHexaDataLayersError',
