@@ -1,6 +1,15 @@
 import React, { FC, ReactNode, useCallback } from 'react';
 import LayersIcon from '@mui/icons-material/Layers';
-import { Box, Button, Card, Divider, Stack, Typography } from '@mui/material';
+import {
+    Box,
+    Button,
+    Card,
+    Divider,
+    Stack,
+    Tab,
+    Tabs,
+    Typography,
+} from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
@@ -37,6 +46,7 @@ const styles: SxStyles = {
         justifyContent: 'space-between',
     },
     footerActions: { gap: 1 },
+    tab: { textTransform: 'none', minHeight: 48 },
 };
 
 type Props = {
@@ -68,6 +78,7 @@ export const DataLayerWizardPanel: FC<Props> = ({
         lastStep,
         goNext,
         goBack,
+        goToStep,
         canAdvance,
         isEditing,
         layerType,
@@ -103,10 +114,30 @@ export const DataLayerWizardPanel: FC<Props> = ({
                         {formatMessage(titleMessage)}
                     </Typography>
                 </Stack>
-                <WizardStepRail
-                    activeStep={activeStepIndex}
-                    steps={stepLabels}
-                />
+                {isEditing ? (
+                    <Tabs
+                        value={activeStep}
+                        textColor="primary"
+                        indicatorColor="primary"
+                        onChange={(_event, step) => goToStep(step)}
+                    >
+                        <Tab
+                            value={WIZARD_STEPS.DETAILS}
+                            label={formatMessage(MESSAGES.wizardStepDetails)}
+                            sx={styles.tab}
+                        />
+                        <Tab
+                            value={WIZARD_STEPS.LEGEND}
+                            label={formatMessage(MESSAGES.wizardStepLegend)}
+                            sx={styles.tab}
+                        />
+                    </Tabs>
+                ) : (
+                    <WizardStepRail
+                        activeStep={activeStepIndex}
+                        steps={stepLabels}
+                    />
+                )}
             </Stack>
 
             <ExtendedFormikProvider formik={formik}>
@@ -152,31 +183,37 @@ export const DataLayerWizardPanel: FC<Props> = ({
                 <Button onClick={requestClose} disabled={isSubmitting}>
                     {formatMessage(MESSAGES.cancel)}
                 </Button>
-                <Stack direction="row" sx={styles.footerActions}>
-                    {activeStepIndex > 0 && (
-                        <Button onClick={goBack} disabled={isSubmitting}>
-                            {formatMessage(MESSAGES.wizardBack)}
-                        </Button>
-                    )}
+                {isEditing ? (
                     <Button
                         variant="contained"
-                        onClick={onPrimary}
-                        disabled={
-                            isSubmitting ||
-                            (isLastStep ? !formik.isValid : !canAdvance)
-                        }
+                        onClick={submit}
+                        disabled={isSubmitting || !formik.isValid}
                     >
-                        {isLastStep
-                            ? formatMessage(
-                                  isEditing
-                                      ? MESSAGES.wizardSaveChanges
-                                      : MESSAGES.createLayer,
-                              )
-                            : formatMessage(MESSAGES.wizardNext, {
-                                  step: stepLabels[activeStepIndex + 1],
-                              })}
+                        {formatMessage(MESSAGES.wizardSaveChanges)}
                     </Button>
-                </Stack>
+                ) : (
+                    <Stack direction="row" sx={styles.footerActions}>
+                        {activeStepIndex > 0 && (
+                            <Button onClick={goBack} disabled={isSubmitting}>
+                                {formatMessage(MESSAGES.wizardBack)}
+                            </Button>
+                        )}
+                        <Button
+                            variant="contained"
+                            onClick={onPrimary}
+                            disabled={
+                                isSubmitting ||
+                                (isLastStep ? !formik.isValid : !canAdvance)
+                            }
+                        >
+                            {isLastStep
+                                ? formatMessage(MESSAGES.createLayer)
+                                : formatMessage(MESSAGES.wizardNext, {
+                                      step: stepLabels[activeStepIndex + 1],
+                                  })}
+                        </Button>
+                    </Stack>
+                )}
             </Stack>
         </Card>
     );
