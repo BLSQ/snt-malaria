@@ -45,6 +45,8 @@ type Props = {
     importStatus?: OpenHexaImportStatus;
     /** While the composite editor is open, the row is a drag source rather than a selector. */
     editing?: boolean;
+    /** Lets the parent list track this row's DOM node, e.g. to scroll it into view. */
+    onRowRef?: (node: HTMLLIElement | null) => void;
 };
 
 const styles: SxStyles = {
@@ -95,6 +97,7 @@ export const DataLayerLine: FC<Props> = ({
     onRefreshOpenHexaLayer,
     importStatus,
     editing = false,
+    onRowRef,
 }) => {
     const isComposite = compositeLayerId !== undefined;
     const isOpenHexa = metricType.origin === 'openhexa';
@@ -133,7 +136,7 @@ export const DataLayerLine: FC<Props> = ({
         },
         [metricType.id, metricType.name, theme],
     );
-    const anchorRef = React.useRef<HTMLLIElement>(null);
+    const anchorRef = React.useRef<HTMLLIElement | null>(null);
     const [showMoreActions, setShowMoreActions] = React.useState(false);
     const { formatMessage } = useSafeIntl();
     const toggleMoreActions = useCallback(() => {
@@ -161,7 +164,10 @@ export const DataLayerLine: FC<Props> = ({
                     ...(selected ? styles.metricTypeSelected : {}),
                 } as SxProps
             }
-            ref={anchorRef}
+            ref={node => {
+                anchorRef.current = node;
+                onRowRef?.(node);
+            }}
             secondaryAction={
                 editing ? undefined : (
                     <DisplayIfUserHasPerm

@@ -84,6 +84,45 @@ export const DataLayerList: FC<Props> = ({
             onSelectMetricType(firstMetricType);
         }
     }, [metricCategories, onSelectMetricType]);
+
+    const rowNodes = useRef(new Map<number, HTMLLIElement>());
+    const setRowRef = useCallback(
+        (metricTypeId: number, node: HTMLLIElement | null) => {
+            if (node) {
+                rowNodes.current.set(metricTypeId, node);
+            } else {
+                rowNodes.current.delete(metricTypeId);
+            }
+        },
+        [],
+    );
+
+    // Reveal the selected layer whenever the selection changes, e.g. right after the wizard
+    // creates a new one, in case it's off-screen or its category is collapsed. Deliberately keyed
+    // only on `selectedMetricTypeId`, not `metricCategories`/`collapsedCategories`, so a background
+    // refetch doesn't re-trigger the scroll.
+    useEffect(() => {
+        if (selectedMetricTypeId === undefined) return undefined;
+        const category = metricCategories.find(metricCategory =>
+            metricCategory.items.some(item => item.id === selectedMetricTypeId),
+        );
+        const wasCollapsed = category
+            ? collapsedCategories.has(category.name)
+            : false;
+        if (category && wasCollapsed) {
+            toggleCategory(category.name);
+        }
+        const timeoutId = window.setTimeout(
+            () => {
+                rowNodes.current
+                    .get(selectedMetricTypeId)
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            },
+            wasCollapsed ? 300 : 0,
+        );
+        return () => window.clearTimeout(timeoutId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedMetricTypeId]);
     return (
         (metricCategories.length === 0 && (
             <Typography variant="body2" color="textSecondary">
@@ -147,6 +186,9 @@ export const DataLayerList: FC<Props> = ({
                                         selected={
                                             metricType.id ===
                                             selectedMetricTypeId
+                                        }
+                                        onRowRef={node =>
+                                            setRowRef(metricType.id, node)
                                         }
                                     />
                                 ))}
