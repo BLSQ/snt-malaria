@@ -220,8 +220,8 @@ export const useDataLayerWizardController = ({
     }, [resetAll, onClosed]);
 
     const hasProgress = useMemo(
-        () => formik.dirty || wizard.activeStepIndex > 0,
-        [formik.dirty, wizard.activeStepIndex],
+        () => formik.dirty || (!editing && wizard.activeStepIndex > 0),
+        [formik.dirty, wizard.activeStepIndex, editing],
     );
 
     const requestClose = useCallback(() => {
@@ -721,6 +721,7 @@ export const useDataLayerWizardController = ({
         lastStep: wizard.lastStep,
         goNext,
         goBack: requestBack,
+        goToStep: wizard.setActiveStep,
         backConfirmOpen,
         confirmBack,
         cancelBack,
