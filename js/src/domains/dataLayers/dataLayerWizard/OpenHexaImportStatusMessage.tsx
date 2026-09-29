@@ -21,6 +21,14 @@ const styles = {
         p: 1.5,
         borderRadius: 2,
         border: '1px solid',
+        minWidth: 0,
+    },
+    icon: {
+        flexShrink: 0,
+    },
+    message: {
+        minWidth: 0,
+        overflowWrap: 'break-word',
     },
     error: {
         borderColor: 'error.main',
@@ -46,8 +54,16 @@ export const OpenHexaImportStatusMessage: FC<Props> = ({ status }) => {
     if (status && isFailedTaskStatus(status.status)) {
         return (
             <Box sx={[styles.box, styles.error]}>
-                <ErrorOutlineIcon fontSize="small" color="error" />
-                <Typography variant="body2" color="error.main">
+                <ErrorOutlineIcon
+                    fontSize="small"
+                    color="error"
+                    sx={styles.icon}
+                />
+                <Typography
+                    variant="body2"
+                    color="error.main"
+                    sx={styles.message}
+                >
                     {status.progress_message ||
                         formatMessage(MESSAGES.importFailed)}
                 </Typography>
@@ -57,8 +73,16 @@ export const OpenHexaImportStatusMessage: FC<Props> = ({ status }) => {
     if (status && isSuccessTaskStatus(status.status)) {
         return (
             <Box sx={[styles.box, styles.success]}>
-                <CheckCircleOutlineIcon fontSize="small" color="success" />
-                <Typography variant="body2" color="success.main">
+                <CheckCircleOutlineIcon
+                    fontSize="small"
+                    color="success"
+                    sx={styles.icon}
+                />
+                <Typography
+                    variant="body2"
+                    color="success.main"
+                    sx={styles.message}
+                >
                     {formatMessage(MESSAGES.wizardOpenHexaImportComplete)}
                 </Typography>
             </Box>
@@ -66,8 +90,12 @@ export const OpenHexaImportStatusMessage: FC<Props> = ({ status }) => {
     }
     return (
         <Box sx={[styles.box, styles.info]}>
-            <CircularProgress size={16} />
-            <Typography variant="body2" color="primary.main">
+            <CircularProgress size={16} sx={styles.icon} />
+            <Typography
+                variant="body2"
+                color="primary.main"
+                sx={styles.message}
+            >
                 {status?.progress_message ||
                     formatMessage(MESSAGES.wizardOpenHexaImportInfo)}
             </Typography>
