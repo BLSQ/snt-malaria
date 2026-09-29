@@ -1,14 +1,16 @@
-import React, { FC } from 'react';
+import React, { FC, useCallback } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { FormikErrors, FormikTouched } from 'formik';
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
+import { getColor, useGetColors } from 'Iaso/hooks/useGetColors';
 import { SxStyles } from 'Iaso/types/general';
 import { hasOpenEndedTopBucket } from '../../../constants/legend';
 import { useGetChildError } from '../../../hooks/useGetChildError';
 import { DEFAULT_LEGEND_CONFIG_ITEM } from '../hooks/useMetricTypeFormState';
 import { MESSAGES } from '../messages';
 import { Scale } from '../types/metrics';
+import { DEFAULT_COLOR } from './legendScale';
 import { ScaleForm } from './ScaleForm';
 
 const styles: SxStyles = {
@@ -66,10 +68,24 @@ export const LegendConfigForm: FC<Props> = ({
     onChangeTopColor,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const { data: colors } = useGetColors(true);
     const getChildError = useGetChildError<Scale>({
         errors,
         touched,
     });
+
+    const handleAdd = useCallback(() => {
+        const usedColors = legendConfig.map(scale => scale.color);
+        const nextColor = getColor(
+            legendConfig.length,
+            colors,
+            usedColors,
+            DEFAULT_COLOR,
+        );
+        onAdd(LIST_FIELD_KEY, DEFAULT_LEGEND_CONFIG_ITEM, {
+            color: nextColor,
+        });
+    }, [legendConfig, colors, onAdd]);
 
     return (
         <Box sx={styles.legendConfigContainer}>
@@ -102,9 +118,7 @@ export const LegendConfigForm: FC<Props> = ({
             )}
             {!disableValues && (
                 <Button
-                    onClick={() =>
-                        onAdd(LIST_FIELD_KEY, DEFAULT_LEGEND_CONFIG_ITEM, {})
-                    }
+                    onClick={handleAdd}
                     disabled={legendConfig.length >= maxItems}
                 >
                     {formatMessage(MESSAGES.addScaleItem)}
