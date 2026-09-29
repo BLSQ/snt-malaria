@@ -9,45 +9,39 @@ const styles = {
         border: '1px solid',
         borderColor: 'divider',
         cursor: 'pointer',
-        transition: 'border-color 120ms, background-color 120ms',
-        '&:hover': { borderColor: 'primary.light' },
-    },
-    selected: {
-        borderColor: 'primary.main',
-        backgroundColor: 'action.hover',
+        transition:
+            'border-color 120ms, background-color 120ms, box-shadow 120ms',
+        '&:hover': {
+            borderColor: 'primary.main',
+            backgroundColor: 'action.hover',
+            boxShadow: 1,
+        },
     },
     disabled: { opacity: 0.5, pointerEvents: 'none' },
 } satisfies SxStyles;
 
 type Props = {
-    selected: boolean;
-    onSelect: () => void;
+    onClick: () => void;
     disabled?: boolean;
     children: ReactNode;
 };
 
-export const SelectableCard: FC<Props> = ({
-    selected,
-    onSelect,
+export const ActionCard: FC<Props> = ({
+    onClick,
     disabled = false,
     children,
 }) => (
     <Box
-        role="radio"
-        aria-checked={selected}
+        role="button"
         tabIndex={disabled ? -1 : 0}
-        onClick={onSelect}
+        onClick={onClick}
         onKeyDown={(event: KeyboardEvent) => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                onSelect();
+                onClick();
             }
         }}
-        sx={[
-            styles.card,
-            selected && styles.selected,
-            disabled && styles.disabled,
-        ]}
+        sx={[styles.card, disabled && styles.disabled]}
     >
         {children}
     </Box>

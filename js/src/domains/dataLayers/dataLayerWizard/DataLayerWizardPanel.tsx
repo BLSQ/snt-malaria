@@ -16,6 +16,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { SidePanelIconToggle } from '../../../components/sidePanel/SidePanelIconToggle';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../messages';
+import { WizardLayerType } from './constants';
 import { StepDataControls } from './steps/StepDataControls';
 import { StepDetails } from './steps/StepDetails';
 import { StepLegend } from './steps/StepLegend';
@@ -94,6 +95,7 @@ export const DataLayerWizardPanel: FC<Props> = ({
     } = controller;
 
     const isLastStep = activeStep === lastStep;
+    const isTypeStep = activeStep === WIZARD_STEPS.TYPE;
 
     const onPrimary = useCallback(() => {
         if (isCompositeGraphStep) {
@@ -104,6 +106,14 @@ export const DataLayerWizardPanel: FC<Props> = ({
             goNext();
         }
     }, [isCompositeGraphStep, isLastStep, onCompositeNext, submit, goNext]);
+
+    const onSelectLayerType = useCallback(
+        (value: WizardLayerType) => {
+            setLayerType(value);
+            goNext();
+        },
+        [setLayerType, goNext],
+    );
 
     return (
         <Card sx={styles.card}>
@@ -147,8 +157,7 @@ export const DataLayerWizardPanel: FC<Props> = ({
                     <Box sx={styles.body}>
                         {activeStep === WIZARD_STEPS.TYPE && (
                             <StepType
-                                layerType={layerType}
-                                onChangeLayerType={setLayerType}
+                                onChangeLayerType={onSelectLayerType}
                                 showOpenHexa={showOpenHexa}
                                 showComposite={showComposite}
                             />
@@ -198,20 +207,24 @@ export const DataLayerWizardPanel: FC<Props> = ({
                                 {formatMessage(MESSAGES.wizardBack)}
                             </Button>
                         )}
-                        <Button
-                            variant="contained"
-                            onClick={onPrimary}
-                            disabled={
-                                isSubmitting ||
-                                (isLastStep ? !formik.isValid : !canAdvance)
-                            }
-                        >
-                            {isLastStep
-                                ? formatMessage(MESSAGES.createLayer)
-                                : formatMessage(MESSAGES.wizardNext, {
-                                      step: stepLabels[activeStepIndex + 1],
-                                  })}
-                        </Button>
+                        {!isTypeStep && (
+                            <Button
+                                variant="contained"
+                                onClick={onPrimary}
+                                disabled={
+                                    isSubmitting ||
+                                    (isLastStep
+                                        ? !formik.isValid
+                                        : !canAdvance)
+                                }
+                            >
+                                {isLastStep
+                                    ? formatMessage(MESSAGES.createLayer)
+                                    : formatMessage(MESSAGES.wizardNext, {
+                                          step: stepLabels[activeStepIndex + 1],
+                                      })}
+                            </Button>
+                        )}
                     </Stack>
                 )}
             </Stack>

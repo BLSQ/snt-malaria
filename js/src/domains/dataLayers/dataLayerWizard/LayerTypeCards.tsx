@@ -6,8 +6,8 @@ import { useSafeIntl } from 'bluesquare-components';
 import { OpenHexaSvg } from 'Iaso/components/svg/OpenHexaSvg';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../messages';
+import { ActionCard } from './ActionCard';
 import { WizardLayerType } from './constants';
-import { SelectableCard } from './SelectableCard';
 
 type Option = {
     value: WizardLayerType;
@@ -44,14 +44,12 @@ const styles = {
 } satisfies SxStyles;
 
 type Props = {
-    value: WizardLayerType;
     onChange: (value: WizardLayerType) => void;
     showOpenHexa: boolean;
     showComposite: boolean;
 };
 
 export const LayerTypeCards: FC<Props> = ({
-    value,
     onChange,
     showOpenHexa,
     showComposite,
@@ -67,25 +65,22 @@ export const LayerTypeCards: FC<Props> = ({
         <Box sx={styles.list}>
             {React.Children.toArray(
                 options.map(option => (
-                    <SelectableCard
-                        selected={option.value === value}
-                        onSelect={() => onChange(option.value)}
-                    >
+                    <ActionCard onClick={() => onChange(option.value)}>
                         <Stack direction="row" gap={1.5}>
                             <Box sx={styles.icon}>{option.icon}</Box>
                             <Box>
-                                <Typography variant="body2" sx={styles.title}>
+                                <Typography variant="body1" sx={styles.title}>
                                     {formatMessage(option.title)}
                                 </Typography>
                                 <Typography
-                                    variant="caption"
+                                    variant="body2"
                                     color="text.secondary"
                                 >
                                     {formatMessage(option.blurb)}
                                 </Typography>
                             </Box>
                         </Stack>
-                    </SelectableCard>
+                    </ActionCard>
                 )),
             )}
         </Box>
