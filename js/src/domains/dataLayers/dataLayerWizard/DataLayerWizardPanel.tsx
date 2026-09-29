@@ -1,8 +1,10 @@
 import React, { FC, ReactNode, useCallback } from 'react';
+import LayersIcon from '@mui/icons-material/Layers';
 import { Box, Button, Card, Divider, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
+import { SidePanelIconToggle } from '../../../components/sidePanel/SidePanelIconToggle';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../messages';
 import { StepDataControls } from './steps/StepDataControls';
@@ -21,7 +23,7 @@ const styles: SxStyles = {
         pb: 1.5,
         gap: 1.5,
     },
-    title: { fontWeight: 600 },
+    title: { fontWeight: 600, flexGrow: 1 },
     body: { flexGrow: 1, overflow: 'auto', p: 2 },
     bodyFlush: {
         flexGrow: 1,
@@ -95,9 +97,12 @@ export const DataLayerWizardPanel: FC<Props> = ({
     return (
         <Card sx={styles.card}>
             <Stack sx={styles.header}>
-                <Typography variant="h6" sx={styles.title}>
-                    {formatMessage(titleMessage)}
-                </Typography>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                    <SidePanelIconToggle icon={LayersIcon} />
+                    <Typography variant="h6" sx={styles.title}>
+                        {formatMessage(titleMessage)}
+                    </Typography>
+                </Stack>
                 <WizardStepRail
                     activeStep={activeStepIndex}
                     steps={stepLabels}

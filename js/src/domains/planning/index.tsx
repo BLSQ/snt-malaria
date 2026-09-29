@@ -1,5 +1,4 @@
 import React, {
-    ComponentProps,
     FC,
     ReactNode,
     useCallback,
@@ -8,6 +7,7 @@ import React, {
     useRef,
     useState,
 } from 'react';
+import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
 import { Card } from '@mui/material';
 import {
     LoadingSpinner,
@@ -19,12 +19,12 @@ import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../components/CardStyled';
+import { SidePanel } from '../../components/sidePanel/SidePanel';
 import {
     ChatColumn,
     MainColumn,
     PaperFullHeight,
     PageContainer,
-    SidebarColumn,
     SidebarLayout,
 } from '../../components/styledComponents';
 import { baseUrls } from '../../constants/urls';
@@ -42,12 +42,10 @@ import { InterventionPlanHeader } from './components/interventionPlan/Interventi
 import { InterventionPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
 import { ScenarioRuleAIChat } from './components/scenarioRule/scenarioRuleAiChat/ScenarioRuleAIChat';
 import { useScenarioRuleAIChat } from './components/scenarioRule/scenarioRuleAiChat/useScenarioRuleAIChat';
+import { ScenarioRulesActions } from './components/scenarioRule/scenarioRuleList/ScenarioRulesHeader';
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
 import { ScenarioSummaryTab } from './components/ScenarioSummaryTab';
-import {
-    PlanningProvider,
-    usePlanningContext,
-} from './contexts/PlanningContext';
+import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetAccountSettings } from './hooks/useGetAccountSettings';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
 import { useGetLatestCalculatedBudget } from './hooks/useGetLatestCalculatedBudget';
@@ -68,18 +66,6 @@ const styles = {
 type PlanningParams = {
     scenarioId: number;
     displayOrgUnitId?: number;
-};
-
-const ScenarioRulesSidebar: FC<
-    ComponentProps<typeof ScenarioRulesPanel>
-> = props => {
-    const { showRulesPanel } = usePlanningContext();
-    if (!showRulesPanel) return null;
-    return (
-        <SidebarColumn>
-            <ScenarioRulesPanel {...props} />
-        </SidebarColumn>
-    );
 };
 
 export const Planning: FC = () => {
@@ -326,18 +312,29 @@ export const Planning: FC = () => {
                             />
                         </ChatColumn>
                     )}
-                    <ScenarioRulesSidebar
-                        onPreviewScenarioRule={onPreviewScenarioRule}
-                        scenarioId={scenarioId}
-                        rules={scenarioRules || []}
-                        isLoading={isFetchingRules}
-                        createRuleRef={tour.anchorRefs[0]}
-                        matchedOrgUnitIds={matchedOrgUnitIds}
-                        isLoadingPreview={isLoadingPreview}
-                        hasAiApiKey={hasAiApiKey}
-                        showAIChat={showAIChat}
-                        onToggleAIChat={toggleAIChat}
-                    />
+                    <SidePanel
+                        icon={SettingsInputComponentOutlinedIcon}
+                        actions={
+                            <ScenarioRulesActions
+                                hasAiApiKey={hasAiApiKey}
+                                showAIChat={showAIChat}
+                                onToggleAIChat={toggleAIChat}
+                            />
+                        }
+                    >
+                        <ScenarioRulesPanel
+                            onPreviewScenarioRule={onPreviewScenarioRule}
+                            scenarioId={scenarioId}
+                            rules={scenarioRules || []}
+                            isLoading={isFetchingRules}
+                            createRuleRef={tour.anchorRefs[0]}
+                            matchedOrgUnitIds={matchedOrgUnitIds}
+                            isLoadingPreview={isLoadingPreview}
+                            hasAiApiKey={hasAiApiKey}
+                            showAIChat={showAIChat}
+                            onToggleAIChat={toggleAIChat}
+                        />
+                    </SidePanel>
                     <MainColumn>{renderMainColumn()}</MainColumn>
                 </SidebarLayout>
             </PageContainer>

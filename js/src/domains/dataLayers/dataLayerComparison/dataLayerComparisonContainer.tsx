@@ -10,7 +10,7 @@ const styles = {
         overflow: 'auto',
         scrollbarWidth: 'none',
         '&::-webkit-scrollbar': { display: 'none' },
-        width: '33%',
+        width: '50%',
     },
     items: {
         minHeight: 'calc(50% - .25rem)',

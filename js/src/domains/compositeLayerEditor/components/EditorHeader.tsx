@@ -1,9 +1,10 @@
 import React, { FC } from 'react';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import SchemaIcon from '@mui/icons-material/Schema';
-import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import { Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { SidePanelIconToggle } from '../../../components/sidePanel/SidePanelIconToggle';
 import { MESSAGES } from '../messages';
 
 const styles = {
@@ -12,10 +13,6 @@ const styles = {
 
 type Props = {
     title: string;
-    /** Whether the data layers sidebar is currently collapsed (owned by the parent page). */
-    sidebarCollapsed: boolean;
-    /** Toggles the data layers sidebar (mirrors the scenario editor's rules-panel toggle). */
-    onToggleSidebar?: () => void;
     /** Re-lays-out every node on the canvas from their real rendered sizes (see `handleRearrange`
      * in index.tsx) - the same measure-then-layout pass a structural AI update runs, exposed here
      * so it can also tidy up a hand-built or manually-dragged graph. */
@@ -26,11 +23,9 @@ type Props = {
     hideActions?: boolean;
 };
 
-/** Header bar of the composite editor: sidebar toggle, title, and cancel/save actions. */
+/** Header bar of the composite editor: title, and cancel/save actions. */
 export const EditorHeader: FC<Props> = ({
     title,
-    sidebarCollapsed,
-    onToggleSidebar,
     onRearrange,
     onCancel,
     onSave,
@@ -45,21 +40,7 @@ export const EditorHeader: FC<Props> = ({
             alignItems="center"
         >
             <Stack direction="row" alignItems="center" spacing={0.5}>
-                {onToggleSidebar && (
-                    <Tooltip
-                        title={formatMessage(
-                            sidebarCollapsed
-                                ? MESSAGES.showSidePanel
-                                : MESSAGES.hideSidePanel,
-                        )}
-                    >
-                        <IconButton size="small" onClick={onToggleSidebar}>
-                            <ViewSidebarIcon
-                                color={sidebarCollapsed ? 'action' : 'primary'}
-                            />
-                        </IconButton>
-                    </Tooltip>
-                )}
+                <SidePanelIconToggle icon={AccountTreeIcon} />
                 <Typography variant="h6" sx={styles.title}>
                     {title}
                 </Typography>
