@@ -1,6 +1,6 @@
 """Resolve a data layer's ``SOURCE_DATA`` to a concrete OpenHexa dataset file.
 
-``SOURCE_DATA`` in ``SNT_metadata.json`` names a dataset by an identifier key
+``SOURCE_DATA`` in the OpenHexa metadata file names a dataset by an identifier key
 (``SNT_DHIS2_INCIDENCE``) and a filename template (``{COUNTRY_CODE}_incidence.csv``);
 ``SNT_config.json`` maps that key to a dataset slug and supplies the country code.
 """

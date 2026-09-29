@@ -2,7 +2,7 @@ from unittest import mock
 
 from iaso.models import MetricType, MetricValue, OrgUnit, Task
 from iaso.models.base import ERRORED, KILLED, SUCCESS
-from plugins.snt_malaria.providers.openhexa_data_layers import CONFIG_FILENAME, METADATA_FILENAME
+from plugins.snt_malaria.providers.openhexa_data_layers import CONFIG_FILENAME, DEFAULT_METADATA_FILENAME
 from plugins.snt_malaria.tasks.import_openhexa_data_layer import import_openhexa_data_layer
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
@@ -10,12 +10,15 @@ from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 TASK_PATH = "plugins.snt_malaria.tasks.import_openhexa_data_layer"
 
 
-def _fake_fetch_dataset_jsons(metadata):
-    """Stand-in for fetch_dataset_jsons: returns the requested files keyed by filename."""
+def _fake_fetch_dataset_json(metadata):
+    """Stand-in for fetch_dataset_json: serves each file only from the dataset it lives in."""
 
-    def fetch(_url, _token, _ws, _slug, filenames):
-        available = {METADATA_FILENAME: metadata, CONFIG_FILENAME: SNT_CONFIG}
-        return {name: available.get(name, {}) for name in filenames}
+    def fetch(_url, _token, _ws, dataset_slug, filename):
+        available = {
+            ("snt-metadata", DEFAULT_METADATA_FILENAME): metadata,
+            ("snt-configuration", CONFIG_FILENAME): SNT_CONFIG,
+        }
+        return available[(dataset_slug, filename)]
 
     return fetch
 
@@ -73,7 +76,11 @@ class ImportOpenHexaDataLayerTaskTestCase(SNTMalariaTestCase):
                 f"{TASK_PATH}.resolve_config_dataset",
                 return_value=("https://oh/graphql/", "token", "ws", "snt-configuration"),
             ),
-            mock.patch(f"{TASK_PATH}.fetch_dataset_jsons", side_effect=_fake_fetch_dataset_jsons(metadata)),
+            mock.patch(
+                f"{TASK_PATH}.resolve_metadata_file",
+                return_value=("https://oh/graphql/", "token", "ws", "snt-metadata", DEFAULT_METADATA_FILENAME),
+            ),
+            mock.patch(f"{TASK_PATH}.fetch_dataset_json", side_effect=_fake_fetch_dataset_json(metadata)),
             mock.patch(f"{TASK_PATH}.download_dataset_file", return_value=SOURCE_CSV) as download,
         ):
             import_openhexa_data_layer(metric_type_id=self.metric_type.id, task=self.task, _immediate=True)
