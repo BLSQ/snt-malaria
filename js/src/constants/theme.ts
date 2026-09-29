@@ -154,10 +154,20 @@ export const theme = createTheme({
                 root: {
                     transform: 'translate(14px, 8px) scale(1)',
                     color: 'textSecondary',
+                    background: 'transparent',
                 },
+                // bluesquare-components' TextArea hardcodes its own shrink
+                // transform with `!important` (see its inputLabelShrink
+                // class), which no specificity trick can beat on its own, so
+                // `transform` needs `!important` here too.
                 shrink: {
-                    transform: 'translate(14px, -9px) scale(1)',
-                    fontSize: '0.75rem',
+                    '&&': {
+                        transform: 'translate(14px, -9px) scale(1) !important',
+                        fontSize: '0.75rem',
+                        backgroundColor: '#fff',
+                        paddingLeft: '2px',
+                        paddingRight: '2px',
+                    },
                 },
                 outlined: {
                     '&.MuiInputLabel-shrink': {
