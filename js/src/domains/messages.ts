@@ -457,7 +457,7 @@ export const MESSAGES = defineMessages({
     },
     editedOn: {
         id: 'iaso.snt_malaria.label.editedOn',
-        defaultMessage: 'Edited on {date}',
+        defaultMessage: 'Created by {username} - edited {date}',
     },
     entirePeriod: {
         id: 'iaso.snt_malaria.budgeting.entirePeriod',

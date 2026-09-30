@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import ChevronRightOutlinedIcon from '@mui/icons-material/ChevronRightOutlined';
 import {
     Box,
@@ -36,9 +36,13 @@ const styles: SxStyles = {
     }),
     period: { marginLeft: 1 },
     timestamp: (theme: Theme) => ({
-        fontSize: 14,
-        lineHeight: '143%',
+        fontSize: 12,
         color: theme.palette.text.secondary,
+    }),
+    description: (theme: Theme) => ({
+        color: theme.palette.text.secondary,
+        marginTop: theme.spacing(0.5),
+        marginBottom: theme.spacing(1),
     }),
 };
 
@@ -52,6 +56,18 @@ export const ScenarioComponent: FC<Props> = ({ scenario }) => {
     const handleScenarioClick = () => {
         navigate(`/${baseUrls.planning}/scenarioId/${scenario.id}`);
     };
+
+    const username = useMemo(() => {
+        if (!scenario.created_by) return '';
+
+        const created_by = scenario.created_by;
+
+        if (!created_by.first_name && !created_by.last_name) {
+            return created_by.username;
+        }
+
+        return `${created_by.first_name} ${created_by.last_name}`;
+    }, [scenario]);
 
     return (
         <Card sx={styles.card}>
@@ -68,8 +84,14 @@ export const ScenarioComponent: FC<Props> = ({ scenario }) => {
                                 {scenario.start_year} - {scenario.end_year}
                             </Box>
                         </Typography>
+                        {scenario.description && (
+                            <Typography variant="body2" sx={styles.description}>
+                                {scenario.description}
+                            </Typography>
+                        )}
                         <Typography variant="body2" sx={styles.timestamp}>
                             {formatMessage(MESSAGES.editedOn, {
+                                username: username,
                                 date: new Date(
                                     scenario.updated_at,
                                 ).toLocaleString(),
