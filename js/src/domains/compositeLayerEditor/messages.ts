@@ -5,14 +5,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compositeLayerEditor.title',
         defaultMessage: 'Composite layer editor',
     },
-    showSidePanel: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.showSidePanel',
-        defaultMessage: 'Show side panel',
-    },
-    hideSidePanel: {
-        id: 'iaso.snt_malaria.compositeLayerEditor.hideSidePanel',
-        defaultMessage: 'Hide side panel',
-    },
     save: {
         id: 'iaso.snt_malaria.compositeLayerEditor.save',
         defaultMessage: 'Save',

@@ -1,9 +1,11 @@
 import React, { FC, Ref } from 'react';
+import AddIcon from '@mui/icons-material/Add';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
 import { Button, Stack, Typography } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
-import { IconBoxed } from '../../../../../components/IconBoxed';
+import { IconButton, useSafeIntl } from 'bluesquare-components';
+import { useSidePanelContext } from '../../../../../components/sidePanel/SidePanelContext';
+import { SidePanelIconToggle } from '../../../../../components/sidePanel/SidePanelIconToggle';
 import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 
@@ -36,28 +38,72 @@ export const ScenarioRulesHeader: FC<Props> = ({
             justifyContent="space-between"
         >
             <Stack spacing={1} direction="row" alignItems="center">
-                <IconBoxed Icon={SettingsInputComponentOutlinedIcon} />
-
+                <SidePanelIconToggle
+                    icon={SettingsInputComponentOutlinedIcon}
+                />
                 <Typography variant="h6" gutterBottom>
                     {formatMessage(MESSAGES.interventionTitle)}
                 </Typography>
             </Stack>
-            {isScenarioEditable && (
-                <Stack spacing={1} direction="row" alignItems="center">
-                    {hasAiApiKey && (
+            <Stack spacing={1} direction="row" alignItems="center">
+                {isScenarioEditable && (
+                    <>
+                        {hasAiApiKey && (
+                            <Button
+                                variant={showAIChat ? 'contained' : 'outlined'}
+                                startIcon={<AutoAwesomeIcon />}
+                                onClick={() => onToggleAIChat?.()}
+                            >
+                                {formatMessage(
+                                    MESSAGES.scenarioRuleAIChatButton,
+                                )}
+                            </Button>
+                        )}
                         <Button
-                            variant={showAIChat ? 'contained' : 'outlined'}
-                            startIcon={<AutoAwesomeIcon />}
-                            onClick={() => onToggleAIChat?.()}
+                            ref={createRuleRef}
+                            onClick={() => onCreateRule()}
                         >
-                            {formatMessage(MESSAGES.scenarioRuleAIChatButton)}
+                            {formatMessage(MESSAGES.createScenarioRule)}
                         </Button>
-                    )}
-                    <Button ref={createRuleRef} onClick={() => onCreateRule()}>
-                        {formatMessage(MESSAGES.createScenarioRule)}
-                    </Button>
-                </Stack>
-            )}
+                    </>
+                )}
+            </Stack>
         </Stack>
+    );
+};
+
+/** Icon-only equivalents of the header's actions, shown in the collapsed rail so they stay
+ *  usable without expanding the panel. Reads the "start creating" trigger from context since
+ *  it's normally owned by the (unmounted-while-collapsed) rule form. */
+export const ScenarioRulesActions: FC<
+    Pick<Props, 'hasAiApiKey' | 'showAIChat' | 'onToggleAIChat'>
+> = ({ hasAiApiKey, showAIChat, onToggleAIChat }) => {
+    const { isScenarioEditable, startEditingRule } = usePlanningContext();
+    const { open } = useSidePanelContext();
+
+    if (!isScenarioEditable) {
+        return null;
+    }
+
+    return (
+        <>
+            {hasAiApiKey && (
+                <IconButton
+                    onClick={() => onToggleAIChat?.()}
+                    color={showAIChat ? 'primary' : 'action'}
+                    overrideIcon={AutoAwesomeIcon}
+                    tooltipMessage={MESSAGES.scenarioRuleAIChatButton}
+                />
+            )}
+            <IconButton
+                onClick={() => {
+                    open();
+                    startEditingRule();
+                }}
+                color="primary"
+                overrideIcon={AddIcon}
+                tooltipMessage={MESSAGES.createScenarioRule}
+            />
+        </>
     );
 };

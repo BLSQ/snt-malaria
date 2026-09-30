@@ -1,4 +1,4 @@
-import React, { FC, Ref, useCallback, useState } from 'react';
+import React, { FC, Ref, useCallback } from 'react';
 import { useGetColors } from 'Iaso/hooks/useGetColors';
 import { CardScrollable } from '../../../../components/styledComponents';
 import { usePlanningContext } from '../../contexts/PlanningContext';
@@ -33,29 +33,26 @@ export const ScenarioRulesPanel: FC<Props> = ({
     showAIChat,
     onToggleAIChat,
 }) => {
-    const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
-
-    const { isEditing, toggleIsEditing } = usePlanningContext();
+    const { isEditing, editingRule, startEditingRule, stopEditingRule } =
+        usePlanningContext();
     // Prefetches the palette so the form's lazy colour picker finds it warm
     // in the React Query cache when the form mounts.
     useGetColors();
 
     const handleShowForm = useCallback(
         (rule?: ScenarioRule) => {
-            setEditingRule(rule);
-            toggleIsEditing();
+            startEditingRule(rule);
             if (rule) {
                 onPreviewScenarioRule?.(rule);
             }
         },
-        [toggleIsEditing, onPreviewScenarioRule],
+        [startEditingRule, onPreviewScenarioRule],
     );
 
     const handleCloseForm = useCallback(() => {
         onPreviewScenarioRule?.(undefined);
-        setEditingRule(undefined);
-        toggleIsEditing();
-    }, [onPreviewScenarioRule, setEditingRule, toggleIsEditing]);
+        stopEditingRule();
+    }, [onPreviewScenarioRule, stopEditingRule]);
 
     const handleFormChange = useCallback(
         (values: Partial<ScenarioRuleFormValues>) => {

@@ -1,16 +1,13 @@
 import React, { FC, ReactNode, Ref, useCallback } from 'react';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import {
     Box,
     Divider,
-    IconButton,
     MenuItem,
     Stack,
     ToggleButton,
     ToggleButtonGroup,
-    Tooltip,
 } from '@mui/material';
 import { Link as MuiLink } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -69,14 +66,8 @@ export const InterventionPlanHeader: FC<Props> = ({
     moreActionsRef,
     tabActions,
 }) => {
-    const {
-        scenarioId,
-        scenario,
-        canEditScenario,
-        isScenarioEditable,
-        showRulesPanel,
-        toggleShowRulesPanel,
-    } = usePlanningContext();
+    const { scenarioId, scenario, canEditScenario, isScenarioEditable } =
+        usePlanningContext();
     const csvUrl = `${exportScenarioAPIPath}?id=${scenarioId}`;
 
     const { formatMessage } = useSafeIntl();
@@ -100,19 +91,6 @@ export const InterventionPlanHeader: FC<Props> = ({
             sx={styles.root}
         >
             <Stack direction="row" spacing={2} alignItems="center">
-                <Tooltip
-                    title={formatMessage(
-                        showRulesPanel
-                            ? MESSAGES.hideRulesPanel
-                            : MESSAGES.showRulesPanel,
-                    )}
-                >
-                    <IconButton size="small" onClick={toggleShowRulesPanel}>
-                        <ViewSidebarIcon
-                            color={showRulesPanel ? 'primary' : 'action'}
-                        />
-                    </IconButton>
-                </Tooltip>
                 <ToggleButtonGroup
                     value={activeTab}
                     size="small"

@@ -9,6 +9,7 @@ import React, {
     useState,
 } from 'react';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SidePanelProvider } from '../../../components/sidePanel/SidePanelProvider';
 import { useGetBudgetSettings } from '../../../hooks/useGetBudgetSettings';
 import { createTimeoutService } from '../../../services/timeoutService';
 import { MetricTypeCategory } from '../../dataLayers/types/metrics';
@@ -24,6 +25,7 @@ import {
     InterventionPlan,
     ScenarioYearlyCostAssignment,
 } from '../types/interventionAssignments';
+import { ScenarioRule } from '../types/scenarioRule';
 
 type PlanningContextType = {
     scenarioId: number;
@@ -32,6 +34,7 @@ type PlanningContextType = {
     canEditScenario: boolean; // This is oriented user, does he have the necessary permissions to edit the scenario
     isScenarioEditable: boolean; // This is oriented scenario, is it locked or not, if it's locked it can't be edited even if the user has permissions
     isEditing: boolean;
+    editingRule: ScenarioRule | undefined;
     orgUnits: OrgUnit[];
     metricTypeCategories: MetricTypeCategory[];
     interventionCategories: InterventionCategory[];
@@ -40,10 +43,9 @@ type PlanningContextType = {
     scenarioYearlyCostAssignments: ScenarioYearlyCostAssignment[];
     budgets: Budget[];
     currency: string;
-    showRulesPanel: boolean;
-    toggleShowRulesPanel: () => void;
     saveYearlyCoverage: (params: SaveYearlyCoverageParams) => void;
-    toggleIsEditing: () => void;
+    startEditingRule: (rule?: ScenarioRule) => void;
+    stopEditingRule: () => void;
     // Comparison tab's slot selection, kept here (rather than local to the
     // tab) so it survives switching away from and back to the tab. Reset
     // whenever scenarioId changes, see the effect below.
@@ -70,6 +72,7 @@ const PlanningContext = createContext<PlanningContextType>({
     canEditScenario: false,
     isScenarioEditable: false,
     isEditing: false,
+    editingRule: undefined,
     orgUnits: [],
     metricTypeCategories: [],
     interventionCategories: [],
@@ -78,10 +81,9 @@ const PlanningContext = createContext<PlanningContextType>({
     scenarioYearlyCostAssignments: [],
     budgets: [],
     currency: '',
-    showRulesPanel: true,
-    toggleShowRulesPanel: () => {},
     saveYearlyCoverage: () => {},
-    toggleIsEditing: () => {},
+    startEditingRule: () => {},
+    stopEditingRule: () => {},
     comparisonCurrentYear: undefined,
     setComparisonCurrentYear: () => {},
     comparisonExtraSlots: [],
@@ -150,18 +152,15 @@ export const PlanningProvider = ({
     }, [interventionAssignments, setInterventionPlans]);
 
     const [isEditing, setIsEditing] = useState(false);
-    const toggleIsEditing = useCallback(
-        () => setIsEditing(e => !e),
-        [setIsEditing],
-    );
-
-    const [showRulesPanel, setShowRulesPanel] = useState(
-        scenario?.is_locked ? false : true,
-    );
-    const toggleShowRulesPanel = useCallback(
-        () => setShowRulesPanel(v => !v),
-        [],
-    );
+    const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
+    const startEditingRule = useCallback((rule?: ScenarioRule) => {
+        setEditingRule(rule);
+        setIsEditing(true);
+    }, []);
+    const stopEditingRule = useCallback(() => {
+        setEditingRule(undefined);
+        setIsEditing(false);
+    }, []);
 
     const [comparisonCurrentYear, setComparisonCurrentYear] = useState<
         number | undefined
@@ -225,20 +224,25 @@ export const PlanningProvider = ({
                 interventionAssignments,
                 interventionPlans,
                 isEditing,
+                editingRule,
                 scenarioYearlyCostAssignments,
                 budgets,
                 currency,
-                showRulesPanel,
-                toggleShowRulesPanel,
                 saveYearlyCoverage,
-                toggleIsEditing,
+                startEditingRule,
+                stopEditingRule,
                 comparisonCurrentYear,
                 setComparisonCurrentYear,
                 comparisonExtraSlots,
                 setComparisonExtraSlots,
             }}
         >
-            {children}
+            <SidePanelProvider
+                defaultOpen={!scenario?.is_locked}
+                locked={isEditing}
+            >
+                {children}
+            </SidePanelProvider>
         </PlanningContext.Provider>
     );
 };

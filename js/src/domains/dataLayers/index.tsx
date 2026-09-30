@@ -6,6 +6,8 @@ import React, {
     useRef,
     useState,
 } from 'react';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import LayersIcon from '@mui/icons-material/Layers';
 import { Card, Stack } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
@@ -16,11 +18,16 @@ import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { SxStyles } from 'Iaso/types/general';
 import { useCurrentUser } from 'Iaso/utils/usersUtils';
 import { CardStyled } from '../../components/CardStyled';
+import { SidePanel } from '../../components/sidePanel/SidePanel';
+import {
+    SidePanelContext,
+    SidePanelContextValue,
+} from '../../components/sidePanel/SidePanelContext';
+import { useSidePanelState } from '../../components/sidePanel/useSidePanelState';
 import {
     MainColumn,
     PageContainer,
     PaperFullHeight,
-    SidebarColumn,
     SidebarLayout,
 } from '../../components/styledComponents';
 import { SETTINGS_WRITE } from '../../constants/permissions';
@@ -49,7 +56,10 @@ import { useGetOrgUnits } from '../planning/hooks/useGetOrgUnits';
 import { DataLayerComparisonProvider } from './contexts/DataLayerComparisonContext';
 import { DataLayerComparisonContainer } from './dataLayerComparison/dataLayerComparisonContainer';
 import { DataLayerList } from './dataLayerList/DataLayerList';
-import { DataLayerListHeader } from './dataLayerList/DataLayerListHeader';
+import {
+    DataLayerListActions,
+    DataLayerListHeader,
+} from './dataLayerList/DataLayerListHeader';
 import { DataLayerMapWrapper } from './dataLayerMap/DataLayerMapWrapper';
 import { DataLayerWizardMain } from './dataLayerWizard/DataLayerWizardMain';
 import { DataLayerWizardPanel } from './dataLayerWizard/DataLayerWizardPanel';
@@ -198,11 +208,10 @@ export const DataLayers: FC = () => {
         [compositeLayerByMetricType],
     );
 
-    // Collapsible data layers sidebar (mirrors the scenario editor's rules-panel toggle).
-    const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
-    const toggleSidebar = useCallback(() => {
-        setSidebarCollapsed(collapsed => !collapsed);
-    }, []);
+    // Collapsible data layers sidebar. Locked (can't collapse) while creating/editing a layer,
+    // wired in further down once `wizard` exists - see `sidePanel` below.
+    const sidePanelState = useSidePanelState(true);
+    const { open: openSidePanel } = sidePanelState;
 
     // Only meaningful while the composite editor is open, and only when there is an AI key.
     const [sidebarTab, setSidebarTab] =
@@ -219,11 +228,11 @@ export const DataLayers: FC = () => {
     const onCloseCompositeEditor = useCallback(() => {
         setIsCompositeEditorOpen(false);
         setEditingCompositeLayerId(undefined);
-        setSidebarCollapsed(false);
+        openSidePanel();
         setSidebarTab('library');
         setNodeSearchTerm('');
         resetAiChat();
-    }, [resetAiChat]);
+    }, [resetAiChat, openSidePanel]);
 
     // After saving, close the editor and show the resulting composite layer on the map.
     const onCompositeSaved = useCallback(
@@ -250,6 +259,19 @@ export const DataLayers: FC = () => {
     });
     const wizardPreview = useWizardMapPreview(wizard);
 
+    // Locks the sidebar open while creating/editing a layer, so its form can't be hidden
+    // mid-flow. Can't be built into `sidePanelState` above since `wizard` doesn't exist yet at
+    // that point (it needs `openSidePanel`, which needs `sidePanelState` first).
+    const sidePanel: SidePanelContextValue = useMemo(
+        () => ({
+            ...sidePanelState,
+            locked: wizard.isOpen,
+            toggle: wizard.isOpen ? sidePanelState.open : sidePanelState.toggle,
+            close: wizard.isOpen ? () => {} : sidePanelState.close,
+        }),
+        [sidePanelState, wizard.isOpen],
+    );
+
     const onEditMetricType = useCallback(
         (metricType: MetricType) =>
             wizard.openForEdit(
@@ -266,10 +288,10 @@ export const DataLayers: FC = () => {
 
     const onWizardGraphSaved = useCallback(
         (metricType?: MetricType) => {
-            setSidebarCollapsed(false);
+            openSidePanel();
             wizard.onCompositeGraphSaved(metricType);
         },
-        [wizard],
+        [wizard, openSidePanel],
     );
 
     // Keeps the edited composite selected in the list while the editor is open.
@@ -412,6 +434,16 @@ export const DataLayers: FC = () => {
         return layerListCard;
     };
 
+    const sidePanelIcon = isCompositeEditorOpen ? AccountTreeIcon : LayersIcon;
+    const sidePanelActions = isCompositeEditorOpen ? undefined : (
+        <DataLayerListActions
+            onCreate={() => {
+                openSidePanel();
+                wizard.open();
+            }}
+        />
+    );
+
     const compositeLayerIdFor = (
         metricType?: MetricType,
     ): number | undefined =>
@@ -437,13 +469,11 @@ export const DataLayers: FC = () => {
               onClose: wizard.requestClose,
               onSaved: onWizardGraphSaved,
               hideActions: true,
-              onToggleSidebar: undefined,
           }
         : {
               onClose: onCloseCompositeEditor,
               onSaved: onCompositeSaved,
               hideActions: false,
-              onToggleSidebar: toggleSidebar,
           };
 
     const renderMainColumn = () => {
@@ -452,7 +482,6 @@ export const DataLayers: FC = () => {
                 <CompositeLayerEditor
                     ref={compositeLayerEditorRef}
                     compositeLayerId={activeCompositeLayerId}
-                    sidebarCollapsed={sidebarCollapsed}
                     {...editorProps}
                 />
             );
@@ -497,43 +526,48 @@ export const DataLayers: FC = () => {
     };
 
     return (
-        <DataLayerComparisonProvider orgUnits={orgUnits ?? []}>
-            {isLoadingMetricLayers && <LoadingSpinner />}
-            <TopBar
-                title={formatMessage(MESSAGES.dataLayersTitle)}
-                disableShadow
-                sx={{ zIndex: 401 }}
-            />
-            <PageContainer>
-                <SidebarLayout>
-                    {!sidebarCollapsed && (
-                        <SidebarColumn>
+        <SidePanelContext.Provider value={sidePanel}>
+            <DataLayerComparisonProvider orgUnits={orgUnits ?? []}>
+                {isLoadingMetricLayers && <LoadingSpinner />}
+                <TopBar
+                    title={formatMessage(MESSAGES.dataLayersTitle)}
+                    disableShadow
+                    sx={{ zIndex: 401 }}
+                />
+                <PageContainer>
+                    <SidebarLayout>
+                        <SidePanel
+                            icon={sidePanelIcon}
+                            actions={sidePanelActions}
+                        >
                             <PaperFullHeight>
                                 {renderSidebarColumn()}
                             </PaperFullHeight>
-                        </SidebarColumn>
-                    )}
-                    <MainColumn>
-                        <PaperFullHeight>{renderMainColumn()}</PaperFullHeight>
-                    </MainColumn>
-                </SidebarLayout>
-                <DiscardWizardModal
-                    open={wizard.discardOpen}
-                    titleMessage={wizard.titleMessage}
-                    message={wizard.discardMessage}
-                    onConfirm={wizard.confirmDiscard}
-                    onCancel={wizard.cancelDiscard}
-                />
-                <DiscardWizardModal
-                    id="data-layer-wizard-back-graph"
-                    open={wizard.backConfirmOpen}
-                    titleMessage={wizard.titleMessage}
-                    message={MESSAGES.wizardBackGraphConfirm}
-                    onConfirm={wizard.confirmBack}
-                    onCancel={wizard.cancelBack}
-                />
-            </PageContainer>
-            {onboarding.element}
-        </DataLayerComparisonProvider>
+                        </SidePanel>
+                        <MainColumn>
+                            <PaperFullHeight>
+                                {renderMainColumn()}
+                            </PaperFullHeight>
+                        </MainColumn>
+                    </SidebarLayout>
+                    <DiscardWizardModal
+                        open={wizard.discardOpen}
+                        titleMessage={wizard.titleMessage}
+                        message={wizard.discardMessage}
+                        onConfirm={wizard.confirmDiscard}
+                        onCancel={wizard.cancelDiscard}
+                    />
+                    <DiscardWizardModal
+                        id="data-layer-wizard-back-graph"
+                        open={wizard.backConfirmOpen}
+                        titleMessage={wizard.titleMessage}
+                        message={MESSAGES.wizardBackGraphConfirm}
+                        onConfirm={wizard.confirmBack}
+                        onCancel={wizard.cancelBack}
+                    />
+                </PageContainer>
+                {onboarding.element}
+            </DataLayerComparisonProvider>
+        </SidePanelContext.Provider>
     );
 };
