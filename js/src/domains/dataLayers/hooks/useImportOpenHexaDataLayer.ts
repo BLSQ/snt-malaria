@@ -28,7 +28,7 @@ export const useImportOpenHexaDataLayer = ({
             postRequest('/api/snt_malaria/openhexa/data_layers/', body),
         // The new layer is an empty shell at this point; `openHexaImportStatus` drives the
         // row badge and, on task completion, the layer list + values refetch. Its progress
-        // is already shown live by `OpenHexaImportStatusMessage`/`ImportStatusIndicator`,
+        // is already shown live by `OpenHexaImportStatusMessage`/`LayerTypeIcon`,
         // so a "started" snackbar here would just duplicate that.
         invalidateQueryKey: ['metricTypes', 'openHexaImportStatus'],
         showSuccessSnackBar: false,
