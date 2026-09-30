@@ -51,36 +51,37 @@ export const StepDetails: FC<Props> = ({
                     disabled={codeLocked}
                 />
             )}
-            {isOpenHexa && (
-                <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={styles.readOnlyHint}
-                >
-                    {formatMessage(MESSAGES.openHexaFieldsReadOnly)}
-                </Typography>
-            )}
             <InputComponent
                 keyValue="name"
                 type="text"
                 required
-                disabled={isOpenHexa}
                 onChange={setFieldValueAndState}
                 value={values.name}
                 label={MESSAGES.label}
                 errors={getErrors('name')}
             />
             {!isComposite && (
-                <InputComponent
-                    keyValue="code"
-                    type="text"
-                    required
-                    disabled={isEditing || isOpenHexa || codeLocked}
-                    onChange={setFieldValueAndState}
-                    value={values.code}
-                    label={MESSAGES.variable}
-                    errors={getErrors('code')}
-                />
+                <>
+                    <InputComponent
+                        keyValue="code"
+                        type="text"
+                        required
+                        disabled={isEditing || isOpenHexa || codeLocked}
+                        onChange={setFieldValueAndState}
+                        value={values.code}
+                        label={MESSAGES.variable}
+                        errors={getErrors('code')}
+                    />
+                    {isOpenHexa && (
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={styles.readOnlyHint}
+                        >
+                            {formatMessage(MESSAGES.openHexaCodeReadOnly)}
+                        </Typography>
+                    )}
+                </>
             )}
             <InputComponent
                 keyValue="category"
@@ -88,7 +89,6 @@ export const StepDetails: FC<Props> = ({
                 required
                 freeSolo
                 clearable={false}
-                disabled={isOpenHexa}
                 options={categoryOptions}
                 onChange={setFieldValueAndState}
                 value={values.category}
@@ -98,7 +98,6 @@ export const StepDetails: FC<Props> = ({
             <InputComponent
                 keyValue="description"
                 type="textarea"
-                disabled={isOpenHexa}
                 onChange={setFieldValueAndState}
                 value={values.description}
                 label={MESSAGES.description}
@@ -109,7 +108,6 @@ export const StepDetails: FC<Props> = ({
                     <InputComponent
                         keyValue="units"
                         type="text"
-                        disabled={isOpenHexa}
                         onChange={setFieldValueAndState}
                         value={values.units}
                         label={MESSAGES.units}
@@ -120,7 +118,6 @@ export const StepDetails: FC<Props> = ({
                     <InputComponent
                         keyValue="unit_symbol"
                         type="text"
-                        disabled={isOpenHexa}
                         onChange={setFieldValueAndState}
                         value={values.unit_symbol}
                         label={MESSAGES.unitSymbol}
@@ -136,7 +133,6 @@ export const StepDetails: FC<Props> = ({
                     value={values.is_population}
                     label={MESSAGES.is_population}
                     withMarginTop={false}
-                    disabled={isOpenHexa}
                 />
             </Box>
         </Box>

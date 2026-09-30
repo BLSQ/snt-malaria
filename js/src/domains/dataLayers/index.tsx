@@ -402,6 +402,7 @@ export const DataLayers: FC = () => {
                     selectedMetricTypeId={displayedMetricType?.id}
                     onEditMetricType={onEditMetricType}
                     compositeLayerIdByMetricType={compositeLayerIdByMetricType}
+                    onEditComposite={onEditCompositeLayer}
                     deleteMetricType={deleteMetricType}
                     onRefreshOpenHexaLayer={refreshOpenHexaLayer}
                     openHexaImportStatus={openHexaImportStatus}
@@ -444,21 +445,11 @@ export const DataLayers: FC = () => {
         />
     );
 
-    const compositeLayerIdFor = (
-        metricType?: MetricType,
-    ): number | undefined =>
-        metricType
-            ? compositeLayerIdByMetricType.get(metricType.id)
-            : undefined;
-
     const mapColumn = (
         <Stack direction="row" gap={1} sx={{ height: '100%' }}>
             <DataLayerMapWrapper
                 metricType={displayedMetricType}
                 orgUnits={orgUnits || []}
-                showCompositeLayers={showCompositeLayers}
-                compositeLayerId={compositeLayerIdFor(displayedMetricType)}
-                onEditComposite={onEditCompositeLayer}
             />
             <DataLayerComparisonContainer />
         </Stack>
@@ -493,10 +484,6 @@ export const DataLayers: FC = () => {
                 <DataLayerMapWrapper
                     metricType={wizard.editingMetricType}
                     orgUnits={orgUnits || []}
-                    showCompositeLayers={showCompositeLayers}
-                    compositeLayerId={compositeLayerIdFor(
-                        wizard.editingMetricType,
-                    )}
                 />
             );
         }
