@@ -1,4 +1,4 @@
-"""Turn the OpenHexa ``SNT_metadata.json`` definitions into data-layer dicts.
+"""Turn the OpenHexa metadata file definitions into data-layer dicts.
 
 Each top-level key of the file is one data layer; its value carries the metadata used
 to pre-fill the data-layer form. Phase 1 is English-first with a French fallback -

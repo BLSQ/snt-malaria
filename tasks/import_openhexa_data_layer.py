@@ -14,10 +14,10 @@ from plugins.snt_malaria.api.openhexa_data_layers.constants import IMPORT_TASK_N
 from plugins.snt_malaria.api.openhexa_data_layers.source import resolve_source_file
 from plugins.snt_malaria.providers.openhexa_data_layers import (
     CONFIG_FILENAME,
-    METADATA_FILENAME,
     download_dataset_file,
-    fetch_dataset_jsons,
+    fetch_dataset_json,
     resolve_config_dataset,
+    resolve_metadata_file,
 )
 from plugins.snt_malaria.services.openhexa_data_layers import import_metric_values
 
@@ -44,21 +44,30 @@ def import_openhexa_data_layer(metric_type_id: int, task: Task = None):
     try:
         task.report_progress_and_stop_if_killed(progress_message="Starting OpenHexa data layer import")
 
-        openhexa_url, openhexa_token, workspace_slug, dataset_slug = resolve_config_dataset(account)
+        openhexa_url, openhexa_token, workspace_slug, config_dataset_slug = resolve_config_dataset(account)
+        *_unused, metadata_dataset_slug, metadata_filename = resolve_metadata_file(account)
         logger.info(
-            "import_openhexa_data_layer: workspace '%s', configuration dataset '%s'", workspace_slug, dataset_slug
+            "import_openhexa_data_layer: workspace '%s', configuration dataset '%s', metadata '%s' in dataset '%s'",
+            workspace_slug,
+            config_dataset_slug,
+            metadata_filename,
+            metadata_dataset_slug,
         )
 
         task.report_progress_and_stop_if_killed(progress_message="Reading the OpenHexa configuration")
-        config_files = fetch_dataset_jsons(
-            openhexa_url, openhexa_token, workspace_slug, dataset_slug, [METADATA_FILENAME, CONFIG_FILENAME]
+        metadata = fetch_dataset_json(
+            openhexa_url, openhexa_token, workspace_slug, metadata_dataset_slug, metadata_filename
         )
-        metadata, snt_config = config_files[METADATA_FILENAME], config_files[CONFIG_FILENAME]
+        snt_config = fetch_dataset_json(
+            openhexa_url, openhexa_token, workspace_slug, config_dataset_slug, CONFIG_FILENAME
+        )
 
         definition = metadata.get(metric_type.code)
         if not isinstance(definition, dict):
             raise ValueError(
-                _("Data layer '{code}' is no longer defined in SNT_metadata.json").format(code=metric_type.code)
+                _("Data layer '{code}' is no longer defined in {filename}").format(
+                    code=metric_type.code, filename=metadata_filename
+                )
             )
         logger.info(
             "import_openhexa_data_layer: '%s' SOURCE_DATA=%s, SNT_config COUNTRY_CODE=%s, dataset identifiers=%s",

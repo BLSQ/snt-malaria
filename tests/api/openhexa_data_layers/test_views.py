@@ -5,6 +5,7 @@ from rest_framework import status
 from iaso.models import MetricType
 from iaso.models.openhexa import OpenHEXAInstance, OpenHEXAWorkspace
 from plugins.snt_malaria.permissions import SNT_SETTINGS_READ_PERMISSION
+from plugins.snt_malaria.providers.openhexa_data_layers import DEFAULT_METADATA_FILENAME
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
@@ -82,7 +83,7 @@ class OpenHexaDataLayerViewSetTestCase(SNTMalariaAPITestCase):
             openhexa_instance=instance,
             account=self.account,
             slug="snt-testing",
-            config={"snt_configuration_dataset": "snt-configuration"},
+            config={"snt_configuration_dataset": "snt-configuration", "snt_metadata_dataset": "snt-metadata"},
         )
 
     def test_requires_authentication(self):
@@ -173,14 +174,34 @@ class OpenHexaDataLayerViewSetTestCase(SNTMalariaAPITestCase):
         self.assertIn("2-9", flagged["error"])
         self.assertIn("10", flagged["error"])
 
-    def test_returns_422_when_config_key_is_missing(self):
-        self.workspace.config = {}
+    @patch(FETCH_PATH, return_value=SAMPLE_METADATA)
+    def test_reads_default_metadata_file_from_metadata_dataset(self, mock_fetch):
+        self.client.force_authenticate(self.user)
+        self.client.get(self.BASE_URL)
+
+        _url, _token, workspace_slug, dataset_slug, filename = mock_fetch.call_args[0]
+        self.assertEqual(
+            (workspace_slug, dataset_slug, filename), ("snt-testing", "snt-metadata", DEFAULT_METADATA_FILENAME)
+        )
+
+    @patch(FETCH_PATH, return_value=SAMPLE_METADATA)
+    def test_metadata_filename_can_be_overridden_by_workspace_config(self, mock_fetch):
+        self.workspace.config = {**self.workspace.config, "snt_metadata_filename": "SNT_metadata.json"}
+        self.workspace.save()
+        self.client.force_authenticate(self.user)
+        self.client.get(self.BASE_URL)
+
+        _url, _token, _workspace_slug, dataset_slug, filename = mock_fetch.call_args[0]
+        self.assertEqual((dataset_slug, filename), ("snt-metadata", "SNT_metadata.json"))
+
+    def test_returns_422_when_metadata_dataset_key_is_missing(self):
+        self.workspace.config = {"snt_configuration_dataset": "snt-configuration"}
         self.workspace.save()
         self.client.force_authenticate(self.user)
 
         response = self.client.get(self.BASE_URL)
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
-        self.assertIn("snt_configuration_dataset", response.json()["error"])
+        self.assertIn("snt_metadata_dataset", response.json()["error"])
 
     def test_returns_422_when_no_openhexa_workspace(self):
         self.workspace.delete()
@@ -266,7 +287,7 @@ class ImportOpenHexaDataLayerTestCase(SNTMalariaAPITestCase):
             openhexa_instance=instance,
             account=self.account,
             slug="snt-testing",
-            config={"snt_configuration_dataset": "snt-configuration"},
+            config={"snt_configuration_dataset": "snt-configuration", "snt_metadata_dataset": "snt-metadata"},
         )
 
     @patch(SERIALIZER_FETCH_PATH, return_value=SAMPLE_METADATA)
