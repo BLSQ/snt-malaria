@@ -5,6 +5,7 @@ import { IMPACT } from 'Iaso/utils/featureFlags';
 
 import { CompareCustomize } from '../domains/compareCustomize';
 import { ConfigureAccount } from '../domains/configureAccount';
+import { CostManagement } from '../domains/costManagement';
 import { DataLayers } from '../domains/dataLayers';
 import { Interventions } from '../domains/interventions';
 import { Planning } from '../domains/planning';
@@ -50,6 +51,13 @@ export const interventionsPath: RoutePath = {
     permissions: [SETTINGS_READ],
 };
 
+export const costManagementPath: RoutePath = {
+    baseUrl: baseUrls.costManagement,
+    routerUrl: `${baseUrls.costManagement}/*`,
+    element: <CostManagement />,
+    permissions: [SETTINGS_READ],
+};
+
 export const settingsPath: RoutePath = {
     baseUrl: baseUrls.settings,
     routerUrl: `${baseUrls.settings}/*`,
@@ -81,6 +89,7 @@ export const routes: (RoutePath | AnonymousRoutePath)[] = [
     scenariosPath,
     compareCustomizePath,
     interventionsPath,
+    costManagementPath,
     settingsPath,
     setupAccountPath,
     configureAccountPath,
