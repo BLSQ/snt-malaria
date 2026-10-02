@@ -26,7 +26,7 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return (
-            InterventionCostBreakdownLine.objects.select_related("intervention", "unit_type")
+            InterventionCostBreakdownLine.objects.select_related("intervention", "unit_type", "population_layer")
             .filter(intervention__intervention_category__account=self.request.user.iaso_profile.account)
             .order_by("id")
         )

@@ -13,10 +13,10 @@ import {
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { noOp } from 'Iaso/utils';
-import { pluralize } from '../../../utils/pluralize';
 import { MESSAGES } from '../../messages';
 import { useInterventionContext } from '../contexts/InterventionContext';
 import { InterventionCostBreakdownLine } from '../types';
+import { formatConversionDirection } from '../utils/costBreakdownLine';
 
 type Props = {
     costBreakdownLine: InterventionCostBreakdownLine;
@@ -45,23 +45,19 @@ export const InterventionCostBreakdownLineForm: FC<Props> = ({
                 String(option.value) === String(costBreakdownLine.unit_type),
         )?.label ?? formatMessage(MESSAGES.unit);
 
-    const conversionDirectionOptions = useMemo(() => {
-        const factor = Number(costBreakdownLine.conversion_factor) || 1;
-        return [
-            {
-                value: 'direct',
-                label: formatMessage(MESSAGES.budgetingCostLineUnitPerPeople, {
-                    unit: pluralize(selectedUnitLabel, factor),
-                }),
-            },
-            {
-                value: 'inverse',
-                label: formatMessage(MESSAGES.budgetingCostLinePeoplePerUnit, {
-                    unit: selectedUnitLabel,
-                }),
-            },
-        ];
-    }, [formatMessage, selectedUnitLabel, costBreakdownLine.conversion_factor]);
+    const conversionDirectionOptions = useMemo(
+        () =>
+            [false, true].map(isInverted => ({
+                value: isInverted ? 'inverse' : 'direct',
+                label: formatConversionDirection(
+                    formatMessage,
+                    selectedUnitLabel,
+                    costBreakdownLine.conversion_factor,
+                    isInverted,
+                ),
+            })),
+        [formatMessage, selectedUnitLabel, costBreakdownLine.conversion_factor],
+    );
 
     const handleCostDriverChange = (
         _event: React.MouseEvent,

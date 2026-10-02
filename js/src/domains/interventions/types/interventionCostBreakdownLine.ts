@@ -8,7 +8,14 @@ export type InterventionCostBreakdownLine = {
     id: number;
     intervention: number;
     population_layer: number | null;
+    population_layer_label: string | null;
     is_proportional: boolean;
     conversion_factor: number | string;
     invert_conversion_factor: boolean;
+    coverage: number | string;
 };
+
+export type InterventionCostBreakdownLinePayload = Omit<
+    InterventionCostBreakdownLine,
+    'id' | 'category_label' | 'unit_type_label' | 'population_layer_label'
+> & { id?: number };

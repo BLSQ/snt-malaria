@@ -1,5 +1,6 @@
 from rest_framework import status
 
+from iaso.models.metric import MetricType
 from plugins.snt_malaria.models.cost_breakdown import InterventionCostBreakdownLine
 from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base import (
     InterventionCostBreakdownLineBase,
@@ -25,6 +26,20 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.assertEqual(len(result), 2)
         ids = [item["id"] for item in result]
         self.assertCountEqual(ids, [self.cost_line1.id, self.cost_line2.id])
+
+    def test_list_cost_breakdown_lines_includes_population_layer_label(self):
+        population = MetricType.objects.create(account=self.account, name="Total population", code="POP")
+        self.cost_line1.is_proportional = True
+        self.cost_line1.population_layer = population
+        self.cost_line1.save()
+
+        self.client.force_authenticate(user=self.user_read)
+        response = self.client.get(self.BASE_URL)
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        labels = {item["id"]: item["population_layer_label"] for item in result}
+        self.assertEqual(labels[self.cost_line1.id], "Total population")
+        self.assertIsNone(labels[self.cost_line2.id])
 
     def test_list_cost_breakdown_lines_with_read_perm(self):
         self.client.force_authenticate(user=self.user_read)

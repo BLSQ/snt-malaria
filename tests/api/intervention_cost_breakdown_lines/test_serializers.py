@@ -1,3 +1,4 @@
+from decimal import Decimal
 from unittest.mock import Mock
 
 from rest_framework import status
@@ -128,6 +129,57 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
             list(created_lines.values_list("name", flat=True)),
             ["cost line A", "cost line B"],
         )
+
+    def test_create_cost_breakdown_line_coverage_above_hundred_is_rejected(self):
+        data = {
+            "intervention": self.intervention_chemo_iptp.id,
+            "name": "test",
+            "unit_cost": 15,
+            "category": "Procurement",
+            "unit_type": self.unit_type_other.id,
+            "coverage": "100.01",
+        }
+        serializer = InterventionCostBreakdownLineWriteSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("coverage", serializer.errors)
+
+    def test_create_cost_breakdown_line_without_coverage_defaults_to_full_coverage(self):
+        data = {
+            "intervention": self.intervention_chemo_iptp.id,
+            "name": "test",
+            "unit_cost": 15,
+            "category": "Procurement",
+            "unit_type": self.unit_type_other.id,
+        }
+        serializer = InterventionCostBreakdownLineWriteSerializer(data=data, context=self.context)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertEqual(serializer.validated_data["coverage"], Decimal("100"))
+
+    def test_update_cost_breakdown_lines_list_payload_persists_coverage(self):
+        queryset = InterventionCostBreakdownLine.objects.filter(intervention=self.intervention_chemo_smc).order_by("id")
+        data = [
+            {
+                "id": self.cost_line2.id,
+                "intervention": self.intervention_chemo_smc.id,
+                "name": self.cost_line2.name,
+                "unit_cost": "12.00",
+                "unit_type": self.unit_type_other.id,
+                "category": "Operational",
+                "coverage": "80.50",
+            },
+        ]
+
+        serializer = InterventionCostBreakdownLineWriteSerializer(
+            instance=queryset,
+            data=data,
+            many=True,
+            context=self.context,
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+
+        self.cost_line2.refresh_from_db()
+        self.assertEqual(self.cost_line2.coverage, Decimal("80.50"))
 
     def test_update_cost_breakdown_lines_list_payload_updates_creates_and_deletes(self):
         existing_line_1 = self.cost_line2

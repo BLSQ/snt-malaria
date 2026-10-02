@@ -9,6 +9,7 @@ import { MESSAGES } from '../../messages';
 import { useInterventionContext } from '../contexts/InterventionContext';
 import { InterventionCostBreakdownLine } from '../types';
 import { InterventionFormValues } from '../types/interventionForm';
+import { getDefaultCostUnitType } from '../utils/costBreakdownLine';
 import { InterventionCostBreakdownLineForm } from './InterventionCostBreakdownLineForm';
 
 export const InterventionForm: FC = () => {
@@ -40,16 +41,13 @@ export const InterventionForm: FC = () => {
 
     const defaultBreakdownLine: Partial<InterventionCostBreakdownLine> =
         useMemo(() => {
-            // "Item" is the seeded default unit; fall back to the first
-            // option for accounts that renamed or removed it.
-            const defaultUnit =
-                costUnitTypeOptions.find(option => option.label === 'Item') ??
-                costUnitTypeOptions[0];
+            const defaultUnit = getDefaultCostUnitType(costUnitTypeOptions);
             return {
                 unit_type: defaultUnit?.value || '',
                 is_proportional: false,
                 conversion_factor: 1,
                 invert_conversion_factor: false,
+                coverage: 100,
             };
         }, [costUnitTypeOptions]);
 

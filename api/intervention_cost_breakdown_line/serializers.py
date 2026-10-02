@@ -51,6 +51,7 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
                         "is_proportional",
                         "conversion_factor",
                         "invert_conversion_factor",
+                        "coverage",
                     ],
                 )
             if lines_to_delete:
@@ -75,6 +76,7 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
     unit_cost = serializers.DecimalField(max_digits=19, decimal_places=2, required=True, min_value=0)
     unit_type_label = serializers.SerializerMethodField()
     category_label = serializers.SerializerMethodField()
+    population_layer_label = serializers.SerializerMethodField()
 
     class Meta:
         model = InterventionCostBreakdownLine
@@ -88,13 +90,18 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
             "category_label",
             "intervention",
             "population_layer",
+            "population_layer_label",
             "is_proportional",
             "conversion_factor",
             "invert_conversion_factor",
+            "coverage",
         ]
 
     def get_unit_type_label(self, obj):
         return obj.unit_type.name
+
+    def get_population_layer_label(self, obj):
+        return obj.population_layer.name if obj.population_layer else None
 
     def get_category_label(self, obj):
         return InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory(obj.category).label
@@ -122,6 +129,9 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
         max_digits=19, decimal_places=6, required=False, default=Decimal("1"), min_value=0
     )
     invert_conversion_factor = serializers.BooleanField(required=False, default=False)
+    coverage = serializers.DecimalField(
+        max_digits=5, decimal_places=2, required=False, default=Decimal("100"), min_value=0, max_value=100
+    )
 
     class Meta:
         model = InterventionCostBreakdownLine
@@ -137,6 +147,7 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             "is_proportional",
             "conversion_factor",
             "invert_conversion_factor",
+            "coverage",
         ]
 
     def get_fields(self):

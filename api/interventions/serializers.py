@@ -113,6 +113,7 @@ class InterventionDuplicateSerializer(serializers.Serializer):
         "is_proportional",
         "conversion_factor",
         "invert_conversion_factor",
+        "coverage",
     ]
 
     def create(self, validated_data):

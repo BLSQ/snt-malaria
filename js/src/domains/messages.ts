@@ -1097,6 +1097,76 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.costManagement.grants.title',
         defaultMessage: 'Grants',
     },
+    searchCostItems: {
+        id: 'iaso.snt_malaria.costManagement.budget.searchCostItems',
+        defaultMessage: 'Search cost items',
+    },
+    addToIntervention: {
+        id: 'iaso.snt_malaria.costManagement.budget.addToIntervention',
+        defaultMessage: 'Add to intervention',
+    },
+    addCostItemTo: {
+        id: 'iaso.snt_malaria.costManagement.budget.addCostItemTo',
+        defaultMessage: 'Add a cost item to {intervention}',
+    },
+    costItemColumn: {
+        id: 'iaso.snt_malaria.costManagement.budget.costItemColumn',
+        defaultMessage: 'Cost item',
+    },
+    coverageLabel: {
+        id: 'iaso.snt_malaria.costManagement.budget.coverage',
+        defaultMessage: 'Coverage',
+    },
+    costItemsCount: {
+        id: 'iaso.snt_malaria.costManagement.budget.costItemsCount',
+        defaultMessage:
+            '{count, plural, one {# cost item} other {# cost items}}',
+    },
+    perUnit: {
+        id: 'iaso.snt_malaria.costManagement.budget.perUnit',
+        defaultMessage: 'per {unit}',
+    },
+    fixedCost: {
+        id: 'iaso.snt_malaria.costManagement.budget.fixedCost',
+        defaultMessage: 'Fixed cost',
+    },
+    fromPopulation: {
+        id: 'iaso.snt_malaria.costManagement.budget.fromPopulation',
+        defaultMessage: 'Population',
+    },
+    fixedCount: {
+        id: 'iaso.snt_malaria.costManagement.budget.fixedCount',
+        defaultMessage: 'Fixed count',
+    },
+    costItemValues: {
+        id: 'iaso.snt_malaria.costManagement.budget.values',
+        defaultMessage: 'Values',
+    },
+    editCostItem: {
+        id: 'iaso.snt_malaria.costManagement.budget.editCostItem',
+        defaultMessage: 'Edit cost item',
+    },
+    deleteCostItem: {
+        id: 'iaso.snt_malaria.costManagement.budget.deleteCostItem',
+        defaultMessage: 'Delete cost item',
+    },
+    deleteCostItemConfirm: {
+        id: 'iaso.snt_malaria.costManagement.budget.deleteCostItemConfirm',
+        defaultMessage: 'Delete "{name}" from {intervention}?',
+    },
+    fixedCountNote: {
+        id: 'iaso.snt_malaria.costManagement.budget.fixedCountNote',
+        defaultMessage:
+            'A fixed-count item has no population to convert or cover, so target population, conversion direction, conversion factor and coverage do not apply.',
+    },
+    expandCollapseAll: {
+        id: 'iaso.snt_malaria.costManagement.budget.expandCollapseAll',
+        defaultMessage: 'Expand or collapse all',
+    },
+    noCostItems: {
+        id: 'iaso.snt_malaria.costManagement.budget.noCostItems',
+        defaultMessage: 'No cost items match your filters',
+    },
     interventionsTitle: {
         id: 'iaso.snt_malaria.interventions.title',
         defaultMessage: 'Interventions',
