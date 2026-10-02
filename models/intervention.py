@@ -55,7 +55,7 @@ class Intervention(models.Model):
             "Reference used to match this intervention to its counterpart in the "
             "configured impact data source. The format depends on the provider: "
             "for SwissTPH, use the deployed_int_* column name (e.g. 'deployed_int_smc') "
-            "or a comma-separated list for multiple columns (e.g. 'deployed_int_pbo,deployed_int_itn'); "
+            "or a comma-separated list for multiple columns (e.g. 'deployed_int_pbo,deployed_int_std'); "
             "for IDM, use 'type:option' from the intervention_package table (e.g. 'smc:pmc')."
         ),
     )

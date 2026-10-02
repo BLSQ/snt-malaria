@@ -123,7 +123,7 @@ list-editable).
 
 Use the `deployed_int_`* column name from the `impact_data` table. Multiple
 columns can be comma-separated when one intervention maps to multiple columns
-(e.g. `deployed_int_pbo,deployed_int_itn`).
+(e.g. `deployed_int_pbo,deployed_int_std`).
 
 
 | Intervention                                      | impact_ref                           |
@@ -133,13 +133,14 @@ columns can be comma-separated when one intervention maps to multiple columns
 | iCCM                                              | `deployed_int_iccm`                  |
 | IPTp (SP)                                         | `deployed_int_iptsc`                 |
 | IRS                                               | `deployed_int_irs`                   |
-| Standard Pyrethroid (Campaign / Routine / School) | `deployed_int_itn`                   |
+| Standard Pyrethroid (Campaign / Routine / School) | `deployed_int_std`                   |
 | PBO (Campaign / Routine / School)                 | `deployed_int_pbo`                   |
 | Dual AI (Campaign / Routine / School)             | `deployed_int_ig2`                   |
 | LSM                                               | `deployed_int_lsm`                   |
 | PMC (SP)                                          | `deployed_int_pmc`                   |
 | SMC (SP+AQ)                                       | `deployed_int_smc`                   |
-| R21 / RTS,S                                       | `deployed_int_vaccine`               |
+| R21                                               | `deployed_int_vaccine`               |
+| RTS,S                                             | `deployed_int_rtss`                  |
 
 
 ### IDM format

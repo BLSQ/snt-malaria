@@ -391,7 +391,7 @@ class InterventionAPITests(SNTMalariaAPITestCase):
     # Duplicate
 
     def test_duplicate_intervention_copies_basic_fields_under_unique_name(self):
-        self.intervention_vaccination_rts.impact_ref = "deployed_int_rts"
+        self.intervention_vaccination_rts.impact_ref = "deployed_int_rtss"
         self.intervention_vaccination_rts.description = "Original description"
         self.intervention_vaccination_rts.save()
 
@@ -406,7 +406,7 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         self.assertEqual(duplicate.intervention_category, self.intervention_vaccination_rts.intervention_category)
         self.assertEqual(duplicate.code, self.intervention_vaccination_rts.code)
         self.assertEqual(duplicate.short_name, self.intervention_vaccination_rts.short_name)
-        self.assertEqual(duplicate.impact_ref, "deployed_int_rts")
+        self.assertEqual(duplicate.impact_ref, "deployed_int_rtss")
         self.assertEqual(duplicate.description, "Original description")
         self.assertEqual(duplicate.created_by, self.user_write)
         # The source intervention keeps its own name.
