@@ -478,7 +478,6 @@
     "iaso.snt_malaria.settings.interventions.costLineDirectionLabel": "Sens de conversion",
     "iaso.snt_malaria.settings.interventions.costItemFixedLabel": "Élément de coût fixe",
     "iaso.snt_malaria.settings.interventions.costItemProportionalLabel": "Élément de coût proportionnel",
-    "iaso.snt_malaria.settings.grants.title": "Subventions",
     "iaso.snt_malaria.settings.grants.add": "Ajouter",
     "iaso.snt_malaria.settings.grants.new": "Nouvelle subvention",
     "iaso.snt_malaria.settings.grants.delete": "Supprimer",
