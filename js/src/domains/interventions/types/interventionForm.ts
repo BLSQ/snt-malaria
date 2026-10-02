@@ -1,4 +1,4 @@
-import { InterventionCostBreakdownLine } from '../../../interventions/types';
+import { InterventionCostBreakdownLine } from './interventionCostBreakdownLine';
 
 export type InterventionFormValues = {
     id?: number;

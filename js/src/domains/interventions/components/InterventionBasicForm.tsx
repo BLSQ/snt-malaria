@@ -4,9 +4,9 @@ import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
-import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
-import { useGetInterventionCategories } from '../../../interventions/hooks/useGetInterventionCategories';
-import { MESSAGES } from '../../../messages';
+import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
+import { MESSAGES } from '../../messages';
+import { useGetInterventionCategories } from '../hooks/useGetInterventionCategories';
 import { InterventionFormValues } from '../types/interventionForm';
 
 const styles: SxStyles = {

@@ -10,26 +10,23 @@ import {
 } from 'bluesquare-components';
 import { setNestedObjectValues } from 'formik';
 import { DeleteRestoreModal } from 'Iaso/components/DeleteRestoreModals/DeleteRestoreModal';
-import { CardStyled } from '../../../../components/CardStyled';
-import { SettingsFormContainer } from '../../../../components/styledComponents';
-import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
-import { ExtendedFormikProvider } from '../../../../hooks/useGetExtendedFormikContext';
-import { useGetMetricTypes } from '../../../dataLayers/hooks/useGetMetrics';
-import { useDeleteIntervention } from '../../../interventions/hooks/useDeleteIntervention';
-import { useDuplicateIntervention } from '../../../interventions/hooks/useDuplicateIntervention';
-import { useGetInterventionCostBreakdownLineCategories } from '../../../interventions/hooks/useGetInterventionCostBreakdownLineCategories';
-import { useGetInterventionCostUnitTypes } from '../../../interventions/hooks/useGetInterventionCostUnitType';
-import { useGetInterventionDetails } from '../../../interventions/hooks/useGetInterventionDetails';
-import { useSaveIntervention } from '../../../interventions/hooks/useSaveIntervention';
-import { useSaveInterventionDetails } from '../../../interventions/hooks/useSaveInterventionDetails';
-import {
-    Intervention,
-    InterventionPayload,
-} from '../../../interventions/types';
-import { MESSAGES } from '../../../messages';
-import { useGetGrants } from '../../grants/hooks/useGetGrants';
+import { CardStyled } from '../../../components/CardStyled';
+import { SettingsFormContainer } from '../../../components/styledComponents';
+import { useGetBudgetSettings } from '../../../hooks/useGetBudgetSettings';
+import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
+import { useGetMetricTypes } from '../../dataLayers/hooks/useGetMetrics';
+import { MESSAGES } from '../../messages';
+import { useGetGrants } from '../../settings/grants/hooks/useGetGrants';
 import { InterventionProvider } from '../contexts/InterventionContext';
+import { useDeleteIntervention } from '../hooks/useDeleteIntervention';
+import { useDuplicateIntervention } from '../hooks/useDuplicateIntervention';
+import { useGetInterventionCostBreakdownLineCategories } from '../hooks/useGetInterventionCostBreakdownLineCategories';
+import { useGetInterventionCostUnitTypes } from '../hooks/useGetInterventionCostUnitType';
+import { useGetInterventionDetails } from '../hooks/useGetInterventionDetails';
 import { useInterventionFormState } from '../hooks/useInterventionFormState';
+import { useSaveIntervention } from '../hooks/useSaveIntervention';
+import { useSaveInterventionDetails } from '../hooks/useSaveInterventionDetails';
+import { Intervention, InterventionPayload } from '../types';
 import { InterventionFormValues } from '../types/interventionForm';
 import { InterventionBasicForm } from './InterventionBasicForm';
 import { InterventionForm } from './InterventionForm';
