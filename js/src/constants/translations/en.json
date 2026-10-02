@@ -452,7 +452,6 @@
     "iaso.snt_malaria.settings.interventions.costLineDirectionLabel": "Conversion direction",
     "iaso.snt_malaria.settings.interventions.costItemFixedLabel": "Fixed cost item",
     "iaso.snt_malaria.settings.interventions.costItemProportionalLabel": "Proportional cost item",
-    "iaso.snt_malaria.settings.grants.title": "Grants",
     "iaso.snt_malaria.settings.grants.add": "Add",
     "iaso.snt_malaria.settings.grants.new": "New grant",
     "iaso.snt_malaria.settings.grants.delete": "Delete",

@@ -1146,10 +1146,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.interventions.costItemProportionalLabel',
         defaultMessage: 'Proportional cost item',
     },
-    grantsTitle: {
-        id: 'iaso.snt_malaria.settings.grants.title',
-        defaultMessage: 'Grants',
-    },
     addGrant: {
         id: 'iaso.snt_malaria.settings.grants.add',
         defaultMessage: 'Add',
