@@ -13,10 +13,10 @@ import {
 import { IconButton, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { noOp } from 'Iaso/utils';
-import { pluralize } from '../../../../utils/pluralize';
-import { InterventionCostBreakdownLine } from '../../../interventions/types';
-import { MESSAGES } from '../../../messages';
+import { pluralize } from '../../../utils/pluralize';
+import { MESSAGES } from '../../messages';
 import { useInterventionContext } from '../contexts/InterventionContext';
+import { InterventionCostBreakdownLine } from '../types';
 
 type Props = {
     costBreakdownLine: InterventionCostBreakdownLine;

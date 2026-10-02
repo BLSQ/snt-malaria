@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
-import { MESSAGES } from '../../../messages';
+import { MESSAGES } from '../../messages';
 import { InterventionFormValues } from '../types/interventionForm';
 
 export const defaultInterventionFormValues: InterventionFormValues = {

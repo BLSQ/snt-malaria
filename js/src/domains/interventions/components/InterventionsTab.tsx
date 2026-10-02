@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { CategoryOutlined } from '@mui/icons-material';
+import { VaccinesOutlined } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
 import { Button, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -11,12 +11,12 @@ import {
     SidebarColumn,
     SidebarLayout,
 } from '../../../components/styledComponents';
-import { useGetInterventionCategories } from '../../interventions/hooks/useGetInterventionCategories';
 import { MESSAGES } from '../../messages';
-import { InterventionCategoryFormWrapper } from './components/InterventionCategoryFormWrapper';
-import { InterventionCategoryList } from './components/InterventionCategoryList';
+import { useGetInterventionCategories } from '../hooks/useGetInterventionCategories';
+import { InterventionFormWrapper } from './InterventionFormWrapper';
+import { InterventionList } from './InterventionList';
 
-export const InterventionCategorySettings: FC = () => {
+export const InterventionsTab: FC = () => {
     const { formatMessage } = useSafeIntl();
 
     const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -24,8 +24,16 @@ export const InterventionCategorySettings: FC = () => {
 
     const { data: interventionCategories } = useGetInterventionCategories();
 
-    // Selecting an existing category (or clearing the selection) always leaves creation mode.
-    const selectInterventionCategory = useCallback((id: number | null) => {
+    const flatInterventions = useMemo(
+        () =>
+            (interventionCategories || []).flatMap(
+                category => category.interventions,
+            ),
+        [interventionCategories],
+    );
+
+    // Selecting an existing intervention (or clearing the selection) always leaves creation mode.
+    const selectIntervention = useCallback((id: number | null) => {
         setIsCreating(false);
         setSelectedId(id);
     }, []);
@@ -36,47 +44,44 @@ export const InterventionCategorySettings: FC = () => {
     }, []);
 
     // After a delete, fall back to the top of the remaining list (or nothing
-    // when the last category was removed) rather than opening the "new
-    // category" form.
+    // when the last intervention was removed) rather than opening the "new
+    // intervention" form.
     const handleDeleted = useCallback(() => {
         setIsCreating(false);
         setSelectedId(prev => {
-            const remaining = (interventionCategories ?? []).filter(
-                category => category.id !== prev,
+            const remaining = flatInterventions.filter(
+                intervention => intervention.id !== prev,
             );
             return remaining.length > 0 ? remaining[0].id : null;
         });
-    }, [interventionCategories]);
+    }, [flatInterventions]);
 
-    // Cancelling creation falls back to the first category in the list, if any.
+    // Cancelling creation falls back to the first intervention in the list, if any.
     const handleCancelCreate = useCallback(() => {
         setIsCreating(false);
         setSelectedId(
-            interventionCategories && interventionCategories.length > 0
-                ? interventionCategories[0].id
-                : null,
+            flatInterventions.length > 0 ? flatInterventions[0].id : null,
         );
-    }, [interventionCategories]);
+    }, [flatInterventions]);
 
     useEffect(() => {
         if (
-            interventionCategories &&
-            interventionCategories.length > 0 &&
+            flatInterventions.length > 0 &&
             selectedId === null &&
             !isCreating
         ) {
-            setSelectedId(interventionCategories[0].id);
+            setSelectedId(flatInterventions[0].id);
         }
-    }, [interventionCategories, selectedId, isCreating]);
+    }, [flatInterventions, selectedId, isCreating]);
 
-    const selectedInterventionCategory = useMemo(
+    const selectedIntervention = useMemo(
         () =>
             selectedId !== null
-                ? (interventionCategories?.find(
-                      category => category.id === selectedId,
+                ? (flatInterventions.find(
+                      intervention => intervention.id === selectedId,
                   ) ?? null)
                 : null,
-        [interventionCategories, selectedId],
+        [flatInterventions, selectedId],
     );
 
     const isFormOpen = isCreating || selectedId !== null;
@@ -92,35 +97,31 @@ export const InterventionCategorySettings: FC = () => {
                                 alignItems="center"
                                 spacing={1}
                             >
-                                <IconBoxed Icon={CategoryOutlined} />
+                                <IconBoxed Icon={VaccinesOutlined}></IconBoxed>
                                 <Typography
                                     variant="h6"
                                     gutterBottom
                                     sx={{ flexGrow: 1, mb: 0 }}
                                 >
-                                    {formatMessage(
-                                        MESSAGES.interventionCategoriesTitle,
-                                    )}
+                                    {formatMessage(MESSAGES.interventionsTitle)}
                                 </Typography>
                                 <Button
                                     onClick={handleAdd}
                                     startIcon={<AddIcon />}
                                 >
-                                    {formatMessage(
-                                        MESSAGES.addInterventionCategory,
-                                    )}
+                                    {formatMessage(MESSAGES.addIntervention)}
                                 </Button>
                             </Stack>
                         }
                     >
-                        <InterventionCategoryList
+                        <InterventionList
                             interventionCategories={
                                 interventionCategories || []
                             }
-                            onSelectInterventionCategory={category =>
-                                selectInterventionCategory(category.id)
+                            onSelectIntervention={intervention =>
+                                selectIntervention(intervention.id)
                             }
-                            activeInterventionCategoryId={selectedId}
+                            activeInterventionId={selectedId}
                         />
                     </CardStyled>
                 </CardScrollable>
@@ -128,12 +129,12 @@ export const InterventionCategorySettings: FC = () => {
             <MainColumn>
                 <CardScrollable>
                     {isFormOpen && (
-                        <InterventionCategoryFormWrapper
+                        <InterventionFormWrapper
                             key={isCreating ? 'new' : selectedId}
-                            interventionCategory={selectedInterventionCategory}
+                            intervention={selectedIntervention}
                             onSaved={savedId => {
                                 if (savedId != null) {
-                                    selectInterventionCategory(savedId);
+                                    selectIntervention(savedId);
                                 }
                             }}
                             onDeleted={handleDeleted}

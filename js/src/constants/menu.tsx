@@ -4,6 +4,7 @@ import {
     FormatListBulletedOutlined,
     Layers,
     TuneOutlined,
+    VaccinesOutlined,
 } from '@mui/icons-material';
 import { SvgIconProps } from '@mui/material';
 import { IMPACT } from 'Iaso/utils/featureFlags';
@@ -32,6 +33,12 @@ export const menu = [
         permissions: [],
         featureFlag: IMPACT,
         icon: (props: SvgIconProps) => <CompareOutlined {...props} />,
+    },
+    {
+        label: MESSAGES.interventionsTitle,
+        key: 'snt_malaria/interventions',
+        permissions: [SETTINGS_READ],
+        icon: (props: SvgIconProps) => <VaccinesOutlined {...props} />,
     },
     {
         label: MESSAGES.settingsTitle,

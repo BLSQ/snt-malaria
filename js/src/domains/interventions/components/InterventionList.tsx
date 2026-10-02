@@ -1,10 +1,7 @@
 import React, { FC } from 'react';
 import { Box, List, ListItem, ListItemText, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
-import {
-    Intervention,
-    InterventionCategory,
-} from '../../../interventions/types';
+import { Intervention, InterventionCategory } from '../types';
 
 const styles: SxStyles = {
     listContainer: {

@@ -6,6 +6,7 @@ import { IMPACT } from 'Iaso/utils/featureFlags';
 import { CompareCustomize } from '../domains/compareCustomize';
 import { ConfigureAccount } from '../domains/configureAccount';
 import { DataLayers } from '../domains/dataLayers';
+import { Interventions } from '../domains/interventions';
 import { Planning } from '../domains/planning';
 import { Scenarios } from '../domains/scenarios';
 import { Settings } from '../domains/settings';
@@ -42,6 +43,13 @@ export const compareCustomizePath: RoutePath = {
     featureFlag: IMPACT,
 };
 
+export const interventionsPath: RoutePath = {
+    baseUrl: baseUrls.interventions,
+    routerUrl: `${baseUrls.interventions}/*`,
+    element: <Interventions />,
+    permissions: [SETTINGS_READ],
+};
+
 export const settingsPath: RoutePath = {
     baseUrl: baseUrls.settings,
     routerUrl: `${baseUrls.settings}/*`,
@@ -72,6 +80,7 @@ export const routes: (RoutePath | AnonymousRoutePath)[] = [
     planningPath,
     scenariosPath,
     compareCustomizePath,
+    interventionsPath,
     settingsPath,
     setupAccountPath,
     configureAccountPath,

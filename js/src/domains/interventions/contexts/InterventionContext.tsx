@@ -1,7 +1,7 @@
 import React, { createContext, useContext } from 'react';
 import { DropdownOptions } from 'Iaso/types/utils';
-import { BudgetSettings } from '../../../../hooks/useGetBudgetSettings';
-import { MetricType } from '../../../dataLayers/types/metrics';
+import { BudgetSettings } from '../../../hooks/useGetBudgetSettings';
+import { MetricType } from '../../dataLayers/types/metrics';
 
 type InterventionContextType = {
     costCategoryOptions: DropdownOptions<string>[];

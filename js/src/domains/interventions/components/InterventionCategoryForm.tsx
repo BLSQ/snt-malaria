@@ -3,8 +3,8 @@ import { Stack, TextField } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
-import { useGetExtendedFormikContext } from '../../../../hooks/useGetExtendedFormikContext';
-import { MESSAGES } from '../../../messages';
+import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
+import { MESSAGES } from '../../messages';
 import { InterventionCategoryPayload } from '../types';
 
 export const InterventionCategoryForm: FC = () => {
