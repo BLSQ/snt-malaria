@@ -1290,8 +1290,9 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         response = self.client.patch(f"{self.BASE_URL}{other_scenario.id}/reorder_rules/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_scenario_import_csv_creates_majority_match_all_rule(self):
-        """When an intervention group covers >50% of org units, a 'Match all' rule is created."""
+    def test_scenario_import_csv_creates_inclusion_only_rule_for_majority_group(self):
+        """There is no "match all" sentinel in matching_criteria - even when an intervention group
+        covers >50% of org units, it gets a plain inclusion-only rule, same as any other group."""
         csv_content = (
             'org_unit_id,org_unit_name,IPTp - iptp,"RTS,S - rts_s",SMC - smc\n'
             f"{self.district1.id},District 1,1,0,0\n"
@@ -1312,9 +1313,9 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         smc_rule = rules.filter(interventions=self.intervention_chemo_smc).first()
 
         self.assertIsNotNone(iptp_rule)
-        self.assertEqual(iptp_rule.matching_criteria, {"all": True})
-        self.assertEqual(sorted(iptp_rule.org_units_excluded), sorted([self.district3.id]))
-        self.assertEqual(iptp_rule.org_units_included, [])
+        self.assertIsNone(iptp_rule.matching_criteria)
+        self.assertEqual(sorted(iptp_rule.org_units_included), sorted([self.district1.id, self.district2.id]))
+        self.assertEqual(iptp_rule.org_units_excluded, [])
 
         self.assertIsNotNone(smc_rule)
         self.assertIsNone(smc_rule.matching_criteria)

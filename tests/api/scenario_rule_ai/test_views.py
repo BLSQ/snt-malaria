@@ -493,7 +493,7 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
             priority=1,
             scenario=self.scenario,
             created_by=self.user,
-            matching_criteria={"all": True},
+            matching_criteria=None,
             org_units_matched=[],
         )
         rule_to_keep.interventions.add(self.intervention)
@@ -502,7 +502,7 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
             priority=2,
             scenario=self.scenario,
             created_by=self.user,
-            matching_criteria={"all": True},
+            matching_criteria=None,
             org_units_matched=[],
         )
         rule_to_delete.interventions.add(self.intervention)
@@ -528,7 +528,7 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
             priority=1,
             scenario=self.scenario,
             created_by=self.user,
-            matching_criteria={"all": True},
+            matching_criteria=None,
             org_units_matched=[],
         )
         existing_rule.interventions.add(self.intervention)

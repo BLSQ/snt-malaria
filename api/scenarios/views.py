@@ -182,13 +182,11 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
         assignment_df = serializer.context.get("assignment_df")
         interventions = serializer.context.get("interventions")
-        account = request.user.iaso_profile.account
-        all_org_unit_ids = set(ScenarioRule.resolve_matched_org_units(account, {"all": True}))
 
         scenario = get_scenario(request.user, base_name="Imported Scenario")
         with transaction.atomic():
             scenario.save()
-            rules = create_rules_from_import(scenario, assignment_df, interventions, all_org_unit_ids, request.user)
+            rules = create_rules_from_import(scenario, assignment_df, interventions, request.user)
 
             if not rules:
                 raise ValidationError("No assignments to create from the provided CSV data.")

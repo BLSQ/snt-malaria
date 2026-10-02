@@ -4,10 +4,9 @@ from typing import Optional
 # Mirrors the frontend's flat MetricTypeCriterion shape (js/src/domains/planning/types/scenarioRule.ts)
 # and its conversion helpers (js/src/domains/planning/utils/jsonLogic.tsx), so the AI-facing rule
 # spec never has to deal with jsonlogic directly - only ScenarioRule.matching_criteria itself does.
-
-
-def is_match_all(matching_criteria) -> bool:
-    return isinstance(matching_criteria, dict) and matching_criteria.get("all") is True
+#
+# "match all org units" resolution lives on ScenarioRule itself (resolve_all_org_unit_ids /
+# covers_all_org_units in models/scenario.py) - it's not specific to the AI chat.
 
 
 def jsonlogic_to_matching_criteria(matching_criteria) -> list[dict]:

@@ -145,17 +145,6 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
         )
         self.assertIsNone(rule.matching_criteria)
 
-    def test_matching_criteria_match_all(self):
-        rule = ScenarioRule.objects.create(
-            name="Match all rule",
-            priority=3,
-            color="#00FF00",
-            matching_criteria={"all": True},
-            created_by=self.user,
-            scenario=self.scenario,
-        )
-        self.assertEqual(rule.matching_criteria, {"all": True})
-
     def test_refresh_assignments_it_create_assignments(self):
         # This is a very basic test just to check that the method runs without error,
         # more complex logic should be tested in unit tests for this method
@@ -430,114 +419,6 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
         self.assertEqual(rule.intervention_assignments.count(), 0)
 
 
-class ScenarioRuleMatchAllTestCase(SNTMalariaTestCase):
-    """Tests for refresh_assignments with matching_criteria={"all": True}."""
-
-    auto_create_account = False
-
-    def setUp(self):
-        super().setUp()
-        data_source = DataSource.objects.create(name="source")
-        source_version = SourceVersion.objects.create(data_source=data_source, number=1)
-        self.account = Account.objects.create(name="account", default_version=source_version)
-        self.user = self.create_user_with_profile(username="user", account=self.account)
-
-        self.intervention_category = self.create_snt_intervention_category(
-            account=self.account, created_by=self.user, name="Category 1"
-        )
-        self.intervention = self.create_snt_intervention(
-            intervention_category=self.intervention_category, created_by=self.user, name="Intervention 1", code="INT1"
-        )
-        self.scenario = self.create_snt_scenario(
-            self.account, self.user, name="Scenario 1", start_year=2020, end_year=2030
-        )
-
-        self.org_unit_1 = OrgUnit.objects.create(
-            name="OU 1",
-            version=source_version,
-            validation_status=OrgUnit.VALIDATION_VALID,
-            location=Point(1.0, 2.0, 0.0),
-        )
-        self.org_unit_2 = OrgUnit.objects.create(
-            name="OU 2",
-            version=source_version,
-            validation_status=OrgUnit.VALIDATION_VALID,
-            location=Point(3.0, 4.0, 0.0),
-        )
-        self.org_unit_3 = OrgUnit.objects.create(
-            name="OU 3",
-            version=source_version,
-            validation_status=OrgUnit.VALIDATION_VALID,
-            location=Point(5.0, 6.0, 0.0),
-        )
-
-        metric_type = MetricType.objects.create(account=self.account, name="Population", code="POP", units="people")
-        for org_unit in [self.org_unit_1, self.org_unit_2, self.org_unit_3]:
-            MetricValue.objects.create(metric_type=metric_type, org_unit=org_unit, value=1000, year=2025)
-
-    def test_refresh_assignments_match_all(self):
-        rule = ScenarioRule.objects.create(
-            name="Match all rule",
-            priority=1,
-            color="#00FF00",
-            matching_criteria={"all": True},
-            created_by=self.user,
-            scenario=self.scenario,
-            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id, self.org_unit_3.id],
-        )
-        rule.interventions.add(self.intervention)
-
-        rule.refresh_assignments(self.user, previous_assignments={})
-
-        self.assertEqual(rule.intervention_assignments.count(), 3)
-        self.assertEqual(
-            set(rule.intervention_assignments.values_list("org_unit_id", flat=True)),
-            {self.org_unit_1.id, self.org_unit_2.id, self.org_unit_3.id},
-        )
-
-    def test_refresh_assignments_match_all_with_exclusions(self):
-        rule = ScenarioRule.objects.create(
-            name="Match all minus OU3",
-            priority=1,
-            color="#00FF00",
-            matching_criteria={"all": True},
-            created_by=self.user,
-            scenario=self.scenario,
-            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id, self.org_unit_3.id],
-            org_units_excluded=[self.org_unit_3.id],
-        )
-        rule.interventions.add(self.intervention)
-
-        rule.refresh_assignments(self.user, previous_assignments={})
-
-        self.assertEqual(rule.intervention_assignments.count(), 2)
-        self.assertEqual(
-            set(rule.intervention_assignments.values_list("org_unit_id", flat=True)),
-            {self.org_unit_1.id, self.org_unit_2.id},
-        )
-
-    def test_refresh_assignments_match_all_with_exclusion_and_inclusion(self):
-        """Edge case: a match-all rule where the same org unit is both excluded and included.
-        Not a typical user-created rule, but verifies that inclusion takes precedence over exclusion."""
-        rule = ScenarioRule.objects.create(
-            name="Match all with overrides",
-            priority=1,
-            color="#00FF00",
-            matching_criteria={"all": True},
-            created_by=self.user,
-            scenario=self.scenario,
-            org_units_matched=[self.org_unit_1.id, self.org_unit_2.id, self.org_unit_3.id],
-            org_units_excluded=[self.org_unit_2.id],
-            org_units_included=[self.org_unit_2.id],
-        )
-        rule.interventions.add(self.intervention)
-
-        rule.refresh_assignments(self.user, previous_assignments={})
-
-        # Inclusion overrides exclusion
-        self.assertEqual(rule.intervention_assignments.count(), 3)
-
-
 class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):
     """Tests that resolve_matched_org_units respects AccountSettings.intervention_org_unit_type."""
 
@@ -580,13 +461,13 @@ class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):
         MetricValue.objects.create(metric_type=metric_type, org_unit=self.district_1, value=20000, year=2025)
         MetricValue.objects.create(metric_type=metric_type, org_unit=self.district_2, value=30000, year=2025)
 
-    def test_match_all_without_settings_returns_all_levels(self):
-        result = ScenarioRule.resolve_matched_org_units(self.account, {"all": True})
+    def test_resolve_all_org_unit_ids_without_settings_returns_all_levels(self):
+        result = ScenarioRule.resolve_all_org_unit_ids(self.account)
         self.assertCountEqual(result, [self.region.id, self.district_1.id, self.district_2.id])
 
-    def test_match_all_with_intervention_type_excludes_parent(self):
+    def test_resolve_all_org_unit_ids_with_intervention_type_excludes_parent(self):
         AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)
-        result = ScenarioRule.resolve_matched_org_units(self.account, {"all": True})
+        result = ScenarioRule.resolve_all_org_unit_ids(self.account)
         self.assertCountEqual(result, [self.district_1.id, self.district_2.id])
         self.assertNotIn(self.region.id, result)
 
@@ -602,14 +483,14 @@ class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):
         result = ScenarioRule.resolve_matched_org_units(self.account, None)
         self.assertEqual(result, [])
 
-    def test_unified_pipeline_match_all_and_criteria_produce_same_intervention_scope(self):
-        """Both match-all and JSONLogic go through the same pipeline and apply the
-        intervention_org_unit_type filter, so when all org units
-        satisfy a criteria, both modes return the exact same intervention-level set."""
+    def test_resolve_all_org_unit_ids_and_criteria_produce_same_intervention_scope(self):
+        """resolve_all_org_unit_ids and resolve_matched_org_units both apply the
+        intervention_org_unit_type filter, so when all org units satisfy a criteria, both return the
+        exact same intervention-level set."""
         AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)
         metric_type = MetricType.objects.get(account=self.account, code="POP")
 
-        match_all_result = ScenarioRule.resolve_matched_org_units(self.account, {"all": True})
+        all_org_unit_ids_result = ScenarioRule.resolve_all_org_unit_ids(self.account)
 
         # ">=1" is satisfied by every org unit with a POP MetricValue (region + both districts),
         # so the only thing narrowing the result is the intervention_org_unit_type filter.
@@ -617,9 +498,9 @@ class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):
         criteria_result = ScenarioRule.resolve_matched_org_units(self.account, criteria)
 
         expected = [self.district_1.id, self.district_2.id]
-        self.assertCountEqual(match_all_result, expected)
+        self.assertCountEqual(all_org_unit_ids_result, expected)
         self.assertCountEqual(criteria_result, expected)
-        self.assertNotIn(self.region.id, match_all_result)
+        self.assertNotIn(self.region.id, all_org_unit_ids_result)
         self.assertNotIn(self.region.id, criteria_result)
 
 
@@ -741,13 +622,6 @@ class ResolveMatchedOrgUnitsDataLayerYearsTestCase(SNTMalariaTestCase):
             self.account, criteria, data_layer_years={self.metric_type.id: 2025, other_metric_type.id: 2026}
         )
         self.assertCountEqual(result, [self.org_unit_1.id])
-
-    def test_match_all_ignores_data_layer_years(self):
-        """matching_criteria={"all": True} returns before any data_layer_years filtering is applied."""
-        result = ScenarioRule.resolve_matched_org_units(
-            self.account, {"all": True}, data_layer_years={self.metric_type.id: 2030}
-        )
-        self.assertCountEqual(result, [self.org_unit_1.id, self.org_unit_2.id])
 
     def test_none_criteria_with_data_layer_years_returns_empty(self):
         result = ScenarioRule.resolve_matched_org_units(

@@ -51,7 +51,12 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         scenario = serializer.validated_data["scenario"]
 
         scenario_rules = self.get_queryset().filter(scenario=scenario).order_by("priority")
-        list_serializer = ScenarioRuleListSerializer(scenario_rules, many=True)
+        # Resolved once for the whole list rather than once per rule - see
+        # ScenarioRuleListSerializer.get_is_match_all / _rule_is_match_all.
+        account_org_unit_ids = ScenarioRule.resolve_all_org_unit_ids(scenario.account)
+        list_serializer = ScenarioRuleListSerializer(
+            scenario_rules, many=True, context={"account_org_unit_ids": account_org_unit_ids}
+        )
 
         return Response(list_serializer.data, status=status.HTTP_200_OK)
 
@@ -140,11 +145,12 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         account = request.user.iaso_profile.account
         matching_criteria = serializer.validated_data.get("matching_criteria")
         data_layer_years = serializer.validated_data.get("data_layer_years")
-        matched = set(
-            ScenarioRule.resolve_matched_org_units(account, matching_criteria, data_layer_years=data_layer_years)
-        )
+        matched = ScenarioRule.resolve_matched_org_units(account, matching_criteria, data_layer_years=data_layer_years)
 
-        excluded = set(serializer.validated_data.get("org_units_excluded", []))
-        included = set(serializer.validated_data.get("org_units_included", []))
-        result = (matched - excluded) | included
+        result = ScenarioRule.resolve_org_unit_ids(
+            matching_criteria,
+            matched,
+            serializer.validated_data.get("org_units_excluded", []),
+            serializer.validated_data.get("org_units_included", []),
+        )
         return Response(list(result), status=status.HTTP_200_OK)

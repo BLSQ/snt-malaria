@@ -1,28 +1,26 @@
-import React, { FC, useCallback, useMemo } from 'react';
-import {
-    Box,
-    Checkbox,
-    FormControlLabel,
-    Stack,
-    TextField,
-    Typography,
-} from '@mui/material';
+import React, { FC, useCallback } from 'react';
+import { Box, Stack, TextField, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
-import InputComponent from 'Iaso/components/forms/InputComponent';
-import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { SxStyles } from 'Iaso/types/general';
 import { useGetExtendedFormikContext } from '../../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { useGetAccountSettings } from '../../../hooks/useGetAccountSettings';
-import { useGetOrgUnits } from '../../../hooks/useGetOrgUnits';
 import { ScenarioRuleFormValues } from '../../../hooks/useScenarioRuleFormState';
 import { generateRuleName } from '../../../libs/rule-utils';
 import { InterventionPropertiesForm } from './InterventionPropertiesForm';
 import { MatchingCriteriaForm } from './MatchingCriteriaForm';
+import { OrgUnitScopeSelector } from './orgUnitScopeSelector/OrgUnitScopeSelector';
 import { RuleCoverageSummary } from './RuleCoverageSummary';
+
+const parseOrgUnitIds = (commaSeparatedIds?: string): number[] =>
+    (commaSeparatedIds || '')
+        .split(',')
+        .filter(id => id !== '')
+        .map(id => parseInt(id, 10))
+        .filter(id => Number.isFinite(id));
 
 const styles = {
     formRoot: {
@@ -39,11 +37,6 @@ const styles = {
         p: 2,
         backgroundColor: 'grey.100',
         borderRadius: 3,
-    },
-    inputLabel: {
-        ' .MuiInputLabel-shrink': {
-            backgroundColor: 'grey.100',
-        },
     },
     ruleNameInput: {
         flexGrow: 1,
@@ -81,14 +74,7 @@ export const ScenarioRuleForm: FC<Props> = ({
         usePlanningContext();
 
     const { data: accountSettings } = useGetAccountSettings();
-    // Fetch all intervention-level org units including geometry. The map makes
-    // the same request (same query key), so when the page was loaded without a
-    // region filter this is an instant cache hit instead of a costly extra call.
     const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
-    const { data: allOrgUnits, isLoading: isLoadingOrgUnits } = useGetOrgUnits({
-        orgUnitTypeId: interventionTypeId,
-        enabled: !!interventionTypeId,
-    });
 
     const {
         values,
@@ -100,40 +86,18 @@ export const ScenarioRuleForm: FC<Props> = ({
         setChildFieldValueAndState,
     } = useGetExtendedFormikContext<ScenarioRuleFormValues>();
 
-    const getErrors = useTranslatedErrors({
-        errors,
-        touched,
-        formatMessage,
-        messages: MESSAGES,
-    });
-
-    const allOrgUnitOptions = useMemo(
-        () =>
-            (allOrgUnits ?? []).map(orgUnit => ({
-                value: orgUnit.id,
-                label: orgUnit.name,
-            })),
-        [allOrgUnits],
+    const onChangeExcludedOrgUnits = useCallback(
+        (ids: number[]) => {
+            setFieldValueAndState('org_units_excluded', ids.join(','));
+        },
+        [setFieldValueAndState],
     );
 
-    const excludeOrgUnitsFromList = useCallback(
-        (exclusionList: string) =>
-            allOrgUnitOptions.filter(
-                option =>
-                    !exclusionList
-                        ?.split(',')
-                        .includes(option.value.toString()),
-            ),
-        [allOrgUnitOptions],
-    );
-
-    const inclusionOrgUnitOptions = useMemo(
-        () => excludeOrgUnitsFromList(values.org_units_excluded || ''),
-        [excludeOrgUnitsFromList, values.org_units_excluded],
-    );
-    const exclusionOrgUnitOptions = useMemo(
-        () => excludeOrgUnitsFromList(values.org_units_included || ''),
-        [excludeOrgUnitsFromList, values.org_units_included],
+    const onChangeHandpickedOrgUnits = useCallback(
+        (ids: number[]) => {
+            setFieldValueAndState('org_units_included', ids.join(','));
+        },
+        [setFieldValueAndState],
     );
 
     const onAddIntervention = useCallback(
@@ -182,76 +146,33 @@ export const ScenarioRuleForm: FC<Props> = ({
                     />
                 </Box>
                 <Box mb={2}>
-                    <Box
-                        display="flex"
-                        justifyContent="space-between"
-                        alignItems="center"
-                    >
-                        <ScenarioRuleHeading
-                            label={formatMessage(MESSAGES.selectionCriteria)}
-                        />
-                        {values.matching_criteria.length === 0 && (
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        size="small"
-                                        checked={values.is_match_all}
-                                        onChange={e =>
-                                            setFieldValueAndState(
-                                                'is_match_all',
-                                                e.target.checked,
-                                            )
-                                        }
-                                    />
-                                }
-                                label={formatMessage(MESSAGES.matchAllOrgUnits)}
-                            />
-                        )}
-                    </Box>
-                    {!values.is_match_all && (
-                        <MatchingCriteriaForm
-                            metricTypeCategories={metricTypeCategories}
-                            dataLayerYears={scenario?.data_layer_years}
-                            matchingCriteria={values.matching_criteria}
-                            onAdd={addChildValue}
-                            onRemove={(list_field_key: string, index: number) =>
-                                removeChildValue(list_field_key, index)
-                            }
-                            errors={errors.matching_criteria}
-                            touched={touched.matching_criteria}
-                            onUpdateField={setChildFieldValueAndState}
-                        />
-                    )}
+                    <ScenarioRuleHeading
+                        label={formatMessage(MESSAGES.selectionCriteria)}
+                    />
+                    <MatchingCriteriaForm
+                        metricTypeCategories={metricTypeCategories}
+                        dataLayerYears={scenario?.data_layer_years}
+                        matchingCriteria={values.matching_criteria}
+                        onAdd={addChildValue}
+                        onRemove={(list_field_key: string, index: number) =>
+                            removeChildValue(list_field_key, index)
+                        }
+                        errors={errors.matching_criteria}
+                        touched={touched.matching_criteria}
+                        onUpdateField={setChildFieldValueAndState}
+                    />
                 </Box>
                 <Box>
-                    <ScenarioRuleHeading
-                        label={formatMessage(MESSAGES.ruleExceptions)}
-                    />
-                    <InputComponent
-                        keyValue="org_units_excluded"
-                        type="select"
-                        value={values.org_units_excluded || []}
-                        multi={true}
-                        loading={isLoadingOrgUnits}
-                        options={exclusionOrgUnitOptions}
-                        onChange={setFieldValueAndState}
-                        errors={getErrors('org_units_excluded')}
-                        label={MESSAGES.excludedOrgUnits}
-                        wrapperSx={styles.inputLabel}
-                    />
-
-                    <InputComponent
-                        keyValue="org_units_included"
-                        type="select"
-                        value={values.org_units_included || []}
-                        multi={true}
-                        loading={isLoadingOrgUnits}
-                        disabled={values.is_match_all}
-                        options={inclusionOrgUnitOptions}
-                        onChange={setFieldValueAndState}
-                        errors={getErrors('org_units_included')}
-                        label={MESSAGES.includedOrgUnits}
-                        wrapperSx={styles.inputLabel}
+                    <OrgUnitScopeSelector
+                        interventionTypeId={interventionTypeId}
+                        matchingCriteria={values.matching_criteria}
+                        dataLayerYears={scenario?.data_layer_years}
+                        excludedIds={parseOrgUnitIds(values.org_units_excluded)}
+                        handpickedIds={parseOrgUnitIds(
+                            values.org_units_included,
+                        )}
+                        onChangeExcluded={onChangeExcludedOrgUnits}
+                        onChangeHandpicked={onChangeHandpickedOrgUnits}
                     />
                 </Box>
             </Box>

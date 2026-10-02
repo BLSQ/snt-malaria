@@ -57,15 +57,24 @@ def _normalize_color(value) -> Optional[str]:
     return None
 
 
-def _rule_spec_to_payload(spec: dict, metric_type_by_id: dict) -> dict:
+def _rule_spec_to_payload(spec: dict, metric_type_by_id: dict, account_org_unit_ids: list[int]) -> dict:
     if not spec.get("interventions"):
         # A rule with no interventions matches org units but assigns nothing - a no-op. Caught here
         # (not just in the prompt) since the model doesn't always follow that instruction, e.g. when
         # proposing a placeholder "baseline" rule.
         raise serializers.ValidationError(f'Rule "{spec.get("name")}" has no interventions and would be a no-op.')
 
+    payload = {
+        "name": spec.get("name") or "",
+        "interventions": spec.get("interventions") or [],
+    }
+
     if spec.get("is_match_all"):
-        matching_criteria = {"all": True}
+        # No "match all" sentinel in matching_criteria - the AI's intent is resolved into an explicit
+        # snapshot of every org unit id right here, so the stored rule never relies on anything but
+        # matching_criteria/org_units_included/org_units_excluded.
+        payload["matching_criteria"] = None
+        payload["org_units_included"] = account_org_unit_ids
     else:
         criteria = spec.get("matching_criteria") or []
         for criterion in criteria:
@@ -90,12 +99,8 @@ def _rule_spec_to_payload(spec: dict, metric_type_by_id: dict) -> dict:
             raise serializers.ValidationError(
                 f'Rule "{spec.get("name")}" has no matching criteria and is not match-all.'
             )
+        payload["matching_criteria"] = matching_criteria
 
-    payload = {
-        "name": spec.get("name") or "",
-        "matching_criteria": matching_criteria,
-        "interventions": spec.get("interventions") or [],
-    }
     color = _normalize_color(spec.get("color"))
     if color:
         payload["color"] = color
@@ -114,6 +119,10 @@ def persist_scenario_rule_set(scenario, rule_specs: list[dict], context: dict) -
     `updated_by` come from `request.user`)."""
     user = context["request"].user
     metric_type_by_id = {mt["id"]: mt for mt in build_account_metric_types(scenario.account)}
+    account_org_unit_ids = ScenarioRule.resolve_all_org_unit_ids(scenario.account)
+    # Shared by every write serializer instantiated below, so none of them need to re-resolve it
+    # (e.g. ScenarioRuleUpdateSerializer clearing a stale match-all org_units_included snapshot).
+    context = {**context, "account_org_unit_ids": account_org_unit_ids}
 
     existing_by_id = {rule.id: rule for rule in scenario.rules.all()}
     submitted_ids = {spec["id"] for spec in rule_specs if spec.get("id")}
@@ -126,8 +135,8 @@ def persist_scenario_rule_set(scenario, rule_specs: list[dict], context: dict) -
 
     saved_rules = []
     for spec in rule_specs:
-        payload = _rule_spec_to_payload(spec, metric_type_by_id)
         existing_rule = existing_by_id.get(spec.get("id"))
+        payload = _rule_spec_to_payload(spec, metric_type_by_id, account_org_unit_ids)
         org_units_matched = ScenarioRule.resolve_matched_org_units(
             scenario.account, payload["matching_criteria"], data_layer_years=scenario.data_layer_years
         )
@@ -163,4 +172,4 @@ def persist_scenario_rule_set(scenario, rule_specs: list[dict], context: dict) -
     scenario.refresh_assignments(user)
     BudgetCalculationService(scenario).calculate_and_save_all_years(user)
 
-    return ScenarioRuleListSerializer(scenario.rules.order_by("priority"), many=True).data
+    return ScenarioRuleListSerializer(scenario.rules.order_by("priority"), many=True, context=context).data

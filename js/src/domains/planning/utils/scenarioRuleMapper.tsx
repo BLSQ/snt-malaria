@@ -2,11 +2,6 @@ import { ScenarioRuleResponse } from '../../planning/hooks/useGetScenarioRules';
 import { ScenarioRule } from '../../planning/types/scenarioRule';
 import { jsonLogicToMatchingCriteria } from './jsonLogic';
 
-const isMatchAll = (criteria: unknown): boolean =>
-    typeof criteria === 'object' &&
-    criteria !== null &&
-    (criteria as Record<string, unknown>).all === true;
-
 export const mapResponseToScenarioRule = (
     response: ScenarioRuleResponse,
 ): ScenarioRule => ({
@@ -15,10 +10,9 @@ export const mapResponseToScenarioRule = (
     scenario: response.scenario,
     priority: response.priority,
     color: response.color,
-    is_match_all: isMatchAll(response.matching_criteria),
+    is_match_all: response.is_match_all,
     matching_criteria:
-        response.matching_criteria == null ||
-        isMatchAll(response.matching_criteria)
+        response.matching_criteria == null
             ? []
             : jsonLogicToMatchingCriteria(response.matching_criteria),
     interventions: response.interventions,
