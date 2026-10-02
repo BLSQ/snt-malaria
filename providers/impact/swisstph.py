@@ -26,7 +26,8 @@ KNOWN_DEPLOYED_COLUMNS = {
     "deployed_int_pmc",
     "deployed_int_smc",
     "deployed_int_vaccine",
-    "deployed_int_itn",
+    "deployed_int_std",
+    "deployed_int_rtss",
     "deployed_int_irs",
     "deployed_int_iccm",
     "deployed_int_lsm",
@@ -214,7 +215,7 @@ class SwissTPHImpactProvider(ImpactProvider):
 
         The impact_ref can be a single column name (e.g. 'deployed_int_smc')
         or a comma-separated list when one intervention maps to multiple
-        columns (e.g. 'deployed_int_pbo,deployed_int_itn').
+        columns (e.g. 'deployed_int_pbo,deployed_int_std').
 
         Raises InterventionMappingError if the impact_ref is empty or contains
         unrecognised column names.
