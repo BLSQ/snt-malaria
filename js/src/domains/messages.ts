@@ -1085,6 +1085,18 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.title',
         defaultMessage: 'Settings',
     },
+    costManagementTitle: {
+        id: 'iaso.snt_malaria.costManagement.title',
+        defaultMessage: 'Cost management',
+    },
+    costManagementBudgetTitle: {
+        id: 'iaso.snt_malaria.costManagement.budget.title',
+        defaultMessage: 'Budget',
+    },
+    costManagementGrantsTitle: {
+        id: 'iaso.snt_malaria.costManagement.grants.title',
+        defaultMessage: 'Grants',
+    },
     interventionsTitle: {
         id: 'iaso.snt_malaria.interventions.title',
         defaultMessage: 'Interventions',

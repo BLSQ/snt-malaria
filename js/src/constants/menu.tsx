@@ -3,6 +3,7 @@ import {
     CompareOutlined,
     FormatListBulletedOutlined,
     Layers,
+    PaymentsOutlined,
     TuneOutlined,
     VaccinesOutlined,
 } from '@mui/icons-material';
@@ -39,6 +40,12 @@ export const menu = [
         key: 'snt_malaria/interventions',
         permissions: [SETTINGS_READ],
         icon: (props: SvgIconProps) => <VaccinesOutlined {...props} />,
+    },
+    {
+        label: MESSAGES.costManagementTitle,
+        key: 'snt_malaria/cost-management',
+        permissions: [SETTINGS_READ],
+        icon: (props: SvgIconProps) => <PaymentsOutlined {...props} />,
     },
     {
         label: MESSAGES.settingsTitle,
