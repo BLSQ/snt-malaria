@@ -1,3 +1,6 @@
+from decimal import Decimal
+from unittest import mock
+
 from rest_framework import status
 
 from iaso.models.metric import MetricType
@@ -7,17 +10,99 @@ from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base
 )
 
 
+RECALCULATE_PATH = "plugins.snt_malaria.api.intervention_cost_breakdown_line.views.recalculate_budgets_for_intervention"
+
+
 class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
-    def test_write_methods_are_not_allowed(self):
+    def test_put_is_not_allowed(self):
         self.client.force_authenticate(user=self.user_write)
-        for method in ("post", "put", "patch", "delete"):
-            response = getattr(self.client, method)(self.BASE_URL, {}, format="json")
-            self.assertEqual(
-                response.status_code,
-                status.HTTP_405_METHOD_NOT_ALLOWED,
-                f"{method.upper()} should be rejected, got {response.status_code}",
-            )
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)
+        response = self.client.put(f"{self.BASE_URL}{self.cost_line1.id}/", {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    @mock.patch(RECALCULATE_PATH)
+    def test_create_cost_breakdown_line_returns_line_and_recalculates_budgets(self, recalculate):
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.post(
+            self.BASE_URL,
+            {
+                "intervention": self.intervention_chemo_iptp.id,
+                "name": "New line",
+                "unit_cost": "3.50",
+                "category": "Procurement",
+                "unit_type": self.unit_type_other.id,
+                "coverage": "80",
+            },
+            format="json",
+        )
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+
+        line = InterventionCostBreakdownLine.objects.get(id=result["id"])
+        self.assertEqual(line.created_by, self.user_write)
+        self.assertEqual(line.coverage, Decimal("80"))
+        self.assertEqual(result["unit_type_label"], self.unit_type_other.name)
+        recalculate.assert_called_once_with(self.intervention_chemo_iptp, self.user_write)
+
+    @mock.patch(RECALCULATE_PATH)
+    def test_partial_update_cost_breakdown_line_keeps_unsent_fields(self, recalculate):
+        population = MetricType.objects.create(account=self.account, name="Total population", code="POP")
+        self.cost_line1.is_proportional = True
+        self.cost_line1.population_layer = population
+        self.cost_line1.save()
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.patch(f"{self.BASE_URL}{self.cost_line1.id}/", {"unit_cost": "12.00"}, format="json")
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.cost_line1.refresh_from_db()
+        self.assertEqual(self.cost_line1.unit_cost, Decimal("12.00"))
+        self.assertTrue(self.cost_line1.is_proportional)
+        self.assertEqual(self.cost_line1.population_layer, population)
+        self.assertEqual(self.cost_line1.updated_by, self.user_write)
+        self.assertEqual(result["population_layer_label"], "Total population")
+        recalculate.assert_called_once_with(self.intervention_vaccination_rts, self.user_write)
+
+    @mock.patch(RECALCULATE_PATH)
+    def test_partial_update_to_proportional_without_population_is_rejected(self, recalculate):
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.patch(f"{self.BASE_URL}{self.cost_line1.id}/", {"is_proportional": True}, format="json")
+        self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        recalculate.assert_not_called()
+
+    @mock.patch(RECALCULATE_PATH)
+    def test_delete_cost_breakdown_line_recalculates_budgets(self, recalculate):
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{self.BASE_URL}{self.cost_line1.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(InterventionCostBreakdownLine.objects.filter(id=self.cost_line1.id).exists())
+        recalculate.assert_called_once_with(self.intervention_vaccination_rts, self.user_write)
+
+    def test_write_cost_breakdown_line_with_read_perm_is_forbidden(self):
+        self.client.force_authenticate(user=self.user_read)
+        url = f"{self.BASE_URL}{self.cost_line1.id}/"
+        self.assertEqual(self.client.patch(url, {"unit_cost": "1"}, format="json").status_code, 403)
+        self.assertEqual(self.client.delete(url).status_code, 403)
+        self.assertEqual(self.client.post(self.BASE_URL, {}, format="json").status_code, 403)
+
+    def test_write_cost_breakdown_line_of_other_account_is_not_found(self):
+        self.client.force_authenticate(user=self.user_write)
+        url = f"{self.BASE_URL}{self.other_cost_line.id}/"
+        self.assertEqual(self.client.patch(url, {"unit_cost": "1"}, format="json").status_code, 404)
+        self.assertEqual(self.client.delete(url).status_code, 404)
+
+    def test_create_cost_breakdown_line_for_other_account_intervention_is_rejected(self):
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.post(
+            self.BASE_URL,
+            {
+                "intervention": self.other_intervention.id,
+                "name": "New line",
+                "unit_cost": "1",
+                "category": "Procurement",
+                "unit_type": self.unit_type_other.id,
+            },
+            format="json",
+        )
+        self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
 
     def test_list_cost_breakdown_lines_with_write_perm(self):
         self.client.force_authenticate(user=self.user_write)

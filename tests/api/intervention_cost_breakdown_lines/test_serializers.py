@@ -1,8 +1,6 @@
 from decimal import Decimal
 from unittest.mock import Mock
 
-from rest_framework import status
-
 from iaso.api.common import DropdownOptionsWithRepresentationSerializer
 from iaso.models.metric import MetricType
 from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
@@ -19,17 +17,6 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
     def setUp(self):
         super().setUp()
         self.context = {"request": Mock(user=self.user_write)}
-
-    def test_write_methods_are_not_allowed(self):
-        self.client.force_authenticate(user=self.user_write)
-        for method in ("post", "put", "patch", "delete"):
-            response = getattr(self.client, method)(self.BASE_URL, {}, format="json")
-            self.assertEqual(
-                response.status_code,
-                status.HTTP_405_METHOD_NOT_ALLOWED,
-                f"{method.upper()} should be rejected, got {response.status_code}",
-            )
-        self.assertEqual(InterventionCostBreakdownLine.objects.count(), 3)
 
     def test_create_cost_breakdown_line_cost_below_zero(self):
         data = {
