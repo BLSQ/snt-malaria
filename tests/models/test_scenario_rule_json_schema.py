@@ -187,12 +187,8 @@ class ScenarioRuleMatchingCriteriaJsonValidationTests(SNTMalariaTestCase):
         with self.assertRaisesMessage(ValidationError, "Additional properties are not allowed"):
             jsonschema.validate(invalid_criteria, SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)
 
-    def test_valid_match_all_criteria(self):
-        jsonschema.validate({"all": True}, SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)
-
-    def test_invalid_match_all_false(self):
-        with self.assertRaises(ValidationError):
-            jsonschema.validate({"all": False}, SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)
-
-    def test_invalid_match_all_extra_property(self):
-        self._assert_schema_error_contains({"all": True, "foo": "bar"}, "Additional properties are not allowed")
+    def test_invalid_match_all_sentinel_no_longer_accepted(self):
+        """{"all": true} used to be a valid "match everyone" sentinel - it no longer is. A rule that
+        should match everyone now does so by explicitly listing every org unit in
+        org_units_included, with matching_criteria left null."""
+        self._assert_schema_error_contains({"all": True}, "'and' is a required property")

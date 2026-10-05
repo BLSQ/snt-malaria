@@ -12,6 +12,9 @@ export type ScenarioRuleResponse = {
     priority: number;
     color: string;
     matching_criteria: JsonLogicTree;
+    // Read-only, derived server-side: whether org_units_included already amounts to "every org
+    // unit" - there is no "match all" sentinel in matching_criteria itself.
+    is_match_all: boolean;
     interventions: number[];
     org_units_excluded?: number[];
     org_units_included?: number[];

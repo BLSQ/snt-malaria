@@ -8,6 +8,9 @@ type UseGetOrgUnitsOptions = {
     orgUnitParentId?: number | null;
     orgUnitTypeId?: number;
     withGeometry?: boolean;
+    // Requires withGeometry (asLocation) - adds each org unit's ancestor
+    // chain (org_unit.parent.parent...) to the response.
+    withParents?: boolean;
     enabled?: boolean;
 };
 
@@ -15,6 +18,7 @@ export const useGetOrgUnits = ({
     orgUnitParentId,
     orgUnitTypeId,
     withGeometry = true,
+    withParents = false,
     enabled = true,
 }: UseGetOrgUnitsOptions = {}): UseQueryResult<OrgUnit[], Error> => {
     const params: Record<string, any> = {
@@ -24,6 +28,9 @@ export const useGetOrgUnits = ({
     };
     if (withGeometry) {
         params.asLocation = true;
+        if (withParents) {
+            params.withParents = true;
+        }
     } else {
         params.smallSearch = true;
         params.order = 'name';

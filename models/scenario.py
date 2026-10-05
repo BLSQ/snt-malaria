@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
 from django.db import connection, models, transaction
@@ -74,22 +76,12 @@ class Scenario(SoftDeletableModel):
 
 SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "oneOf": [
-        {
-            "type": "object",
-            "required": ["and"],
-            "additionalProperties": False,
-            "properties": {
-                "and": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/condition"}},
-            },
-        },
-        {
-            "type": "object",
-            "required": ["all"],
-            "additionalProperties": False,
-            "properties": {"all": {"const": True}},
-        },
-    ],
+    "type": "object",
+    "required": ["and"],
+    "additionalProperties": False,
+    "properties": {
+        "and": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/condition"}},
+    },
     "$defs": {
         "condition": {
             "type": "object",
@@ -140,8 +132,9 @@ class ScenarioRule(models.Model):
     # Matching criteria determines how org units are selected for this rule:
     # - {"and": [...]} — jsonlogic criteria evaluated against MetricValues
     #                    (must match format for jsonlogic_to_exists_q_clauses, single nesting level only)
-    # - {"all": true}  — matches every org unit that has MetricValues in the account
     # - null           — inclusion-only rule, org units come solely from org_units_included
+    #                    (this is also how a rule that should match every org unit is expressed - by
+    #                    listing them all explicitly in org_units_included, resolved once up front)
     matching_criteria = models.JSONField(
         blank=True, null=True, validators=[JSONSchemaValidator(schema=SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA)]
     )
@@ -189,8 +182,7 @@ class ScenarioRule(models.Model):
 
         1. start from the account's valid geo-located org units at the configured
            intervention_org_unit_type level (get_intervention_org_units)
-        2. if matching_criteria is JSONLogic, intersect with org units whose MetricValues satisfy it
-           (match-all skips this step - every org unit qualifies)
+        2. intersect with org units whose MetricValues satisfy matching_criteria (JSONLogic)
 
         data_layer_years maps metric_type_id -> year. For each metric type referenced in
         matching_criteria: if a year is configured, year=<that year> is preferred, falling back to
@@ -201,9 +193,6 @@ class ScenarioRule(models.Model):
             return []
 
         org_units = get_intervention_org_units(account)
-
-        if isinstance(matching_criteria, dict) and matching_criteria.get("all"):
-            return list(org_units.values_list("id", flat=True).distinct())
 
         metric_values = MetricValue.objects.filter(metric_type__account=account, org_unit_id__isnull=False)
 
@@ -228,14 +217,59 @@ class ScenarioRule(models.Model):
         matched_ids = metric_values.filter(q).distinct().values_list("org_unit_id", flat=True)
         return list(org_units.filter(id__in=matched_ids).values_list("id", flat=True).distinct())
 
+    @staticmethod
+    def resolve_all_org_unit_ids(account) -> list[int]:
+        """Every org unit id a rule could target for this account, at the configured intervention
+        level. There is no "match all" sentinel in matching_criteria - a rule matches everyone only
+        by explicitly including every one of them in org_units_included, resolved from this."""
+        return list(get_intervention_org_units(account).values_list("id", flat=True).distinct())
+
+    @staticmethod
+    def covers_all_org_units(
+        org_units_included, account=None, account_org_unit_ids: Optional[list[int]] = None
+    ) -> bool:
+        """Whether org_units_included already amounts to "every org unit" for this account - a
+        read-only signal (never persisted) used to: tell the AI chat which of a scenario's *existing*
+        rules currently match everyone (without ever exposing the real org unit ids themselves), and
+        to detect a rule moving away from match-all so its now-stale org_units_included snapshot gets
+        cleared (see scenario_rule_ai.rule_set._rule_spec_to_payload). Pass `account_org_unit_ids`
+        when already resolved (the only case `account` itself can be omitted), to avoid re-querying
+        it for every rule."""
+        if not org_units_included:
+            return False
+        all_ids = (
+            account_org_unit_ids if account_org_unit_ids is not None else ScenarioRule.resolve_all_org_unit_ids(account)
+        )
+        return set(org_units_included) == set(all_ids)
+
+    @staticmethod
+    def resolve_org_unit_ids(
+        matching_criteria,
+        org_units_matched: list[int],
+        org_units_excluded: list[int],
+        org_units_included: list[int],
+    ) -> set[int]:
+        """Resolve the set of org unit ids a rule targets, given its matching mode and
+        exclusion/inclusion overrides. Shared between ScenarioRule._compute_org_unit_ids and
+        the preview endpoint, since both need the same set algebra.
+        """
+        included = set(org_units_included)
+        if matching_criteria is None:
+            return included
+        matched = set(org_units_matched)
+        if not matched and not included:
+            return set()
+        excluded = set(org_units_excluded)
+        return (matched - excluded) | included
+
     def _compute_org_unit_ids(self) -> set[int]:
         """Resolve the set of org unit ids this rule targets based on its matching mode."""
-        if self.matching_criteria is None:
-            return set(self.org_units_included)
-        matched = set(self.org_units_matched)
-        if not matched and not self.org_units_included:
-            return set()
-        return (matched - set(self.org_units_excluded)) | set(self.org_units_included)
+        return ScenarioRule.resolve_org_unit_ids(
+            self.matching_criteria,
+            self.org_units_matched,
+            self.org_units_excluded,
+            self.org_units_included,
+        )
 
     def refresh_assignments(self, user: User, previous_assignments: dict[int, set[int]]) -> None:
         # """
