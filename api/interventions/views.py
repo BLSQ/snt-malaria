@@ -13,9 +13,8 @@ from plugins.snt_malaria.api.interventions.serializers import (
     InterventionDuplicateSerializer,
     InterventionSerializer,
 )
-from plugins.snt_malaria.models import Intervention
-from plugins.snt_malaria.models.intervention import InterventionAssignment
-from plugins.snt_malaria.services import BudgetCalculationService
+from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
+from plugins.snt_malaria.services import recalculate_budgets_for_intervention
 
 
 class InterventionViewSet(viewsets.ModelViewSet):
@@ -81,18 +80,8 @@ class InterventionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(intervention, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        recalculate_budgets_for_intervention(intervention, request.user)
 
-        # Refresh budget for all scenarios with at least 1 assignment of that intervention
-        # As it might impact cost lines.
-        scenario_ids = (
-            InterventionAssignment.objects.filter(intervention=intervention)
-            .values_list("scenario_id", flat=True)
-            .distinct()
-        )
-
-        scenarios = intervention.intervention_category.account.scenario_set.filter(id__in=scenario_ids)
-        for scenario in scenarios:
-            budget_service = BudgetCalculationService(scenario)
-            budget_service.calculate_and_save_all_years(self.request.user)
-
+        # Reload so the response reflects the saved lines rather than the prefetch from before the save.
+        intervention = self.get_queryset().get(pk=intervention.pk)
         return Response(InterventionDetailSerializer(intervention).data, status=status.HTTP_200_OK)
