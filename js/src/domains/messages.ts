@@ -1089,10 +1089,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.costManagement.title',
         defaultMessage: 'Cost management',
     },
-    costManagementBudgetTitle: {
-        id: 'iaso.snt_malaria.costManagement.budget.title',
-        defaultMessage: 'Budget',
-    },
     costManagementGrantsTitle: {
         id: 'iaso.snt_malaria.costManagement.grants.title',
         defaultMessage: 'Grants',
@@ -1455,10 +1451,6 @@ export const MESSAGES = defineMessages({
     interventionCategoryDescription: {
         id: 'iaso.snt_malaria.settings.interventionCategories.description',
         defaultMessage: 'Description',
-    },
-    generalTitle: {
-        id: 'iaso.snt_malaria.settings.general.title',
-        defaultMessage: 'General',
     },
     budgetSettingsTitle: {
         id: 'iaso.snt_malaria.settings.budget.title',

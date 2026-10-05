@@ -48,7 +48,7 @@ const styles = {
     },
 } satisfies SxStyles;
 
-export const BudgetManagement: FC = () => {
+export const CostItemsManagement: FC = () => {
     const { formatMessage } = useSafeIntl();
     const { groups, interventionCategories, isLoading } = useCostItemGroups();
     const { data: costCategoryOptions = [] } =

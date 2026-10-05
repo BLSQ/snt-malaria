@@ -21,6 +21,18 @@ export const menu = [
         icon: (props: SvgIconProps) => <Layers {...props} />,
     },
     {
+        label: MESSAGES.interventionsTitle,
+        key: 'snt_malaria/interventions',
+        permissions: [SETTINGS_READ],
+        icon: (props: SvgIconProps) => <VaccinesOutlined {...props} />,
+    },
+    {
+        label: MESSAGES.costManagementTitle,
+        key: 'snt_malaria/cost-management',
+        permissions: [SETTINGS_READ],
+        icon: (props: SvgIconProps) => <PaymentsOutlined {...props} />,
+    },
+    {
         label: MESSAGES.scenariosTitle,
         key: 'snt_malaria/scenarios/list',
         permissions: [],
@@ -34,18 +46,6 @@ export const menu = [
         permissions: [],
         featureFlag: IMPACT,
         icon: (props: SvgIconProps) => <CompareOutlined {...props} />,
-    },
-    {
-        label: MESSAGES.interventionsTitle,
-        key: 'snt_malaria/interventions',
-        permissions: [SETTINGS_READ],
-        icon: (props: SvgIconProps) => <VaccinesOutlined {...props} />,
-    },
-    {
-        label: MESSAGES.costManagementTitle,
-        key: 'snt_malaria/cost-management',
-        permissions: [SETTINGS_READ],
-        icon: (props: SvgIconProps) => <PaymentsOutlined {...props} />,
     },
     {
         label: MESSAGES.settingsTitle,
