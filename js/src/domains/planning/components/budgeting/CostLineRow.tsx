@@ -14,6 +14,7 @@ import {
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { pluralize } from '../../../../utils/pluralize';
+import { formatConversionDirection } from '../../../interventions/utils/costBreakdownLine';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { formatBigNumber, formatQuantity } from '../../libs/cost-utils';
@@ -291,16 +292,12 @@ export const CostLineTooltip: FC<TooltipProps> = ({ costLine }) => {
         () =>
             (!costLine.unitName &&
                 formatMessage(MESSAGES.budgetingCostLineConversionFactor)) ||
-            (costLine.invertedConversionFactor
-                ? formatMessage(MESSAGES.budgetingCostLinePeoplePerUnit, {
-                      unit: costLine.unitName,
-                  })
-                : formatMessage(MESSAGES.budgetingCostLineUnitPerPeople, {
-                      unit: pluralize(
-                          costLine.unitName,
-                          costLine.conversionFactor ?? 1,
-                      ),
-                  })),
+            formatConversionDirection(
+                formatMessage,
+                costLine.unitName,
+                costLine.conversionFactor ?? 1,
+                Boolean(costLine.invertedConversionFactor),
+            ),
         [
             costLine.unitName,
             costLine.invertedConversionFactor,
