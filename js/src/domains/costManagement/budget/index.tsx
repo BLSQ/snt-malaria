@@ -57,7 +57,7 @@ export const BudgetManagement: FC = () => {
         useGetInterventionCostUnitTypes();
     const { data: metricTypes = [] } = useGetMetricTypes(true);
     const { data: budgetSettings } = useGetBudgetSettings();
-    const { saveLine, deleteLine } = useSaveCostItems();
+    const { updateLine, saveLine, deleteLine } = useSaveCostItems();
 
     const [filters, setFilters] = useState<CostItemFilters>({
         search: '',
@@ -144,15 +144,9 @@ export const BudgetManagement: FC = () => {
         [],
     );
 
-    const handleSaveEditedLine = useCallback(
-        (line: InterventionCostBreakdownLinePayload) =>
-            editedItem ? saveLine(editedItem.group, line) : Promise.resolve(),
-        [editedItem, saveLine],
-    );
-
     const handleConfirmDelete = useCallback(() => {
         if (deletedItem) {
-            deleteLine(deletedItem.group, deletedItem.line.id);
+            deleteLine(deletedItem.line.id);
         }
     }, [deletedItem, deleteLine]);
 
@@ -181,7 +175,7 @@ export const BudgetManagement: FC = () => {
                     isAnyGroupOpen={isAnyGroupOpen}
                     onToggleGroup={handleToggleGroup}
                     onToggleAllGroups={handleToggleAllGroups}
-                    onSaveLine={saveLine}
+                    onUpdateLine={updateLine}
                     onAddLine={handleAddLine}
                     onEditLine={handleEditLine}
                     onDeleteLine={handleRequestDelete}
@@ -192,7 +186,7 @@ export const BudgetManagement: FC = () => {
                     key={editedItem.line.id ?? 'new'}
                     group={editedItem.group}
                     initialLine={editedItem.line}
-                    onSave={handleSaveEditedLine}
+                    onSave={saveLine}
                     onClose={closeEditor}
                 />
             )}

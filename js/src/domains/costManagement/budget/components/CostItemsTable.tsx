@@ -4,9 +4,8 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { MESSAGES } from '../../../messages';
-import { CostItemGroup } from '../types';
+import { CostItemGroup, LineHandler, PartialLineHandler } from '../types';
 import { CostItemGroupHeader } from './CostItemGroupHeader';
 import { CostItemRow } from './CostItemRow';
 import {
@@ -16,18 +15,13 @@ import {
     COST_ITEMS_ROW_PADDING_LEFT,
 } from './costItemsGrid';
 
-type LineHandler = (
-    group: CostItemGroup,
-    line: InterventionCostBreakdownLine,
-) => void;
-
 type Props = {
     groups: CostItemGroup[];
     isGroupOpen: (interventionId: number) => boolean;
     isAnyGroupOpen: boolean;
     onToggleGroup: (interventionId: number) => void;
     onToggleAllGroups: () => void;
-    onSaveLine: LineHandler;
+    onUpdateLine: PartialLineHandler;
     onAddLine: (group: CostItemGroup) => void;
     onEditLine: LineHandler;
     onDeleteLine: LineHandler;
@@ -87,7 +81,7 @@ export const CostItemsTable: FC<Props> = ({
     isAnyGroupOpen,
     onToggleGroup,
     onToggleAllGroups,
-    onSaveLine,
+    onUpdateLine,
     onAddLine,
     onEditLine,
     onDeleteLine,
@@ -142,12 +136,12 @@ export const CostItemsTable: FC<Props> = ({
                             onAdd={onAddLine}
                         />
                         {isOpen &&
-                            group.visibleLines.map(line => (
+                            group.lines.map(line => (
                                 <CostItemRow
                                     key={line.id}
                                     group={group}
                                     line={line}
-                                    onSave={onSaveLine}
+                                    onUpdate={onUpdateLine}
                                     onEdit={onEditLine}
                                     onDelete={onDeleteLine}
                                 />

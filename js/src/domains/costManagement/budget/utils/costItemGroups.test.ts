@@ -93,13 +93,12 @@ describe('filterCostItemGroups', () => {
         expect(result.map(group => group.intervention.id)).toEqual([20]);
     });
 
-    it('narrows visible lines on search but keeps the full line list for saving', () => {
+    it('keeps only the lines matching the search', () => {
         const [result] = filterCostItemGroups(groups, {
             search: 'training',
             interventionCategoryId: null,
         });
-        expect(result.visibleLines.map(line => line.id)).toEqual([2]);
-        expect(result.lines.map(line => line.id)).toEqual([1, 2]);
+        expect(result.lines.map(line => line.id)).toEqual([2]);
     });
 
     it('matches the cost category label, case-insensitively', () => {
@@ -108,7 +107,7 @@ describe('filterCostItemGroups', () => {
             interventionCategoryId: null,
         });
         expect(result.map(group => group.intervention.id)).toEqual([10]);
-        expect(result[0].visibleLines.map(line => line.id)).toEqual([1]);
+        expect(result[0].lines.map(line => line.id)).toEqual([1]);
     });
 
     it('shows every line of an intervention whose name matches the search', () => {

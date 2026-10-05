@@ -110,7 +110,7 @@ export const CostItemGroupHeader: FC<Props> = ({
             <Typography variant="caption" sx={styles.count}>
                 {formatMessage(
                     MESSAGES.costItemsCount,
-                    numericValues({ count: group.visibleLines.length }),
+                    numericValues({ count: group.lines.length }),
                 )}
             </Typography>
             <Tooltip

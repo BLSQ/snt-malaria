@@ -19,12 +19,10 @@ export const buildCostItemGroups = (
     });
     return interventionCategories.flatMap(interventionCategory =>
         interventionCategory.interventions.map(intervention => {
-            const lines = linesByIntervention.get(intervention.id) ?? [];
             return {
                 intervention,
                 interventionCategory,
-                lines,
-                visibleLines: lines,
+                lines: linesByIntervention.get(intervention.id) ?? [],
             };
         }),
     );
@@ -48,11 +46,11 @@ export const filterCostItemGroups = (
             if (!query || includesQuery(group.intervention.name, query)) {
                 return [group];
             }
-            const visibleLines = group.lines.filter(
+            const lines = group.lines.filter(
                 line =>
                     includesQuery(line.name, query) ||
                     includesQuery(line.category_label, query),
             );
-            return visibleLines.length > 0 ? [{ ...group, visibleLines }] : [];
+            return lines.length > 0 ? [{ ...group, lines }] : [];
         });
 };

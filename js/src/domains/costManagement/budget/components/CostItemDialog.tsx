@@ -79,11 +79,19 @@ export const CostItemDialog: FC<Props> = ({
 
     const handleBasisChange = useCallback(
         (_event: React.MouseEvent, basis: Basis | null) => {
-            if (basis !== null) {
-                updateField('is_proportional', basis === 'proportional');
+            if (basis === null) {
+                return;
             }
+            const isProportional = basis === 'proportional';
+            setLine(previous => ({
+                ...previous,
+                is_proportional: isProportional,
+                population_layer: isProportional
+                    ? previous.population_layer
+                    : null,
+            }));
         },
-        [updateField],
+        [],
     );
 
     const handleDirectionChange = useCallback(

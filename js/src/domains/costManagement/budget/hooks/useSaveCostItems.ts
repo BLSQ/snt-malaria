@@ -1,112 +1,127 @@
 import { useCallback } from 'react';
 import { useQueryClient } from 'react-query';
+import { deleteRequest, patchRequest, postRequest } from 'Iaso/libs/Api';
+import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { COST_BREAKDOWN_LINES_QUERY_KEY } from '../../../interventions/hooks/useGetCostBreakdownLines';
-import { useSaveInterventionDetails } from '../../../interventions/hooks/useSaveInterventionDetails';
 import {
     InterventionCostBreakdownLine,
     InterventionCostBreakdownLinePayload,
-    InterventionDetails,
 } from '../../../interventions/types';
-import { CostItemGroup } from '../types';
 
-const COST_LINES_QUERY_KEY = ['costBreakdownLines'];
+const COST_LINES_URL = '/api/snt_malaria/intervention_cost_breakdown_lines/';
 
+// Saved lines are written to the cache from the responses, so only the
+// queries derived from them need refetching.
 const INVALIDATED_QUERY_KEYS = ['interventionDetails', 'calculated_budget'];
 
-const replaceInterventionLines = (
-    previous: InterventionCostBreakdownLine[] | undefined,
-    interventionId: number,
-    lines: InterventionCostBreakdownLine[],
-) => [
-    ...(previous ?? []).filter(line => line.intervention !== interventionId),
-    // The details endpoint doesn't order lines; keep the list endpoint's id order.
-    ...[...lines].sort((a, b) => a.id - b.id),
-];
-
-// Lines without an id (new ones) only reach the cache with the response.
-const mergeSavedLines = (
-    previous: InterventionCostBreakdownLine[] | undefined,
-    interventionId: number,
-    savedLines: InterventionCostBreakdownLinePayload[],
-) => {
-    const savedLinesById = new Map(
-        savedLines
-            .filter(line => line.id !== undefined)
-            .map(line => [line.id, line]),
-    );
-    return (previous ?? [])
-        .filter(
-            line =>
-                line.intervention !== interventionId ||
-                savedLinesById.has(line.id),
-        )
-        .map(line => ({ ...line, ...savedLinesById.get(line.id) }));
-};
+type LineChanges = Partial<InterventionCostBreakdownLinePayload>;
 
 export const useSaveCostItems = () => {
     const queryClient = useQueryClient();
-    const { mutateAsync: saveInterventionDetails } = useSaveInterventionDetails(
-        INVALIDATED_QUERY_KEYS,
-    );
 
-    // The cache is updated before the request so a second inline edit made
-    // before the response lands is saved on top of the first one, not over it.
-    const saveLines = useCallback(
-        async (
-            group: CostItemGroup,
-            lines: InterventionCostBreakdownLinePayload[],
-        ) => {
-            const interventionId = group.intervention.id;
+    const { mutateAsync: createLine } = useSnackMutation<
+        InterventionCostBreakdownLine,
+        unknown,
+        InterventionCostBreakdownLinePayload
+    >({
+        mutationFn: line => postRequest(COST_LINES_URL, line),
+        invalidateQueryKey: INVALIDATED_QUERY_KEYS,
+        showSuccessSnackBar: false,
+    });
+    const { mutateAsync: patchLine } = useSnackMutation<
+        InterventionCostBreakdownLine,
+        unknown,
+        LineChanges & { id: number }
+    >({
+        mutationFn: ({ id, ...changes }) =>
+            patchRequest(`${COST_LINES_URL}${id}/`, changes),
+        invalidateQueryKey: INVALIDATED_QUERY_KEYS,
+        showSuccessSnackBar: false,
+    });
+    const { mutateAsync: removeLine } = useSnackMutation<
+        boolean,
+        unknown,
+        number
+    >({
+        mutationFn: id => deleteRequest(`${COST_LINES_URL}${id}/`),
+        invalidateQueryKey: INVALIDATED_QUERY_KEYS,
+        showSuccessSnackBar: false,
+    });
+
+    const setCachedLines = useCallback(
+        (
+            update: (
+                lines: InterventionCostBreakdownLine[],
+            ) => InterventionCostBreakdownLine[],
+        ) =>
             queryClient.setQueryData<InterventionCostBreakdownLine[]>(
                 COST_BREAKDOWN_LINES_QUERY_KEY,
-                previous => mergeSavedLines(previous, interventionId, lines),
+                previous => update(previous ?? []),
+            ),
+        [queryClient],
+    );
+
+    const replaceCachedLine = useCallback(
+        (saved: InterventionCostBreakdownLine) =>
+            setCachedLines(lines =>
+                lines.map(line => (line.id === saved.id ? saved : line)),
+            ),
+        [setCachedLines],
+    );
+
+    const refetchLines = useCallback(
+        () => queryClient.invalidateQueries(COST_BREAKDOWN_LINES_QUERY_KEY),
+        [queryClient],
+    );
+
+    // Applied to the cache first so the row shows the new value while saving.
+    const patchCachedLine = useCallback(
+        async (lineId: number, changes: LineChanges) => {
+            setCachedLines(lines =>
+                lines.map(line =>
+                    line.id === lineId ? { ...line, ...changes } : line,
+                ),
             );
             try {
-                const saved = (await saveInterventionDetails({
-                    interventionId,
-                    cost_breakdown_lines: lines,
-                })) as InterventionDetails;
-                queryClient.setQueryData<InterventionCostBreakdownLine[]>(
-                    COST_BREAKDOWN_LINES_QUERY_KEY,
-                    previous =>
-                        replaceInterventionLines(
-                            previous,
-                            interventionId,
-                            saved.cost_breakdown_lines,
-                        ),
-                );
+                replaceCachedLine(await patchLine({ ...changes, id: lineId }));
             } catch (error) {
-                queryClient.invalidateQueries(COST_BREAKDOWN_LINES_QUERY_KEY);
+                refetchLines();
                 throw error;
             }
         },
-        [queryClient, saveInterventionDetails],
+        [patchLine, refetchLines, replaceCachedLine, setCachedLines],
+    );
+
+    // The error snackbar is shown by the mutation; the cache is rolled back.
+    const updateLine = useCallback(
+        (lineId: number, changes: LineChanges) =>
+            patchCachedLine(lineId, changes).catch(() => undefined),
+        [patchCachedLine],
     );
 
     const saveLine = useCallback(
-        (
-            group: CostItemGroup,
-            savedLine: InterventionCostBreakdownLinePayload,
-        ) =>
-            saveLines(
-                group,
-                savedLine.id === undefined
-                    ? [...group.lines, savedLine]
-                    : group.lines.map(line =>
-                          line.id === savedLine.id ? savedLine : line,
-                      ),
-            ),
-        [saveLines],
+        async (line: InterventionCostBreakdownLinePayload) => {
+            if (line.id !== undefined) {
+                await patchCachedLine(line.id, line);
+                return;
+            }
+            const created = await createLine(line);
+            setCachedLines(lines => [...lines, created]);
+        },
+        [createLine, patchCachedLine, setCachedLines],
     );
 
     const deleteLine = useCallback(
-        (group: CostItemGroup, lineId: number) =>
-            saveLines(
-                group,
-                group.lines.filter(line => line.id !== lineId),
-            ),
-        [saveLines],
+        async (lineId: number) => {
+            setCachedLines(lines => lines.filter(line => line.id !== lineId));
+            try {
+                await removeLine(lineId);
+            } catch {
+                refetchLines();
+            }
+        },
+        [refetchLines, removeLine, setCachedLines],
     );
 
-    return { saveLine, deleteLine };
+    return { updateLine, saveLine, deleteLine };
 };

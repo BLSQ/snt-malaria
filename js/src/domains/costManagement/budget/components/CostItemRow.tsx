@@ -9,7 +9,7 @@ import { useInterventionContext } from '../../../interventions/contexts/Interven
 import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { formatConversionDirection } from '../../../interventions/utils/costBreakdownLine';
 import { MESSAGES } from '../../../messages';
-import { CostItemGroup } from '../types';
+import { CostItemGroup, LineHandler, PartialLineHandler } from '../types';
 import {
     COST_ITEMS_GRID_COLUMNS,
     COST_ITEMS_GRID_MIN_WIDTH,
@@ -17,15 +17,10 @@ import {
 } from './costItemsGrid';
 import { InlineNumberField } from './InlineNumberField';
 
-type LineHandler = (
-    group: CostItemGroup,
-    line: InterventionCostBreakdownLine,
-) => void;
-
 type Props = {
     group: CostItemGroup;
     line: InterventionCostBreakdownLine;
-    onSave: LineHandler;
+    onUpdate: PartialLineHandler;
     onEdit: LineHandler;
     onDelete: LineHandler;
 };
@@ -73,7 +68,7 @@ const styles = {
 const CostItemRowComponent: FC<Props> = ({
     group,
     line,
-    onSave,
+    onUpdate,
     onEdit,
     onDelete,
 }) => {
@@ -93,9 +88,8 @@ const CostItemRowComponent: FC<Props> = ({
         [onDelete, group, line],
     );
     const handleFieldCommit = useCallback(
-        (field: string, value: number) =>
-            onSave(group, { ...line, [field]: value }),
-        [onSave, group, line],
+        (field: string, value: number) => onUpdate(line.id, { [field]: value }),
+        [onUpdate, line.id],
     );
 
     return (

@@ -1,5 +1,5 @@
 import { putRequest } from 'bluesquare-components';
-import { QueryKey, UseMutationResult } from 'react-query';
+import { UseMutationResult } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import {
     InterventionCostBreakdownLinePayload,
@@ -14,17 +14,7 @@ type SaveInterventionDetailsBody = Partial<
     cost_breakdown_lines?: InterventionCostBreakdownLinePayload[];
 };
 
-// Partial match invalidates every ['interventionDetails', id] query key.
-const DEFAULT_INVALIDATED_QUERY_KEYS: QueryKey = [
-    'interventionDetails',
-    'interventionCategories',
-    COST_BREAKDOWN_LINES_QUERY_KEY[0],
-    'calculated_budget',
-];
-
-export const useSaveInterventionDetails = (
-    invalidateQueryKey: QueryKey = DEFAULT_INVALIDATED_QUERY_KEYS,
-): UseMutationResult =>
+export const useSaveInterventionDetails = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: ({
             interventionId,
@@ -34,6 +24,12 @@ export const useSaveInterventionDetails = (
                 `/api/snt_malaria/interventions/${interventionId}/update_details/`,
                 body,
             ),
-        invalidateQueryKey,
+        // Partial match invalidates every ['interventionDetails', id] query key.
+        invalidateQueryKey: [
+            'interventionDetails',
+            'interventionCategories',
+            COST_BREAKDOWN_LINES_QUERY_KEY[0],
+            'calculated_budget',
+        ],
         showSuccessSnackBar: false,
     });

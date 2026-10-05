@@ -7,12 +7,20 @@ import {
 export type CostItemGroup = {
     intervention: Intervention;
     interventionCategory: InterventionCategory;
-    // Every line of the intervention: saving sends the full list, so filtering must never drop lines from it.
     lines: InterventionCostBreakdownLine[];
-    visibleLines: InterventionCostBreakdownLine[];
 };
 
 export type CostItemFilters = {
     search: string;
     interventionCategoryId: number | null;
 };
+
+export type LineHandler = (
+    group: CostItemGroup,
+    line: InterventionCostBreakdownLine,
+) => void;
+
+export type PartialLineHandler = (
+    lineId: number,
+    changes: Partial<InterventionCostBreakdownLine>,
+) => void;
