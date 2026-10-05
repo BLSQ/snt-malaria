@@ -8,31 +8,51 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from iaso.utils.openhexa import get_openhexa_config
-from plugins.snt_malaria.api.openhexa_data_layers.constants import CONFIG_DATASET_KEY
+from plugins.snt_malaria.api.openhexa_data_layers.constants import (
+    CONFIG_DATASET_KEY,
+    METADATA_DATASET_KEY,
+    METADATA_FILENAME_KEY,
+)
 from plugins.snt_malaria.api.openhexa_data_layers.jsonc import loads_jsonc
 from plugins.snt_malaria.management.commands.support.openhexa_client import OpenHEXAClient
 
 
 logger = logging.getLogger(__name__)
 
-METADATA_FILENAME = "SNT_metadata.json"
+DEFAULT_METADATA_FILENAME = "SNT_metadata_trimmed.json"
 CONFIG_FILENAME = "SNT_config.json"
 DOWNLOAD_TIMEOUT_SECONDS = 30
+
+
+def _required_config_value(workspace, key: str) -> str:
+    value = (workspace.config or {}).get(key)
+    if not value:
+        raise ValidationError(_("The OpenHexa workspace configuration is missing the '{key}' key.").format(key=key))
+    return value
 
 
 def resolve_config_dataset(account) -> tuple:
     """``(openhexa_url, token, workspace_slug, config_dataset_slug)`` for the account.
 
     Raises ``ValidationError`` if OpenHexa is not configured or the workspace config is
-    missing the ``snt_configuration_dataset`` key. Shared by the import serializer and task.
+    missing the ``snt_configuration_dataset`` key.
     """
     openhexa_url, openhexa_token, workspace_slug, workspace = get_openhexa_config(account)
-    dataset_slug = (workspace.config or {}).get(CONFIG_DATASET_KEY)
-    if not dataset_slug:
-        raise ValidationError(
-            _("The OpenHexa workspace configuration is missing the '{key}' key.").format(key=CONFIG_DATASET_KEY)
-        )
+    dataset_slug = _required_config_value(workspace, CONFIG_DATASET_KEY)
     return openhexa_url, openhexa_token, workspace_slug, dataset_slug
+
+
+def resolve_metadata_file(account) -> tuple:
+    """``(openhexa_url, token, workspace_slug, metadata_dataset_slug, metadata_filename)`` for the account.
+
+    The dataset comes from the ``snt_metadata_dataset`` workspace config key (required); the
+    filename from ``snt_metadata_filename`` if set, else ``DEFAULT_METADATA_FILENAME``.
+    Shared by the list view, the import serializer and the import task.
+    """
+    openhexa_url, openhexa_token, workspace_slug, workspace = get_openhexa_config(account)
+    dataset_slug = _required_config_value(workspace, METADATA_DATASET_KEY)
+    filename = (workspace.config or {}).get(METADATA_FILENAME_KEY) or DEFAULT_METADATA_FILENAME
+    return openhexa_url, openhexa_token, workspace_slug, dataset_slug, filename
 
 
 def _resolve_version_files(client: OpenHEXAClient, workspace_slug: str, dataset_slug: str) -> list:
@@ -101,23 +121,10 @@ def _parse_jsonc(filename: str, content: bytes) -> dict:
         raise ValidationError(_("File '{filename}' is not valid JSON: {error}").format(filename=filename, error=error))
 
 
-def fetch_dataset_jsons(
-    openhexa_url: str, openhexa_token: str, workspace_slug: str, dataset_slug: str, filenames: list
-) -> dict:
-    """Download and JSONC-parse several files from one dataset, resolving its version once.
-
-    Filenames are ``METADATA_FILENAME`` (data layer definitions) / ``CONFIG_FILENAME``
-    (dataset identifiers + country code) - both live in the same configuration dataset.
-    """
-    client = OpenHEXAClient(openhexa_url, openhexa_token)
-    files = _resolve_version_files(client, workspace_slug, dataset_slug)
-    return {
-        filename: _parse_jsonc(filename, _download_file(client, files, filename, dataset_slug))
-        for filename in filenames
-    }
-
-
 def fetch_dataset_json(
     openhexa_url: str, openhexa_token: str, workspace_slug: str, dataset_slug: str, filename: str
 ) -> dict:
-    return fetch_dataset_jsons(openhexa_url, openhexa_token, workspace_slug, dataset_slug, [filename])[filename]
+    """Download and JSONC-parse ``filename`` from the latest version of ``dataset_slug``."""
+    return _parse_jsonc(
+        filename, download_dataset_file(openhexa_url, openhexa_token, workspace_slug, dataset_slug, filename)
+    )

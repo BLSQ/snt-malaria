@@ -250,9 +250,8 @@ msgstr ""
 
 #: plugins/snt_malaria/tasks/import_openhexa_data_layer.py
 #, python-brace-format
-msgid "Data layer '{code}' is no longer defined in SNT_metadata.json"
-msgstr ""
-"La couche de données '{code}' n'est plus définie dans SNT_metadata.json"
+msgid "Data layer '{code}' is no longer defined in {filename}"
+msgstr "La couche de données '{code}' n'est plus définie dans {filename}"
 
 #, python-brace-format
 #~ msgid "Writing {count} values"

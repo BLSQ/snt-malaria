@@ -44,7 +44,7 @@ export type MetricTypeFormModel = {
     is_composite?: boolean;
 };
 
-/** A data-layer definition read from the OpenHexa `SNT_metadata.json` file. */
+/** A data-layer definition read from the OpenHexa metadata file (`SNT_metadata_trimmed.json` by default). */
 export type OpenHexaDataLayer = {
     code: string;
     name: string;

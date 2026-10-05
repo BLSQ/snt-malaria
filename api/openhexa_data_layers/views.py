@@ -12,9 +12,8 @@ from rest_framework.response import Response
 from iaso.api.tasks.serializers import TaskSerializer
 from iaso.models import ALIVE_STATUSES, Task
 from plugins.snt_malaria.providers.openhexa_data_layers import (
-    METADATA_FILENAME,
     fetch_dataset_json,
-    resolve_config_dataset,
+    resolve_metadata_file,
 )
 from plugins.snt_malaria.tasks.import_openhexa_data_layer import import_openhexa_data_layer
 
@@ -33,12 +32,12 @@ logger = logging.getLogger(__name__)
 
 @extend_schema(tags=["SNT Malaria - OpenHexa data layers"])
 class OpenHexaDataLayerViewSet(viewsets.ViewSet):
-    """Data layers declared in the account's OpenHexa configuration dataset.
+    """Data layers declared in the account's OpenHexa metadata dataset.
 
-    ``GET /api/snt_malaria/openhexa/data_layers/`` reads ``SNT_metadata.json`` from the
-    dataset named by the ``snt_configuration_dataset`` workspace config key and returns one
-    entry per definition. Each entry pre-fills the data-layer form; the values themselves
-    are imported later.
+    ``GET /api/snt_malaria/openhexa/data_layers/`` reads the metadata file (``SNT_metadata_trimmed.json``
+    unless overridden by the ``snt_metadata_filename`` workspace config key) from the dataset named
+    by the ``snt_metadata_dataset`` workspace config key and returns one entry per definition. Each
+    entry pre-fills the data-layer form; the values themselves are imported later.
     """
 
     permission_classes = [OpenHexaDataLayerPermission]
@@ -47,8 +46,7 @@ class OpenHexaDataLayerViewSet(viewsets.ViewSet):
         account = request.user.iaso_profile.account
 
         try:
-            openhexa_url, openhexa_token, workspace_slug, dataset_slug = resolve_config_dataset(account)
-            metadata = fetch_dataset_json(openhexa_url, openhexa_token, workspace_slug, dataset_slug, METADATA_FILENAME)
+            metadata = fetch_dataset_json(*resolve_metadata_file(account))
         except ValidationError as error:
             return Response({"error": error.messages[0]}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         except Exception:

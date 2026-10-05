@@ -5,16 +5,15 @@ from rest_framework import serializers
 from iaso.api.common.serializer_fields import JSONSchemaField
 from iaso.models import MetricType
 from plugins.snt_malaria.providers.openhexa_data_layers import (
-    METADATA_FILENAME,
     fetch_dataset_json,
-    resolve_config_dataset,
+    resolve_metadata_file,
 )
 
 from .metadata import build_data_layer
 
 
 class OpenHexaDataLayerSerializer(serializers.Serializer):
-    """One data-layer definition read from the OpenHexa ``SNT_metadata.json`` file.
+    """One data-layer definition read from the OpenHexa data layer metadata file.
 
     The shape mirrors the ``MetricType`` fields the data-layer form pre-fills.
     """
@@ -35,7 +34,7 @@ class OpenHexaDataLayerSerializer(serializers.Serializer):
 class ImportOpenHexaDataLayerSerializer(serializers.Serializer):
     """Upsert the ``MetricType`` shell for one OpenHexa data layer.
 
-    The metadata is re-read from ``SNT_metadata.json`` (the source of truth); the client
+    The metadata is re-read from the OpenHexa metadata file (the source of truth); the client
     only picks the ``code`` and may override the legend colours. The values themselves are
     loaded by the ``import_openhexa_data_layer`` task the view launches afterwards.
     """
@@ -47,8 +46,7 @@ class ImportOpenHexaDataLayerSerializer(serializers.Serializer):
         account = self.context["request"].user.iaso_profile.account
 
         try:
-            openhexa_url, openhexa_token, workspace_slug, dataset_slug = resolve_config_dataset(account)
-            metadata = fetch_dataset_json(openhexa_url, openhexa_token, workspace_slug, dataset_slug, METADATA_FILENAME)
+            metadata = fetch_dataset_json(*resolve_metadata_file(account))
         except DjangoValidationError as djangoError:
             raise serializers.ValidationError({"code": djangoError.messages[0]})
 
