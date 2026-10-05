@@ -25,7 +25,8 @@ BOOLEAN_COLUMNS = [
     "deployed_int_Vaccine",
     "deployed_int_PBO",
     "deployed_int_IG2",
-    "deployed_int_ITN",
+    "deployed_int_STD",
+    "deployed_int_RTSS",
     "deployed_int_iCCM",
     "deployed_int_LSM",
     "deployed_int_CM",
@@ -73,7 +74,6 @@ def load_csv(csv_file: File):
     total_rows = 0
     for i, chunk in enumerate(pd.read_csv(path, chunksize=READ_CHUNK_SIZE)):
         chunk = _transform(chunk)
-        present_dtypes = {c: dtype_mapping[c] for c in BOOLEAN_COLUMNS if c in chunk.columns}
 
         chunk.to_sql(
             "impact_data",
@@ -82,7 +82,7 @@ def load_csv(csv_file: File):
             con=engine,
             chunksize=WRITE_CHUNK_SIZE,
             method="multi",
-            dtype=present_dtypes,
+            dtype=dtype_mapping,
         )
         total_rows += len(chunk)
         current_run.log_info(f"Chunk {i + 1}: {len(chunk)} rows ({total_rows} total)")
@@ -96,8 +96,10 @@ def _transform(df):
     if drop_cols:
         df = df.drop(columns=drop_cols)
 
-    present_bool_cols = [c for c in BOOLEAN_COLUMNS if c in df.columns]
-    for col in present_bool_cols:
+    for col in BOOLEAN_COLUMNS:
+        if col not in df.columns:
+            df[col] = False
+            continue
         df[col] = (
             pd.to_numeric(df[col].map({"TRUE": 1, "FALSE": 0, True: 1, False: 0}), errors="coerce")
             .fillna(0)

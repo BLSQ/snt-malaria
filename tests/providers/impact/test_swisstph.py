@@ -58,7 +58,8 @@ class SwissTPHMapInterventionTests(TestCase):
             ("deployed_int_pmc", {"deployed_int_pmc"}),
             ("deployed_int_vaccine", {"deployed_int_vaccine"}),
             ("deployed_int_irs", {"deployed_int_irs"}),
-            ("deployed_int_itn", {"deployed_int_itn"}),
+            ("deployed_int_std", {"deployed_int_std"}),
+            ("deployed_int_rtss", {"deployed_int_rtss"}),
             ("deployed_int_pbo", {"deployed_int_pbo"}),
             ("deployed_int_ig2", {"deployed_int_ig2"}),
         ]
@@ -87,14 +88,14 @@ class SwissTPHMapInterventionTests(TestCase):
 
     def test_comma_separated_impact_ref_returns_multiple_columns(self):
         """A comma-separated impact_ref should activate all listed columns."""
-        intervention = MockIntervention(impact_ref="deployed_int_pbo,deployed_int_itn")
+        intervention = MockIntervention(impact_ref="deployed_int_pbo,deployed_int_std")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_pbo", "deployed_int_itn"})
+        self.assertEqual(result, {"deployed_int_pbo", "deployed_int_std"})
 
     def test_comma_separated_with_whitespace(self):
-        intervention = MockIntervention(impact_ref=" deployed_int_pbo , deployed_int_itn ")
+        intervention = MockIntervention(impact_ref=" deployed_int_pbo , deployed_int_std ")
         result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_pbo", "deployed_int_itn"})
+        self.assertEqual(result, {"deployed_int_pbo", "deployed_int_std"})
 
     def test_comma_separated_with_unrecognised_entry_raises_mapping_error(self):
         intervention = MockIntervention(impact_ref="deployed_int_smc,unknown_column")
@@ -118,7 +119,7 @@ class SwissTPHBuildQueryFiltersTests(TestCase):
         filters = self.provider._build_query_filters({"deployed_int_smc"})
         self.assertTrue(filters["deployed_int_smc"])
         self.assertFalse(filters["deployed_int_irs"])
-        self.assertFalse(filters["deployed_int_itn"])
+        self.assertFalse(filters["deployed_int_std"])
 
     def test_multiple_deployed_columns(self):
         deployed = {"deployed_int_smc", "deployed_int_irs", "deployed_int_vaccine"}
@@ -127,13 +128,13 @@ class SwissTPHBuildQueryFiltersTests(TestCase):
         self.assertTrue(filters["deployed_int_irs"])
         self.assertTrue(filters["deployed_int_vaccine"])
         self.assertFalse(filters["deployed_int_iccm"])
-        self.assertFalse(filters["deployed_int_itn"])
+        self.assertFalse(filters["deployed_int_std"])
 
     def test_each_column_is_independent(self):
         """Deploying one net type (e.g. PBO) should not affect other columns."""
         filters = self.provider._build_query_filters({"deployed_int_pbo"})
         self.assertTrue(filters["deployed_int_pbo"])
-        self.assertFalse(filters["deployed_int_itn"])
+        self.assertFalse(filters["deployed_int_std"])
         self.assertFalse(filters["deployed_int_ig2"])
 
 
