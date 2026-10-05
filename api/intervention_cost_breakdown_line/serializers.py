@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework.fields import empty
 
 from iaso.models.metric import MetricType
 from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
@@ -162,12 +163,24 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             fields["population_layer"].queryset = MetricType.objects.filter(account=account)
         return fields
 
+    def _current_value(self, attrs, field):
+        # A partial update only sends the changed fields; the rest come from the saved line.
+        if field in attrs:
+            return attrs[field]
+        if isinstance(self.instance, InterventionCostBreakdownLine):
+            return getattr(self.instance, field)
+        default = self.fields[field].default
+        return None if default is empty else default
+
     def validate(self, attrs):
         attrs = super().validate(attrs)
-        if attrs.get("invert_conversion_factor") and attrs.get("conversion_factor") == 0:
+        if (
+            self._current_value(attrs, "invert_conversion_factor")
+            and self._current_value(attrs, "conversion_factor") == 0
+        ):
             raise serializers.ValidationError({"conversion_factor": "The conversion factor cannot be 0 when inverted."})
-        if attrs.get("is_proportional"):
-            if not attrs.get("population_layer"):
+        if self._current_value(attrs, "is_proportional"):
+            if not self._current_value(attrs, "population_layer"):
                 raise serializers.ValidationError(
                     {"population_layer": "A target population is required for proportional cost items."}
                 )
