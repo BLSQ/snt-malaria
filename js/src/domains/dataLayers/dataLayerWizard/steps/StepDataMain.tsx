@@ -8,6 +8,7 @@ import { WizardLayerType } from '../constants';
 import { ManualValueGrid } from '../ManualValueGrid';
 import { metricValuesToGrid } from '../metricValuesToGrid';
 import { WizardMainCard } from '../WizardMainCard';
+import { WizardPreviewPlaceholder } from '../WizardPreviewPlaceholder';
 
 type Props = {
     layerType: WizardLayerType;
@@ -60,15 +61,7 @@ export const StepDataMain: FC<Props> = ({
                 </WizardMainCard>
             );
         }
-        return (
-            <WizardMainCard header={header} centered>
-                <Typography variant="h6">{values.name}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                    {values.code}
-                    {values.units ? ` · ${values.units}` : ''}
-                </Typography>
-            </WizardMainCard>
-        );
+        return <WizardPreviewPlaceholder />;
     }
 
     return (

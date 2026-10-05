@@ -1,15 +1,8 @@
 import React, { FC } from 'react';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import SchemaIcon from '@mui/icons-material/Schema';
 import { Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { SxStyles } from 'Iaso/types/general';
-import { SidePanelIconToggle } from '../../../components/sidePanel/SidePanelIconToggle';
 import { MESSAGES } from '../messages';
-
-const styles = {
-    title: { ml: 1 },
-} satisfies SxStyles;
 
 type Props = {
     title: string;
@@ -39,12 +32,7 @@ export const EditorHeader: FC<Props> = ({
             justifyContent="space-between"
             alignItems="center"
         >
-            <Stack direction="row" alignItems="center" spacing={0.5}>
-                <SidePanelIconToggle icon={AccountTreeIcon} />
-                <Typography variant="h6" sx={styles.title}>
-                    {title}
-                </Typography>
-            </Stack>
+            <Typography variant="h6">{title}</Typography>
             <Stack direction="row" alignItems="center" spacing={1}>
                 <Tooltip title={formatMessage(MESSAGES.rearrangeNodes)}>
                     <IconButton size="small" onClick={onRearrange}>

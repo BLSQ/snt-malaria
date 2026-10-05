@@ -1,8 +1,6 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import {
-    Button,
     Card,
     MenuItem,
     Select,
@@ -14,7 +12,6 @@ import {
     IconButton,
     LoadingSpinner,
     useRedirectToReplace,
-    useSafeIntl,
 } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { CardStyled } from '../../../components/CardStyled';
@@ -44,10 +41,6 @@ type Props = {
     displayOrgUnitId?: number;
     small?: boolean;
     onRemove?: () => void;
-    showCompositeLayers?: boolean;
-    /** Set when the displayed layer is a composite: enables the "Edit composite" button. */
-    compositeLayerId?: number;
-    onEditComposite?: (compositeLayerId: number) => void;
 };
 
 export const DataLayerMapWrapper: FC<Props> = ({
@@ -56,11 +49,7 @@ export const DataLayerMapWrapper: FC<Props> = ({
     displayOrgUnitId,
     small = false,
     onRemove,
-    showCompositeLayers = false,
-    compositeLayerId = undefined,
-    onEditComposite = undefined,
 }) => {
-    const { formatMessage } = useSafeIntl();
     const { data: metricValues, isLoading: loadingMetricValues } =
         useGetMetricValues({
             metricTypeId: metricType?.id || null,
@@ -155,24 +144,6 @@ export const DataLayerMapWrapper: FC<Props> = ({
                                     selectedOrgUnitId={displayOrgUnitId}
                                 />
                             )}
-                            {!small &&
-                                showCompositeLayers &&
-                                compositeLayerId !== undefined &&
-                                onEditComposite && (
-                                    <Button
-                                        variant="text"
-                                        size="small"
-                                        color="primary"
-                                        startIcon={<AccountTreeIcon />}
-                                        onClick={() =>
-                                            onEditComposite(compositeLayerId)
-                                        }
-                                    >
-                                        {formatMessage(
-                                            MESSAGES.compositeEditor,
-                                        )}
-                                    </Button>
-                                )}
                             <ExportMetricValuesCsvButton
                                 metricType={metricType}
                                 year={year}

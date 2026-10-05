@@ -1,11 +1,13 @@
 import React, { FC, useCallback } from 'react';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import LayersIcon from '@mui/icons-material/Layers';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import {
     Box,
+    CircularProgress,
     ClickAwayListener,
     ListItem,
     MenuItem,
@@ -22,12 +24,13 @@ import { DisplayIfUserHasPerm } from 'Iaso/components/DisplayIfUserHasPerm';
 import { OpenHexaSvg } from 'Iaso/components/svg/OpenHexaSvg';
 import { SxStyles } from 'Iaso/types/general';
 import * as CorePermission from 'Iaso/utils/permissions';
+import { MESSAGES as commonMessages } from '../../messages';
 import { useDataLayerComparisonContext } from '../contexts/DataLayerComparisonContext';
 import { DATA_LAYER_DND_MIME } from '../dragAndDrop';
 import { OpenHexaImportStatus } from '../hooks/useGetOpenHexaImportStatus';
 import { MESSAGES } from '../messages';
 import { MetricType } from '../types/metrics';
-import { ImportStatusIndicator } from './ImportStatusIndicator';
+import { getImportStatusKind } from './importStatus';
 
 type Props = {
     metricType: MetricType;
@@ -36,6 +39,7 @@ type Props = {
     onEdit: (metricType: MetricType) => void;
     /** Set when this layer is a composite, to show the composite icon. */
     compositeLayerId?: number;
+    onEditComposite?: (compositeLayerId: number) => void;
     onDelete: (metricType: number) => void;
     /** Re-run the OpenHexa value import (row menu only; absent in the composite-editor list). */
     onRefreshOpenHexaLayer?: (metricType: MetricType) => void;
@@ -43,6 +47,8 @@ type Props = {
     importStatus?: OpenHexaImportStatus;
     /** While the composite editor is open, the row is a drag source rather than a selector. */
     editing?: boolean;
+    /** Lets the parent list track this row's DOM node, e.g. to scroll it into view. */
+    onRowRef?: (node: HTMLLIElement | null) => void;
 };
 
 const styles: SxStyles = {
@@ -72,7 +78,6 @@ const styles: SxStyles = {
         '&:active': { cursor: 'grabbing' },
     },
     metricTypeIcon: { minWidth: 20, mr: 2 },
-    incompleteIcon: { ml: 1, flexShrink: 0 },
     metricTypeDetails: {
         flexGrow: 1,
         display: 'flex',
@@ -82,16 +87,108 @@ const styles: SxStyles = {
     },
 };
 
+type LayerTypeIconProps = {
+    importStatus?: OpenHexaImportStatus;
+    isComplete: boolean;
+    isComposite: boolean;
+    isOpenHexa: boolean;
+};
+
+/** The layer row's single leading icon, in priority order: the import spinner, an import
+ *  failure, an incomplete-setup warning, then (only once none of those apply) the plain
+ *  layer-type icon (composite / OpenHexa / generic). */
+const LayerTypeIcon: FC<LayerTypeIconProps> = ({
+    importStatus,
+    isComplete,
+    isComposite,
+    isOpenHexa,
+}) => {
+    const { formatMessage } = useSafeIntl();
+    const importStatusKind = getImportStatusKind(importStatus);
+
+    if (importStatusKind === 'loading') {
+        return (
+            <Tooltip
+                title={
+                    importStatus?.progress_message ||
+                    formatMessage(MESSAGES.importRunning)
+                }
+            >
+                <CircularProgress size={20} sx={styles.metricTypeIcon} />
+            </Tooltip>
+        );
+    }
+    if (importStatusKind === 'error') {
+        return (
+            <Tooltip
+                title={
+                    importStatus?.progress_message ||
+                    formatMessage(MESSAGES.importFailed)
+                }
+            >
+                <ErrorOutlineIcon
+                    fontSize="small"
+                    color="error"
+                    sx={styles.metricTypeIcon}
+                />
+            </Tooltip>
+        );
+    }
+    if (!isComplete) {
+        return (
+            <Tooltip title={formatMessage(MESSAGES.layerSetupIncomplete)}>
+                <WarningAmberIcon
+                    fontSize="small"
+                    color="warning"
+                    sx={styles.metricTypeIcon}
+                />
+            </Tooltip>
+        );
+    }
+    if (isComposite) {
+        return (
+            <Tooltip title={formatMessage(MESSAGES.compositeLayer)}>
+                <AccountTreeIcon
+                    fontSize="small"
+                    color="action"
+                    sx={styles.metricTypeIcon}
+                />
+            </Tooltip>
+        );
+    }
+    if (isOpenHexa) {
+        return (
+            <Tooltip title={formatMessage(MESSAGES.layerTypeOpenHexa)}>
+                <OpenHexaSvg
+                    fontSize="small"
+                    color="action"
+                    disabled={false}
+                    sx={styles.metricTypeIcon}
+                />
+            </Tooltip>
+        );
+    }
+    return (
+        <LayersIcon
+            fontSize="small"
+            color="action"
+            sx={styles.metricTypeIcon}
+        />
+    );
+};
+
 export const DataLayerLine: FC<Props> = ({
     metricType,
     selected = false,
     onClick,
     onEdit,
     compositeLayerId,
+    onEditComposite,
     onDelete,
     onRefreshOpenHexaLayer,
     importStatus,
     editing = false,
+    onRowRef,
 }) => {
     const isComposite = compositeLayerId !== undefined;
     const isOpenHexa = metricType.origin === 'openhexa';
@@ -130,7 +227,7 @@ export const DataLayerLine: FC<Props> = ({
         },
         [metricType.id, metricType.name, theme],
     );
-    const anchorRef = React.useRef<HTMLLIElement>(null);
+    const anchorRef = React.useRef<HTMLLIElement | null>(null);
     const [showMoreActions, setShowMoreActions] = React.useState(false);
     const { formatMessage } = useSafeIntl();
     const toggleMoreActions = useCallback(() => {
@@ -158,7 +255,10 @@ export const DataLayerLine: FC<Props> = ({
                     ...(selected ? styles.metricTypeSelected : {}),
                 } as SxProps
             }
-            ref={anchorRef}
+            ref={node => {
+                anchorRef.current = node;
+                onRowRef?.(node);
+            }}
             secondaryAction={
                 editing ? undefined : (
                     <DisplayIfUserHasPerm
@@ -177,46 +277,13 @@ export const DataLayerLine: FC<Props> = ({
         >
             <Box sx={styles.metricTypeDetails}>
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    {/* Composites and OpenHexa layers swap the layer icon for their own rather than showing both. */}
-                    {isComposite ? (
-                        <Tooltip title={formatMessage(MESSAGES.compositeLayer)}>
-                            <AccountTreeIcon
-                                fontSize="small"
-                                color="action"
-                                sx={styles.metricTypeIcon}
-                            />
-                        </Tooltip>
-                    ) : isOpenHexa ? (
-                        <Tooltip
-                            title={formatMessage(MESSAGES.layerTypeOpenHexa)}
-                        >
-                            <OpenHexaSvg
-                                fontSize="small"
-                                color="action"
-                                disabled={false}
-                                sx={styles.metricTypeIcon}
-                            />
-                        </Tooltip>
-                    ) : (
-                        <LayersIcon
-                            fontSize="small"
-                            color="action"
-                            sx={styles.metricTypeIcon}
-                        />
-                    )}
+                    <LayerTypeIcon
+                        importStatus={importStatus}
+                        isComplete={metricType.is_complete !== false}
+                        isComposite={isComposite}
+                        isOpenHexa={isOpenHexa}
+                    />
                     <Typography variant="body2">{metricType.name}</Typography>
-                    {metricType.is_complete === false && (
-                        <Tooltip
-                            title={formatMessage(MESSAGES.layerSetupIncomplete)}
-                        >
-                            <WarningAmberIcon
-                                fontSize="small"
-                                color="warning"
-                                sx={styles.incompleteIcon}
-                            />
-                        </Tooltip>
-                    )}
-                    <ImportStatusIndicator importStatus={importStatus} />
                 </Box>
             </Box>
             <Box
@@ -252,6 +319,19 @@ export const DataLayerLine: FC<Props> = ({
                             <MenuItem onClick={() => onEdit(metricType)}>
                                 {formatMessage(MESSAGES.editLayer)}
                             </MenuItem>
+                            {compositeLayerId !== undefined &&
+                                onEditComposite && (
+                                    <MenuItem
+                                        onClick={() => {
+                                            setShowMoreActions(false);
+                                            onEditComposite(compositeLayerId);
+                                        }}
+                                    >
+                                        {formatMessage(
+                                            commonMessages.compositeEditor,
+                                        )}
+                                    </MenuItem>
+                                )}
                             {metricType.origin === 'openhexa' &&
                                 onRefreshOpenHexaLayer && (
                                     <MenuItem

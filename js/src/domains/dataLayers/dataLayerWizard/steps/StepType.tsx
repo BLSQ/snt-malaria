@@ -11,14 +11,12 @@ const styles: SxStyles = {
 };
 
 type Props = {
-    layerType: WizardLayerType;
     onChangeLayerType: (value: WizardLayerType) => void;
     showOpenHexa: boolean;
     showComposite: boolean;
 };
 
 export const StepType: FC<Props> = ({
-    layerType,
     onChangeLayerType,
     showOpenHexa,
     showComposite,
@@ -31,7 +29,6 @@ export const StepType: FC<Props> = ({
                 {formatMessage(MESSAGES.wizardTypeQuestion)}
             </Typography>
             <LayerTypeCards
-                value={layerType}
                 onChange={onChangeLayerType}
                 showOpenHexa={showOpenHexa}
                 showComposite={showComposite}
