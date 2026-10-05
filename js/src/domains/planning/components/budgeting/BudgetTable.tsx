@@ -17,6 +17,7 @@ import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { getColorRange } from '../../libs/color-utils';
+import { DEFAULT_BUFFER_MULTIPLIER } from '../../libs/cost-utils';
 import {
     BudgetIntervention,
     BudgetInterventionCostLine,
@@ -110,7 +111,7 @@ export const BudgetTable: FC = ({}) => {
                                 : null,
                         invertedConversionFactor: line.invert_conversion_factor,
                         targetPopulation: null,
-                        buffer: 1.1,
+                        buffer: DEFAULT_BUFFER_MULTIPLIER,
                     });
                 });
             }

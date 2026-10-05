@@ -2,21 +2,20 @@ import React, { createContext, useContext, useMemo } from 'react';
 import { DropdownOptions } from 'Iaso/types/utils';
 import { BudgetSettings } from '../../../hooks/useGetBudgetSettings';
 import { MetricType } from '../../dataLayers/types/metrics';
+import {
+    bufferMultiplierToPercent,
+    DEFAULT_BUFFER_MULTIPLIER,
+} from '../../planning/libs/cost-utils';
 
 type InterventionContextType = {
     costCategoryOptions: DropdownOptions<string>[];
     costUnitTypeOptions: DropdownOptions<string>[];
     populationOptions: DropdownOptions<number | null>[];
     currency?: string;
-    // Budget settings store the buffer as a multiplier (1.1); cost lines as a percentage (10).
     defaultBufferPercent: number;
 };
 
 const defaultCurrency = 'USD';
-const DEFAULT_BUFFER_MULTIPLIER = 1.1;
-
-const toBufferPercent = (multiplier: number) =>
-    Math.round((multiplier - 1) * 10000) / 100;
 
 const emptyPopulationOption: DropdownOptions<number | null> = {
     label: '-',
@@ -28,7 +27,7 @@ const InterventionContext = createContext<InterventionContextType>({
     costUnitTypeOptions: [],
     populationOptions: [emptyPopulationOption],
     currency: defaultCurrency,
-    defaultBufferPercent: toBufferPercent(DEFAULT_BUFFER_MULTIPLIER),
+    defaultBufferPercent: bufferMultiplierToPercent(DEFAULT_BUFFER_MULTIPLIER),
 });
 
 export const useInterventionContext = () => useContext(InterventionContext);
@@ -57,7 +56,7 @@ export const InterventionProvider = ({
     );
 
     const currency = budgetSettings?.local_currency || defaultCurrency;
-    const defaultBufferPercent = toBufferPercent(
+    const defaultBufferPercent = bufferMultiplierToPercent(
         Number(budgetSettings?.buffer ?? DEFAULT_BUFFER_MULTIPLIER),
     );
 

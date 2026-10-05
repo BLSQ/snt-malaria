@@ -25,6 +25,9 @@ type Props = {
 
 type Basis = 'proportional' | 'fixed';
 
+const PERCENT_INPUT_OPTIONS = { decimalScale: 2, min: 0, suffix: '%' };
+const COVERAGE_INPUT_OPTIONS = { ...PERCENT_INPUT_OPTIONS, max: 100 };
+
 const styles = {
     subtitle: { color: 'text.secondary', mb: 2 },
     fields: {
@@ -35,7 +38,13 @@ const styles = {
     },
     basisToggle: { height: 40, width: '100%' },
     basisButton: { flex: 1, gap: 0.75, textTransform: 'none' },
-    values: { display: 'grid', gap: 2, mt: 2 },
+    values: {
+        display: 'grid',
+        gridAutoFlow: 'column',
+        gridAutoColumns: '1fr',
+        gap: 2,
+        mt: 2,
+    },
     note: { color: 'text.secondary', mt: 2 },
 } satisfies SxStyles;
 
@@ -242,14 +251,7 @@ export const CostItemDialog: FC<Props> = ({
                 <Typography variant="body1" fontWeight="medium">
                     {formatMessage(MESSAGES.costItemValues)}
                 </Typography>
-                <Box
-                    sx={{
-                        ...styles.values,
-                        gridTemplateColumns: line.is_proportional
-                            ? 'repeat(4, 1fr)'
-                            : 'repeat(2, 1fr)',
-                    }}
-                >
+                <Box sx={styles.values}>
                     <InputComponent
                         type="number"
                         keyValue="unit_cost"
@@ -279,29 +281,18 @@ export const CostItemDialog: FC<Props> = ({
                         label={MESSAGES.budgetingCostLineBuffer}
                         placeholder={`${defaultBufferPercent}%`}
                         withMarginTop={false}
-                        numberInputOptions={{
-                            decimalScale: 2,
-                            min: 0,
-                            suffix: '%',
-                        }}
+                        numberInputOptions={PERCENT_INPUT_OPTIONS}
                     />
                     {line.is_proportional && (
-                        <>
-                            <InputComponent
-                                type="number"
-                                keyValue="coverage"
-                                value={line.coverage}
-                                onChange={updateField}
-                                label={MESSAGES.coverageLabel}
-                                withMarginTop={false}
-                                numberInputOptions={{
-                                    decimalScale: 2,
-                                    min: 0,
-                                    max: 100,
-                                    suffix: '%',
-                                }}
-                            />
-                        </>
+                        <InputComponent
+                            type="number"
+                            keyValue="coverage"
+                            value={line.coverage}
+                            onChange={updateField}
+                            label={MESSAGES.coverageLabel}
+                            withMarginTop={false}
+                            numberInputOptions={COVERAGE_INPUT_OPTIONS}
+                        />
                     )}
                 </Box>
             </Box>

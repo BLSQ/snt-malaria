@@ -17,7 +17,11 @@ import { pluralize } from '../../../../utils/pluralize';
 import { formatConversionDirection } from '../../../interventions/utils/costBreakdownLine';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
-import { formatBigNumber, formatQuantity } from '../../libs/cost-utils';
+import {
+    bufferMultiplierToPercent,
+    formatBigNumber,
+    formatQuantity,
+} from '../../libs/cost-utils';
 import { YearlyCoverageInput } from './YearlyCoverageInput';
 
 export type CostLineYearlyCoverage = {
@@ -287,7 +291,7 @@ type TooltipProps = {
 export const CostLineTooltip: FC<TooltipProps> = ({ costLine }) => {
     const { formatMessage } = useSafeIntl();
     const { currency } = usePlanningContext();
-    const bufferPercent = Math.round((costLine.buffer - 1) * 100);
+    const bufferPercent = bufferMultiplierToPercent(costLine.buffer);
     const unitLabel = useMemo(
         () =>
             (!costLine.unitName &&

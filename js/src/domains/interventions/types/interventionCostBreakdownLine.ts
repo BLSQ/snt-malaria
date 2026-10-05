@@ -13,7 +13,7 @@ export type InterventionCostBreakdownLine = {
     conversion_factor: number | string;
     invert_conversion_factor: boolean;
     coverage: number | string;
-    // Percentage; null uses the budget settings buffer.
+    // Percentage, unlike the budget settings multiplier.
     buffer: number | string | null;
 };
 

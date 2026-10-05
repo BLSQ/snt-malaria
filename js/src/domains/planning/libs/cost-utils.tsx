@@ -40,6 +40,12 @@ export const getCostBreakdownChartData = (
         .filter(Boolean);
 };
 
+// Budget settings store the buffer as a multiplier (1.1); cost lines as a percentage (10).
+export const DEFAULT_BUFFER_MULTIPLIER = 1.1;
+
+export const bufferMultiplierToPercent = (multiplier: number) =>
+    Math.round((multiplier - 1) * 10000) / 100;
+
 export const formatPercentValue = (value: number) => {
     return `${(value * 100).toFixed(0)}%`;
 };

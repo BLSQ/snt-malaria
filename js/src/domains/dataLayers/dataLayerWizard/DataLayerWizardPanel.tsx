@@ -213,9 +213,7 @@ export const DataLayerWizardPanel: FC<Props> = ({
                                 onClick={onPrimary}
                                 disabled={
                                     isSubmitting ||
-                                    (isLastStep
-                                        ? !formik.isValid
-                                        : !canAdvance)
+                                    (isLastStep ? !formik.isValid : !canAdvance)
                                 }
                             >
                                 {isLastStep

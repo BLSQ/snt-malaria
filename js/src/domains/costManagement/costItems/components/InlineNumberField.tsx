@@ -24,7 +24,6 @@ type Props = {
     min?: number;
     max?: number;
     disabled?: boolean;
-    // Allows clearing the field, which commits null; the placeholder shows what applies then.
     isNullable?: boolean;
     placeholder?: string;
 };
@@ -130,20 +129,22 @@ export const InlineNumberField: FC<Props> = ({
     );
 
     const handleBlur = useCallback(() => {
-        const isUnchanged = draft.trim() === formattedValue;
-        if (isReverting.current || isUnchanged) {
+        const trimmedDraft = draft.trim();
+        if (isReverting.current || trimmedDraft === formattedValue) {
             isReverting.current = false;
             setDraft(formattedValue);
             return;
         }
-        if (isNullable && draft.trim() === '') {
+        if (isNullable && trimmedDraft === '') {
             onCommit(keyValue, null);
             return;
         }
-        const parsed = parseDraft(draft);
-        const isOutOfRange =
-            parsed < min || (max !== undefined && parsed > max);
-        if (Number.isNaN(parsed) || isOutOfRange) {
+        const parsed = parseDraft(trimmedDraft);
+        if (
+            Number.isNaN(parsed) ||
+            parsed < min ||
+            (max !== undefined && parsed > max)
+        ) {
             setDraft(formattedValue);
             return;
         }

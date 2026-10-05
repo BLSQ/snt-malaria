@@ -14,6 +14,7 @@ import {
 } from '../../../components/styledComponents';
 import { useGetBudgetSettings } from '../../../hooks/useGetBudgetSettings';
 import { MESSAGES } from '../../messages';
+import { DEFAULT_BUFFER_MULTIPLIER } from '../../planning/libs/cost-utils';
 import { useBudgetSettingsFormState } from './hooks/useBudgetSettingsFormState';
 import { useSaveBudgetSettings } from './hooks/useSaveBudgetSettings';
 import { BudgetSettingsFormValues } from './types';
@@ -31,7 +32,7 @@ export const BudgetSettingsTab: FC = () => {
             local_currency: budgetSettings?.local_currency ?? '',
             exchange_rate: budgetSettings?.exchange_rate ?? '1',
             inflation_rate: budgetSettings?.inflation_rate ?? '0',
-            buffer: budgetSettings?.buffer ?? '1.1',
+            buffer: budgetSettings?.buffer ?? String(DEFAULT_BUFFER_MULTIPLIER),
         }),
         [budgetSettings],
     );
