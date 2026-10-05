@@ -14,7 +14,6 @@ export const defaultInterventionFormValues: InterventionFormValues = {
     description: '',
     impact_ref: '',
     grant: null,
-    cost_breakdown_lines: [],
 };
 
 const useValidation = () => {
@@ -39,51 +38,6 @@ const useValidation = () => {
                 description: Yup.string(),
                 impact_ref: Yup.string(),
                 grant: Yup.number().nullable(),
-                cost_breakdown_lines: Yup.array().of(
-                    Yup.object().shape({
-                        name: Yup.string().required(
-                            formatMessage(MESSAGES.required),
-                        ),
-                        unit_cost: Yup.number()
-                            .required(formatMessage(MESSAGES.required))
-                            .min(
-                                0,
-                                formatMessage(MESSAGES.negativeValueNotAllowed),
-                            ),
-                        category: Yup.string().required(
-                            formatMessage(MESSAGES.required),
-                        ),
-                        unit_type: Yup.string().required(
-                            formatMessage(MESSAGES.required),
-                        ),
-                        is_proportional: Yup.boolean(),
-                        invert_conversion_factor: Yup.boolean(),
-                        population_layer: Yup.number()
-                            .nullable()
-                            .when('is_proportional', {
-                                is: true,
-                                then: schema =>
-                                    schema.required(
-                                        formatMessage(MESSAGES.required),
-                                    ),
-                                otherwise: schema => schema.notRequired(),
-                            }),
-                        conversion_factor: Yup.number()
-                            .nullable()
-                            .min(
-                                0,
-                                formatMessage(MESSAGES.negativeValueNotAllowed),
-                            )
-                            .when('is_proportional', {
-                                is: true,
-                                then: schema =>
-                                    schema.required(
-                                        formatMessage(MESSAGES.required),
-                                    ),
-                                otherwise: schema => schema.notRequired(),
-                            }),
-                    }),
-                ),
             }),
         [formatMessage],
     );

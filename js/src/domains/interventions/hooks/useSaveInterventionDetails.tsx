@@ -1,17 +1,12 @@
 import { putRequest } from 'bluesquare-components';
 import { UseMutationResult } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import {
-    InterventionCostBreakdownLinePayload,
-    InterventionDetails,
-} from '../types';
-import { COST_BREAKDOWN_LINES_QUERY_KEY } from './useGetCostBreakdownLines';
+import { InterventionDetails } from '../types';
 
 type SaveInterventionDetailsBody = Partial<
-    Omit<InterventionDetails, 'cost_breakdown_lines'>
+    Pick<InterventionDetails, 'name' | 'impact_ref' | 'grant'>
 > & {
     interventionId: number;
-    cost_breakdown_lines?: InterventionCostBreakdownLinePayload[];
 };
 
 export const useSaveInterventionDetails = (): UseMutationResult =>
@@ -28,7 +23,6 @@ export const useSaveInterventionDetails = (): UseMutationResult =>
         invalidateQueryKey: [
             'interventionDetails',
             'interventionCategories',
-            COST_BREAKDOWN_LINES_QUERY_KEY[0],
             'calculated_budget',
         ],
         showSuccessSnackBar: false,

@@ -1,5 +1,3 @@
-import { InterventionCostBreakdownLine } from './interventionCostBreakdownLine';
-
 export type InterventionFormValues = {
     id?: number;
     intervention_category: number | null;
@@ -9,5 +7,4 @@ export type InterventionFormValues = {
     description: string;
     impact_ref: string;
     grant: number | null;
-    cost_breakdown_lines: InterventionCostBreakdownLine[];
 };

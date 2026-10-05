@@ -12,16 +12,11 @@ import { setNestedObjectValues } from 'formik';
 import { DeleteRestoreModal } from 'Iaso/components/DeleteRestoreModals/DeleteRestoreModal';
 import { CardStyled } from '../../../components/CardStyled';
 import { SettingsFormContainer } from '../../../components/styledComponents';
-import { useGetBudgetSettings } from '../../../hooks/useGetBudgetSettings';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
 import { useGetGrants } from '../../costManagement/grants/hooks/useGetGrants';
-import { useGetMetricTypes } from '../../dataLayers/hooks/useGetMetrics';
 import { MESSAGES } from '../../messages';
-import { InterventionProvider } from '../contexts/InterventionContext';
 import { useDeleteIntervention } from '../hooks/useDeleteIntervention';
 import { useDuplicateIntervention } from '../hooks/useDuplicateIntervention';
-import { useGetInterventionCostBreakdownLineCategories } from '../hooks/useGetInterventionCostBreakdownLineCategories';
-import { useGetInterventionCostUnitTypes } from '../hooks/useGetInterventionCostUnitType';
 import { useGetInterventionDetails } from '../hooks/useGetInterventionDetails';
 import { useInterventionFormState } from '../hooks/useInterventionFormState';
 import { useSaveIntervention } from '../hooks/useSaveIntervention';
@@ -70,14 +65,6 @@ export const InterventionFormWrapper: FC<Props> = ({
     const isNew = !intervention;
     const interventionId = intervention?.id;
 
-    const { data: interventionCostCategories = [] } =
-        useGetInterventionCostBreakdownLineCategories();
-
-    const { data: interventionCostUnitTypes = [] } =
-        useGetInterventionCostUnitTypes();
-
-    const { data: metricTypes = [] } = useGetMetricTypes(true);
-    const { data: budgetSettings } = useGetBudgetSettings();
     const { data: grants = [] } = useGetGrants();
 
     const grantOptions = useMemo(
@@ -117,19 +104,17 @@ export const InterventionFormWrapper: FC<Props> = ({
             description: intervention?.description ?? '',
             impact_ref: interventionDetails?.impact_ref ?? '',
             grant: interventionDetails?.grant ?? null,
-            cost_breakdown_lines:
-                interventionDetails?.cost_breakdown_lines ?? [],
         }),
         [intervention, interventionDetails],
     );
 
-    // Save the basic fields and the cost-line details together, in one submit,
-    // so a new intervention is created with its cost lines already attached
-    // and an edit can never save one half without the other.
+    // Save the basic fields and the details together, in one submit, so an
+    // edit can never save one half without the other. Cost lines are managed
+    // from Cost Management and deliberately not sent: `update_details` would
+    // delete any line missing from the payload.
     const onSubmit = useCallback(
         async (values: InterventionFormValues) => {
-            const { impact_ref, grant, cost_breakdown_lines, ...basicValues } =
-                values;
+            const { impact_ref, grant, ...basicValues } = values;
 
             const savedIntervention = (await saveIntervention(
                 basicValues as InterventionPayload,
@@ -141,7 +126,6 @@ export const InterventionFormWrapper: FC<Props> = ({
                 interventionId: savedId,
                 impact_ref,
                 grant,
-                cost_breakdown_lines,
             });
 
             if (isNew) {
@@ -187,82 +171,74 @@ export const InterventionFormWrapper: FC<Props> = ({
     const isSaving = isSavingIntervention || isSavingInterventionDetails;
 
     return (
-        <InterventionProvider
-            costCategoryOptions={interventionCostCategories}
-            costUnitTypeOptions={interventionCostUnitTypes}
-            grantOptions={grantOptions}
-            metricTypes={metricTypes}
-            budgetSettings={budgetSettings}
-        >
-            <CardStyled
-                header={
-                    <Stack direction="row" justifyContent="space-between">
-                        <Typography variant="h6">
-                            {isNew
-                                ? formatMessage(MESSAGES.newIntervention)
-                                : intervention?.name}
-                        </Typography>
-                        <Stack direction="row" spacing={1}>
-                            {!isNew && (
-                                <Button
-                                    onClick={handleDuplicate}
-                                    variant="outlined"
-                                    color="primary"
-                                    startIcon={<ContentCopyIcon />}
-                                    disabled={isDuplicating}
-                                >
-                                    {formatMessage(MESSAGES.duplicate)}
-                                </Button>
-                            )}
-                            {!isNew && (
-                                <DeleteInterventionModal
-                                    titleMessage={formatMessage(
-                                        MESSAGES.deleteInterventionConfirmTitle,
-                                    )}
-                                    onConfirm={handleDelete}
-                                    iconProps={{
-                                        label: formatMessage(
-                                            MESSAGES.deleteIntervention,
-                                        ),
-                                        disabled: isDeleting,
-                                    }}
-                                >
-                                    {formatMessage(
-                                        MESSAGES.deleteInterventionConfirmMessage,
-                                    )}
-                                </DeleteInterventionModal>
-                            )}
-                            {isNew && (
-                                <Button onClick={onCancel} color="primary">
-                                    {formatMessage(MESSAGES.cancel)}
-                                </Button>
-                            )}
+        <CardStyled
+            header={
+                <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="h6">
+                        {isNew
+                            ? formatMessage(MESSAGES.newIntervention)
+                            : intervention?.name}
+                    </Typography>
+                    <Stack direction="row" spacing={1}>
+                        {!isNew && (
                             <Button
-                                onClick={handleSave}
-                                variant="contained"
+                                onClick={handleDuplicate}
+                                variant="outlined"
                                 color="primary"
-                                startIcon={<CheckIcon />}
-                                disabled={isSaving}
+                                startIcon={<ContentCopyIcon />}
+                                disabled={isDuplicating}
                             >
-                                {formatMessage(MESSAGES.save)}
+                                {formatMessage(MESSAGES.duplicate)}
                             </Button>
-                        </Stack>
+                        )}
+                        {!isNew && (
+                            <DeleteInterventionModal
+                                titleMessage={formatMessage(
+                                    MESSAGES.deleteInterventionConfirmTitle,
+                                )}
+                                onConfirm={handleDelete}
+                                iconProps={{
+                                    label: formatMessage(
+                                        MESSAGES.deleteIntervention,
+                                    ),
+                                    disabled: isDeleting,
+                                }}
+                            >
+                                {formatMessage(
+                                    MESSAGES.deleteInterventionConfirmMessage,
+                                )}
+                            </DeleteInterventionModal>
+                        )}
+                        {isNew && (
+                            <Button onClick={onCancel} color="primary">
+                                {formatMessage(MESSAGES.cancel)}
+                            </Button>
+                        )}
+                        <Button
+                            onClick={handleSave}
+                            variant="contained"
+                            color="primary"
+                            startIcon={<CheckIcon />}
+                            disabled={isSaving}
+                        >
+                            {formatMessage(MESSAGES.save)}
+                        </Button>
                     </Stack>
-                }
-            >
-                {isFetchingInterventionDetails && (
-                    <LoadingSpinner absolute={true} />
-                )}
+                </Stack>
+            }
+        >
+            {isFetchingInterventionDetails && (
+                <LoadingSpinner absolute={true} />
+            )}
 
-                <ExtendedFormikProvider formik={formik}>
-                    <SettingsFormContainer>
-                        <InterventionBasicForm />
-                    </SettingsFormContainer>
-                    <SettingsFormContainer>
-                        <InterventionForm />
-                    </SettingsFormContainer>
-                </ExtendedFormikProvider>
-            </CardStyled>
-        </InterventionProvider>
+            <ExtendedFormikProvider formik={formik}>
+                <SettingsFormContainer>
+                    <InterventionBasicForm />
+                </SettingsFormContainer>
+                <SettingsFormContainer>
+                    <InterventionForm grantOptions={grantOptions} />
+                </SettingsFormContainer>
+            </ExtendedFormikProvider>
+        </CardStyled>
     );
 };

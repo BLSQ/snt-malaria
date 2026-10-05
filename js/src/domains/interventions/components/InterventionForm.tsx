@@ -1,31 +1,26 @@
-import React, { FC, useMemo } from 'react';
-import { Button, Stack, Typography } from '@mui/material';
+import React, { FC, useCallback } from 'react';
+import { Stack } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { useTranslatedErrors } from 'Iaso/libs/validation';
-import { useGetChildError } from '../../../hooks/useGetChildError';
+import { DropdownOptions } from 'Iaso/types/utils';
 import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../messages';
-import { useInterventionContext } from '../contexts/InterventionContext';
-import { InterventionCostBreakdownLine } from '../types';
 import { InterventionFormValues } from '../types/interventionForm';
-import { getDefaultCostUnitType } from '../utils/costBreakdownLine';
-import { InterventionCostBreakdownLineForm } from './InterventionCostBreakdownLineForm';
 
-export const InterventionForm: FC = () => {
+type Props = {
+    grantOptions: DropdownOptions<number>[];
+};
+
+const styles = {
+    field: { flex: '1 1 0', minWidth: 0 },
+};
+
+export const InterventionForm: FC<Props> = ({ grantOptions }) => {
     const { formatMessage } = useSafeIntl();
 
-    const {
-        values,
-        errors,
-        touched,
-        setFieldValueAndState,
-        setChildFieldValueAndState,
-        addChildValue,
-        removeChildValue,
-    } = useGetExtendedFormikContext<InterventionFormValues>();
-
-    const { costUnitTypeOptions, grantOptions } = useInterventionContext();
+    const { values, errors, touched, setFieldValueAndState } =
+        useGetExtendedFormikContext<InterventionFormValues>();
 
     const getErrors = useTranslatedErrors({
         errors,
@@ -34,98 +29,35 @@ export const InterventionForm: FC = () => {
         messages: MESSAGES,
     });
 
-    const getChildError = useGetChildError<InterventionFormValues>({
-        errors: errors?.cost_breakdown_lines,
-        touched: touched?.cost_breakdown_lines,
-    });
-
-    const defaultBreakdownLine: Partial<InterventionCostBreakdownLine> =
-        useMemo(() => {
-            const defaultUnit = getDefaultCostUnitType(costUnitTypeOptions);
-            return {
-                unit_type: defaultUnit?.value || '',
-                is_proportional: false,
-                conversion_factor: 1,
-                invert_conversion_factor: false,
-                coverage: 100,
-            };
-        }, [costUnitTypeOptions]);
+    const handleGrantChange = useCallback(
+        (field: string, value?: number | null) =>
+            setFieldValueAndState(field, value ?? null),
+        [setFieldValueAndState],
+    );
 
     return (
-        <Stack spacing={3}>
-            <Stack spacing={2} direction="row">
-                <InputComponent
-                    keyValue="impact_ref"
-                    type="text"
-                    value={values.impact_ref}
-                    onChange={setFieldValueAndState}
-                    errors={getErrors('impact_ref')}
-                    labelString={formatMessage(MESSAGES.impactRefLabel)}
-                    wrapperSx={{ flex: '1 1 0', minWidth: 0 }}
-                />
-                <InputComponent
-                    keyValue="grant"
-                    type="select"
-                    multi={false}
-                    clearable
-                    options={grantOptions}
-                    value={values.grant}
-                    onChange={(field, value) =>
-                        setFieldValueAndState(field, value ?? null)
-                    }
-                    errors={getErrors('grant')}
-                    labelString={formatMessage(MESSAGES.interventionGrant)}
-                    wrapperSx={{ flex: '1 1 0', minWidth: 0 }}
-                />
-            </Stack>
-            <Stack spacing={0} direction="column">
-                <Typography variant="subtitle1" fontWeight="medium">
-                    {formatMessage(MESSAGES.costItems)}
-                </Typography>
-                <Typography variant="caption" color="textSecondary">
-                    {formatMessage(
-                        MESSAGES.interventionCostBreakdownLineDescription,
-                        { br: <br /> },
-                    )}
-                </Typography>
-            </Stack>
-            <Stack spacing={2} direction="column">
-                {values.cost_breakdown_lines &&
-                    values.cost_breakdown_lines.length > 0 &&
-                    React.Children.toArray(
-                        values.cost_breakdown_lines.map((line, index) => (
-                            <InterventionCostBreakdownLineForm
-                                costBreakdownLine={line}
-                                onUpdateField={(field, value) =>
-                                    setChildFieldValueAndState(
-                                        'cost_breakdown_lines',
-                                        index,
-                                        field,
-                                        value,
-                                    )
-                                }
-                                onRemove={() =>
-                                    removeChildValue(
-                                        'cost_breakdown_lines',
-                                        index,
-                                    )
-                                }
-                                getErrors={field => getChildError(field, index)}
-                            />
-                        )),
-                    )}
-                <Button
-                    variant="text"
-                    sx={{ alignSelf: 'flex-start' }}
-                    onClick={() =>
-                        addChildValue('cost_breakdown_lines', {
-                            ...defaultBreakdownLine,
-                        })
-                    }
-                >
-                    {formatMessage(MESSAGES.addInterventionCostBreakdownLine)}
-                </Button>
-            </Stack>
+        <Stack spacing={2} direction="row">
+            <InputComponent
+                keyValue="impact_ref"
+                type="text"
+                value={values.impact_ref}
+                onChange={setFieldValueAndState}
+                errors={getErrors('impact_ref')}
+                labelString={formatMessage(MESSAGES.impactRefLabel)}
+                wrapperSx={styles.field}
+            />
+            <InputComponent
+                keyValue="grant"
+                type="select"
+                multi={false}
+                clearable
+                options={grantOptions}
+                value={values.grant}
+                onChange={handleGrantChange}
+                errors={getErrors('grant')}
+                labelString={formatMessage(MESSAGES.interventionGrant)}
+                wrapperSx={styles.field}
+            />
         </Stack>
     );
 };
