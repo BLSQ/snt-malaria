@@ -142,6 +142,31 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
         self.assertTrue(serializer.is_valid(), serializer.errors)
         self.assertEqual(serializer.validated_data["coverage"], Decimal("100"))
 
+    def test_create_cost_breakdown_line_with_negative_buffer_is_rejected(self):
+        data = {
+            "intervention": self.intervention_chemo_iptp.id,
+            "name": "test",
+            "unit_cost": 15,
+            "category": "Procurement",
+            "unit_type": self.unit_type_other.id,
+            "buffer": "-1",
+        }
+        serializer = InterventionCostBreakdownLineWriteSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("buffer", serializer.errors)
+
+    def test_create_cost_breakdown_line_without_buffer_falls_back_to_budget_settings(self):
+        data = {
+            "intervention": self.intervention_chemo_iptp.id,
+            "name": "test",
+            "unit_cost": 15,
+            "category": "Procurement",
+            "unit_type": self.unit_type_other.id,
+        }
+        serializer = InterventionCostBreakdownLineWriteSerializer(data=data, context=self.context)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertIsNone(serializer.validated_data["buffer"])
+
     def test_update_cost_breakdown_lines_list_payload_persists_coverage(self):
         queryset = InterventionCostBreakdownLine.objects.filter(intervention=self.intervention_chemo_smc).order_by("id")
         data = [

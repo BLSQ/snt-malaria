@@ -73,7 +73,7 @@ const CostItemRowComponent: FC<Props> = ({
     onDelete,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const { currency } = useInterventionContext();
+    const { currency, defaultBufferPercent } = useInterventionContext();
     const currencyAffixes = getCurrencyAffixes(currency);
 
     const handleEdit = useCallback(
@@ -88,7 +88,8 @@ const CostItemRowComponent: FC<Props> = ({
         [onDelete, group, line],
     );
     const handleFieldCommit = useCallback(
-        (field: string, value: number) => onUpdate(line.id, { [field]: value }),
+        (field: string, value: number | null) =>
+            onUpdate(line.id, { [field]: value }),
         [onUpdate, line.id],
     );
 
@@ -176,6 +177,17 @@ const CostItemRowComponent: FC<Props> = ({
                     </Typography>
                 )}
             </Box>
+
+            <InlineNumberField
+                keyValue="buffer"
+                value={line.buffer}
+                onCommit={handleFieldCommit}
+                maxDecimals={2}
+                suffix="%"
+                isNullable
+                placeholder={String(defaultBufferPercent)}
+                ariaLabel={formatMessage(MESSAGES.budgetingCostLineBuffer)}
+            />
 
             <InlineNumberField
                 keyValue="coverage"

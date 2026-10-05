@@ -54,6 +54,15 @@ class InterventionCostBreakdownLine(models.Model):
         default=Decimal("100"),
         validators=[MinValueValidator(Decimal("0")), MaxValueValidator(Decimal("100"))],
     )
+    # Percentage over-ordering added to the quantity (10 means x1.10). Null falls back to the
+    # account's budget settings buffer.
+    buffer = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal("0"))],
+    )
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="cost_breakdown_line_created_set"
     )

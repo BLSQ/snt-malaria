@@ -13,6 +13,8 @@ export type InterventionCostBreakdownLine = {
     conversion_factor: number | string;
     invert_conversion_factor: boolean;
     coverage: number | string;
+    // Percentage; null uses the budget settings buffer.
+    buffer: number | string | null;
 };
 
 export type InterventionCostBreakdownLinePayload = Omit<

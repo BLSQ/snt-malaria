@@ -163,10 +163,15 @@ class BudgetCalculationService:
             "target_population_layer_id": None,
             "is_proportional": False,
             "yearly_value": Decimal("0"),
+            "buffer": None,
         }
 
-    @staticmethod
-    def _populate_breakdown_from_cost_line(entry, cost_line):
+    def _buffer_multiplier(self, cost_line):
+        if cost_line.buffer is None:
+            return self.buffer
+        return Decimal("1") + cost_line.buffer / Decimal("100")
+
+    def _populate_breakdown_from_cost_line(self, entry, cost_line):
         """Fills in a breakdown entry's cost-line-derived (as opposed to accumulated) fields."""
         entry["unit_cost"] = cost_line.unit_cost
         entry["cost_unit_name"] = cost_line.unit_type.name if cost_line.unit_type else None
@@ -175,6 +180,7 @@ class BudgetCalculationService:
         entry["target_population"] = cost_line.population_layer.name if cost_line.population_layer else None
         entry["target_population_layer_id"] = cost_line.population_layer.id if cost_line.population_layer else None
         entry["is_proportional"] = cost_line.is_proportional
+        entry["buffer"] = float(self._buffer_multiplier(cost_line))
 
     def calculate_year(self, year):
         """Calculate the budget for a given year, based on the population-driven formula and the scenario data.
@@ -307,7 +313,7 @@ class BudgetCalculationService:
 
         # The buffer is baked into the quantity (procurement over-ordering), so the
         # exposed quantity reflects what actually needs to be procured.
-        quantity = population * yearly_value * line.conversion_ratio * self.buffer
+        quantity = population * yearly_value * line.conversion_ratio * self._buffer_multiplier(line)
         line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
 
         if line_cost <= 0:
@@ -332,7 +338,7 @@ class BudgetCalculationService:
         Calculate using yearly value as quantity. Added once per intervention regardless of org units.
         """
         yearly_value = self._get_yearly_value(line, year)
-        quantity = yearly_value * self.buffer
+        quantity = yearly_value * self._buffer_multiplier(line)
         line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
         if line_cost <= 0:
             return None
@@ -374,7 +380,7 @@ class BudgetCalculationService:
                 target_population_layer_id=bd["target_population_layer_id"],
                 is_proportional=bd["is_proportional"],
                 yearly_value=bd["yearly_value"],
-                buffer=float(self.buffer),
+                buffer=bd["buffer"],
             )
             for _, bd in sorted(breakdown_dict.items(), key=lambda x: x[0])
             if bd["total_cost"] > 0

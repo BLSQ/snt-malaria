@@ -161,6 +161,39 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         # total_cost = 2250 * unit_cost(2.0) = 4500 (buffer already in quantity, no inflation)
         self.assertEqual(breakdown.total_cost, 4500.0)
 
+    def test_cost_line_buffer_overrides_configured_buffer(self):
+        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"), buffer=Decimal("1.25"))
+        self.population_line.buffer = Decimal("10")
+        self.population_line.save()
+        service = BudgetCalculationService(self.scenario)
+
+        result = service.calculate_year(2025)
+
+        breakdown = result.interventions[0].cost_breakdown[0]
+        # quantity = 3000 * yearly(1.2) * factor(0.5) * line buffer(1 + 10%) = 1980
+        self.assertEqual(breakdown.quantity, 1980.0)
+        self.assertEqual(breakdown.total_cost, 3960.0)
+        self.assertEqual(breakdown.buffer, 1.1)
+
+    def test_cost_line_without_buffer_reports_configured_buffer(self):
+        BudgetSettings.objects.filter(account=self.account).update(buffer=Decimal("1.25"))
+        service = BudgetCalculationService(self.scenario)
+
+        result = service.calculate_year(2025)
+
+        self.assertEqual(result.interventions[0].cost_breakdown[0].buffer, 1.25)
+
+    def test_zero_cost_line_buffer_disables_buffering(self):
+        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"))
+        self.population_line.buffer = Decimal("0")
+        self.population_line.save()
+        service = BudgetCalculationService(self.scenario)
+
+        result = service.calculate_year(2025)
+
+        # quantity = 3000 * yearly(1.2) * factor(0.5), no buffer
+        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 1800.0)
+
     def test_calculate_year_uses_default_yearly_multiplier_when_missing(self):
         service = BudgetCalculationService(self.scenario)
 

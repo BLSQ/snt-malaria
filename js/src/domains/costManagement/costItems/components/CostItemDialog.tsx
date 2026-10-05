@@ -65,6 +65,7 @@ export const CostItemDialog: FC<Props> = ({
         costUnitTypeOptions,
         populationOptions,
         currency,
+        defaultBufferPercent,
     } = useInterventionContext();
     const [line, setLine] = useState(initialLine);
     const [isSaving, setIsSaving] = useState(false);
@@ -92,6 +93,13 @@ export const CostItemDialog: FC<Props> = ({
             }));
         },
         [],
+    );
+
+    // A cleared field must be sent as null, not omitted, to fall back to the default buffer.
+    const handleBufferChange = useCallback(
+        (field: string, value?: number | null) =>
+            updateField(field, value ?? null),
+        [updateField],
     );
 
     const handleDirectionChange = useCallback(
@@ -238,8 +246,8 @@ export const CostItemDialog: FC<Props> = ({
                     sx={{
                         ...styles.values,
                         gridTemplateColumns: line.is_proportional
-                            ? 'repeat(3, 1fr)'
-                            : '1fr',
+                            ? 'repeat(4, 1fr)'
+                            : 'repeat(2, 1fr)',
                     }}
                 >
                     <InputComponent
@@ -253,18 +261,32 @@ export const CostItemDialog: FC<Props> = ({
                         numberInputOptions={{ decimalScale: 2, currency }}
                     />
                     {line.is_proportional && (
+                        <InputComponent
+                            type="number"
+                            keyValue="conversion_factor"
+                            value={line.conversion_factor}
+                            onChange={updateField}
+                            label={MESSAGES.budgetingCostLineConversionFactor}
+                            withMarginTop={false}
+                            numberInputOptions={{ decimalScale: 6 }}
+                        />
+                    )}
+                    <InputComponent
+                        type="number"
+                        keyValue="buffer"
+                        value={line.buffer ?? undefined}
+                        onChange={handleBufferChange}
+                        label={MESSAGES.budgetingCostLineBuffer}
+                        placeholder={`${defaultBufferPercent}%`}
+                        withMarginTop={false}
+                        numberInputOptions={{
+                            decimalScale: 2,
+                            min: 0,
+                            suffix: '%',
+                        }}
+                    />
+                    {line.is_proportional && (
                         <>
-                            <InputComponent
-                                type="number"
-                                keyValue="conversion_factor"
-                                value={line.conversion_factor}
-                                onChange={updateField}
-                                label={
-                                    MESSAGES.budgetingCostLineConversionFactor
-                                }
-                                withMarginTop={false}
-                                numberInputOptions={{ decimalScale: 6 }}
-                            />
                             <InputComponent
                                 type="number"
                                 keyValue="coverage"

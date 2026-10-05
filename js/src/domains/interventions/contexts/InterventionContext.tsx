@@ -8,9 +8,15 @@ type InterventionContextType = {
     costUnitTypeOptions: DropdownOptions<string>[];
     populationOptions: DropdownOptions<number | null>[];
     currency?: string;
+    // Budget settings store the buffer as a multiplier (1.1); cost lines as a percentage (10).
+    defaultBufferPercent: number;
 };
 
 const defaultCurrency = 'USD';
+const DEFAULT_BUFFER_MULTIPLIER = 1.1;
+
+const toBufferPercent = (multiplier: number) =>
+    Math.round((multiplier - 1) * 10000) / 100;
 
 const emptyPopulationOption: DropdownOptions<number | null> = {
     label: '-',
@@ -22,6 +28,7 @@ const InterventionContext = createContext<InterventionContextType>({
     costUnitTypeOptions: [],
     populationOptions: [emptyPopulationOption],
     currency: defaultCurrency,
+    defaultBufferPercent: toBufferPercent(DEFAULT_BUFFER_MULTIPLIER),
 });
 
 export const useInterventionContext = () => useContext(InterventionContext);
@@ -50,6 +57,9 @@ export const InterventionProvider = ({
     );
 
     const currency = budgetSettings?.local_currency || defaultCurrency;
+    const defaultBufferPercent = toBufferPercent(
+        Number(budgetSettings?.buffer ?? DEFAULT_BUFFER_MULTIPLIER),
+    );
 
     const value = useMemo(
         () => ({
@@ -57,8 +67,15 @@ export const InterventionProvider = ({
             costUnitTypeOptions,
             populationOptions,
             currency,
+            defaultBufferPercent,
         }),
-        [costCategoryOptions, costUnitTypeOptions, populationOptions, currency],
+        [
+            costCategoryOptions,
+            costUnitTypeOptions,
+            populationOptions,
+            currency,
+            defaultBufferPercent,
+        ],
     );
 
     return (

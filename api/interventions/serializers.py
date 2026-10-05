@@ -114,6 +114,7 @@ class InterventionDuplicateSerializer(serializers.Serializer):
         "conversion_factor",
         "invert_conversion_factor",
         "coverage",
+        "buffer",
     ]
 
     def create(self, validated_data):

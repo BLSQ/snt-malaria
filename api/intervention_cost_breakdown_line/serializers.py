@@ -53,6 +53,7 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
                         "conversion_factor",
                         "invert_conversion_factor",
                         "coverage",
+                        "buffer",
                     ],
                 )
             if lines_to_delete:
@@ -96,6 +97,7 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
             "conversion_factor",
             "invert_conversion_factor",
             "coverage",
+            "buffer",
         ]
 
     def get_unit_type_label(self, obj):
@@ -133,6 +135,9 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
     coverage = serializers.DecimalField(
         max_digits=5, decimal_places=2, required=False, default=Decimal("100"), min_value=0, max_value=100
     )
+    buffer = serializers.DecimalField(
+        max_digits=5, decimal_places=2, required=False, allow_null=True, default=None, min_value=0
+    )
 
     class Meta:
         model = InterventionCostBreakdownLine
@@ -149,6 +154,7 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             "conversion_factor",
             "invert_conversion_factor",
             "coverage",
+            "buffer",
         ]
 
     def get_fields(self):

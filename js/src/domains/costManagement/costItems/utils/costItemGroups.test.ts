@@ -35,6 +35,7 @@ const makeLine = (
     conversion_factor: 1,
     invert_conversion_factor: false,
     coverage: 100,
+    buffer: null,
 });
 
 const categories: InterventionCategory[] = [

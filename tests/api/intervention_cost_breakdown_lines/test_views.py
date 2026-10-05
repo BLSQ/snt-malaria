@@ -62,6 +62,19 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         recalculate.assert_called_once_with(self.intervention_vaccination_rts, self.user_write)
 
     @mock.patch(RECALCULATE_PATH)
+    def test_partial_update_can_clear_buffer_to_use_budget_settings(self, recalculate):
+        self.cost_line1.buffer = Decimal("10")
+        self.cost_line1.save()
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.patch(f"{self.BASE_URL}{self.cost_line1.id}/", {"buffer": None}, format="json")
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.cost_line1.refresh_from_db()
+        self.assertIsNone(self.cost_line1.buffer)
+        self.assertIsNone(result["buffer"])
+
+    @mock.patch(RECALCULATE_PATH)
     def test_partial_update_to_proportional_without_population_is_rejected(self, recalculate):
         self.client.force_authenticate(user=self.user_write)
         response = self.client.patch(f"{self.BASE_URL}{self.cost_line1.id}/", {"is_proportional": True}, format="json")

@@ -14,8 +14,8 @@ import { SxStyles } from 'Iaso/types/general';
 
 type Props = {
     keyValue: string;
-    value: number | string;
-    onCommit: (keyValue: string, value: number) => void;
+    value: number | string | null;
+    onCommit: (keyValue: string, value: number | null) => void;
     maxDecimals: number;
     minDecimals?: number;
     ariaLabel: string;
@@ -24,6 +24,9 @@ type Props = {
     min?: number;
     max?: number;
     disabled?: boolean;
+    // Allows clearing the field, which commits null; the placeholder shows what applies then.
+    isNullable?: boolean;
+    placeholder?: string;
 };
 
 const styles = {
@@ -73,10 +76,13 @@ const getNumberFormat = (minDecimals: number, maxDecimals: number) => {
 };
 
 const formatValue = (
-    value: number | string,
+    value: number | string | null,
     minDecimals: number,
     maxDecimals: number,
 ) => {
+    if (value === null || value === '') {
+        return '';
+    }
     const parsed = Number(value);
     return Number.isNaN(parsed)
         ? ''
@@ -107,6 +113,8 @@ export const InlineNumberField: FC<Props> = ({
     min = 0,
     max,
     disabled = false,
+    isNullable = false,
+    placeholder,
 }) => {
     const formattedValue = formatValue(value, minDecimals, maxDecimals);
     const [draft, setDraft] = useState(formattedValue);
@@ -122,22 +130,35 @@ export const InlineNumberField: FC<Props> = ({
     );
 
     const handleBlur = useCallback(() => {
+        const isUnchanged = draft.trim() === formattedValue;
+        if (isReverting.current || isUnchanged) {
+            isReverting.current = false;
+            setDraft(formattedValue);
+            return;
+        }
+        if (isNullable && draft.trim() === '') {
+            onCommit(keyValue, null);
+            return;
+        }
         const parsed = parseDraft(draft);
         const isOutOfRange =
             parsed < min || (max !== undefined && parsed > max);
-        if (
-            isReverting.current ||
-            Number.isNaN(parsed) ||
-            isOutOfRange ||
-            draft.trim() === formattedValue
-        ) {
-            isReverting.current = false;
+        if (Number.isNaN(parsed) || isOutOfRange) {
             setDraft(formattedValue);
             return;
         }
         // The API rejects values with more decimals than the field stores.
         onCommit(keyValue, Number(parsed.toFixed(maxDecimals)));
-    }, [draft, formattedValue, keyValue, max, maxDecimals, min, onCommit]);
+    }, [
+        draft,
+        formattedValue,
+        isNullable,
+        keyValue,
+        max,
+        maxDecimals,
+        min,
+        onCommit,
+    ]);
 
     const handleKeyDown = useCallback(
         (event: KeyboardEvent<HTMLInputElement>) => {
@@ -164,6 +185,7 @@ export const InlineNumberField: FC<Props> = ({
             inputProps={{
                 inputMode: 'decimal',
                 'aria-label': ariaLabel,
+                placeholder,
             }}
             startAdornment={
                 prefix && (
