@@ -23,6 +23,7 @@ import {
     SidePanelContext,
     SidePanelContextValue,
 } from '../../components/sidePanel/SidePanelContext';
+import { SidePanelIconToggle } from '../../components/sidePanel/SidePanelIconToggle';
 import { useSidePanelState } from '../../components/sidePanel/useSidePanelState';
 import {
     MainColumn,
@@ -64,6 +65,7 @@ import { DataLayerMapWrapper } from './dataLayerMap/DataLayerMapWrapper';
 import { DataLayerWizardMain } from './dataLayerWizard/DataLayerWizardMain';
 import { DataLayerWizardPanel } from './dataLayerWizard/DataLayerWizardPanel';
 import { DiscardWizardModal } from './dataLayerWizard/DiscardWizardModal';
+import { WIZARD_STEPS } from './dataLayerWizard/useDataLayerWizard';
 import { useDataLayerWizardController } from './dataLayerWizard/useDataLayerWizardController';
 import { useWizardMapPreview } from './dataLayerWizard/useWizardMapPreview';
 import { WizardLegendPreview } from './dataLayerWizard/WizardLegendPreview';
@@ -260,16 +262,21 @@ export const DataLayers: FC = () => {
     const wizardPreview = useWizardMapPreview(wizard);
 
     // Locks the sidebar open while creating/editing a layer, so its form can't be hidden
-    // mid-flow. Can't be built into `sidePanelState` above since `wizard` doesn't exist yet at
-    // that point (it needs `openSidePanel`, which needs `sidePanelState` first).
+    // mid-flow - except on the Data/Graph step, where collapsing it gives the main view room.
+    // Can't be built into `sidePanelState` above since `wizard` doesn't exist yet at that point
+    // (it needs `openSidePanel`, which needs `sidePanelState` first).
+    const isSidePanelLocked =
+        wizard.isOpen && wizard.activeStep !== WIZARD_STEPS.DATA;
     const sidePanel: SidePanelContextValue = useMemo(
         () => ({
             ...sidePanelState,
-            locked: wizard.isOpen,
-            toggle: wizard.isOpen ? sidePanelState.open : sidePanelState.toggle,
-            close: wizard.isOpen ? () => {} : sidePanelState.close,
+            locked: isSidePanelLocked,
+            toggle: isSidePanelLocked
+                ? sidePanelState.open
+                : sidePanelState.toggle,
+            close: isSidePanelLocked ? () => {} : sidePanelState.close,
         }),
-        [sidePanelState, wizard.isOpen],
+        [sidePanelState, isSidePanelLocked],
     );
 
     const onEditMetricType = useCallback(
@@ -316,11 +323,16 @@ export const DataLayers: FC = () => {
             flushContent={isAiChatTab}
             header={
                 <>
-                    <CompositeSidebarTabs
-                        tab={sidebarTab}
-                        onChangeTab={setSidebarTab}
-                        showTabs={hasAiApiKey}
-                    />
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                        {isCompositeEditorOpen && (
+                            <SidePanelIconToggle icon={AccountTreeIcon} />
+                        )}
+                        <CompositeSidebarTabs
+                            tab={sidebarTab}
+                            onChangeTab={setSidebarTab}
+                            showTabs={hasAiApiKey}
+                        />
+                    </Stack>
                     {!isAiChatTab && (
                         <NodeLibrarySearch
                             value={nodeSearchTerm}
@@ -436,14 +448,15 @@ export const DataLayers: FC = () => {
     };
 
     const sidePanelIcon = isCompositeEditorOpen ? AccountTreeIcon : LayersIcon;
-    const sidePanelActions = isCompositeEditorOpen ? undefined : (
-        <DataLayerListActions
-            onCreate={() => {
-                openSidePanel();
-                wizard.open();
-            }}
-        />
-    );
+    const sidePanelActions =
+        isCompositeEditorActive || wizard.isOpen ? undefined : (
+            <DataLayerListActions
+                onCreate={() => {
+                    openSidePanel();
+                    wizard.open();
+                }}
+            />
+        );
 
     const mapColumn = (
         <Stack direction="row" gap={1} sx={{ height: '100%' }}>
