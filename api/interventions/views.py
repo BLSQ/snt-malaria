@@ -1,5 +1,5 @@
 from django.db import IntegrityError, transaction
-from django.db.models import ProtectedError
+from django.db.models import Prefetch, ProtectedError
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
@@ -24,7 +24,17 @@ class InterventionViewSet(viewsets.ModelViewSet):
     permission_classes = [InterventionPermission]
 
     def get_queryset(self):
-        return Intervention.objects.filter(intervention_category__account=self.request.user.iaso_profile.account)
+        queryset = Intervention.objects.filter(intervention_category__account=self.request.user.iaso_profile.account)
+        if self.action in ("details", "update_details"):
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    "cost_breakdown_lines",
+                    queryset=InterventionCostBreakdownLine.objects.select_related(
+                        "unit_type", "population_layer"
+                    ).order_by("id"),
+                )
+            )
+        return queryset
 
     def perform_create(self, serializer):
         try:
