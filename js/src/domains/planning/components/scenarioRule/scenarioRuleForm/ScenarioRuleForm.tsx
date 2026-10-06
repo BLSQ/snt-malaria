@@ -9,19 +9,13 @@ import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { useGetAccountSettings } from '../../../hooks/useGetAccountSettings';
 import { ScenarioRuleFormValues } from '../../../hooks/useScenarioRuleFormState';
-import { generateRuleName } from '../../../libs/rule-utils';
+import { generateRuleName, parseOrgUnitIds } from '../../../libs/rule-utils';
 import { InterventionPropertiesForm } from './InterventionPropertiesForm';
 import { MatchingCriteriaForm } from './MatchingCriteriaForm';
 import { OrgUnitScopeSelector } from './orgUnitScopeSelector/OrgUnitScopeSelector';
 import { RuleCoverageSummary } from './RuleCoverageSummary';
 import { RuleStepSection, RuleStepSubSectionHeader } from './RuleStepSection';
-
-const parseOrgUnitIds = (commaSeparatedIds?: string): number[] =>
-    (commaSeparatedIds || '')
-        .split(',')
-        .filter(id => id !== '')
-        .map(id => parseInt(id, 10))
-        .filter(id => Number.isFinite(id));
+import { RuleMatchedOrgUnits } from './useRuleMatchedOrgUnits';
 
 const styles = {
     formRoot: {
@@ -57,13 +51,13 @@ const styles = {
 } satisfies SxStyles;
 
 type Props = {
+    ruleMatches: RuleMatchedOrgUnits;
     matchedOrgUnitIds?: number[];
-    isLoadingPreview?: boolean;
 };
 
 export const ScenarioRuleForm: FC<Props> = ({
+    ruleMatches,
     matchedOrgUnitIds,
-    isLoadingPreview,
 }) => {
     const { formatMessage } = useSafeIntl();
     const { metricTypeCategories, interventionCategories, scenario } =
@@ -149,7 +143,7 @@ export const ScenarioRuleForm: FC<Props> = ({
                     <OrgUnitScopeSelector
                         interventionTypeId={interventionTypeId}
                         matchingCriteria={values.matching_criteria}
-                        dataLayerYears={scenario?.data_layer_years}
+                        ruleMatches={ruleMatches}
                         excludedIds={parseOrgUnitIds(values.org_units_excluded)}
                         handpickedIds={parseOrgUnitIds(
                             values.org_units_included,
@@ -208,7 +202,7 @@ export const ScenarioRuleForm: FC<Props> = ({
             <Box sx={styles.coverage}>
                 <RuleCoverageSummary
                     matchedOrgUnitIds={matchedOrgUnitIds}
-                    isLoadingPreview={isLoadingPreview}
+                    isLoadingPreview={ruleMatches.isLoading}
                 />
             </Box>
         </Box>

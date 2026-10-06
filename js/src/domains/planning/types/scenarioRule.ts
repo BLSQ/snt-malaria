@@ -19,3 +19,8 @@ export type MetricTypeCriterion = {
     value?: number;
     string_value?: string;
 };
+
+export type ScenarioRulePreview = {
+    rule: Pick<ScenarioRule, 'color' | 'interventions'>;
+    matchedOrgUnitIds: number[];
+};

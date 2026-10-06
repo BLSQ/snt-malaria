@@ -27,3 +27,31 @@ export const generateRuleName = (
         .map(({ intervention }) => intervention.short_name || intervention.name)
         .join(' + ');
 };
+
+export const parseOrgUnitIds = (commaSeparatedIds?: string): number[] =>
+    (commaSeparatedIds || '')
+        .split(',')
+        .filter(id => id !== '')
+        .map(id => parseInt(id, 10))
+        .filter(id => Number.isFinite(id));
+
+/** Mirrors the backend's `ScenarioRule.resolve_org_unit_ids` set algebra. */
+export const resolveRuleOrgUnitIds = ({
+    hasCriteria,
+    ruleMatchedIds,
+    excludedIds,
+    includedIds,
+}: {
+    hasCriteria: boolean;
+    ruleMatchedIds: number[];
+    excludedIds: number[];
+    includedIds: number[];
+}): number[] => {
+    if (!hasCriteria) {
+        return includedIds;
+    }
+    const excluded = new Set(excludedIds);
+    const resolved = new Set(ruleMatchedIds.filter(id => !excluded.has(id)));
+    includedIds.forEach(id => resolved.add(id));
+    return [...resolved];
+};

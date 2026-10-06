@@ -131,10 +131,13 @@ export const Map: FC<Props> = ({
 }) => {
     const [currentTile] = useState<Tile>(tiles.osm);
 
-    const boundsOptions: Record<string, any> = {
-        padding: [-10, -10],
-        maxZoom: currentTile.maxZoom,
-    };
+    const boundsOptions: Record<string, any> = useMemo(
+        () => ({
+            padding: [-10, -10],
+            maxZoom: currentTile.maxZoom,
+        }),
+        [currentTile.maxZoom],
+    );
 
     const orderedOrgUnits = useMemo(
         () => orderOrgUnitsByDepth(orgUnits || []),

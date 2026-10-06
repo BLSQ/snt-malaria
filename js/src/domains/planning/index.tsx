@@ -51,8 +51,7 @@ import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignm
 import { useGetLatestCalculatedBudget } from './hooks/useGetLatestCalculatedBudget';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
-import { usePreviewScenarioRule } from './hooks/usePreviewScenarioRule';
-import { ScenarioRule } from './types/scenarioRule';
+import { ScenarioRule, ScenarioRulePreview } from './types/scenarioRule';
 import { useUserCanEditScenario } from './utils/permissions';
 
 const styles = {
@@ -166,8 +165,6 @@ export const Planning: FC = () => {
     const [previewRule, setPreviewRule] = useState<
         Partial<ScenarioRule> | undefined
     >();
-    const { mutate: previewScenarioRule, isLoading: isLoadingPreview } =
-        usePreviewScenarioRule();
 
     const onSetTab = useCallback(
         (tab: string) => tab && setActiveTab(tab),
@@ -175,21 +172,11 @@ export const Planning: FC = () => {
     );
 
     const onPreviewScenarioRule = useCallback(
-        (rule?: Partial<ScenarioRule>) => {
-            setPreviewRule(rule);
-            if (!rule) {
-                setMatchedOrgUnitIds([]);
-                return;
-            }
-
-            return previewScenarioRule(
-                { ...rule, data_layer_years: scenario?.data_layer_years },
-                {
-                    onSuccess: data => setMatchedOrgUnitIds(data as number[]),
-                },
-            );
+        (preview?: ScenarioRulePreview) => {
+            setPreviewRule(preview?.rule);
+            setMatchedOrgUnitIds(preview?.matchedOrgUnitIds ?? []);
         },
-        [previewScenarioRule, scenario],
+        [],
     );
 
     const hasNoRules = useMemo(
@@ -328,8 +315,6 @@ export const Planning: FC = () => {
                             rules={scenarioRules || []}
                             isLoading={isFetchingRules}
                             createRuleRef={tour.anchorRefs[0]}
-                            matchedOrgUnitIds={matchedOrgUnitIds}
-                            isLoadingPreview={isLoadingPreview}
                             hasAiApiKey={hasAiApiKey}
                             showAIChat={showAIChat}
                             onToggleAIChat={toggleAIChat}

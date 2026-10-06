@@ -13,10 +13,12 @@ import {
 } from '@mui/icons-material';
 import { Box, Button, Typography, alpha } from '@mui/material';
 import { SxProps, Theme } from '@mui/material/styles';
-import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
+import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { DelayedLoadingSpinner } from '../../../../../../components/DelayedLoadingSpinner';
 import { MESSAGES } from '../../../../../messages';
 import { MetricTypeCriterion } from '../../../../types/scenarioRule';
+import { RuleMatchedOrgUnits } from '../useRuleMatchedOrgUnits';
 import { ScopeTreeRow } from './ScopeTreeRow';
 import {
     buildVisibleRows,
@@ -31,7 +33,6 @@ import {
 } from './scopeTreeUtils';
 import { ScopeAggregate } from './types';
 import { useOrgUnitScopeTree } from './useOrgUnitScopeTree';
-import { useRuleMatchedOrgUnits } from './useRuleMatchedOrgUnits';
 
 const EMPTY_AGGREGATE: ScopeAggregate = {
     total: 0,
@@ -110,7 +111,7 @@ const styles = {
 type Props = {
     interventionTypeId?: number;
     matchingCriteria: MetricTypeCriterion[];
-    dataLayerYears?: Record<string, number>;
+    ruleMatches: RuleMatchedOrgUnits;
     excludedIds: number[];
     handpickedIds: number[];
     onChangeExcluded: (ids: number[]) => void;
@@ -120,7 +121,7 @@ type Props = {
 export const OrgUnitScopeSelector: FC<Props> = ({
     interventionTypeId,
     matchingCriteria,
-    dataLayerYears,
+    ruleMatches,
     excludedIds,
     handpickedIds,
     onChangeExcluded,
@@ -139,10 +140,9 @@ export const OrgUnitScopeSelector: FC<Props> = ({
         isLoading: isLoadingRule,
         isError: isRuleError,
         retry: retryRule,
-    } = useRuleMatchedOrgUnits({
-        matchingCriteria,
-        dataLayerYears,
-    });
+        isAwaitingFirstResult,
+    } = ruleMatches;
+    const isLoadingRows = isLoadingTree || isAwaitingFirstResult;
 
     const [expanded, setExpanded] = useState<Set<number>>(new Set());
     const [query, setQuery] = useState('');
@@ -370,7 +370,7 @@ export const OrgUnitScopeSelector: FC<Props> = ({
                 </Box>
 
                 <Box sx={styles.treeScroll}>
-                    {isLoadingTree && (
+                    {isLoadingRows && (
                         <Box sx={styles.centeredMessage}>
                             <Box sx={getLoadingRowSx('70%', 0)} />
                             <Box sx={getLoadingRowSx('52%', 22)} />
@@ -386,7 +386,7 @@ export const OrgUnitScopeSelector: FC<Props> = ({
                         </Box>
                     )}
 
-                    {!isLoadingTree && isNoResult && (
+                    {!isLoadingRows && isNoResult && (
                         <Box sx={styles.centeredMessage}>
                             <Typography variant="body2" color="text.secondary">
                                 {formatMessage(MESSAGES.scopeNoResultTitle, {
@@ -403,7 +403,7 @@ export const OrgUnitScopeSelector: FC<Props> = ({
                         </Box>
                     )}
 
-                    {!isLoadingTree &&
+                    {!isLoadingRows &&
                         !isNoResult &&
                         tree &&
                         rows.map(row => {
@@ -471,7 +471,7 @@ export const OrgUnitScopeSelector: FC<Props> = ({
                     )}
                 </Box>
             </Box>
-            {isLoadingRule && !isLoadingTree && <LoadingSpinner size={16} />}
+            {isLoadingRule && !isLoadingRows && <DelayedLoadingSpinner />}
         </Box>
     );
 };
