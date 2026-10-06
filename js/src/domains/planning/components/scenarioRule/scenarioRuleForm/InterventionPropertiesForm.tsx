@@ -1,15 +1,14 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Box } from '@mui/material';
-import { DropdownButton } from '../../../../../components/DropdownButton';
+import { Stack } from '@mui/material';
 import { InterventionCategory } from '../../../../interventions/types';
 import { MESSAGES } from '../../../../messages';
+import { AddItemButton } from './AddItemButton';
 import { InterventionPropertyForm } from './InterventionPropertyForm';
 
 type Props = {
     interventions: number[];
     onAdd: (interventionId: number) => void;
     onRemove: (index: number) => void;
-    onUpdateField: (index: number, interventionId: number) => void;
     interventionCategories: InterventionCategory[];
 };
 
@@ -17,7 +16,6 @@ export const InterventionPropertiesForm: FC<Props> = ({
     interventions,
     onAdd,
     onRemove,
-    onUpdateField,
     interventionCategories,
 }) => {
     const getCategoryForIntervention = useCallback(
@@ -38,56 +36,43 @@ export const InterventionPropertiesForm: FC<Props> = ({
         [interventions, getCategoryForIntervention],
     );
 
-    const availableCategories = useMemo(
+    const interventionOptions = useMemo(
         () =>
-            interventionCategories.filter(c => !selectedCategoryIds.has(c.id)),
+            interventionCategories
+                .filter(category => !selectedCategoryIds.has(category.id))
+                .flatMap(category =>
+                    category.interventions.map(intervention => ({
+                        value: intervention.id,
+                        label: intervention.name,
+                        groupKey: String(category.id),
+                        groupLabel: category.name,
+                    })),
+                ),
         [interventionCategories, selectedCategoryIds],
     );
 
-    const interventionCategoryOptions = useMemo(
-        () =>
-            availableCategories.map(category => ({
-                value: category.id,
-                label: category.name,
-            })),
-        [availableCategories],
-    );
-
-    const getInterventionsForCategory = useCallback(
-        (categoryId: number) =>
-            interventionCategories.find(c => c.id === categoryId)
-                ?.interventions ?? [],
-        [interventionCategories],
-    );
-
     return (
-        <Box>
+        <Stack spacing={1}>
             {interventions.map((interventionId, index) => {
                 const category = getCategoryForIntervention(interventionId);
-                const interventionOptions = category?.interventions ?? [];
+                const intervention = category?.interventions.find(
+                    i => i.id === interventionId,
+                );
                 return (
                     <InterventionPropertyForm
                         key={`intervention_${interventionId}`}
-                        interventionId={interventionId}
-                        interventions={interventionOptions}
+                        interventionName={intervention?.name ?? ''}
                         categoryName={category?.name ?? ''}
-                        onUpdateField={newId => onUpdateField(index, newId)}
                         onRemove={() => onRemove(index)}
                     />
                 );
             })}
-            <DropdownButton
+            <AddItemButton
                 label={MESSAGES.addInterventionProperty}
-                options={interventionCategoryOptions}
-                onClick={categoryId => {
-                    const firstIntervention =
-                        getInterventionsForCategory(categoryId)[0];
-                    if (firstIntervention) {
-                        onAdd(firstIntervention.id);
-                    }
-                }}
-                size="small"
+                options={interventionOptions}
+                onClick={onAdd}
+                hasItems={interventions.length > 0}
             />
-        </Box>
+        </Stack>
     );
 };

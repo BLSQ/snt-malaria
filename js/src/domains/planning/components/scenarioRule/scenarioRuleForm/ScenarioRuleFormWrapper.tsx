@@ -131,6 +131,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                 />
             }
             isLoading={isSubmittingRule}
+            flushContent
         >
             <ExtendedFormikProvider formik={formik}>
                 <ScenarioRuleForm

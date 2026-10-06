@@ -1,12 +1,18 @@
-import React, { FC, useMemo } from 'react';
-import { Box, Typography, SxProps, Theme, Tooltip } from '@mui/material';
+import React, { FC, useCallback, useEffect, useMemo } from 'react';
+import { MenuItem, Select, SelectChangeEvent, Tooltip } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
-import { DeleteIconButton } from 'Iaso/components/Buttons/DeleteIconButton';
-import InputComponent from 'Iaso/components/forms/InputComponent';
+import { SxStyles } from 'Iaso/types/general';
 import { LegendTypes } from '../../../../../constants/legend';
 import { MetricType } from '../../../../dataLayers/types/metrics';
 import { MESSAGES } from '../../../../messages';
 import { MetricTypeCriterion } from '../../../types/scenarioRule';
+import {
+    CriterionOperatorSelect,
+    EQUAL_OPERATOR,
+} from './CriterionOperatorSelect';
+import { CriterionValueInput } from './CriterionValueInput';
+import { RuleItemCard } from './RuleItemCard';
+import { compactInputStyles, criterionValueStyles } from './styles';
 
 type Props = {
     metricTypeCriterion: MetricTypeCriterion;
@@ -18,36 +24,12 @@ type Props = {
     getErrors: (keyValue: string) => string[];
 };
 
-const styles: Record<string, SxProps<Theme>> = {
-    matchingCriteriaContainer: {
-        display: 'flex',
-        mb: 2,
-        gap: 1,
-        ' button': {
-            visibility: 'hidden',
-        },
-        '&:hover button': {
-            visibility: 'visible',
-        },
+const styles = {
+    ordinalSelect: {
+        ...compactInputStyles,
+        ...criterionValueStyles,
     },
-    scaleLabel: { textAlign: 'right', width: '100%' },
-    labelWrapper: {
-        maxHeight: 40,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        flexGrow: 1,
-        overflow: 'hidden',
-    },
-};
-
-const operatorOptions = [
-    { value: '>', label: '>' },
-    { value: '>=', label: '>=' },
-    { value: '<', label: '<' },
-    { value: '<=', label: '<=' },
-    { value: '==', label: '=' },
-];
+} satisfies SxStyles;
 
 export const MatchingCriterionForm: FC<Props> = ({
     metricTypeCriterion,
@@ -58,86 +40,85 @@ export const MatchingCriterionForm: FC<Props> = ({
     getErrors,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const isOrdinal = metricType?.legend_type === LegendTypes.ORDINAL;
 
     const scaleLabel = useMemo(() => {
-        if (!metricType) return '';
-        const domain = metricType.legend_config?.domain;
+        const domain = metricType?.legend_config?.domain;
         if (!domain) return '';
-        const scale = `${domain[0]} - ${domain[domain.length - 1]}`;
-        return scale;
+        return `${domain[0]} - ${domain[domain.length - 1]}`;
     }, [metricType]);
 
-    const ordinalOptions = useMemo(
-        () =>
-            metricType?.legend_type === LegendTypes.ORDINAL
-                ? metricType.legend_config.domain.map(d => ({
-                      label: d,
-                      value: d,
-                  }))
-                : [],
-        [metricType],
+    useEffect(() => {
+        if (isOrdinal && metricTypeCriterion.operator !== EQUAL_OPERATOR) {
+            onUpdateField('operator', EQUAL_OPERATOR);
+        }
+    }, [isOrdinal, metricTypeCriterion.operator, onUpdateField]);
+
+    const stringValueErrors = getErrors('string_value');
+
+    const handleOperatorChange = useCallback(
+        (operator: MetricTypeCriterion['operator']) =>
+            onUpdateField('operator', operator),
+        [onUpdateField],
     );
 
+    const handleStringValueChange = useCallback(
+        (event: SelectChangeEvent) =>
+            onUpdateField('string_value', event.target.value),
+        [onUpdateField],
+    );
+
+    const handleValueChange = useCallback(
+        (value?: number) => onUpdateField('value', value),
+        [onUpdateField],
+    );
+
+    const caption =
+        configuredYear != null
+            ? formatMessage(MESSAGES.dataLayerYear, {
+                  year: configuredYear.toString(),
+              })
+            : formatMessage(MESSAGES.dataLayerYearNotSet);
+
     return (
-        <Box sx={styles.matchingCriteriaContainer}>
-            <Box sx={styles.labelWrapper}>
-                <Tooltip title={metricType?.name}>
-                    <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        noWrap={true}
-                    >
-                        {metricType?.name}
-                    </Typography>
-                </Tooltip>
-                <Typography variant="caption" color="textSecondary" noWrap>
-                    {configuredYear != null
-                        ? formatMessage(MESSAGES.dataLayerYear, {
-                              year: configuredYear.toString(),
-                          })
-                        : formatMessage(MESSAGES.dataLayerYearNotSet)}
-                </Typography>
-            </Box>
-            <InputComponent
-                keyValue="operator"
-                type="select"
+        <RuleItemCard
+            title={metricType?.name ?? ''}
+            caption={caption}
+            onRemove={onRemove}
+        >
+            <CriterionOperatorSelect
                 value={metricTypeCriterion.operator}
-                options={operatorOptions}
-                onChange={onUpdateField}
+                onChange={handleOperatorChange}
                 errors={getErrors('operator')}
-                clearable={false}
-                wrapperSx={{ width: 75 }}
-                withMarginTop={false}
+                isEqualOnly={isOrdinal}
             />
-            {metricType?.legend_type === LegendTypes.ORDINAL ? (
-                <InputComponent
-                    keyValue="string_value"
-                    type="select"
-                    value={metricTypeCriterion.string_value}
-                    onChange={onUpdateField}
-                    errors={getErrors('string_value')}
-                    wrapperSx={{ flexGrow: 1 }}
-                    withMarginTop={false}
-                    options={ordinalOptions}
-                    clearable={false}
-                />
-            ) : (
-                <Tooltip title={scaleLabel}>
-                    {/* This box is needed for the tooltip to work as it required a ref that MUI knows */}
-                    <Box>
-                        <InputComponent
-                            keyValue="value"
-                            type="number"
-                            value={metricTypeCriterion.value}
-                            onChange={onUpdateField}
-                            errors={getErrors('value')}
-                            wrapperSx={{ maxWidth: 85, minWidth: 85 }}
-                            withMarginTop={false}
-                        />
-                    </Box>
+            {isOrdinal ? (
+                <Tooltip title={stringValueErrors.join(', ')}>
+                    <Select
+                        size="small"
+                        value={metricTypeCriterion.string_value ?? ''}
+                        onChange={handleStringValueChange}
+                        error={stringValueErrors.length > 0}
+                        sx={styles.ordinalSelect}
+                    >
+                        {(metricType?.legend_config.domain ?? []).map(
+                            option => (
+                                <MenuItem key={option} value={option}>
+                                    {option}
+                                </MenuItem>
+                            ),
+                        )}
+                    </Select>
                 </Tooltip>
+            ) : (
+                <CriterionValueInput
+                    value={metricTypeCriterion.value}
+                    onChange={handleValueChange}
+                    unitSymbol={metricType?.unit_symbol}
+                    errors={getErrors('value')}
+                    hint={scaleLabel}
+                />
             )}
-            <DeleteIconButton onClick={onRemove} />
-        </Box>
+        </RuleItemCard>
     );
 };

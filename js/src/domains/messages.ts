@@ -15,7 +15,7 @@ export const MESSAGES = defineMessages({
     },
     addMatchingCriteria: {
         id: 'iaso.snt_malaria.scenarioRule.addMatchingCriteria',
-        defaultMessage: 'Add Criteria',
+        defaultMessage: 'Add criterion',
     },
     addToPlan: {
         id: 'iaso.snt_malaria.label.interventionList.addToPlan',
@@ -790,6 +790,26 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'The impact figures shown are generated for demonstration purposes and are not based on real epidemiological data.',
     },
+    operatorEqual: {
+        id: 'iaso.snt_malaria.scenarioRule.operatorEqual',
+        defaultMessage: 'Equal to',
+    },
+    operatorGreaterThan: {
+        id: 'iaso.snt_malaria.scenarioRule.operatorGreaterThan',
+        defaultMessage: 'Greater than',
+    },
+    operatorGreaterThanOrEqual: {
+        id: 'iaso.snt_malaria.scenarioRule.operatorGreaterThanOrEqual',
+        defaultMessage: 'Greater than or equal to',
+    },
+    operatorLessThan: {
+        id: 'iaso.snt_malaria.scenarioRule.operatorLessThan',
+        defaultMessage: 'Less than',
+    },
+    operatorLessThanOrEqual: {
+        id: 'iaso.snt_malaria.scenarioRule.operatorLessThanOrEqual',
+        defaultMessage: 'Less than or equal to',
+    },
     orgUnitsNotFoundTitle: {
         id: 'iaso.snt_malaria.compareCustomize.orgUnitsNotFoundTitle',
         defaultMessage: 'Org units not found',
@@ -846,10 +866,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.resolveConflictTile',
         defaultMessage: 'Resolve Conflicts',
     },
-    orgUnitsSectionLabel: {
-        id: 'iaso.snt_malaria.scenarioRule.orgUnitsSectionLabel',
-        defaultMessage: 'Org units',
-    },
     retry: {
         id: 'iaso.snt_malaria.label.retry',
         defaultMessage: 'Retry',
@@ -868,12 +884,63 @@ export const MESSAGES = defineMessages({
     },
     ruleNameAndColor: {
         id: 'iaso.snt_malaria.scenarioRule.ruleNameAndColor',
-        defaultMessage: 'Rule name and color',
+        defaultMessage: 'Name and color',
     },
-    scopeLine: {
-        id: 'iaso.snt_malaria.scenarioRule.scopeLine',
+    ruleStepRegion: {
+        id: 'iaso.snt_malaria.scenarioRule.ruleStepRegion',
+        defaultMessage: 'Region',
+    },
+    ruleStepRegionDescription: {
+        id: 'iaso.snt_malaria.scenarioRule.ruleStepRegionDescription',
         defaultMessage:
-            '{rule} by rule + {hand} handpicked − {exc} excluded = {scope} in scope',
+            'Select the region this rule applies to. Districts that meet all selection criteria are included in this rule. Use the tree to add or exclude districts by hand.',
+    },
+    selectionCriteriaDescription: {
+        id: 'iaso.snt_malaria.scenarioRule.selectionCriteriaDescription',
+        defaultMessage: 'A district must meet every criterion to be included.',
+    },
+    ruleStepInterventionsDescription: {
+        id: 'iaso.snt_malaria.scenarioRule.ruleStepInterventionsDescription',
+        defaultMessage:
+            'Add the interventions this rule assigns to its matching districts.',
+    },
+    ruleStepNameAndColorDescription: {
+        id: 'iaso.snt_malaria.scenarioRule.ruleStepNameAndColorDescription',
+        defaultMessage:
+            'Give the rule a custom name, or leave it empty to use a name generated from its interventions.',
+    },
+    scopeFooterWithOverrides: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeFooterWithOverrides',
+        defaultMessage:
+            '{scope} in scope · {hand} hand-picked · {exc} excluded',
+    },
+    scopeClearSelection: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeClearSelection',
+        defaultMessage: 'Clear selection',
+    },
+    scopeLeafRuleTooltip: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeLeafRuleTooltip',
+        defaultMessage: 'Matches the criteria. Click to exclude.',
+    },
+    scopeLeafHandpickedTooltip: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeLeafHandpickedTooltip',
+        defaultMessage: 'Added by hand. Click to follow the criteria again.',
+    },
+    scopeLeafExcludedTooltip: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeLeafExcludedTooltip',
+        defaultMessage: 'Excluded by hand. Click to follow the criteria again.',
+    },
+    scopeLeafUnselectedTooltip: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeLeafUnselectedTooltip',
+        defaultMessage: 'Does not match the criteria. Click to add.',
+    },
+    scopeBranchIncludeAllTooltip: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeBranchIncludeAllTooltip',
+        defaultMessage: 'Click to include all',
+    },
+    scopeBranchExcludeAllTooltip: {
+        id: 'iaso.snt_malaria.scenarioRule.scopeBranchExcludeAllTooltip',
+        defaultMessage: 'Click to exclude all',
     },
     scopeSearchPlaceholder: {
         id: 'iaso.snt_malaria.scenarioRule.scopeSearchPlaceholder',
@@ -885,15 +952,11 @@ export const MESSAGES = defineMessages({
     },
     scopeFooterInScope: {
         id: 'iaso.snt_malaria.scenarioRule.scopeFooterInScope',
-        defaultMessage: '{count} in scope — changes apply live',
+        defaultMessage: '{count} in scope',
     },
     scopeResetOverrides: {
         id: 'iaso.snt_malaria.scenarioRule.scopeResetOverrides',
         defaultMessage: 'Reset overrides',
-    },
-    scopeBranchExcludedSuffix: {
-        id: 'iaso.snt_malaria.scenarioRule.scopeBranchExcludedSuffix',
-        defaultMessage: '{count} excluded',
     },
     scopeLoading: {
         id: 'iaso.snt_malaria.scenarioRule.scopeLoading',
