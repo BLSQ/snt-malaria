@@ -34,30 +34,19 @@ const EMPTY_AGGREGATE: ScopeAggregate = {
 };
 
 const styles = {
-    headerRow: {
-        display: 'flex',
-        alignItems: 'baseline',
-        justifyContent: 'space-between',
-        gap: 2,
-        mb: 1.25,
-    },
-    scopeLine: {
-        fontSize: '12px',
-        color: 'text.secondary',
-    },
     box: {
         border: 1,
         borderColor: 'divider',
-        borderRadius: 1,
+        borderRadius: 2,
         overflow: 'hidden',
-        backgroundColor: 'common.white',
+        backgroundColor: 'background.paper',
     },
     searchRow: {
         display: 'flex',
         alignItems: 'center',
-        gap: 1.25,
-        px: 1.25,
-        py: 1,
+        gap: 1,
+        height: 40,
+        px: 1.5,
         borderBottom: 1,
         borderColor: 'divider',
     },
@@ -77,16 +66,21 @@ const styles = {
     treeScroll: {
         maxHeight: '360px',
         overflow: 'auto',
+        py: 0.5,
     },
     footer: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: 1.5,
-        px: 1.25,
-        py: 0.75,
+        gap: 1,
+        minHeight: 40,
+        px: 1.5,
         borderTop: 1,
         borderColor: 'divider',
+    },
+    resetButton: {
+        flex: '0 0 auto',
+        whiteSpace: 'nowrap',
     },
     centeredMessage: {
         textAlign: 'center',
@@ -193,7 +187,7 @@ export const OrgUnitScopeSelector: FC<Props> = ({
         });
     }, []);
 
-    const handleRowClick = useCallback(
+    const handleToggleSelection = useCallback(
         (nodeId: number, isLeaf: boolean) => {
             if (!tree) return;
             const leafIds = tree.leafIdsByAncestor.get(nodeId) ?? [];
@@ -241,6 +235,8 @@ export const OrgUnitScopeSelector: FC<Props> = ({
         setQuery('');
     }, []);
 
+    const hasCriteria = matchingCriteria.length > 0;
+    const hasOverrides = rootAggregate.hand + rootAggregate.exc > 0;
     const isFiltering = query.trim() !== '';
     const isNoResult = isFiltering && rows.length === 0;
 
@@ -286,20 +282,6 @@ export const OrgUnitScopeSelector: FC<Props> = ({
 
     return (
         <Box>
-            <Box sx={styles.headerRow}>
-                <Typography variant="subtitle1">
-                    {formatMessage(MESSAGES.orgUnitsSectionLabel)}
-                </Typography>
-                <Box sx={styles.scopeLine}>
-                    {formatMessage(MESSAGES.scopeLine, {
-                        rule: String(rootAggregate.rule),
-                        hand: String(rootAggregate.hand),
-                        exc: String(rootAggregate.exc),
-                        scope: String(rootAggregate.scope),
-                    })}
-                </Box>
-            </Box>
-
             {isRuleError && (
                 <Box sx={styles.previewError}>
                     <ErrorOutline color="error" fontSize="small" />
@@ -396,6 +378,7 @@ export const OrgUnitScopeSelector: FC<Props> = ({
                                     node={node}
                                     depth={row.depth}
                                     aggregate={aggregate}
+                                    hasCriteria={hasCriteria}
                                     kind={
                                         node.isLeaf
                                             ? leafKind(
@@ -410,8 +393,11 @@ export const OrgUnitScopeSelector: FC<Props> = ({
                                     onToggleOpen={() =>
                                         handleToggleOpen(node.id)
                                     }
-                                    onClick={() =>
-                                        handleRowClick(node.id, node.isLeaf)
+                                    onToggleSelection={() =>
+                                        handleToggleSelection(
+                                            node.id,
+                                            node.isLeaf,
+                                        )
                                     }
                                 />
                             );
@@ -420,17 +406,30 @@ export const OrgUnitScopeSelector: FC<Props> = ({
 
                 <Box sx={styles.footer}>
                     <Typography variant="caption" color="text.secondary">
-                        {formatMessage(MESSAGES.scopeFooterInScope, {
-                            count: String(rootAggregate.scope),
-                        })}
+                        {hasCriteria
+                            ? formatMessage(MESSAGES.scopeFooterWithOverrides, {
+                                  scope: String(rootAggregate.scope),
+                                  hand: String(rootAggregate.hand),
+                                  exc: String(rootAggregate.exc),
+                              })
+                            : formatMessage(MESSAGES.scopeFooterInScope, {
+                                  count: String(rootAggregate.scope),
+                              })}
                     </Typography>
-                    <Button
-                        variant="text"
-                        size="small"
-                        onClick={handleResetOverrides}
-                    >
-                        {formatMessage(MESSAGES.scopeResetOverrides)}
-                    </Button>
+                    {hasOverrides && (
+                        <Button
+                            variant="text"
+                            size="small"
+                            onClick={handleResetOverrides}
+                            sx={styles.resetButton}
+                        >
+                            {formatMessage(
+                                hasCriteria
+                                    ? MESSAGES.scopeResetOverrides
+                                    : MESSAGES.scopeClearSelection,
+                            )}
+                        </Button>
+                    )}
                 </Box>
             </Box>
             {isLoadingRule && !isLoadingTree && <LoadingSpinner size={16} />}

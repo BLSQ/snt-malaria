@@ -1,5 +1,5 @@
 import React, { FC, useCallback } from 'react';
-import { Box, Stack, TextField, Typography } from '@mui/material';
+import { Box, Stack, TextField } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
@@ -14,6 +14,7 @@ import { InterventionPropertiesForm } from './InterventionPropertiesForm';
 import { MatchingCriteriaForm } from './MatchingCriteriaForm';
 import { OrgUnitScopeSelector } from './orgUnitScopeSelector/OrgUnitScopeSelector';
 import { RuleCoverageSummary } from './RuleCoverageSummary';
+import { RuleStepSection, RuleStepSubSectionHeader } from './RuleStepSection';
 
 const parseOrgUnitIds = (commaSeparatedIds?: string): number[] =>
     (commaSeparatedIds || '')
@@ -24,19 +25,22 @@ const parseOrgUnitIds = (commaSeparatedIds?: string): number[] =>
 
 const styles = {
     formRoot: {
+        position: 'absolute',
+        inset: 0,
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100%',
     },
-    // Pins the coverage widgets to the bottom of the panel, but collapses when
-    // the rule content is tall enough to push them down (and the panel scrolls).
-    coverage: {
-        mt: 'auto',
-    },
-    formWrapper: {
+    scrollableSteps: {
+        flex: '1 1 auto',
+        minHeight: 0,
+        overflowY: 'auto',
         p: 2,
-        backgroundColor: 'grey.100',
-        borderRadius: 3,
+    },
+    coverage: {
+        flex: '0 0 auto',
+        px: 2,
+        pt: 1.5,
+        pb: 2,
     },
     ruleNameInput: {
         flexGrow: 1,
@@ -51,14 +55,6 @@ const styles = {
         },
     },
 } satisfies SxStyles;
-
-const ScenarioRuleHeading: FC<{ label: string }> = ({ label }) => {
-    return (
-        <Typography variant="subtitle1" gutterBottom>
-            {label}
-        </Typography>
-    );
-};
 
 type Props = {
     matchedOrgUnitIds?: number[];
@@ -119,35 +115,21 @@ export const ScenarioRuleForm: FC<Props> = ({
         [setFieldValueAndState, values.interventions],
     );
 
-    const onUpdateIntervention = useCallback(
-        (index: number, interventionId: number) => {
-            const updated = [...values.interventions];
-            updated[index] = interventionId;
-            setFieldValueAndState('interventions', updated);
-        },
-        [setFieldValueAndState, values.interventions],
-    );
-
     return (
         <Box sx={styles.formRoot}>
-            <Box sx={styles.formWrapper}>
-                <Box mb={3}>
-                    <ScenarioRuleHeading
-                        label={formatMessage(MESSAGES.interventionProperties)}
-                    />
-                    <InterventionPropertiesForm
-                        interventions={values.interventions}
-                        interventionCategories={interventionCategories}
-                        onAdd={onAddIntervention}
-                        onRemove={onRemoveIntervention}
-                        onUpdateField={onUpdateIntervention}
-                        errors={errors.interventions}
-                        touched={touched.interventions}
-                    />
-                </Box>
-                <Box mb={2}>
-                    <ScenarioRuleHeading
-                        label={formatMessage(MESSAGES.selectionCriteria)}
+            <Stack spacing={3} sx={styles.scrollableSteps}>
+                <RuleStepSection
+                    step={1}
+                    title={formatMessage(MESSAGES.ruleStepRegion)}
+                    description={formatMessage(
+                        MESSAGES.ruleStepRegionDescription,
+                    )}
+                >
+                    <RuleStepSubSectionHeader
+                        title={formatMessage(MESSAGES.selectionCriteria)}
+                        description={formatMessage(
+                            MESSAGES.selectionCriteriaDescription,
+                        )}
                     />
                     <MatchingCriteriaForm
                         metricTypeCategories={metricTypeCategories}
@@ -161,8 +143,9 @@ export const ScenarioRuleForm: FC<Props> = ({
                         touched={touched.matching_criteria}
                         onUpdateField={setChildFieldValueAndState}
                     />
-                </Box>
-                <Box>
+                    <RuleStepSubSectionHeader
+                        title={formatMessage(MESSAGES.manualSelection)}
+                    />
                     <OrgUnitScopeSelector
                         interventionTypeId={interventionTypeId}
                         matchingCriteria={values.matching_criteria}
@@ -174,37 +157,54 @@ export const ScenarioRuleForm: FC<Props> = ({
                         onChangeExcluded={onChangeExcludedOrgUnits}
                         onChangeHandpicked={onChangeHandpickedOrgUnits}
                     />
-                </Box>
-            </Box>
-            <Box mt={3}>
-                <Typography variant="body2" fontWeight="medium" mb={1}>
-                    {formatMessage(MESSAGES.ruleNameAndColor)}
-                </Typography>
-                <Stack direction="row" spacing={2}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        value={values.name}
-                        onChange={e =>
-                            setFieldValueAndState('name', e.target.value)
-                        }
-                        placeholder={generateRuleName(
-                            values.interventions,
-                            interventionCategories,
-                        )}
-                        sx={styles.ruleNameInput}
+                </RuleStepSection>
+                <RuleStepSection
+                    step={2}
+                    title={formatMessage(MESSAGES.interventionProperties)}
+                    description={formatMessage(
+                        MESSAGES.ruleStepInterventionsDescription,
+                    )}
+                >
+                    <InterventionPropertiesForm
+                        interventions={values.interventions}
+                        interventionCategories={interventionCategories}
+                        onAdd={onAddIntervention}
+                        onRemove={onRemoveIntervention}
                     />
-                    <Box pt={1}>
-                        <ColorPicker
-                            displayLabel={false}
-                            currentColor={values.color}
-                            onChangeColor={color =>
-                                setFieldValueAndState('color', color)
+                </RuleStepSection>
+                <RuleStepSection
+                    step={3}
+                    title={formatMessage(MESSAGES.ruleNameAndColor)}
+                    description={formatMessage(
+                        MESSAGES.ruleStepNameAndColorDescription,
+                    )}
+                >
+                    <Stack direction="row" spacing={2}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            value={values.name}
+                            onChange={e =>
+                                setFieldValueAndState('name', e.target.value)
                             }
+                            placeholder={generateRuleName(
+                                values.interventions,
+                                interventionCategories,
+                            )}
+                            sx={styles.ruleNameInput}
                         />
-                    </Box>
-                </Stack>
-            </Box>
+                        <Box pt={1}>
+                            <ColorPicker
+                                displayLabel={false}
+                                currentColor={values.color}
+                                onChangeColor={color =>
+                                    setFieldValueAndState('color', color)
+                                }
+                            />
+                        </Box>
+                    </Stack>
+                </RuleStepSection>
+            </Stack>
             <Box sx={styles.coverage}>
                 <RuleCoverageSummary
                     matchedOrgUnitIds={matchedOrgUnitIds}

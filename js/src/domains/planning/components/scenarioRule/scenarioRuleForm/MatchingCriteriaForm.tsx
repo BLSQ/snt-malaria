@@ -1,14 +1,16 @@
 import React, { FC, useCallback, useMemo } from 'react';
-import { Box } from '@mui/material';
+import { Stack } from '@mui/material';
 import { FormikTouched } from 'formik';
 import { FormikErrors } from 'formik';
-import { DropdownButton } from '../../../../../components/DropdownButton';
+import { LegendTypes } from '../../../../../constants/legend';
 import { useGetChildError } from '../../../../../hooks/useGetChildError';
 import { MetricTypeCategory } from '../../../../dataLayers/types/metrics';
 import { MESSAGES } from '../../../../messages';
 import { getDataLayerYear } from '../../../../scenarios/types';
 import { defaultMatchingCriteria } from '../../../hooks/useScenarioRuleFormState';
 import { MetricTypeCriterion } from '../../../types/scenarioRule';
+import { AddItemButton } from './AddItemButton';
+import { EQUAL_OPERATOR } from './CriterionOperatorSelect';
 import { MatchingCriterionForm } from './MatchingCriterionForm';
 
 type Props = {
@@ -32,6 +34,11 @@ type Props = {
 };
 
 const LIST_FIELD_KEY = 'matching_criteria';
+
+const ordinalMatchingCriteria: MetricTypeCriterion = {
+    ...defaultMatchingCriteria,
+    operator: EQUAL_OPERATOR,
+};
 
 export const MatchingCriteriaForm: FC<Props> = ({
     matchingCriteria,
@@ -76,7 +83,7 @@ export const MatchingCriteriaForm: FC<Props> = ({
     });
 
     return (
-        <Box>
+        <Stack spacing={1}>
             {React.Children.toArray(
                 matchingCriteria.map((criterion, index) => (
                     <MatchingCriterionForm
@@ -94,17 +101,21 @@ export const MatchingCriteriaForm: FC<Props> = ({
                     />
                 )),
             )}
-            <DropdownButton
+            <AddItemButton
                 label={MESSAGES.addMatchingCriteria}
                 options={metricTypeOptions}
                 onClick={(metric_type: number) =>
-                    onAdd(LIST_FIELD_KEY, defaultMatchingCriteria, {
-                        metric_type,
-                    })
+                    onAdd(
+                        LIST_FIELD_KEY,
+                        getMetricType(metric_type)?.legend_type ===
+                            LegendTypes.ORDINAL
+                            ? ordinalMatchingCriteria
+                            : defaultMatchingCriteria,
+                        { metric_type },
+                    )
                 }
-                size="small"
-                groupOptions
+                hasItems={matchingCriteria.length > 0}
             />
-        </Box>
+        </Stack>
     );
 };

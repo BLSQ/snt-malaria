@@ -16,12 +16,18 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: 1.5,
-        p: 1.5,
+        py: 1.5,
+        px: 2,
         backgroundColor: 'grey.100',
-        borderRadius: 3,
+        borderRadius: 2,
     },
     widgetIcon: {
+        fontSize: 22,
         color: 'primary.main',
+    },
+    widgetPercent: {
+        fontWeight: 'regular',
+        color: 'text.secondary',
     },
     widgetLabel: {
         color: 'text.secondary',
@@ -64,12 +70,16 @@ const RuleCoverageWidget: FC<WidgetProps> = ({
     <Box
         sx={isLoading ? { ...styles.widget, ...styles.loading } : styles.widget}
     >
-        <Icon fontSize="medium" sx={styles.widgetIcon} />
+        <Icon sx={styles.widgetIcon} />
         <Box>
-            <Typography variant="subtitle1" fontWeight="bold" lineHeight={1.3}>
+            <Typography variant="body2" fontWeight="medium">
                 {value !== undefined ? formatCount(value) : '-'}
                 {value !== undefined && (
-                    <Typography component="span" variant="subtitle1">
+                    <Typography
+                        component="span"
+                        variant="body2"
+                        sx={styles.widgetPercent}
+                    >
                         {formatPercentOfTotal(value, total)}
                     </Typography>
                 )}
@@ -128,7 +138,7 @@ export const RuleCoverageSummary: FC<Props> = ({
     }, [populationByOrgUnit, allOrgUnits]);
 
     return (
-        <Box mt={3}>
+        <Box>
             <Typography variant="body2" fontWeight="medium" mb={1}>
                 {formatMessage(MESSAGES.ruleCoverage)}
             </Typography>

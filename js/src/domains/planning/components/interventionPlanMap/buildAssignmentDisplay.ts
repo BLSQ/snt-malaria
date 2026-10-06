@@ -52,10 +52,13 @@ export function buildAssignmentDisplay(
 
             entry.colors.add(ruleColor);
 
-            if (!entry.chipsByInterventionId.has(interventionId)) {
+            if (
+                interventionId !== undefined &&
+                !entry.chipsByInterventionId.has(interventionId)
+            ) {
                 entry.chipsByInterventionId.set(interventionId, {
                     id: interventionId,
-                    name: interventionName,
+                    name: interventionName ?? '',
                     color: ruleColor,
                 });
             }

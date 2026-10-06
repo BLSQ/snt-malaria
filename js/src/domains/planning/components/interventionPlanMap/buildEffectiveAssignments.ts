@@ -1,16 +1,19 @@
 import { mapTheme } from '../../../../constants/map-theme';
-import { InterventionCategory } from '../../../interventions/types';
+import {
+    Intervention,
+    InterventionCategory,
+} from '../../../interventions/types';
 import { InterventionAssignmentResponse } from '../../types/interventionAssignments';
 import { ScenarioRule } from '../../types/scenarioRule';
 
 /** Label + color for one intervention chip in a map tooltip. */
 export type InterventionChip = { id: number; name: string; color: string };
 
-/** One intervention on one org unit for the map pipeline. */
+/** One intervention (or none, for a preview rule without interventions) on one org unit for the map pipeline. */
 export type NormalizedAssignment = {
     orgUnitId: number;
-    interventionId: number;
-    interventionName: string;
+    interventionId?: number;
+    interventionName?: string;
     ruleColor: string;
 };
 
@@ -32,17 +35,19 @@ export function buildPreviewAssignments({
         c => c.interventions,
     );
     const color = previewRule?.color || mapTheme.shapeColor;
+    const ruleInterventions = (previewRule?.interventions ?? [])
+        .map(id => allInterventions.find(i => i.id === id))
+        .filter((i): i is Intervention => i !== undefined);
 
     return (matchedOrgUnitIds ?? []).flatMap(orgUnitId =>
-        (previewRule?.interventions ?? [])
-            .map(id => allInterventions.find(i => i.id === id))
-            .filter(Boolean)
-            .map(i => ({
-                orgUnitId,
-                interventionId: i!.id,
-                interventionName: i!.short_name,
-                ruleColor: color,
-            })),
+        ruleInterventions.length > 0
+            ? ruleInterventions.map(i => ({
+                  orgUnitId,
+                  interventionId: i.id,
+                  interventionName: i.short_name,
+                  ruleColor: color,
+              }))
+            : [{ orgUnitId, ruleColor: color }],
     );
 }
 
