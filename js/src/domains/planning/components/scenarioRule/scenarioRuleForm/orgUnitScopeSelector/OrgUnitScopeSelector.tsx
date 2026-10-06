@@ -1,4 +1,11 @@
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, {
+    FC,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import {
     CloudOff,
     ErrorOutline,
@@ -17,6 +24,7 @@ import {
     computeKeepForQuery,
     leafKind,
     pickLeaves,
+    pruneNoOpOverrides,
     restoreLeaves,
     sumAggregates,
     unpickLeaves,
@@ -145,6 +153,37 @@ export const OrgUnitScopeSelector: FC<Props> = ({
     );
     const handIds = useMemo(() => new Set(handpickedIds), [handpickedIds]);
     const excIds = useMemo(() => new Set(excludedIds), [excludedIds]);
+
+    const previousRuleMatchedIds = useRef(ruleMatchedIds);
+    useEffect(() => {
+        const previous = previousRuleMatchedIds.current;
+        previousRuleMatchedIds.current = ruleMatchedIds;
+        if (
+            previous === undefined ||
+            ruleMatchedIds === undefined ||
+            previous === ruleMatchedIds
+        ) {
+            return;
+        }
+        const { hand, exc } = pruneNoOpOverrides(
+            ruleIds,
+            handpickedIds,
+            excludedIds,
+        );
+        if (hand.length !== handpickedIds.length) {
+            onChangeHandpicked(hand);
+        }
+        if (exc.length !== excludedIds.length) {
+            onChangeExcluded(exc);
+        }
+    }, [
+        ruleMatchedIds,
+        ruleIds,
+        handpickedIds,
+        excludedIds,
+        onChangeHandpicked,
+        onChangeExcluded,
+    ]);
 
     const aggregates = useMemo(
         () =>

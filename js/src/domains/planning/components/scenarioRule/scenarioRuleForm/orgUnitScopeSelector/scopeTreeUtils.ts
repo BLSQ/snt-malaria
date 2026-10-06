@@ -124,13 +124,11 @@ export const computeAggregates = (
         let exc = 0;
         let scope = 0;
         leaves.forEach(leafId => {
-            const inRule = ruleIds.has(leafId);
-            const inHand = handIds.has(leafId);
-            const inExc = excIds.has(leafId);
-            if (inRule) rule += 1;
-            if (inHand) hand += 1;
-            if (inExc) exc += 1;
-            if ((inRule || inHand) && !inExc) scope += 1;
+            const kind = leafKind(leafId, ruleIds, handIds, excIds);
+            if (ruleIds.has(leafId)) rule += 1;
+            if (kind === 'hand') hand += 1;
+            if (kind === 'exc') exc += 1;
+            if (kind === 'rule' || kind === 'hand') scope += 1;
         });
         aggregates.set(nodeId, {
             total: leaves.length,
@@ -149,14 +147,14 @@ export const leafKind = (
     handIds: Set<number>,
     excIds: Set<number>,
 ): ScopeKind => {
-    if (excIds.has(id)) return 'exc';
-    if (handIds.has(id)) return 'hand';
-    if (ruleIds.has(id)) return 'rule';
-    return 'none';
+    if (ruleIds.has(id)) {
+        return excIds.has(id) ? 'exc' : 'rule';
+    }
+    return handIds.has(id) ? 'hand' : 'none';
 };
 
-// Picking a set of leaves restores any that are excluded (the rule still
-// owns them) and handpicks the rest, unless they're already rule-matched.
+// Picking a set of leaves restores the rule-matched ones and handpicks the
+// rest, dropping any exclusion left over from earlier criteria.
 export const pickLeaves = (
     leafIds: number[],
     hand: Set<number>,
@@ -166,9 +164,8 @@ export const pickLeaves = (
     const nextHand = new Set(hand);
     const nextExc = new Set(exc);
     leafIds.forEach(id => {
-        if (nextExc.has(id)) {
-            nextExc.delete(id);
-        } else if (!ruleIds.has(id)) {
+        nextExc.delete(id);
+        if (!ruleIds.has(id)) {
             nextHand.add(id);
         }
     });
@@ -176,7 +173,8 @@ export const pickLeaves = (
 };
 
 // Unpicking a set of leaves excludes the ones the rule matched (rule
-// membership itself is never edited) and simply un-handpicks the rest.
+// membership itself is never edited) and un-handpicks all of them, including
+// handpicks left over from earlier criteria.
 export const unpickLeaves = (
     leafIds: number[],
     hand: Set<number>,
@@ -186,14 +184,24 @@ export const unpickLeaves = (
     const nextHand = new Set(hand);
     const nextExc = new Set(exc);
     leafIds.forEach(id => {
+        nextHand.delete(id);
         if (ruleIds.has(id)) {
             nextExc.add(id);
-        } else {
-            nextHand.delete(id);
         }
     });
     return { hand: nextHand, exc: nextExc };
 };
+
+// Overrides that no longer change anything: exclusions of leaves the rule no
+// longer matches, and handpicks of leaves it now matches.
+export const pruneNoOpOverrides = (
+    ruleIds: Set<number>,
+    handpickedIds: number[],
+    excludedIds: number[],
+): { hand: number[]; exc: number[] } => ({
+    hand: handpickedIds.filter(id => !ruleIds.has(id)),
+    exc: excludedIds.filter(id => ruleIds.has(id)),
+});
 
 export const restoreLeaves = (
     leafIds: number[],

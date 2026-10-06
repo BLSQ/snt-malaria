@@ -1,7 +1,7 @@
-import React, { FC, MouseEvent, useCallback } from 'react';
+import React, { FC, MouseEvent, useCallback, useMemo } from 'react';
 import { Check, Close, ExpandMore, Remove } from '@mui/icons-material';
-import { Box, Tooltip, useTheme } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { Box, Palette, Tooltip, useTheme } from '@mui/material';
+import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../../../messages';
 import { ruleFormColors } from '../styles';
@@ -41,6 +41,57 @@ const styles = {
     },
 } satisfies SxStyles;
 
+type RowAppearance = {
+    boxColor?: string;
+    rowBackgroundColor: string;
+    tooltip: IntlMessage;
+};
+
+const getRowAppearance = (
+    isLeaf: boolean,
+    kind: ScopeKind | undefined,
+    branchScope: number,
+    palette: Palette,
+): RowAppearance => {
+    if (!isLeaf) {
+        return branchScope > 0
+            ? {
+                  boxColor: ruleFormColors.ruleMatch,
+                  rowBackgroundColor: 'transparent',
+                  tooltip: MESSAGES.scopeBranchExcludeAllTooltip,
+              }
+            : {
+                  rowBackgroundColor: 'transparent',
+                  tooltip: MESSAGES.scopeBranchIncludeAllTooltip,
+              };
+    }
+    switch (kind) {
+        case 'exc':
+            return {
+                boxColor: palette.error.main,
+                rowBackgroundColor: ruleFormColors.excludedBackground,
+                tooltip: MESSAGES.scopeLeafExcludedTooltip,
+            };
+        case 'hand':
+            return {
+                boxColor: palette.primary.main,
+                rowBackgroundColor: palette.primary.light,
+                tooltip: MESSAGES.scopeLeafHandpickedTooltip,
+            };
+        case 'rule':
+            return {
+                boxColor: ruleFormColors.ruleMatch,
+                rowBackgroundColor: 'transparent',
+                tooltip: MESSAGES.scopeLeafRuleTooltip,
+            };
+        default:
+            return {
+                rowBackgroundColor: 'transparent',
+                tooltip: MESSAGES.scopeLeafUnselectedTooltip,
+            };
+    }
+};
+
 type Props = {
     node: ScopeTreeNode;
     depth: number;
@@ -75,28 +126,11 @@ export const ScopeTreeRow: FC<Props> = ({
     const isHandpicked = node.isLeaf && kind === 'hand';
     const isRuleMatch = node.isLeaf && kind === 'rule';
 
-    let boxColor: string | undefined;
-    let rowBackgroundColor = 'transparent';
-    let tooltip = formatMessage(MESSAGES.scopeLeafUnselectedTooltip);
-    if (!node.isLeaf) {
-        boxColor = aggregate.scope > 0 ? ruleFormColors.ruleMatch : undefined;
-        tooltip = formatMessage(
-            aggregate.scope > 0
-                ? MESSAGES.scopeBranchExcludeAllTooltip
-                : MESSAGES.scopeBranchIncludeAllTooltip,
-        );
-    } else if (isExcluded) {
-        boxColor = theme.palette.error.main;
-        rowBackgroundColor = ruleFormColors.excludedBackground;
-        tooltip = formatMessage(MESSAGES.scopeLeafExcludedTooltip);
-    } else if (isHandpicked) {
-        boxColor = theme.palette.primary.main;
-        rowBackgroundColor = theme.palette.primary.light;
-        tooltip = formatMessage(MESSAGES.scopeLeafHandpickedTooltip);
-    } else if (isRuleMatch) {
-        boxColor = ruleFormColors.ruleMatch;
-        tooltip = formatMessage(MESSAGES.scopeLeafRuleTooltip);
-    }
+    const { boxColor, rowBackgroundColor, tooltip } = useMemo(
+        () =>
+            getRowAppearance(node.isLeaf, kind, aggregate.scope, theme.palette),
+        [node.isLeaf, kind, aggregate.scope, theme.palette],
+    );
 
     const handleCheckboxClick = useCallback(
         (event: MouseEvent) => {
@@ -167,7 +201,11 @@ export const ScopeTreeRow: FC<Props> = ({
             <Box sx={rowStyles.caret}>
                 <ExpandMore fontSize="small" />
             </Box>
-            <Tooltip title={tooltip} placement="left" disableInteractive>
+            <Tooltip
+                title={formatMessage(tooltip)}
+                placement="left"
+                disableInteractive
+            >
                 <Box sx={rowStyles.box} onClick={handleCheckboxClick}>
                     {isExcluded && <Close sx={styles.boxIcon} />}
                     {(isHandpicked || isRuleMatch || isBranchFull) && (
