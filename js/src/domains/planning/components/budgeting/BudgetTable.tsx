@@ -12,12 +12,16 @@ import {
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { useGetCostBreakdownLines } from '../../../interventions/hooks/useGetCostBreakdownLines';
 import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { getColorRange } from '../../libs/color-utils';
-import { DEFAULT_BUFFER_MULTIPLIER } from '../../libs/cost-utils';
+import {
+    bufferPercentToMultiplier,
+    DEFAULT_BUFFER_MULTIPLIER,
+} from '../../libs/cost-utils';
 import {
     BudgetIntervention,
     BudgetInterventionCostLine,
@@ -47,6 +51,10 @@ export const BudgetTable: FC = ({}) => {
         isScenarioEditable,
     } = usePlanningContext();
     const { data: costLines } = useGetCostBreakdownLines();
+    const { data: budgetSettings } = useGetBudgetSettings();
+    const defaultBufferMultiplier = Number(
+        budgetSettings?.buffer ?? DEFAULT_BUFFER_MULTIPLIER,
+    );
     const [totalCosts, setTotalCosts] = useState<{
         totalCost: number;
         yearlyTotal: Record<number, number>;
@@ -111,7 +119,12 @@ export const BudgetTable: FC = ({}) => {
                                 : null,
                         invertedConversionFactor: line.invert_conversion_factor,
                         targetPopulation: null,
-                        buffer: DEFAULT_BUFFER_MULTIPLIER,
+                        buffer:
+                            line.buffer === null
+                                ? defaultBufferMultiplier
+                                : bufferPercentToMultiplier(
+                                      Number(line.buffer),
+                                  ),
                     });
                 });
             }
@@ -120,7 +133,7 @@ export const BudgetTable: FC = ({}) => {
                 costBreakdownLineRecord: lineRecord,
                 defaultCostRowDataByIntervention: defaultRowsByIntervention,
             };
-        }, [costLines, yearlyCoverageByCostLine]);
+        }, [costLines, yearlyCoverageByCostLine, defaultBufferMultiplier]);
 
     const yearRange = useMemo(
         () =>
@@ -208,10 +221,14 @@ export const BudgetTable: FC = ({}) => {
                 conversionFactor: costLine.conversion_factor,
                 invertedConversionFactor: costLine.invert_conversion_factor,
                 targetPopulation: costLine.target_population,
-                buffer: costLine.buffer ?? 1.1,
+                buffer: costLine.buffer ?? defaultBufferMultiplier,
             };
         },
-        [costBreakdownLineRecord, yearlyCoverageByCostLine],
+        [
+            costBreakdownLineRecord,
+            yearlyCoverageByCostLine,
+            defaultBufferMultiplier,
+        ],
     );
 
     useEffect(() => {

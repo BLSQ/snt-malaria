@@ -194,3 +194,13 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             # Absolute / fixed cost: a population layer is meaningless, so drop it silently.
             attrs["population_layer"] = None
         return attrs
+
+
+class InterventionCostBreakdownLineSingleWriteSerializer(InterventionCostBreakdownLineWriteSerializer):
+    """Writes one line through the cost line endpoints, where the URL identifies the line.
+
+    The writable ``id`` only exists for the list update of ``update_details``; here it would let a
+    payload target any other line.
+    """
+
+    id = serializers.IntegerField(read_only=True)

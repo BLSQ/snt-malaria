@@ -14,7 +14,7 @@ from .filters import InterventionCostBreakdownLineListFilter
 from .permissions import InterventionCostBreakdownLinePermission
 from .serializers import (
     InterventionCostBreakdownLineSerializer,
-    InterventionCostBreakdownLineWriteSerializer,
+    InterventionCostBreakdownLineSingleWriteSerializer,
     UnitTypeDropdownSerializer,
 )
 
@@ -29,7 +29,7 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action in ("create", "partial_update"):
-            return InterventionCostBreakdownLineWriteSerializer
+            return InterventionCostBreakdownLineSingleWriteSerializer
         return InterventionCostBreakdownLineSerializer
 
     def get_queryset(self):

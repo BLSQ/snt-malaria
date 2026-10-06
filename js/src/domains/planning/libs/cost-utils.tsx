@@ -46,6 +46,8 @@ export const DEFAULT_BUFFER_MULTIPLIER = 1.1;
 export const bufferMultiplierToPercent = (multiplier: number) =>
     Math.round((multiplier - 1) * 10000) / 100;
 
+export const bufferPercentToMultiplier = (percent: number) => 1 + percent / 100;
+
 export const formatPercentValue = (value: number) => {
     return `${(value * 100).toFixed(0)}%`;
 };
