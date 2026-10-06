@@ -1,7 +1,7 @@
 import React, {
     FC,
     useCallback,
-    useEffect,
+    useLayoutEffect,
     useMemo,
     useRef,
     useState,
@@ -11,6 +11,7 @@ import { useGetColors } from 'Iaso/hooks/useGetColors';
 import { CardStyled } from '../../../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../../../messages';
+import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { useCreateUpdateScenarioRule } from '../../../hooks/useCreateUpdateScenarioRule';
 import {
     defaultScenarioRuleValues,
@@ -18,20 +19,21 @@ import {
     useScenarioRuleFormState,
 } from '../../../hooks/useScenarioRuleFormState';
 import { pickRandomPaletteColor } from '../../../libs/color-utils';
-import { ScenarioRule } from '../../../types/scenarioRule';
+import {
+    parseOrgUnitIds,
+    resolveRuleOrgUnitIds,
+} from '../../../libs/rule-utils';
+import { ScenarioRule, ScenarioRulePreview } from '../../../types/scenarioRule';
 import { ScenarioRuleForm } from './ScenarioRuleForm';
 import { ScenarioRuleFormHeader } from './ScenarioRuleFormHeader';
-
-const PREVIEW_DEBOUNCE_MS = 500;
+import { useRuleMatchedOrgUnits } from './useRuleMatchedOrgUnits';
 
 type Props = {
     scenarioId: number;
     rule?: ScenarioRule;
     existingRules: ScenarioRule[];
     onClose: () => void;
-    onChange?: (values: Partial<ScenarioRuleFormValues>) => void;
-    matchedOrgUnitIds?: number[];
-    isLoadingPreview?: boolean;
+    onPreviewChange?: (preview: ScenarioRulePreview) => void;
 };
 
 export const ScenarioRuleFormWrapper: FC<Props> = ({
@@ -39,11 +41,10 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
     rule,
     existingRules,
     onClose,
-    onChange,
-    matchedOrgUnitIds,
-    isLoadingPreview,
+    onPreviewChange,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const { scenario } = usePlanningContext();
     const { data: palette } = useGetColors();
 
     // useState's lazy initializer runs only on mount, so the random pick is
@@ -105,20 +106,48 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         editMode: Boolean(rule),
     });
 
-    const onChangeRef = useRef(onChange);
-    onChangeRef.current = onChange;
+    const {
+        matching_criteria: matchingCriteria,
+        org_units_excluded: excludedOrgUnits,
+        org_units_included: includedOrgUnits,
+        color,
+        interventions,
+    } = formik.values;
 
-    const isFirstRender = useRef(true);
-    useEffect(() => {
-        if (isFirstRender.current) {
-            isFirstRender.current = false;
+    const ruleMatches = useRuleMatchedOrgUnits({
+        matchingCriteria,
+        dataLayerYears: scenario?.data_layer_years,
+    });
+    const { isAwaitingFirstResult } = ruleMatches;
+
+    const matchedOrgUnitIds = useMemo(
+        () =>
+            resolveRuleOrgUnitIds({
+                hasCriteria: matchingCriteria.length > 0,
+                ruleMatchedIds: ruleMatches.ruleMatchedIds ?? [],
+                excludedIds: parseOrgUnitIds(excludedOrgUnits),
+                includedIds: parseOrgUnitIds(includedOrgUnits),
+            }),
+        [
+            matchingCriteria,
+            ruleMatches.ruleMatchedIds,
+            excludedOrgUnits,
+            includedOrgUnits,
+        ],
+    );
+
+    const onPreviewChangeRef = useRef(onPreviewChange);
+    onPreviewChangeRef.current = onPreviewChange;
+
+    useLayoutEffect(() => {
+        if (isAwaitingFirstResult) {
             return;
         }
-        const timer = setTimeout(() => {
-            onChangeRef.current?.(formik.values);
-        }, PREVIEW_DEBOUNCE_MS);
-        return () => clearTimeout(timer);
-    }, [formik.values]);
+        onPreviewChangeRef.current?.({
+            rule: { color, interventions },
+            matchedOrgUnitIds,
+        });
+    }, [color, interventions, matchedOrgUnitIds, isAwaitingFirstResult]);
 
     return (
         <CardStyled
@@ -135,8 +164,10 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         >
             <ExtendedFormikProvider formik={formik}>
                 <ScenarioRuleForm
-                    matchedOrgUnitIds={matchedOrgUnitIds}
-                    isLoadingPreview={isLoadingPreview}
+                    ruleMatches={ruleMatches}
+                    matchedOrgUnitIds={
+                        isAwaitingFirstResult ? undefined : matchedOrgUnitIds
+                    }
                 />
             </ExtendedFormikProvider>
         </CardStyled>

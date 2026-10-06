@@ -2,8 +2,7 @@ import React, { FC, Ref, useCallback } from 'react';
 import { useGetColors } from 'Iaso/hooks/useGetColors';
 import { CardScrollable } from '../../../../components/styledComponents';
 import { usePlanningContext } from '../../contexts/PlanningContext';
-import { ScenarioRuleFormValues } from '../../hooks/useScenarioRuleFormState';
-import { ScenarioRule } from '../../types/scenarioRule';
+import { ScenarioRule, ScenarioRulePreview } from '../../types/scenarioRule';
 import { ScenarioRuleFormWrapper } from './scenarioRuleForm/ScenarioRuleFormWrapper';
 import { ScenarioRulesContainer } from './scenarioRuleList/ScenarioRulesContainer';
 
@@ -11,10 +10,8 @@ type Props = {
     scenarioId: number;
     rules: ScenarioRule[];
     isLoading: boolean;
-    onPreviewScenarioRule?: (rule?: Partial<ScenarioRule>) => void;
+    onPreviewScenarioRule?: (preview?: ScenarioRulePreview) => void;
     createRuleRef?: Ref<HTMLButtonElement>;
-    matchedOrgUnitIds?: number[];
-    isLoadingPreview?: boolean;
     /** Whether the account has an AI API key configured - gates the AI Chat button. */
     hasAiApiKey?: boolean;
     showAIChat?: boolean;
@@ -27,8 +24,6 @@ export const ScenarioRulesPanel: FC<Props> = ({
     isLoading,
     onPreviewScenarioRule,
     createRuleRef,
-    matchedOrgUnitIds,
-    isLoadingPreview,
     hasAiApiKey,
     showAIChat,
     onToggleAIChat,
@@ -40,29 +35,14 @@ export const ScenarioRulesPanel: FC<Props> = ({
     useGetColors();
 
     const handleShowForm = useCallback(
-        (rule?: ScenarioRule) => {
-            startEditingRule(rule);
-            if (rule) {
-                onPreviewScenarioRule?.(rule);
-            }
-        },
-        [startEditingRule, onPreviewScenarioRule],
+        (rule?: ScenarioRule) => startEditingRule(rule),
+        [startEditingRule],
     );
 
     const handleCloseForm = useCallback(() => {
         onPreviewScenarioRule?.(undefined);
         stopEditingRule();
     }, [onPreviewScenarioRule, stopEditingRule]);
-
-    const handleFormChange = useCallback(
-        (values: Partial<ScenarioRuleFormValues>) => {
-            if (!onPreviewScenarioRule) {
-                return;
-            }
-            onPreviewScenarioRule(values);
-        },
-        [onPreviewScenarioRule],
-    );
 
     return (
         <CardScrollable>
@@ -72,9 +52,7 @@ export const ScenarioRulesPanel: FC<Props> = ({
                     rule={editingRule}
                     existingRules={rules}
                     onClose={handleCloseForm}
-                    onChange={handleFormChange}
-                    matchedOrgUnitIds={matchedOrgUnitIds}
-                    isLoadingPreview={isLoadingPreview}
+                    onPreviewChange={onPreviewScenarioRule}
                 />
             ) : (
                 <ScenarioRulesContainer

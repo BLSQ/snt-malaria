@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDebouncedCallback } from 'bluesquare-components';
-import { usePreviewScenarioRule } from '../../../../hooks/usePreviewScenarioRule';
-import { MetricTypeCriterion } from '../../../../types/scenarioRule';
+import { usePreviewScenarioRule } from '../../../hooks/usePreviewScenarioRule';
+import { MetricTypeCriterion } from '../../../types/scenarioRule';
 
 const DEBOUNCE_MS = 500;
 
@@ -10,27 +10,25 @@ type UseRuleMatchedOrgUnitsArgs = {
     dataLayerYears?: Record<string, number>;
 };
 
-type UseRuleMatchedOrgUnitsResult = {
-    // The "by rule" set - org units matched by the criteria alone, live as
-    // the user edits them, independent of any handpicks/exclusions.
+export type RuleMatchedOrgUnits = {
+    // Org units matched by the criteria alone, independent of any
+    // handpicks/exclusions. Undefined until the first result arrives.
     ruleMatchedIds: number[] | undefined;
+    isAwaitingFirstResult: boolean;
     isLoading: boolean;
     isError: boolean;
     retry: () => void;
 };
 
-// Mirrors the debounced live-preview call already made one level up (in
-// ScenarioRuleFormWrapper) for the *effective* scope, but always with no
-// exclusions/handpicks, so it resolves to the raw "by rule" set the tree
-// needs for its rule/handpicked/excluded breakdown.
 export const useRuleMatchedOrgUnits = ({
     matchingCriteria,
     dataLayerYears,
-}: UseRuleMatchedOrgUnitsArgs): UseRuleMatchedOrgUnitsResult => {
+}: UseRuleMatchedOrgUnitsArgs): RuleMatchedOrgUnits => {
     const { mutate, isLoading, isError } = usePreviewScenarioRule();
     const [ruleMatchedIds, setRuleMatchedIds] = useState<number[] | undefined>(
         undefined,
     );
+    const hasRequestedFirstResult = useRef(false);
 
     const runPreview = useCallback(() => {
         mutate(
@@ -52,8 +50,20 @@ export const useRuleMatchedOrgUnits = ({
             setRuleMatchedIds([]);
             return;
         }
+        if (!hasRequestedFirstResult.current) {
+            hasRequestedFirstResult.current = true;
+            runPreview();
+            return;
+        }
         debouncedRunPreview();
-    }, [matchingCriteria, dataLayerYears, debouncedRunPreview]);
+    }, [matchingCriteria, dataLayerYears, runPreview, debouncedRunPreview]);
 
-    return { ruleMatchedIds, isLoading, isError, retry: runPreview };
+    return {
+        ruleMatchedIds,
+        isAwaitingFirstResult:
+            matchingCriteria.length > 0 && ruleMatchedIds === undefined,
+        isLoading,
+        isError,
+        retry: runPreview,
+    };
 };
