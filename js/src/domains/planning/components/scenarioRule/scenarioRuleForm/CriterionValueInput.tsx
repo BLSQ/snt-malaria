@@ -10,12 +10,11 @@ import React, {
 } from 'react';
 import { InputAdornment, TextField, Tooltip } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
-import { compactInputStyles } from './styles';
+import { compactInputStyles, criterionValueStyles } from './styles';
 
 const styles = {
     field: {
-        flex: '0 0 96px',
-        width: 96,
+        ...criterionValueStyles,
         '& .MuiInputBase-root': {
             ...compactInputStyles,
             px: 0.75,

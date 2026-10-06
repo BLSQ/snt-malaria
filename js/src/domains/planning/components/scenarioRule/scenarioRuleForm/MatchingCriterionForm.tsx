@@ -12,7 +12,7 @@ import {
 } from './CriterionOperatorSelect';
 import { CriterionValueInput } from './CriterionValueInput';
 import { RuleItemCard } from './RuleItemCard';
-import { compactInputStyles } from './styles';
+import { compactInputStyles, criterionValueStyles } from './styles';
 
 type Props = {
     metricTypeCriterion: MetricTypeCriterion;
@@ -27,8 +27,7 @@ type Props = {
 const styles = {
     ordinalSelect: {
         ...compactInputStyles,
-        flex: '0 0 96px',
-        width: 96,
+        ...criterionValueStyles,
     },
 } satisfies SxStyles;
 
