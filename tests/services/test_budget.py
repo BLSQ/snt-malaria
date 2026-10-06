@@ -194,6 +194,28 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         # quantity = 3000 * yearly(1.2) * factor(0.5), no buffer
         self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 1800.0)
 
+    def test_year_without_scenario_coverage_uses_cost_line_coverage(self):
+        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"))
+        self.population_line.coverage = Decimal("80")
+        self.population_line.save()
+        service = BudgetCalculationService(self.scenario)
+
+        result = service.calculate_year(2026)
+
+        # No scenario value for 2026: quantity = (1500 + 2500) * line coverage(0.8) * factor(0.5) * buffer(1.1)
+        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 1760.0)
+
+    def test_scenario_yearly_coverage_overrides_cost_line_coverage(self):
+        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"))
+        self.population_line.coverage = Decimal("80")
+        self.population_line.save()
+        service = BudgetCalculationService(self.scenario)
+
+        result = service.calculate_year(2025)
+
+        # The scenario sets 2025 to 1.2, which wins over the line coverage: 3000 * 1.2 * 0.5 * 1.1
+        self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 1980.0)
+
     def test_calculate_year_uses_default_yearly_multiplier_when_missing(self):
         service = BudgetCalculationService(self.scenario)
 

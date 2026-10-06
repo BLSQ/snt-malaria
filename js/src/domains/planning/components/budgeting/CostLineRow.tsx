@@ -37,6 +37,7 @@ export type CostLineRowData = {
     totalCost: number;
     quantity: number;
     coverageByYear: Record<number, CostLineYearlyCoverage>;
+    defaultCoverage: number;
     unitCost: number;
     unitName: string;
     conversionFactor: number | null;
@@ -92,7 +93,9 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
         Record<number, string>
     >({});
 
-    const defaultCoverage = costLine.isProportional ? 100 : 0;
+    const defaultCoverage = costLine.isProportional
+        ? costLine.defaultCoverage
+        : 0;
 
     React.useEffect(() => {
         const nextCoverageInputsByYear: Record<number, string> = {};

@@ -296,7 +296,9 @@ class BudgetCalculationService:
         return rows
 
     def _get_yearly_value(self, line, year):
-        default = Decimal("1") if line.is_proportional else Decimal("0")
+        # A year the scenario doesn't set falls back to the line's coverage (a percentage), which
+        # proportional lines apply as a ratio of the population; fixed lines have no default count.
+        default = line.coverage / Decimal("100") if line.is_proportional else Decimal("0")
         return self.yearly_value_by_key.get((line.id, year), default)
 
     def _compute_population_cost_row(self, line, org_unit_id, year, inflation_multiplier, intervention_id, grant_id):

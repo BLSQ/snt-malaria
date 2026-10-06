@@ -31,6 +31,8 @@ import { BudgetRow, BudgetRowData } from './BudgetRow';
 import { BudgetTotalRow } from './BudgetTotalRow';
 import { CostLineRowData, CostLineYearlyCoverage } from './CostLineRow';
 
+const FULL_COVERAGE_PERCENT = 100;
+
 const styles = {
     container: {
         maxHeight: '100%',
@@ -111,6 +113,7 @@ export const BudgetTable: FC = ({}) => {
                         quantity: 0,
                         coverageByYear: (yearlyCoverageByCostLine[line.id] ||
                             {}) as Record<number, CostLineYearlyCoverage>,
+                        defaultCoverage: Number(line.coverage),
                         unitCost: Number(line.unit_cost),
                         unitName: line.unit_type_label,
                         conversionFactor:
@@ -216,6 +219,9 @@ export const BudgetTable: FC = ({}) => {
                 quantity: costLine.quantity,
                 coverageByYear: (yearlyCoverageByCostLine[costLine.id] ||
                     {}) as Record<number, CostLineYearlyCoverage>,
+                defaultCoverage: Number(
+                    breakdownLine?.coverage ?? FULL_COVERAGE_PERCENT,
+                ),
                 unitCost: costLine.unit_cost ?? 0,
                 unitName: costLine.cost_unit_name ?? '',
                 conversionFactor: costLine.conversion_factor,

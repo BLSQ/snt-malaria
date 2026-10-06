@@ -89,6 +89,45 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.assertFalse(InterventionCostBreakdownLine.objects.filter(id=self.cost_line1.id).exists())
         recalculate.assert_called_once_with(self.intervention_vaccination_rts, self.user_write)
 
+    @mock.patch(RECALCULATE_PATH)
+    def test_partial_update_ignores_id_in_payload(self, recalculate):
+        """A payload id must not redirect the update to another line, even one of another account."""
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.patch(
+            f"{self.BASE_URL}{self.cost_line1.id}/",
+            {"id": self.other_cost_line.id, "unit_cost": "99.00"},
+            format="json",
+        )
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+
+        self.assertEqual(result["id"], self.cost_line1.id)
+        self.cost_line1.refresh_from_db()
+        self.other_cost_line.refresh_from_db()
+        self.assertEqual(self.cost_line1.unit_cost, Decimal("99.00"))
+        self.assertEqual(self.other_cost_line.unit_cost, Decimal("20.00"))
+        self.assertEqual(self.other_cost_line.intervention, self.other_intervention)
+
+    @mock.patch(RECALCULATE_PATH)
+    def test_create_ignores_id_in_payload(self, recalculate):
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.post(
+            self.BASE_URL,
+            {
+                "id": self.cost_line1.id,
+                "intervention": self.intervention_chemo_iptp.id,
+                "name": "New line",
+                "unit_cost": "1",
+                "category": "Procurement",
+                "unit_type": self.unit_type_other.id,
+            },
+            format="json",
+        )
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+
+        self.assertNotEqual(result["id"], self.cost_line1.id)
+        self.cost_line1.refresh_from_db()
+        self.assertEqual(self.cost_line1.name, "Cost Line 1")
+
     def test_write_cost_breakdown_line_with_read_perm_is_forbidden(self):
         self.client.force_authenticate(user=self.user_read)
         url = f"{self.BASE_URL}{self.cost_line1.id}/"
