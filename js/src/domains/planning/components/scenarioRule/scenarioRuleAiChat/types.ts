@@ -11,6 +11,8 @@ export type GeneratedScenarioRuleSpec = {
     name: string;
     is_match_all: boolean;
     matching_criteria: MetricTypeCriterion[];
+    org_units_included: number[];
+    org_units_excluded: number[];
     interventions: number[];
     color?: string;
 };

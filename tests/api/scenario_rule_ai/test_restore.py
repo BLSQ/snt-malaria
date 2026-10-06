@@ -1,6 +1,7 @@
+from django.contrib.gis.geos import Point
 from rest_framework import status
 
-from iaso.models import Account, MetricType
+from iaso.models import Account, DataSource, MetricType, OrgUnit, SourceVersion
 from plugins.snt_malaria.models import ScenarioRule
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
@@ -151,3 +152,24 @@ class ScenarioRuleAIRestoreAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["rules"]), 1)
         self.assertEqual(response.data["rules"][0]["name"], "Restored")
+
+    def test_restore_keeps_the_snapshot_manual_org_unit_selection(self):
+        data_source = DataSource.objects.create(name="source")
+        version = SourceVersion.objects.create(data_source=data_source, number=1)
+        self.account.default_version = version
+        self.account.save()
+        included, excluded = [
+            self.create_snt_org_unit(
+                version=version, validation_status=OrgUnit.VALIDATION_VALID, location=Point(1.0, 2.0, 0.0)
+            )
+            for _ in range(2)
+        ]
+        spec = {**self._spec(), "org_units_included": [included.id], "org_units_excluded": [excluded.id]}
+        self.client.force_authenticate(self.user)
+
+        response = self._post([spec])
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        rule = ScenarioRule.objects.get(scenario=self.scenario)
+        self.assertEqual(rule.org_units_included, [included.id])
+        self.assertEqual(rule.org_units_excluded, [excluded.id])

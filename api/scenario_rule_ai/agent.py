@@ -34,15 +34,20 @@ RULES_PARSE_FAILURE_MESSAGE = (
 # example) need no escaping.
 METRIC_TYPES_CATALOG_PLACEHOLDER = "{metric_types_catalog}"
 INTERVENTIONS_CATALOG_PLACEHOLDER = "{interventions_catalog}"
+ORG_UNITS_CATALOG_PLACEHOLDER = "{org_units_catalog}"
 COLORS_CATALOG_PLACEHOLDER = "{colors_catalog}"
 
 SCENARIO_RULE_SYSTEM_PROMPT_TEMPLATE = """You are an expert at building malaria intervention scenario rules.
 
 A scenario is a prioritized list of rules. Each rule:
 - has a `name`,
-- selects org units either by a set of AND'ed conditions on data layers (`matching_criteria`), or by
-  matching every org unit in the account (`is_match_all: true`) - a rule uses one or the other, never
-  both,
+- selects org units in one of three ways:
+  - by a set of AND'ed conditions on data layers (`matching_criteria`),
+  - by matching every org unit in the account (`is_match_all: true`),
+  - by a manual selection of org units only (`org_units_included`, with no `matching_criteria` and
+    `is_match_all: false`),
+- can adjust that selection by hand: `org_units_excluded` removes specific org units from it, and
+  `org_units_included` adds specific org units on top of what `matching_criteria` matches,
 - assigns one or more `interventions` to every org unit it selects.
 
 Rules are listed from lowest to highest priority (the last rule in the list has the highest priority).
@@ -63,6 +68,9 @@ When an org unit is matched by more than one rule, here is how their interventio
 ## Available interventions for this account
 {interventions_catalog}
 
+## Available org units for this account
+{org_units_catalog}
+
 ## Available colors
 {colors_catalog}
 
@@ -80,6 +88,8 @@ that changed:
       "matching_criteria": [
         {"metric_type": <id from the data layer catalog above, as an integer>, "operator": "<one of ==, <=, >=, <, >>", "value": <number>}
       ],
+      "org_units_included": [<id from the org units catalog above, as an integer>, ...],
+      "org_units_excluded": [<id from the org units catalog above, as an integer>, ...],
       "interventions": [<id from the interventions catalog above, as an integer>, ...],
       "color": "<required - a hex value from the color palette above, chosen to suit this rule and stay distinct from the others>"
     }
@@ -99,12 +109,24 @@ Never prefix a `question` or an `option` with a letter or number (no "a.", "1)",
 UI numbers/distinguishes them structurally, so both fields must be the clean label text only.
 
 ## Rules
-- Only reference metric type ids that appear in the data layer catalog above, and intervention ids that
-  appear in the interventions catalog above.
+- Only reference metric type ids that appear in the data layer catalog above, intervention ids that
+  appear in the interventions catalog above, and org unit ids that appear in the org units catalog above.
 - A rule's `matching_criteria` conditions are implicitly AND'ed - a rule matches an org unit only if
   every condition is true for it. Use `is_match_all: true` instead of `matching_criteria` for a rule
   that should apply to every org unit; a rule cannot use both, and a non-match-all rule needs at least
-  one condition.
+  one condition, unless it is a manual selection rule (non-empty `org_units_included`).
+- Use `org_units_included` / `org_units_excluded` whenever the user names specific org units (e.g.
+  "only in Bo and Kenema", "everywhere except Bonthe", "also add Pujehun", "same criteria but skip
+  Kailahun"). Leave both as empty lists otherwise - never use them to approximate a data layer
+  condition. How they combine with the rest of the rule:
+  - criteria rule: org units matching `matching_criteria`, minus `org_units_excluded`, plus
+    `org_units_included`;
+  - match-all rule: every org unit minus `org_units_excluded` (`org_units_included` is ignored);
+  - manual selection rule (`is_match_all: false`, empty `matching_criteria`): exactly
+    `org_units_included`, which must then not be empty (`org_units_excluded` is ignored).
+  An org unit must never appear in both lists of the same rule. If an org unit name the user gives
+  matches no catalog entry, or matches several (use the parent shown in the catalog to tell them
+  apart), ask rather than guess.
 - A condition's value is a number (`value`), unless the data layer is marked "categorical" in the
   catalog above (e.g. produced by a `classify` composite layer), in which case use one of its listed
   valid values as a text label (`string_value`) instead. A categorical condition's operator MUST be
@@ -136,7 +158,8 @@ UI numbers/distinguishes them structurally, so both fields must be the clean lab
 - In the `message` field (and in any plain-text clarifying question), never write a numeric id, for
   any reason - not even in parentheses to disambiguate two data layers or interventions that happen to
   share the same name (e.g. never write "'TEST' (id 97)"). The user reading it has no way to look up
-  what an id refers to - ids exist only in the `matching_criteria`/`interventions` fields of the JSON,
+  what an id refers to - ids exist only in the `matching_criteria`/`interventions`/`org_units_*` fields
+  of the JSON,
   never in text a person reads. If two or more catalog entries share the exact same name, say so in
   words instead - e.g. "there are two data layers both named 'TEST' - ask your administrator to rename
   one so they can be told apart" - and either ask the user which one they mean, or pick one and explain
@@ -164,6 +187,8 @@ class GeneratedScenarioRuleSpec(BaseModel, extra="allow"):
     name: str
     is_match_all: bool = False
     matching_criteria: list[MatchingCriterionSpec] = Field(default_factory=list)
+    org_units_included: list[int] = Field(default_factory=list)
+    org_units_excluded: list[int] = Field(default_factory=list)
     interventions: list[int] = Field(default_factory=list)
     color: Optional[str] = None
 
@@ -215,6 +240,19 @@ def _build_interventions_catalog(interventions: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _build_org_units_catalog(org_units: list[dict]) -> str:
+    if not org_units:
+        return "(no org units available for this account)"
+
+    lines = []
+    for org_unit in org_units:
+        line = f'- id={org_unit["id"]}, name="{org_unit["name"]}"'
+        if org_unit.get("parent_name"):
+            line += f', parent="{org_unit["parent_name"]}"'
+        lines.append(line)
+    return "\n".join(lines)
+
+
 def _build_colors_catalog() -> str:
     # The palette is a fixed, global list (not account-specific), same one the manual color picker
     # (ColorPicker) and _pick_new_rule_color's auto-assignment draw from - never built from
@@ -222,9 +260,11 @@ def _build_colors_catalog() -> str:
     return "\n".join(f'- value="{hex_code}", name="{label}"' for hex_code, label in COLOR_CHOICES)
 
 
-def build_static_system_prompt(metric_types: list[dict], interventions: list[dict]) -> str:
+def build_static_system_prompt(
+    metric_types: list[dict], interventions: list[dict], org_units: Optional[list[dict]] = None
+) -> str:
     """Build the part of the system prompt that's static for a given account: the instructional
-    template with its data layer, intervention, and color catalogs substituted in. Unlike the
+    template with its data layer, intervention, org unit, and color catalogs substituted in. Unlike the
     current rules (see `build_system_blocks`), this is identical across every turn of a session and
     across sessions for the same account, which is what makes it worth caching as its own block."""
     return (
@@ -232,6 +272,7 @@ def build_static_system_prompt(metric_types: list[dict], interventions: list[dic
             METRIC_TYPES_CATALOG_PLACEHOLDER, _build_metric_types_catalog(metric_types)
         )
         .replace(INTERVENTIONS_CATALOG_PLACEHOLDER, _build_interventions_catalog(interventions))
+        .replace(ORG_UNITS_CATALOG_PLACEHOLDER, _build_org_units_catalog(org_units or []))
         .replace(COLORS_CATALOG_PLACEHOLDER, _build_colors_catalog())
     )
 
@@ -240,6 +281,7 @@ def build_system_blocks(
     metric_types: list[dict],
     interventions: list[dict],
     current_rules: Optional[list[dict]] = None,
+    org_units: Optional[list[dict]] = None,
 ) -> list[dict]:
     """Build the `system` param as content blocks. The static template+catalogs are marked as a
     single cached block, since a chat session resends the same system prompt on every turn - only
@@ -248,7 +290,7 @@ def build_system_blocks(
     blocks = [
         {
             "type": "text",
-            "text": build_static_system_prompt(metric_types, interventions),
+            "text": build_static_system_prompt(metric_types, interventions, org_units),
             # 1h rather than the 5m default: turns in this chat are often minutes apart (the user
             # reviews the generated rules in the editor between messages), so the short-lived
             # default would frequently miss and pay full cache-write price on every turn anyway.
@@ -268,6 +310,7 @@ def call_claude(
     api_key: Optional[str] = None,
     current_rules: Optional[list[dict]] = None,
     attachments: Optional[list[dict]] = None,
+    org_units: Optional[list[dict]] = None,
 ) -> str:
     """Call Claude API with the conversation and return the raw response text."""
     client = anthropic.Anthropic(api_key=api_key)
@@ -275,7 +318,7 @@ def call_claude(
     response = client.beta.messages.create(
         model=settings.SCENARIO_RULE_AI_MODEL,
         max_tokens=4096,
-        system=build_system_blocks(metric_types, interventions, current_rules=current_rules),
+        system=build_system_blocks(metric_types, interventions, current_rules=current_rules, org_units=org_units),
         messages=build_conversation(message, conversation_history, attachments),
         betas=[ANTHROPIC_FILES_BETA],
     )
@@ -326,6 +369,7 @@ def generate_scenario_rules(
     api_key: Optional[str] = None,
     current_rules: Optional[list[dict]] = None,
     attachments: Optional[list[dict]] = None,
+    org_units: Optional[list[dict]] = None,
 ) -> dict:
     """Call the AI and return the parsed rule set plus updated conversation history.
 
@@ -344,6 +388,7 @@ def generate_scenario_rules(
         api_key=api_key,
         current_rules=current_rules,
         attachments=attachments,
+        org_units=org_units,
     )
 
     rules = None

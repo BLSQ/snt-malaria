@@ -133,6 +133,48 @@ class BuildSystemPromptTestCase(SimpleTestCase):
         self.assertIn('"message": "<your explanation', prompt)
 
 
+class OrgUnitsCatalogTestCase(SimpleTestCase):
+    def test_org_units_catalog_lists_ids_names_and_parents(self):
+        org_units = [
+            {"id": 5, "name": "Bo", "parent_name": "Southern"},
+            {"id": 6, "name": "Western Area", "parent_name": None},
+        ]
+        prompt = build_static_system_prompt(METRIC_TYPES, INTERVENTIONS, org_units)
+        self.assertIn('- id=5, name="Bo", parent="Southern"', prompt)
+        self.assertIn('- id=6, name="Western Area"\n', prompt)
+        self.assertNotIn("{org_units_catalog}", prompt)
+
+    def test_empty_org_units_catalog(self):
+        prompt = build_static_system_prompt(METRIC_TYPES, INTERVENTIONS)
+        self.assertIn("(no org units available for this account)", prompt)
+
+    def test_inclusion_exclusion_semantics_are_explained(self):
+        prompt = build_static_system_prompt(METRIC_TYPES, INTERVENTIONS)
+        self.assertIn("org_units_included", prompt)
+        self.assertIn("org_units_excluded", prompt)
+        self.assertIn("manual selection rule", prompt)
+
+    def test_rule_spec_org_unit_lists_default_to_empty(self):
+        parsed = parse_scenario_rules_response(
+            json.dumps({"message": "ok", "rules": [{"name": "R", "matching_criteria": [], "interventions": [10]}]})
+        )
+        self.assertEqual(parsed.rules[0].org_units_included, [])
+        self.assertEqual(parsed.rules[0].org_units_excluded, [])
+
+    def test_manual_selection_rule_parses(self):
+        parsed = parse_scenario_rules_response(
+            json.dumps(
+                {
+                    "message": "ok",
+                    "rules": [
+                        {"name": "R", "org_units_included": [5, 6], "org_units_excluded": [], "interventions": [10]}
+                    ],
+                }
+            )
+        )
+        self.assertEqual(parsed.rules[0].org_units_included, [5, 6])
+
+
 class BuildSystemBlocksTestCase(SimpleTestCase):
     def test_static_block_is_cached(self):
         blocks = build_system_blocks(METRIC_TYPES, INTERVENTIONS)

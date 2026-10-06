@@ -3,6 +3,7 @@ import random
 from typing import Optional
 
 from django.db import transaction
+from django.db.models import F
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -14,6 +15,7 @@ from plugins.snt_malaria.api.scenario_rules.serializers import (
     ScenarioRuleUpdateSerializer,
 )
 from plugins.snt_malaria.models import ScenarioRule
+from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 from plugins.snt_malaria.services import BudgetCalculationService
 
 from .matching_criteria import matching_criteria_to_jsonlogic
@@ -29,6 +31,18 @@ def build_account_metric_types(account) -> list[dict]:
         MetricType.objects.filter(account=account, is_utility=False, metric_kind=MetricType.MetricKind.ANY).values(
             "id", "name", "description", "legend_type", "legend_config"
         )
+    )
+
+
+def build_account_org_units(account) -> list[dict]:
+    """The org units a rule can manually include/exclude - same set as the manual org unit picker
+    and match-all resolution (ScenarioRule.resolve_all_org_unit_ids). The parent name is there so
+    the AI can tell apart org units sharing a name, and map "the districts of region X" requests."""
+    return list(
+        get_intervention_org_units(account)
+        .annotate(parent_name=F("parent__name"))
+        .order_by("parent_name", "name")
+        .values("id", "name", "parent_name")
     )
 
 
@@ -57,6 +71,28 @@ def _normalize_color(value) -> Optional[str]:
     return None
 
 
+def is_match_all_selection(
+    matching_criteria, org_units_included: list[int], org_units_excluded: list[int], account_org_unit_ids: list[int]
+) -> bool:
+    """Whether a rule's selection reads as "every org unit, minus its exclusions" - how
+    `_rule_spec_to_payload` stores an `is_match_all` spec. Exclusions only count without criteria,
+    since only then is org_units_included the whole selection."""
+    selection = set(org_units_included)
+    if matching_criteria is None:
+        selection |= set(org_units_excluded)
+    return ScenarioRule.covers_all_org_units(list(selection), account_org_unit_ids=account_org_unit_ids)
+
+
+def _validate_org_unit_overrides(spec: dict, included: list[int], excluded: list[int], account_org_unit_ids: set[int]):
+    unknown_ids = sorted(set(included + excluded) - account_org_unit_ids)
+    if unknown_ids:
+        raise serializers.ValidationError(
+            f'Rule "{spec.get("name")}" references unknown org units (ids={unknown_ids}).'
+        )
+    if set(included) & set(excluded):
+        raise serializers.ValidationError(f'Rule "{spec.get("name")}" both includes and excludes the same org units.')
+
+
 def _rule_spec_to_payload(spec: dict, metric_type_by_id: dict, account_org_unit_ids: list[int]) -> dict:
     if not spec.get("interventions"):
         # A rule with no interventions matches org units but assigns nothing - a no-op. Caught here
@@ -69,12 +105,21 @@ def _rule_spec_to_payload(spec: dict, metric_type_by_id: dict, account_org_unit_
         "interventions": spec.get("interventions") or [],
     }
 
+    included = spec.get("org_units_included") or []
+    excluded = spec.get("org_units_excluded") or []
+    _validate_org_unit_overrides(spec, included, excluded, set(account_org_unit_ids))
+    # Stored even where matching ignores it (match-all and manual selection rules), so "everyone
+    # except X" still reads back as match-all + exclusions - see is_match_all_selection.
+    payload["org_units_excluded"] = excluded
+
     if spec.get("is_match_all"):
         # No "match all" sentinel in matching_criteria - the AI's intent is resolved into an explicit
         # snapshot of every org unit id right here, so the stored rule never relies on anything but
         # matching_criteria/org_units_included/org_units_excluded.
         payload["matching_criteria"] = None
-        payload["org_units_included"] = account_org_unit_ids
+        payload["org_units_included"] = [
+            org_unit_id for org_unit_id in account_org_unit_ids if org_unit_id not in excluded
+        ]
     else:
         criteria = spec.get("matching_criteria") or []
         for criterion in criteria:
@@ -95,11 +140,12 @@ def _rule_spec_to_payload(spec: dict, metric_type_by_id: dict, account_org_unit_
                     "for categorical values."
                 )
         matching_criteria = matching_criteria_to_jsonlogic(criteria)
-        if matching_criteria is None:
+        if matching_criteria is None and not included:
             raise serializers.ValidationError(
-                f'Rule "{spec.get("name")}" has no matching criteria and is not match-all.'
+                f'Rule "{spec.get("name")}" has no matching criteria, no included org units and is not match-all.'
             )
         payload["matching_criteria"] = matching_criteria
+        payload["org_units_included"] = included
 
     color = _normalize_color(spec.get("color"))
     if color:

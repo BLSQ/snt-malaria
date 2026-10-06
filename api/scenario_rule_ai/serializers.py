@@ -17,7 +17,7 @@ from .rule_set import persist_scenario_rule_set
 logger = logging.getLogger(__name__)
 
 RULE_RESTORE_STALE_ERROR = (
-    "Couldn't restore this rule set - a data layer or intervention it uses no longer exists. "
+    "Couldn't restore this rule set - a data layer, intervention or org unit it uses no longer exists. "
     "The rules currently in the scenario were left unchanged."
 )
 

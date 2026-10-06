@@ -2,10 +2,11 @@ from unittest.mock import MagicMock, patch
 
 import anthropic
 
+from django.contrib.gis.geos import Point
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
-from iaso.models import Account, MetricType
+from iaso.models import Account, DataSource, MetricType, OrgUnit, SourceVersion
 from plugins.snt_malaria.api.ai_chat.serializers import MAX_ATTACHMENT_SIZE_BYTES
 from plugins.snt_malaria.models import ScenarioRule
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
@@ -69,7 +70,15 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
         )
 
     def _rule_spec(
-        self, id=None, name="High incidence", is_match_all=False, criteria=None, interventions=None, color=None
+        self,
+        id=None,
+        name="High incidence",
+        is_match_all=False,
+        criteria=None,
+        interventions=None,
+        color=None,
+        included=None,
+        excluded=None,
     ):
         return {
             "id": id,
@@ -80,9 +89,39 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
                 if criteria is not None
                 else [{"metric_type": self.metric_type.id, "operator": ">", "value": 400}]
             ),
+            "org_units_included": included or [],
+            "org_units_excluded": excluded or [],
             "interventions": interventions if interventions is not None else [self.intervention.id],
             "color": color,
         }
+
+    def _create_account_org_units(self):
+        data_source = DataSource.objects.create(name="source")
+        version = SourceVersion.objects.create(data_source=data_source, number=1)
+        self.account.default_version = version
+        self.account.save()
+        org_unit_type = self.create_snt_org_unit_type()
+        region = self.create_snt_org_unit(org_unit_type=org_unit_type, name="Southern", version=version)
+        return [
+            self.create_snt_org_unit(
+                org_unit_type=org_unit_type,
+                name=name,
+                parent=region,
+                version=version,
+                validation_status=OrgUnit.VALIDATION_VALID,
+                location=Point(1.0, 2.0, 0.0),
+            )
+            for name in ["Bo", "Bonthe", "Pujehun"]
+        ]
+
+    def _post_generated_rules(self, rules):
+        self.mock_gen_result = self._mock_result(rules=rules)
+        self.client.force_authenticate(self.user)
+        with patch(
+            "plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules", return_value=self.mock_gen_result
+        ) as mock_gen:
+            response = self.client.post(BASE_URL, {"scenario": self.scenario.id, "message": "go"}, format="json")
+        return response, mock_gen
 
     def _mock_result(self, rules=None, message="Done.", quick_replies=None):
         return {
@@ -569,11 +608,123 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(len(current_rules), 1)
         sent_rule = current_rules[0]
         self.assertEqual(
-            set(sent_rule.keys()), {"id", "name", "is_match_all", "matching_criteria", "interventions", "color"}
+            set(sent_rule.keys()),
+            {
+                "id",
+                "name",
+                "is_match_all",
+                "matching_criteria",
+                "org_units_included",
+                "org_units_excluded",
+                "interventions",
+                "color",
+            },
         )
         self.assertEqual(
             sent_rule["matching_criteria"], [{"metric_type": self.metric_type.id, "operator": ">", "value": 400}]
         )
+        self.assertEqual(sent_rule["org_units_included"], [4])
+        self.assertEqual(sent_rule["org_units_excluded"], [2])
+
+    def test_manual_selection_rule_without_criteria_persists_included_org_units(self):
+        bo, _bonthe, pujehun = self._create_account_org_units()
+
+        response, _ = self._post_generated_rules([self._rule_spec(criteria=[], included=[bo.id, pujehun.id])])
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        rule = ScenarioRule.objects.get(scenario=self.scenario)
+        self.assertIsNone(rule.matching_criteria)
+        self.assertCountEqual(rule.org_units_included, [bo.id, pujehun.id])
+
+    def test_criteria_rule_persists_included_and_excluded_overrides(self):
+        bo, bonthe, _pujehun = self._create_account_org_units()
+
+        response, _ = self._post_generated_rules([self._rule_spec(included=[bo.id], excluded=[bonthe.id])])
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        rule = ScenarioRule.objects.get(scenario=self.scenario)
+        self.assertIsNotNone(rule.matching_criteria)
+        self.assertEqual(rule.org_units_included, [bo.id])
+        self.assertEqual(rule.org_units_excluded, [bonthe.id])
+
+    def test_match_all_rule_with_exclusions_includes_every_other_org_unit(self):
+        bo, bonthe, pujehun = self._create_account_org_units()
+
+        response, _ = self._post_generated_rules(
+            [self._rule_spec(is_match_all=True, criteria=[], excluded=[bonthe.id])]
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        rule = ScenarioRule.objects.get(scenario=self.scenario)
+        self.assertIsNone(rule.matching_criteria)
+        self.assertCountEqual(rule.org_units_included, [bo.id, pujehun.id])
+        self.assertEqual(rule.org_units_excluded, [bonthe.id])
+
+    def test_rule_referencing_unknown_org_unit_rejected(self):
+        self._create_account_org_units()
+
+        response, _ = self._post_generated_rules([self._rule_spec(criteria=[], included=[999999])])
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(ScenarioRule.objects.filter(scenario=self.scenario).exists())
+
+    def test_rule_including_and_excluding_the_same_org_unit_rejected(self):
+        bo, _bonthe, _pujehun = self._create_account_org_units()
+
+        response, _ = self._post_generated_rules([self._rule_spec(included=[bo.id], excluded=[bo.id])])
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(ScenarioRule.objects.filter(scenario=self.scenario).exists())
+
+    def test_org_units_catalog_is_sent_with_parent_names(self):
+        self._create_account_org_units()
+
+        _, mock_gen = self._post_generated_rules(None)
+
+        org_units_sent = mock_gen.call_args.kwargs["org_units"]
+        self.assertEqual(
+            [(org_unit["name"], org_unit["parent_name"]) for org_unit in org_units_sent],
+            [("Bo", "Southern"), ("Bonthe", "Southern"), ("Pujehun", "Southern")],
+        )
+
+    def test_current_rules_context_shows_match_all_with_exclusions_without_included_ids(self):
+        bo, bonthe, pujehun = self._create_account_org_units()
+        existing_rule = ScenarioRule.objects.create(
+            name="Everyone but Bonthe",
+            priority=1,
+            scenario=self.scenario,
+            created_by=self.user,
+            matching_criteria=None,
+            org_units_included=[bo.id, pujehun.id],
+            org_units_excluded=[bonthe.id],
+        )
+        existing_rule.interventions.add(self.intervention)
+
+        _, mock_gen = self._post_generated_rules(None)
+
+        sent_rule = mock_gen.call_args.kwargs["current_rules"][0]
+        self.assertTrue(sent_rule["is_match_all"])
+        self.assertEqual(sent_rule["org_units_included"], [])
+        self.assertEqual(sent_rule["org_units_excluded"], [bonthe.id])
+
+    def test_current_rules_context_shows_manual_selection_rule_as_not_match_all(self):
+        bo, _bonthe, _pujehun = self._create_account_org_units()
+        existing_rule = ScenarioRule.objects.create(
+            name="Bo only",
+            priority=1,
+            scenario=self.scenario,
+            created_by=self.user,
+            matching_criteria=None,
+            org_units_included=[bo.id],
+        )
+        existing_rule.interventions.add(self.intervention)
+
+        _, mock_gen = self._post_generated_rules(None)
+
+        sent_rule = mock_gen.call_args.kwargs["current_rules"][0]
+        self.assertFalse(sent_rule["is_match_all"])
+        self.assertEqual(sent_rule["matching_criteria"], [])
+        self.assertEqual(sent_rule["org_units_included"], [bo.id])
 
     @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
     def test_only_account_scoped_interventions_and_metric_types_are_sent(self, mock_gen):

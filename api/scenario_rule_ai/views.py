@@ -13,7 +13,12 @@ from plugins.snt_malaria.services.ai_chat import classify_anthropic_error
 from .agent import generate_scenario_rules
 from .matching_criteria import jsonlogic_to_matching_criteria
 from .permissions import ScenarioRuleAIPermission
-from .rule_set import build_account_metric_types, persist_scenario_rule_set
+from .rule_set import (
+    build_account_metric_types,
+    build_account_org_units,
+    is_match_all_selection,
+    persist_scenario_rule_set,
+)
 from .serializers import (
     ScenarioRuleAIRequestSerializer,
     ScenarioRuleAIResponseSerializer,
@@ -27,16 +32,19 @@ logger = logging.getLogger(__name__)
 
 def _rule_to_ai_context(rule: ScenarioRule, account_org_unit_ids: list[int]) -> dict:
     """Whitelisted view of a rule sent to the AI: definition only - name, criteria (thresholds, not
-    values), interventions, color. Never the real `org_units_matched`/`org_units_excluded`/
-    `org_units_included` ids (tied to a resolved health-metric condition) or any MetricValue data -
-    `is_match_all` here is only a derived boolean (does org_units_included amount to "everyone"?),
-    never the ids themselves."""
-    match_all = ScenarioRule.covers_all_org_units(rule.org_units_included, account_org_unit_ids=account_org_unit_ids)
+    values), the user's manual org unit selection, interventions, color. Never `org_units_matched`
+    (the org units satisfying a health-metric condition) or any MetricValue data - and for a
+    match-all rule, never the full org_units_included snapshot either, just `is_match_all`."""
+    match_all = is_match_all_selection(
+        rule.matching_criteria, rule.org_units_included, rule.org_units_excluded, account_org_unit_ids
+    )
     return {
         "id": rule.id,
         "name": rule.name,
         "is_match_all": match_all,
         "matching_criteria": [] if match_all else jsonlogic_to_matching_criteria(rule.matching_criteria),
+        "org_units_included": [] if match_all else rule.org_units_included,
+        "org_units_excluded": rule.org_units_excluded,
         "interventions": [intervention.id for intervention in rule.interventions.all()],
         "color": rule.color,
     }
@@ -102,6 +110,7 @@ class ScenarioRuleAIViewSet(AIChatAttachmentViewSetMixin, viewsets.ViewSet):
                 api_key=api_key,
                 current_rules=current_rules or None,
                 attachments=attachments,
+                org_units=build_account_org_units(account),
             )
         except Exception as e:
             status_code, body = classify_anthropic_error(

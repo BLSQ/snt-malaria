@@ -2,6 +2,13 @@ import { ScenarioRuleResponse } from '../../planning/hooks/useGetScenarioRules';
 import { ScenarioRule } from '../../planning/types/scenarioRule';
 import { jsonLogicToMatchingCriteria } from './jsonLogic';
 
+export const parseOrgUnitIds = (commaSeparatedIds?: string): number[] =>
+    (commaSeparatedIds || '')
+        .split(',')
+        .filter(id => id !== '')
+        .map(id => parseInt(id, 10))
+        .filter(id => Number.isFinite(id));
+
 export const mapResponseToScenarioRule = (
     response: ScenarioRuleResponse,
 ): ScenarioRule => ({

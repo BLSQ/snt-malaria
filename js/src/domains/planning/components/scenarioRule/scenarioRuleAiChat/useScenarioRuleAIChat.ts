@@ -3,6 +3,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import { useAIChat } from '../../../../../hooks/aiChat/useAIChat';
 import { MESSAGES } from '../../../../messages';
 import { ScenarioRule } from '../../../types/scenarioRule';
+import { parseOrgUnitIds } from '../../../utils/scenarioRuleMapper';
 import {
     GeneratedScenarioRuleSpec,
     ScenarioRuleAIResponse,
@@ -30,6 +31,8 @@ const rulesToSpecs = (rules: ScenarioRule[]): GeneratedScenarioRuleSpec[] =>
             name: rule.name,
             is_match_all: Boolean(rule.is_match_all),
             matching_criteria: rule.matching_criteria,
+            org_units_included: parseOrgUnitIds(rule.org_units_included),
+            org_units_excluded: parseOrgUnitIds(rule.org_units_excluded),
             interventions: rule.interventions,
             color: rule.color,
         }));

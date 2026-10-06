@@ -10,17 +10,11 @@ import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { useGetAccountSettings } from '../../../hooks/useGetAccountSettings';
 import { ScenarioRuleFormValues } from '../../../hooks/useScenarioRuleFormState';
 import { generateRuleName } from '../../../libs/rule-utils';
+import { parseOrgUnitIds } from '../../../utils/scenarioRuleMapper';
 import { InterventionPropertiesForm } from './InterventionPropertiesForm';
 import { MatchingCriteriaForm } from './MatchingCriteriaForm';
 import { OrgUnitScopeSelector } from './orgUnitScopeSelector/OrgUnitScopeSelector';
 import { RuleCoverageSummary } from './RuleCoverageSummary';
-
-const parseOrgUnitIds = (commaSeparatedIds?: string): number[] =>
-    (commaSeparatedIds || '')
-        .split(',')
-        .filter(id => id !== '')
-        .map(id => parseInt(id, 10))
-        .filter(id => Number.isFinite(id));
 
 const styles = {
     formRoot: {
