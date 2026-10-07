@@ -138,7 +138,6 @@ export const CostItemsTable: FC<Props> = ({
                             group.lines.map(line => (
                                 <CostItemRow
                                     key={line.id}
-                                    group={group}
                                     line={line}
                                     onUpdate={onUpdateLine}
                                     onEdit={onEditLine}

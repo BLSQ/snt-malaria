@@ -28,16 +28,6 @@ import { useSaveCostItems } from './hooks/useSaveCostItems';
 import { CostItemFilters, CostItemGroup } from './types';
 import { filterCostItemGroups } from './utils/costItemGroups';
 
-type EditedCostItem = {
-    group: CostItemGroup;
-    line: InterventionCostBreakdownLinePayload;
-};
-
-type DeletedCostItem = {
-    group: CostItemGroup;
-    line: InterventionCostBreakdownLine;
-};
-
 const styles = {
     card: {
         position: 'relative',
@@ -66,10 +56,21 @@ export const CostItemsManagement: FC = () => {
     const [collapsedInterventionIds, setCollapsedInterventionIds] = useState<
         Set<number>
     >(new Set());
-    const [editedItem, setEditedItem] = useState<EditedCostItem | null>(null);
-    const [deletedItem, setDeletedItem] = useState<DeletedCostItem | null>(
-        null,
+    const [editedLine, setEditedLine] =
+        useState<InterventionCostBreakdownLinePayload | null>(null);
+    const [deletedLine, setDeletedLine] =
+        useState<InterventionCostBreakdownLine | null>(null);
+
+    // Rows only pass their line up, since groups are rebuilt on every cache
+    // write and would defeat the rows' memoization.
+    const groupsByInterventionId = useMemo(
+        () => new Map(groups.map(group => [group.intervention.id, group])),
+        [groups],
     );
+    const editedGroup =
+        editedLine && groupsByInterventionId.get(editedLine.intervention);
+    const deletedGroup =
+        deletedLine && groupsByInterventionId.get(deletedLine.intervention);
 
     // Filtering re-renders the whole table, so it trails the typed search
     // instead of blocking each keystroke.
@@ -111,48 +112,32 @@ export const CostItemsManagement: FC = () => {
 
     const handleAddLine = useCallback(
         (group: CostItemGroup) => {
-            setEditedItem({
-                group,
-                line: {
-                    name: '',
-                    category: costCategoryOptions[0]?.value ?? '',
-                    unit_type:
-                        getDefaultCostUnitType(costUnitTypeOptions)?.value ??
-                        '',
-                    unit_cost: 0,
-                    intervention: group.intervention.id,
-                    population_layer: null,
-                    is_proportional: true,
-                    conversion_factor: 1,
-                    invert_conversion_factor: false,
-                    coverage: 100,
-                    buffer: null,
-                },
+            setEditedLine({
+                name: '',
+                category: costCategoryOptions[0]?.value ?? '',
+                unit_type:
+                    getDefaultCostUnitType(costUnitTypeOptions)?.value ?? '',
+                unit_cost: 0,
+                intervention: group.intervention.id,
+                population_layer: null,
+                is_proportional: true,
+                conversion_factor: 1,
+                invert_conversion_factor: false,
+                coverage: 100,
+                buffer: null,
             });
         },
         [costCategoryOptions, costUnitTypeOptions],
     );
 
-    const handleEditLine = useCallback(
-        (group: CostItemGroup, line: InterventionCostBreakdownLine) =>
-            setEditedItem({ group, line }),
-        [],
-    );
-
-    const handleRequestDelete = useCallback(
-        (group: CostItemGroup, line: InterventionCostBreakdownLine) =>
-            setDeletedItem({ group, line }),
-        [],
-    );
-
     const handleConfirmDelete = useCallback(() => {
-        if (deletedItem) {
-            deleteLine(deletedItem.line.id);
+        if (deletedLine) {
+            deleteLine(deletedLine.id);
         }
-    }, [deletedItem, deleteLine]);
+    }, [deletedLine, deleteLine]);
 
-    const closeEditor = useCallback(() => setEditedItem(null), []);
-    const closeDeleteDialog = useCallback(() => setDeletedItem(null), []);
+    const closeEditor = useCallback(() => setEditedLine(null), []);
+    const closeDeleteDialog = useCallback(() => setDeletedLine(null), []);
 
     return (
         <InterventionProvider
@@ -178,21 +163,21 @@ export const CostItemsManagement: FC = () => {
                     onToggleAllGroups={handleToggleAllGroups}
                     onUpdateLine={updateLine}
                     onAddLine={handleAddLine}
-                    onEditLine={handleEditLine}
-                    onDeleteLine={handleRequestDelete}
+                    onEditLine={setEditedLine}
+                    onDeleteLine={setDeletedLine}
                 />
             </Card>
-            {editedItem && (
+            {editedLine && editedGroup && (
                 <CostItemDialog
-                    key={editedItem.line.id ?? 'new'}
-                    group={editedItem.group}
-                    initialLine={editedItem.line}
+                    key={editedLine.id ?? 'new'}
+                    group={editedGroup}
+                    initialLine={editedLine}
                     onSave={saveLine}
                     onClose={closeEditor}
                 />
             )}
             <DeleteRestoreModal
-                isOpen={Boolean(deletedItem)}
+                isOpen={Boolean(deletedLine)}
                 closeDialog={closeDeleteDialog}
                 onConfirm={handleConfirmDelete}
                 titleMessage={MESSAGES.deleteCostItem}
@@ -200,11 +185,11 @@ export const CostItemsManagement: FC = () => {
                 id="delete-cost-item-dialog"
                 dataTestId="delete-cost-item-dialog"
             >
-                {deletedItem && (
+                {deletedLine && deletedGroup && (
                     <Typography variant="body1">
                         {formatMessage(MESSAGES.deleteCostItemConfirm, {
-                            name: deletedItem.line.name,
-                            intervention: deletedItem.group.intervention.name,
+                            name: deletedLine.name,
+                            intervention: deletedGroup.intervention.name,
                         })}
                     </Typography>
                 )}

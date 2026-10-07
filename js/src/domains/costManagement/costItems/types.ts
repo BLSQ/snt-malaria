@@ -15,10 +15,7 @@ export type CostItemFilters = {
     interventionCategoryId: number | null;
 };
 
-export type LineHandler = (
-    group: CostItemGroup,
-    line: InterventionCostBreakdownLine,
-) => void;
+export type LineHandler = (line: InterventionCostBreakdownLine) => void;
 
 export type PartialLineHandler = (
     lineId: number,

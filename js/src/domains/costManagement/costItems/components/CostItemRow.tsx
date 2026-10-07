@@ -9,7 +9,7 @@ import { useInterventionContext } from '../../../interventions/contexts/Interven
 import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { formatConversionDirection } from '../../../interventions/utils/costBreakdownLine';
 import { MESSAGES } from '../../../messages';
-import { CostItemGroup, LineHandler, PartialLineHandler } from '../types';
+import { LineHandler, PartialLineHandler } from '../types';
 import {
     COST_ITEMS_GRID_COLUMNS,
     COST_ITEMS_GRID_MIN_WIDTH,
@@ -18,7 +18,6 @@ import {
 import { InlineNumberField } from './InlineNumberField';
 
 type Props = {
-    group: CostItemGroup;
     line: InterventionCostBreakdownLine;
     onUpdate: PartialLineHandler;
     onEdit: LineHandler;
@@ -72,7 +71,6 @@ const styles = {
 } satisfies SxStyles;
 
 const CostItemRowComponent: FC<Props> = ({
-    group,
     line,
     onUpdate,
     onEdit,
@@ -82,16 +80,13 @@ const CostItemRowComponent: FC<Props> = ({
     const { currency, defaultBufferPercent } = useInterventionContext();
     const currencyAffixes = getCurrencyAffixes(currency);
 
-    const handleEdit = useCallback(
-        () => onEdit(group, line),
-        [onEdit, group, line],
-    );
+    const handleEdit = useCallback(() => onEdit(line), [onEdit, line]);
     const handleDelete = useCallback(
         (event: MouseEvent) => {
             event.stopPropagation();
-            onDelete(group, line);
+            onDelete(line);
         },
-        [onDelete, group, line],
+        [onDelete, line],
     );
     const handleFieldCommit = useCallback(
         (field: string, value: number | null) =>
