@@ -1,3 +1,5 @@
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from rest_framework import status
 
 from plugins.snt_malaria.api.interventions.permissions import (
@@ -80,6 +82,57 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         self.assertEqual(response.data["name"], self.intervention_vaccination_rts.name)
         self.assertEqual(response.data["impact_ref"], self.intervention_vaccination_rts.impact_ref)
         self.assertIn("cost_breakdown_lines", response.data)
+
+    def test_retrieve_intervention_details_lists_cost_lines_by_id_without_per_line_queries(self):
+        self.client.force_authenticate(user=self.user_write)
+        url = f"{BASE_URL}{self.intervention_vaccination_rts.id}/details/"
+        self.client.get(url)  # warms the per-user caches so both measurements compare the same work
+        with CaptureQueriesContext(connection) as single_line_queries:
+            self.client.get(url)
+
+        extra_lines = [
+            self.intervention_vaccination_rts.cost_breakdown_lines.create(
+                name=f"Extra line {index}",
+                unit_cost=1,
+                category="Operational",
+                unit_type=self.unit_type_per_itn,
+                created_by=self.user_write,
+            )
+            for index in range(2)
+        ]
+        with CaptureQueriesContext(connection) as three_lines_queries:
+            response = self.client.get(url)
+
+        self.assertEqual(len(three_lines_queries), len(single_line_queries))
+        self.assertEqual(
+            [line["id"] for line in response.data["cost_breakdown_lines"]],
+            [self.cost_line.id] + [line.id for line in extra_lines],
+        )
+
+    def test_update_intervention_details_returns_saved_cost_lines(self):
+        self.client.force_authenticate(user=self.user_write)
+        url = f"{BASE_URL}{self.intervention_vaccination_rts.id}/update_details/"
+        response = self.client.put(
+            url,
+            {
+                "cost_breakdown_lines": [
+                    {
+                        "id": self.cost_line.id,
+                        "intervention": self.intervention_vaccination_rts.id,
+                        "name": "Renamed line",
+                        "unit_cost": "10.00",
+                        "category": "Procurement",
+                        "unit_type": self.unit_type_per_itn.id,
+                    }
+                ]
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        [line] = response.data["cost_breakdown_lines"]
+        self.assertEqual(line["name"], "Renamed line")
+        self.assertEqual(line["unit_type_label"], self.unit_type_per_itn.name)
 
     def test_retrieve_intervention_details_unauthenticated(self):
         url = f"{BASE_URL}{self.intervention_vaccination_rts.id}/details/"

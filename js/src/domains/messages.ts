@@ -392,17 +392,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.description',
         defaultMessage: 'Description',
     },
-    interventionCostBreakdownLineDescription: {
-        id: 'iaso.snt_malaria.settings.intervention.costBreakdownLineDescription',
-        defaultMessage:
-            'Add cost items to this intervention to include them in the cost breakdown and budget calculations. {br} \
-            These costs will be included in the total cumulative costs but will not impact the estimated health impact. {br} \
-            If no population layer is selected the cost will be used as a global fixed cost.',
-    },
-    removeInterventionCostBreakdownLine: {
-        id: 'iaso.snt_malaria.settings.intervention.removeInterventionCostBreakdownLine',
-        defaultMessage: 'Remove cost',
-    },
     addInterventionCostBreakdownLine: {
         id: 'iaso.snt_malaria.settings.intervention.addInterventionCostBreakdownLine',
         defaultMessage: 'Add cost item',
@@ -1085,6 +1074,84 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.title',
         defaultMessage: 'Settings',
     },
+    costManagementTitle: {
+        id: 'iaso.snt_malaria.costManagement.title',
+        defaultMessage: 'Cost management',
+    },
+    costManagementGrantsTitle: {
+        id: 'iaso.snt_malaria.costManagement.grants.title',
+        defaultMessage: 'Grants',
+    },
+    searchCostItems: {
+        id: 'iaso.snt_malaria.costManagement.budget.searchCostItems',
+        defaultMessage: 'Search cost items',
+    },
+    addToIntervention: {
+        id: 'iaso.snt_malaria.costManagement.budget.addToIntervention',
+        defaultMessage: 'Add to intervention',
+    },
+    addCostItemTo: {
+        id: 'iaso.snt_malaria.costManagement.budget.addCostItemTo',
+        defaultMessage: 'Add a cost item to {intervention}',
+    },
+    costItemColumn: {
+        id: 'iaso.snt_malaria.costManagement.budget.costItemColumn',
+        defaultMessage: 'Cost item',
+    },
+    coverageLabel: {
+        id: 'iaso.snt_malaria.costManagement.budget.coverage',
+        defaultMessage: 'Coverage',
+    },
+    costItemsCount: {
+        id: 'iaso.snt_malaria.costManagement.budget.costItemsCount',
+        defaultMessage:
+            '{count, plural, one {# cost item} other {# cost items}}',
+    },
+    perUnit: {
+        id: 'iaso.snt_malaria.costManagement.budget.perUnit',
+        defaultMessage: 'per {unit}',
+    },
+    fixedCost: {
+        id: 'iaso.snt_malaria.costManagement.budget.fixedCost',
+        defaultMessage: 'Fixed cost',
+    },
+    fromPopulation: {
+        id: 'iaso.snt_malaria.costManagement.budget.fromPopulation',
+        defaultMessage: 'Population',
+    },
+    fixedCount: {
+        id: 'iaso.snt_malaria.costManagement.budget.fixedCount',
+        defaultMessage: 'Fixed count',
+    },
+    costItemValues: {
+        id: 'iaso.snt_malaria.costManagement.budget.values',
+        defaultMessage: 'Values',
+    },
+    editCostItem: {
+        id: 'iaso.snt_malaria.costManagement.budget.editCostItem',
+        defaultMessage: 'Edit cost item',
+    },
+    deleteCostItem: {
+        id: 'iaso.snt_malaria.costManagement.budget.deleteCostItem',
+        defaultMessage: 'Delete cost item',
+    },
+    deleteCostItemConfirm: {
+        id: 'iaso.snt_malaria.costManagement.budget.deleteCostItemConfirm',
+        defaultMessage: 'Delete "{name}" from {intervention}?',
+    },
+    fixedCountNote: {
+        id: 'iaso.snt_malaria.costManagement.budget.fixedCountNote',
+        defaultMessage:
+            'A fixed-count item has no population to convert or cover, so target population, conversion direction, conversion factor and coverage do not apply.',
+    },
+    expandCollapseAll: {
+        id: 'iaso.snt_malaria.costManagement.budget.expandCollapseAll',
+        defaultMessage: 'Expand or collapse all',
+    },
+    noCostItems: {
+        id: 'iaso.snt_malaria.costManagement.budget.noCostItems',
+        defaultMessage: 'No cost items match your filters',
+    },
     interventionsTitle: {
         id: 'iaso.snt_malaria.interventions.title',
         defaultMessage: 'Interventions',
@@ -1246,10 +1313,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.interventions.costItemProportionalLabel',
         defaultMessage: 'Proportional cost item',
     },
-    grantsTitle: {
-        id: 'iaso.snt_malaria.settings.grants.title',
-        defaultMessage: 'Grants',
-    },
     addGrant: {
         id: 'iaso.snt_malaria.settings.grants.add',
         defaultMessage: 'Add',
@@ -1378,10 +1441,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.interventionCategories.description',
         defaultMessage: 'Description',
     },
-    generalTitle: {
-        id: 'iaso.snt_malaria.settings.general.title',
-        defaultMessage: 'General',
-    },
     budgetSettingsTitle: {
         id: 'iaso.snt_malaria.settings.budget.title',
         defaultMessage: 'Budget',
@@ -1431,7 +1490,7 @@ export const MESSAGES = defineMessages({
     budgetBufferHelp: {
         id: 'iaso.snt_malaria.settings.budget.bufferHelp',
         defaultMessage:
-            'Multiplier applied to all costs, e.g. 1.1 for a 10% buffer.',
+            'Multiplier applied to all costs, e.g. 1.1 for a 10% buffer. It can be overridden per cost item.',
     },
     accountSettingsTitle: {
         id: 'iaso.snt_malaria.settings.account.title',

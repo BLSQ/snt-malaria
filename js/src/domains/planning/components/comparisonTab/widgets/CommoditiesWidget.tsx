@@ -1,8 +1,8 @@
 import React, { FC, useMemo } from 'react';
 import { Inventory2Outlined } from '@mui/icons-material';
 import { useSafeIntl } from 'bluesquare-components';
+import { useGetCostUnitTypes } from '../../../../costManagement/costUnits/hooks/useGetCostUnitTypes';
 import { MESSAGES } from '../../../../messages';
-import { useGetCostUnitTypes } from '../../../../settings/costUnits/hooks/useGetCostUnitTypes';
 import { useScenarioComparisonContext } from '../../../contexts/ScenarioComparisonContext';
 import {
     getSlotCommoditiesByIntervention,

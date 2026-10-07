@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework.fields import empty
 
 from iaso.models.metric import MetricType
 from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
@@ -51,6 +52,8 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
                         "is_proportional",
                         "conversion_factor",
                         "invert_conversion_factor",
+                        "coverage",
+                        "buffer",
                     ],
                 )
             if lines_to_delete:
@@ -75,6 +78,7 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
     unit_cost = serializers.DecimalField(max_digits=19, decimal_places=2, required=True, min_value=0)
     unit_type_label = serializers.SerializerMethodField()
     category_label = serializers.SerializerMethodField()
+    population_layer_label = serializers.SerializerMethodField()
 
     class Meta:
         model = InterventionCostBreakdownLine
@@ -88,13 +92,19 @@ class InterventionCostBreakdownLineSerializer(serializers.ModelSerializer):
             "category_label",
             "intervention",
             "population_layer",
+            "population_layer_label",
             "is_proportional",
             "conversion_factor",
             "invert_conversion_factor",
+            "coverage",
+            "buffer",
         ]
 
     def get_unit_type_label(self, obj):
         return obj.unit_type.name
+
+    def get_population_layer_label(self, obj):
+        return obj.population_layer.name if obj.population_layer else None
 
     def get_category_label(self, obj):
         return InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory(obj.category).label
@@ -122,6 +132,12 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
         max_digits=19, decimal_places=6, required=False, default=Decimal("1"), min_value=0
     )
     invert_conversion_factor = serializers.BooleanField(required=False, default=False)
+    coverage = serializers.DecimalField(
+        max_digits=5, decimal_places=2, required=False, default=Decimal("100"), min_value=0, max_value=100
+    )
+    buffer = serializers.DecimalField(
+        max_digits=5, decimal_places=2, required=False, allow_null=True, default=None, min_value=0
+    )
 
     class Meta:
         model = InterventionCostBreakdownLine
@@ -137,6 +153,8 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             "is_proportional",
             "conversion_factor",
             "invert_conversion_factor",
+            "coverage",
+            "buffer",
         ]
 
     def get_fields(self):
@@ -151,12 +169,24 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             fields["population_layer"].queryset = MetricType.objects.filter(account=account)
         return fields
 
+    def _current_value(self, attrs, field):
+        # A partial update only sends the changed fields; the rest come from the saved line.
+        if field in attrs:
+            return attrs[field]
+        if isinstance(self.instance, InterventionCostBreakdownLine):
+            return getattr(self.instance, field)
+        default = self.fields[field].default
+        return None if default is empty else default
+
     def validate(self, attrs):
         attrs = super().validate(attrs)
-        if attrs.get("invert_conversion_factor") and attrs.get("conversion_factor") == 0:
+        if (
+            self._current_value(attrs, "invert_conversion_factor")
+            and self._current_value(attrs, "conversion_factor") == 0
+        ):
             raise serializers.ValidationError({"conversion_factor": "The conversion factor cannot be 0 when inverted."})
-        if attrs.get("is_proportional"):
-            if not attrs.get("population_layer"):
+        if self._current_value(attrs, "is_proportional"):
+            if not self._current_value(attrs, "population_layer"):
                 raise serializers.ValidationError(
                     {"population_layer": "A target population is required for proportional cost items."}
                 )
@@ -164,3 +194,13 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
             # Absolute / fixed cost: a population layer is meaningless, so drop it silently.
             attrs["population_layer"] = None
         return attrs
+
+
+class InterventionCostBreakdownLineSingleWriteSerializer(InterventionCostBreakdownLineWriteSerializer):
+    """Writes one line through the cost line endpoints, where the URL identifies the line.
+
+    The writable ``id`` only exists for the list update of ``update_details``; here it would let a
+    payload target any other line.
+    """
+
+    id = serializers.IntegerField(read_only=True)

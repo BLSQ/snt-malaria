@@ -3,7 +3,9 @@ import {
     CompareOutlined,
     FormatListBulletedOutlined,
     Layers,
+    PaymentsOutlined,
     TuneOutlined,
+    VaccinesOutlined,
 } from '@mui/icons-material';
 import { SvgIconProps } from '@mui/material';
 import { IMPACT } from 'Iaso/utils/featureFlags';
@@ -17,6 +19,18 @@ export const menu = [
         key: 'snt_malaria/data-layers',
         permissions: [SETTINGS_READ],
         icon: (props: SvgIconProps) => <Layers {...props} />,
+    },
+    {
+        label: MESSAGES.interventionsTitle,
+        key: 'snt_malaria/interventions',
+        permissions: [SETTINGS_READ],
+        icon: (props: SvgIconProps) => <VaccinesOutlined {...props} />,
+    },
+    {
+        label: MESSAGES.costManagementTitle,
+        key: 'snt_malaria/cost-management',
+        permissions: [SETTINGS_READ],
+        icon: (props: SvgIconProps) => <PaymentsOutlined {...props} />,
     },
     {
         label: MESSAGES.scenariosTitle,
