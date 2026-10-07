@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -46,6 +47,22 @@ class InterventionCostBreakdownLine(models.Model):
     conversion_factor = models.DecimalField(max_digits=19, decimal_places=6, default=Decimal("1"))
     # When True, ``conversion_factor`` is inverted (1 / value) to get the canonical ratio.
     invert_conversion_factor = models.BooleanField(default=False)
+    # Percentage (0-100) of the population layer actually reached by this cost line.
+    coverage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal("100"),
+        validators=[MinValueValidator(Decimal("0")), MaxValueValidator(Decimal("100"))],
+    )
+    # Percentage over-ordering added to the quantity (10 means x1.10). Null falls back to the
+    # account's budget settings buffer.
+    buffer = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal("0"))],
+    )
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, related_name="cost_breakdown_line_created_set"
     )

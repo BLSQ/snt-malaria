@@ -4,7 +4,7 @@ import { Box, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { pluralize } from '../../../../utils/pluralize';
-import { useGetCostUnitTypes } from '../../../settings/costUnits/hooks/useGetCostUnitTypes';
+import { useGetCostUnitTypes } from '../../../costManagement/costUnits/hooks/useGetCostUnitTypes';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { aggregateProcurementQuantitiesByUnit } from '../../libs/budget-aggregation';
 import { formatQuantity } from '../../libs/cost-utils';

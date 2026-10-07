@@ -94,6 +94,7 @@ class BudgetCalculationService:
         budget_settings = BudgetSettings.objects.filter(account=scenario.account).first()
         self.inflation_rate = Decimal(str(budget_settings.inflation_rate)) if budget_settings else Decimal("0")
         self.buffer = Decimal(str(budget_settings.buffer)) if budget_settings else Decimal("1.1")
+        self.buffer_multiplier_by_line_id = {line.id: self._buffer_multiplier(line) for line in population_cost_lines}
 
     def calculate_and_save_all_years(self, user):
         all_years_results = self.calculate_all_years()
@@ -163,10 +164,15 @@ class BudgetCalculationService:
             "target_population_layer_id": None,
             "is_proportional": False,
             "yearly_value": Decimal("0"),
+            "buffer": None,
         }
 
-    @staticmethod
-    def _populate_breakdown_from_cost_line(entry, cost_line):
+    def _buffer_multiplier(self, cost_line):
+        if cost_line.buffer is None:
+            return self.buffer
+        return Decimal("1") + cost_line.buffer / Decimal("100")
+
+    def _populate_breakdown_from_cost_line(self, entry, cost_line):
         """Fills in a breakdown entry's cost-line-derived (as opposed to accumulated) fields."""
         entry["unit_cost"] = cost_line.unit_cost
         entry["cost_unit_name"] = cost_line.unit_type.name if cost_line.unit_type else None
@@ -175,6 +181,7 @@ class BudgetCalculationService:
         entry["target_population"] = cost_line.population_layer.name if cost_line.population_layer else None
         entry["target_population_layer_id"] = cost_line.population_layer.id if cost_line.population_layer else None
         entry["is_proportional"] = cost_line.is_proportional
+        entry["buffer"] = float(self.buffer_multiplier_by_line_id[cost_line.id])
 
     def calculate_year(self, year):
         """Calculate the budget for a given year, based on the population-driven formula and the scenario data.
@@ -289,7 +296,9 @@ class BudgetCalculationService:
         return rows
 
     def _get_yearly_value(self, line, year):
-        default = Decimal("1") if line.is_proportional else Decimal("0")
+        # A year the scenario doesn't set falls back to the line's coverage (a percentage), which
+        # proportional lines apply as a ratio of the population; fixed lines have no default count.
+        default = line.coverage / Decimal("100") if line.is_proportional else Decimal("0")
         return self.yearly_value_by_key.get((line.id, year), default)
 
     def _compute_population_cost_row(self, line, org_unit_id, year, inflation_multiplier, intervention_id, grant_id):
@@ -307,7 +316,7 @@ class BudgetCalculationService:
 
         # The buffer is baked into the quantity (procurement over-ordering), so the
         # exposed quantity reflects what actually needs to be procured.
-        quantity = population * yearly_value * line.conversion_ratio * self.buffer
+        quantity = population * yearly_value * line.conversion_ratio * self.buffer_multiplier_by_line_id[line.id]
         line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
 
         if line_cost <= 0:
@@ -332,7 +341,7 @@ class BudgetCalculationService:
         Calculate using yearly value as quantity. Added once per intervention regardless of org units.
         """
         yearly_value = self._get_yearly_value(line, year)
-        quantity = yearly_value * self.buffer
+        quantity = yearly_value * self.buffer_multiplier_by_line_id[line.id]
         line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
         if line_cost <= 0:
             return None
@@ -374,7 +383,7 @@ class BudgetCalculationService:
                 target_population_layer_id=bd["target_population_layer_id"],
                 is_proportional=bd["is_proportional"],
                 yearly_value=bd["yearly_value"],
-                buffer=float(self.buffer),
+                buffer=bd["buffer"],
             )
             for _, bd in sorted(breakdown_dict.items(), key=lambda x: x[0])
             if bd["total_cost"] > 0

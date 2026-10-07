@@ -3,7 +3,9 @@ import { UseMutationResult } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { InterventionDetails } from '../types';
 
-type SaveInterventionDetailsBody = Partial<InterventionDetails> & {
+type SaveInterventionDetailsBody = Partial<
+    Pick<InterventionDetails, 'name' | 'impact_ref' | 'grant'>
+> & {
     interventionId: number;
 };
 

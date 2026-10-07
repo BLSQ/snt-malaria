@@ -14,9 +14,14 @@ import {
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { pluralize } from '../../../../utils/pluralize';
+import { formatConversionDirection } from '../../../interventions/utils/costBreakdownLine';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
-import { formatBigNumber, formatQuantity } from '../../libs/cost-utils';
+import {
+    bufferMultiplierToPercent,
+    formatBigNumber,
+    formatQuantity,
+} from '../../libs/cost-utils';
 import { YearlyCoverageInput } from './YearlyCoverageInput';
 
 export type CostLineYearlyCoverage = {
@@ -32,6 +37,7 @@ export type CostLineRowData = {
     totalCost: number;
     quantity: number;
     coverageByYear: Record<number, CostLineYearlyCoverage>;
+    defaultCoverage: number;
     unitCost: number;
     unitName: string;
     conversionFactor: number | null;
@@ -87,7 +93,9 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
         Record<number, string>
     >({});
 
-    const defaultCoverage = costLine.isProportional ? 100 : 0;
+    const defaultCoverage = costLine.isProportional
+        ? costLine.defaultCoverage
+        : 0;
 
     React.useEffect(() => {
         const nextCoverageInputsByYear: Record<number, string> = {};
@@ -286,21 +294,17 @@ type TooltipProps = {
 export const CostLineTooltip: FC<TooltipProps> = ({ costLine }) => {
     const { formatMessage } = useSafeIntl();
     const { currency } = usePlanningContext();
-    const bufferPercent = Math.round((costLine.buffer - 1) * 100);
+    const bufferPercent = bufferMultiplierToPercent(costLine.buffer);
     const unitLabel = useMemo(
         () =>
             (!costLine.unitName &&
                 formatMessage(MESSAGES.budgetingCostLineConversionFactor)) ||
-            (costLine.invertedConversionFactor
-                ? formatMessage(MESSAGES.budgetingCostLinePeoplePerUnit, {
-                      unit: costLine.unitName,
-                  })
-                : formatMessage(MESSAGES.budgetingCostLineUnitPerPeople, {
-                      unit: pluralize(
-                          costLine.unitName,
-                          costLine.conversionFactor ?? 1,
-                      ),
-                  })),
+            formatConversionDirection(
+                formatMessage,
+                costLine.unitName,
+                costLine.conversionFactor ?? 1,
+                Boolean(costLine.invertedConversionFactor),
+            ),
         [
             costLine.unitName,
             costLine.invertedConversionFactor,
