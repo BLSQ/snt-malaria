@@ -29,9 +29,7 @@ type Props = {
 
 const COLUMN_LABELS = [
     MESSAGES.budgetingCostLineUnitCost,
-    null,
     MESSAGES.costLineFactorLabel,
-    null,
     MESSAGES.budgetingCostLineBuffer,
     MESSAGES.coverageLabel,
     null,

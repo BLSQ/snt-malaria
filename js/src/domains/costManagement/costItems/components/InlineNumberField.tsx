@@ -11,6 +11,7 @@ import React, {
 } from 'react';
 import { InputBase, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
+import { COST_ITEMS_INPUT_WIDTH } from './costItemsGrid';
 
 type Props = {
     keyValue: string;
@@ -30,7 +31,8 @@ type Props = {
 
 const styles = {
     root: {
-        width: '100%',
+        width: COST_ITEMS_INPUT_WIDTH,
+        flexShrink: 0,
         height: 28,
         px: 0.75,
         gap: 0.25,

@@ -53,6 +53,12 @@ const styles = {
         gap: 1,
         minWidth: 0,
     },
+    inputCell: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        minWidth: 0,
+    },
     basisIcon: { color: 'text.secondary', display: 'flex' },
     name: ellipsis,
     caption: { color: 'text.secondary', lineHeight: 1.3, ...ellipsis },
@@ -125,57 +131,63 @@ const CostItemRowComponent: FC<Props> = ({
                 </Box>
             </Box>
 
-            <InlineNumberField
-                keyValue="unit_cost"
-                value={line.unit_cost}
-                onCommit={handleFieldCommit}
-                minDecimals={2}
-                maxDecimals={2}
-                prefix={currencyAffixes.prefix}
-                suffix={currencyAffixes.suffix}
-                ariaLabel={formatMessage(MESSAGES.budgetingCostLineUnitCost)}
-            />
-            <Typography variant="caption" sx={styles.caption}>
-                {formatMessage(MESSAGES.perUnit, {
-                    unit: line.unit_type_label,
-                })}
-            </Typography>
-
-            <InlineNumberField
-                keyValue="conversion_factor"
-                value={line.conversion_factor}
-                onCommit={handleFieldCommit}
-                maxDecimals={6}
-                disabled={!line.is_proportional}
-                ariaLabel={formatMessage(
-                    MESSAGES.budgetingCostLineConversionFactor,
-                )}
-            />
-            <Box minWidth={0}>
-                <Typography
-                    variant="caption"
-                    component="div"
-                    sx={styles.caption}
-                >
-                    {line.is_proportional
-                        ? formatConversionDirection(
-                              formatMessage,
-                              line.unit_type_label,
-                              line.conversion_factor,
-                              line.invert_conversion_factor,
-                          )
-                        : formatMessage(MESSAGES.fixedCost)}
+            <Box sx={styles.inputCell}>
+                <InlineNumberField
+                    keyValue="unit_cost"
+                    value={line.unit_cost}
+                    onCommit={handleFieldCommit}
+                    minDecimals={2}
+                    maxDecimals={2}
+                    prefix={currencyAffixes.prefix}
+                    suffix={currencyAffixes.suffix}
+                    ariaLabel={formatMessage(
+                        MESSAGES.budgetingCostLineUnitCost,
+                    )}
+                />
+                <Typography variant="caption" sx={styles.caption}>
+                    {formatMessage(MESSAGES.perUnit, {
+                        unit: line.unit_type_label,
+                    })}
                 </Typography>
-                {line.is_proportional && line.population_layer_label && (
+            </Box>
+
+            <Box sx={styles.inputCell}>
+                <InlineNumberField
+                    keyValue="conversion_factor"
+                    value={line.conversion_factor}
+                    onCommit={handleFieldCommit}
+                    maxDecimals={6}
+                    disabled={!line.is_proportional}
+                    ariaLabel={formatMessage(
+                        MESSAGES.budgetingCostLineConversionFactor,
+                    )}
+                />
+                <Box minWidth={0}>
                     <Typography
                         variant="caption"
                         component="div"
-                        title={line.population_layer_label}
-                        sx={styles.mutedCaption}
+                        sx={styles.caption}
                     >
-                        ({line.population_layer_label})
+                        {line.is_proportional
+                            ? formatConversionDirection(
+                                  formatMessage,
+                                  line.unit_type_label,
+                                  line.conversion_factor,
+                                  line.invert_conversion_factor,
+                              )
+                            : formatMessage(MESSAGES.fixedCost)}
                     </Typography>
-                )}
+                    {line.is_proportional && line.population_layer_label && (
+                        <Typography
+                            variant="caption"
+                            component="div"
+                            title={line.population_layer_label}
+                            sx={styles.mutedCaption}
+                        >
+                            ({line.population_layer_label})
+                        </Typography>
+                    )}
+                </Box>
             </Box>
 
             <InlineNumberField

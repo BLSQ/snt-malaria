@@ -10,7 +10,7 @@ import {
 
 const COST_LINES_URL = '/api/snt_malaria/intervention_cost_breakdown_lines/';
 
-// Saved lines are written to the cache from the responses, so only the
+// Lines are kept up to date in the cache by this hook, so only the
 // queries derived from them need refetching.
 const INVALIDATED_QUERY_KEYS = ['interventionDetails', 'calculated_budget'];
 
@@ -61,21 +61,14 @@ export const useSaveCostItems = () => {
         [queryClient],
     );
 
-    const replaceCachedLine = useCallback(
-        (saved: InterventionCostBreakdownLine) =>
-            setCachedLines(lines =>
-                lines.map(line => (line.id === saved.id ? saved : line)),
-            ),
-        [setCachedLines],
-    );
-
     const refetchLines = useCallback(
         () => queryClient.invalidateQueries(COST_BREAKDOWN_LINES_QUERY_KEY),
         [queryClient],
     );
 
-    // Applied to the cache first so the row shows the new value while saving.
-    const patchCachedLine = useCallback(
+    // Inline edits only touch plain values, so the cache is updated upfront
+    // and the response isn't needed; a failure refetches to revert it.
+    const updateLine = useCallback(
         async (lineId: number, changes: LineChanges) => {
             setCachedLines(lines =>
                 lines.map(line =>
@@ -83,32 +76,29 @@ export const useSaveCostItems = () => {
                 ),
             );
             try {
-                replaceCachedLine(await patchLine({ ...changes, id: lineId }));
-            } catch (error) {
+                await patchLine({ ...changes, id: lineId });
+            } catch {
                 refetchLines();
-                throw error;
             }
         },
-        [patchLine, refetchLines, replaceCachedLine, setCachedLines],
+        [patchLine, refetchLines, setCachedLines],
     );
 
-    // The error snackbar is shown by the mutation; the cache is rolled back.
-    const updateLine = useCallback(
-        (lineId: number, changes: LineChanges) =>
-            patchCachedLine(lineId, changes).catch(() => undefined),
-        [patchCachedLine],
-    );
-
+    // The response is used here because it carries the server-side labels
+    // (category, unit type, population layer) the edit may have changed.
     const saveLine = useCallback(
         async (line: InterventionCostBreakdownLinePayload) => {
-            if (line.id !== undefined) {
-                await patchCachedLine(line.id, line);
+            if (line.id === undefined) {
+                const created = await createLine(line);
+                setCachedLines(lines => [...lines, created]);
                 return;
             }
-            const created = await createLine(line);
-            setCachedLines(lines => [...lines, created]);
+            const saved = await patchLine({ ...line, id: line.id });
+            setCachedLines(lines =>
+                lines.map(cached => (cached.id === saved.id ? saved : cached)),
+            );
         },
-        [createLine, patchCachedLine, setCachedLines],
+        [createLine, patchLine, setCachedLines],
     );
 
     const deleteLine = useCallback(

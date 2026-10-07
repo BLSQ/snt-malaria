@@ -1490,7 +1490,7 @@ export const MESSAGES = defineMessages({
     budgetBufferHelp: {
         id: 'iaso.snt_malaria.settings.budget.bufferHelp',
         defaultMessage:
-            'Multiplier applied to all costs, e.g. 1.1 for a 10% buffer.',
+            'Multiplier applied to all costs, e.g. 1.1 for a 10% buffer. It can be overridden per cost item.',
     },
     accountSettingsTitle: {
         id: 'iaso.snt_malaria.settings.account.title',
