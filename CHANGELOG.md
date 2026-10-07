@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.20.0](https://github.com/BLSQ/snt-malaria/compare/2.19.0...2.20.0) (2026-10-07)
+
+
+### Features
+
+* **comparison:** Add "All years" option to scenario comparison slots ([#390](https://github.com/BLSQ/snt-malaria/issues/390)) ([0043eb0](https://github.com/BLSQ/snt-malaria/commit/0043eb03dffd167543c248e4bb2f340c6d7a03e2))
+* **DataLayer:** data layer UI finetuning ([8318dbf](https://github.com/BLSQ/snt-malaria/commit/8318dbfa10c3ffb7e5f1d09018c1feb65fe14d39))
+* **DataLayer:** Import OpenHexa DataLayer in a task ([eb4869c](https://github.com/BLSQ/snt-malaria/commit/eb4869c790370c476ac1a75aaad629bf496f77b8))
+* **DataLayers:** Manually create OpenHexa DataLayer ([7272d55](https://github.com/BLSQ/snt-malaria/commit/7272d554de0c99476794ce69b4324ce0432ede59))
+* **DataLayerWizard:** Data layers UI improvements ([#394](https://github.com/BLSQ/snt-malaria/issues/394)) ([d79edd1](https://github.com/BLSQ/snt-malaria/commit/d79edd1902a6b5e5af1ac27311bd1b8d9c3b79cf))
+* **impact data:** update SwissTPH pipeline and models ([8ca9744](https://github.com/BLSQ/snt-malaria/commit/8ca97446cb2234a06dd6ace8368d54b6e87e81ea))
+* **Logging:** Replace print statements with logging module ([#379](https://github.com/BLSQ/snt-malaria/issues/379)) ([712795d](https://github.com/BLSQ/snt-malaria/commit/712795d12dfed017dacb6af0314c8d4793a096ef))
+* **OH Import:** Allow custom OH metadata source ([#398](https://github.com/BLSQ/snt-malaria/issues/398)) ([db0e672](https://github.com/BLSQ/snt-malaria/commit/db0e672ea7daf5b7c85dc6866b552f9679e9624b))
+* **rule builder:** improve preview loading ([#405](https://github.com/BLSQ/snt-malaria/issues/405)) ([831659a](https://github.com/BLSQ/snt-malaria/commit/831659ab295d8fa0218155d3bc43a6bffad4102d))
+* **Scenario:** Display scenario creator and description ([#395](https://github.com/BLSQ/snt-malaria/issues/395)) ([0321ead](https://github.com/BLSQ/snt-malaria/commit/0321ead484412a4b4817a967295bc985291c2de7))
+* **ScenarioRules:** Define rule exceptions at higher level than district ([#397](https://github.com/BLSQ/snt-malaria/issues/397)) ([89505d0](https://github.com/BLSQ/snt-malaria/commit/89505d0b23f246edc27a6af4d44184b9d117387a))
+* **SidePanel:** Introduce generic, reusable side panel component (SNT-620) ([#399](https://github.com/BLSQ/snt-malaria/issues/399)) ([617695a](https://github.com/BLSQ/snt-malaria/commit/617695a7a45f5ab0c3b3282df4fbf5f7eb3c49e7))
+* SNT-622 new rule builder design ([#404](https://github.com/BLSQ/snt-malaria/issues/404)) ([fff83df](https://github.com/BLSQ/snt-malaria/commit/fff83df5305c60c0ac9e580116149327f2e93a3e))
+
+
+### Bug Fixes
+
+* **migration:** merge duplicate leaf 0062 ([#402](https://github.com/BLSQ/snt-malaria/issues/402)) ([2212dc7](https://github.com/BLSQ/snt-malaria/commit/2212dc789bf8813d6e327a369c2a3f6eed50ac6b))
+
 ## [2.19.0](https://github.com/BLSQ/snt-malaria/compare/2.18.0...2.19.0) (2026-09-08)
 
 
