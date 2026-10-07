@@ -12,11 +12,16 @@ import {
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { useGetCostBreakdownLines } from '../../../interventions/hooks/useGetCostBreakdownLines';
 import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { getColorRange } from '../../libs/color-utils';
+import {
+    bufferPercentToMultiplier,
+    DEFAULT_BUFFER_MULTIPLIER,
+} from '../../libs/cost-utils';
 import {
     BudgetIntervention,
     BudgetInterventionCostLine,
@@ -25,6 +30,8 @@ import { InterventionPlan } from '../../types/interventionAssignments';
 import { BudgetRow, BudgetRowData } from './BudgetRow';
 import { BudgetTotalRow } from './BudgetTotalRow';
 import { CostLineRowData, CostLineYearlyCoverage } from './CostLineRow';
+
+const FULL_COVERAGE_PERCENT = 100;
 
 const styles = {
     container: {
@@ -46,6 +53,10 @@ export const BudgetTable: FC = ({}) => {
         isScenarioEditable,
     } = usePlanningContext();
     const { data: costLines } = useGetCostBreakdownLines();
+    const { data: budgetSettings } = useGetBudgetSettings();
+    const defaultBufferMultiplier = Number(
+        budgetSettings?.buffer ?? DEFAULT_BUFFER_MULTIPLIER,
+    );
     const [totalCosts, setTotalCosts] = useState<{
         totalCost: number;
         yearlyTotal: Record<number, number>;
@@ -102,6 +113,7 @@ export const BudgetTable: FC = ({}) => {
                         quantity: 0,
                         coverageByYear: (yearlyCoverageByCostLine[line.id] ||
                             {}) as Record<number, CostLineYearlyCoverage>,
+                        defaultCoverage: Number(line.coverage),
                         unitCost: Number(line.unit_cost),
                         unitName: line.unit_type_label,
                         conversionFactor:
@@ -110,7 +122,12 @@ export const BudgetTable: FC = ({}) => {
                                 : null,
                         invertedConversionFactor: line.invert_conversion_factor,
                         targetPopulation: null,
-                        buffer: 1.1,
+                        buffer:
+                            line.buffer === null
+                                ? defaultBufferMultiplier
+                                : bufferPercentToMultiplier(
+                                      Number(line.buffer),
+                                  ),
                     });
                 });
             }
@@ -119,7 +136,7 @@ export const BudgetTable: FC = ({}) => {
                 costBreakdownLineRecord: lineRecord,
                 defaultCostRowDataByIntervention: defaultRowsByIntervention,
             };
-        }, [costLines, yearlyCoverageByCostLine]);
+        }, [costLines, yearlyCoverageByCostLine, defaultBufferMultiplier]);
 
     const yearRange = useMemo(
         () =>
@@ -202,15 +219,22 @@ export const BudgetTable: FC = ({}) => {
                 quantity: costLine.quantity,
                 coverageByYear: (yearlyCoverageByCostLine[costLine.id] ||
                     {}) as Record<number, CostLineYearlyCoverage>,
+                defaultCoverage: Number(
+                    breakdownLine?.coverage ?? FULL_COVERAGE_PERCENT,
+                ),
                 unitCost: costLine.unit_cost ?? 0,
                 unitName: costLine.cost_unit_name ?? '',
                 conversionFactor: costLine.conversion_factor,
                 invertedConversionFactor: costLine.invert_conversion_factor,
                 targetPopulation: costLine.target_population,
-                buffer: costLine.buffer ?? 1.1,
+                buffer: costLine.buffer ?? defaultBufferMultiplier,
             };
         },
-        [costBreakdownLineRecord, yearlyCoverageByCostLine],
+        [
+            costBreakdownLineRecord,
+            yearlyCoverageByCostLine,
+            defaultBufferMultiplier,
+        ],
     );
 
     useEffect(() => {
