@@ -6,10 +6,7 @@ import React, {
     useRef,
     useState,
 } from 'react';
-import {
-    CloudOff,
-    Search as SearchIcon,
-} from '@mui/icons-material';
+import { CloudOff, Search as SearchIcon } from '@mui/icons-material';
 import { Box, Button, Typography } from '@mui/material';
 import { SxProps, Theme } from '@mui/material/styles';
 import { useSafeIntl } from 'bluesquare-components';

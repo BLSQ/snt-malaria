@@ -2,10 +2,7 @@ import { JsonLogicTree } from '@react-awesome-query-builder/mui';
 import { getRequest } from 'bluesquare-components';
 import { UseQueryResult } from 'react-query';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
-import {
-    RuleInterventionOverride,
-    ScenarioRule,
-} from '../types/scenarioRule';
+import { RuleInterventionOverride, ScenarioRule } from '../types/scenarioRule';
 import { mapResponseToScenarioRules } from '../utils/scenarioRuleMapper';
 
 export type ScenarioRuleResponse = {

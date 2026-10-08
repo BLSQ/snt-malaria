@@ -48,7 +48,10 @@ export const HoverSwapTile: FC<Props> = ({
     actionSx,
 }) => {
     const rootSx = useMemo(
-        () => [styles.root, { flex: `0 0 ${size}px`, width: size, height: size }],
+        () => [
+            styles.root,
+            { flex: `0 0 ${size}px`, width: size, height: size },
+        ],
         [size],
     );
     const buttonSx = useMemo(

@@ -1509,7 +1509,8 @@ export const MESSAGES = defineMessages({
     },
     budgetViewReworked: {
         id: 'iaso.snt_malaria.label.budgetViewReworked',
-        defaultMessage: 'The budget table is being reworked to support rule overrides.',
+        defaultMessage:
+            'The budget table is being reworked to support rule overrides.',
     },
     criterionValue: {
         id: 'iaso.snt_malaria.scenarioRule.criterionValue',
@@ -1521,15 +1522,18 @@ export const MESSAGES = defineMessages({
     },
     overridesSummary: {
         id: 'iaso.snt_malaria.ruleOverrides.summary',
-        defaultMessage: '{overrides} in {changed} of {total, plural, one {# intervention} other {# interventions}}',
+        defaultMessage:
+            '{overrides} in {changed} of {total, plural, one {# intervention} other {# interventions}}',
     },
     overridesHint: {
         id: 'iaso.snt_malaria.ruleOverrides.hint',
-        defaultMessage: 'Overrides apply to this rule in this scenario only. Empty fields use the cost item values from Cost management. In each card you can change the grant, the years the intervention is deployed, and the unit cost, conversion factor, buffer and coverage of each cost item. Changed values are highlighted. Clear a field, revert a line or revert a whole intervention to go back to the defaults.',
+        defaultMessage:
+            'Overrides apply to this rule in this scenario only. Empty fields use the cost item values from Cost management. In each card you can change the grant, the years the intervention is deployed, and the unit cost, conversion factor, buffer and coverage of each cost item. Changed values are highlighted. Clear a field, revert a line or revert a whole intervention to go back to the defaults.',
     },
     overridesEmpty: {
         id: 'iaso.snt_malaria.ruleOverrides.empty',
-        defaultMessage: 'Add an intervention in the side panel to set overrides for it',
+        defaultMessage:
+            'Add an intervention in the side panel to set overrides for it',
     },
     overrideCount: {
         id: 'iaso.snt_malaria.ruleOverrides.count',
@@ -1609,23 +1613,28 @@ export const MESSAGES = defineMessages({
     },
     yearCoverageSet: {
         id: 'iaso.snt_malaria.ruleOverrides.yearCoverageSet',
-        defaultMessage: 'Coverage in {year} set for this rule. Clear to use {value}.',
+        defaultMessage:
+            'Coverage in {year} set for this rule. Clear to use {value}.',
     },
     yearCoverageDeployed: {
         id: 'iaso.snt_malaria.ruleOverrides.yearCoverageDeployed',
-        defaultMessage: 'Deployed in {year} at the Cost management coverage: {value}. Type a value to change it for this rule.',
+        defaultMessage:
+            'Deployed in {year} at the Cost management coverage: {value}. Type a value to change it for this rule.',
     },
     yearCoverageNotDeployed: {
         id: 'iaso.snt_malaria.ruleOverrides.yearCoverageNotDeployed',
-        defaultMessage: 'Not deployed in {year}, so 0%. Type a value to cost this item anyway.',
+        defaultMessage:
+            'Not deployed in {year}, so 0%. Type a value to cost this item anyway.',
     },
     valueSetTooltip: {
         id: 'iaso.snt_malaria.ruleOverrides.valueSetTooltip',
-        defaultMessage: '{label} set for this rule. Clear the field to use the Cost management value, {value}.',
+        defaultMessage:
+            '{label} set for this rule. Clear the field to use the Cost management value, {value}.',
     },
     valueDefaultTooltip: {
         id: 'iaso.snt_malaria.ruleOverrides.valueDefaultTooltip',
-        defaultMessage: '{label} from Cost management. Type a value to change it for this rule.',
+        defaultMessage:
+            '{label} from Cost management. Type a value to change it for this rule.',
     },
     notApplicableToFixed: {
         id: 'iaso.snt_malaria.ruleOverrides.notApplicableToFixed',
@@ -1641,7 +1650,8 @@ export const MESSAGES = defineMessages({
     },
     costItemBasisResetWarning: {
         id: 'iaso.snt_malaria.costManagement.costItems.basisResetWarning',
-        defaultMessage: 'Coverage values set in scenario rules for this item will be reset.',
+        defaultMessage:
+            'Coverage values set in scenario rules for this item will be reset.',
     },
     resetMapLayer: {
         id: 'iaso.snt_malaria.scenarioRule.resetMapLayer',
@@ -1685,18 +1695,22 @@ export const MESSAGES = defineMessages({
     },
     coverageOrQuantityTooltip: {
         id: 'iaso.snt_malaria.ruleOverrides.coverageOrQuantityTooltip',
-        defaultMessage: 'Coverage for population-based items, quantity for fixed-count items',
+        defaultMessage:
+            'Coverage for population-based items, quantity for fixed-count items',
     },
     yearQuantitySet: {
         id: 'iaso.snt_malaria.ruleOverrides.yearQuantitySet',
-        defaultMessage: 'Quantity in {year} set for this rule. Clear to use {value}.',
+        defaultMessage:
+            'Quantity in {year} set for this rule. Clear to use {value}.',
     },
     yearQuantityDeployed: {
         id: 'iaso.snt_malaria.ruleOverrides.yearQuantityDeployed',
-        defaultMessage: 'Deployed in {year} at the item quantity: {value}. Type a value to change it for this rule.',
+        defaultMessage:
+            'Deployed in {year} at the item quantity: {value}. Type a value to change it for this rule.',
     },
     yearQuantityNotDeployed: {
         id: 'iaso.snt_malaria.ruleOverrides.yearQuantityNotDeployed',
-        defaultMessage: 'Not deployed in {year}, so 0. Type a value to cost this item anyway.',
+        defaultMessage:
+            'Not deployed in {year}, so 0. Type a value to cost this item anyway.',
     },
 });

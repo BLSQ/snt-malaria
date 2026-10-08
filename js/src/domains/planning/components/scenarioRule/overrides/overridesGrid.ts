@@ -28,19 +28,30 @@ const getTracks = (yearCount: number, isCompact: boolean): Track[] => [
     ...Array.from({ length: yearCount }, () => YEAR_COLUMN),
 ];
 
-const sumOf = (values: number[]) => values.reduce((total, value) => total + value, 0);
+const sumOf = (values: number[]) =>
+    values.reduce((total, value) => total + value, 0);
 
 const getGutterWidth = (trackCount: number) =>
     (trackCount - 1) * COLUMN_GAP + 2 * ROW_PADDING_X;
 
-export const getOverridesGridColumns = (yearCount: number, isCompact: boolean) =>
+export const getOverridesGridColumns = (
+    yearCount: number,
+    isCompact: boolean,
+) =>
     getTracks(yearCount, isCompact)
-        .map(({ min, max }) => (min === max ? `${min}px` : `minmax(${min}px, ${max}px)`))
+        .map(({ min, max }) =>
+            min === max ? `${min}px` : `minmax(${min}px, ${max}px)`,
+        )
         .join(' ');
 
-export const getOverridesGridMinWidth = (yearCount: number, isCompact: boolean) => {
+export const getOverridesGridMinWidth = (
+    yearCount: number,
+    isCompact: boolean,
+) => {
     const tracks = getTracks(yearCount, isCompact);
-    return sumOf(tracks.map(track => track.min)) + getGutterWidth(tracks.length);
+    return (
+        sumOf(tracks.map(track => track.min)) + getGutterWidth(tracks.length)
+    );
 };
 
 /** Card width below which the grid switches to compact columns. */
@@ -82,9 +93,11 @@ export const getUnitCostColumnOffset = (
 export const OVERRIDES_HOVER_ROW_CLASS = 'overridesHoverRow';
 export const OVERRIDES_SCROLLED_ATTRIBUTE = 'data-scrolled';
 
-
 /** Pins a row's first cell while the grid scrolls horizontally; the divider only shows once scrolled. */
-export const getStickyCellStyles = (paddingTop: string, paddingBottom = paddingTop) => ({
+export const getStickyCellStyles = (
+    paddingTop: string,
+    paddingBottom = paddingTop,
+) => ({
     position: 'sticky',
     left: 0,
     zIndex: 1,

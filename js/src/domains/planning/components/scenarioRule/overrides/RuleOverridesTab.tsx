@@ -1,11 +1,4 @@
-import React, {
-    FC,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
 import UndoIcon from '@mui/icons-material/Undo';
 import { Box, Button, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -95,7 +88,6 @@ export const RuleOverridesTab: FC = () => {
     const { data: grants = [] } = useGetGrants();
     const { data: budgetSettings } = useGetBudgetSettings();
 
-
     const { ref: summaryRef, size: summarySize } =
         useElementSize<HTMLDivElement>();
     const summaryHeight = summarySize?.height ?? 0;
@@ -169,25 +161,27 @@ export const RuleOverridesTab: FC = () => {
     return (
         <Box>
             <Box ref={summaryRef} sx={styles.stickySummary}>
-            <Box sx={styles.summary}>
-                <Box sx={styles.summaryText}>
-                    <Typography variant="body2" fontWeight="medium">
-                        {totalOverrides > 0
-                            ? formatMessage(MESSAGES.overridesSummary, {
-                                  overrides: formatMessage(
-                                      MESSAGES.overrideCount,
-                                      { count: totalOverrides },
-                                  ),
-                                  changed: changedInterventions.length,
-                                  total: interventions.length,
-                              })
-                            : formatMessage(MESSAGES.overridesNone)}
-                    </Typography>
-                    {changedInterventions.length > 0 && (
-                        <Typography variant="caption" sx={styles.secondaryText}>
-                            {changedInterventions
-                                .map(
-                                    item =>
+                <Box sx={styles.summary}>
+                    <Box sx={styles.summaryText}>
+                        <Typography variant="body2" fontWeight="medium">
+                            {totalOverrides > 0
+                                ? formatMessage(MESSAGES.overridesSummary, {
+                                      overrides: formatMessage(
+                                          MESSAGES.overrideCount,
+                                          { count: totalOverrides },
+                                      ),
+                                      changed: changedInterventions.length,
+                                      total: interventions.length,
+                                  })
+                                : formatMessage(MESSAGES.overridesNone)}
+                        </Typography>
+                        {changedInterventions.length > 0 && (
+                            <Typography
+                                variant="caption"
+                                sx={styles.secondaryText}
+                            >
+                                {changedInterventions
+                                    .map(item =>
                                         formatMessage(
                                             MESSAGES.overrideBreakdownItem,
                                             {
@@ -201,28 +195,30 @@ export const RuleOverridesTab: FC = () => {
                                                 ),
                                             },
                                         ),
-                                )
-                                .join(' · ')}
+                                    )
+                                    .join(' · ')}
+                            </Typography>
+                        )}
+                        <Typography variant="caption" sx={styles.hint}>
+                            {formatMessage(MESSAGES.overridesHint)}
                         </Typography>
+                    </Box>
+                    {totalOverrides > 0 && (
+                        <Button
+                            size="small"
+                            startIcon={
+                                <UndoIcon sx={overridesGridStyles.smallIcon} />
+                            }
+                            onClick={handleRevertAll}
+                            sx={overridesGridStyles.textAction}
+                        >
+                            {formatMessage(MESSAGES.revertAll)}
+                        </Button>
                     )}
-                    <Typography variant="caption" sx={styles.hint}>
-                        {formatMessage(MESSAGES.overridesHint)}
-                    </Typography>
                 </Box>
-                {totalOverrides > 0 && (
-                    <Button
-                        size="small"
-                        startIcon={<UndoIcon sx={overridesGridStyles.smallIcon} />}
-                        onClick={handleRevertAll}
-                        sx={overridesGridStyles.textAction}
-                    >
-                        {formatMessage(MESSAGES.revertAll)}
-                    </Button>
-                )}
-            </Box>
             </Box>
             <Box sx={styles.cards}>
-            {interventions.map(item => (
+                {interventions.map(item => (
                     <InterventionOverrideCard
                         key={item.intervention.id}
                         interventionId={item.intervention.id}

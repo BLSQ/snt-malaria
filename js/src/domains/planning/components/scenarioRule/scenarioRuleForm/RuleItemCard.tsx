@@ -1,10 +1,4 @@
-import React, {
-    FC,
-    MouseEvent,
-    ReactNode,
-    useCallback,
-    useState,
-} from 'react';
+import React, { FC, MouseEvent, ReactNode, useCallback, useState } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Box, SvgIconProps, Tooltip, Typography, alpha } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';

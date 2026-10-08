@@ -140,21 +140,21 @@ export const RuleCoverageSummary: FC<Props> = ({
             </Typography>
             <Box sx={styles.widgets}>
                 <Stack direction="row" spacing={2}>
-                <RuleCoverageWidget
-                    icon={GroupsOutlinedIcon}
-                    label={
-                        populationYear != null
-                            ? `${formatMessage(MESSAGES.ruleCoveragePopulation)} (${populationYear})`
-                            : formatMessage(MESSAGES.ruleCoveragePopulation)
-                    }
-                    value={totalPopulation}
-                    total={overallPopulation}
-                />
-                <RuleCoverageWidget
-                    icon={PlaceOutlinedIcon}
-                    label={formatMessage(MESSAGES.ruleCoverageDistricts)}
-                    value={matchedOrgUnitIds?.length ?? 0}
-                />
+                    <RuleCoverageWidget
+                        icon={GroupsOutlinedIcon}
+                        label={
+                            populationYear != null
+                                ? `${formatMessage(MESSAGES.ruleCoveragePopulation)} (${populationYear})`
+                                : formatMessage(MESSAGES.ruleCoveragePopulation)
+                        }
+                        value={totalPopulation}
+                        total={overallPopulation}
+                    />
+                    <RuleCoverageWidget
+                        icon={PlaceOutlinedIcon}
+                        label={formatMessage(MESSAGES.ruleCoverageDistricts)}
+                        value={matchedOrgUnitIds?.length ?? 0}
+                    />
                 </Stack>
                 {isLoadingPreview && (
                     <DelayedLoadingSpinner absolute transparent size={24} />

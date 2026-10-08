@@ -2,7 +2,10 @@ import React, { FC, useCallback, useMemo } from 'react';
 import { Tooltip, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import { NumberInput, NumberInputVariant } from '../../../../../components/NumberInput';
+import {
+    NumberInput,
+    NumberInputVariant,
+} from '../../../../../components/NumberInput';
 import { overrideColors } from '../../../../../constants/overrideColors';
 import { MESSAGES } from '../../../../messages';
 import { CostLineValueField } from '../../../libs/override-utils';

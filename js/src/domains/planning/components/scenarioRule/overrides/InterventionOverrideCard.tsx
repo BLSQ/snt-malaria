@@ -354,7 +354,9 @@ export const InterventionOverrideCard: FC<Props> = ({
         const textWidth = Math.max(
             ...Array.from(labels.children).map(child => child.scrollWidth),
         );
-        setNameContentWidth(INTERVENTION_TILE_SIZE + NAME_BLOCK_GAP + textWidth);
+        setNameContentWidth(
+            INTERVENTION_TILE_SIZE + NAME_BLOCK_GAP + textWidth,
+        );
     }, [interventionName, categoryName]);
     const nameBlockSx = useMemo(() => {
         const alignedWidth = Number.isFinite(cardWidth)
@@ -365,7 +367,10 @@ export const InterventionOverrideCard: FC<Props> = ({
     }, [cardWidth, isCompact, nameContentWidth, years.length]);
     const gridSx = useMemo(
         () => ({
-            gridTemplateColumns: getOverridesGridColumns(years.length, isCompact),
+            gridTemplateColumns: getOverridesGridColumns(
+                years.length,
+                isCompact,
+            ),
         }),
         [isCompact, years.length],
     );
@@ -490,7 +495,9 @@ export const InterventionOverrideCard: FC<Props> = ({
                 </Box>
                 <Box sx={styles.grant} onClick={stopPropagation}>
                     <Box component="span" sx={overridesGridStyles.tile}>
-                        <AccountBalanceIcon sx={overridesGridStyles.smallIcon} />
+                        <AccountBalanceIcon
+                            sx={overridesGridStyles.smallIcon}
+                        />
                     </Box>
                     <Select<number | string>
                         size="small"
@@ -631,17 +638,26 @@ export const InterventionOverrideCard: FC<Props> = ({
                                     >
                                         {formatMessage(MESSAGES.costItemColumn)}
                                     </Box>
-                                    <Box component="span" sx={styles.columnHeader}>
+                                    <Box
+                                        component="span"
+                                        sx={styles.columnHeader}
+                                    >
                                         {formatMessage(
                                             MESSAGES.budgetingCostLineUnitCost,
                                         )}
                                     </Box>
-                                    <Box component="span" sx={styles.columnHeader}>
+                                    <Box
+                                        component="span"
+                                        sx={styles.columnHeader}
+                                    >
                                         {formatMessage(
                                             MESSAGES.conversionFactorShort,
                                         )}
                                     </Box>
-                                    <Box component="span" sx={styles.columnHeader}>
+                                    <Box
+                                        component="span"
+                                        sx={styles.columnHeader}
+                                    >
                                         {formatMessage(
                                             MESSAGES.budgetingCostLineBuffer,
                                         )}

@@ -158,10 +158,7 @@ export const CostLineOverrideRow: FC<Props> = ({
                                     : MESSAGES.costItemFixedLabel,
                             )}
                         >
-                            <Box
-                                component="span"
-                                sx={overridesGridStyles.tile}
-                            >
+                            <Box component="span" sx={overridesGridStyles.tile}>
                                 {line.is_proportional ? (
                                     <GroupsIcon
                                         sx={overridesGridStyles.smallIcon}
@@ -246,7 +243,9 @@ export const CostLineOverrideRow: FC<Props> = ({
                 field="buffer"
                 label={formatMessage(MESSAGES.budgetingCostLineBuffer)}
                 value={current.buffer}
-                defaultValue={toNumberOrNull(line.buffer) ?? defaultBufferPercent}
+                defaultValue={
+                    toNumberOrNull(line.buffer) ?? defaultBufferPercent
+                }
                 lineName={line.name}
                 onCommit={handleValueCommit}
                 maxDecimals={2}

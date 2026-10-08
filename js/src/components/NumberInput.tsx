@@ -10,17 +10,10 @@ import React, {
     useRef,
     useState,
 } from 'react';
-import {
-    InputBase,
-    SxProps,
-    Theme,
-    Tooltip,
-    Typography,
-} from '@mui/material';
+import { InputBase, SxProps, Theme, Tooltip, Typography } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { overrideColors } from '../constants/overrideColors';
 import { formatBigNumber } from '../domains/planning/libs/cost-utils';
-
 
 export type NumberInputVariant = 'default' | 'overridden' | 'zero';
 

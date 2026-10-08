@@ -29,8 +29,7 @@ export const AdaptiveLabel: FC<Props> = ({ label, shortLabel }) => {
     const { ref: rootRef, size: rootSize } = useElementSize<HTMLSpanElement>();
     const { ref: measureRef, size: labelSize } =
         useElementSize<HTMLSpanElement>();
-    const fits =
-        !rootSize || !labelSize || labelSize.width <= rootSize.width;
+    const fits = !rootSize || !labelSize || labelSize.width <= rootSize.width;
     return (
         <Box component="span" ref={rootRef} sx={styles.root}>
             <Box component="span" ref={measureRef} sx={styles.measure}>
