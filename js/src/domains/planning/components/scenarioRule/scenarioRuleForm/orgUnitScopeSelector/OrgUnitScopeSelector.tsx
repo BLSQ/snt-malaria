@@ -8,10 +8,9 @@ import React, {
 } from 'react';
 import {
     CloudOff,
-    ErrorOutline,
     Search as SearchIcon,
 } from '@mui/icons-material';
-import { Box, Button, Typography, alpha } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { SxProps, Theme } from '@mui/material/styles';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
@@ -95,17 +94,6 @@ const styles = {
         textAlign: 'center',
         p: 2,
     },
-    previewError: {
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 1.25,
-        border: 1,
-        borderColor: theme => alpha(theme.palette.error.main, 0.5),
-        borderRadius: 1,
-        backgroundColor: theme => alpha(theme.palette.error.main, 0.07),
-        p: 1.5,
-        mb: 1.5,
-    },
 } satisfies SxStyles;
 
 type Props = {
@@ -138,8 +126,6 @@ export const OrgUnitScopeSelector: FC<Props> = ({
     const {
         ruleMatchedIds,
         isLoading: isLoadingRule,
-        isError: isRuleError,
-        retry: retryRule,
         isAwaitingFirstResult,
     } = ruleMatches;
     const isLoadingRows = isLoadingTree || isAwaitingFirstResult;
@@ -321,30 +307,6 @@ export const OrgUnitScopeSelector: FC<Props> = ({
 
     return (
         <Box>
-            {isRuleError && (
-                <Box sx={styles.previewError}>
-                    <ErrorOutline color="error" fontSize="small" />
-                    <Box flex={1}>
-                        <Typography variant="body2">
-                            {formatMessage(MESSAGES.scopePreviewErrorTitle)}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            {formatMessage(
-                                MESSAGES.scopePreviewErrorDescription,
-                            )}
-                        </Typography>
-                    </Box>
-                    <Button
-                        variant="text"
-                        size="small"
-                        color="error"
-                        onClick={retryRule}
-                    >
-                        {formatMessage(MESSAGES.retry)}
-                    </Button>
-                </Box>
-            )}
-
             <Box sx={styles.box}>
                 <Box sx={styles.searchRow}>
                     <SearchIcon

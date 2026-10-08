@@ -1,4 +1,7 @@
 import React, { FC, useCallback, useMemo } from 'react';
+import VaccinesIcon from '@mui/icons-material/Vaccines';
+import { useSafeIntl } from 'bluesquare-components';
+import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 import {
     countInterventionOverrides,
@@ -23,6 +26,7 @@ export const InterventionPropertyForm: FC<Props> = ({
     categoryName,
     onRemove,
 }) => {
+    const { formatMessage } = useSafeIntl();
     const {
         scenarioYears: years,
         focusOverride,
@@ -52,10 +56,12 @@ export const InterventionPropertyForm: FC<Props> = ({
 
     return (
         <RuleItemCard
+            Icon={VaccinesIcon}
             title={interventionName}
             caption={categoryName}
             onRemove={handleRemove}
             onClick={handleClick}
+            clickHint={formatMessage(MESSAGES.interventionOverridesHint)}
             isSelected={
                 activeTab === 'overrides' &&
                 focusedOverrideInterventionId === interventionId

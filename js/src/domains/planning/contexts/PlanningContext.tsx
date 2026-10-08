@@ -51,6 +51,9 @@ type PlanningContextType = {
     overrideFocusRequest: number;
     focusOverride: (interventionId: number) => void;
     selectOverride: (interventionId: number) => void;
+    mapMetricTypeId: number | undefined;
+    setMapMetricTypeId: (metricTypeId: number | undefined) => void;
+    showMetricOnMap: (metricTypeId: number) => void;
     overridesTabContainer: HTMLElement | null;
     setOverridesTabContainer: (element: HTMLElement | null) => void;
     // Comparison tab's slot selection, kept here (rather than local to the
@@ -86,6 +89,9 @@ const PlanningContext = createContext<PlanningContextType>({
     overrideFocusRequest: 0,
     focusOverride: () => {},
     selectOverride: () => {},
+    mapMetricTypeId: undefined,
+    setMapMetricTypeId: () => {},
+    showMetricOnMap: () => {},
     overridesTabContainer: null,
     setOverridesTabContainer: () => {},
     comparisonCurrentYear: undefined,
@@ -165,10 +171,19 @@ export const PlanningProvider = ({
     const [focusedOverrideInterventionId, setFocusedOverrideInterventionId] =
         useState<number | undefined>();
     const [overrideFocusRequest, setOverrideFocusRequest] = useState(0);
+    const [mapMetricTypeId, setMapMetricTypeId] = useState<
+        number | undefined
+    >();
     const focusOverride = useCallback((interventionId: number) => {
         setFocusedOverrideInterventionId(interventionId);
         setOverrideFocusRequest(request => request + 1);
+        setMapMetricTypeId(undefined);
         setActiveTab('overrides');
+    }, []);
+
+    const showMetricOnMap = useCallback((metricTypeId: number) => {
+        setMapMetricTypeId(metricTypeId);
+        setActiveTab('map');
     }, []);
 
     const [overridesTabContainer, setOverridesTabContainer] =
@@ -185,6 +200,7 @@ export const PlanningProvider = ({
         setEditingRule(undefined);
         setIsEditing(false);
         setFocusedOverrideInterventionId(undefined);
+        setMapMetricTypeId(undefined);
         setActiveTab('map');
     }, []);
 
@@ -229,6 +245,9 @@ export const PlanningProvider = ({
                 overrideFocusRequest,
                 focusOverride,
                 selectOverride: setFocusedOverrideInterventionId,
+                mapMetricTypeId,
+                setMapMetricTypeId,
+                showMetricOnMap,
                 overridesTabContainer,
                 setOverridesTabContainer,
                 comparisonCurrentYear,

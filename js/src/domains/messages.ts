@@ -570,7 +570,7 @@ export const MESSAGES = defineMessages({
     },
     interventionProperties: {
         id: 'iaso.snt_malaria.scenarioRule.interventionProperties',
-        defaultMessage: 'Interventions',
+        defaultMessage: 'Assign interventions',
     },
     interventionTitle: {
         id: 'iaso.snt_malaria.label.interventionTitle',
@@ -665,14 +665,6 @@ export const MESSAGES = defineMessages({
     year: {
         id: 'iaso.snt_malaria.scenario.year',
         defaultMessage: 'Year',
-    },
-    dataLayerYear: {
-        id: 'iaso.snt_malaria.scenario.dataLayerYear',
-        defaultMessage: 'Year: {year}',
-    },
-    dataLayerYearNotSet: {
-        id: 'iaso.snt_malaria.scenario.dataLayerYearNotSet',
-        defaultMessage: 'Year: not set',
     },
     noDataLayersFound: {
         id: 'iaso.snt_malaria.scenario.noDataLayersFound',
@@ -873,20 +865,21 @@ export const MESSAGES = defineMessages({
     },
     ruleNameAndColor: {
         id: 'iaso.snt_malaria.scenarioRule.ruleNameAndColor',
-        defaultMessage: 'Name and color',
+        defaultMessage: 'Set name and color',
     },
     ruleStepRegion: {
         id: 'iaso.snt_malaria.scenarioRule.ruleStepRegion',
-        defaultMessage: 'Region',
+        defaultMessage: 'Select areas',
     },
     ruleStepRegionDescription: {
         id: 'iaso.snt_malaria.scenarioRule.ruleStepRegionDescription',
         defaultMessage:
-            'Select the region this rule applies to. Districts that meet all selection criteria are included in this rule. Use the tree to add or exclude districts by hand.',
+            'Select the areas this rule applies to. Districts that meet all selection criteria are included in this rule. Use the tree to add or exclude districts by hand.',
     },
     selectionCriteriaDescription: {
         id: 'iaso.snt_malaria.scenarioRule.selectionCriteriaDescription',
-        defaultMessage: 'A district must meet every criterion to be included.',
+        defaultMessage:
+            'A district must meet every criterion to be included. Click a criterion to see its data on the map.',
     },
     ruleStepInterventionsDescription: {
         id: 'iaso.snt_malaria.scenarioRule.ruleStepInterventionsDescription',
@@ -966,14 +959,6 @@ export const MESSAGES = defineMessages({
     scopeLoadErrorDescription: {
         id: 'iaso.snt_malaria.scenarioRule.scopeLoadErrorDescription',
         defaultMessage: 'The source version could not be reached.',
-    },
-    scopePreviewErrorTitle: {
-        id: 'iaso.snt_malaria.scenarioRule.scopePreviewErrorTitle',
-        defaultMessage: 'Could not run the rule',
-    },
-    scopePreviewErrorDescription: {
-        id: 'iaso.snt_malaria.scenarioRule.scopePreviewErrorDescription',
-        defaultMessage: 'Manual picks and exclusions are kept.',
     },
     scenarioCSV: {
         id: 'iaso.snt_malaria.scenario.scenarioCSV',
@@ -1068,7 +1053,7 @@ export const MESSAGES = defineMessages({
     },
     selectionCriteria: {
         id: 'iaso.snt_malaria.scenarioRule.selectionCriteria',
-        defaultMessage: 'Selection criteria',
+        defaultMessage: 'Criteria-based selection',
     },
     settingsTitle: {
         id: 'iaso.snt_malaria.settings.title',
@@ -1518,18 +1503,6 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Metric type automatically shown as the population layer whenever one is needed for display (e.g. totals on the rule panel).',
     },
-    costItemBasisResetWarning: {
-        id: 'iaso.snt_malaria.costManagement.costItems.basisResetWarning',
-        defaultMessage: 'Coverage values set in scenario rules for this item will be reset.',
-    },
-    quantityLabel: {
-        id: 'iaso.snt_malaria.costManagement.budget.quantity',
-        defaultMessage: 'Quantity',
-    },
-    coverageOrQuantityColumn: {
-        id: 'iaso.snt_malaria.costManagement.budget.coverageOrQuantity',
-        defaultMessage: 'Coverage / quantity',
-    },
     overridesView: {
         id: 'iaso.snt_malaria.label.overridesView',
         defaultMessage: 'Overrides',
@@ -1537,6 +1510,10 @@ export const MESSAGES = defineMessages({
     budgetViewReworked: {
         id: 'iaso.snt_malaria.label.budgetViewReworked',
         defaultMessage: 'The budget table is being reworked to support rule overrides.',
+    },
+    criterionValue: {
+        id: 'iaso.snt_malaria.scenarioRule.criterionValue',
+        defaultMessage: 'Value',
     },
     overridesNone: {
         id: 'iaso.snt_malaria.ruleOverrides.none',
@@ -1662,6 +1639,26 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.ruleOverrides.fixedCountCaption',
         defaultMessage: 'per {unit}, fixed count',
     },
+    costItemBasisResetWarning: {
+        id: 'iaso.snt_malaria.costManagement.costItems.basisResetWarning',
+        defaultMessage: 'Coverage values set in scenario rules for this item will be reset.',
+    },
+    resetMapLayer: {
+        id: 'iaso.snt_malaria.scenarioRule.resetMapLayer',
+        defaultMessage: 'Reset',
+    },
+    criterionShowOnMapHint: {
+        id: 'iaso.snt_malaria.scenarioRule.criterionShowOnMapHint',
+        defaultMessage: 'Click to show on map',
+    },
+    criterionHideOnMapHint: {
+        id: 'iaso.snt_malaria.scenarioRule.criterionHideOnMapHint',
+        defaultMessage: 'Click to hide from map',
+    },
+    interventionOverridesHint: {
+        id: 'iaso.snt_malaria.scenarioRule.interventionOverridesHint',
+        defaultMessage: 'Click to edit overrides',
+    },
     revertLine: {
         id: 'iaso.snt_malaria.ruleOverrides.revertLine',
         defaultMessage: 'Revert line',
@@ -1673,6 +1670,14 @@ export const MESSAGES = defineMessages({
     overrideCellLabel: {
         id: 'iaso.snt_malaria.ruleOverrides.cellLabel',
         defaultMessage: '{line}, {field}',
+    },
+    quantityLabel: {
+        id: 'iaso.snt_malaria.costManagement.budget.quantity',
+        defaultMessage: 'Quantity',
+    },
+    coverageOrQuantityColumn: {
+        id: 'iaso.snt_malaria.costManagement.budget.coverageOrQuantity',
+        defaultMessage: 'Coverage / quantity',
     },
     coverageOrQuantityColumnCompact: {
         id: 'iaso.snt_malaria.ruleOverrides.coverageOrQuantityCompact',

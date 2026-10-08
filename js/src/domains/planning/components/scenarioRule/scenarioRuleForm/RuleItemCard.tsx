@@ -1,9 +1,28 @@
-import React, { FC, MouseEvent, ReactNode, useCallback } from 'react';
-import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import { Box, IconButton, Tooltip, Typography, alpha } from '@mui/material';
+import React, {
+    FC,
+    MouseEvent,
+    ReactNode,
+    useCallback,
+    useState,
+} from 'react';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Box, SvgIconProps, Tooltip, Typography, alpha } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import {
+    HoverSwapTile,
+    hoverSwapTileTrigger,
+} from '../../../../../components/HoverSwapTile';
 import { MESSAGES } from '../../../../messages';
+
+const CARD_ACTION_CLASS = 'ruleItemAction';
+const TILE_SIZE = 32;
+
+// Events from portaled children (e.g. an open dropdown menu) bubble through the React tree too.
+const isCardBodyEvent = ({ target, currentTarget }: MouseEvent<HTMLElement>) =>
+    target instanceof Element &&
+    currentTarget.contains(target) &&
+    !target.closest(`.${CARD_ACTION_CLASS}`);
 
 const styles = {
     card: {
@@ -13,7 +32,8 @@ const styles = {
         minHeight: 52,
         py: 1,
         pr: 1.5,
-        pl: 2,
+        pl: '10px',
+        ...hoverSwapTileTrigger,
         border: 1,
         borderColor: 'divider',
         borderRadius: 2,
@@ -27,6 +47,20 @@ const styles = {
     selectedCard: {
         borderColor: 'primary.main',
     },
+    leading: { mr: '-2px', display: 'inline-flex' },
+    iconTile: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: TILE_SIZE,
+        height: TILE_SIZE,
+        borderRadius: 2,
+        backgroundColor: 'primary.light',
+        color: 'primary.main',
+    },
+    icon: { fontSize: 20 },
+    clickHint: { display: 'block', mt: 0.5, opacity: 0.8 },
+    actions: { display: 'contents' },
     labels: {
         flex: '1 1 auto',
         minWidth: 0,
@@ -42,9 +76,7 @@ const styles = {
         color: 'text.secondary',
     },
     removeButton: {
-        flex: '0 0 auto',
-        p: 0.5,
-        color: 'text.disabled',
+        color: 'text.secondary',
         '&:hover': {
             color: 'error.main',
             backgroundColor: theme => alpha(theme.palette.error.main, 0.08),
@@ -53,23 +85,28 @@ const styles = {
 } satisfies SxStyles;
 
 type Props = {
+    Icon: FC<SvgIconProps>;
     title: string;
     caption?: string;
     onRemove: () => void;
     onClick?: () => void;
+    clickHint?: string;
     isSelected?: boolean;
     children?: ReactNode;
 };
 
 export const RuleItemCard: FC<Props> = ({
+    Icon,
     title,
     caption,
     onRemove,
     onClick,
+    clickHint,
     isSelected = false,
     children,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const [isHintOpen, setIsHintOpen] = useState(false);
     const handleRemove = useCallback(
         (event: MouseEvent) => {
             event.stopPropagation();
@@ -77,17 +114,66 @@ export const RuleItemCard: FC<Props> = ({
         },
         [onRemove],
     );
+    const handleMouseOver = useCallback(
+        (event: MouseEvent<HTMLElement>) =>
+            setIsHintOpen(isCardBodyEvent(event)),
+        [],
+    );
+    const handleMouseLeave = useCallback(() => setIsHintOpen(false), []);
+    const handleClick = useCallback(
+        (event: MouseEvent<HTMLElement>) => {
+            if (isCardBodyEvent(event)) {
+                onClick?.();
+            }
+        },
+        [onClick],
+    );
+
     return (
-        <Box
-            sx={[
-                styles.card,
-                Boolean(onClick) && styles.clickableCard,
-                isSelected && styles.selectedCard,
-            ]}
-            onClick={onClick}
+        <Tooltip
+            open={isHintOpen}
+            title={
+                clickHint ? (
+                    <>
+                        {title}
+                        <Box component="span" sx={styles.clickHint}>
+                            {clickHint}
+                        </Box>
+                    </>
+                ) : (
+                    title
+                )
+            }
+            disableHoverListener
+            disableFocusListener
+            disableTouchListener
         >
-            <Box sx={styles.labels}>
-                <Tooltip title={title}>
+            <Box
+                sx={[
+                    styles.card,
+                    Boolean(onClick) && styles.clickableCard,
+                    isSelected && styles.selectedCard,
+                ]}
+                onClick={handleClick}
+                onMouseOver={handleMouseOver}
+                onMouseLeave={handleMouseLeave}
+            >
+                <Box sx={styles.leading}>
+                    <HoverSwapTile
+                        size={TILE_SIZE}
+                        tile={
+                            <Box component="span" sx={styles.iconTile}>
+                                <Icon sx={styles.icon} />
+                            </Box>
+                        }
+                        actionIcon={<DeleteIcon sx={styles.icon} />}
+                        actionLabel={formatMessage(MESSAGES.remove)}
+                        onAction={handleRemove}
+                        actionClassName={CARD_ACTION_CLASS}
+                        actionSx={styles.removeButton}
+                    />
+                </Box>
+                <Box sx={styles.labels}>
                     <Typography
                         variant="body2"
                         fontWeight="medium"
@@ -96,23 +182,22 @@ export const RuleItemCard: FC<Props> = ({
                     >
                         {title}
                     </Typography>
-                </Tooltip>
-                {caption && (
-                    <Typography variant="caption" noWrap sx={styles.caption}>
-                        {caption}
-                    </Typography>
+                    {caption && (
+                        <Typography
+                            variant="caption"
+                            noWrap
+                            sx={styles.caption}
+                        >
+                            {caption}
+                        </Typography>
+                    )}
+                </Box>
+                {children && (
+                    <Box className={CARD_ACTION_CLASS} sx={styles.actions}>
+                        {children}
+                    </Box>
                 )}
             </Box>
-            {children}
-            <Tooltip title={formatMessage(MESSAGES.remove)}>
-                <IconButton
-                    size="small"
-                    onClick={handleRemove}
-                    sx={styles.removeButton}
-                >
-                    <DeleteOutlinedIcon fontSize="small" />
-                </IconButton>
-            </Tooltip>
-        </Box>
+        </Tooltip>
     );
 };

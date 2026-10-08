@@ -16,15 +16,13 @@ export type RuleMatchedOrgUnits = {
     ruleMatchedIds: number[] | undefined;
     isAwaitingFirstResult: boolean;
     isLoading: boolean;
-    isError: boolean;
-    retry: () => void;
 };
 
 export const useRuleMatchedOrgUnits = ({
     matchingCriteria,
     dataLayerYears,
 }: UseRuleMatchedOrgUnitsArgs): RuleMatchedOrgUnits => {
-    const { mutate, isLoading, isError } = usePreviewScenarioRule();
+    const { mutate, isLoading } = usePreviewScenarioRule();
     const [ruleMatchedIds, setRuleMatchedIds] = useState<number[] | undefined>(
         undefined,
     );
@@ -63,7 +61,5 @@ export const useRuleMatchedOrgUnits = ({
         isAwaitingFirstResult:
             matchingCriteria.length > 0 && ruleMatchedIds === undefined,
         isLoading,
-        isError,
-        retry: runPreview,
     };
 };

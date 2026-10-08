@@ -1,5 +1,6 @@
 import React, { FC, useCallback } from 'react';
-import { Box, Stack, TextField } from '@mui/material';
+import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import { Box, Button, Stack, TextField } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
@@ -29,6 +30,11 @@ const styles = {
         minHeight: 0,
         overflowY: 'auto',
         p: 2,
+    },
+    resetMapLayerButton: {
+        flex: '0 0 auto',
+        whiteSpace: 'nowrap',
+        mt: -0.5,
     },
     coverage: {
         flex: '0 0 auto',
@@ -60,8 +66,17 @@ export const ScenarioRuleForm: FC<Props> = ({
     matchedOrgUnitIds,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const { metricTypeCategories, interventionCategories, scenario } =
-        usePlanningContext();
+    const {
+        metricTypeCategories,
+        interventionCategories,
+        mapMetricTypeId,
+        setMapMetricTypeId,
+    } = usePlanningContext();
+
+    const handleResetMapLayer = useCallback(
+        () => setMapMetricTypeId(undefined),
+        [setMapMetricTypeId],
+    );
 
     const { data: accountSettings } = useGetAccountSettings();
     const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
@@ -133,10 +148,22 @@ export const ScenarioRuleForm: FC<Props> = ({
                         description={formatMessage(
                             MESSAGES.selectionCriteriaDescription,
                         )}
+                        action={
+                            mapMetricTypeId !== undefined && (
+                                <Button
+                                    variant="text"
+                                    size="small"
+                                    startIcon={<VisibilityOffOutlinedIcon />}
+                                    onClick={handleResetMapLayer}
+                                    sx={styles.resetMapLayerButton}
+                                >
+                                    {formatMessage(MESSAGES.resetMapLayer)}
+                                </Button>
+                            )
+                        }
                     />
                     <MatchingCriteriaForm
                         metricTypeCategories={metricTypeCategories}
-                        dataLayerYears={scenario?.data_layer_years}
                         matchingCriteria={values.matching_criteria}
                         onAdd={addChildValue}
                         onRemove={(list_field_key: string, index: number) =>
