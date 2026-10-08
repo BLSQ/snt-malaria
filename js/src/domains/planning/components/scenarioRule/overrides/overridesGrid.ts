@@ -7,6 +7,7 @@ type Track = { min: number; max: number };
 const NAME_COLUMN: Track = { min: 300, max: 400 };
 const COMPACT_NAME_COLUMN: Track = { min: 210, max: 400 };
 const VALUE_COLUMN_MAX = 104;
+const COVERAGE_COLUMN_MAX = 128;
 const VALUE_COLUMN_MINS = [72, 72, 72, 72];
 const COMPACT_VALUE_COLUMN_MINS = [66, 66, 52, 52];
 const SPACER_COLUMN: Track = { min: 12, max: 12 };
@@ -20,10 +21,15 @@ const COMPACT_THRESHOLD_YEAR_WIDTH = 48;
 
 const getTracks = (yearCount: number, isCompact: boolean): Track[] => [
     isCompact ? COMPACT_NAME_COLUMN : NAME_COLUMN,
-    ...(isCompact ? COMPACT_VALUE_COLUMN_MINS : VALUE_COLUMN_MINS).map(min => ({
-        min,
-        max: VALUE_COLUMN_MAX,
-    })),
+    ...(isCompact ? COMPACT_VALUE_COLUMN_MINS : VALUE_COLUMN_MINS).map(
+        (min, index, mins) => ({
+            min,
+            max:
+                index === mins.length - 1
+                    ? COVERAGE_COLUMN_MAX
+                    : VALUE_COLUMN_MAX,
+        }),
+    ),
     SPACER_COLUMN,
     ...Array.from({ length: yearCount }, () => YEAR_COLUMN),
 ];
@@ -145,6 +151,7 @@ export const overridesGridStyles = {
     smallIcon: { fontSize: 16 },
     cellInput: {
         width: '100%',
+        maxWidth: VALUE_COLUMN_MAX,
         minWidth: 0,
         height: 30,
     },
