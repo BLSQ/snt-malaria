@@ -1,4 +1,4 @@
-import React, { FC, ReactNode } from 'react';
+import React, { FC, MouseEvent, ReactNode, useCallback } from 'react';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import { Box, IconButton, Tooltip, Typography, alpha } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -18,6 +18,14 @@ const styles = {
         borderColor: 'divider',
         borderRadius: 2,
         backgroundColor: 'background.paper',
+    },
+    clickableCard: {
+        cursor: 'pointer',
+        transition: 'background-color 150ms',
+        '&:hover': { backgroundColor: 'action.hover' },
+    },
+    selectedCard: {
+        borderColor: 'primary.main',
     },
     labels: {
         flex: '1 1 auto',
@@ -48,6 +56,8 @@ type Props = {
     title: string;
     caption?: string;
     onRemove: () => void;
+    onClick?: () => void;
+    isSelected?: boolean;
     children?: ReactNode;
 };
 
@@ -55,11 +65,27 @@ export const RuleItemCard: FC<Props> = ({
     title,
     caption,
     onRemove,
+    onClick,
+    isSelected = false,
     children,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const handleRemove = useCallback(
+        (event: MouseEvent) => {
+            event.stopPropagation();
+            onRemove();
+        },
+        [onRemove],
+    );
     return (
-        <Box sx={styles.card}>
+        <Box
+            sx={[
+                styles.card,
+                Boolean(onClick) && styles.clickableCard,
+                isSelected && styles.selectedCard,
+            ]}
+            onClick={onClick}
+        >
             <Box sx={styles.labels}>
                 <Tooltip title={title}>
                     <Typography
@@ -81,7 +107,7 @@ export const RuleItemCard: FC<Props> = ({
             <Tooltip title={formatMessage(MESSAGES.remove)}>
                 <IconButton
                     size="small"
-                    onClick={onRemove}
+                    onClick={handleRemove}
                     sx={styles.removeButton}
                 >
                     <DeleteOutlinedIcon fontSize="small" />

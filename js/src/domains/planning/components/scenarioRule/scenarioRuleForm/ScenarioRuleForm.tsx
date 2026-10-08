@@ -74,6 +74,8 @@ export const ScenarioRuleForm: FC<Props> = ({
         addChildValue,
         removeChildValue,
         setChildFieldValueAndState,
+        setFieldTouched,
+        setValues,
     } = useGetExtendedFormikContext<ScenarioRuleFormValues>();
 
     const onChangeExcludedOrgUnits = useCallback(
@@ -101,12 +103,19 @@ export const ScenarioRuleForm: FC<Props> = ({
     );
 
     const onRemoveIntervention = useCallback(
-        (index: number) => {
-            const updated = [...values.interventions];
-            updated.splice(index, 1);
-            setFieldValueAndState('interventions', updated);
+        (interventionId: number) => {
+            setFieldTouched('interventions', true, false);
+            setValues({
+                ...values,
+                interventions: values.interventions.filter(
+                    id => id !== interventionId,
+                ),
+                intervention_overrides: values.intervention_overrides.filter(
+                    override => override.intervention !== interventionId,
+                ),
+            });
         },
-        [setFieldValueAndState, values.interventions],
+        [setFieldTouched, setValues, values],
     );
 
     return (

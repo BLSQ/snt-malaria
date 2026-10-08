@@ -5,6 +5,7 @@ import React, {
     useCallback,
     useContext,
     useEffect,
+    useMemo,
     useRef,
     useState,
 } from 'react';
@@ -16,16 +17,19 @@ import { InterventionCategory } from '../../interventions/types';
 import { sortByStringProp } from '../../planning/libs/list-utils';
 import { Scenario } from '../../scenarios/types';
 import type { ExtraSlotState } from '../components/comparisonTab/useComparisonSlots';
+import { getScenarioYears } from '../libs/override-utils';
 import { Budget } from '../types/budget';
 import {
     InterventionAssignmentResponse,
     InterventionPlan,
 } from '../types/interventionAssignments';
+import { PlanningTab } from '../types/planningTab';
 import { ScenarioRule } from '../types/scenarioRule';
 
 type PlanningContextType = {
     scenarioId: number;
     scenario?: Scenario;
+    scenarioYears: number[];
     displayOrgUnitId?: number;
     canEditScenario: boolean; // This is oriented user, does he have the necessary permissions to edit the scenario
     isScenarioEditable: boolean; // This is oriented scenario, is it locked or not, if it's locked it can't be edited even if the user has permissions
@@ -40,6 +44,15 @@ type PlanningContextType = {
     currency: string;
     startEditingRule: (rule?: ScenarioRule) => void;
     stopEditingRule: () => void;
+    activeTab: PlanningTab;
+    setActiveTab: (tab: PlanningTab) => void;
+    focusedOverrideInterventionId: number | undefined;
+    /** Increments on every focusOverride call, so focusing the same intervention again re-triggers it. */
+    overrideFocusRequest: number;
+    focusOverride: (interventionId: number) => void;
+    selectOverride: (interventionId: number) => void;
+    overridesTabContainer: HTMLElement | null;
+    setOverridesTabContainer: (element: HTMLElement | null) => void;
     // Comparison tab's slot selection, kept here (rather than local to the
     // tab) so it survives switching away from and back to the tab. Reset
     // whenever scenarioId changes, see the effect below.
@@ -52,6 +65,7 @@ type PlanningContextType = {
 const PlanningContext = createContext<PlanningContextType>({
     scenarioId: 0,
     scenario: undefined,
+    scenarioYears: [],
     displayOrgUnitId: undefined,
     canEditScenario: false,
     isScenarioEditable: false,
@@ -66,6 +80,14 @@ const PlanningContext = createContext<PlanningContextType>({
     currency: '',
     startEditingRule: () => {},
     stopEditingRule: () => {},
+    activeTab: 'map',
+    setActiveTab: () => {},
+    focusedOverrideInterventionId: undefined,
+    overrideFocusRequest: 0,
+    focusOverride: () => {},
+    selectOverride: () => {},
+    overridesTabContainer: null,
+    setOverridesTabContainer: () => {},
     comparisonCurrentYear: undefined,
     setComparisonCurrentYear: () => {},
     comparisonExtraSlots: [],
@@ -104,6 +126,7 @@ export const PlanningProvider = ({
         ? !scenario.is_locked && canEditScenario
         : canEditScenario;
 
+    const scenarioYears = useMemo(() => getScenarioYears(scenario), [scenario]);
     const { data: budgetSettings } = useGetBudgetSettings();
     const currency = budgetSettings?.local_currency ?? '';
 
@@ -127,15 +150,42 @@ export const PlanningProvider = ({
         );
     }, [interventionAssignments, setInterventionPlans]);
 
+    const [activeTab, setActiveTab] = useState<PlanningTab>('map');
+    // Locked scenarios open on the summary tab, on first load only.
+    const didInitActiveTab = useRef(false);
+    useEffect(() => {
+        if (scenario && !didInitActiveTab.current) {
+            didInitActiveTab.current = true;
+            if (scenario.is_locked) {
+                setActiveTab('summary');
+            }
+        }
+    }, [scenario]);
+
+    const [focusedOverrideInterventionId, setFocusedOverrideInterventionId] =
+        useState<number | undefined>();
+    const [overrideFocusRequest, setOverrideFocusRequest] = useState(0);
+    const focusOverride = useCallback((interventionId: number) => {
+        setFocusedOverrideInterventionId(interventionId);
+        setOverrideFocusRequest(request => request + 1);
+        setActiveTab('overrides');
+    }, []);
+
+    const [overridesTabContainer, setOverridesTabContainer] =
+        useState<HTMLElement | null>(null);
+
     const [isEditing, setIsEditing] = useState(false);
     const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
     const startEditingRule = useCallback((rule?: ScenarioRule) => {
         setEditingRule(rule);
         setIsEditing(true);
+        setActiveTab('map');
     }, []);
     const stopEditingRule = useCallback(() => {
         setEditingRule(undefined);
         setIsEditing(false);
+        setFocusedOverrideInterventionId(undefined);
+        setActiveTab('map');
     }, []);
 
     const [comparisonCurrentYear, setComparisonCurrentYear] = useState<
@@ -158,6 +208,7 @@ export const PlanningProvider = ({
             value={{
                 scenarioId,
                 scenario,
+                scenarioYears,
                 displayOrgUnitId,
                 canEditScenario,
                 isScenarioEditable,
@@ -172,6 +223,14 @@ export const PlanningProvider = ({
                 currency,
                 startEditingRule,
                 stopEditingRule,
+                activeTab,
+                setActiveTab,
+                focusedOverrideInterventionId,
+                overrideFocusRequest,
+                focusOverride,
+                selectOverride: setFocusedOverrideInterventionId,
+                overridesTabContainer,
+                setOverridesTabContainer,
                 comparisonCurrentYear,
                 setComparisonCurrentYear,
                 comparisonExtraSlots,
