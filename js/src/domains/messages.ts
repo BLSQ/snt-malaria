@@ -1142,7 +1142,7 @@ export const MESSAGES = defineMessages({
     fixedCountNote: {
         id: 'iaso.snt_malaria.costManagement.budget.fixedCountNote',
         defaultMessage:
-            'A fixed-count item has no population to convert or cover, so target population, conversion direction, conversion factor and coverage do not apply.',
+            'A fixed-count item has no population to convert, so target population, conversion direction and conversion factor do not apply. Its quantity is costed every year the intervention is deployed.',
     },
     expandCollapseAll: {
         id: 'iaso.snt_malaria.costManagement.budget.expandCollapseAll',
@@ -1517,5 +1517,17 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.account.defaultPopulationHelp',
         defaultMessage:
             'Metric type automatically shown as the population layer whenever one is needed for display (e.g. totals on the rule panel).',
+    },
+    costItemBasisResetWarning: {
+        id: 'iaso.snt_malaria.costManagement.costItems.basisResetWarning',
+        defaultMessage: 'Coverage values set in scenario rules for this item will be reset.',
+    },
+    quantityLabel: {
+        id: 'iaso.snt_malaria.costManagement.budget.quantity',
+        defaultMessage: 'Quantity',
+    },
+    coverageOrQuantityColumn: {
+        id: 'iaso.snt_malaria.costManagement.budget.coverageOrQuantity',
+        defaultMessage: 'Coverage / quantity',
     },
 });

@@ -79,7 +79,7 @@
     "iaso.snt_malaria.costManagement.budget.editCostItem": "Modifier le poste de coût",
     "iaso.snt_malaria.costManagement.budget.deleteCostItem": "Supprimer le poste de coût",
     "iaso.snt_malaria.costManagement.budget.deleteCostItemConfirm": "Supprimer « {name} » de {intervention} ?",
-    "iaso.snt_malaria.costManagement.budget.fixedCountNote": "Un poste à nombre fixe n'a pas de population à convertir ou à couvrir : la population cible, le sens de conversion, le facteur de conversion et la couverture ne s'appliquent pas.",
+    "iaso.snt_malaria.costManagement.budget.fixedCountNote": "Un poste à nombre fixe n'a pas de population à convertir : la population cible, le sens de conversion et le facteur de conversion ne s'appliquent pas. Sa quantité est chiffrée chaque année où l'intervention est déployée.",
     "iaso.snt_malaria.costManagement.budget.expandCollapseAll": "Tout déplier ou replier",
     "iaso.snt_malaria.costManagement.budget.noCostItems": "Aucun poste de coût ne correspond à vos filtres",
     "iaso.snt_malaria.costManagement.title": "Gestion des coûts",
@@ -608,5 +608,8 @@
     "iaso.snt_malaria.settings.dataLayers.wizard.saveChanges": "Enregistrer les modifications",
     "iaso.snt_malaria.settings.dataLayers.wizard.discardEditConfirm": "Abandonner vos modifications non enregistrées de cette couche ?",
     "iaso.snt_malaria.settings.dataLayers.wizard.backGraphConfirm": "Revenir en arrière maintenant annulera les modifications non enregistrées du graphe composite.",
-    "iaso.snt_malaria.settings.dataLayers.openHexaCodeReadOnly": "Défini par OpenHexa et non modifiable — sert à faire correspondre cette couche à sa source."
+    "iaso.snt_malaria.settings.dataLayers.openHexaCodeReadOnly": "Défini par OpenHexa et non modifiable — sert à faire correspondre cette couche à sa source.",
+    "iaso.snt_malaria.costManagement.costItems.basisResetWarning": "Les valeurs de couverture définies dans les règles de scénario pour cet élément seront réinitialisées.",
+    "iaso.snt_malaria.costManagement.budget.quantity": "Quantité",
+    "iaso.snt_malaria.costManagement.budget.coverageOrQuantity": "Couverture / quantité"
 }

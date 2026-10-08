@@ -79,7 +79,7 @@
     "iaso.snt_malaria.costManagement.budget.editCostItem": "Edit cost item",
     "iaso.snt_malaria.costManagement.budget.deleteCostItem": "Delete cost item",
     "iaso.snt_malaria.costManagement.budget.deleteCostItemConfirm": "Delete \"{name}\" from {intervention}?",
-    "iaso.snt_malaria.costManagement.budget.fixedCountNote": "A fixed-count item has no population to convert or cover, so target population, conversion direction, conversion factor and coverage do not apply.",
+    "iaso.snt_malaria.costManagement.budget.fixedCountNote": "A fixed-count item has no population to convert, so target population, conversion direction and conversion factor do not apply. Its quantity is costed every year the intervention is deployed.",
     "iaso.snt_malaria.costManagement.budget.expandCollapseAll": "Expand or collapse all",
     "iaso.snt_malaria.costManagement.budget.noCostItems": "No cost items match your filters",
     "iaso.snt_malaria.costManagement.title": "Cost management",
@@ -609,5 +609,8 @@
     "iaso.snt_malaria.settings.dataLayers.wizard.saveChanges": "Save changes",
     "iaso.snt_malaria.settings.dataLayers.wizard.discardEditConfirm": "Discard your unsaved changes to this layer?",
     "iaso.snt_malaria.settings.dataLayers.wizard.backGraphConfirm": "Going back now will discard any unsaved changes to the composite graph.",
-    "iaso.snt_malaria.settings.dataLayers.openHexaCodeReadOnly": "Set by OpenHexa and can't be changed — it's used to match this layer to its source."
+    "iaso.snt_malaria.settings.dataLayers.openHexaCodeReadOnly": "Set by OpenHexa and can't be changed — it's used to match this layer to its source.",
+    "iaso.snt_malaria.costManagement.costItems.basisResetWarning": "Coverage values set in scenario rules for this item will be reset.",
+    "iaso.snt_malaria.costManagement.budget.quantity": "Quantity",
+    "iaso.snt_malaria.costManagement.budget.coverageOrQuantity": "Coverage / quantity"
 }

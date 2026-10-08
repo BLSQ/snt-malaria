@@ -5,6 +5,7 @@ import NumbersIcon from '@mui/icons-material/Numbers';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { getCurrencyAffixes, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { NumberInput } from '../../../../components/NumberInput';
 import { useInterventionContext } from '../../../interventions/contexts/InterventionContext';
 import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { formatConversionDirection } from '../../../interventions/utils/costBreakdownLine';
@@ -13,9 +14,9 @@ import { LineHandler, PartialLineHandler } from '../types';
 import {
     COST_ITEMS_GRID_COLUMNS,
     COST_ITEMS_GRID_MIN_WIDTH,
+    COST_ITEMS_INPUT_WIDTH,
     COST_ITEMS_ROW_PADDING_LEFT,
 } from './costItemsGrid';
-import { InlineNumberField } from './InlineNumberField';
 
 type Props = {
     line: InterventionCostBreakdownLine;
@@ -58,6 +59,7 @@ const styles = {
         gap: 1,
         minWidth: 0,
     },
+    input: { width: COST_ITEMS_INPUT_WIDTH, flexShrink: 0 },
     basisIcon: { color: 'text.secondary', display: 'flex' },
     name: ellipsis,
     caption: { color: 'text.secondary', lineHeight: 1.3, ...ellipsis },
@@ -88,9 +90,32 @@ const CostItemRowComponent: FC<Props> = ({
         },
         [onDelete, line],
     );
-    const handleFieldCommit = useCallback(
-        (field: string, value: number | null) =>
-            onUpdate(line.id, { [field]: value }),
+    const handleUnitCostCommit = useCallback(
+        (value: number | null) => {
+            if (value !== null) {
+                onUpdate(line.id, { unit_cost: value });
+            }
+        },
+        [onUpdate, line.id],
+    );
+    const handleConversionFactorCommit = useCallback(
+        (value: number | null) => {
+            if (value !== null) {
+                onUpdate(line.id, { conversion_factor: value });
+            }
+        },
+        [onUpdate, line.id],
+    );
+    const handleBufferCommit = useCallback(
+        (value: number | null) => onUpdate(line.id, { buffer: value }),
+        [onUpdate, line.id],
+    );
+    const handleCoverageCommit = useCallback(
+        (value: number | null) => {
+            if (value !== null) {
+                onUpdate(line.id, { coverage: value });
+            }
+        },
         [onUpdate, line.id],
     );
 
@@ -127,12 +152,14 @@ const CostItemRowComponent: FC<Props> = ({
             </Box>
 
             <Box sx={styles.inputCell}>
-                <InlineNumberField
-                    keyValue="unit_cost"
+                <NumberInput
                     value={line.unit_cost}
-                    onCommit={handleFieldCommit}
+                    onCommit={handleUnitCostCommit}
                     minDecimals={2}
                     maxDecimals={2}
+                    min={0}
+                    compact
+                    sx={styles.input}
                     prefix={currencyAffixes.prefix}
                     suffix={currencyAffixes.suffix}
                     ariaLabel={formatMessage(
@@ -147,11 +174,12 @@ const CostItemRowComponent: FC<Props> = ({
             </Box>
 
             <Box sx={styles.inputCell}>
-                <InlineNumberField
-                    keyValue="conversion_factor"
+                <NumberInput
                     value={line.conversion_factor}
-                    onCommit={handleFieldCommit}
+                    onCommit={handleConversionFactorCommit}
                     maxDecimals={6}
+                    min={0}
+                    sx={styles.input}
                     disabled={!line.is_proportional}
                     ariaLabel={formatMessage(
                         MESSAGES.budgetingCostLineConversionFactor,
@@ -185,26 +213,31 @@ const CostItemRowComponent: FC<Props> = ({
                 </Box>
             </Box>
 
-            <InlineNumberField
-                keyValue="buffer"
+            <NumberInput
                 value={line.buffer}
-                onCommit={handleFieldCommit}
+                onCommit={handleBufferCommit}
                 maxDecimals={2}
+                min={0}
+                sx={styles.input}
                 suffix="%"
                 isNullable
                 placeholder={String(defaultBufferPercent)}
                 ariaLabel={formatMessage(MESSAGES.budgetingCostLineBuffer)}
             />
 
-            <InlineNumberField
-                keyValue="coverage"
+            <NumberInput
                 value={line.coverage}
-                onCommit={handleFieldCommit}
+                onCommit={handleCoverageCommit}
                 maxDecimals={2}
-                suffix="%"
-                max={100}
-                disabled={!line.is_proportional}
-                ariaLabel={formatMessage(MESSAGES.coverageLabel)}
+                min={0}
+                sx={styles.input}
+                suffix={line.is_proportional ? '%' : undefined}
+                max={line.is_proportional ? 100 : undefined}
+                ariaLabel={formatMessage(
+                    line.is_proportional
+                        ? MESSAGES.coverageLabel
+                        : MESSAGES.quantityLabel,
+                )}
             />
 
             <Tooltip title={formatMessage(MESSAGES.deleteCostItem)}>

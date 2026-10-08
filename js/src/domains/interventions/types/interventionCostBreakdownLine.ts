@@ -12,6 +12,7 @@ export type InterventionCostBreakdownLine = {
     is_proportional: boolean;
     conversion_factor: number | string;
     invert_conversion_factor: boolean;
+    // Percentage for population-based items, yearly quantity for fixed items.
     coverage: number | string;
     // Percentage, unlike the budget settings multiplier.
     buffer: number | string | null;
