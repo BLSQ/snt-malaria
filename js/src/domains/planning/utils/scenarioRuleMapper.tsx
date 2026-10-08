@@ -16,6 +16,7 @@ export const mapResponseToScenarioRule = (
             ? []
             : jsonLogicToMatchingCriteria(response.matching_criteria),
     interventions: response.interventions,
+    intervention_overrides: response.intervention_overrides ?? [],
     org_units_excluded: response.org_units_excluded?.join(','),
     org_units_included: response.org_units_included?.join(','),
 });

@@ -726,6 +726,7 @@ class InterventionSeeder:
                     account=self.account, code=cost_data["population_layer_code"]
                 ).first()
 
+            is_proportional = cost_data.get("is_proportional", population_layer is not None)
             InterventionCostBreakdownLine.objects.create(
                 intervention=intervention,
                 name=cost_data["name"],
@@ -733,7 +734,8 @@ class InterventionSeeder:
                 unit_type=unit_type,
                 population_layer=population_layer,
                 unit_cost=cost_data["unit_cost"],
-                is_proportional=cost_data.get("is_proportional", population_layer is not None),
+                is_proportional=is_proportional,
+                coverage=InterventionCostBreakdownLine.default_coverage(is_proportional),
                 conversion_factor=cost_data.get("conversion_factor", Decimal("1")),
                 invert_conversion_factor=cost_data.get("invert_conversion_factor", False),
                 created_by=created_by,

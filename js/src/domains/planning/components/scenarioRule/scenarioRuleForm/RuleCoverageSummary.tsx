@@ -4,6 +4,7 @@ import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import { Box, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { DelayedLoadingSpinner } from '../../../../../components/DelayedLoadingSpinner';
 import { MESSAGES } from '../../../../messages';
 import { useGetAccountSettings } from '../../../hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../../../hooks/useGetOrgUnits';
@@ -32,9 +33,8 @@ const styles = {
     widgetLabel: {
         color: 'text.secondary',
     },
-    loading: {
-        opacity: 0.5,
-        transition: 'opacity 0.2s',
+    widgets: {
+        position: 'relative',
     },
 } satisfies SxStyles;
 
@@ -57,7 +57,6 @@ type WidgetProps = {
     label: string;
     value?: number;
     total?: number;
-    isLoading?: boolean;
 };
 
 const RuleCoverageWidget: FC<WidgetProps> = ({
@@ -65,11 +64,8 @@ const RuleCoverageWidget: FC<WidgetProps> = ({
     label,
     value,
     total,
-    isLoading,
 }) => (
-    <Box
-        sx={isLoading ? { ...styles.widget, ...styles.loading } : styles.widget}
-    >
+    <Box sx={styles.widget}>
         <Icon sx={styles.widgetIcon} />
         <Box>
             <Typography variant="body2" fontWeight="medium">
@@ -142,25 +138,28 @@ export const RuleCoverageSummary: FC<Props> = ({
             <Typography variant="body2" fontWeight="medium" mb={1}>
                 {formatMessage(MESSAGES.ruleCoverage)}
             </Typography>
-            <Stack direction="row" spacing={2}>
-                <RuleCoverageWidget
-                    icon={GroupsOutlinedIcon}
-                    label={
-                        populationYear != null
-                            ? `${formatMessage(MESSAGES.ruleCoveragePopulation)} (${populationYear})`
-                            : formatMessage(MESSAGES.ruleCoveragePopulation)
-                    }
-                    value={totalPopulation}
-                    total={overallPopulation}
-                    isLoading={isLoadingPreview}
-                />
-                <RuleCoverageWidget
-                    icon={PlaceOutlinedIcon}
-                    label={formatMessage(MESSAGES.ruleCoverageDistricts)}
-                    value={matchedOrgUnitIds?.length ?? 0}
-                    isLoading={isLoadingPreview}
-                />
-            </Stack>
+            <Box sx={styles.widgets}>
+                <Stack direction="row" spacing={2}>
+                    <RuleCoverageWidget
+                        icon={GroupsOutlinedIcon}
+                        label={
+                            populationYear != null
+                                ? `${formatMessage(MESSAGES.ruleCoveragePopulation)} (${populationYear})`
+                                : formatMessage(MESSAGES.ruleCoveragePopulation)
+                        }
+                        value={totalPopulation}
+                        total={overallPopulation}
+                    />
+                    <RuleCoverageWidget
+                        icon={PlaceOutlinedIcon}
+                        label={formatMessage(MESSAGES.ruleCoverageDistricts)}
+                        value={matchedOrgUnitIds?.length ?? 0}
+                    />
+                </Stack>
+                {isLoadingPreview && (
+                    <DelayedLoadingSpinner absolute transparent size={24} />
+                )}
+            </Box>
         </Box>
     );
 };

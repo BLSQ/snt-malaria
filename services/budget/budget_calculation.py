@@ -8,8 +8,10 @@ from plugins.snt_malaria.models import (
     BudgetSettings,
     Grant,
     InterventionCostBreakdownLine,
-    ScenarioYearlyCostAssignment,
+    ScenarioRuleCostOverride,
+    ScenarioRuleIntervention,
 )
+from plugins.snt_malaria.models.cost_breakdown import compute_conversion_ratio
 
 from .dataclasses import (
     BudgetBreakdownItem,
@@ -27,8 +29,14 @@ class BudgetCalculationService:
     """Compute scenario budget using internal population-driven formula.
 
     Implemented formula:
-    quantity = population * yearly_assignment_value * conversion_ratio * buffer
-    total_cost = quantity * cost_line_unit_cost * (1 + inflation_rate)^(year - start_year)
+    proportional lines: quantity = population * coverage * conversion_ratio * buffer
+    fixed lines:        quantity = coverage (the yearly quantity) * buffer
+    total_cost = quantity * unit_cost * (1 + inflation_rate)^(year - start_year)
+
+    Each assignment is costed with the values of the rule that produced it: a cost line value
+    resolves from the rule's override for that year, then its all-years override, then the cost
+    line itself. A year the rule does not deploy the intervention in has no coverage unless the
+    rule sets one for that year.
     """
 
     def __init__(self, scenario):
@@ -60,12 +68,10 @@ class BudgetCalculationService:
 
         self.cost_lines_by_intervention_id = defaultdict(list)
         self.cost_line_by_id = {}
-        cost_line_ids = []
         metric_type_ids = set()
         for line in population_cost_lines:
             self.cost_lines_by_intervention_id[line.intervention_id].append(line)
             self.cost_line_by_id[line.id] = line
-            cost_line_ids.append(line.id)
             if line.population_layer_id is not None:
                 metric_type_ids.add(line.population_layer_id)
 
@@ -80,21 +86,42 @@ class BudgetCalculationService:
             for row in metric_values
         }
 
-        yearly_assignments = ScenarioYearlyCostAssignment.objects.filter(
-            scenario=scenario,
-            year__gte=self.start_year,
-            year__lte=self.end_year,
-            cost_line_id__in=cost_line_ids,
-        ).values("cost_line_id", "year", "value")
-
-        self.yearly_value_by_key = {
-            (row["cost_line_id"], row["year"]): Decimal(str(row["value"])) for row in yearly_assignments
+        rule_interventions = list(
+            ScenarioRuleIntervention.objects.filter(scenario_rule__scenario=scenario).select_related("scenario_rule")
+        )
+        self.rule_intervention_by_key = {
+            (rule_intervention.scenario_rule_id, rule_intervention.intervention_id): rule_intervention
+            for rule_intervention in rule_interventions
         }
+        self.override_by_key = {
+            (override.rule_intervention_id, override.cost_line_id, override.year): override
+            for override in ScenarioRuleCostOverride.objects.filter(rule_intervention__in=rule_interventions)
+        }
+        self.fixed_cost_candidates_by_intervention_id = self._fixed_cost_candidates(rule_interventions)
 
         budget_settings = BudgetSettings.objects.filter(account=scenario.account).first()
         self.inflation_rate = Decimal(str(budget_settings.inflation_rate)) if budget_settings else Decimal("0")
         self.buffer = Decimal(str(budget_settings.buffer)) if budget_settings else Decimal("1.1")
-        self.buffer_multiplier_by_line_id = {line.id: self._buffer_multiplier(line) for line in population_cost_lines}
+
+    def _fixed_cost_candidates(self, rule_interventions):
+        """Per intervention, the rule interventions eligible to cost its fixed lines, highest priority first.
+
+        Only rules that ended up with assignments qualify. ``None`` stands for assignments made
+        outside of any rule, which use the cost line values.
+        """
+        assigned_keys = {(assignment.rule_id, assignment.intervention_id) for assignment in self.assignments}
+        candidates = defaultdict(list)
+        for rule_intervention in sorted(rule_interventions, key=lambda ri: ri.scenario_rule.priority, reverse=True):
+            if (rule_intervention.scenario_rule_id, rule_intervention.intervention_id) in assigned_keys:
+                candidates[rule_intervention.intervention_id].append(rule_intervention)
+        interventions_assigned_outside_rules = {
+            intervention_id
+            for rule_id, intervention_id in assigned_keys
+            if (rule_id, intervention_id) not in self.rule_intervention_by_key
+        }
+        for intervention_id in interventions_assigned_outside_rules:
+            candidates[intervention_id].append(None)
+        return candidates
 
     def calculate_and_save_all_years(self, user):
         all_years_results = self.calculate_all_years()
@@ -167,10 +194,10 @@ class BudgetCalculationService:
             "buffer": None,
         }
 
-    def _buffer_multiplier(self, cost_line):
-        if cost_line.buffer is None:
+    def _buffer_multiplier(self, buffer_percentage):
+        if buffer_percentage is None:
             return self.buffer
-        return Decimal("1") + cost_line.buffer / Decimal("100")
+        return Decimal("1") + buffer_percentage / Decimal("100")
 
     def _populate_breakdown_from_cost_line(self, entry, cost_line):
         """Fills in a breakdown entry's cost-line-derived (as opposed to accumulated) fields."""
@@ -181,12 +208,12 @@ class BudgetCalculationService:
         entry["target_population"] = cost_line.population_layer.name if cost_line.population_layer else None
         entry["target_population_layer_id"] = cost_line.population_layer.id if cost_line.population_layer else None
         entry["is_proportional"] = cost_line.is_proportional
-        entry["buffer"] = float(self.buffer_multiplier_by_line_id[cost_line.id])
+        entry["buffer"] = float(self._buffer_multiplier(cost_line.buffer))
 
     def calculate_year(self, year):
         """Calculate the budget for a given year, based on the population-driven formula and the scenario data.
         The calculation is done in several steps:
-        1. Compute the raw breakdown lines for the year, based on the population, yearly assignment values and cost line unit costs, applying the inflation rate.
+        1. Compute the raw breakdown lines for the year, based on the population and the coverage and unit costs resolved from rule overrides, applying the inflation rate.
         2. Aggregate the breakdown lines by intervention, org unit and category, to compute the totals for each level and the breakdown of costs by category for each intervention and org unit.
         3. Build the final list of interventions with their cost breakdown, the list of org units with their interventions and breakdown, and the list of category costs, filtering out items with total cost <= 0.
 
@@ -263,47 +290,56 @@ class BudgetCalculationService:
     def _compute_breakdown_line_rows(self, year):
         """
         Compute the raw cost breakdown lines for a given year, without any aggregation, to be used as input for the budget calculation.
-        Calculation is based on the population-driven formula, only processing cost lines with population as cost driver
-        And skipping lines with missing population or yearly per scenario cost values.
-        Formula quantity: population * yearly_cost_value * conversion_ratio * buffer
-        Formula total cost: quantity * cost_line_unit_cost * (1 + inflation_rate)^(year - start_year)
+        Population-based lines produce one row per assignment, fixed lines one row per scenario.
+        Lines without population or coverage for the year are skipped.
         """
 
         rows = []
-        seen_fixed_cost_line_ids = set()
         years_offset = year - self.start_year
         inflation_multiplier = (Decimal("1") + self.inflation_rate) ** years_offset
         for assignment in self.assignments:
             intervention = assignment.intervention
-            org_unit_id = assignment.org_unit_id
-            # Grant attribution: the assignment override wins, otherwise fall
-            # back to the grant configured on the intervention.
+            rule_intervention = self.rule_intervention_by_key.get((assignment.rule_id, intervention.id))
             grant_id = assignment.grant_id or intervention.grant_id
 
             for line in self.cost_lines_by_intervention_id.get(intervention.id, []):
-                lineToAdd = None
-                if line.is_proportional:
-                    lineToAdd = self._compute_population_cost_row(
-                        line, org_unit_id, year, inflation_multiplier, intervention.id, grant_id
-                    )
-                elif line.id not in seen_fixed_cost_line_ids:
-                    seen_fixed_cost_line_ids.add(line.id)
-                    lineToAdd = self._compute_fixed_cost_row(
-                        line, year, inflation_multiplier, intervention.id, grant_id
-                    )
-                if lineToAdd:
-                    rows.append(lineToAdd)
+                if not line.is_proportional:
+                    continue
+                row = self._compute_population_cost_row(
+                    line, rule_intervention, assignment.org_unit_id, year, inflation_multiplier, grant_id
+                )
+                if row:
+                    rows.append(row)
+
+        rows.extend(self._compute_fixed_cost_rows(year, inflation_multiplier))
         return rows
 
-    def _get_yearly_value(self, line, year):
-        # A year the scenario doesn't set falls back to the line's coverage (a percentage), which
-        # proportional lines apply as a ratio of the population; fixed lines have no default count.
-        default = line.coverage / Decimal("100") if line.is_proportional else Decimal("0")
-        return self.yearly_value_by_key.get((line.id, year), default)
+    def _override_value(self, field, rule_intervention, line, year):
+        if rule_intervention is None:
+            return None
+        override = self.override_by_key.get((rule_intervention.id, line.id, year))
+        return getattr(override, field) if override else None
 
-    def _compute_population_cost_row(self, line, org_unit_id, year, inflation_multiplier, intervention_id, grant_id):
+    def _resolve(self, field, rule_intervention, line, year):
+        """Value of a cost line field for a rule and year: year override, then all-years override, then the line."""
+        for override_year in (year, None):
+            value = self._override_value(field, rule_intervention, line, override_year)
+            if value is not None:
+                return value
+        return getattr(line, field)
+
+    def _coverage(self, rule_intervention, line, year):
+        """Coverage percentage for proportional lines, quantity for fixed lines."""
+        year_coverage = self._override_value("coverage", rule_intervention, line, year)
+        if year_coverage is not None:
+            return year_coverage
+        if rule_intervention is not None and not rule_intervention.is_deployed_in(year):
+            return Decimal("0")
+        return self._resolve("coverage", rule_intervention, line, year)
+
+    def _compute_population_cost_row(self, line, rule_intervention, org_unit_id, year, inflation_multiplier, grant_id):
         """
-        Calculate using population as quantity and yearly value is a ratio applied on this quantity.
+        Calculate using population as quantity and the coverage as a ratio applied on this quantity.
         """
         if line.population_layer_id is None:
             return None
@@ -312,51 +348,79 @@ class BudgetCalculationService:
         if population <= 0:
             return None
 
-        yearly_value = self._get_yearly_value(line, year)
+        coverage_ratio = self._coverage(rule_intervention, line, year) / Decimal("100")
+        if coverage_ratio <= 0:
+            return None
 
+        conversion_ratio = compute_conversion_ratio(
+            True,
+            self._resolve("conversion_factor", rule_intervention, line, year),
+            line.invert_conversion_factor,
+        )
+        buffer_multiplier = self._buffer_multiplier(self._resolve("buffer", rule_intervention, line, year))
         # The buffer is baked into the quantity (procurement over-ordering), so the
         # exposed quantity reflects what actually needs to be procured.
-        quantity = population * yearly_value * line.conversion_ratio * self.buffer_multiplier_by_line_id[line.id]
-        line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
+        quantity = population * coverage_ratio * conversion_ratio * buffer_multiplier
+        line_cost = self._compute_cost_(
+            quantity, self._resolve("unit_cost", rule_intervention, line, year), inflation_multiplier
+        )
 
         if line_cost <= 0:
             return None
 
-        category = line.get_category_display()
         return BudgetLineRow(
             cost_line_id=line.id,
             org_unit_id=org_unit_id,
-            intervention_id=intervention_id,
-            category=category,
+            intervention_id=line.intervention_id,
+            category=line.get_category_display(),
             population=population,
             is_proportional=line.is_proportional,
-            yearly_value=yearly_value,
+            yearly_value=coverage_ratio,
             quantity=quantity,
             total_cost=line_cost,
             grant_id=grant_id,
         )
 
-    def _compute_fixed_cost_row(self, line, year, inflation_multiplier, intervention_id, grant_id):
+    def _compute_fixed_cost_rows(self, year, inflation_multiplier):
         """
-        Calculate using yearly value as quantity. Added once per intervention regardless of org units.
+        Fixed lines cost their quantity once per scenario, with the values of the highest-priority
+        rule that costs a quantity that year.
         """
-        yearly_value = self._get_yearly_value(line, year)
-        quantity = yearly_value * self.buffer_multiplier_by_line_id[line.id]
-        line_cost = self._compute_cost_(quantity, line.unit_cost, inflation_multiplier)
+        rows = []
+        for intervention_id, candidates in self.fixed_cost_candidates_by_intervention_id.items():
+            for line in self.cost_lines_by_intervention_id.get(intervention_id, []):
+                if line.is_proportional:
+                    continue
+                for rule_intervention in candidates:
+                    fixed_quantity = self._coverage(rule_intervention, line, year)
+                    if fixed_quantity > 0:
+                        row = self._compute_fixed_cost_row(
+                            line, rule_intervention, fixed_quantity, year, inflation_multiplier
+                        )
+                        if row:
+                            rows.append(row)
+                        break
+        return rows
+
+    def _compute_fixed_cost_row(self, line, rule_intervention, fixed_quantity, year, inflation_multiplier):
+        quantity = fixed_quantity * self._buffer_multiplier(self._resolve("buffer", rule_intervention, line, year))
+        line_cost = self._compute_cost_(
+            quantity, self._resolve("unit_cost", rule_intervention, line, year), inflation_multiplier
+        )
         if line_cost <= 0:
             return None
 
-        category = line.get_category_display()
+        rule_grant_id = rule_intervention.grant_id if rule_intervention else None
         return BudgetLineRow(
             cost_line_id=line.id,
             org_unit_id=None,
-            intervention_id=intervention_id,
-            category=category,
+            intervention_id=line.intervention_id,
+            category=line.get_category_display(),
             is_proportional=line.is_proportional,
-            yearly_value=yearly_value,
+            yearly_value=fixed_quantity,
             quantity=quantity,
             total_cost=line_cost,
-            grant_id=grant_id,
+            grant_id=rule_grant_id or line.intervention.grant_id,
         )
 
     def _compute_cost_(self, quantity, unit_cost, inflation_multiplier):

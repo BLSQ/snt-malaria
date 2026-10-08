@@ -12,27 +12,26 @@ from iaso.models.metric import MetricType, MetricValue
 # from plugins.snt_malaria.models.budget import Budget
 from plugins.snt_malaria.models.cost_breakdown import InterventionCostBreakdownLine
 from plugins.snt_malaria.models.intervention import Intervention
-from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule
-from plugins.snt_malaria.models.scenario_yearly_cost_assignment import ScenarioYearlyCostAssignment
+from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule, ScenarioRuleIntervention
+from plugins.snt_malaria.models.scenario_rule_cost_override import ScenarioRuleCostOverride
 from plugins.snt_malaria.services.budget.budget_calculation import BudgetCalculationService
 
 
-# Coverage ratios stored in ScenarioYearlyCostAssignment.value for population-driven lines.
-# Keyed by intervention.code; unrecognised codes fall back to DEFAULT_YEARLY_COVERAGE.
-YEARLY_COVERAGE_BY_CODE = {
-    "iptp": Decimal("0.85"),
-    "pmc": Decimal("0.80"),
-    "smc": Decimal("0.90"),
-    "smc_3": Decimal("0.90"),
-    "smc_4": Decimal("0.90"),
-    "smc_5": Decimal("0.90"),
-    "itn_campaign": Decimal("0.75"),
-    "itn_routine": Decimal("0.80"),
-    "itn_school": Decimal("0.75"),
-    "vacc": Decimal("0.70"),
-    "lsm": Decimal("0.80"),
+# Coverage percentages seeded as rule overrides for population-driven lines, keyed by
+# intervention.code. Unlisted codes keep the cost line's own coverage.
+COVERAGE_BY_CODE = {
+    "iptp": Decimal("85"),
+    "pmc": Decimal("80"),
+    "smc": Decimal("90"),
+    "smc_3": Decimal("90"),
+    "smc_4": Decimal("90"),
+    "smc_5": Decimal("90"),
+    "itn_campaign": Decimal("75"),
+    "itn_routine": Decimal("80"),
+    "itn_school": Decimal("75"),
+    "vacc": Decimal("70"),
+    "lsm": Decimal("80"),
 }
-DEFAULT_YEARLY_COVERAGE = Decimal("1.00")
 
 
 class DemoScenarioSeeder:
@@ -190,7 +189,7 @@ class DemoScenarioSeeder:
         assignment_count = scenario.intervention_assignments.count()
         self.stdout_write(f"Assigned {assignment_count} interventions to scenario")
 
-        self._create_yearly_cost_assignments(scenario)
+        self._create_coverage_overrides(scenario)
 
         self._ensure_population_for_scenario_years(scenario)
 
@@ -200,34 +199,28 @@ class DemoScenarioSeeder:
 
         return scenario
 
-    def _create_yearly_cost_assignments(self, scenario):
-        """Create ScenarioYearlyCostAssignment rows for all cost breakdown lines of
-        the interventions assigned to the scenario, one row per (line, year)."""
-        intervention_ids = list(scenario.intervention_assignments.values_list("intervention_id", flat=True).distinct())
-
-        cost_lines = InterventionCostBreakdownLine.objects.filter(intervention_id__in=intervention_ids).select_related(
-            "intervention"
+    def _create_coverage_overrides(self, scenario):
+        rule_interventions = ScenarioRuleIntervention.objects.filter(
+            scenario_rule__scenario=scenario, intervention__code__in=COVERAGE_BY_CODE.keys()
+        ).select_related("intervention")
+        cost_lines = InterventionCostBreakdownLine.objects.filter(
+            intervention_id__in=rule_interventions.values("intervention_id"), is_proportional=True
         )
+        lines_by_intervention = {}
+        for line in cost_lines:
+            lines_by_intervention.setdefault(line.intervention_id, []).append(line)
 
-        to_create = []
-        for year in range(scenario.start_year, scenario.end_year + 1):
-            for line in cost_lines:
-                if line.is_proportional:
-                    value = YEARLY_COVERAGE_BY_CODE.get(line.intervention.code, DEFAULT_YEARLY_COVERAGE)
-                else:
-                    # Fixed-cost lines default to 0 in the budget calculator; seed an explicit 0
-                    value = Decimal("0.00")
-                to_create.append(
-                    ScenarioYearlyCostAssignment(
-                        scenario=scenario,
-                        cost_line=line,
-                        year=year,
-                        value=value,
-                    )
-                )
-
-        ScenarioYearlyCostAssignment.objects.bulk_create(to_create, ignore_conflicts=True)
-        self.stdout_write(f"Created {len(to_create)} yearly cost assignments for '{scenario.name}'")
+        to_create = [
+            ScenarioRuleCostOverride(
+                rule_intervention=rule_intervention,
+                cost_line=line,
+                coverage=COVERAGE_BY_CODE[rule_intervention.intervention.code],
+            )
+            for rule_intervention in rule_interventions
+            for line in lines_by_intervention.get(rule_intervention.intervention_id, [])
+        ]
+        ScenarioRuleCostOverride.objects.bulk_create(to_create)
+        self.stdout_write(f"Created {len(to_create)} coverage overrides for '{scenario.name}'")
 
     def _ensure_population_for_scenario_years(self, scenario):
         """The metrics dataset has no YEAR column so MetricValues are imported as timeless

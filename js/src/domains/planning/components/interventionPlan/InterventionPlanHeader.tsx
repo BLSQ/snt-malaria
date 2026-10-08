@@ -8,6 +8,7 @@ import {
     Stack,
     ToggleButton,
     ToggleButtonGroup,
+    Tooltip,
 } from '@mui/material';
 import { Link as MuiLink } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -30,6 +31,7 @@ import {
     UpdateScenarioModal,
 } from '../../../scenarios/components/ScenarioModal';
 import { usePlanningContext } from '../../contexts/PlanningContext';
+import { PlanningTab } from '../../types/planningTab';
 
 const styles = {
     root: {
@@ -43,9 +45,7 @@ const styles = {
 } satisfies SxStyles;
 
 type Props = {
-    activeTab: string;
     selectedOrgUnitId?: number;
-    onTabChange: (value: string) => void;
     onOrgUnitChange: (orgUnitId?: number) => void;
     onDeleteScenario: () => void;
     onToggleLockScenario: () => void;
@@ -56,9 +56,7 @@ type Props = {
 };
 
 export const InterventionPlanHeader: FC<Props> = ({
-    activeTab,
     selectedOrgUnitId,
-    onTabChange,
     onOrgUnitChange,
     onDeleteScenario,
     onToggleLockScenario,
@@ -66,13 +64,25 @@ export const InterventionPlanHeader: FC<Props> = ({
     moreActionsRef,
     tabActions,
 }) => {
-    const { scenarioId, scenario, canEditScenario, isScenarioEditable } =
-        usePlanningContext();
+    const {
+        scenarioId,
+        scenario,
+        canEditScenario,
+        isScenarioEditable,
+        isEditing,
+        activeTab,
+        setActiveTab,
+    } = usePlanningContext();
     const csvUrl = `${exportScenarioAPIPath}?id=${scenarioId}`;
 
     const { formatMessage } = useSafeIntl();
 
     const navigate = useNavigate();
+
+    const handleTabChange = useCallback(
+        (_: unknown, value: PlanningTab | null) => value && setActiveTab(value),
+        [setActiveTab],
+    );
 
     const redirectToScenario = useCallback(
         (scenarioId: number | boolean) => {
@@ -94,21 +104,38 @@ export const InterventionPlanHeader: FC<Props> = ({
                 <ToggleButtonGroup
                     value={activeTab}
                     size="small"
-                    onChange={(_, value) => onTabChange(value)}
+                    onChange={handleTabChange}
                     exclusive
                 >
-                    <ToggleButton value="map" key="map">
+                    <ToggleButton value="map">
                         {formatMessage(MESSAGES.mapView)}
                     </ToggleButton>
-                    <ToggleButton value="budget" key="budget">
-                        {formatMessage(MESSAGES.budgetView)}
-                    </ToggleButton>
-                    <ToggleButton value="summary" key="summary">
-                        {formatMessage(MESSAGES.summaryView)}
-                    </ToggleButton>
-                    <ToggleButton value="comparison" key="comparison">
-                        {formatMessage(MESSAGES.comparisonView)}
-                    </ToggleButton>
+                    {isEditing && (
+                        <ToggleButton value="overrides">
+                            {formatMessage(MESSAGES.overridesView)}
+                        </ToggleButton>
+                    )}
+                    {!isEditing && (
+                        <Tooltip
+                            title={formatMessage(MESSAGES.budgetViewReworked)}
+                        >
+                            <span>
+                                <ToggleButton value="budget" disabled>
+                                    {formatMessage(MESSAGES.budgetView)}
+                                </ToggleButton>
+                            </span>
+                        </Tooltip>
+                    )}
+                    {!isEditing && (
+                        <ToggleButton value="summary">
+                            {formatMessage(MESSAGES.summaryView)}
+                        </ToggleButton>
+                    )}
+                    {!isEditing && (
+                        <ToggleButton value="comparison">
+                            {formatMessage(MESSAGES.comparisonView)}
+                        </ToggleButton>
+                    )}
                 </ToggleButtonGroup>
                 {tabActions && (
                     <>

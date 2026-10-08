@@ -2,6 +2,7 @@ import React, { FC, useCallback, useMemo, useState } from 'react';
 import GroupsIcon from '@mui/icons-material/Groups';
 import NumbersIcon from '@mui/icons-material/Numbers';
 import {
+    Alert,
     Box,
     ToggleButton,
     ToggleButtonGroup,
@@ -12,7 +13,10 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { useInterventionContext } from '../../../interventions/contexts/InterventionContext';
 import { InterventionCostBreakdownLinePayload } from '../../../interventions/types';
-import { formatConversionDirection } from '../../../interventions/utils/costBreakdownLine';
+import {
+    formatConversionDirection,
+    getDefaultCoverage,
+} from '../../../interventions/utils/costBreakdownLine';
 import { MESSAGES } from '../../../messages';
 import { CostItemGroup } from '../types';
 
@@ -27,6 +31,7 @@ type Basis = 'proportional' | 'fixed';
 
 const PERCENT_INPUT_OPTIONS = { decimalScale: 2, min: 0, suffix: '%' };
 const COVERAGE_INPUT_OPTIONS = { ...PERCENT_INPUT_OPTIONS, max: 100 };
+const QUANTITY_INPUT_OPTIONS = { decimalScale: 2, min: 0 };
 
 const styles = {
     subtitle: { color: 'text.secondary', mb: 2 },
@@ -46,6 +51,7 @@ const styles = {
         mt: 2,
     },
     note: { color: 'text.secondary', mt: 2 },
+    basisResetWarning: { mt: 2 },
 } satisfies SxStyles;
 
 const isValidLine = (line: InterventionCostBreakdownLinePayload) => {
@@ -55,10 +61,9 @@ const isValidLine = (line: InterventionCostBreakdownLinePayload) => {
         Boolean(line.unit_type) &&
         line.unit_cost !== undefined &&
         line.unit_cost !== null &&
+        coverage >= 0 &&
         (!line.is_proportional ||
-            (line.population_layer !== null &&
-                coverage >= 0 &&
-                coverage <= 100))
+            (line.population_layer !== null && coverage <= 100))
     );
 };
 
@@ -80,6 +85,8 @@ export const CostItemDialog: FC<Props> = ({
     const [isSaving, setIsSaving] = useState(false);
 
     const isNew = initialLine.id === undefined;
+    const isBasisChanged =
+        !isNew && line.is_proportional !== initialLine.is_proportional;
 
     const updateField = useCallback(
         (field: string, value: unknown) =>
@@ -99,6 +106,10 @@ export const CostItemDialog: FC<Props> = ({
                 population_layer: isProportional
                     ? previous.population_layer
                     : null,
+                coverage:
+                    isProportional === previous.is_proportional
+                        ? previous.coverage
+                        : getDefaultCoverage(isProportional),
             }));
         },
         [],
@@ -283,17 +294,23 @@ export const CostItemDialog: FC<Props> = ({
                         withMarginTop={false}
                         numberInputOptions={PERCENT_INPUT_OPTIONS}
                     />
-                    {line.is_proportional && (
-                        <InputComponent
-                            type="number"
-                            keyValue="coverage"
-                            value={line.coverage}
-                            onChange={updateField}
-                            label={MESSAGES.coverageLabel}
-                            withMarginTop={false}
-                            numberInputOptions={COVERAGE_INPUT_OPTIONS}
-                        />
-                    )}
+                    <InputComponent
+                        type="number"
+                        keyValue="coverage"
+                        value={line.coverage}
+                        onChange={updateField}
+                        label={
+                            line.is_proportional
+                                ? MESSAGES.coverageLabel
+                                : MESSAGES.quantityLabel
+                        }
+                        withMarginTop={false}
+                        numberInputOptions={
+                            line.is_proportional
+                                ? COVERAGE_INPUT_OPTIONS
+                                : QUANTITY_INPUT_OPTIONS
+                        }
+                    />
                 </Box>
             </Box>
 
@@ -301,6 +318,11 @@ export const CostItemDialog: FC<Props> = ({
                 <Typography variant="body2" sx={styles.note}>
                     {formatMessage(MESSAGES.fixedCountNote)}
                 </Typography>
+            )}
+            {isBasisChanged && (
+                <Alert severity="warning" sx={styles.basisResetWarning}>
+                    {formatMessage(MESSAGES.costItemBasisResetWarning)}
+                </Alert>
             )}
         </ConfirmCancelModal>
     );

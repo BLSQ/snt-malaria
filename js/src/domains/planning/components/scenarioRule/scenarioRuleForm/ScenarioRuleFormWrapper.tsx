@@ -7,6 +7,7 @@ import React, {
     useState,
 } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
+import { createPortal } from 'react-dom';
 import { useGetColors } from 'Iaso/hooks/useGetColors';
 import { CardStyled } from '../../../../../components/CardStyled';
 import { ExtendedFormikProvider } from '../../../../../hooks/useGetExtendedFormikContext';
@@ -24,6 +25,7 @@ import {
     resolveRuleOrgUnitIds,
 } from '../../../libs/rule-utils';
 import { ScenarioRule, ScenarioRulePreview } from '../../../types/scenarioRule';
+import { RuleOverridesTab } from '../overrides/RuleOverridesTab';
 import { ScenarioRuleForm } from './ScenarioRuleForm';
 import { ScenarioRuleFormHeader } from './ScenarioRuleFormHeader';
 import { useRuleMatchedOrgUnits } from './useRuleMatchedOrgUnits';
@@ -44,7 +46,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
     onPreviewChange,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const { scenario } = usePlanningContext();
+    const { scenario, overridesTabContainer } = usePlanningContext();
     const { data: palette } = useGetColors();
 
     // useState's lazy initializer runs only on mount, so the random pick is
@@ -77,6 +79,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                       name: rule.name,
                       color: rule.color,
                       interventions: rule.interventions,
+                      intervention_overrides: rule.intervention_overrides,
                       matching_criteria: rule.matching_criteria,
                       org_units_excluded: rule.org_units_excluded,
                       org_units_included: rule.org_units_included,
@@ -169,6 +172,8 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                         isAwaitingFirstResult ? undefined : matchedOrgUnitIds
                     }
                 />
+                {overridesTabContainer &&
+                    createPortal(<RuleOverridesTab />, overridesTabContainer)}
             </ExtendedFormikProvider>
         </CardStyled>
     );
