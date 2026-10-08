@@ -4,10 +4,11 @@ from unittest.mock import Mock
 from iaso.api.common import DropdownOptionsWithRepresentationSerializer
 from iaso.models.metric import MetricType
 from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import (
+    InterventionCostBreakdownLineSingleWriteSerializer,
     InterventionCostBreakdownLineWriteListSerializer,
     InterventionCostBreakdownLineWriteSerializer,
 )
-from plugins.snt_malaria.models import InterventionCostBreakdownLine, ScenarioYearlyCostAssignment
+from plugins.snt_malaria.models import InterventionCostBreakdownLine, ScenarioRuleCostOverride
 from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base import (
     InterventionCostBreakdownLineBase,
 )
@@ -117,30 +118,51 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
             ["cost line A", "cost line B"],
         )
 
-    def test_create_cost_breakdown_line_coverage_above_hundred_is_rejected(self):
-        data = {
+    def _new_line_data(self, **changes):
+        return {
             "intervention": self.intervention_chemo_iptp.id,
             "name": "test",
             "unit_cost": 15,
             "category": "Procurement",
             "unit_type": self.unit_type_other.id,
-            "coverage": "100.01",
+            **changes,
         }
+
+    def test_proportional_cost_line_coverage_above_hundred_is_rejected(self):
+        data = self._new_line_data(
+            is_proportional=True, population_layer=self._population_layer().id, coverage="100.01"
+        )
         serializer = InterventionCostBreakdownLineWriteSerializer(data=data, context=self.context)
         self.assertFalse(serializer.is_valid())
         self.assertIn("coverage", serializer.errors)
 
-    def test_create_cost_breakdown_line_without_coverage_defaults_to_full_coverage(self):
-        data = {
-            "intervention": self.intervention_chemo_iptp.id,
-            "name": "test",
-            "unit_cost": 15,
-            "category": "Procurement",
-            "unit_type": self.unit_type_other.id,
-        }
-        serializer = InterventionCostBreakdownLineWriteSerializer(data=data, context=self.context)
+    def test_fixed_cost_line_accepts_a_quantity_above_hundred(self):
+        serializer = InterventionCostBreakdownLineWriteSerializer(
+            data=self._new_line_data(coverage="250"), context=self.context
+        )
         self.assertTrue(serializer.is_valid(), serializer.errors)
-        self.assertEqual(serializer.validated_data["coverage"], Decimal("100"))
+        self.assertEqual(serializer.validated_data["coverage"], Decimal("250"))
+
+    def test_new_cost_line_without_coverage_defaults_per_basis(self):
+        """Population-based lines default to full coverage, fixed lines to a quantity of one."""
+        cases = {
+            "proportional": (
+                self._new_line_data(is_proportional=True, population_layer=self._population_layer().id),
+                Decimal("100"),
+            ),
+            "fixed": (self._new_line_data(), Decimal("1")),
+        }
+        for case, (data, expected_coverage) in cases.items():
+            with self.subTest(case):
+                serializer = InterventionCostBreakdownLineWriteSerializer(data=data, context=self.context)
+                self.assertTrue(serializer.is_valid(), serializer.errors)
+                self.assertEqual(serializer.validated_data["coverage"], expected_coverage)
+
+    def test_basis_change_without_coverage_resets_it_to_the_new_default(self):
+        self._single_update(is_proportional=True, population_layer=self._population_layer().id)
+
+        self.cost_line2.refresh_from_db()
+        self.assertEqual(self.cost_line2.coverage, Decimal("100"))
 
     def test_create_cost_breakdown_line_with_negative_buffer_is_rejected(self):
         data = {
@@ -244,20 +266,22 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
 
         self.assertTrue(lines.filter(name="Cost Line 2 new", unit_cost="9.00").exists())
 
-    def test_update_cost_breakdown_line_keeps_scenario_yearly_assignment(self):
-        scenario = self.create_snt_scenario(
-            account=self.account,
-            created_by=self.user_write,
-            name="Scenario for update",
+    def _create_rule_overrides(self):
+        """An all-years and a 2026 override for cost_line2 (fixed) in a rule deploying SMC."""
+        scenario = self.create_snt_scenario(account=self.account, created_by=self.user_write)
+        rule = self.create_snt_rule(scenario, [self.intervention_chemo_smc], created_by=self.user_write)
+        all_years = self.create_snt_rule_cost_override(
+            rule,
+            self.cost_line2,
+            unit_cost=Decimal("7"),
+            buffer=Decimal("5"),
+            conversion_factor=Decimal("2"),
+            coverage=Decimal("50"),
         )
-        yearly_assignment = ScenarioYearlyCostAssignment.objects.create(
-            scenario=scenario,
-            cost_line=self.cost_line2,
-            year=2026,
-            value="10.00",
-        )
+        yearly = self.create_snt_rule_cost_override(rule, self.cost_line2, year=2026, coverage=Decimal("100"))
+        return all_years, yearly
 
-        queryset = InterventionCostBreakdownLine.objects.filter(id=self.cost_line2.id)
+    def _list_update(self, **changes):
         data = [
             {
                 "id": self.cost_line2.id,
@@ -266,11 +290,11 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
                 "unit_cost": "11.00",
                 "unit_type": self.unit_type_per_sp.id,
                 "category": "Operational",
+                **changes,
             }
         ]
-
         serializer = InterventionCostBreakdownLineWriteSerializer(
-            instance=queryset,
+            instance=InterventionCostBreakdownLine.objects.filter(id=self.cost_line2.id),
             data=data,
             many=True,
             context=self.context,
@@ -278,29 +302,70 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
         self.assertTrue(serializer.is_valid(), serializer.errors)
         serializer.save()
 
-        yearly_assignment.refresh_from_db()
-        self.cost_line2.refresh_from_db()
-
-        self.assertEqual(yearly_assignment.cost_line_id, self.cost_line2.id)
-        self.assertEqual(self.cost_line2.name, "Cost Line 2 updated")
-        self.assertEqual(str(self.cost_line2.unit_cost), "11.00")
-
-    def test_remove_cost_breakdown_line_deletes_scenario_yearly_assignment(self):
-        scenario = self.create_snt_scenario(
-            account=self.account,
-            created_by=self.user_write,
-            name="Scenario for delete",
+    def _single_update(self, **changes):
+        serializer = InterventionCostBreakdownLineSingleWriteSerializer(
+            instance=self.cost_line2, data=changes, partial=True, context=self.context
         )
-        yearly_assignment = ScenarioYearlyCostAssignment.objects.create(
-            scenario=scenario,
-            cost_line=self.cost_line2,
-            year=2026,
-            value="10.00",
-        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
 
-        queryset = InterventionCostBreakdownLine.objects.filter(id=self.cost_line2.id)
+    def _population_layer(self):
+        count = MetricType.objects.filter(account=self.account).count()
+        return MetricType.objects.create(account=self.account, name=f"Under 5 {count}", code=f"U5_{count}")
+
+    def test_list_update_without_basis_change_keeps_rule_overrides(self):
+        all_years, yearly = self._create_rule_overrides()
+
+        self._list_update()
+
+        all_years.refresh_from_db()
+        self.assertEqual(all_years.coverage, Decimal("50"))
+        self.assertTrue(ScenarioRuleCostOverride.objects.filter(id=yearly.id).exists())
+
+    def test_basis_change_resets_basis_dependent_rule_overrides(self):
+        """Switching between fixed and population-based drops yearly values, coverage and factor, keeps the rest."""
+        for update in (self._list_update, self._single_update):
+            with self.subTest(update=update.__name__):
+                self.cost_line2.is_proportional = False
+                self.cost_line2.population_layer = None
+                self.cost_line2.save()
+                ScenarioRuleCostOverride.objects.all().delete()
+                all_years, yearly = self._create_rule_overrides()
+
+                update(is_proportional=True, population_layer=self._population_layer().id)
+
+                all_years.refresh_from_db()
+                self.assertFalse(ScenarioRuleCostOverride.objects.filter(id=yearly.id).exists())
+                self.assertIsNone(all_years.coverage)
+                self.assertIsNone(all_years.conversion_factor)
+                self.assertEqual(all_years.unit_cost, Decimal("7"))
+                self.assertEqual(all_years.buffer, Decimal("5"))
+
+    def test_basis_change_deletes_rule_overrides_left_empty(self):
+        self._create_rule_overrides()
+        ScenarioRuleCostOverride.objects.filter(year__isnull=True).update(unit_cost=None, buffer=None)
+
+        self._single_update(is_proportional=True, population_layer=self._population_layer().id)
+
+        self.assertFalse(ScenarioRuleCostOverride.objects.exists())
+
+    def test_intervention_change_deletes_rule_overrides(self):
+        for update in (self._list_update, self._single_update):
+            with self.subTest(update=update.__name__):
+                self.cost_line2.intervention = self.intervention_chemo_smc
+                self.cost_line2.save()
+                ScenarioRuleCostOverride.objects.all().delete()
+                self._create_rule_overrides()
+
+                update(intervention=self.intervention_chemo_iptp.id)
+
+                self.assertFalse(ScenarioRuleCostOverride.objects.filter(cost_line=self.cost_line2).exists())
+
+    def test_remove_cost_breakdown_line_deletes_rule_overrides(self):
+        self._create_rule_overrides()
+
         serializer = InterventionCostBreakdownLineWriteSerializer(
-            instance=queryset,
+            instance=InterventionCostBreakdownLine.objects.filter(id=self.cost_line2.id),
             data=[],
             many=True,
             context=self.context,
@@ -308,11 +373,7 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
         self.assertTrue(serializer.is_valid(), serializer.errors)
         serializer.save()
 
-        with self.assertRaises(InterventionCostBreakdownLine.DoesNotExist):
-            InterventionCostBreakdownLine.objects.get(id=self.cost_line2.id)
-
-        with self.assertRaises(ScenarioYearlyCostAssignment.DoesNotExist):
-            ScenarioYearlyCostAssignment.objects.get(id=yearly_assignment.id)
+        self.assertFalse(ScenarioRuleCostOverride.objects.exists())
 
     def test_serializer_categories_to_representation(self):
         serializer = DropdownOptionsWithRepresentationSerializer()

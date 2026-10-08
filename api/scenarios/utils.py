@@ -1,16 +1,17 @@
 import logging
 
 from collections import defaultdict
-from copy import deepcopy
 from datetime import datetime
 
 import pandas as pd
 
 from django.contrib.auth.models import User
+from django.db import models
 
 from iaso.utils.colors import COLOR_CHOICES, DISPERSED_COLOR_ORDER
 from plugins.snt_malaria.models.intervention import Intervention, InterventionAssignment
-from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule
+from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule, ScenarioRuleIntervention
+from plugins.snt_malaria.models.scenario_rule_cost_override import OVERRIDE_VALUE_FIELDS, ScenarioRuleCostOverride
 
 
 logger = logging.getLogger(__name__)
@@ -167,8 +168,10 @@ def create_rules_from_import(
 
 
 def duplicate_rules(scenario_from: Scenario, scenario_to: Scenario, user: User):
-    for rule in scenario_from.rules.prefetch_related("interventions").all():
-        intervention_ids = list(rule.interventions.values_list("id", flat=True))
+    rule_interventions = ScenarioRuleIntervention.objects.prefetch_related("cost_overrides")
+    for rule in scenario_from.rules.prefetch_related(
+        models.Prefetch("scenarioruleintervention_set", queryset=rule_interventions)
+    ):
         new_rule = ScenarioRule.objects.create(
             scenario=scenario_to,
             name=rule.name,
@@ -181,12 +184,19 @@ def duplicate_rules(scenario_from: Scenario, scenario_to: Scenario, user: User):
             org_units_scope=rule.org_units_scope,
             created_by=user,
         )
-        new_rule.interventions.set(intervention_ids)
-
-
-def duplicate_scenario_yearly_cost_assignment(scenario_from: Scenario, scenario_to: Scenario, user: User):
-    for cost_assignment in scenario_from.yearly_cost_assignments.all():
-        initial_cost_assignment = deepcopy(cost_assignment)
-        initial_cost_assignment.pk = None
-        initial_cost_assignment.scenario = scenario_to
-        initial_cost_assignment.save()
+        for rule_intervention in rule.scenarioruleintervention_set.all():
+            new_rule_intervention = ScenarioRuleIntervention.objects.create(
+                scenario_rule=new_rule,
+                intervention_id=rule_intervention.intervention_id,
+                deployment_years=rule_intervention.deployment_years,
+                grant_id=rule_intervention.grant_id,
+            )
+            ScenarioRuleCostOverride.objects.bulk_create(
+                ScenarioRuleCostOverride(
+                    rule_intervention=new_rule_intervention,
+                    cost_line_id=override.cost_line_id,
+                    year=override.year,
+                    **{field: getattr(override, field) for field in OVERRIDE_VALUE_FIELDS},
+                )
+                for override in rule_intervention.cost_overrides.all()
+            )
