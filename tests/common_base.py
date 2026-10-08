@@ -1,3 +1,4 @@
+from decimal import Decimal
 from itertools import count
 
 from django.utils.text import slugify
@@ -5,10 +6,17 @@ from django.utils.text import slugify
 from iaso.models import Account, OrgUnit, OrgUnitType
 from iaso.test import APITestCase, TestCase
 from plugins.snt_malaria.models import (
+    CostUnitType,
+    Donor,
+    Grant,
     Intervention,
     InterventionAssignment,
     InterventionCategory,
+    InterventionCostBreakdownLine,
     Scenario,
+    ScenarioRule,
+    ScenarioRuleCostOverride,
+    ScenarioRuleIntervention,
 )
 
 
@@ -122,6 +130,49 @@ class SNTMalariaTestMixin:
             intervention=intervention,
             created_by=created_by or getattr(scenario, "created_by", self.user),
             **kwargs,
+        )
+
+    def create_snt_rule(self, scenario, interventions=(), created_by=None, priority=None, **kwargs):
+        rule = ScenarioRule.objects.create(
+            scenario=scenario,
+            name=kwargs.pop("name", "Test Rule"),
+            priority=priority if priority is not None else scenario.get_next_available_priority(),
+            created_by=created_by or self.user,
+            **kwargs,
+        )
+        rule.interventions.set(interventions)
+        return rule
+
+    def get_snt_rule_intervention(self, rule, intervention):
+        return ScenarioRuleIntervention.objects.get(scenario_rule=rule, intervention=intervention)
+
+    def create_snt_cost_line(self, intervention, unit_type=None, created_by=None, **kwargs):
+        return InterventionCostBreakdownLine.objects.create(
+            intervention=intervention,
+            name=kwargs.pop("name", "Test cost line"),
+            unit_type=unit_type
+            or CostUnitType.objects.get_or_create(account=intervention.intervention_category.account, name="per item")[
+                0
+            ],
+            unit_cost=kwargs.pop("unit_cost", Decimal("1.00")),
+            coverage=kwargs.pop(
+                "coverage", InterventionCostBreakdownLine.default_coverage(kwargs.get("is_proportional", False))
+            ),
+            created_by=created_by or self.user,
+            **kwargs,
+        )
+
+    def create_snt_grant(self, account=None, name="Test Grant", donor_name="Test Donor"):
+        account = account or self.account
+        donor, _ = Donor.objects.get_or_create(account=account, name=donor_name)
+        return Grant.objects.create(account=account, donor=donor, name=name)
+
+    def create_snt_rule_cost_override(self, rule, cost_line, year=None, **values):
+        return ScenarioRuleCostOverride.objects.create(
+            rule_intervention=self.get_snt_rule_intervention(rule, cost_line.intervention),
+            cost_line=cost_line,
+            year=year,
+            **values,
         )
 
     def create_snt_default_interventions(self, account=None, created_by=None):

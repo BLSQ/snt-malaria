@@ -24,6 +24,7 @@ class BudgetBreakdownItem(BudgetBaseModel):
     target_population: Optional[str] = None
     target_population_layer_id: Optional[int] = None
     is_proportional: bool = False
+    # Coverage ratio for population-based lines; the yearly quantity for fixed lines.
     yearly_value: Decimal = Decimal("0.0")
     buffer: Optional[float] = None
 
@@ -65,6 +66,7 @@ class BudgetLineRow(BudgetBaseModel):
     category: str
     population: Decimal = Decimal("0")
     is_proportional: bool = False
+    # Coverage ratio for population-based lines; the yearly quantity for fixed lines.
     yearly_value: Decimal = Decimal("0")
     quantity: Decimal
     total_cost: Decimal

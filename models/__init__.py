@@ -12,7 +12,8 @@ from .intervention import (
     InterventionAssignment,
     InterventionCategory,
 )
-from .scenario import Scenario, ScenarioRule
+from .scenario import Scenario, ScenarioRule, ScenarioRuleIntervention
+from .scenario_rule_cost_override import ScenarioRuleCostOverride
 from .scenario_yearly_cost_assignment import ScenarioYearlyCostAssignment
 from .snt_account_setup import SNTAccountSetup
 
@@ -23,6 +24,8 @@ __all__ = [
     "InterventionCategory",
     "Scenario",
     "ScenarioRule",
+    "ScenarioRuleIntervention",
+    "ScenarioRuleCostOverride",
     "CostUnitType",
     "Donor",
     "Grant",

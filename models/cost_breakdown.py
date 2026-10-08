@@ -1,11 +1,26 @@
 from decimal import Decimal
 
 from django.contrib.auth.models import User
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from plugins.snt_malaria.models.intervention import Intervention
+
+
+MAX_COVERAGE_PERCENTAGE = Decimal("100")
+
+
+def compute_conversion_ratio(is_proportional, conversion_factor, invert_conversion_factor):
+    """Canonical conversion factor used by the budget calculation (1 / value when inverted).
+
+    Fixed cost lines and degenerate factors (missing or 0) always return 1.
+    """
+    if not is_proportional or not conversion_factor:
+        return Decimal(1)
+    if invert_conversion_factor:
+        return Decimal(1) / conversion_factor
+    return conversion_factor
 
 
 class InterventionCostBreakdownLine(models.Model):
@@ -47,12 +62,13 @@ class InterventionCostBreakdownLine(models.Model):
     conversion_factor = models.DecimalField(max_digits=19, decimal_places=6, default=Decimal("1"))
     # When True, ``conversion_factor`` is inverted (1 / value) to get the canonical ratio.
     invert_conversion_factor = models.BooleanField(default=False)
-    # Percentage (0-100) of the population layer actually reached by this cost line.
+    # Proportional lines: percentage (0-100) of the population layer reached. Fixed lines: the
+    # quantity costed per year. See ``default_coverage``.
     coverage = models.DecimalField(
-        max_digits=5,
+        max_digits=19,
         decimal_places=2,
         default=Decimal("100"),
-        validators=[MinValueValidator(Decimal("0")), MaxValueValidator(Decimal("100"))],
+        validators=[MinValueValidator(Decimal("0"))],
     )
     # Percentage over-ordering added to the quantity (10 means x1.10). Null falls back to the
     # account's budget settings buffer.
@@ -72,14 +88,10 @@ class InterventionCostBreakdownLine(models.Model):
     )
     updated_at = models.DateTimeField(auto_now=True)
 
+    @staticmethod
+    def default_coverage(is_proportional):
+        return MAX_COVERAGE_PERCENTAGE if is_proportional else Decimal("1")
+
     @property
     def conversion_ratio(self):
-        """Canonical conversion factor used by the budget calculation (1 / value when inverted).
-
-        Fixed cost lines and degenerate factors (missing or 0) always return 1.
-        """
-        if not self.is_proportional or not self.conversion_factor:
-            return Decimal(1)
-        if self.invert_conversion_factor:
-            return Decimal(1) / self.conversion_factor
-        return self.conversion_factor
+        return compute_conversion_ratio(self.is_proportional, self.conversion_factor, self.invert_conversion_factor)
