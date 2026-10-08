@@ -11,19 +11,15 @@ import React, {
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SidePanelProvider } from '../../../components/sidePanel/SidePanelProvider';
 import { useGetBudgetSettings } from '../../../hooks/useGetBudgetSettings';
-import { createTimeoutService } from '../../../services/timeoutService';
 import { MetricTypeCategory } from '../../dataLayers/types/metrics';
 import { InterventionCategory } from '../../interventions/types';
 import { sortByStringProp } from '../../planning/libs/list-utils';
 import { Scenario } from '../../scenarios/types';
 import type { ExtraSlotState } from '../components/comparisonTab/useComparisonSlots';
-import { useGetScenarioYearlyCostAssignments } from '../hooks/useGetScenarioYearlyCostAssignments';
-import { useSaveScenarioYearlyCostAssignment } from '../hooks/useSaveScenarioYearlyCostAssignment';
 import { Budget } from '../types/budget';
 import {
     InterventionAssignmentResponse,
     InterventionPlan,
-    ScenarioYearlyCostAssignment,
 } from '../types/interventionAssignments';
 import { ScenarioRule } from '../types/scenarioRule';
 
@@ -40,10 +36,8 @@ type PlanningContextType = {
     interventionCategories: InterventionCategory[];
     interventionAssignments: InterventionAssignmentResponse[];
     interventionPlans: InterventionPlan[];
-    scenarioYearlyCostAssignments: ScenarioYearlyCostAssignment[];
     budgets: Budget[];
     currency: string;
-    saveYearlyCoverage: (params: SaveYearlyCoverageParams) => void;
     startEditingRule: (rule?: ScenarioRule) => void;
     stopEditingRule: () => void;
     // Comparison tab's slot selection, kept here (rather than local to the
@@ -54,16 +48,6 @@ type PlanningContextType = {
     comparisonExtraSlots: ExtraSlotState[];
     setComparisonExtraSlots: Dispatch<SetStateAction<ExtraSlotState[]>>;
 };
-
-type SaveYearlyCoverageParams = {
-    assignmentId?: number;
-    costLineId: number;
-    year: number;
-    value: number;
-};
-
-const toCoverageKey = (costLineId: number, year: number) =>
-    `${costLineId}-${year}`;
 
 const PlanningContext = createContext<PlanningContextType>({
     scenarioId: 0,
@@ -78,10 +62,8 @@ const PlanningContext = createContext<PlanningContextType>({
     interventionCategories: [],
     interventionAssignments: [],
     interventionPlans: [],
-    scenarioYearlyCostAssignments: [],
     budgets: [],
     currency: '',
-    saveYearlyCoverage: () => {},
     startEditingRule: () => {},
     stopEditingRule: () => {},
     comparisonCurrentYear: undefined,
@@ -115,7 +97,6 @@ export const PlanningProvider = ({
     budgets: Budget[];
     children: React.ReactNode;
 }) => {
-    const DEBOUNCE_MS = 500;
     const [interventionPlans, setInterventionPlans] = useState<
         InterventionPlan[]
     >([]);
@@ -123,13 +104,8 @@ export const PlanningProvider = ({
         ? !scenario.is_locked && canEditScenario
         : canEditScenario;
 
-    const { data: scenarioYearlyCostAssignments = [] } =
-        useGetScenarioYearlyCostAssignments(scenarioId);
-    const { mutate: saveScenarioYearlyCostAssignment } =
-        useSaveScenarioYearlyCostAssignment();
     const { data: budgetSettings } = useGetBudgetSettings();
     const currency = budgetSettings?.local_currency ?? '';
-    const timeoutServiceRef = useRef(createTimeoutService());
 
     useEffect(() => {
         const plans = new Map<number, InterventionPlan>();
@@ -177,39 +153,6 @@ export const PlanningProvider = ({
         }
     }, [scenarioId]);
 
-    const saveYearlyCoverage = useCallback(
-        ({
-            assignmentId,
-            costLineId,
-            year,
-            value,
-        }: SaveYearlyCoverageParams) => {
-            const debounceKey = toCoverageKey(costLineId, year);
-
-            timeoutServiceRef.current.debounce(
-                debounceKey,
-                () => {
-                    saveScenarioYearlyCostAssignment({
-                        id: assignmentId,
-                        scenario: scenarioId,
-                        costLine: costLineId,
-                        year,
-                        value,
-                    });
-                },
-                DEBOUNCE_MS,
-            );
-        },
-        [saveScenarioYearlyCostAssignment, scenarioId],
-    );
-
-    useEffect(
-        () => () => {
-            timeoutServiceRef.current.clearAll();
-        },
-        [],
-    );
-
     return (
         <PlanningContext.Provider
             value={{
@@ -225,10 +168,8 @@ export const PlanningProvider = ({
                 interventionPlans,
                 isEditing,
                 editingRule,
-                scenarioYearlyCostAssignments,
                 budgets,
                 currency,
-                saveYearlyCoverage,
                 startEditingRule,
                 stopEditingRule,
                 comparisonCurrentYear,
