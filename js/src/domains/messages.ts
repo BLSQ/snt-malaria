@@ -716,6 +716,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.noLayer',
         defaultMessage: 'No layer',
     },
+    clearMapLayer: {
+        id: 'iaso.snt_malaria.label.clearMapLayer',
+        defaultMessage: 'Clear layer',
+    },
     noOrgUnitsSelected: {
         id: 'iaso.snt_malaria.label.noOrgUnitsSelected',
         defaultMessage:

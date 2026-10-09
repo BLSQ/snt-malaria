@@ -3,8 +3,10 @@ import AddIcon from '@mui/icons-material/Add';
 import { Box, Button, MenuItem, Popover, alpha } from '@mui/material';
 import { IntlMessage, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-
-const MENU_MIN_WIDTH = 300;
+import {
+    OPTION_MENU_MIN_WIDTH,
+    optionMenuStyles,
+} from '../../../../../components/optionMenuStyles';
 
 const styles = {
     emptyListButton: {
@@ -23,29 +25,6 @@ const styles = {
         px: 0.75,
         py: 0.25,
         fontWeight: 'medium',
-    },
-    menu: {
-        maxHeight: 360,
-        py: 0.5,
-        overflowY: 'auto',
-    },
-    groupLabel: {
-        px: 2,
-        pt: 1.25,
-        pb: 0.5,
-        typography: 'caption',
-        lineHeight: 1.4,
-        color: 'text.secondary',
-    },
-    option: {
-        display: 'block',
-        minHeight: 0,
-        px: 2,
-        py: '7px',
-        typography: 'body2',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
     },
 } satisfies SxStyles;
 
@@ -108,7 +87,7 @@ export const AddItemButton: FC<Props> = ({
 
     const menuWidth = Math.max(
         anchorRef.current?.offsetWidth ?? 0,
-        MENU_MIN_WIDTH,
+        OPTION_MENU_MIN_WIDTH,
     );
 
     return (
@@ -127,18 +106,24 @@ export const AddItemButton: FC<Props> = ({
                 onClose={handleClose}
                 anchorEl={anchorRef.current}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                slotProps={{ paper: { sx: { width: menuWidth } } }}
+                slotProps={{
+                    paper: {
+                        sx: [optionMenuStyles.paper, { width: menuWidth }],
+                    },
+                }}
             >
-                <Box sx={styles.menu}>
+                <Box sx={optionMenuStyles.list}>
                     {groups.map(group => (
                         <Box key={group.key}>
-                            <Box sx={styles.groupLabel}>{group.label}</Box>
+                            <Box sx={optionMenuStyles.groupLabel}>
+                                {group.label}
+                            </Box>
                             {group.options.map(option => (
                                 <MenuItem
                                     key={option.value}
                                     title={option.label}
                                     onClick={() => handlePick(option.value)}
-                                    sx={styles.option}
+                                    sx={optionMenuStyles.option}
                                 >
                                     {option.label}
                                 </MenuItem>

@@ -94,6 +94,13 @@ export const MatchingCriterionForm: FC<Props> = ({
         }
     }, [isShownOnMap, metricType, setMapMetricTypeId, showMetricOnMap]);
 
+    const handleRemove = useCallback(() => {
+        if (metricType && mapMetricTypeId === metricType.id) {
+            setMapMetricTypeId(undefined);
+        }
+        onRemove();
+    }, [mapMetricTypeId, metricType, onRemove, setMapMetricTypeId]);
+
     const handleValueChange = useCallback(
         (value: number | null) => onUpdateField('value', value ?? undefined),
         [onUpdateField],
@@ -104,7 +111,7 @@ export const MatchingCriterionForm: FC<Props> = ({
             Icon={LayersIcon}
             title={metricType?.name ?? ''}
             caption={scaleLabel}
-            onRemove={onRemove}
+            onRemove={handleRemove}
             onClick={handleToggleOnMap}
             clickHint={formatMessage(
                 isShownOnMap
