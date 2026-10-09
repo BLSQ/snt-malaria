@@ -309,6 +309,7 @@
     "iaso.snt_malaria.label.duplicate": "Duplicate",
     "iaso.snt_malaria.label.hideLegend": "Hide Legend",
     "iaso.snt_malaria.label.noLayer": "No layer",
+    "iaso.snt_malaria.label.clearMapLayer": "Clear layer",
     "iaso.snt_malaria.scenarioRule.create": "Create rule",
     "iaso.snt_malaria.scenarioRule.ai.chatButton": "AI Chat",
     "iaso.snt_malaria.scenarioRule.ai.title": "Generate with AI",

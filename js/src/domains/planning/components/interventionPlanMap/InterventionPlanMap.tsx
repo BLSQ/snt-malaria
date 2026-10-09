@@ -167,6 +167,7 @@ export const InterventionPlanMap: FC<Props> = ({
                 <Box sx={styles.actionBox}>
                     <LayerSelect
                         placeholder={MESSAGES.noLayer}
+                        clearLabel={MESSAGES.clearMapLayer}
                         selection={selectedMetricLayer}
                         metricCategories={metricTypeCategories}
                         onLayerChange={handleLayerChange}
