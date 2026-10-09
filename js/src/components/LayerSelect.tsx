@@ -10,6 +10,7 @@ import {
     MenuItem,
     Select,
     SelectChangeEvent,
+    SelectProps,
     Theme,
     Tooltip,
     Typography,
@@ -21,8 +22,16 @@ import { SxStyles } from 'Iaso/types/general';
 import { flattenMetricTypes } from '../domains/dataLayers/hooks/useGetMetrics';
 import { MetricType } from '../domains/dataLayers/types/metrics';
 import { MetricTypeCategory } from '../domains/dataLayers/types/metrics';
+import { optionMenuStyles } from './optionMenuStyles';
 
 const NoDropDownIcon = () => null;
+
+const mapMenuProps: SelectProps['MenuProps'] = {
+    anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+    transformOrigin: { vertical: 'top', horizontal: 'left' },
+    slotProps: { paper: { sx: optionMenuStyles.paper } },
+    MenuListProps: { sx: optionMenuStyles.list },
+};
 
 /** `sx` is the OutlinedInput root. `map` matches the [MapLegend] chip; `form` is a plain field. */
 const styles: SxStyles = {
@@ -125,6 +134,7 @@ export const LayerSelect: FC<Props> = ({
 }) => {
     const { formatMessage } = useSafeIntl();
     const isMap = variant === 'map';
+    const optionSx = isMap ? optionMenuStyles.option : styles.menuItem;
     const clearTitle =
         isMap && selection && clearLabel
             ? formatMessage(clearLabel)
@@ -183,21 +193,31 @@ export const LayerSelect: FC<Props> = ({
                         </InputAdornment>
                     )
                 }
+                MenuProps={isMap ? mapMenuProps : undefined}
                 displayEmpty
             >
-                <MenuItem value="" sx={styles.menuItem}>
+                <MenuItem value="" sx={optionSx}>
                     {formatMessage(placeholder)}
                 </MenuItem>
                 {metricCategories?.map(category => [
-                    <ListSubheader key={category.name}>
-                        <Typography variant="overline" sx={styles.category}>
+                    isMap ? (
+                        <ListSubheader
+                            key={category.name}
+                            sx={optionMenuStyles.groupLabel}
+                        >
                             {category.name}
-                        </Typography>
-                    </ListSubheader>,
+                        </ListSubheader>
+                    ) : (
+                        <ListSubheader key={category.name}>
+                            <Typography variant="overline" sx={styles.category}>
+                                {category.name}
+                            </Typography>
+                        </ListSubheader>
+                    ),
                     ...category.items.map(metric => (
                         <MenuItem
                             key={metric.id}
-                            sx={styles.menuItem}
+                            sx={optionSx}
                             value={metric.id}
                         >
                             {metric.name}
