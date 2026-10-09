@@ -308,6 +308,7 @@
     "iaso.snt_malaria.label.duplicate": "Dupliquer",
     "iaso.snt_malaria.label.hideLegend": "Masquer la légende",
     "iaso.snt_malaria.label.noLayer": "Aucune couche",
+    "iaso.snt_malaria.label.clearMapLayer": "Effacer la couche",
     "iaso.snt_malaria.scenarioRule.create": "Créer une règle",
     "iaso.snt_malaria.scenarioRule.ai.chatButton": "Chat IA",
     "iaso.snt_malaria.scenarioRule.ai.title": "Générer avec l'IA",
