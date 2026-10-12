@@ -1,6 +1,7 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import VaccinesIcon from '@mui/icons-material/Vaccines';
 import { useSafeIntl } from 'bluesquare-components';
+import { HighlightChip } from '../../../../../components/HighlightChip';
 import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 import {
@@ -9,7 +10,6 @@ import {
     hasYearValue,
 } from '../../../libs/override-utils';
 import { DeploymentYearDots } from '../overrides/DeploymentYearDots';
-import { OverrideChip } from '../overrides/OverrideChip';
 import { useRuleInterventionOverride } from '../overrides/useRuleInterventionOverride';
 import { RuleItemCard } from './RuleItemCard';
 
@@ -67,7 +67,13 @@ export const InterventionPropertyForm: FC<Props> = ({
                 focusedOverrideInterventionId === interventionId
             }
         >
-            {overrideCount > 0 && <OverrideChip count={overrideCount} />}
+            {overrideCount > 0 && (
+                <HighlightChip
+                    label={formatMessage(MESSAGES.overrideCount, {
+                        count: String(overrideCount),
+                    })}
+                />
+            )}
             <DeploymentYearDots
                 years={years}
                 deployedYears={deployedYears}

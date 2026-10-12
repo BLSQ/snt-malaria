@@ -40,6 +40,8 @@ const sumOf = (values: number[]) =>
 const getGutterWidth = (trackCount: number) =>
     (trackCount - 1) * COLUMN_GAP + 2 * ROW_PADDING_X;
 
+export type OverridesGridSx = { gridTemplateColumns: string };
+
 export const getOverridesGridColumns = (
     yearCount: number,
     isCompact: boolean,

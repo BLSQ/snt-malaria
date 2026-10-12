@@ -1,4 +1,4 @@
-import React, { FC, memo, MouseEvent, useCallback } from 'react';
+import React, { FC, memo, MouseEvent, useCallback, useMemo } from 'react';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import GroupsIcon from '@mui/icons-material/Groups';
 import NumbersIcon from '@mui/icons-material/Numbers';
@@ -17,6 +17,8 @@ import {
     COST_ITEMS_INPUT_WIDTH,
     COST_ITEMS_ROW_PADDING_LEFT,
 } from './costItemsGrid';
+
+type EditableField = 'unit_cost' | 'conversion_factor' | 'buffer' | 'coverage';
 
 type Props = {
     line: InterventionCostBreakdownLine;
@@ -90,34 +92,16 @@ const CostItemRowComponent: FC<Props> = ({
         },
         [onDelete, line],
     );
-    const handleUnitCostCommit = useCallback(
-        (value: number | null) => {
-            if (value !== null) {
-                onUpdate(line.id, { unit_cost: value });
-            }
-        },
-        [onUpdate, line.id],
-    );
-    const handleConversionFactorCommit = useCallback(
-        (value: number | null) => {
-            if (value !== null) {
-                onUpdate(line.id, { conversion_factor: value });
-            }
-        },
-        [onUpdate, line.id],
-    );
-    const handleBufferCommit = useCallback(
-        (value: number | null) => onUpdate(line.id, { buffer: value }),
-        [onUpdate, line.id],
-    );
-    const handleCoverageCommit = useCallback(
-        (value: number | null) => {
-            if (value !== null) {
-                onUpdate(line.id, { coverage: value });
-            }
-        },
-        [onUpdate, line.id],
-    );
+    const handleFieldCommit = useMemo(() => {
+        const commitField = (field: EditableField) => (value: number | null) =>
+            onUpdate(line.id, { [field]: value });
+        return {
+            unitCost: commitField('unit_cost'),
+            conversionFactor: commitField('conversion_factor'),
+            buffer: commitField('buffer'),
+            coverage: commitField('coverage'),
+        };
+    }, [onUpdate, line.id]);
 
     return (
         <Box sx={styles.row} onClick={handleEdit}>
@@ -154,7 +138,7 @@ const CostItemRowComponent: FC<Props> = ({
             <Box sx={styles.inputCell}>
                 <NumberInput
                     value={line.unit_cost}
-                    onCommit={handleUnitCostCommit}
+                    onCommit={handleFieldCommit.unitCost}
                     minDecimals={2}
                     maxDecimals={2}
                     min={0}
@@ -176,7 +160,7 @@ const CostItemRowComponent: FC<Props> = ({
             <Box sx={styles.inputCell}>
                 <NumberInput
                     value={line.conversion_factor}
-                    onCommit={handleConversionFactorCommit}
+                    onCommit={handleFieldCommit.conversionFactor}
                     maxDecimals={6}
                     min={0}
                     sx={styles.input}
@@ -215,7 +199,7 @@ const CostItemRowComponent: FC<Props> = ({
 
             <NumberInput
                 value={line.buffer}
-                onCommit={handleBufferCommit}
+                onCommit={handleFieldCommit.buffer}
                 maxDecimals={2}
                 min={0}
                 sx={styles.input}
@@ -227,7 +211,7 @@ const CostItemRowComponent: FC<Props> = ({
 
             <NumberInput
                 value={line.coverage}
-                onCommit={handleCoverageCommit}
+                onCommit={handleFieldCommit.coverage}
                 maxDecimals={2}
                 min={0}
                 sx={styles.input}

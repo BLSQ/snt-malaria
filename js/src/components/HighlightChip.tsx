@@ -1,9 +1,7 @@
 import React, { FC } from 'react';
 import { Box } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import { overrideColors } from '../../../../../constants/overrideColors';
-import { MESSAGES } from '../../../../messages';
+import { overrideColors } from '../constants/overrideColors';
 
 const styles = {
     chip: {
@@ -22,14 +20,11 @@ const styles = {
 } satisfies SxStyles;
 
 type Props = {
-    count: number;
+    label: string;
 };
 
-export const OverrideChip: FC<Props> = ({ count }) => {
-    const { formatMessage } = useSafeIntl();
-    return (
-        <Box component="span" sx={styles.chip}>
-            {formatMessage(MESSAGES.overrideCount, { count })}
-        </Box>
-    );
-};
+export const HighlightChip: FC<Props> = ({ label }) => (
+    <Box component="span" sx={styles.chip}>
+        {label}
+    </Box>
+);
