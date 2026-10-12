@@ -1659,7 +1659,7 @@ export const MESSAGES = defineMessages({
     },
     resetMapLayer: {
         id: 'iaso.snt_malaria.scenarioRule.resetMapLayer',
-        defaultMessage: 'Reset',
+        defaultMessage: 'Reset map',
     },
     criterionShowOnMapHint: {
         id: 'iaso.snt_malaria.scenarioRule.criterionShowOnMapHint',

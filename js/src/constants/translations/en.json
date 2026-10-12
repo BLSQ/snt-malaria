@@ -642,7 +642,7 @@
     "iaso.snt_malaria.ruleOverrides.noCostItems": "No cost items defined for this intervention.",
     "iaso.snt_malaria.ruleOverrides.fixedCountCaption": "per {unit}, fixed count",
     "iaso.snt_malaria.costManagement.costItems.basisResetWarning": "Coverage values set in scenario rules for this item will be reset.",
-    "iaso.snt_malaria.scenarioRule.resetMapLayer": "Reset",
+    "iaso.snt_malaria.scenarioRule.resetMapLayer": "Reset map",
     "iaso.snt_malaria.scenarioRule.criterionShowOnMapHint": "Click to show on map",
     "iaso.snt_malaria.scenarioRule.criterionHideOnMapHint": "Click to hide from map",
     "iaso.snt_malaria.scenarioRule.interventionOverridesHint": "Click to edit overrides",

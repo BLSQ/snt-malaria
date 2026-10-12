@@ -1,7 +1,8 @@
-import React, { FC, useCallback, useMemo } from 'react';
-import { Stack } from '@mui/material';
+import React, { FC, ReactNode, useCallback, useMemo } from 'react';
+import { Box, Stack } from '@mui/material';
 import { FormikTouched } from 'formik';
 import { FormikErrors } from 'formik';
+import { SxStyles } from 'Iaso/types/general';
 import { LegendTypes } from '../../../../../constants/legend';
 import { useGetChildError } from '../../../../../hooks/useGetChildError';
 import { MetricTypeCategory } from '../../../../dataLayers/types/metrics';
@@ -29,7 +30,17 @@ type Props = {
         value: any,
     ) => void;
     metricTypeCategories: MetricTypeCategory[];
+    footerAction?: ReactNode;
 };
+
+const styles = {
+    footer: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+    },
+    addButtonContainer: { flex: '1 1 auto', minWidth: 0 },
+} satisfies SxStyles;
 
 const LIST_FIELD_KEY = 'matching_criteria';
 
@@ -46,6 +57,7 @@ export const MatchingCriteriaForm: FC<Props> = ({
     touched,
     onUpdateField,
     metricTypeCategories,
+    footerAction,
 }) => {
     const metricTypes = useMemo(
         () => metricTypeCategories.flatMap(mtc => mtc.items),
@@ -103,21 +115,26 @@ export const MatchingCriteriaForm: FC<Props> = ({
                     />
                 )),
             )}
-            <AddItemButton
-                label={MESSAGES.addMatchingCriteria}
-                options={metricTypeOptions}
-                onClick={(metric_type: number) =>
-                    onAdd(
-                        LIST_FIELD_KEY,
-                        getMetricType(metric_type)?.legend_type ===
-                            LegendTypes.ORDINAL
-                            ? ordinalMatchingCriteria
-                            : defaultMatchingCriteria,
-                        { metric_type },
-                    )
-                }
-                hasItems={matchingCriteria.length > 0}
-            />
+            <Box sx={styles.footer}>
+                <Box sx={styles.addButtonContainer}>
+                    <AddItemButton
+                        label={MESSAGES.addMatchingCriteria}
+                        options={metricTypeOptions}
+                        onClick={(metric_type: number) =>
+                            onAdd(
+                                LIST_FIELD_KEY,
+                                getMetricType(metric_type)?.legend_type ===
+                                    LegendTypes.ORDINAL
+                                    ? ordinalMatchingCriteria
+                                    : defaultMatchingCriteria,
+                                { metric_type },
+                            )
+                        }
+                        hasItems={matchingCriteria.length > 0}
+                    />
+                </Box>
+                {footerAction}
+            </Box>
         </Stack>
     );
 };

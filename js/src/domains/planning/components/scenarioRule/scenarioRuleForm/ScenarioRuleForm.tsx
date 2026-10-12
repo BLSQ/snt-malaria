@@ -34,7 +34,8 @@ const styles = {
     resetMapLayerButton: {
         flex: '0 0 auto',
         whiteSpace: 'nowrap',
-        mt: -0.5,
+        px: 0.75,
+        py: 0.25,
     },
     coverage: {
         flex: '0 0 auto',
@@ -148,7 +149,18 @@ export const ScenarioRuleForm: FC<Props> = ({
                         description={formatMessage(
                             MESSAGES.selectionCriteriaDescription,
                         )}
-                        action={
+                    />
+                    <MatchingCriteriaForm
+                        metricTypeCategories={metricTypeCategories}
+                        matchingCriteria={values.matching_criteria}
+                        onAdd={addChildValue}
+                        onRemove={(list_field_key: string, index: number) =>
+                            removeChildValue(list_field_key, index)
+                        }
+                        errors={errors.matching_criteria}
+                        touched={touched.matching_criteria}
+                        onUpdateField={setChildFieldValueAndState}
+                        footerAction={
                             mapMetricTypeId !== undefined && (
                                 <Button
                                     variant="text"
@@ -161,17 +173,6 @@ export const ScenarioRuleForm: FC<Props> = ({
                                 </Button>
                             )
                         }
-                    />
-                    <MatchingCriteriaForm
-                        metricTypeCategories={metricTypeCategories}
-                        matchingCriteria={values.matching_criteria}
-                        onAdd={addChildValue}
-                        onRemove={(list_field_key: string, index: number) =>
-                            removeChildValue(list_field_key, index)
-                        }
-                        errors={errors.matching_criteria}
-                        touched={touched.matching_criteria}
-                        onUpdateField={setChildFieldValueAndState}
                     />
                     <RuleStepSubSectionHeader
                         title={formatMessage(MESSAGES.manualSelection)}
