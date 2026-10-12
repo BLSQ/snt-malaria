@@ -1,4 +1,5 @@
 import React, { FC, useCallback } from 'react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
     Box,
     MenuItem,
@@ -32,6 +33,12 @@ const operatorOptions: {
 const getOperatorSymbol = (operator: string) =>
     operatorOptions.find(option => option.value === operator)?.symbol ??
     operator;
+
+const SYMBOL_CLASS = 'operatorToken-symbol';
+const HOVER_CHEVRON_CLASS = 'operatorToken-hoverChevron';
+const HOVER_TURN_PROPERTY = '--operator-hover-turn';
+const COUNTER_CLOCKWISE_OPERATORS: Operator[] = ['<', '<='];
+const HOVER_SWAP_TRANSITION = 'opacity 200ms, transform 200ms';
 
 const tokenStyles = {
     ...compactInputStyles,
@@ -70,6 +77,14 @@ const styles = {
         '& .MuiSelect-icon': {
             display: 'none',
         },
+        [`&:hover .${SYMBOL_CLASS}`]: {
+            opacity: 0,
+            transform: `rotate(var(${HOVER_TURN_PROPERTY})) scale(0.5)`,
+        },
+        [`&:hover .${HOVER_CHEVRON_CLASS}`]: {
+            opacity: 1,
+            transform: 'none',
+        },
     },
     fixedToken: {
         ...tokenStyles,
@@ -80,6 +95,28 @@ const styles = {
     tokenSymbol: {
         ...operatorSymbolStyles,
         fontWeight: 'bold',
+    },
+    selectableTokenContent: {
+        [HOVER_TURN_PROPERTY]: '90deg',
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    counterClockwiseTokenContent: {
+        [HOVER_TURN_PROPERTY]: '-90deg',
+    },
+    selectableTokenSymbol: {
+        transition: HOVER_SWAP_TRANSITION,
+    },
+    hoverChevron: {
+        position: 'absolute',
+        fontSize: 20,
+        stroke: 'currentColor',
+        strokeWidth: 0.75,
+        opacity: 0,
+        transform: `rotate(calc(-1 * var(${HOVER_TURN_PROPERTY}))) scale(0.5)`,
+        transition: HOVER_SWAP_TRANSITION,
     },
     option: {
         gap: 1.5,
@@ -96,6 +133,29 @@ const styles = {
 const OperatorTokenSymbol: FC<{ operator: string }> = ({ operator }) => (
     <Box component="span" sx={styles.tokenSymbol}>
         {getOperatorSymbol(operator)}
+    </Box>
+);
+
+const SelectableOperatorToken: FC<{ operator: Operator }> = ({ operator }) => (
+    <Box
+        component="span"
+        sx={[
+            styles.selectableTokenContent,
+            COUNTER_CLOCKWISE_OPERATORS.includes(operator) &&
+                styles.counterClockwiseTokenContent,
+        ]}
+    >
+        <Box
+            component="span"
+            className={SYMBOL_CLASS}
+            sx={[styles.tokenSymbol, styles.selectableTokenSymbol]}
+        >
+            {getOperatorSymbol(operator)}
+        </Box>
+        <ExpandMoreIcon
+            className={HOVER_CHEVRON_CLASS}
+            sx={styles.hoverChevron}
+        />
     </Box>
 );
 
@@ -121,7 +181,7 @@ export const CriterionOperatorSelect: FC<Props> = ({
     );
 
     const renderValue = useCallback(
-        (operator: Operator) => <OperatorTokenSymbol operator={operator} />,
+        (operator: Operator) => <SelectableOperatorToken operator={operator} />,
         [],
     );
 

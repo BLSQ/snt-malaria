@@ -36,17 +36,6 @@ const styles = {
     subSectionTitle: {
         mt: 1,
     },
-    descriptionWithAction: {
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        gap: 1,
-        mt: -0.5,
-    },
-    descriptionNextToAction: {
-        color: 'text.secondary',
-        lineHeight: 1.5,
-    },
 } satisfies SxStyles;
 
 type Props = {
@@ -83,13 +72,11 @@ export const RuleStepSection: FC<Props> = ({
 type SubSectionProps = {
     title: string;
     description?: string;
-    action?: ReactNode;
 };
 
 export const RuleStepSubSectionHeader: FC<SubSectionProps> = ({
     title,
     description,
-    action,
 }) => (
     <>
         <Typography
@@ -99,21 +86,10 @@ export const RuleStepSubSectionHeader: FC<SubSectionProps> = ({
         >
             {title}
         </Typography>
-        {description && !action && (
+        {description && (
             <Typography variant="caption" sx={styles.description}>
                 {description}
             </Typography>
-        )}
-        {description && action && (
-            <Box sx={styles.descriptionWithAction}>
-                <Typography
-                    variant="caption"
-                    sx={styles.descriptionNextToAction}
-                >
-                    {description}
-                </Typography>
-                {action}
-            </Box>
         )}
     </>
 );
