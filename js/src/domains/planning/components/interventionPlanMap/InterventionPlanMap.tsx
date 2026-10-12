@@ -52,11 +52,21 @@ export const InterventionPlanMap: FC<Props> = ({
         metricTypeCategories,
         isEditing: isPreviewingRule,
         scenario,
+        mapMetricTypeId,
+        setMapMetricTypeId,
     } = usePlanningContext();
 
-    const [selectedMetricLayer, setSelectedMetricLayer] = React.useState<
-        MetricType | undefined
-    >(undefined);
+    const selectedMetricLayer = useMemo(
+        () =>
+            metricTypeCategories
+                ?.flatMap(category => category.items)
+                .find(metricType => metricType.id === mapMetricTypeId),
+        [metricTypeCategories, mapMetricTypeId],
+    );
+    const handleLayerChange = useCallback(
+        (metricType?: MetricType) => setMapMetricTypeId(metricType?.id),
+        [setMapMetricTypeId],
+    );
 
     const activeMetricLayer = isPreviewingRule
         ? selectedMetricLayer
@@ -159,7 +169,7 @@ export const InterventionPlanMap: FC<Props> = ({
                         placeholder={MESSAGES.noLayer}
                         selection={selectedMetricLayer}
                         metricCategories={metricTypeCategories}
-                        onLayerChange={setSelectedMetricLayer}
+                        onLayerChange={handleLayerChange}
                     />
                 </Box>
             )}

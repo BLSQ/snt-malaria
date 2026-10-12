@@ -29,3 +29,7 @@ export const formatConversionDirection = (
         : formatMessage(MESSAGES.budgetingCostLineUnitPerPeople, {
               unit: pluralize(unitLabel, Number(conversionFactor) || 1),
           });
+
+/** Coverage is a percentage for population-based items and a yearly quantity for fixed items. */
+export const getDefaultCoverage = (isProportional: boolean) =>
+    isProportional ? 100 : 1;

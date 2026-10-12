@@ -9,6 +9,13 @@ from plugins.snt_malaria.models.intervention import Intervention
 from plugins.snt_malaria.models.scenario import SCENARIO_RULE_MATCHING_CRITERIA_SCHEMA
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
 
+from .override_serializers import (
+    InterventionOverrideSerializer,
+    intervention_overrides_representation,
+    save_intervention_overrides,
+    validate_intervention_overrides,
+)
+
 
 class ScenarioRuleQuerySerializer(serializers.Serializer):
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
@@ -33,6 +40,7 @@ def _rule_is_match_all(rule: ScenarioRule, context: dict) -> bool:
 
 class ScenarioRuleListSerializer(serializers.ModelSerializer):
     interventions = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    intervention_overrides = serializers.SerializerMethodField()
     is_match_all = serializers.SerializerMethodField()
 
     class Meta:
@@ -44,6 +52,7 @@ class ScenarioRuleListSerializer(serializers.ModelSerializer):
             "priority",
             "color",
             "interventions",
+            "intervention_overrides",
             "matching_criteria",
             "is_match_all",
             "org_units_matched",
@@ -54,6 +63,9 @@ class ScenarioRuleListSerializer(serializers.ModelSerializer):
 
     def get_is_match_all(self, obj: ScenarioRule) -> bool:
         return _rule_is_match_all(obj, self.context)
+
+    def get_intervention_overrides(self, obj: ScenarioRule) -> list:
+        return intervention_overrides_representation(obj)
 
 
 class ScenarioRuleSmallSerializer(serializers.ModelSerializer):
@@ -69,6 +81,7 @@ class ScenarioRuleSmallSerializer(serializers.ModelSerializer):
 
 class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
     interventions = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    intervention_overrides = serializers.SerializerMethodField()
     is_match_all = serializers.SerializerMethodField()
 
     class Meta:
@@ -80,6 +93,7 @@ class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
             "priority",
             "color",
             "interventions",
+            "intervention_overrides",
             "matching_criteria",
             "is_match_all",
             "org_units_matched",
@@ -94,6 +108,9 @@ class ScenarioRuleRetrieveSerializer(serializers.ModelSerializer):
 
     def get_is_match_all(self, obj: ScenarioRule) -> bool:
         return _rule_is_match_all(obj, self.context)
+
+    def get_intervention_overrides(self, obj: ScenarioRule) -> list:
+        return intervention_overrides_representation(obj)
 
 
 class ScenarioRulePreviewSerializer(serializers.ModelSerializer):
@@ -128,6 +145,7 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
     org_units_scope = serializers.ListField(
         child=serializers.PrimaryKeyRelatedField(queryset=OrgUnit.objects.none()), required=False
     )
+    intervention_overrides = InterventionOverrideSerializer(many=True, required=False)
 
     class Meta:
         model = ScenarioRule
@@ -135,6 +153,7 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
             "name",
             "color",
             "interventions",
+            "intervention_overrides",
             "matching_criteria",
             "org_units_excluded",
             "org_units_included",
@@ -174,6 +193,20 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
 
         return matching_criteria
 
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if "intervention_overrides" in attrs:
+            scenario = attrs.get("scenario") or self.instance.scenario
+            if "interventions" in attrs:
+                intervention_ids = {intervention.id for intervention in attrs["interventions"]}
+            else:
+                intervention_ids = set(self.instance.interventions.values_list("id", flat=True))
+            try:
+                validate_intervention_overrides(attrs["intervention_overrides"], intervention_ids, scenario)
+            except serializers.ValidationError as error:
+                raise serializers.ValidationError({"intervention_overrides": error.detail})
+        return attrs
+
 
 class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
@@ -203,6 +236,7 @@ class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
 
     def create(self, validated_data, **kwargs):
         interventions_data = validated_data.pop("interventions", [])
+        intervention_overrides = validated_data.pop("intervention_overrides", None)
         other_values = {
             "priority": validated_data["scenario"].get_next_available_priority(),
             "org_units_excluded": [org_unit.id for org_unit in validated_data.pop("org_units_excluded", [])],
@@ -211,6 +245,8 @@ class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
         }
         scenario_rule = ScenarioRule.objects.create(**validated_data, **other_values, **kwargs)
         scenario_rule.interventions.set(interventions_data)
+        if intervention_overrides is not None:
+            save_intervention_overrides(scenario_rule, intervention_overrides)
         return scenario_rule
 
 
@@ -228,6 +264,7 @@ class ScenarioRuleUpdateSerializer(ScenarioRuleWriteSerializerBase):
 
     def update(self, instance, validated_data, **kwargs):
         interventions_data = validated_data.pop("interventions", None)
+        intervention_overrides = validated_data.pop("intervention_overrides", None)
 
         other_optional_values = {}
         for field in ["org_units_excluded", "org_units_included", "org_units_scope"]:
@@ -258,5 +295,7 @@ class ScenarioRuleUpdateSerializer(ScenarioRuleWriteSerializerBase):
 
         if interventions_data is not None:
             instance.interventions.set(interventions_data)
+        if intervention_overrides is not None:
+            save_intervention_overrides(instance, intervention_overrides)
 
         return instance

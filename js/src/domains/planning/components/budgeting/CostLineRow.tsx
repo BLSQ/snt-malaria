@@ -22,12 +22,6 @@ import {
     formatBigNumber,
     formatQuantity,
 } from '../../libs/cost-utils';
-import { YearlyCoverageInput } from './YearlyCoverageInput';
-
-export type CostLineYearlyCoverage = {
-    id: number;
-    value: number;
-};
 
 export type CostLineRowData = {
     id: number;
@@ -36,7 +30,6 @@ export type CostLineRowData = {
     isProportional: boolean;
     totalCost: number;
     quantity: number;
-    coverageByYear: Record<number, CostLineYearlyCoverage>;
     defaultCoverage: number;
     unitCost: number;
     unitName: string;
@@ -49,7 +42,6 @@ export type CostLineRowData = {
 type Props = {
     costLine: CostLineRowData;
     yearRange: number[];
-    isEditable: boolean;
 };
 
 const styles = {
@@ -80,94 +72,11 @@ const styles = {
     },
 } satisfies SxStyles;
 
-const clampPercentage = (value: number) => {
-    if (!Number.isFinite(value)) {
-        return 0;
-    }
-    return Math.min(100, Math.max(0, value));
-};
-
-export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
-    const { saveYearlyCoverage, currency } = usePlanningContext();
-    const [coverageInputsByYear, setCoverageInputsByYear] = React.useState<
-        Record<number, string>
-    >({});
-
-    const defaultCoverage = costLine.isProportional
-        ? costLine.defaultCoverage
-        : 0;
-
-    React.useEffect(() => {
-        const nextCoverageInputsByYear: Record<number, string> = {};
-        yearRange.forEach(year => {
-            nextCoverageInputsByYear[year] = String(
-                costLine.coverageByYear[year]?.value ?? defaultCoverage,
-            );
-        });
-        setCoverageInputsByYear(nextCoverageInputsByYear);
-    }, [costLine.coverageByYear, yearRange, defaultCoverage]);
-
-    const handleCoverageChange = React.useCallback(
-        (year: number, nextValue: string) => {
-            setCoverageInputsByYear(current => ({
-                ...current,
-                [year]: nextValue,
-            }));
-
-            if (nextValue.trim() === '') {
-                return;
-            }
-
-            const parsedValue = Number(nextValue);
-            if (!Number.isFinite(parsedValue)) {
-                return;
-            }
-
-            saveYearlyCoverage({
-                assignmentId: costLine.coverageByYear[year]?.id,
-                costLineId: costLine.id,
-                year,
-                value: parsedValue,
-            });
-        },
-        [costLine, saveYearlyCoverage],
-    );
-
-    const normalizeCoverageValue = React.useCallback(
-        (year: number) => {
-            if (!costLine.isProportional) return;
-
-            setCoverageInputsByYear(current => {
-                const rawValue = current[year] ?? '';
-                if (rawValue.trim() === '') {
-                    return {
-                        ...current,
-                        [year]: String(
-                            costLine.coverageByYear[year]?.value ??
-                                defaultCoverage,
-                        ),
-                    };
-                }
-
-                const parsedValue = Number(rawValue);
-                if (!Number.isFinite(parsedValue)) {
-                    return {
-                        ...current,
-                        [year]: String(
-                            costLine.coverageByYear[year]?.value ??
-                                defaultCoverage,
-                        ),
-                    };
-                }
-
-                return {
-                    ...current,
-                    [year]: String(clampPercentage(parsedValue)),
-                };
-            });
-        },
-        [costLine, defaultCoverage],
-    );
+export const CostLineRow: FC<Props> = ({ costLine, yearRange }) => {
+    const { currency } = usePlanningContext();
+    const coverageLabel = costLine.isProportional
+        ? `${costLine.defaultCoverage}%`
+        : String(costLine.defaultCoverage);
 
     return (
         <TableRow sx={styles.costLineRow}>
@@ -183,17 +92,9 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange, isEditable }) => {
                     align="center"
                 >
                     <CostDriverTooltip isProportional={costLine.isProportional}>
-                        <Box component="span" display="inline-flex">
-                            <YearlyCoverageInput
-                                value={coverageInputsByYear[year]}
-                                onChange={nextValue =>
-                                    handleCoverageChange(year, nextValue)
-                                }
-                                onBlur={() => normalizeCoverageValue(year)}
-                                disabled={!isEditable}
-                                percentage={costLine.isProportional}
-                            />
-                        </Box>
+                        <Typography variant="body2" component="span">
+                            {coverageLabel}
+                        </Typography>
                     </CostDriverTooltip>
                 </TableCell>
             ))}

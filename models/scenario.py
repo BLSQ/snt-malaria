@@ -53,6 +53,10 @@ class Scenario(SoftDeletableModel):
     def __str__(self):
         return "%s %s %s" % (self.name, self.updated_at, self.id)
 
+    @property
+    def years(self) -> range:
+        return range(self.start_year, self.end_year + 1)
+
     def get_next_available_priority(self):
         """
         Returns the highest priority of existing rules + 1, or 1 if there is no rule yet.
@@ -293,7 +297,9 @@ class ScenarioRule(models.Model):
             return
 
         intervention_assignments_to_create = []
-        for intervention in self.interventions.select_related("intervention_category").all():
+        rule_interventions = self.scenarioruleintervention_set.select_related("intervention").order_by("id")
+        for rule_intervention in rule_interventions:
+            intervention = rule_intervention.intervention
             category_id = intervention.intervention_category_id
             if category_id not in previous_assignments:
                 previous_assignments[category_id] = set()
@@ -310,6 +316,7 @@ class ScenarioRule(models.Model):
                         rule=self,
                         intervention_id=intervention.id,
                         org_unit_id=org_unit_id,
+                        grant_id=rule_intervention.grant_id,
                         created_by=user,
                         scenario_id=self.scenario_id,
                     )
@@ -326,11 +333,23 @@ class ScenarioRuleIntervention(models.Model):
 
     Uses on_delete=PROTECT on `intervention` so that deleting an Intervention that is
     still referenced by a rule is blocked at the DB level, instead of silently cascading.
+
+    Also holds how the rule deploys the intervention: the years it is deployed in, a grant replacing
+    the intervention's default grant (copied onto the rule's assignments), and the cost line values
+    in `cost_overrides` (see ScenarioRuleCostOverride).
     """
 
     scenario_rule = models.ForeignKey(ScenarioRule, on_delete=models.CASCADE)
     intervention = models.ForeignKey("Intervention", on_delete=models.PROTECT)
+    # Null means deployed in every year of the scenario.
+    deployment_years = ArrayField(models.PositiveSmallIntegerField(), null=True, blank=True)
+    grant = models.ForeignKey(
+        "Grant", on_delete=models.SET_NULL, null=True, blank=True, related_name="scenario_rule_interventions"
+    )
 
     class Meta:
         app_label = "snt_malaria"
         unique_together = [["scenario_rule", "intervention"]]
+
+    def is_deployed_in(self, year: int) -> bool:
+        return self.deployment_years is None or year in self.deployment_years

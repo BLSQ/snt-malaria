@@ -31,7 +31,7 @@ const COLUMN_LABELS = [
     MESSAGES.budgetingCostLineUnitCost,
     MESSAGES.costLineFactorLabel,
     MESSAGES.budgetingCostLineBuffer,
-    MESSAGES.coverageLabel,
+    MESSAGES.coverageOrQuantityColumn,
     null,
 ];
 

@@ -5,8 +5,22 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 
 from iaso.models.metric import MetricType
-from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
+from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine, ScenarioRuleCostOverride
+from plugins.snt_malaria.models.cost_breakdown import MAX_COVERAGE_PERCENTAGE
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
+
+
+def _is_basis_changed(line, attrs):
+    return "is_proportional" in attrs and attrs["is_proportional"] != line.is_proportional
+
+
+def _is_intervention_changed(line, attrs):
+    return "intervention" in attrs and attrs["intervention"].id != line.intervention_id
+
+
+def _reset_rule_overrides(basis_changed_ids, intervention_changed_ids):
+    ScenarioRuleCostOverride.objects.delete_for_cost_lines(intervention_changed_ids)
+    ScenarioRuleCostOverride.objects.reset_basis_dependent(set(basis_changed_ids) - set(intervention_changed_ids))
 
 
 class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerializer):
@@ -18,10 +32,16 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
         lines_to_update = []
         lines_to_create = []
         lines_to_delete = set(existing_lines.keys())
+        basis_changed_ids = set()
+        intervention_changed_ids = set()
         for item in validated_data:
             line_id = item.get("id")
             if line_id and line_id in existing_lines:
                 line = existing_lines[line_id]
+                if _is_basis_changed(line, item):
+                    basis_changed_ids.add(line_id)
+                if _is_intervention_changed(line, item):
+                    intervention_changed_ids.add(line_id)
                 for attr, value in item.items():
                     setattr(line, attr, value)
 
@@ -56,6 +76,7 @@ class InterventionCostBreakdownLineWriteListSerializer(serializers.ListSerialize
                         "buffer",
                     ],
                 )
+                _reset_rule_overrides(basis_changed_ids, intervention_changed_ids)
             if lines_to_delete:
                 InterventionCostBreakdownLine.objects.filter(id__in=lines_to_delete).delete()
             if lines_to_create:
@@ -132,9 +153,7 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
         max_digits=19, decimal_places=6, required=False, default=Decimal("1"), min_value=0
     )
     invert_conversion_factor = serializers.BooleanField(required=False, default=False)
-    coverage = serializers.DecimalField(
-        max_digits=5, decimal_places=2, required=False, default=Decimal("100"), min_value=0, max_value=100
-    )
+    coverage = serializers.DecimalField(max_digits=19, decimal_places=2, required=False, min_value=0)
     buffer = serializers.DecimalField(
         max_digits=5, decimal_places=2, required=False, allow_null=True, default=None, min_value=0
     )
@@ -193,6 +212,18 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
         else:
             # Absolute / fixed cost: a population layer is meaningless, so drop it silently.
             attrs["population_layer"] = None
+        is_existing_line = isinstance(self.instance, InterventionCostBreakdownLine)
+        if "coverage" not in attrs and (not is_existing_line or _is_basis_changed(self.instance, attrs)):
+            attrs["coverage"] = InterventionCostBreakdownLine.default_coverage(
+                self._current_value(attrs, "is_proportional")
+            )
+        if (
+            self._current_value(attrs, "is_proportional")
+            and self._current_value(attrs, "coverage") > MAX_COVERAGE_PERCENTAGE
+        ):
+            raise serializers.ValidationError(
+                {"coverage": "The coverage of a proportional cost item cannot exceed 100%."}
+            )
         return attrs
 
 
@@ -204,3 +235,11 @@ class InterventionCostBreakdownLineSingleWriteSerializer(InterventionCostBreakdo
     """
 
     id = serializers.IntegerField(read_only=True)
+
+    def update(self, instance, validated_data):
+        basis_changed_ids = [instance.id] if _is_basis_changed(instance, validated_data) else []
+        intervention_changed_ids = [instance.id] if _is_intervention_changed(instance, validated_data) else []
+        with transaction.atomic():
+            line = super().update(instance, validated_data)
+            _reset_rule_overrides(basis_changed_ids, intervention_changed_ids)
+        return line

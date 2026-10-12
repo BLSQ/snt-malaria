@@ -21,7 +21,7 @@ export const useSetFieldValueAndState = ({
 }: useSetFieldValueAndStateProps) =>
     useCallback(
         (field: string | null, value: any) => {
-            setFieldTouched(field, true);
+            setFieldTouched(field, true, false);
             setFieldValue(field, value);
         },
         [setFieldTouched, setFieldValue],

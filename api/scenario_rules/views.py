@@ -28,7 +28,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
             return ScenarioRule.objects.none()
         return (
             ScenarioRule.objects.select_related("scenario")
-            .prefetch_related("interventions")
+            .prefetch_related("interventions", "scenarioruleintervention_set__cost_overrides")
             .filter(scenario__account=user.iaso_profile.account)
         )
 
@@ -86,8 +86,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         create_serializer.is_valid(raise_exception=True)
         self.perform_create(create_serializer)
 
-        rule = create_serializer.instance
-
+        rule = self.get_queryset().get(pk=create_serializer.instance.pk)
         result_serializer = ScenarioRuleRetrieveSerializer(rule, context=self.get_serializer_context())
         result_headers = self.get_success_headers(result_serializer.data)
         return Response(result_serializer.data, status=status.HTTP_201_CREATED, headers=result_headers)
@@ -124,7 +123,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         update_serializer.is_valid(raise_exception=True)
         self.perform_update(update_serializer)
 
-        rule = update_serializer.instance
+        rule = self.get_queryset().get(pk=update_serializer.instance.pk)
         result_serializer = ScenarioRuleRetrieveSerializer(rule, context=self.get_serializer_context())
         result_headers = self.get_success_headers(result_serializer.data)
         return Response(result_serializer.data, status=status.HTTP_200_OK, headers=result_headers)

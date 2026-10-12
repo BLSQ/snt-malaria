@@ -35,8 +35,8 @@ const getOperatorSymbol = (operator: string) =>
 
 const tokenStyles = {
     ...compactInputStyles,
-    flex: '0 0 48px',
-    width: 48,
+    flex: `0 0 ${compactInputStyles.height}px`,
+    width: compactInputStyles.height,
     borderRadius: 1,
     backgroundColor: 'primary.light',
     color: 'primary.main',

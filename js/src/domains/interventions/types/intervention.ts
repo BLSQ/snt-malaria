@@ -8,6 +8,7 @@ export type Intervention = {
     description: string;
     intervention_category: number;
     target_population: string[];
+    grant: number | null;
 };
 
 export type InterventionPayload = {

@@ -1,24 +1,25 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react';
+import LayersIcon from '@mui/icons-material/Layers';
 import { MenuItem, Select, SelectChangeEvent, Tooltip } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { NumberInput } from '../../../../../components/NumberInput';
 import { LegendTypes } from '../../../../../constants/legend';
 import { MetricType } from '../../../../dataLayers/types/metrics';
 import { MESSAGES } from '../../../../messages';
+import { usePlanningContext } from '../../../contexts/PlanningContext';
+import { formatBigNumber } from '../../../libs/cost-utils';
 import { MetricTypeCriterion } from '../../../types/scenarioRule';
 import {
     CriterionOperatorSelect,
     EQUAL_OPERATOR,
 } from './CriterionOperatorSelect';
-import { CriterionValueInput } from './CriterionValueInput';
 import { RuleItemCard } from './RuleItemCard';
 import { compactInputStyles, criterionValueStyles } from './styles';
 
 type Props = {
     metricTypeCriterion: MetricTypeCriterion;
     metricType?: MetricType;
-    /** The year configured for this criterion's data layer on the scenario, if any (read-only). */
-    configuredYear?: number;
     onUpdateField: (field: string, value: any) => void;
     onRemove: () => void;
     getErrors: (keyValue: string) => string[];
@@ -29,23 +30,35 @@ const styles = {
         ...compactInputStyles,
         ...criterionValueStyles,
     },
+    valueInput: {
+        ...criterionValueStyles,
+        height: compactInputStyles.height,
+    },
 } satisfies SxStyles;
+
+const formatRangeBound = (bound: string | number) => {
+    const value = Number(bound);
+    return Number.isFinite(value) && Math.abs(value) >= 1000
+        ? (formatBigNumber(value) ?? String(bound))
+        : String(bound);
+};
 
 export const MatchingCriterionForm: FC<Props> = ({
     metricTypeCriterion,
     metricType,
-    configuredYear,
     onUpdateField,
     onRemove,
     getErrors,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const { activeTab, mapMetricTypeId, setMapMetricTypeId, showMetricOnMap } =
+        usePlanningContext();
     const isOrdinal = metricType?.legend_type === LegendTypes.ORDINAL;
 
     const scaleLabel = useMemo(() => {
         const domain = metricType?.legend_config?.domain;
         if (!domain) return '';
-        return `${domain[0]} - ${domain[domain.length - 1]}`;
+        return `${formatRangeBound(domain[0])} - ${formatRangeBound(domain[domain.length - 1])}`;
     }, [metricType]);
 
     useEffect(() => {
@@ -68,23 +81,37 @@ export const MatchingCriterionForm: FC<Props> = ({
         [onUpdateField],
     );
 
+    const isShownOnMap =
+        activeTab === 'map' &&
+        metricType !== undefined &&
+        mapMetricTypeId === metricType.id;
+
+    const handleToggleOnMap = useCallback(() => {
+        if (isShownOnMap) {
+            setMapMetricTypeId(undefined);
+        } else if (metricType) {
+            showMetricOnMap(metricType.id);
+        }
+    }, [isShownOnMap, metricType, setMapMetricTypeId, showMetricOnMap]);
+
     const handleValueChange = useCallback(
-        (value?: number) => onUpdateField('value', value),
+        (value: number | null) => onUpdateField('value', value ?? undefined),
         [onUpdateField],
     );
 
-    const caption =
-        configuredYear != null
-            ? formatMessage(MESSAGES.dataLayerYear, {
-                  year: configuredYear.toString(),
-              })
-            : formatMessage(MESSAGES.dataLayerYearNotSet);
-
     return (
         <RuleItemCard
+            Icon={LayersIcon}
             title={metricType?.name ?? ''}
-            caption={caption}
+            caption={scaleLabel}
             onRemove={onRemove}
+            onClick={handleToggleOnMap}
+            clickHint={formatMessage(
+                isShownOnMap
+                    ? MESSAGES.criterionHideOnMapHint
+                    : MESSAGES.criterionShowOnMapHint,
+            )}
+            isSelected={isShownOnMap}
         >
             <CriterionOperatorSelect
                 value={metricTypeCriterion.operator}
@@ -111,12 +138,16 @@ export const MatchingCriterionForm: FC<Props> = ({
                     </Select>
                 </Tooltip>
             ) : (
-                <CriterionValueInput
+                <NumberInput
                     value={metricTypeCriterion.value}
-                    onChange={handleValueChange}
-                    unitSymbol={metricType?.unit_symbol}
-                    errors={getErrors('value')}
-                    hint={scaleLabel}
+                    onCommit={handleValueChange}
+                    commitOn="change"
+                    isNullable
+                    compact
+                    suffix={metricType?.unit_symbol}
+                    error={getErrors('value').join(', ')}
+                    ariaLabel={formatMessage(MESSAGES.criterionValue)}
+                    sx={styles.valueInput}
                 />
             )}
         </RuleItemCard>

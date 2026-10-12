@@ -13,6 +13,7 @@ const makeIntervention = (id: number, name: string): Intervention => ({
     description: '',
     intervention_category: 1,
     target_population: [],
+    grant: null,
 });
 
 const makeLine = (

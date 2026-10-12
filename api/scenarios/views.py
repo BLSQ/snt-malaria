@@ -18,7 +18,6 @@ from iaso.api.common import CONTENT_TYPE_CSV
 from plugins.snt_malaria.api.scenarios.utils import (
     create_rules_from_import,
     duplicate_rules,
-    duplicate_scenario_yearly_cost_assignment,
     get_csv_headers,
     get_csv_row,
     get_scenario,
@@ -127,7 +126,6 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             raise ValidationError(f"Error saving scenario: {e}")
 
         duplicate_rules(initial_scenario, new_scenario, request.user)
-        duplicate_scenario_yearly_cost_assignment(initial_scenario, new_scenario, request.user)
 
         new_scenario.refresh_assignments(request.user)
 
