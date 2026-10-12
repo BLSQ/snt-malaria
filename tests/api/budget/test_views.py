@@ -142,7 +142,7 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         self.scenario.save(update_fields=["data_layer_years"])
 
     def test_calculate_budget_no_metric_values(self):
-        InterventionCostBreakdownLine.objects.update(population_layer=None, is_proportional=False)
+        InterventionCostBreakdownLine.objects.update(population_layer=None, is_proportional=True)
         MetricType.objects.all().delete()
         MetricType.objects.create(
             account=self.account,

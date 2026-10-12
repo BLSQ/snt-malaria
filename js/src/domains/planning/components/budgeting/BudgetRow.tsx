@@ -26,7 +26,6 @@ type Props = {
     intervention: BudgetRowData;
     combinedTotalCost: number;
     color: string;
-    isEditable: boolean;
 };
 
 const styles = {
@@ -39,7 +38,6 @@ export const BudgetRow: FC<Props> = ({
     intervention,
     combinedTotalCost,
     color,
-    isEditable,
 }) => {
     const [open, setOpen] = React.useState(false);
     const { formatMessage } = useSafeIntl();
@@ -114,7 +112,6 @@ export const BudgetRow: FC<Props> = ({
                     <CostLineRow
                         key={`cost_line_${line.id}`}
                         yearRange={yearRange}
-                        isEditable={isEditable}
                         costLine={line}
                     />
                 ))}

@@ -29,7 +29,7 @@ import {
 import { InterventionPlan } from '../../types/interventionAssignments';
 import { BudgetRow, BudgetRowData } from './BudgetRow';
 import { BudgetTotalRow } from './BudgetTotalRow';
-import { CostLineRowData, CostLineYearlyCoverage } from './CostLineRow';
+import { CostLineRowData } from './CostLineRow';
 
 const FULL_COVERAGE_PERCENT = 100;
 
@@ -46,12 +46,7 @@ const styles = {
 export const BudgetTable: FC = ({}) => {
     const [budgetRows, setBudgetRows] = useState<BudgetRowData[]>([]);
     const { formatMessage } = useSafeIntl();
-    const {
-        interventionPlans,
-        budgets,
-        scenarioYearlyCostAssignments,
-        isScenarioEditable,
-    } = usePlanningContext();
+    const { interventionPlans, budgets } = usePlanningContext();
     const { data: costLines } = useGetCostBreakdownLines();
     const { data: budgetSettings } = useGetBudgetSettings();
     const defaultBufferMultiplier = Number(
@@ -66,31 +61,6 @@ export const BudgetTable: FC = ({}) => {
         yearlyTotal: {},
         interventionTotals: [],
     });
-
-    const yearlyCoverageByCostLine = useMemo(() => {
-        const coverageByCostLine: Record<
-            number,
-            Record<number, CostLineYearlyCoverage>
-        > = {};
-
-        scenarioYearlyCostAssignments.forEach(assignment => {
-            if (!coverageByCostLine[assignment.cost_line]) {
-                coverageByCostLine[assignment.cost_line] = {};
-            }
-
-            if (
-                coverageByCostLine[assignment.cost_line][assignment.year] ===
-                undefined
-            ) {
-                coverageByCostLine[assignment.cost_line][assignment.year] = {
-                    id: assignment.id,
-                    value: assignment.value,
-                };
-            }
-        });
-
-        return coverageByCostLine;
-    }, [scenarioYearlyCostAssignments]);
 
     const { costBreakdownLineRecord, defaultCostRowDataByIntervention } =
         useMemo(() => {
@@ -111,8 +81,6 @@ export const BudgetTable: FC = ({}) => {
                         isProportional: line.is_proportional,
                         totalCost: 0,
                         quantity: 0,
-                        coverageByYear: (yearlyCoverageByCostLine[line.id] ||
-                            {}) as Record<number, CostLineYearlyCoverage>,
                         defaultCoverage: Number(line.coverage),
                         unitCost: Number(line.unit_cost),
                         unitName: line.unit_type_label,
@@ -136,7 +104,7 @@ export const BudgetTable: FC = ({}) => {
                 costBreakdownLineRecord: lineRecord,
                 defaultCostRowDataByIntervention: defaultRowsByIntervention,
             };
-        }, [costLines, yearlyCoverageByCostLine, defaultBufferMultiplier]);
+        }, [costLines, defaultBufferMultiplier]);
 
     const yearRange = useMemo(
         () =>
@@ -217,8 +185,6 @@ export const BudgetTable: FC = ({}) => {
                 isProportional: breakdownLine?.is_proportional ?? true,
                 totalCost: costLine.total_cost,
                 quantity: costLine.quantity,
-                coverageByYear: (yearlyCoverageByCostLine[costLine.id] ||
-                    {}) as Record<number, CostLineYearlyCoverage>,
                 defaultCoverage: Number(
                     breakdownLine?.coverage ?? FULL_COVERAGE_PERCENT,
                 ),
@@ -230,11 +196,7 @@ export const BudgetTable: FC = ({}) => {
                 buffer: costLine.buffer ?? defaultBufferMultiplier,
             };
         },
-        [
-            costBreakdownLineRecord,
-            yearlyCoverageByCostLine,
-            defaultBufferMultiplier,
-        ],
+        [costBreakdownLineRecord, defaultBufferMultiplier],
     );
 
     useEffect(() => {
@@ -333,7 +295,6 @@ export const BudgetTable: FC = ({}) => {
                             intervention={row}
                             combinedTotalCost={totalCosts.totalCost}
                             color={colors[index]}
-                            isEditable={isScenarioEditable}
                         />
                     ))}
                 </TableBody>

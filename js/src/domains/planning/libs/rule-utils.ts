@@ -1,6 +1,19 @@
 import { sortBy } from 'lodash';
 import { InterventionCategory } from '../../interventions/types';
 
+export const findInterventionWithCategory = (
+    interventionCategories: InterventionCategory[],
+    interventionId: number,
+) => {
+    const category = interventionCategories.find(c =>
+        c.interventions.some(i => i.id === interventionId),
+    );
+    const intervention = category?.interventions.find(
+        i => i.id === interventionId,
+    );
+    return category && intervention ? { category, intervention } : undefined;
+};
+
 /**
  * Builds a deterministic rule name from the selected intervention IDs.
  * Interventions are sorted alphabetically by category name first, then by
@@ -12,16 +25,9 @@ export const generateRuleName = (
     interventionIds: number[],
     interventionCategories: InterventionCategory[],
 ): string => {
-    const allInterventions = interventionCategories.flatMap(
-        c => c.interventions,
-    );
     const pairs = interventionIds.flatMap(id => {
-        const intervention = allInterventions.find(i => i.id === id);
-        if (!intervention) return [];
-        const category = interventionCategories.find(c =>
-            c.interventions.some(i => i.id === id),
-        );
-        return category ? [{ category, intervention }] : [];
+        const match = findInterventionWithCategory(interventionCategories, id);
+        return match ? [match] : [];
     });
     return sortBy(pairs, ['category.name', 'intervention.name'])
         .map(({ intervention }) => intervention.short_name || intervention.name)

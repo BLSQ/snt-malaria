@@ -1,7 +1,10 @@
 import { useCallback, useMemo } from 'react';
 import { FormikHelpers, useFormik } from 'formik';
 import * as Yup from 'yup';
-import { MetricTypeCriterion } from '../types/scenarioRule';
+import {
+    MetricTypeCriterion,
+    RuleInterventionOverride,
+} from '../types/scenarioRule';
 
 export type ScenarioRuleFormValues = {
     id?: number;
@@ -9,6 +12,7 @@ export type ScenarioRuleFormValues = {
     scenario: number;
     color: string;
     interventions: number[];
+    intervention_overrides: RuleInterventionOverride[];
     matching_criteria: MetricTypeCriterion[];
     org_units_excluded?: string; // comma separated list of org unit ids
     org_units_included?: string; // comma separated list of org unit ids
@@ -26,6 +30,7 @@ export const defaultScenarioRuleValues: ScenarioRuleFormValues = {
     name: '',
     color: '#000000',
     interventions: [],
+    intervention_overrides: [],
     matching_criteria: [],
 };
 

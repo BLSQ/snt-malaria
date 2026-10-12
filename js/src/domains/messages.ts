@@ -570,7 +570,7 @@ export const MESSAGES = defineMessages({
     },
     interventionProperties: {
         id: 'iaso.snt_malaria.scenarioRule.interventionProperties',
-        defaultMessage: 'Interventions',
+        defaultMessage: 'Assign interventions',
     },
     interventionTitle: {
         id: 'iaso.snt_malaria.label.interventionTitle',
@@ -665,14 +665,6 @@ export const MESSAGES = defineMessages({
     year: {
         id: 'iaso.snt_malaria.scenario.year',
         defaultMessage: 'Year',
-    },
-    dataLayerYear: {
-        id: 'iaso.snt_malaria.scenario.dataLayerYear',
-        defaultMessage: 'Year: {year}',
-    },
-    dataLayerYearNotSet: {
-        id: 'iaso.snt_malaria.scenario.dataLayerYearNotSet',
-        defaultMessage: 'Year: not set',
     },
     noDataLayersFound: {
         id: 'iaso.snt_malaria.scenario.noDataLayersFound',
@@ -873,25 +865,26 @@ export const MESSAGES = defineMessages({
     },
     ruleNameAndColor: {
         id: 'iaso.snt_malaria.scenarioRule.ruleNameAndColor',
-        defaultMessage: 'Name and color',
+        defaultMessage: 'Set name and color',
     },
     ruleStepRegion: {
         id: 'iaso.snt_malaria.scenarioRule.ruleStepRegion',
-        defaultMessage: 'Region',
+        defaultMessage: 'Select areas',
     },
     ruleStepRegionDescription: {
         id: 'iaso.snt_malaria.scenarioRule.ruleStepRegionDescription',
         defaultMessage:
-            'Select the region this rule applies to. Districts that meet all selection criteria are included in this rule. Use the tree to add or exclude districts by hand.',
+            'Select the areas this rule applies to. Districts that meet all selection criteria are included in this rule. Use the tree to add or exclude districts by hand.',
     },
     selectionCriteriaDescription: {
         id: 'iaso.snt_malaria.scenarioRule.selectionCriteriaDescription',
-        defaultMessage: 'A district must meet every criterion to be included.',
+        defaultMessage:
+            'A district must meet every criterion to be included. Click a criterion to see its data on the map.',
     },
     ruleStepInterventionsDescription: {
         id: 'iaso.snt_malaria.scenarioRule.ruleStepInterventionsDescription',
         defaultMessage:
-            'Add the interventions this rule assigns to its matching districts.',
+            'Add the interventions this rule assigns to its matching districts. Select an intervention to choose its deployment years, cost item values and grant in the Overrides tab.',
     },
     ruleStepNameAndColorDescription: {
         id: 'iaso.snt_malaria.scenarioRule.ruleStepNameAndColorDescription',
@@ -966,14 +959,6 @@ export const MESSAGES = defineMessages({
     scopeLoadErrorDescription: {
         id: 'iaso.snt_malaria.scenarioRule.scopeLoadErrorDescription',
         defaultMessage: 'The source version could not be reached.',
-    },
-    scopePreviewErrorTitle: {
-        id: 'iaso.snt_malaria.scenarioRule.scopePreviewErrorTitle',
-        defaultMessage: 'Could not run the rule',
-    },
-    scopePreviewErrorDescription: {
-        id: 'iaso.snt_malaria.scenarioRule.scopePreviewErrorDescription',
-        defaultMessage: 'Manual picks and exclusions are kept.',
     },
     scenarioCSV: {
         id: 'iaso.snt_malaria.scenario.scenarioCSV',
@@ -1068,7 +1053,7 @@ export const MESSAGES = defineMessages({
     },
     selectionCriteria: {
         id: 'iaso.snt_malaria.scenarioRule.selectionCriteria',
-        defaultMessage: 'Selection criteria',
+        defaultMessage: 'Criteria-based selection',
     },
     settingsTitle: {
         id: 'iaso.snt_malaria.settings.title',
@@ -1142,7 +1127,7 @@ export const MESSAGES = defineMessages({
     fixedCountNote: {
         id: 'iaso.snt_malaria.costManagement.budget.fixedCountNote',
         defaultMessage:
-            'A fixed-count item has no population to convert or cover, so target population, conversion direction, conversion factor and coverage do not apply.',
+            'A fixed-count item has no population to convert, so target population, conversion direction and conversion factor do not apply. Its quantity is costed every year the intervention is deployed.',
     },
     expandCollapseAll: {
         id: 'iaso.snt_malaria.costManagement.budget.expandCollapseAll',
@@ -1517,5 +1502,215 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.account.defaultPopulationHelp',
         defaultMessage:
             'Metric type automatically shown as the population layer whenever one is needed for display (e.g. totals on the rule panel).',
+    },
+    overridesView: {
+        id: 'iaso.snt_malaria.label.overridesView',
+        defaultMessage: 'Overrides',
+    },
+    budgetViewReworked: {
+        id: 'iaso.snt_malaria.label.budgetViewReworked',
+        defaultMessage:
+            'The budget table is being reworked to support rule overrides.',
+    },
+    criterionValue: {
+        id: 'iaso.snt_malaria.scenarioRule.criterionValue',
+        defaultMessage: 'Value',
+    },
+    overridesNone: {
+        id: 'iaso.snt_malaria.ruleOverrides.none',
+        defaultMessage: 'No overrides yet',
+    },
+    overridesSummary: {
+        id: 'iaso.snt_malaria.ruleOverrides.summary',
+        defaultMessage:
+            '{overrides} in {changed} of {total, plural, one {# intervention} other {# interventions}}',
+    },
+    overridesHint: {
+        id: 'iaso.snt_malaria.ruleOverrides.hint',
+        defaultMessage:
+            'Overrides apply to this rule in this scenario only. Empty fields use the cost item values from Cost management. In each card you can change the grant, the years the intervention is deployed, and the unit cost, conversion factor, buffer and coverage of each cost item. Changed values are highlighted. Clear a field, revert a line or revert a whole intervention to go back to the defaults.',
+    },
+    overridesEmpty: {
+        id: 'iaso.snt_malaria.ruleOverrides.empty',
+        defaultMessage:
+            'Add an intervention in the side panel to set overrides for it',
+    },
+    overrideCount: {
+        id: 'iaso.snt_malaria.ruleOverrides.count',
+        defaultMessage: '{count, plural, one {# override} other {# overrides}}',
+    },
+    revertAll: {
+        id: 'iaso.snt_malaria.ruleOverrides.revertAll',
+        defaultMessage: 'Revert all',
+    },
+    revertLineTooltip: {
+        id: 'iaso.snt_malaria.ruleOverrides.revertLineTooltip',
+        defaultMessage: 'Revert changes to this cost item',
+    },
+    yearlyDeployment: {
+        id: 'iaso.snt_malaria.ruleOverrides.yearlyDeployment',
+        defaultMessage: 'Yearly deployment',
+    },
+    deploymentEveryYear: {
+        id: 'iaso.snt_malaria.ruleOverrides.deploymentEveryYear',
+        defaultMessage: 'Every year',
+    },
+    deploymentSomeYears: {
+        id: 'iaso.snt_malaria.ruleOverrides.deploymentSomeYears',
+        defaultMessage: '{count} of {total} years',
+    },
+    deploymentNoYears: {
+        id: 'iaso.snt_malaria.ruleOverrides.deploymentNoYears',
+        defaultMessage: 'No years selected',
+    },
+    selectNone: {
+        id: 'iaso.snt_malaria.ruleOverrides.selectNone',
+        defaultMessage: 'Select none',
+    },
+    selectAllYears: {
+        id: 'iaso.snt_malaria.ruleOverrides.selectAll',
+        defaultMessage: 'Select all',
+    },
+    conversionFactorShort: {
+        id: 'iaso.snt_malaria.ruleOverrides.conversionFactorShort',
+        defaultMessage: 'Con. factor',
+    },
+    grant: {
+        id: 'iaso.snt_malaria.ruleOverrides.grant',
+        defaultMessage: 'Grant',
+    },
+    grantDefault: {
+        id: 'iaso.snt_malaria.ruleOverrides.grantDefault',
+        defaultMessage: '{grant} (default)',
+    },
+    noGrant: {
+        id: 'iaso.snt_malaria.ruleOverrides.noGrant',
+        defaultMessage: 'No grant',
+    },
+    yearDeployedTooltip: {
+        id: 'iaso.snt_malaria.ruleOverrides.yearDeployedTooltip',
+        defaultMessage: 'Deployed in {year}. Click to remove.',
+    },
+    yearNotDeployedTooltip: {
+        id: 'iaso.snt_malaria.ruleOverrides.yearNotDeployedTooltip',
+        defaultMessage: 'Not deployed in {year}. Click to add.',
+    },
+    dotDeployed: {
+        id: 'iaso.snt_malaria.ruleOverrides.dotDeployed',
+        defaultMessage: '{year}: deployed',
+    },
+    dotNotDeployed: {
+        id: 'iaso.snt_malaria.ruleOverrides.dotNotDeployed',
+        defaultMessage: '{year}: not deployed',
+    },
+    dotDeployedChanged: {
+        id: 'iaso.snt_malaria.ruleOverrides.dotDeployedChanged',
+        defaultMessage: '{year}: deployed, cost item coverage changed',
+    },
+    dotNotDeployedChanged: {
+        id: 'iaso.snt_malaria.ruleOverrides.dotNotDeployedChanged',
+        defaultMessage: '{year}: not deployed, cost item coverage set',
+    },
+    yearCoverageSet: {
+        id: 'iaso.snt_malaria.ruleOverrides.yearCoverageSet',
+        defaultMessage:
+            'Coverage in {year} set for this rule. Clear to use {value}.',
+    },
+    yearCoverageDeployed: {
+        id: 'iaso.snt_malaria.ruleOverrides.yearCoverageDeployed',
+        defaultMessage:
+            'Deployed in {year} at the Cost management coverage: {value}. Type a value to change it for this rule.',
+    },
+    yearCoverageNotDeployed: {
+        id: 'iaso.snt_malaria.ruleOverrides.yearCoverageNotDeployed',
+        defaultMessage:
+            'Not deployed in {year}, so 0%. Type a value to cost this item anyway.',
+    },
+    valueSetTooltip: {
+        id: 'iaso.snt_malaria.ruleOverrides.valueSetTooltip',
+        defaultMessage:
+            '{label} set for this rule. Clear the field to use the Cost management value, {value}.',
+    },
+    valueDefaultTooltip: {
+        id: 'iaso.snt_malaria.ruleOverrides.valueDefaultTooltip',
+        defaultMessage:
+            '{label} from Cost management. Type a value to change it for this rule.',
+    },
+    notApplicableToFixed: {
+        id: 'iaso.snt_malaria.ruleOverrides.notApplicableToFixed',
+        defaultMessage: 'Does not apply to a fixed-count item',
+    },
+    noInterventionCostItems: {
+        id: 'iaso.snt_malaria.ruleOverrides.noCostItems',
+        defaultMessage: 'No cost items defined for this intervention.',
+    },
+    fixedCountCaption: {
+        id: 'iaso.snt_malaria.ruleOverrides.fixedCountCaption',
+        defaultMessage: 'per {unit}, fixed count',
+    },
+    costItemBasisResetWarning: {
+        id: 'iaso.snt_malaria.costManagement.costItems.basisResetWarning',
+        defaultMessage:
+            'Coverage values set in scenario rules for this item will be reset.',
+    },
+    resetMapLayer: {
+        id: 'iaso.snt_malaria.scenarioRule.resetMapLayer',
+        defaultMessage: 'Reset',
+    },
+    criterionShowOnMapHint: {
+        id: 'iaso.snt_malaria.scenarioRule.criterionShowOnMapHint',
+        defaultMessage: 'Click to show on map',
+    },
+    criterionHideOnMapHint: {
+        id: 'iaso.snt_malaria.scenarioRule.criterionHideOnMapHint',
+        defaultMessage: 'Click to hide from map',
+    },
+    interventionOverridesHint: {
+        id: 'iaso.snt_malaria.scenarioRule.interventionOverridesHint',
+        defaultMessage: 'Click to edit overrides',
+    },
+    revertLine: {
+        id: 'iaso.snt_malaria.ruleOverrides.revertLine',
+        defaultMessage: 'Revert line',
+    },
+    overrideBreakdownItem: {
+        id: 'iaso.snt_malaria.ruleOverrides.breakdownItem',
+        defaultMessage: '{intervention}: {overrides}',
+    },
+    overrideCellLabel: {
+        id: 'iaso.snt_malaria.ruleOverrides.cellLabel',
+        defaultMessage: '{line}, {field}',
+    },
+    quantityLabel: {
+        id: 'iaso.snt_malaria.costManagement.budget.quantity',
+        defaultMessage: 'Quantity',
+    },
+    coverageOrQuantityColumn: {
+        id: 'iaso.snt_malaria.costManagement.budget.coverageOrQuantity',
+        defaultMessage: 'Coverage / quantity',
+    },
+    coverageOrQuantityColumnCompact: {
+        id: 'iaso.snt_malaria.ruleOverrides.coverageOrQuantityCompact',
+        defaultMessage: 'Cov. / Qty.',
+    },
+    coverageOrQuantityTooltip: {
+        id: 'iaso.snt_malaria.ruleOverrides.coverageOrQuantityTooltip',
+        defaultMessage:
+            'Coverage for population-based items, quantity for fixed-count items',
+    },
+    yearQuantitySet: {
+        id: 'iaso.snt_malaria.ruleOverrides.yearQuantitySet',
+        defaultMessage:
+            'Quantity in {year} set for this rule. Clear to use {value}.',
+    },
+    yearQuantityDeployed: {
+        id: 'iaso.snt_malaria.ruleOverrides.yearQuantityDeployed',
+        defaultMessage:
+            'Deployed in {year} at the item quantity: {value}. Type a value to change it for this rule.',
+    },
+    yearQuantityNotDeployed: {
+        id: 'iaso.snt_malaria.ruleOverrides.yearQuantityNotDeployed',
+        defaultMessage:
+            'Not deployed in {year}, so 0. Type a value to cost this item anyway.',
     },
 });

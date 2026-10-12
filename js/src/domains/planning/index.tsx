@@ -1,14 +1,5 @@
-import React, {
-    FC,
-    ReactNode,
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import React, { FC, ReactNode, useCallback, useMemo, useState } from 'react';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
-import { Card } from '@mui/material';
 import {
     LoadingSpinner,
     useRedirectToReplace,
@@ -17,13 +8,10 @@ import {
 import { useNavigate } from 'react-router';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
-import { SxStyles } from 'Iaso/types/general';
-import { CardStyled } from '../../components/CardStyled';
 import { SidePanel } from '../../components/sidePanel/SidePanel';
 import {
     ChatColumn,
     MainColumn,
-    PaperFullHeight,
     PageContainer,
     SidebarLayout,
 } from '../../components/styledComponents';
@@ -36,15 +24,12 @@ import { MESSAGES } from '../messages';
 import { useDeleteScenario } from '../scenarios/hooks/useDeleteScenario';
 import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
-import { BudgetTable } from './components/budgeting/BudgetTable';
-import { ScenarioComparisonTab } from './components/comparisonTab/ScenarioComparisonTab';
 import { InterventionPlanHeader } from './components/interventionPlan/InterventionPlanHeader';
-import { InterventionPlanMap } from './components/interventionPlanMap/InterventionPlanMap';
+import { PlanningMainColumn } from './components/PlanningMainColumn';
 import { ScenarioRuleAIChat } from './components/scenarioRule/scenarioRuleAiChat/ScenarioRuleAIChat';
 import { useScenarioRuleAIChat } from './components/scenarioRule/scenarioRuleAiChat/useScenarioRuleAIChat';
 import { ScenarioRulesActions } from './components/scenarioRule/scenarioRuleList/ScenarioRulesHeader';
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
-import { ScenarioSummaryTab } from './components/ScenarioSummaryTab';
 import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetAccountSettings } from './hooks/useGetAccountSettings';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
@@ -53,14 +38,6 @@ import { useGetOrgUnits } from './hooks/useGetOrgUnits';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { ScenarioRule, ScenarioRulePreview } from './types/scenarioRule';
 import { useUserCanEditScenario } from './utils/permissions';
-
-const styles = {
-    card: {
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-    },
-} satisfies SxStyles;
 
 type PlanningParams = {
     scenarioId: number;
@@ -77,20 +54,6 @@ export const Planning: FC = () => {
 
     const { data: scenario } = useGetScenario(scenarioId);
     const { formatMessage } = useSafeIntl();
-    const [activeTab, setActiveTab] = useState('map');
-
-    // Locked scenarios default to the summary tab, but only on first load:
-    // the ref guard stops later scenario updates (e.g. toggling the lock, or a
-    // refetch) from yanking the user back to summary after they changed tabs.
-    const didInitActiveTab = useRef(false);
-    useEffect(() => {
-        if (scenario && !didInitActiveTab.current) {
-            didInitActiveTab.current = true;
-            if (scenario.is_locked) {
-                setActiveTab('summary');
-            }
-        }
-    }, [scenario]);
 
     const { data: metricTypeCategories } = useGetMetricCategories('any');
     const { data: interventionCategories } = useGetInterventionCategories();
@@ -166,11 +129,6 @@ export const Planning: FC = () => {
         Partial<ScenarioRule> | undefined
     >();
 
-    const onSetTab = useCallback(
-        (tab: string) => tab && setActiveTab(tab),
-        [setActiveTab],
-    );
-
     const onPreviewScenarioRule = useCallback(
         (preview?: ScenarioRulePreview) => {
             setPreviewRule(preview?.rule);
@@ -222,8 +180,6 @@ export const Planning: FC = () => {
     const renderPlanHeader = useCallback(
         (tabActions?: ReactNode) => (
             <InterventionPlanHeader
-                onTabChange={onSetTab}
-                activeTab={activeTab}
                 onDeleteScenario={handleDeleteScenario}
                 onToggleLockScenario={handleToggleLockScenario}
                 onOrgUnitChange={handleDisplayOrgUnitChange}
@@ -234,8 +190,6 @@ export const Planning: FC = () => {
             />
         ),
         [
-            onSetTab,
-            activeTab,
             handleDeleteScenario,
             handleToggleLockScenario,
             handleDisplayOrgUnitChange,
@@ -243,32 +197,6 @@ export const Planning: FC = () => {
             tour.anchorRefs,
         ],
     );
-
-    const renderMainColumn = () => {
-        if (activeTab === 'summary') {
-            return <ScenarioSummaryTab header={renderPlanHeader()} />;
-        }
-        if (activeTab === 'comparison') {
-            return <ScenarioComparisonTab header={renderPlanHeader} />;
-        }
-        return (
-            <PaperFullHeight>
-                <Card sx={styles.card}>
-                    <CardStyled header={renderPlanHeader()}>
-                        {activeTab === 'map' && (
-                            <InterventionPlanMap
-                                matchedOrgUnitIds={matchedOrgUnitIds}
-                                previewRule={previewRule}
-                            />
-                        )}
-                        {activeTab === 'budget' && orgUnits && budget && (
-                            <BudgetTable />
-                        )}
-                    </CardStyled>
-                </Card>
-            </PaperFullHeight>
-        );
-    };
 
     return metricTypeCategories && interventionCategories ? (
         <PlanningProvider
@@ -320,7 +248,14 @@ export const Planning: FC = () => {
                             onToggleAIChat={toggleAIChat}
                         />
                     </SidePanel>
-                    <MainColumn>{renderMainColumn()}</MainColumn>
+                    <MainColumn>
+                        <PlanningMainColumn
+                            renderHeader={renderPlanHeader}
+                            matchedOrgUnitIds={matchedOrgUnitIds}
+                            previewRule={previewRule}
+                            isBudgetLoaded={Boolean(orgUnits && budget)}
+                        />
+                    </MainColumn>
                 </SidebarLayout>
             </PageContainer>
             {tour.element}
