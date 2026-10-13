@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.20.1](https://github.com/BLSQ/snt-malaria/compare/2.20.0...2.20.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* **DemoAccount:** Remove donor and grant when recreating demo account ([#413](https://github.com/BLSQ/snt-malaria/issues/413)) ([c531be0](https://github.com/BLSQ/snt-malaria/commit/c531be0368ac7b3b7766fb3a97e44c560e9f42cd))
+
 ## [2.20.0](https://github.com/BLSQ/snt-malaria/compare/2.19.0...2.20.0) (2026-10-07)
 
 
