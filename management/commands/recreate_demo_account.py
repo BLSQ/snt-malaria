@@ -14,6 +14,8 @@ from iaso.permissions.core_permissions import CORE_DATASTORE_READ_PERMISSION, CO
 from plugins.snt_malaria.models import (
     AccountSettings,
     Budget,
+    Donor,
+    Grant,
     ImpactProviderConfig,
     Intervention,
     InterventionAssignment,
@@ -124,6 +126,8 @@ class Command(BaseCommand):
         InterventionCostBreakdownLine.objects.filter(intervention__in=interventions).delete()
         interventions.delete()
         categories.delete()
+        Grant.objects.filter(account=demo_account).delete()
+        Donor.objects.filter(account=demo_account).delete()
         MetricValue.objects.filter(metric_type__in=metric_types).delete()
         metric_types.delete()
         Team.objects.filter(project__in=projects).delete()
