@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.20.2](https://github.com/BLSQ/snt-malaria/compare/2.20.1...2.20.2) (2026-10-13)
+
+
+### Bug Fixes
+
+* **DataLayer:** Allow year in the future when importing data layers ([#415](https://github.com/BLSQ/snt-malaria/issues/415)) ([57130cd](https://github.com/BLSQ/snt-malaria/commit/57130cd873cb3454139d91ecb9a6411c88f54652))
+
 ## [2.20.1](https://github.com/BLSQ/snt-malaria/compare/2.20.0...2.20.1) (2026-10-13)
 
 
