@@ -5,7 +5,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { ProgressBar } from '../../../../components/LinearProgress';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
-import { formatBigNumber } from '../../libs/cost-utils';
+import { formatCost } from '../../libs/cost-utils';
 
 const styles = {
     row: { backgroundColor: '#f0f0f0' },
@@ -42,7 +42,7 @@ export const BudgetTotalRow: FC<{
                         component="span"
                         sx={styles.emphasis}
                     >
-                        {formatBigNumber(
+                        {formatCost(
                             totalCosts.yearlyTotal[year] || 0,
                             currency,
                         )}
@@ -55,7 +55,7 @@ export const BudgetTotalRow: FC<{
                     component="span"
                     sx={styles.emphasis}
                 >
-                    {formatBigNumber(totalCosts.totalCost, currency)}
+                    {formatCost(totalCosts.totalCost, currency)}
                 </Typography>
             </TableCell>
             <TableCell align="right">

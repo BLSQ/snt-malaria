@@ -19,7 +19,7 @@ import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import {
     bufferMultiplierToPercent,
-    formatBigNumber,
+    formatCost,
     formatQuantity,
 } from '../../libs/cost-utils';
 
@@ -30,7 +30,7 @@ export type CostLineRowData = {
     isProportional: boolean;
     totalCost: number;
     quantity: number;
-    defaultCoverage: number;
+    yearCosts: Record<number, number>;
     unitCost: number;
     unitName: string;
     conversionFactor: number | null;
@@ -74,9 +74,6 @@ const styles = {
 
 export const CostLineRow: FC<Props> = ({ costLine, yearRange }) => {
     const { currency } = usePlanningContext();
-    const coverageLabel = costLine.isProportional
-        ? `${costLine.defaultCoverage}%`
-        : String(costLine.defaultCoverage);
 
     return (
         <TableRow sx={styles.costLineRow}>
@@ -91,16 +88,14 @@ export const CostLineRow: FC<Props> = ({ costLine, yearRange }) => {
                     key={`cost_line_${costLine.label}_${year}`}
                     align="center"
                 >
-                    <CostDriverTooltip isProportional={costLine.isProportional}>
-                        <Typography variant="body2" component="span">
-                            {coverageLabel}
-                        </Typography>
-                    </CostDriverTooltip>
+                    <Typography variant="body2" component="span">
+                        {formatCost(costLine.yearCosts[year] || 0, currency)}
+                    </Typography>
                 </TableCell>
             ))}
             <TableCell align="right">
                 <Typography variant="body2" component="div">
-                    {formatBigNumber(costLine.totalCost, currency)}
+                    {formatCost(costLine.totalCost, currency)}
                 </Typography>
                 {costLine.unitName && costLine.quantity > 0 && (
                     <Typography

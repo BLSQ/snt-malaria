@@ -31,8 +31,6 @@ import { BudgetRow, BudgetRowData } from './BudgetRow';
 import { BudgetTotalRow } from './BudgetTotalRow';
 import { CostLineRowData } from './CostLineRow';
 
-const FULL_COVERAGE_PERCENT = 100;
-
 const styles = {
     container: {
         maxHeight: '100%',
@@ -81,7 +79,7 @@ export const BudgetTable: FC = ({}) => {
                         isProportional: line.is_proportional,
                         totalCost: 0,
                         quantity: 0,
-                        defaultCoverage: Number(line.coverage),
+                        yearCosts: {},
                         unitCost: Number(line.unit_cost),
                         unitName: line.unit_type_label,
                         conversionFactor:
@@ -147,6 +145,7 @@ export const BudgetTable: FC = ({}) => {
                 ...costLine,
                 totalCost: 0,
                 quantity: 0,
+                yearCosts: {},
             }));
 
             return {
@@ -164,8 +163,10 @@ export const BudgetTable: FC = ({}) => {
     const applyBudgetSnapshot = (
         row: CostLineRowData,
         costLine: BudgetInterventionCostLine,
+        year: number,
     ) => {
         row.totalCost += costLine.total_cost;
+        row.yearCosts[year] = (row.yearCosts[year] || 0) + costLine.total_cost;
         row.quantity += costLine.quantity;
         row.unitCost = costLine.unit_cost ?? row.unitCost;
         row.unitName = costLine.cost_unit_name ?? row.unitName;
@@ -176,7 +177,10 @@ export const BudgetTable: FC = ({}) => {
     };
 
     const populateCostLine = useCallback(
-        (costLine: BudgetInterventionCostLine): CostLineRowData => {
+        (
+            costLine: BudgetInterventionCostLine,
+            year: number,
+        ): CostLineRowData => {
             const breakdownLine = costBreakdownLineRecord[costLine.id];
             return {
                 id: costLine.id,
@@ -185,9 +189,7 @@ export const BudgetTable: FC = ({}) => {
                 isProportional: breakdownLine?.is_proportional ?? true,
                 totalCost: costLine.total_cost,
                 quantity: costLine.quantity,
-                defaultCoverage: Number(
-                    breakdownLine?.coverage ?? FULL_COVERAGE_PERCENT,
-                ),
+                yearCosts: { [year]: costLine.total_cost },
                 unitCost: costLine.unit_cost ?? 0,
                 unitName: costLine.cost_unit_name ?? '',
                 conversionFactor: costLine.conversion_factor,
@@ -225,9 +227,16 @@ export const BudgetTable: FC = ({}) => {
                 intervention.cost_breakdown.forEach(costLine => {
                     const existing = costLineById.get(costLine.id);
                     if (existing) {
-                        applyBudgetSnapshot(existing, costLine);
+                        applyBudgetSnapshot(
+                            existing,
+                            costLine,
+                            intervention.year,
+                        );
                     } else {
-                        const newRow = populateCostLine(costLine);
+                        const newRow = populateCostLine(
+                            costLine,
+                            intervention.year,
+                        );
                         row.costBreakdowns.push(newRow);
                         costLineById.set(newRow.id, newRow);
                     }

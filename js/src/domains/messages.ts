@@ -1511,11 +1511,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.overridesView',
         defaultMessage: 'Overrides',
     },
-    budgetViewReworked: {
-        id: 'iaso.snt_malaria.label.budgetViewReworked',
-        defaultMessage:
-            'The budget table is being reworked to support rule overrides.',
-    },
     criterionValue: {
         id: 'iaso.snt_malaria.scenarioRule.criterionValue',
         defaultMessage: 'Value',

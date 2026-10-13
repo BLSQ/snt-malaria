@@ -87,6 +87,9 @@ export const formatBigNumber = (value: number, currency?: string) => {
         : formattedValue;
 };
 
+export const formatCost = (value: number, currency?: string): string =>
+    formatBigNumber(value, currency) ?? formatCurrencyAmount(0, currency);
+
 /** Compact quantity formatting: whole units below 1000, else K/M/B, e.g. 534233 -> "534.23K". */
 export const formatQuantity = (value: number) =>
     Math.abs(value) >= 1_000

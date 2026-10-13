@@ -607,7 +607,6 @@
     "iaso.snt_malaria.settings.dataLayers.wizard.backGraphConfirm": "Revenir en arrière maintenant annulera les modifications non enregistrées du graphe composite.",
     "iaso.snt_malaria.settings.dataLayers.openHexaCodeReadOnly": "Défini par OpenHexa et non modifiable — sert à faire correspondre cette couche à sa source.",
     "iaso.snt_malaria.label.overridesView": "Ajustements",
-    "iaso.snt_malaria.label.budgetViewReworked": "Le tableau budgétaire est en cours de refonte pour prendre en charge les ajustements des règles.",
     "iaso.snt_malaria.scenarioRule.criterionValue": "Valeur",
     "iaso.snt_malaria.ruleOverrides.none": "Aucun ajustement pour le moment",
     "iaso.snt_malaria.ruleOverrides.summary": "{overrides} dans {changed} sur {total, plural, one {# intervention} other {# interventions}}",
