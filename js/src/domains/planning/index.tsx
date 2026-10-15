@@ -10,7 +10,6 @@ import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { useParamsObject } from 'Iaso/routing/hooks/useParamsObject';
 import { SidePanel } from '../../components/sidePanel/SidePanel';
 import {
-    ChatColumn,
     MainColumn,
     PageContainer,
     SidebarLayout,
@@ -26,7 +25,7 @@ import { useGetScenario } from '../scenarios/hooks/useGetScenarios';
 import { useUpdateScenario } from '../scenarios/hooks/useUpdateScenario';
 import { InterventionPlanHeader } from './components/interventionPlan/InterventionPlanHeader';
 import { PlanningMainColumn } from './components/PlanningMainColumn';
-import { ScenarioRuleAIChat } from './components/scenarioRule/scenarioRuleAiChat/ScenarioRuleAIChat';
+import { ScenarioRuleAIChatColumn } from './components/scenarioRule/scenarioRuleAiChat/ScenarioRuleAIChatColumn';
 import { useScenarioRuleAIChat } from './components/scenarioRule/scenarioRuleAiChat/useScenarioRuleAIChat';
 import { ScenarioRulesActions } from './components/scenarioRule/scenarioRuleList/ScenarioRulesHeader';
 import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel';
@@ -215,17 +214,15 @@ export const Planning: FC = () => {
             <PageContainer>
                 <SidebarLayout>
                     {showAIChat && hasAiApiKey && (
-                        <ChatColumn>
-                            <ScenarioRuleAIChat
-                                messages={aiChatMessages}
-                                isLoading={isAiChatLoading}
-                                onSendMessage={sendAiChatMessage}
-                                onRevert={revertAiChatMessage}
-                                pendingAttachments={aiChatPendingAttachments}
-                                onAttachFiles={onAiChatAttachFiles}
-                                onRemoveAttachment={onAiChatRemoveAttachment}
-                            />
-                        </ChatColumn>
+                        <ScenarioRuleAIChatColumn
+                            messages={aiChatMessages}
+                            isLoading={isAiChatLoading}
+                            onSendMessage={sendAiChatMessage}
+                            onRevert={revertAiChatMessage}
+                            pendingAttachments={aiChatPendingAttachments}
+                            onAttachFiles={onAiChatAttachFiles}
+                            onRemoveAttachment={onAiChatRemoveAttachment}
+                        />
                     )}
                     <SidePanel
                         icon={SettingsInputComponentOutlinedIcon}
