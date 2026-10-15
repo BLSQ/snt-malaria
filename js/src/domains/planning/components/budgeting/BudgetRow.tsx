@@ -7,7 +7,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { ProgressBar } from '../../../../components/LinearProgress';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
-import { formatBigNumber } from '../../libs/cost-utils';
+import { formatCost } from '../../libs/cost-utils';
 import { CostLineRow, CostLineRowData } from './CostLineRow';
 
 export type BudgetRowData = {
@@ -82,7 +82,7 @@ export const BudgetRow: FC<Props> = ({
                             component="span"
                             sx={{ ...styles.emphasis }}
                         >
-                            {formatBigNumber(
+                            {formatCost(
                                 intervention.yearCosts[year] || 0,
                                 currency,
                             )}
@@ -96,7 +96,7 @@ export const BudgetRow: FC<Props> = ({
                         component="span"
                         sx={styles.supEmphasis}
                     >
-                        {formatBigNumber(intervention.totalCost, currency)}
+                        {formatCost(intervention.totalCost, currency)}
                     </Typography>
                 </TableCell>
                 <TableCell align="center">

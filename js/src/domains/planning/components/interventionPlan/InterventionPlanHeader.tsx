@@ -8,7 +8,6 @@ import {
     Stack,
     ToggleButton,
     ToggleButtonGroup,
-    Tooltip,
 } from '@mui/material';
 import { Link as MuiLink } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
@@ -116,15 +115,9 @@ export const InterventionPlanHeader: FC<Props> = ({
                         </ToggleButton>
                     )}
                     {!isEditing && (
-                        <Tooltip
-                            title={formatMessage(MESSAGES.budgetViewReworked)}
-                        >
-                            <span>
-                                <ToggleButton value="budget" disabled>
-                                    {formatMessage(MESSAGES.budgetView)}
-                                </ToggleButton>
-                            </span>
-                        </Tooltip>
+                        <ToggleButton value="budget">
+                            {formatMessage(MESSAGES.budgetView)}
+                        </ToggleButton>
                     )}
                     {!isEditing && (
                         <ToggleButton value="summary">

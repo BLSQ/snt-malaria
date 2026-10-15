@@ -608,7 +608,6 @@
     "iaso.snt_malaria.settings.dataLayers.wizard.backGraphConfirm": "Going back now will discard any unsaved changes to the composite graph.",
     "iaso.snt_malaria.settings.dataLayers.openHexaCodeReadOnly": "Set by OpenHexa and can't be changed — it's used to match this layer to its source.",
     "iaso.snt_malaria.label.overridesView": "Overrides",
-    "iaso.snt_malaria.label.budgetViewReworked": "The budget table is being reworked to support rule overrides.",
     "iaso.snt_malaria.scenarioRule.criterionValue": "Value",
     "iaso.snt_malaria.ruleOverrides.none": "No overrides yet",
     "iaso.snt_malaria.ruleOverrides.summary": "{overrides} in {changed} of {total, plural, one {# intervention} other {# interventions}}",
