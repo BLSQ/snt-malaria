@@ -1130,8 +1130,8 @@ export const MESSAGES = defineMessages({
     },
     fixedCountNote: {
         id: 'iaso.snt_malaria.costManagement.budget.fixedCountNote',
-        defaultMessage:
-            'A fixed-count item has no population to convert, so target population, conversion direction and conversion factor do not apply. Its quantity is costed every year the intervention is deployed.',
+        defaultMessage: `A fixed-count item has no population to convert, so target population, conversion direction and conversion factor do not apply. 
+            Its quantity is costed every year the intervention is deployed.`,
     },
     expandCollapseAll: {
         id: 'iaso.snt_malaria.costManagement.budget.expandCollapseAll',
@@ -1526,8 +1526,9 @@ export const MESSAGES = defineMessages({
     },
     overridesHint: {
         id: 'iaso.snt_malaria.ruleOverrides.hint',
-        defaultMessage:
-            'Overrides apply to this rule in this scenario only. Empty fields use the cost item values from Cost management. In each card you can change the grant, the years the intervention is deployed, and the unit cost, conversion factor, buffer and coverage of each cost item. Changed values are highlighted. Clear a field, revert a line or revert a whole intervention to go back to the defaults.',
+        defaultMessage: `Overrides apply to this rule in this scenario only. Empty fields use the cost item values from Cost management. 
+            In each card you can change the grant, the years the intervention is deployed, and the unit cost, conversion factor, buffer and coverage of each cost item. 
+            Changed values are highlighted. Clear a field, revert a line or revert a whole intervention to go back to the defaults.`,
     },
     overridesEmpty: {
         id: 'iaso.snt_malaria.ruleOverrides.empty',
