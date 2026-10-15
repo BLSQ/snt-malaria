@@ -547,7 +547,7 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
         self.assertTrue(ScenarioRule.objects.filter(id=existing_rule.id).exists())
 
     @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
-    def test_current_rules_context_excludes_resolved_org_units(self, mock_gen):
+    def test_current_rules_context_sends_hand_picked_org_units_but_never_matched_ones(self, mock_gen):
         existing_rule = ScenarioRule.objects.create(
             name="Existing",
             priority=1,
@@ -569,11 +569,24 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(len(current_rules), 1)
         sent_rule = current_rules[0]
         self.assertEqual(
-            set(sent_rule.keys()), {"id", "name", "is_match_all", "matching_criteria", "interventions", "color"}
+            set(sent_rule.keys()),
+            {
+                "id",
+                "name",
+                "is_match_all",
+                "matching_criteria",
+                "org_units_included",
+                "org_units_excluded",
+                "interventions",
+                "intervention_overrides",
+                "color",
+            },
         )
         self.assertEqual(
             sent_rule["matching_criteria"], [{"metric_type": self.metric_type.id, "operator": ">", "value": 400}]
         )
+        self.assertEqual(sent_rule["org_units_included"], [4])
+        self.assertEqual(sent_rule["org_units_excluded"], [2])
 
     @patch("plugins.snt_malaria.api.scenario_rule_ai.views.generate_scenario_rules")
     def test_only_account_scoped_interventions_and_metric_types_are_sent(self, mock_gen):

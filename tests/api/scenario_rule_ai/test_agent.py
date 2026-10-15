@@ -1,5 +1,6 @@
 import json
 
+from decimal import Decimal
 from unittest.mock import patch
 
 from django.test import SimpleTestCase
@@ -133,6 +134,117 @@ class BuildSystemPromptTestCase(SimpleTestCase):
         self.assertIn('"message": "<your explanation', prompt)
 
 
+class BuildOverridesAndOrgUnitsCatalogsTestCase(SimpleTestCase):
+    def test_interventions_catalog_lists_default_grant_and_cost_items_with_their_defaults(self):
+        interventions = [
+            {
+                "id": 10,
+                "name": "Bednets",
+                "category_name": "Vector control",
+                "grant_name": "Global Fund GC7",
+                "cost_lines": [
+                    {
+                        "id": 100,
+                        "name": "Nets",
+                        "is_proportional": True,
+                        "unit_cost": Decimal("2.50"),
+                        "coverage": Decimal("80.00"),
+                        "conversion_factor": Decimal("1.800000"),
+                        "invert_conversion_factor": False,
+                        "buffer": None,
+                    },
+                    {
+                        "id": 101,
+                        "name": "Campaign",
+                        "is_proportional": False,
+                        "unit_cost": Decimal("5000.00"),
+                        "coverage": Decimal("2.00"),
+                        "conversion_factor": Decimal("1"),
+                        "invert_conversion_factor": False,
+                        "buffer": Decimal("10.00"),
+                    },
+                ],
+            }
+        ]
+
+        prompt = build_static_system_prompt(METRIC_TYPES, interventions)
+
+        self.assertIn('id=10, name="Bednets", default grant="Global Fund GC7"', prompt)
+        self.assertIn(
+            'id=100, name="Nets", population-based, unit cost=2.5, coverage=80%, conversion factor=1.8, '
+            "buffer=account default",
+            prompt,
+        )
+        self.assertIn('id=101, name="Campaign", fixed, unit cost=5000, quantity per year=2, buffer=10%', prompt)
+
+    def test_grants_and_org_units_catalogs_are_included(self):
+        prompt = build_static_system_prompt(
+            METRIC_TYPES,
+            INTERVENTIONS,
+            grants=[{"id": 3, "name": "Global Fund GC7", "short_name": "GC7", "donor_name": "Global Fund"}],
+            org_units=[{"id": 7, "name": "District A", "parent_name": "North"}],
+        )
+
+        self.assertIn('id=3, name="Global Fund GC7", short name="GC7", donor="Global Fund"', prompt)
+        self.assertIn('id=7, name="District A", parent="North"', prompt)
+        self.assertNotIn("{grants_catalog}", prompt)
+        self.assertNotIn("{org_units_catalog}", prompt)
+
+    def test_overrides_and_hand_picked_org_units_are_explained(self):
+        prompt = build_static_system_prompt(METRIC_TYPES, INTERVENTIONS)
+
+        self.assertIn("## Hand-picked org units", prompt)
+        self.assertIn("## Intervention overrides", prompt)
+        self.assertIn("To disable one or more years, list every scenario year except those", prompt)
+        self.assertIn("never set one for a disabled year", prompt)
+        self.assertIn("Only the coverage/quantity can differ per year", prompt)
+
+    def test_scenario_period_is_sent_uncached_before_current_rules(self):
+        current_rules = [{"id": 1, "name": "Bednets"}]
+
+        blocks = build_system_blocks(
+            METRIC_TYPES, INTERVENTIONS, current_rules=current_rules, scenario_years=range(2025, 2029)
+        )
+
+        self.assertEqual(len(blocks), 3)
+        self.assertNotIn("cache_control", blocks[1])
+        self.assertIn("The scenario covers the years 2025 to 2028.", blocks[1]["text"])
+        self.assertIn("## Current rules for this scenario", blocks[2]["text"])
+
+    def test_rule_with_overrides_and_hand_picked_org_units_parses(self):
+        response = json.dumps(
+            {
+                "message": "Done.",
+                "rules": [
+                    {
+                        "name": "Bednets",
+                        "is_match_all": True,
+                        "org_units_excluded": [7],
+                        "interventions": [10],
+                        "intervention_overrides": [
+                            {
+                                "intervention": 10,
+                                "grant": 3,
+                                "deployment_years": [2025, 2027],
+                                "cost_lines": [{"cost_line": 100, "unit_cost": 3, "yearly_coverage": {"2027": 50}}],
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+
+        [rule] = parse_scenario_rules_response(response).rules
+
+        self.assertEqual(rule.org_units_excluded, [7])
+        self.assertEqual(rule.org_units_included, [])
+        [override] = rule.intervention_overrides
+        self.assertEqual(override.deployment_years, [2025, 2027])
+        self.assertEqual(override.cost_lines[0].unit_cost, 3)
+        self.assertIsNone(override.cost_lines[0].coverage)
+        self.assertEqual(override.cost_lines[0].yearly_coverage, {"2027": 50})
+
+
 class BuildSystemBlocksTestCase(SimpleTestCase):
     def test_static_block_is_cached(self):
         blocks = build_system_blocks(METRIC_TYPES, INTERVENTIONS)
@@ -153,7 +265,7 @@ class BuildSystemBlocksTestCase(SimpleTestCase):
         self.assertEqual(len(blocks), 2)
         self.assertNotIn("cache_control", blocks[1])
         self.assertIn("## Current rules for this scenario", blocks[1]["text"])
-        self.assertIn(json.dumps(current_rules, indent=2), blocks[1]["text"])
+        self.assertIn(json.dumps(current_rules, separators=(",", ":")), blocks[1]["text"])
 
     def test_no_second_block_when_current_rules_absent(self):
         blocks = build_system_blocks(METRIC_TYPES, INTERVENTIONS, current_rules=None)

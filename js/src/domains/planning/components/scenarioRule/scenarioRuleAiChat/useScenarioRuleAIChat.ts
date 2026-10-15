@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import { useAIChat } from '../../../../../hooks/aiChat/useAIChat';
 import { MESSAGES } from '../../../../messages';
+import { parseOrgUnitIds } from '../../../libs/rule-utils';
 import { ScenarioRule } from '../../../types/scenarioRule';
 import {
     GeneratedScenarioRuleSpec,
@@ -28,9 +29,13 @@ const rulesToSpecs = (rules: ScenarioRule[]): GeneratedScenarioRuleSpec[] =>
         .map(rule => ({
             id: rule.id,
             name: rule.name,
-            is_match_all: Boolean(rule.is_match_all),
+            // The stored selection as is: a match-all rule is an explicit list of every org unit.
+            is_match_all: false,
             matching_criteria: rule.matching_criteria,
+            org_units_included: parseOrgUnitIds(rule.org_units_included),
+            org_units_excluded: parseOrgUnitIds(rule.org_units_excluded),
             interventions: rule.interventions,
+            intervention_overrides: rule.intervention_overrides,
             color: rule.color,
         }));
 
