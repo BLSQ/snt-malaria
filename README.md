@@ -1,4 +1,5 @@
 # SNT Malaria IASO plugin
+foo
 
 This repo contains a IASO plugin for the web app of the Malaria Subnational Tailoring project.
 
