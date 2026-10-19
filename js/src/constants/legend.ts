@@ -17,7 +17,7 @@ export const hasOpenEndedTopBucket = (legendType?: string): boolean =>
     legendType === LegendTypes.THRESHOLD;
 
 export const LEGEND_TYPE_MAX_ITEMS: Record<string, number> = {
-    [LegendTypes.ORDINAL]: 6,
+    [LegendTypes.ORDINAL]: 12,
     [LegendTypes.THRESHOLD]: 9,
     [LegendTypes.LINEAR]: 2,
 };

@@ -10,7 +10,7 @@ from typing import Any
 from django.utils.translation import gettext_lazy as _
 
 from iaso.models.metric import MetricType
-from iaso.utils.legend import NINE_SHADES, ORDINAL, get_range_from_count
+from iaso.utils.legend import NINE_SHADES, ORDINAL_MAX_ITEMS, get_ordinal_range, get_range_from_count
 
 
 LANGUAGE_FALLBACK_ORDER = ("EN", "FR")
@@ -22,7 +22,7 @@ _VALID_LEGEND_TYPES = {choice.value for choice in MetricType.LegendType}
 _SCALE_BREAK_BOUNDS = {
     MetricType.LegendType.THRESHOLD.value: (2, 9),
     MetricType.LegendType.LINEAR.value: (2, 2),
-    MetricType.LegendType.ORDINAL.value: (2, 4),
+    MetricType.LegendType.ORDINAL.value: (2, ORDINAL_MAX_ITEMS),
 }
 
 
@@ -41,7 +41,7 @@ def _legend_config(legend_type: str, scale: list) -> dict:
     ``iaso.utils.legend.get_legend_config`` (which can't be reused directly here - its
     linear branch needs a persisted ``MetricType`` for the value range)."""
     if legend_type == MetricType.LegendType.ORDINAL.value:
-        return {"domain": list(scale), "range": list(ORDINAL.get(len(scale), []))}
+        return {"domain": list(scale), "range": get_ordinal_range(len(scale))}
     if legend_type == MetricType.LegendType.LINEAR.value:
         return {"domain": list(scale[:2]), "range": [NINE_SHADES[0], NINE_SHADES[-1]]}
     return {"domain": list(scale), "range": get_range_from_count(len(scale))}
