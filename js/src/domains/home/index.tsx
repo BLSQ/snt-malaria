@@ -67,6 +67,15 @@ const HOME_CARDS: HomeCardConfig[] = [
     },
 ];
 
+const CARD_MAX_WIDTH = 300;
+const CARDS_GAP = 24;
+
+// Four cards read better as a 2x2 grid than as 3 + 1.
+const getColumnCount = (cardCount: number): number => (cardCount === 4 ? 2 : 3);
+
+const getCardsMaxWidth = (columnCount: number): number =>
+    columnCount * CARD_MAX_WIDTH + (columnCount - 1) * CARDS_GAP;
+
 const styles = {
     page: {
         display: 'flex',
@@ -75,6 +84,10 @@ const styles = {
         pt: 11,
         pb: 1,
         gap: 4,
+        // Prevents children from shrinking and overlapping when the viewport is too short.
+        '& > *': {
+            flexShrink: 0,
+        },
     },
     titleBlock: {
         display: 'flex',
@@ -101,18 +114,15 @@ const styles = {
     },
     cards: {
         width: '100%',
-        maxWidth: 948,
         minHeight: 187,
         // Flex-wrap rather than grid so a lone card on the last row is centred.
         display: 'flex',
         flexWrap: 'wrap',
         justifyContent: 'center',
-        gap: 3,
+        gap: `${CARDS_GAP}px`,
         '& > *': {
-            flexBasis: {
-                xs: '100%',
-                md: 'calc(50% - 12px)',
-            },
+            flex: '1 1 240px',
+            maxWidth: CARD_MAX_WIDTH,
         },
     },
     spacer: {
@@ -147,6 +157,7 @@ export const Home: FC = () => {
                         <FormattedMessage
                             {...MESSAGES.wordmark}
                             values={{
+                                accountName: currentUser.account?.name ?? '',
                                 accent: chunks => (
                                     <Box
                                         component="span"
@@ -165,7 +176,12 @@ export const Home: FC = () => {
                 <Box
                     component="nav"
                     aria-label={formatMessage(MESSAGES.mainSections)}
-                    sx={styles.cards}
+                    sx={{
+                        ...styles.cards,
+                        maxWidth: getCardsMaxWidth(
+                            getColumnCount(allowedCards.length),
+                        ),
+                    }}
                 >
                     {allowedCards.map(card => (
                         <HomeCard key={card.id} card={card} />

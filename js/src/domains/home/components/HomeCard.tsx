@@ -18,6 +18,10 @@ const styles = {
         backgroundColor: 'background.paper',
         borderRadius: '12px',
         textAlign: 'center',
+        // Overrides the global `a:hover` underline, which beats `underline="none"` on specificity.
+        '&:hover': {
+            textDecoration: 'none',
+        },
         '&:focus-visible': {
             outline: '2px solid',
             outlineColor: 'primary.main',

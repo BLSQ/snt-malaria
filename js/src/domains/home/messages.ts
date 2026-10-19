@@ -7,7 +7,7 @@ export const MESSAGES = defineMessages({
     },
     wordmark: {
         id: 'iaso.snt_malaria.home.wordmark',
-        defaultMessage: 'SNT <accent>Malaria</accent>',
+        defaultMessage: 'SNT <accent>{accountName}</accent>',
     },
     subtitle: {
         id: 'iaso.snt_malaria.home.subtitle',
