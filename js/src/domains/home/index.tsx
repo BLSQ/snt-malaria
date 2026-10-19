@@ -36,7 +36,7 @@ const HOME_CARDS: HomeCardConfig[] = [
         Icon: Vaccines,
         title: MESSAGES.interventionsTitle,
         caption: MESSAGES.interventionsCaption,
-        to: `/${baseUrls.settings}?tab=interventions`,
+        to: `/${baseUrls.interventions}`,
         permissions: [SETTINGS_READ],
     },
     {
@@ -44,8 +44,7 @@ const HOME_CARDS: HomeCardConfig[] = [
         Icon: Payments,
         title: MESSAGES.costSettingsTitle,
         caption: MESSAGES.costSettingsCaption,
-        // TODO: point to a dedicated cost settings page once it exists.
-        to: `/${baseUrls.settings}`,
+        to: `/${baseUrls.costManagement}`,
         permissions: [SETTINGS_READ],
     },
     {
@@ -88,6 +87,13 @@ const styles = {
         '& > *': {
             flexShrink: 0,
         },
+    },
+    wrapper: {
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        flexGrow: 1,
+        gap: 4,
     },
     titleBlock: {
         display: 'flex',
@@ -152,40 +158,43 @@ export const Home: FC = () => {
         <>
             <TopBar title={formatMessage(MESSAGES.title)} disableShadow />
             <PageContainer sx={styles.page}>
-                <Box sx={styles.titleBlock}>
-                    <Typography component="h1" sx={styles.wordmark}>
-                        <FormattedMessage
-                            {...MESSAGES.wordmark}
-                            values={{
-                                accountName: currentUser.account?.name ?? '',
-                                accent: chunks => (
-                                    <Box
-                                        component="span"
-                                        sx={styles.wordmarkAccent}
-                                    >
-                                        {chunks}
-                                    </Box>
-                                ),
-                            }}
-                        />
-                    </Typography>
-                    <Typography sx={styles.subtitle}>
-                        {formatMessage(MESSAGES.subtitle)}
-                    </Typography>
-                </Box>
-                <Box
-                    component="nav"
-                    aria-label={formatMessage(MESSAGES.mainSections)}
-                    sx={{
-                        ...styles.cards,
-                        maxWidth: getCardsMaxWidth(
-                            getColumnCount(allowedCards.length),
-                        ),
-                    }}
-                >
-                    {allowedCards.map(card => (
-                        <HomeCard key={card.id} card={card} />
-                    ))}
+                <Box sx={styles.wrapper}>
+                    <Box sx={styles.titleBlock}>
+                        <Typography component="h1" sx={styles.wordmark}>
+                            <FormattedMessage
+                                {...MESSAGES.wordmark}
+                                values={{
+                                    accountName:
+                                        currentUser.account?.name ?? '',
+                                    accent: chunks => (
+                                        <Box
+                                            component="span"
+                                            sx={styles.wordmarkAccent}
+                                        >
+                                            {chunks}
+                                        </Box>
+                                    ),
+                                }}
+                            />
+                        </Typography>
+                        <Typography sx={styles.subtitle}>
+                            {formatMessage(MESSAGES.subtitle)}
+                        </Typography>
+                    </Box>
+                    <Box
+                        component="nav"
+                        aria-label={formatMessage(MESSAGES.mainSections)}
+                        sx={{
+                            ...styles.cards,
+                            maxWidth: getCardsMaxWidth(
+                                getColumnCount(allowedCards.length),
+                            ),
+                        }}
+                    >
+                        {allowedCards.map(card => (
+                            <HomeCard key={card.id} card={card} />
+                        ))}
+                    </Box>
                 </Box>
                 <Box sx={styles.spacer} />
                 <ContributorsFooter />
