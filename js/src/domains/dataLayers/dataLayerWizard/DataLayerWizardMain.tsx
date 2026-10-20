@@ -1,4 +1,5 @@
 import React, { FC } from 'react';
+import { LoadingSpinner } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
 import { StepDataMain } from './steps/StepDataMain';
@@ -16,8 +17,17 @@ export const DataLayerWizardMain: FC<Props> = ({
     preview,
     orgUnits,
 }) => {
-    const { formik, staged, setGridValue, addGridYear, removeGridYear } =
-        controller;
+    const {
+        formik,
+        staged,
+        setGridValue,
+        addGridYear,
+        removeGridYear,
+        isLoadingGridValues,
+    } = controller;
+    if (isLoadingGridValues) {
+        return <LoadingSpinner />;
+    }
     return (
         <ExtendedFormikProvider formik={formik}>
             <StepDataMain

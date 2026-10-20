@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { currentYear } from '../../../constants/shared';
 import { MESSAGES } from '../messages';
 import { WizardLayerType } from './constants';
+import { MetricValueGrid } from './metricValuesToGrid';
 
 export const WIZARD_STEPS = {
     TYPE: 0,
@@ -25,9 +26,10 @@ const mergeYearValues = (
 /** A standard layer's table always starts with a single column for the current year. */
 const DEFAULT_GRID_YEARS = [currentYear];
 
-/** Editing an existing layer runs Details then Legend only — its type is fixed and
- *  its values are managed elsewhere — which skips Data, so the two runs aren't a
- *  contiguous span of `WIZARD_STEPS` and each is listed explicitly. */
+/** Editing an existing layer never runs Type (its type is fixed). Only a standard
+ *  layer's values are editable in the wizard — OpenHexa ones are refreshed from the
+ *  source and a composite's graph has its own editor — so the others skip Data too,
+ *  and the runs aren't a contiguous span of `WIZARD_STEPS`. */
 export const CREATE_STEPS: WizardStep[] = [
     WIZARD_STEPS.TYPE,
     WIZARD_STEPS.DETAILS,
@@ -36,6 +38,11 @@ export const CREATE_STEPS: WizardStep[] = [
 ];
 export const EDIT_STEPS: WizardStep[] = [
     WIZARD_STEPS.DETAILS,
+    WIZARD_STEPS.LEGEND,
+];
+export const EDIT_STANDARD_STEPS: WizardStep[] = [
+    WIZARD_STEPS.DETAILS,
+    WIZARD_STEPS.DATA,
     WIZARD_STEPS.LEGEND,
 ];
 
@@ -55,7 +62,11 @@ type StagedState = {
     gridValues: Record<number, Record<number, string>>;
     /** Year columns currently shown in the table, in display order. */
     gridYears: number[];
+    /** Years already persisted for the layer, so a year column removed from the
+     *  table still gets its values deleted on submit. */
     importedYears?: number[];
+    /** Whether the table was edited since it was last seeded or submitted. */
+    gridDirty?: boolean;
     /** Persisted composite shell id, once the graph step creates it (2a keeps the
      *  editor in-flow). */
     compositeLayerId?: number;
@@ -125,6 +136,7 @@ export const useDataLayerWizard = () => {
         (orgUnitId: number, year: number, value: string) =>
             setStaged(prev => ({
                 ...prev,
+                gridDirty: true,
                 gridValues: {
                     ...prev.gridValues,
                     [orgUnitId]: mergeYearValues(prev.gridValues[orgUnitId], {
@@ -142,6 +154,7 @@ export const useDataLayerWizard = () => {
                     ? prev
                     : {
                           ...prev,
+                          gridDirty: true,
                           gridYears: sortedUniqueYears([
                               ...prev.gridYears,
                               year,
@@ -155,6 +168,7 @@ export const useDataLayerWizard = () => {
         (year: number) =>
             setStaged(prev => ({
                 ...prev,
+                gridDirty: true,
                 gridYears: prev.gridYears.filter(y => y !== year),
                 gridValues: Object.fromEntries(
                     Object.entries(prev.gridValues).map(
@@ -189,8 +203,21 @@ export const useDataLayerWizard = () => {
                         );
                     },
                 );
-                return { ...prev, gridYears, gridValues };
+                return { ...prev, gridYears, gridValues, gridDirty: true };
             }),
+        [],
+    );
+
+    /** Fills the table with a layer's persisted values, e.g. when editing it. */
+    const seedGrid = useCallback(
+        ({ values, years }: MetricValueGrid) =>
+            setStaged(prev => ({
+                ...prev,
+                gridValues: values,
+                gridYears: years.length > 0 ? years : DEFAULT_GRID_YEARS,
+                importedYears: years,
+                gridDirty: false,
+            })),
         [],
     );
 
@@ -238,6 +265,7 @@ export const useDataLayerWizard = () => {
         addGridYear,
         removeGridYear,
         mergeGridFromCsv,
+        seedGrid,
         isCompositeGraphStep,
     };
 };

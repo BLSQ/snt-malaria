@@ -16,7 +16,7 @@ import { useCancelOpenHexaImport } from '../hooks/useCancelOpenHexaImport';
 import { useCompleteMetricType } from '../hooks/useCompleteMetricType';
 import { useCreateOrUpdateMetricType } from '../hooks/useCreateOrUpdateMetricType';
 import { useDeleteMetricType } from '../hooks/useDeleteMetricType';
-import { useGetMetricTypes } from '../hooks/useGetMetrics';
+import { useGetMetricTypes, useGetMetricValues } from '../hooks/useGetMetrics';
 import { useImportMetricValuesJson } from '../hooks/useImportMetricValuesJson';
 import { useImportOpenHexaDataLayer } from '../hooks/useImportOpenHexaDataLayer';
 import {
@@ -32,7 +32,9 @@ import {
 } from '../types/metrics';
 import { WizardLayerType } from './constants';
 import { parseYearlyCsv } from './gridCsv';
+import { metricValuesToGrid } from './metricValuesToGrid';
 import {
+    EDIT_STANDARD_STEPS,
     EDIT_STEPS,
     useDataLayerWizard,
     WIZARD_STEP_LABELS,
@@ -107,13 +109,16 @@ export const useDataLayerWizardController = ({
     const [isOpen, setIsOpen] = useState(false);
     const [discardOpen, setDiscardOpen] = useState(false);
     const [backConfirmOpen, setBackConfirmOpen] = useState(false);
-    /** The layer being edited (Details + Legend only); undefined for a create run. */
+    /** The layer being edited; undefined for a create run. */
     const [editing, setEditing] = useState<{
         metricType: MetricType;
         compositeLayer?: CompositeLayerListItem;
     }>();
 
     const wizard = useDataLayerWizard();
+    // The edited layer's table is seeded once per edit run: its values query
+    // refetches after the submit's import, which must not overwrite the table.
+    const seededMetricTypeId = useRef<number>();
     const { staged, patch, reset: resetStaged } = wizard;
 
     const { data: allMetricTypes } = useGetMetricTypes<MetricType>(
@@ -204,8 +209,13 @@ export const useDataLayerWizardController = ({
     const openForEdit = useCallback(
         (metricType: MetricType, compositeLayer?: CompositeLayerListItem) => {
             const model = editFormModel(metricType, compositeLayer);
+            const layerType = layerTypeOf(model);
+            seededMetricTypeId.current = undefined;
             formik.resetForm({ values: model });
-            wizard.start(EDIT_STEPS, { layerType: layerTypeOf(model) });
+            wizard.start(
+                layerType === 'data' ? EDIT_STANDARD_STEPS : EDIT_STEPS,
+                { layerType },
+            );
             setEditing({ metricType, compositeLayer });
             setIsOpen(true);
         },
@@ -220,8 +230,11 @@ export const useDataLayerWizardController = ({
     }, [resetAll, onClosed]);
 
     const hasProgress = useMemo(
-        () => formik.dirty || (!editing && wizard.activeStepIndex > 0),
-        [formik.dirty, wizard.activeStepIndex, editing],
+        () =>
+            formik.dirty ||
+            Boolean(staged.gridDirty) ||
+            (!editing && wizard.activeStepIndex > 0),
+        [formik.dirty, staged.gridDirty, wizard.activeStepIndex, editing],
     );
 
     const requestClose = useCallback(() => {
@@ -359,7 +372,7 @@ export const useDataLayerWizardController = ({
                 years,
                 values,
             });
-            patch({ importedYears: staged.gridYears });
+            patch({ importedYears: staged.gridYears, gridDirty: false });
             return response;
         },
         [
@@ -532,6 +545,20 @@ export const useDataLayerWizardController = ({
         patch,
     ]);
 
+    const editedStandardMetricTypeId =
+        editing && staged.layerType === 'data'
+            ? editing.metricType.id
+            : undefined;
+    const { data: editedMetricValues, isLoading: isLoadingEditedValues } =
+        useGetMetricValues({ metricTypeId: editedStandardMetricTypeId });
+    const { seedGrid } = wizard;
+    useEffect(() => {
+        if (!editedStandardMetricTypeId || !editedMetricValues) return;
+        if (seededMetricTypeId.current === editedStandardMetricTypeId) return;
+        seededMetricTypeId.current = editedStandardMetricTypeId;
+        seedGrid(metricValuesToGrid(editedMetricValues));
+    }, [editedStandardMetricTypeId, editedMetricValues, seedGrid]);
+
     // Saves (or finalises) a standard/OpenHexa layer's metadata, then explicitly completes it -
     // this is what turns a wizard-created shell into a real, listed layer. Skipped when the
     // layer is already complete (e.g. OpenHexa's import task got there first), to avoid an
@@ -575,6 +602,9 @@ export const useDataLayerWizardController = ({
     const submitEdit = useCallback(async () => {
         const values = formik.values;
         const legend_config = legendPayload();
+        if (editing && staged.layerType === 'data' && staged.gridDirty) {
+            await submitGridValues(editing.metricType.id);
+        }
         if (editing?.compositeLayer) {
             const saved = await updateComposite({
                 id: editing.compositeLayer.id,
@@ -591,6 +621,9 @@ export const useDataLayerWizardController = ({
         close();
     }, [
         editing,
+        staged.layerType,
+        staged.gridDirty,
+        submitGridValues,
         formik.values,
         legendPayload,
         updateComposite,
@@ -728,6 +761,9 @@ export const useDataLayerWizardController = ({
         canAdvance,
         isEditing,
         editingMetricType: editing?.metricType,
+        isLoadingGridValues:
+            Boolean(editedStandardMetricTypeId) && isLoadingEditedValues,
+        steps: wizard.steps,
         layerType: staged.layerType,
         setLayerType,
         staged,

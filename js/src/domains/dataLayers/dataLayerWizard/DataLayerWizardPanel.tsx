@@ -72,6 +72,7 @@ export const DataLayerWizardPanel: FC<Props> = ({
     const { formatMessage } = useSafeIntl();
     const {
         formik,
+        steps,
         stepLabels,
         titleMessage,
         activeStep,
@@ -131,16 +132,14 @@ export const DataLayerWizardPanel: FC<Props> = ({
                         indicatorColor="primary"
                         onChange={(_event, step) => goToStep(step)}
                     >
-                        <Tab
-                            value={WIZARD_STEPS.DETAILS}
-                            label={formatMessage(MESSAGES.wizardStepDetails)}
-                            sx={styles.tab}
-                        />
-                        <Tab
-                            value={WIZARD_STEPS.LEGEND}
-                            label={formatMessage(MESSAGES.wizardStepLegend)}
-                            sx={styles.tab}
-                        />
+                        {steps.map((step, index) => (
+                            <Tab
+                                key={step}
+                                value={step}
+                                label={stepLabels[index]}
+                                sx={styles.tab}
+                            />
+                        ))}
                     </Tabs>
                 ) : (
                     <WizardStepRail
