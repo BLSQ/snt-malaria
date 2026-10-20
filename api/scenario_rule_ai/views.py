@@ -1,19 +1,25 @@
 import logging
 
-from django.db.models import F
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from plugins.snt_malaria.api.ai_chat.mixins import AIChatAttachmentViewSetMixin
-from plugins.snt_malaria.models import Intervention, ScenarioRule
+from plugins.snt_malaria.api.scenario_rules.override_serializers import intervention_overrides_representation
+from plugins.snt_malaria.models import ScenarioRule
 from plugins.snt_malaria.services.ai_chat import classify_anthropic_error
 
 from .agent import generate_scenario_rules
-from .matching_criteria import jsonlogic_to_matching_criteria
 from .permissions import ScenarioRuleAIPermission
-from .rule_set import build_account_metric_types, persist_scenario_rule_set
+from .rule_set import (
+    build_account_grants,
+    build_account_interventions,
+    build_account_metric_types,
+    build_account_org_units,
+    org_unit_selection_to_ai_context,
+    persist_scenario_rule_set,
+)
 from .serializers import (
     ScenarioRuleAIRequestSerializer,
     ScenarioRuleAIResponseSerializer,
@@ -26,18 +32,15 @@ logger = logging.getLogger(__name__)
 
 
 def _rule_to_ai_context(rule: ScenarioRule, account_org_unit_ids: list[int]) -> dict:
-    """Whitelisted view of a rule sent to the AI: definition only - name, criteria (thresholds, not
-    values), interventions, color. Never the real `org_units_matched`/`org_units_excluded`/
-    `org_units_included` ids (tied to a resolved health-metric condition) or any MetricValue data -
-    `is_match_all` here is only a derived boolean (does org_units_included amount to "everyone"?),
-    never the ids themselves."""
-    match_all = ScenarioRule.covers_all_org_units(rule.org_units_included, account_org_unit_ids=account_org_unit_ids)
+    """Whitelisted view of a rule sent to the AI: its definition only - name, criteria (thresholds,
+    not values), the org units the user hand-picked, interventions and their overrides, color. Never
+    `org_units_matched` (tied to a resolved health-metric condition) or any MetricValue data."""
     return {
         "id": rule.id,
         "name": rule.name,
-        "is_match_all": match_all,
-        "matching_criteria": [] if match_all else jsonlogic_to_matching_criteria(rule.matching_criteria),
+        **org_unit_selection_to_ai_context(rule, account_org_unit_ids),
         "interventions": [intervention.id for intervention in rule.interventions.all()],
+        "intervention_overrides": intervention_overrides_representation(rule),
         "color": rule.color,
     }
 
@@ -82,15 +85,14 @@ class ScenarioRuleAIViewSet(AIChatAttachmentViewSetMixin, viewsets.ViewSet):
             return Response({"error": self.API_KEY_MISSING_ERROR}, status=status.HTTP_400_BAD_REQUEST)
 
         metric_types = build_account_metric_types(account)
-        interventions = list(
-            Intervention.objects.filter(intervention_category__account=account)
-            .annotate(category_name=F("intervention_category__name"))
-            .values("id", "name", "category_name")
-        )
-        account_org_unit_ids = ScenarioRule.resolve_all_org_unit_ids(account)
+        interventions = build_account_interventions(account)
+        org_units = build_account_org_units(account)
+        account_org_unit_ids = [org_unit["id"] for org_unit in org_units]
         current_rules = [
             _rule_to_ai_context(rule, account_org_unit_ids)
-            for rule in scenario.rules.order_by("priority").prefetch_related("interventions")
+            for rule in scenario.rules.order_by("priority").prefetch_related(
+                "interventions", "scenarioruleintervention_set__cost_overrides"
+            )
         ]
 
         try:
@@ -102,6 +104,9 @@ class ScenarioRuleAIViewSet(AIChatAttachmentViewSetMixin, viewsets.ViewSet):
                 api_key=api_key,
                 current_rules=current_rules or None,
                 attachments=attachments,
+                grants=build_account_grants(account),
+                org_units=org_units,
+                scenario_years=scenario.years,
             )
         except Exception as e:
             status_code, body = classify_anthropic_error(
@@ -113,7 +118,11 @@ class ScenarioRuleAIViewSet(AIChatAttachmentViewSetMixin, viewsets.ViewSet):
             return Response(result, status=status.HTTP_200_OK)
 
         try:
-            persisted_rules = persist_scenario_rule_set(scenario, result["rules"], self.get_serializer_context())
+            persisted_rules = persist_scenario_rule_set(
+                scenario,
+                result["rules"],
+                {**self.get_serializer_context(), "account_org_unit_ids": account_org_unit_ids},
+            )
         except serializers.ValidationError as e:
             logger.warning("Scenario Rule AI produced an invalid rule set: %s", e)
             return Response(

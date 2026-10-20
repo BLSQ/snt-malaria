@@ -78,7 +78,8 @@ export const ScenarioRulesHeader: FC<Props> = ({
 export const ScenarioRulesActions: FC<
     Pick<Props, 'hasAiApiKey' | 'showAIChat' | 'onToggleAIChat'>
 > = ({ hasAiApiKey, showAIChat, onToggleAIChat }) => {
-    const { isScenarioEditable, startEditingRule } = usePlanningContext();
+    const { isScenarioEditable, isEditing, startEditingRule } =
+        usePlanningContext();
     const { open } = useSidePanelContext();
 
     if (!isScenarioEditable) {
@@ -87,7 +88,7 @@ export const ScenarioRulesActions: FC<
 
     return (
         <>
-            {hasAiApiKey && (
+            {hasAiApiKey && !isEditing && (
                 <IconButton
                     onClick={() => onToggleAIChat?.()}
                     color={showAIChat ? 'primary' : 'action'}

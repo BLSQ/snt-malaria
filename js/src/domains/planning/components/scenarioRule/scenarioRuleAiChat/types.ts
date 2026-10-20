@@ -2,7 +2,10 @@ import {
     AIChatRequest,
     AIChatResponse,
 } from '../../../../../hooks/aiChat/types';
-import { MetricTypeCriterion } from '../../../types/scenarioRule';
+import {
+    MetricTypeCriterion,
+    RuleInterventionOverride,
+} from '../../../types/scenarioRule';
 
 // The rule set the AI proposes - and, once generated, has already persisted server-side. Same flat
 // shape as MetricTypeCriterion, so no jsonlogic conversion is needed anywhere in this feature.
@@ -11,7 +14,10 @@ export type GeneratedScenarioRuleSpec = {
     name: string;
     is_match_all: boolean;
     matching_criteria: MetricTypeCriterion[];
+    org_units_included: number[];
+    org_units_excluded: number[];
     interventions: number[];
+    intervention_overrides: RuleInterventionOverride[];
     color?: string;
 };
 
