@@ -35,11 +35,14 @@ const styles = {
     },
     clickableCard: {
         cursor: 'pointer',
-        transition: 'background-color 150ms',
-        '&:hover': { backgroundColor: 'action.hover' },
+        transition: 'border-color 150ms',
+        '&:hover': {
+            borderColor: theme => alpha(theme.palette.primary.main, 0.6),
+        },
     },
     selectedCard: {
         borderColor: 'primary.main',
+        '&:hover': { borderColor: 'primary.main' },
     },
     leading: { mr: '-2px', display: 'inline-flex' },
     iconTile: {

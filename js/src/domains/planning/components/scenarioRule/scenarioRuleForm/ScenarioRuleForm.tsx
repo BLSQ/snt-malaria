@@ -47,6 +47,9 @@ const styles = {
         flexGrow: 1,
         // The placeholder is the auto-generated rule name that is actually
         // used when the field is left empty, so style it as a real value.
+        '& .MuiInputBase-root': {
+            backgroundColor: 'background.paper',
+        },
         '& .MuiInputBase-input::placeholder': {
             color: 'text.primary',
             opacity: 1,
@@ -136,7 +139,7 @@ export const ScenarioRuleForm: FC<Props> = ({
 
     return (
         <Box sx={styles.formRoot}>
-            <Stack spacing={3} sx={styles.scrollableSteps}>
+            <Stack spacing={1.5} sx={styles.scrollableSteps}>
                 <RuleStepSection
                     step={1}
                     title={formatMessage(MESSAGES.ruleStepRegion)}
@@ -176,6 +179,9 @@ export const ScenarioRuleForm: FC<Props> = ({
                     />
                     <RuleStepSubSectionHeader
                         title={formatMessage(MESSAGES.manualSelection)}
+                        description={formatMessage(
+                            MESSAGES.manualSelectionDescription,
+                        )}
                     />
                     <OrgUnitScopeSelector
                         interventionTypeId={interventionTypeId}

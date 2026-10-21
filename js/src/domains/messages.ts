@@ -612,6 +612,11 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenarioRule.manualSelection',
         defaultMessage: 'Manual selection',
     },
+    manualSelectionDescription: {
+        id: 'iaso.snt_malaria.scenarioRule.manualSelectionDescription',
+        defaultMessage:
+            'Add districts by hand, or exclude ones that match the criteria.',
+    },
     mapView: {
         id: 'iaso.snt_malaria.label.mapView',
         defaultMessage: 'Map',
@@ -878,7 +883,7 @@ export const MESSAGES = defineMessages({
     ruleStepRegionDescription: {
         id: 'iaso.snt_malaria.scenarioRule.ruleStepRegionDescription',
         defaultMessage:
-            'Select the areas this rule applies to. Districts that meet all selection criteria are included in this rule. Use the tree to add or exclude districts by hand.',
+            'Choose the districts this rule applies to, using criteria, manual selection, or both.',
     },
     selectionCriteriaDescription: {
         id: 'iaso.snt_malaria.scenarioRule.selectionCriteriaDescription',
@@ -888,7 +893,7 @@ export const MESSAGES = defineMessages({
     ruleStepInterventionsDescription: {
         id: 'iaso.snt_malaria.scenarioRule.ruleStepInterventionsDescription',
         defaultMessage:
-            'Add the interventions this rule assigns to its matching districts. Select an intervention to choose its deployment years, cost item values and grant in the Overrides tab.',
+            'Add the interventions this rule assigns to its districts. Select an intervention to choose its years and override its cost settings.',
     },
     ruleStepNameAndColorDescription: {
         id: 'iaso.snt_malaria.scenarioRule.ruleStepNameAndColorDescription',
