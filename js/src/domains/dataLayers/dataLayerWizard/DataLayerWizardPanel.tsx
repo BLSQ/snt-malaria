@@ -34,7 +34,7 @@ const styles: SxStyles = {
         gap: 1.5,
     },
     title: { fontWeight: 600, flexGrow: 1 },
-    body: { flexGrow: 1, overflow: 'auto', p: 2 },
+    body: { flexGrow: 1, overflow: 'auto', px: 2, my: 2 },
     bodyFlush: {
         flexGrow: 1,
         minHeight: 0,

@@ -41,7 +41,7 @@ const styles = {
         minHeight: 0,
         overflow: 'auto',
         px: 2,
-        pb: 2,
+        mb: 2,
     },
     header: {
         position: 'sticky',

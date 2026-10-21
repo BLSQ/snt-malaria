@@ -29,7 +29,8 @@ const styles = {
         flex: '1 1 auto',
         minHeight: 0,
         overflowY: 'auto',
-        p: 2,
+        my: 2,
+        px: 2,
     },
     resetMapLayerButton: {
         flex: '0 0 auto',
@@ -40,7 +41,6 @@ const styles = {
     coverage: {
         flex: '0 0 auto',
         px: 2,
-        pt: 1.5,
         pb: 2,
     },
     ruleNameInput: {
