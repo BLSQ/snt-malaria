@@ -164,7 +164,8 @@ export const ScenarioRuleForm: FC<Props> = ({
                         touched={touched.matching_criteria}
                         onUpdateField={setChildFieldValueAndState}
                         footerAction={
-                            mapMetricTypeId !== undefined && (
+                            mapMetricTypeId !== undefined &&
+                            values.matching_criteria.length > 0 && (
                                 <Button
                                     variant="text"
                                     size="small"
