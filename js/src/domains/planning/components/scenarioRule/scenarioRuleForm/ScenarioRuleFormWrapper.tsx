@@ -139,6 +139,13 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         ],
     );
 
+    const canSubmit =
+        formik.isValid &&
+        interventions.length > 0 &&
+        !isAwaitingFirstResult &&
+        !ruleMatches.isLoading &&
+        matchedOrgUnitIds.length > 0;
+
     const onPreviewChangeRef = useRef(onPreviewChange);
     onPreviewChangeRef.current = onPreviewChange;
 
@@ -159,7 +166,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                     title={title}
                     onCancel={onClose}
                     onSubmit={formik.handleSubmit}
-                    disabled={isSubmittingRule || !formik.isValid}
+                    disabled={isSubmittingRule || !canSubmit}
                 />
             }
             isLoading={isSubmittingRule}

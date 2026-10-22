@@ -40,28 +40,14 @@ const useValidation = () => {
             Yup.object().shape({
                 name: Yup.string(),
                 interventions: Yup.array().of(Yup.number().required()).min(1),
-                matching_criteria: Yup.array()
-                    .of(
-                        Yup.object().shape({
-                            metric_type: Yup.number().required(),
-                            operator: Yup.string().required(),
-                            value: Yup.number(),
-                            string_value: Yup.string(),
-                        }),
-                    )
-                    .test(
-                        'criteria-or-inclusions',
-                        'required',
-                        function test(value) {
-                            const { org_units_included } = this.parent;
-                            if (
-                                org_units_included &&
-                                String(org_units_included).length > 0
-                            )
-                                return true;
-                            return (value ?? []).length >= 1;
-                        },
-                    ),
+                matching_criteria: Yup.array().of(
+                    Yup.object().shape({
+                        metric_type: Yup.number().required(),
+                        operator: Yup.string().required(),
+                        value: Yup.number(),
+                        string_value: Yup.string(),
+                    }),
+                ),
             }),
         [],
     );
