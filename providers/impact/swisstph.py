@@ -10,6 +10,7 @@ from plugins.snt_malaria.providers.impact.base import (
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
     ImpactProviderMeta,
+    ImpactRefOption,
     ImpactResult,
     InterventionMappingError,
     MatchResult,
@@ -181,6 +182,21 @@ class SwissTPHImpactProvider(ImpactProvider):
             .distinct()
             .order_by("age_group")
         )
+
+    def get_available_impact_refs(self) -> list[ImpactRefOption]:
+        options = [
+            ImpactRefOption(ref=column, label=self._deployed_column_label(column)) for column in KNOWN_DEPLOYED_COLUMNS
+        ]
+        return sorted(options, key=lambda option: option.label.lower())
+
+    def is_known_impact_ref(self, impact_ref: str) -> bool:
+        columns = [column.strip() for column in impact_ref.split(",")]
+        return all(column in KNOWN_DEPLOYED_COLUMNS for column in columns)
+
+    @staticmethod
+    def _deployed_column_label(column: str) -> str:
+        db_column = SwissTPHImpactData._meta.get_field(column).db_column
+        return db_column.removeprefix("deployed_int_")
 
     def _check_unmatched_org_units(self, reference_to_org_unit, matched_references) -> MatchWarnings:
         """Classify unmatched org units into 'not found' vs 'unmatched interventions'.

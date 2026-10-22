@@ -145,6 +145,15 @@ class FakeProviderInterventionMappingTests(SNTMalariaTestCase):
             "impact_3",
         )
 
+    def test_available_impact_refs_are_the_known_refs(self):
+        refs = [option.ref for option in self.provider.get_available_impact_refs()]
+        self.assertEqual(refs, sorted(INTERVENTION_EFFECT.keys()))
+
+    def test_is_known_impact_ref(self):
+        self.assertTrue(self.provider.is_known_impact_ref("impact_1"))
+        self.assertFalse(self.provider.is_known_impact_ref("impact_99"))
+        self.assertFalse(self.provider.is_known_impact_ref(""))
+
 
 class FakeProviderMatchImpactTests(SNTMalariaTestCase):
     """Integration tests for match_impact_bulk using real ORM rows."""

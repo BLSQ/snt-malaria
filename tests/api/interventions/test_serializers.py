@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch
 
 from iaso.models.base import Account
 from iaso.test import APITestCase
@@ -100,3 +100,50 @@ class InterventionDetailWriteSerializerTests(APITestCase):
         self.assertEqual(intervention.name, intervention_data["name"])
         self.assertEqual(intervention.impact_ref, intervention_data["impact_ref"])
         self.assertEqual(intervention.cost_breakdown_lines.count(), 0)
+
+    def _validate_impact_ref(self, impact_ref):
+        serializer = InterventionDetailWriteSerializer(
+            instance=self.intervention_vaccination_rts,
+            data={"impact_ref": impact_ref},
+            partial=True,
+            context=self.context,
+        )
+        return serializer.is_valid(), serializer
+
+    @patch("plugins.snt_malaria.api.interventions.serializers.get_provider_for_account")
+    def test_impact_ref_unknown_to_provider_is_rejected(self, mock_get_provider):
+        mock_provider = MagicMock()
+        mock_provider.is_known_impact_ref.return_value = False
+        mock_get_provider.return_value = mock_provider
+
+        is_valid, serializer = self._validate_impact_ref("unknown_ref")
+
+        self.assertFalse(is_valid)
+        self.assertIn("impact_ref", serializer.errors)
+        mock_provider.is_known_impact_ref.assert_called_once_with("unknown_ref")
+
+    @patch("plugins.snt_malaria.api.interventions.serializers.get_provider_for_account")
+    def test_impact_ref_known_to_provider_is_accepted_and_stripped(self, mock_get_provider):
+        mock_provider = MagicMock()
+        mock_provider.is_known_impact_ref.return_value = True
+        mock_get_provider.return_value = mock_provider
+
+        is_valid, serializer = self._validate_impact_ref("  smc:pmc ")
+
+        self.assertTrue(is_valid, serializer.errors)
+        self.assertEqual(serializer.validated_data["impact_ref"], "smc:pmc")
+
+    @patch("plugins.snt_malaria.api.interventions.serializers.get_provider_for_account")
+    def test_empty_impact_ref_is_accepted_without_asking_provider(self, mock_get_provider):
+        is_valid, serializer = self._validate_impact_ref("")
+
+        self.assertTrue(is_valid, serializer.errors)
+        mock_get_provider.assert_not_called()
+
+    @patch("plugins.snt_malaria.api.interventions.serializers.get_provider_for_account")
+    def test_any_impact_ref_is_accepted_without_provider(self, mock_get_provider):
+        mock_get_provider.return_value = None
+
+        is_valid, serializer = self._validate_impact_ref("anything")
+
+        self.assertTrue(is_valid, serializer.errors)

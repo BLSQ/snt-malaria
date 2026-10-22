@@ -7,6 +7,7 @@ from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import
     InterventionCostBreakdownLineWriteSerializer,
 )
 from plugins.snt_malaria.models import Grant, Intervention, InterventionCostBreakdownLine
+from plugins.snt_malaria.providers.impact import get_provider_for_account
 
 
 class InterventionSerializer(serializers.ModelSerializer):
@@ -80,6 +81,15 @@ class InterventionDetailWriteSerializer(serializers.ModelSerializer):
         if grant.account_id != account.id:
             raise serializers.ValidationError(_("Grant not found."))
         return grant
+
+    def validate_impact_ref(self, impact_ref):
+        impact_ref = impact_ref.strip()
+        if not impact_ref:
+            return impact_ref
+        provider = get_provider_for_account(self.context["request"].user.iaso_profile.account)
+        if provider is not None and not provider.is_known_impact_ref(impact_ref):
+            raise serializers.ValidationError(_("Unknown impact reference for the configured impact provider."))
+        return impact_ref
 
     def update(self, instance, validated_data):
         cost_breakdown_lines_data = validated_data.pop("cost_breakdown_lines", None)

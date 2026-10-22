@@ -33,6 +33,7 @@ from plugins.snt_malaria.providers.impact.base import (
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
     ImpactProviderMeta,
+    ImpactRefOption,
     ImpactResult,
     IncompleteConfigError,
     InterventionMappingError,
@@ -218,6 +219,9 @@ class FakeImpactProvider(ImpactProvider):
 
     def get_age_groups(self) -> list[str]:
         return list(AGE_GROUPS)
+
+    def get_available_impact_refs(self) -> list[ImpactRefOption]:
+        return [ImpactRefOption(ref=ref, label=ref) for ref in sorted(KNOWN_IMPACT_REFS)]
 
     @staticmethod
     def _map_intervention(intervention: Intervention) -> str:

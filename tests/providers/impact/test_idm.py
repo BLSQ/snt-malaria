@@ -234,6 +234,24 @@ class IDMMapInterventionTests(TestCase):
             self.provider._map_intervention(intervention)
         self.assertIn("intervention_package not found", str(context.exception))
 
+    def test_available_impact_refs_are_built_from_packages_without_baseline(self):
+        refs = {option.ref for option in self.provider.get_available_impact_refs()}
+        expected = {f"{package['type']}:{package['option']}" for package in INTERVENTION_PACKAGES if package["id"] != 1}
+        self.assertEqual(refs, expected)
+
+    def test_available_impact_refs_use_description_as_label(self):
+        IDMInterventionPackage.objects.using("default").filter(id=5).update(
+            description="Perennial malaria chemoprevention"
+        )
+        labels_by_ref = {option.ref: option.label for option in self.provider.get_available_impact_refs()}
+        self.assertEqual(labels_by_ref["smc:pmc"], "Perennial malaria chemoprevention")
+        self.assertEqual(labels_by_ref["smc:smc"], "smc:smc")
+
+    def test_is_known_impact_ref(self):
+        self.assertTrue(self.provider.is_known_impact_ref("smc:pmc"))
+        self.assertFalse(self.provider.is_known_impact_ref("smc:cm"))
+        self.assertFalse(self.provider.is_known_impact_ref("none:none"))
+
 
 class IDMDatabaseIntegrationTests(TestCase):
     """Integration tests that query actual IDM tables seeded with test data.

@@ -692,6 +692,8 @@
     "iaso.snt_malaria.compareCustomize.warningDistrictsCount": "{count, plural, one {# district} other {# districts}}",
     "iaso.snt_malaria.label.showDistricts": "Afficher les districts",
     "iaso.snt_malaria.label.hideDistricts": "Masquer les districts",
+    "iaso.snt_malaria.label.noImpactRefOption": "Ne pas assigner",
+    "iaso.snt_malaria.label.unknownImpactRefOption": "{ref} (inconnue)",
     "iaso.snt_malaria.compareCustomize.yearRangeImpactData": "Données d'impact",
     "iaso.snt_malaria.compareCustomize.yearRangeNone": "Aucune"
 }

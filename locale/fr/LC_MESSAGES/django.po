@@ -65,6 +65,10 @@ msgstr "Catégorie d'intervention inconnue."
 msgid "Grant not found."
 msgstr "Financement inconnu."
 
+#: plugins/snt_malaria/api/interventions/serializers.py
+msgid "Unknown impact reference for the configured impact provider."
+msgstr "Référence d'impact inconnue pour le fournisseur d'impact configuré."
+
 #: plugins/snt_malaria/api/interventions/views.py
 msgid ""
 "Cannot delete this intervention because it is used by one or more scenario "

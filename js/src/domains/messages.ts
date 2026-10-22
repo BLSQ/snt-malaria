@@ -510,6 +510,14 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.impactRef',
         defaultMessage: 'Impact Provider Reference',
     },
+    noImpactRefOption: {
+        id: 'iaso.snt_malaria.label.noImpactRefOption',
+        defaultMessage: "Don't assign",
+    },
+    unknownImpactRefOption: {
+        id: 'iaso.snt_malaria.label.unknownImpactRefOption',
+        defaultMessage: '{ref} (unknown)',
+    },
     impactSettingsLabel: {
         id: 'iaso.snt_malaria.impactSettings.label',
         defaultMessage: 'Impact settings',
