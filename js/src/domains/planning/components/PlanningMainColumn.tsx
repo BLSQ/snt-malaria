@@ -18,10 +18,9 @@ const styles = {
     },
     overridesScroll: {
         position: 'absolute',
-        inset: 0,
+        inset: theme => theme.spacing(0, 0, 2),
         overflow: 'auto',
         px: 2,
-        pb: 2,
     },
 } satisfies SxStyles;
 

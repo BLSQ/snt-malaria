@@ -19,8 +19,10 @@ const styles = {
         overflow: 'auto',
         position: 'relative',
         flexGrow: 1,
+        my: 2,
+        py: 0,
         '&:last-child': {
-            paddingBottom: 2,
+            paddingBottom: 0,
         },
     },
     cardContentFlush: {

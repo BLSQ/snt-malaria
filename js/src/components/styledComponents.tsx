@@ -7,9 +7,6 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
-// Theme spacing steps of padding MUI's CardContent applies on every side (see CardStyled).
-const CARD_CONTENT_PADDING = 2;
-
 export const PaperFullHeight = styled(Paper)(({ theme }) => ({
     height: `calc(100vh - ${theme.spacing(12)})`,
     backgroundColor: theme.palette.background.default,
@@ -84,19 +81,18 @@ export const CardScrollable = styled(Card)(({}) => ({
     overflow: 'hidden',
 }));
 
-/**
- * Sticky category header for the card-hosted lists (data layers, node library). The negative `top`
- * matters: `top: 0` would pin below `CardContent`'s padding, leaving a strip at the top of the
- * scrollport where rows scrolling past show above the header.
- */
+// Sticky category header for the card-hosted lists (data layers, node library).
 export const StickyListSubheader = styled(ListSubheader)(({ theme }) => ({
     position: 'sticky',
-    top: theme.spacing(-CARD_CONTENT_PADDING),
+    top: 0,
     zIndex: 2,
     backgroundColor: theme.palette.background.paper,
     color: theme.palette.text.primary,
-    paddingLeft: 0,
-    paddingRight: 0,
+    lineHeight: 1.5,
+    padding: theme.spacing(0, 0, 1.5),
+    '&:not(:first-child)': {
+        marginTop: theme.spacing(1.5),
+    },
 }));
 
 // Wraps a settings form inside its card, adding top spacing so it doesn't sit

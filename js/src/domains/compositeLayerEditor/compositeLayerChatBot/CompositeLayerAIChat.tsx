@@ -24,6 +24,7 @@ type Props = {
 const chatStyles = {
     // The sidebar tabs already say "AI Mode"; the title is shown in the empty state instead.
     header: { display: 'none' },
+    messagesArea: { mt: 2, pt: 0 },
 } satisfies SxStyles;
 
 // Added to ChatPanel's own flex `gap` on both rows, so the two gaps stay equal.

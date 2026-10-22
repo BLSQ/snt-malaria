@@ -38,6 +38,7 @@ const styles = {
     // CardStyled's own header already shows the panel title, matching the rules panel's header
     // style - ChatPanel's built-in header (with its divider) would just duplicate it.
     chatHeader: { display: 'none' },
+    chatMessagesArea: { mt: 2, pt: 0 },
     emptyStateTitle: {
         display: 'flex',
         alignItems: 'center',
@@ -86,7 +87,10 @@ export const ScenarioRuleAIChat: FC<Props> = ({
                     placeholder={formatMessage(
                         MESSAGES.scenarioRuleAIPlaceholder,
                     )}
-                    sx={{ header: styles.chatHeader }}
+                    sx={{
+                        header: styles.chatHeader,
+                        messagesArea: styles.chatMessagesArea,
+                    }}
                     emptyState={
                         <Box>
                             <Box sx={styles.emptyStateTitle}>

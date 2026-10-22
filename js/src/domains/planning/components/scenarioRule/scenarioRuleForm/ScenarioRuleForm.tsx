@@ -29,7 +29,8 @@ const styles = {
         flex: '1 1 auto',
         minHeight: 0,
         overflowY: 'auto',
-        p: 2,
+        my: 2,
+        px: 2,
     },
     resetMapLayerButton: {
         flex: '0 0 auto',
@@ -40,13 +41,15 @@ const styles = {
     coverage: {
         flex: '0 0 auto',
         px: 2,
-        pt: 1.5,
         pb: 2,
     },
     ruleNameInput: {
         flexGrow: 1,
         // The placeholder is the auto-generated rule name that is actually
         // used when the field is left empty, so style it as a real value.
+        '& .MuiInputBase-root': {
+            backgroundColor: 'background.paper',
+        },
         '& .MuiInputBase-input::placeholder': {
             color: 'text.primary',
             opacity: 1,
@@ -136,7 +139,7 @@ export const ScenarioRuleForm: FC<Props> = ({
 
     return (
         <Box sx={styles.formRoot}>
-            <Stack spacing={3} sx={styles.scrollableSteps}>
+            <Stack spacing={1.5} sx={styles.scrollableSteps}>
                 <RuleStepSection
                     step={1}
                     title={formatMessage(MESSAGES.ruleStepRegion)}
@@ -161,7 +164,8 @@ export const ScenarioRuleForm: FC<Props> = ({
                         touched={touched.matching_criteria}
                         onUpdateField={setChildFieldValueAndState}
                         footerAction={
-                            mapMetricTypeId !== undefined && (
+                            mapMetricTypeId !== undefined &&
+                            values.matching_criteria.length > 0 && (
                                 <Button
                                     variant="text"
                                     size="small"
@@ -176,6 +180,9 @@ export const ScenarioRuleForm: FC<Props> = ({
                     />
                     <RuleStepSubSectionHeader
                         title={formatMessage(MESSAGES.manualSelection)}
+                        description={formatMessage(
+                            MESSAGES.manualSelectionDescription,
+                        )}
                     />
                     <OrgUnitScopeSelector
                         interventionTypeId={interventionTypeId}

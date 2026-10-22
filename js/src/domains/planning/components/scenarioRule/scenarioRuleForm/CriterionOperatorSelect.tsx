@@ -39,6 +39,9 @@ const HOVER_CHEVRON_CLASS = 'operatorToken-hoverChevron';
 const HOVER_TURN_PROPERTY = '--operator-hover-turn';
 const COUNTER_CLOCKWISE_OPERATORS: Operator[] = ['<', '<='];
 const HOVER_SWAP_TRANSITION = 'opacity 200ms, transform 200ms';
+const OPEN_SELECT = '& .MuiSelect-select[aria-expanded="true"]';
+const SWAPPED_SYMBOL = `&:hover .${SYMBOL_CLASS}, ${OPEN_SELECT} .${SYMBOL_CLASS}`;
+const SWAPPED_CHEVRON = `&:hover .${HOVER_CHEVRON_CLASS}, ${OPEN_SELECT} .${HOVER_CHEVRON_CLASS}`;
 
 const tokenStyles = {
     ...compactInputStyles,
@@ -77,11 +80,11 @@ const styles = {
         '& .MuiSelect-icon': {
             display: 'none',
         },
-        [`&:hover .${SYMBOL_CLASS}`]: {
+        [SWAPPED_SYMBOL]: {
             opacity: 0,
             transform: `rotate(var(${HOVER_TURN_PROPERTY})) scale(0.5)`,
         },
-        [`&:hover .${HOVER_CHEVRON_CLASS}`]: {
+        [SWAPPED_CHEVRON]: {
             opacity: 1,
             transform: 'none',
         },
