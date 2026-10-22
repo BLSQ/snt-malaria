@@ -79,14 +79,18 @@ export type ScenarioImpactMetrics = ImpactMetrics & {
     provider_meta: ImpactProviderMeta;
 };
 
-export type ScenarioMatchWarning = {
+export type ScenarioYearRange = {
     scenario: ScenarioDisplay;
-    orgUnits: OrgUnitRef[];
+    yearRange: [number, number];
+};
+
+export type MatchWarningOrgUnit = OrgUnitRef & {
+    scenarios: ScenarioDisplay[];
 };
 
 export type ImpactYearRange = {
-    min_year: number;
-    max_year: number;
+    min_year: number | null;
+    max_year: number | null;
 };
 
 export type ImpactAgeGroups = {

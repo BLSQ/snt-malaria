@@ -1,25 +1,17 @@
-import React, { FC, useState } from 'react';
+import React, { FC, ReactNode } from 'react';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import RemoveOutlinedIcon from '@mui/icons-material/RemoveOutlined';
-import {
-    Alert,
-    AlertTitle,
-    Box,
-    Button,
-    Chip,
-    IconButton,
-    Theme,
-    Typography,
-} from '@mui/material';
+import { Box, IconButton, Theme, Typography } from '@mui/material';
 import { blueGrey } from '@mui/material/colors';
 import { alpha } from '@mui/material/styles';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { DropdownOptions } from 'Iaso/types/utils';
+import { ColorDot } from '../../../components/ColorDot';
 import { YearRangeSlider } from '../../../components/YearRangeSlider';
 import { MESSAGES } from '../../messages';
-import { ImpactProviderMeta, ScenarioId, ScenarioMatchWarning } from '../types';
+import { ScenarioId } from '../types';
 import { getScenarioColor } from '../utils/colors';
 
 type Props = {
@@ -36,14 +28,11 @@ type Props = {
     yearRange?: [number, number];
     selectedYearRange?: [number, number];
     onYearRangeChange?: (range: [number, number]) => void;
-    showYearRangeError?: boolean;
     isYearRangeLoading?: boolean;
     ageGroups?: string[];
     selectedAgeGroup?: string;
     onAgeGroupChange?: (_key: string, value: unknown) => void;
-    orgUnitsNotFound?: ScenarioMatchWarning[];
-    orgUnitsWithUnmatchedInterventions?: ScenarioMatchWarning[];
-    providerMeta?: ImpactProviderMeta;
+    children?: ReactNode;
 };
 
 const styles = {
@@ -59,12 +48,6 @@ const styles = {
         '& .MuiInputLabel-shrink': {
             backgroundColor: 'transparent !important',
         },
-    },
-    scenarioDot: {
-        width: theme => theme.spacing(1.75),
-        height: theme => theme.spacing(1.75),
-        borderRadius: '50%',
-        flex: '0 0 auto',
     },
     iconButton: {
         p: 0.5,
@@ -99,12 +82,6 @@ const styles = {
         color: 'text.primary',
         mb: 1,
     },
-    chipContainer: {
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 0.5,
-        mt: 1,
-    },
     card: {
         backgroundColor: (theme: Theme) =>
             alpha(theme.palette.common.white, 0.5),
@@ -131,55 +108,12 @@ const styles = {
         display: 'flex',
         justifyContent: 'center',
     },
-    warningTitleRow: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
     cardBody: {
         position: 'relative',
         flex: 1,
         minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
-    },
-    alertsSection: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-        mt: 2,
-        flex: 1,
-        minHeight: 0,
-        overflowY: 'auto',
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none',
-        '&::-webkit-scrollbar': {
-            width: 0,
-            height: 0,
-        },
-    },
-    detailsButton: {
-        p: 0,
-        textTransform: 'none',
-        minWidth: 0,
-    },
-    alertBox: {
-        borderRadius: 3,
-        border: 'none',
-    },
-    alertBoxWarning: {
-        backgroundColor: (theme: Theme) =>
-            alpha(theme.palette.warning.light, 0.15),
-        '& .MuiAlert-icon': { color: 'warning.main' },
-    },
-    alertBoxInfo: {
-        backgroundColor: (theme: Theme) =>
-            alpha(theme.palette.info.light, 0.15),
-        '& .MuiAlert-icon': { color: 'info.main' },
-    },
-    scenarioChip: {
-        color: (theme: Theme) => theme.palette.common.white,
-        fontWeight: 500,
     },
 } satisfies SxStyles;
 
@@ -195,14 +129,11 @@ export const ConfigurationPanel: FC<Props> = ({
     yearRange,
     selectedYearRange,
     onYearRangeChange,
-    showYearRangeError,
     isYearRangeLoading,
     ageGroups,
     selectedAgeGroup,
     onAgeGroupChange,
-    orgUnitsNotFound,
-    orgUnitsWithUnmatchedInterventions,
-    providerMeta,
+    children,
 }) => {
     const { formatMessage } = useSafeIntl();
 
@@ -213,15 +144,6 @@ export const ConfigurationPanel: FC<Props> = ({
             ageGroups.length > 0 &&
             selectedAgeGroup &&
             onAgeGroupChange);
-
-    const hasWarnings =
-        showYearRangeError ||
-        (orgUnitsNotFound?.length ?? 0) > 0 ||
-        (orgUnitsWithUnmatchedInterventions?.length ?? 0) > 0;
-    const isFakeProvider = providerMeta?.provider_key === 'fake';
-
-    const [showNotFoundDetails, setShowNotFoundDetails] = useState(false);
-    const [showUnmatchedDetails, setShowUnmatchedDetails] = useState(false);
 
     return (
         <Box sx={styles.card}>
@@ -239,12 +161,7 @@ export const ConfigurationPanel: FC<Props> = ({
             </Box>
             <Box sx={styles.cardBody}>
                 <Box sx={styles.scenarioRow}>
-                    <Box
-                        sx={[
-                            styles.scenarioDot,
-                            { backgroundColor: getScenarioColor(0) },
-                        ]}
-                    />
+                    <ColorDot color={getScenarioColor(0)} size={14} />
                     <Box sx={styles.scenarioSelectWrap}>
                         <InputComponent
                             keyValue="scenario"
@@ -278,15 +195,9 @@ export const ConfigurationPanel: FC<Props> = ({
                             key={`comparison-${id || index}`}
                             sx={styles.scenarioRow}
                         >
-                            <Box
-                                sx={[
-                                    styles.scenarioDot,
-                                    {
-                                        backgroundColor: getScenarioColor(
-                                            index + 1,
-                                        ),
-                                    },
-                                ]}
+                            <ColorDot
+                                color={getScenarioColor(index + 1)}
+                                size={14}
                             />
                             <Box sx={styles.scenarioSelectWrap}>
                                 <InputComponent
@@ -360,134 +271,7 @@ export const ConfigurationPanel: FC<Props> = ({
                             )}
                     </Box>
                 )}
-                {hasWarnings && (
-                    <Typography sx={styles.sectionTitle}>
-                        {formatMessage(MESSAGES.warningsTitle)}
-                    </Typography>
-                )}
-                <Box sx={styles.alertsSection}>
-                    {showYearRangeError && (
-                        <Alert
-                            severity="warning"
-                            sx={[styles.alertBox, styles.alertBoxWarning]}
-                        >
-                            <AlertTitle>
-                                {formatMessage(
-                                    MESSAGES.noYearRangeOverlapTitle,
-                                )}
-                            </AlertTitle>
-                            {formatMessage(MESSAGES.noYearRangeOverlap)}
-                        </Alert>
-                    )}
-                    {orgUnitsNotFound && orgUnitsNotFound.length > 0 && (
-                        <Alert
-                            severity="warning"
-                            sx={[styles.alertBox, styles.alertBoxWarning]}
-                        >
-                            <AlertTitle sx={styles.warningTitleRow}>
-                                {formatMessage(MESSAGES.orgUnitsNotFoundTitle)}
-                                <Button
-                                    size="small"
-                                    onClick={() =>
-                                        setShowNotFoundDetails(prev => !prev)
-                                    }
-                                    sx={styles.detailsButton}
-                                >
-                                    {formatMessage(
-                                        showNotFoundDetails
-                                            ? MESSAGES.hideDetails
-                                            : MESSAGES.showDetails,
-                                    )}
-                                </Button>
-                            </AlertTitle>
-                            {formatMessage(MESSAGES.orgUnitsNotFound)}
-                            {showNotFoundDetails && (
-                                <Box sx={styles.chipContainer}>
-                                    {orgUnitsNotFound.flatMap(
-                                        ({ scenario, orgUnits }) =>
-                                            orgUnits.map(ou => (
-                                                <Chip
-                                                    key={`${scenario.id}-${ou.org_unit_id}`}
-                                                    label={ou.org_unit_name}
-                                                    size="small"
-                                                    sx={[
-                                                        styles.scenarioChip,
-                                                        {
-                                                            backgroundColor:
-                                                                scenario.color,
-                                                        },
-                                                    ]}
-                                                />
-                                            )),
-                                    )}
-                                </Box>
-                            )}
-                        </Alert>
-                    )}
-                    {orgUnitsWithUnmatchedInterventions &&
-                        orgUnitsWithUnmatchedInterventions.length > 0 && (
-                            <Alert
-                                severity="warning"
-                                sx={[styles.alertBox, styles.alertBoxWarning]}
-                            >
-                                <AlertTitle sx={styles.warningTitleRow}>
-                                    {formatMessage(
-                                        MESSAGES.orgUnitsWithUnmatchedInterventionsTitle,
-                                    )}
-                                    <Button
-                                        size="small"
-                                        onClick={() =>
-                                            setShowUnmatchedDetails(
-                                                prev => !prev,
-                                            )
-                                        }
-                                        sx={styles.detailsButton}
-                                    >
-                                        {formatMessage(
-                                            showUnmatchedDetails
-                                                ? MESSAGES.hideDetails
-                                                : MESSAGES.showDetails,
-                                        )}
-                                    </Button>
-                                </AlertTitle>
-                                {formatMessage(
-                                    MESSAGES.orgUnitsWithUnmatchedInterventions,
-                                )}
-                                {showUnmatchedDetails && (
-                                    <Box sx={styles.chipContainer}>
-                                        {orgUnitsWithUnmatchedInterventions.flatMap(
-                                            ({ scenario, orgUnits }) =>
-                                                orgUnits.map(ou => (
-                                                    <Chip
-                                                        key={`${scenario.id}-${ou.org_unit_id}`}
-                                                        label={ou.org_unit_name}
-                                                        size="small"
-                                                        sx={[
-                                                            styles.scenarioChip,
-                                                            {
-                                                                backgroundColor:
-                                                                    scenario.color,
-                                                            },
-                                                        ]}
-                                                    />
-                                                )),
-                                        )}
-                                    </Box>
-                                )}
-                            </Alert>
-                        )}
-                    {isFakeProvider && (
-                        <Alert
-                            severity="info"
-                            sx={[styles.alertBox, styles.alertBoxInfo]}
-                        >
-                            <AlertTitle>
-                                {formatMessage(MESSAGES.fakeProviderInfoTitle)}
-                            </AlertTitle>
-                            {formatMessage(MESSAGES.fakeProviderInfoBody)}
-                        </Alert>
-                    )}
-                </Box>
+                {children}
             </Box>
         </Box>
     );

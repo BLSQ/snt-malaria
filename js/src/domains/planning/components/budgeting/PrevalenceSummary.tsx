@@ -56,10 +56,12 @@ export const PrevalenceSummary: FC = () => {
     const ageGroup = ageGroupsQuery.data?.age_groups?.[0];
 
     const yearRange = useMemo((): [number, number] | undefined => {
-        if (!scenario || !yearRangeQuery.data) return undefined;
+        const { min_year: minYear, max_year: maxYear } =
+            yearRangeQuery.data ?? {};
+        if (!scenario || minYear == null || maxYear == null) return undefined;
         return intersectYearRanges(
             [scenario.start_year, scenario.end_year],
-            [yearRangeQuery.data.min_year, yearRangeQuery.data.max_year],
+            [minYear, maxYear],
         );
     }, [scenario, yearRangeQuery.data]);
 

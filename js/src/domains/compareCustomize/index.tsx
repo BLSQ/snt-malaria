@@ -16,6 +16,7 @@ import { useGetScenarios } from '../scenarios/hooks/useGetScenarios';
 import { ComparisonDataProvider } from './ComparisonDataContext';
 import { ComparisonCharts } from './components/ComparisonCharts';
 import { ConfigurationPanel } from './components/ConfigurationPanel';
+import { ImpactWarnings } from './components/ImpactWarnings';
 import { InterventionMaps } from './components/InterventionMaps';
 import { MetricsSummary } from './components/MetricsSummary';
 import { useComparisonData } from './hooks/useComparisonData';
@@ -25,7 +26,12 @@ import { useMatchWarnings } from './hooks/useMatchWarnings';
 import { usePrefetchYearsImpact } from './hooks/usePrefetchYearsImpact';
 import { useScenarioInterventions } from './hooks/useScenarioInterventions';
 import { useScenarioSelections } from './hooks/useScenarioSelections';
-import { ImpactProviderMeta, ScenarioDisplay, toNumericId } from './types';
+import {
+    ImpactProviderMeta,
+    ScenarioDisplay,
+    ScenarioYearRange,
+    toNumericId,
+} from './types';
 import { getScenarioColor } from './utils/colors';
 import { intersectYearRanges } from './utils/yearRange';
 
@@ -118,9 +124,26 @@ export const CompareCustomize: FC = () => {
         return [maxStart, minEnd];
     }, [scenarios, baselineScenarioId, comparisonScenarioIds]);
 
+    const scenarioYearRanges = useMemo(
+        (): ScenarioYearRange[] =>
+            displayScenarios.flatMap(display => {
+                const scenario = scenarios?.find(s => s.id === display.id);
+                if (!scenario) return [];
+                return [
+                    {
+                        scenario: display,
+                        yearRange: [scenario.start_year, scenario.end_year],
+                    },
+                ];
+            }),
+        [displayScenarios, scenarios],
+    );
+
     const impactYearRange = useMemo((): [number, number] | undefined => {
-        if (!yearRangeQuery.data) return undefined;
-        return [yearRangeQuery.data.min_year, yearRangeQuery.data.max_year];
+        const { min_year: minYear, max_year: maxYear } =
+            yearRangeQuery.data ?? {};
+        if (minYear == null || maxYear == null) return undefined;
+        return [minYear, maxYear];
     }, [yearRangeQuery.data]);
 
     const effectiveYearRange = useMemo((): [number, number] | undefined => {
@@ -277,10 +300,6 @@ export const CompareCustomize: FC = () => {
                                     yearRange={effectiveYearRange}
                                     selectedYearRange={selectedYearRange}
                                     onYearRangeChange={setSelectedYearRange}
-                                    showYearRangeError={
-                                        displayScenarios.length > 0 &&
-                                        !effectiveYearRange
-                                    }
                                     isYearRangeLoading={
                                         displayScenarios.length > 0 &&
                                         (isLoading ||
@@ -290,12 +309,21 @@ export const CompareCustomize: FC = () => {
                                     ageGroups={ageGroupsQuery.data?.age_groups}
                                     selectedAgeGroup={selectedAgeGroup}
                                     onAgeGroupChange={handleAgeGroupChange}
-                                    orgUnitsNotFound={orgUnitsNotFound}
-                                    orgUnitsWithUnmatchedInterventions={
-                                        orgUnitsWithUnmatchedInterventions
-                                    }
-                                    providerMeta={providerMeta}
-                                />
+                                >
+                                    <ImpactWarnings
+                                        showYearRangeError={
+                                            displayScenarios.length > 0 &&
+                                            !effectiveYearRange
+                                        }
+                                        scenarioYearRanges={scenarioYearRanges}
+                                        impactYearRange={impactYearRange}
+                                        orgUnitsNotFound={orgUnitsNotFound}
+                                        orgUnitsWithUnmatchedInterventions={
+                                            orgUnitsWithUnmatchedInterventions
+                                        }
+                                        providerMeta={providerMeta}
+                                    />
+                                </ConfigurationPanel>
                             </PaperFullHeight>
                         </SidebarColumn>
                     </SidebarLayout>

@@ -460,10 +460,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.hideLegend',
         defaultMessage: 'Hide Legend',
     },
-    hideDetails: {
-        id: 'iaso.snt_malaria.label.hideDetails',
-        defaultMessage: 'Hide details',
-    },
     hideSidebar: {
         id: 'iaso.snt_malaria.label.hideSidebar',
         defaultMessage: 'Hide sidebar',
@@ -745,7 +741,15 @@ export const MESSAGES = defineMessages({
     noYearRangeOverlap: {
         id: 'iaso.snt_malaria.compareCustomize.noYearRangeOverlap',
         defaultMessage:
-            'No overlapping year range between the selected scenarios and the available impact data. Please select scenarios with compatible year ranges.',
+            "Impact can't be loaded because the selected scenarios and the impact data don't share any years.",
+    },
+    yearRangeImpactData: {
+        id: 'iaso.snt_malaria.compareCustomize.yearRangeImpactData',
+        defaultMessage: 'Impact data',
+    },
+    yearRangeNone: {
+        id: 'iaso.snt_malaria.compareCustomize.yearRangeNone',
+        defaultMessage: 'None',
     },
     noYearRangeOverlapTitle: {
         id: 'iaso.snt_malaria.compareCustomize.noYearRangeOverlapTitle',
@@ -778,7 +782,7 @@ export const MESSAGES = defineMessages({
     fakeProviderInfoBody: {
         id: 'iaso.snt_malaria.compareCustomize.fakeProviderInfoBody',
         defaultMessage:
-            'The impact figures shown are generated for demonstration purposes and are not based on real epidemiological data.',
+            'Impact figures come from a demo provider and are not model results.',
     },
     operatorEqual: {
         id: 'iaso.snt_malaria.scenarioRule.operatorEqual',
@@ -802,21 +806,23 @@ export const MESSAGES = defineMessages({
     },
     orgUnitsNotFoundTitle: {
         id: 'iaso.snt_malaria.compareCustomize.orgUnitsNotFoundTitle',
-        defaultMessage: 'Org units not found',
+        defaultMessage:
+            '{count, plural, one {# district not found in the impact database} other {# districts not found in the impact database}}',
     },
     orgUnitsNotFound: {
         id: 'iaso.snt_malaria.compareCustomize.orgUnitsNotFound',
         defaultMessage:
-            'Some org units could not be found in the impact database.',
+            'These districts are skipped in the impact results. Districts are matched to the impact database by name.',
     },
     orgUnitsWithUnmatchedInterventionsTitle: {
         id: 'iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventionsTitle',
-        defaultMessage: 'Unmatched interventions',
+        defaultMessage:
+            '{count, plural, one {# district without impact data for its interventions} other {# districts without impact data for their interventions}}',
     },
     orgUnitsWithUnmatchedInterventions: {
         id: 'iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventions',
         defaultMessage:
-            'Some org units exist in the impact database but have no data for their assigned interventions.',
+            'These districts exist in the impact database, but it has no results for the interventions assigned to them, so they are skipped.',
     },
     operator: {
         id: 'iaso.snt_malaria.scenarioRule.operator',
@@ -1150,10 +1156,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.interventions.title',
         defaultMessage: 'Interventions',
     },
-    showDetails: {
-        id: 'iaso.snt_malaria.label.showDetails',
-        defaultMessage: 'Show details',
-    },
     showLegend: {
         id: 'iaso.snt_malaria.label.showLegend',
         defaultMessage: 'Show Legend',
@@ -1240,6 +1242,18 @@ export const MESSAGES = defineMessages({
     warningsTitle: {
         id: 'iaso.snt_malaria.compareCustomize.warningsTitle',
         defaultMessage: 'Warnings',
+    },
+    warningDistrictsCount: {
+        id: 'iaso.snt_malaria.compareCustomize.warningDistrictsCount',
+        defaultMessage: '{count, plural, one {# district} other {# districts}}',
+    },
+    showDistricts: {
+        id: 'iaso.snt_malaria.label.showDistricts',
+        defaultMessage: 'Show districts',
+    },
+    hideDistricts: {
+        id: 'iaso.snt_malaria.label.hideDistricts',
+        defaultMessage: 'Hide districts',
     },
     yearlyPrevalenceTitle: {
         id: 'iaso.snt_malaria.compareCustomize.yearlyPrevalenceTitle',
