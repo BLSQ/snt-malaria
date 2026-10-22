@@ -1,6 +1,7 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import {
+    Box,
     Card,
     MenuItem,
     Select,
@@ -14,6 +15,7 @@ import {
     useRedirectToReplace,
 } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
+import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../../components/CardStyled';
 import { OrgUnitSelect } from '../../../components/OrgUnitSelect';
 import { baseUrls } from '../../../constants/urls';
@@ -33,7 +35,8 @@ const styles = {
     smallHeader: {
         minHeight: '36px',
     },
-};
+    titleBlock: { flex: 1, minWidth: 0, paddingRight: 1 },
+} satisfies SxStyles;
 
 type Props = {
     metricType?: MetricType;
@@ -56,6 +59,7 @@ export const DataLayerMapWrapper: FC<Props> = ({
         });
 
     const redirectToReplace = useRedirectToReplace();
+    const description = metricType?.description?.trim();
 
     const handleDisplayOrgUnitChange = useCallback(
         (orgUnitId?: number) => {
@@ -106,15 +110,39 @@ export const DataLayerMapWrapper: FC<Props> = ({
                         alignItems="center"
                         overflow="hidden"
                     >
-                        <Tooltip title={metricType?.name || ''}>
-                            <Typography
-                                variant={small ? 'body2' : 'h6'}
-                                noWrap
-                                sx={{ flex: 1, minWidth: 0, paddingRight: 1 }}
+                        <Box sx={styles.titleBlock}>
+                            <Tooltip
+                                title={
+                                    small && description ? (
+                                        <>
+                                            {metricType?.name}
+                                            <br />
+                                            {description}
+                                        </>
+                                    ) : (
+                                        metricType?.name || ''
+                                    )
+                                }
                             >
-                                {metricType?.name || ''}
-                            </Typography>
-                        </Tooltip>
+                                <Typography
+                                    variant={small ? 'body2' : 'h6'}
+                                    noWrap
+                                >
+                                    {metricType?.name || ''}
+                                </Typography>
+                            </Tooltip>
+                            {!small && description && (
+                                <Tooltip title={description}>
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        noWrap
+                                    >
+                                        {description}
+                                    </Typography>
+                                </Tooltip>
+                            )}
+                        </Box>
                         <Stack
                             direction="row"
                             spacing={2}

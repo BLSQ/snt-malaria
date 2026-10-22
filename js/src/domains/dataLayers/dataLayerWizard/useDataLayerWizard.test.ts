@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
+    EDIT_STANDARD_STEPS,
     EDIT_STEPS,
     useDataLayerWizard,
     WIZARD_STEPS,
@@ -42,6 +43,46 @@ describe('useDataLayerWizard', () => {
         expect(result.current.activeStep).toBe(WIZARD_STEPS.DETAILS);
         act(() => result.current.goNext());
         expect(result.current.activeStep).toBe(WIZARD_STEPS.LEGEND);
+    });
+
+    it('start(EDIT_STANDARD_STEPS) runs Details -> Data -> Legend', () => {
+        const { result } = renderHook(() => useDataLayerWizard());
+        act(() => result.current.start(EDIT_STANDARD_STEPS));
+        expect(result.current.activeStep).toBe(WIZARD_STEPS.DETAILS);
+        act(() => result.current.goNext());
+        expect(result.current.activeStep).toBe(WIZARD_STEPS.DATA);
+        act(() => result.current.goNext());
+        expect(result.current.activeStep).toBe(WIZARD_STEPS.LEGEND);
+    });
+
+    it('seedGrid() fills the table with persisted values and remembers their years', () => {
+        const { result } = renderHook(() => useDataLayerWizard());
+        act(() =>
+            result.current.seedGrid({
+                values: { 7: { 2023: '1', 2024: '2' } },
+                years: [2023, 2024],
+            }),
+        );
+        expect(result.current.staged.gridValues).toEqual({
+            7: { 2023: '1', 2024: '2' },
+        });
+        expect(result.current.staged.gridYears).toEqual([2023, 2024]);
+        expect(result.current.staged.importedYears).toEqual([2023, 2024]);
+        expect(result.current.staged.gridDirty).toBe(false);
+    });
+
+    it('seedGrid() without persisted values keeps the default year column', () => {
+        const { result } = renderHook(() => useDataLayerWizard());
+        act(() => result.current.seedGrid({ values: {}, years: [] }));
+        expect(result.current.staged.gridYears).toEqual([expect.any(Number)]);
+        expect(result.current.staged.importedYears).toEqual([]);
+    });
+
+    it('marks the table dirty once it is edited after seeding', () => {
+        const { result } = renderHook(() => useDataLayerWizard());
+        act(() => result.current.seedGrid({ values: {}, years: [2024] }));
+        act(() => result.current.addGridYear(2025));
+        expect(result.current.staged.gridDirty).toBe(true);
     });
 
     it("start() can seed staged state, e.g. an edit run's known layer type", () => {
