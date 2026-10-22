@@ -402,8 +402,6 @@
     "iaso.snt_malaria.compareCustomize.fakeProviderInfoBody": "Les chiffres d'impact proviennent d'un fournisseur de démonstration et ne sont pas des résultats de modèle.",
     "iaso.snt_malaria.compareCustomize.orgUnitsNotFoundTitle": "{count, plural, one {# district introuvable dans la base de données d'impact} other {# districts introuvables dans la base de données d'impact}}",
     "iaso.snt_malaria.compareCustomize.orgUnitsNotFound": "Ces districts sont ignorés dans les résultats d'impact. Les districts sont associés à la base de données d'impact par leur nom.",
-    "iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventionsTitle": "{count, plural, one {# district sans données d'impact pour ses interventions} other {# districts sans données d'impact pour leurs interventions}}",
-    "iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventions": "Ces districts existent dans la base de données d'impact, mais celle-ci n'a pas de résultats pour les interventions qui leur sont assignées. Ils sont donc ignorés.",
     "iaso.snt_malaria.compareCustomize.warningsTitle": "Avertissements",
     "iaso.snt_malaria.interventions.title": "Interventions",
     "iaso.snt_malaria.label.maxLength": "Longueur maximum de {max} caractères",
@@ -696,6 +694,8 @@
     "iaso.snt_malaria.label.unknownImpactRefOption": "{ref} (inconnue)",
     "iaso.snt_malaria.compareCustomize.interventionsWithoutImpactRefTitle": "{count, plural, one {# intervention sans référence d'impact} other {# interventions sans référence d'impact}}",
     "iaso.snt_malaria.compareCustomize.interventionsWithoutImpactRef": "Ces interventions n'ont pas de référence d'impact, ou une référence que le fournisseur d'impact ne reconnaît pas. Dans les districts où elles sont assignées, l'impact est calculé pour le reste de la combinaison sans elles.",
+    "iaso.snt_malaria.compareCustomize.unmatchedInterventionMixesTitle": "{count, plural, one {Pas de données d'impact pour # combinaison d'interventions} other {Pas de données d'impact pour # combinaisons d'interventions}}",
+    "iaso.snt_malaria.compareCustomize.unmatchedInterventionMixes": "L'impact est recherché pour la combinaison complète d'interventions de chaque district. Il n'y a pas de résultats pour ces combinaisons, {count, plural, one {# district est donc ignoré} other {# districts sont donc ignorés}}.",
     "iaso.snt_malaria.compareCustomize.yearRangeImpactData": "Données d'impact",
     "iaso.snt_malaria.compareCustomize.yearRangeNone": "Aucune"
 }

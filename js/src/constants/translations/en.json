@@ -403,8 +403,6 @@
     "iaso.snt_malaria.compareCustomize.fakeProviderInfoBody": "Impact figures come from a demo provider and are not model results.",
     "iaso.snt_malaria.compareCustomize.orgUnitsNotFoundTitle": "{count, plural, one {# district not found in the impact database} other {# districts not found in the impact database}}",
     "iaso.snt_malaria.compareCustomize.orgUnitsNotFound": "These districts are skipped in the impact results. Districts are matched to the impact database by name.",
-    "iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventionsTitle": "{count, plural, one {# district without impact data for its interventions} other {# districts without impact data for their interventions}}",
-    "iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventions": "These districts exist in the impact database, but it has no results for the interventions assigned to them, so they are skipped.",
     "iaso.snt_malaria.compareCustomize.warningsTitle": "Warnings",
     "iaso.snt_malaria.interventions.title": "Interventions",
     "iaso.snt_malaria.label.maxLength": "Maximum length is {max} characters",
@@ -697,6 +695,8 @@
     "iaso.snt_malaria.label.unknownImpactRefOption": "{ref} (unknown)",
     "iaso.snt_malaria.compareCustomize.interventionsWithoutImpactRefTitle": "{count, plural, one {# intervention without an impact reference} other {# interventions without an impact reference}}",
     "iaso.snt_malaria.compareCustomize.interventionsWithoutImpactRef": "These interventions have no impact reference, or one the provider doesn't recognise. In the districts where they are assigned, impact is calculated for the rest of the mix without them.",
+    "iaso.snt_malaria.compareCustomize.unmatchedInterventionMixesTitle": "{count, plural, one {No impact data for # intervention mix} other {No impact data for # intervention mixes}}",
+    "iaso.snt_malaria.compareCustomize.unmatchedInterventionMixes": "Impact is looked up for each district's full intervention mix. There are no results for these mixes, so {count, plural, one {# district is} other {# districts are}} skipped.",
     "iaso.snt_malaria.compareCustomize.yearRangeImpactData": "Impact data",
     "iaso.snt_malaria.compareCustomize.yearRangeNone": "None"
 }

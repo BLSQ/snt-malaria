@@ -224,7 +224,7 @@ export const CompareCustomize: FC = () => {
 
     const {
         orgUnitsNotFound,
-        orgUnitsWithUnmatchedInterventions,
+        unmatchedInterventionMixes,
         interventionsWithoutImpactRef,
     } = useMatchWarnings({
         impactsByScenarioId,
@@ -321,8 +321,8 @@ export const CompareCustomize: FC = () => {
                                         scenarioYearRanges={scenarioYearRanges}
                                         impactYearRange={impactYearRange}
                                         orgUnitsNotFound={orgUnitsNotFound}
-                                        orgUnitsWithUnmatchedInterventions={
-                                            orgUnitsWithUnmatchedInterventions
+                                        unmatchedInterventionMixes={
+                                            unmatchedInterventionMixes
                                         }
                                         interventionsWithoutImpactRef={
                                             interventionsWithoutImpactRef

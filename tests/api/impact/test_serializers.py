@@ -7,6 +7,7 @@ from plugins.snt_malaria.services.impact import (
     InterventionWithoutImpactRef,
     OrgUnitImpactMetrics,
     ScenarioImpactMetrics,
+    UnmatchedInterventionMix,
     YearImpactMetrics,
 )
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
@@ -210,6 +211,28 @@ class ScenarioImpactSerializerTestCase(SNTMalariaTestCase):
             [
                 {
                     "intervention": {"id": 7, "name": "PMC"},
+                    "org_units": [{"org_unit_id": 3, "org_unit_name": "District 3"}],
+                }
+            ],
+        )
+
+    def test_unmatched_intervention_mixes(self):
+        metrics = ScenarioImpactMetrics(
+            scenario_id=1,
+            unmatched_intervention_mixes=[
+                UnmatchedInterventionMix(
+                    interventions=[InterventionRef(id=1, name="IRS"), InterventionRef(id=2, name="SMC")],
+                    org_units=[OrgUnitRef(id=3, name="District 3")],
+                ),
+            ],
+        )
+        data = ScenarioImpactSerializer(metrics).data
+
+        self.assertEqual(
+            data["unmatched_intervention_mixes"],
+            [
+                {
+                    "interventions": [{"id": 1, "name": "IRS"}, {"id": 2, "name": "SMC"}],
                     "org_units": [{"org_unit_id": 3, "org_unit_name": "District 3"}],
                 }
             ],

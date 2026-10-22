@@ -70,6 +70,11 @@ class InterventionWithoutImpactRefSerializer(serializers.Serializer):
     org_units = OrgUnitRefSerializer(many=True)
 
 
+class UnmatchedInterventionMixSerializer(serializers.Serializer):
+    interventions = InterventionRefSerializer(many=True)
+    org_units = OrgUnitRefSerializer(many=True)
+
+
 class ImpactProviderMetaSerializer(serializers.Serializer):
     provider_key = serializers.CharField()
 
@@ -79,6 +84,6 @@ class ScenarioImpactSerializer(ImpactMetricsSerializer):
     by_year = YearMetricsSerializer(many=True)
     org_units = OrgUnitMetricsSerializer(many=True)
     org_units_not_found = OrgUnitRefSerializer(many=True, default=[])
-    org_units_with_unmatched_interventions = OrgUnitRefSerializer(many=True, default=[])
+    unmatched_intervention_mixes = UnmatchedInterventionMixSerializer(many=True, default=[])
     interventions_without_impact_ref = InterventionWithoutImpactRefSerializer(many=True, default=[])
     provider_meta = ImpactProviderMetaSerializer()

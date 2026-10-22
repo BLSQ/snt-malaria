@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
@@ -42,7 +42,7 @@ type Props = {
     scenarioYearRanges?: ScenarioYearRange[];
     impactYearRange?: [number, number];
     orgUnitsNotFound?: MatchWarningOrgUnit[];
-    orgUnitsWithUnmatchedInterventions?: MatchWarningOrgUnit[];
+    unmatchedInterventionMixes?: MatchWarningGroup[];
     interventionsWithoutImpactRef?: MatchWarningGroup[];
     providerMeta?: ImpactProviderMeta;
 };
@@ -52,7 +52,7 @@ export const ImpactWarnings: FC<Props> = ({
     scenarioYearRanges = [],
     impactYearRange,
     orgUnitsNotFound = [],
-    orgUnitsWithUnmatchedInterventions = [],
+    unmatchedInterventionMixes = [],
     interventionsWithoutImpactRef = [],
     providerMeta,
 }) => {
@@ -61,9 +61,15 @@ export const ImpactWarnings: FC<Props> = ({
     const hasWarnings =
         showYearRangeError ||
         orgUnitsNotFound.length > 0 ||
-        orgUnitsWithUnmatchedInterventions.length > 0 ||
+        unmatchedInterventionMixes.length > 0 ||
         interventionsWithoutImpactRef.length > 0;
     const isFakeProvider = providerMeta?.provider_key === 'fake';
+    const unmatchedDistrictCount = useMemo(
+        () =>
+            new Set(unmatchedInterventionMixes.flatMap(mix => mix.orgUnitNames))
+                .size,
+        [unmatchedInterventionMixes],
+    );
 
     return (
         <>
@@ -103,29 +109,22 @@ export const ImpactWarnings: FC<Props> = ({
                         ))}
                     </WarningBox>
                 )}
-                {orgUnitsWithUnmatchedInterventions.length > 0 && (
+                {unmatchedInterventionMixes.length > 0 && (
                     <WarningBox
                         severity="warning"
                         title={formatMessage(
-                            MESSAGES.orgUnitsWithUnmatchedInterventionsTitle,
-                            {
-                                count: orgUnitsWithUnmatchedInterventions.length,
-                            },
+                            MESSAGES.unmatchedInterventionMixesTitle,
+                            { count: unmatchedInterventionMixes.length },
                         )}
                         description={formatMessage(
-                            MESSAGES.orgUnitsWithUnmatchedInterventions,
+                            MESSAGES.unmatchedInterventionMixes,
+                            { count: unmatchedDistrictCount },
                         )}
                     >
-                        {orgUnitsWithUnmatchedInterventions.map(orgUnit => (
-                            <WarningGroup
-                                key={orgUnit.org_unit_id}
-                                label={orgUnit.org_unit_name}
-                                scenarioColors={orgUnit.scenarios.map(
-                                    scenario => scenario.color,
-                                )}
-                                countLabel={orgUnit.scenarios
-                                    .map(scenario => scenario.label)
-                                    .join(', ')}
+                        {unmatchedInterventionMixes.map(mix => (
+                            <InterventionWarningGroup
+                                key={mix.key}
+                                group={mix}
                             />
                         ))}
                     </WarningBox>

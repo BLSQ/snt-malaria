@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Iterator, Optional
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import Intervention, InterventionAssignment, Scenario
@@ -76,6 +76,14 @@ class InterventionWithoutImpactRef:
 
 
 @dataclass
+class UnmatchedInterventionMix:
+    """An intervention mix the provider has no data for, with the org units it is assigned to."""
+
+    interventions: list[InterventionRef]
+    org_units: list[OrgUnitRef] = field(default_factory=list)
+
+
+@dataclass
 class ScenarioImpactMetrics(ImpactMetrics):
     """Top-level impact result for a scenario, with breakdowns by year and org unit."""
 
@@ -83,7 +91,7 @@ class ScenarioImpactMetrics(ImpactMetrics):
     by_year: list[YearImpactMetrics] = field(default_factory=list)
     org_units: list[OrgUnitImpactMetrics] = field(default_factory=list)
     org_units_not_found: list[OrgUnitRef] = field(default_factory=list)
-    org_units_with_unmatched_interventions: list[OrgUnitRef] = field(default_factory=list)
+    unmatched_intervention_mixes: list[UnmatchedInterventionMix] = field(default_factory=list)
     interventions_without_impact_ref: list[InterventionWithoutImpactRef] = field(default_factory=list)
     provider_meta: ImpactProviderMeta = field(default_factory=lambda: ImpactProviderMeta(provider_key=""))
 
@@ -137,8 +145,12 @@ class ImpactService:
         """Return the full impact result for a scenario."""
         org_unit_interventions = self._get_org_unit_interventions(scenario)
         matchable_interventions, interventions_without_impact_ref = self._split_by_impact_ref(org_unit_interventions)
-        year_data, warnings = self._collect_metrics(matchable_interventions, age_group, year_from, year_to)
-        return self._build_response(scenario, year_data, warnings, interventions_without_impact_ref)
+        year_data, org_units_not_found, unmatched_mixes = self._collect_metrics(
+            matchable_interventions, age_group, year_from, year_to
+        )
+        return self._build_response(
+            scenario, year_data, org_units_not_found, unmatched_mixes, interventions_without_impact_ref
+        )
 
     @staticmethod
     def _get_org_unit_interventions(scenario: Scenario) -> dict[OrgUnit, list[Intervention]]:
@@ -196,29 +208,54 @@ class ImpactService:
         age_group: str,
         year_from: Optional[str],
         year_to: Optional[str],
-    ) -> tuple[dict[int, list[OrgUnitImpactMetrics]], MatchWarnings]:
+    ) -> tuple[dict[int, list[OrgUnitImpactMetrics]], list[OrgUnitRef], list[UnmatchedInterventionMix]]:
         ou_by_id: dict[int, OrgUnit] = {ou.id: ou for ou in org_unit_interventions}
         year_data: dict[int, list[OrgUnitImpactMetrics]] = defaultdict(list)
-        warnings = MatchWarnings()
+        org_units_not_found: list[OrgUnitRef] = []
+        unmatched_mixes: dict[frozenset[int], UnmatchedInterventionMix] = {}
 
-        if self._provider.supports_bulk:
-            self._collect_bulk(org_unit_interventions, age_group, year_from, year_to, ou_by_id, year_data, warnings)
-        else:
-            self._collect_individual(org_unit_interventions, age_group, year_from, year_to, year_data, warnings)
+        for interventions, results, warnings in self._match_by_mix(
+            org_unit_interventions, age_group, year_from, year_to
+        ):
+            org_units_not_found.extend(warnings.org_units_not_found)
+            if interventions and warnings.org_units_with_unmatched_interventions:
+                mix = unmatched_mixes.setdefault(
+                    frozenset(i.id for i in interventions),
+                    UnmatchedInterventionMix(
+                        interventions=sorted(
+                            (InterventionRef.from_intervention(i) for i in interventions), key=lambda i: i.name
+                        )
+                    ),
+                )
+                mix.org_units.extend(warnings.org_units_with_unmatched_interventions)
 
-        return dict(year_data), warnings
+            for ou_id, impact_results in results.items():
+                org_unit = ou_by_id[ou_id]
+                for result in impact_results:
+                    year_data[result.year].append(OrgUnitImpactMetrics.from_impact_result(result, org_unit))
 
-    def _collect_bulk(
+        return dict(year_data), org_units_not_found, list(unmatched_mixes.values())
+
+    def _match_by_mix(
         self,
         org_unit_interventions: dict[OrgUnit, list[Intervention]],
         age_group: str,
         year_from: Optional[str],
         year_to: Optional[str],
-        ou_by_id: dict[int, OrgUnit],
-        year_data: dict[int, list[OrgUnitImpactMetrics]],
-        warnings: MatchWarnings,
-    ) -> None:
-        """Fetch impact data using batch queries, grouped by intervention mix."""
+    ) -> Iterator[tuple[list[Intervention], dict[int, list[ImpactResult]], MatchWarnings]]:
+        """Yield one provider match per intervention mix, batched when the provider supports it."""
+        if not self._provider.supports_bulk:
+            for org_unit, interventions in org_unit_interventions.items():
+                match = self._provider.match_impact(
+                    org_unit=org_unit,
+                    interventions=interventions,
+                    age_group=age_group,
+                    year_from=year_from,
+                    year_to=year_to,
+                )
+                yield interventions, {org_unit.id: match.results}, match.warnings
+            return
+
         groups: dict[frozenset[int], tuple[list[OrgUnit], list[Intervention]]] = {}
         for org_unit, interventions in org_unit_interventions.items():
             key = frozenset(i.id for i in interventions)
@@ -234,43 +271,7 @@ class ImpactService:
                 year_from=year_from,
                 year_to=year_to,
             )
-
-            warnings.org_units_not_found.extend(bulk.warnings.org_units_not_found)
-            warnings.org_units_with_unmatched_interventions.extend(bulk.warnings.org_units_with_unmatched_interventions)
-
-            for ou_id, impact_results in bulk.results.items():
-                org_unit = ou_by_id[ou_id]
-                for result in impact_results:
-                    metrics = OrgUnitImpactMetrics.from_impact_result(result, org_unit)
-                    year_data[result.year].append(metrics)
-
-    def _collect_individual(
-        self,
-        org_unit_interventions: dict[OrgUnit, list[Intervention]],
-        age_group: str,
-        year_from: Optional[str],
-        year_to: Optional[str],
-        year_data: dict[int, list[OrgUnitImpactMetrics]],
-        warnings: MatchWarnings,
-    ) -> None:
-        """Fetch impact data one org unit at a time via match_impact."""
-        for org_unit, interventions in org_unit_interventions.items():
-            match = self._provider.match_impact(
-                org_unit=org_unit,
-                interventions=interventions,
-                age_group=age_group,
-                year_from=year_from,
-                year_to=year_to,
-            )
-
-            warnings.org_units_not_found.extend(match.warnings.org_units_not_found)
-            warnings.org_units_with_unmatched_interventions.extend(
-                match.warnings.org_units_with_unmatched_interventions
-            )
-
-            for result in match.results:
-                metrics = OrgUnitImpactMetrics.from_impact_result(result, org_unit)
-                year_data[result.year].append(metrics)
+            yield interventions, bulk.results, bulk.warnings
 
     def _aggregate_org_units(
         self,
@@ -302,11 +303,21 @@ class ImpactService:
                 seen[ou.id] = ou
         return sorted(seen.values(), key=lambda ou: ou.name)
 
+    def _sort_unmatched_mixes(self, unmatched_mixes: list[UnmatchedInterventionMix]) -> list[UnmatchedInterventionMix]:
+        """Deduplicate each mix's org units and order mixes by number of org units, largest first."""
+        for mix in unmatched_mixes:
+            mix.org_units = self._deduplicate_org_units(mix.org_units)
+        return sorted(
+            unmatched_mixes,
+            key=lambda mix: (-len(mix.org_units), [intervention.name for intervention in mix.interventions]),
+        )
+
     def _build_response(
         self,
         scenario: Scenario,
         year_data: dict[int, list[OrgUnitImpactMetrics]],
-        warnings: MatchWarnings,
+        org_units_not_found: list[OrgUnitRef],
+        unmatched_mixes: list[UnmatchedInterventionMix],
         interventions_without_impact_ref: list[InterventionWithoutImpactRef],
     ) -> ScenarioImpactMetrics:
         by_year = []
@@ -332,10 +343,8 @@ class ImpactService:
             scenario_id=scenario.id,
             by_year=by_year,
             org_units=self._aggregate_org_units(year_data),
-            org_units_not_found=self._deduplicate_org_units(warnings.org_units_not_found),
-            org_units_with_unmatched_interventions=self._deduplicate_org_units(
-                warnings.org_units_with_unmatched_interventions
-            ),
+            org_units_not_found=self._deduplicate_org_units(org_units_not_found),
+            unmatched_intervention_mixes=self._sort_unmatched_mixes(unmatched_mixes),
             interventions_without_impact_ref=interventions_without_impact_ref,
             provider_meta=self._provider.get_meta(),
             **{f.name: getattr(overall, f.name) for f in ImpactMetrics.__dataclass_fields__.values()},

@@ -822,16 +822,6 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'These districts are skipped in the impact results. Districts are matched to the impact database by name.',
     },
-    orgUnitsWithUnmatchedInterventionsTitle: {
-        id: 'iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventionsTitle',
-        defaultMessage:
-            '{count, plural, one {# district without impact data for its interventions} other {# districts without impact data for their interventions}}',
-    },
-    orgUnitsWithUnmatchedInterventions: {
-        id: 'iaso.snt_malaria.compareCustomize.orgUnitsWithUnmatchedInterventions',
-        defaultMessage:
-            'These districts exist in the impact database, but it has no results for the interventions assigned to them, so they are skipped.',
-    },
     operator: {
         id: 'iaso.snt_malaria.scenarioRule.operator',
         defaultMessage: 'Operator',
@@ -1250,6 +1240,16 @@ export const MESSAGES = defineMessages({
     warningsTitle: {
         id: 'iaso.snt_malaria.compareCustomize.warningsTitle',
         defaultMessage: 'Warnings',
+    },
+    unmatchedInterventionMixesTitle: {
+        id: 'iaso.snt_malaria.compareCustomize.unmatchedInterventionMixesTitle',
+        defaultMessage:
+            '{count, plural, one {No impact data for # intervention mix} other {No impact data for # intervention mixes}}',
+    },
+    unmatchedInterventionMixes: {
+        id: 'iaso.snt_malaria.compareCustomize.unmatchedInterventionMixes',
+        defaultMessage:
+            "Impact is looked up for each district's full intervention mix. There are no results for these mixes, so {count, plural, one {# district is} other {# districts are}} skipped.",
     },
     interventionsWithoutImpactRefTitle: {
         id: 'iaso.snt_malaria.compareCustomize.interventionsWithoutImpactRefTitle',

@@ -16,6 +16,7 @@ from plugins.snt_malaria.services.impact import (
     InterventionRef,
     InterventionWithoutImpactRef,
     OrgUnitImpactMetrics,
+    UnmatchedInterventionMix,
     _aggregate_metrics,
 )
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
@@ -284,7 +285,7 @@ class ImpactServiceGetScenarioImpactTestCase(SNTMalariaTestCase):
 
         # -- warnings should be empty in the happy path --
         self.assertEqual(result.org_units_not_found, [])
-        self.assertEqual(result.org_units_with_unmatched_interventions, [])
+        self.assertEqual(result.unmatched_intervention_mixes, [])
         self.assertEqual(result.interventions_without_impact_ref, [])
 
     def test_service_calls_match_impact_bulk(self):
@@ -351,20 +352,73 @@ class ImpactServiceGetScenarioImpactTestCase(SNTMalariaTestCase):
         self._assert_scenario_impact(result)
 
     def test_warnings_propagated_bulk(self):
-        """Warnings from the provider should appear on the final ScenarioImpactMetrics."""
-        warnings = MatchWarnings(
-            org_units_not_found=[OrgUnitRef(id=self.district1.id, name=self.district1.name)],
-            org_units_with_unmatched_interventions=[OrgUnitRef(id=self.district2.id, name=self.district2.name)],
-        )
+        """Not-found warnings from the provider should appear on the final ScenarioImpactMetrics."""
+        warnings = MatchWarnings(org_units_not_found=[OrgUnitRef(id=self.district1.id, name=self.district1.name)])
         mock_provider = self._make_provider_mock(supports_bulk=True, warnings=warnings)
 
         service = ImpactService(provider=mock_provider)
         result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
 
-        not_found_ids = {ou.id for ou in result.org_units_not_found}
-        unmatched_ids = {ou.id for ou in result.org_units_with_unmatched_interventions}
-        self.assertIn(self.district1.id, not_found_ids)
-        self.assertIn(self.district2.id, unmatched_ids)
+        self.assertEqual(result.org_units_not_found, [OrgUnitRef(id=self.district1.id, name=self.district1.name)])
+
+    def _expected_unmatched_mixes(self):
+        return [
+            UnmatchedInterventionMix(
+                interventions=[
+                    InterventionRef(id=self.intervention2.id, name="IPTp"),
+                    InterventionRef(id=self.intervention1.id, name="SMC"),
+                ],
+                org_units=[OrgUnitRef(id=self.district3.id, name="District 3")],
+            ),
+            UnmatchedInterventionMix(
+                interventions=[InterventionRef(id=self.intervention1.id, name="SMC")],
+                org_units=[OrgUnitRef(id=self.district2.id, name="District 2")],
+            ),
+        ]
+
+    def _unmatched_warnings_for(self, org_units):
+        unmatched = [ou for ou in org_units if ou.id in {self.district2.id, self.district3.id}]
+        return MatchWarnings(
+            org_units_with_unmatched_interventions=[OrgUnitRef(id=ou.id, name=ou.name) for ou in unmatched]
+        )
+
+    def test_unmatched_org_units_are_grouped_by_intervention_mix_bulk(self):
+        mock_provider = self._make_provider_mock(supports_bulk=True)
+        mock_provider.match_impact_bulk.side_effect = lambda org_units, **kw: BulkMatchResult(
+            warnings=self._unmatched_warnings_for(org_units)
+        )
+
+        service = ImpactService(provider=mock_provider)
+        result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
+
+        self.assertEqual(result.unmatched_intervention_mixes, self._expected_unmatched_mixes())
+
+    def test_unmatched_org_units_are_grouped_by_intervention_mix_individual(self):
+        mock_provider = self._make_provider_mock(supports_bulk=False)
+        mock_provider.match_impact.side_effect = lambda org_unit, **kw: MatchResult(
+            warnings=self._unmatched_warnings_for([org_unit])
+        )
+
+        service = ImpactService(provider=mock_provider)
+        result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
+
+        self.assertEqual(result.unmatched_intervention_mixes, self._expected_unmatched_mixes())
+
+    def test_unmatched_mixes_are_ordered_by_number_of_org_units(self):
+        mock_provider = self._make_provider_mock(supports_bulk=False)
+        mock_provider.match_impact.side_effect = lambda org_unit, **kw: MatchResult(
+            warnings=MatchWarnings(
+                org_units_with_unmatched_interventions=[OrgUnitRef(id=org_unit.id, name=org_unit.name)]
+            )
+        )
+
+        service = ImpactService(provider=mock_provider)
+        result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
+
+        self.assertEqual(
+            [[ou.id for ou in mix.org_units] for mix in result.unmatched_intervention_mixes],
+            [[self.district1.id, self.district2.id], [self.district3.id]],
+        )
 
     def test_warnings_propagated_individual(self):
         """Warnings from match_impact should appear on the final ScenarioImpactMetrics."""
@@ -478,6 +532,30 @@ class ImpactServiceGetScenarioImpactTestCase(SNTMalariaTestCase):
 
         self.assertEqual(
             sorted(call.args[0] for call in mock_provider.is_known_impact_ref.call_args_list), ["iptp", "smc"]
+        )
+
+    def test_org_units_without_any_usable_impact_ref_are_not_reported_as_unmatched_mix(self):
+        """An empty mix is already covered by the left-out interventions, so it is not reported as unmatched."""
+        self.intervention1.impact_ref = ""
+        self.intervention1.save()
+        mock_provider = self._make_provider_mock(supports_bulk=True)
+        mock_provider.match_impact_bulk.side_effect = lambda org_units, **kw: BulkMatchResult(
+            warnings=MatchWarnings(
+                org_units_with_unmatched_interventions=[OrgUnitRef(id=ou.id, name=ou.name) for ou in org_units]
+            )
+        )
+
+        service = ImpactService(provider=mock_provider)
+        result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
+
+        self.assertEqual(
+            result.unmatched_intervention_mixes,
+            [
+                UnmatchedInterventionMix(
+                    interventions=[InterventionRef(id=self.intervention2.id, name="IPTp")],
+                    org_units=[OrgUnitRef(id=self.district3.id, name="District 3")],
+                ),
+            ],
         )
 
     def test_warnings_use_intervention_short_name_when_set(self):

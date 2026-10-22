@@ -80,7 +80,7 @@ export const useMatchWarnings = ({
 }: UseMatchWarningsArgs) => {
     return useMemo(() => {
         const notFound: ScenarioOrgUnits[] = [];
-        const unmatched: ScenarioOrgUnits[] = [];
+        const unmatchedMixes: ScenarioWarningGroup[] = [];
         const withoutImpactRef: ScenarioWarningGroup[] = [];
 
         displayScenarios.forEach(scenario => {
@@ -90,9 +90,18 @@ export const useMatchWarnings = ({
                 scenario,
                 orgUnits: impact.org_units_not_found ?? [],
             });
-            unmatched.push({
-                scenario,
-                orgUnits: impact.org_units_with_unmatched_interventions ?? [],
+            (impact.unmatched_intervention_mixes ?? []).forEach(mix => {
+                unmatchedMixes.push({
+                    scenario,
+                    key: mix.interventions
+                        .map(intervention => intervention.id)
+                        .sort((a, b) => a - b)
+                        .join('-'),
+                    interventionNames: mix.interventions.map(
+                        intervention => intervention.name,
+                    ),
+                    orgUnits: mix.org_units,
+                });
             });
             (impact.interventions_without_impact_ref ?? []).forEach(
                 ({ intervention, org_units }) => {
@@ -108,8 +117,9 @@ export const useMatchWarnings = ({
 
         return {
             orgUnitsNotFound: mergeOrgUnitsAcrossScenarios(notFound),
-            orgUnitsWithUnmatchedInterventions:
-                mergeOrgUnitsAcrossScenarios(unmatched),
+            unmatchedInterventionMixes: mergeGroupsAcrossScenarios(
+                unmatchedMixes,
+            ).sort((a, b) => b.orgUnitNames.length - a.orgUnitNames.length),
             interventionsWithoutImpactRef: mergeGroupsAcrossScenarios(
                 withoutImpactRef,
             ).sort((a, b) =>
