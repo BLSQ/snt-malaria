@@ -70,12 +70,23 @@ export type ImpactProviderMeta = {
     provider_key: string;
 };
 
+export type InterventionRef = {
+    id: number;
+    name: string;
+};
+
+export type InterventionWithoutImpactRef = {
+    intervention: InterventionRef;
+    org_units: OrgUnitRef[];
+};
+
 export type ScenarioImpactMetrics = ImpactMetrics & {
     scenario_id: number;
     by_year: YearImpactMetrics[];
     org_units: OrgUnitImpactMetrics[];
     org_units_not_found: OrgUnitRef[];
     org_units_with_unmatched_interventions: OrgUnitRef[];
+    interventions_without_impact_ref: InterventionWithoutImpactRef[];
     provider_meta: ImpactProviderMeta;
 };
 
@@ -86,6 +97,13 @@ export type ScenarioYearRange = {
 
 export type MatchWarningOrgUnit = OrgUnitRef & {
     scenarios: ScenarioDisplay[];
+};
+
+export type MatchWarningGroup = {
+    key: string;
+    interventionNames: string[];
+    scenarios: ScenarioDisplay[];
+    orgUnitNames: string[];
 };
 
 export type ImpactYearRange = {

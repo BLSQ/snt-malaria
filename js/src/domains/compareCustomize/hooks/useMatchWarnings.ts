@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import {
+    MatchWarningGroup,
     MatchWarningOrgUnit,
     OrgUnitRef,
     ScenarioDisplay,
@@ -8,6 +9,13 @@ import {
 
 type ScenarioOrgUnits = {
     scenario: ScenarioDisplay;
+    orgUnits: OrgUnitRef[];
+};
+
+type ScenarioWarningGroup = {
+    scenario: ScenarioDisplay;
+    key: string;
+    interventionNames: string[];
     orgUnits: OrgUnitRef[];
 };
 
@@ -38,6 +46,34 @@ const mergeOrgUnitsAcrossScenarios = (
     );
 };
 
+const mergeGroupsAcrossScenarios = (
+    entries: ScenarioWarningGroup[],
+): MatchWarningGroup[] => {
+    const byKey = new Map<
+        string,
+        Omit<MatchWarningGroup, 'orgUnitNames'> & { orgUnitNames: Set<string> }
+    >();
+    entries.forEach(({ scenario, key, interventionNames, orgUnits }) => {
+        const existing = byKey.get(key) ?? {
+            key,
+            interventionNames,
+            scenarios: [],
+            orgUnitNames: new Set<string>(),
+        };
+        existing.scenarios.push(scenario);
+        orgUnits.forEach(orgUnit =>
+            existing.orgUnitNames.add(orgUnit.org_unit_name),
+        );
+        byKey.set(key, existing);
+    });
+    return [...byKey.values()].map(group => ({
+        ...group,
+        orgUnitNames: [...group.orgUnitNames].sort((a, b) =>
+            a.localeCompare(b),
+        ),
+    }));
+};
+
 export const useMatchWarnings = ({
     impactsByScenarioId,
     displayScenarios,
@@ -45,6 +81,7 @@ export const useMatchWarnings = ({
     return useMemo(() => {
         const notFound: ScenarioOrgUnits[] = [];
         const unmatched: ScenarioOrgUnits[] = [];
+        const withoutImpactRef: ScenarioWarningGroup[] = [];
 
         displayScenarios.forEach(scenario => {
             const impact = impactsByScenarioId.get(scenario.id);
@@ -57,12 +94,27 @@ export const useMatchWarnings = ({
                 scenario,
                 orgUnits: impact.org_units_with_unmatched_interventions ?? [],
             });
+            (impact.interventions_without_impact_ref ?? []).forEach(
+                ({ intervention, org_units }) => {
+                    withoutImpactRef.push({
+                        scenario,
+                        key: `${intervention.id}`,
+                        interventionNames: [intervention.name],
+                        orgUnits: org_units,
+                    });
+                },
+            );
         });
 
         return {
             orgUnitsNotFound: mergeOrgUnitsAcrossScenarios(notFound),
             orgUnitsWithUnmatchedInterventions:
                 mergeOrgUnitsAcrossScenarios(unmatched),
+            interventionsWithoutImpactRef: mergeGroupsAcrossScenarios(
+                withoutImpactRef,
+            ).sort((a, b) =>
+                a.interventionNames[0].localeCompare(b.interventionNames[0]),
+            ),
         };
     }, [impactsByScenarioId, displayScenarios]);
 };

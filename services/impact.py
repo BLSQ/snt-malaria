@@ -55,6 +55,26 @@ class YearImpactMetrics(ImpactMetrics):
     org_units: list[OrgUnitImpactMetrics] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class InterventionRef:
+    """Lightweight reference to an intervention (id + display name)."""
+
+    id: int
+    name: str
+
+    @classmethod
+    def from_intervention(cls, intervention: Intervention) -> "InterventionRef":
+        return cls(id=intervention.id, name=intervention.short_name or intervention.name)
+
+
+@dataclass
+class InterventionWithoutImpactRef:
+    """An assigned intervention left out of impact matching, with the org units it is assigned to."""
+
+    intervention: InterventionRef
+    org_units: list[OrgUnitRef] = field(default_factory=list)
+
+
 @dataclass
 class ScenarioImpactMetrics(ImpactMetrics):
     """Top-level impact result for a scenario, with breakdowns by year and org unit."""
@@ -64,6 +84,7 @@ class ScenarioImpactMetrics(ImpactMetrics):
     org_units: list[OrgUnitImpactMetrics] = field(default_factory=list)
     org_units_not_found: list[OrgUnitRef] = field(default_factory=list)
     org_units_with_unmatched_interventions: list[OrgUnitRef] = field(default_factory=list)
+    interventions_without_impact_ref: list[InterventionWithoutImpactRef] = field(default_factory=list)
     provider_meta: ImpactProviderMeta = field(default_factory=lambda: ImpactProviderMeta(provider_key=""))
 
 
@@ -115,8 +136,9 @@ class ImpactService:
     ) -> ScenarioImpactMetrics:
         """Return the full impact result for a scenario."""
         org_unit_interventions = self._get_org_unit_interventions(scenario)
-        year_data, warnings = self._collect_metrics(org_unit_interventions, age_group, year_from, year_to)
-        return self._build_response(scenario, year_data, warnings)
+        matchable_interventions, interventions_without_impact_ref = self._split_by_impact_ref(org_unit_interventions)
+        year_data, warnings = self._collect_metrics(matchable_interventions, age_group, year_from, year_to)
+        return self._build_response(scenario, year_data, warnings, interventions_without_impact_ref)
 
     @staticmethod
     def _get_org_unit_interventions(scenario: Scenario) -> dict[OrgUnit, list[Intervention]]:
@@ -124,12 +146,49 @@ class ImpactService:
         assignments = (
             InterventionAssignment.objects.select_related("org_unit", "org_unit__impact_mapping", "intervention")
             .filter(scenario=scenario, org_unit__version=default_version)
-            .order_by("org_unit__id")
+            .order_by("org_unit__id", "intervention__id")
         )
         result: dict[OrgUnit, list[Intervention]] = defaultdict(list)
         for assignment in assignments:
             result[assignment.org_unit].append(assignment.intervention)
         return dict(result)
+
+    def _split_by_impact_ref(
+        self,
+        org_unit_interventions: dict[OrgUnit, list[Intervention]],
+    ) -> tuple[dict[OrgUnit, list[Intervention]], list[InterventionWithoutImpactRef]]:
+        """Separate interventions the provider can match from those with an empty or unknown impact_ref.
+
+        Org units keep their entry even when none of their interventions can be matched, so they are
+        still looked up with an empty intervention mix.
+        """
+        is_known_by_ref: dict[str, bool] = {}
+
+        def has_usable_impact_ref(intervention: Intervention) -> bool:
+            impact_ref = (intervention.impact_ref or "").strip()
+            if not impact_ref:
+                return False
+            if impact_ref not in is_known_by_ref:
+                is_known_by_ref[impact_ref] = self._provider.is_known_impact_ref(impact_ref)
+            return is_known_by_ref[impact_ref]
+
+        matchable: dict[OrgUnit, list[Intervention]] = {}
+        left_out: dict[int, InterventionWithoutImpactRef] = {}
+        for org_unit, interventions in org_unit_interventions.items():
+            matchable[org_unit] = []
+            for intervention in interventions:
+                if has_usable_impact_ref(intervention):
+                    matchable[org_unit].append(intervention)
+                    continue
+                entry = left_out.setdefault(
+                    intervention.id,
+                    InterventionWithoutImpactRef(intervention=InterventionRef.from_intervention(intervention)),
+                )
+                entry.org_units.append(OrgUnitRef(id=org_unit.id, name=org_unit.name))
+
+        for entry in left_out.values():
+            entry.org_units.sort(key=lambda ou: ou.name)
+        return matchable, sorted(left_out.values(), key=lambda entry: entry.intervention.name)
 
     def _collect_metrics(
         self,
@@ -248,6 +307,7 @@ class ImpactService:
         scenario: Scenario,
         year_data: dict[int, list[OrgUnitImpactMetrics]],
         warnings: MatchWarnings,
+        interventions_without_impact_ref: list[InterventionWithoutImpactRef],
     ) -> ScenarioImpactMetrics:
         by_year = []
         all_metrics: list[OrgUnitImpactMetrics] = []
@@ -276,6 +336,7 @@ class ImpactService:
             org_units_with_unmatched_interventions=self._deduplicate_org_units(
                 warnings.org_units_with_unmatched_interventions
             ),
+            interventions_without_impact_ref=interventions_without_impact_ref,
             provider_meta=self._provider.get_meta(),
             **{f.name: getattr(overall, f.name) for f in ImpactMetrics.__dataclass_fields__.values()},
         )

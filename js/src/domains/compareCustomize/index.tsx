@@ -222,11 +222,14 @@ export const CompareCustomize: FC = () => {
         isImpactLoading,
     );
 
-    const { orgUnitsNotFound, orgUnitsWithUnmatchedInterventions } =
-        useMatchWarnings({
-            impactsByScenarioId,
-            displayScenarios,
-        });
+    const {
+        orgUnitsNotFound,
+        orgUnitsWithUnmatchedInterventions,
+        interventionsWithoutImpactRef,
+    } = useMatchWarnings({
+        impactsByScenarioId,
+        displayScenarios,
+    });
 
     const providerMeta: ImpactProviderMeta | undefined = useMemo(() => {
         for (const impact of impactsByScenarioId.values()) {
@@ -320,6 +323,9 @@ export const CompareCustomize: FC = () => {
                                         orgUnitsNotFound={orgUnitsNotFound}
                                         orgUnitsWithUnmatchedInterventions={
                                             orgUnitsWithUnmatchedInterventions
+                                        }
+                                        interventionsWithoutImpactRef={
+                                            interventionsWithoutImpactRef
                                         }
                                         providerMeta={providerMeta}
                                     />

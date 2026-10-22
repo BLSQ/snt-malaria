@@ -13,6 +13,8 @@ from plugins.snt_malaria.providers.impact.base import (
 )
 from plugins.snt_malaria.services.impact import (
     ImpactService,
+    InterventionRef,
+    InterventionWithoutImpactRef,
     OrgUnitImpactMetrics,
     _aggregate_metrics,
 )
@@ -105,10 +107,10 @@ class ImpactServiceGetScenarioImpactTestCase(SNTMalariaTestCase):
             account=self.account, created_by=self.user, name="Chemoprevention"
         )
         self.intervention1 = self.create_snt_intervention(
-            intervention_category=self.int_category, created_by=self.user, name="SMC", code="smc"
+            intervention_category=self.int_category, created_by=self.user, name="SMC", code="smc", impact_ref="smc"
         )
         self.intervention2 = self.create_snt_intervention(
-            intervention_category=self.int_category, created_by=self.user, name="IPTp", code="iptp"
+            intervention_category=self.int_category, created_by=self.user, name="IPTp", code="iptp", impact_ref="iptp"
         )
 
         self.org_unit_type = OrgUnitType.objects.create(name="DISTRICT")
@@ -202,6 +204,7 @@ class ImpactServiceGetScenarioImpactTestCase(SNTMalariaTestCase):
         results_by_ou = self._make_impact_results()
         mock_provider = Mock()
         mock_provider.supports_bulk = supports_bulk
+        mock_provider.is_known_impact_ref.side_effect = lambda impact_ref: impact_ref in {"smc", "iptp"}
         mock_provider.get_meta.return_value = meta if meta is not None else ImpactProviderMeta(provider_key="test")
 
         w = warnings or MatchWarnings()
@@ -282,6 +285,7 @@ class ImpactServiceGetScenarioImpactTestCase(SNTMalariaTestCase):
         # -- warnings should be empty in the happy path --
         self.assertEqual(result.org_units_not_found, [])
         self.assertEqual(result.org_units_with_unmatched_interventions, [])
+        self.assertEqual(result.interventions_without_impact_ref, [])
 
     def test_service_calls_match_impact_bulk(self):
         """Test that the service calls match_impact_bulk with correct grouping and produces correct outcomes."""
@@ -386,3 +390,111 @@ class ImpactServiceGetScenarioImpactTestCase(SNTMalariaTestCase):
         result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
 
         self.assertEqual(result.provider_meta, ImpactProviderMeta(provider_key="fake"))
+
+    def test_interventions_without_usable_impact_ref_are_left_out_of_the_mix(self):
+        """Interventions with an empty or unknown impact_ref are not sent to the provider and are reported."""
+        no_ref = self.create_snt_intervention(
+            intervention_category=self.int_category, created_by=self.user, name="PMC", code="pmc", impact_ref=""
+        )
+        unknown_ref = self.create_snt_intervention(
+            intervention_category=self.int_category, created_by=self.user, name="LSM", code="lsm", impact_ref="lsm"
+        )
+        self.create_snt_assignment(self.scenario, self.district1, no_ref, self.user)
+        self.create_snt_assignment(self.scenario, self.district3, no_ref, self.user)
+        self.create_snt_assignment(self.scenario, self.district2, unknown_ref, self.user)
+        mock_provider = self._make_provider_mock(supports_bulk=True)
+
+        service = ImpactService(provider=mock_provider)
+        result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
+
+        mock_provider.match_impact_bulk.assert_has_calls(
+            [
+                mock.call(
+                    org_units=[self.district1, self.district2],
+                    interventions=[self.intervention1],
+                    age_group="under5",
+                    year_from=2025,
+                    year_to=2027,
+                ),
+                mock.call(
+                    org_units=[self.district3],
+                    interventions=[self.intervention1, self.intervention2],
+                    age_group="under5",
+                    year_from=2025,
+                    year_to=2027,
+                ),
+            ]
+        )
+        self.assertEqual(
+            result.interventions_without_impact_ref,
+            [
+                InterventionWithoutImpactRef(
+                    intervention=InterventionRef(id=unknown_ref.id, name="LSM"),
+                    org_units=[OrgUnitRef(id=self.district2.id, name="District 2")],
+                ),
+                InterventionWithoutImpactRef(
+                    intervention=InterventionRef(id=no_ref.id, name="PMC"),
+                    org_units=[
+                        OrgUnitRef(id=self.district1.id, name="District 1"),
+                        OrgUnitRef(id=self.district3.id, name="District 3"),
+                    ],
+                ),
+            ],
+        )
+
+    def test_org_unit_without_any_usable_impact_ref_is_matched_with_an_empty_mix(self):
+        """An org unit whose interventions all lack a usable impact_ref is still looked up, with no interventions."""
+        self.intervention1.impact_ref = ""
+        self.intervention1.save()
+        mock_provider = self._make_provider_mock(supports_bulk=False)
+
+        service = ImpactService(provider=mock_provider)
+        result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
+
+        mock_provider.match_impact.assert_any_call(
+            org_unit=self.district1,
+            interventions=[],
+            age_group="under5",
+            year_from=2025,
+            year_to=2027,
+        )
+        mock_provider.match_impact.assert_any_call(
+            org_unit=self.district3,
+            interventions=[self.intervention2],
+            age_group="under5",
+            year_from=2025,
+            year_to=2027,
+        )
+        self.assertEqual(
+            [entry.intervention.id for entry in result.interventions_without_impact_ref], [self.intervention1.id]
+        )
+
+    def test_provider_is_asked_once_per_distinct_impact_ref(self):
+        mock_provider = self._make_provider_mock(supports_bulk=True)
+
+        ImpactService(provider=mock_provider).get_scenario_impact(
+            self.scenario, age_group="under5", year_from=2025, year_to=2027
+        )
+
+        self.assertEqual(
+            sorted(call.args[0] for call in mock_provider.is_known_impact_ref.call_args_list), ["iptp", "smc"]
+        )
+
+    def test_warnings_use_intervention_short_name_when_set(self):
+        no_ref = self.create_snt_intervention(
+            intervention_category=self.int_category,
+            created_by=self.user,
+            name="Dual AI",
+            short_name="Dual AI (Routine)",
+            code="dual_ai_routine",
+            impact_ref="",
+        )
+        self.create_snt_assignment(self.scenario, self.district1, no_ref, self.user)
+        mock_provider = self._make_provider_mock(supports_bulk=True)
+
+        service = ImpactService(provider=mock_provider)
+        result = service.get_scenario_impact(self.scenario, age_group="under5", year_from=2025, year_to=2027)
+
+        self.assertEqual(
+            [entry.intervention.name for entry in result.interventions_without_impact_ref], ["Dual AI (Routine)"]
+        )

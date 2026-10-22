@@ -7,9 +7,11 @@ import { WarningGroup } from '../../../components/WarningGroup';
 import { MESSAGES } from '../../messages';
 import {
     ImpactProviderMeta,
+    MatchWarningGroup,
     MatchWarningOrgUnit,
     ScenarioYearRange,
 } from '../types';
+import { InterventionWarningGroup } from './InterventionWarningGroup';
 import { YearRangeMismatchDetails } from './YearRangeMismatchDetails';
 
 const styles = {
@@ -41,6 +43,7 @@ type Props = {
     impactYearRange?: [number, number];
     orgUnitsNotFound?: MatchWarningOrgUnit[];
     orgUnitsWithUnmatchedInterventions?: MatchWarningOrgUnit[];
+    interventionsWithoutImpactRef?: MatchWarningGroup[];
     providerMeta?: ImpactProviderMeta;
 };
 
@@ -50,6 +53,7 @@ export const ImpactWarnings: FC<Props> = ({
     impactYearRange,
     orgUnitsNotFound = [],
     orgUnitsWithUnmatchedInterventions = [],
+    interventionsWithoutImpactRef = [],
     providerMeta,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -57,7 +61,8 @@ export const ImpactWarnings: FC<Props> = ({
     const hasWarnings =
         showYearRangeError ||
         orgUnitsNotFound.length > 0 ||
-        orgUnitsWithUnmatchedInterventions.length > 0;
+        orgUnitsWithUnmatchedInterventions.length > 0 ||
+        interventionsWithoutImpactRef.length > 0;
     const isFakeProvider = providerMeta?.provider_key === 'fake';
 
     return (
@@ -121,6 +126,25 @@ export const ImpactWarnings: FC<Props> = ({
                                 countLabel={orgUnit.scenarios
                                     .map(scenario => scenario.label)
                                     .join(', ')}
+                            />
+                        ))}
+                    </WarningBox>
+                )}
+                {interventionsWithoutImpactRef.length > 0 && (
+                    <WarningBox
+                        severity="warning"
+                        title={formatMessage(
+                            MESSAGES.interventionsWithoutImpactRefTitle,
+                            { count: interventionsWithoutImpactRef.length },
+                        )}
+                        description={formatMessage(
+                            MESSAGES.interventionsWithoutImpactRef,
+                        )}
+                    >
+                        {interventionsWithoutImpactRef.map(intervention => (
+                            <InterventionWarningGroup
+                                key={intervention.key}
+                                group={intervention}
                             />
                         ))}
                     </WarningBox>

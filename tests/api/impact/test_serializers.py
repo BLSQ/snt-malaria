@@ -1,8 +1,10 @@
 from unittest.mock import Mock
 
 from plugins.snt_malaria.api.impact.serializers import ImpactQuerySerializer, ScenarioImpactSerializer
-from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProviderMeta
+from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProviderMeta, OrgUnitRef
 from plugins.snt_malaria.services.impact import (
+    InterventionRef,
+    InterventionWithoutImpactRef,
     OrgUnitImpactMetrics,
     ScenarioImpactMetrics,
     YearImpactMetrics,
@@ -190,6 +192,28 @@ class ScenarioImpactSerializerTestCase(SNTMalariaTestCase):
         self.assertIsNone(data["number_cases"]["upper"])
         self.assertEqual(data["by_year"], [])
         self.assertEqual(data["org_units"], [])
+
+    def test_interventions_without_impact_ref(self):
+        metrics = ScenarioImpactMetrics(
+            scenario_id=1,
+            interventions_without_impact_ref=[
+                InterventionWithoutImpactRef(
+                    intervention=InterventionRef(id=7, name="PMC"),
+                    org_units=[OrgUnitRef(id=3, name="District 3")],
+                ),
+            ],
+        )
+        data = ScenarioImpactSerializer(metrics).data
+
+        self.assertEqual(
+            data["interventions_without_impact_ref"],
+            [
+                {
+                    "intervention": {"id": 7, "name": "PMC"},
+                    "org_units": [{"org_unit_id": 3, "org_unit_name": "District 3"}],
+                }
+            ],
+        )
 
     def _assert_metric(self, metric_data, value, lower, upper):
         self.assertEqual(metric_data["value"], value)

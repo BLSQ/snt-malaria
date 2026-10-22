@@ -60,6 +60,16 @@ class OrgUnitRefSerializer(serializers.Serializer):
     org_unit_name = serializers.CharField(source="name")
 
 
+class InterventionRefSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
+class InterventionWithoutImpactRefSerializer(serializers.Serializer):
+    intervention = InterventionRefSerializer()
+    org_units = OrgUnitRefSerializer(many=True)
+
+
 class ImpactProviderMetaSerializer(serializers.Serializer):
     provider_key = serializers.CharField()
 
@@ -70,4 +80,5 @@ class ScenarioImpactSerializer(ImpactMetricsSerializer):
     org_units = OrgUnitMetricsSerializer(many=True)
     org_units_not_found = OrgUnitRefSerializer(many=True, default=[])
     org_units_with_unmatched_interventions = OrgUnitRefSerializer(many=True, default=[])
+    interventions_without_impact_ref = InterventionWithoutImpactRefSerializer(many=True, default=[])
     provider_meta = ImpactProviderMetaSerializer()

@@ -1251,6 +1251,16 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compareCustomize.warningsTitle',
         defaultMessage: 'Warnings',
     },
+    interventionsWithoutImpactRefTitle: {
+        id: 'iaso.snt_malaria.compareCustomize.interventionsWithoutImpactRefTitle',
+        defaultMessage:
+            '{count, plural, one {# intervention without an impact reference} other {# interventions without an impact reference}}',
+    },
+    interventionsWithoutImpactRef: {
+        id: 'iaso.snt_malaria.compareCustomize.interventionsWithoutImpactRef',
+        defaultMessage:
+            "These interventions have no impact reference, or one the provider doesn't recognise. In the districts where they are assigned, impact is calculated for the rest of the mix without them.",
+    },
     warningDistrictsCount: {
         id: 'iaso.snt_malaria.compareCustomize.warningDistrictsCount',
         defaultMessage: '{count, plural, one {# district} other {# districts}}',

@@ -695,6 +695,8 @@
     "iaso.snt_malaria.label.hideDistricts": "Hide districts",
     "iaso.snt_malaria.label.noImpactRefOption": "Don't assign",
     "iaso.snt_malaria.label.unknownImpactRefOption": "{ref} (unknown)",
+    "iaso.snt_malaria.compareCustomize.interventionsWithoutImpactRefTitle": "{count, plural, one {# intervention without an impact reference} other {# interventions without an impact reference}}",
+    "iaso.snt_malaria.compareCustomize.interventionsWithoutImpactRef": "These interventions have no impact reference, or one the provider doesn't recognise. In the districts where they are assigned, impact is calculated for the rest of the mix without them.",
     "iaso.snt_malaria.compareCustomize.yearRangeImpactData": "Impact data",
     "iaso.snt_malaria.compareCustomize.yearRangeNone": "None"
 }
