@@ -1,9 +1,8 @@
 import React, { FC, ReactNode } from 'react';
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import RemoveOutlinedIcon from '@mui/icons-material/RemoveOutlined';
-import { Box, IconButton, Theme, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { blueGrey } from '@mui/material/colors';
-import { alpha } from '@mui/material/styles';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
@@ -83,8 +82,7 @@ const styles = {
         mb: 1,
     },
     card: {
-        backgroundColor: (theme: Theme) =>
-            alpha(theme.palette.common.white, 0.5),
+        backgroundColor: 'common.white',
         borderRadius: 4,
         height: '100%',
         display: 'flex',
