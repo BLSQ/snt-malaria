@@ -1,9 +1,15 @@
 import React, { FC, useMemo } from 'react';
-import { Box, Typography } from '@mui/material';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { Box, Button, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
+import { Link as RouterLink } from 'react-router-dom';
+import { userHasPermission } from 'Iaso/domains/users/utils';
 import { SxStyles } from 'Iaso/types/general';
+import { useCurrentUser } from 'Iaso/utils/usersUtils';
 import { WarningBox } from '../../../components/WarningBox';
 import { WarningGroup } from '../../../components/WarningGroup';
+import { SETTINGS_READ } from '../../../constants/permissions';
+import { baseUrls } from '../../../constants/urls';
 import { MESSAGES } from '../../messages';
 import {
     ImpactProviderMeta,
@@ -57,6 +63,8 @@ export const ImpactWarnings: FC<Props> = ({
     providerMeta,
 }) => {
     const { formatMessage } = useSafeIntl();
+    const currentUser = useCurrentUser();
+    const canOpenInterventions = userHasPermission(SETTINGS_READ, currentUser);
 
     const hasWarnings =
         showYearRangeError ||
@@ -139,6 +147,22 @@ export const ImpactWarnings: FC<Props> = ({
                         description={formatMessage(
                             MESSAGES.interventionsWithoutImpactRef,
                         )}
+                        action={
+                            canOpenInterventions && (
+                                <Button
+                                    component={RouterLink}
+                                    to={`/${baseUrls.interventions}`}
+                                    variant="text"
+                                    color="primary"
+                                    size="small"
+                                    endIcon={<OpenInNewIcon />}
+                                >
+                                    {formatMessage(
+                                        MESSAGES.setUpInInterventions,
+                                    )}
+                                </Button>
+                            )
+                        }
                     >
                         {interventionsWithoutImpactRef.map(intervention => (
                             <InterventionWarningGroup

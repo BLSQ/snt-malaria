@@ -75,6 +75,9 @@ const styles = {
     description: {
         color: 'text.secondary',
     },
+    action: {
+        alignSelf: 'flex-end',
+    },
     details: {
         display: 'flex',
         flexDirection: 'column',
@@ -88,6 +91,7 @@ type Props = {
     description?: string;
     collapsible?: boolean;
     defaultExpanded?: boolean;
+    action?: ReactNode;
     children?: ReactNode;
 };
 
@@ -97,10 +101,11 @@ export const WarningBox: FC<Props> = ({
     description,
     collapsible = true,
     defaultExpanded = false,
+    action,
     children,
 }) => {
     const [expanded, setExpanded] = useState(defaultExpanded);
-    const hasBody = Boolean(description || children);
+    const hasBody = Boolean(description || children || action);
     const isToggleable = collapsible && hasBody;
     const isExpanded = !collapsible || expanded;
     const Icon = severityIcons[severity];
@@ -136,6 +141,7 @@ export const WarningBox: FC<Props> = ({
                             </Typography>
                         )}
                         {children && <Box sx={styles.details}>{children}</Box>}
+                        {action && <Box sx={styles.action}>{action}</Box>}
                     </Box>
                 </Collapse>
             )}

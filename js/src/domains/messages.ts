@@ -1256,6 +1256,10 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             "Impact is looked up for each district's full intervention mix. There are no results for these mixes, so {count, plural, one {# district is} other {# districts are}} skipped.",
     },
+    setUpInInterventions: {
+        id: 'iaso.snt_malaria.compareCustomize.setUpInInterventions',
+        defaultMessage: 'Set up in Interventions',
+    },
     interventionsWithoutImpactRefTitle: {
         id: 'iaso.snt_malaria.compareCustomize.interventionsWithoutImpactRefTitle',
         defaultMessage:
