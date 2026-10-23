@@ -6,20 +6,26 @@ import { useTranslatedErrors } from 'Iaso/libs/validation';
 import { DropdownOptions } from 'Iaso/types/utils';
 import { useGetExtendedFormikContext } from '../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../../messages';
-import { useGetImpactRefs } from '../hooks/useGetImpactRefs';
+import { ImpactRefOption } from '../types/intervention';
 import { InterventionFormValues } from '../types/interventionForm';
 
 const NO_IMPACT_REF = '__no_impact_ref__';
 
 type Props = {
     grantOptions: DropdownOptions<number>[];
+    impactRefs?: ImpactRefOption[];
+    isFetchingImpactRefs: boolean;
 };
 
 const styles = {
     field: { flex: '1 1 0', minWidth: 0 },
 };
 
-export const InterventionForm: FC<Props> = ({ grantOptions }) => {
+export const InterventionForm: FC<Props> = ({
+    grantOptions,
+    impactRefs,
+    isFetchingImpactRefs,
+}) => {
     const { formatMessage } = useSafeIntl();
 
     const { values, errors, touched, setFieldValueAndState } =
@@ -32,30 +38,30 @@ export const InterventionForm: FC<Props> = ({ grantOptions }) => {
         messages: MESSAGES,
     });
 
-    const { data: impactRefs } = useGetImpactRefs();
+    const isUnknownImpactRef = Boolean(
+        impactRefs?.length &&
+        values.impact_ref &&
+        !impactRefs.some(({ ref }) => ref === values.impact_ref),
+    );
 
     const impactRefOptions: DropdownOptions<string>[] | undefined =
         useMemo(() => {
-            const refs = impactRefs?.refs ?? [];
-            if (refs.length === 0) return undefined;
+            if (!impactRefs?.length) return undefined;
             const options = [
                 {
                     label: formatMessage(MESSAGES.noImpactRefOption),
                     value: NO_IMPACT_REF,
                 },
-                ...refs.map(({ ref, label }) => ({ label, value: ref })),
+                ...impactRefs.map(({ ref, label }) => ({ label, value: ref })),
             ];
-            const currentRef = values.impact_ref;
-            if (currentRef && !refs.some(({ ref }) => ref === currentRef)) {
+            if (isUnknownImpactRef) {
                 options.push({
-                    label: formatMessage(MESSAGES.unknownImpactRefOption, {
-                        ref: currentRef,
-                    }),
-                    value: currentRef,
+                    label: values.impact_ref,
+                    value: values.impact_ref,
                 });
             }
             return options;
-        }, [impactRefs, values.impact_ref, formatMessage]);
+        }, [impactRefs, isUnknownImpactRef, values.impact_ref, formatMessage]);
 
     const handleImpactRefChange = useCallback(
         (field: string, value?: string | null) =>
@@ -74,30 +80,32 @@ export const InterventionForm: FC<Props> = ({ grantOptions }) => {
 
     return (
         <Stack spacing={2} direction="row">
-            {impactRefOptions ? (
-                <InputComponent
-                    keyValue="impact_ref"
-                    type="select"
-                    multi={false}
-                    clearable={false}
-                    options={impactRefOptions}
-                    value={values.impact_ref || NO_IMPACT_REF}
-                    onChange={handleImpactRefChange}
-                    errors={getErrors('impact_ref')}
-                    labelString={formatMessage(MESSAGES.impactRefLabel)}
-                    wrapperSx={styles.field}
-                />
-            ) : (
-                <InputComponent
-                    keyValue="impact_ref"
-                    type="text"
-                    value={values.impact_ref}
-                    onChange={setFieldValueAndState}
-                    errors={getErrors('impact_ref')}
-                    labelString={formatMessage(MESSAGES.impactRefLabel)}
-                    wrapperSx={styles.field}
-                />
-            )}
+            <InputComponent
+                keyValue="impact_ref"
+                type="select"
+                multi={false}
+                clearable={false}
+                disabled={!impactRefOptions}
+                options={impactRefOptions ?? []}
+                value={
+                    impactRefOptions
+                        ? values.impact_ref || NO_IMPACT_REF
+                        : undefined
+                }
+                onChange={handleImpactRefChange}
+                errors={
+                    isUnknownImpactRef
+                        ? [formatMessage(MESSAGES.unknownImpactRef)]
+                        : getErrors('impact_ref')
+                }
+                helperText={
+                    !impactRefOptions && !isFetchingImpactRefs
+                        ? formatMessage(MESSAGES.noImpactProviderConfigured)
+                        : undefined
+                }
+                labelString={formatMessage(MESSAGES.impactRefLabel)}
+                wrapperSx={styles.field}
+            />
             <InputComponent
                 keyValue="grant"
                 type="select"

@@ -514,9 +514,14 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.label.noImpactRefOption',
         defaultMessage: "Don't assign",
     },
-    unknownImpactRefOption: {
-        id: 'iaso.snt_malaria.label.unknownImpactRefOption',
-        defaultMessage: '{ref} (unknown)',
+    noImpactProviderConfigured: {
+        id: 'iaso.snt_malaria.label.noImpactProviderConfigured',
+        defaultMessage: 'No impact provider is configured for this account.',
+    },
+    unknownImpactRef: {
+        id: 'iaso.snt_malaria.label.unknownImpactRef',
+        defaultMessage:
+            'This reference is not available for the impact provider. Pick another one.',
     },
     impactSettingsLabel: {
         id: 'iaso.snt_malaria.impactSettings.label',

@@ -17,6 +17,7 @@ import { useGetGrants } from '../../costManagement/grants/hooks/useGetGrants';
 import { MESSAGES } from '../../messages';
 import { useDeleteIntervention } from '../hooks/useDeleteIntervention';
 import { useDuplicateIntervention } from '../hooks/useDuplicateIntervention';
+import { useGetImpactRefs } from '../hooks/useGetImpactRefs';
 import { useGetInterventionDetails } from '../hooks/useGetInterventionDetails';
 import { useInterventionFormState } from '../hooks/useInterventionFormState';
 import { useSaveIntervention } from '../hooks/useSaveIntervention';
@@ -135,9 +136,20 @@ export const InterventionFormWrapper: FC<Props> = ({
         [saveIntervention, saveInterventionDetails, isNew, onSaved],
     );
 
+    const { data: impactRefs, isFetching: isFetchingImpactRefs } =
+        useGetImpactRefs();
+    const knownImpactRefs = useMemo(
+        () =>
+            impactRefs?.refs.length
+                ? impactRefs.refs.map(({ ref }) => ref)
+                : undefined,
+        [impactRefs],
+    );
+
     const formik = useInterventionFormState({
         onSubmit,
         initialValues,
+        knownImpactRefs,
     });
 
     const handleSave = useCallback(async () => {
@@ -236,7 +248,11 @@ export const InterventionFormWrapper: FC<Props> = ({
                     <InterventionBasicForm />
                 </SettingsFormContainer>
                 <SettingsFormContainer>
-                    <InterventionForm grantOptions={grantOptions} />
+                    <InterventionForm
+                        grantOptions={grantOptions}
+                        impactRefs={impactRefs?.refs}
+                        isFetchingImpactRefs={isFetchingImpactRefs}
+                    />
                 </SettingsFormContainer>
             </ExtendedFormikProvider>
         </CardStyled>

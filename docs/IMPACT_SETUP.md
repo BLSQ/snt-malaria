@@ -115,9 +115,14 @@ Example:
 ## 2. Intervention impact_ref
 
 Each `Intervention` has an `impact_ref` field that tells the provider how to
-match it in the external data source. The format is provider-specific. Configure
-this in **Django Admin → SNT Malaria → Interventions** (the field is
-list-editable).
+match it in the external data source. The format is provider-specific. Pick it in
+the intervention settings, where the dropdown lists the refs the account's
+provider knows (it is disabled when no provider is configured), or set it in
+**Django Admin → SNT Malaria → Interventions**.
+
+An intervention with an empty ref, or one the provider doesn't know, is left out
+of the intervention mix when looking up impact, and the compare page lists it in
+a warning.
 
 ### SwissTPH format
 
