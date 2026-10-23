@@ -4,7 +4,12 @@ from plugins.snt_malaria.api.account_settings.views import AccountSettingsViewSe
 from plugins.snt_malaria.api.budget.views import BudgetViewSet
 from plugins.snt_malaria.api.budget_settings.views import BudgetSettingsViewSet
 from plugins.snt_malaria.api.composite_layer_ai.views import CompositeLayerAIViewSet
-from plugins.snt_malaria.api.impact.views import ImpactAgeGroupsViewSet, ImpactViewSet, ImpactYearRangeViewSet
+from plugins.snt_malaria.api.impact.views import (
+    ImpactAgeGroupsViewSet,
+    ImpactRefsViewSet,
+    ImpactViewSet,
+    ImpactYearRangeViewSet,
+)
 from plugins.snt_malaria.api.scenario_rule_ai.views import ScenarioRuleAIViewSet
 
 from .account_setup.views import SNTAccountSetupViewSet
@@ -46,6 +51,7 @@ router.register(r"snt_malaria/budget_settings", BudgetSettingsViewSet, basename=
 router.register(r"snt_malaria/impact", ImpactViewSet, basename="impact")
 router.register(r"snt_malaria/impact_year_range", ImpactYearRangeViewSet, basename="impact_year_range")
 router.register(r"snt_malaria/impact_age_groups", ImpactAgeGroupsViewSet, basename="impact_age_groups")
+router.register(r"snt_malaria/impact_refs", ImpactRefsViewSet, basename="impact_refs")
 router.register(r"snt_malaria/account_settings", AccountSettingsViewSet, basename="account_settings")
 router.register(r"snt_malaria/account_setup", SNTAccountSetupViewSet, basename="account_setup")
 router.register(r"snt_malaria/composite_layers", CompositeLayerViewSet, basename="composite_layers")

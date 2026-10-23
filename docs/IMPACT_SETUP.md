@@ -110,20 +110,24 @@ Example:
 ```
 
 > [!NOTE]
-> Responses are tagged with `provider_meta.provider_key = "fake"`. The Compare & Customize UI picks this up and shows an info banner so users know the figures are generated, not real.
+> Responses are tagged with `provider_meta.provider_key = "fake"`. The Comparison page picks this up and shows an info banner so users know the figures are generated, not real.
 
 ## 2. Intervention impact_ref
 
 Each `Intervention` has an `impact_ref` field that tells the provider how to
-match it in the external data source. The format is provider-specific. Configure
-this in **Django Admin → SNT Malaria → Interventions** (the field is
-list-editable).
+match it in the external data source. The format is provider-specific. Pick it in
+the intervention settings, where the dropdown lists the refs the account's
+provider knows (it is disabled when no provider is configured), or set it in
+**Django Admin → SNT Malaria → Interventions**.
+
+An intervention with an empty ref, or one the provider doesn't know, is left out
+of the intervention mix when looking up impact, and the compare page lists it in
+a warning.
 
 ### SwissTPH format
 
-Use the `deployed_int_`* column name from the `impact_data` table. Multiple
-columns can be comma-separated when one intervention maps to multiple columns
-(e.g. `deployed_int_pbo,deployed_int_std`).
+Use the `deployed_int_`* column name from the `impact_data` table. Each
+intervention maps to exactly one column.
 
 
 | Intervention                                      | impact_ref                           |
@@ -172,13 +176,13 @@ Map each real intervention to one of five generic strength tiers, from
 initial reduction and the multi-year trajectory — weaker tiers let cases
 drift upwards over time, stronger tiers show a sustained decline.
 
-| impact_ref | Rough effect size                           |
-|------------|---------------------------------------------|
-| `impact_1` | ~5% reduction, slight yearly increase       |
-| `impact_2` | ~12% reduction, mild yearly decline         |
-| `impact_3` | ~20% reduction, moderate yearly decline     |
-| `impact_4` | ~28% reduction, strong yearly decline       |
-| `impact_5` | ~38% reduction, sustained strong decline    |
+| impact_ref | Dropdown label                 | Rough effect size                        |
+|------------|--------------------------------|------------------------------------------|
+| `impact_1` | Demo impact tier 1 (weakest)   | ~5% reduction, slight yearly increase    |
+| `impact_2` | Demo impact tier 2             | ~12% reduction, mild yearly decline      |
+| `impact_3` | Demo impact tier 3             | ~20% reduction, moderate yearly decline  |
+| `impact_4` | Demo impact tier 4             | ~28% reduction, strong yearly decline    |
+| `impact_5` | Demo impact tier 5 (strongest) | ~38% reduction, sustained strong decline |
 
 Pick a tier that roughly matches how impactful the real intervention is
 expected to be — the absolute numbers are illustrative, not calibrated.

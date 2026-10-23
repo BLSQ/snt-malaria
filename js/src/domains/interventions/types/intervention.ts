@@ -27,3 +27,12 @@ export type InterventionDetails = {
     grant: number | null;
     cost_breakdown_lines: InterventionCostBreakdownLine[];
 };
+
+export type ImpactRefOption = {
+    ref: string;
+    label: string;
+};
+
+export type ImpactRefs = {
+    refs: ImpactRefOption[];
+};

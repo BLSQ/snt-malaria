@@ -16,6 +16,14 @@ class OrgUnitRef:
 
 
 @dataclass(frozen=True)
+class ImpactRefOption:
+    """An impact_ref value the provider can match, with a human-readable label."""
+
+    ref: str
+    label: str
+
+
+@dataclass(frozen=True)
 class ImpactProviderMeta:
     """Descriptor for an impact provider, attached to every impact response."""
 
@@ -226,3 +234,11 @@ class ImpactProvider(ABC):
     @abstractmethod
     def get_age_groups(self) -> list[str]:
         """Return a sorted list of age group labels."""
+
+    @abstractmethod
+    def get_available_impact_refs(self) -> list[ImpactRefOption]:
+        """Return the impact_ref values an Intervention can be mapped to, sorted by label."""
+
+    def is_known_impact_ref(self, impact_ref: str) -> bool:
+        """Whether an Intervention with this impact_ref can be matched by the provider."""
+        return impact_ref in {option.ref for option in self.get_available_impact_refs()}

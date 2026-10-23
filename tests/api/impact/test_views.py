@@ -3,11 +3,13 @@ from unittest.mock import MagicMock, patch
 from rest_framework import status
 
 from plugins.snt_malaria.models.impact_provider_config import ImpactProviderConfig
+from plugins.snt_malaria.providers.impact.base import ImpactRefOption
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
 
 YEAR_RANGE_URL = "/api/snt_malaria/impact_year_range/"
 AGE_GROUPS_URL = "/api/snt_malaria/impact_age_groups/"
+IMPACT_REFS_URL = "/api/snt_malaria/impact_refs/"
 IMPACT_URL = "/api/snt_malaria/impact/"
 
 
@@ -77,6 +79,35 @@ class ImpactAgeGroupsViewTests(ImpactViewsBaseTestCase):
 
         self.client.force_authenticate(user=self.user)
         self.assertJSONResponse(self.client.get(AGE_GROUPS_URL), status.HTTP_404_NOT_FOUND)
+
+
+class ImpactRefsViewTests(ImpactViewsBaseTestCase):
+    def test_unauthenticated(self):
+        response = self.client.get(IMPACT_REFS_URL)
+        self.assertJSONResponse(response, status.HTTP_401_UNAUTHORIZED)
+
+    @patch("plugins.snt_malaria.api.impact.views.get_provider_for_account")
+    def test_authenticated_with_provider(self, mock_get_provider):
+        mock_provider = MagicMock()
+        mock_provider.get_available_impact_refs.return_value = [
+            ImpactRefOption(ref="smc:pmc", label="PMC"),
+            ImpactRefOption(ref="smc:smc", label="SMC"),
+        ]
+        mock_get_provider.return_value = mock_provider
+
+        self.client.force_authenticate(user=self.user)
+        result = self.assertJSONResponse(self.client.get(IMPACT_REFS_URL), status.HTTP_200_OK)
+        self.assertEqual(
+            result["refs"],
+            [{"ref": "smc:pmc", "label": "PMC"}, {"ref": "smc:smc", "label": "SMC"}],
+        )
+
+    @patch("plugins.snt_malaria.api.impact.views.get_provider_for_account")
+    def test_no_provider_configured(self, mock_get_provider):
+        mock_get_provider.return_value = None
+
+        self.client.force_authenticate(user=self.user)
+        self.assertJSONResponse(self.client.get(IMPACT_REFS_URL), status.HTTP_404_NOT_FOUND)
 
 
 class ImpactViewTests(ImpactViewsBaseTestCase):

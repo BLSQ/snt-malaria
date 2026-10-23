@@ -70,23 +70,50 @@ export type ImpactProviderMeta = {
     provider_key: string;
 };
 
+export type InterventionRef = {
+    id: number;
+    name: string;
+};
+
+export type UnmatchedInterventionMix = {
+    interventions: InterventionRef[];
+    org_units: OrgUnitRef[];
+};
+
+export type InterventionWithoutImpactRef = {
+    intervention: InterventionRef;
+    org_units: OrgUnitRef[];
+};
+
 export type ScenarioImpactMetrics = ImpactMetrics & {
     scenario_id: number;
     by_year: YearImpactMetrics[];
     org_units: OrgUnitImpactMetrics[];
     org_units_not_found: OrgUnitRef[];
-    org_units_with_unmatched_interventions: OrgUnitRef[];
+    unmatched_intervention_mixes: UnmatchedInterventionMix[];
+    interventions_without_impact_ref: InterventionWithoutImpactRef[];
     provider_meta: ImpactProviderMeta;
 };
 
-export type ScenarioMatchWarning = {
+export type ScenarioYearRange = {
     scenario: ScenarioDisplay;
-    orgUnits: OrgUnitRef[];
+    yearRange: [number, number];
+};
+
+export type MatchWarningOrgUnit = OrgUnitRef & {
+    scenarios: ScenarioDisplay[];
+};
+
+export type MatchWarningGroup = {
+    key: string;
+    interventionNames: string[];
+    scenarios: ScenarioDisplay[];
+    orgUnitNames: string[];
 };
 
 export type ImpactYearRange = {
-    min_year: number;
-    max_year: number;
+    min_year: number | null;
+    max_year: number | null;
 };
 
 export type ImpactAgeGroups = {

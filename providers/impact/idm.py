@@ -1,3 +1,4 @@
+from collections import Counter
 from typing import Optional
 
 from django.db.models import Max, Min
@@ -11,6 +12,7 @@ from plugins.snt_malaria.providers.impact.base import (
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
     ImpactProviderMeta,
+    ImpactRefOption,
     ImpactResult,
     InterventionMappingError,
     MatchResult,
@@ -62,13 +64,17 @@ class IDMImpactProvider(ImpactProvider):
         self._db_alias = ensure_db_connection(config_id, config, secret)
         self._cached_intervention_packages = None
 
-    def _resolve_intervention_package(self, type_value, option_value):
-        """Look up an IDMInterventionPackage by (type, option), lazy-loading the cache on first call."""
+    def _intervention_packages(self) -> dict[tuple[str, str], IDMInterventionPackage]:
+        """Return IDMInterventionPackages keyed by (type, option), lazy-loading the cache on first call."""
         if self._cached_intervention_packages is None:
             self._cached_intervention_packages = {
                 (pkg.type, pkg.option): pkg for pkg in IDMInterventionPackage.objects.using(self._db_alias).all()
             }
-        return self._cached_intervention_packages.get((type_value, option_value))
+        return self._cached_intervention_packages
+
+    def _resolve_intervention_package(self, type_value, option_value):
+        """Look up an IDMInterventionPackage by (type, option)."""
+        return self._intervention_packages().get((type_value, option_value))
 
     @property
     def supports_bulk(self) -> bool:
@@ -215,6 +221,25 @@ class IDMImpactProvider(ImpactProvider):
 
     def get_age_groups(self) -> list[str]:
         return list(IDMAgeGroup.objects.using(self._db_alias).values_list("option", flat=True).order_by("option"))
+
+    def get_available_impact_refs(self) -> list[ImpactRefOption]:
+        """Label each package with its description, adding the option where several packages share one."""
+        packages = [
+            pkg
+            for pkg in self._intervention_packages().values()
+            if pkg.id != IDM_NONE_PACKAGE_ID and pkg.type and pkg.option
+        ]
+        description_counts = Counter(pkg.description for pkg in packages if pkg.description)
+
+        def label(pkg: IDMInterventionPackage) -> str:
+            if not pkg.description:
+                return f"{pkg.type}:{pkg.option}"
+            if description_counts[pkg.description] > 1:
+                return f"{pkg.description} ({pkg.option})"
+            return pkg.description
+
+        options = [ImpactRefOption(ref=f"{pkg.type}:{pkg.option}", label=label(pkg)) for pkg in packages]
+        return sorted(options, key=lambda option: option.label.lower())
 
     def _check_unmatched_org_units(self, reference_to_org_unit, matched_references) -> MatchWarnings:
         """Classify unmatched org units into 'not found' vs 'unmatched interventions'.

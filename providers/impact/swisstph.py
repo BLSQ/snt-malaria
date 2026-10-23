@@ -10,6 +10,7 @@ from plugins.snt_malaria.providers.impact.base import (
     ImpactMetricWithConfidenceInterval,
     ImpactProvider,
     ImpactProviderMeta,
+    ImpactRefOption,
     ImpactResult,
     InterventionMappingError,
     MatchResult,
@@ -182,6 +183,17 @@ class SwissTPHImpactProvider(ImpactProvider):
             .order_by("age_group")
         )
 
+    def get_available_impact_refs(self) -> list[ImpactRefOption]:
+        options = [
+            ImpactRefOption(ref=column, label=self._deployed_column_label(column)) for column in KNOWN_DEPLOYED_COLUMNS
+        ]
+        return sorted(options, key=lambda option: option.label.lower())
+
+    @staticmethod
+    def _deployed_column_label(column: str) -> str:
+        db_column = SwissTPHImpactData._meta.get_field(column).db_column
+        return db_column.removeprefix("deployed_int_")
+
     def _check_unmatched_org_units(self, reference_to_org_unit, matched_references) -> MatchWarnings:
         """Classify unmatched org units into 'not found' vs 'unmatched interventions'.
 
@@ -211,31 +223,20 @@ class SwissTPHImpactProvider(ImpactProvider):
         return warnings
 
     def _map_intervention(self, intervention: Intervention) -> set[str]:
-        """Resolve an Intervention's impact_ref to SwissTPH deployed_int_* columns.
+        """Resolve an Intervention's impact_ref (a deployed_int_* column name) to its SwissTPH column.
 
-        The impact_ref can be a single column name (e.g. 'deployed_int_smc')
-        or a comma-separated list when one intervention maps to multiple
-        columns (e.g. 'deployed_int_pbo,deployed_int_std').
-
-        Raises InterventionMappingError if the impact_ref is empty or contains
-        unrecognised column names.
+        Raises InterventionMappingError if the impact_ref is empty or not a known column.
         """
-        raw_reference = (intervention.impact_ref or "").strip()
-        if not raw_reference:
+        column_name = (intervention.impact_ref or "").strip()
+        if not column_name:
             raise InterventionMappingError(f"Intervention '{intervention}' has no impact_ref")
-
-        matched_columns = set()
-        for column_name in raw_reference.split(","):
-            column_name = column_name.strip()
-            if column_name not in KNOWN_DEPLOYED_COLUMNS:
-                raise InterventionMappingError(
-                    f"Unknown SwissTPH column {column_name!r} in impact_ref "
-                    f"for intervention '{intervention}'. "
-                    f"Known columns: {sorted(KNOWN_DEPLOYED_COLUMNS)}"
-                )
-            matched_columns.add(column_name)
-
-        return matched_columns
+        if column_name not in KNOWN_DEPLOYED_COLUMNS:
+            raise InterventionMappingError(
+                f"Unknown SwissTPH column {column_name!r} in impact_ref "
+                f"for intervention '{intervention}'. "
+                f"Known columns: {sorted(KNOWN_DEPLOYED_COLUMNS)}"
+            )
+        return {column_name}
 
     def _build_query_filters(self, deployed_columns: set[str]) -> dict:
         """Build a filter dict for all deployed_int_* boolean columns.
