@@ -176,13 +176,13 @@ Map each real intervention to one of five generic strength tiers, from
 initial reduction and the multi-year trajectory — weaker tiers let cases
 drift upwards over time, stronger tiers show a sustained decline.
 
-| impact_ref | Rough effect size                           |
-|------------|---------------------------------------------|
-| `impact_1` | ~5% reduction, slight yearly increase       |
-| `impact_2` | ~12% reduction, mild yearly decline         |
-| `impact_3` | ~20% reduction, moderate yearly decline     |
-| `impact_4` | ~28% reduction, strong yearly decline       |
-| `impact_5` | ~38% reduction, sustained strong decline    |
+| impact_ref | Dropdown label                 | Rough effect size                        |
+|------------|--------------------------------|------------------------------------------|
+| `impact_1` | Demo impact tier 1 (weakest)   | ~5% reduction, slight yearly increase    |
+| `impact_2` | Demo impact tier 2             | ~12% reduction, mild yearly decline      |
+| `impact_3` | Demo impact tier 3             | ~20% reduction, moderate yearly decline  |
+| `impact_4` | Demo impact tier 4             | ~28% reduction, strong yearly decline    |
+| `impact_5` | Demo impact tier 5 (strongest) | ~38% reduction, sustained strong decline |
 
 Pick a tier that roughly matches how impactful the real intervention is
 expected to be — the absolute numbers are illustrative, not calibrated.

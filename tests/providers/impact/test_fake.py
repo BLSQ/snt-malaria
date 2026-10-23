@@ -149,6 +149,11 @@ class FakeProviderInterventionMappingTests(SNTMalariaTestCase):
         refs = [option.ref for option in self.provider.get_available_impact_refs()]
         self.assertEqual(refs, sorted(INTERVENTION_EFFECT.keys()))
 
+    def test_available_impact_refs_are_labelled_as_demo_tiers(self):
+        labels = [option.label for option in self.provider.get_available_impact_refs()]
+        self.assertEqual(labels[0], "Demo impact tier 1 (weakest)")
+        self.assertEqual(labels[-1], "Demo impact tier 5 (strongest)")
+
     def test_is_known_impact_ref(self):
         self.assertTrue(self.provider.is_known_impact_ref("impact_1"))
         self.assertFalse(self.provider.is_known_impact_ref("impact_99"))

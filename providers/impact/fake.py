@@ -114,6 +114,14 @@ SHARED_SEASONAL_AMPLITUDE: Final[float] = 0.10
 
 KNOWN_IMPACT_REFS: Final[frozenset[str]] = frozenset(INTERVENTION_EFFECT.keys())
 
+IMPACT_REF_LABELS: Final[dict[str, str]] = {
+    "impact_1": "Demo impact tier 1 (weakest)",
+    "impact_2": "Demo impact tier 2",
+    "impact_3": "Demo impact tier 3",
+    "impact_4": "Demo impact tier 4",
+    "impact_5": "Demo impact tier 5 (strongest)",
+}
+
 
 @dataclass
 class _MetricInputs:
@@ -221,7 +229,7 @@ class FakeImpactProvider(ImpactProvider):
         return list(AGE_GROUPS)
 
     def get_available_impact_refs(self) -> list[ImpactRefOption]:
-        return [ImpactRefOption(ref=ref, label=ref) for ref in sorted(KNOWN_IMPACT_REFS)]
+        return [ImpactRefOption(ref=ref, label=IMPACT_REF_LABELS[ref]) for ref in sorted(KNOWN_IMPACT_REFS)]
 
     @staticmethod
     def _map_intervention(intervention: Intervention) -> str:
