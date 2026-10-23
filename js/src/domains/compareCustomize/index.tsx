@@ -151,6 +151,15 @@ export const CompareCustomize: FC = () => {
         return intersectYearRanges(scenariosYearRange, impactYearRange);
     }, [scenariosYearRange, impactYearRange]);
 
+    const isYearRangeLoading =
+        displayScenarios.length > 0 &&
+        (isLoading || yearRangeQuery.isLoading || yearRangeQuery.isFetching);
+    const showYearRangeError =
+        displayScenarios.length > 0 &&
+        !isYearRangeLoading &&
+        yearRangeQuery.isSuccess &&
+        !effectiveYearRange;
+
     useEffect(() => {
         if (!effectiveYearRange) return;
         setSelectedYearRange(prev => {
@@ -303,21 +312,13 @@ export const CompareCustomize: FC = () => {
                                     yearRange={effectiveYearRange}
                                     selectedYearRange={selectedYearRange}
                                     onYearRangeChange={setSelectedYearRange}
-                                    isYearRangeLoading={
-                                        displayScenarios.length > 0 &&
-                                        (isLoading ||
-                                            yearRangeQuery.isLoading ||
-                                            yearRangeQuery.isFetching)
-                                    }
+                                    isYearRangeLoading={isYearRangeLoading}
                                     ageGroups={ageGroupsQuery.data?.age_groups}
                                     selectedAgeGroup={selectedAgeGroup}
                                     onAgeGroupChange={handleAgeGroupChange}
                                 >
                                     <ImpactWarnings
-                                        showYearRangeError={
-                                            displayScenarios.length > 0 &&
-                                            !effectiveYearRange
-                                        }
+                                        showYearRangeError={showYearRangeError}
                                         scenarioYearRanges={scenarioYearRanges}
                                         impactYearRange={impactYearRange}
                                         orgUnitsNotFound={orgUnitsNotFound}
