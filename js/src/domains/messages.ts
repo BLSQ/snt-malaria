@@ -278,7 +278,7 @@ export const MESSAGES = defineMessages({
     },
     compareCustomizeTitle: {
         id: 'iaso.snt_malaria.compareCustomize.title',
-        defaultMessage: 'Compare & Customize',
+        defaultMessage: 'Comparison',
     },
     compareScenariosLabel: {
         id: 'iaso.snt_malaria.scenarios.compare',

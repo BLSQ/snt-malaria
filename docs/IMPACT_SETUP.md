@@ -110,7 +110,7 @@ Example:
 ```
 
 > [!NOTE]
-> Responses are tagged with `provider_meta.provider_key = "fake"`. The Compare & Customize UI picks this up and shows an info banner so users know the figures are generated, not real.
+> Responses are tagged with `provider_meta.provider_key = "fake"`. The Comparison page picks this up and shows an info banner so users know the figures are generated, not real.
 
 ## 2. Intervention impact_ref
 

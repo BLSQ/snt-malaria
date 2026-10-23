@@ -1,6 +1,6 @@
 {
     "iaso.snt_malaria.home.title": "SNT Malaria",
-    "iaso.snt_malaria.compareCustomize.title": "Comparer et personnaliser",
+    "iaso.snt_malaria.compareCustomize.title": "Comparaison",
     "iaso.snt_malaria.compareCustomize.scenarioFallbackLabel": "Scénario {value}",
     "iaso.snt_malaria.compareCustomize.impactDifferenceMetricLabel": "Indicateur",
     "iaso.snt_malaria.compareCustomize.impactDifferenceMetricOrgUnitCost": "Coût",
