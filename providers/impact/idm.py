@@ -1,3 +1,4 @@
+from collections import Counter
 from typing import Optional
 
 from django.db.models import Max, Min
@@ -222,11 +223,22 @@ class IDMImpactProvider(ImpactProvider):
         return list(IDMAgeGroup.objects.using(self._db_alias).values_list("option", flat=True).order_by("option"))
 
     def get_available_impact_refs(self) -> list[ImpactRefOption]:
-        options = [
-            ImpactRefOption(ref=f"{pkg.type}:{pkg.option}", label=pkg.description or f"{pkg.type}:{pkg.option}")
+        """Label each package with its description, adding the option where several packages share one."""
+        packages = [
+            pkg
             for pkg in self._intervention_packages().values()
             if pkg.id != IDM_NONE_PACKAGE_ID and pkg.type and pkg.option
         ]
+        description_counts = Counter(pkg.description for pkg in packages if pkg.description)
+
+        def label(pkg: IDMInterventionPackage) -> str:
+            if not pkg.description:
+                return f"{pkg.type}:{pkg.option}"
+            if description_counts[pkg.description] > 1:
+                return f"{pkg.description} ({pkg.option})"
+            return pkg.description
+
+        options = [ImpactRefOption(ref=f"{pkg.type}:{pkg.option}", label=label(pkg)) for pkg in packages]
         return sorted(options, key=lambda option: option.label.lower())
 
     def _check_unmatched_org_units(self, reference_to_org_unit, matched_references) -> MatchWarnings:

@@ -247,6 +247,12 @@ class IDMMapInterventionTests(TestCase):
         self.assertEqual(labels_by_ref["smc:pmc"], "Perennial malaria chemoprevention")
         self.assertEqual(labels_by_ref["smc:smc"], "smc:smc")
 
+    def test_available_impact_refs_add_the_option_to_shared_descriptions(self):
+        IDMInterventionPackage.objects.using("default").filter(id__in=[4, 5]).update(description="SMC or PMC")
+        labels_by_ref = {option.ref: option.label for option in self.provider.get_available_impact_refs()}
+        self.assertEqual(labels_by_ref["smc:smc"], "SMC or PMC (smc)")
+        self.assertEqual(labels_by_ref["smc:pmc"], "SMC or PMC (pmc)")
+
     def test_is_known_impact_ref(self):
         self.assertTrue(self.provider.is_known_impact_ref("smc:pmc"))
         self.assertFalse(self.provider.is_known_impact_ref("smc:cm"))
