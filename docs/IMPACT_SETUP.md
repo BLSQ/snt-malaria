@@ -126,9 +126,8 @@ a warning.
 
 ### SwissTPH format
 
-Use the `deployed_int_`* column name from the `impact_data` table. Multiple
-columns can be comma-separated when one intervention maps to multiple columns
-(e.g. `deployed_int_pbo,deployed_int_std`).
+Use the `deployed_int_`* column name from the `impact_data` table. Each
+intervention maps to exactly one column.
 
 
 | Intervention                                      | impact_ref                           |

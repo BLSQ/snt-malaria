@@ -86,23 +86,10 @@ class SwissTPHMapInterventionTests(TestCase):
         result = self.provider._map_intervention(intervention)
         self.assertEqual(result, {"deployed_int_smc"})
 
-    def test_comma_separated_impact_ref_returns_multiple_columns(self):
-        """A comma-separated impact_ref should activate all listed columns."""
+    def test_comma_separated_impact_ref_raises_mapping_error(self):
         intervention = MockIntervention(impact_ref="deployed_int_pbo,deployed_int_std")
-        result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_pbo", "deployed_int_std"})
-
-    def test_comma_separated_with_whitespace(self):
-        intervention = MockIntervention(impact_ref=" deployed_int_pbo , deployed_int_std ")
-        result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_pbo", "deployed_int_std"})
-
-    def test_comma_separated_with_unrecognised_entry_raises_mapping_error(self):
-        intervention = MockIntervention(impact_ref="deployed_int_smc,unknown_column")
-        with self.assertRaises(InterventionMappingError) as context:
+        with self.assertRaises(InterventionMappingError):
             self.provider._map_intervention(intervention)
-        self.assertIn("Unknown SwissTPH column", str(context.exception))
-        self.assertIn("unknown_column", str(context.exception))
 
 
 class SwissTPHAvailableImpactRefsTests(TestCase):
@@ -119,13 +106,12 @@ class SwissTPHAvailableImpactRefsTests(TestCase):
         labels = [option.label for option in options]
         self.assertEqual(labels, sorted(labels, key=str.lower))
 
-    def test_is_known_impact_ref_accepts_single_and_comma_separated_columns(self):
+    def test_is_known_impact_ref_accepts_known_columns(self):
         self.assertTrue(self.provider.is_known_impact_ref("deployed_int_smc"))
-        self.assertTrue(self.provider.is_known_impact_ref("deployed_int_pbo, deployed_int_std"))
 
     def test_is_known_impact_ref_rejects_unknown_columns(self):
         self.assertFalse(self.provider.is_known_impact_ref("deployed_int_unknown"))
-        self.assertFalse(self.provider.is_known_impact_ref("deployed_int_smc,deployed_int_unknown"))
+        self.assertFalse(self.provider.is_known_impact_ref("deployed_int_pbo,deployed_int_std"))
         self.assertFalse(self.provider.is_known_impact_ref(""))
 
 
