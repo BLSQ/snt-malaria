@@ -41,6 +41,7 @@ const styles = {
         gap: 2,
         alignItems: 'start',
     },
+    fullWidth: { gridColumn: '1 / -1' },
     basisToggle: { height: 40, width: '100%' },
     basisButton: { flex: 1, gap: 0.75, textTransform: 'none' },
     values: {
@@ -230,15 +231,26 @@ export const CostItemDialog: FC<Props> = ({
                 </ToggleButtonGroup>
                 {line.is_proportional && (
                     <>
+                        <Box sx={styles.fullWidth}>
+                            <InputComponent
+                                type="select"
+                                keyValue="population_layer"
+                                value={line.population_layer ?? ''}
+                                onChange={updateField}
+                                options={populationOptions}
+                                label={MESSAGES.targetPopulationLabel}
+                                required
+                                withMarginTop={false}
+                            />
+                        </Box>
                         <InputComponent
-                            type="select"
-                            keyValue="population_layer"
-                            value={line.population_layer ?? ''}
+                            type="number"
+                            keyValue="conversion_factor"
+                            value={line.conversion_factor}
                             onChange={updateField}
-                            options={populationOptions}
-                            label={MESSAGES.targetPopulationLabel}
-                            required
+                            label={MESSAGES.budgetingCostLineConversionFactor}
                             withMarginTop={false}
+                            numberInputOptions={{ decimalScale: 6 }}
                         />
                         <InputComponent
                             type="select"
@@ -273,17 +285,6 @@ export const CostItemDialog: FC<Props> = ({
                         withMarginTop={false}
                         numberInputOptions={{ decimalScale: 2, currency }}
                     />
-                    {line.is_proportional && (
-                        <InputComponent
-                            type="number"
-                            keyValue="conversion_factor"
-                            value={line.conversion_factor}
-                            onChange={updateField}
-                            label={MESSAGES.budgetingCostLineConversionFactor}
-                            withMarginTop={false}
-                            numberInputOptions={{ decimalScale: 6 }}
-                        />
-                    )}
                     <InputComponent
                         type="number"
                         keyValue="buffer"

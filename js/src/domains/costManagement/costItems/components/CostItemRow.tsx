@@ -2,9 +2,18 @@ import React, { FC, memo, MouseEvent, useCallback, useMemo } from 'react';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import GroupsIcon from '@mui/icons-material/Groups';
 import NumbersIcon from '@mui/icons-material/Numbers';
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import {
+    Box,
+    IconButton,
+    MenuItem,
+    Select,
+    SelectChangeEvent,
+    Tooltip,
+    Typography,
+} from '@mui/material';
 import { getCurrencyAffixes, useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { DropdownOptions } from 'Iaso/types/utils';
 import { NumberInput } from '../../../../components/NumberInput';
 import { useInterventionContext } from '../../../interventions/contexts/InterventionContext';
 import { InterventionCostBreakdownLine } from '../../../interventions/types';
@@ -62,6 +71,14 @@ const styles = {
         minWidth: 0,
     },
     input: { width: COST_ITEMS_INPUT_WIDTH, flexShrink: 0 },
+    select: {
+        height: 28,
+        width: '100%',
+        typography: 'body2',
+        backgroundColor: 'background.paper',
+        '&.Mui-disabled': { backgroundColor: 'grey.100', opacity: 0.45 },
+        '& .MuiSelect-select': { py: 0, ...ellipsis },
+    },
     basisIcon: { color: 'text.secondary', display: 'flex' },
     name: ellipsis,
     caption: { color: 'text.secondary', lineHeight: 1.3, ...ellipsis },
@@ -74,6 +91,8 @@ const styles = {
     },
 } satisfies SxStyles;
 
+const stopPropagation = (event: MouseEvent) => event.stopPropagation();
+
 const CostItemRowComponent: FC<Props> = ({
     line,
     onUpdate,
@@ -81,7 +100,8 @@ const CostItemRowComponent: FC<Props> = ({
     onDelete,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const { currency, defaultBufferPercent } = useInterventionContext();
+    const { currency, defaultBufferPercent, populationOptions } =
+        useInterventionContext();
     const currencyAffixes = getCurrencyAffixes(currency);
 
     const handleEdit = useCallback(() => onEdit(line), [onEdit, line]);
@@ -102,6 +122,17 @@ const CostItemRowComponent: FC<Props> = ({
             coverage: commitField('coverage'),
         };
     }, [onUpdate, line.id]);
+    const handlePopulationChange = useCallback(
+        (event: SelectChangeEvent<number | ''>) =>
+            onUpdate(line.id, {
+                population_layer: Number(event.target.value),
+                population_layer_label:
+                    populationOptions.find(
+                        option => option.value === event.target.value,
+                    )?.label ?? null,
+            }),
+        [onUpdate, line.id, populationOptions],
+    );
 
     return (
         <Box sx={styles.row} onClick={handleEdit}>
@@ -157,6 +188,35 @@ const CostItemRowComponent: FC<Props> = ({
                 </Typography>
             </Box>
 
+            {/* Menu clicks bubble through the portal to the row, which opens the edit dialog. */}
+            <Box minWidth={0} onClick={stopPropagation}>
+                <Select
+                    size="small"
+                    value={
+                        (line.is_proportional && line.population_layer) || ''
+                    }
+                    onChange={handlePopulationChange}
+                    disabled={!line.is_proportional}
+                    sx={styles.select}
+                    inputProps={{
+                        'aria-label': formatMessage(
+                            MESSAGES.targetPopulationLabel,
+                        ),
+                    }}
+                >
+                    {populationOptions
+                        .filter(
+                            (option): option is DropdownOptions<number> =>
+                                option.value !== null,
+                        )
+                        .map(option => (
+                            <MenuItem key={option.value} value={option.value}>
+                                {option.label}
+                            </MenuItem>
+                        ))}
+                </Select>
+            </Box>
+
             <Box sx={styles.inputCell}>
                 <NumberInput
                     value={line.conversion_factor}
@@ -169,32 +229,16 @@ const CostItemRowComponent: FC<Props> = ({
                         MESSAGES.budgetingCostLineConversionFactor,
                     )}
                 />
-                <Box minWidth={0}>
-                    <Typography
-                        variant="caption"
-                        component="div"
-                        sx={styles.caption}
-                    >
-                        {line.is_proportional
-                            ? formatConversionDirection(
-                                  formatMessage,
-                                  line.unit_type_label,
-                                  line.conversion_factor,
-                                  line.invert_conversion_factor,
-                              )
-                            : formatMessage(MESSAGES.fixedCost)}
-                    </Typography>
-                    {line.is_proportional && line.population_layer_label && (
-                        <Typography
-                            variant="caption"
-                            component="div"
-                            title={line.population_layer_label}
-                            sx={styles.mutedCaption}
-                        >
-                            ({line.population_layer_label})
-                        </Typography>
-                    )}
-                </Box>
+                <Typography variant="caption" sx={styles.caption}>
+                    {line.is_proportional
+                        ? formatConversionDirection(
+                              formatMessage,
+                              line.unit_type_label,
+                              line.conversion_factor,
+                              line.invert_conversion_factor,
+                          )
+                        : formatMessage(MESSAGES.fixedCost)}
+                </Typography>
             </Box>
 
             <NumberInput
