@@ -1,7 +1,6 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import {
-    Box,
     Card,
     MenuItem,
     Select,
@@ -35,7 +34,14 @@ const styles = {
     smallHeader: {
         minHeight: '36px',
     },
-    titleBlock: { flex: 1, minWidth: 0, paddingRight: 1 },
+    title: { flex: 1, minWidth: 0, paddingRight: 1 },
+    description: {
+        display: '-webkit-box',
+        WebkitLineClamp: 3,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden',
+        overflowWrap: 'anywhere',
+    },
 } satisfies SxStyles;
 
 type Props = {
@@ -104,13 +110,12 @@ export const DataLayerMapWrapper: FC<Props> = ({
             <CardStyled
                 headerSx={small ? styles.smallHeader : undefined}
                 header={
-                    <Stack
-                        direction="row"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        overflow="hidden"
-                    >
-                        <Box sx={styles.titleBlock}>
+                    <Stack overflow="hidden">
+                        <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            alignItems="center"
+                        >
                             <Tooltip
                                 title={
                                     small && description ? (
@@ -127,64 +132,67 @@ export const DataLayerMapWrapper: FC<Props> = ({
                                 <Typography
                                     variant={small ? 'body2' : 'h6'}
                                     noWrap
+                                    sx={styles.title}
                                 >
                                     {metricType?.name || ''}
                                 </Typography>
                             </Tooltip>
-                            {!small && description && (
-                                <Tooltip title={description}>
-                                    <Typography
-                                        variant="body2"
-                                        color="text.secondary"
-                                        noWrap
+                            <Stack
+                                direction="row"
+                                spacing={2}
+                                alignItems="center"
+                                sx={{ flexShrink: 0 }}
+                            >
+                                {yearOptions.length > 0 && (
+                                    <Select
+                                        value={year}
+                                        onChange={e => setYear(e.target.value)}
+                                        variant="outlined"
+                                        displayEmpty
                                     >
-                                        {description}
-                                    </Typography>
-                                </Tooltip>
-                            )}
-                        </Box>
-                        <Stack
-                            direction="row"
-                            spacing={2}
-                            alignItems="center"
-                            sx={{ flexShrink: 0 }}
-                        >
-                            {yearOptions.length > 0 && (
-                                <Select
-                                    value={year}
-                                    onChange={e => setYear(e.target.value)}
-                                    variant="outlined"
-                                    displayEmpty
-                                >
-                                    {yearOptions.map(yearOption => (
-                                        <MenuItem
-                                            key={yearOption}
-                                            value={yearOption}
-                                        >
-                                            {yearOption}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            )}
-                            {small ? null : (
-                                <OrgUnitSelect
-                                    onOrgUnitChange={handleDisplayOrgUnitChange}
-                                    selectedOrgUnitId={displayOrgUnitId}
+                                        {yearOptions.map(yearOption => (
+                                            <MenuItem
+                                                key={yearOption}
+                                                value={yearOption}
+                                            >
+                                                {yearOption}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                )}
+                                {small ? null : (
+                                    <OrgUnitSelect
+                                        onOrgUnitChange={
+                                            handleDisplayOrgUnitChange
+                                        }
+                                        selectedOrgUnitId={displayOrgUnitId}
+                                    />
+                                )}
+                                <ExportMetricValuesCsvButton
+                                    metricType={metricType}
+                                    year={year}
                                 />
-                            )}
-                            <ExportMetricValuesCsvButton
-                                metricType={metricType}
-                                year={year}
-                            />
-                            {(onRemove && (
-                                <IconButton
-                                    overrideIcon={CancelOutlinedIcon}
-                                    tooltipMessage={MESSAGES.remove}
-                                    onClick={onRemove}
-                                ></IconButton>
-                            )) ||
-                                null}
+                                {(onRemove && (
+                                    <IconButton
+                                        overrideIcon={CancelOutlinedIcon}
+                                        tooltipMessage={MESSAGES.remove}
+                                        onClick={onRemove}
+                                    ></IconButton>
+                                )) ||
+                                    null}
+                            </Stack>
                         </Stack>
+                        {!small && description && (
+                            <Tooltip title={description}>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={styles.description}
+                                >
+                                    {description}
+                                </Typography>
+                            </Tooltip>
+                        )}
                     </Stack>
                 }
             >
