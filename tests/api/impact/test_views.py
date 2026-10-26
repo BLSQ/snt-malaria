@@ -82,12 +82,12 @@ class ImpactAgeGroupsViewTests(ImpactViewsBaseTestCase):
 
 
 class ImpactRefsViewTests(ImpactViewsBaseTestCase):
-    def test_unauthenticated(self):
+    def test_unauthenticated_request_is_rejected(self):
         response = self.client.get(IMPACT_REFS_URL)
         self.assertJSONResponse(response, status.HTTP_401_UNAUTHORIZED)
 
     @patch("plugins.snt_malaria.api.impact.views.get_provider_for_account")
-    def test_authenticated_with_provider(self, mock_get_provider):
+    def test_returns_the_provider_refs_with_their_labels(self, mock_get_provider):
         mock_provider = MagicMock()
         mock_provider.get_available_impact_refs.return_value = [
             ImpactRefOption(ref="smc:pmc", label="PMC"),
@@ -103,7 +103,7 @@ class ImpactRefsViewTests(ImpactViewsBaseTestCase):
         )
 
     @patch("plugins.snt_malaria.api.impact.views.get_provider_for_account")
-    def test_no_provider_configured(self, mock_get_provider):
+    def test_returns_not_found_when_no_provider_is_configured(self, mock_get_provider):
         mock_get_provider.return_value = None
 
         self.client.force_authenticate(user=self.user)

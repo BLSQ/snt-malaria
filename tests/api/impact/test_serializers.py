@@ -194,7 +194,7 @@ class ScenarioImpactSerializerTestCase(SNTMalariaTestCase):
         self.assertEqual(data["by_year"], [])
         self.assertEqual(data["org_units"], [])
 
-    def test_interventions_without_impact_ref(self):
+    def test_interventions_without_impact_ref_serialize_with_intervention_and_org_units(self):
         metrics = ScenarioImpactMetrics(
             scenario_id=1,
             interventions_without_impact_ref=[
@@ -216,7 +216,7 @@ class ScenarioImpactSerializerTestCase(SNTMalariaTestCase):
             ],
         )
 
-    def test_unmatched_intervention_mixes(self):
+    def test_unmatched_intervention_mixes_serialize_with_interventions_and_org_units(self):
         metrics = ScenarioImpactMetrics(
             scenario_id=1,
             unmatched_intervention_mixes=[
