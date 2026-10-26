@@ -36,6 +36,15 @@ class ImpactAgeGroupsViewSet(viewsets.ViewSet):
         return Response({"age_groups": age_groups})
 
 
+class ImpactRefsViewSet(viewsets.ViewSet):
+    http_method_names = ["get", "options"]
+
+    def list(self, request):
+        provider = _get_provider(request)
+        refs = provider.get_available_impact_refs()
+        return Response({"refs": [{"ref": option.ref, "label": option.label} for option in refs]})
+
+
 class ImpactViewSet(viewsets.ViewSet):
     http_method_names = ["get", "options"]
 

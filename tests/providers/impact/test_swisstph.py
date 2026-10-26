@@ -86,23 +86,33 @@ class SwissTPHMapInterventionTests(TestCase):
         result = self.provider._map_intervention(intervention)
         self.assertEqual(result, {"deployed_int_smc"})
 
-    def test_comma_separated_impact_ref_returns_multiple_columns(self):
-        """A comma-separated impact_ref should activate all listed columns."""
+    def test_comma_separated_impact_ref_raises_mapping_error(self):
         intervention = MockIntervention(impact_ref="deployed_int_pbo,deployed_int_std")
-        result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_pbo", "deployed_int_std"})
-
-    def test_comma_separated_with_whitespace(self):
-        intervention = MockIntervention(impact_ref=" deployed_int_pbo , deployed_int_std ")
-        result = self.provider._map_intervention(intervention)
-        self.assertEqual(result, {"deployed_int_pbo", "deployed_int_std"})
-
-    def test_comma_separated_with_unrecognised_entry_raises_mapping_error(self):
-        intervention = MockIntervention(impact_ref="deployed_int_smc,unknown_column")
-        with self.assertRaises(InterventionMappingError) as context:
+        with self.assertRaises(InterventionMappingError):
             self.provider._map_intervention(intervention)
-        self.assertIn("Unknown SwissTPH column", str(context.exception))
-        self.assertIn("unknown_column", str(context.exception))
+
+
+class SwissTPHAvailableImpactRefsTests(TestCase):
+    def setUp(self):
+        with patch("plugins.snt_malaria.providers.impact.swisstph.ensure_db_connection", return_value="default"):
+            self.provider = SwissTPHImpactProvider(**_PROVIDER_KWARGS)
+
+    def test_available_impact_refs_list_every_deployed_column_labelled_by_db_column(self):
+        options = self.provider.get_available_impact_refs()
+        self.assertEqual({option.ref for option in options}, KNOWN_DEPLOYED_COLUMNS)
+        labels_by_ref = {option.ref: option.label for option in options}
+        self.assertEqual(labels_by_ref["deployed_int_iccm"], "iCCM")
+        self.assertEqual(labels_by_ref["deployed_int_smc"], "SMC")
+        labels = [option.label for option in options]
+        self.assertEqual(labels, sorted(labels, key=str.lower))
+
+    def test_is_known_impact_ref_accepts_known_columns(self):
+        self.assertTrue(self.provider.is_known_impact_ref("deployed_int_smc"))
+
+    def test_is_known_impact_ref_rejects_unknown_columns(self):
+        self.assertFalse(self.provider.is_known_impact_ref("deployed_int_unknown"))
+        self.assertFalse(self.provider.is_known_impact_ref("deployed_int_pbo,deployed_int_std"))
+        self.assertFalse(self.provider.is_known_impact_ref(""))
 
 
 class SwissTPHBuildQueryFiltersTests(TestCase):

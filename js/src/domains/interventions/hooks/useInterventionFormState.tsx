@@ -16,7 +16,7 @@ export const defaultInterventionFormValues: InterventionFormValues = {
     grant: null,
 };
 
-const useValidation = () => {
+const useValidation = (knownImpactRefs?: string[]) => {
     const { formatMessage } = useSafeIntl();
 
     return useMemo(
@@ -36,24 +36,33 @@ const useValidation = () => {
                     .required(formatMessage(MESSAGES.required))
                     .max(50, formatMessage(MESSAGES.maxLength, { max: 50 })),
                 description: Yup.string(),
-                impact_ref: Yup.string(),
+                impact_ref: Yup.string().test(
+                    'known-impact-ref',
+                    formatMessage(MESSAGES.unknownImpactRef),
+                    value =>
+                        !value ||
+                        !knownImpactRefs ||
+                        knownImpactRefs.includes(value),
+                ),
                 grant: Yup.number().nullable(),
             }),
-        [formatMessage],
+        [formatMessage, knownImpactRefs],
     );
 };
 
 export const useInterventionFormState = ({
     onSubmit,
     initialValues,
+    knownImpactRefs,
 }: {
     onSubmit: (
         values: InterventionFormValues,
         formikHelpers?: FormikHelpers<InterventionFormValues>,
     ) => void;
     initialValues?: InterventionFormValues;
+    knownImpactRefs?: string[];
 }) => {
-    const validationSchema = useValidation();
+    const validationSchema = useValidation(knownImpactRefs);
     const formik = useFormik({
         initialValues: initialValues ?? defaultInterventionFormValues,
         validationSchema,
