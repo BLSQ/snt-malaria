@@ -4,7 +4,6 @@ from typing import Any, Optional
 
 from iaso.models import MetricValue
 from plugins.snt_malaria.models import (
-    Budget,
     BudgetSettings,
     Grant,
     InterventionCostBreakdownLine,
@@ -125,16 +124,6 @@ class BudgetCalculationService:
         for intervention_id in interventions_assigned_outside_rules:
             candidates[intervention_id].append(None)
         return candidates
-
-    def calculate_and_save_all_years(self, user):
-        all_years_results = self.calculate_all_years()
-        return Budget.objects.create(
-            scenario=self.scenario,
-            name=f"Budget for {self.scenario.name}",
-            results=[budget_result.model_dump(mode="json") for budget_result in all_years_results],
-            created_by=user,
-            updated_by=user,
-        )
 
     def calculate_all_years(self):
         return [self.calculate_year(year) for year in range(self.start_year, self.end_year + 1)]

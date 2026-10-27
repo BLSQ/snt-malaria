@@ -8,13 +8,10 @@ from decimal import Decimal
 from iaso.models import OrgUnitType, User
 from iaso.models.data_store import JsonDataStore
 from iaso.models.metric import MetricType, MetricValue
-
-# from plugins.snt_malaria.models.budget import Budget
 from plugins.snt_malaria.models.cost_breakdown import InterventionCostBreakdownLine
 from plugins.snt_malaria.models.intervention import Intervention
 from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule, ScenarioRuleIntervention
 from plugins.snt_malaria.models.scenario_rule_cost_override import ScenarioRuleCostOverride
-from plugins.snt_malaria.services.budget.budget_calculation import BudgetCalculationService
 
 
 # Coverage percentages seeded as rule overrides for population-driven lines, keyed by
@@ -192,10 +189,6 @@ class DemoScenarioSeeder:
         self._create_coverage_overrides(scenario)
 
         self._ensure_population_for_scenario_years(scenario)
-
-        self.stdout_write(f"Calculating budget for '{scenario.name}'...")
-        budget = BudgetCalculationService(scenario).calculate_and_save_all_years(user)
-        self.stdout_write(f"Created budget '{budget.name}' (ID: {budget.id})")
 
         return scenario
 

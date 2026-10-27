@@ -18,7 +18,6 @@ from plugins.snt_malaria.management.commands.load_impact_org_unit_mappings impor
 )
 
 from .models import (
-    Budget,
     BudgetSettings,
     CompositeLayer,
     CostUnitType,
@@ -121,14 +120,6 @@ class InterventionCostBreakdownLineAdmin(admin.ModelAdmin):
     search_fields = ("intervention",)
     list_filter = ("intervention",)
     ordering = ("id", "name")
-
-
-@admin.register(Budget)
-class BudgetAdmin(admin.ModelAdmin):
-    list_display = ("id", "scenario", "name", "updated_at")
-    search_fields = ("id", "name")
-    list_filter = ("scenario",)
-    ordering = ("id", "name", "updated_at")
 
 
 @admin.register(BudgetSettings)
