@@ -40,6 +40,9 @@ export type MetricTypeCriterion = {
 };
 
 export type ScenarioRulePreview = {
-    rule: Pick<ScenarioRule, 'color' | 'interventions'>;
+    rule: Pick<
+        ScenarioRule,
+        'color' | 'name' | 'interventions' | 'intervention_overrides'
+    >;
     matchedOrgUnitIds: number[];
 };

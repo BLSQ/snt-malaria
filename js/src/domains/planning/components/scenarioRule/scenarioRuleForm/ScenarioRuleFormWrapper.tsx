@@ -114,7 +114,9 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         org_units_excluded: excludedOrgUnits,
         org_units_included: includedOrgUnits,
         color,
+        name,
         interventions,
+        intervention_overrides: interventionOverrides,
     } = formik.values;
 
     const ruleMatches = useRuleMatchedOrgUnits({
@@ -154,10 +156,22 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
             return;
         }
         onPreviewChangeRef.current?.({
-            rule: { color, interventions },
+            rule: {
+                color,
+                name,
+                interventions,
+                intervention_overrides: interventionOverrides,
+            },
             matchedOrgUnitIds,
         });
-    }, [color, interventions, matchedOrgUnitIds, isAwaitingFirstResult]);
+    }, [
+        color,
+        name,
+        interventions,
+        interventionOverrides,
+        matchedOrgUnitIds,
+        isAwaitingFirstResult,
+    ]);
 
     return (
         <CardStyled

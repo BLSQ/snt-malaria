@@ -1,3 +1,5 @@
+import { InterventionCostBreakdownLine } from '../../interventions/types';
+import { getDefaultCoverage } from '../../interventions/utils/costBreakdownLine';
 import { Scenario } from '../../scenarios/types';
 import {
     RuleCostLineOverride,
@@ -72,6 +74,44 @@ export const getYearCoverage = (
     costLineOverride: RuleCostLineOverride | undefined,
     year: number,
 ): number | undefined => costLineOverride?.yearly_coverage[String(year)];
+
+const toNumberOrNull = (value: number | string | null) =>
+    value === null || value === '' ? null : Number(value);
+
+/** Resolves a field for one year: yearly coverage, then the rule's all-years value, then the cost item, then the default. */
+export const resolveCostLineValue = (
+    line: InterventionCostBreakdownLine,
+    costLineOverride: RuleCostLineOverride | undefined,
+    field: CostLineValueField,
+    year: number,
+    defaultBufferPercent: number,
+): { value: number | null; isRuleValue: boolean } => {
+    const yearCoverage =
+        field === 'coverage'
+            ? getYearCoverage(costLineOverride, year)
+            : undefined;
+    const ruleValue = yearCoverage ?? costLineOverride?.[field] ?? null;
+    if (ruleValue !== null) {
+        return { value: ruleValue, isRuleValue: true };
+    }
+    if (field === 'conversion_factor' && !line.is_proportional) {
+        return { value: null, isRuleValue: false };
+    }
+    const lineValue = toNumberOrNull(line[field]);
+    if (lineValue !== null) {
+        return { value: lineValue, isRuleValue: false };
+    }
+    if (field === 'buffer') {
+        return { value: defaultBufferPercent, isRuleValue: false };
+    }
+    if (field === 'coverage') {
+        return {
+            value: getDefaultCoverage(line.is_proportional),
+            isRuleValue: false,
+        };
+    }
+    return { value: null, isRuleValue: false };
+};
 
 export const hasYearValue = (
     override: RuleInterventionOverride | undefined,
