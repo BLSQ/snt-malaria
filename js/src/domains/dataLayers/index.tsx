@@ -491,7 +491,7 @@ export const DataLayers: FC = () => {
             );
         }
         if (!wizard.isOpen) return mapColumn;
-        if (wizard.isEditing) {
+        if (wizard.isEditing && wizard.wizardMainView !== 'standardData') {
             // Editing shows the real layer as a reference; the panel handles the form.
             return (
                 <DataLayerMapWrapper

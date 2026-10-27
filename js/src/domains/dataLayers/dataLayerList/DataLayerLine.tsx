@@ -80,11 +80,14 @@ const styles: SxStyles = {
     metricTypeIcon: { minWidth: 20, mr: 2 },
     metricTypeDetails: {
         flexGrow: 1,
+        minWidth: 0,
         display: 'flex',
         justifyContent: 'space-between',
         marginRight: 4,
         py: 2,
     },
+    metricTypeLabel: { display: 'flex', alignItems: 'center', minWidth: 0 },
+    metricTypeText: { minWidth: 0 },
 };
 
 type LayerTypeIconProps = {
@@ -192,6 +195,7 @@ export const DataLayerLine: FC<Props> = ({
 }) => {
     const isComposite = compositeLayerId !== undefined;
     const isOpenHexa = metricType.origin === 'openhexa';
+    const description = metricType.description?.trim();
     const theme = useTheme();
     const onDragStart = useCallback(
         (e: React.DragEvent<HTMLElement>) => {
@@ -276,14 +280,30 @@ export const DataLayerLine: FC<Props> = ({
             onClick={editing ? undefined : onClick}
         >
             <Box sx={styles.metricTypeDetails}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={styles.metricTypeLabel}>
                     <LayerTypeIcon
                         importStatus={importStatus}
                         isComplete={metricType.is_complete !== false}
                         isComposite={isComposite}
                         isOpenHexa={isOpenHexa}
                     />
-                    <Typography variant="body2">{metricType.name}</Typography>
+                    <Box sx={styles.metricTypeText}>
+                        <Typography variant="body2">
+                            {metricType.name}
+                        </Typography>
+                        {description && (
+                            <Tooltip title={description}>
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    noWrap
+                                    component="div"
+                                >
+                                    {description}
+                                </Typography>
+                            </Tooltip>
+                        )}
+                    </Box>
                 </Box>
             </Box>
             <Box
