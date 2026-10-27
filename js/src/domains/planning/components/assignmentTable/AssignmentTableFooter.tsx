@@ -11,9 +11,8 @@ const styles = {
     root: {
         flex: '0 0 auto',
         display: 'flex',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '6px 24px',
+        alignItems: 'flex-start',
+        gap: 3,
         py: 1,
         px: 1.5,
         borderTop: 1,
@@ -21,8 +20,10 @@ const styles = {
         backgroundColor: 'background.paper',
         color: 'text.secondary',
     },
+    summary: { flex: '0 0 auto', whiteSpace: 'nowrap' },
     legend: {
-        ml: 'auto',
+        flex: '1 1 auto',
+        minWidth: 0,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-end',
@@ -63,7 +64,7 @@ export const AssignmentTableFooter: FC<Props> = ({
     const { formatMessage } = useSafeIntl();
     return (
         <Box sx={styles.root}>
-            <Typography variant="caption">
+            <Typography variant="caption" sx={styles.summary}>
                 {formatMessage(
                     isRuleView
                         ? MESSAGES.assignmentTableCountRule
