@@ -33,13 +33,9 @@ class BudgetViewSet(viewsets.ModelViewSet):
         intervention's grant; unattributed costs come back with grant_id None.
         Computed on the fly from the current scenario data.
         """
-        scenario_id = request.query_params.get("scenario_id")
-        if not scenario_id:
-            return Response({"detail": "scenario_id is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        scenario = Scenario.objects.filter(id=scenario_id, account=request.user.iaso_profile.account).first()
-        if not scenario:
-            return Response({"detail": "Scenario not found"}, status=status.HTTP_404_NOT_FOUND)
+        scenario, error_response = self._get_scenario_from_query_params(request)
+        if error_response:
+            return error_response
 
         budget_service = BudgetCalculationService(scenario)
         grant_costs = budget_service.calculate_grant_costs()
@@ -52,13 +48,30 @@ class BudgetViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=False, methods=["get"])
-    def get_latest(self, _request):
-        queryset = self.filter_queryset(self.get_queryset())
-        budget = queryset.order_by("-created_at").first()
-        if not budget:
-            return Response({"detail": "No budget found"}, status=status.HTTP_404_NOT_FOUND)
-        serializer = BudgetSerializer(budget)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_latest(self, request):
+        """Return the scenario budget for every year, computed on the fly from the current scenario data."""
+        scenario, error_response = self._get_scenario_from_query_params(request)
+        if error_response:
+            return error_response
+
+        results = BudgetCalculationService(scenario).calculate_all_years()
+        return Response(
+            {
+                "scenario": scenario.id,
+                "results": [year_result.model_dump(mode="json") for year_result in results],
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def _get_scenario_from_query_params(self, request):
+        scenario_id = request.query_params.get("scenario_id")
+        if not scenario_id:
+            return None, Response({"detail": "scenario_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        scenario = Scenario.objects.filter(id=scenario_id, account=request.user.iaso_profile.account).first()
+        if not scenario:
+            return None, Response({"detail": "Scenario not found"}, status=status.HTTP_404_NOT_FOUND)
+        return scenario, None
 
     def get_serializer_class(self):
         if self.action == "create":

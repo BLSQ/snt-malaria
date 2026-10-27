@@ -475,43 +475,54 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         response = self.client.get(f"{BASE_URL}{other_budget.id}/")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_get_latest(self):
-        """
-        This endpoint is available to all authenticated users, regardless of permissions.
-        """
-        budget_2 = Budget.objects.create(
-            scenario=self.scenario,
-            name="Test Budget 2",
-            created_by=self.user_with_full_perm,
-            results={},
+    def test_get_latest_computes_budget_for_every_scenario_year_for_all_authenticated_users(self):
+        """This endpoint is available to all authenticated users, regardless of permissions."""
+        for user in (self.user_no_perms, self.user_with_basic_perm, self.user_with_full_perm):
+            self.client.force_authenticate(user=user)
+            response = self.client.get(f"{BASE_URL}get_latest/", {"scenario_id": self.scenario.id})
+
+            result = self.assertJSONResponse(response, status.HTTP_200_OK)
+            self.assertEqual(result["scenario"], self.scenario.id)
+            self.assertEqual(
+                [year_result["year"] for year_result in result["results"]],
+                list(range(self.scenario.start_year, self.scenario.end_year + 1)),
+            )
+
+    def test_get_latest_reflects_current_data_without_saving_a_budget(self):
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.get(f"{BASE_URL}get_latest/", {"scenario_id": self.scenario.id})
+        initial_total = self.assertJSONResponse(response, status.HTTP_200_OK)["results"][0]["total_cost"]
+
+        smc_cost_line = self.cost_lines[0]
+        smc_cost_line.unit_cost = smc_cost_line.unit_cost * 2
+        smc_cost_line.save()
+
+        response = self.client.get(f"{BASE_URL}get_latest/", {"scenario_id": self.scenario.id})
+        updated_total = self.assertJSONResponse(response, status.HTTP_200_OK)["results"][0]["total_cost"]
+
+        self.assertGreater(updated_total, initial_total)
+        self.assertEqual(Budget.objects.filter(scenario=self.scenario).count(), 1)
+
+    def test_get_latest_without_scenario_id_returns_400(self):
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.get(f"{BASE_URL}get_latest/")
+
+        result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(result["detail"], "scenario_id is required")
+
+    def test_get_latest_for_scenario_of_other_account_returns_404(self):
+        other_account, _, _, _ = self.create_account_datasource_version_project(
+            "other_source", "Other Account", "other_project"
+        )
+        other_user, _, _ = self.create_base_users(other_account, [SNT_SCENARIO_FULL_WRITE_PERMISSION], "otheruser")
+        other_scenario = Scenario.objects.create(
+            account=other_account, created_by=other_user, name="Other Scenario", start_year=2025, end_year=2028
         )
 
-        self.client.force_authenticate(user=self.user_no_perms)
-        response = self.client.get(f"{BASE_URL}get_latest/")
-
-        result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertEqual(result["id"], budget_2.id)
-
-        self.client.force_authenticate(user=self.user_with_basic_perm)
-        response = self.client.get(f"{BASE_URL}get_latest/")
-
-        result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertEqual(result["id"], budget_2.id)
-
         self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.get(f"{BASE_URL}get_latest/")
+        response = self.client.get(f"{BASE_URL}get_latest/", {"scenario_id": other_scenario.id})
 
-        result = self.assertJSONResponse(response, status.HTTP_200_OK)
-        self.assertEqual(result["id"], budget_2.id)
-
-    def test_get_latest_no_budgets(self):
-        Budget.objects.all().delete()
-
-        self.client.force_authenticate(user=self.user_with_full_perm)
-        response = self.client.get(f"{BASE_URL}get_latest/")
-
-        result = self.assertJSONResponse(response, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(result["detail"], "No budget found")
+        self.assertJSONResponse(response, status.HTTP_404_NOT_FOUND)
 
     def test_get_latest_unauthenticated(self):
         response = self.client.get(f"{BASE_URL}get_latest/")

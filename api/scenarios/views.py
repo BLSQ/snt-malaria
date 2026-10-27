@@ -25,7 +25,6 @@ from plugins.snt_malaria.api.scenarios.utils import (
 from plugins.snt_malaria.models import InterventionAssignment, Scenario, ScenarioRule
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 from plugins.snt_malaria.models.intervention import Intervention
-from plugins.snt_malaria.services import BudgetCalculationService
 
 from .permissions import ScenarioPermission
 from .serializers import (
@@ -96,7 +95,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
 
     def _refresh_rules_for_data_layer_years_change(self, scenario):
         """Recompute org_units_matched for every rule of the scenario using the new data_layer_years,
-        then refresh assignments and budget once for the whole scenario rather than per rule."""
+        then refresh assignments once for the whole scenario rather than per rule."""
         rules = list(scenario.rules.all())
         for rule in rules:
             rule.org_units_matched = ScenarioRule.resolve_matched_org_units(
@@ -105,9 +104,6 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         ScenarioRule.objects.bulk_update(rules, ["org_units_matched"])
 
         scenario.refresh_assignments(self.request.user)
-
-        budget_service = BudgetCalculationService(scenario)
-        budget_service.calculate_and_save_all_years(self.request.user)
 
     # Custom action to duplicate a scenario
     @transaction.atomic
@@ -128,9 +124,6 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         duplicate_rules(initial_scenario, new_scenario, request.user)
 
         new_scenario.refresh_assignments(request.user)
-
-        budget_service = BudgetCalculationService(new_scenario)
-        budget_service.calculate_and_save_all_years(request.user)
 
         serializer = ScenarioSerializer(new_scenario)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

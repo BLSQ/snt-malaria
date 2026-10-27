@@ -4,7 +4,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from plugins.snt_malaria.models import ScenarioRule
-from plugins.snt_malaria.services import BudgetCalculationService
 
 from .permissions import ScenarioRulePermission
 from .serializers import (
@@ -74,9 +73,6 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         rule: ScenarioRule = serializer.save(created_by=user, org_units_matched=org_units_matched)
         rule.scenario.refresh_assignments(user)
 
-        budget_service = BudgetCalculationService(scenario)
-        budget_service.calculate_and_save_all_years(user)
-
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """
@@ -109,9 +105,6 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         rule: ScenarioRule = serializer.save(updated_by=user, org_units_matched=org_units_matched)
         rule.scenario.refresh_assignments(user)
 
-        budget_service = BudgetCalculationService(rule.scenario)
-        budget_service.calculate_and_save_all_years(user)
-
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         """
@@ -133,8 +126,6 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         scenario = instance.scenario
         super().perform_destroy(instance)
         scenario.refresh_assignments(self.request.user)
-        budget_service = BudgetCalculationService(scenario)
-        budget_service.calculate_and_save_all_years(self.request.user)
 
     @action(detail=False, methods=["post"])
     def preview(self, request, *args, **kwargs):
