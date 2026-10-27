@@ -45,7 +45,7 @@ class BudgetCalculationService:
         self.end_year = scenario.end_year
 
         self.assignments = list(
-            scenario.intervention_assignments.select_related("intervention", "org_unit")
+            scenario.intervention_assignments.select_related("intervention")
             .all()
             .order_by("org_unit_id", "intervention_id")
         )
@@ -68,10 +68,12 @@ class BudgetCalculationService:
 
         self.cost_lines_by_intervention_id = defaultdict(list)
         self.cost_line_by_id = {}
+        self.category_label_by_cost_line_id = {}
         metric_type_ids = set()
         for line in population_cost_lines:
             self.cost_lines_by_intervention_id[line.intervention_id].append(line)
             self.cost_line_by_id[line.id] = line
+            self.category_label_by_cost_line_id[line.id] = str(line.get_category_display())
             if line.population_layer_id is not None:
                 metric_type_ids.add(line.population_layer_id)
 
@@ -102,6 +104,7 @@ class BudgetCalculationService:
         budget_settings = BudgetSettings.objects.filter(account=scenario.account).first()
         self.inflation_rate = Decimal(str(budget_settings.inflation_rate)) if budget_settings else Decimal("0")
         self.buffer = Decimal(str(budget_settings.buffer)) if budget_settings else Decimal("1.1")
+        self._breakdown_line_rows_by_year = {}
 
     def _fixed_cost_candidates(self, rule_interventions):
         """Per intervention, the rule interventions eligible to cost its fixed lines, highest priority first.
@@ -288,6 +291,11 @@ class BudgetCalculationService:
         )
 
     def _compute_breakdown_line_rows(self, year):
+        if year not in self._breakdown_line_rows_by_year:
+            self._breakdown_line_rows_by_year[year] = self._compute_uncached_breakdown_line_rows(year)
+        return self._breakdown_line_rows_by_year[year]
+
+    def _compute_uncached_breakdown_line_rows(self, year):
         """
         Compute the raw cost breakdown lines for a given year, without any aggregation, to be used as input for the budget calculation.
         Population-based lines produce one row per assignment, fixed lines one row per scenario.
@@ -372,7 +380,7 @@ class BudgetCalculationService:
             cost_line_id=line.id,
             org_unit_id=org_unit_id,
             intervention_id=line.intervention_id,
-            category=line.get_category_display(),
+            category=self.category_label_by_cost_line_id[line.id],
             population=population,
             is_proportional=line.is_proportional,
             yearly_value=coverage_ratio,
@@ -415,7 +423,7 @@ class BudgetCalculationService:
             cost_line_id=line.id,
             org_unit_id=None,
             intervention_id=line.intervention_id,
-            category=line.get_category_display(),
+            category=self.category_label_by_cost_line_id[line.id],
             is_proportional=line.is_proportional,
             yearly_value=fixed_quantity,
             quantity=quantity,
