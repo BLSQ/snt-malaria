@@ -1,12 +1,14 @@
 import { useMemo } from 'react';
 import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { useGetCostBreakdownLines } from '../../../interventions/hooks/useGetCostBreakdownLines';
+import { InterventionCategory } from '../../../interventions/types';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import {
     bufferMultiplierToPercent,
     DEFAULT_BUFFER_MULTIPLIER,
 } from '../../libs/cost-utils';
 import { CostLineValueField } from '../../libs/override-utils';
+import { getRuleDisplayName } from '../../libs/rule-utils';
 import { ScenarioRule } from '../../types/scenarioRule';
 import {
     buildPreviewAssignments,
@@ -29,12 +31,27 @@ type Args = {
 };
 
 const toPreviewRuleSource = (
-    previewRule?: Partial<ScenarioRule>,
+    previewRule: Partial<ScenarioRule> | undefined,
+    interventionCategories: InterventionCategory[],
 ): AssignmentRuleSource => ({
     id: previewRule?.id,
     color: previewRule?.color ?? '',
-    name: previewRule?.name ?? '',
+    name: getRuleDisplayName(
+        {
+            name: previewRule?.name ?? '',
+            interventions: previewRule?.interventions ?? [],
+        },
+        interventionCategories,
+    ),
     intervention_overrides: previewRule?.intervention_overrides ?? [],
+});
+
+const toScenarioRuleSource = (
+    rule: ScenarioRule,
+    interventionCategories: InterventionCategory[],
+): AssignmentRuleSource => ({
+    ...rule,
+    name: getRuleDisplayName(rule, interventionCategories),
 });
 
 export const useAssignmentTableData = ({
@@ -77,8 +94,13 @@ export const useAssignmentTableData = ({
     );
 
     const rules = useMemo<AssignmentRuleSource[]>(
-        () => (isRuleView ? [toPreviewRuleSource(previewRule)] : scenarioRules),
-        [isRuleView, previewRule, scenarioRules],
+        () =>
+            isRuleView
+                ? [toPreviewRuleSource(previewRule, interventionCategories)]
+                : scenarioRules.map(rule =>
+                      toScenarioRuleSource(rule, interventionCategories),
+                  ),
+        [isRuleView, previewRule, scenarioRules, interventionCategories],
     );
 
     const table = useMemo(
