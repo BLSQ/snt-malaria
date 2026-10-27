@@ -1,9 +1,10 @@
 import React, { FC, useCallback, useMemo } from 'react';
+import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
 import UndoIcon from '@mui/icons-material/Undo';
 import { Box, Button, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import { overrideColors } from '../../../../../constants/overrideColors';
+import { EmptyPlaceholder } from '../../../../../components/EmptyPlaceholder';
 import { useElementSize } from '../../../../../hooks/useElementSize';
 import { useGetBudgetSettings } from '../../../../../hooks/useGetBudgetSettings';
 import { useGetExtendedFormikContext } from '../../../../../hooks/useGetExtendedFormikContext';
@@ -27,6 +28,11 @@ import { overridesGridStyles } from './overridesGrid';
 const GLOW_SPACE = 3;
 
 const styles = {
+    emptyContainer: {
+        height: '100%',
+        boxSizing: 'border-box',
+        pt: 2,
+    },
     stickySummary: {
         position: 'sticky',
         top: 0,
@@ -61,15 +67,6 @@ const styles = {
     },
     secondaryText: { color: 'text.secondary', textWrap: 'pretty' },
     hint: { color: 'text.secondary', textWrap: 'pretty', mt: 0.5 },
-    empty: {
-        mt: 2,
-        py: 4,
-        px: 2,
-        textAlign: 'center',
-        color: 'text.secondary',
-        border: `1px dashed ${overrideColors.inputBorder}`,
-        borderRadius: 2,
-    },
 } satisfies SxStyles;
 
 export const RuleOverridesTab: FC = () => {
@@ -152,9 +149,12 @@ export const RuleOverridesTab: FC = () => {
 
     if (interventions.length === 0) {
         return (
-            <Typography variant="body2" sx={styles.empty}>
-                {formatMessage(MESSAGES.overridesEmpty)}
-            </Typography>
+            <Box sx={styles.emptyContainer}>
+                <EmptyPlaceholder
+                    icon={TuneOutlinedIcon}
+                    message={formatMessage(MESSAGES.overridesEmpty)}
+                />
+            </Box>
         );
     }
 

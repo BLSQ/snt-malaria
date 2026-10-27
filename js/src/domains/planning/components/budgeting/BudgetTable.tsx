@@ -1,4 +1,5 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import {
     Paper,
     Table,
@@ -12,6 +13,7 @@ import {
 } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { EmptyPlaceholder } from '../../../../components/EmptyPlaceholder';
 import { useGetBudgetSettings } from '../../../../hooks/useGetBudgetSettings';
 import { useGetCostBreakdownLines } from '../../../interventions/hooks/useGetCostBreakdownLines';
 import { InterventionCostBreakdownLine } from '../../../interventions/types';
@@ -317,8 +319,9 @@ export const BudgetTable: FC = ({}) => {
             </Table>
         </TableContainer>
     ) : (
-        <Typography variant="body1" align="center">
-            {formatMessage(MESSAGES.budgetingNoData)}
-        </Typography>
+        <EmptyPlaceholder
+            icon={PaymentsOutlinedIcon}
+            message={formatMessage(MESSAGES.budgetingNoData)}
+        />
     );
 };

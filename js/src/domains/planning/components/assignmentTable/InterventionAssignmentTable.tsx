@@ -1,8 +1,9 @@
 import React, { FC, useMemo, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import TableRowsOutlinedIcon from '@mui/icons-material/TableRowsOutlined';
+import { Box } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
-import { overrideColors } from '../../../../constants/overrideColors';
+import { EmptyPlaceholder } from '../../../../components/EmptyPlaceholder';
 import { MESSAGES } from '../../../messages';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { CostLineValueField } from '../../libs/override-utils';
@@ -35,14 +36,6 @@ const styles = {
         borderColor: 'divider',
         borderRadius: 2,
         overflow: 'hidden',
-    },
-    empty: {
-        py: 4,
-        px: 2,
-        textAlign: 'center',
-        color: 'text.secondary',
-        border: `1px dashed ${overrideColors.inputBorder}`,
-        borderRadius: 2,
     },
 } satisfies SxStyles;
 
@@ -89,6 +82,21 @@ export const InterventionAssignmentTable: FC<Props> = ({
         [table.rows, filter, query],
     );
 
+    if (table.groups.length === 0) {
+        return (
+            <Box sx={styles.root}>
+                <EmptyPlaceholder
+                    icon={TableRowsOutlinedIcon}
+                    message={formatMessage(
+                        isRuleView
+                            ? MESSAGES.assignmentTableEmptyRule
+                            : MESSAGES.assignmentTableEmptyScenario,
+                    )}
+                />
+            </Box>
+        );
+    }
+
     return (
         <Box sx={styles.root}>
             <AssignmentTableToolbar
@@ -102,37 +110,27 @@ export const InterventionAssignmentTable: FC<Props> = ({
                 filter={filter}
                 onFilterChange={setFilter}
             />
-            {table.groups.length === 0 ? (
-                <Typography variant="body2" sx={styles.empty}>
-                    {formatMessage(
-                        isRuleView
-                            ? MESSAGES.assignmentTableEmptyRule
-                            : MESSAGES.assignmentTableEmptyScenario,
-                    )}
-                </Typography>
-            ) : (
-                <Box sx={styles.frame}>
-                    <AssignmentMatrix
-                        groups={table.groups}
-                        rows={visibleRows}
-                        mode={mode}
-                        field={field}
-                        year={year}
-                        currency={currency}
-                        isRuleView={isRuleView}
-                        query={query}
-                        onQueryChange={setQuery}
-                    />
-                    <AssignmentTableFooter
-                        assignedCount={table.assignedCount}
-                        totalCount={table.rows.length}
-                        legendRules={legendRules}
-                        isRuleView={isRuleView}
-                        showDeployedLegend={mode === 'interventions'}
-                        ruleDotSize={getRuleDotSize(mode)}
-                    />
-                </Box>
-            )}
+            <Box sx={styles.frame}>
+                <AssignmentMatrix
+                    groups={table.groups}
+                    rows={visibleRows}
+                    mode={mode}
+                    field={field}
+                    year={year}
+                    currency={currency}
+                    isRuleView={isRuleView}
+                    query={query}
+                    onQueryChange={setQuery}
+                />
+                <AssignmentTableFooter
+                    assignedCount={table.assignedCount}
+                    totalCount={table.rows.length}
+                    legendRules={legendRules}
+                    isRuleView={isRuleView}
+                    showDeployedLegend={mode === 'interventions'}
+                    ruleDotSize={getRuleDotSize(mode)}
+                />
+            </Box>
         </Box>
     );
 };
