@@ -3,7 +3,7 @@ import { overrideColors } from '../../../../constants/overrideColors';
 
 export const CONTROL_HEIGHT = 32;
 
-export const controlStyles = {
+const controlStyles = {
     button: {
         display: 'inline-flex',
         alignItems: 'center',

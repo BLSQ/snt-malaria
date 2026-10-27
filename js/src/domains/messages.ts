@@ -1759,10 +1759,6 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Not deployed in {year}, so 0. Type a value to cost this item anyway.',
     },
-    assignmentTableInterventions: {
-        id: 'iaso.snt_malaria.assignmentTable.interventions',
-        defaultMessage: 'Interventions',
-    },
     assignmentTableFilterAll: {
         id: 'iaso.snt_malaria.assignmentTable.filterAll',
         defaultMessage: 'All',
@@ -1850,18 +1846,6 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             '{column}, {district}, {year}: {value}, from Cost management via {rule}',
     },
-    assignmentTableCostItem: {
-        id: 'iaso.snt_malaria.assignmentTable.costItem',
-        defaultMessage: 'Cost item',
-    },
-    assignmentTableChooseValue: {
-        id: 'iaso.snt_malaria.assignmentTable.chooseValue',
-        defaultMessage: 'Choose cost item value',
-    },
-    assignmentTableData: {
-        id: 'iaso.snt_malaria.assignmentTable.data',
-        defaultMessage: 'Data',
-    },
     assignmentTableShow: {
         id: 'iaso.snt_malaria.assignmentTable.show',
         defaultMessage: 'Show',
@@ -1881,5 +1865,9 @@ export const MESSAGES = defineMessages({
     clearSearch: {
         id: 'iaso.snt_malaria.label.clearSearch',
         defaultMessage: 'Clear search',
+    },
+    assignmentTableCostItemValue: {
+        id: 'iaso.snt_malaria.assignmentTable.costItemValue',
+        defaultMessage: 'Cost item value',
     },
 });

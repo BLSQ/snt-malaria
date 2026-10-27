@@ -10,7 +10,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { YearStepper } from '../../../../components/YearStepper';
 import { MESSAGES } from '../../../messages';
 import { CostLineValueField } from '../../libs/override-utils';
-import { AssignmentDataControl } from './AssignmentDataControl';
+import { AssignmentValueSelect } from './AssignmentValueSelect';
 import {
     AssignmentTableFilter,
     AssignmentTableMode,
@@ -126,9 +126,11 @@ export const AssignmentTableToolbar: FC<Props> = ({
                             sx={[styles.labelledControl, styles.dividedControl]}
                         >
                             <ControlLabel>
-                                {formatMessage(MESSAGES.assignmentTableData)}
+                                {formatMessage(
+                                    MESSAGES.assignmentTableCostItemValue,
+                                )}
                             </ControlLabel>
-                            <AssignmentDataControl
+                            <AssignmentValueSelect
                                 mode={mode}
                                 onModeChange={onModeChange}
                                 field={field}

@@ -700,7 +700,6 @@
     "iaso.snt_malaria.compareCustomize.unmatchedInterventionMixes": "L'impact est recherché pour la combinaison complète d'interventions de chaque district. Il n'y a pas de résultats pour ces combinaisons, {count, plural, one {# district est donc ignoré} other {# districts sont donc ignorés}}.",
     "iaso.snt_malaria.compareCustomize.yearRangeImpactData": "Données d'impact",
     "iaso.snt_malaria.compareCustomize.yearRangeNone": "Aucune",
-    "iaso.snt_malaria.assignmentTable.interventions": "Interventions",
     "iaso.snt_malaria.assignmentTable.filterAll": "Tous",
     "iaso.snt_malaria.assignmentTable.filterDeployed": "Déployés",
     "iaso.snt_malaria.assignmentTable.filterOverridden": "Ajustés",
@@ -722,12 +721,10 @@
     "iaso.snt_malaria.assignmentTable.cellNotDeployed": "{column}, {district}, {year} : non déployé via {rule}",
     "iaso.snt_malaria.assignmentTable.cellRuleValue": "{column}, {district}, {year} : {value}, défini dans {rule}",
     "iaso.snt_malaria.assignmentTable.cellInheritedValue": "{column}, {district}, {year} : {value}, issu de la gestion des coûts via {rule}",
-    "iaso.snt_malaria.assignmentTable.costItem": "Élément de coût",
-    "iaso.snt_malaria.assignmentTable.chooseValue": "Choisir la valeur de l'élément de coût",
-    "iaso.snt_malaria.assignmentTable.data": "Données",
     "iaso.snt_malaria.assignmentTable.show": "Afficher",
     "iaso.snt_malaria.yearStepper.previous": "Année précédente",
     "iaso.snt_malaria.yearStepper.next": "Année suivante",
     "iaso.snt_malaria.yearStepper.choose": "Choisir l'année",
-    "iaso.snt_malaria.label.clearSearch": "Effacer la recherche"
+    "iaso.snt_malaria.label.clearSearch": "Effacer la recherche",
+    "iaso.snt_malaria.assignmentTable.costItemValue": "Valeur de l'élément de coût"
 }
