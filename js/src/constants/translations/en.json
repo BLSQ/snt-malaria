@@ -700,5 +700,9 @@
     "iaso.snt_malaria.compareCustomize.unmatchedInterventionMixesTitle": "{count, plural, one {No impact data for # intervention mix} other {No impact data for # intervention mixes}}",
     "iaso.snt_malaria.compareCustomize.unmatchedInterventionMixes": "Impact is looked up for each district's full intervention mix. There are no results for these mixes, so {count, plural, one {# district is} other {# districts are}} skipped.",
     "iaso.snt_malaria.compareCustomize.yearRangeImpactData": "Impact data",
-    "iaso.snt_malaria.compareCustomize.yearRangeNone": "None"
+    "iaso.snt_malaria.compareCustomize.yearRangeNone": "None",
+    "iaso.snt_malaria.yearStepper.previous": "Previous year",
+    "iaso.snt_malaria.yearStepper.next": "Next year",
+    "iaso.snt_malaria.yearStepper.choose": "Choose year",
+    "iaso.snt_malaria.label.clearSearch": "Clear search"
 }

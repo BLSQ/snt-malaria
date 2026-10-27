@@ -15,6 +15,7 @@ export const overrideColors = {
     zeroBorder: palette.error.main,
     zeroBackground: '#FFEBEE',
     inputBorder: alpha(ink, 0.23),
+    controlBorder: alpha(ink, 0.12),
     mutedIcon: palette.text.secondary,
     notApplicableText: alpha(ink, 0.38),
     emptyDot: alpha(ink, 0.12),

@@ -6,12 +6,13 @@ import React, {
     useRef,
     useState,
 } from 'react';
-import { CloudOff, Search as SearchIcon } from '@mui/icons-material';
+import { CloudOff } from '@mui/icons-material';
 import { Box, Button, Typography } from '@mui/material';
 import { SxProps, Theme } from '@mui/material/styles';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DelayedLoadingSpinner } from '../../../../../../components/DelayedLoadingSpinner';
+import { InlineSearchInput } from '../../../../../../components/InlineSearchInput';
 import { MESSAGES } from '../../../../../messages';
 import { MetricTypeCriterion } from '../../../../types/scenarioRule';
 import { RuleMatchedOrgUnits } from '../useRuleMatchedOrgUnits';
@@ -54,14 +55,6 @@ const styles = {
         px: 1.5,
         borderBottom: 1,
         borderColor: 'divider',
-    },
-    searchInput: {
-        flex: 1,
-        border: 0,
-        outline: 'none',
-        background: 'transparent',
-        font: '400 14px Roboto, sans-serif',
-        color: 'text.primary',
     },
     resultLine: {
         fontSize: '12px',
@@ -306,18 +299,12 @@ export const OrgUnitScopeSelector: FC<Props> = ({
         <Box>
             <Box sx={styles.box}>
                 <Box sx={styles.searchRow}>
-                    <SearchIcon
-                        fontSize="small"
-                        sx={{ color: 'text.secondary' }}
-                    />
-                    <Box
-                        component="input"
+                    <InlineSearchInput
                         value={query}
-                        onChange={e => setQuery(e.target.value)}
+                        onChange={setQuery}
                         placeholder={formatMessage(
                             MESSAGES.scopeSearchPlaceholder,
                         )}
-                        sx={styles.searchInput}
                     />
                     {isFiltering && (
                         <Box sx={styles.resultLine}>

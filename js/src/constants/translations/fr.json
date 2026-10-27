@@ -699,5 +699,9 @@
     "iaso.snt_malaria.compareCustomize.unmatchedInterventionMixesTitle": "{count, plural, one {Pas de données d'impact pour # combinaison d'interventions} other {Pas de données d'impact pour # combinaisons d'interventions}}",
     "iaso.snt_malaria.compareCustomize.unmatchedInterventionMixes": "L'impact est recherché pour la combinaison complète d'interventions de chaque district. Il n'y a pas de résultats pour ces combinaisons, {count, plural, one {# district est donc ignoré} other {# districts sont donc ignorés}}.",
     "iaso.snt_malaria.compareCustomize.yearRangeImpactData": "Données d'impact",
-    "iaso.snt_malaria.compareCustomize.yearRangeNone": "Aucune"
+    "iaso.snt_malaria.compareCustomize.yearRangeNone": "Aucune",
+    "iaso.snt_malaria.yearStepper.previous": "Année précédente",
+    "iaso.snt_malaria.yearStepper.next": "Année suivante",
+    "iaso.snt_malaria.yearStepper.choose": "Choisir l'année",
+    "iaso.snt_malaria.label.clearSearch": "Effacer la recherche"
 }

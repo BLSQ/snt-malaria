@@ -1759,4 +1759,20 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Not deployed in {year}, so 0. Type a value to cost this item anyway.',
     },
+    yearStepperPrevious: {
+        id: 'iaso.snt_malaria.yearStepper.previous',
+        defaultMessage: 'Previous year',
+    },
+    yearStepperNext: {
+        id: 'iaso.snt_malaria.yearStepper.next',
+        defaultMessage: 'Next year',
+    },
+    yearStepperChoose: {
+        id: 'iaso.snt_malaria.yearStepper.choose',
+        defaultMessage: 'Choose year',
+    },
+    clearSearch: {
+        id: 'iaso.snt_malaria.label.clearSearch',
+        defaultMessage: 'Clear search',
+    },
 });
