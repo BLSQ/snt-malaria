@@ -5,6 +5,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
+import TableRowsOutlinedIcon from '@mui/icons-material/TableRowsOutlined';
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
 import {
     Box,
@@ -116,6 +117,12 @@ export const InterventionPlanHeader: FC<Props> = ({
                         <ToggleButtonLabel
                             icon={MapOutlinedIcon}
                             label={formatMessage(MESSAGES.mapView)}
+                        />
+                    </ToggleButton>
+                    <ToggleButton value="list">
+                        <ToggleButtonLabel
+                            icon={TableRowsOutlinedIcon}
+                            label={formatMessage(MESSAGES.listView)}
                         />
                     </ToggleButton>
                     {isEditing && (

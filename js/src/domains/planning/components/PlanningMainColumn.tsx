@@ -5,6 +5,7 @@ import { CardStyled } from '../../../components/CardStyled';
 import { PaperFullHeight } from '../../../components/styledComponents';
 import { usePlanningContext } from '../contexts/PlanningContext';
 import { ScenarioRule } from '../types/scenarioRule';
+import { InterventionAssignmentTable } from './assignmentTable/InterventionAssignmentTable';
 import { BudgetTable } from './budgeting/BudgetTable';
 import { ScenarioComparisonTab } from './comparisonTab/ScenarioComparisonTab';
 import { InterventionPlanMap } from './interventionPlanMap/InterventionPlanMap';
@@ -28,6 +29,7 @@ type Props = {
     renderHeader: (tabActions?: ReactNode) => ReactElement;
     matchedOrgUnitIds: number[];
     previewRule?: Partial<ScenarioRule>;
+    scenarioRules: ScenarioRule[];
     isBudgetLoaded: boolean;
 };
 
@@ -35,6 +37,7 @@ export const PlanningMainColumn: FC<Props> = ({
     renderHeader,
     matchedOrgUnitIds,
     previewRule,
+    scenarioRules,
     isBudgetLoaded,
 }) => {
     const { activeTab, setOverridesTabContainer } = usePlanningContext();
@@ -50,12 +53,21 @@ export const PlanningMainColumn: FC<Props> = ({
             <Card sx={styles.card}>
                 <CardStyled
                     header={renderHeader()}
-                    flushContent={activeTab === 'overrides'}
+                    flushContent={
+                        activeTab === 'overrides' || activeTab === 'list'
+                    }
                 >
                     {activeTab === 'map' && (
                         <InterventionPlanMap
                             matchedOrgUnitIds={matchedOrgUnitIds}
                             previewRule={previewRule}
+                        />
+                    )}
+                    {activeTab === 'list' && (
+                        <InterventionAssignmentTable
+                            matchedOrgUnitIds={matchedOrgUnitIds}
+                            previewRule={previewRule}
+                            scenarioRules={scenarioRules}
                         />
                     )}
                     {activeTab === 'overrides' && (

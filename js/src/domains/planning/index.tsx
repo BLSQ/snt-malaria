@@ -250,6 +250,7 @@ export const Planning: FC = () => {
                             renderHeader={renderPlanHeader}
                             matchedOrgUnitIds={matchedOrgUnitIds}
                             previewRule={previewRule}
+                            scenarioRules={scenarioRules || []}
                             isBudgetLoaded={Boolean(orgUnits && budget)}
                         />
                     </MainColumn>

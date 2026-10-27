@@ -7,9 +7,12 @@ const ink = '#1F2B3D';
 export const overrideColors = {
     overriddenBorder: palette.primary.main,
     overriddenBackground: palette.primary.light,
+    overriddenHoverBackground: '#D1C4E9',
     overriddenText: '#5E35B1',
     rowHoverBackground: palette.action.hover,
     actionHoverBackground: alpha(palette.primary.main, 0.08),
+    crosshairBackground: alpha(palette.primary.main, 0.03),
+    hoveredCellBackground: alpha(palette.primary.main, 0.14),
     focusGlow: alpha(palette.primary.main, 0.16),
     progressFill: '#FAF7FD',
     zeroBorder: palette.error.main,
