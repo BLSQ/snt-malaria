@@ -12,6 +12,7 @@ export const useDeleteScenarioRule = (scenarioId: number): UseMutationResult =>
             'interventionAssignments',
             'impact',
             'budget_by_grant',
+            'calculated_budget',
         ],
         snackSuccessMessage: MESSAGES.deleteScenarioRuleSuccess,
         snackErrorMsg: MESSAGES.deleteScenarioRuleError,

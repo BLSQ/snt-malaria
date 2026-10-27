@@ -17,5 +17,6 @@ export const useRefreshAssignments = (scenarioId: number): UseMutationResult =>
             'interventionAssignments',
             'impact',
             'budget_by_grant',
+            'calculated_budget',
         ],
     });

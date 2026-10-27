@@ -19,5 +19,6 @@ export const useReorderScenarioRules = (
             'interventionAssignments',
             'impact',
             'budget_by_grant',
+            'calculated_budget',
         ],
     });

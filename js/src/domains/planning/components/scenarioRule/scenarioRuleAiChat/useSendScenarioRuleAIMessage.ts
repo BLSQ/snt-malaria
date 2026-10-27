@@ -19,6 +19,7 @@ export const invalidateScenarioQueries = (
     queryClient.invalidateQueries('interventionAssignments');
     queryClient.invalidateQueries('impact');
     queryClient.invalidateQueries('budget_by_grant');
+    queryClient.invalidateQueries('calculated_budget');
 };
 
 export const useSendScenarioRuleAIMessage = (scenarioId: number) => {

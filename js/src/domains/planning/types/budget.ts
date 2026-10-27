@@ -60,7 +60,6 @@ export type BudgetCalculationRequest = {
 };
 
 export type BudgetCalculationResponse = {
-    id: number;
     scenario: number;
     results: Budget[];
 };

@@ -25,6 +25,10 @@ export const useUpdateBudgetSettings = (): UseMutationResult<
 > =>
     useSnackMutation<BudgetSettings, unknown, UpdateBudgetSettingsPayload>({
         mutationFn: updateBudgetSettings,
-        invalidateQueryKey: ['snt_malaria_budget_settings'],
+        invalidateQueryKey: [
+            'snt_malaria_budget_settings',
+            'calculated_budget',
+            'budget_by_grant',
+        ],
         ignoreErrorCodes: [400],
     });

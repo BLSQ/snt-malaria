@@ -7,5 +7,9 @@ export const useSaveBudgetSettings = (): UseMutationResult =>
     useSnackMutation({
         mutationFn: ({ id, ...body }: BudgetSettingsPayload) =>
             patchRequest(`/api/snt_malaria/budget_settings/${id}/`, body),
-        invalidateQueryKey: ['snt_malaria_budget_settings'],
+        invalidateQueryKey: [
+            'snt_malaria_budget_settings',
+            'calculated_budget',
+            'budget_by_grant',
+        ],
     });
