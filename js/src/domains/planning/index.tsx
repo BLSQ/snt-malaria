@@ -72,7 +72,8 @@ export const Planning: FC = () => {
     } = useGetScenarioRules(scenarioId);
     const { data: interventionAssignments } =
         useGetInterventionAssignments(scenarioId);
-    const { data: budget } = useGetLatestCalculatedBudget(scenario?.id);
+    const { data: budget, isLoading: isLoadingBudget } =
+        useGetLatestCalculatedBudget(scenario?.id);
 
     const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
         navigate('/');
@@ -250,7 +251,10 @@ export const Planning: FC = () => {
                             renderHeader={renderPlanHeader}
                             matchedOrgUnitIds={matchedOrgUnitIds}
                             previewRule={previewRule}
-                            isBudgetLoaded={Boolean(orgUnits && budget)}
+                            scenarioRules={scenarioRules || []}
+                            isBudgetLoaded={
+                                Boolean(orgUnits) && !isLoadingBudget
+                            }
                         />
                     </MainColumn>
                 </SidebarLayout>

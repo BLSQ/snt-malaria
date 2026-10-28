@@ -6,7 +6,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 import { useDeleteScenarioRule } from '../../../hooks/useDeleteScenarioRule';
-import { generateRuleName } from '../../../libs/rule-utils';
+import { getRuleDisplayName } from '../../../libs/rule-utils';
 import { ScenarioRule } from '../../../types/scenarioRule';
 
 const styles: SxStyles = {
@@ -116,11 +116,7 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
                         my={1}
                         noWrap
                     >
-                        {rule.name ||
-                            generateRuleName(
-                                rule.interventions,
-                                interventionCategories,
-                            )}
+                        {getRuleDisplayName(rule, interventionCategories)}
                     </Typography>
                     {isScenarioEditable && hovered && (
                         <Box

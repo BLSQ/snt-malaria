@@ -1,13 +1,6 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-import {
-    Card,
-    MenuItem,
-    Select,
-    Stack,
-    Tooltip,
-    Typography,
-} from '@mui/material';
+import { Card, Stack, Tooltip, Typography } from '@mui/material';
 import {
     IconButton,
     LoadingSpinner,
@@ -17,6 +10,7 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../../components/CardStyled';
 import { OrgUnitSelect } from '../../../components/OrgUnitSelect';
+import { YearStepper } from '../../../components/YearStepper';
 import { baseUrls } from '../../../constants/urls';
 import { MESSAGES } from '../../messages';
 import { useGetMetricValues } from '../hooks/useGetMetrics';
@@ -96,10 +90,19 @@ export const DataLayerMapWrapper: FC<Props> = ({
             valuesByYear[metricYear].push(metricValue);
         }
         setMetricValuesPerYear(valuesByYear);
-        const sortedYears = [...years].filter(y => y > 0).sort((a, b) => b - a);
+        const sortedYears = [...years].filter(y => y > 0).sort((a, b) => a - b);
         setYearOptions(sortedYears);
-        setYear(sortedYears.length > 0 ? sortedYears[0].toString() : '0');
+        setYear(
+            sortedYears.length > 0
+                ? sortedYears[sortedYears.length - 1].toString()
+                : '0',
+        );
     }, [metricValues]);
+
+    const handleYearChange = useCallback(
+        (selectedYear: number) => setYear(selectedYear.toString()),
+        [],
+    );
 
     if (loadingMetricValues) {
         return <LoadingSpinner />;
@@ -144,21 +147,11 @@ export const DataLayerMapWrapper: FC<Props> = ({
                                 sx={{ flexShrink: 0 }}
                             >
                                 {yearOptions.length > 0 && (
-                                    <Select
-                                        value={year}
-                                        onChange={e => setYear(e.target.value)}
-                                        variant="outlined"
-                                        displayEmpty
-                                    >
-                                        {yearOptions.map(yearOption => (
-                                            <MenuItem
-                                                key={yearOption}
-                                                value={yearOption}
-                                            >
-                                                {yearOption}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
+                                    <YearStepper
+                                        years={yearOptions}
+                                        value={Number(year)}
+                                        onChange={handleYearChange}
+                                    />
                                 )}
                                 {small ? null : (
                                     <OrgUnitSelect

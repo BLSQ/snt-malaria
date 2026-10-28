@@ -65,6 +65,9 @@ type PlanningContextType = {
     setComparisonExtraSlots: Dispatch<SetStateAction<ExtraSlotState[]>>;
 };
 
+const keepListTab = (tab: PlanningTab): PlanningTab =>
+    tab === 'list' ? 'list' : 'map';
+
 const PlanningContext = createContext<PlanningContextType>({
     scenarioId: 0,
     scenario: undefined,
@@ -194,14 +197,14 @@ export const PlanningProvider = ({
     const startEditingRule = useCallback((rule?: ScenarioRule) => {
         setEditingRule(rule);
         setIsEditing(true);
-        setActiveTab('map');
+        setActiveTab(keepListTab);
     }, []);
     const stopEditingRule = useCallback(() => {
         setEditingRule(undefined);
         setIsEditing(false);
         setFocusedOverrideInterventionId(undefined);
         setMapMetricTypeId(undefined);
-        setActiveTab('map');
+        setActiveTab(keepListTab);
     }, []);
 
     const [comparisonCurrentYear, setComparisonCurrentYear] = useState<

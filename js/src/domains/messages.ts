@@ -1759,4 +1759,115 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             'Not deployed in {year}, so 0. Type a value to cost this item anyway.',
     },
+    assignmentTableFilterAll: {
+        id: 'iaso.snt_malaria.assignmentTable.filterAll',
+        defaultMessage: 'All',
+    },
+    assignmentTableFilterDeployed: {
+        id: 'iaso.snt_malaria.assignmentTable.filterDeployed',
+        defaultMessage: 'Deployed',
+    },
+    assignmentTableFilterOverridden: {
+        id: 'iaso.snt_malaria.assignmentTable.filterOverridden',
+        defaultMessage: 'Overridden',
+    },
+    assignmentTableSearch: {
+        id: 'iaso.snt_malaria.assignmentTable.search',
+        defaultMessage: 'Search province or district',
+    },
+    assignmentTableYear: {
+        id: 'iaso.snt_malaria.assignmentTable.year',
+        defaultMessage: 'Year',
+    },
+    assignmentTableNoCostItems: {
+        id: 'iaso.snt_malaria.assignmentTable.noCostItems',
+        defaultMessage: 'No cost items',
+    },
+    assignmentTableCountScenario: {
+        id: 'iaso.snt_malaria.assignmentTable.countScenario',
+        defaultMessage: '{assigned} of {total} districts with interventions',
+    },
+    assignmentTableCountRule: {
+        id: 'iaso.snt_malaria.assignmentTable.countRule',
+        defaultMessage: '{assigned} of {total} districts in this rule',
+    },
+    assignmentTableDeployed: {
+        id: 'iaso.snt_malaria.assignmentTable.deployed',
+        defaultMessage: 'Deployed',
+    },
+    assignmentTableChangedInARule: {
+        id: 'iaso.snt_malaria.assignmentTable.changedInARule',
+        defaultMessage: 'Changed in a rule',
+    },
+    assignmentTableChangedInThisRule: {
+        id: 'iaso.snt_malaria.assignmentTable.changedInThisRule',
+        defaultMessage: 'Changed in this rule',
+    },
+    assignmentTableThisRule: {
+        id: 'iaso.snt_malaria.assignmentTable.thisRule',
+        defaultMessage: 'this rule',
+    },
+    assignmentTableEmptyScenario: {
+        id: 'iaso.snt_malaria.assignmentTable.emptyScenario',
+        defaultMessage:
+            'Add interventions to a rule to see the final mix per district.',
+    },
+    assignmentTableEmptyRule: {
+        id: 'iaso.snt_malaria.assignmentTable.emptyRule',
+        defaultMessage:
+            'Add an intervention in the side panel to see it per district.',
+    },
+    assignmentTableNoResults: {
+        id: 'iaso.snt_malaria.assignmentTable.noResults',
+        defaultMessage: 'No districts match the search and filter.',
+    },
+    assignmentCellNotAssigned: {
+        id: 'iaso.snt_malaria.assignmentTable.cellNotAssigned',
+        defaultMessage: '{column}, {district}, {year}: not assigned',
+    },
+    assignmentCellOutsideRule: {
+        id: 'iaso.snt_malaria.assignmentTable.cellOutsideRule',
+        defaultMessage: '{column}, {district}, {year}: outside this rule',
+    },
+    assignmentCellDeployed: {
+        id: 'iaso.snt_malaria.assignmentTable.cellDeployed',
+        defaultMessage: '{column}, {district}, {year}: deployed via {rule}',
+    },
+    assignmentCellNotDeployed: {
+        id: 'iaso.snt_malaria.assignmentTable.cellNotDeployed',
+        defaultMessage: '{column}, {district}, {year}: not deployed via {rule}',
+    },
+    assignmentCellRuleValue: {
+        id: 'iaso.snt_malaria.assignmentTable.cellRuleValue',
+        defaultMessage: '{column}, {district}, {year}: {value}, set in {rule}',
+    },
+    assignmentCellInheritedValue: {
+        id: 'iaso.snt_malaria.assignmentTable.cellInheritedValue',
+        defaultMessage:
+            '{column}, {district}, {year}: {value}, from Cost management via {rule}',
+    },
+    assignmentTableShow: {
+        id: 'iaso.snt_malaria.assignmentTable.show',
+        defaultMessage: 'Show',
+    },
+    yearStepperPrevious: {
+        id: 'iaso.snt_malaria.yearStepper.previous',
+        defaultMessage: 'Previous year',
+    },
+    yearStepperNext: {
+        id: 'iaso.snt_malaria.yearStepper.next',
+        defaultMessage: 'Next year',
+    },
+    yearStepperChoose: {
+        id: 'iaso.snt_malaria.yearStepper.choose',
+        defaultMessage: 'Choose year',
+    },
+    clearSearch: {
+        id: 'iaso.snt_malaria.label.clearSearch',
+        defaultMessage: 'Clear search',
+    },
+    assignmentTableCostItemValue: {
+        id: 'iaso.snt_malaria.assignmentTable.costItemValue',
+        defaultMessage: 'Cost item value',
+    },
 });

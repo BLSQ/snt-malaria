@@ -1,5 +1,6 @@
 import { sortBy } from 'lodash';
 import { InterventionCategory } from '../../interventions/types';
+import { ScenarioRule } from '../types/scenarioRule';
 
 export const findInterventionWithCategory = (
     interventionCategories: InterventionCategory[],
@@ -33,6 +34,12 @@ export const generateRuleName = (
         .map(({ intervention }) => intervention.short_name || intervention.name)
         .join(' + ');
 };
+
+export const getRuleDisplayName = (
+    rule: Pick<ScenarioRule, 'name' | 'interventions'>,
+    interventionCategories: InterventionCategory[],
+): string =>
+    rule.name || generateRuleName(rule.interventions, interventionCategories);
 
 export const parseOrgUnitIds = (commaSeparatedIds?: string): number[] =>
     (commaSeparatedIds || '')

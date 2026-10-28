@@ -1,6 +1,12 @@
 import React, { FC, ReactNode, Ref, useCallback } from 'react';
+import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
+import CompareOutlinedIcon from '@mui/icons-material/CompareOutlined';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
+import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
+import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
+import TableRowsOutlinedIcon from '@mui/icons-material/TableRowsOutlined';
+import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
 import {
     Box,
     Divider,
@@ -21,6 +27,7 @@ import { SxStyles } from 'Iaso/types/general';
 import { noOp } from 'Iaso/utils';
 import { MoreActions } from '../../../../components/MoreActions';
 import { OrgUnitSelect } from '../../../../components/OrgUnitSelect';
+import { ToggleButtonLabel } from '../../../../components/ToggleButtonLabel';
 import { exportScenarioAPIPath } from '../../../../constants/api-urls';
 import * as Permission from '../../../../constants/permissions';
 import { baseUrls } from '../../../../constants/urls';
@@ -107,26 +114,47 @@ export const InterventionPlanHeader: FC<Props> = ({
                     exclusive
                 >
                     <ToggleButton value="map">
-                        {formatMessage(MESSAGES.mapView)}
+                        <ToggleButtonLabel
+                            icon={MapOutlinedIcon}
+                            label={formatMessage(MESSAGES.mapView)}
+                        />
+                    </ToggleButton>
+                    <ToggleButton value="list">
+                        <ToggleButtonLabel
+                            icon={TableRowsOutlinedIcon}
+                            label={formatMessage(MESSAGES.listView)}
+                        />
                     </ToggleButton>
                     {isEditing && (
                         <ToggleButton value="overrides">
-                            {formatMessage(MESSAGES.overridesView)}
+                            <ToggleButtonLabel
+                                icon={TuneOutlinedIcon}
+                                label={formatMessage(MESSAGES.overridesView)}
+                            />
                         </ToggleButton>
                     )}
                     {!isEditing && (
                         <ToggleButton value="budget">
-                            {formatMessage(MESSAGES.budgetView)}
+                            <ToggleButtonLabel
+                                icon={PaymentsOutlinedIcon}
+                                label={formatMessage(MESSAGES.budgetView)}
+                            />
                         </ToggleButton>
                     )}
                     {!isEditing && (
                         <ToggleButton value="summary">
-                            {formatMessage(MESSAGES.summaryView)}
+                            <ToggleButtonLabel
+                                icon={BarChartOutlinedIcon}
+                                label={formatMessage(MESSAGES.summaryView)}
+                            />
                         </ToggleButton>
                     )}
                     {!isEditing && (
                         <ToggleButton value="comparison">
-                            {formatMessage(MESSAGES.comparisonView)}
+                            <ToggleButtonLabel
+                                icon={CompareOutlinedIcon}
+                                label={formatMessage(MESSAGES.comparisonView)}
+                            />
                         </ToggleButton>
                     )}
                 </ToggleButtonGroup>

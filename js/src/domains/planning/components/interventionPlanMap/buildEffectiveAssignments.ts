@@ -14,6 +14,7 @@ export type NormalizedAssignment = {
     orgUnitId: number;
     interventionId?: number;
     interventionName?: string;
+    ruleId?: number;
     ruleColor: string;
 };
 
@@ -45,9 +46,10 @@ export function buildPreviewAssignments({
                   orgUnitId,
                   interventionId: i.id,
                   interventionName: i.short_name,
+                  ruleId: previewRule?.id,
                   ruleColor: color,
               }))
-            : [{ orgUnitId, ruleColor: color }],
+            : [{ orgUnitId, ruleId: previewRule?.id, ruleColor: color }],
     );
 }
 
@@ -59,6 +61,7 @@ export function buildSavedAssignments(
         orgUnitId: a.org_unit.id,
         interventionId: a.intervention.id,
         interventionName: a.intervention.short_name,
+        ruleId: a.rule?.id,
         ruleColor: a.rule?.color || mapTheme.shapeColor,
     }));
 }

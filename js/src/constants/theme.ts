@@ -199,6 +199,16 @@ export const theme = createTheme({
                 },
             },
         },
+        MuiToggleButtonGroup: {
+            defaultProps: {
+                color: 'primary',
+            },
+        },
+        MuiToggleButton: {
+            defaultProps: {
+                color: 'primary',
+            },
+        },
         MuiChip: {
             styleOverrides: {
                 root: {
