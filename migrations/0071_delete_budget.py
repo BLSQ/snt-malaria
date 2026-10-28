@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("snt_malaria", "0069_alter_intervention_impact_ref"),
+        ("snt_malaria", "0070_alter_scenariorule_color"),
     ]
 
     operations = [
