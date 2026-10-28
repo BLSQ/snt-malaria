@@ -6,6 +6,8 @@ CONSTANTS = {
     "LOGO_PATH": "",
     "APP_TITLE": "SNT Malaria",
     "HIDE_BASIC_NAV_ITEMS": "yes",
+    # Keep in sync with primaryMain in js/src/constants/theme.ts: Django auth pages can't read the JS theme.
+    "THEME_PRIMARY_COLOR": "#673AB7",
     "ENABLE_PUBLIC_ACCOUNT_SETUP": os.environ.get("ENABLE_PUBLIC_ACCOUNT_SETUP", "false").lower() == "true",
     # Paths that IasoLogoutView accepts as ?next=... after logging the user out.
     # Used by the configureAccount wizard's "Restart" link.

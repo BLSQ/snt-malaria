@@ -2,6 +2,7 @@ import { alpha, createTheme } from '@mui/material/styles';
 
 import { theme as defaultTheme } from 'bluesquare-components';
 
+// Mirrored as THEME_PRIMARY_COLOR in plugin_settings.py for the Django auth pages.
 const primaryMain = '#673AB7';
 
 // Styling the scrollbar opts out of the native one, which insets its thumb; the inset restores
