@@ -14,7 +14,6 @@ from plugins.snt_malaria.api.interventions.serializers import (
     InterventionSerializer,
 )
 from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
-from plugins.snt_malaria.services import recalculate_budgets_for_intervention
 
 
 class InterventionViewSet(viewsets.ModelViewSet):
@@ -90,7 +89,6 @@ class InterventionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(intervention, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        recalculate_budgets_for_intervention(intervention, request.user)
 
         # Reload so the response reflects the saved lines rather than the prefetch from before the save.
         intervention = self.get_queryset().get(pk=intervention.pk)

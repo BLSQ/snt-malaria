@@ -58,12 +58,13 @@ export const OverrideValueCell: FC<ValueCellProps> = ({
         [field, onCommit],
     );
     const defaultDisplay = `${prefix ?? ''}${defaultValue ?? ''}${suffix ?? ''}`;
-    const variant =
-        field === 'coverage'
-            ? getVariant(value)
-            : value === null
-              ? 'default'
-              : 'overridden';
+    let variant: NumberInputVariant;
+    if (field === 'coverage') {
+        variant = getVariant(value);
+    } else {
+        variant = value ? 'overridden' : 'default';
+    }
+
     return (
         <NumberInput
             value={value}

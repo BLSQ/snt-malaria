@@ -1,6 +1,7 @@
 import { patchRequest, postRequest } from 'bluesquare-components';
 import { useQueryClient } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
+import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
 import { ScenarioRuleResponse } from '../hooks/useGetScenarioRules';
 import {
     MetricTypeCriterion,
@@ -93,10 +94,9 @@ export const useCreateUpdateScenarioRule = (scenarioId: number) => {
                 : postRequest(`/api/snt_malaria/scenario_rules/`, payload);
         },
         invalidateQueryKey: [
+            ...BUDGET_QUERY_KEYS,
             'interventionAssignments',
             'impact',
-            'calculated_budget',
-            'budget_by_grant',
         ],
         options: {
             onSuccess: replaceQueryData,

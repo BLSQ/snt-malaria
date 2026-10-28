@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useGetLatestCalculatedBudget } from '../../planning/hooks/useGetLatestCalculatedBudget';
+import { useGetScenarioBudget } from '../../planning/hooks/useGetScenarioBudget';
 import { BudgetCalculationResponse } from '../../planning/types/budget';
 import { ScenarioImpactMetrics, ScenarioId, toNumericId } from '../types';
 import { useGetScenarioImpact } from './useGetScenarioImpact';
@@ -33,9 +33,9 @@ export const useComparisonData = ({
 
     const impactEnabled = yearFrom !== undefined;
 
-    const baselineBudgetQuery = useGetLatestCalculatedBudget(baselineNumericId);
-    const comparisonBudget1Query = useGetLatestCalculatedBudget(comparisonId1);
-    const comparisonBudget2Query = useGetLatestCalculatedBudget(comparisonId2);
+    const baselineBudgetQuery = useGetScenarioBudget(baselineNumericId);
+    const comparisonBudget1Query = useGetScenarioBudget(comparisonId1);
+    const comparisonBudget2Query = useGetScenarioBudget(comparisonId2);
 
     const baselineImpactQuery = useGetScenarioImpact(
         baselineNumericId,

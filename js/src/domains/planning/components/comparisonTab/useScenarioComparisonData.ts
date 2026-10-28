@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useGetLatestCalculatedBudget } from '../../hooks/useGetLatestCalculatedBudget';
+import { useGetScenarioBudget } from '../../hooks/useGetScenarioBudget';
 import { mergeBudgets } from '../../libs/budget-aggregation';
 import { Budget } from '../../types/budget';
 import { YearlyCost } from '../../types/comparisonAggregation';
@@ -8,7 +8,7 @@ import { isAllYears, MAX_SLOTS } from './useComparisonSlots';
 
 if (MAX_SLOTS !== 3) {
     throw new Error(
-        'MAX_SLOTS changed: update the 3 fixed useGetLatestCalculatedBudget calls below to match.',
+        'MAX_SLOTS changed: update the 3 fixed useGetScenarioBudget calls below to match.',
     );
 }
 
@@ -34,14 +34,14 @@ const resolveSlotBudget = (
  * total-cost-by-year series (`totalCostsBySlotKey`, for the cost-over-time
  * chart) -- the full `Budget` objects for the other years never leave this
  * hook. Always calls exactly `MAX_SLOTS` (currently 3)
- * `useGetLatestCalculatedBudget` hooks (React's rules of hooks forbid a
+ * `useGetScenarioBudget` hooks (React's rules of hooks forbid a
  * variable count); slots beyond what's currently selected pass `undefined`,
  * which the hook treats as disabled.
  */
 export const useScenarioComparisonData = (slots: ComparisonSlot[]) => {
-    const budgetQuery0 = useGetLatestCalculatedBudget(slots[0]?.scenarioId);
-    const budgetQuery1 = useGetLatestCalculatedBudget(slots[1]?.scenarioId);
-    const budgetQuery2 = useGetLatestCalculatedBudget(slots[2]?.scenarioId);
+    const budgetQuery0 = useGetScenarioBudget(slots[0]?.scenarioId);
+    const budgetQuery1 = useGetScenarioBudget(slots[1]?.scenarioId);
+    const budgetQuery2 = useGetScenarioBudget(slots[2]?.scenarioId);
 
     // Depend on `data.results` -- referentially stable across renders thanks
     // to react-query's structural sharing plus `staleTime: Infinity` -- not

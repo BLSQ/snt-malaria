@@ -1,5 +1,4 @@
 from decimal import Decimal
-from unittest import mock
 
 from rest_framework import status
 
@@ -10,17 +9,13 @@ from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base
 )
 
 
-RECALCULATE_PATH = "plugins.snt_malaria.api.intervention_cost_breakdown_line.views.recalculate_budgets_for_intervention"
-
-
 class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
     def test_put_is_not_allowed(self):
         self.client.force_authenticate(user=self.user_write)
         response = self.client.put(f"{self.BASE_URL}{self.cost_line1.id}/", {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    @mock.patch(RECALCULATE_PATH)
-    def test_create_cost_breakdown_line_returns_line_and_recalculates_budgets(self, recalculate):
+    def test_create_cost_breakdown_line_returns_line(self):
         self.client.force_authenticate(user=self.user_write)
         response = self.client.post(
             self.BASE_URL,
@@ -40,10 +35,8 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.assertEqual(line.created_by, self.user_write)
         self.assertEqual(line.coverage, Decimal("80"))
         self.assertEqual(result["unit_type_label"], self.unit_type_other.name)
-        recalculate.assert_called_once_with(self.intervention_chemo_iptp, self.user_write)
 
-    @mock.patch(RECALCULATE_PATH)
-    def test_partial_update_cost_breakdown_line_keeps_unsent_fields(self, recalculate):
+    def test_partial_update_cost_breakdown_line_keeps_unsent_fields(self):
         population = MetricType.objects.create(account=self.account, name="Total population", code="POP")
         self.cost_line1.is_proportional = True
         self.cost_line1.population_layer = population
@@ -59,10 +52,8 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.assertEqual(self.cost_line1.population_layer, population)
         self.assertEqual(self.cost_line1.updated_by, self.user_write)
         self.assertEqual(result["population_layer_label"], "Total population")
-        recalculate.assert_called_once_with(self.intervention_vaccination_rts, self.user_write)
 
-    @mock.patch(RECALCULATE_PATH)
-    def test_partial_update_can_clear_buffer_to_use_budget_settings(self, recalculate):
+    def test_partial_update_can_clear_buffer_to_use_budget_settings(self):
         self.cost_line1.buffer = Decimal("10")
         self.cost_line1.save()
 
@@ -74,23 +65,18 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.assertIsNone(self.cost_line1.buffer)
         self.assertIsNone(result["buffer"])
 
-    @mock.patch(RECALCULATE_PATH)
-    def test_partial_update_to_proportional_without_population_is_rejected(self, recalculate):
+    def test_partial_update_to_proportional_without_population_is_rejected(self):
         self.client.force_authenticate(user=self.user_write)
         response = self.client.patch(f"{self.BASE_URL}{self.cost_line1.id}/", {"is_proportional": True}, format="json")
         self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
-        recalculate.assert_not_called()
 
-    @mock.patch(RECALCULATE_PATH)
-    def test_delete_cost_breakdown_line_recalculates_budgets(self, recalculate):
+    def test_delete_cost_breakdown_line(self):
         self.client.force_authenticate(user=self.user_write)
         response = self.client.delete(f"{self.BASE_URL}{self.cost_line1.id}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(InterventionCostBreakdownLine.objects.filter(id=self.cost_line1.id).exists())
-        recalculate.assert_called_once_with(self.intervention_vaccination_rts, self.user_write)
 
-    @mock.patch(RECALCULATE_PATH)
-    def test_partial_update_ignores_id_in_payload(self, recalculate):
+    def test_partial_update_ignores_id_in_payload(self):
         """A payload id must not redirect the update to another line, even one of another account."""
         self.client.force_authenticate(user=self.user_write)
         response = self.client.patch(
@@ -107,8 +93,7 @@ class InterventionCostBreakdownLineAPITests(InterventionCostBreakdownLineBase):
         self.assertEqual(self.other_cost_line.unit_cost, Decimal("20.00"))
         self.assertEqual(self.other_cost_line.intervention, self.other_intervention)
 
-    @mock.patch(RECALCULATE_PATH)
-    def test_create_ignores_id_in_payload(self, recalculate):
+    def test_create_ignores_id_in_payload(self):
         self.client.force_authenticate(user=self.user_write)
         response = self.client.post(
             self.BASE_URL,

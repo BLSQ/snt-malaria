@@ -4,7 +4,6 @@ from typing import Any, Optional
 
 from iaso.models import MetricValue
 from plugins.snt_malaria.models import (
-    Budget,
     BudgetSettings,
     Grant,
     InterventionCostBreakdownLine,
@@ -45,7 +44,7 @@ class BudgetCalculationService:
         self.end_year = scenario.end_year
 
         self.assignments = list(
-            scenario.intervention_assignments.select_related("intervention", "org_unit")
+            scenario.intervention_assignments.select_related("intervention")
             .all()
             .order_by("org_unit_id", "intervention_id")
         )
@@ -68,10 +67,12 @@ class BudgetCalculationService:
 
         self.cost_lines_by_intervention_id = defaultdict(list)
         self.cost_line_by_id = {}
+        self.category_label_by_cost_line_id = {}
         metric_type_ids = set()
         for line in population_cost_lines:
             self.cost_lines_by_intervention_id[line.intervention_id].append(line)
             self.cost_line_by_id[line.id] = line
+            self.category_label_by_cost_line_id[line.id] = str(line.get_category_display())
             if line.population_layer_id is not None:
                 metric_type_ids.add(line.population_layer_id)
 
@@ -122,16 +123,6 @@ class BudgetCalculationService:
         for intervention_id in interventions_assigned_outside_rules:
             candidates[intervention_id].append(None)
         return candidates
-
-    def calculate_and_save_all_years(self, user):
-        all_years_results = self.calculate_all_years()
-        return Budget.objects.create(
-            scenario=self.scenario,
-            name=f"Budget for {self.scenario.name}",
-            results=[budget_result.model_dump(mode="json") for budget_result in all_years_results],
-            created_by=user,
-            updated_by=user,
-        )
 
     def calculate_all_years(self):
         return [self.calculate_year(year) for year in range(self.start_year, self.end_year + 1)]
@@ -372,7 +363,7 @@ class BudgetCalculationService:
             cost_line_id=line.id,
             org_unit_id=org_unit_id,
             intervention_id=line.intervention_id,
-            category=line.get_category_display(),
+            category=self.category_label_by_cost_line_id[line.id],
             population=population,
             is_proportional=line.is_proportional,
             yearly_value=coverage_ratio,
@@ -415,7 +406,7 @@ class BudgetCalculationService:
             cost_line_id=line.id,
             org_unit_id=None,
             intervention_id=line.intervention_id,
-            category=line.get_category_display(),
+            category=self.category_label_by_cost_line_id[line.id],
             is_proportional=line.is_proportional,
             yearly_value=fixed_quantity,
             quantity=quantity,

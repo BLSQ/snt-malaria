@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import { TollOutlined } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
-import { Alert, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { Button } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
@@ -102,9 +102,6 @@ export const BudgetSettingsTab: FC = () => {
                 }
             >
                 {isLoading && <LoadingSpinner absolute />}
-                <Alert severity="warning">
-                    {formatMessage(MESSAGES.budgetSettingsWarning)}
-                </Alert>
                 <SettingsFormContainer>
                     <Stack spacing={2}>
                         <Typography variant="caption" color="textSecondary">

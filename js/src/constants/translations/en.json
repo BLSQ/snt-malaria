@@ -519,7 +519,6 @@
     "iaso.snt_malaria.settings.interventionCategories.shortName": "Short name",
     "iaso.snt_malaria.settings.interventionCategories.description": "Description",
     "iaso.snt_malaria.settings.budget.title": "Budget",
-    "iaso.snt_malaria.settings.budget.warning": "Changing these settings will not automatically recalculate existing budgets. Re-run the budget calculation on each scenario to apply the new values.",
     "iaso.snt_malaria.settings.budget.subtitle": "Set the currency and rates used to compute intervention costs and projections.",
     "iaso.snt_malaria.settings.budget.localCurrency": "Local currency (ISO code)",
     "iaso.snt_malaria.settings.budget.localCurrencyHelp": "Three-letter code, e.g. USD, EUR, XOF.",

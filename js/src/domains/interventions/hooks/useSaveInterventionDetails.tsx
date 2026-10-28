@@ -1,6 +1,7 @@
 import { putRequest } from 'bluesquare-components';
 import { UseMutationResult } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
+import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
 import { InterventionDetails } from '../types';
 
 type SaveInterventionDetailsBody = Partial<
@@ -21,9 +22,9 @@ export const useSaveInterventionDetails = (): UseMutationResult =>
             ),
         // Partial match invalidates every ['interventionDetails', id] query key.
         invalidateQueryKey: [
+            ...BUDGET_QUERY_KEYS,
             'interventionDetails',
             'interventionCategories',
-            'calculated_budget',
         ],
         showSuccessSnackBar: false,
     });

@@ -13,7 +13,6 @@ from iaso.modules import MODULE_DEFAULT, MODULE_SNT_MALARIA
 from iaso.permissions.core_permissions import CORE_DATASTORE_READ_PERMISSION, CORE_METRIC_TYPES_PERMISSION
 from plugins.snt_malaria.models import (
     AccountSettings,
-    Budget,
     Donor,
     Grant,
     ImpactProviderConfig,
@@ -118,9 +117,6 @@ class Command(BaseCommand):
 
         # Delete in order to avoid PROTECT foreign key constraints
         InterventionAssignment.objects.filter(scenario__in=scenarios).delete()
-        budgets = Budget.objects_include_deleted.filter(scenario__in=scenarios)
-        for b in budgets:
-            b.delete_hard()
         for s in scenarios:
             s.delete_hard()
         InterventionCostBreakdownLine.objects.filter(intervention__in=interventions).delete()

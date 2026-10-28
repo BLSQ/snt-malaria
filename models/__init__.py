@@ -1,5 +1,4 @@
 from .account_settings import AccountSettings
-from .budget import Budget
 from .budget_settings import BudgetSettings
 from .composite_layer import CompositeLayer
 from .cost_breakdown import InterventionCostBreakdownLine
@@ -31,7 +30,6 @@ __all__ = [
     "InterventionCostBreakdownLine",
     "ImpactOrgUnitMapping",
     "ImpactProviderConfig",
-    "Budget",
     "BudgetSettings",
     "AccountSettings",
     "SNTAccountSetup",

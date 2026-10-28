@@ -3,6 +3,7 @@ import { useQueryClient, UseQueryResult } from 'react-query';
 import { TaskStatus } from 'Iaso/domains/tasks/types';
 import { getRequest } from 'Iaso/libs/Api';
 import { useSnackQuery } from 'Iaso/libs/apiHooks';
+import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
 import {
     isInFlightTaskStatus,
     isTerminalTaskStatus,
@@ -58,6 +59,9 @@ export const useGetOpenHexaImportStatus = (
                 if (justFinished) {
                     queryClient.invalidateQueries(['metricTypes']);
                     queryClient.invalidateQueries(['metricValues']);
+                    BUDGET_QUERY_KEYS.forEach(key =>
+                        queryClient.invalidateQueries(key),
+                    );
                 }
             },
         },

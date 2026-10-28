@@ -24,7 +24,6 @@ from plugins.snt_malaria.models import (
 )
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 from plugins.snt_malaria.models.scenario_rule_cost_override import OVERRIDE_VALUE_FIELDS
-from plugins.snt_malaria.services import BudgetCalculationService
 
 from .matching_criteria import jsonlogic_to_matching_criteria, matching_criteria_to_jsonlogic
 
@@ -312,7 +311,6 @@ def persist_scenario_rule_set(scenario, rule_specs: list[dict], context: dict) -
         ScenarioRule.objects.bulk_update_with_deferred_constraint(saved_rules, ["priority", "updated_by", "updated_at"])
 
     scenario.refresh_assignments(user)
-    BudgetCalculationService(scenario).calculate_and_save_all_years(user)
 
     rules = scenario.rules.order_by("priority").prefetch_related(
         "interventions", "scenarioruleintervention_set__cost_overrides"

@@ -1,5 +1,6 @@
 import { postRequest } from 'bluesquare-components';
 import { useMutation, useQueryClient } from 'react-query';
+import { BUDGET_QUERY_KEYS } from '../../../../../constants/queryKeys';
 import {
     ScenarioRuleAIRequest,
     ScenarioRuleAIResponse,
@@ -18,7 +19,7 @@ export const invalidateScenarioQueries = (
     queryClient.invalidateQueries([`scenarioRules_${scenarioId}`]);
     queryClient.invalidateQueries('interventionAssignments');
     queryClient.invalidateQueries('impact');
-    queryClient.invalidateQueries('budget_by_grant');
+    BUDGET_QUERY_KEYS.forEach(key => queryClient.invalidateQueries(key));
 };
 
 export const useSendScenarioRuleAIMessage = (scenarioId: number) => {
