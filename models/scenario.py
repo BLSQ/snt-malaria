@@ -6,7 +6,6 @@ from django.db import connection, models, transaction
 from django.db.models import Deferrable, Q
 
 from iaso.models import MetricValue
-from iaso.utils.colors import DEFAULT_COLOR
 from iaso.utils.jsonlogic import jsonlogic_to_exists_q_clauses
 from iaso.utils.models.color import ColorField
 from iaso.utils.models.soft_deletable import (
@@ -131,7 +130,7 @@ class ScenarioRule(models.Model):
     scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="rules")
     name = models.CharField(max_length=255, blank=True)
     priority = models.PositiveSmallIntegerField()
-    color = ColorField(default=DEFAULT_COLOR)
+    color = ColorField()
 
     # Matching criteria determines how org units are selected for this rule:
     # - {"and": [...]} — jsonlogic criteria evaluated against MetricValues
