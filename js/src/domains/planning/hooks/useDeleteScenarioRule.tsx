@@ -1,8 +1,8 @@
 import { deleteRequest } from 'bluesquare-components';
 import { UseMutationResult } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { MESSAGES } from '../../messages';
 import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
+import { MESSAGES } from '../../messages';
 
 export const useDeleteScenarioRule = (scenarioId: number): UseMutationResult =>
     useSnackMutation({

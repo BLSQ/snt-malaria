@@ -1,9 +1,9 @@
 import { UseMutationResult } from 'react-query';
 import { putRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
+import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
 import { Scenario } from '../types';
 import { ScenarioFormValues } from './useScenarioFormState';
-import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
 
 export const useUpdateScenario = (
     scenarioId: number,

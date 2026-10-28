@@ -3,8 +3,8 @@ import { UseMutationResult } from 'react-query';
 import { patchRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 
-import { BudgetSettings } from '../../../hooks/useGetBudgetSettings';
 import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
+import { BudgetSettings } from '../../../hooks/useGetBudgetSettings';
 
 export type UpdateBudgetSettingsPayload = {
     id: number;

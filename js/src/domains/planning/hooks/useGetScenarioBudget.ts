@@ -9,9 +9,7 @@ export const useGetScenarioBudget = (
     return useSnackQuery({
         queryKey: ['calculated_budget', `calculated_budget_${scenarioId}`],
         queryFn: () =>
-            getRequest(
-                `/api/snt_malaria/budgets/?scenario_id=${scenarioId}`,
-            ),
+            getRequest(`/api/snt_malaria/budgets/?scenario_id=${scenarioId}`),
         options: {
             staleTime: Infinity,
             cacheTime: Infinity,

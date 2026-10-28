@@ -32,8 +32,8 @@ import { ScenarioRulesPanel } from './components/scenarioRule/ScenarioRulesPanel
 import { PlanningProvider } from './contexts/PlanningContext';
 import { useGetAccountSettings } from './hooks/useGetAccountSettings';
 import { useGetInterventionAssignments } from './hooks/useGetInterventionAssignments';
-import { useGetScenarioBudget } from './hooks/useGetScenarioBudget';
 import { useGetOrgUnits } from './hooks/useGetOrgUnits';
+import { useGetScenarioBudget } from './hooks/useGetScenarioBudget';
 import { useGetScenarioRules } from './hooks/useGetScenarioRules';
 import { ScenarioRule, ScenarioRulePreview } from './types/scenarioRule';
 import { useUserCanEditScenario } from './utils/permissions';
@@ -72,8 +72,9 @@ export const Planning: FC = () => {
     } = useGetScenarioRules(scenarioId);
     const { data: interventionAssignments } =
         useGetInterventionAssignments(scenarioId);
-    const { data: budget, isLoading: isLoadingBudget } =
-        useGetScenarioBudget(scenario?.id);
+    const { data: budget, isLoading: isLoadingBudget } = useGetScenarioBudget(
+        scenario?.id,
+    );
 
     const { mutateAsync: deleteScenario } = useDeleteScenario(() => {
         navigate('/');

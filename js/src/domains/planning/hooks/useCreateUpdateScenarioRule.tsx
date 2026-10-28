@@ -1,13 +1,13 @@
 import { patchRequest, postRequest } from 'bluesquare-components';
 import { useQueryClient } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
+import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
 import { ScenarioRuleResponse } from '../hooks/useGetScenarioRules';
 import {
     MetricTypeCriterion,
     RuleInterventionOverride,
 } from '../types/scenarioRule';
 import { matchingCriteriaToJsonLogic } from '../utils/jsonLogic';
-import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
 
 type ScenarioRulePayload = {
     id?: number;

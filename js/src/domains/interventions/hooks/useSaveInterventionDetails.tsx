@@ -1,8 +1,8 @@
 import { putRequest } from 'bluesquare-components';
 import { UseMutationResult } from 'react-query';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
-import { InterventionDetails } from '../types';
 import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
+import { InterventionDetails } from '../types';
 
 type SaveInterventionDetailsBody = Partial<
     Pick<InterventionDetails, 'name' | 'impact_ref' | 'grant'>
