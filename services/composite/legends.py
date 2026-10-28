@@ -9,8 +9,6 @@ from __future__ import annotations
 
 import copy
 
-from typing import Tuple
-
 from iaso.models.metric import MetricType
 from iaso.utils.legend import SEVEN_SHADES, build_auto_legend_config, is_categorical_values, resolve_auto_legend_type
 
@@ -18,7 +16,7 @@ from .evaluator import CompositeGraphEvaluator, ValuesByYear, iter_all_values
 from .graph import CONCRETE_LEGEND_TYPES, REFERENCE_LEGEND, is_valid_legend_config
 
 
-def placeholder_legend(legend_type=None, legend_config=None) -> Tuple[str, dict]:
+def placeholder_legend(legend_type=None, legend_config=None) -> tuple[str, dict]:
     """Legend for a composite that has no values yet: the requested one when it is concrete enough
     to stand on its own, else an empty threshold legend until the first successful run."""
     if legend_type in CONCRETE_LEGEND_TYPES and is_valid_legend_config(legend_config):
@@ -40,7 +38,7 @@ def _get_reference_metric_type(account, reference_id) -> MetricType | None:
 
 def resolve_output_legend(
     account, evaluator: CompositeGraphEvaluator, values_by_year: ValuesByYear
-) -> Tuple[str, dict]:
+) -> tuple[str, dict]:
     """Return ``(legend_type, legend_config)`` for the output, honouring the user's legend choice.
 
     A "reference" choice copies another layer's legend verbatim, falling back to the first

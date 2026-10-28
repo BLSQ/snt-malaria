@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from django.db import transaction
 from django.utils.text import slugify

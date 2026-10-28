@@ -20,7 +20,6 @@ import logging
 import sqlite3
 
 from pathlib import Path
-from typing import List
 
 import geopandas as gpd
 import pandas as pd
@@ -174,7 +173,7 @@ class Command(BaseCommand):
         except Exception as e:
             raise CommandError(f"Error reading GeoJSON file: {e}")
 
-    def filter_pyramid_levels(self, df: pd.DataFrame, levels: List[int] = [1, 2, 3]) -> pd.DataFrame:
+    def filter_pyramid_levels(self, df: pd.DataFrame, levels: list[int] = [1, 2, 3]) -> pd.DataFrame:
         """
         Filter the pyramid DataFrame to include only specified levels and get unique values.
 
