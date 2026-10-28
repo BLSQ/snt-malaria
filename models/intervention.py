@@ -27,7 +27,7 @@ class InterventionCategory(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return "%s %s" % (self.name, self.id)
+        return f"{self.name} {self.id}"
 
 
 class Intervention(models.Model):
@@ -70,7 +70,7 @@ class Intervention(models.Model):
     )
 
     def __str__(self):
-        return "%s %s" % (self.name, self.id)
+        return f"{self.name} {self.id}"
 
 
 class InterventionAssignment(models.Model):

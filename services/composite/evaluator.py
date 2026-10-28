@@ -30,7 +30,8 @@ from __future__ import annotations
 import ast
 import operator
 
-from typing import Callable, Dict, Iterable, Iterator, List, Optional, Tuple, Union
+from collections.abc import Iterable, Iterator
+from typing import Callable, Optional, Union
 
 from simpleeval import DEFAULT_FUNCTIONS, InvalidExpression, SimpleEval
 
@@ -39,11 +40,11 @@ from iaso.models.metric import MetricType, MetricValue
 
 # A resolved node value: numeric or a category label.
 Value = Union[float, str]
-ValuesByOrgUnit = Dict[int, Value]
-ValuesByYear = Dict[Optional[int], ValuesByOrgUnit]
+ValuesByOrgUnit = dict[int, Value]
+ValuesByYear = dict[Optional[int], ValuesByOrgUnit]
 
 # Comparison operators available to a ``classify`` node's threshold rules.
-CLASSIFY_OPERATORS: Dict[str, Callable[[float, float], bool]] = {
+CLASSIFY_OPERATORS: dict[str, Callable[[float, float], bool]] = {
     "<": operator.lt,
     "<=": operator.le,
     ">": operator.gt,
@@ -65,7 +66,7 @@ FORMULA_FUNCTIONS = {
 # makes a single dropdown safe: the unlabeled inputs a, b, c, … are interchangeable. ``stack`` (see
 # STACK_OPERATION below) is deliberately not in this dict: it is the one ``combine`` operation that
 # is NOT a symmetric reducer, so it takes a separate code path (``_resolve_stack``).
-COMBINE_OPERATIONS: Dict[str, Callable[[List[float]], float]] = {
+COMBINE_OPERATIONS: dict[str, Callable[[list[float]], float]] = {
     "mean": lambda values: sum(values) / len(values),
     "sum": sum,
     "min": min,
@@ -120,12 +121,12 @@ class CompositeGraphEvaluator:
         self.account = account
         self.graph = graph or {}
         self.org_unit_ids = list(org_unit_ids)
-        self._cache: Dict[str, ValuesByYear] = {}
+        self._cache: dict[str, ValuesByYear] = {}
         # node_ids currently being resolved, used to detect cycles.
         self._visiting: set = set()
         # Ordered category labels of the output when the result is categorical (else None); used by
         # the legend builder so an ordinal legend respects the rule order.
-        self.output_category_order: List[str] | None = None
+        self.output_category_order: list[str] | None = None
         # Legend type chosen on the output node ("auto"/"linear"/"threshold"/"ordinal"/"reference");
         # "auto" (or missing) picks based on whether the result is numeric or categorical.
         self.output_legend_type: str | None = None
@@ -169,7 +170,7 @@ class CompositeGraphEvaluator:
 
         return values_by_year
 
-    def connected_data_layer_metric_type_ids(self) -> List[int]:
+    def connected_data_layer_metric_type_ids(self) -> list[int]:
         """MetricType ids of the data layers wired into the output, in traversal order (deduped).
 
         Walks depth-first from the output node following input connections, so it finds data layers
@@ -180,7 +181,7 @@ class CompositeGraphEvaluator:
         if len(output_nodes) != 1:
             return []
 
-        ordered: List[int] = []
+        ordered: list[int] = []
         visited: set = set()
 
         def visit(node_id: str) -> None:
@@ -330,8 +331,8 @@ class CompositeGraphEvaluator:
 
     @staticmethod
     def _align_input_years(
-        inputs: Dict[str, ValuesByYear],
-    ) -> Tuple[set, Dict[int | None, Dict[str, ValuesByOrgUnit]]]:
+        inputs: dict[str, ValuesByYear],
+    ) -> tuple[set, dict[int | None, dict[str, ValuesByOrgUnit]]]:
         """Align per-year inputs for combination.
 
         Returns ``(target_years, aligned)`` where ``aligned`` is ``{year: {port: {org_unit_id: value}}}``:
@@ -350,7 +351,7 @@ class CompositeGraphEvaluator:
 
         target_years = set.intersection(*yearly_year_sets) if yearly_year_sets else {None}
 
-        aligned: Dict[int | None, Dict[str, ValuesByOrgUnit]] = {}
+        aligned: dict[int | None, dict[str, ValuesByOrgUnit]] = {}
         for year in target_years:
             per_port = {}
             for port, by_year in inputs.items():
@@ -433,7 +434,7 @@ class CompositeGraphEvaluator:
         for year, by_ou in input_by_year.items():
             if not by_ou:
                 continue
-            numeric: Dict[int, float] = {}
+            numeric: dict[int, float] = {}
             for org_unit_id, value in by_ou.items():
                 try:
                     numeric[org_unit_id] = float(value)
@@ -447,7 +448,7 @@ class CompositeGraphEvaluator:
         return result
 
     @staticmethod
-    def _min_max_scale(numeric: Dict[int, float], scale: float) -> ValuesByOrgUnit:
+    def _min_max_scale(numeric: dict[int, float], scale: float) -> ValuesByOrgUnit:
         low = min(numeric.values())
         high = max(numeric.values())
         span = high - low
@@ -458,7 +459,7 @@ class CompositeGraphEvaluator:
         return {org_unit_id: (value - low) / span * scale for org_unit_id, value in numeric.items()}
 
     @staticmethod
-    def _percentile_rank(numeric: Dict[int, float], scale: float) -> ValuesByOrgUnit:
+    def _percentile_rank(numeric: dict[int, float], scale: float) -> ValuesByOrgUnit:
         """Fractional rank of each value among its peers, scaled to ``[0, scale]``.
 
         Tied values share the average of the ranks they span (e.g. two values tied for 2nd/3rd
@@ -471,7 +472,7 @@ class CompositeGraphEvaluator:
             return {only_org_unit_id: scale / 2}
 
         ordered = sorted(numeric.items(), key=lambda item: item[1])
-        ranks: Dict[int, float] = {}
+        ranks: dict[int, float] = {}
         i = 0
         while i < n:
             j = i
@@ -538,9 +539,9 @@ class CompositeGraphEvaluator:
                 continue
         return ids
 
-    def _resolve_dynamic_inputs(self, node: dict, empty_message: str) -> Dict[str, ValuesByYear]:
+    def _resolve_dynamic_inputs(self, node: dict, empty_message: str) -> dict[str, ValuesByYear]:
         """Resolve every connected dynamic port (a, b, c, …) of a multi-input node."""
-        inputs: Dict[str, ValuesByYear] = {}
+        inputs: dict[str, ValuesByYear] = {}
         connected_ports = (node.get("connections") or {}).get("inputs") or {}
         for port in connected_ports:
             source = self._get_single_input_source(node, port)
@@ -579,7 +580,7 @@ class CompositeGraphEvaluator:
                 result.setdefault(year, {})[org_unit_id] = float(reducer(numbers))
         return result
 
-    def _resolve_stack(self, node: dict, inputs: Dict[str, ValuesByYear]) -> ValuesByYear:
+    def _resolve_stack(self, node: dict, inputs: dict[str, ValuesByYear]) -> ValuesByYear:
         """Merge inputs by priority: each org unit takes its value from the highest-priority input
         that has one, falling through to lower-priority inputs where it doesn't.
 
@@ -606,7 +607,7 @@ class CompositeGraphEvaluator:
         return result
 
     @staticmethod
-    def _resolve_stack_order(node: dict, ports: Iterable[str]) -> List[str]:
+    def _resolve_stack_order(node: dict, ports: Iterable[str]) -> list[str]:
         """Connected ports from lowest to highest priority.
 
         ``priorityOrder`` is a hint that can drift from the live connections, so it is reconciled
@@ -617,7 +618,7 @@ class CompositeGraphEvaluator:
         """
         connected = set(ports)
         raw = CompositeGraphEvaluator._get_control_value(node, "operation", "priorityOrder")
-        ordered: List[str] = []
+        ordered: list[str] = []
         if isinstance(raw, list):
             for entry in raw:
                 if isinstance(entry, str) and entry in connected and entry not in ordered:
@@ -625,7 +626,7 @@ class CompositeGraphEvaluator:
         missing = sorted(connected - set(ordered))
         return missing + ordered
 
-    def _parse_classify_config(self, node: dict) -> Tuple[List[Tuple[Callable, float, str]], str]:
+    def _parse_classify_config(self, node: dict) -> tuple[list[tuple[Callable, float, str]], str]:
         """Return ``([(op_fn, threshold, label), ...], default_label)`` from a classify node."""
         config = self._get_control_value(node, "config", "rules") or {}
         raw_rules = config.get("rules") or []
@@ -652,7 +653,7 @@ class CompositeGraphEvaluator:
             raise CompositeGraphIncompleteError("A reclassify node has no mappings.")
         return rules, default_label
 
-    def _classify_category_order(self, node: dict) -> List[str]:
+    def _classify_category_order(self, node: dict) -> list[str]:
         """Ordered, de-duplicated category labels declared on a classify node (rules first, then default)."""
         rules, default_label = self._parse_classify_config(node)
         order = []
@@ -663,7 +664,7 @@ class CompositeGraphEvaluator:
             order.append(default_label)
         return order
 
-    def _data_layer_category_order(self, node: dict) -> List[str] | None:
+    def _data_layer_category_order(self, node: dict) -> list[str] | None:
         """Category order of a categorical data layer, taken from its own legend (or ``None``)."""
         raw_id = self._get_control_value(node, "metricType", "metricTypeId")
         try:

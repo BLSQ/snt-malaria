@@ -174,7 +174,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             row = get_csv_row(org_unit_id, oui["name"], oui["assignments"], interventions)
             writer.writerow(row)
 
-        filename = "%s_%s.csv" % (scenario_name, datetime.now().strftime("%Y-%m-%d"))
+        filename = "{}_{}.csv".format(scenario_name, datetime.now().strftime("%Y-%m-%d"))
         response["Content-Disposition"] = "attachment; filename=" + filename
         return response
 

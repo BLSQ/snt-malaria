@@ -51,7 +51,7 @@ class Scenario(SoftDeletableModel):
     objects_include_deleted = IncludeDeletedSoftDeletableManager()
 
     def __str__(self):
-        return "%s %s %s" % (self.name, self.updated_at, self.id)
+        return f"{self.name} {self.updated_at} {self.id}"
 
     @property
     def years(self) -> range:
