@@ -1,4 +1,3 @@
-from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -38,14 +37,12 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
             .order_by("id")
         )
 
-    @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         line = serializer.save(created_by=request.user, updated_by=request.user)
         return Response(InterventionCostBreakdownLineSerializer(line).data, status=status.HTTP_201_CREATED)
 
-    @transaction.atomic
     def partial_update(self, request, *args, **kwargs):
         line = self.get_object()
         serializer = self.get_serializer(line, data=request.data, partial=True)

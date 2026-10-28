@@ -309,6 +309,13 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result["detail"], "scenario_id is required")
 
+    def test_list_budget_with_non_integer_scenario_id_returns_400(self):
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.get(BASE_URL, {"scenario_id": "abc"})
+
+        result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(result["detail"], "scenario_id must be an integer")
+
     def test_list_budget_for_scenario_of_other_account_returns_404(self):
         other_account, _, _, _ = self.create_account_datasource_version_project(
             "other_source", "Other Account", "other_project"

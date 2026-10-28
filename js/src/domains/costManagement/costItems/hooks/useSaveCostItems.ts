@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useQueryClient } from 'react-query';
 import { deleteRequest, patchRequest, postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
+import { BUDGET_QUERY_KEYS } from '../../../../constants/queryKeys';
 import { COST_BREAKDOWN_LINES_QUERY_KEY } from '../../../interventions/hooks/useGetCostBreakdownLines';
 import {
     InterventionCostBreakdownLine,
@@ -12,7 +13,7 @@ const COST_LINES_URL = '/api/snt_malaria/intervention_cost_breakdown_lines/';
 
 // Lines are kept up to date in the cache by this hook, so only the
 // queries derived from them need refetching.
-const INVALIDATED_QUERY_KEYS = ['interventionDetails', 'calculated_budget'];
+const INVALIDATED_QUERY_KEYS = ['interventionDetails', ...BUDGET_QUERY_KEYS];
 
 type LineChanges = Partial<InterventionCostBreakdownLinePayload>;
 

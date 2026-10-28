@@ -4,6 +4,7 @@ import { patchRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 
 import { BudgetSettings } from '../../../hooks/useGetBudgetSettings';
+import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
 
 export type UpdateBudgetSettingsPayload = {
     id: number;
@@ -26,9 +27,8 @@ export const useUpdateBudgetSettings = (): UseMutationResult<
     useSnackMutation<BudgetSettings, unknown, UpdateBudgetSettingsPayload>({
         mutationFn: updateBudgetSettings,
         invalidateQueryKey: [
+            ...BUDGET_QUERY_KEYS,
             'snt_malaria_budget_settings',
-            'calculated_budget',
-            'budget_by_grant',
         ],
         ignoreErrorCodes: [400],
     });

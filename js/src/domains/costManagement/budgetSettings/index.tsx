@@ -102,9 +102,6 @@ export const BudgetSettingsTab: FC = () => {
                 }
             >
                 {isLoading && <LoadingSpinner absolute />}
-                <Alert severity="warning">
-                    {formatMessage(MESSAGES.budgetSettingsWarning)}
-                </Alert>
                 <SettingsFormContainer>
                     <Stack spacing={2}>
                         <Typography variant="caption" color="textSecondary">

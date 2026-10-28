@@ -7,6 +7,7 @@ import {
     RuleInterventionOverride,
 } from '../types/scenarioRule';
 import { matchingCriteriaToJsonLogic } from '../utils/jsonLogic';
+import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
 
 type ScenarioRulePayload = {
     id?: number;
@@ -93,10 +94,9 @@ export const useCreateUpdateScenarioRule = (scenarioId: number) => {
                 : postRequest(`/api/snt_malaria/scenario_rules/`, payload);
         },
         invalidateQueryKey: [
+            ...BUDGET_QUERY_KEYS,
             'interventionAssignments',
             'impact',
-            'calculated_budget',
-            'budget_by_grant',
         ],
         options: {
             onSuccess: replaceQueryData,

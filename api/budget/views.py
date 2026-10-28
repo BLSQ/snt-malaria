@@ -51,6 +51,10 @@ class BudgetViewSet(viewsets.ViewSet):
         scenario_id = request.query_params.get("scenario_id")
         if not scenario_id:
             return None, Response({"detail": "scenario_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            scenario_id = int(scenario_id)
+        except ValueError:
+            return None, Response({"detail": "scenario_id must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
 
         scenario = Scenario.objects.filter(id=scenario_id, account=request.user.iaso_profile.account).first()
         if not scenario:

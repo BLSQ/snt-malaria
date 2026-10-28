@@ -1,6 +1,7 @@
 import { UseMutationResult } from 'react-query';
 import { postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
+import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
 import { MESSAGES } from '../messages';
 
 export const useImportMetricValues = (): UseMutationResult =>
@@ -13,7 +14,12 @@ export const useImportMetricValues = (): UseMutationResult =>
                 },
                 data: year ? { year } : {},
             }),
-        invalidateQueryKey: ['metricCategories', 'metricValues'], // We need both as metric categories contain metric values
+        // metricCategories too, as metric categories contain metric values
+        invalidateQueryKey: [
+            'metricCategories',
+            'metricValues',
+            ...BUDGET_QUERY_KEYS,
+        ],
         snackSuccessMessage: MESSAGES.metricValuesImportSuccess,
         snackErrorMsg: MESSAGES.metricValuesImportError,
     });

@@ -103,7 +103,6 @@ class BudgetCalculationService:
         budget_settings = BudgetSettings.objects.filter(account=scenario.account).first()
         self.inflation_rate = Decimal(str(budget_settings.inflation_rate)) if budget_settings else Decimal("0")
         self.buffer = Decimal(str(budget_settings.buffer)) if budget_settings else Decimal("1.1")
-        self._breakdown_line_rows_by_year = {}
 
     def _fixed_cost_candidates(self, rule_interventions):
         """Per intervention, the rule interventions eligible to cost its fixed lines, highest priority first.
@@ -280,11 +279,6 @@ class BudgetCalculationService:
         )
 
     def _compute_breakdown_line_rows(self, year):
-        if year not in self._breakdown_line_rows_by_year:
-            self._breakdown_line_rows_by_year[year] = self._compute_uncached_breakdown_line_rows(year)
-        return self._breakdown_line_rows_by_year[year]
-
-    def _compute_uncached_breakdown_line_rows(self, year):
         """
         Compute the raw cost breakdown lines for a given year, without any aggregation, to be used as input for the budget calculation.
         Population-based lines produce one row per assignment, fixed lines one row per scenario.

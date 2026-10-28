@@ -1,6 +1,7 @@
 import { UseMutationResult, useQueryClient } from 'react-query';
 import { patchRequest, postRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
+import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
 import { MESSAGES } from '../messages';
 import {
     CompositeLayer,
@@ -24,6 +25,9 @@ export const useSaveCompositeLayer = (
                 // Refresh values shown on the map and the composite lookup map.
                 queryClient.invalidateQueries(['metricValues']);
                 queryClient.invalidateQueries(['compositeLayers']);
+                BUDGET_QUERY_KEYS.forEach(key =>
+                    queryClient.invalidateQueries(key),
+                );
                 // Drop the cached graph so a subsequent edit reloads the freshly-saved one.
                 if (id) {
                     queryClient.removeQueries(['compositeLayer', id]);

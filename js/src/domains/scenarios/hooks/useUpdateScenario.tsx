@@ -3,6 +3,7 @@ import { putRequest } from 'Iaso/libs/Api';
 import { useSnackMutation } from 'Iaso/libs/apiHooks';
 import { Scenario } from '../types';
 import { ScenarioFormValues } from './useScenarioFormState';
+import { BUDGET_QUERY_KEYS } from '../../../constants/queryKeys';
 
 export const useUpdateScenario = (
     scenarioId: number,
@@ -13,13 +14,12 @@ export const useUpdateScenario = (
         mutationFn: (body: ScenarioFormValues) =>
             putRequest(`/api/snt_malaria/scenarios/${scenarioId}/`, body),
         invalidateQueryKey: [
+            ...BUDGET_QUERY_KEYS,
             'scenarios',
             `scenario_${scenarioId}`,
             'interventionAssignments',
             `interventionAssignments_${scenarioId}`,
-            'calculated_budget',
             'impact',
-            'budget_by_grant',
         ],
         options: {
             onSuccess,
