@@ -258,6 +258,11 @@ export const CostLineTooltip: FC<TooltipProps> = ({ costLine }) => {
                             </Tooltip>
                         </Stack>
                     )}
+                    {!costLine.isProportional && (
+                        <Typography variant="body2">
+                            {formatMessage(MESSAGES.fixedCost)}
+                        </Typography>
+                    )}
                     {costLine.isProportional &&
                         costLine.conversionFactor !== null && (
                             <Stack

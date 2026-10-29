@@ -1089,10 +1089,6 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.costManagement.budget.searchCostItems',
         defaultMessage: 'Search cost items',
     },
-    addToIntervention: {
-        id: 'iaso.snt_malaria.costManagement.budget.addToIntervention',
-        defaultMessage: 'Add to intervention',
-    },
     addCostItemTo: {
         id: 'iaso.snt_malaria.costManagement.budget.addCostItemTo',
         defaultMessage: 'Add a cost item to {intervention}',

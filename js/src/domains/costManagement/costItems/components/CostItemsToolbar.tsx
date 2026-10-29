@@ -1,23 +1,15 @@
 import React, {
     Dispatch,
     FC,
-    MouseEvent,
     SetStateAction,
     useCallback,
     useMemo,
-    useState,
 } from 'react';
-import {
-    Box,
-    Button,
-    ListSubheader,
-    Menu,
-    MenuItem,
-    Typography,
-} from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
+import { DropdownButton } from '../../../../components/DropdownButton';
 import { InterventionCategory } from '../../../interventions/types';
 import { MESSAGES } from '../../../messages';
 import { CostItemFilters, CostItemGroup } from '../types';
@@ -28,18 +20,6 @@ type Props = {
     interventionCategories: InterventionCategory[];
     groups: CostItemGroup[];
     onAdd: (group: CostItemGroup) => void;
-};
-
-const AddCostItemMenuItem: FC<{
-    group: CostItemGroup;
-    onSelect: (group: CostItemGroup) => void;
-}> = ({ group, onSelect }) => {
-    const handleClick = useCallback(() => onSelect(group), [onSelect, group]);
-    return (
-        <MenuItem onClick={handleClick}>
-            {group.intervention.name}, {group.interventionCategory.name}
-        </MenuItem>
-    );
 };
 
 const styles = {
@@ -61,13 +41,6 @@ const styles = {
         gap: 1,
     },
     filter: { width: 240 },
-    addMenuHeader: {
-        typography: 'caption',
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-        letterSpacing: 0.6,
-        lineHeight: 2.5,
-    },
 } satisfies SxStyles;
 
 export const CostItemsToolbar: FC<Props> = ({
@@ -78,9 +51,6 @@ export const CostItemsToolbar: FC<Props> = ({
     onAdd,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const [addMenuAnchor, setAddMenuAnchor] = useState<HTMLElement | null>(
-        null,
-    );
 
     const categoryOptions = useMemo(
         () =>
@@ -104,18 +74,26 @@ export const CostItemsToolbar: FC<Props> = ({
             })),
         [onFiltersChange],
     );
-    const openAddMenu = useCallback(
-        (event: MouseEvent<HTMLElement>) =>
-            setAddMenuAnchor(event.currentTarget),
-        [],
+    const addOptions = useMemo(
+        () =>
+            groups.map(group => ({
+                value: group.intervention.id,
+                label: group.intervention.name,
+                groupKey: String(group.interventionCategory.id),
+                groupLabel: group.interventionCategory.name,
+            })),
+        [groups],
     );
-    const closeAddMenu = useCallback(() => setAddMenuAnchor(null), []);
     const handleAdd = useCallback(
-        (group: CostItemGroup) => {
-            setAddMenuAnchor(null);
-            onAdd(group);
+        (interventionId: number) => {
+            const group = groups.find(
+                ({ intervention }) => intervention.id === interventionId,
+            );
+            if (group) {
+                onAdd(group);
+            }
         },
-        [onAdd],
+        [groups, onAdd],
     );
 
     return (
@@ -146,31 +124,13 @@ export const CostItemsToolbar: FC<Props> = ({
                     withMarginTop={false}
                     wrapperSx={styles.filter}
                 />
-                <Button
+                <DropdownButton
+                    label={MESSAGES.addInterventionCostBreakdownLine}
+                    options={addOptions}
+                    onClick={handleAdd}
                     variant="contained"
-                    onClick={openAddMenu}
-                    disabled={groups.length === 0}
-                >
-                    {formatMessage(MESSAGES.addInterventionCostBreakdownLine)}
-                </Button>
-                <Menu
-                    anchorEl={addMenuAnchor}
-                    open={Boolean(addMenuAnchor)}
-                    onClose={closeAddMenu}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                    transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                >
-                    <ListSubheader sx={styles.addMenuHeader}>
-                        {formatMessage(MESSAGES.addToIntervention)}
-                    </ListSubheader>
-                    {groups.map(group => (
-                        <AddCostItemMenuItem
-                            key={group.intervention.id}
-                            group={group}
-                            onSelect={handleAdd}
-                        />
-                    ))}
-                </Menu>
+                    groupOptions
+                />
             </Box>
         </Box>
     );

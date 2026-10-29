@@ -172,6 +172,7 @@ export const BudgetTable: FC = ({}) => {
         row.quantity += costLine.quantity;
         row.unitCost = costLine.unit_cost ?? row.unitCost;
         row.unitName = costLine.cost_unit_name ?? row.unitName;
+        row.isProportional = costLine.is_proportional;
         row.conversionFactor = costLine.conversion_factor;
         row.targetPopulation = costLine.target_population;
         row.invertedConversionFactor = costLine.invert_conversion_factor;
@@ -188,7 +189,7 @@ export const BudgetTable: FC = ({}) => {
                 id: costLine.id,
                 label: breakdownLine?.name ?? '',
                 subLabel: '',
-                isProportional: breakdownLine?.is_proportional ?? true,
+                isProportional: costLine.is_proportional,
                 totalCost: costLine.total_cost,
                 quantity: costLine.quantity,
                 yearCosts: { [year]: costLine.total_cost },

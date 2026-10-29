@@ -66,7 +66,6 @@
     "iaso.snt_malaria.metrics.seasonal": "Saisonnier",
     "iaso.snt_malaria.metrics.not-seasonal": "Pas Saisonnier",
     "iaso.snt_malaria.costManagement.budget.searchCostItems": "Rechercher un poste de coût",
-    "iaso.snt_malaria.costManagement.budget.addToIntervention": "Ajouter à l'intervention",
     "iaso.snt_malaria.costManagement.budget.addCostItemTo": "Ajouter un poste de coût à {intervention}",
     "iaso.snt_malaria.costManagement.budget.costItemColumn": "Poste de coût",
     "iaso.snt_malaria.costManagement.budget.coverage": "Couverture",
