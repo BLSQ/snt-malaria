@@ -8,9 +8,9 @@ import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../messages';
 import { CostItemGroup } from '../types';
 import {
-    COST_ITEMS_GRID_MIN_WIDTH,
     COST_ITEMS_HEADER_HEIGHT,
-} from './costItemsGrid';
+    COST_ITEMS_ROW_MIN_WIDTH,
+} from './costItemsColumns';
 
 type Props = {
     group: CostItemGroup;
@@ -27,11 +27,11 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: 0.5,
-        minWidth: COST_ITEMS_GRID_MIN_WIDTH,
+        minWidth: COST_ITEMS_ROW_MIN_WIDTH,
         py: 0.75,
         pl: 1.5,
         pr: 2,
-        backgroundColor: 'grey.100',
+        backgroundColor: 'background.paper',
         borderLeft: '3px solid',
         borderLeftColor: 'rgba(31, 43, 61, 0.24)',
         cursor: 'pointer',

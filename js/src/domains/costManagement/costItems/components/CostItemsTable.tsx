@@ -9,11 +9,10 @@ import { CostItemGroup, LineHandler, PartialLineHandler } from '../types';
 import { CostItemGroupHeader } from './CostItemGroupHeader';
 import { CostItemRow } from './CostItemRow';
 import {
-    COST_ITEMS_GRID_COLUMNS,
-    COST_ITEMS_GRID_MIN_WIDTH,
+    COST_ITEMS_COLUMNS,
     COST_ITEMS_HEADER_HEIGHT,
-    COST_ITEMS_ROW_PADDING_LEFT,
-} from './costItemsGrid';
+    costItemsRowLayout,
+} from './costItemsColumns';
 
 type Props = {
     groups: CostItemGroup[];
@@ -28,13 +27,15 @@ type Props = {
 };
 
 const COLUMN_LABELS = [
-    { label: MESSAGES.budgetingCostLineUnitCost },
-    { label: MESSAGES.targetPopulationLabel },
-    { label: MESSAGES.costLineFactorLabel },
-    { label: MESSAGES.budgetingCostLineBuffer },
-    { label: MESSAGES.coverageOrQuantityColumn, alignEnd: true },
-    { label: null },
-];
+    { column: 'unitCost', label: MESSAGES.budgetingCostLineUnitCost },
+    { column: 'unitCostCaption', label: null },
+    { column: 'targetPopulation', label: MESSAGES.targetPopulationLabel },
+    { column: 'factor', label: MESSAGES.costLineFactorLabel },
+    { column: 'factorCaption', label: null },
+    { column: 'buffer', label: MESSAGES.budgetingCostLineBuffer },
+    { column: 'coverage', label: MESSAGES.coverageOrQuantityColumn },
+    { column: 'actions', label: null },
+] as const;
 
 const styles = {
     scroller: {
@@ -48,27 +49,26 @@ const styles = {
         position: 'sticky',
         top: 0,
         zIndex: 3,
-        display: 'grid',
-        gridTemplateColumns: COST_ITEMS_GRID_COLUMNS,
-        columnGap: 1,
-        alignItems: 'center',
-        minWidth: COST_ITEMS_GRID_MIN_WIDTH,
+        ...costItemsRowLayout,
         height: COST_ITEMS_HEADER_HEIGHT,
-        pr: 2,
-        pl: COST_ITEMS_ROW_PADDING_LEFT,
         backgroundColor: 'background.paper',
         color: 'text.secondary',
         whiteSpace: 'nowrap',
     },
-    headerName: { position: 'relative', display: 'flex', alignItems: 'center' },
+    headerName: {
+        ...COST_ITEMS_COLUMNS.name,
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+    },
     toggleAll: {
         position: 'absolute',
         left: -30,
         color: 'text.secondary',
         '&:hover': { color: 'primary.main' },
     },
+    // Labels may overflow into the empty caption/actions header cells next to them.
     headerLabel: { fontWeight: 'medium' },
-    headerLabelEnd: { fontWeight: 'medium', justifySelf: 'end' },
     empty: {
         py: 6,
         textAlign: 'center',
@@ -114,14 +114,13 @@ export const CostItemsTable: FC<Props> = ({
                     </Typography>
                 </Box>
                 {React.Children.toArray(
-                    COLUMN_LABELS.map(({ label, alignEnd }) => (
+                    COLUMN_LABELS.map(({ column, label }) => (
                         <Typography
                             variant="caption"
-                            sx={
-                                alignEnd
-                                    ? styles.headerLabelEnd
-                                    : styles.headerLabel
-                            }
+                            sx={[
+                                styles.headerLabel,
+                                COST_ITEMS_COLUMNS[column],
+                            ]}
                         >
                             {label && formatMessage(label)}
                         </Typography>

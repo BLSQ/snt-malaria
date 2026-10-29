@@ -21,12 +21,7 @@ import { InterventionCostBreakdownLine } from '../../../interventions/types';
 import { formatConversionDirection } from '../../../interventions/utils/costBreakdownLine';
 import { MESSAGES } from '../../../messages';
 import { LineHandler, PartialLineHandler } from '../types';
-import {
-    COST_ITEMS_GRID_COLUMNS,
-    COST_ITEMS_GRID_MIN_WIDTH,
-    COST_ITEMS_INPUT_WIDTH,
-    COST_ITEMS_ROW_PADDING_LEFT,
-} from './costItemsGrid';
+import { COST_ITEMS_COLUMNS, costItemsRowLayout } from './costItemsColumns';
 
 type EditableField = 'unit_cost' | 'conversion_factor' | 'buffer' | 'coverage';
 
@@ -43,35 +38,34 @@ const ellipsis = {
     whiteSpace: 'nowrap',
 };
 
+const caption = {
+    color: 'text.secondary',
+    lineHeight: 1.3,
+    ...ellipsis,
+};
+
 const styles = {
     row: {
-        display: 'grid',
-        gridTemplateColumns: COST_ITEMS_GRID_COLUMNS,
-        minWidth: COST_ITEMS_GRID_MIN_WIDTH,
-        columnGap: 1,
-        alignItems: 'center',
+        ...costItemsRowLayout,
         py: 1,
-        pr: 2,
-        pl: COST_ITEMS_ROW_PADDING_LEFT,
         '&:hover': { backgroundColor: 'action.hover' },
         '&:hover .costItemAction, &:focus-within .costItemAction': {
             opacity: 1,
         },
     },
     nameCell: {
+        ...COST_ITEMS_COLUMNS.name,
         display: 'flex',
         alignItems: 'center',
         gap: 1,
-        minWidth: 0,
     },
-    inputCell: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        minWidth: 0,
-    },
-    input: { width: COST_ITEMS_INPUT_WIDTH, flexShrink: 0 },
-    coverageInput: { width: COST_ITEMS_INPUT_WIDTH, justifySelf: 'end' },
+    unitCost: COST_ITEMS_COLUMNS.unitCost,
+    unitCostCaption: { ...COST_ITEMS_COLUMNS.unitCostCaption, ...caption },
+    targetPopulation: COST_ITEMS_COLUMNS.targetPopulation,
+    factor: COST_ITEMS_COLUMNS.factor,
+    factorCaption: { ...COST_ITEMS_COLUMNS.factorCaption, ...caption },
+    buffer: COST_ITEMS_COLUMNS.buffer,
+    coverage: COST_ITEMS_COLUMNS.coverage,
     select: {
         height: 28,
         width: '100%',
@@ -82,9 +76,8 @@ const styles = {
     },
     basisIcon: { color: 'text.secondary', display: 'flex' },
     name: ellipsis,
-    caption: { color: 'text.secondary', lineHeight: 1.3, ...ellipsis },
     mutedCaption: { color: 'text.disabled', lineHeight: 1.3, ...ellipsis },
-    actions: { display: 'flex' },
+    actions: { ...COST_ITEMS_COLUMNS.actions, display: 'flex' },
     edit: {
         opacity: 0,
         transition: 'opacity 0.2s',
@@ -166,29 +159,25 @@ const CostItemRowComponent: FC<Props> = ({
                 </Box>
             </Box>
 
-            <Box sx={styles.inputCell}>
-                <NumberInput
-                    value={line.unit_cost}
-                    onCommit={handleFieldCommit.unitCost}
-                    minDecimals={2}
-                    maxDecimals={2}
-                    min={0}
-                    compact
-                    sx={styles.input}
-                    prefix={currencyAffixes.prefix}
-                    suffix={currencyAffixes.suffix}
-                    ariaLabel={formatMessage(
-                        MESSAGES.budgetingCostLineUnitCost,
-                    )}
-                />
-                <Typography variant="caption" sx={styles.caption}>
-                    {formatMessage(MESSAGES.perUnit, {
-                        unit: line.unit_type_label,
-                    })}
-                </Typography>
-            </Box>
+            <NumberInput
+                value={line.unit_cost}
+                onCommit={handleFieldCommit.unitCost}
+                minDecimals={2}
+                maxDecimals={2}
+                min={0}
+                compact
+                sx={styles.unitCost}
+                prefix={currencyAffixes.prefix}
+                suffix={currencyAffixes.suffix}
+                ariaLabel={formatMessage(MESSAGES.budgetingCostLineUnitCost)}
+            />
+            <Typography variant="caption" sx={styles.unitCostCaption}>
+                {formatMessage(MESSAGES.perUnit, {
+                    unit: line.unit_type_label,
+                })}
+            </Typography>
 
-            <Box minWidth={0}>
+            <Box sx={styles.targetPopulation}>
                 <Select
                     size="small"
                     value={
@@ -216,36 +205,34 @@ const CostItemRowComponent: FC<Props> = ({
                 </Select>
             </Box>
 
-            <Box sx={styles.inputCell}>
-                <NumberInput
-                    value={line.conversion_factor}
-                    onCommit={handleFieldCommit.conversionFactor}
-                    maxDecimals={6}
-                    min={0}
-                    sx={styles.input}
-                    disabled={!line.is_proportional}
-                    ariaLabel={formatMessage(
-                        MESSAGES.budgetingCostLineConversionFactor,
-                    )}
-                />
-                <Typography variant="caption" sx={styles.caption}>
-                    {line.is_proportional
-                        ? formatConversionDirection(
-                              formatMessage,
-                              line.unit_type_label,
-                              line.conversion_factor,
-                              line.invert_conversion_factor,
-                          )
-                        : formatMessage(MESSAGES.fixedCost)}
-                </Typography>
-            </Box>
+            <NumberInput
+                value={line.conversion_factor}
+                onCommit={handleFieldCommit.conversionFactor}
+                maxDecimals={6}
+                min={0}
+                sx={styles.factor}
+                disabled={!line.is_proportional}
+                ariaLabel={formatMessage(
+                    MESSAGES.budgetingCostLineConversionFactor,
+                )}
+            />
+            <Typography variant="caption" sx={styles.factorCaption}>
+                {line.is_proportional
+                    ? formatConversionDirection(
+                          formatMessage,
+                          line.unit_type_label,
+                          line.conversion_factor,
+                          line.invert_conversion_factor,
+                      )
+                    : formatMessage(MESSAGES.fixedCost)}
+            </Typography>
 
             <NumberInput
                 value={line.buffer}
                 onCommit={handleFieldCommit.buffer}
                 maxDecimals={2}
                 min={0}
-                sx={styles.input}
+                sx={styles.buffer}
                 suffix="%"
                 isNullable
                 placeholder={String(defaultBufferPercent)}
@@ -257,7 +244,7 @@ const CostItemRowComponent: FC<Props> = ({
                 onCommit={handleFieldCommit.coverage}
                 maxDecimals={2}
                 min={0}
-                sx={styles.coverageInput}
+                sx={styles.coverage}
                 suffix={line.is_proportional ? '%' : undefined}
                 max={line.is_proportional ? 100 : undefined}
                 ariaLabel={formatMessage(
