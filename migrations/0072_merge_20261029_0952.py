@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('snt_malaria', '0071_alter_scenariorule_color'),
-        ('snt_malaria', '0071_delete_budget'),
+        ("snt_malaria", "0071_alter_scenariorule_color"),
+        ("snt_malaria", "0071_delete_budget"),
     ]
 
-    operations = [
-    ]
+    operations = []
