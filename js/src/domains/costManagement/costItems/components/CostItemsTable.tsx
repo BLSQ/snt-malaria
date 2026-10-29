@@ -28,12 +28,12 @@ type Props = {
 };
 
 const COLUMN_LABELS = [
-    MESSAGES.budgetingCostLineUnitCost,
-    MESSAGES.targetPopulationLabel,
-    MESSAGES.costLineFactorLabel,
-    MESSAGES.budgetingCostLineBuffer,
-    MESSAGES.coverageOrQuantityColumn,
-    null,
+    { label: MESSAGES.budgetingCostLineUnitCost },
+    { label: MESSAGES.targetPopulationLabel },
+    { label: MESSAGES.costLineFactorLabel },
+    { label: MESSAGES.budgetingCostLineBuffer },
+    { label: MESSAGES.coverageOrQuantityColumn, alignEnd: true },
+    { label: null },
 ];
 
 const styles = {
@@ -68,6 +68,7 @@ const styles = {
         '&:hover': { color: 'primary.main' },
     },
     headerLabel: { fontWeight: 'medium' },
+    headerLabelEnd: { fontWeight: 'medium', justifySelf: 'end' },
     empty: {
         py: 6,
         textAlign: 'center',
@@ -113,8 +114,15 @@ export const CostItemsTable: FC<Props> = ({
                     </Typography>
                 </Box>
                 {React.Children.toArray(
-                    COLUMN_LABELS.map(label => (
-                        <Typography variant="caption" sx={styles.headerLabel}>
+                    COLUMN_LABELS.map(({ label, alignEnd }) => (
+                        <Typography
+                            variant="caption"
+                            sx={
+                                alignEnd
+                                    ? styles.headerLabelEnd
+                                    : styles.headerLabel
+                            }
+                        >
                             {label && formatMessage(label)}
                         </Typography>
                     )),

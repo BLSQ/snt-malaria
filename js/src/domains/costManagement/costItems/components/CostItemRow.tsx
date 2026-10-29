@@ -1,5 +1,6 @@
-import React, { FC, memo, MouseEvent, useCallback, useMemo } from 'react';
+import React, { FC, memo, useCallback, useMemo } from 'react';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import GroupsIcon from '@mui/icons-material/Groups';
 import NumbersIcon from '@mui/icons-material/Numbers';
 import {
@@ -52,9 +53,8 @@ const styles = {
         py: 1,
         pr: 2,
         pl: COST_ITEMS_ROW_PADDING_LEFT,
-        cursor: 'pointer',
         '&:hover': { backgroundColor: 'action.hover' },
-        '&:hover .costItemDelete, &:focus-within .costItemDelete': {
+        '&:hover .costItemAction, &:focus-within .costItemAction': {
             opacity: 1,
         },
     },
@@ -71,6 +71,7 @@ const styles = {
         minWidth: 0,
     },
     input: { width: COST_ITEMS_INPUT_WIDTH, flexShrink: 0 },
+    coverageInput: { width: COST_ITEMS_INPUT_WIDTH, justifySelf: 'end' },
     select: {
         height: 28,
         width: '100%',
@@ -83,6 +84,13 @@ const styles = {
     name: ellipsis,
     caption: { color: 'text.secondary', lineHeight: 1.3, ...ellipsis },
     mutedCaption: { color: 'text.disabled', lineHeight: 1.3, ...ellipsis },
+    actions: { display: 'flex' },
+    edit: {
+        opacity: 0,
+        transition: 'opacity 0.2s',
+        color: 'text.disabled',
+        '&:hover': { color: 'primary.main' },
+    },
     delete: {
         opacity: 0,
         transition: 'opacity 0.2s',
@@ -90,8 +98,6 @@ const styles = {
         '&:hover': { color: 'error.main' },
     },
 } satisfies SxStyles;
-
-const stopPropagation = (event: MouseEvent) => event.stopPropagation();
 
 const CostItemRowComponent: FC<Props> = ({
     line,
@@ -105,13 +111,7 @@ const CostItemRowComponent: FC<Props> = ({
     const currencyAffixes = getCurrencyAffixes(currency);
 
     const handleEdit = useCallback(() => onEdit(line), [onEdit, line]);
-    const handleDelete = useCallback(
-        (event: MouseEvent) => {
-            event.stopPropagation();
-            onDelete(line);
-        },
-        [onDelete, line],
-    );
+    const handleDelete = useCallback(() => onDelete(line), [onDelete, line]);
     const handleFieldCommit = useMemo(() => {
         const commitField = (field: EditableField) => (value: number | null) =>
             onUpdate(line.id, { [field]: value });
@@ -135,7 +135,7 @@ const CostItemRowComponent: FC<Props> = ({
     );
 
     return (
-        <Box sx={styles.row} onClick={handleEdit}>
+        <Box sx={styles.row}>
             <Box sx={styles.nameCell}>
                 <Tooltip
                     title={formatMessage(
@@ -188,8 +188,7 @@ const CostItemRowComponent: FC<Props> = ({
                 </Typography>
             </Box>
 
-            {/* Menu clicks bubble through the portal to the row, which opens the edit dialog. */}
-            <Box minWidth={0} onClick={stopPropagation}>
+            <Box minWidth={0}>
                 <Select
                     size="small"
                     value={
@@ -258,7 +257,7 @@ const CostItemRowComponent: FC<Props> = ({
                 onCommit={handleFieldCommit.coverage}
                 maxDecimals={2}
                 min={0}
-                sx={styles.input}
+                sx={styles.coverageInput}
                 suffix={line.is_proportional ? '%' : undefined}
                 max={line.is_proportional ? 100 : undefined}
                 ariaLabel={formatMessage(
@@ -268,17 +267,30 @@ const CostItemRowComponent: FC<Props> = ({
                 )}
             />
 
-            <Tooltip title={formatMessage(MESSAGES.deleteCostItem)}>
-                <IconButton
-                    size="small"
-                    className="costItemDelete"
-                    sx={styles.delete}
-                    onClick={handleDelete}
-                    aria-label={formatMessage(MESSAGES.deleteCostItem)}
-                >
-                    <DeleteOutlineIcon fontSize="small" />
-                </IconButton>
-            </Tooltip>
+            <Box sx={styles.actions}>
+                <Tooltip title={formatMessage(MESSAGES.editCostItem)}>
+                    <IconButton
+                        size="small"
+                        className="costItemAction"
+                        sx={styles.edit}
+                        onClick={handleEdit}
+                        aria-label={formatMessage(MESSAGES.editCostItem)}
+                    >
+                        <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title={formatMessage(MESSAGES.deleteCostItem)}>
+                    <IconButton
+                        size="small"
+                        className="costItemAction"
+                        sx={styles.delete}
+                        onClick={handleDelete}
+                        aria-label={formatMessage(MESSAGES.deleteCostItem)}
+                    >
+                        <DeleteOutlineIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+            </Box>
         </Box>
     );
 };

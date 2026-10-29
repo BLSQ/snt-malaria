@@ -1,22 +1,26 @@
-// Every column shares the free space equally; a column only grows or shrinks
-// unevenly once the even share drops below its minimum width.
-const evenColumn = (minWidth: number) => `minmax(${minWidth}px, 1fr)`;
+// Flexible columns share the free space by weight; a column only grows or
+// shrinks unevenly once its share drops below its minimum width.
+const flexColumn = (minWidth: number, weight = 1) =>
+    `minmax(${minWidth}px, ${weight}fr)`;
 
 export const COST_ITEMS_INPUT_WIDTH = 100;
+
+// Wide enough for the "Coverage / quantity" header in every language.
+const COVERAGE_COLUMN_WIDTH = 140;
 
 // Shared by the header and every row so the columns line up:
 // name | unit cost + unit | target population | factor + direction | buffer | coverage | actions
 export const COST_ITEMS_GRID_COLUMNS = [
-    evenColumn(220),
-    evenColumn(180),
-    evenColumn(160),
-    evenColumn(220),
-    evenColumn(COST_ITEMS_INPUT_WIDTH),
-    evenColumn(COST_ITEMS_INPUT_WIDTH),
-    '32px',
+    flexColumn(220, 2),
+    flexColumn(180),
+    flexColumn(160),
+    flexColumn(220),
+    `${COST_ITEMS_INPUT_WIDTH}px`,
+    `${COVERAGE_COLUMN_WIDTH}px`,
+    '64px',
 ].join(' ');
 
-export const COST_ITEMS_GRID_MIN_WIDTH = 1184;
+export const COST_ITEMS_GRID_MIN_WIDTH = 1216;
 
 export const COST_ITEMS_HEADER_HEIGHT = 36;
 
