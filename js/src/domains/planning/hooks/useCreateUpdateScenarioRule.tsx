@@ -50,7 +50,10 @@ const resolveMatchingCriteria = (
 
 const useReplaceQueryData = (scenarioId: number) => {
     const queryClient = useQueryClient();
-    return (data: ScenarioRuleResponse, variables: ScenarioRulePayload) => {
+    return (
+        data: ScenarioRuleResponse,
+        variables: Partial<ScenarioRulePayload>,
+    ) => {
         const queryKey = [`scenarioRules_${scenarioId}`];
         queryClient.setQueryData(
             queryKey,

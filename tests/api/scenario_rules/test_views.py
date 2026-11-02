@@ -273,6 +273,28 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
         self.assertCountEqual(new_rule.org_units_included, [self.district_1.id])
         self.assertCountEqual(new_rule.org_units_scope, [self.district_1.id, self.district_2.id, self.district_3.id])
 
+    def test_post_scenario_rule_duplicated_from_is_listed_right_after_source(self):
+        payload = {
+            "name": "Rule 1 (copy)",
+            "scenario": self.scenario.id,
+            "matching_criteria": self.scenario_rule_1.matching_criteria,
+            "interventions": [self.intervention_vaccination_rts.id],
+            "duplicated_from": self.scenario_rule_1.id,
+        }
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.post(self.BASE_URL, payload, format="json")
+        result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+
+        self.assertEqual(result["priority"], 2)
+        self.assertNotIn("duplicated_from", result)
+
+        response = self.client.get(self.BASE_URL, {"scenario": self.scenario.id})
+        listed_rules = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(
+            [(rule["id"], rule["priority"]) for rule in listed_rules],
+            [(self.scenario_rule_1.id, 1), (result["id"], 2), (self.scenario_rule_2.id, 3)],
+        )
+
     def test_put_scenario_rule_not_allowed(self):
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.put(f"{self.BASE_URL}{self.scenario_rule_1.id}/", {"name": "Updated Rule"})
