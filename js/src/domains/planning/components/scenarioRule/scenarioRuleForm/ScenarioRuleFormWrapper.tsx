@@ -131,13 +131,16 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
 
     const onSubmit = useCallback(
         (values: Partial<ScenarioRuleFormValues>) => {
-            createUpdateScenarioRule(values, {
+            const payload = isDuplicate
+                ? { ...values, duplicated_from: rule?.id }
+                : values;
+            createUpdateScenarioRule(payload, {
                 onSuccess: () => {
                     onClose();
                 },
             });
         },
-        [createUpdateScenarioRule, onClose],
+        [createUpdateScenarioRule, onClose, isDuplicate, rule?.id],
     );
 
     const formik = useScenarioRuleFormState({

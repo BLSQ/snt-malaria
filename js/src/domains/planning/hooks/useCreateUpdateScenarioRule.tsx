@@ -18,6 +18,7 @@ type ScenarioRulePayload = {
     intervention_overrides?: RuleInterventionOverride[];
     org_units_excluded?: string; // comma separated list of org unit ids
     org_units_included?: string; // comma separated list of org unit ids
+    duplicated_from?: number;
 };
 
 /** Comma-separated ids from the form → API integer array; empty/missing → []. */
@@ -50,8 +51,9 @@ const resolveMatchingCriteria = (
 const useReplaceQueryData = (scenarioId: number) => {
     const queryClient = useQueryClient();
     return (data: ScenarioRuleResponse, variables: ScenarioRulePayload) => {
+        const queryKey = [`scenarioRules_${scenarioId}`];
         queryClient.setQueryData(
-            [`scenarioRules_${scenarioId}`],
+            queryKey,
             (oldData?: ScenarioRuleResponse[]) => {
                 if (!oldData) return [data];
 
@@ -59,11 +61,24 @@ const useReplaceQueryData = (scenarioId: number) => {
                     return oldData.map((rule: ScenarioRuleResponse) =>
                         rule.id === variables.id ? data : rule,
                     );
-                } else {
-                    return [...(oldData || []), data];
                 }
+                const sourceIndex = oldData.findIndex(
+                    rule => rule.id === variables.duplicated_from,
+                );
+                if (sourceIndex === -1) {
+                    return [...oldData, data];
+                }
+                return [
+                    ...oldData.slice(0, sourceIndex + 1),
+                    data,
+                    ...oldData.slice(sourceIndex + 1),
+                ];
             },
         );
+        if (variables.duplicated_from) {
+            // The backend shifted the priority of every rule ranked after the source.
+            queryClient.invalidateQueries(queryKey);
+        }
     };
 };
 
