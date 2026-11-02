@@ -21,6 +21,7 @@ import {
 } from '../../../hooks/useScenarioRuleFormState';
 import { pickRandomPaletteColor } from '../../../libs/color-utils';
 import {
+    getRuleDisplayName,
     parseOrgUnitIds,
     resolveRuleOrgUnitIds,
 } from '../../../libs/rule-utils';
@@ -30,9 +31,28 @@ import { ScenarioRuleForm } from './ScenarioRuleForm';
 import { ScenarioRuleFormHeader } from './ScenarioRuleFormHeader';
 import { useRuleMatchedOrgUnits } from './useRuleMatchedOrgUnits';
 
+const TITLE_MESSAGES = {
+    create: MESSAGES.createScenarioRule,
+    edit: MESSAGES.editScenarioRule,
+    duplicate: MESSAGES.duplicateScenarioRule,
+};
+
+type FormMode = keyof typeof TITLE_MESSAGES;
+
+const getFormMode = (
+    rule: ScenarioRule | undefined,
+    isDuplicate: boolean,
+): FormMode => {
+    if (isDuplicate) {
+        return 'duplicate';
+    }
+    return rule ? 'edit' : 'create';
+};
+
 type Props = {
     scenarioId: number;
     rule?: ScenarioRule;
+    isDuplicate?: boolean;
     existingRules: ScenarioRule[];
     onClose: () => void;
     onPreviewChange?: (preview: ScenarioRulePreview) => void;
@@ -41,12 +61,15 @@ type Props = {
 export const ScenarioRuleFormWrapper: FC<Props> = ({
     scenarioId,
     rule,
+    isDuplicate = false,
     existingRules,
     onClose,
     onPreviewChange,
 }) => {
     const { formatMessage } = useSafeIntl();
-    const { scenario, overridesTabContainer } = usePlanningContext();
+    const { scenario, overridesTabContainer, interventionCategories } =
+        usePlanningContext();
+    const mode = getFormMode(rule, isDuplicate);
     const { data: palette } = useGetColors();
 
     // useState's lazy initializer runs only on mount, so the random pick is
@@ -63,34 +86,48 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
     const { mutate: createUpdateScenarioRule, isLoading: isSubmittingRule } =
         useCreateUpdateScenarioRule(scenarioId);
 
-    const title = useMemo(() => {
-        if (rule) {
-            return formatMessage(MESSAGES.editScenarioRule);
-        }
-        return formatMessage(MESSAGES.createScenarioRule);
-    }, [formatMessage, rule]);
+    const sourceRuleName = rule
+        ? getRuleDisplayName(rule, interventionCategories)
+        : '';
 
-    const initialValues: ScenarioRuleFormValues | undefined = useMemo(
-        () =>
-            rule
-                ? {
-                      id: rule.id,
-                      scenario: rule.scenario,
-                      name: rule.name,
-                      color: rule.color,
-                      interventions: rule.interventions,
-                      intervention_overrides: rule.intervention_overrides,
-                      matching_criteria: rule.matching_criteria,
-                      org_units_excluded: rule.org_units_excluded,
-                      org_units_included: rule.org_units_included,
-                  }
-                : {
-                      ...defaultScenarioRuleValues,
-                      scenario: scenarioId,
-                      color: initialColor,
-                  },
-        [rule, scenarioId, initialColor],
-    );
+    const initialValues: ScenarioRuleFormValues = useMemo(() => {
+        if (!rule) {
+            return {
+                ...defaultScenarioRuleValues,
+                scenario: scenarioId,
+                color: initialColor,
+            };
+        }
+        const ruleValues = {
+            scenario: rule.scenario,
+            interventions: rule.interventions,
+            intervention_overrides: rule.intervention_overrides,
+            matching_criteria: rule.matching_criteria,
+            org_units_excluded: rule.org_units_excluded,
+            org_units_included: rule.org_units_included,
+        };
+        return isDuplicate
+            ? {
+                  ...ruleValues,
+                  name: formatMessage(MESSAGES.scenarioRuleCopyName, {
+                      name: sourceRuleName,
+                  }),
+                  color: initialColor,
+              }
+            : {
+                  ...ruleValues,
+                  id: rule.id,
+                  name: rule.name,
+                  color: rule.color,
+              };
+    }, [
+        rule,
+        isDuplicate,
+        scenarioId,
+        initialColor,
+        sourceRuleName,
+        formatMessage,
+    ]);
 
     const onSubmit = useCallback(
         (values: Partial<ScenarioRuleFormValues>) => {
@@ -106,7 +143,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
     const formik = useScenarioRuleFormState({
         onSubmit,
         initialValues,
-        editMode: Boolean(rule),
+        editMode: mode === 'edit',
     });
 
     const {
@@ -173,11 +210,21 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         isAwaitingFirstResult,
     ]);
 
+    const duplicateHeaderProps = isDuplicate
+        ? {
+              submitLabel: formatMessage(MESSAGES.createCopy),
+              notice: formatMessage(MESSAGES.duplicateScenarioRuleNotice, {
+                  name: sourceRuleName,
+              }),
+          }
+        : {};
+
     return (
         <CardStyled
             header={
                 <ScenarioRuleFormHeader
-                    title={title}
+                    title={formatMessage(TITLE_MESSAGES[mode])}
+                    {...duplicateHeaderProps}
                     onCancel={onClose}
                     onSubmit={formik.handleSubmit}
                     disabled={isSubmittingRule || !canSubmit}

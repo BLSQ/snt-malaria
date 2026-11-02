@@ -35,6 +35,7 @@ type PlanningContextType = {
     isScenarioEditable: boolean; // This is oriented scenario, is it locked or not, if it's locked it can't be edited even if the user has permissions
     isEditing: boolean;
     editingRule: ScenarioRule | undefined;
+    isDuplicatingRule: boolean;
     orgUnits: OrgUnit[];
     metricTypeCategories: MetricTypeCategory[];
     interventionCategories: InterventionCategory[];
@@ -43,6 +44,7 @@ type PlanningContextType = {
     budgets: Budget[];
     currency: string;
     startEditingRule: (rule?: ScenarioRule) => void;
+    startDuplicatingRule: (rule: ScenarioRule) => void;
     stopEditingRule: () => void;
     activeTab: PlanningTab;
     setActiveTab: (tab: PlanningTab) => void;
@@ -77,6 +79,7 @@ const PlanningContext = createContext<PlanningContextType>({
     isScenarioEditable: false,
     isEditing: false,
     editingRule: undefined,
+    isDuplicatingRule: false,
     orgUnits: [],
     metricTypeCategories: [],
     interventionCategories: [],
@@ -85,6 +88,7 @@ const PlanningContext = createContext<PlanningContextType>({
     budgets: [],
     currency: '',
     startEditingRule: () => {},
+    startDuplicatingRule: () => {},
     stopEditingRule: () => {},
     activeTab: 'map',
     setActiveTab: () => {},
@@ -192,16 +196,22 @@ export const PlanningProvider = ({
     const [overridesTabContainer, setOverridesTabContainer] =
         useState<HTMLElement | null>(null);
 
-    const [isEditing, setIsEditing] = useState(false);
-    const [editingRule, setEditingRule] = useState<ScenarioRule | undefined>();
+    const [ruleForm, setRuleForm] = useState<
+        { rule?: ScenarioRule; isDuplicate: boolean } | undefined
+    >();
+    const isEditing = ruleForm !== undefined;
+    const editingRule = ruleForm?.rule;
+    const isDuplicatingRule = ruleForm?.isDuplicate ?? false;
     const startEditingRule = useCallback((rule?: ScenarioRule) => {
-        setEditingRule(rule);
-        setIsEditing(true);
+        setRuleForm({ rule, isDuplicate: false });
+        setActiveTab(keepListTab);
+    }, []);
+    const startDuplicatingRule = useCallback((rule: ScenarioRule) => {
+        setRuleForm({ rule, isDuplicate: true });
         setActiveTab(keepListTab);
     }, []);
     const stopEditingRule = useCallback(() => {
-        setEditingRule(undefined);
-        setIsEditing(false);
+        setRuleForm(undefined);
         setFocusedOverrideInterventionId(undefined);
         setMapMetricTypeId(undefined);
         setActiveTab(keepListTab);
@@ -238,9 +248,11 @@ export const PlanningProvider = ({
                 interventionPlans,
                 isEditing,
                 editingRule,
+                isDuplicatingRule,
                 budgets,
                 currency,
                 startEditingRule,
+                startDuplicatingRule,
                 stopEditingRule,
                 activeTab,
                 setActiveTab,
