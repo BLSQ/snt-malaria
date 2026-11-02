@@ -25,6 +25,13 @@ const styles: SxStyles = {
         display: 'flex',
         alignItems: 'center',
         ml: 'auto',
+        gap: 0.5,
+        '& .MuiIconButton-root': {
+            p: 0.75,
+        },
+        '& .MuiSvgIcon-root': {
+            fontSize: 18,
+        },
     },
     rulesText: {
         ml: 4,
