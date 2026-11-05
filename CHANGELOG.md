@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.21.0](https://github.com/BLSQ/snt-malaria/compare/2.20.2...2.21.0) (2026-11-05)
+
+
+### Features
+
+* **BudgetCalculation:** revamp budget calculation triggers ([#428](https://github.com/BLSQ/snt-malaria/issues/428)) ([49d3707](https://github.com/BLSQ/snt-malaria/commit/49d3707cfe0d622144419b994c773745d8ad9426))
+* **CostManagement:** Add in-table editing for target population and … ([#424](https://github.com/BLSQ/snt-malaria/issues/424)) ([af9a4ba](https://github.com/BLSQ/snt-malaria/commit/af9a4ba532c1ac70af7ff6cc809203eafc645d7d))
+* **DataLayers:** Show descriptions and allow editing values/years on DataLayers ([#421](https://github.com/BLSQ/snt-malaria/issues/421)) ([bb37d88](https://github.com/BLSQ/snt-malaria/commit/bb37d8842fd8a32b91fdf2a10b6c402174816d2e))
+* **Home:** Add Home and Contributors pages ([#396](https://github.com/BLSQ/snt-malaria/issues/396)) ([dddcb70](https://github.com/BLSQ/snt-malaria/commit/dddcb706ad3a2511af835d1b73d5715173df64b4))
+* **Impact:** Improve user-friendliness of comparison page, more robustness for impact matching ([129e1e1](https://github.com/BLSQ/snt-malaria/commit/129e1e11820b0f5d6c4d4ded590122ffd45fb8be))
+* **Legend:** Support up to 12 items for ordinal legends ([#418](https://github.com/BLSQ/snt-malaria/issues/418)) ([ca79d4b](https://github.com/BLSQ/snt-malaria/commit/ca79d4b61b5cfa7e1837066472008cd4e7144103))
+* **Planning:** Intervention table view ([ac79834](https://github.com/BLSQ/snt-malaria/commit/ac798349b595af9881c812f5c8509c56f67a4b9f))
+* Reorganise cost settings into manage cost module ([#403](https://github.com/BLSQ/snt-malaria/issues/403)) ([fcab1ee](https://github.com/BLSQ/snt-malaria/commit/fcab1ee5e0fc03005ac3ddea2a6f027b8418f50f))
+* **RuleBuilder:** additional tweaks ([d81bbbc](https://github.com/BLSQ/snt-malaria/commit/d81bbbcf281c3e9b8bd1931ff15f5b8b8288a87d))
+* **RuleBuilder:** Improve clarity of rule editor panel ([c27ad5f](https://github.com/BLSQ/snt-malaria/commit/c27ad5fcd8f9c4a8283a346c63f33eb1d4b81838))
+* **RuleBuilder:** Per-scenario cost overrides ([08ec817](https://github.com/BLSQ/snt-malaria/commit/08ec81776b3ddb53f3cc73a80fb43e6e4d7066a8))
+* **RuleBuilder:** Support new rule builder with overrides in chat ai ([#419](https://github.com/BLSQ/snt-malaria/issues/419)) ([e469b20](https://github.com/BLSQ/snt-malaria/commit/e469b200f71039c2db3e001c1885b2344852e84b))
+* **ScenarioBudget:** Replace coverage in budget with per year costs ([#417](https://github.com/BLSQ/snt-malaria/issues/417)) ([c171f60](https://github.com/BLSQ/snt-malaria/commit/c171f6044ac722c318a056bf5af06d911b74b5ba))
+* **ScenarioRule:** Alter scenariorule color ([#427](https://github.com/BLSQ/snt-malaria/issues/427)) ([bf1f240](https://github.com/BLSQ/snt-malaria/commit/bf1f240bc5c60cce96e50dabef6600e81716dade))
+* set theme primary color ([#426](https://github.com/BLSQ/snt-malaria/issues/426)) ([255b2cd](https://github.com/BLSQ/snt-malaria/commit/255b2cd70417954d0c682979ce6030148bc3c7ce))
+
+
+### Bug Fixes
+
+* **lint:** issues after stricter ruff rules in IASO ([f6a771b](https://github.com/BLSQ/snt-malaria/commit/f6a771be780cb09eee078b55020ff58f538b60fb))
+* **RuleBuilder:** flaky enable submit logic ([f2265d5](https://github.com/BLSQ/snt-malaria/commit/f2265d54fb76e79f014e342cf61ac67c0e0ff52c))
+
 ## [2.20.2](https://github.com/BLSQ/snt-malaria/compare/2.20.1...2.20.2) (2026-10-13)
 
 
