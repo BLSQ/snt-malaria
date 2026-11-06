@@ -20,6 +20,7 @@ from iaso.permissions import core_permissions
 from plugins.snt_malaria import permissions as snt_permissions
 from plugins.snt_malaria.management.commands.support.intervention_seeder import InterventionSeeder
 from plugins.snt_malaria.models import AccountSettings, SNTAccountSetup
+from plugins.snt_malaria.models.workspace_scoped import get_or_create_first_workspace
 
 
 DEFAULT_MODULES_TO_ACTIVATE = [
@@ -123,7 +124,8 @@ def create_snt_account(
     except IntegrityError as e:
         raise ValidationError(detail=f"The username {username} is already taken") from e
 
-    InterventionSeeder(account).create_interventions_for_api_account(user)
+    workspace = get_or_create_first_workspace(account, created_by=user)
+    InterventionSeeder(workspace).create_interventions_for_api_account(user)
 
     # Create empty AccountSettings row for later PATCH
     # BudgetSettings already created by InterventionSeeder.

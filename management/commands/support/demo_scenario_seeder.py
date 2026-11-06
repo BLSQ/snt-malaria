@@ -32,8 +32,9 @@ COVERAGE_BY_CODE = {
 
 
 class DemoScenarioSeeder:
-    def __init__(self, account, project, stdout_writer=None):
-        self.account = account
+    def __init__(self, workspace, project, stdout_writer=None):
+        self.workspace = workspace
+        self.account = workspace.account
         self.project = project
         self.stdout_write = stdout_writer or print
 
@@ -42,7 +43,7 @@ class DemoScenarioSeeder:
         Create a demo scenario with intervention assignments based on org units and interventions.
         """
         # Check if a demo scenario already exists
-        if Scenario.objects.filter(account=self.account, name__icontains="Demo").exists():
+        if Scenario.objects.filter(workspace=self.workspace, name__icontains="Demo").exists():
             self.stdout_write(f"Skipping scenario creation for {self.account.name}, demo scenario already exists")
             return
 
@@ -54,8 +55,7 @@ class DemoScenarioSeeder:
             self.stdout_write("ERROR: No user found for this account")
             return
 
-        # Get all interventions for this account
-        interventions = Intervention.objects.filter(intervention_category__account=self.account).select_related(
+        interventions = Intervention.objects.filter(intervention_category__workspace=self.workspace).select_related(
             "intervention_category"
         )
 
@@ -96,6 +96,7 @@ class DemoScenarioSeeder:
         # Create the demo scenario
         current_year = date.today().year + 1
         scenario = Scenario.objects.create(
+            workspace=self.workspace,
             account=self.account,
             created_by=user,
             name=f"Demo {scenario_name}",
