@@ -3,6 +3,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from plugins.snt_malaria.api.impact import cache as impact_cache
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.providers.impact import get_provider_for_account
 from plugins.snt_malaria.services.impact import ImpactService
 
@@ -45,7 +46,7 @@ class ImpactRefsViewSet(viewsets.ViewSet):
         return Response({"refs": [{"ref": option.ref, "label": option.label} for option in refs]})
 
 
-class ImpactViewSet(viewsets.ViewSet):
+class ImpactViewSet(WorkspaceScopedViewSetMixin, viewsets.ViewSet):
     http_method_names = ["get", "options"]
 
     def list(self, request):
@@ -60,7 +61,7 @@ class ImpactViewSet(viewsets.ViewSet):
         year_from = data["year_from"]
         year_to = data["year_to"]
 
-        ttl = impact_cache.get_ttl(request.user.iaso_profile.account)
+        ttl = impact_cache.get_ttl(self.workspace.account)
 
         if ttl:
             cached = impact_cache.get(scenario.id, age_group, year_from, year_to)

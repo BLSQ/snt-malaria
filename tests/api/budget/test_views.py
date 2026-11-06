@@ -36,7 +36,7 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
 
         # Create a scenario
         self.scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
             name="Test Scenario",
             description="A test scenario description.",
@@ -46,7 +46,7 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
 
         defaults = self.create_snt_default_interventions_setup(
             scenario=self.scenario,
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
         )
 
@@ -70,14 +70,14 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         )
 
         self.budget_settings = BudgetSettings.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             local_currency="USD",  # Default to USD, can be changed per account
             exchange_rate=1.0,  # 1:1 exchange rate with USD as default
             inflation_rate=0.03,  # 3% inflation rate as default
         )
 
         self.unit_type_per_spaq_3_11, _ = CostUnitType.objects.get_or_create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             name="per SPAQ pack 3-11 month olds",
         )
 
@@ -162,7 +162,7 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
 
     def test_list_budget_scenario_without_interventions_costs_nothing(self):
         empty_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
             name="Empty Scenario",
             description="A scenario with no interventions.",
@@ -322,7 +322,11 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
         )
         other_user, _, _ = self.create_base_users(other_account, [SNT_SCENARIO_FULL_WRITE_PERMISSION], "otheruser")
         other_scenario = Scenario.objects.create(
-            account=other_account, created_by=other_user, name="Other Scenario", start_year=2025, end_year=2028
+            workspace=self.get_snt_workspace(other_account),
+            created_by=other_user,
+            name="Other Scenario",
+            start_year=2025,
+            end_year=2028,
         )
 
         self.client.force_authenticate(user=self.user_with_full_perm)
@@ -336,9 +340,9 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
 
     def test_by_grant(self):
         """Costs are attributed to the assignment grant, falling back to the intervention grant."""
-        donor = Donor.objects.create(account=self.account, name="Global Fund")
-        grant_a = Grant.objects.create(account=self.account, donor=donor, name="Grant A")
-        grant_b = Grant.objects.create(account=self.account, donor=donor, name="Grant B")
+        donor = Donor.objects.create(workspace=self.get_snt_workspace(), name="Global Fund")
+        grant_a = Grant.objects.create(workspace=self.get_snt_workspace(), donor=donor, name="Grant A")
+        grant_b = Grant.objects.create(workspace=self.get_snt_workspace(), donor=donor, name="Grant B")
 
         # Intervention-level grant: applies to the existing SMC assignment on
         # district2 (population 150,000), which has no override.

@@ -97,9 +97,9 @@ class SNTAccountSetupAPIUtilsTestCase(TestCase):
         self.assertEqual(profile.account, account)
         self.assertEqual(profile.language, self.language)
 
-        self.assertEqual(BudgetSettings.objects.filter(account=account).count(), 1)
+        self.assertEqual(BudgetSettings.objects.filter(workspace__account=account).count(), 1)
         # see intervention_seeder.py to understand why these values
-        self.assertEqual(InterventionCategory.objects.filter(account=account).count(), 8)
+        self.assertEqual(InterventionCategory.objects.filter(workspace__account=account).count(), 8)
         self.assertEqual(Intervention.objects.count(), 21)
         self.assertEqual(InterventionCostBreakdownLine.objects.count(), 28)
 

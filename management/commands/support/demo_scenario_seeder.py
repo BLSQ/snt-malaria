@@ -32,8 +32,9 @@ COVERAGE_BY_CODE = {
 
 
 class DemoScenarioSeeder:
-    def __init__(self, account, project, stdout_writer=None):
-        self.account = account
+    def __init__(self, workspace, project, stdout_writer=None):
+        self.workspace = workspace
+        self.account = workspace.account
         self.project = project
         self.stdout_write = stdout_writer or print
 
@@ -42,7 +43,7 @@ class DemoScenarioSeeder:
         Create a demo scenario with intervention assignments based on org units and interventions.
         """
         # Check if a demo scenario already exists
-        if Scenario.objects.filter(account=self.account, name__icontains="Demo").exists():
+        if Scenario.objects.filter(workspace=self.workspace, name__icontains="Demo").exists():
             self.stdout_write(f"Skipping scenario creation for {self.account.name}, demo scenario already exists")
             return
 
@@ -54,8 +55,7 @@ class DemoScenarioSeeder:
             self.stdout_write("ERROR: No user found for this account")
             return
 
-        # Get all interventions for this account
-        interventions = Intervention.objects.filter(intervention_category__account=self.account).select_related(
+        interventions = Intervention.objects.filter(intervention_category__workspace=self.workspace).select_related(
             "intervention_category"
         )
 
@@ -96,7 +96,7 @@ class DemoScenarioSeeder:
         # Create the demo scenario
         current_year = date.today().year + 1
         scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.workspace,
             created_by=user,
             name=f"Demo {scenario_name}",
             description=(
@@ -113,7 +113,7 @@ class DemoScenarioSeeder:
 
         def create_rule(**kwargs):
             matching_criteria = kwargs.get("matching_criteria")
-            org_units_matched = ScenarioRule.resolve_matched_org_units(self.account, matching_criteria)
+            org_units_matched = ScenarioRule.resolve_matched_org_units(self.workspace, matching_criteria)
             return ScenarioRule.objects.create(org_units_matched=org_units_matched, **kwargs)
 
         all_orgunits_rules = create_rule(
@@ -123,7 +123,7 @@ class DemoScenarioSeeder:
             priority=1,
             color="#26C6DA",
             matching_criteria=None,
-            org_units_included=ScenarioRule.resolve_all_org_unit_ids(self.account),
+            org_units_included=ScenarioRule.resolve_all_org_unit_ids(self.workspace),
         )
 
         matching_criteria_seasonal = {
@@ -220,7 +220,7 @@ class DemoScenarioSeeder:
         (year=None). The budget calculator queries by exact year, so copy the timeless baseline
         values to every year in the scenario range so the calculation produces non-zero results."""
         pop_metric_types = MetricType.objects.filter(
-            account=scenario.account,
+            account=self.account,
             metric_kind=MetricType.MetricKind.POPULATION,
         )
 

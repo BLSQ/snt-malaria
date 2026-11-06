@@ -13,12 +13,14 @@ class InterventionCategory(models.Model):
         ordering = ["name"]
         constraints = [
             models.UniqueConstraint(
-                fields=["account", "name"],
-                name="snt_malaria_interventioncategory_account_name_uniq",
+                fields=["workspace", "name"],
+                name="snt_malaria_interventioncategory_workspace_name_uniq",
             ),
         ]
 
-    account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE)
+    workspace = models.ForeignKey(
+        "iaso.Workspace", on_delete=models.CASCADE, related_name="snt_intervention_categories"
+    )
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=100, null=True, blank=True)

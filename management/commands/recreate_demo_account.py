@@ -22,6 +22,7 @@ from plugins.snt_malaria.models import (
     InterventionCostBreakdownLine,
     Scenario,
 )
+from plugins.snt_malaria.models.workspace import get_or_create_first_workspace
 from plugins.snt_malaria.permissions import (
     SNT_SCENARIO_BASIC_WRITE_PERMISSION,
     SNT_SCENARIO_FULL_WRITE_PERMISSION,
@@ -108,8 +109,8 @@ class Command(BaseCommand):
         projects = Project.objects.filter(account=demo_account)
         data_sources = DataSource.objects.filter(projects__in=projects)
         JsonDataStore.objects.filter(account=demo_account).delete()
-        scenarios = Scenario.objects_include_deleted.filter(account=demo_account)
-        categories = InterventionCategory.objects.filter(account=demo_account)
+        scenarios = Scenario.objects_include_deleted.filter(workspace__account=demo_account)
+        categories = InterventionCategory.objects.filter(workspace__account=demo_account)
         interventions = Intervention.objects.filter(intervention_category__in=categories)
         metric_types = MetricType.objects.filter(account=demo_account)
         account_settings = AccountSettings.objects.filter(account=demo_account)
@@ -122,8 +123,8 @@ class Command(BaseCommand):
         InterventionCostBreakdownLine.objects.filter(intervention__in=interventions).delete()
         interventions.delete()
         categories.delete()
-        Grant.objects.filter(account=demo_account).delete()
-        Donor.objects.filter(account=demo_account).delete()
+        Grant.objects.filter(workspace__account=demo_account).delete()
+        Donor.objects.filter(workspace__account=demo_account).delete()
         MetricValue.objects.filter(metric_type__in=metric_types).delete()
         metric_types.delete()
         Team.objects.filter(project__in=projects).delete()
@@ -234,13 +235,14 @@ class Command(BaseCommand):
                 raise
 
             # Seed interventions and intervention costs
-            InterventionSeeder(account, self.stdout.write).create_interventions()
+            workspace = get_or_create_first_workspace(account, created_by=demo_user)
+            InterventionSeeder(workspace, self.stdout.write).create_interventions()
 
             # Link population metric types to cost breakdown lines (demo-specific mapping)
-            self._link_cost_line_population_layers(account)
+            self._link_cost_line_population_layers(workspace)
 
             # Randomly assign impact ref to interventions
-            interventions = Intervention.objects.filter(intervention_category__account=account)
+            interventions = Intervention.objects.filter(intervention_category__workspace=workspace)
             for intervention in interventions:
                 intervention.impact_ref = intervention_impact_refs.get(
                     intervention.short_name, random.choice(list(intervention_impact_refs.values()))
@@ -248,7 +250,7 @@ class Command(BaseCommand):
                 intervention.save()
 
             # Create demo scenario with intervention assignments
-            DemoScenarioSeeder(account, project, self.stdout.write).create_scenario()
+            DemoScenarioSeeder(workspace, project, self.stdout.write).create_scenario()
 
             self.stdout.write("Create Impact Provider Config for demo account.")
             # Create Impact provider config
@@ -270,7 +272,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"\tUsername: {DEMO_USER_USERNAME}"))
             self.stdout.write(self.style.SUCCESS(f"\tPassword: {DEMO_USER_PASSWORD}"))
 
-    def _link_cost_line_population_layers(self, account):
+    def _link_cost_line_population_layers(self, workspace):
         """Set population_layer on InterventionCostBreakdownLines using COST_LINE_POPULATION_CODES.
 
         This is a demo-account-specific step: intervention_seeder leaves population_layer=None
@@ -279,13 +281,13 @@ class Command(BaseCommand):
         metric_types = {
             mt.code: mt
             for mt in MetricType.objects.filter(
-                account=account,
+                account=workspace.account,
                 metric_kind=MetricType.MetricKind.POPULATION,
             )
         }
 
         lines = InterventionCostBreakdownLine.objects.filter(
-            intervention__intervention_category__account=account
+            intervention__intervention_category__workspace=workspace
         ).select_related("intervention")
 
         updated = 0

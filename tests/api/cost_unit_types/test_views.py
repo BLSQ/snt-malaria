@@ -21,16 +21,18 @@ class CostUnitTypeAPITestCase(SNTMalariaAPITestCase):
         )
 
         self.unit_net = CostUnitType.objects.create(
-            account=self.account, name="Net", description="One net protects 1.8 people."
+            workspace=self.get_snt_workspace(), name="Net", description="One net protects 1.8 people."
         )
-        self.unit_bale = CostUnitType.objects.create(account=self.account, name="Bale")
+        self.unit_bale = CostUnitType.objects.create(workspace=self.get_snt_workspace(), name="Bale")
 
         # Other account to verify tenancy isolation
         self.other_account, self.other_user = self.create_snt_account(name="Other Account")
         self.other_user = self.create_user_with_profile(
             username="other user", account=self.other_account, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
         )
-        self.other_unit = CostUnitType.objects.create(account=self.other_account, name="Vaccine dose")
+        self.other_unit = CostUnitType.objects.create(
+            workspace=self.get_snt_workspace(self.other_account), name="Vaccine dose"
+        )
 
     # List
 
@@ -94,7 +96,7 @@ class CostUnitTypeAPITestCase(SNTMalariaAPITestCase):
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
         self.assertEqual(result["name"], "SMC 3 cycles")
         created = CostUnitType.objects.get(id=result["id"])
-        self.assertEqual(created.account, self.account)
+        self.assertEqual(created.workspace.account, self.account)
         self.assertEqual(created.description, "3 per course")
 
     def test_create_duplicate_name_returns_400(self):
@@ -157,7 +159,7 @@ class CostUnitTypeAPITestCase(SNTMalariaAPITestCase):
         self.assertFalse(CostUnitType.objects.filter(id=self.unit_bale.id).exists())
 
     def test_delete_referenced_by_cost_line_returns_405(self):
-        defaults = self.create_snt_default_interventions(account=self.account, created_by=self.user_write)
+        defaults = self.create_snt_default_interventions(workspace=self.get_snt_workspace(), created_by=self.user_write)
         InterventionCostBreakdownLine.objects.create(
             name="Cost Line",
             intervention=defaults["intervention_rts"],

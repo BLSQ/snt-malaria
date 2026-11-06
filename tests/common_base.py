@@ -1,9 +1,10 @@
 from decimal import Decimal
 from itertools import count
 
+from django.test import RequestFactory
 from django.utils.text import slugify
 
-from iaso.models import Account, OrgUnit, OrgUnitType
+from iaso.models import Account, OrgUnit, OrgUnitType, Workspace
 from iaso.test import APITestCase, TestCase
 from plugins.snt_malaria.models import (
     CostUnitType,
@@ -18,6 +19,7 @@ from plugins.snt_malaria.models import (
     ScenarioRuleCostOverride,
     ScenarioRuleIntervention,
 )
+from plugins.snt_malaria.models.workspace import get_or_create_first_workspace
 
 
 class SNTMalariaTestMixin:
@@ -30,11 +32,14 @@ class SNTMalariaTestMixin:
         self._category_counter = count(1)
         self._intervention_counter = count(1)
         self._org_unit_counter = count(1)
+        self._workspace_counter = count(1)
         if self.auto_create_account:
             self.account, self.user = self.create_snt_account(name="Test Account")
+            self.workspace = self.account.workspaces.get()
         else:
             self.account = None
             self.user = None
+            self.workspace = None
 
     def create_snt_account(self, name=None, username=None, permissions=None):
         account_number = next(self._account_counter)
@@ -45,7 +50,22 @@ class SNTMalariaTestMixin:
             account=account,
             permissions=permissions or [],
         )
+        self.create_snt_workspace(account=account, name=account.name)
         return account, user
+
+    def create_snt_workspace(self, account=None, name=None, **kwargs):
+        workspace_number = next(self._workspace_counter)
+        return Workspace.objects.create(
+            account=account or self.account,
+            name=name or f"Test Workspace {workspace_number}",
+            **kwargs,
+        )
+
+    @staticmethod
+    def build_snt_request(user):
+        request = RequestFactory().get("/")
+        request.user = user
+        return request
 
     def create_snt_account_with_project(
         self,
@@ -68,12 +88,16 @@ class SNTMalariaTestMixin:
             account=account,
             permissions=permissions or [],
         )
+        self.create_snt_workspace(account=account, name=account_name)
         return account, user, source, version, project
 
-    def create_snt_scenario(self, account=None, created_by=None, name=None, **kwargs):
+    def get_snt_workspace(self, account=None):
+        return get_or_create_first_workspace(account or self.account)
+
+    def create_snt_scenario(self, workspace=None, created_by=None, name=None, **kwargs):
         scenario_number = next(self._scenario_counter)
         return Scenario.objects.create(
-            account=account or self.account,
+            workspace=workspace or self.get_snt_workspace(),
             created_by=created_by or self.user,
             name=name or f"Test Scenario {scenario_number}",
             description=kwargs.pop("description", "A test scenario description."),
@@ -93,10 +117,10 @@ class SNTMalariaTestMixin:
             **kwargs,
         )
 
-    def create_snt_intervention_category(self, account=None, created_by=None, name=None, **kwargs):
+    def create_snt_intervention_category(self, workspace=None, created_by=None, name=None, **kwargs):
         category_number = next(self._category_counter)
         return InterventionCategory.objects.create(
-            account=account or self.account,
+            workspace=workspace or self.get_snt_workspace(),
             created_by=created_by or self.user,
             name=name or f"Test Intervention Category {category_number}",
             **kwargs,
@@ -151,9 +175,9 @@ class SNTMalariaTestMixin:
             intervention=intervention,
             name=kwargs.pop("name", "Test cost line"),
             unit_type=unit_type
-            or CostUnitType.objects.get_or_create(account=intervention.intervention_category.account, name="per item")[
-                0
-            ],
+            or CostUnitType.objects.get_or_create(
+                workspace=intervention.intervention_category.workspace, name="per item"
+            )[0],
             unit_cost=kwargs.pop("unit_cost", Decimal("1.00")),
             coverage=kwargs.pop(
                 "coverage", InterventionCostBreakdownLine.default_coverage(kwargs.get("is_proportional", False))
@@ -162,10 +186,10 @@ class SNTMalariaTestMixin:
             **kwargs,
         )
 
-    def create_snt_grant(self, account=None, name="Test Grant", donor_name="Test Donor"):
-        account = account or self.account
-        donor, _ = Donor.objects.get_or_create(account=account, name=donor_name)
-        return Grant.objects.create(account=account, donor=donor, name=name)
+    def create_snt_grant(self, workspace=None, name="Test Grant", donor_name="Test Donor"):
+        workspace = workspace or self.get_snt_workspace()
+        donor, _ = Donor.objects.get_or_create(workspace=workspace, name=donor_name)
+        return Grant.objects.create(workspace=workspace, donor=donor, name=name)
 
     def create_snt_rule_cost_override(self, rule, cost_line, year=None, **values):
         return ScenarioRuleCostOverride.objects.create(
@@ -175,28 +199,28 @@ class SNTMalariaTestMixin:
             **values,
         )
 
-    def create_snt_default_interventions(self, account=None, created_by=None):
+    def create_snt_default_interventions(self, workspace=None, created_by=None):
         """Create the default Vaccination/Chemotherapy categories and RTS,S/SMC/IPTp interventions.
 
         Returns a dict with keys: category_vaccination, category_chemoprevention,
         intervention_rts, intervention_smc, intervention_iptp, intervention_itn_campaign.
         """
-        account = account or self.account
+        workspace = workspace or self.get_snt_workspace()
         created_by = created_by or self.user
 
         category_vaccination = self.create_snt_intervention_category(
             name="Vaccination",
-            account=account,
+            workspace=workspace,
             created_by=created_by,
         )
         category_campaign = self.create_snt_intervention_category(
             name="Campaign",
-            account=account,
+            workspace=workspace,
             created_by=created_by,
         )
         category_chemoprevention = self.create_snt_intervention_category(
             name="Preventive Chemotherapy",
-            account=account,
+            workspace=workspace,
             created_by=created_by,
         )
         intervention_rts = self.create_snt_intervention(
@@ -240,17 +264,17 @@ class SNTMalariaTestMixin:
     def create_snt_default_interventions_setup(
         self,
         scenario,
-        account=None,
+        workspace=None,
         created_by=None,
         org_unit_type_name="DISTRICT",
     ):
         # This does the same as create_snt_default_interventions
         # but also creates org units and assignments for the RTS,S and SMC interventions,
 
-        account = account or getattr(scenario, "account", self.account)
+        workspace = workspace or scenario.workspace
         created_by = created_by or getattr(scenario, "created_by", self.user)
 
-        defaults = self.create_snt_default_interventions(account=account, created_by=created_by)
+        defaults = self.create_snt_default_interventions(workspace=workspace, created_by=created_by)
         category_vaccination = defaults["category_vaccination"]
         category_chemoprevention = defaults["category_chemoprevention"]
         intervention_rts = defaults["intervention_rts"]

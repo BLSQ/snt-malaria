@@ -28,28 +28,28 @@ from plugins.snt_malaria.models.scenario_rule_cost_override import OVERRIDE_VALU
 from .matching_criteria import jsonlogic_to_matching_criteria, matching_criteria_to_jsonlogic
 
 
-def build_account_metric_types(account) -> list[dict]:
+def build_workspace_metric_types(workspace) -> list[dict]:
     """The data-layer catalog the manual rule builder can reference as criteria: the planning page
     fetches it via useGetMetricCategories('any'), which despite the name filters to
     metric_kind=ANY - excluding both is_utility layers (e.g. population layers driving budget
     calculations) and metric_kind=POPULATION composites. A layer excluded from either shows no name
     in the UI, so neither the AI nor a restored rule set may reference one the human form can't."""
     return list(
-        MetricType.objects.filter(account=account, is_utility=False, metric_kind=MetricType.MetricKind.ANY).values(
-            "id", "name", "description", "legend_type", "legend_config"
-        )
+        MetricType.objects.filter(
+            account=workspace.account, is_utility=False, metric_kind=MetricType.MetricKind.ANY
+        ).values("id", "name", "description", "legend_type", "legend_config")
     )
 
 
-def build_account_interventions(account) -> list[dict]:
+def build_workspace_interventions(workspace) -> list[dict]:
     interventions = list(
-        Intervention.objects.filter(intervention_category__account=account)
+        Intervention.objects.filter(intervention_category__workspace=workspace)
         .annotate(category_name=F("intervention_category__name"), grant_name=F("grant__name"))
         .values("id", "name", "category_name", "grant_name")
     )
     cost_lines_by_intervention_id = defaultdict(list)
     cost_lines = (
-        InterventionCostBreakdownLine.objects.filter(intervention__intervention_category__account=account)
+        InterventionCostBreakdownLine.objects.filter(intervention__intervention_category__workspace=workspace)
         .order_by("id")
         .values(
             "id",
@@ -70,18 +70,18 @@ def build_account_interventions(account) -> list[dict]:
     return interventions
 
 
-def build_account_grants(account) -> list[dict]:
+def build_workspace_grants(workspace) -> list[dict]:
     return list(
-        Grant.objects.filter(account=account)
+        Grant.objects.filter(workspace=workspace)
         .annotate(donor_name=F("donor__name"))
         .values("id", "name", "short_name", "donor_name")
     )
 
 
-def build_account_org_units(account) -> list[dict]:
+def build_workspace_org_units(workspace) -> list[dict]:
     """The org units a rule can hand-pick - the same ones the manual rule builder's org unit tree offers."""
     return list(
-        get_intervention_org_units(account)
+        get_intervention_org_units(workspace.account)
         .annotate(parent_name=F("parent__name"))
         .order_by("name", "id")
         .values("id", "name", "parent_name")
@@ -252,14 +252,14 @@ def persist_scenario_rule_set(scenario, rule_specs: list[dict], context: dict) -
 
     Shared by the AI generate endpoint (`ScenarioRuleAIViewSet.create`) and the AI-chat "revert"
     (`ScenarioRuleAIViewSet.restore`) - both hand it a complete desired rule set. `context` must
-    carry `request` (the write serializers scope querysets by account from it, and `created_by` /
+    carry `request` (the write serializers scope querysets by workspace from it, and `created_by` /
     `updated_by` come from `request.user`). It may also carry `account_org_unit_ids` when the caller
     already resolved them."""
     user = context["request"].user
-    metric_type_by_id = {mt["id"]: mt for mt in build_account_metric_types(scenario.account)}
+    metric_type_by_id = {mt["id"]: mt for mt in build_workspace_metric_types(scenario.workspace)}
     account_org_unit_ids = context.get("account_org_unit_ids")
     if account_org_unit_ids is None:
-        account_org_unit_ids = ScenarioRule.resolve_all_org_unit_ids(scenario.account)
+        account_org_unit_ids = ScenarioRule.resolve_all_org_unit_ids(scenario.workspace)
     # Shared by every write serializer instantiated below, so none of them need to re-resolve it
     # (e.g. ScenarioRuleUpdateSerializer clearing a stale match-all org_units_included snapshot).
     context = {**context, "account_org_unit_ids": account_org_unit_ids}
@@ -278,7 +278,7 @@ def persist_scenario_rule_set(scenario, rule_specs: list[dict], context: dict) -
         existing_rule = existing_by_id.get(spec.get("id"))
         payload = _rule_spec_to_payload(spec, metric_type_by_id, account_org_unit_ids)
         org_units_matched = ScenarioRule.resolve_matched_org_units(
-            scenario.account, payload["matching_criteria"], data_layer_years=scenario.data_layer_years
+            scenario.workspace, payload["matching_criteria"], data_layer_years=scenario.data_layer_years
         )
         _drop_no_op_org_unit_overrides(payload, org_units_matched)
 

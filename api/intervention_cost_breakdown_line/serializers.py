@@ -5,6 +5,7 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 
 from iaso.models.metric import MetricType
+from iaso.utils.workspace import get_active_workspace
 from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine, ScenarioRuleCostOverride
 from plugins.snt_malaria.models.cost_breakdown import MAX_COVERAGE_PERCENTAGE
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
@@ -180,12 +181,10 @@ class InterventionCostBreakdownLineWriteSerializer(serializers.ModelSerializer):
         fields = super().get_fields()
         request = self.context.get("request")
         if request:
-            account = request.user.iaso_profile.account
-            fields["unit_type"].queryset = CostUnitType.objects.filter(account=account)
-            fields["intervention"].queryset = Intervention.objects.filter(
-                intervention_category__account=account,
-            )
-            fields["population_layer"].queryset = MetricType.objects.filter(account=account)
+            workspace = get_active_workspace(request)
+            fields["unit_type"].queryset = CostUnitType.objects.filter(workspace=workspace)
+            fields["intervention"].queryset = Intervention.objects.filter(intervention_category__workspace=workspace)
+            fields["population_layer"].queryset = MetricType.objects.filter(account=workspace.account)
         return fields
 
     def _current_value(self, attrs, field):

@@ -25,7 +25,7 @@ class CompositeLayer(models.Model):
         app_label = "snt_malaria"
         ordering = ["-updated_at"]
 
-    account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE, related_name="composite_layers")
+    workspace = models.ForeignKey("iaso.Workspace", on_delete=models.CASCADE, related_name="snt_composite_layers")
     name = models.CharField(max_length=255)
     # Serialized Flume graph: { nodeId: { id, type, x, y, inputData, connections } }.
     graph = models.JSONField(default=dict)

@@ -18,7 +18,7 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
         super().setUp()
         self.account, self.user = self.create_snt_account(name="account")
         self.intervention_category = self.create_snt_intervention_category(
-            account=self.account, created_by=self.user, name="Category 1"
+            workspace=self.get_snt_workspace(), created_by=self.user, name="Category 1"
         )
         self.intervention = self.create_snt_intervention(
             intervention_category=self.intervention_category, created_by=self.user, name="Intervention 1", code="INT1"
@@ -27,7 +27,7 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             intervention_category=self.intervention_category, created_by=self.user, name="Intervention 2", code="INT2"
         )
         self.scenario = self.create_snt_scenario(
-            self.account,
+            self.get_snt_workspace(),
             self.user,
             name="Scenario 1",
             description="Description of scenario 1",
@@ -462,12 +462,12 @@ class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):
         MetricValue.objects.create(metric_type=metric_type, org_unit=self.district_2, value=30000, year=2025)
 
     def test_resolve_all_org_unit_ids_without_settings_returns_all_levels(self):
-        result = ScenarioRule.resolve_all_org_unit_ids(self.account)
+        result = ScenarioRule.resolve_all_org_unit_ids(self.get_snt_workspace())
         self.assertCountEqual(result, [self.region.id, self.district_1.id, self.district_2.id])
 
     def test_resolve_all_org_unit_ids_with_intervention_type_excludes_parent(self):
         AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)
-        result = ScenarioRule.resolve_all_org_unit_ids(self.account)
+        result = ScenarioRule.resolve_all_org_unit_ids(self.get_snt_workspace())
         self.assertCountEqual(result, [self.district_1.id, self.district_2.id])
         self.assertNotIn(self.region.id, result)
 
@@ -475,12 +475,12 @@ class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):
         metric_type = MetricType.objects.get(account=self.account, code="POP")
         AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)
         criteria = {"and": [{">=": [{"var": metric_type.id}, 1]}]}
-        result = ScenarioRule.resolve_matched_org_units(self.account, criteria)
+        result = ScenarioRule.resolve_matched_org_units(self.get_snt_workspace(), criteria)
         self.assertCountEqual(result, [self.district_1.id, self.district_2.id])
 
     def test_null_criteria_returns_empty(self):
         AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)
-        result = ScenarioRule.resolve_matched_org_units(self.account, None)
+        result = ScenarioRule.resolve_matched_org_units(self.get_snt_workspace(), None)
         self.assertEqual(result, [])
 
     def test_resolve_all_org_unit_ids_and_criteria_produce_same_intervention_scope(self):
@@ -490,12 +490,12 @@ class ResolveMatchedOrgUnitsInterventionTypeScopeTestCase(SNTMalariaTestCase):
         AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.district_type)
         metric_type = MetricType.objects.get(account=self.account, code="POP")
 
-        all_org_unit_ids_result = ScenarioRule.resolve_all_org_unit_ids(self.account)
+        all_org_unit_ids_result = ScenarioRule.resolve_all_org_unit_ids(self.get_snt_workspace())
 
         # ">=1" is satisfied by every org unit with a POP MetricValue (region + both districts),
         # so the only thing narrowing the result is the intervention_org_unit_type filter.
         criteria = {"and": [{">=": [{"var": metric_type.id}, 1]}]}
-        criteria_result = ScenarioRule.resolve_matched_org_units(self.account, criteria)
+        criteria_result = ScenarioRule.resolve_matched_org_units(self.get_snt_workspace(), criteria)
 
         expected = [self.district_1.id, self.district_2.id]
         self.assertCountEqual(all_org_unit_ids_result, expected)
@@ -544,19 +544,19 @@ class ResolveMatchedOrgUnitsDataLayerYearsTestCase(SNTMalariaTestCase):
 
     def test_configured_year_uses_dated_value_when_available(self):
         result = ScenarioRule.resolve_matched_org_units(
-            self.account, self.criteria, data_layer_years={self.metric_type.id: 2025}
+            self.get_snt_workspace(), self.criteria, data_layer_years={self.metric_type.id: 2025}
         )
         self.assertCountEqual(result, [self.org_unit_1.id])
 
     def test_configured_year_falls_back_to_timeless_value_when_no_data(self):
         # No MetricValue exists for year=2030, so it should fall back to year=None.
         result = ScenarioRule.resolve_matched_org_units(
-            self.account, self.criteria, data_layer_years={self.metric_type.id: 2030}
+            self.get_snt_workspace(), self.criteria, data_layer_years={self.metric_type.id: 2030}
         )
         self.assertCountEqual(result, [self.org_unit_2.id])
 
     def test_no_data_layer_years_does_not_filter_by_year(self):
-        result = ScenarioRule.resolve_matched_org_units(self.account, self.criteria, data_layer_years=None)
+        result = ScenarioRule.resolve_matched_org_units(self.get_snt_workspace(), self.criteria, data_layer_years=None)
         self.assertCountEqual(result, [self.org_unit_1.id, self.org_unit_2.id])
 
     def test_metric_type_absent_from_data_layer_years_is_not_filtered_by_year(self):
@@ -575,7 +575,7 @@ class ResolveMatchedOrgUnitsDataLayerYearsTestCase(SNTMalariaTestCase):
         # POP is configured for 2025 (org_unit_1 only). ITN has no configured year, so its
         # 2019-dated value is still matched even though it's not "the" configured year for POP.
         result = ScenarioRule.resolve_matched_org_units(
-            self.account, criteria, data_layer_years={self.metric_type.id: 2025}
+            self.get_snt_workspace(), criteria, data_layer_years={self.metric_type.id: 2025}
         )
         self.assertCountEqual(result, [self.org_unit_1.id])
 
@@ -594,7 +594,7 @@ class ResolveMatchedOrgUnitsDataLayerYearsTestCase(SNTMalariaTestCase):
         }
 
         result = ScenarioRule.resolve_matched_org_units(
-            self.account, criteria, data_layer_years={self.metric_type.id: 2025, other_metric_type.id: 2025}
+            self.get_snt_workspace(), criteria, data_layer_years={self.metric_type.id: 2025, other_metric_type.id: 2025}
         )
 
         # POP has data for 2025, so it's filtered to year=2025 (only org_unit_1 qualifies).
@@ -619,12 +619,12 @@ class ResolveMatchedOrgUnitsDataLayerYearsTestCase(SNTMalariaTestCase):
         # POP is configured for 2025 (only org_unit_1 has dated data there, value=100 >= 50).
         # ITN is configured for 2026 (org_unit_1 has value=5 >= 3, org_unit_2 has value=1 < 3).
         result = ScenarioRule.resolve_matched_org_units(
-            self.account, criteria, data_layer_years={self.metric_type.id: 2025, other_metric_type.id: 2026}
+            self.get_snt_workspace(), criteria, data_layer_years={self.metric_type.id: 2025, other_metric_type.id: 2026}
         )
         self.assertCountEqual(result, [self.org_unit_1.id])
 
     def test_none_criteria_with_data_layer_years_returns_empty(self):
         result = ScenarioRule.resolve_matched_org_units(
-            self.account, None, data_layer_years={self.metric_type.id: 2025}
+            self.get_snt_workspace(), None, data_layer_years={self.metric_type.id: 2025}
         )
         self.assertEqual(result, [])

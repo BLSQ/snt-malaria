@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from iaso.models.metric import MetricType
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models import CompositeLayer
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 from plugins.snt_malaria.services.composite.evaluator import CompositeGraphError, CompositeGraphIncompleteError
@@ -26,7 +27,7 @@ from .serializers import (
 )
 
 
-class CompositeLayerViewSet(viewsets.ModelViewSet):
+class CompositeLayerViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
     """
     Composite data layers: a serialized node graph plus the ``MetricType`` it produces.
 
@@ -35,15 +36,10 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
     ``MetricValue`` rows; a graph that cannot run yet is stored as-is.
     """
 
+    queryset = CompositeLayer.objects.select_related("metric_type")
     ordering_fields = ["id", "name", "updated_at"]
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
     permission_classes = [CompositeLayerPermission]
-
-    def get_queryset(self):
-        user = self.request.user
-        if not user or not user.is_authenticated or not hasattr(user, "iaso_profile"):
-            return CompositeLayer.objects.none()
-        return CompositeLayer.objects.filter(account=user.iaso_profile.account).select_related("metric_type")
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -55,7 +51,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
         return CompositeLayerRetrieveSerializer
 
     def _intervention_org_unit_ids(self):
-        account = self.request.user.iaso_profile.account
+        account = self.workspace.account
         return list(get_intervention_org_units(account).values_list("id", flat=True))
 
     @staticmethod
@@ -75,7 +71,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
         return metric_type_id
 
     def perform_create(self, serializer):
-        account = self.request.user.iaso_profile.account
+        account = self.workspace.account
         data = serializer.validated_data
         name = data["name"].strip()
         metadata = self._pop_metric_metadata(serializer)
@@ -110,7 +106,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
             )
 
         serializer.save(
-            account=account,
+            workspace=self.workspace,
             name=name,
             graph=graph,
             legend_type=legend_type,
@@ -133,7 +129,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         instance = serializer.instance
-        account = self.request.user.iaso_profile.account
+        account = self.workspace.account
         data = serializer.validated_data
         metadata = self._pop_metric_metadata(serializer)
         name = data.get("name")
@@ -239,7 +235,7 @@ class CompositeLayerViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        account = request.user.iaso_profile.account
+        account = self.workspace.account
         try:
             result = preview_composite_layer(
                 account, serializer.validated_data["graph"], self._intervention_org_unit_ids()
