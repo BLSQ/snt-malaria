@@ -628,3 +628,39 @@ class ResolveMatchedOrgUnitsDataLayerYearsTestCase(SNTMalariaTestCase):
             self.account, None, data_layer_years={self.metric_type.id: 2025}
         )
         self.assertEqual(result, [])
+
+
+class ResolveMatchedOrgUnitsCategoricalLabelTestCase(SNTMalariaTestCase):
+    auto_create_account = False
+
+    def setUp(self):
+        super().setUp()
+        self.account, self.user, _source, version, _project = self.create_snt_account_with_project()
+        org_unit_kwargs = {
+            "version": version,
+            "validation_status": OrgUnit.VALIDATION_VALID,
+            "location": Point(1, 2, 0),
+        }
+        self.org_unit_1 = self.create_snt_org_unit(**org_unit_kwargs)
+        self.org_unit_2 = self.create_snt_org_unit(**org_unit_kwargs)
+
+    def test_resolve_matched_org_units_matches_numeric_looking_category_label(self):
+        """A categorical layer whose labels look like numbers ("1", "2") matches on string_value."""
+        metric_type = MetricType.objects.create(account=self.account, name="Risk class", code="RISK")
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.org_unit_1, value=None, string_value="1")
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.org_unit_2, value=None, string_value="2")
+
+        criteria = {"and": [{"==": [{"var": metric_type.id}, "1"]}]}
+
+        result = ScenarioRule.resolve_matched_org_units(self.account, criteria)
+        self.assertCountEqual(result, [self.org_unit_1.id])
+
+    def test_resolve_matched_org_units_numeric_threshold_matches_value(self):
+        metric_type = MetricType.objects.create(account=self.account, name="Incidence", code="INC")
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.org_unit_1, value=1)
+        MetricValue.objects.create(metric_type=metric_type, org_unit=self.org_unit_2, value=2)
+
+        criteria = {"and": [{"==": [{"var": metric_type.id}, 1]}]}
+
+        result = ScenarioRule.resolve_matched_org_units(self.account, criteria)
+        self.assertCountEqual(result, [self.org_unit_1.id])
