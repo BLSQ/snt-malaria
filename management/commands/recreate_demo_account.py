@@ -22,7 +22,7 @@ from plugins.snt_malaria.models import (
     InterventionCostBreakdownLine,
     Scenario,
 )
-from plugins.snt_malaria.models.workspace_scoped import get_or_create_first_workspace
+from plugins.snt_malaria.models.workspace import get_or_create_first_workspace
 from plugins.snt_malaria.permissions import (
     SNT_SCENARIO_BASIC_WRITE_PERMISSION,
     SNT_SCENARIO_FULL_WRITE_PERMISSION,

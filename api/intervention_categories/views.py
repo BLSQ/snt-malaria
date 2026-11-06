@@ -21,7 +21,7 @@ class InterventionCategoryViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelVie
 
     def perform_create(self, serializer):
         try:
-            serializer.save(**self.workspace_save_kwargs(), created_by=self.request.user)
+            serializer.save(workspace=self.workspace, created_by=self.request.user)
         except IntegrityError as e:
             self._raise_for_integrity_error(e)
 

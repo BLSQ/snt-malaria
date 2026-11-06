@@ -35,7 +35,6 @@ class Command(BaseCommand):
             name__iexact=DEFAULT_SCENARIO_NAME,  # This should be adjusted (see below)
             workspace=workspace,
             defaults={
-                "account": account,
                 "name": DEFAULT_SCENARIO_NAME,
                 "created_by": created_by,
             },

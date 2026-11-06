@@ -31,7 +31,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         )
         # Create a scenario
         self.scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
             name="Test Scenario",
             description="A test scenario description.",
@@ -42,12 +42,12 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         # Create intervention categories
         self.int_category_vaccination = self.create_snt_intervention_category(
             name="Vaccination",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
         )
         self.int_category_chemoprevention = self.create_snt_intervention_category(
             name="Preventive Chemotherapy",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
         )
 
@@ -215,7 +215,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             username="otheruser", account=other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
         )
         other_scenario = Scenario.objects.create(
-            account=other_account,
+            workspace=self.get_snt_workspace(other_account),
             created_by=other_user,
             name="Other Account Scenario",
             description="An other account scenario description.",
@@ -234,7 +234,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(Scenario.objects.count(), 2)
         new_scenario = Scenario.objects.latest("id")
         self.assertEqual(new_scenario.name, "New Scenario")
-        self.assertEqual(new_scenario.account, self.account)
+        self.assertEqual(new_scenario.workspace.account, self.account)
         self.assertEqual(new_scenario.created_by, self.user_with_full_perm)
 
     def test_scenario_create_basic_perm(self):
@@ -245,7 +245,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(Scenario.objects.count(), 2)
         new_scenario = Scenario.objects.latest("id")
         self.assertEqual(new_scenario.name, "New Scenario Basic")
-        self.assertEqual(new_scenario.account, self.account)
+        self.assertEqual(new_scenario.workspace.account, self.account)
         self.assertEqual(new_scenario.created_by, self.user_with_basic_perm)
 
     def test_scenario_create_no_perms(self):
@@ -286,7 +286,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(Scenario.objects.count(), 2)
         new_scenario = Scenario.objects.latest("id")
         self.assertEqual(new_scenario.name, "Test Scenario")
-        self.assertEqual(new_scenario.account, other_account)
+        self.assertEqual(new_scenario.workspace.account, other_account)
         self.assertEqual(new_scenario.created_by, other_user)
 
     def test_scenario_create_unauthenticated(self):
@@ -315,7 +315,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
 
     def test_update_own_scenario_basic_perm(self):
         basic_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_basic_perm,
             name="Basic User Scenario",
             description="A basic user scenario description.",
@@ -336,7 +336,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         This shouldn't happen because the user without permissions can't create scenarios, but just in case.
         """
         own_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_no_perms,
             name="No Perms User Scenario",
             description="A no perms user scenario description.",
@@ -352,7 +352,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
 
     def test_update_other_scenario_full_perm(self):
         other_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_basic_perm,
             name="Other User Scenario",
             description="An other user scenario description.",
@@ -397,7 +397,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             username="otheruser", account=other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
         )
         other_scenario = Scenario.objects.create(
-            account=other_account,
+            workspace=self.get_snt_workspace(other_account),
             created_by=other_user,
             name="Other Account Scenario",
             description="An other account scenario description.",
@@ -430,7 +430,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
 
     def test_scenario_update_name_already_taken(self):
         scenario2 = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
             name="Test Scenario 2",
             description="A test scenario 2 description.",
@@ -658,7 +658,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
         self.assertEqual(Scenario.objects.count(), 2)
         duplicated_scenario = Scenario.objects.latest("id")
         self.assertEqual(duplicated_scenario.created_by, self.user_with_basic_perm)
-        self.assertEqual(duplicated_scenario.account, self.account)
+        self.assertEqual(duplicated_scenario.workspace, self.scenario.workspace)
         self.assertEqual(duplicated_scenario.start_year, self.scenario.start_year)
         self.assertEqual(duplicated_scenario.end_year, self.scenario.end_year)
         self.assertEqual(duplicated_scenario.description, self.scenario.description)
@@ -709,7 +709,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             username="otheruser", account=other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
         )
         other_scenario = Scenario.objects.create(
-            account=other_account,
+            workspace=self.get_snt_workspace(other_account),
             created_by=other_user,
             name="Other Account Scenario",
             description="An other account scenario description.",
@@ -1014,7 +1014,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
 
     def test_delete_scenario_with_full_perm_other_scenario(self):
         other_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_basic_perm,  # created by another user but same account
             name="Other User Scenario",
             description="An other user scenario description.",
@@ -1028,7 +1028,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
 
     def test_delete_scenario_with_basic_perm_own_scenario(self):
         basic_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_basic_perm,
             name="Basic User Scenario",
             description="A basic user scenario description.",
@@ -1063,7 +1063,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             username="otheruser", account=other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
         )
         other_scenario = Scenario.objects.create(
-            account=other_account,
+            workspace=self.get_snt_workspace(other_account),
             created_by=other_user,
             name="Other Account Scenario",
             description="An other account scenario description.",
@@ -1139,7 +1139,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
 
     def test_reorder_rules_with_full_perm_other_scenario(self):
         other_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_basic_perm,  # created by another user but same account
             name="Other User Scenario",
             description="An other user scenario description.",
@@ -1183,7 +1183,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
 
     def test_reorder_rules_with_basic_perm_own_scenario(self):
         own_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_basic_perm,
             name="Basic User Scenario",
             description="A basic user scenario description.",
@@ -1262,7 +1262,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
             username="otheruser", account=other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
         )
         other_scenario = Scenario.objects.create(
-            account=other_account,
+            workspace=self.get_snt_workspace(other_account),
             created_by=other_user,
             name="Other Account Scenario",
             description="An other account scenario description.",
@@ -1437,7 +1437,7 @@ class CsvExportInterventionTypeScopeTestCase(SNTMalariaAPITestCase):
         )
 
         self.int_category = self.create_snt_intervention_category(
-            name="Vaccination", account=self.account, created_by=self.user
+            name="Vaccination", workspace=self.get_snt_workspace(), created_by=self.user
         )
         self.intervention = self.create_snt_intervention(
             name="RTS,S", code="rts_s", intervention_category=self.int_category, created_by=self.user

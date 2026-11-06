@@ -16,10 +16,10 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
     def setUp(self):
         super().setUp()
 
-        self.scenario = self.create_snt_scenario(self.account, self.user, start_year=2025, end_year=2026)
+        self.scenario = self.create_snt_scenario(self.get_snt_workspace(), self.user, start_year=2025, end_year=2026)
         defaults = self.create_snt_default_interventions_setup(
             scenario=self.scenario,
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user,
         )
 
@@ -49,12 +49,12 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         )
 
         self.unit_type = CostUnitType.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             name="per child",
         )
 
         BudgetSettings.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             local_currency="USD",
             exchange_rate=Decimal("1"),
             inflation_rate=Decimal("0.03"),
@@ -147,7 +147,9 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(result.category_costs[0].total_cost, 1980.0)
 
     def test_quantity_includes_configured_buffer(self):
-        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"), buffer=Decimal("1.25"))
+        BudgetSettings.objects.filter(workspace__account=self.account).update(
+            inflation_rate=Decimal("0"), buffer=Decimal("1.25")
+        )
         service = BudgetCalculationService(self.scenario)
 
         result = service.calculate_year(2025)
@@ -159,7 +161,9 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(breakdown.total_cost, 2250.0)
 
     def test_cost_line_buffer_overrides_configured_buffer(self):
-        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"), buffer=Decimal("1.25"))
+        BudgetSettings.objects.filter(workspace__account=self.account).update(
+            inflation_rate=Decimal("0"), buffer=Decimal("1.25")
+        )
         self.population_line.buffer = Decimal("10")
         self.population_line.save()
         service = BudgetCalculationService(self.scenario)
@@ -173,7 +177,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(breakdown.buffer, 1.1)
 
     def test_cost_line_without_buffer_reports_configured_buffer(self):
-        BudgetSettings.objects.filter(account=self.account).update(buffer=Decimal("1.25"))
+        BudgetSettings.objects.filter(workspace__account=self.account).update(buffer=Decimal("1.25"))
         service = BudgetCalculationService(self.scenario)
 
         result = service.calculate_year(2025)
@@ -181,7 +185,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(result.interventions[0].cost_breakdown[0].buffer, 1.25)
 
     def test_zero_cost_line_buffer_disables_buffering(self):
-        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"))
+        BudgetSettings.objects.filter(workspace__account=self.account).update(inflation_rate=Decimal("0"))
         self.population_line.buffer = Decimal("0")
         self.population_line.save()
         service = BudgetCalculationService(self.scenario)
@@ -192,7 +196,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 900.0)
 
     def test_year_without_rule_coverage_uses_cost_line_coverage(self):
-        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"))
+        BudgetSettings.objects.filter(workspace__account=self.account).update(inflation_rate=Decimal("0"))
         self.population_line.coverage = Decimal("80")
         self.population_line.save()
         service = BudgetCalculationService(self.scenario)
@@ -203,7 +207,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(result.interventions[0].cost_breakdown[0].quantity, 1760.0)
 
     def test_rule_yearly_coverage_overrides_cost_line_coverage(self):
-        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"))
+        BudgetSettings.objects.filter(workspace__account=self.account).update(inflation_rate=Decimal("0"))
         self.population_line.coverage = Decimal("80")
         self.population_line.save()
         service = BudgetCalculationService(self.scenario)
@@ -311,7 +315,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
     def test_fixed_cost_not_included_when_intervention_has_no_org_unit_assignment(self):
         """An intervention with only a fixed cost line and no org unit assignment contributes nothing."""
-        scenario = self.create_snt_scenario(self.account, self.user, start_year=2025, end_year=2025)
+        scenario = self.create_snt_scenario(self.get_snt_workspace(), self.user, start_year=2025, end_year=2025)
         category = self.create_snt_intervention_category()
         intervention = self.create_snt_intervention(intervention_category=category, code="unassigned_fixed")
         InterventionCostBreakdownLine.objects.create(
@@ -336,7 +340,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
     def test_fixed_cost_added_once_with_multiple_org_unit_assignments(self):
         """Fixed cost line is counted exactly once regardless of how many org units the intervention covers."""
-        scenario = self.create_snt_scenario(self.account, self.user, start_year=2025, end_year=2025)
+        scenario = self.create_snt_scenario(self.get_snt_workspace(), self.user, start_year=2025, end_year=2025)
         category = self.create_snt_intervention_category()
         intervention = self.create_snt_intervention(intervention_category=category, code="fixed_only_multi")
         self.create_snt_assignment(scenario, self.district_1, intervention)
@@ -429,7 +433,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         """Fixed cost appears once in totals; population costs accumulate per org unit independently.
         A second intervention with only a population cost line is unaffected by the fixed cost.
         """
-        scenario = self.create_snt_scenario(self.account, self.user, start_year=2025, end_year=2025)
+        scenario = self.create_snt_scenario(self.get_snt_workspace(), self.user, start_year=2025, end_year=2025)
         category = self.create_snt_intervention_category()
 
         # Intervention A: population + fixed cost, assigned to two districts.
@@ -530,7 +534,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(result.total_cost, 0.0)
 
     def test_rule_values_resolve_year_then_all_years_then_cost_line(self):
-        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"))
+        BudgetSettings.objects.filter(workspace__account=self.account).update(inflation_rate=Decimal("0"))
         self.create_snt_rule_cost_override(
             self.rule,
             self.population_line,
@@ -551,7 +555,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         self.assertEqual(result_2026.total_cost, 8000.0)
 
     def test_same_intervention_in_two_rules_costs_each_org_unit_with_its_rule_values(self):
-        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"))
+        BudgetSettings.objects.filter(workspace__account=self.account).update(inflation_rate=Decimal("0"))
         priority_rule = self.create_snt_rule(self.scenario, [self.intervention_smc], name="Priority rule")
         InterventionAssignment.objects.filter(intervention=self.intervention_smc, org_unit=self.district_2).update(
             rule=priority_rule
@@ -568,7 +572,7 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
 
     def _create_fixed_cost_rules(self):
         """A fixed line on an intervention deployed by a low and a high priority rule, one district each."""
-        BudgetSettings.objects.filter(account=self.account).update(inflation_rate=Decimal("0"))
+        BudgetSettings.objects.filter(workspace__account=self.account).update(inflation_rate=Decimal("0"))
         intervention = self.create_snt_intervention(intervention_category=self.create_snt_intervention_category())
         fixed_line = self.create_snt_cost_line(intervention, unit_type=self.unit_type, unit_cost=Decimal("100"))
         low_rule = self.create_snt_rule(self.scenario, [intervention], name="Low")

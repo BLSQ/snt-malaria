@@ -98,7 +98,6 @@ class DemoScenarioSeeder:
         current_year = timezone.now().year + 1
         scenario = Scenario.objects.create(
             workspace=self.workspace,
-            account=self.account,
             created_by=user,
             name=f"Demo {scenario_name}",
             description=(
@@ -115,7 +114,7 @@ class DemoScenarioSeeder:
 
         def create_rule(**kwargs):
             matching_criteria = kwargs.get("matching_criteria")
-            org_units_matched = ScenarioRule.resolve_matched_org_units(self.account, matching_criteria)
+            org_units_matched = ScenarioRule.resolve_matched_org_units(self.workspace, matching_criteria)
             return ScenarioRule.objects.create(org_units_matched=org_units_matched, **kwargs)
 
         all_orgunits_rules = create_rule(
@@ -125,7 +124,7 @@ class DemoScenarioSeeder:
             priority=1,
             color="#26C6DA",
             matching_criteria=None,
-            org_units_included=ScenarioRule.resolve_all_org_unit_ids(self.account),
+            org_units_included=ScenarioRule.resolve_all_org_unit_ids(self.workspace),
         )
 
         matching_criteria_seasonal = {
@@ -222,7 +221,7 @@ class DemoScenarioSeeder:
         (year=None). The budget calculator queries by exact year, so copy the timeless baseline
         values to every year in the scenario range so the calculation produces non-zero results."""
         pop_metric_types = MetricType.objects.filter(
-            account=scenario.account,
+            account=self.account,
             metric_kind=MetricType.MetricKind.POPULATION,
         )
 

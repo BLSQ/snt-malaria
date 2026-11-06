@@ -101,11 +101,11 @@ class ImpactServiceGetScenarioImpactTestCase(SNTMalariaTestCase):
         self.user = self.create_user_with_profile(username="impact_service_user", account=self.account)
 
         self.scenario = self.create_snt_scenario(
-            self.account, self.user, name="Test Scenario", start_year=2025, end_year=2027
+            self.get_snt_workspace(), self.user, name="Test Scenario", start_year=2025, end_year=2027
         )
 
         self.int_category = self.create_snt_intervention_category(
-            account=self.account, created_by=self.user, name="Chemoprevention"
+            workspace=self.get_snt_workspace(), created_by=self.user, name="Chemoprevention"
         )
         self.intervention1 = self.create_snt_intervention(
             intervention_category=self.int_category, created_by=self.user, name="SMC", code="smc", impact_ref="smc"

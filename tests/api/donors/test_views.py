@@ -19,12 +19,14 @@ class DonorAPITestCase(SNTMalariaAPITestCase):
             username="user read", account=self.account, permissions=[SNT_SETTINGS_READ_PERMISSION]
         )
 
-        self.donor_gf = Donor.objects.create(account=self.account, name="Global Fund")
-        self.donor_pmi = Donor.objects.create(account=self.account, name="PMI")
+        self.donor_gf = Donor.objects.create(workspace=self.get_snt_workspace(), name="Global Fund")
+        self.donor_pmi = Donor.objects.create(workspace=self.get_snt_workspace(), name="PMI")
 
         # Other account to verify tenancy isolation
         self.other_account, _ = self.create_snt_account(name="Other Account")
-        self.other_donor = Donor.objects.create(account=self.other_account, name="Other Donor")
+        self.other_donor = Donor.objects.create(
+            workspace=self.get_snt_workspace(self.other_account), name="Other Donor"
+        )
 
     # List
 
@@ -65,7 +67,7 @@ class DonorAPITestCase(SNTMalariaAPITestCase):
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
         self.assertEqual(result["name"], "World Bank")
         created = Donor.objects.get(id=result["id"])
-        self.assertEqual(created.account, self.account)
+        self.assertEqual(created.workspace.account, self.account)
 
     def test_create_duplicate_name_returns_400(self):
         self.client.force_authenticate(self.user_write)

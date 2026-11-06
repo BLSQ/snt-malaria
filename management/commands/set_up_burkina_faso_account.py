@@ -7,7 +7,7 @@ from django.db import transaction
 
 from iaso.gpkg.import_gpkg import import_gpkg_file2
 from iaso.models import Account, DataSource, Profile, Project, SourceVersion
-from plugins.snt_malaria.models.workspace_scoped import get_or_create_first_workspace
+from plugins.snt_malaria.models.workspace import get_or_create_first_workspace
 
 from .support.intervention_seeder import InterventionSeeder
 from .support.metrics_importer import MetricsImporter

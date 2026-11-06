@@ -20,7 +20,3 @@ class WorkspaceScopedViewSetMixin:
         if getattr(self, "swagger_fake_view", False):
             return queryset.none()
         return queryset.filter(**{self.workspace_lookup: self.workspace})
-
-    def workspace_save_kwargs(self) -> dict:
-        # `account` is still a required column on root models until the account FKs are dropped.
-        return {"workspace": self.workspace, "account": self.workspace.account}

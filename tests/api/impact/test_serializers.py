@@ -23,7 +23,7 @@ class ImpactQuerySerializerTestCase(SNTMalariaTestCase):
         self.account, self.user = self.create_snt_account(name="Impact Serializer Account")
         self.other_account, self.other_user = self.create_snt_account(name="Other Account")
         self.scenario = self.create_snt_scenario(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user,
             name="Test Scenario",
             start_year=2025,
@@ -49,7 +49,7 @@ class ImpactQuerySerializerTestCase(SNTMalariaTestCase):
 
     def test_scenario_from_other_account_rejected(self):
         other_scenario = self.create_snt_scenario(
-            account=self.other_account,
+            workspace=self.get_snt_workspace(self.other_account),
             created_by=self.other_user,
             name="Other Scenario",
             start_year=2025,
