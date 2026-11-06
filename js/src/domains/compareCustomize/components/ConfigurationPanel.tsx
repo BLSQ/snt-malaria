@@ -31,6 +31,7 @@ type Props = {
     ageGroups?: string[];
     selectedAgeGroup?: string;
     onAgeGroupChange?: (_key: string, value: unknown) => void;
+    orgUnitSelector?: ReactNode;
     children?: ReactNode;
 };
 
@@ -131,6 +132,7 @@ export const ConfigurationPanel: FC<Props> = ({
     ageGroups,
     selectedAgeGroup,
     onAgeGroupChange,
+    orgUnitSelector,
     children,
 }) => {
     const { formatMessage } = useSafeIntl();
@@ -267,6 +269,14 @@ export const ConfigurationPanel: FC<Props> = ({
                                     />
                                 </Box>
                             )}
+                    </Box>
+                )}
+                {orgUnitSelector && (
+                    <Box sx={styles.section}>
+                        <Typography sx={styles.sectionTitle}>
+                            {formatMessage(MESSAGES.areaTitle)}
+                        </Typography>
+                        {orgUnitSelector}
                     </Box>
                 )}
                 {children}

@@ -44,3 +44,22 @@ class ImpactCacheKeyTestCase(SNTMalariaTestCase):
 
     def test_no_key_for_missing_scenario(self):
         self.assertIsNone(impact_cache._build_key(-1, "under5", 2025, 2027))
+
+    def test_key_differs_per_org_unit_selection(self):
+        national = impact_cache._build_key(self.scenario.id, "under5", 2025, 2027)
+        first = impact_cache._build_key(self.scenario.id, "under5", 2025, 2027, [1, 2])
+        second = impact_cache._build_key(self.scenario.id, "under5", 2025, 2027, [1, 3])
+
+        self.assertEqual(len({national, first, second}), 3)
+
+    def test_key_ignores_org_unit_order_and_duplicates(self):
+        self.assertEqual(
+            impact_cache._build_key(self.scenario.id, "under5", 2025, 2027, [2, 1]),
+            impact_cache._build_key(self.scenario.id, "under5", 2025, 2027, [1, 2, 2]),
+        )
+
+    def test_empty_org_unit_selection_shares_the_national_key(self):
+        self.assertEqual(
+            impact_cache._build_key(self.scenario.id, "under5", 2025, 2027, []),
+            impact_cache._build_key(self.scenario.id, "under5", 2025, 2027),
+        )

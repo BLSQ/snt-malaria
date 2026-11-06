@@ -59,11 +59,12 @@ class ImpactViewSet(viewsets.ViewSet):
         age_group = data["age_group"]
         year_from = data["year_from"]
         year_to = data["year_to"]
+        org_unit_ids = data["org_unit_ids"]
 
         ttl = impact_cache.get_ttl(request.user.iaso_profile.account)
 
         if ttl:
-            cached = impact_cache.get(scenario.id, age_group, year_from, year_to)
+            cached = impact_cache.get(scenario.id, age_group, year_from, year_to, org_unit_ids)
             if cached is not None:
                 return Response(cached)
 
@@ -73,10 +74,11 @@ class ImpactViewSet(viewsets.ViewSet):
             age_group=age_group,
             year_from=year_from,
             year_to=year_to,
+            org_unit_ids=org_unit_ids,
         )
         response_data = ScenarioImpactSerializer(result).data
 
         if ttl:
-            impact_cache.set(scenario.id, age_group, year_from, year_to, response_data, ttl)
+            impact_cache.set(scenario.id, age_group, year_from, year_to, org_unit_ids, response_data, ttl)
 
         return Response(response_data)

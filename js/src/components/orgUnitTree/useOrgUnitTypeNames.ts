@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { UseQueryResult } from 'react-query';
-import { useGetOrgUnitTypes } from '../../../../../configureAccount/hooks/useGetOrgUnitTypes';
+import { useGetOrgUnitTypes } from '../../domains/configureAccount/hooks/useGetOrgUnitTypes';
 
 // The org unit list endpoint the tree is built from (asLocation/withParents) only ever carries
 // org_unit_type_id - never a name - for ancestor nodes, so the tree resolves type names itself

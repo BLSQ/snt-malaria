@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from plugins.snt_malaria.api.fields import CommaSeparatedIdsField
 from plugins.snt_malaria.models import Scenario
 
 
@@ -14,6 +15,7 @@ class ImpactQuerySerializer(serializers.Serializer):
     age_group = serializers.CharField()
     year_from = serializers.IntegerField(required=False, allow_null=True, default=None)
     year_to = serializers.IntegerField(required=False, allow_null=True, default=None)
+    org_unit_ids = CommaSeparatedIdsField(required=False, default=None)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

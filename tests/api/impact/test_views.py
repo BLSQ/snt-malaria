@@ -204,3 +204,16 @@ class ImpactViewTests(ImpactViewsBaseTestCase):
             status.HTTP_400_BAD_REQUEST,
         )
         self.assertIn("age_group", result)
+
+    @patch("plugins.snt_malaria.api.impact.views.get_provider_for_account")
+    def test_invalid_org_unit_ids(self, mock_get_provider):
+        mock_get_provider.return_value = MagicMock()
+
+        self.client.force_authenticate(user=self.user)
+        result = self.assertJSONResponse(
+            self.client.get(
+                IMPACT_URL, {"scenario_id": self.scenario.id, "age_group": "under5", "org_unit_ids": "1,abc"}
+            ),
+            status.HTTP_400_BAD_REQUEST,
+        )
+        self.assertIn("org_unit_ids", result)

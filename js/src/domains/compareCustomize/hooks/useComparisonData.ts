@@ -10,6 +10,7 @@ type Params = {
     yearFrom: number | undefined;
     yearTo: number | undefined;
     selectedAgeGroup: string | undefined;
+    orgUnitIds: number[] | undefined;
 };
 
 /**
@@ -26,6 +27,7 @@ export const useComparisonData = ({
     yearFrom,
     yearTo,
     selectedAgeGroup,
+    orgUnitIds,
 }: Params) => {
     const baselineNumericId = toNumericId(baselineScenarioId);
     const comparisonId1 = toNumericId(comparisonScenarioIds[0]);
@@ -33,9 +35,18 @@ export const useComparisonData = ({
 
     const impactEnabled = yearFrom !== undefined;
 
-    const baselineBudgetQuery = useGetScenarioBudget(baselineNumericId);
-    const comparisonBudget1Query = useGetScenarioBudget(comparisonId1);
-    const comparisonBudget2Query = useGetScenarioBudget(comparisonId2);
+    const baselineBudgetQuery = useGetScenarioBudget(
+        baselineNumericId,
+        orgUnitIds,
+    );
+    const comparisonBudget1Query = useGetScenarioBudget(
+        comparisonId1,
+        orgUnitIds,
+    );
+    const comparisonBudget2Query = useGetScenarioBudget(
+        comparisonId2,
+        orgUnitIds,
+    );
 
     const baselineImpactQuery = useGetScenarioImpact(
         baselineNumericId,
@@ -43,6 +54,7 @@ export const useComparisonData = ({
         yearTo,
         selectedAgeGroup,
         impactEnabled,
+        orgUnitIds,
     );
     const comparisonImpact1Query = useGetScenarioImpact(
         comparisonId1,
@@ -50,6 +62,7 @@ export const useComparisonData = ({
         yearTo,
         selectedAgeGroup,
         impactEnabled,
+        orgUnitIds,
     );
     const comparisonImpact2Query = useGetScenarioImpact(
         comparisonId2,
@@ -57,6 +70,7 @@ export const useComparisonData = ({
         yearTo,
         selectedAgeGroup,
         impactEnabled,
+        orgUnitIds,
     );
 
     const resolveData = <T>(query: {

@@ -316,6 +316,44 @@ class ImpactServiceGetScenarioImpactTestCase(SNTMalariaTestCase):
         mock_provider.match_impact.assert_not_called()
         self._assert_scenario_impact(result)
 
+    def test_org_unit_ids_restrict_impact_to_selected_districts(self):
+        mock_provider = self._make_provider_mock(supports_bulk=True)
+
+        service = ImpactService(provider=mock_provider)
+        result = service.get_scenario_impact(
+            self.scenario,
+            age_group="under5",
+            year_from=2025,
+            year_to=2027,
+            org_unit_ids=[self.district1.id, self.district3.id],
+        )
+
+        mock_provider.match_impact_bulk.assert_has_calls(
+            [
+                mock.call(
+                    org_units=[self.district1],
+                    interventions=[self.intervention1],
+                    age_group="under5",
+                    year_from=2025,
+                    year_to=2027,
+                ),
+                mock.call(
+                    org_units=[self.district3],
+                    interventions=[self.intervention1, self.intervention2],
+                    age_group="under5",
+                    year_from=2025,
+                    year_to=2027,
+                ),
+            ]
+        )
+        self.assertEqual(result.number_cases.value, 820.0)
+        self.assertEqual(result.by_year[0].number_cases.value, 400.0)
+        self.assertAlmostEqual(result.by_year[0].prevalence_rate.value, 0.06)
+        self.assertEqual(
+            {ou.org_unit_id for ou in result.org_units},
+            {self.district1.id, self.district3.id},
+        )
+
     def test_service_calls_match_impact(self):
         """Test that the service calls match_impact individually for each org unit and produces correct outcomes."""
         mock_provider = self._make_provider_mock(supports_bulk=False)

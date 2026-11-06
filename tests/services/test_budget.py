@@ -365,6 +365,66 @@ class BudgetCalculationServiceTestCase(SNTMalariaTestCase):
         # Fixed costs are not attributed to specific org units.
         self.assertEqual(len(result.org_units_costs), 0)
 
+    def _create_fixed_only_scenario(self, assigned_org_units):
+        scenario = self.create_snt_scenario(self.account, self.user, start_year=2025, end_year=2025)
+        category = self.create_snt_intervention_category()
+        intervention = self.create_snt_intervention(intervention_category=category, code="fixed_prorated")
+        for org_unit in assigned_org_units:
+            self.create_snt_assignment(scenario, org_unit, intervention)
+        InterventionCostBreakdownLine.objects.create(
+            intervention=intervention,
+            name="Fixed cost",
+            category=InterventionCostBreakdownLine.InterventionCostBreakdownLineCategory.OPERATIONAL,
+            unit_type=self.unit_type,
+            population_layer=None,
+            unit_cost=Decimal("100.00"),
+            coverage=Decimal("1"),
+            created_by=self.user,
+        )
+        return scenario
+
+    def test_fixed_cost_divided_by_share_of_selected_org_units(self):
+        """With a selection, a fixed line costs the share of its intervention's assigned org units selected."""
+        scenario = self._create_fixed_only_scenario([self.district_1, self.district_2])
+
+        service = BudgetCalculationService(scenario, org_unit_ids=[self.district_1.id])
+        result = service.calculate_year(2025)
+
+        # 110.0 (see test_fixed_cost_added_once_with_multiple_org_unit_assignments) * 1/2 selected
+        self.assertEqual(result.total_cost, Decimal("55"))
+        self.assertTrue(service.prorates_fixed_costs)
+
+    def test_fixed_cost_not_divided_when_all_assigned_org_units_selected(self):
+        scenario = self._create_fixed_only_scenario([self.district_1, self.district_2])
+
+        service = BudgetCalculationService(scenario, org_unit_ids=[self.district_1.id, self.district_2.id])
+
+        self.assertEqual(service.calculate_year(2025).total_cost, Decimal("110"))
+        self.assertFalse(service.prorates_fixed_costs)
+
+    def test_fixed_cost_not_divided_without_selection(self):
+        scenario = self._create_fixed_only_scenario([self.district_1, self.district_2])
+
+        service = BudgetCalculationService(scenario)
+
+        self.assertEqual(service.calculate_year(2025).total_cost, Decimal("110"))
+        self.assertFalse(service.prorates_fixed_costs)
+
+    def test_fixed_cost_dropped_when_no_assigned_org_unit_selected(self):
+        scenario = self._create_fixed_only_scenario([self.district_1])
+
+        service = BudgetCalculationService(scenario, org_unit_ids=[self.district_2.id])
+
+        self.assertEqual(service.calculate_year(2025).total_cost, Decimal("0"))
+
+    def test_population_costs_limited_to_selected_org_units(self):
+        full = BudgetCalculationService(self.scenario).calculate_year(2025)
+        filtered = BudgetCalculationService(self.scenario, org_unit_ids=[self.district_1.id]).calculate_year(2025)
+
+        full_by_org_unit = {item.org_unit_id: item.total_cost for item in full.org_units_costs}
+        self.assertEqual([item.org_unit_id for item in filtered.org_units_costs], [self.district_1.id])
+        self.assertEqual(filtered.total_cost, full_by_org_unit[self.district_1.id])
+
     def test_fixed_and_population_costs_combined_with_second_population_only_intervention(self):
         """Fixed cost appears once in totals; population costs accumulate per org unit independently.
         A second intervention with only a population cost line is unaffected by the fixed cost.
