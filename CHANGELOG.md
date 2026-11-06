@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.22.0](https://github.com/BLSQ/snt-malaria/compare/2.21.0...2.22.0) (2026-11-06)
+
+
+### Features
+
+* Update contributors ([#432](https://github.com/BLSQ/snt-malaria/issues/432)) ([bf95f8e](https://github.com/BLSQ/snt-malaria/commit/bf95f8e7c88a837c45d6f23376d3f8121c12a21d))
+
 ## [2.21.0](https://github.com/BLSQ/snt-malaria/compare/2.20.2...2.21.0) (2026-11-05)
 
 
