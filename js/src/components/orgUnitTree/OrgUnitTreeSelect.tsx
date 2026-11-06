@@ -74,8 +74,9 @@ const getCheckState = (
 };
 
 type Props = {
-    selectedIds: number[];
-    onChange: (ids: number[]) => void;
+    /** `undefined` means every org unit is selected. */
+    selectedIds: number[] | undefined;
+    onChange: (ids: number[] | undefined) => void;
 };
 
 export const OrgUnitTreeSelect: FC<Props> = ({ selectedIds, onChange }) => {
@@ -89,7 +90,16 @@ export const OrgUnitTreeSelect: FC<Props> = ({ selectedIds, onChange }) => {
     const [expanded, setExpanded] = useState<Set<number>>(new Set());
     const [query, setQuery] = useState('');
 
-    const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
+    const selected = useMemo(
+        () => new Set(selectedIds ?? tree?.leafIds ?? []),
+        [selectedIds, tree],
+    );
+
+    const handleChange = useCallback(
+        (ids: number[]) =>
+            onChange(ids.length === tree?.leafIds.length ? undefined : ids),
+        [tree, onChange],
+    );
 
     const keep = useMemo(
         () => (tree ? computeKeepForQuery(tree, query) : null),
@@ -123,16 +133,17 @@ export const OrgUnitTreeSelect: FC<Props> = ({ selectedIds, onChange }) => {
             } else {
                 leafIds.forEach(id => next.add(id));
             }
-            onChange(Array.from(next));
+            handleChange(Array.from(next));
         },
-        [tree, selected, onChange],
+        [tree, selected, handleChange],
     );
 
-    const handleClearSelection = useCallback(() => onChange([]), [onChange]);
+    const handleSelectAll = useCallback(() => onChange(undefined), [onChange]);
     const handleClearFilter = useCallback(() => setQuery(''), []);
 
     const isFiltering = query.trim() !== '';
     const isNoResult = isFiltering && rows.length === 0;
+    const totalLeafCount = tree?.leafIds.length ?? 0;
     const selectedLeafCount = tree ? countSelected(tree.leafIds, selected) : 0;
 
     if (isError) {
@@ -252,21 +263,19 @@ export const OrgUnitTreeSelect: FC<Props> = ({ selectedIds, onChange }) => {
 
             <Box sx={styles.footer}>
                 <Typography variant="caption" color="text.secondary">
-                    {selectedLeafCount > 0
-                        ? formatMessage(MESSAGES.orgUnitTreeSelectedCount, {
-                              count: String(selectedLeafCount),
-                              total: String(tree?.leafIds.length ?? 0),
-                          })
-                        : formatMessage(MESSAGES.orgUnitTreeNoSelection)}
+                    {formatMessage(MESSAGES.orgUnitTreeSelectedCount, {
+                        count: String(selectedLeafCount),
+                        total: String(totalLeafCount),
+                    })}
                 </Typography>
-                {selectedLeafCount > 0 && (
+                {selectedLeafCount < totalLeafCount && (
                     <Button
                         variant="text"
                         size="small"
-                        onClick={handleClearSelection}
+                        onClick={handleSelectAll}
                         sx={styles.clearButton}
                     >
-                        {formatMessage(MESSAGES.scopeClearSelection)}
+                        {formatMessage(MESSAGES.orgUnitTreeSelectAll)}
                     </Button>
                 )}
             </Box>

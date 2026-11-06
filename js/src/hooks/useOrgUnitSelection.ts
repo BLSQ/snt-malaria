@@ -1,18 +1,28 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 type OrgUnitSelection = {
-    selectedIds: number[];
-    setSelectedIds: (ids: number[]) => void;
-    hasSelection: boolean;
+    /** `undefined` means every org unit is selected; `[]` means the selection was cleared. */
+    selectedIds: number[] | undefined;
+    /** Last non-empty selection, `undefined` meaning every org unit. */
+    appliedIds: number[] | undefined;
+    setSelectedIds: (ids: number[] | undefined) => void;
 };
 
-/** Selected intervention-level org unit ids; empty means national. */
 export const useOrgUnitSelection = (): OrgUnitSelection => {
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [appliedIds, setAppliedIds] = useState<number[] | undefined>();
+    const [isCleared, setIsCleared] = useState(false);
+
+    const setSelectedIds = useCallback((ids: number[] | undefined) => {
+        const isEmpty = ids?.length === 0;
+        setIsCleared(isEmpty);
+        if (!isEmpty) {
+            setAppliedIds(ids);
+        }
+    }, []);
 
     return {
-        selectedIds,
+        selectedIds: isCleared ? [] : appliedIds,
+        appliedIds,
         setSelectedIds,
-        hasSelection: selectedIds.length > 0,
     };
 };

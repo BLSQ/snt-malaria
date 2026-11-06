@@ -931,13 +931,13 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.orgUnitTree.deselectTooltip',
         defaultMessage: 'Click to deselect',
     },
+    orgUnitTreeSelectAll: {
+        id: 'iaso.snt_malaria.orgUnitTree.selectAll',
+        defaultMessage: 'Select all',
+    },
     orgUnitTreeSelectedCount: {
         id: 'iaso.snt_malaria.orgUnitTree.selectedCount',
         defaultMessage: '{count} of {total} selected',
-    },
-    orgUnitTreeNoSelection: {
-        id: 'iaso.snt_malaria.orgUnitTree.noSelection',
-        defaultMessage: 'No selection: showing national',
     },
     scopeClearSelection: {
         id: 'iaso.snt_malaria.scenarioRule.scopeClearSelection',

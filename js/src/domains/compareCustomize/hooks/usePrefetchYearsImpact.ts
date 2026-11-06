@@ -32,7 +32,7 @@ export const usePrefetchYearsImpact = (
     scenarioIds: number[],
     selectedAgeGroup: string | undefined,
     isImpactLoading: boolean,
-    orgUnitIds: number[],
+    orgUnitIds: number[] | undefined,
 ): void => {
     const queryClient = useQueryClient();
     const serializedOrgUnitIds = serializeOrgUnitIds(orgUnitIds);

@@ -9,7 +9,7 @@ import { BudgetCalculationResponse } from '../types/budget';
 
 export const useGetScenarioBudget = (
     scenarioId?: number,
-    orgUnitIds: number[] = [],
+    orgUnitIds?: number[],
 ): UseQueryResult<BudgetCalculationResponse, Error> => {
     const params = new URLSearchParams({ scenario_id: String(scenarioId) });
     const serializedOrgUnitIds = serializeOrgUnitIds(orgUnitIds);

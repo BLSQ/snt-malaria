@@ -13,7 +13,7 @@ export const useGetScenarioImpact = (
     yearTo?: number,
     ageGroup?: string,
     enabledOverride?: boolean,
-    orgUnitIds: number[] = [],
+    orgUnitIds?: number[],
 ): UseQueryResult<ScenarioImpactMetrics, Error> => {
     const params = new URLSearchParams();
     if (scenarioId) {

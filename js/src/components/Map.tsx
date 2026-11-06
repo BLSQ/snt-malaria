@@ -101,7 +101,7 @@ type Props = {
     hideLegend?: boolean;
     defaultColor?: string;
     selectedOrgUnitIds?: number[];
-    /** When non-empty, only these org units are drawn and the map fits to them. */
+    /** When set, only these org units are drawn and the map fits to them; when empty, the view is kept. */
     visibleOrgUnitIds?: number[];
     onOrgUnitClick?: (orgUnitId: number) => void;
     /** Optional key fragment appended to each GeoJSON key to force style refresh. */
@@ -156,7 +156,7 @@ export const Map: FC<Props> = ({
             (max, ou) => Math.max(max, ou.org_unit_type_depth ?? 0),
             0,
         );
-        const visibleIds = visibleOrgUnitIds?.length
+        const visibleIds = visibleOrgUnitIds
             ? new Set(visibleOrgUnitIds)
             : undefined;
         return orderedOrgUnits.filter(

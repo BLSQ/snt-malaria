@@ -728,7 +728,7 @@
     "iaso.snt_malaria.orgUnitTree.selectTooltip": "Cliquer pour sélectionner",
     "iaso.snt_malaria.orgUnitTree.deselectTooltip": "Cliquer pour désélectionner",
     "iaso.snt_malaria.orgUnitTree.selectedCount": "{count} sur {total} sélectionnés",
-    "iaso.snt_malaria.orgUnitTree.noSelection": "Aucune sélection : affichage national",
     "iaso.snt_malaria.compareCustomize.areaTitle": "Zone géographique",
-    "iaso.snt_malaria.compareCustomize.fixedCostsProratedNote": "Les coûts fixes sont répartis selon la part des districts sélectionnés"
+    "iaso.snt_malaria.compareCustomize.fixedCostsProratedNote": "Les coûts fixes sont répartis selon la part des districts sélectionnés",
+    "iaso.snt_malaria.orgUnitTree.selectAll": "Tout sélectionner"
 }

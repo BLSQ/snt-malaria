@@ -62,8 +62,11 @@ const styles = {
 export const CompareCustomize: FC = () => {
     const { formatMessage } = useSafeIntl();
     const { data: scenarios, isLoading } = useGetScenarios();
-    const { selectedIds: selectedOrgUnitIds, setSelectedIds } =
-        useOrgUnitSelection();
+    const {
+        selectedIds: selectedOrgUnitIds,
+        appliedIds: appliedOrgUnitIds,
+        setSelectedIds,
+    } = useOrgUnitSelection();
     const {
         baselineScenarioId,
         comparisonScenarioIds,
@@ -220,7 +223,7 @@ export const CompareCustomize: FC = () => {
         yearFrom,
         yearTo,
         selectedAgeGroup,
-        orgUnitIds: selectedOrgUnitIds,
+        orgUnitIds: appliedOrgUnitIds,
     });
 
     const scenarioNumericIds = useMemo(
@@ -234,7 +237,7 @@ export const CompareCustomize: FC = () => {
         scenarioNumericIds,
         selectedAgeGroup,
         isImpactLoading,
-        selectedOrgUnitIds,
+        appliedOrgUnitIds,
     );
 
     const {

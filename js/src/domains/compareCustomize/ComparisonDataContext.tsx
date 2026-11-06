@@ -11,7 +11,7 @@ type ComparisonData = {
     isBudgetLoading: boolean;
     targetYear?: number;
     yearFrom?: number;
-    selectedOrgUnitIds: number[];
+    selectedOrgUnitIds: number[] | undefined;
 };
 
 const ComparisonDataContext = createContext<ComparisonData | undefined>(

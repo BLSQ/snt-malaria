@@ -10,7 +10,7 @@ type Params = {
     yearFrom: number | undefined;
     yearTo: number | undefined;
     selectedAgeGroup: string | undefined;
-    orgUnitIds: number[];
+    orgUnitIds: number[] | undefined;
 };
 
 /**
