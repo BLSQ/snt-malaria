@@ -444,6 +444,23 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.scenarioRule.edit',
         defaultMessage: 'Edit rule',
     },
+    duplicateScenarioRule: {
+        id: 'iaso.snt_malaria.scenarioRule.duplicate',
+        defaultMessage: 'Duplicate rule',
+    },
+    duplicateScenarioRuleNotice: {
+        id: 'iaso.snt_malaria.scenarioRule.duplicateNotice',
+        defaultMessage:
+            'You are creating a new rule based on "{name}". The original rule will not be changed.',
+    },
+    scenarioRuleCopyName: {
+        id: 'iaso.snt_malaria.scenarioRule.copyName',
+        defaultMessage: '{name} (copy)',
+    },
+    createCopy: {
+        id: 'iaso.snt_malaria.scenarioRule.createCopy',
+        defaultMessage: 'Create copy',
+    },
     editedOn: {
         id: 'iaso.snt_malaria.label.editedOn',
         defaultMessage: 'Created by {username} - edited {date}',

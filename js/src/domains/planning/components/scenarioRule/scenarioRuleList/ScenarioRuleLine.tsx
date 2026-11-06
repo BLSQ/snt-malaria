@@ -1,6 +1,7 @@
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo, useState } from 'react';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, Grid, Typography } from '@mui/material';
-import { useSafeIntl } from 'bluesquare-components';
+import { IconButton, useSafeIntl } from 'bluesquare-components';
 import { DeleteModal } from 'Iaso/components/DeleteRestoreModals/DeleteModal';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../../messages';
@@ -20,10 +21,17 @@ const styles: SxStyles = {
     contentBox: {
         width: '100%',
     },
-    deleteAction: {
+    actions: {
         display: 'flex',
         alignItems: 'center',
         ml: 'auto',
+        gap: 0.5,
+        '& .MuiIconButton-root': {
+            p: 0.75,
+        },
+        '& .MuiSvgIcon-root': {
+            fontSize: 18,
+        },
     },
     rulesText: {
         ml: 4,
@@ -47,8 +55,17 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
     const { mutateAsync: deleteScenarioRule } =
         useDeleteScenarioRule(scenarioId);
 
-    const { metricTypeCategories, interventionCategories, isScenarioEditable } =
-        usePlanningContext();
+    const {
+        metricTypeCategories,
+        interventionCategories,
+        isScenarioEditable,
+        startDuplicatingRule,
+    } = usePlanningContext();
+
+    const handleDuplicate = useCallback(
+        () => startDuplicatingRule(rule),
+        [startDuplicatingRule, rule],
+    );
 
     const metricTypes = useMemo(
         () => metricTypeCategories.flatMap(category => category.items),
@@ -121,8 +138,13 @@ export const ScenarioRuleLine: FC<Props> = ({ scenarioId, rule, onEdit }) => {
                     {isScenarioEditable && hovered && (
                         <Box
                             onClick={e => e.stopPropagation()}
-                            sx={styles.deleteAction}
+                            sx={styles.actions}
                         >
+                            <IconButton
+                                onClick={handleDuplicate}
+                                overrideIcon={ContentCopyIcon}
+                                tooltipMessage={MESSAGES.duplicateScenarioRule}
+                            />
                             <DeleteModal
                                 type="icon"
                                 onConfirm={() => deleteScenarioRule(rule.id)}

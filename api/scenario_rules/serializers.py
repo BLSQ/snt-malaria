@@ -210,12 +210,19 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
 
 class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
+    duplicated_from = serializers.PrimaryKeyRelatedField(
+        queryset=ScenarioRule.objects.none(),
+        required=False,
+        write_only=True,
+        help_text="Rule this one is a copy of. The new rule is ranked right after it instead of last.",
+    )
 
     class Meta:
         model = ScenarioRule
         fields = [
             *ScenarioRuleWriteSerializerBase.Meta.fields,
             "scenario",
+            "duplicated_from",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -223,6 +230,7 @@ class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
         user = self.context["request"].user
         account = user.iaso_profile.account
         self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
+        self.fields["duplicated_from"].queryset = ScenarioRule.objects.filter(scenario__account=account)
 
     def validate_scenario(self, scenario):
         user = self.context["request"].user
@@ -234,11 +242,26 @@ class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
             raise PermissionDenied("You don't have permission to edit this scenario")
         return scenario
 
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        source_rule = attrs.get("duplicated_from")
+        if source_rule and source_rule.scenario_id != attrs["scenario"].id:
+            raise serializers.ValidationError(
+                {"duplicated_from": "The duplicated rule must belong to the same scenario."}
+            )
+        return attrs
+
     def create(self, validated_data, **kwargs):
         interventions_data = validated_data.pop("interventions", [])
         intervention_overrides = validated_data.pop("intervention_overrides", None)
+        source_rule = validated_data.pop("duplicated_from", None)
+        scenario = validated_data["scenario"]
         other_values = {
-            "priority": validated_data["scenario"].get_next_available_priority(),
+            "priority": (
+                scenario.free_priority_after(source_rule.priority)
+                if source_rule
+                else scenario.get_next_available_priority()
+            ),
             "org_units_excluded": [org_unit.id for org_unit in validated_data.pop("org_units_excluded", [])],
             "org_units_included": [org_unit.id for org_unit in validated_data.pop("org_units_included", [])],
             "org_units_scope": [org_unit.id for org_unit in validated_data.pop("org_units_scope", [])],

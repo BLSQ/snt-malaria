@@ -3,7 +3,7 @@ from typing import Optional
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
 from django.db import connection, models, transaction
-from django.db.models import Deferrable, Q
+from django.db.models import Deferrable, F, Q
 
 from iaso.models import MetricValue
 from iaso.utils.jsonlogic import jsonlogic_to_exists_q_clauses
@@ -65,6 +65,17 @@ class Scenario(SoftDeletableModel):
         if not self.rules.exists():
             return 1
         return self.rules.aggregate(max_priority=models.Max("priority"))["max_priority"] + 1
+
+    @transaction.atomic()
+    def free_priority_after(self, priority: int) -> int:
+        """
+        Shifts every rule ranked above `priority` up by one and returns the freed slot,
+        so a new rule can be inserted right after the rule holding `priority`.
+        """
+        with connection.cursor() as cursor:
+            cursor.execute("SET CONSTRAINTS scenario_rule_priority_unique DEFERRED")
+        self.rules.filter(priority__gt=priority).update(priority=F("priority") + 1)
+        return priority + 1
 
     @transaction.atomic()
     def refresh_assignments(self, user: User) -> None:
