@@ -914,6 +914,22 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             '{scope} in scope · {hand} hand-picked · {exc} excluded',
     },
+    orgUnitTreeSelectTooltip: {
+        id: 'iaso.snt_malaria.orgUnitTree.selectTooltip',
+        defaultMessage: 'Click to select',
+    },
+    orgUnitTreeDeselectTooltip: {
+        id: 'iaso.snt_malaria.orgUnitTree.deselectTooltip',
+        defaultMessage: 'Click to deselect',
+    },
+    orgUnitTreeSelectedCount: {
+        id: 'iaso.snt_malaria.orgUnitTree.selectedCount',
+        defaultMessage: '{count} of {total} selected',
+    },
+    orgUnitTreeNoSelection: {
+        id: 'iaso.snt_malaria.orgUnitTree.noSelection',
+        defaultMessage: 'No selection: showing national',
+    },
     scopeClearSelection: {
         id: 'iaso.snt_malaria.scenarioRule.scopeClearSelection',
         defaultMessage: 'Clear selection',
