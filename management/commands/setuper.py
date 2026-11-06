@@ -8,6 +8,7 @@ from django.db import transaction
 from iaso.gpkg.import_gpkg import import_gpkg_file2
 from iaso.models import Account, DataSource, Profile, Project, SourceVersion, TenantUser
 from plugins.snt_malaria.management.commands.support.intervention_seeder import InterventionSeeder
+from plugins.snt_malaria.models.workspace_scoped import get_or_create_first_workspace
 
 
 class Command(BaseCommand):
@@ -148,7 +149,8 @@ class Command(BaseCommand):
                 raise
 
             # Seed interventions
-            InterventionSeeder(account, self.stdout.write).create_interventions()
+            workspace = get_or_create_first_workspace(account, created_by=account_user)
+            InterventionSeeder(workspace, self.stdout.write).create_interventions()
 
             # Data layer values are imported per layer from the Data Layers screen (OpenHexa data
             # layer type), which launches the import_openhexa_data_layer background task.

@@ -7,7 +7,18 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 
-from iaso.models import Account, DataSource, ImportGPKG, OrgUnit, OrgUnitType, Profile, Project, SourceVersion, Task
+from iaso.models import (
+    Account,
+    DataSource,
+    ImportGPKG,
+    OrgUnit,
+    OrgUnitType,
+    Profile,
+    Project,
+    SourceVersion,
+    Task,
+    Workspace,
+)
 from iaso.permissions.core_permissions import CORE_DATA_TASKS_PERMISSION
 from iaso.tests.tasks.task_api_test_case import TaskAPITestCase
 from plugins.snt_malaria.models import (
@@ -66,6 +77,11 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         self.assertEqual(InterventionCategory.objects.count(), 8)
         self.assertEqual(Intervention.objects.count(), 21)
         self.assertEqual(InterventionCostBreakdownLine.objects.count(), 28)
+        workspace = Workspace.objects.get(account=new_account)
+        self.assertEqual(workspace.name, new_account.name)
+        self.assertEqual(workspace.created_by, User.objects.get())
+        self.assertEqual(set(InterventionCategory.objects.values_list("workspace_id", flat=True)), {workspace.id})
+        self.assertEqual(BudgetSettings.objects.get().workspace, workspace)
 
         # Checking if the import task was launched with the right parameters
         self.assertEqual(Task.objects.count(), 1)
@@ -235,6 +251,7 @@ class SNTAccountSetupAPITestCase(TaskAPITestCase):
         self.assertEqual(Profile.objects.count(), 0)
         self.assertEqual(BudgetSettings.objects.count(), 0)
         self.assertEqual(AccountSettings.objects.count(), 0)
+        self.assertEqual(Workspace.objects.count(), 0)
         self.assertEqual(InterventionCategory.objects.count(), 0)
         self.assertEqual(Intervention.objects.count(), 0)
         self.assertEqual(InterventionCostBreakdownLine.objects.count(), 0)
