@@ -7,6 +7,7 @@ from django.db import transaction
 
 from iaso.gpkg.import_gpkg import import_gpkg_file2
 from iaso.models import Account, DataSource, Profile, Project, SourceVersion
+from plugins.snt_malaria.models.workspace_scoped import get_or_create_first_workspace
 
 from .support.intervention_seeder import InterventionSeeder
 from .support.metrics_importer import MetricsImporter
@@ -130,11 +131,13 @@ class Command(BaseCommand):
                 raise
 
             # Seed interventions and intervention costs
-            InterventionSeeder(account, self.stdout.write).create_interventions()
+            workspace = get_or_create_first_workspace(account, created_by=admin_user)
+            InterventionSeeder(workspace, self.stdout.write).create_interventions()
 
             self.stdout.write(self.style.SUCCESS("Setup completed successfully!"))
             self.stdout.write(
                 f"\n  - Account: {account.name} (ID: {account.id})"
+                f"\n  - Workspace: {workspace.name} (ID: {workspace.id})"
                 f"\n  - Project: {project.name} (ID: {project.id})"
                 f"\n  - DataSource: {data_source.name} (ID: {data_source.id})"
                 f"\n  - SourceVersion: {source_version.number} (ID: {source_version.id})"
