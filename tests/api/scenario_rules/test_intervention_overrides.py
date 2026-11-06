@@ -3,6 +3,7 @@ from decimal import Decimal
 from rest_framework import status
 
 from plugins.snt_malaria.models import ScenarioRuleCostOverride, ScenarioRuleIntervention
+from plugins.snt_malaria.models.workspace import get_or_create_first_workspace
 from plugins.snt_malaria.tests.api.scenario_rules.common_base import ScenarioRulesTestBase
 
 
@@ -158,7 +159,9 @@ class ScenarioRuleInterventionOverridesAPITestCase(ScenarioRulesTestBase):
 
     def test_invalid_intervention_overrides_are_rejected(self):
         other_line = self.create_snt_cost_line(self.intervention_chemo_iptp, name="IPTp drugs")
-        other_grant = self.create_snt_grant(account=self.other_account, name="Other grant")
+        other_grant = self.create_snt_grant(
+            workspace=get_or_create_first_workspace(self.other_account), name="Other grant"
+        )
         population_line_entry = {"cost_line": self.population_line.id}
         cases = {
             "intervention not in the rule": {"intervention": self.intervention_chemo_iptp.id, "cost_lines": []},

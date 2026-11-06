@@ -65,7 +65,7 @@ class ScenarioViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
         return ScenarioWriteSerializer
 
     def perform_create(self, serializer):
-        serializer.save(**self.workspace_save_kwargs(), created_by=self.request.user)
+        serializer.save(workspace=self.workspace, created_by=self.request.user)
 
     @transaction.atomic
     def perform_update(self, serializer):
@@ -74,7 +74,7 @@ class ScenarioViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
         try:
             scenario = serializer.save()
         except IntegrityError as e:
-            if "duplicate" in str(e).lower() and "(account_id, name)" in str(e).lower():
+            if "duplicate" in str(e).lower() and "(workspace_id, name)" in str(e).lower():
                 raise serializers.ValidationError(_("Scenario with this name already exists."))
             if "snt_malaria_scenario_start_year_lte_end_year" in str(e).lower():
                 raise serializers.ValidationError(_("Start year should be lower or equal end year."))
@@ -89,7 +89,7 @@ class ScenarioViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
         rules = list(scenario.rules.all())
         for rule in rules:
             rule.org_units_matched = ScenarioRule.resolve_matched_org_units(
-                scenario.account, rule.matching_criteria, data_layer_years=scenario.data_layer_years
+                scenario.workspace, rule.matching_criteria, data_layer_years=scenario.data_layer_years
             )
         ScenarioRule.objects.bulk_update(rules, ["org_units_matched"])
 
@@ -106,7 +106,7 @@ class ScenarioViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
         initial_scenario = self.get_object()
 
         try:
-            new_scenario = serializer.save(**self.workspace_save_kwargs(), created_by=request.user)
+            new_scenario = serializer.save(workspace=self.workspace, created_by=request.user)
         except Exception as e:
             logger.exception("Error saving duplicated scenario")
             raise ValidationError(f"Error saving scenario: {e}")

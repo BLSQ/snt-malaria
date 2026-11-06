@@ -26,7 +26,6 @@ def get_scenario(user, workspace, base_name="Scenario"):
         name=f"{base_name} {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         created_by=user,
         workspace=workspace,
-        account=workspace.account,
         start_year=datetime.now().year,
         end_year=datetime.now().year + 3,
     )
@@ -158,7 +157,7 @@ def create_rules_from_import(
         groups_for_rules.append(group)
 
     for rule in rules:
-        rule.org_units_matched = ScenarioRule.resolve_matched_org_units(scenario.account, rule.matching_criteria)
+        rule.org_units_matched = ScenarioRule.resolve_matched_org_units(scenario.workspace, rule.matching_criteria)
 
     ScenarioRule.objects.bulk_create(rules)
 

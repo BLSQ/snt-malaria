@@ -6,6 +6,7 @@ from iaso.models import MetricType, MetricValue, OrgUnit, OrgUnitType
 from iaso.models.data_source import DataSource, SourceVersion
 from iaso.models.project import Project
 from plugins.snt_malaria.models import ImpactProviderConfig, Intervention, InterventionCategory
+from plugins.snt_malaria.models.workspace import get_or_create_first_workspace
 from plugins.snt_malaria.providers.impact.base import (
     ImpactProviderMeta,
     IncompleteConfigError,
@@ -187,7 +188,9 @@ class FakeProviderMatchImpactTests(SNTMalariaTestCase):
         MetricValue.objects.create(metric_type=metric_type, org_unit=cls.ou1, value=120_000, year=_CURRENT_YEAR)
         MetricValue.objects.create(metric_type=metric_type, org_unit=cls.ou2, value=50_000, year=_CURRENT_YEAR)
 
-        category = InterventionCategory.objects.create(name="cat", account=cls.account, created_by=cls.user)
+        category = InterventionCategory.objects.create(
+            name="cat", workspace=get_or_create_first_workspace(cls.account), created_by=cls.user
+        )
         cls.intervention_1 = Intervention.objects.create(
             name="i1", code="i1", intervention_category=category, impact_ref="impact_1", created_by=cls.user
         )

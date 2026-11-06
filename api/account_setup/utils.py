@@ -20,7 +20,7 @@ from iaso.permissions import core_permissions
 from plugins.snt_malaria import permissions as snt_permissions
 from plugins.snt_malaria.management.commands.support.intervention_seeder import InterventionSeeder
 from plugins.snt_malaria.models import AccountSettings, SNTAccountSetup
-from plugins.snt_malaria.models.workspace_scoped import get_or_create_first_workspace
+from plugins.snt_malaria.models.workspace import get_or_create_first_workspace
 
 
 DEFAULT_MODULES_TO_ACTIVATE = [

@@ -1,6 +1,6 @@
 from rest_framework import status
 
-from plugins.snt_malaria.models import Donor, Grant
+from plugins.snt_malaria.models import Donor, Grant, Scenario
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION, SNT_SETTINGS_WRITE_PERMISSION
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
@@ -20,10 +20,8 @@ class WorkspaceScopedViewSetTestCase(SNTMalariaAPITestCase):
             permissions=[SNT_SETTINGS_WRITE_PERMISSION, SNT_SCENARIO_FULL_WRITE_PERMISSION],
         )
         self.other_workspace = self.create_snt_workspace(name="Other workspace")
-        self.own_donor = Donor.objects.create(account=self.account, workspace=self.workspace, name="Own donor")
-        self.hidden_donor = Donor.objects.create(
-            account=self.account, workspace=self.other_workspace, name="Hidden donor"
-        )
+        self.own_donor = Donor.objects.create(workspace=self.workspace, name="Own donor")
+        self.hidden_donor = Donor.objects.create(workspace=self.other_workspace, name="Hidden donor")
         self.hidden_scenario = self.create_snt_scenario(workspace=self.other_workspace, name="Hidden scenario")
         self.client.force_authenticate(self.writer)
 
@@ -38,13 +36,19 @@ class WorkspaceScopedViewSetTestCase(SNTMalariaAPITestCase):
 
         self.assertJSONResponse(response, status.HTTP_404_NOT_FOUND)
 
-    def test_create_stores_the_active_workspace_and_its_account(self):
+    def test_create_stores_the_active_workspace(self):
         response = self.client.post(self.DONORS_URL, {"name": "New donor"}, format="json")
 
         created = self.assertJSONResponse(response, status.HTTP_201_CREATED)
-        donor = Donor.objects.get(id=created["id"])
-        self.assertEqual(donor.workspace, self.workspace)
-        self.assertEqual(donor.account, self.account)
+        self.assertEqual(Donor.objects.get(id=created["id"]).workspace, self.workspace)
+
+    def test_same_scenario_name_is_free_when_only_used_in_another_workspace(self):
+        payload = {"name": "Hidden scenario", "start_year": 2025, "end_year": 2026}
+
+        response = self.client.post(self.SCENARIOS_URL, payload, format="json")
+
+        created = self.assertJSONResponse(response, status.HTTP_201_CREATED)
+        self.assertEqual(Scenario.objects.get(id=created["id"]).workspace, self.workspace)
 
     def test_grant_cannot_reference_a_donor_of_another_workspace(self):
         payload = {"name": "Grant", "donor": self.hidden_donor.id}

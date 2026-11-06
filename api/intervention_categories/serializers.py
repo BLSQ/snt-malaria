@@ -11,7 +11,6 @@ class InterventionCategorySerializer(serializers.ModelSerializer):
         model = InterventionCategory
         fields = [
             "id",
-            "account",
             "name",
             "short_name",
             "description",
@@ -22,7 +21,6 @@ class InterventionCategorySerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
-            "account",
             "interventions",
             "created_by",
             "created_at",

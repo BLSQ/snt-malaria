@@ -14,10 +14,10 @@ from plugins.snt_malaria.services.ai_chat import classify_anthropic_error
 from .agent import generate_scenario_rules
 from .permissions import ScenarioRuleAIPermission
 from .rule_set import (
-    build_account_metric_types,
-    build_account_org_units,
     build_workspace_grants,
     build_workspace_interventions,
+    build_workspace_metric_types,
+    build_workspace_org_units,
     org_unit_selection_to_ai_context,
     persist_scenario_rule_set,
 )
@@ -80,14 +80,13 @@ class ScenarioRuleAIViewSet(WorkspaceScopedViewSetMixin, AIChatAttachmentViewSet
         conversation_history = serializer.validated_data.get("conversation_history", [])
         attachments = serializer.validated_data.get("attachments", [])
 
-        account = scenario.account
         api_key = self._get_api_key(request)
         if not api_key:
             return Response({"error": self.API_KEY_MISSING_ERROR}, status=status.HTTP_400_BAD_REQUEST)
 
-        metric_types = build_account_metric_types(account)
+        metric_types = build_workspace_metric_types(scenario.workspace)
         interventions = build_workspace_interventions(scenario.workspace)
-        org_units = build_account_org_units(account)
+        org_units = build_workspace_org_units(scenario.workspace)
         account_org_unit_ids = [org_unit["id"] for org_unit in org_units]
         current_rules = [
             _rule_to_ai_context(rule, account_org_unit_ids)

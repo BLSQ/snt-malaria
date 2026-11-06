@@ -26,7 +26,7 @@ class ImpactViewsBaseTestCase(SNTMalariaAPITestCase):
         ImpactProviderConfig.objects.create(account=self.account, provider_key="swisstph")
 
         self.scenario = self.create_snt_scenario(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user,
             name="Test Scenario",
             start_year=2025,
@@ -136,7 +136,7 @@ class ImpactViewTests(ImpactViewsBaseTestCase):
         mock_get_provider.return_value = MagicMock()
 
         other_scenario = self.create_snt_scenario(
-            account=self.other_account,
+            workspace=self.get_snt_workspace(self.other_account),
             created_by=self.other_user,
             name="Other Scenario",
             start_year=2025,

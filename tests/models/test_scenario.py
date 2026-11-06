@@ -16,7 +16,7 @@ class ScenarioModelTestCase(SNTMalariaTestCase):
         super().setUp()
         self.account, self.user = self.create_snt_account(name="account")
         self.scenario = self.create_snt_scenario(
-            self.account,
+            self.get_snt_workspace(),
             self.user,
             name="Scenario 1",
             description="Description of scenario 1",
@@ -49,7 +49,7 @@ class ScenarioModelTestCase(SNTMalariaTestCase):
         )
 
         self.intervention_category = self.create_snt_intervention_category(
-            account=self.account, created_by=self.user, name="Category 1"
+            workspace=self.get_snt_workspace(), created_by=self.user, name="Category 1"
         )
 
         self.intervention_1 = self.create_snt_intervention(
@@ -68,7 +68,7 @@ class ScenarioModelTestCase(SNTMalariaTestCase):
 
     def test_get_next_available_priority_no_rules(self):
         new_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user,
             name="Scenario 2",
             description="Description of scenario 2",
@@ -114,7 +114,7 @@ class ScenarioModelTestCase(SNTMalariaTestCase):
     def test_reuse_soft_deleted_scenario_names(self):
         self.scenario.delete()
         new_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user,
             name=self.scenario.name,  # same name
             description="Description of new scenario",
@@ -127,7 +127,7 @@ class ScenarioModelTestCase(SNTMalariaTestCase):
         # this can be done multiple times in a row
         new_scenario.delete()
         another_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user,
             name=self.scenario.name,
             description="Description of another scenario",
@@ -138,10 +138,10 @@ class ScenarioModelTestCase(SNTMalariaTestCase):
         self.assertEqual(another_scenario.name, self.scenario.name)
         self.assertEqual(another_scenario.name, new_scenario.name)
 
-    def test_account_name_unicity_not_soft_deleted(self):
-        with self.assertRaisesMessage(IntegrityError, "scenario_name_account_unique"):
+    def test_workspace_name_unicity_not_soft_deleted(self):
+        with self.assertRaisesMessage(IntegrityError, "scenario_name_workspace_unique"):
             Scenario.objects.create(
-                account=self.account,
+                workspace=self.get_snt_workspace(),
                 created_by=self.user,
                 name=self.scenario.name,
                 description="Oh nooooo, I'm stealing a scenario name :(",

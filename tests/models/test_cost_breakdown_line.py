@@ -9,7 +9,7 @@ class InterventionCostBreakdownLineModelTestCase(SNTMalariaTestCase):
     def setUp(self):
         super().setUp()
         self.intervention = self.create_snt_intervention()
-        self.unit_type = CostUnitType.objects.create(account=self.account, name="Unit")
+        self.unit_type = CostUnitType.objects.create(workspace=self.get_snt_workspace(), name="Unit")
 
     def _create(self, **kwargs):
         return InterventionCostBreakdownLine.objects.create(

@@ -16,10 +16,9 @@ from iaso.utils.models.soft_deletable import (
 )
 from iaso.utils.validators import JSONSchemaValidator
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
-from plugins.snt_malaria.models.workspace_scoped import WorkspaceFromAccountMixin
 
 
-class Scenario(WorkspaceFromAccountMixin, SoftDeletableModel):
+class Scenario(SoftDeletableModel):
     class Meta:
         app_label = "snt_malaria"
         ordering = ["-updated_at"]
@@ -29,16 +28,13 @@ class Scenario(WorkspaceFromAccountMixin, SoftDeletableModel):
                 name="%(app_label)s_%(class)s_start_year_lte_end_year",
             ),
             models.UniqueConstraint(
-                fields=["account", "name"],
-                name="scenario_name_account_unique",
+                fields=["workspace", "name"],
+                name="scenario_name_workspace_unique",
                 condition=Q(deleted_at__isnull=True),
             ),
         ]
 
-    account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE)
-    workspace = models.ForeignKey(
-        "iaso.Workspace", null=True, blank=True, on_delete=models.CASCADE, related_name="snt_scenarios"
-    )
+    workspace = models.ForeignKey("iaso.Workspace", on_delete=models.CASCADE, related_name="snt_scenarios")
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255, blank=False, null=False)
     description = models.TextField(blank=True)
@@ -182,12 +178,12 @@ class ScenarioRule(models.Model):
         super().save(*args, **kwargs)
 
     @staticmethod
-    def resolve_matched_org_units(account, matching_criteria, data_layer_years=None):
+    def resolve_matched_org_units(workspace, matching_criteria, data_layer_years=None):
         """Evaluate matching_criteria and return the raw list of matched org unit IDs.
 
         This is the criteria-only result, before exclusion/inclusion overrides.
 
-        1. start from the account's valid geo-located org units at the configured
+        1. start from the workspace account's valid geo-located org units at the configured
            intervention_org_unit_type level (get_intervention_org_units)
         2. intersect with org units whose MetricValues satisfy matching_criteria (JSONLogic)
 
@@ -199,6 +195,7 @@ class ScenarioRule(models.Model):
         if matching_criteria is None:
             return []
 
+        account = workspace.account
         org_units = get_intervention_org_units(account)
 
         metric_values = MetricValue.objects.filter(metric_type__account=account, org_unit_id__isnull=False)
@@ -225,27 +222,29 @@ class ScenarioRule(models.Model):
         return list(org_units.filter(id__in=matched_ids).values_list("id", flat=True).distinct())
 
     @staticmethod
-    def resolve_all_org_unit_ids(account) -> list[int]:
-        """Every org unit id a rule could target for this account, at the configured intervention
+    def resolve_all_org_unit_ids(workspace) -> list[int]:
+        """Every org unit id a rule could target in this workspace, at the account's configured intervention
         level. There is no "match all" sentinel in matching_criteria - a rule matches everyone only
         by explicitly including every one of them in org_units_included, resolved from this."""
-        return list(get_intervention_org_units(account).values_list("id", flat=True).distinct())
+        return list(get_intervention_org_units(workspace.account).values_list("id", flat=True).distinct())
 
     @staticmethod
     def covers_all_org_units(
-        org_units_included, account=None, account_org_unit_ids: Optional[list[int]] = None
+        org_units_included, workspace=None, account_org_unit_ids: Optional[list[int]] = None
     ) -> bool:
         """Whether org_units_included already amounts to "every org unit" for this account - a
         read-only signal (never persisted) used to: tell the AI chat which of a scenario's *existing*
         rules currently match everyone (without ever exposing the real org unit ids themselves), and
         to detect a rule moving away from match-all so its now-stale org_units_included snapshot gets
         cleared (see scenario_rule_ai.rule_set._rule_spec_to_payload). Pass `account_org_unit_ids`
-        when already resolved (the only case `account` itself can be omitted), to avoid re-querying
+        when already resolved (the only case `workspace` itself can be omitted), to avoid re-querying
         it for every rule."""
         if not org_units_included:
             return False
         all_ids = (
-            account_org_unit_ids if account_org_unit_ids is not None else ScenarioRule.resolve_all_org_unit_ids(account)
+            account_org_unit_ids
+            if account_org_unit_ids is not None
+            else ScenarioRule.resolve_all_org_unit_ids(workspace)
         )
         return set(org_units_included) == set(all_ids)
 
