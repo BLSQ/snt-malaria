@@ -4,9 +4,10 @@ from django.db import models
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule
+from plugins.snt_malaria.models.workspace_scoped import WorkspaceFromAccountMixin
 
 
-class InterventionCategory(models.Model):
+class InterventionCategory(WorkspaceFromAccountMixin, models.Model):
     class Meta:
         app_label = "snt_malaria"
         verbose_name_plural = "Intervention categories"
@@ -19,6 +20,9 @@ class InterventionCategory(models.Model):
         ]
 
     account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE)
+    workspace = models.ForeignKey(
+        "iaso.Workspace", null=True, blank=True, on_delete=models.CASCADE, related_name="snt_intervention_categories"
+    )
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=100, null=True, blank=True)
