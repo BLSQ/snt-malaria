@@ -20,6 +20,7 @@ from plugins.snt_malaria.api.scenarios.utils import (
     get_csv_row,
     get_scenario,
 )
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models import InterventionAssignment, Scenario, ScenarioRule
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
 from plugins.snt_malaria.models.intervention import Intervention
@@ -36,7 +37,7 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
-class ScenarioViewSet(viewsets.ModelViewSet):
+class ScenarioViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
     """Scenario API
 
     POST /api/scenarios/duplicate
@@ -50,6 +51,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     }
     """
 
+    queryset = Scenario.objects.select_related("created_by").prefetch_related("rules")
     serializer_class = ScenarioSerializer
     ordering_fields = ["id", "name"]
     http_method_names = ["get", "post", "put", "patch", "delete"]
@@ -60,20 +62,8 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             return ScenarioSerializer
         return ScenarioWriteSerializer
 
-    def get_queryset(self):
-        user = self.request.user
-        if not user or not user.is_authenticated or not hasattr(user, "iaso_profile"):
-            return Scenario.objects.none()
-        return (
-            Scenario.objects.select_related("created_by")
-            .prefetch_related("rules")
-            .filter(account=user.iaso_profile.account)
-        )
-
     def perform_create(self, serializer):
-        serializer.validated_data["created_by"] = self.request.user
-        serializer.validated_data["account"] = self.request.user.iaso_profile.account
-        serializer.save()
+        serializer.save(**self.workspace_save_kwargs(), created_by=self.request.user)
 
     @transaction.atomic
     def perform_update(self, serializer):
@@ -114,7 +104,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         initial_scenario = self.get_object()
 
         try:
-            new_scenario = serializer.save(account=request.user.iaso_profile.account, created_by=request.user)
+            new_scenario = serializer.save(**self.workspace_save_kwargs(), created_by=request.user)
         except Exception as e:
             logger.exception("Error saving duplicated scenario")
             raise ValidationError(f"Error saving scenario: {e}")
@@ -135,11 +125,9 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             scenario = get_object_or_404(self.get_queryset(), pk=scenario_id)
             scenario_name = scenario.name
 
-        interventions = Intervention.objects.filter(
-            intervention_category__account=self.request.user.iaso_profile.account
-        )
+        interventions = Intervention.objects.filter(intervention_category__workspace=self.workspace)
 
-        org_units = get_intervention_org_units(self.request.user.iaso_profile.account).order_by("name")
+        org_units = get_intervention_org_units(self.workspace.account).order_by("name")
 
         assignments = (
             InterventionAssignment.objects.select_related("org_unit", "intervention").filter(scenario__id=scenario_id)
@@ -177,7 +165,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         assignment_df = serializer.context.get("assignment_df")
         interventions = serializer.context.get("interventions")
 
-        scenario = get_scenario(request.user, base_name="Imported Scenario")
+        scenario = get_scenario(request.user, self.workspace, base_name="Imported Scenario")
         with transaction.atomic():
             scenario.save()
             rules = create_rules_from_import(scenario, assignment_df, interventions, request.user)

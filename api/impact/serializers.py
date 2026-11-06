@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from iaso.utils.workspace import get_active_workspace
 from plugins.snt_malaria.api.fields import CommaSeparatedIdsField
 from plugins.snt_malaria.models import Scenario
 
@@ -19,9 +20,8 @@ class ImpactQuerySerializer(serializers.Serializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        user = self.context["request"].user
-        account = user.iaso_profile.account
-        self.fields["scenario_id"].queryset = Scenario.objects.filter(account=account)
+        workspace = get_active_workspace(self.context["request"])
+        self.fields["scenario_id"].queryset = Scenario.objects.filter(workspace=workspace)
 
     def validate(self, attrs):
         year_from = attrs.get("year_from")

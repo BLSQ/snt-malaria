@@ -1,6 +1,7 @@
 from decimal import Decimal
 from itertools import count
 
+from django.test import RequestFactory
 from django.utils.text import slugify
 
 from iaso.models import Account, OrgUnit, OrgUnitType, Workspace
@@ -58,6 +59,12 @@ class SNTMalariaTestMixin:
             name=name or f"Test Workspace {workspace_number}",
             **kwargs,
         )
+
+    @staticmethod
+    def build_snt_request(user):
+        request = RequestFactory().get("/")
+        request.user = user
+        return request
 
     def create_snt_account_with_project(
         self,

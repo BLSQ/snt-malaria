@@ -50,6 +50,7 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
         self.account, self.source, self.version, self.project = self.create_account_datasource_version_project(
             "source", "Test Account", "project"
         )
+        self.workspace = self.create_snt_workspace(account=self.account)
         self.user = self.create_user_with_profile(
             username="user", account=self.account, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
         )

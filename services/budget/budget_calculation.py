@@ -111,7 +111,7 @@ class BudgetCalculationService:
         ]
         self.fixed_cost_share_by_intervention_id = self._fixed_cost_shares()
 
-        budget_settings = BudgetSettings.objects.filter(account=scenario.account).first()
+        budget_settings = BudgetSettings.objects.filter(workspace_id=scenario.workspace_id).first()
         self.inflation_rate = Decimal(str(budget_settings.inflation_rate)) if budget_settings else Decimal("0")
         self.buffer = Decimal(str(budget_settings.buffer)) if budget_settings else Decimal("1.1")
 

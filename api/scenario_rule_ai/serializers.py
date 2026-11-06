@@ -3,6 +3,7 @@ import logging
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
+from iaso.utils.workspace import get_active_workspace
 from plugins.snt_malaria.api.ai_chat.serializers import (
     attachments_field,
     conversation_history_field,
@@ -22,15 +23,14 @@ RULE_RESTORE_STALE_ERROR = (
 )
 
 
-class _AccountScopedScenarioSerializer(serializers.Serializer):
+class _WorkspaceScopedScenarioSerializer(serializers.Serializer):
     scenario = serializers.PrimaryKeyRelatedField(queryset=Scenario.objects.none())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request = self.context.get("request")
         if request is not None:
-            account = request.user.iaso_profile.account
-            self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
+            self.fields["scenario"].queryset = Scenario.objects.filter(workspace=get_active_workspace(request))
 
     def validate_scenario(self, scenario):
         """Both AI entry points require an unlocked scenario the user is allowed to edit."""
@@ -42,7 +42,7 @@ class _AccountScopedScenarioSerializer(serializers.Serializer):
         return scenario
 
 
-class ScenarioRuleAIRequestSerializer(_AccountScopedScenarioSerializer):
+class ScenarioRuleAIRequestSerializer(_WorkspaceScopedScenarioSerializer):
     message = serializers.CharField(help_text="User message describing the scenario rules to create or modify")
     conversation_history = conversation_history_field()
     attachments = attachments_field()
@@ -55,7 +55,7 @@ class ScenarioRuleAIResponseSerializer(serializers.Serializer):
     conversation_history = serializers.ListField(child=serializers.DictField())
 
 
-class ScenarioRuleRestoreRequestSerializer(_AccountScopedScenarioSerializer):
+class ScenarioRuleRestoreRequestSerializer(_WorkspaceScopedScenarioSerializer):
     """Re-persists a complete rule set the chat client captured before an earlier AI turn (the
     transcript's "revert" action). Reuses the exact generate pipeline, so it recreates/deletes rules,
     reprioritizes, and refreshes assignments + budget in one transaction."""

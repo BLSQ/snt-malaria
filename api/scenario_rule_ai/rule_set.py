@@ -41,15 +41,15 @@ def build_account_metric_types(account) -> list[dict]:
     )
 
 
-def build_account_interventions(account) -> list[dict]:
+def build_workspace_interventions(workspace) -> list[dict]:
     interventions = list(
-        Intervention.objects.filter(intervention_category__account=account)
+        Intervention.objects.filter(intervention_category__workspace=workspace)
         .annotate(category_name=F("intervention_category__name"), grant_name=F("grant__name"))
         .values("id", "name", "category_name", "grant_name")
     )
     cost_lines_by_intervention_id = defaultdict(list)
     cost_lines = (
-        InterventionCostBreakdownLine.objects.filter(intervention__intervention_category__account=account)
+        InterventionCostBreakdownLine.objects.filter(intervention__intervention_category__workspace=workspace)
         .order_by("id")
         .values(
             "id",
@@ -70,9 +70,9 @@ def build_account_interventions(account) -> list[dict]:
     return interventions
 
 
-def build_account_grants(account) -> list[dict]:
+def build_workspace_grants(workspace) -> list[dict]:
     return list(
-        Grant.objects.filter(account=account)
+        Grant.objects.filter(workspace=workspace)
         .annotate(donor_name=F("donor__name"))
         .values("id", "name", "short_name", "donor_name")
     )
@@ -252,7 +252,7 @@ def persist_scenario_rule_set(scenario, rule_specs: list[dict], context: dict) -
 
     Shared by the AI generate endpoint (`ScenarioRuleAIViewSet.create`) and the AI-chat "revert"
     (`ScenarioRuleAIViewSet.restore`) - both hand it a complete desired rule set. `context` must
-    carry `request` (the write serializers scope querysets by account from it, and `created_by` /
+    carry `request` (the write serializers scope querysets by workspace from it, and `created_by` /
     `updated_by` come from `request.user`). It may also carry `account_org_unit_ids` when the caller
     already resolved them."""
     user = context["request"].user

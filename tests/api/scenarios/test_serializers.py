@@ -1,5 +1,3 @@
-from unittest.mock import Mock
-
 from plugins.snt_malaria.api.scenarios.serializers import (
     ScenarioRulesReorderSerializer,
     ScenarioWriteSerializer,
@@ -25,7 +23,7 @@ class BaseSerializerTestCase(SNTMalariaTestCase):
             start_year=2025,
             end_year=2026,
         )
-        self.context = {"request": Mock(user=self.user_with_basic_perm)}
+        self.context = {"request": self.build_snt_request(self.user_with_basic_perm)}
 
 
 class ScenarioWriteSerializerTestCase(BaseSerializerTestCase):

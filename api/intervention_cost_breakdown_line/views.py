@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from iaso.api.common.serializer import DropdownOptionsWithRepresentationSerializer
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models import InterventionCostBreakdownLine
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 
@@ -17,7 +18,11 @@ from .serializers import (
 )
 
 
-class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
+class InterventionCostBreakdownLineViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
+    queryset = InterventionCostBreakdownLine.objects.select_related(
+        "intervention", "unit_type", "population_layer"
+    ).order_by("id")
+    workspace_lookup = "intervention__intervention_category__workspace"
     ordering_fields = ["id"]
     http_method_names = ["get", "post", "patch", "delete", "options"]
     filter_backends = [DjangoFilterBackend]
@@ -29,13 +34,6 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
         if self.action in ("create", "partial_update"):
             return InterventionCostBreakdownLineSingleWriteSerializer
         return InterventionCostBreakdownLineSerializer
-
-    def get_queryset(self):
-        return (
-            InterventionCostBreakdownLine.objects.select_related("intervention", "unit_type", "population_layer")
-            .filter(intervention__intervention_category__account=self.request.user.iaso_profile.account)
-            .order_by("id")
-        )
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -63,8 +61,7 @@ class InterventionCostBreakdownLineViewSet(viewsets.ModelViewSet):
         methods=["get"],
     )
     def unit_types_dropdown(self, _):
-        account = self.request.user.iaso_profile.account
-        queryset = CostUnitType.objects.filter(account=account)
+        queryset = CostUnitType.objects.filter(workspace=self.workspace)
 
         data = [
             {

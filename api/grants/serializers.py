@@ -1,6 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from iaso.utils.workspace import get_active_workspace
 from plugins.snt_malaria.models import Donor, Grant
 
 
@@ -14,7 +15,6 @@ class GrantSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "donor_name"]
 
     def validate_donor(self, donor):
-        account = self.context["request"].user.iaso_profile.account
-        if donor.account_id != account.id:
+        if donor.workspace_id != get_active_workspace(self.context["request"]).id:
             raise serializers.ValidationError(_("Donor not found."))
         return donor

@@ -7,16 +7,17 @@ from rest_framework.response import Response
 
 from plugins.snt_malaria.api.ai_chat.mixins import AIChatAttachmentViewSetMixin
 from plugins.snt_malaria.api.scenario_rules.override_serializers import intervention_overrides_representation
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models import ScenarioRule
 from plugins.snt_malaria.services.ai_chat import classify_anthropic_error
 
 from .agent import generate_scenario_rules
 from .permissions import ScenarioRuleAIPermission
 from .rule_set import (
-    build_account_grants,
-    build_account_interventions,
     build_account_metric_types,
     build_account_org_units,
+    build_workspace_grants,
+    build_workspace_interventions,
     org_unit_selection_to_ai_context,
     persist_scenario_rule_set,
 )
@@ -46,11 +47,11 @@ def _rule_to_ai_context(rule: ScenarioRule, account_org_unit_ids: list[int]) -> 
 
 
 @extend_schema(tags=["SNT Malaria"])
-class ScenarioRuleAIViewSet(AIChatAttachmentViewSetMixin, viewsets.ViewSet):
+class ScenarioRuleAIViewSet(WorkspaceScopedViewSetMixin, AIChatAttachmentViewSetMixin, viewsets.ViewSet):
     """AI-powered scenario rule generation.
 
     Send a natural language message describing the desired scenario rules. The AI sees the account's
-    data layer and intervention catalogs plus the scenario's current rules (definitions only, never
+    data layers, the workspace's intervention catalog plus the scenario's current rules (definitions only, never
     resolved org units or data values), and generates the complete desired rule set for the scenario,
     which is persisted immediately - creating, updating, deleting, and reprioritizing rules as needed.
 
@@ -85,7 +86,7 @@ class ScenarioRuleAIViewSet(AIChatAttachmentViewSetMixin, viewsets.ViewSet):
             return Response({"error": self.API_KEY_MISSING_ERROR}, status=status.HTTP_400_BAD_REQUEST)
 
         metric_types = build_account_metric_types(account)
-        interventions = build_account_interventions(account)
+        interventions = build_workspace_interventions(scenario.workspace)
         org_units = build_account_org_units(account)
         account_org_unit_ids = [org_unit["id"] for org_unit in org_units]
         current_rules = [
@@ -104,7 +105,7 @@ class ScenarioRuleAIViewSet(AIChatAttachmentViewSetMixin, viewsets.ViewSet):
                 api_key=api_key,
                 current_rules=current_rules or None,
                 attachments=attachments,
-                grants=build_account_grants(account),
+                grants=build_workspace_grants(scenario.workspace),
                 org_units=org_units,
                 scenario_years=scenario.years,
             )

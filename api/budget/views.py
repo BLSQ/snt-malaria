@@ -4,11 +4,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from plugins.snt_malaria.api.budget.serializers import BudgetQuerySerializer
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models.scenario import Scenario
 from plugins.snt_malaria.services import BudgetCalculationService
 
 
-class BudgetViewSet(viewsets.ViewSet):
+class BudgetViewSet(WorkspaceScopedViewSetMixin, viewsets.ViewSet):
     """Scenario budgets, computed on the fly from the current scenario data."""
 
     permission_classes = [IsAuthenticated]
@@ -66,7 +67,7 @@ class BudgetViewSet(viewsets.ViewSet):
         except ValueError:
             return None, Response({"detail": "scenario_id must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
 
-        scenario = Scenario.objects.filter(id=scenario_id, account=request.user.iaso_profile.account).first()
+        scenario = Scenario.objects.filter(id=scenario_id, workspace=self.workspace).first()
         if not scenario:
             return None, Response({"detail": "Scenario not found"}, status=status.HTTP_404_NOT_FOUND)
         return scenario, None
