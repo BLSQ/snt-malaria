@@ -28,8 +28,13 @@ export const ScenarioRulesPanel: FC<Props> = ({
     showAIChat,
     onToggleAIChat,
 }) => {
-    const { isEditing, editingRule, startEditingRule, stopEditingRule } =
-        usePlanningContext();
+    const {
+        isEditing,
+        editingRule,
+        isDuplicatingRule,
+        startEditingRule,
+        stopEditingRule,
+    } = usePlanningContext();
     // Prefetches the palette so the form's lazy colour picker finds it warm
     // in the React Query cache when the form mounts.
     useGetColors();
@@ -50,6 +55,7 @@ export const ScenarioRulesPanel: FC<Props> = ({
                 <ScenarioRuleFormWrapper
                     scenarioId={scenarioId}
                     rule={editingRule}
+                    isDuplicate={isDuplicatingRule}
                     existingRules={rules}
                     onClose={handleCloseForm}
                     onPreviewChange={onPreviewScenarioRule}

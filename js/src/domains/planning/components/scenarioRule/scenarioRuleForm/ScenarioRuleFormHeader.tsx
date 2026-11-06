@@ -6,6 +6,7 @@ import { MESSAGES } from '../../../../messages';
 
 type Props = {
     title: string;
+    submitLabel?: string;
     disabled?: boolean;
     onCancel: () => void;
     onSubmit: () => void;
@@ -13,6 +14,7 @@ type Props = {
 
 export const ScenarioRuleFormHeader: FC<Props> = ({
     title,
+    submitLabel,
     disabled = false,
     onSubmit,
     onCancel,
@@ -20,21 +22,25 @@ export const ScenarioRuleFormHeader: FC<Props> = ({
     const { formatMessage } = useSafeIntl();
     return (
         <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-        >
-            <IconButton
-                onClick={onCancel}
-                overrideIcon={ChevronLeftIcon}
-                tooltipMessage={MESSAGES.cancel}
-            />
-            <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                {title}
-            </Typography>
-            <Button onClick={onSubmit} variant="contained" disabled={disabled}>
-                {formatMessage(MESSAGES.submit)}
-            </Button>
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+            >
+                <IconButton
+                    onClick={onCancel}
+                    overrideIcon={ChevronLeftIcon}
+                    tooltipMessage={MESSAGES.cancel}
+                />
+                <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                    {title}
+                </Typography>
+                <Button
+                    onClick={onSubmit}
+                    variant="contained"
+                    disabled={disabled}
+                >
+                    {submitLabel ?? formatMessage(MESSAGES.submit)}
+                </Button>
         </Stack>
     );
 };

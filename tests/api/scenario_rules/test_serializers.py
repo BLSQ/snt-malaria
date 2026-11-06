@@ -153,6 +153,73 @@ class ScenarioRuleCreateSerializerTestCase(ScenarioRulesTestBase):
         self.assertIsNotNone(scenario_rule.created_at)
         self.assertIsNotNone(scenario_rule.updated_at)
 
+    def test_duplicated_from_ranks_new_rule_right_after_source_and_shifts_higher_rules(self):
+        data = {
+            "scenario": self.scenario.id,
+            "name": "Rule 1 (copy)",
+            "color": "#0000FF",
+            "matching_criteria": self.scenario_rule_1.matching_criteria,
+            "interventions": [self.intervention_vaccination_rts.id],
+            "duplicated_from": self.scenario_rule_1.id,
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+        scenario_rule = serializer.save(created_by=self.user_with_full_perm)
+
+        self.scenario_rule_1.refresh_from_db()
+        self.scenario_rule_2.refresh_from_db()
+        self.assertEqual(self.scenario_rule_1.priority, 1)
+        self.assertEqual(scenario_rule.priority, 2)
+        self.assertEqual(self.scenario_rule_2.priority, 3)
+
+    def test_duplicated_from_last_rule_ranks_new_rule_last(self):
+        data = {
+            "scenario": self.scenario.id,
+            "matching_criteria": self.scenario_rule_1.matching_criteria,
+            "interventions": [self.intervention_chemo_iptp.id],
+            "duplicated_from": self.scenario_rule_2.id,
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+        scenario_rule = serializer.save(created_by=self.user_with_full_perm)
+
+        self.assertEqual(scenario_rule.priority, 3)
+        self.assertEqual(
+            list(self.scenario.rules.order_by("priority").values_list("id", flat=True)),
+            [self.scenario_rule_1.id, self.scenario_rule_2.id, scenario_rule.id],
+        )
+
+    def test_duplicated_from_rule_of_another_scenario_is_rejected(self):
+        same_account_scenario = self.create_snt_scenario(
+            account=self.account,
+            created_by=self.user_with_full_perm,
+            name="Another Scenario",
+            start_year=2020,
+            end_year=2030,
+        )
+        data = {
+            "scenario": same_account_scenario.id,
+            "matching_criteria": self.scenario_rule_1.matching_criteria,
+            "interventions": [self.intervention_vaccination_rts.id],
+            "duplicated_from": self.scenario_rule_1.id,
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("duplicated_from", serializer.errors)
+
+    def test_duplicated_from_rule_of_another_account_is_rejected(self):
+        data = {
+            "scenario": self.scenario.id,
+            "matching_criteria": self.scenario_rule_1.matching_criteria,
+            "interventions": [self.intervention_vaccination_rts.id],
+            "duplicated_from": self.other_scenario_rule.id,
+        }
+        serializer = ScenarioRuleCreateSerializer(data=data, context=self.context)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("duplicated_from", serializer.errors)
+
     def test_missing_required_fields(self):
         serializer = ScenarioRuleCreateSerializer(data={}, context=self.context)
         self.assertFalse(serializer.is_valid())

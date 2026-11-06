@@ -253,7 +253,9 @@ class ScenarioRuleModelTestCase(SNTMalariaTestCase):
             org_units_matched=[self.org_unit_1.id, self.org_unit_2.id],
         )
 
-        rule_1.interventions.add(self.intervention, self.intervention_2)
+        # Separate calls: add(a, b) inserts through rows in set order, not argument order.
+        rule_1.interventions.add(self.intervention)
+        rule_1.interventions.add(self.intervention_2)
 
         previous_assignments = {}
 
