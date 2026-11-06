@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from plugins.snt_malaria.api.budget.serializers import BudgetQuerySerializer
 from plugins.snt_malaria.models.scenario import Scenario
 from plugins.snt_malaria.services import BudgetCalculationService
 
@@ -18,11 +19,13 @@ class BudgetViewSet(viewsets.ViewSet):
         if error_response:
             return error_response
 
-        results = BudgetCalculationService(scenario).calculate_all_years()
+        service = BudgetCalculationService(scenario, org_unit_ids=self._get_org_unit_ids(request))
+        results = service.calculate_all_years()
         return Response(
             {
                 "scenario": scenario.id,
                 "results": [year_result.model_dump(mode="json") for year_result in results],
+                "fixed_costs_prorated": service.prorates_fixed_costs,
             },
             status=status.HTTP_200_OK,
         )
@@ -38,7 +41,8 @@ class BudgetViewSet(viewsets.ViewSet):
         if error_response:
             return error_response
 
-        grant_costs = BudgetCalculationService(scenario).calculate_grant_costs()
+        service = BudgetCalculationService(scenario, org_unit_ids=self._get_org_unit_ids(request))
+        grant_costs = service.calculate_grant_costs()
         return Response(
             {
                 "scenario_id": scenario.id,
@@ -46,6 +50,12 @@ class BudgetViewSet(viewsets.ViewSet):
             },
             status=status.HTTP_200_OK,
         )
+
+    @staticmethod
+    def _get_org_unit_ids(request):
+        serializer = BudgetQuerySerializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        return serializer.validated_data["org_unit_ids"]
 
     def _get_scenario_from_query_params(self, request):
         scenario_id = request.query_params.get("scenario_id")
