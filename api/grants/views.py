@@ -4,21 +4,20 @@ from rest_framework import serializers, viewsets
 
 from plugins.snt_malaria.api.grants.permissions import GrantPermission
 from plugins.snt_malaria.api.grants.serializers import GrantSerializer
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models import Grant
 
 
-class GrantViewSet(viewsets.ModelViewSet):
+class GrantViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
+    queryset = Grant.objects.select_related("donor")
     serializer_class = GrantSerializer
     ordering_fields = ["id", "name"]
     http_method_names = ["get", "post", "put", "patch", "delete", "head", "options"]
     permission_classes = [GrantPermission]
 
-    def get_queryset(self):
-        return Grant.objects.select_related("donor").filter(account=self.request.user.iaso_profile.account)
-
     def perform_create(self, serializer):
         try:
-            serializer.save(account=self.request.user.iaso_profile.account)
+            serializer.save(**self.workspace_save_kwargs())
         except IntegrityError as e:
             self._raise_for_integrity_error(e)
 

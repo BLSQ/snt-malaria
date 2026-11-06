@@ -3,6 +3,7 @@ from rest_framework.exceptions import PermissionDenied
 
 from iaso.api.common.serializer_fields import JSONSchemaField
 from iaso.models import OrgUnit
+from iaso.utils.workspace import get_active_workspace
 from plugins.snt_malaria.models import Scenario, ScenarioRule
 from plugins.snt_malaria.models.account_settings import get_account_metric_type_ids, get_intervention_org_units
 from plugins.snt_malaria.models.intervention import Intervention
@@ -22,9 +23,8 @@ class ScenarioRuleQuerySerializer(serializers.Serializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        user = self.context["request"].user
-        account = user.iaso_profile.account
-        self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
+        workspace = get_active_workspace(self.context["request"])
+        self.fields["scenario"].queryset = Scenario.objects.filter(workspace=workspace)
 
 
 def _rule_is_match_all(rule: ScenarioRule, context: dict) -> bool:
@@ -162,22 +162,20 @@ class ScenarioRuleWriteSerializerBase(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        user = self.context["request"].user
-        account = user.iaso_profile.account
-        org_units = get_intervention_org_units(account)
+        workspace = get_active_workspace(self.context["request"])
+        org_units = get_intervention_org_units(workspace.account)
         self.fields["org_units_excluded"].child.queryset = org_units
         self.fields["org_units_included"].child.queryset = org_units
         self.fields["org_units_scope"].child.queryset = org_units
         self.fields["interventions"].child_relation.queryset = Intervention.objects.filter(
-            intervention_category__account=account
+            intervention_category__workspace=workspace
         )
 
     def validate_matching_criteria(self, matching_criteria):
         if matching_criteria is None:
             return matching_criteria
 
-        user = self.context["request"].user
-        account = user.iaso_profile.account
+        account = get_active_workspace(self.context["request"]).account
         account_metric_types = get_account_metric_type_ids(account)
         invalid_metric_types = []
 
@@ -220,9 +218,8 @@ class ScenarioRuleCreateSerializer(ScenarioRuleWriteSerializerBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        user = self.context["request"].user
-        account = user.iaso_profile.account
-        self.fields["scenario"].queryset = Scenario.objects.filter(account=account)
+        workspace = get_active_workspace(self.context["request"])
+        self.fields["scenario"].queryset = Scenario.objects.filter(workspace=workspace)
 
     def validate_scenario(self, scenario):
         user = self.context["request"].user

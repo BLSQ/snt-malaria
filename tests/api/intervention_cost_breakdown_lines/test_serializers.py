@@ -1,5 +1,4 @@
 from decimal import Decimal
-from unittest.mock import Mock
 
 from iaso.api.common import DropdownOptionsWithRepresentationSerializer
 from iaso.models.metric import MetricType
@@ -17,7 +16,7 @@ from plugins.snt_malaria.tests.api.intervention_cost_breakdown_lines.common_base
 class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLineBase):
     def setUp(self):
         super().setUp()
-        self.context = {"request": Mock(user=self.user_write)}
+        self.context = {"request": self.build_snt_request(self.user_write)}
 
     def test_create_cost_breakdown_line_cost_below_zero(self):
         data = {
@@ -408,7 +407,7 @@ class InterventionCostBreakdownLineSerializerTests(InterventionCostBreakdownLine
 class InterventionCostBreakdownLineWriteSerializerTests(InterventionCostBreakdownLineBase):
     def setUp(self):
         super().setUp()
-        self.context = {"request": Mock(user=self.user_write)}
+        self.context = {"request": self.build_snt_request(self.user_write)}
         self.population_metric = MetricType.objects.create(
             account=self.account,
             name="Population total",

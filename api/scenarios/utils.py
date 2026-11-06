@@ -21,18 +21,19 @@ def get_intervention_column(name, code):
     return f"{name} - {code}"
 
 
-def get_scenario(user, base_name="Scenario"):
+def get_scenario(user, workspace, base_name="Scenario"):
     return Scenario(
         name=f"{base_name} {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         created_by=user,
-        account=user.iaso_profile.account,
+        workspace=workspace,
+        account=workspace.account,
         start_year=datetime.now().year,
         end_year=datetime.now().year + 3,
     )
 
 
-def get_interventions(account):
-    return Intervention.objects.filter(intervention_category__account=account).values("id", "name", "code")
+def get_interventions(workspace):
+    return Intervention.objects.filter(intervention_category__workspace=workspace).values("id", "name", "code")
 
 
 def get_csv_headers(interventions):

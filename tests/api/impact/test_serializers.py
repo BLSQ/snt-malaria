@@ -1,5 +1,3 @@
-from unittest.mock import Mock
-
 from plugins.snt_malaria.api.impact.serializers import ImpactQuerySerializer, ScenarioImpactSerializer
 from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProviderMeta, OrgUnitRef
 from plugins.snt_malaria.services.impact import (
@@ -31,7 +29,7 @@ class ImpactQuerySerializerTestCase(SNTMalariaTestCase):
             start_year=2025,
             end_year=2027,
         )
-        self.context = {"request": Mock(user=self.user)}
+        self.context = {"request": self.build_snt_request(self.user)}
 
     def test_missing_scenario_id(self):
         serializer = ImpactQuerySerializer(

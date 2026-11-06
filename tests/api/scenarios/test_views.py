@@ -269,6 +269,7 @@ class ScenarioAPITestCase(SNTMalariaAPITestCase):
 
     def test_scenario_create_same_name_different_account(self):
         other_account = Account.objects.create(name="Other Account")
+        self.create_snt_workspace(account=other_account)
         other_user = self.create_user_with_profile(
             username="otheruser", account=other_account, permissions=[SNT_SCENARIO_BASIC_WRITE_PERMISSION]
         )
