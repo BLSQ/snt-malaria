@@ -16,9 +16,10 @@ from iaso.utils.models.soft_deletable import (
 )
 from iaso.utils.validators import JSONSchemaValidator
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
+from plugins.snt_malaria.models.workspace_scoped import WorkspaceFromAccountMixin
 
 
-class Scenario(SoftDeletableModel):
+class Scenario(WorkspaceFromAccountMixin, SoftDeletableModel):
     class Meta:
         app_label = "snt_malaria"
         ordering = ["-updated_at"]
@@ -35,6 +36,9 @@ class Scenario(SoftDeletableModel):
         ]
 
     account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE)
+    workspace = models.ForeignKey(
+        "iaso.Workspace", null=True, blank=True, on_delete=models.CASCADE, related_name="snt_scenarios"
+    )
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255, blank=False, null=False)
     description = models.TextField(blank=True)

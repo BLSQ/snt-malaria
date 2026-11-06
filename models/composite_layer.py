@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.db import models
 
+from plugins.snt_malaria.models.workspace_scoped import WorkspaceFromAccountMixin
 
-class CompositeLayer(models.Model):
+
+class CompositeLayer(WorkspaceFromAccountMixin, models.Model):
     """
     A composite data layer built with the visual node editor.
 
@@ -26,6 +28,9 @@ class CompositeLayer(models.Model):
         ordering = ["-updated_at"]
 
     account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE, related_name="composite_layers")
+    workspace = models.ForeignKey(
+        "iaso.Workspace", null=True, blank=True, on_delete=models.CASCADE, related_name="snt_composite_layers"
+    )
     name = models.CharField(max_length=255)
     # Serialized Flume graph: { nodeId: { id, type, x, y, inputData, connections } }.
     graph = models.JSONField(default=dict)

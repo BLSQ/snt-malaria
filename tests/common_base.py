@@ -3,7 +3,7 @@ from itertools import count
 
 from django.utils.text import slugify
 
-from iaso.models import Account, OrgUnit, OrgUnitType
+from iaso.models import Account, OrgUnit, OrgUnitType, Workspace
 from iaso.test import APITestCase, TestCase
 from plugins.snt_malaria.models import (
     CostUnitType,
@@ -30,11 +30,14 @@ class SNTMalariaTestMixin:
         self._category_counter = count(1)
         self._intervention_counter = count(1)
         self._org_unit_counter = count(1)
+        self._workspace_counter = count(1)
         if self.auto_create_account:
             self.account, self.user = self.create_snt_account(name="Test Account")
+            self.workspace = self.account.workspaces.get()
         else:
             self.account = None
             self.user = None
+            self.workspace = None
 
     def create_snt_account(self, name=None, username=None, permissions=None):
         account_number = next(self._account_counter)
@@ -45,7 +48,16 @@ class SNTMalariaTestMixin:
             account=account,
             permissions=permissions or [],
         )
+        self.create_snt_workspace(account=account, name=account.name)
         return account, user
+
+    def create_snt_workspace(self, account=None, name=None, **kwargs):
+        workspace_number = next(self._workspace_counter)
+        return Workspace.objects.create(
+            account=account or self.account,
+            name=name or f"Test Workspace {workspace_number}",
+            **kwargs,
+        )
 
     def create_snt_account_with_project(
         self,
@@ -68,6 +80,7 @@ class SNTMalariaTestMixin:
             account=account,
             permissions=permissions or [],
         )
+        self.create_snt_workspace(account=account, name=account_name)
         return account, user, source, version, project
 
     def create_snt_scenario(self, account=None, created_by=None, name=None, **kwargs):
