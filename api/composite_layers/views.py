@@ -106,7 +106,7 @@ class CompositeLayerViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
             )
 
         serializer.save(
-            **self.workspace_save_kwargs(),
+            workspace=self.workspace,
             name=name,
             graph=graph,
             legend_type=legend_type,

@@ -575,7 +575,6 @@ class InterventionSeeder:
                 workspace=self.workspace,
                 name=unit_data["name"],
                 defaults={
-                    "account": self.account,
                     "description": unit_data["description"],
                     "is_commodity": unit_data["is_commodity"],
                 },
@@ -669,7 +668,6 @@ class InterventionSeeder:
                 name=category_name,
                 workspace=self.workspace,
                 defaults={
-                    "account": self.account,
                     "short_name": data.get("short_name", category_name),
                     # "description": data["description"],
                     "created_by": user,
@@ -706,7 +704,6 @@ class InterventionSeeder:
         if not BudgetSettings.objects.filter(workspace=self.workspace).exists():
             BudgetSettings.objects.create(
                 workspace=self.workspace,
-                account=self.account,
                 local_currency="USD",  # Default to USD, can be changed per account
                 exchange_rate=1.0,  # 1:1 exchange rate with USD as default
                 inflation_rate=0.03,  # 3% inflation rate as default

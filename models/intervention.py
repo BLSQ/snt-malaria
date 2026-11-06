@@ -4,24 +4,22 @@ from django.db import models
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models.scenario import Scenario, ScenarioRule
-from plugins.snt_malaria.models.workspace_scoped import WorkspaceFromAccountMixin
 
 
-class InterventionCategory(WorkspaceFromAccountMixin, models.Model):
+class InterventionCategory(models.Model):
     class Meta:
         app_label = "snt_malaria"
         verbose_name_plural = "Intervention categories"
         ordering = ["name"]
         constraints = [
             models.UniqueConstraint(
-                fields=["account", "name"],
-                name="snt_malaria_interventioncategory_account_name_uniq",
+                fields=["workspace", "name"],
+                name="snt_malaria_interventioncategory_workspace_name_uniq",
             ),
         ]
 
-    account = models.ForeignKey("iaso.Account", on_delete=models.CASCADE)
     workspace = models.ForeignKey(
-        "iaso.Workspace", null=True, blank=True, on_delete=models.CASCADE, related_name="snt_intervention_categories"
+        "iaso.Workspace", on_delete=models.CASCADE, related_name="snt_intervention_categories"
     )
     created_by = models.ForeignKey(User, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)

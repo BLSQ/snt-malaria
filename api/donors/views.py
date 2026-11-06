@@ -18,7 +18,7 @@ class DonorViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         try:
-            serializer.save(**self.workspace_save_kwargs())
+            serializer.save(workspace=self.workspace)
         except IntegrityError as e:
             if "name_uniq" in str(e):
                 raise serializers.ValidationError({"name": _("A donor with this name already exists.")})

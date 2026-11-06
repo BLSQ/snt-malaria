@@ -25,12 +25,14 @@ class ScenarioRuleAIRestoreAPITestCase(SNTMalariaAPITestCase):
         self.user_no_perm = self.create_user_with_profile(
             username="restore_user_no_perm", account=self.account, permissions=[]
         )
-        self.scenario = self.create_snt_scenario(account=self.account, created_by=self.user, name="Test Scenario")
+        self.scenario = self.create_snt_scenario(
+            workspace=self.get_snt_workspace(), created_by=self.user, name="Test Scenario"
+        )
 
         self.metric_type = MetricType.objects.create(account=self.account, name="Incidence", code="incidence")
 
         self.int_category = self.create_snt_intervention_category(
-            account=self.account, created_by=self.user, name="Vector control"
+            workspace=self.get_snt_workspace(), created_by=self.user, name="Vector control"
         )
         self.intervention = self.create_snt_intervention(
             intervention_category=self.int_category, created_by=self.user, name="Bednets", code="bednets"

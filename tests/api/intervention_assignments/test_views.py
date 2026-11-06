@@ -25,18 +25,18 @@ class InterventionAssignmentsAPITests(SNTMalariaAPITestCase):
         )
         # Create a scenario
         self.scenario = self.create_snt_scenario(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
             name="Test Scenario",
         )
         self.int_category_vaccination = self.create_snt_intervention_category(
             name="Vaccination",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
         )
         self.int_category_chemoprevention = self.create_snt_intervention_category(
             name="Preventive Chemotherapy",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
         )
         self.intervention_vaccination_rts = self.create_snt_intervention(
@@ -99,13 +99,13 @@ class InterventionAssignmentsAPITests(SNTMalariaAPITestCase):
             username="otheradmin", account=self.other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
         )
         self.other_scenario = self.create_snt_scenario(
-            account=self.other_account,
+            workspace=self.get_snt_workspace(self.other_account),
             created_by=self.other_admin,
             name="Other Scenario",
         )
         self.other_int_category = self.create_snt_intervention_category(
             name="Other Category",
-            account=self.other_account,
+            workspace=self.get_snt_workspace(self.other_account),
             created_by=self.other_admin,
         )
         self.other_intervention = self.create_snt_intervention(
@@ -221,7 +221,7 @@ class InterventionAssignmentsAPITests(SNTMalariaAPITestCase):
     def test_intervention_assignments_destroy_with_full_perm_other_scenario(self):
         # Create an assignment to delete, which belongs to a scenario created by another user
         other_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_basic_perm,
             name="Other User Scenario",
             description="Another test scenario description.",
@@ -245,7 +245,7 @@ class InterventionAssignmentsAPITests(SNTMalariaAPITestCase):
     def test_intervention_assignments_destroy_with_basic_perm_own_scenario(self):
         # Create a scenario and assignment to delete
         scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_basic_perm,
             name="Basic User Scenario",
             description="A test scenario for basic user.",
@@ -280,7 +280,7 @@ class InterventionAssignmentsAPITests(SNTMalariaAPITestCase):
         """
         # It will not happen, but let's create a scenario and assignment for the no perm user
         no_perm_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_no_perms,
             name="No Perm Scenario",
             description="A test scenario for no perm user.",
@@ -346,7 +346,7 @@ class InterventionAssignmentsAPITests(SNTMalariaAPITestCase):
     def test_invervention_assignments_delete_many_with_full_perm_other_scenario(self):
         # Create an assignment to delete, which belongs to a scenario created by another user
         other_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_basic_perm,
             name="Other User Scenario",
             description="Another test scenario description.",
@@ -376,7 +376,7 @@ class InterventionAssignmentsAPITests(SNTMalariaAPITestCase):
     def test_intervention_assignments_delete_many_with_basic_perm_own_scenario(self):
         # Create a scenario and assignments to delete
         scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_basic_perm,
             name="Basic User Scenario",
             description="A test scenario for basic user.",
@@ -486,7 +486,7 @@ class InterventionAssignmentsAPITests(SNTMalariaAPITestCase):
     def test_intervention_assignments_delete_many_mixed_scenarios(self):
         # Create another assignment in a different scenario
         other_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_basic_perm,
             name="Other User Scenario",
             description="Another test scenario description.",

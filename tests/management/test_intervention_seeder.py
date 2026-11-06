@@ -13,7 +13,7 @@ class InterventionSeederTestCase(SNTMalariaTestCase):
 
         self.assertTrue(InterventionCategory.objects.filter(workspace=other_workspace).exists())
         self.assertTrue(CostUnitType.objects.filter(workspace=other_workspace).exists())
-        self.assertEqual(BudgetSettings.objects.get(workspace=other_workspace).account, self.account)
+        self.assertTrue(BudgetSettings.objects.filter(workspace=other_workspace).exists())
         self.assertFalse(InterventionCategory.objects.filter(workspace=self.workspace).exists())
         self.assertFalse(CostUnitType.objects.filter(workspace=self.workspace).exists())
 

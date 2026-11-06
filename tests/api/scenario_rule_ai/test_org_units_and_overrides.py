@@ -31,7 +31,7 @@ class ScenarioRuleAIOrgUnitsAndOverridesTestCase(SNTMalariaAPITestCase):
             username="user", account=self.account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
         )
         self.scenario = self.create_snt_scenario(
-            account=self.account, created_by=self.user, start_year=2025, end_year=2028
+            workspace=self.get_snt_workspace(), created_by=self.user, start_year=2025, end_year=2028
         )
 
         region = OrgUnit.objects.create(name="North", version=source_version)
@@ -52,7 +52,7 @@ class ScenarioRuleAIOrgUnitsAndOverridesTestCase(SNTMalariaAPITestCase):
         for org_unit, value in ((self.district_a, 500), (self.district_b, 500), (self.district_c, 100)):
             MetricValue.objects.create(metric_type=self.metric_type, org_unit=org_unit, value=value)
 
-        category = self.create_snt_intervention_category(account=self.account, created_by=self.user)
+        category = self.create_snt_intervention_category(workspace=self.get_snt_workspace(), created_by=self.user)
         self.intervention = self.create_snt_intervention(
             intervention_category=category, created_by=self.user, name="Bednets"
         )
@@ -60,7 +60,7 @@ class ScenarioRuleAIOrgUnitsAndOverridesTestCase(SNTMalariaAPITestCase):
             self.intervention, name="Nets", is_proportional=True, unit_cost=Decimal("2.50")
         )
         self.campaign_line = self.create_snt_cost_line(self.intervention, name="Campaign", unit_cost=Decimal("5000"))
-        self.grant = self.create_snt_grant(account=self.account, name="Global Fund GC7")
+        self.grant = self.create_snt_grant(workspace=self.get_snt_workspace(), name="Global Fund GC7")
 
         self.client.force_authenticate(self.user)
 

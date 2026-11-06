@@ -21,7 +21,7 @@ class ScenarioRulesTestBase(SNTMalariaAPITestCase):
             username="user_basic", account=self.account, permissions=[SNT_SCENARIO_BASIC_WRITE_PERMISSION]
         )
         self.scenario = self.create_snt_scenario(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
             name="Test Scenario",
             start_year=2020,
@@ -30,12 +30,12 @@ class ScenarioRulesTestBase(SNTMalariaAPITestCase):
 
         self.int_category_vaccination = self.create_snt_intervention_category(
             name="Vaccination",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
         )
         self.int_category_chemoprevention = self.create_snt_intervention_category(
             name="Preventive Chemotherapy",
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_full_perm,
         )
         self.intervention_vaccination_rts = self.create_snt_intervention(
@@ -157,7 +157,7 @@ class ScenarioRulesTestBase(SNTMalariaAPITestCase):
             username="other_user", account=self.other_account, permissions=[SNT_SCENARIO_FULL_WRITE_PERMISSION]
         )
         self.other_scenario = self.create_snt_scenario(
-            account=self.other_account,
+            workspace=self.get_snt_workspace(self.other_account),
             created_by=self.other_user,
             name="Other Scenario",
             start_year=2020,
@@ -165,7 +165,7 @@ class ScenarioRulesTestBase(SNTMalariaAPITestCase):
         )
         self.other_int_category = self.create_snt_intervention_category(
             name="Other Category",
-            account=self.other_account,
+            workspace=self.get_snt_workspace(self.other_account),
             created_by=self.other_user,
         )
         self.other_intervention = self.create_snt_intervention(

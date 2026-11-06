@@ -16,7 +16,7 @@ class BaseSerializerTestCase(SNTMalariaTestCase):
             name="Test Account", permissions=[SNT_SCENARIO_BASIC_WRITE_PERMISSION]
         )
         self.scenario = self.create_snt_scenario(
-            self.account,
+            self.get_snt_workspace(),
             self.user_with_basic_perm,
             name="Test Scenario",
             description="A test scenario description.",
@@ -209,7 +209,7 @@ class ScenarioRulesSerializerTestCase(BaseSerializerTestCase):
 
     def test_extra_rule(self):
         another_scenario = self.create_snt_scenario(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_with_basic_perm,
             name="Another Scenario",
             description="Another scenario description.",

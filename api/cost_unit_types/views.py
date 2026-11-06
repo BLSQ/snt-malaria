@@ -19,7 +19,7 @@ class CostUnitTypeViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         try:
-            serializer.save(**self.workspace_save_kwargs())
+            serializer.save(workspace=self.workspace)
         except IntegrityError as e:
             self._raise_for_integrity_error(e)
 

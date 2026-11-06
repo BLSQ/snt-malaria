@@ -34,8 +34,8 @@ def _rule_is_match_all(rule: ScenarioRule, context: dict) -> bool:
     `account_org_unit_ids` via serializer context (see ScenarioRuleViewSet.list) to resolve it once
     for a whole list of rules instead of once per rule."""
     account_org_unit_ids = context.get("account_org_unit_ids")
-    account = rule.scenario.account if account_org_unit_ids is None else None
-    return ScenarioRule.covers_all_org_units(rule.org_units_included, account, account_org_unit_ids)
+    workspace = rule.scenario.workspace if account_org_unit_ids is None else None
+    return ScenarioRule.covers_all_org_units(rule.org_units_included, workspace, account_org_unit_ids)
 
 
 class ScenarioRuleListSerializer(serializers.ModelSerializer):

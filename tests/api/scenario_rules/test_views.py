@@ -2,6 +2,7 @@ from rest_framework import status
 
 from iaso.utils.colors import DEFAULT_COLOR
 from plugins.snt_malaria.models import AccountSettings, InterventionAssignment, Scenario, ScenarioRule
+from plugins.snt_malaria.models.workspace import get_or_create_first_workspace
 from plugins.snt_malaria.tests.api.scenario_rules.common_base import ScenarioRulesTestBase
 
 
@@ -138,7 +139,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
 
     def test_post_scenario_rule_with_full_perm_other_scenario(self):
         new_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=get_or_create_first_workspace(self.account),
             created_by=self.user_with_basic_perm,
             name="Other Scenario",
             description="Description of other scenario - belongs to another user",
@@ -173,7 +174,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
 
     def test_post_scenario_rule_with_basic_perm_own_scenario(self):
         new_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=get_or_create_first_workspace(self.account),
             created_by=self.user_with_basic_perm,
             name="Other Scenario",
             description="Description of other scenario - belongs to another user",
@@ -349,7 +350,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
 
     def test_patch_scenario_rule_with_full_perm_other_scenario(self):
         new_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=get_or_create_first_workspace(self.account),
             created_by=self.user_with_basic_perm,
             name="Other Scenario",
             description="Description of other scenario - belongs to another user",
@@ -380,7 +381,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
 
     def test_patch_scenario_rule_with_basic_perm_own_scenario(self):
         new_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=get_or_create_first_workspace(self.account),
             created_by=self.user_with_basic_perm,
             name="Other Scenario",
             description="Description of other scenario - belongs to another user",
@@ -523,7 +524,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
 
     def test_delete_scenario_rule_with_full_perm_other_scenario(self):
         new_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=get_or_create_first_workspace(self.account),
             created_by=self.user_with_basic_perm,
             name="Other Scenario",
             description="Description of other scenario - belongs to another user",
@@ -552,7 +553,7 @@ class ScenarioRuleAPITestCase(ScenarioRulesTestBase):
 
     def test_delete_scenario_rule_with_basic_perm_own_scenario(self):
         new_scenario = Scenario.objects.create(
-            account=self.account,
+            workspace=get_or_create_first_workspace(self.account),
             created_by=self.user_with_basic_perm,
             name="Other Scenario",
             description="Description of other scenario",

@@ -7,6 +7,7 @@ from iaso.test import APITestCase
 from plugins.snt_malaria.api.interventions.serializers import InterventionDetailWriteSerializer
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.models.intervention import Intervention, InterventionCategory
+from plugins.snt_malaria.models.workspace import get_or_create_first_workspace
 
 
 class InterventionDetailWriteSerializerTests(APITestCase):
@@ -15,7 +16,7 @@ class InterventionDetailWriteSerializerTests(APITestCase):
         self.user = self.create_user_with_profile(username="testuserintervention", account=self.account)
         self.int_category_vaccination = InterventionCategory.objects.create(
             name="Vaccination",
-            account=self.account,
+            workspace=get_or_create_first_workspace(self.account),
             created_by=self.user,
         )
         self.intervention_vaccination_rts = Intervention.objects.create(
@@ -24,8 +25,12 @@ class InterventionDetailWriteSerializerTests(APITestCase):
             intervention_category=self.int_category_vaccination,
             code="rts_s",
         )
-        self.unit_type_other, _ = CostUnitType.objects.get_or_create(account=self.account, name="Other")
-        self.unit_type_per_itn, _ = CostUnitType.objects.get_or_create(account=self.account, name="per ITN")
+        self.unit_type_other, _ = CostUnitType.objects.get_or_create(
+            workspace=get_or_create_first_workspace(self.account), name="Other"
+        )
+        self.unit_type_per_itn, _ = CostUnitType.objects.get_or_create(
+            workspace=get_or_create_first_workspace(self.account), name="per ITN"
+        )
 
         request = RequestFactory().get("/")
         request.user = self.user

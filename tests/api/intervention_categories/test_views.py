@@ -20,14 +20,14 @@ class InterventionCategoryAPITestCase(SNTMalariaAPITestCase):
         )
 
         self.category_1 = self.create_snt_intervention_category(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_write,
             name="Intervention Category 1",
             short_name="IC1",
             description="Description for Intervention Category 1",
         )
         self.category_2 = self.create_snt_intervention_category(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_write,
             name="Intervention Category 2",
             short_name="IC2",
@@ -40,7 +40,7 @@ class InterventionCategoryAPITestCase(SNTMalariaAPITestCase):
             username="other user", account=self.other_account, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
         )
         self.other_category = self.create_snt_intervention_category(
-            account=self.other_account,
+            workspace=self.get_snt_workspace(self.other_account),
             created_by=self.other_user,
             name="Intervention Category Other Account",
         )
@@ -70,7 +70,6 @@ class InterventionCategoryAPITestCase(SNTMalariaAPITestCase):
             set(category.keys()),
             {
                 "id",
-                "account",
                 "name",
                 "short_name",
                 "description",
@@ -121,7 +120,7 @@ class InterventionCategoryAPITestCase(SNTMalariaAPITestCase):
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
         self.assertEqual(result["name"], "New Category")
         created = InterventionCategory.objects.get(id=result["id"])
-        self.assertEqual(created.account, self.account)
+        self.assertEqual(created.workspace.account, self.account)
         self.assertEqual(created.created_by, self.user_write)
         self.assertEqual(created.short_name, "NC")
         self.assertEqual(created.description, "A new category")

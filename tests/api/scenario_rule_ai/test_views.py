@@ -35,9 +35,11 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
         )
         self.user_no_perm = self.create_user_with_profile(username="user_no_perm", account=self.account, permissions=[])
 
-        self.scenario = self.create_snt_scenario(account=self.account, created_by=self.user, name="Test Scenario")
+        self.scenario = self.create_snt_scenario(
+            workspace=self.get_snt_workspace(), created_by=self.user, name="Test Scenario"
+        )
         self.scenario_no_key = self.create_snt_scenario(
-            account=self.account_no_key, created_by=self.user_no_key, name="No Key Scenario"
+            workspace=self.get_snt_workspace(self.account_no_key), created_by=self.user_no_key, name="No Key Scenario"
         )
 
         self.metric_type = MetricType.objects.create(account=self.account, name="Incidence", code="incidence")
@@ -59,7 +61,7 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
         )
 
         self.int_category = self.create_snt_intervention_category(
-            account=self.account, created_by=self.user, name="Vector control"
+            workspace=self.get_snt_workspace(), created_by=self.user, name="Vector control"
         )
         self.intervention = self.create_snt_intervention(
             intervention_category=self.int_category,
@@ -596,7 +598,7 @@ class ScenarioRuleAIAPITestCase(SNTMalariaAPITestCase):
         )
         MetricType.objects.create(account=other_account, name="Other layer", code="other_layer")
         other_category = self.create_snt_intervention_category(
-            account=other_account, created_by=other_user, name="Other category"
+            workspace=self.get_snt_workspace(other_account), created_by=other_user, name="Other category"
         )
         self.create_snt_intervention(
             intervention_category=other_category, created_by=other_user, name="Other intervention", code="other_int"

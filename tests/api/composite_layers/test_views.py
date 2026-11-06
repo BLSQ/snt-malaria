@@ -94,7 +94,7 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
         )
         self.other_user = self.create_user_with_profile(username="other_user", account=self.other_account)
         self.other_composite_layer = CompositeLayer.objects.create(
-            account=self.other_account,
+            workspace=self.get_snt_workspace(self.other_account),
             name="Other composite",
             graph={},
             created_by=self.other_user,
@@ -138,7 +138,7 @@ class CompositeLayerAPITestCase(SNTMalariaAPITestCase):
         result = self.assertJSONResponse(response, status.HTTP_201_CREATED)
 
         composite_layer = CompositeLayer.objects.get(id=result["id"])
-        self.assertEqual(composite_layer.account, self.account)
+        self.assertEqual(composite_layer.workspace.account, self.account)
         self.assertEqual(composite_layer.name, "Risk score")
         self.assertEqual(composite_layer.comments, payload["comments"])
         self.assertEqual(composite_layer.created_by, self.user)

@@ -47,7 +47,7 @@ class ScenarioRuleViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
         scenario_rules = self.get_queryset().filter(scenario=scenario).order_by("priority")
         # Resolved once for the whole list rather than once per rule - see
         # ScenarioRuleListSerializer.get_is_match_all / _rule_is_match_all.
-        account_org_unit_ids = ScenarioRule.resolve_all_org_unit_ids(scenario.account)
+        account_org_unit_ids = ScenarioRule.resolve_all_org_unit_ids(scenario.workspace)
         list_serializer = ScenarioRuleListSerializer(
             scenario_rules, many=True, context={"account_org_unit_ids": account_org_unit_ids}
         )
@@ -62,7 +62,7 @@ class ScenarioRuleViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
         scenario = serializer.validated_data["scenario"]
         matching_criteria = serializer.validated_data.get("matching_criteria")
         org_units_matched = ScenarioRule.resolve_matched_org_units(
-            scenario.account, matching_criteria, data_layer_years=scenario.data_layer_years
+            scenario.workspace, matching_criteria, data_layer_years=scenario.data_layer_years
         )
 
         rule: ScenarioRule = serializer.save(created_by=user, org_units_matched=org_units_matched)
@@ -94,7 +94,7 @@ class ScenarioRuleViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
         instance = serializer.instance
         matching_criteria = serializer.validated_data.get("matching_criteria", instance.matching_criteria)
         org_units_matched = ScenarioRule.resolve_matched_org_units(
-            instance.scenario.account, matching_criteria, data_layer_years=instance.scenario.data_layer_years
+            instance.scenario.workspace, matching_criteria, data_layer_years=instance.scenario.data_layer_years
         )
 
         rule: ScenarioRule = serializer.save(updated_by=user, org_units_matched=org_units_matched)
@@ -130,7 +130,7 @@ class ScenarioRuleViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
         matching_criteria = serializer.validated_data.get("matching_criteria")
         data_layer_years = serializer.validated_data.get("data_layer_years")
         matched = ScenarioRule.resolve_matched_org_units(
-            self.workspace.account, matching_criteria, data_layer_years=data_layer_years
+            self.workspace, matching_criteria, data_layer_years=data_layer_years
         )
 
         result = ScenarioRule.resolve_org_unit_ids(
