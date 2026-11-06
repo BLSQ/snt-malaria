@@ -62,6 +62,7 @@ export type BudgetCalculationRequest = {
 export type BudgetCalculationResponse = {
     scenario: number;
     results: Budget[];
+    fixed_costs_prorated: boolean;
 };
 
 export type BudgetGrantYearCost = {

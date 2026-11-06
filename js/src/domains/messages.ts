@@ -914,6 +914,15 @@ export const MESSAGES = defineMessages({
         defaultMessage:
             '{scope} in scope · {hand} hand-picked · {exc} excluded',
     },
+    areaTitle: {
+        id: 'iaso.snt_malaria.compareCustomize.areaTitle',
+        defaultMessage: 'Area',
+    },
+    fixedCostsProratedNote: {
+        id: 'iaso.snt_malaria.compareCustomize.fixedCostsProratedNote',
+        defaultMessage:
+            'Fixed costs are divided by the share of selected districts',
+    },
     orgUnitTreeSelectTooltip: {
         id: 'iaso.snt_malaria.orgUnitTree.selectTooltip',
         defaultMessage: 'Click to select',

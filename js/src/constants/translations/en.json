@@ -729,5 +729,7 @@
     "iaso.snt_malaria.orgUnitTree.selectTooltip": "Click to select",
     "iaso.snt_malaria.orgUnitTree.deselectTooltip": "Click to deselect",
     "iaso.snt_malaria.orgUnitTree.selectedCount": "{count} of {total} selected",
-    "iaso.snt_malaria.orgUnitTree.noSelection": "No selection: showing national"
+    "iaso.snt_malaria.orgUnitTree.noSelection": "No selection: showing national",
+    "iaso.snt_malaria.compareCustomize.areaTitle": "Area",
+    "iaso.snt_malaria.compareCustomize.fixedCostsProratedNote": "Fixed costs are divided by the share of selected districts"
 }

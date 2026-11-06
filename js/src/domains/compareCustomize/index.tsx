@@ -3,6 +3,7 @@ import { Box, Grid } from '@mui/material';
 import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import TopBar from 'Iaso/components/nav/TopBarComponent';
 import { SxStyles } from 'Iaso/types/general';
+import { OrgUnitTreeSelect } from '../../components/orgUnitTree/OrgUnitTreeSelect';
 import {
     MainColumn,
     PageContainer,
@@ -11,6 +12,7 @@ import {
     SidebarColumn,
     SidebarLayout,
 } from '../../components/styledComponents';
+import { useOrgUnitSelection } from '../../hooks/useOrgUnitSelection';
 import { MESSAGES } from '../messages';
 import { useGetScenarios } from '../scenarios/hooks/useGetScenarios';
 import { ComparisonDataProvider } from './ComparisonDataContext';
@@ -60,6 +62,8 @@ const styles = {
 export const CompareCustomize: FC = () => {
     const { formatMessage } = useSafeIntl();
     const { data: scenarios, isLoading } = useGetScenarios();
+    const { selectedIds: selectedOrgUnitIds, setSelectedIds } =
+        useOrgUnitSelection();
     const {
         baselineScenarioId,
         comparisonScenarioIds,
@@ -216,6 +220,7 @@ export const CompareCustomize: FC = () => {
         yearFrom,
         yearTo,
         selectedAgeGroup,
+        orgUnitIds: selectedOrgUnitIds,
     });
 
     const scenarioNumericIds = useMemo(
@@ -229,6 +234,7 @@ export const CompareCustomize: FC = () => {
         scenarioNumericIds,
         selectedAgeGroup,
         isImpactLoading,
+        selectedOrgUnitIds,
     );
 
     const {
@@ -265,6 +271,7 @@ export const CompareCustomize: FC = () => {
                 isBudgetLoading={isBudgetLoading}
                 targetYear={yearTo}
                 yearFrom={yearFrom}
+                selectedOrgUnitIds={selectedOrgUnitIds}
             >
                 <PageContainer sx={styles.pageContainer}>
                     <SidebarLayout>
@@ -316,6 +323,12 @@ export const CompareCustomize: FC = () => {
                                     ageGroups={ageGroupsQuery.data?.age_groups}
                                     selectedAgeGroup={selectedAgeGroup}
                                     onAgeGroupChange={handleAgeGroupChange}
+                                    orgUnitSelector={
+                                        <OrgUnitTreeSelect
+                                            selectedIds={selectedOrgUnitIds}
+                                            onChange={setSelectedIds}
+                                        />
+                                    }
                                 >
                                     <ImpactWarnings
                                         showYearRangeError={showYearRangeError}
