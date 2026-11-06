@@ -6,21 +6,20 @@ from rest_framework.exceptions import MethodNotAllowed
 
 from plugins.snt_malaria.api.cost_unit_types.permissions import CostUnitTypePermission
 from plugins.snt_malaria.api.cost_unit_types.serializers import CostUnitTypeSerializer
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 
 
-class CostUnitTypeViewSet(viewsets.ModelViewSet):
+class CostUnitTypeViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
+    queryset = CostUnitType.objects.all()
     serializer_class = CostUnitTypeSerializer
     ordering_fields = ["id", "name"]
     http_method_names = ["get", "post", "put", "patch", "delete", "head", "options"]
     permission_classes = [CostUnitTypePermission]
 
-    def get_queryset(self):
-        return CostUnitType.objects.filter(account=self.request.user.iaso_profile.account)
-
     def perform_create(self, serializer):
         try:
-            serializer.save(account=self.request.user.iaso_profile.account)
+            serializer.save(**self.workspace_save_kwargs())
         except IntegrityError as e:
             self._raise_for_integrity_error(e)
 

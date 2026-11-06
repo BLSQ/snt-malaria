@@ -1,6 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 
+from iaso.utils.workspace import get_active_workspace
 from plugins.snt_malaria.models import (
     Grant,
     Intervention,
@@ -12,8 +13,8 @@ from plugins.snt_malaria.models.cost_breakdown import MAX_COVERAGE_PERCENTAGE
 from plugins.snt_malaria.models.scenario_rule_cost_override import OVERRIDE_VALUE_FIELDS
 
 
-def _account(serializer):
-    return serializer.context["request"].user.iaso_profile.account
+def _workspace(serializer):
+    return get_active_workspace(serializer.context["request"])
 
 
 def _optional_decimal(max_digits, decimal_places):
@@ -42,7 +43,7 @@ class CostLineOverrideSerializer(serializers.Serializer):
     def get_fields(self):
         fields = super().get_fields()
         fields["cost_line"].queryset = InterventionCostBreakdownLine.objects.filter(
-            intervention__intervention_category__account=_account(self)
+            intervention__intervention_category__workspace=_workspace(self)
         )
         return fields
 
@@ -80,9 +81,9 @@ class InterventionOverrideSerializer(serializers.Serializer):
 
     def get_fields(self):
         fields = super().get_fields()
-        account = _account(self)
-        fields["intervention"].queryset = Intervention.objects.filter(intervention_category__account=account)
-        fields["grant"].queryset = Grant.objects.filter(account=account)
+        workspace = _workspace(self)
+        fields["intervention"].queryset = Intervention.objects.filter(intervention_category__workspace=workspace)
+        fields["grant"].queryset = Grant.objects.filter(workspace=workspace)
         return fields
 
     def validate(self, attrs):

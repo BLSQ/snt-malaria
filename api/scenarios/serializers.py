@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from iaso.api.common import UserSerializer
+from iaso.utils.workspace import get_active_workspace
 from plugins.snt_malaria.api.scenarios.utils import get_interventions, get_missing_headers
 from plugins.snt_malaria.models import Scenario, ScenarioRule
 from plugins.snt_malaria.models.account_settings import get_account_metric_type_ids, get_intervention_org_units
@@ -70,8 +71,7 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
         if not value:
             return value
 
-        request = self.context.get("request")
-        account = request.user.iaso_profile.account
+        account = get_active_workspace(self.context["request"]).account
         account_metric_type_ids = {str(mt_id) for mt_id in get_account_metric_type_ids(account)}
         invalid_keys = [key for key in value if key not in account_metric_type_ids]
         if invalid_keys:
@@ -84,10 +84,8 @@ class ScenarioWriteSerializer(serializers.ModelSerializer):
         if self.instance is not None and self.instance.name == value:
             return value
 
-        request = self.context.get("request")
-        account = request.user.iaso_profile.account
-
-        if Scenario.objects.filter(name=value, account=account).exists():
+        workspace = get_active_workspace(self.context["request"])
+        if Scenario.objects.filter(name=value, workspace=workspace).exists():
             raise serializers.ValidationError(_("A scenario with this name already exists for your account."))
 
         return value
@@ -101,7 +99,8 @@ class ImportScenarioSerializer(serializers.Serializer):
             raise serializers.ValidationError(_("The file must be a CSV."))
 
         request = self.context.get("request")
-        interventions = get_interventions(request.user.iaso_profile.account)
+        workspace = get_active_workspace(request)
+        interventions = get_interventions(workspace)
         df = pd.read_csv(value)
 
         self.context["assignment_df"] = df
@@ -115,7 +114,7 @@ class ImportScenarioSerializer(serializers.Serializer):
         header_errors = get_missing_headers(df, interventions)
 
         csv_org_unit_ids = set(df["org_unit_id"].dropna().astype(int).unique().tolist())
-        org_units = get_intervention_org_units(request.user.iaso_profile.account)
+        org_units = get_intervention_org_units(workspace.account)
         available_org_unit_ids = set(org_units.values_list("id", flat=True))
         not_found_org_units = csv_org_unit_ids - available_org_unit_ids
         missing_org_units_from_file = available_org_unit_ids - csv_org_unit_ids

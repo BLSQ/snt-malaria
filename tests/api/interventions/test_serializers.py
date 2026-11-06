@@ -1,4 +1,6 @@
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
+
+from django.test import RequestFactory
 
 from iaso.models.base import Account
 from iaso.test import APITestCase
@@ -25,7 +27,9 @@ class InterventionDetailWriteSerializerTests(APITestCase):
         self.unit_type_other, _ = CostUnitType.objects.get_or_create(account=self.account, name="Other")
         self.unit_type_per_itn, _ = CostUnitType.objects.get_or_create(account=self.account, name="per ITN")
 
-        self.context = {"request": Mock(user=self.user)}
+        request = RequestFactory().get("/")
+        request.user = self.user
+        self.context = {"request": request}
 
     def test_update_intervention_with_cost_breakdown_lines(self):
         intervention_data = {

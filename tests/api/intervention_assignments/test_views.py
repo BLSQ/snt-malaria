@@ -230,7 +230,7 @@ class InterventionAssignmentsAPITests(SNTMalariaAPITestCase):
         )
 
         assignment = InterventionAssignment.objects.create(
-            scenario=self.other_scenario,
+            scenario=other_scenario,
             org_unit=self.district1,
             intervention=self.intervention_vaccination_rts,
             created_by=self.user_with_basic_perm,
