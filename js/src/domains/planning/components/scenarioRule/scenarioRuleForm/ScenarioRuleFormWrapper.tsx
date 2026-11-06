@@ -213,21 +213,21 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         isAwaitingFirstResult,
     ]);
 
-    const duplicateHeaderProps = isDuplicate
-        ? {
-              submitLabel: formatMessage(MESSAGES.createCopy),
-              notice: formatMessage(MESSAGES.duplicateScenarioRuleNotice, {
-                  name: sourceRuleName,
-              }),
-          }
-        : {};
+    const submitLabel = isDuplicate
+        ? formatMessage(MESSAGES.createCopy)
+        : undefined;
+    const notice = isDuplicate
+        ? formatMessage(MESSAGES.duplicateScenarioRuleNotice, {
+              name: sourceRuleName,
+          })
+        : undefined;
 
     return (
         <CardStyled
             header={
                 <ScenarioRuleFormHeader
                     title={formatMessage(TITLE_MESSAGES[mode])}
-                    {...duplicateHeaderProps}
+                    submitLabel={submitLabel}
                     onCancel={onClose}
                     onSubmit={formik.handleSubmit}
                     disabled={isSubmittingRule || !canSubmit}
@@ -239,6 +239,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
             <ExtendedFormikProvider formik={formik}>
                 <ScenarioRuleForm
                     ruleMatches={ruleMatches}
+                    notice={notice}
                     matchedOrgUnitIds={
                         isAwaitingFirstResult ? undefined : matchedOrgUnitIds
                     }

@@ -1,6 +1,6 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC, ReactNode, useCallback } from 'react';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
-import { Box, Button, Stack, TextField } from '@mui/material';
+import { Alert, Box, Button, Stack, TextField } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 
 import { ColorPicker } from 'Iaso/components/forms/ColorPicker';
@@ -31,6 +31,11 @@ const styles = {
         overflowY: 'auto',
         my: 2,
         px: 2,
+    },
+    notice: {
+        '& .MuiAlert-message': {
+            overflowWrap: 'anywhere',
+        },
     },
     resetMapLayerButton: {
         flex: '0 0 auto',
@@ -63,11 +68,13 @@ const styles = {
 type Props = {
     ruleMatches: RuleMatchedOrgUnits;
     matchedOrgUnitIds?: number[];
+    notice?: ReactNode;
 };
 
 export const ScenarioRuleForm: FC<Props> = ({
     ruleMatches,
     matchedOrgUnitIds,
+    notice,
 }) => {
     const { formatMessage } = useSafeIntl();
     const {
@@ -140,6 +147,11 @@ export const ScenarioRuleForm: FC<Props> = ({
     return (
         <Box sx={styles.formRoot}>
             <Stack spacing={1.5} sx={styles.scrollableSteps}>
+                {notice && (
+                    <Alert severity="info" sx={styles.notice}>
+                        {notice}
+                    </Alert>
+                )}
                 <RuleStepSection
                     step={1}
                     title={formatMessage(MESSAGES.ruleStepRegion)}

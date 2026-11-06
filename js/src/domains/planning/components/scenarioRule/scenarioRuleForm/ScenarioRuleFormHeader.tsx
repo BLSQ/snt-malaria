@@ -1,20 +1,12 @@
-import React, { FC, ReactNode } from 'react';
+import React, { FC } from 'react';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { Alert, Button, Stack, Typography } from '@mui/material';
+import { Button, Stack, Typography } from '@mui/material';
 import { IconButton, useSafeIntl } from 'bluesquare-components';
-import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../../../messages';
-
-const styles = {
-    notice: {
-        mt: 1,
-    },
-} satisfies SxStyles;
 
 type Props = {
     title: string;
     submitLabel?: string;
-    notice?: ReactNode;
     disabled?: boolean;
     onCancel: () => void;
     onSubmit: () => void;
@@ -23,15 +15,13 @@ type Props = {
 export const ScenarioRuleFormHeader: FC<Props> = ({
     title,
     submitLabel,
-    notice,
     disabled = false,
     onSubmit,
     onCancel,
 }) => {
     const { formatMessage } = useSafeIntl();
     return (
-        <>
-            <Stack
+        <Stack
                 direction="row"
                 justifyContent="space-between"
                 alignItems="center"
@@ -51,12 +41,6 @@ export const ScenarioRuleFormHeader: FC<Props> = ({
                 >
                     {submitLabel ?? formatMessage(MESSAGES.submit)}
                 </Button>
-            </Stack>
-            {notice && (
-                <Alert severity="info" sx={styles.notice}>
-                    {notice}
-                </Alert>
-            )}
-        </>
+        </Stack>
     );
 };
