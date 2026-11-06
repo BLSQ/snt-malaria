@@ -9,7 +9,7 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.contributors.intro',
         defaultMessage: `SNT Explorer is the product of close collaboration between modelling, costing and software development partners, 
         working alongside national malaria programmes to turn subnational tailoring analyses into actionable, costed plans. 
-        It draws on the experience of scenario and impact dashboards previously developed by partners, including Swiss TPH, IDM, PATH and CHAI.`,
+        It draws on the experience of costing and impact dashboards previously developed by partners, including Swiss TPH, IDM, PATH and CHAI.`,
     },
     backToHome: {
         id: 'iaso.snt_malaria.contributors.backToHome',
@@ -27,7 +27,7 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.contributors.countryPartnersText',
         defaultMessage: `We thank the Programme National de Lutte contre le Paludisme (PNLP) of Burkina Faso for its early support of SNT Explorer.
  The public demonstration environment uses openly available global datasets, including WorldPop and ERA5.
- We are also grateful to the PNLP of Cameroon, in particular [Franklin Surname, …], and to the CHAI Cameroon team, in particular Norbert Lemonge, Bassirou Mbacke and Chancelin Magloire.
+ We are also grateful to the PNLP of Cameroon and to the CHAI Cameroon team, in particular Norbert Lemonge, Bassirou Mbacke and Chancelin Magloire.
  Through regular working sessions, they helped align SNT Explorer with national planning needs and adoption realities.
  They made data from Cameroon's SNT and Global Fund GC8 processes available for testing, and their feedback directly shaped the platform.`,
     },

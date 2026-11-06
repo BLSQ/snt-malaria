@@ -51,14 +51,19 @@ export const leadDeveloper: DevelopmentPartner = {
 
 export const collaboratingDevelopers: DevelopmentPartner[] = [
     {
-        id: 'chai',
-        name: MESSAGES.chaiName,
-        shortName: 'CHAI',
-        url: 'https://www.clintonhealthaccess.org/',
-        logo: chaiLogo,
-        logoPadding: '6px 8px',
-        description: MESSAGES.chaiDescription,
-        people: ['Anthony Yuen'],
+        id: 'swisstph',
+        name: 'Swiss TPH',
+        url: 'https://www.swisstph.ch/en/',
+        logo: swisstphLogo,
+        logoPadding: '8px 14px',
+        description: MESSAGES.swisstphDescription,
+        people: [
+            'Roland Goers',
+            'Billy Bauzile',
+            'Myroslava Volosko',
+            'Christian Selinger',
+            'Emilie Pothin',
+        ],
     },
     {
         id: 'idm',
@@ -80,18 +85,14 @@ export const collaboratingDevelopers: DevelopmentPartner[] = [
         people: ['Hayley Thompson', 'Justin Millar', 'Hannah Slater'],
     },
     {
-        id: 'swisstph',
-        name: 'Swiss TPH',
-        url: 'https://www.swisstph.ch/en/',
-        logo: swisstphLogo,
-        logoPadding: '8px 14px',
-        description: MESSAGES.swisstphDescription,
-        people: [
-            'Roland Goers',
-            'Billy Bauzile',
-            'Myroslava Volosko',
-            'Emilie Pothin',
-        ],
+        id: 'chai',
+        name: MESSAGES.chaiName,
+        shortName: 'CHAI',
+        url: 'https://www.clintonhealthaccess.org/',
+        logo: chaiLogo,
+        logoPadding: '6px 8px',
+        description: MESSAGES.chaiDescription,
+        people: ['Anthony Yuen'],
     },
 ];
 
