@@ -10,6 +10,7 @@ import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../../components/CardStyled';
 import { OrgUnitSelect } from '../../../components/OrgUnitSelect';
+import { SidePanelToggle } from '../../../components/sidePanel/SidePanelToggle';
 import { YearStepper } from '../../../components/YearStepper';
 import { baseUrls } from '../../../constants/urls';
 import { MESSAGES } from '../../messages';
@@ -28,6 +29,7 @@ const styles = {
     smallHeader: {
         minHeight: '36px',
     },
+    headerText: { flex: 1, minWidth: 0 },
     title: { flex: 1, minWidth: 0, paddingRight: 1 },
     description: {
         display: '-webkit-box',
@@ -113,79 +115,86 @@ export const DataLayerMapWrapper: FC<Props> = ({
             <CardStyled
                 headerSx={small ? styles.smallHeader : undefined}
                 header={
-                    <Stack overflow="hidden">
-                        <Stack
-                            direction="row"
-                            justifyContent="space-between"
-                            alignItems="center"
-                        >
-                            <Tooltip
-                                title={
-                                    small && description ? (
-                                        <>
-                                            {metricType?.name}
-                                            <br />
-                                            {description}
-                                        </>
-                                    ) : (
-                                        metricType?.name || ''
-                                    )
-                                }
-                            >
-                                <Typography
-                                    variant={small ? 'body2' : 'h6'}
-                                    noWrap
-                                    sx={styles.title}
-                                >
-                                    {metricType?.name || ''}
-                                </Typography>
-                            </Tooltip>
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        overflow="hidden"
+                    >
+                        {!small && <SidePanelToggle />}
+                        <Stack sx={styles.headerText}>
                             <Stack
                                 direction="row"
-                                spacing={2}
+                                justifyContent="space-between"
                                 alignItems="center"
-                                sx={{ flexShrink: 0 }}
                             >
-                                {yearOptions.length > 0 && (
-                                    <YearStepper
-                                        years={yearOptions}
-                                        value={Number(year)}
-                                        onChange={handleYearChange}
-                                    />
-                                )}
-                                {small ? null : (
-                                    <OrgUnitSelect
-                                        onOrgUnitChange={
-                                            handleDisplayOrgUnitChange
-                                        }
-                                        selectedOrgUnitId={displayOrgUnitId}
-                                    />
-                                )}
-                                <ExportMetricValuesCsvButton
-                                    metricType={metricType}
-                                    year={year}
-                                />
-                                {(onRemove && (
-                                    <IconButton
-                                        overrideIcon={CancelOutlinedIcon}
-                                        tooltipMessage={MESSAGES.remove}
-                                        onClick={onRemove}
-                                    ></IconButton>
-                                )) ||
-                                    null}
-                            </Stack>
-                        </Stack>
-                        {!small && description && (
-                            <Tooltip title={description}>
-                                <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                    sx={styles.description}
+                                <Tooltip
+                                    title={
+                                        small && description ? (
+                                            <>
+                                                {metricType?.name}
+                                                <br />
+                                                {description}
+                                            </>
+                                        ) : (
+                                            metricType?.name || ''
+                                        )
+                                    }
                                 >
-                                    {description}
-                                </Typography>
-                            </Tooltip>
-                        )}
+                                    <Typography
+                                        variant={small ? 'body2' : 'h6'}
+                                        noWrap
+                                        sx={styles.title}
+                                    >
+                                        {metricType?.name || ''}
+                                    </Typography>
+                                </Tooltip>
+                                <Stack
+                                    direction="row"
+                                    spacing={2}
+                                    alignItems="center"
+                                    sx={{ flexShrink: 0 }}
+                                >
+                                    {yearOptions.length > 0 && (
+                                        <YearStepper
+                                            years={yearOptions}
+                                            value={Number(year)}
+                                            onChange={handleYearChange}
+                                        />
+                                    )}
+                                    {small ? null : (
+                                        <OrgUnitSelect
+                                            onOrgUnitChange={
+                                                handleDisplayOrgUnitChange
+                                            }
+                                            selectedOrgUnitId={displayOrgUnitId}
+                                        />
+                                    )}
+                                    <ExportMetricValuesCsvButton
+                                        metricType={metricType}
+                                        year={year}
+                                    />
+                                    {(onRemove && (
+                                        <IconButton
+                                            overrideIcon={CancelOutlinedIcon}
+                                            tooltipMessage={MESSAGES.remove}
+                                            onClick={onRemove}
+                                        ></IconButton>
+                                    )) ||
+                                        null}
+                                </Stack>
+                            </Stack>
+                            {!small && description && (
+                                <Tooltip title={description}>
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={styles.description}
+                                    >
+                                        {description}
+                                    </Typography>
+                                </Tooltip>
+                            )}
+                        </Stack>
                     </Stack>
                 }
             >

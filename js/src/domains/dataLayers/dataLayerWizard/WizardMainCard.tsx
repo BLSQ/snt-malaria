@@ -1,7 +1,8 @@
 import React, { FC, ReactNode } from 'react';
-import { Card, Stack } from '@mui/material';
+import { Box, Card, Stack } from '@mui/material';
 import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../../components/CardStyled';
+import { SidePanelToggle } from '../../../components/sidePanel/SidePanelToggle';
 
 const styles = {
     card: { height: '100%', display: 'flex', flexDirection: 'column' },
@@ -13,6 +14,7 @@ const styles = {
         gap: 1.5,
         p: 4,
     },
+    headerContent: { flex: 1, minWidth: 0 },
 } satisfies SxStyles;
 
 type Props = {
@@ -23,7 +25,16 @@ type Props = {
 
 export const WizardMainCard: FC<Props> = ({ header, centered, children }) => (
     <Card sx={styles.card}>
-        <CardStyled header={header}>
+        <CardStyled
+            header={
+                header && (
+                    <Stack direction="row" alignItems="center">
+                        <SidePanelToggle />
+                        <Box sx={styles.headerContent}>{header}</Box>
+                    </Stack>
+                )
+            }
+        >
             {centered ? (
                 <Stack sx={styles.centered}>{children}</Stack>
             ) : (

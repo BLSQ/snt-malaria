@@ -656,9 +656,13 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.sidebarToggle.hideSidePanel',
         defaultMessage: 'Hide side panel',
     },
-    showSidePanel: {
-        id: 'iaso.snt_malaria.sidebarToggle.showSidePanel',
-        defaultMessage: 'Show side panel',
+    pinSidePanel: {
+        id: 'iaso.snt_malaria.sidebarToggle.pinSidePanel',
+        defaultMessage: 'Pin side panel',
+    },
+    scenarioRulesCount: {
+        id: 'iaso.snt_malaria.scenarioRule.rulesCount',
+        defaultMessage: '{count, plural, one {# rule} other {# rules}}',
     },
     manualSelection: {
         id: 'iaso.snt_malaria.scenarioRule.manualSelection',

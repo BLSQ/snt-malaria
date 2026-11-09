@@ -20,8 +20,8 @@ import { RuleMatchedOrgUnits } from './useRuleMatchedOrgUnits';
 
 const styles = {
     formRoot: {
-        position: 'absolute',
-        inset: 0,
+        flex: '1 1 auto',
+        minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
     },

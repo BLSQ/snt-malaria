@@ -13,7 +13,8 @@ import {
 import { useSafeIntl } from 'bluesquare-components';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
 import { SxStyles } from 'Iaso/types/general';
-import { SidePanelIconToggle } from '../../../components/sidePanel/SidePanelIconToggle';
+import { IconBoxed } from '../../../components/IconBoxed';
+import { SidePanelDockButton } from '../../../components/sidePanel/SidePanelDockButton';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
 import { MESSAGES } from '../messages';
 import { WizardLayerType } from './constants';
@@ -120,10 +121,11 @@ export const DataLayerWizardPanel: FC<Props> = ({
         <Card sx={styles.card}>
             <Stack sx={styles.header}>
                 <Stack direction="row" alignItems="center" spacing={1}>
-                    <SidePanelIconToggle icon={LayersIcon} />
+                    <IconBoxed Icon={LayersIcon} />
                     <Typography variant="h6" sx={styles.title}>
                         {formatMessage(titleMessage)}
                     </Typography>
+                    <SidePanelDockButton />
                 </Stack>
                 {isEditing ? (
                     <Tabs
