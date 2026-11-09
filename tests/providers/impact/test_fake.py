@@ -1,6 +1,5 @@
-from datetime import date
-
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from iaso.models import MetricType, MetricValue, OrgUnit, OrgUnitType
 from iaso.models.data_source import DataSource, SourceVersion
@@ -26,7 +25,7 @@ from plugins.snt_malaria.providers.impact.fake import (
 from plugins.snt_malaria.tests.common_base import SNTMalariaTestCase
 
 
-_CURRENT_YEAR = date.today().year
+_CURRENT_YEAR = timezone.now().year
 
 
 def _cases(result) -> float:

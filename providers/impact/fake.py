@@ -22,9 +22,10 @@ import logging
 import math
 
 from dataclasses import dataclass
-from datetime import date
 from random import Random
 from typing import Final
+
+from django.utils import timezone
 
 from iaso.models import MetricType, MetricValue, OrgUnit
 from plugins.snt_malaria.models import ImpactProviderConfig, Intervention
@@ -222,7 +223,7 @@ class FakeImpactProvider(ImpactProvider):
         return BulkMatchResult(results=results, warnings=warnings)
 
     def get_year_range(self) -> tuple[int, int]:
-        current = date.today().year - 2
+        current = timezone.now().year - 2
         return current, current + YEAR_SPAN
 
     def get_age_groups(self) -> list[str]:

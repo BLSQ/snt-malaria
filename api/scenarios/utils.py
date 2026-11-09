@@ -1,12 +1,12 @@
 import logging
 
 from collections import defaultdict
-from datetime import datetime
 
 import pandas as pd
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 from iaso.utils.colors import COLOR_CHOICES, DISPERSED_COLOR_ORDER
 from plugins.snt_malaria.models.intervention import Intervention, InterventionAssignment
@@ -22,12 +22,13 @@ def get_intervention_column(name, code):
 
 
 def get_scenario(user, base_name="Scenario"):
+    now = timezone.now()
     return Scenario(
-        name=f"{base_name} {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        name=f"{base_name} {now.strftime('%Y-%m-%d %H:%M:%S')}",
         created_by=user,
         account=user.iaso_profile.account,
-        start_year=datetime.now().year,
-        end_year=datetime.now().year + 3,
+        start_year=now.year,
+        end_year=now.year + 3,
     )
 
 

@@ -1,8 +1,6 @@
 import csv
 import logging
 
-from datetime import datetime
-
 from django.db import IntegrityError, transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -167,7 +165,7 @@ class ScenarioViewSet(viewsets.ModelViewSet):
             row = get_csv_row(org_unit_id, oui["name"], oui["assignments"], interventions)
             writer.writerow(row)
 
-        filename = "{}_{}.csv".format(scenario_name, datetime.now().strftime("%Y-%m-%d"))
+        filename = "{}_{}.csv".format(scenario_name, timezone.now().strftime("%Y-%m-%d"))
         response["Content-Disposition"] = "attachment; filename=" + filename
         return response
 

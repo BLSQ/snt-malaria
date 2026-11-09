@@ -2,8 +2,9 @@
 Create a demo scenario with intervention assignments for Burkina Faso
 """
 
-from datetime import date
 from decimal import Decimal
+
+from django.utils import timezone
 
 from iaso.models import OrgUnitType, User
 from iaso.models.data_store import JsonDataStore
@@ -94,7 +95,7 @@ class DemoScenarioSeeder:
         self, scenario_name, user, interventions, seasonality_precipitation_metric_type, pf_rate_metric_type, rate
     ):
         # Create the demo scenario
-        current_year = date.today().year + 1
+        current_year = timezone.now().year + 1
         scenario = Scenario.objects.create(
             account=self.account,
             created_by=user,
