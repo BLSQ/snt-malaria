@@ -87,7 +87,7 @@ class InterventionViewSet(viewsets.ModelViewSet):
         scenarios = (
             Scenario.objects.filter(rules__interventions=intervention)
             .distinct()
-            .order_by("-is_locked", "name")
+            .order_by("-is_locked", "-updated_at")
             .prefetch_related(
                 Prefetch(
                     "rules",

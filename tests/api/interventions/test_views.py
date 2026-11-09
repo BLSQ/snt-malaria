@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
 from rest_framework import status
 
 from plugins.snt_malaria.api.interventions.permissions import (
@@ -10,6 +13,7 @@ from plugins.snt_malaria.models import (
     Donor,
     Grant,
     Intervention,
+    Scenario,
     ScenarioRule,
     ScenarioRuleCostOverride,
     ScenarioRuleIntervention,
@@ -548,18 +552,23 @@ class InterventionAPITests(SNTMalariaAPITestCase):
                 self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(Intervention.objects.filter(id=rts.id).exists())
 
-    def test_usage_lists_locked_scenarios_first(self):
+    def test_usage_lists_locked_scenarios_first_then_most_recently_updated(self):
         rts = self.intervention_vaccination_rts
-        self._create_rule(self._create_scenario(name="A open plan"), [rts])
-        self._create_rule(self._create_scenario(name="B locked plan", is_locked=True), [rts])
+        older = self._create_scenario(name="Older plan")
+        newer = self._create_scenario(name="Newer plan")
+        locked = self._create_scenario(name="Locked plan", is_locked=True)
+        for scenario in (older, newer, locked):
+            self._create_rule(scenario, [rts])
+        Scenario.objects.filter(id=older.id).update(updated_at=timezone.now() - timedelta(days=2))
+        Scenario.objects.filter(id=locked.id).update(updated_at=timezone.now() - timedelta(days=3))
 
         self.client.force_authenticate(user=self.user_read)
         response = self.client.get(f"{BASE_URL}{rts.id}/usage/")
 
         response_data = self.assertJSONResponse(response, status.HTTP_200_OK)
         self.assertEqual(
-            [(scenario["name"], scenario["is_locked"]) for scenario in response_data],
-            [("B locked plan", True), ("A open plan", False)],
+            [scenario["name"] for scenario in response_data],
+            ["Locked plan", "Newer plan", "Older plan"],
         )
 
     def test_usage_lists_only_active_scenarios_and_their_rules_using_the_intervention(self):
