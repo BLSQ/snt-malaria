@@ -17,15 +17,15 @@ export const ShowSidePanelIcon = createSvgIcon(
     'ShowSidePanel',
 );
 
-export const HideSidePanelIcon = createSvgIcon(
+export const UndockSidePanelIcon = createSvgIcon(
     <>
         <rect x="3" y="4" width="18" height="16" rx="2" {...strokeProps} />
         <path d="M9 4v16M16 10l-2 2 2 2" {...strokeProps} />
     </>,
-    'HideSidePanel',
+    'UndockSidePanel',
 );
 
-export const PinSidePanelIcon = createSvgIcon(
+export const DockSidePanelIcon = createSvgIcon(
     <path d="M9 3h6M10 3v6l-3 4h10l-3-4V3M12 13v8" {...strokeProps} />,
-    'PinSidePanel',
+    'DockSidePanel',
 );

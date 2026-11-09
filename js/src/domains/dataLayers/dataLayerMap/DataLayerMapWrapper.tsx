@@ -117,7 +117,7 @@ export const DataLayerMapWrapper: FC<Props> = ({
                 header={
                     <Stack
                         direction="row"
-                        alignItems="center"
+                        alignItems="flex-start"
                         overflow="hidden"
                     >
                         {!small && <SidePanelToggle />}

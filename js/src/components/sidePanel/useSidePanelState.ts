@@ -19,6 +19,8 @@ import {
 
 export const BASE_LABEL_KEY = 'base';
 
+const OVERLAY_SELECTOR = '.MuiPopover-root, .MuiPopper-root, .MuiModal-root';
+
 type Options = {
     storageKey: string;
     defaultMode?: SidePanelMode;
@@ -88,6 +90,7 @@ export const useSidePanelState = ({
     const phaseTimer = useRef<number>();
     const closeTimer = useRef<number>();
     const pointerInside = useRef(false);
+    const isHeld = useRef(false);
 
     const mode: SidePanelMode = canUndock ? storedMode : 'docked';
 
@@ -125,6 +128,7 @@ export const useSidePanelState = ({
 
     const closeFloating = useCallback(() => {
         clearCloseTimer();
+        isHeld.current = false;
         updateOrigin();
         setFloating('closed');
     }, [clearCloseTimer, updateOrigin]);
@@ -153,6 +157,7 @@ export const useSidePanelState = ({
 
     const undock = useCallback(() => {
         clearTimers();
+        pointerInside.current = true;
         setPhase('lifting');
         phaseTimer.current = window.setTimeout(() => {
             phaseTimer.current = undefined;
@@ -167,6 +172,7 @@ export const useSidePanelState = ({
 
     const dock = useCallback(() => {
         clearTimers();
+        isHeld.current = false;
         setPhase('docking');
         phaseTimer.current = window.setTimeout(() => {
             phaseTimer.current = undefined;
@@ -176,9 +182,17 @@ export const useSidePanelState = ({
         }, SLIDE_MS);
     }, [clearTimers, setMode]);
 
+    const hold = useCallback(() => {
+        if (mode === 'undocked' && floating !== 'closed') {
+            clearCloseTimer();
+            isHeld.current = true;
+        }
+    }, [mode, floating, clearCloseTimer]);
+
     const reveal = useCallback(() => {
         if (mode === 'undocked' && floating === 'closed') {
-            openFloating();
+            openFloating(true);
+            isHeld.current = true;
         }
     }, [mode, floating, openFloating]);
 
@@ -228,17 +242,58 @@ export const useSidePanelState = ({
         }
     }, [clearCloseTimer, mode, phase, floating, openFloating]);
 
-    const onEnterPanel = useCallback(() => {
-        pointerInside.current = true;
-        clearCloseTimer();
-    }, [clearCloseTimer]);
+    const isPeeking = floating === 'peek' && !phase;
+    const isPeekingRef = useRef(isPeeking);
+    isPeekingRef.current = isPeeking;
+    const tracksPointer = mode === 'undocked' || phase === 'lifting';
 
-    const onLeave = useCallback(() => {
-        pointerInside.current = false;
-        if (floating === 'peek' && !phase) {
-            scheduleClose(PEEK_CLOSE_DELAY_MS);
+    useEffect(() => {
+        if (!tracksPointer) {
+            return undefined;
         }
-    }, [floating, phase, scheduleClose]);
+        const isInside = (target: EventTarget | null): boolean =>
+            target instanceof Element &&
+            (Boolean(panelElement.current?.contains(target)) ||
+                [...toggleElements.current.keys()].some(toggle =>
+                    toggle.contains(target),
+                ) ||
+                Boolean(target.closest(OVERLAY_SELECTOR)));
+        const updatePointer = (inside: boolean) => {
+            const wasInside = pointerInside.current;
+            pointerInside.current = inside;
+            if (inside) {
+                isHeld.current = false;
+                clearCloseTimer();
+            } else if (wasInside && isPeekingRef.current && !isHeld.current) {
+                scheduleClose(PEEK_CLOSE_DELAY_MS);
+            }
+        };
+        const onPointerMove = (event: PointerEvent) =>
+            updatePointer(isInside(event.target));
+        const onPointerLeaveWindow = (event: MouseEvent) => {
+            if (!event.relatedTarget) {
+                updatePointer(false);
+            }
+        };
+        const onPointerDown = (event: PointerEvent) => {
+            if (isHeld.current && !isInside(event.target)) {
+                closeFloating();
+            }
+        };
+        const options = { capture: true, passive: true };
+        document.addEventListener('pointermove', onPointerMove, options);
+        document.addEventListener('pointerdown', onPointerDown, options);
+        document.addEventListener('mouseout', onPointerLeaveWindow, options);
+        return () => {
+            document.removeEventListener('pointermove', onPointerMove, options);
+            document.removeEventListener('pointerdown', onPointerDown, options);
+            document.removeEventListener(
+                'mouseout',
+                onPointerLeaveWindow,
+                options,
+            );
+        };
+    }, [tracksPointer, clearCloseTimer, scheduleClose, closeFloating]);
 
     const onBlurPanel = useCallback(
         (event: FocusEvent<HTMLElement>) => {
@@ -246,15 +301,15 @@ export const useSidePanelState = ({
                 event.relatedTarget as Node | null,
             );
             if (
-                floating === 'peek' &&
-                !phase &&
+                isPeeking &&
+                !isHeld.current &&
                 !pointerInside.current &&
                 !focusStaysInPanel
             ) {
                 scheduleClose(PEEK_CLOSE_DELAY_MS);
             }
         },
-        [floating, phase, scheduleClose],
+        [isPeeking, scheduleClose],
     );
 
     return useMemo(
@@ -270,13 +325,12 @@ export const useSidePanelState = ({
             undock,
             openFloating,
             closeFloating,
+            hold,
             reveal,
             setLabel,
             panelRef,
             registerToggle,
             onEnterToggle,
-            onEnterPanel,
-            onLeave,
             onBlurPanel,
         }),
         [
@@ -291,13 +345,12 @@ export const useSidePanelState = ({
             undock,
             openFloating,
             closeFloating,
+            hold,
             reveal,
             setLabel,
             panelRef,
             registerToggle,
             onEnterToggle,
-            onEnterPanel,
-            onLeave,
             onBlurPanel,
         ],
     );

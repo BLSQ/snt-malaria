@@ -1,5 +1,6 @@
 import React, { FC, Ref, useCallback } from 'react';
 import { useGetColors } from 'Iaso/hooks/useGetColors';
+import { useSidePanelHold } from '../../../../components/sidePanel/useSidePanelHold';
 import { CardScrollable } from '../../../../components/styledComponents';
 import { usePlanningContext } from '../../contexts/PlanningContext';
 import { ScenarioRule, ScenarioRulePreview } from '../../types/scenarioRule';
@@ -38,6 +39,7 @@ export const ScenarioRulesPanel: FC<Props> = ({
     // Prefetches the palette so the form's lazy colour picker finds it warm
     // in the React Query cache when the form mounts.
     useGetColors();
+    useSidePanelHold(isEditing);
 
     const handleShowForm = useCallback(
         (rule?: ScenarioRule) => startEditingRule(rule),
