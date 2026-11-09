@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.23.0](https://github.com/BLSQ/snt-malaria/compare/2.22.0...2.23.0) (2026-11-09)
+
+
+### Features
+
+* **Impact:** Geographic scoping for comparison page ([573fc17](https://github.com/BLSQ/snt-malaria/commit/573fc1784bebce07ce88a926ddcaa459d8b3aad0))
+* **ScenarioRule:** support for rule duplication ([#430](https://github.com/BLSQ/snt-malaria/issues/430)) ([0cd3daf](https://github.com/BLSQ/snt-malaria/commit/0cd3daf712d188a7e331330db00d32042ebee22b))
+
+
+### Bug Fixes
+
+* use timezone-aware datetimes for ruff DTZ rules ([b75a45b](https://github.com/BLSQ/snt-malaria/commit/b75a45b068ea6cdb9a33ec169f0532f1e5a0e59d))
+
 ## [2.22.0](https://github.com/BLSQ/snt-malaria/compare/2.21.0...2.22.0) (2026-11-06)
 
 
