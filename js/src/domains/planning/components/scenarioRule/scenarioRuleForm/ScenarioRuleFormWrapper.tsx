@@ -10,7 +10,9 @@ import { useSafeIntl } from 'bluesquare-components';
 import { uniq } from 'lodash';
 import { createPortal } from 'react-dom';
 import { useGetColors } from 'Iaso/hooks/useGetColors';
+import { SxStyles } from 'Iaso/types/general';
 import { CardStyled } from '../../../../../components/CardStyled';
+import { useSidePanelLabel } from '../../../../../components/sidePanel/useSidePanelLabel';
 import { useFlash } from '../../../../../hooks/useFlash';
 import { ExtendedFormikProvider } from '../../../../../hooks/useGetExtendedFormikContext';
 import { usePrefetchMetricValues } from '../../../../dataLayers/hooks/useGetMetrics';
@@ -40,6 +42,13 @@ import { toggleLeaf } from './orgUnitScopeSelector/scopeTreeUtils';
 import { ScenarioRuleForm } from './ScenarioRuleForm';
 import { ScenarioRuleFormHeader } from './ScenarioRuleFormHeader';
 import { useRuleMatchedOrgUnits } from './useRuleMatchedOrgUnits';
+
+const styles = {
+    content: {
+        display: 'flex',
+        flexDirection: 'column',
+    },
+} satisfies SxStyles;
 
 const TITLE_MESSAGES = {
     create: MESSAGES.createScenarioRule,
@@ -168,6 +177,14 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
         interventions,
         intervention_overrides: interventionOverrides,
     } = formik.values;
+
+    useSidePanelLabel({
+        title: formatMessage(TITLE_MESSAGES[mode]),
+        hint: getRuleDisplayName(
+            { name, interventions },
+            interventionCategories,
+        ),
+    });
 
     const ruleMatches = useRuleMatchedOrgUnits({
         matchingCriteria,
@@ -324,6 +341,7 @@ export const ScenarioRuleFormWrapper: FC<Props> = ({
                 />
             }
             isLoading={isSubmittingRule}
+            contentSx={styles.content}
             flushContent
         >
             <ExtendedFormikProvider formik={formik}>

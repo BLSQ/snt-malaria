@@ -272,8 +272,8 @@ export const PlanningProvider = ({
             }}
         >
             <SidePanelProvider
-                defaultOpen={!scenario?.is_locked}
-                locked={isEditing}
+                storageKey="snt_malaria.planning.sidePanelMode"
+                defaultMode={scenario?.is_locked ? 'undocked' : 'docked'}
             >
                 {children}
             </SidePanelProvider>

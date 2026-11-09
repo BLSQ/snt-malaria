@@ -1,51 +1,25 @@
-import React, { ComponentType, FC, ReactNode } from 'react';
-import Card from '@mui/material/Card/Card';
-import Divider from '@mui/material/Divider/Divider';
-import type { SvgIconProps } from '@mui/material/SvgIcon/SvgIcon';
+import React, { FC, ReactNode } from 'react';
+import Box from '@mui/material/Box/Box';
 import { SxStyles } from 'Iaso/types/general';
-import { SidebarColumn } from '../styledComponents';
-import { useSidePanelContext } from './SidePanelContext';
-import { SidePanelIconToggle } from './SidePanelIconToggle';
+import { useSidePanelLabel } from './useSidePanelLabel';
+import { BASE_LABEL_KEY } from './useSidePanelState';
 
 const styles = {
-    collapsedCard: {
-        flexShrink: 0,
-        width: 65,
-        height: '100%',
+    root: {
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        gap: 1.5,
-        pt: 2,
-    },
-    divider: {
-        width: '60%',
+        flex: '1 1 auto',
+        minHeight: 0,
     },
 } satisfies SxStyles;
 
 type Props = {
-    icon: ComponentType<SvgIconProps>;
-    actions?: ReactNode;
+    title: string;
+    hint?: string;
     children: ReactNode;
 };
 
-export const SidePanel: FC<Props> = ({ icon, actions, children }) => {
-    const { isOpen } = useSidePanelContext();
-
-    if (!isOpen) {
-        return (
-            <Card sx={styles.collapsedCard}>
-                <SidePanelIconToggle icon={icon} />
-                {actions && (
-                    <>
-                        <Divider sx={styles.divider} />
-                        {actions}
-                    </>
-                )}
-            </Card>
-        );
-    }
-
-    return <SidebarColumn>{children}</SidebarColumn>;
+export const SidePanel: FC<Props> = ({ title, hint, children }) => {
+    useSidePanelLabel({ title, hint }, BASE_LABEL_KEY);
+    return <Box sx={styles.root}>{children}</Box>;
 };

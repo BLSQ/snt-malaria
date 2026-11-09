@@ -6,6 +6,7 @@ import Stack from '@mui/material/Stack/Stack';
 import Tooltip from '@mui/material/Tooltip/Tooltip';
 import Typography from '@mui/material/Typography/Typography';
 import { useSafeIntl } from 'bluesquare-components';
+import { SidePanelToggle } from '../../../components/sidePanel/SidePanelToggle';
 import { MESSAGES } from '../messages';
 
 type Props = {
@@ -36,7 +37,10 @@ export const EditorHeader: FC<Props> = ({
             justifyContent="space-between"
             alignItems="center"
         >
-            <Typography variant="h6">{title}</Typography>
+            <Stack direction="row" alignItems="center">
+                <SidePanelToggle />
+                <Typography variant="h6">{title}</Typography>
+            </Stack>
             <Stack direction="row" alignItems="center" spacing={1}>
                 <Tooltip title={formatMessage(MESSAGES.rearrangeNodes)}>
                     <IconButton size="small" onClick={onRearrange}>

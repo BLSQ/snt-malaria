@@ -1,0 +1,10 @@
+export const PANEL_WIDTH = 450;
+export const PANEL_GAP = 8;
+export const LIFT_MS = 220;
+export const SLIDE_MS = 320;
+export const PEEK_CLOSE_DELAY_MS = 250;
+export const SCRIM_Z_INDEX = 1150;
+export const PANEL_Z_INDEX = 1160;
+export const FALLBACK_TOGGLE_Z_INDEX = 1001;
+export const OPEN_MS = 360;
+export const CLOSE_MS = 280;

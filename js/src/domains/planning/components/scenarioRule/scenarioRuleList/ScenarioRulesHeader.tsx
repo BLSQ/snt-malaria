@@ -1,13 +1,12 @@
 import React, { FC, Ref } from 'react';
-import AddIcon from '@mui/icons-material/Add';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SettingsInputComponentOutlinedIcon from '@mui/icons-material/SettingsInputComponentOutlined';
 import Button from '@mui/material/Button/Button';
 import Stack from '@mui/material/Stack/Stack';
 import Typography from '@mui/material/Typography/Typography';
-import { IconButton, useSafeIntl } from 'bluesquare-components';
-import { useSidePanelContext } from '../../../../../components/sidePanel/SidePanelContext';
-import { SidePanelIconToggle } from '../../../../../components/sidePanel/SidePanelIconToggle';
+import { useSafeIntl } from 'bluesquare-components';
+import { IconBoxed } from '../../../../../components/IconBoxed';
+import { SidePanelDockButton } from '../../../../../components/sidePanel/SidePanelDockButton';
 import { MESSAGES } from '../../../../messages';
 import { usePlanningContext } from '../../../contexts/PlanningContext';
 
@@ -40,9 +39,7 @@ export const ScenarioRulesHeader: FC<Props> = ({
             justifyContent="space-between"
         >
             <Stack spacing={1} direction="row" alignItems="center">
-                <SidePanelIconToggle
-                    icon={SettingsInputComponentOutlinedIcon}
-                />
+                <IconBoxed Icon={SettingsInputComponentOutlinedIcon} />
                 <Typography variant="h6" gutterBottom>
                     {formatMessage(MESSAGES.interventionTitle)}
                 </Typography>
@@ -69,44 +66,8 @@ export const ScenarioRulesHeader: FC<Props> = ({
                         </Button>
                     </>
                 )}
+                <SidePanelDockButton />
             </Stack>
         </Stack>
-    );
-};
-
-/** Icon-only equivalents of the header's actions, shown in the collapsed rail so they stay
- *  usable without expanding the panel. Reads the "start creating" trigger from context since
- *  it's normally owned by the (unmounted-while-collapsed) rule form. */
-export const ScenarioRulesActions: FC<
-    Pick<Props, 'hasAiApiKey' | 'showAIChat' | 'onToggleAIChat'>
-> = ({ hasAiApiKey, showAIChat, onToggleAIChat }) => {
-    const { isScenarioEditable, isEditing, startEditingRule } =
-        usePlanningContext();
-    const { open } = useSidePanelContext();
-
-    if (!isScenarioEditable) {
-        return null;
-    }
-
-    return (
-        <>
-            {hasAiApiKey && !isEditing && (
-                <IconButton
-                    onClick={() => onToggleAIChat?.()}
-                    color={showAIChat ? 'primary' : 'action'}
-                    overrideIcon={AutoAwesomeIcon}
-                    tooltipMessage={MESSAGES.scenarioRuleAIChatButton}
-                />
-            )}
-            <IconButton
-                onClick={() => {
-                    open();
-                    startEditingRule();
-                }}
-                color="primary"
-                overrideIcon={AddIcon}
-                tooltipMessage={MESSAGES.createScenarioRule}
-            />
-        </>
     );
 };
