@@ -1467,6 +1467,17 @@ export const MESSAGES = defineMessages({
             '{name} is used in {ruleCount, plural, one {# rule} other {# rules}} across {scenarioCount, plural, one {# scenario} other {# scenarios}}. ' +
             'Choose what happens to those rules, or open the scenarios and change them first.',
     },
+    deleteInterventionLockedMessage: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.lockedMessage',
+        defaultMessage:
+            '{name} is used in {ruleCount, plural, one {# rule} other {# rules}} across {scenarioCount, plural, one {# scenario} other {# scenarios}}. ' +
+            "{lockedCount, plural, one {# of these scenarios is locked} other {# of these scenarios are locked}}, so their rules can't be changed here. " +
+            'Unlock or delete the locked scenarios before deleting {name}.',
+    },
+    deleteInterventionLocked: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.locked',
+        defaultMessage: 'Locked',
+    },
     deleteInterventionUsedInActiveScenarios: {
         id: 'iaso.snt_malaria.settings.interventions.deleteDialog.usedInActiveScenarios',
         defaultMessage: 'Used in active scenarios',

@@ -47,5 +47,6 @@ export type InterventionUsageRule = {
 export type InterventionUsageScenario = {
     id: number;
     name: string;
+    is_locked: boolean;
     rules: InterventionUsageRule[];
 };

@@ -186,7 +186,7 @@ class InterventionUsageScenarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Scenario
-        fields = ["id", "name", "rules"]
+        fields = ["id", "name", "is_locked", "rules"]
 
 
 class InterventionDeleteSerializer(serializers.Serializer):

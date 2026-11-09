@@ -1,8 +1,10 @@
 import React, { FC } from 'react';
+import LockIcon from '@mui/icons-material/Lock';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Link, Stack, Typography } from '@mui/material';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
+import { ColorDot } from '../../../../components/ColorDot';
 import { HighlightChip } from '../../../../components/HighlightChip';
 import { baseUrls } from '../../../../constants/urls';
 import { MESSAGES } from '../../../messages';
@@ -40,6 +42,11 @@ const styles = {
                 visibility: 'visible',
             },
     },
+    scenarioTitle: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        gap: 1,
+    },
     scenarioName: {
         fontWeight: 'medium',
         lineHeight: 1.25,
@@ -70,7 +77,7 @@ type RuleChipProps = {
 const RuleChip: FC<RuleChipProps> = ({ rule, interventionCategories }) => (
     <HighlightChip
         variant="outlined"
-        dotColor={rule.color}
+        icon={<ColorDot color={rule.color} />}
         label={getRuleDisplayName(rule, interventionCategories)}
     />
 );
@@ -91,16 +98,26 @@ export const InterventionUsageList: FC<Props> = ({ scenarios }) => {
                 <Stack key={scenario.id} sx={styles.scenarioCard}>
                     <Stack
                         direction="row"
-                        alignItems="center"
+                        alignItems="baseline"
                         justifyContent="space-between"
                         gap={1}
                     >
-                        <Typography
-                            variant="subtitle1"
-                            sx={styles.scenarioName}
-                        >
-                            {scenario.name}
-                        </Typography>
+                        <Stack sx={styles.scenarioTitle}>
+                            <Typography
+                                variant="subtitle1"
+                                sx={styles.scenarioName}
+                            >
+                                {scenario.name}
+                            </Typography>
+                            {scenario.is_locked && (
+                                <HighlightChip
+                                    icon={<LockIcon fontSize="inherit" />}
+                                    label={formatMessage(
+                                        MESSAGES.deleteInterventionLocked,
+                                    )}
+                                />
+                            )}
+                        </Stack>
                         <Link
                             href={`/dashboard/${baseUrls.planning}/scenarioId/${scenario.id}`}
                             target="_blank"

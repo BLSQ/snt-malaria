@@ -548,6 +548,20 @@ class InterventionAPITests(SNTMalariaAPITestCase):
                 self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(Intervention.objects.filter(id=rts.id).exists())
 
+    def test_usage_lists_locked_scenarios_first(self):
+        rts = self.intervention_vaccination_rts
+        self._create_rule(self._create_scenario(name="A open plan"), [rts])
+        self._create_rule(self._create_scenario(name="B locked plan", is_locked=True), [rts])
+
+        self.client.force_authenticate(user=self.user_read)
+        response = self.client.get(f"{BASE_URL}{rts.id}/usage/")
+
+        response_data = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(
+            [(scenario["name"], scenario["is_locked"]) for scenario in response_data],
+            [("B locked plan", True), ("A open plan", False)],
+        )
+
     def test_usage_lists_only_active_scenarios_and_their_rules_using_the_intervention(self):
         rts = self.intervention_vaccination_rts
         scenario = self._create_scenario(name="Active plan")
@@ -565,6 +579,7 @@ class InterventionAPITests(SNTMalariaAPITestCase):
                 {
                     "id": scenario.id,
                     "name": "Active plan",
+                    "is_locked": False,
                     "rules": [{"id": rule.id, "name": "High PfPR", "color": rule.color, "interventions": [rts.id]}],
                 }
             ],

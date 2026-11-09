@@ -49,6 +49,9 @@ const styles = {
         '&.Mui-focused': {
             color: 'text.primary',
         },
+        '&.Mui-disabled': {
+            color: 'text.disabled',
+        },
     },
     radioGroup: {
         gap: 2,
@@ -111,6 +114,7 @@ export const DeleteInterventionDialog: FC<Props> = ({
     const [confirmName, setConfirmName] = useState('');
 
     const isUsed = usage.length > 0;
+    const lockedCount = usage.filter(({ is_locked }) => is_locked).length;
     const isReplacing = rulesAction === 'replace';
     const isRemoving = rulesAction === 'remove';
     const replacement = replacementOptions.find(
@@ -123,7 +127,11 @@ export const DeleteInterventionDialog: FC<Props> = ({
     );
     const countValues = {
         name: intervention.name,
-        ...numericValues({ ruleCount, scenarioCount: usage.length }),
+        ...numericValues({
+            ruleCount,
+            scenarioCount: usage.length,
+            lockedCount,
+        }),
     };
 
     const canConfirm =
@@ -199,12 +207,14 @@ export const DeleteInterventionDialog: FC<Props> = ({
                 <Stack spacing={2}>
                     <Alert severity="warning">
                         {formatMessage(
-                            MESSAGES.deleteInterventionUsedMessage,
+                            lockedCount > 0
+                                ? MESSAGES.deleteInterventionLockedMessage
+                                : MESSAGES.deleteInterventionUsedMessage,
                             countValues,
                         )}
                     </Alert>
                     <InterventionUsageList scenarios={usage} />
-                    <FormControl>
+                    <FormControl disabled={lockedCount > 0}>
                         <FormLabel sx={styles.legend}>
                             {formatMessage(
                                 MESSAGES.deleteInterventionRulesActionLegend,

@@ -1,9 +1,8 @@
-import React, { FC } from 'react';
+import React, { FC, ReactNode } from 'react';
 import { Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { SxStyles } from 'Iaso/types/general';
 import { overrideColors } from '../constants/overrideColors';
-import { ColorDot } from './ColorDot';
 
 const styles = {
     chip: {
@@ -30,25 +29,24 @@ const styles = {
     },
 } satisfies SxStyles;
 
+const variantStyles = {
+    highlight: styles.highlightChip,
+    outlined: styles.outlinedChip,
+};
+
 type Props = {
     label: string;
-    variant?: 'highlight' | 'outlined';
-    dotColor?: string;
+    variant?: keyof typeof variantStyles;
+    icon?: ReactNode;
 };
 
 export const HighlightChip: FC<Props> = ({
     label,
     variant = 'highlight',
-    dotColor,
+    icon,
 }) => (
-    <Box
-        component="span"
-        sx={[
-            styles.chip,
-            variant === 'outlined' ? styles.outlinedChip : styles.highlightChip,
-        ]}
-    >
-        {dotColor && <ColorDot color={dotColor} />}
+    <Box component="span" sx={[styles.chip, variantStyles[variant]]}>
+        {icon}
         {label}
     </Box>
 );

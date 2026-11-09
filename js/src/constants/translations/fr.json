@@ -508,6 +508,8 @@
     "iaso.snt_malaria.settings.interventions.deleteConfirmTitle": "Supprimer cette intervention ?",
     "iaso.snt_malaria.settings.interventions.deleteDialog.unusedMessage": "{name} n'est utilisée dans aucune règle de scénario. Elle sera définitivement supprimée.",
     "iaso.snt_malaria.settings.interventions.deleteDialog.usedMessage": "{name} est utilisée dans {ruleCount, plural, one {# règle} other {# règles}} de {scenarioCount, plural, one {# scénario} other {# scénarios}}. Choisissez ce qu'il advient de ces règles, ou ouvrez les scénarios pour les modifier d'abord.",
+    "iaso.snt_malaria.settings.interventions.deleteDialog.lockedMessage": "{name} est utilisée dans {ruleCount, plural, one {# règle} other {# règles}} de {scenarioCount, plural, one {# scénario} other {# scénarios}}. {lockedCount, plural, one {# de ces scénarios est verrouillé} other {# de ces scénarios sont verrouillés}}, leurs règles ne peuvent donc pas être modifiées ici. Déverrouillez ou supprimez les scénarios verrouillés avant de supprimer {name}.",
+    "iaso.snt_malaria.settings.interventions.deleteDialog.locked": "Verrouillé",
     "iaso.snt_malaria.settings.interventions.deleteDialog.usedInActiveScenarios": "Utilisée dans des scénarios actifs",
     "iaso.snt_malaria.settings.interventions.deleteDialog.openScenario": "Ouvrir le scénario",
     "iaso.snt_malaria.settings.interventions.deleteDialog.inRules": "Dans les règles :",
