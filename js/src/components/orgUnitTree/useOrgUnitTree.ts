@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
 import { UseQueryResult } from 'react-query';
 import { OrgUnit } from 'Iaso/domains/orgUnits/types/orgUnit';
-import { useGetOrgUnits } from '../../../../hooks/useGetOrgUnits';
-import { buildScopeTree } from './scopeTreeUtils';
-import { ScopeTree } from './types';
+import { useGetOrgUnits } from '../../domains/planning/hooks/useGetOrgUnits';
+import { buildOrgUnitTree } from './orgUnitTreeUtils';
+import { OrgUnitTree } from './types';
 import { useOrgUnitTypeNames } from './useOrgUnitTypeNames';
 
-type UseOrgUnitScopeTreeResult = {
-    tree: ScopeTree | undefined;
+type UseOrgUnitTreeResult = {
+    tree: OrgUnitTree | undefined;
     isLoading: boolean;
     isError: boolean;
     refetch: UseQueryResult<OrgUnit[], Error>['refetch'];
@@ -19,11 +19,11 @@ type UseOrgUnitScopeTreeResult = {
 // request. Intervention-level counts are bounded (low hundreds for a
 // country), so this is far simpler and more robust than aggregating counts
 // over a lazily/partially-loaded tree, while still only ever holding the
-// org units this selector actually cares about in memory - never the
+// org units the tree actually cares about in memory - never the
 // full pyramid down to facility level.
-export const useOrgUnitScopeTree = (
+export const useOrgUnitTree = (
     interventionTypeId?: number,
-): UseOrgUnitScopeTreeResult => {
+): UseOrgUnitTreeResult => {
     const {
         data: orgUnits,
         isLoading: isLoadingOrgUnits,
@@ -43,7 +43,7 @@ export const useOrgUnitScopeTree = (
     const tree = useMemo(
         () =>
             orgUnits && orgUnitTypeNames
-                ? buildScopeTree(orgUnits, orgUnitTypeNames)
+                ? buildOrgUnitTree(orgUnits, orgUnitTypeNames)
                 : undefined,
         [orgUnits, orgUnitTypeNames],
     );

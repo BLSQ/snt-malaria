@@ -6,6 +6,7 @@ import { Intervention } from '../../../interventions/types';
 import { useGetAccountSettings } from '../../../planning/hooks/useGetAccountSettings';
 import { useGetInterventionPlans } from '../../../planning/hooks/useGetInterventionAssignments';
 import { useGetOrgUnits } from '../../../planning/hooks/useGetOrgUnits';
+import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { NO_INTERVENTION_COLOR } from '../../utils/colors';
 import {
     buildOrgUnitLookup,
@@ -63,6 +64,7 @@ export const InterventionPlanMap: FC<Props> = ({
     titleDotColor,
     titleText,
 }) => {
+    const { selectedOrgUnitIds } = useComparisonDataContext();
     const { data: accountSettings } = useGetAccountSettings();
     const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
     const { data: orgUnits } = useGetOrgUnits({
@@ -134,6 +136,7 @@ export const InterventionPlanMap: FC<Props> = ({
                 border
                 id={mapId}
                 orgUnits={orgUnits ?? []}
+                visibleOrgUnitIds={selectedOrgUnitIds}
                 getOrgUnitMapMisc={getOrgUnitMapMisc}
                 legendConfig={legendConfig}
                 hideLegend={

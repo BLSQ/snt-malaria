@@ -729,5 +729,11 @@
     "iaso.snt_malaria.yearStepper.next": "Next year",
     "iaso.snt_malaria.yearStepper.choose": "Choose year",
     "iaso.snt_malaria.label.clearSearch": "Clear search",
-    "iaso.snt_malaria.assignmentTable.costItemValue": "Cost item value"
+    "iaso.snt_malaria.assignmentTable.costItemValue": "Cost item value",
+    "iaso.snt_malaria.orgUnitTree.selectTooltip": "Click to select",
+    "iaso.snt_malaria.orgUnitTree.deselectTooltip": "Click to deselect",
+    "iaso.snt_malaria.orgUnitTree.selectedCount": "{count} of {total} selected",
+    "iaso.snt_malaria.compareCustomize.areaTitle": "Area",
+    "iaso.snt_malaria.compareCustomize.fixedCostsProratedNote": "Fixed costs are divided by the share of selected districts",
+    "iaso.snt_malaria.orgUnitTree.selectAll": "Select all"
 }

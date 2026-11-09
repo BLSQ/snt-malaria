@@ -302,6 +302,30 @@ class BudgetAPITestCase(SNTMalariaAPITestCase):
 
         self.assertGreater(updated_total, initial_total)
 
+    def test_list_budget_filtered_by_org_unit_ids_costs_only_selected_org_units(self):
+        InterventionAssignment.objects.create(
+            scenario=self.scenario,
+            org_unit=self.district1,
+            intervention=self.intervention_chemo_smc,
+            created_by=self.user_with_full_perm,
+        )
+
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.get(BASE_URL, {"scenario_id": self.scenario.id, "org_unit_ids": str(self.district1.id)})
+
+        result = self.assertJSONResponse(response, status.HTTP_200_OK)
+        budget_2025 = result["results"][0]
+        self.assertEqual(budget_2025["total_cost"], 275000.0)
+        self.assertEqual([item["org_unit_id"] for item in budget_2025["org_units_costs"]], [self.district1.id])
+        self.assertFalse(result["fixed_costs_prorated"])
+
+    def test_list_budget_with_invalid_org_unit_ids_returns_400(self):
+        self.client.force_authenticate(user=self.user_with_full_perm)
+        response = self.client.get(BASE_URL, {"scenario_id": self.scenario.id, "org_unit_ids": "1,abc"})
+
+        result = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("org_unit_ids", result)
+
     def test_list_budget_without_scenario_id_returns_400(self):
         self.client.force_authenticate(user=self.user_with_full_perm)
         response = self.client.get(BASE_URL)

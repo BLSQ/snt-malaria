@@ -142,9 +142,10 @@ class ImpactService:
         age_group: str,
         year_from: Optional[str] = None,
         year_to: Optional[str] = None,
+        org_unit_ids: Optional[list[int]] = None,
     ) -> ScenarioImpactMetrics:
-        """Return the full impact result for a scenario."""
-        org_unit_interventions = self._get_org_unit_interventions(scenario)
+        """Return the impact result for a scenario, restricted to `org_unit_ids` when given."""
+        org_unit_interventions = self._get_org_unit_interventions(scenario, org_unit_ids)
         matchable_interventions, interventions_without_impact_ref = self._split_by_impact_ref(org_unit_interventions)
         year_data, org_units_not_found, unmatched_mixes = self._collect_metrics(
             matchable_interventions, age_group, year_from, year_to
@@ -154,13 +155,17 @@ class ImpactService:
         )
 
     @staticmethod
-    def _get_org_unit_interventions(scenario: Scenario) -> dict[OrgUnit, list[Intervention]]:
+    def _get_org_unit_interventions(
+        scenario: Scenario, org_unit_ids: Optional[list[int]] = None
+    ) -> dict[OrgUnit, list[Intervention]]:
         default_version = scenario.account.default_version
         assignments = (
             InterventionAssignment.objects.select_related("org_unit", "org_unit__impact_mapping", "intervention")
             .filter(scenario=scenario, org_unit__version=default_version)
             .order_by("org_unit__id", "intervention__id")
         )
+        if org_unit_ids:
+            assignments = assignments.filter(org_unit_id__in=org_unit_ids)
         result: dict[OrgUnit, list[Intervention]] = defaultdict(list)
         for assignment in assignments:
             result[assignment.org_unit].append(assignment.intervention)

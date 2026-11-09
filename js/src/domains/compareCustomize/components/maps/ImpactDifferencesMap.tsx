@@ -5,6 +5,7 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { Map as SNTMap } from '../../../../components/Map';
 import { MESSAGES } from '../../../messages';
+import { useGetAccountSettings } from '../../../planning/hooks/useGetAccountSettings';
 import { useGetOrgUnits } from '../../../planning/hooks/useGetOrgUnits';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
 import { MetricKey } from '../../types';
@@ -70,8 +71,14 @@ export const ImpactDifferencesMap: FC<Props> = ({ selectedMetric }) => {
         baselineScenarioId,
         impactsByScenarioId,
         budgetsByScenarioId,
+        selectedOrgUnitIds,
     } = useComparisonDataContext();
-    const { data: orgUnits } = useGetOrgUnits();
+    const { data: accountSettings } = useGetAccountSettings();
+    const interventionTypeId = accountSettings?.intervention_org_unit_type_id;
+    const { data: orgUnits } = useGetOrgUnits({
+        orgUnitTypeId: interventionTypeId,
+        enabled: !!interventionTypeId,
+    });
     const intl = useSafeIntl();
     const { formatMessage } = intl;
     const config = useMetricConfig();
@@ -260,6 +267,7 @@ export const ImpactDifferencesMap: FC<Props> = ({ selectedMetric }) => {
                 border
                 id="impact_differences_map"
                 orgUnits={orgUnits ?? []}
+                visibleOrgUnitIds={selectedOrgUnitIds}
                 getOrgUnitMapMisc={getOrgUnitMapMisc}
                 legendConfig={legendConfig}
                 hideLegend={!hasData}
