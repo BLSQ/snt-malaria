@@ -101,6 +101,8 @@ type Props = {
     hideLegend?: boolean;
     defaultColor?: string;
     selectedOrgUnitIds?: number[];
+    /** When set, only these org units are drawn and the map fits to them; when empty, the view is kept. */
+    visibleOrgUnitIds?: number[];
     onOrgUnitClick?: (orgUnitId: number) => void;
     /** Optional key fragment appended to each GeoJSON key to force style refresh. */
     dataKey?: string;
@@ -121,6 +123,7 @@ export const Map: FC<Props> = ({
     hideLegend = false,
     defaultColor = 'var(--deepPurple-300, #9575CD)',
     selectedOrgUnitIds,
+    visibleOrgUnitIds,
     onOrgUnitClick = noOp,
     dataKey,
     border = false,
@@ -153,10 +156,15 @@ export const Map: FC<Props> = ({
             (max, ou) => Math.max(max, ou.org_unit_type_depth ?? 0),
             0,
         );
+        const visibleIds = visibleOrgUnitIds
+            ? new Set(visibleOrgUnitIds)
+            : undefined;
         return orderedOrgUnits.filter(
-            ou => (ou.org_unit_type_depth ?? 0) === maxDepth,
+            ou =>
+                (ou.org_unit_type_depth ?? 0) === maxDepth &&
+                (!visibleIds || visibleIds.has(ou.id)),
         );
-    }, [orderedOrgUnits]);
+    }, [orderedOrgUnits, visibleOrgUnitIds]);
 
     const bounds: Bounds | undefined = useMemo(() => {
         const geoJsonFeatures = leafOrgUnits

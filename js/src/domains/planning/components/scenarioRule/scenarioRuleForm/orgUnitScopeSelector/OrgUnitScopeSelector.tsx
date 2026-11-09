@@ -13,14 +13,17 @@ import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { DelayedLoadingSpinner } from '../../../../../../components/DelayedLoadingSpinner';
 import { InlineSearchInput } from '../../../../../../components/InlineSearchInput';
+import {
+    buildVisibleRows,
+    computeKeepForQuery,
+} from '../../../../../../components/orgUnitTree/orgUnitTreeUtils';
+import { useOrgUnitTree } from '../../../../../../components/orgUnitTree/useOrgUnitTree';
 import { MESSAGES } from '../../../../../messages';
 import { MetricTypeCriterion } from '../../../../types/scenarioRule';
 import { RuleMatchedOrgUnits } from '../useRuleMatchedOrgUnits';
 import { ScopeTreeRow } from './ScopeTreeRow';
 import {
-    buildVisibleRows,
     computeAggregates,
-    computeKeepForQuery,
     leafKind,
     pickLeaves,
     pruneNoOpOverrides,
@@ -29,7 +32,6 @@ import {
     unpickLeaves,
 } from './scopeTreeUtils';
 import { ScopeAggregate } from './types';
-import { useOrgUnitScopeTree } from './useOrgUnitScopeTree';
 
 const EMPTY_AGGREGATE: ScopeAggregate = {
     total: 0,
@@ -112,7 +114,7 @@ export const OrgUnitScopeSelector: FC<Props> = ({
         isLoading: isLoadingTree,
         isError: isTreeError,
         refetch: refetchTree,
-    } = useOrgUnitScopeTree(interventionTypeId);
+    } = useOrgUnitTree(interventionTypeId);
     const {
         ruleMatchedIds,
         isLoading: isLoadingRule,

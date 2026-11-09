@@ -1,6 +1,10 @@
 import { useEffect } from 'react';
 import { useQueryClient } from 'react-query';
 import { getRequest } from 'Iaso/libs/Api';
+import {
+    ORG_UNIT_IDS_API_PARAM,
+    serializeOrgUnitIds,
+} from '../../../utils/orgUnitIdsParam';
 
 const PREFETCH_INTERVAL_MS = 50;
 const PREFETCH_YEARS = 2;
@@ -28,8 +32,10 @@ export const usePrefetchYearsImpact = (
     scenarioIds: number[],
     selectedAgeGroup: string | undefined,
     isImpactLoading: boolean,
+    orgUnitIds: number[] | undefined,
 ): void => {
     const queryClient = useQueryClient();
+    const serializedOrgUnitIds = serializeOrgUnitIds(orgUnitIds);
 
     useEffect(() => {
         if (
@@ -69,9 +75,22 @@ export const usePrefetchYearsImpact = (
                             year_to: String(to),
                             age_group: selectedAgeGroup,
                         });
+                        if (serializedOrgUnitIds) {
+                            params.set(
+                                ORG_UNIT_IDS_API_PARAM,
+                                serializedOrgUnitIds,
+                            );
+                        }
 
                         queryClient.prefetchQuery(
-                            ['impact', scenarioId, from, to, selectedAgeGroup],
+                            [
+                                'impact',
+                                scenarioId,
+                                from,
+                                to,
+                                selectedAgeGroup,
+                                serializedOrgUnitIds,
+                            ],
                             () =>
                                 getRequest(
                                     `/api/snt_malaria/impact/?${params.toString()}`,
@@ -92,5 +111,6 @@ export const usePrefetchYearsImpact = (
         scenarioIds,
         selectedAgeGroup,
         isImpactLoading,
+        serializedOrgUnitIds,
     ]);
 };

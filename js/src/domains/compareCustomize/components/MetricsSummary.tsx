@@ -101,6 +101,13 @@ export const MetricsSummary: FC = () => {
             ),
         [scenarios, budgetsByScenarioId],
     );
+    const isFixedCostsProrated = useMemo(
+        () =>
+            Array.from(budgetsByScenarioId.values()).some(
+                budget => budget?.fixed_costs_prorated,
+            ),
+        [budgetsByScenarioId],
+    );
 
     const targetYearSubtext = (
         metricField: 'number_cases' | 'number_severe_cases' | 'prevalence_rate',
@@ -156,6 +163,13 @@ export const MetricsSummary: FC = () => {
                 isLoading={isBudgetLoading}
                 entries={costsEntries}
                 keyPrefix="total-costs"
+                subtext={
+                    isFixedCostsProrated && (
+                        <Typography variant="caption" sx={styles.subtext}>
+                            {formatMessage(MESSAGES.fixedCostsProratedNote)}
+                        </Typography>
+                    )
+                }
             />
         </Grid>
     );

@@ -36,10 +36,14 @@ class BudgetCalculationService:
     resolves from the rule's override for that year, then its all-years override, then the cost
     line itself. A year the rule does not deploy the intervention in has no coverage unless the
     rule sets one for that year.
+
+    With ``org_unit_ids``, only assignments to those org units are costed. A fixed line is
+    scaled by the share of its intervention's assigned org units that are selected.
     """
 
-    def __init__(self, scenario):
+    def __init__(self, scenario, org_unit_ids=None):
         self.scenario = scenario
+        self.selected_org_unit_ids = set(org_unit_ids) if org_unit_ids else None
         self.start_year = scenario.start_year
         self.end_year = scenario.end_year
 
@@ -100,6 +104,13 @@ class BudgetCalculationService:
         }
         self.fixed_cost_candidates_by_intervention_id = self._fixed_cost_candidates(rule_interventions)
 
+        self.costed_assignments = [
+            assignment
+            for assignment in self.assignments
+            if self.selected_org_unit_ids is None or assignment.org_unit_id in self.selected_org_unit_ids
+        ]
+        self.fixed_cost_share_by_intervention_id = self._fixed_cost_shares()
+
         budget_settings = BudgetSettings.objects.filter(account=scenario.account).first()
         self.inflation_rate = Decimal(str(budget_settings.inflation_rate)) if budget_settings else Decimal("0")
         self.buffer = Decimal(str(budget_settings.buffer)) if budget_settings else Decimal("1.1")
@@ -123,6 +134,27 @@ class BudgetCalculationService:
         for intervention_id in interventions_assigned_outside_rules:
             candidates[intervention_id].append(None)
         return candidates
+
+    def _fixed_cost_shares(self):
+        if self.selected_org_unit_ids is None:
+            return {}
+        assigned = defaultdict(set)
+        for assignment in self.assignments:
+            assigned[assignment.intervention_id].add(assignment.org_unit_id)
+        return {
+            intervention_id: Decimal(len(org_unit_ids & self.selected_org_unit_ids)) / Decimal(len(org_unit_ids))
+            for intervention_id, org_unit_ids in assigned.items()
+        }
+
+    @property
+    def prorates_fixed_costs(self):
+        return any(
+            share < 1 and self._has_fixed_lines(intervention_id)
+            for intervention_id, share in self.fixed_cost_share_by_intervention_id.items()
+        )
+
+    def _has_fixed_lines(self, intervention_id):
+        return any(not line.is_proportional for line in self.cost_lines_by_intervention_id.get(intervention_id, []))
 
     def calculate_all_years(self):
         return [self.calculate_year(year) for year in range(self.start_year, self.end_year + 1)]
@@ -288,7 +320,7 @@ class BudgetCalculationService:
         rows = []
         years_offset = year - self.start_year
         inflation_multiplier = (Decimal("1") + self.inflation_rate) ** years_offset
-        for assignment in self.assignments:
+        for assignment in self.costed_assignments:
             intervention = assignment.intervention
             rule_intervention = self.rule_intervention_by_key.get((assignment.rule_id, intervention.id))
             grant_id = assignment.grant_id or intervention.grant_id
@@ -394,7 +426,10 @@ class BudgetCalculationService:
         return rows
 
     def _compute_fixed_cost_row(self, line, rule_intervention, fixed_quantity, year, inflation_multiplier):
-        quantity = fixed_quantity * self._buffer_multiplier(self._resolve("buffer", rule_intervention, line, year))
+        share = self.fixed_cost_share_by_intervention_id.get(line.intervention_id, Decimal("1"))
+        quantity = (
+            fixed_quantity * self._buffer_multiplier(self._resolve("buffer", rule_intervention, line, year)) * share
+        )
         line_cost = self._compute_cost_(
             quantity, self._resolve("unit_cost", rule_intervention, line, year), inflation_multiplier
         )

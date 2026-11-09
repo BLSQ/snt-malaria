@@ -64,6 +64,30 @@ class ImpactQuerySerializerTestCase(SNTMalariaTestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("scenario_id", serializer.errors)
 
+    def test_org_unit_ids_are_parsed_deduplicated_and_sorted(self):
+        serializer = ImpactQuerySerializer(
+            data={"scenario_id": self.scenario.id, "age_group": "under5", "org_unit_ids": "3,1,3"},
+            context=self.context,
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertEqual(serializer.validated_data["org_unit_ids"], [1, 3])
+
+    def test_org_unit_ids_default_to_none(self):
+        serializer = ImpactQuerySerializer(
+            data={"scenario_id": self.scenario.id, "age_group": "under5"},
+            context=self.context,
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        self.assertIsNone(serializer.validated_data["org_unit_ids"])
+
+    def test_org_unit_ids_with_non_integer_rejected(self):
+        serializer = ImpactQuerySerializer(
+            data={"scenario_id": self.scenario.id, "age_group": "under5", "org_unit_ids": "1,abc"},
+            context=self.context,
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("org_unit_ids", serializer.errors)
+
     def test_valid_with_optional_year_from_year_to(self):
         serializer = ImpactQuerySerializer(
             data={
