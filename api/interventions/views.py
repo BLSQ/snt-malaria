@@ -8,12 +8,14 @@ from rest_framework.response import Response
 
 from plugins.snt_malaria.api.interventions.permissions import InterventionPermission
 from plugins.snt_malaria.api.interventions.serializers import (
+    InterventionDeleteSerializer,
     InterventionDetailSerializer,
     InterventionDetailWriteSerializer,
     InterventionDuplicateSerializer,
     InterventionSerializer,
+    InterventionUsageScenarioSerializer,
 )
-from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
+from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine, Scenario, ScenarioRule
 
 
 class InterventionViewSet(viewsets.ModelViewSet):
@@ -48,10 +50,13 @@ class InterventionViewSet(viewsets.ModelViewSet):
             self._raise_for_integrity_error(e)
 
     def perform_destroy(self, instance):
-        # Deletion is blocked at the DB level (on_delete=PROTECT) while a scenario
-        # rule still references this intervention; turn that into a friendly error.
+        serializer = InterventionDeleteSerializer(
+            data=self.request.query_params,
+            context={**self.get_serializer_context(), "intervention": instance},
+        )
+        serializer.is_valid(raise_exception=True)
         try:
-            instance.delete()
+            serializer.save()
         except ProtectedError:
             raise MethodNotAllowed(
                 self.request.method,
@@ -75,6 +80,26 @@ class InterventionViewSet(viewsets.ModelViewSet):
             InterventionSerializer(duplicate, context=self.get_serializer_context()).data,
             status=status.HTTP_201_CREATED,
         )
+
+    @action(detail=True, methods=["get"], serializer_class=InterventionUsageScenarioSerializer)
+    def usage(self, request, pk):
+        intervention = self.get_object()
+        scenarios = (
+            Scenario.objects.filter(rules__interventions=intervention)
+            .distinct()
+            .order_by("name")
+            .prefetch_related(
+                Prefetch(
+                    "rules",
+                    queryset=ScenarioRule.objects.filter(interventions=intervention)
+                    .order_by("-priority")
+                    .prefetch_related("interventions"),
+                    to_attr="rules_using_intervention",
+                )
+            )
+        )
+        serializer = self.get_serializer(scenarios, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["get"], serializer_class=InterventionDetailSerializer)
     def details(self, request, pk):
