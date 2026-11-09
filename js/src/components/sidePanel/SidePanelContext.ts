@@ -28,13 +28,12 @@ export type SidePanelContextValue = {
     undock: () => void;
     openFloating: (peek?: boolean) => void;
     closeFloating: () => void;
+    hold: () => void;
     reveal: () => void;
     setLabel: (key: string, label: SidePanelLabel | null) => void;
     panelRef: (element: HTMLElement | null) => void;
     registerToggle: (element: HTMLElement, isFallback: boolean) => () => void;
     onEnterToggle: () => void;
-    onEnterPanel: () => void;
-    onLeave: () => void;
     onBlurPanel: (event: FocusEvent<HTMLElement>) => void;
 };
 

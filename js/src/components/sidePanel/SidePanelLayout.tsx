@@ -163,8 +163,6 @@ export const SidePanelLayout: FC<Props> = ({ panel, before, children }) => {
         toggleOrigin,
         panelRef,
         closeFloating,
-        onEnterPanel,
-        onLeave,
         onBlurPanel,
     } = useSidePanelContext();
     const { transitions } = useTheme();
@@ -212,8 +210,6 @@ export const SidePanelLayout: FC<Props> = ({ panel, before, children }) => {
                 >
                     <Box
                         ref={setPanelElement}
-                        onMouseEnter={onEnterPanel}
-                        onMouseLeave={onLeave}
                         onBlur={onBlurPanel}
                         aria-hidden={!isOpen}
                         sx={[

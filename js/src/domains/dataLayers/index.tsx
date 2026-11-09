@@ -531,6 +531,7 @@ export const DataLayers: FC = () => {
                             <SidePanel
                                 title={sidePanelLabel.title}
                                 hint={sidePanelLabel.hint}
+                                holdKey={`${wizard.isOpen}:${wizard.activeStep}:${isCompositeEditorOpen}`}
                             >
                                 {renderSidebarColumn()}
                             </SidePanel>

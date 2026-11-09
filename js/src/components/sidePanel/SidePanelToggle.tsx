@@ -71,7 +71,6 @@ export const SidePanelToggle: FC<Props> = ({ fallback = false }) => {
         openFloating,
         closeFloating,
         onEnterToggle,
-        onLeave,
     } = useSidePanelContext();
     const { transitions } = useTheme();
     const buttonRef = useRef<HTMLButtonElement>(null);
@@ -115,7 +114,6 @@ export const SidePanelToggle: FC<Props> = ({ fallback = false }) => {
                     ref={buttonRef}
                     onClick={handleClick}
                     onMouseEnter={onEnterToggle}
-                    onMouseLeave={onLeave}
                     aria-expanded={isOpen}
                     sx={[
                         styles.button,

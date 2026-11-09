@@ -5,7 +5,7 @@ import Tooltip from '@mui/material/Tooltip/Tooltip';
 import { useSafeIntl } from 'bluesquare-components';
 import { SxStyles } from 'Iaso/types/general';
 import { MESSAGES } from '../../domains/messages';
-import { HideSidePanelIcon, PinSidePanelIcon } from './icons';
+import { DockSidePanelIcon, UndockSidePanelIcon } from './icons';
 import { useSidePanelContext } from './SidePanelContext';
 
 const styles = {
@@ -44,9 +44,9 @@ export const SidePanelDockButton: FC = () => {
     }
 
     const tooltip = formatMessage(
-        isFloating ? MESSAGES.pinSidePanel : MESSAGES.hideSidePanel,
+        isFloating ? MESSAGES.dockSidePanel : MESSAGES.undockSidePanel,
     );
-    const Icon = isFloating ? PinSidePanelIcon : HideSidePanelIcon;
+    const Icon = isFloating ? DockSidePanelIcon : UndockSidePanelIcon;
 
     return (
         <Tooltip title={tooltip}>
