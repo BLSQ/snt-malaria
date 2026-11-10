@@ -22,6 +22,7 @@ def get_intervention_column(name, code):
 
 
 def get_scenario(user, workspace, base_name="Scenario"):
+    now = timezone.now()
     return Scenario(
         name=f"{base_name} {now.strftime('%Y-%m-%d %H:%M:%S')}",
         created_by=user,
