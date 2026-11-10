@@ -33,6 +33,7 @@ export const MetricsSummary: FC = () => {
         isBudgetLoading,
         isImpactLoading,
         targetYear,
+        isSingleYear,
     } = useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
 
@@ -87,6 +88,20 @@ export const MetricsSummary: FC = () => {
             ),
         [scenarios, impactsByScenarioId],
     );
+    const prevalenceEntries = useMemo(
+        () =>
+            buildMetricEntries(
+                scenarios,
+                impactsByScenarioId,
+                d => d?.prevalence_rate?.value ?? undefined,
+                formatPercentValue,
+                {
+                    relative: false,
+                    positiveIsGreen: false,
+                },
+            ),
+        [scenarios, impactsByScenarioId],
+    );
     const costsEntries = useMemo(
         () =>
             buildMetricEntries(
@@ -113,7 +128,8 @@ export const MetricsSummary: FC = () => {
         metricField: 'number_cases' | 'number_severe_cases' | 'prevalence_rate',
         formatter: (v: number) => string,
     ) => {
-        if (!targetYear || !baselineTargetYearData) return undefined;
+        if (isSingleYear || !targetYear || !baselineTargetYearData)
+            return undefined;
         const metricValue = baselineTargetYearData[metricField]?.value;
         return (
             <Typography variant="caption" sx={styles.subtext}>
@@ -146,17 +162,27 @@ export const MetricsSummary: FC = () => {
                     formatBigNumber,
                 )}
             />
-            <MetricCard
-                title={formatMessage(MESSAGES.impactPfprEvolution)}
-                icon={TimelineOutlinedIcon}
-                isLoading={isImpactLoading}
-                entries={pfprEntries}
-                keyPrefix="pfpr"
-                subtext={targetYearSubtext(
-                    'prevalence_rate',
-                    formatPercentValue,
-                )}
-            />
+            {isSingleYear ? (
+                <MetricCard
+                    title={formatMessage(MESSAGES.impactPrevalenceRate)}
+                    icon={TimelineOutlinedIcon}
+                    isLoading={isImpactLoading}
+                    entries={prevalenceEntries}
+                    keyPrefix="prevalence"
+                />
+            ) : (
+                <MetricCard
+                    title={formatMessage(MESSAGES.impactPfprEvolution)}
+                    icon={TimelineOutlinedIcon}
+                    isLoading={isImpactLoading}
+                    entries={pfprEntries}
+                    keyPrefix="pfpr"
+                    subtext={targetYearSubtext(
+                        'prevalence_rate',
+                        formatPercentValue,
+                    )}
+                />
+            )}
             <MetricCard
                 title={formatMessage(MESSAGES.impactTotalCosts)}
                 icon={MonetizationOnOutlinedIcon}

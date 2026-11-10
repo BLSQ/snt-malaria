@@ -95,6 +95,8 @@ export type ScenarioImpactMetrics = ImpactMetrics & {
     provider_meta: ImpactProviderMeta;
 };
 
+export type YearMode = 'range' | 'single';
+
 export type ScenarioYearRange = {
     scenario: ScenarioDisplay;
     yearRange: [number, number];

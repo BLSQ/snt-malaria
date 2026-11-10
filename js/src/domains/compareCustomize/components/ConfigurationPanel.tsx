@@ -8,10 +8,10 @@ import InputComponent from 'Iaso/components/forms/InputComponent';
 import { SxStyles } from 'Iaso/types/general';
 import { DropdownOptions } from 'Iaso/types/utils';
 import { ColorDot } from '../../../components/ColorDot';
-import { YearRangeSlider } from '../../../components/YearRangeSlider';
 import { MESSAGES } from '../../messages';
-import { ScenarioId } from '../types';
+import { ScenarioId, YearMode } from '../types';
 import { getScenarioColor } from '../utils/colors';
+import { YearSelection } from './YearSelection';
 
 type Props = {
     baselineScenarioId: ScenarioId;
@@ -27,6 +27,10 @@ type Props = {
     yearRange?: [number, number];
     selectedYearRange?: [number, number];
     onYearRangeChange?: (range: [number, number]) => void;
+    yearMode?: YearMode;
+    onYearModeChange?: (mode: YearMode) => void;
+    selectedSingleYear?: number;
+    onSingleYearChange?: (year: number) => void;
     isYearRangeLoading?: boolean;
     ageGroups?: string[];
     selectedAgeGroup?: string;
@@ -128,6 +132,10 @@ export const ConfigurationPanel: FC<Props> = ({
     yearRange,
     selectedYearRange,
     onYearRangeChange,
+    yearMode,
+    onYearModeChange,
+    selectedSingleYear,
+    onSingleYearChange,
     isYearRangeLoading,
     ageGroups,
     selectedAgeGroup,
@@ -237,11 +245,21 @@ export const ConfigurationPanel: FC<Props> = ({
                         )}
                         {!isYearRangeLoading &&
                             yearRange &&
-                            onYearRangeChange && (
-                                <YearRangeSlider
+                            onYearRangeChange &&
+                            yearMode &&
+                            onYearModeChange &&
+                            selectedSingleYear !== undefined &&
+                            onSingleYearChange && (
+                                <YearSelection
                                     yearRange={yearRange}
-                                    value={selectedYearRange ?? yearRange}
-                                    onChange={onYearRangeChange}
+                                    yearMode={yearMode}
+                                    onYearModeChange={onYearModeChange}
+                                    selectedYearRange={
+                                        selectedYearRange ?? yearRange
+                                    }
+                                    onYearRangeChange={onYearRangeChange}
+                                    selectedSingleYear={selectedSingleYear}
+                                    onSingleYearChange={onSingleYearChange}
                                 />
                             )}
                         {ageGroups &&

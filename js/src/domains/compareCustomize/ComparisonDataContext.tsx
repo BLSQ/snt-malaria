@@ -11,6 +11,7 @@ type ComparisonData = {
     isBudgetLoading: boolean;
     targetYear?: number;
     yearFrom?: number;
+    isSingleYear: boolean;
     selectedOrgUnitIds: number[] | undefined;
 };
 
