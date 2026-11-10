@@ -9,6 +9,7 @@ from plugins.snt_malaria.models import (
     CostUnitType,
     Donor,
     Grant,
+    ImpactProviderConfig,
     Intervention,
     InterventionAssignment,
     InterventionCategory,
@@ -166,6 +167,9 @@ class SNTMalariaTestMixin:
         account = account or self.account
         donor, _ = Donor.objects.get_or_create(account=account, name=donor_name)
         return Grant.objects.create(account=account, donor=donor, name=name)
+
+    def create_snt_impact_provider_config(self, account=None, provider_key="fake", **kwargs):
+        return ImpactProviderConfig.objects.create(account=account or self.account, provider_key=provider_key, **kwargs)
 
     def create_snt_rule_cost_override(self, rule, cost_line, year=None, **values):
         return ScenarioRuleCostOverride.objects.create(

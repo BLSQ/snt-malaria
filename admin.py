@@ -11,6 +11,7 @@ from django.utils.html import format_html
 from iaso.admin import IasoJSONEditorWidget
 from iaso.models import Account
 from plugins.snt_malaria.api.account_settings.serializers import AccountSettings
+from plugins.snt_malaria.api.impact import cache as impact_cache
 from plugins.snt_malaria.management.commands.load_impact_org_unit_mappings import (
     HELP_TEXT as IMPACT_MAPPING_HELP_TEXT,
     MappingLoadError,
@@ -176,6 +177,14 @@ class ImpactProviderConfigAdmin(admin.ModelAdmin):
         ("Provider configuration", {"fields": ("config", "secret")}),
         ("Caching", {"fields": ("cache_ttl_seconds",)}),
     )
+    actions = ("invalidate_impact_cache",)
+
+    @admin.action(description="Invalidate impact cache")
+    def invalidate_impact_cache(self, request, queryset):
+        account_ids = list(queryset.values_list("account_id", flat=True))
+        for account_id in account_ids:
+            impact_cache.invalidate_account(account_id)
+        self.message_user(request, f"Impact cache invalidated for {len(account_ids)} account(s).", messages.SUCCESS)
 
 
 MAPPING_FILE_HELP = format_html(
