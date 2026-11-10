@@ -33,6 +33,7 @@ import {
     ScenarioDisplay,
     ScenarioYearRange,
     toNumericId,
+    YearMode,
 } from './types';
 import { getScenarioColor } from './utils/colors';
 import { intersectYearRanges } from './utils/yearRange';
@@ -114,6 +115,10 @@ export const CompareCustomize: FC = () => {
     const [selectedYearRange, setSelectedYearRange] = useState<
         [number, number] | undefined
     >(undefined);
+    const [yearMode, setYearMode] = useState<YearMode>('range');
+    const [selectedSingleYear, setSelectedSingleYear] = useState<
+        number | undefined
+    >(undefined);
 
     const scenariosYearRange = useMemo((): [number, number] | undefined => {
         if (!scenarios?.length) return undefined;
@@ -179,14 +184,25 @@ export const CompareCustomize: FC = () => {
             }
             return effectiveYearRange;
         });
+        setSelectedSingleYear(prev =>
+            prev !== undefined &&
+            prev >= effectiveYearRange[0] &&
+            prev <= effectiveYearRange[1]
+                ? prev
+                : undefined,
+        );
     }, [effectiveYearRange]);
 
-    const yearFrom = effectiveYearRange
+    const rangeFrom = effectiveYearRange
         ? (selectedYearRange?.[0] ?? effectiveYearRange[0])
         : undefined;
-    const yearTo = effectiveYearRange
+    const rangeTo = effectiveYearRange
         ? (selectedYearRange?.[1] ?? effectiveYearRange[1])
         : undefined;
+    const isSingleYear = yearMode === 'single';
+    const singleYear = selectedSingleYear ?? rangeTo;
+    const yearFrom = isSingleYear ? singleYear : rangeFrom;
+    const yearTo = isSingleYear ? singleYear : rangeTo;
 
     // Age group state
     const ageGroupsQuery = useGetImpactAgeGroups();
@@ -238,6 +254,7 @@ export const CompareCustomize: FC = () => {
         selectedAgeGroup,
         isImpactLoading,
         appliedOrgUnitIds,
+        isSingleYear,
     );
 
     const {
@@ -274,6 +291,7 @@ export const CompareCustomize: FC = () => {
                 isBudgetLoading={isBudgetLoading}
                 targetYear={yearTo}
                 yearFrom={yearFrom}
+                isSingleYear={isSingleYear}
                 selectedOrgUnitIds={selectedOrgUnitIds}
             >
                 <PageContainer sx={styles.pageContainer}>
@@ -322,6 +340,10 @@ export const CompareCustomize: FC = () => {
                                     yearRange={effectiveYearRange}
                                     selectedYearRange={selectedYearRange}
                                     onYearRangeChange={setSelectedYearRange}
+                                    yearMode={yearMode}
+                                    onYearModeChange={setYearMode}
+                                    selectedSingleYear={singleYear}
+                                    onSingleYearChange={setSelectedSingleYear}
                                     isYearRangeLoading={isYearRangeLoading}
                                     ageGroups={ageGroupsQuery.data?.age_groups}
                                     selectedAgeGroup={selectedAgeGroup}

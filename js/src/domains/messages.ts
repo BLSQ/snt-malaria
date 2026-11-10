@@ -420,6 +420,24 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compareCustomize.displayOptionsTitle',
         defaultMessage: 'Display options',
     },
+    yearModeRange: {
+        id: 'iaso.snt_malaria.compareCustomize.yearModeRange',
+        defaultMessage: 'Range',
+    },
+    yearModeSingle: {
+        id: 'iaso.snt_malaria.compareCustomize.yearModeSingle',
+        defaultMessage: 'Single year',
+    },
+    yearModeRangeHint: {
+        id: 'iaso.snt_malaria.compareCustomize.yearModeRangeHint',
+        defaultMessage:
+            'Data is aggregated over the selected years: cases and costs are summed, PfPR shows the evolution from the first to the last year.',
+    },
+    yearModeSingleHint: {
+        id: 'iaso.snt_malaria.compareCustomize.yearModeSingleHint',
+        defaultMessage:
+            'The per-year chart and the target values are hidden, as they only apply to a range of years.',
+    },
     downloadCSVTemplate: {
         id: 'iaso.snt_malaria.scenario.downloadCSVTemplate',
         defaultMessage: 'Download CSV Template',
@@ -522,6 +540,10 @@ export const MESSAGES = defineMessages({
     impactPfprEvolution: {
         id: 'iaso.snt_malaria.impact.pfprEvolution',
         defaultMessage: 'PfPR evolution',
+    },
+    impactPrevalenceRate: {
+        id: 'iaso.snt_malaria.impact.prevalenceRate',
+        defaultMessage: 'Prevalence rate',
     },
     impactRefLabel: {
         id: 'iaso.snt_malaria.label.impactRef',
