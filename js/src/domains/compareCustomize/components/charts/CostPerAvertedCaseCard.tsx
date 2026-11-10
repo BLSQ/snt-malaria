@@ -31,10 +31,16 @@ import {
 import { computeNiceTicks } from '../../utils/chartUtils';
 import { SCENARIO_BASE_COLORS } from '../../utils/colors';
 
+const CHART_HEIGHT = 220;
+const SINGLE_YEAR_CHART_HEIGHT = 340;
+
 const styles = {
     chartBody: {
         width: '100%',
-        height: 220,
+        height: CHART_HEIGHT,
+    },
+    singleYearChartBody: {
+        height: SINGLE_YEAR_CHART_HEIGHT,
     },
 } satisfies SxStyles;
 
@@ -86,6 +92,7 @@ export const CostPerAvertedCaseCard: FC = () => {
         budgetsByScenarioId,
         isImpactLoading,
         isBudgetLoading,
+        isSingleYear,
     } = useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
     const { axisColor, gridProps, axisProps } = useChartTheme();
@@ -135,13 +142,22 @@ export const CostPerAvertedCaseCard: FC = () => {
             title={formatMessage(MESSAGES.costPerAvertedCaseTitle)}
             tooltip={formatMessage(MESSAGES.costPerAvertedCaseTooltip)}
             icon={BarChartOutlinedIcon}
-            bodySx={{ minHeight: 220 }}
+            bodySx={{
+                minHeight: isSingleYear
+                    ? SINGLE_YEAR_CHART_HEIGHT
+                    : CHART_HEIGHT,
+            }}
             isLoading={isLoading}
         >
             {chartData.length === 0 ? (
                 <ChartEmptyState message={emptyMessage} />
             ) : (
-                <Box sx={styles.chartBody}>
+                <Box
+                    sx={[
+                        styles.chartBody,
+                        isSingleYear && styles.singleYearChartBody,
+                    ]}
+                >
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                             layout="vertical"

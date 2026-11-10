@@ -23,7 +23,8 @@ const surroundingYears = (year: number, min: number, max: number): number[] => {
 /**
  * Prefetch impact data for the next PREFETCH_YEARS positions on each
  * slider thumb. Since the user can only move one slider at a time,
- * this covers the next moves in any direction they choose.
+ * this covers the next moves in any direction they choose. With a single
+ * year, the neighbouring single years are prefetched.
  */
 export const usePrefetchYearsImpact = (
     yearFrom: number | undefined,
@@ -33,6 +34,7 @@ export const usePrefetchYearsImpact = (
     selectedAgeGroup: string | undefined,
     isImpactLoading: boolean,
     orgUnitIds: number[] | undefined,
+    isSingleYear: boolean,
 ): void => {
     const queryClient = useQueryClient();
     const serializedOrgUnitIds = serializeOrgUnitIds(orgUnitIds);
@@ -55,10 +57,18 @@ export const usePrefetchYearsImpact = (
 
         // The user moves one slider at a time, so pair each candidate
         // with the fixed other thumb.
-        const yearsToPrefetch: [number, number][] = [
-            ...yearFromCandidates.map(f => [f, yearTo] as [number, number]),
-            ...yearToCandidates.map(t => [yearFrom, t] as [number, number]),
-        ];
+        const yearsToPrefetch: [number, number][] = isSingleYear
+            ? surroundingYears(yearFrom, min, max).map(
+                  y => [y, y] as [number, number],
+              )
+            : [
+                  ...yearFromCandidates.map(
+                      f => [f, yearTo] as [number, number],
+                  ),
+                  ...yearToCandidates.map(
+                      t => [yearFrom, t] as [number, number],
+                  ),
+              ];
 
         const timers: ReturnType<typeof setTimeout>[] = [];
         let index = 0;
@@ -112,5 +122,6 @@ export const usePrefetchYearsImpact = (
         selectedAgeGroup,
         isImpactLoading,
         serializedOrgUnitIds,
+        isSingleYear,
     ]);
 };
