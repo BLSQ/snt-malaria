@@ -36,3 +36,17 @@ export type ImpactRefOption = {
 export type ImpactRefs = {
     refs: ImpactRefOption[];
 };
+
+export type InterventionUsageRule = {
+    id: number;
+    name: string;
+    color: string;
+    interventions: number[];
+};
+
+export type InterventionUsageScenario = {
+    id: number;
+    name: string;
+    is_locked: boolean;
+    rules: InterventionUsageRule[];
+};

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-22 12:46+0000\n"
+"POT-Creation-Date: 2026-11-06 14:17+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -68,6 +68,23 @@ msgstr "Financement inconnu."
 #: plugins/snt_malaria/api/interventions/serializers.py
 msgid "Unknown impact reference for the configured impact provider."
 msgstr "Référence d'impact inconnue pour le fournisseur d'impact configuré."
+
+#: plugins/snt_malaria/api/interventions/serializers.py
+msgid "Intervention not found."
+msgstr "Intervention introuvable."
+
+#: plugins/snt_malaria/api/interventions/serializers.py
+msgid "An intervention cannot replace itself."
+msgstr "Une intervention ne peut pas se remplacer elle-même."
+
+#: plugins/snt_malaria/api/interventions/serializers.py
+msgid "Either replace the intervention or remove it from the rules."
+msgstr "Remplacez l'intervention ou retirez-la des règles, mais pas les deux."
+
+#: plugins/snt_malaria/api/interventions/serializers.py
+#, python-format
+msgid "Unlock these scenarios first: %(names)s"
+msgstr "Déverrouillez d'abord ces scénarios : %(names)s"
 
 #: plugins/snt_malaria/api/interventions/views.py
 msgid ""

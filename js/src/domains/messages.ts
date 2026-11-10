@@ -1456,10 +1456,93 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.settings.interventions.deleteConfirmTitle',
         defaultMessage: 'Delete this intervention?',
     },
-    deleteInterventionConfirmMessage: {
-        id: 'iaso.snt_malaria.settings.interventions.deleteConfirmMessage',
+    deleteInterventionUnusedMessage: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.unusedMessage',
         defaultMessage:
-            'This intervention will be permanently removed. Intervention used in scenario rules cannot be deleted.',
+            '{name} is not used in any scenario rule. It will be permanently removed.',
+    },
+    deleteInterventionUsedMessage: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.usedMessage',
+        defaultMessage:
+            '{name} is used in {ruleCount, plural, one {# rule} other {# rules}} across {scenarioCount, plural, one {# scenario} other {# scenarios}}. ' +
+            'Choose what happens to those rules, or open the scenarios and change them first.',
+    },
+    deleteInterventionLockedMessage: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.lockedMessage',
+        defaultMessage:
+            '{name} is used in {ruleCount, plural, one {# rule} other {# rules}} across {scenarioCount, plural, one {# scenario} other {# scenarios}}. ' +
+            "{lockedCount, plural, one {# of these scenarios is locked} other {# of these scenarios are locked}}, so their rules can't be changed here. " +
+            'Unlock or delete the locked scenarios before deleting {name}.',
+    },
+    deleteInterventionLocked: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.locked',
+        defaultMessage: 'Locked',
+    },
+    deleteInterventionUsedInActiveScenarios: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.usedInActiveScenarios',
+        defaultMessage: 'Used in active scenarios',
+    },
+    deleteInterventionOpenScenario: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.openScenario',
+        defaultMessage: 'Open scenario',
+    },
+    deleteInterventionInRules: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.inRules',
+        defaultMessage: 'In rules:',
+    },
+    deleteInterventionRulesActionLegend: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.rulesActionLegend',
+        defaultMessage: 'What should happen to these rules?',
+    },
+    deleteInterventionReplaceOption: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.replaceOption',
+        defaultMessage: 'Replace with another intervention',
+    },
+    deleteInterventionSelectReplacement: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.selectReplacement',
+        defaultMessage: 'Select an intervention',
+    },
+    deleteInterventionReplaceHelper: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.replaceHelper',
+        defaultMessage:
+            'These rules will use the replacement instead. Their districts, deployment years and grant are kept. Cost overrides are reset.',
+    },
+    deleteInterventionReplaceChosenHelper: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.replaceChosenHelper',
+        defaultMessage:
+            '{ruleCount, plural, one {# rule} other {# rules}} will use {replacement} instead of {name}. ' +
+            'Their districts, deployment years and grant are kept. Cost overrides are reset to the costs of {replacement}.',
+    },
+    deleteInterventionRemoveOption: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.removeOption',
+        defaultMessage: 'Remove it from these rules',
+    },
+    deleteInterventionRemoveHelper: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.removeHelper',
+        defaultMessage:
+            '{name} is taken out of {ruleCount, plural, one {# rule} other {# rules}} in {scenarioCount, plural, one {# scenario} other {# scenarios}}. ' +
+            'Other interventions in those rules are kept. Rules left with no intervention are removed.',
+    },
+    deleteInterventionConfirmNameLabel: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.confirmNameLabel',
+        defaultMessage: 'Type the intervention name to confirm',
+    },
+    deleteInterventionConfirmNameWarning: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.confirmNameWarning',
+        defaultMessage:
+            "This can't be undone. {name} and its cost items are permanently deleted.",
+    },
+    deleteInterventionReplaceAndDelete: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.replaceAndDelete',
+        defaultMessage: 'Replace and delete',
+    },
+    deleteInterventionReplaceWithAndDelete: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.replaceWithAndDelete',
+        defaultMessage: 'Replace with {replacement} and delete',
+    },
+    deleteInterventionRemoveAndDelete: {
+        id: 'iaso.snt_malaria.settings.interventions.deleteDialog.removeAndDelete',
+        defaultMessage: 'Remove from rules and delete',
     },
     interventionName: {
         id: 'iaso.snt_malaria.settings.interventions.name',

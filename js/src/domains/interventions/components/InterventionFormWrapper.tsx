@@ -1,21 +1,14 @@
 import React, { FC, useCallback, useMemo } from 'react';
 import CheckIcon from '@mui/icons-material/Check';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Button, Stack, Typography } from '@mui/material';
-import {
-    LoadingSpinner,
-    makeFullModal,
-    useSafeIntl,
-} from 'bluesquare-components';
+import { LoadingSpinner, useSafeIntl } from 'bluesquare-components';
 import { setNestedObjectValues } from 'formik';
-import { DeleteRestoreModal } from 'Iaso/components/DeleteRestoreModals/DeleteRestoreModal';
 import { CardStyled } from '../../../components/CardStyled';
 import { SettingsFormContainer } from '../../../components/styledComponents';
 import { ExtendedFormikProvider } from '../../../hooks/useGetExtendedFormikContext';
 import { useGetGrants } from '../../costManagement/grants/hooks/useGetGrants';
 import { MESSAGES } from '../../messages';
-import { useDeleteIntervention } from '../hooks/useDeleteIntervention';
 import { useDuplicateIntervention } from '../hooks/useDuplicateIntervention';
 import { useGetImpactRefs } from '../hooks/useGetImpactRefs';
 import { useGetInterventionDetails } from '../hooks/useGetInterventionDetails';
@@ -24,6 +17,7 @@ import { useSaveIntervention } from '../hooks/useSaveIntervention';
 import { useSaveInterventionDetails } from '../hooks/useSaveInterventionDetails';
 import { Intervention, InterventionPayload } from '../types';
 import { InterventionFormValues } from '../types/interventionForm';
+import { DeleteInterventionButton } from './deleteInterventionDialog/DeleteInterventionButton';
 import { InterventionBasicForm } from './InterventionBasicForm';
 import { InterventionForm } from './InterventionForm';
 
@@ -33,27 +27,6 @@ type Props = {
     onDeleted: () => void;
     onCancel: () => void;
 };
-
-const DeleteTriggerButton: FC<{
-    onClick: () => void;
-    label: string;
-    disabled?: boolean;
-}> = ({ onClick, label, disabled }) => (
-    <Button
-        onClick={onClick}
-        variant="outlined"
-        color="error"
-        startIcon={<DeleteOutlineIcon />}
-        disabled={disabled}
-    >
-        {label}
-    </Button>
-);
-
-const DeleteInterventionModal = makeFullModal(
-    DeleteRestoreModal,
-    DeleteTriggerButton,
-);
 
 export const InterventionFormWrapper: FC<Props> = ({
     intervention,
@@ -79,8 +52,6 @@ export const InterventionFormWrapper: FC<Props> = ({
 
     const { mutateAsync: saveIntervention, isLoading: isSavingIntervention } =
         useSaveIntervention();
-    const { mutate: deleteIntervention, isLoading: isDeleting } =
-        useDeleteIntervention();
     const { mutateAsync: duplicateIntervention, isLoading: isDuplicating } =
         useDuplicateIntervention();
     const {
@@ -161,13 +132,6 @@ export const InterventionFormWrapper: FC<Props> = ({
         await formik.submitForm();
     }, [formik]);
 
-    const handleDelete = useCallback(() => {
-        if (!intervention) {
-            return;
-        }
-        deleteIntervention(intervention.id, { onSuccess: onDeleted });
-    }, [intervention, deleteIntervention, onDeleted]);
-
     const handleDuplicate = useCallback(async () => {
         if (!intervention) {
             return;
@@ -203,23 +167,11 @@ export const InterventionFormWrapper: FC<Props> = ({
                                 {formatMessage(MESSAGES.duplicate)}
                             </Button>
                         )}
-                        {!isNew && (
-                            <DeleteInterventionModal
-                                titleMessage={formatMessage(
-                                    MESSAGES.deleteInterventionConfirmTitle,
-                                )}
-                                onConfirm={handleDelete}
-                                iconProps={{
-                                    label: formatMessage(
-                                        MESSAGES.deleteIntervention,
-                                    ),
-                                    disabled: isDeleting,
-                                }}
-                            >
-                                {formatMessage(
-                                    MESSAGES.deleteInterventionConfirmMessage,
-                                )}
-                            </DeleteInterventionModal>
+                        {intervention && (
+                            <DeleteInterventionButton
+                                intervention={intervention}
+                                onDeleted={onDeleted}
+                            />
                         )}
                         {isNew && (
                             <Button onClick={onCancel} color="primary">
