@@ -1,5 +1,3 @@
-from unittest.mock import Mock
-
 from iaso.models import OrgUnit
 from plugins.snt_malaria.api.scenario_rules.serializers import (
     ScenarioRuleCreateSerializer,
@@ -15,7 +13,7 @@ from plugins.snt_malaria.tests.api.scenario_rules.common_base import ScenarioRul
 class ScenarioRuleQuerySerializerTestCase(ScenarioRulesTestBase):
     def setUp(self):
         super().setUp()
-        self.context = {"request": Mock(user=self.user_with_full_perm)}
+        self.context = {"request": self.build_snt_request(self.user_with_full_perm)}
 
     def test_happy_path(self):
         data = {
@@ -116,7 +114,7 @@ class ScenarioRuleRetrieveSerializerTestCase(ScenarioRulesTestBase):
 class ScenarioRuleCreateSerializerTestCase(ScenarioRulesTestBase):
     def setUp(self):
         super().setUp()
-        self.context = {"request": Mock(user=self.user_with_full_perm)}
+        self.context = {"request": self.build_snt_request(self.user_with_full_perm)}
 
     def test_happy_path(self):
         data = {
@@ -440,7 +438,7 @@ class ScenarioRuleCreateSerializerInterventionLevelOnlyTestCase(ScenarioRulesTes
 
     def setUp(self):
         super().setUp()
-        self.context = {"request": Mock(user=self.user_with_full_perm)}
+        self.context = {"request": self.build_snt_request(self.user_with_full_perm)}
         AccountSettings.objects.create(account=self.account, intervention_org_unit_type=self.out_district)
         self.province_type = self.create_snt_org_unit_type(name="PROVINCE")
         self.province = self.create_snt_org_unit(
@@ -488,7 +486,7 @@ class ScenarioRuleCreateSerializerInterventionLevelOnlyTestCase(ScenarioRulesTes
 class ScenarioRuleUpdateSerializerTestCase(ScenarioRulesTestBase):
     def setUp(self):
         super().setUp()
-        self.context = {"request": Mock(user=self.user_with_full_perm)}
+        self.context = {"request": self.build_snt_request(self.user_with_full_perm)}
 
     def test_happy_path(self):
         data = {

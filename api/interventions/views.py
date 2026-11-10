@@ -13,17 +13,20 @@ from plugins.snt_malaria.api.interventions.serializers import (
     InterventionDuplicateSerializer,
     InterventionSerializer,
 )
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models import Intervention, InterventionCostBreakdownLine
 
 
-class InterventionViewSet(viewsets.ModelViewSet):
+class InterventionViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
+    queryset = Intervention.objects.all()
+    workspace_lookup = "intervention_category__workspace"
     serializer_class = InterventionSerializer
     ordering_fields = ["id", "name"]
     http_method_names = ["get", "post", "put", "patch", "delete", "head", "options"]
     permission_classes = [InterventionPermission]
 
     def get_queryset(self):
-        queryset = Intervention.objects.filter(intervention_category__account=self.request.user.iaso_profile.account)
+        queryset = super().get_queryset()
         if self.action in ("details", "update_details"):
             queryset = queryset.prefetch_related(
                 Prefetch(

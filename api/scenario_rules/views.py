@@ -3,6 +3,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models import ScenarioRule
 
 from .permissions import ScenarioRulePermission
@@ -16,20 +17,14 @@ from .serializers import (
 )
 
 
-class ScenarioRuleViewSet(viewsets.ModelViewSet):
+class ScenarioRuleViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
+    queryset = ScenarioRule.objects.select_related("scenario").prefetch_related(
+        "interventions", "scenarioruleintervention_set__cost_overrides"
+    )
+    workspace_lookup = "scenario__workspace"
     ordering_fields = ["scenario", "priority"]
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
     permission_classes = [ScenarioRulePermission]
-
-    def get_queryset(self):
-        user = self.request.user
-        if not user or not user.is_authenticated or not hasattr(user, "iaso_profile"):
-            return ScenarioRule.objects.none()
-        return (
-            ScenarioRule.objects.select_related("scenario")
-            .prefetch_related("interventions", "scenarioruleintervention_set__cost_overrides")
-            .filter(scenario__account=user.iaso_profile.account)
-        )
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -52,7 +47,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         scenario_rules = self.get_queryset().filter(scenario=scenario).order_by("priority")
         # Resolved once for the whole list rather than once per rule - see
         # ScenarioRuleListSerializer.get_is_match_all / _rule_is_match_all.
-        account_org_unit_ids = ScenarioRule.resolve_all_org_unit_ids(scenario.account)
+        account_org_unit_ids = ScenarioRule.resolve_all_org_unit_ids(scenario.workspace)
         list_serializer = ScenarioRuleListSerializer(
             scenario_rules, many=True, context={"account_org_unit_ids": account_org_unit_ids}
         )
@@ -67,7 +62,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         scenario = serializer.validated_data["scenario"]
         matching_criteria = serializer.validated_data.get("matching_criteria")
         org_units_matched = ScenarioRule.resolve_matched_org_units(
-            scenario.account, matching_criteria, data_layer_years=scenario.data_layer_years
+            scenario.workspace, matching_criteria, data_layer_years=scenario.data_layer_years
         )
 
         rule: ScenarioRule = serializer.save(created_by=user, org_units_matched=org_units_matched)
@@ -99,7 +94,7 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         instance = serializer.instance
         matching_criteria = serializer.validated_data.get("matching_criteria", instance.matching_criteria)
         org_units_matched = ScenarioRule.resolve_matched_org_units(
-            instance.scenario.account, matching_criteria, data_layer_years=instance.scenario.data_layer_years
+            instance.scenario.workspace, matching_criteria, data_layer_years=instance.scenario.data_layer_years
         )
 
         rule: ScenarioRule = serializer.save(updated_by=user, org_units_matched=org_units_matched)
@@ -132,10 +127,11 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        account = request.user.iaso_profile.account
         matching_criteria = serializer.validated_data.get("matching_criteria")
         data_layer_years = serializer.validated_data.get("data_layer_years")
-        matched = ScenarioRule.resolve_matched_org_units(account, matching_criteria, data_layer_years=data_layer_years)
+        matched = ScenarioRule.resolve_matched_org_units(
+            self.workspace, matching_criteria, data_layer_years=data_layer_years
+        )
 
         result = ScenarioRule.resolve_org_unit_ids(
             matching_criteria,

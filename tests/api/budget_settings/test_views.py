@@ -20,7 +20,7 @@ class BudgetSettingsAPITestCase(SNTMalariaAPITestCase):
         )
 
         self.budget_settings_usd = BudgetSettings.objects.create(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             local_currency="USD",
             exchange_rate=1.0,
             inflation_rate=0.02,
@@ -33,7 +33,7 @@ class BudgetSettingsAPITestCase(SNTMalariaAPITestCase):
         )
 
         self.budget_settings_usd2 = BudgetSettings.objects.create(
-            account=self.account2,
+            workspace=self.get_snt_workspace(self.account2),
             local_currency="USD",
             exchange_rate=2.0,
             inflation_rate=2.02,

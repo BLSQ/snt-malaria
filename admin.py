@@ -40,13 +40,13 @@ class InterventionCategoryAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "short_name",
-        "account",
+        "workspace",
         "created_by",
         "created_at",
         "updated_at",
     )
     search_fields = ("name", "description")
-    list_filter = ("account", "created_by")
+    list_filter = ("workspace__account", "workspace", "created_by")
     ordering = ("name",)
 
 
@@ -66,7 +66,8 @@ class InterventionAdmin(admin.ModelAdmin):
     list_editable = ("impact_ref",)
     search_fields = ("name", "description", "code", "impact_ref")
     list_filter = (
-        "intervention_category__account",
+        "intervention_category__workspace__account",
+        "intervention_category__workspace",
         "created_by",
     )
     ordering = ("name",)
@@ -88,14 +89,14 @@ class InterventionAssignmentAdmin(admin.ModelAdmin):
 class ScenarioAdmin(admin.ModelAdmin):
     list_display = (
         "name",
-        "account",
+        "workspace",
         "created_by",
         "created_at",
         "updated_at",
         "deleted_at",
     )
     search_fields = ("name", "description")
-    list_filter = ("account", "created_by")
+    list_filter = ("workspace__account", "workspace", "created_by")
     ordering = ("name",)
 
 
@@ -127,7 +128,7 @@ class InterventionCostBreakdownLineAdmin(admin.ModelAdmin):
 class BudgetSettingsAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "account",
+        "workspace",
         "local_currency",
         "exchange_rate",
         "inflation_rate",
@@ -138,18 +139,18 @@ class BudgetSettingsAdmin(admin.ModelAdmin):
 
 @admin.register(Donor)
 class DonorAdmin(admin.ModelAdmin):
-    list_display = ("id", "account", "name", "created_at", "updated_at")
-    search_fields = ("account__name", "name")
-    list_filter = ("account",)
-    ordering = ("account__name", "name")
+    list_display = ("id", "workspace", "name", "created_at", "updated_at")
+    search_fields = ("workspace__account__name", "workspace__name", "name")
+    list_filter = ("workspace__account", "workspace")
+    ordering = ("workspace__account__name", "workspace__name", "name")
 
 
 @admin.register(Grant)
 class GrantAdmin(admin.ModelAdmin):
-    list_display = ("id", "account", "name", "short_name", "donor", "amount", "created_at", "updated_at")
-    search_fields = ("account__name", "name", "short_name", "donor__name")
-    list_filter = ("account", "donor")
-    ordering = ("account__name", "name")
+    list_display = ("id", "workspace", "name", "short_name", "donor", "amount", "created_at", "updated_at")
+    search_fields = ("workspace__account__name", "workspace__name", "name", "short_name", "donor__name")
+    list_filter = ("workspace__account", "workspace", "donor")
+    ordering = ("workspace__account__name", "workspace__name", "name")
 
 
 class ImpactProviderConfigForm(forms.ModelForm):
@@ -313,16 +314,17 @@ class AccountSettingsAdmin(admin.ModelAdmin):
 
 @admin.register(CostUnitType)
 class CostUnitTypeAdmin(admin.ModelAdmin):
-    list_display = ("id", "account", "name")
-    search_fields = ("account__name", "name")
-    ordering = ("account__name", "name")
+    list_display = ("id", "workspace", "name")
+    search_fields = ("workspace__account__name", "workspace__name", "name")
+    list_filter = ("workspace__account", "workspace")
+    ordering = ("workspace__account__name", "workspace__name", "name")
 
 
 @admin.register(CompositeLayer)
 class CompositeLayerAdmin(admin.ModelAdmin):
     formfield_overrides = {models.JSONField: {"widget": IasoJSONEditorWidget}}
-    list_display = ("id", "account", "name", "metric_type", "created_by", "created_at", "updated_at")
-    search_fields = ("account__name", "name")
-    list_filter = ("account",)
+    list_display = ("id", "workspace", "name", "metric_type", "created_by", "created_at", "updated_at")
+    search_fields = ("workspace__account__name", "workspace__name", "name")
+    list_filter = ("workspace__account", "workspace")
     ordering = ("-updated_at",)
     raw_id_fields = ("metric_type",)

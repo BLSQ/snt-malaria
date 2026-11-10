@@ -4,8 +4,7 @@ import os
 
 from django.core.management.base import BaseCommand
 
-from iaso.models import User
-from iaso.models.base import Account
+from iaso.models import User, Workspace
 from iaso.models.org_unit import OrgUnit
 from plugins.snt_malaria.models import InterventionAssignment
 from plugins.snt_malaria.models.intervention import Intervention
@@ -14,7 +13,6 @@ from plugins.snt_malaria.models.scenario import Scenario
 
 logger = logging.getLogger(__name__)
 
-BURKINA_ACCOUNT_ID = 1
 DEFAULT_SCENARIO_NAME = "WHO scenario"
 # To use this script in it's current form, you need to add this file to the correct folder
 BFA_INTERVENTION_MIX = os.path.join(os.path.dirname(__file__), "burkina_faso/BFA_intervention_mix.csv")
@@ -23,15 +21,19 @@ BFA_INTERVENTION_MIX = os.path.join(os.path.dirname(__file__), "burkina_faso/BFA
 class Command(BaseCommand):
     help = "Script to import “WHO scenario” as default scenario for Burkina Faso"
 
+    def add_arguments(self, parser):
+        parser.add_argument("--workspace-id", type=int, required=True, help="Workspace receiving the scenario")
+
     def handle(self, *args, **options):
-        account = Account.objects.get(pk=BURKINA_ACCOUNT_ID)
-        logger.info(f"Account: {account.name}")
+        workspace = Workspace.objects.select_related("account").get(pk=options["workspace_id"])
+        account = workspace.account
+        logger.info(f"Workspace: {workspace.name} (account {account.name})")
         logger.info("---------------------------------------------------------")
         logger.info("1. Get or create the default scenario")
         created_by = User.objects.filter(iaso_profile__account=account).first()
         default_scenario, created = Scenario.objects.get_or_create(
             name__iexact=DEFAULT_SCENARIO_NAME,  # This should be adjusted (see below)
-            account=account,
+            workspace=workspace,
             defaults={
                 "name": DEFAULT_SCENARIO_NAME,
                 "created_by": created_by,
@@ -53,7 +55,7 @@ class Command(BaseCommand):
                     csv_intervention_mix = row["INTERVENTION_MIX"].split(", ")
                     db_interventions_mixs = Intervention.objects.filter(
                         name__iregex=r"(" + "|".join(csv_intervention_mix) + ")",
-                        intervention_category__account=account,
+                        intervention_category__workspace=workspace,
                     )
 
                     if len(csv_intervention_mix) != len(db_interventions_mixs):

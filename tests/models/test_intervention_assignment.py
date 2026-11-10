@@ -13,7 +13,7 @@ class InterventionAssignmentModelTestCase(SNTMalariaTestCase):
         super().setUp()
         self.account, self.user = self.create_snt_account(name="account")
         self.scenario = self.create_snt_scenario(
-            self.account,
+            self.get_snt_workspace(),
             self.user,
             name="Scenario 1",
             description="Description of scenario 1",
@@ -33,7 +33,7 @@ class InterventionAssignmentModelTestCase(SNTMalariaTestCase):
             org_units_scope=[],
         )
         self.intervention_category = self.create_snt_intervention_category(
-            account=self.account, created_by=self.user, name="Category 1"
+            workspace=self.get_snt_workspace(), created_by=self.user, name="Category 1"
         )
         self.intervention = self.create_snt_intervention(
             intervention_category=self.intervention_category, created_by=self.user, name="Intervention 1"

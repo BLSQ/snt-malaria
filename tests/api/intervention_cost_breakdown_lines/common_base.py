@@ -17,14 +17,14 @@ class InterventionCostBreakdownLineBase(SNTMalariaAPITestCase):
         self.user_read = self.create_user_with_profile(
             username="user_read", account=self.account, permissions=[SNT_SETTINGS_READ_PERMISSION]
         )
-        defaults = self.create_snt_default_interventions(account=self.account, created_by=self.user_write)
+        defaults = self.create_snt_default_interventions(workspace=self.get_snt_workspace(), created_by=self.user_write)
         self.int_category_vaccination = defaults["category_vaccination"]
         self.int_category_chemoprevention = defaults["category_chemoprevention"]
         self.intervention_vaccination_rts = defaults["intervention_rts"]
         self.intervention_chemo_smc = defaults["intervention_smc"]
         self.intervention_chemo_iptp = defaults["intervention_iptp"]
-        self.unit_type_other, _ = CostUnitType.objects.get_or_create(account=self.account, name="Other")
-        self.unit_type_per_sp, _ = CostUnitType.objects.get_or_create(account=self.account, name="per SP")
+        self.unit_type_other, _ = CostUnitType.objects.get_or_create(workspace=self.get_snt_workspace(), name="Other")
+        self.unit_type_per_sp, _ = CostUnitType.objects.get_or_create(workspace=self.get_snt_workspace(), name="per SP")
         self.cost_line1 = InterventionCostBreakdownLine.objects.create(
             name="Cost Line 1",
             intervention=self.intervention_vaccination_rts,
@@ -47,10 +47,14 @@ class InterventionCostBreakdownLineBase(SNTMalariaAPITestCase):
         self.other_user = self.create_user_with_profile(
             username="otheruser", account=self.other_account, permissions=[SNT_SETTINGS_WRITE_PERMISSION]
         )
-        other_defaults = self.create_snt_default_interventions(account=self.other_account, created_by=self.other_user)
+        other_defaults = self.create_snt_default_interventions(
+            workspace=self.get_snt_workspace(self.other_account), created_by=self.other_user
+        )
         self.other_int_category = other_defaults["category_vaccination"]
         self.other_intervention = other_defaults["intervention_rts"]
-        self.other_unit_type, _ = CostUnitType.objects.get_or_create(account=self.other_account, name="per RDT kit")
+        self.other_unit_type, _ = CostUnitType.objects.get_or_create(
+            workspace=self.get_snt_workspace(self.other_account), name="per RDT kit"
+        )
         self.other_cost_line = InterventionCostBreakdownLine.objects.create(
             name="Other Cost Line",
             intervention=self.other_intervention,

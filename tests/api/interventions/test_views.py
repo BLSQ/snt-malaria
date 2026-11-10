@@ -27,14 +27,16 @@ class InterventionAPITests(SNTMalariaAPITestCase):
             username="user_read", account=self.account, permissions=[SNT_SETTINGS_READ_PERMISSION]
         )
 
-        defaults = self.create_snt_default_interventions(account=self.account, created_by=self.user_write)
+        defaults = self.create_snt_default_interventions(workspace=self.get_snt_workspace(), created_by=self.user_write)
         self.int_category_vaccination = defaults["category_vaccination"]
         self.int_category_chemoprevention = defaults["category_chemoprevention"]
         self.intervention_vaccination_rts = defaults["intervention_rts"]
         self.intervention_chemo_smc = defaults["intervention_smc"]
         self.intervention_chemo_iptp = defaults["intervention_iptp"]
-        self.unit_type_other, _ = CostUnitType.objects.get_or_create(account=self.account, name="Other")
-        self.unit_type_per_itn, _ = CostUnitType.objects.get_or_create(account=self.account, name="per ITN")
+        self.unit_type_other, _ = CostUnitType.objects.get_or_create(workspace=self.get_snt_workspace(), name="Other")
+        self.unit_type_per_itn, _ = CostUnitType.objects.get_or_create(
+            workspace=self.get_snt_workspace(), name="per ITN"
+        )
 
         self.cost_line = self.intervention_vaccination_rts.cost_breakdown_lines.create(
             name="Cost Line 1",
@@ -187,8 +189,8 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         self.assertIn("New Cost Line 2", line_names)
 
     def test_retrieve_intervention_details_includes_grant(self):
-        donor = Donor.objects.create(account=self.account, name="Global Fund")
-        grant = Grant.objects.create(account=self.account, donor=donor, name="NFM4")
+        donor = Donor.objects.create(workspace=self.get_snt_workspace(), name="Global Fund")
+        grant = Grant.objects.create(workspace=self.get_snt_workspace(), donor=donor, name="NFM4")
         self.intervention_vaccination_rts.grant = grant
         self.intervention_vaccination_rts.save()
 
@@ -199,8 +201,8 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         self.assertEqual(response.data["grant"], grant.id)
 
     def test_update_intervention_details_set_grant(self):
-        donor = Donor.objects.create(account=self.account, name="Global Fund")
-        grant = Grant.objects.create(account=self.account, donor=donor, name="NFM4")
+        donor = Donor.objects.create(workspace=self.get_snt_workspace(), name="Global Fund")
+        grant = Grant.objects.create(workspace=self.get_snt_workspace(), donor=donor, name="NFM4")
 
         self.client.force_authenticate(user=self.user_write)
         url = f"{BASE_URL}{self.intervention_vaccination_rts.id}/update_details/"
@@ -211,8 +213,8 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         self.assertEqual(self.intervention_vaccination_rts.grant, grant)
 
     def test_update_intervention_details_clear_grant(self):
-        donor = Donor.objects.create(account=self.account, name="Global Fund")
-        grant = Grant.objects.create(account=self.account, donor=donor, name="NFM4")
+        donor = Donor.objects.create(workspace=self.get_snt_workspace(), name="Global Fund")
+        grant = Grant.objects.create(workspace=self.get_snt_workspace(), donor=donor, name="NFM4")
         self.intervention_vaccination_rts.grant = grant
         self.intervention_vaccination_rts.save()
 
@@ -226,8 +228,10 @@ class InterventionAPITests(SNTMalariaAPITestCase):
 
     def test_update_intervention_details_with_other_account_grant_returns_400(self):
         other_account, _ = self.create_snt_account(name="Other Account For Grants")
-        other_donor = Donor.objects.create(account=other_account, name="Other Donor")
-        other_grant = Grant.objects.create(account=other_account, donor=other_donor, name="Other Grant")
+        other_donor = Donor.objects.create(workspace=self.get_snt_workspace(other_account), name="Other Donor")
+        other_grant = Grant.objects.create(
+            workspace=self.get_snt_workspace(other_account), donor=other_donor, name="Other Grant"
+        )
 
         self.client.force_authenticate(user=self.user_write)
         url = f"{BASE_URL}{self.intervention_vaccination_rts.id}/update_details/"
@@ -313,7 +317,9 @@ class InterventionAPITests(SNTMalariaAPITestCase):
 
     def test_create_intervention_with_other_account_category_returns_400(self):
         other_account, _ = self.create_snt_account(name="Other Account For Interventions")
-        other_category = self.create_snt_intervention_category(account=other_account, created_by=self.user_write)
+        other_category = self.create_snt_intervention_category(
+            workspace=self.get_snt_workspace(other_account), created_by=self.user_write
+        )
 
         self.client.force_authenticate(user=self.user_write)
         data = {"name": "Sneaky intervention", "code": "sneaky", "intervention_category": other_category.id}
@@ -367,7 +373,7 @@ class InterventionAPITests(SNTMalariaAPITestCase):
 
     def test_delete_intervention_used_by_a_rule_returns_405(self):
         scenario = self.create_snt_scenario(
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             created_by=self.user_write,
             name="Scenario with rule",
         )
@@ -395,7 +401,9 @@ class InterventionAPITests(SNTMalariaAPITestCase):
 
     def test_delete_other_account_intervention_not_found(self):
         other_account, _ = self.create_snt_account(name="Other Account For Delete")
-        other_category = self.create_snt_intervention_category(account=other_account, created_by=self.user_write)
+        other_category = self.create_snt_intervention_category(
+            workspace=self.get_snt_workspace(other_account), created_by=self.user_write
+        )
         other_intervention = self.create_snt_intervention(
             intervention_category=other_category, created_by=self.user_write
         )
@@ -478,7 +486,9 @@ class InterventionAPITests(SNTMalariaAPITestCase):
 
     def test_duplicate_other_account_intervention_not_found(self):
         other_account, _ = self.create_snt_account(name="Other Account For Duplicate")
-        other_category = self.create_snt_intervention_category(account=other_account, created_by=self.user_write)
+        other_category = self.create_snt_intervention_category(
+            workspace=self.get_snt_workspace(other_account), created_by=self.user_write
+        )
         other_intervention = self.create_snt_intervention(
             intervention_category=other_category, created_by=self.user_write
         )

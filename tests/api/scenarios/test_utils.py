@@ -29,7 +29,7 @@ class ScenarioAPIUtilsTestCase(SNTMalariaTestCase):
         self.account, self.user_1 = self.create_snt_account(name="account")
         self.user_2 = self.create_user_with_profile(username="user_2", account=self.account)
 
-        defaults = self.create_snt_default_interventions(account=self.account, created_by=self.user_1)
+        defaults = self.create_snt_default_interventions(workspace=self.get_snt_workspace(), created_by=self.user_1)
         self.int_category_vaccination = defaults["category_vaccination"]
         self.int_category_chemoprevention = defaults["category_chemoprevention"]
         self.intervention_vaccination_rts = defaults["intervention_rts"]
@@ -37,7 +37,7 @@ class ScenarioAPIUtilsTestCase(SNTMalariaTestCase):
         self.intervention_chemo_iptp = defaults["intervention_iptp"]
 
         self.scenario_1 = self.create_snt_scenario(
-            self.account, self.user_1, name="Scenario 1", start_year=2024, end_year=2026
+            self.get_snt_workspace(), self.user_1, name="Scenario 1", start_year=2024, end_year=2026
         )
         self.rule_1 = ScenarioRule.objects.create(
             name="Rule 1",
@@ -71,7 +71,7 @@ class ScenarioAPIUtilsTestCase(SNTMalariaTestCase):
         scenario_2 = Scenario.objects.create(
             name="Scenario 2",
             created_by=self.user_1,
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             start_year=2024,
             end_year=2026,
         )
@@ -116,14 +116,14 @@ class ScenarioAPIUtilsTestCase(SNTMalariaTestCase):
         scenario_3 = Scenario.objects.create(
             name="Scenario 3",
             created_by=self.user_1,
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             start_year=2024,
             end_year=2026,
         )
         new_scenario = Scenario.objects.create(
             name="New Scenario",
             created_by=self.user_1,
-            account=self.account,
+            workspace=self.get_snt_workspace(),
             start_year=2024,
             end_year=2026,
         )
@@ -140,7 +140,9 @@ class BuildInterventionGroupsTestCase(SNTMalariaTestCase):
     def setUp(self):
         super().setUp()
         self.account, self.user = self.create_snt_account(name="account")
-        self.category = self.create_snt_intervention_category(account=self.account, created_by=self.user, name="Cat")
+        self.category = self.create_snt_intervention_category(
+            workspace=self.get_snt_workspace(), created_by=self.user, name="Cat"
+        )
         self.iv_a = self.create_snt_intervention(
             intervention_category=self.category, created_by=self.user, name="A", code="a"
         )
@@ -152,7 +154,9 @@ class BuildInterventionGroupsTestCase(SNTMalariaTestCase):
         return pd.DataFrame(rows)
 
     def _interventions_qs(self):
-        return Intervention.objects.filter(intervention_category__account=self.account).values("id", "name", "code")
+        return Intervention.objects.filter(intervention_category__workspace__account=self.account).values(
+            "id", "name", "code"
+        )
 
     def test_single_group(self):
         col_a = get_intervention_column("A", "a")
@@ -210,7 +214,9 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
         self.account.default_version = self.version
         self.account.save()
 
-        self.category = self.create_snt_intervention_category(account=self.account, created_by=self.user, name="Cat")
+        self.category = self.create_snt_intervention_category(
+            workspace=self.get_snt_workspace(), created_by=self.user, name="Cat"
+        )
         self.iv_a = self.create_snt_intervention(
             intervention_category=self.category, created_by=self.user, name="Alpha", code="a", short_name="A"
         )
@@ -246,13 +252,15 @@ class CreateRulesFromImportTestCase(SNTMalariaTestCase):
             MetricValue.objects.create(metric_type=metric_type, org_unit=org_unit, value=1000, year=2025)
 
         self.scenario = self.create_snt_scenario(
-            self.account, self.user, name="Import Scenario", start_year=2024, end_year=2026
+            self.get_snt_workspace(), self.user, name="Import Scenario", start_year=2024, end_year=2026
         )
         self.col_a = get_intervention_column("Alpha", "a")
         self.col_b = get_intervention_column("Beta", "b")
 
     def _interventions_qs(self):
-        return Intervention.objects.filter(intervention_category__account=self.account).values("id", "name", "code")
+        return Intervention.objects.filter(intervention_category__workspace__account=self.account).values(
+            "id", "name", "code"
+        )
 
     def test_all_minority_groups(self):
         """Each district has a unique intervention → all minority → inclusion-only rules."""

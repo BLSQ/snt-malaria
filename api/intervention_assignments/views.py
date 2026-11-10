@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from plugins.snt_malaria.api.intervention_assignments.filters import (
     InterventionAssignmentListFilter,
 )
+from plugins.snt_malaria.api.workspace_scoped import WorkspaceScopedViewSetMixin
 from plugins.snt_malaria.models import InterventionAssignment
 from plugins.snt_malaria.permissions import SNT_SCENARIO_FULL_WRITE_PERMISSION
 
@@ -16,18 +17,13 @@ from .serializers import (
 )
 
 
-class InterventionAssignmentViewSet(viewsets.ModelViewSet):
+class InterventionAssignmentViewSet(WorkspaceScopedViewSetMixin, viewsets.ModelViewSet):
+    queryset = InterventionAssignment.objects.prefetch_related("intervention", "org_unit").select_related("rule")
+    workspace_lookup = "scenario__workspace"
     http_method_names = ["get", "delete"]
     filter_backends = [DjangoFilterBackend]
     filterset_class = InterventionAssignmentListFilter
     permission_classes = [InterventionAssignmentsPermission]
-
-    def get_queryset(self):
-        return (
-            InterventionAssignment.objects.prefetch_related("intervention__intervention_category__account", "org_unit")
-            .select_related("rule")
-            .filter(intervention__intervention_category__account=self.request.user.iaso_profile.account)
-        )
 
     def get_serializer_class(self):
         return InterventionAssignmentListSerializer
@@ -48,7 +44,6 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
     def delete_many(self, request):
         ids_param = request.query_params.get("ids", "")
         user = request.user
-        account = user.iaso_profile.account
         if not ids_param:
             return Response({"error": "No ids provided."}, status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -68,7 +63,7 @@ class InterventionAssignmentViewSet(viewsets.ModelViewSet):
                     {"scenario_id": "You do not have permission to delete assignments from this scenario."},
                     status=status.HTTP_403_FORBIDDEN,
                 )
-            if scenario.account != account:
+            if scenario.workspace_id != self.workspace.id:
                 return Response(
                     {"assignment_id": "This assigment was not found."},
                     status=status.HTTP_404_NOT_FOUND,
