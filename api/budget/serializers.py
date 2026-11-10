@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from plugins.snt_malaria.api.fields import CommaSeparatedIdsField
+from iaso.api.common.serializer_fields import CommaSeparatedListField
 
 
 class BudgetQuerySerializer(serializers.Serializer):
-    org_unit_ids = CommaSeparatedIdsField(required=False, default=None)
+    org_unit_ids = CommaSeparatedListField(child=serializers.IntegerField(min_value=1), required=False, default=None)
