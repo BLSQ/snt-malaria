@@ -1,55 +1,20 @@
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { FC, useMemo } from 'react';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 import { useSafeIntl } from 'bluesquare-components';
 import { ChartEmptyState } from '../../../../components/charts/ChartEmptyState';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { MESSAGES } from '../../../messages';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
+import { useMetricSelection } from '../../hooks/useMetricSelection';
 import { MetricKey } from '../../types';
-import { getAvailableMetrics } from '../../utils/divergingScale';
-import { useMetricConfig } from '../../utils/metricConfig';
 import { ImpactDifferencesMap } from '../maps/ImpactDifferencesMap';
 
 export const ImpactDifferencesCard: FC = () => {
-    const {
-        scenarios,
-        impactsByScenarioId,
-        budgetsByScenarioId,
-        isImpactLoading,
-        isBudgetLoading,
-    } = useComparisonDataContext();
+    const { scenarios, isImpactLoading, isBudgetLoading } =
+        useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
-    const config = useMetricConfig();
-
-    // First key in declaration order is the default. useState's lazy initializer
-    // runs once on mount, so this is unaffected by later locale changes.
-    const [selectedMetric, setSelectedMetric] = useState<MetricKey>(
-        () => Object.keys(config)[0] as MetricKey,
-    );
-
-    const availableMetrics = useMemo(
-        () => getAvailableMetrics(impactsByScenarioId, budgetsByScenarioId),
-        [impactsByScenarioId, budgetsByScenarioId],
-    );
-
-    const metricOptions = useMemo(() => {
-        const allOptions = (Object.keys(config) as MetricKey[]).map(key => ({
-            label: config[key].label,
-            value: key,
-        }));
-        // Keep all options visible until data has loaded so the dropdown isn't briefly empty.
-        if (availableMetrics.size === 0) return allOptions;
-        return allOptions.filter(option => availableMetrics.has(option.value));
-    }, [config, availableMetrics]);
-
-    useEffect(() => {
-        if (availableMetrics.size === 0) return;
-        if (availableMetrics.has(selectedMetric)) return;
-        const fallback = metricOptions[0]?.value;
-        if (fallback && fallback !== selectedMetric) {
-            setSelectedMetric(fallback);
-        }
-    }, [availableMetrics, selectedMetric, metricOptions]);
+    const { selectedMetric, setSelectedMetric, metricOptions } =
+        useMetricSelection();
 
     const isLoading = useMemo(
         () =>

@@ -10,6 +10,7 @@
     "iaso.snt_malaria.compareCustomize.impactDifferencesSharedScaleTooltip": "Use one scale across all scenarios, or only between the two current ones.",
     "iaso.snt_malaria.compareCustomize.impactDifferencesTitle": "Impact differences",
     "iaso.snt_malaria.compareCustomize.yearlyPrevalenceTitle": "Yearly Prevalence Rate",
+    "iaso.snt_malaria.compareCustomize.yearlyMetricTitle": "{metric} per year",
     "iaso.snt_malaria.compareCustomize.costPerAvertedCaseTitle": "Cost per averted case",
     "iaso.snt_malaria.compareCustomize.budgetByCategoryTitle": "Budget by Category",
     "iaso.snt_malaria.compareCustomize.displayOptionsTitle": "Display options",
