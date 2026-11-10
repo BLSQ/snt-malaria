@@ -16,6 +16,7 @@ from iaso.utils.models.soft_deletable import (
 )
 from iaso.utils.validators import JSONSchemaValidator
 from plugins.snt_malaria.models.account_settings import get_intervention_org_units
+from plugins.snt_malaria.models.scenario_rule_cost_override import ScenarioRuleCostOverride
 
 
 class Scenario(SoftDeletableModel):
@@ -338,11 +339,41 @@ class ScenarioRule(models.Model):
         InterventionAssignment.objects.bulk_create(intervention_assignments_to_create)
 
 
+class ScenarioRuleInterventionQuerySet(models.QuerySet):
+    def in_active_scenarios(self):
+        return self.filter(scenario_rule__scenario__deleted_at__isnull=True)
+
+    def in_deleted_scenarios(self):
+        return self.filter(scenario_rule__scenario__deleted_at__isnull=False)
+
+    def remove_from_rules(self) -> set[int]:
+        """Delete these links and every rule left without an intervention. Returns the affected scenario ids."""
+        rule_ids = set(self.values_list("scenario_rule_id", flat=True))
+        scenario_ids = set(self.values_list("scenario_rule__scenario_id", flat=True))
+        self.delete()
+        ScenarioRule.objects.filter(id__in=rule_ids, interventions__isnull=True).delete()
+        return scenario_ids
+
+    def replace_in_rules(self, replacement) -> set[int]:
+        """Point these links at `replacement`, keeping their deployment years and grant but not their cost
+        overrides. A rule already using `replacement` just loses the link. Returns the affected scenario ids.
+        """
+        scenario_ids = set(self.values_list("scenario_rule__scenario_id", flat=True))
+        rules_using_replacement = ScenarioRuleIntervention.objects.filter(intervention=replacement).values(
+            "scenario_rule_id"
+        )
+        self.filter(scenario_rule_id__in=rules_using_replacement).delete()
+        ScenarioRuleCostOverride.objects.filter(rule_intervention__in=self).delete()
+        self.update(intervention=replacement)
+        return scenario_ids
+
+
 class ScenarioRuleIntervention(models.Model):
     """Explicit through table for ScenarioRule.interventions.
 
     Uses on_delete=PROTECT on `intervention` so that deleting an Intervention that is
     still referenced by a rule is blocked at the DB level, instead of silently cascading.
+    Links from soft-deleted scenarios are not meant to block it: see `remove_from_rules`.
 
     Also holds how the rule deploys the intervention: the years it is deployed in, a grant replacing
     the intervention's default grant (copied onto the rule's assignments), and the cost line values
@@ -356,6 +387,8 @@ class ScenarioRuleIntervention(models.Model):
     grant = models.ForeignKey(
         "Grant", on_delete=models.SET_NULL, null=True, blank=True, related_name="scenario_rule_interventions"
     )
+
+    objects = ScenarioRuleInterventionQuerySet.as_manager()
 
     class Meta:
         app_label = "snt_malaria"

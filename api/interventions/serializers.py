@@ -6,8 +6,9 @@ from plugins.snt_malaria.api.intervention_cost_breakdown_line.serializers import
     InterventionCostBreakdownLineSerializer,
     InterventionCostBreakdownLineWriteSerializer,
 )
-from plugins.snt_malaria.models import Grant, Intervention, InterventionCostBreakdownLine
+from plugins.snt_malaria.models import Grant, Intervention, InterventionCostBreakdownLine, Scenario, ScenarioRule
 from plugins.snt_malaria.providers.impact import get_provider_for_account
+from plugins.snt_malaria.services.intervention_deletion import delete_intervention
 
 
 class InterventionSerializer(serializers.ModelSerializer):
@@ -170,3 +171,63 @@ class InterventionDuplicateSerializer(serializers.Serializer):
             candidate = f"{base_name} {suffix}"
             suffix += 1
         return candidate
+
+
+class InterventionUsageRuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScenarioRule
+        fields = ["id", "name", "color", "interventions"]
+
+
+class InterventionUsageScenarioSerializer(serializers.ModelSerializer):
+    """Active scenario using an intervention; expects ``rules_using_intervention`` prefetched."""
+
+    rules = InterventionUsageRuleSerializer(source="rules_using_intervention", many=True)
+
+    class Meta:
+        model = Scenario
+        fields = ["id", "name", "is_locked", "rules"]
+
+
+class InterventionDeleteSerializer(serializers.Serializer):
+    """Deletes the intervention passed through the serializer context as ``intervention``."""
+
+    replace_with = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all(), required=False)
+    remove_from_rules = serializers.BooleanField(default=False)
+
+    def validate_replace_with(self, replacement):
+        account = self.context["request"].user.iaso_profile.account
+        if replacement.intervention_category.account_id != account.id:
+            raise serializers.ValidationError(_("Intervention not found."))
+        if replacement == self.context["intervention"]:
+            raise serializers.ValidationError(_("An intervention cannot replace itself."))
+        return replacement
+
+    def validate(self, attrs):
+        replace_with = attrs.get("replace_with")
+        if replace_with and attrs["remove_from_rules"]:
+            raise serializers.ValidationError(_("Either replace the intervention or remove it from the rules."))
+        if replace_with or attrs["remove_from_rules"]:
+            self._validate_no_locked_scenario()
+        return attrs
+
+    def _validate_no_locked_scenario(self):
+        locked_scenario_names = list(
+            Scenario.objects.filter(is_locked=True, rules__interventions=self.context["intervention"])
+            .distinct()
+            .order_by("name")
+            .values_list("name", flat=True)
+        )
+        if locked_scenario_names:
+            raise serializers.ValidationError(
+                _("Unlock these scenarios first: %(names)s") % {"names": ", ".join(locked_scenario_names)}
+            )
+
+    def create(self, validated_data):
+        delete_intervention(
+            self.context["intervention"],
+            self.context["request"].user,
+            replace_with=validated_data.get("replace_with"),
+            remove_from_active_rules=validated_data["remove_from_rules"],
+        )
+        return self.context["intervention"]

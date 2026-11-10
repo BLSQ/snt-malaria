@@ -1,12 +1,23 @@
+from datetime import timedelta
+
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
 from rest_framework import status
 
 from plugins.snt_malaria.api.interventions.permissions import (
     SNT_SETTINGS_READ_PERMISSION,
     SNT_SETTINGS_WRITE_PERMISSION,
 )
-from plugins.snt_malaria.models import Donor, Grant, Intervention, ScenarioRule
+from plugins.snt_malaria.models import (
+    Donor,
+    Grant,
+    Intervention,
+    Scenario,
+    ScenarioRule,
+    ScenarioRuleCostOverride,
+    ScenarioRuleIntervention,
+)
 from plugins.snt_malaria.models.cost_unit_type import CostUnitType
 from plugins.snt_malaria.tests.common_base import SNTMalariaAPITestCase
 
@@ -365,24 +376,223 @@ class InterventionAPITests(SNTMalariaAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Intervention.objects.filter(id=self.intervention_vaccination_rts.id).exists())
 
+    def _create_scenario(self, **kwargs):
+        return self.create_snt_scenario(account=self.account, created_by=self.user_write, **kwargs)
+
+    def _create_rule(self, scenario, interventions, **kwargs):
+        return self.create_snt_rule(scenario, interventions, created_by=self.user_write, **kwargs)
+
+    def _create_deleted_scenario_rule(self, interventions):
+        scenario = self._create_scenario()
+        rule = self._create_rule(scenario, interventions)
+        scenario.delete()
+        return rule
+
     def test_delete_intervention_used_by_a_rule_returns_405(self):
-        scenario = self.create_snt_scenario(
-            account=self.account,
-            created_by=self.user_write,
-            name="Scenario with rule",
-        )
-        rule = ScenarioRule.objects.create(
-            scenario=scenario,
-            priority=1,
-            created_by=self.user_write,
-        )
-        rule.interventions.add(self.intervention_vaccination_rts)
+        self._create_rule(self._create_scenario(), [self.intervention_vaccination_rts])
 
         self.client.force_authenticate(user=self.user_write)
         response = self.client.delete(f"{BASE_URL}{self.intervention_vaccination_rts.id}/")
 
         self.assertJSONResponse(response, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertTrue(Intervention.objects.filter(id=self.intervention_vaccination_rts.id).exists())
+
+    def test_delete_intervention_used_only_by_deleted_scenarios_removes_it_from_their_rules(self):
+        rts = self.intervention_vaccination_rts
+        emptied_rule = self._create_deleted_scenario_rule([rts])
+        shared_rule = self._create_deleted_scenario_rule([rts, self.intervention_chemo_smc])
+        self.create_snt_rule_cost_override(emptied_rule, self.cost_line)
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{BASE_URL}{rts.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Intervention.objects.filter(id=rts.id).exists())
+        self.assertFalse(ScenarioRuleCostOverride.objects.exists())
+        self.assertFalse(ScenarioRule.objects.filter(id=emptied_rule.id).exists())
+        self.assertEqual(list(shared_rule.interventions.all()), [self.intervention_chemo_smc])
+
+    def test_delete_intervention_used_by_active_and_deleted_scenarios_returns_405_and_keeps_all_links(self):
+        rts = self.intervention_vaccination_rts
+        deleted_scenario_rule = self._create_deleted_scenario_rule([rts])
+        self._create_rule(self._create_scenario(), [rts])
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{BASE_URL}{rts.id}/")
+
+        self.assertJSONResponse(response, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(ScenarioRuleIntervention.objects.filter(intervention=rts).count(), 2)
+        self.assertTrue(ScenarioRule.objects.filter(id=deleted_scenario_rule.id).exists())
+
+    def test_delete_intervention_with_remove_from_rules_removes_it_from_active_rules(self):
+        smc = self.intervention_chemo_smc
+        scenario = self._create_scenario()
+        emptied_rule = self._create_rule(scenario, [smc])
+        shared_rule = self._create_rule(scenario, [smc, self.intervention_vaccination_rts])
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{BASE_URL}{smc.id}/?remove_from_rules=true")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Intervention.objects.filter(id=smc.id).exists())
+        self.assertFalse(ScenarioRule.objects.filter(id=emptied_rule.id).exists())
+        self.assertEqual(list(shared_rule.interventions.all()), [self.intervention_vaccination_rts])
+
+    def test_delete_intervention_with_remove_from_rules_hands_its_districts_to_lower_priority_rules(self):
+        """Removing SMC from the top rule lets the lower rule's IPTp (same category) take the district."""
+        org_unit = self.create_snt_org_unit()
+        scenario = self._create_scenario()
+        self._create_rule(scenario, [self.intervention_chemo_iptp], priority=1, org_units_included=[org_unit.id])
+        self._create_rule(
+            scenario,
+            [self.intervention_chemo_smc, self.intervention_vaccination_rts],
+            priority=2,
+            org_units_included=[org_unit.id],
+        )
+        scenario.refresh_assignments(self.user_write)
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{BASE_URL}{self.intervention_chemo_smc.id}/?remove_from_rules=true")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertCountEqual(
+            scenario.intervention_assignments.values_list("intervention_id", flat=True),
+            [self.intervention_chemo_iptp.id, self.intervention_vaccination_rts.id],
+        )
+
+    def test_delete_intervention_with_remove_from_rules_in_locked_scenario_returns_400(self):
+        rts = self.intervention_vaccination_rts
+        self._create_rule(self._create_scenario(name="Locked plan", is_locked=True), [rts])
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{BASE_URL}{rts.id}/?remove_from_rules=true")
+
+        response_data = self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Locked plan", response_data["non_field_errors"][0])
+        self.assertTrue(Intervention.objects.filter(id=rts.id).exists())
+
+    def test_delete_intervention_with_replace_with_keeps_deployment_years_and_grant_and_drops_cost_overrides(self):
+        rts, smc = self.intervention_vaccination_rts, self.intervention_chemo_smc
+        rule = self._create_rule(self._create_scenario(), [rts])
+        grant = self.create_snt_grant(account=self.account)
+        ScenarioRuleIntervention.objects.filter(scenario_rule=rule).update(deployment_years=[2026], grant=grant)
+        self.create_snt_rule_cost_override(rule, self.cost_line)
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{BASE_URL}{rts.id}/?replace_with={smc.id}")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Intervention.objects.filter(id=rts.id).exists())
+        rule_intervention = ScenarioRuleIntervention.objects.get(scenario_rule=rule)
+        self.assertEqual(rule_intervention.intervention, smc)
+        self.assertEqual(rule_intervention.deployment_years, [2026])
+        self.assertEqual(rule_intervention.grant, grant)
+        self.assertFalse(ScenarioRuleCostOverride.objects.exists())
+
+    def test_delete_intervention_with_replace_with_keeps_the_existing_link_of_a_rule_already_using_the_replacement(
+        self,
+    ):
+        rts, smc = self.intervention_vaccination_rts, self.intervention_chemo_smc
+        rule = self._create_rule(self._create_scenario(), [rts, smc])
+        smc_cost_line = self.create_snt_cost_line(smc, created_by=self.user_write)
+        smc_override = self.create_snt_rule_cost_override(rule, smc_cost_line)
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{BASE_URL}{rts.id}/?replace_with={smc.id}")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(list(rule.interventions.all()), [smc])
+        self.assertTrue(ScenarioRuleCostOverride.objects.filter(id=smc_override.id).exists())
+
+    def test_delete_intervention_with_replace_with_removes_it_from_deleted_scenarios(self):
+        rts, smc = self.intervention_vaccination_rts, self.intervention_chemo_smc
+        deleted_scenario_rule = self._create_deleted_scenario_rule([rts])
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(f"{BASE_URL}{rts.id}/?replace_with={smc.id}")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(ScenarioRule.objects.filter(id=deleted_scenario_rule.id).exists())
+        self.assertFalse(ScenarioRuleIntervention.objects.filter(intervention=smc).exists())
+
+    def test_delete_intervention_with_replace_with_refreshes_assignments(self):
+        org_unit = self.create_snt_org_unit()
+        scenario = self._create_scenario()
+        self._create_rule(scenario, [self.intervention_vaccination_rts], org_units_included=[org_unit.id])
+        scenario.refresh_assignments(self.user_write)
+
+        self.client.force_authenticate(user=self.user_write)
+        response = self.client.delete(
+            f"{BASE_URL}{self.intervention_vaccination_rts.id}/?replace_with={self.intervention_chemo_smc.id}"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(
+            list(scenario.intervention_assignments.values_list("intervention_id", flat=True)),
+            [self.intervention_chemo_smc.id],
+        )
+
+    def test_delete_intervention_with_invalid_replace_with_returns_400(self):
+        rts = self.intervention_vaccination_rts
+        other_account, _ = self.create_snt_account(name="Other account")
+        other_category = self.create_snt_intervention_category(account=other_account, created_by=self.user_write)
+        other_intervention = self.create_snt_intervention(
+            intervention_category=other_category, created_by=self.user_write
+        )
+        self._create_rule(self._create_scenario(), [rts])
+
+        self.client.force_authenticate(user=self.user_write)
+        for query in (
+            f"replace_with={rts.id}",
+            f"replace_with={other_intervention.id}",
+            f"replace_with={self.intervention_chemo_smc.id}&remove_from_rules=true",
+        ):
+            with self.subTest(query=query):
+                response = self.client.delete(f"{BASE_URL}{rts.id}/?{query}")
+                self.assertJSONResponse(response, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(Intervention.objects.filter(id=rts.id).exists())
+
+    def test_usage_lists_locked_scenarios_first_then_most_recently_updated(self):
+        rts = self.intervention_vaccination_rts
+        older = self._create_scenario(name="Older plan")
+        newer = self._create_scenario(name="Newer plan")
+        locked = self._create_scenario(name="Locked plan", is_locked=True)
+        for scenario in (older, newer, locked):
+            self._create_rule(scenario, [rts])
+        Scenario.objects.filter(id=older.id).update(updated_at=timezone.now() - timedelta(days=2))
+        Scenario.objects.filter(id=locked.id).update(updated_at=timezone.now() - timedelta(days=3))
+
+        self.client.force_authenticate(user=self.user_read)
+        response = self.client.get(f"{BASE_URL}{rts.id}/usage/")
+
+        response_data = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(
+            [scenario["name"] for scenario in response_data],
+            ["Locked plan", "Newer plan", "Older plan"],
+        )
+
+    def test_usage_lists_only_active_scenarios_and_their_rules_using_the_intervention(self):
+        rts = self.intervention_vaccination_rts
+        scenario = self._create_scenario(name="Active plan")
+        rule = self._create_rule(scenario, [rts], name="High PfPR")
+        self._create_rule(scenario, [self.intervention_chemo_smc], name="Unrelated")
+        self._create_deleted_scenario_rule([rts])
+
+        self.client.force_authenticate(user=self.user_read)
+        response = self.client.get(f"{BASE_URL}{rts.id}/usage/")
+
+        response_data = self.assertJSONResponse(response, status.HTTP_200_OK)
+        self.assertEqual(
+            response_data,
+            [
+                {
+                    "id": scenario.id,
+                    "name": "Active plan",
+                    "is_locked": False,
+                    "rules": [{"id": rule.id, "name": "High PfPR", "color": rule.color, "interventions": [rts.id]}],
+                }
+            ],
+        )
 
     def test_delete_intervention_with_read_perm_forbidden(self):
         self.client.force_authenticate(user=self.user_read)
