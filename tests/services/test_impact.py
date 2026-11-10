@@ -51,6 +51,22 @@ class AggregateMetricsTestCase(SNTMalariaTestCase):
         self.assertEqual(result.number_severe_cases.value, 15.0)
         self.assertEqual(result.direct_deaths.value, 3.0)
 
+    def test_sums_number_uncomplicated_cases_and_keeps_missing_values_empty(self):
+        """Uncomplicated cases are summed; entries from providers without the metric don't contribute."""
+        metrics = [
+            OrgUnitImpactMetrics(org_unit_id=1, number_uncomplicated_cases=_metric(80.0, 70.0, 90.0)),
+            OrgUnitImpactMetrics(org_unit_id=2, number_uncomplicated_cases=_metric(20.0, 15.0, 25.0)),
+            OrgUnitImpactMetrics(org_unit_id=3),
+        ]
+        result = _aggregate_metrics(metrics)
+        self.assertEqual(result.number_uncomplicated_cases.value, 100.0)
+        self.assertEqual(result.number_uncomplicated_cases.lower, 85.0)
+        self.assertEqual(result.number_uncomplicated_cases.upper, 115.0)
+
+    def test_number_uncomplicated_cases_stays_empty_when_no_entry_provides_it(self):
+        metrics = [OrgUnitImpactMetrics(org_unit_id=1, number_cases=_metric(100.0))]
+        self.assertIsNone(_aggregate_metrics(metrics).number_uncomplicated_cases.value)
+
     def test_averages_prevalence_rate(self):
         metrics = [
             OrgUnitImpactMetrics(

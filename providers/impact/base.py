@@ -28,6 +28,7 @@ class ImpactProviderMeta:
     """Descriptor for an impact provider, attached to every impact response."""
 
     provider_key: str
+    metric_annotations: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -76,6 +77,9 @@ class ImpactResult:
     number_severe_cases: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
     prevalence_rate: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
     direct_deaths: ImpactMetricWithConfidenceInterval = field(default_factory=ImpactMetricWithConfidenceInterval)
+    number_uncomplicated_cases: ImpactMetricWithConfidenceInterval = field(
+        default_factory=ImpactMetricWithConfidenceInterval
+    )
 
 
 @dataclass

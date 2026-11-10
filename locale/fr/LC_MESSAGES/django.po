@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-06 14:17+0000\n"
+"POT-Creation-Date: 2026-11-10 09:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -213,6 +213,10 @@ msgstr "Configuration - Lecture"
 #: plugins/snt_malaria/permissions.py
 msgid "Settings - Write"
 msgstr "Configuration - Écriture"
+
+#: plugins/snt_malaria/providers/impact/swisstph.py
+msgid "Cases treated by the health system (uncomplicated + severe)"
+msgstr "Cas traités par le système de santé (simples + graves)"
 
 #: plugins/snt_malaria/providers/openhexa_data_layers.py
 #, python-brace-format

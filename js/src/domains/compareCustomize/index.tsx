@@ -293,6 +293,7 @@ export const CompareCustomize: FC = () => {
                 yearFrom={yearFrom}
                 isSingleYear={isSingleYear}
                 selectedOrgUnitIds={selectedOrgUnitIds}
+                providerMeta={providerMeta}
             >
                 <PageContainer sx={styles.pageContainer}>
                     <SidebarLayout>

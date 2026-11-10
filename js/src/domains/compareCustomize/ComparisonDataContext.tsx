@@ -1,6 +1,10 @@
 import React, { createContext, FC, ReactNode, useContext } from 'react';
 import { BudgetCalculationResponse } from '../planning/types/budget';
-import { ScenarioImpactMetrics, ScenarioDisplay } from './types';
+import {
+    ImpactProviderMeta,
+    ScenarioImpactMetrics,
+    ScenarioDisplay,
+} from './types';
 
 type ComparisonData = {
     scenarios: ScenarioDisplay[];
@@ -13,6 +17,7 @@ type ComparisonData = {
     yearFrom?: number;
     isSingleYear: boolean;
     selectedOrgUnitIds: number[] | undefined;
+    providerMeta: ImpactProviderMeta | undefined;
 };
 
 const ComparisonDataContext = createContext<ComparisonData | undefined>(

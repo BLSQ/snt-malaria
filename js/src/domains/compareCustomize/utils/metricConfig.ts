@@ -52,6 +52,11 @@ const METRIC_CONFIG: Record<
         format: { notation: 'compact', maximumFractionDigits: 1 },
         positiveIsGreen: false,
     },
+    [MetricKey.UncomplicatedCases]: {
+        label: MESSAGES.impactUncomplicatedCases,
+        format: { notation: 'compact', maximumFractionDigits: 1 },
+        positiveIsGreen: false,
+    },
     [MetricKey.SevereCases]: {
         label: MESSAGES.impactSevereCases,
         format: { notation: 'compact', maximumFractionDigits: 1 },

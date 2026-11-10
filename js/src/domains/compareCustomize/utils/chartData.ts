@@ -147,7 +147,7 @@ export type CostPerAvertedCaseResult = {
  *   averted_cases    = baseline.cases − scenario.cases
  *   cost_per_averted = (scenario.cost − baseline.cost) / averted_cases
  *
- * Only uncomplicated cases are used (severe cases excluded).
+ * Cases are each scenario's `number_cases`.
  * A scenario must avert at least 1 case to be included; otherwise the
  * metric is meaningless and `hasInsufficientAverted` is flagged.
  * Confidence intervals repeat the formula with pessimistic/optimistic bounds.

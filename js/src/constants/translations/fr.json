@@ -298,6 +298,7 @@
     "iaso.snt_malaria.impactSettings.notIncluded": "Non inclus",
     "iaso.snt_malaria.impact.cases": "Cas",
     "iaso.snt_malaria.impact.severeCases": "Cas graves",
+    "iaso.snt_malaria.impact.uncomplicatedCases": "Cas simples",
     "iaso.snt_malaria.impact.pfprEvolution": "Évolution PfPR",
     "iaso.snt_malaria.impact.prevalenceRate": "Taux de prévalence",
     "iaso.snt_malaria.impact.totalCosts": "Coûts cumulatifs totaux (USD)",

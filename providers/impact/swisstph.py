@@ -1,6 +1,7 @@
 from typing import Optional
 
 from django.db.models import Avg, Max, Min, Q
+from django.utils.translation import gettext_lazy as _
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.models import ImpactProviderConfig, Intervention
@@ -55,7 +56,10 @@ class SwissTPHImpactProvider(ImpactProvider):
       ``"EIR_lci"``, ``"EIR_uci"``).
     """
 
-    meta = ImpactProviderMeta(provider_key=ImpactProviderConfig.ProviderKey.SWISSTPH)
+    meta = ImpactProviderMeta(
+        provider_key=ImpactProviderConfig.ProviderKey.SWISSTPH,
+        metric_annotations={"number_cases": _("Cases treated by the health system (uncomplicated + severe)")},
+    )
 
     def __init__(self, config_id: int, config: dict, secret: str):
         super().__init__(config_id, config, secret)
@@ -123,6 +127,12 @@ class SwissTPHImpactProvider(ImpactProvider):
                 mean_n_uncomp=Avg("n_uncomp", filter=eir_mean),
                 lower_n_uncomp=Avg("n_uncomp", filter=eir_lower),
                 upper_n_uncomp=Avg("n_uncomp", filter=eir_upper),
+                mean_t_uncomp=Avg("t_uncomp", filter=eir_mean),
+                lower_t_uncomp=Avg("t_uncomp", filter=eir_lower),
+                upper_t_uncomp=Avg("t_uncomp", filter=eir_upper),
+                mean_t_severe=Avg("t_severe", filter=eir_mean),
+                lower_t_severe=Avg("t_severe", filter=eir_lower),
+                upper_t_severe=Avg("t_severe", filter=eir_upper),
                 mean_n_severe=Avg("n_severe", filter=eir_mean),
                 lower_n_severe=Avg("n_severe", filter=eir_lower),
                 upper_n_severe=Avg("n_severe", filter=eir_upper),
@@ -148,7 +158,8 @@ class SwissTPHImpactProvider(ImpactProvider):
             results.setdefault(org_unit.id, []).append(
                 ImpactResult(
                     year=row["year"],
-                    number_cases=self._build_metric(row, "n_uncomp"),
+                    number_cases=self._build_metric(row, "t_uncomp") + self._build_metric(row, "t_severe"),
+                    number_uncomplicated_cases=self._build_metric(row, "n_uncomp"),
                     number_severe_cases=self._build_metric(row, "n_severe"),
                     prevalence_rate=self._build_metric(row, "prevalence_rate"),
                     population=row["mean_n_host"] or 0,

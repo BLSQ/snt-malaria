@@ -574,6 +574,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.impact.severeCases',
         defaultMessage: 'Severe cases',
     },
+    impactUncomplicatedCases: {
+        id: 'iaso.snt_malaria.impact.uncomplicatedCases',
+        defaultMessage: 'Uncomplicated cases',
+    },
     impactTargetLabel: {
         id: 'iaso.snt_malaria.impact.targetLabel',
         defaultMessage: '{year} Target: {value}',

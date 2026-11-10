@@ -25,6 +25,7 @@ export type OrgUnitRef = {
 export const ImpactMetricKey = {
     DirectDeaths: 'direct_deaths',
     Cases: 'number_cases',
+    UncomplicatedCases: 'number_uncomplicated_cases',
     SevereCases: 'number_severe_cases',
     PrevalenceRate: 'prevalence_rate',
 } as const;
@@ -68,6 +69,7 @@ export type YearImpactMetrics = ImpactMetrics & {
 
 export type ImpactProviderMeta = {
     provider_key: string;
+    metric_annotations: Partial<Record<ImpactMetricKey, string>>;
 };
 
 export type InterventionRef = {

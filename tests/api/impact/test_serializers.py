@@ -148,6 +148,7 @@ class ScenarioImpactSerializerTestCase(SNTMalariaTestCase):
             number_severe_cases=_metric(10.0, 8.0, 12.0),
             prevalence_rate=_metric(0.05, 0.04, 0.06),
             direct_deaths=_metric(2.0, 1.5, 2.5),
+            number_uncomplicated_cases=_metric(80.0, 70.0, 90.0),
             by_year=[
                 YearImpactMetrics(
                     year=2025,
@@ -182,12 +183,13 @@ class ScenarioImpactSerializerTestCase(SNTMalariaTestCase):
         data = ScenarioImpactSerializer(metrics).data
 
         self.assertEqual(data["scenario_id"], 42)
-        self.assertEqual(data["provider_meta"], {"provider_key": "fake"})
+        self.assertEqual(data["provider_meta"], {"provider_key": "fake", "metric_annotations": {}})
 
         self._assert_metric(data["number_cases"], 100.0, 90.0, 110.0)
         self._assert_metric(data["number_severe_cases"], 10.0, 8.0, 12.0)
         self._assert_metric(data["prevalence_rate"], 0.05, 0.04, 0.06)
         self._assert_metric(data["direct_deaths"], 2.0, 1.5, 2.5)
+        self._assert_metric(data["number_uncomplicated_cases"], 80.0, 70.0, 90.0)
 
         self.assertEqual(len(data["by_year"]), 1)
         year = data["by_year"][0]
@@ -205,6 +207,18 @@ class ScenarioImpactSerializerTestCase(SNTMalariaTestCase):
         self.assertEqual(ou["org_unit_id"], 1)
         self.assertEqual(ou["org_unit_name"], "OU1")
         self._assert_metric(ou["number_cases"], 100.0, 90.0, 110.0)
+
+    def test_provider_meta_serializes_metric_annotations(self):
+        metrics = ScenarioImpactMetrics(
+            scenario_id=1,
+            provider_meta=ImpactProviderMeta(
+                provider_key="swisstph",
+                metric_annotations={"number_cases": "Treated cases"},
+            ),
+        )
+        data = ScenarioImpactSerializer(metrics).data
+
+        self.assertEqual(data["provider_meta"]["metric_annotations"], {"number_cases": "Treated cases"})
 
     def test_empty_results(self):
         """No impact data matched: empty lists and all-None metrics are serialized cleanly."""
