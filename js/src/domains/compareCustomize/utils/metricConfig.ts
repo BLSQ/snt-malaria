@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSafeIntl } from 'bluesquare-components';
 import type { IntlMessage } from 'bluesquare-components/dist/types/types/types';
 import type { FormatNumberOptions } from 'react-intl';
+import { useGetBudgetSettings } from '../../../hooks/useGetBudgetSettings';
 import { MESSAGES } from '../../messages';
+import { formatCost } from '../../planning/libs/cost-utils';
 import { MetricKey } from '../types';
 
 /**
@@ -86,5 +88,24 @@ export const useMetricConfig = (): Record<MetricKey, MetricConfig> => {
                 ]),
             ) as Record<MetricKey, MetricConfig>,
         [formatMessage],
+    );
+};
+
+/**
+ * Formats a single (non-delta) value of `metric`: costs in the account's
+ * local currency, other metrics with their `MetricConfig.format`.
+ */
+export const useMetricValueFormatter = (
+    metric: MetricKey,
+): ((value: number) => string) => {
+    const { formatNumber } = useSafeIntl();
+    const { data: budgetSettings } = useGetBudgetSettings();
+    const currencyCode = budgetSettings?.local_currency;
+    return useCallback(
+        (value: number) =>
+            metric === MetricKey.OrgUnitTotalCost
+                ? formatCost(value, currencyCode)
+                : formatNumber(value, METRIC_CONFIG[metric].format),
+        [metric, currencyCode, formatNumber],
     );
 };

@@ -24,10 +24,13 @@ import { WidgetCard } from '../../../../components/WidgetCard';
 import { useGetImpactAgeGroups } from '../../../compareCustomize/hooks/useGetImpactAgeGroups';
 import { useGetImpactYearRange } from '../../../compareCustomize/hooks/useGetImpactYearRange';
 import { useGetScenarioImpact } from '../../../compareCustomize/hooks/useGetScenarioImpact';
-import { ScenarioImpactMetrics } from '../../../compareCustomize/types';
 import {
-    buildPrevalenceChartData,
-    getPrevalenceMaxValue,
+    MetricKey,
+    ScenarioImpactMetrics,
+} from '../../../compareCustomize/types';
+import {
+    buildYearlyMetricChartData,
+    getYearlyMetricMaxValue,
 } from '../../../compareCustomize/utils/chartData';
 import { intersectYearRanges } from '../../../compareCustomize/utils/yearRange';
 import { MESSAGES } from '../../../messages';
@@ -86,7 +89,11 @@ export const PrevalenceSummary: FC = () => {
         const impactMap = new Map<number, ScenarioImpactMetrics | undefined>([
             [scenarioId, impact],
         ]);
-        return buildPrevalenceChartData(scenarios, impactMap);
+        return buildYearlyMetricChartData(
+            scenarios,
+            MetricKey.PrevalenceRate,
+            impactMap,
+        );
     }, [scenarios, scenarioId, impact]);
 
     const isLoading =
@@ -98,7 +105,7 @@ export const PrevalenceSummary: FC = () => {
     const yAxisLabels = useMemo(
         () => [
             formatPercentValue(
-                getPrevalenceMaxValue(
+                getYearlyMetricMaxValue(
                     chartData,
                     scenarios.map(line => line.label),
                 ),

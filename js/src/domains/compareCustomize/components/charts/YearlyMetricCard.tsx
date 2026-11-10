@@ -19,12 +19,17 @@ import { ChartTooltip } from '../../../../components/charts/ChartTooltip';
 import { useAutoYAxisWidth } from '../../../../components/useAutoYAxisWidth';
 import { WidgetCard } from '../../../../components/WidgetCard';
 import { MESSAGES } from '../../../messages';
-import { formatPercentValue } from '../../../planning/libs/cost-utils';
 import { useComparisonDataContext } from '../../ComparisonDataContext';
+import { useMetricSelection } from '../../hooks/useMetricSelection';
+import { MetricKey } from '../../types';
 import {
-    buildPrevalenceChartData,
-    getPrevalenceMaxValue,
+    buildYearlyMetricChartData,
+    getYearlyMetricMaxValue,
 } from '../../utils/chartData';
+import {
+    useMetricConfig,
+    useMetricValueFormatter,
+} from '../../utils/metricConfig';
 
 const styles = {
     chartBody: {
@@ -33,16 +38,18 @@ const styles = {
     },
 } satisfies SxStyles;
 
-type PrevalenceTooltipProps = {
+type YearlyMetricTooltipProps = {
     active?: boolean;
     label?: number;
     payload?: { name: string; value: number; color: string }[];
+    formatValue: (value: number) => string;
 };
 
-const PrevalenceTooltip: FC<PrevalenceTooltipProps> = ({
+const YearlyMetricTooltip: FC<YearlyMetricTooltipProps> = ({
     active,
     label,
     payload,
+    formatValue,
 }) => {
     if (!active || !payload?.length) return null;
     return (
@@ -50,55 +57,79 @@ const PrevalenceTooltip: FC<PrevalenceTooltipProps> = ({
             title={label}
             rows={payload.map(entry => ({
                 label: entry.name,
-                value: formatPercentValue(entry.value),
+                value: formatValue(entry.value),
                 color: entry.color,
             }))}
         />
     );
 };
 
-export const YearlyPrevalenceCard: FC = () => {
+export const YearlyMetricCard: FC = () => {
     const {
         scenarios,
         impactsByScenarioId,
-        isImpactLoading: isLoading,
+        budgetsByScenarioId,
+        isImpactLoading,
+        isBudgetLoading,
     } = useComparisonDataContext();
     const { formatMessage } = useSafeIntl();
     const theme = useTheme();
     const { gridProps, axisProps } = useChartTheme();
+    const config = useMetricConfig();
+    const { selectedMetric, setSelectedMetric, metricOptions } =
+        useMetricSelection(MetricKey.PrevalenceRate);
+    const formatValue = useMetricValueFormatter(selectedMetric);
+
+    const isCostMetric = selectedMetric === MetricKey.OrgUnitTotalCost;
+    const isLoading = isImpactLoading || (isCostMetric && isBudgetLoading);
 
     const chartData = useMemo(
-        () => buildPrevalenceChartData(scenarios, impactsByScenarioId),
-        [scenarios, impactsByScenarioId],
+        () =>
+            buildYearlyMetricChartData(
+                scenarios,
+                selectedMetric,
+                impactsByScenarioId,
+                budgetsByScenarioId,
+            ),
+        [scenarios, selectedMetric, impactsByScenarioId, budgetsByScenarioId],
     );
 
     const hasData = chartData.length > 0;
 
-    // Size the (numeric) value axis to its widest formatted tick so the percent
-    // labels aren't clipped and the axis only takes the space it needs.
     const yAxisLabels = useMemo(
         () => [
-            formatPercentValue(
-                getPrevalenceMaxValue(
+            formatValue(
+                getYearlyMetricMaxValue(
                     chartData,
                     scenarios.map(scenario => scenario.label),
                 ),
             ),
         ],
-        [chartData, scenarios],
+        [chartData, scenarios, formatValue],
     );
     const { width: yAxisWidth } = useAutoYAxisWidth({ labels: yAxisLabels });
 
     return (
         <WidgetCard
-            title={formatMessage(MESSAGES.yearlyPrevalenceTitle)}
+            title={formatMessage(MESSAGES.yearlyMetricTitle, {
+                metric: config[selectedMetric].label,
+            })}
             icon={ShowChartOutlinedIcon}
             bodySx={{ minHeight: 220 }}
+            dropdown={{
+                value: selectedMetric,
+                options: metricOptions,
+                onChange: setSelectedMetric,
+            }}
             isLoading={isLoading}
         >
             {!hasData ? (
                 <ChartEmptyState
-                    message={formatMessage(MESSAGES.noImpactData)}
+                    message={formatMessage(
+                        isCostMetric
+                            ? MESSAGES.noBudgetData
+                            : MESSAGES.noImpactData,
+                    )}
                 />
             ) : (
                 <Box sx={styles.chartBody}>
@@ -119,12 +150,18 @@ export const YearlyPrevalenceCard: FC = () => {
                                 tickMargin={4}
                             />
                             <YAxis
-                                tickFormatter={formatPercentValue}
+                                tickFormatter={formatValue}
                                 {...axisProps}
                                 width={yAxisWidth}
                                 tickMargin={2}
                             />
-                            <Tooltip content={<PrevalenceTooltip />} />
+                            <Tooltip
+                                content={
+                                    <YearlyMetricTooltip
+                                        formatValue={formatValue}
+                                    />
+                                }
+                            />
                             {scenarios.map(scenario => (
                                 <Line
                                     key={scenario.id}

@@ -1324,6 +1324,10 @@ export const MESSAGES = defineMessages({
         id: 'iaso.snt_malaria.compareCustomize.yearlyPrevalenceTitle',
         defaultMessage: 'Yearly Prevalence Rate',
     },
+    yearlyMetricTitle: {
+        id: 'iaso.snt_malaria.compareCustomize.yearlyMetricTitle',
+        defaultMessage: '{metric} per year',
+    },
     yearsLabel: {
         id: 'iaso.snt_malaria.compareCustomize.yearsLabel',
         defaultMessage: 'Years',
