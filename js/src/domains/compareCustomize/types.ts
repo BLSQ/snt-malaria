@@ -94,7 +94,6 @@ export type ScenarioImpactMetrics = ImpactMetrics & {
     org_units_not_found: OrgUnitRef[];
     unmatched_intervention_mixes: UnmatchedInterventionMix[];
     interventions_without_impact_ref: InterventionWithoutImpactRef[];
-    provider_meta: ImpactProviderMeta;
 };
 
 export type YearMode = 'range' | 'single';

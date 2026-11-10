@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.core.cache import cache
 from django.test import override_settings
 from django.urls import reverse
-from django.utils import timezone, translation
+from django.utils import timezone
 
 from iaso.models import OrgUnit
 from plugins.snt_malaria.api.impact import cache as impact_cache
@@ -95,13 +95,6 @@ class ImpactCacheKeyTestCase(SNTMalariaTestCase):
         impact_cache.invalidate_account(self.account.id)
 
         self.assertIsNone(impact_cache.get(self.scenario.id, "under5", 2025, 2027))
-
-    def test_key_differs_per_language(self):
-        with translation.override("en"):
-            english = self._key()
-        with translation.override("fr"):
-            french = self._key()
-        self.assertNotEqual(english, french)
 
 
 @override_settings(CACHES=LOCMEM_CACHES)

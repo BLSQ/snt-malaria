@@ -5,7 +5,7 @@ from __future__ import annotations
 
 Entries are keyed by (scenario_id, scenario.updated_at, latest
 updated_at of the scenario's assigned interventions, age_group,
-year_from, year_to, selected org unit ids, active language).  The scenario timestamp invalidates the cache
+year_from, year_to, selected org unit ids).  The scenario timestamp invalidates the cache
 whenever assignments are refreshed (which calls Scenario.save(),
 bumping updated_at); the intervention timestamp invalidates it when an
 assigned intervention changes, e.g. its impact_ref.
@@ -23,7 +23,6 @@ from uuid import uuid4
 
 from django.core.cache import cache
 from django.db.models import Max
-from django.utils.translation import get_language
 
 from plugins.snt_malaria.models import ImpactProviderConfig, Scenario
 
@@ -93,7 +92,4 @@ def _build_key(scenario_id, age_group, year_from, year_to, org_unit_ids=None) ->
     if not stamp:
         return None
     org_units = _org_units_fragment(org_unit_ids)
-    return (
-        f"{_KEY_PREFIX}:v{_RESPONSE_VERSION}:{scenario_id}:{stamp}:{age_group}:{year_from}:{year_to}:{org_units}"
-        f":{get_language()}"
-    )
+    return f"{_KEY_PREFIX}:v{_RESPONSE_VERSION}:{scenario_id}:{stamp}:{age_group}:{year_from}:{year_to}:{org_units}"

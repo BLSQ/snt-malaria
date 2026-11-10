@@ -6,7 +6,7 @@ from plugins.snt_malaria.api.impact import cache as impact_cache
 from plugins.snt_malaria.providers.impact import get_provider_for_account
 from plugins.snt_malaria.services.impact import ImpactService
 
-from .serializers import ImpactQuerySerializer, ScenarioImpactSerializer
+from .serializers import ImpactProviderMetaSerializer, ImpactQuerySerializer, ScenarioImpactSerializer
 
 
 def _get_provider(request):
@@ -43,6 +43,14 @@ class ImpactRefsViewSet(viewsets.ViewSet):
         provider = _get_provider(request)
         refs = provider.get_available_impact_refs()
         return Response({"refs": [{"ref": option.ref, "label": option.label} for option in refs]})
+
+
+class ImpactProviderMetaViewSet(viewsets.ViewSet):
+    http_method_names = ["get", "options"]
+
+    def list(self, request):
+        provider = _get_provider(request)
+        return Response(ImpactProviderMetaSerializer(provider.get_meta()).data)
 
 
 class ImpactViewSet(viewsets.ViewSet):

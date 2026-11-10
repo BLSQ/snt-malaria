@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
 from plugins.snt_malaria.api.impact.serializers import ImpactQuerySerializer, ScenarioImpactSerializer
-from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, ImpactProviderMeta, OrgUnitRef
+from plugins.snt_malaria.providers.impact.base import ImpactMetricWithConfidenceInterval, OrgUnitRef
 from plugins.snt_malaria.services.impact import (
     InterventionRef,
     InterventionWithoutImpactRef,
@@ -178,12 +178,10 @@ class ScenarioImpactSerializerTestCase(SNTMalariaTestCase):
                     direct_deaths=_metric(2.0, 1.5, 2.5),
                 ),
             ],
-            provider_meta=ImpactProviderMeta(provider_key="fake"),
         )
         data = ScenarioImpactSerializer(metrics).data
 
         self.assertEqual(data["scenario_id"], 42)
-        self.assertEqual(data["provider_meta"], {"provider_key": "fake", "metric_annotations": {}})
 
         self._assert_metric(data["number_cases"], 100.0, 90.0, 110.0)
         self._assert_metric(data["number_severe_cases"], 10.0, 8.0, 12.0)
@@ -207,18 +205,6 @@ class ScenarioImpactSerializerTestCase(SNTMalariaTestCase):
         self.assertEqual(ou["org_unit_id"], 1)
         self.assertEqual(ou["org_unit_name"], "OU1")
         self._assert_metric(ou["number_cases"], 100.0, 90.0, 110.0)
-
-    def test_provider_meta_serializes_metric_annotations(self):
-        metrics = ScenarioImpactMetrics(
-            scenario_id=1,
-            provider_meta=ImpactProviderMeta(
-                provider_key="swisstph",
-                metric_annotations={"number_cases": "Treated cases"},
-            ),
-        )
-        data = ScenarioImpactSerializer(metrics).data
-
-        self.assertEqual(data["provider_meta"]["metric_annotations"], {"number_cases": "Treated cases"})
 
     def test_empty_results(self):
         """No impact data matched: empty lists and all-None metrics are serialized cleanly."""

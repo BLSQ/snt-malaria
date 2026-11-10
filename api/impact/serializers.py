@@ -90,4 +90,3 @@ class ScenarioImpactSerializer(ImpactMetricsSerializer):
     org_units_not_found = OrgUnitRefSerializer(many=True, default=[])
     unmatched_intervention_mixes = UnmatchedInterventionMixSerializer(many=True, default=[])
     interventions_without_impact_ref = InterventionWithoutImpactRefSerializer(many=True, default=[])
-    provider_meta = ImpactProviderMetaSerializer()
